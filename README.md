@@ -5,4 +5,4 @@ The purpose of this repo is to help the team lead and his team member in trainin
 
 ## Instructions
 
-Clone this repo on your local machine. Create a new branch by your name like *firstname.lastname*. Check-in everything under this branch and push. **Do not check-in anything in master**.
+Clone this repo on your local machine. Create a new branch by your name like *firstname.lastname*. Check-in everything under this branch and push. **Do not check-in anything in master branch**.
