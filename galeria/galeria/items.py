@@ -9,8 +9,6 @@ import scrapy
 
 
 class GaleriaItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
     title = scrapy.Field()
     category = scrapy.Field()
     url = scrapy.Field()
@@ -25,4 +23,3 @@ class GaleriaItem(scrapy.Item):
     skus = scrapy.Field()
     price = scrapy.Field()
     size = scrapy.Field()
-    pass
