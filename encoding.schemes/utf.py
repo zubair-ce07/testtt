@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-temp = u'\u1234'
-
-
 def utf8_encode(query_string):
     utf8binary = ''
     utf8 = query_string.encode("utf-8")
