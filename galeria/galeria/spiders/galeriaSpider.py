@@ -10,7 +10,7 @@ class GaleriaspiderSpider(CrawlSpider):
     name = "galeriaSpider"
     allowed_domains = ["www.galeria-kaufhof.de"]
     start_urls = (
-        'http://www.galeria-kaufhof.de/store/c/Damen-Bekleidung-Hosen',
+        'http://www.galeria-kaufhof.de/',
     )
 	# allowed categories
     shop_categories = [u"Damen", u"Herren", u"Kinder", u"Schuhe", u"Uhren", u"Wäsche", u"Taschen & Koffer"]
