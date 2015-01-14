@@ -1,29 +1,48 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 temp = u'\u1234'
-utf8r = ''
-utf16r = ''
-utf32r = ''
-print temp
-#####################utf8#######################
-utf8 = temp.encode("utf-8")
-print '\n++++++++++\nutf8\n+++++++++\n'
-print repr(utf8)
-for a in utf8:
-    utf8r = utf8r + ' ' + bin(ord(a))
-print utf8r
-####################utf-16#####################
-utf16 = temp.encode("utf-16")
-print '\n++++++++++\nutf16\n+++++++++\n'
-print repr(utf16)
 
-for a in utf16:
-    utf16r = utf16r + ' ' + bin(ord(a))
-print utf16r
+
+def utf8_encode(query_string):
+    utf8binary = ''
+    utf8 = query_string.encode("utf-8")
+    for result in utf8:
+        utf8binary = utf8binary + ' ' + bin(ord(result))
+    return utf8, utf8binary
+
+
+####################utf-16#####################
+def utf16_encode(query_string):
+    utf16binary = ''
+    utf16 = query_string.encode("utf-16")
+    for result in utf16:
+        utf16binary = utf16binary + ' ' + bin(ord(result))
+    return utf16, utf16binary
+
+
 ##################utf-32#####################
-utf32 = temp.encode("utf-32")
-print '\n++++++++++\nutf32\n+++++++++\n'
-print repr(utf32)
-for a in utf32:
-    utf32r = utf32r + ' ' + bin(ord(a))
-print utf32r
+def utf32_encode(query_string):
+    utf32binary = ''
+    utf32 = query_string.encode("utf-32")
+    for result in utf32:
+        utf32binary = utf32binary + ' ' + bin(ord(result))
+    return utf32, utf32binary
+
+
+def main():
+    special_char = u'\u1234'
+    print '\n++++++++++\nutf8\n+++++++++\n'
+    utf8, utf8binary = utf8_encode(special_char)
+    print utf8
+    print utf8binary
+    print '\n++++++++++\nutf16\n+++++++++\n'
+    utf16, utf16binary = utf16_encode(special_char)
+    print utf16
+    print utf16binary
+    print '\n++++++++++\nutf32\n+++++++++\n'
+    utf32, utf32binary = utf32_encode(special_char)
+    print utf32
+    print utf32binary
+
+if __name__ == "__main__":
+    main()
