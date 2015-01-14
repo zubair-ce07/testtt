@@ -34,7 +34,7 @@ class SpiderGymboree(CrawlSpider):
         Rule(SgmlLinkExtractor(restrict_xpaths=items_page, process_value=link_break), follow=True),
         Rule(SgmlLinkExtractor(deny=[r'index'], restrict_xpaths=item_detail_page, tags=('body'), attrs='onload',
                                process_value=last_link_break), callback='parse_get_detail')
-        #
+        # Rules for crawling
     ]
     product_response = ''
 
