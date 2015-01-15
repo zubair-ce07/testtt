@@ -42,6 +42,11 @@ class SpiderGymboree(CrawlSpider):
         title = self.product_response.xpath('.//head/@name').extract()[0]
         return title
 
+    def extract_price(self,price):
+        start = price[0].find('$')
+        end = price[0].find('<', start + 1)
+        return price[0][start:end]
+
     def get_skus(self, res):
         skus = {}
         color = self.get_color(res)
@@ -52,13 +57,9 @@ class SpiderGymboree(CrawlSpider):
             arr['color'] = color
             arr['currency'] = 'USD'
             reg_price = rec.xpath('./@reg-price').extract()
-            start = reg_price[0].find('$')
-            end = reg_price[0].find('<', start + 1)
-            arr['previous_price'] = reg_price[0][start:end]
+            arr['previous_price'] =self.extract_price(reg_price)
             sale_price = rec.xpath('./@sale-price').extract()
-            sale_start = sale_price[0].find('$')
-            sale_end = sale_price[0].find('<', sale_start + 1)
-            arr['price'] = sale_price[0][sale_start:sale_end]
+            arr['price'] = self.extract_price(sale_price)
             skus[id[0]] = arr
         return skus
 
