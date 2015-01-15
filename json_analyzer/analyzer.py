@@ -7,7 +7,7 @@ import collections
 
 def rate_by_search_key(data_line, record, Resultdict, search_key): # this function is used for count element rate which is given as search key  in given json files
     if search_key in data_line:
-        if data_line[search_key]:
+        if data_line.get(search_key):
             key = search_key
             if key not in record:
                 record[key] = {'type': type(data_line[search_key]).__name__,
@@ -17,10 +17,7 @@ def rate_by_search_key(data_line, record, Resultdict, search_key): # this functi
             if isinstance(data_line[search_key], list):
                 for data in data_line[search_key]:
                     if (isinstance(data, dict)):
-                        keys_list = []
-                        for key in data:
-                            keys_list.append(key)
-                        node_name = tuple(keys_list)
+                        node_name = tuple(data.keys())
                     else:
                         node_name = tuple(data_line[search_key])
             elif isinstance(data_line[search_key], dict):
@@ -71,7 +68,7 @@ def print_data(record, total_rows, Resultdict):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("file_name")
+    parser.add_argument("file_name", help='Json file Name')
     parser.add_argument('-f', help='Must be present while using Search by key')
     args = parser.parse_args()
     record = {}
