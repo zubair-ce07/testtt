@@ -10,7 +10,7 @@ class GaleriaspiderSpider(CrawlSpider):
     name = "galeriaSpider"
     allowed_domains = ["www.galeria-kaufhof.de"]
     start_urls = (
-        'http://www.galeria-kaufhof.de/',
+        'http://www.galeria-kaufhof.de/store/c/Damen-Bekleidung-Hosen',
     )
 	# allowed categories
     shop_categories = [u"Damen", u"Herren", u"Kinder", u"Schuhe", u"Uhren", u"Wäsche", u"Taschen & Koffer"]
@@ -49,7 +49,7 @@ class GaleriaspiderSpider(CrawlSpider):
                                  'Sport-Specials-Fitnessgeraete',
                                  'Spielwaren-Kategorien-Baby-Kleinkind', 'Haushalt-Heimtextilien-Schreibwaren',
                                  'Haushalt-Heimtextilien-Kleinelektro', 'Haushalt-Heimtextilien-Handarbeiten',
-                                 'Haushalt-Heimtextilien-Essen-und-Trinken'], restrict_xpaths=products_page_xpath,
+                                 'Haushalt-Heimtextilien-Essen-und-Trinken'],restrict_xpaths=products_page_xpath,
                            attrs='content'), callback='get_product_detail'),
         Rule(LinkExtractor(restrict_xpaths=sub_menu_items_xpath)),
         #Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
@@ -67,6 +67,10 @@ class GaleriaspiderSpider(CrawlSpider):
             skus[arr['size'] + u'_' + arr['colour']] = arr
         return skus
 
+    def get_images(self,json_response,product_images):
+        for image in json_response:
+            product_images.append(image['image']['url'])
+
     def get_title(self, response):
         title = response.xpath('.//*[@id="pdsPage"]//*[@class="productHeading"]/text()') \
             .extract()[0]
@@ -81,7 +85,7 @@ class GaleriaspiderSpider(CrawlSpider):
         return strip_care
 
     def get_cat(self, response):
-        category = response.xpath('.//*[@id="breadCrump"]//span[position()>1]/a/text()') \
+        category = response.xpath('.//*[@id="breadCrump"]//span[position()>1]/a/@title') \
             .extract()
         strip_category = [item.strip() for item in category]
         return strip_category
@@ -133,12 +137,11 @@ class GaleriaspiderSpider(CrawlSpider):
                     available = True
                     size_with_price.append([colorname, size, available, price])
 
-                for image in json_response['product']['productImages']:
-                    product_images.append(image['image']['url'])
+                self.getimages(json_response['product']['productImages'],product_images)
             else:
                 price = self.get_price(json_response)
-                for image in json_response['product']['productImages']:
-                    product_images.append(image['image']['url'])
+                self.getimages(json_response['product']['productImages'],product_images)
+
                 size_with_price.append([u'', u'OneSize', True, price])
 
 
