@@ -46,8 +46,7 @@ class WittWeidenSpider(CrawlSpider):
     def next_url_request(self):
         if self.urls:
             return Request(url=self.urls.pop(),
-                           callback=self.get_product_detail,
-                           dont_filter=True)
+                           callback=self.get_product_detail)
 
     def get_title(self, response):
         title = response.xpath('.//*[@id="article-header"]/header/h1/text()') \
