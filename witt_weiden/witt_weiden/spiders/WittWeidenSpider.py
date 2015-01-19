@@ -72,8 +72,14 @@ class WittWeidenSpider(CrawlSpider):
         return size.strip()
 
     def get_cat(self, response):
-        category = response.xpath('.//*[@id="breadcrumb"]//li[position()>1]/a/text()') \
-            .extract()
+        category=[]
+        categoryResponse = response.xpath('.//script[contains(.,"emospro.pageId")]/text()') \
+            .extract()[0]
+        match = re.search(r"pageId = 'Angebotsstrecke/Artikeldetailseite/*(.*)'",categoryResponse)
+        value = match.group(1)
+        for categories in value.split('/'):
+            if categories:
+                category.append(categories)
         return category
 
     def get_color(self, response):
