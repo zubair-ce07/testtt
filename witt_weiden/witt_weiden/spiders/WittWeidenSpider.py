@@ -53,7 +53,7 @@ class WittWeidenSpider(CrawlSpider):
                              'item': item,
                              'size_with_price': size_with_price})
 
-    def request_for_models(self, models, colors, item, size_with_price, req_flag=0):
+    def request_for_models(self, models, colors, item, size_with_price):
         return Request(url=models[0], callback=self.parse_size,
                        meta={'color': colors,
                              'item': item,
@@ -160,7 +160,7 @@ class WittWeidenSpider(CrawlSpider):
         colors = response.meta['color']
         item = response.meta['item']
         models = response.meta['models']
-        if models > 0:
+        if models:
             models.pop(0)
             self.model = models
             if response.xpath(".//*[@id='size-control-group']"):
@@ -215,7 +215,7 @@ class WittWeidenSpider(CrawlSpider):
                 models = response.xpath(
                     ".//*[@id='model-control-group']//li/a[not(contains(@href,'#'))]/@href"). \
                     extract()
-                return self.request_for_models(models, colors, item, size_with_price, req_flag=1)
+                return self.request_for_models(models, colors, item, size_with_price)
             else:
                 if response.xpath(".//*[@id='size-control-group']"):
                     sizes = response.xpath(
