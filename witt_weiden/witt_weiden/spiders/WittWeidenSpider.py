@@ -70,8 +70,7 @@ class WittWeidenSpider(CrawlSpider):
             return Request(url=self.urls.pop(),
                            callback=self.get_product_detail)
 
-    def get_images(self, response):
-        all_images = []
+    def get_images(self,response, item):
         if response.xpath(".//*[@id='backviews']"):
             images = response.xpath('.//*[@id="backviews"]//img/@src'). \
                 extract()
@@ -81,8 +80,7 @@ class WittWeidenSpider(CrawlSpider):
         for img in images:
             img = 'http://www.witt-weiden.de' + img
             img = img.replace('_4.jpg', '_5.jpg')
-            all_images.append(img)
-        return all_images
+            item['image_urls'].append(img)
 
     def get_title(self, response):
         title = response.xpath('.//*[@id="article-header"]/header/h1/text()') \
@@ -210,7 +208,7 @@ class WittWeidenSpider(CrawlSpider):
         colors = response.meta['color']
         item = response.meta['item']
         size_with_price = response.meta['size_with_price']
-        item['image_urls'] = self.get_images(response)
+        self.get_images(response,item)
         if colors:
             colors.pop(0)
             if response.xpath(".//*[@id='model-control-group']"):
@@ -253,7 +251,7 @@ class WittWeidenSpider(CrawlSpider):
                 extract()
             yield self.request_for_color(colors, item, size_with_price)
         else:
-            item['image_urls'] = self.get_images(response)
+            self.get_images(response,item)
             if response.xpath(".//*[@id='model-control-group']"):
                 models = response.xpath(
                     ".//*[@id='model-control-group']//li/a[not(contains(@href,'#'))]/@href"). \
