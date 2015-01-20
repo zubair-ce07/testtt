@@ -140,7 +140,7 @@ class WittWeidenSpider(CrawlSpider):
             .extract()[0].strip()
         price_in_points = response.xpath('.//*[@id="article-price"]//strong/sup/text()') \
             .extract()[0].strip()
-        if len(old_price) == 0:
+        if old_price:
             return (' ').join(new_price.split()) + price_in_points + currency_symbol
         else:
             return {'new_price': ' '.join(new_price.split()) + price_in_points + currency_symbol,
@@ -175,7 +175,7 @@ class WittWeidenSpider(CrawlSpider):
                 color = self.get_color(response)
                 size = self.get_size(response)
                 size_with_price.append([size, price, color])
-                if (len(colors) > 0):
+                if colors:
                     yield self.request_for_color(colors, item, size_with_price)
                 else:
                     item['skus'] = self.get_skus(size_with_price)
@@ -195,12 +195,12 @@ class WittWeidenSpider(CrawlSpider):
 
         color = self.get_color(response)
         size_with_price.append([size, price, color])
-        if (len(sizes) > 0):
+        if sizes:
             return self.request_for_size(sizes, colors, item, size_with_price)
-        elif (len(models) > 0):
+        elif models:
             return self.request_for_models(models, colors, item, size_with_price)
         else:
-            if (len(colors) > 0):
+            if colors:
                 return self.request_for_color(colors, item, size_with_price)
             else:
                 item['skus'] = self.get_skus(size_with_price)
@@ -211,7 +211,7 @@ class WittWeidenSpider(CrawlSpider):
         item = response.meta['item']
         size_with_price = response.meta['size_with_price']
         item['image_urls'] = self.get_images(response)
-        if (len(colors) > 0):
+        if colors:
             colors.pop(0)
             if response.xpath(".//*[@id='model-control-group']"):
                 models = response.xpath(
@@ -229,7 +229,7 @@ class WittWeidenSpider(CrawlSpider):
                     color = self.get_color(response)
                     size = self.get_size(response)
                     size_with_price.append([size, price, color])
-                    if (len(colors) > 0):
+                    if colors:
                         return self.request_for_color(colors, item, size_with_price)
                     else:
                         item['skus'] = self.get_skus(size_with_price)
