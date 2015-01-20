@@ -45,23 +45,20 @@ class WittWeidenSpider(CrawlSpider):
                        meta={'color': colors,
                              'item': item,
                              'sizes': sizes,
-                             'size_with_price': size_with_price},
-                       dont_filter=True)
+                             'size_with_price': size_with_price})
 
     def request_for_color(self, colors, item, size_with_price):
         return Request(url=colors[0], callback=self.parse_color,
                        meta={'color': colors,
                              'item': item,
-                             'size_with_price': size_with_price},
-                       dont_filter=True)
+                             'size_with_price': size_with_price})
 
     def request_for_models(self, models, colors, item, size_with_price, req_flag=0):
         return Request(url=models[0], callback=self.parse_size,
                        meta={'color': colors,
                              'item': item,
                              'models': models,
-                             'size_with_price': size_with_price},
-                       dont_filter=True)
+                             'size_with_price': size_with_price})
 
     def save_links(self, value):
         if value.url not in self.urls:
