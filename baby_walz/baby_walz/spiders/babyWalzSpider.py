@@ -69,15 +69,13 @@ class BabywalzspiderSpider(CrawlSpider):
         return description
 
     def get_price(self, response, jsonresponse):
+        def get_price(self, response, jsonresponse):
         new_price = jsonresponse
         old_price = response.xpath(".//*[@id='productOldPrice_span']/text()").extract()
-        if len(old_price) == 0:
+        if (len(old_price) == 0) or (old_price[0] == u"0,00 €"):
             return new_price
         else:
-            if (old_price[0] == u"0,00 €"):
-                return new_price
-            else:
-                return {'new_price': new_price, 'old_price': (' ').join(old_price[0].split())}
+            return {'new_price': new_price, 'old_price': (' ').join(old_price[0].split())}
 
     def size_details(self,jsondecode,response):
         available_colors = []
