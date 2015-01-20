@@ -20,11 +20,11 @@ class BabywalzspiderSpider(CrawlSpider):
         'http://www.baby-walz.de/'
     ]
 
-    products_page_xpath = '(.//a[@class="urldetail"])[1]'
-    pagination_xpath = '(.//a[@class="arrowHeadNextPage"])[1]'
-    main_menu_items_xpath = '(.//*[@class="groupNavi"]//li//a)[1]'
-    main_menu_sub_items_xpath = '(.//*[@id="naviLeft"]//li//a[@class="l1"])[1]'
-    sub_menu_items_xpath = '(.//*[@class="l1 selected"]//li/a)[1]'
+    products_page_xpath = './/a[@class="urldetail"]'
+    pagination_xpath = './/a[@class="arrowHeadNextPage"]'
+    main_menu_items_xpath = './/*[@class="groupNavi"]//li//a'
+    main_menu_sub_items_xpath = './/*[@id="naviLeft"]//li//a[@class="l1"]'
+    sub_menu_items_xpath = './/*[@class="l1 selected"]//li/a'
     rules = [
 
         Rule(LinkExtractor(restrict_xpaths=main_menu_items_xpath,
@@ -79,13 +79,7 @@ class BabywalzspiderSpider(CrawlSpider):
             else:
                 return {'new_price': new_price, 'old_price': (' ').join(old_price[0].split())}
 
-    def get_product_detail(self, response):
-        item = BabyWalzItem()
-        jsonResponse = response.xpath(
-            '//script[@type="text/javascript" and contains(.,"articles") and contains(.,"product")]/text() ').extract()
-        match_result = re.findall("componentConf\[\w+\] = ({.*});", jsonResponse[0])
-        jsondecode = json.loads(match_result[1])
-        item['image_urls'] = self.get_images(jsondecode)
+    def size_details(self,jsondecode,response):
         available_colors = []
         skus = []
         for colors in jsondecode['product']['componentData']['1']:
@@ -131,6 +125,16 @@ class BabywalzspiderSpider(CrawlSpider):
                             comnentdata = sizedata[size]['componentData']['1']
                             clr[0] = comnentdata[comnentdata.keys()[0]]['relValue']
                         skus.append([clr[0], size, sizedata[size]['selectable'], price])
+        return skus
+
+    def get_product_detail(self, response):
+        item = BabyWalzItem()
+        jsonResponse = response.xpath(
+            '//script[@type="text/javascript" and contains(.,"articles") and contains(.,"product")]/text() ').extract()
+        match_result = re.findall("componentConf\[\w+\] = ({.*});", jsonResponse[0])
+        jsondecode = json.loads(match_result[1])
+        item['image_urls'] = self.get_images(jsondecode)
+        skus=self.size_details(jsondecode,response)
         item['category'] = self.get_category(response)
         item['description'] = self.get_description(response)
         item['title'] = self.get_title(response)
