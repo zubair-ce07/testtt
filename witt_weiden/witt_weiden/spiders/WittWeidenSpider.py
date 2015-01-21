@@ -100,15 +100,12 @@ class WittWeidenSpider(CrawlSpider):
         return size.strip()
 
     def get_cat(self, response):
-        category = []
         categoryResponse = response.xpath('.//script[contains(.,"emospro.pageId")]/text()') \
             .extract()[0]
         match = re.search(r"pageId = 'Angebotsstrecke/Artikeldetailseite/*(.*)'", categoryResponse)
         value = match.group(1)
-        for categories in value.split('/'):
-            if categories:
-                category.append(categories)
-        return category
+        categories = [category for category in value.split('/') if category.strip()]
+        return categories
 
     def get_color(self, response):
         if response.xpath(".//*[@id='color-control-group']"):
