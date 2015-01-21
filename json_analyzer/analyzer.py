@@ -85,10 +85,10 @@ def main():
                 if (search_key_argument is None):
                     get_element_rate(jsondecode, record)
                 else:
-                    if '.' in search_key_argument:
-                        search_key = search_key_argument.split('.')
-                        search = search_key.pop()
-                        data_line = jsondecode
+                    search_key = search_key_argument.split('.')
+                    search = search_key.pop()
+                    data_line = jsondecode
+                    if search_key:
                         for element in search_key:
                             if element not in data_line:
                                 continue
@@ -113,7 +113,7 @@ def main():
                                                    Resultdict, search)
                     else:
                         rate_by_search_key(jsondecode, record,
-                                           Resultdict, search_key_argument)
+                                           Resultdict, search)
     else:
         print "Error in File Name!"
     print_data(record, total_rows, Resultdict)
