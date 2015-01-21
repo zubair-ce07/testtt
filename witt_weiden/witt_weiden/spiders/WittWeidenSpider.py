@@ -71,12 +71,7 @@ class WittWeidenSpider(CrawlSpider):
                            callback=self.get_product_detail)
 
     def get_images(self,response, item):
-        if response.xpath(".//*[@id='backviews']"):
-            images = response.xpath('.//*[@id="backviews"]//img/@src'). \
-                extract()
-        else:
-            images = response.xpath('.//*[@id="desktopZoom"]//img/@src') \
-                .extract()
+        images = response.xpath('.//*[@id="backviews" or @id="desktopZoom"]//img/@src').extract()
         for img in images:
             img = 'http://www.witt-weiden.de' + img
             img = img.replace('_4.jpg', '_5.jpg')
