@@ -67,7 +67,7 @@ class GaleriaspiderSpider(CrawlSpider):
             skus[arr['size'] + u'_' + arr['colour']] = arr
         return skus
 
-    def get_images(self,json_response,product_images):
+    def getimages(self,json_response,product_images):
         for image in json_response:
             product_images.append(image['image']['url'])
 
