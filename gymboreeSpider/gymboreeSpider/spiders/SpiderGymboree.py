@@ -1,21 +1,19 @@
-from gymboree.items import GymboreeItem
+from gymboreeSpider.items import GymboreeItem
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 import re
 
 
-def last_link_break(value):
+def product_link_break(value):
     if ('javascript:Detail_Loader' in value):
         match = re.search("javascript:Detail_Loader\('(.*?)', '(.*?)'", value)
         value = match.group(2)
     return value
 
-
 def link_break(value):
     temp_link = value.split('&bmUID')
     value = temp_link[0]
     return value
-
 
 class SpiderGymboree(CrawlSpider):
     name = "Gmyboreespider"
@@ -33,57 +31,10 @@ class SpiderGymboree(CrawlSpider):
         Rule(SgmlLinkExtractor(deny=[r'Eprd_id'], restrict_xpaths=cat_page, process_value=link_break), follow=True),
         Rule(SgmlLinkExtractor(restrict_xpaths=items_page, process_value=link_break), follow=True),
         Rule(SgmlLinkExtractor(deny=[r'index'], restrict_xpaths=item_detail_page, tags=('body'), attrs='onload',
-                               process_value=last_link_break), callback='parse_get_detail')
+                               process_value=product_link_break), callback='parse_get_detail')
         # Rules for crawling
     ]
     product_response = ''
-
-    def get_title(self):
-        title = self.product_response.xpath('.//head/@name').extract()[0]
-        return title
-
-    def extract_price(self,price):
-        start = price[0].find('$')
-        end = price[0].find('<', start + 1)
-        return price[0][start:end]
-
-    def get_skus(self, res):
-        skus = {}
-        color = self.get_color(res)
-        for rec in res.xpath('.//sku'):
-            arr = {}
-            id = rec.xpath('./@id').extract()
-            arr['size'] = rec.xpath('./@title').extract()[0]
-            arr['color'] = color
-            arr['currency'] = 'USD'
-            reg_price = rec.xpath('./@reg-price').extract()
-            arr['previous_price'] =self.extract_price(reg_price)
-            sale_price = rec.xpath('./@sale-price').extract()
-            arr['price'] = self.extract_price(sale_price)
-            skus[id[0]] = arr
-        return skus
-
-    def get_link(self, res):
-        link = res.xpath('./@readReviewsURL').extract()[0]
-        newlink = link.replace('#readReviews', '')
-        m = newlink.find("&bmUID")
-        newlink = newlink[:m]
-        return newlink
-
-
-    def get_retailer_sk(self, res):
-        retailer_sk = res.xpath('./@code').extract()[0]
-        return retailer_sk
-
-    def get_color(self, res):
-        color = res.xpath('./@title').extract()[0]
-        return color
-
-
-    def get_images(self, res):
-        image = res.xpath('./@image').extract()
-        return image
-
 
     def parse_get_detail(self, response):
         print response
@@ -101,4 +52,46 @@ class SpiderGymboree(CrawlSpider):
             item['image_urls'] = self.get_images(res)
             yield item
 
+    def get_title(self):
+        title = self.product_response.xpath('.//head/@name').extract()[0]
+        return title
 
+    def extract_price(self, price):
+        start = price[0].find('$')
+        end = price[0].find('<', start + 1)
+        return price[0][start:end]
+
+    def get_skus(self, res):
+        skus = {}
+        color = self.get_color(res)
+        for rec in res.xpath('.//sku'):
+            arr = {}
+            id = rec.xpath('./@id').extract()
+            arr['size'] = rec.xpath('./@title').extract()[0]
+            arr['color'] = color
+            arr['currency'] = 'USD'
+            reg_price = rec.xpath('./@reg-price').extract()
+            arr['previous_price'] = self.extract_price(reg_price)
+            sale_price = rec.xpath('./@sale-price').extract()
+            arr['price'] = self.extract_price(sale_price)
+            skus[id[0]] = arr
+        return skus
+
+    def get_link(self, res):
+        link = res.xpath('./@readReviewsURL').extract()[0]
+        newlink = link.replace('#readReviews', '')
+        m = newlink.find("&bmUID")
+        newlink = newlink[:m]
+        return newlink
+
+    def get_retailer_sk(self, res):
+        retailer_sk = res.xpath('./@code').extract()[0]
+        return retailer_sk
+
+    def get_color(self, res):
+        color = res.xpath('./@title').extract()[0]
+        return color
+
+    def get_images(self, res):
+        image = res.xpath('./@image').extract()
+        return image
