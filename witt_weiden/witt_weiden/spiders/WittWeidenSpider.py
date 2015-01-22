@@ -43,15 +43,15 @@ class WittWeidenSpider(CrawlSpider):
                 ".//*[@id='color-control-group']/div/ul/li/a[not(contains(@href,'#'))]/@href"). \
                 extract()
             return self.request_for_color(colors, item, size_with_price)
-        else:
+        else:  # execute when color drop down not present
             self.get_images(response, item)
-            if response.xpath(".//*[@id='model-control-group']"):
+            if response.xpath(".//*[@id='model-control-group']"):  # check models are available
                 models = response.xpath(
                     ".//*[@id='model-control-group']//ul//li/a[not(contains(@href,'#'))]/@href"). \
                     extract()
                 return self.request_for_models(models, colors, item, size_with_price)
             else:
-                if response.xpath(".//*[@id='size-control-group']"):
+                if response.xpath(".//*[@id='size-control-group']"): # check sizes are available
                     sizes = response.xpath(
                         ".//*[@id='size-control-group']//ul/li/a[not(contains(@href,'#'))]/@href"). \
                         extract()
@@ -86,7 +86,7 @@ class WittWeidenSpider(CrawlSpider):
                              'models': models,
                              'size_with_price': size_with_price}, dont_filter=True)
 
-    def parse_size_from_models(self, response):
+    def parse_size_from_models(self, response):  # get sizes from models
         size_with_price = response.meta['size_with_price']
         colors = response.meta['color']
         item = response.meta['item']
@@ -111,7 +111,7 @@ class WittWeidenSpider(CrawlSpider):
                 item['skus'] = self.get_skus(size_with_price)
                 return item
 
-    def parse_price_from_sizes(self, response):
+    def parse_price_from_sizes(self, response):  # get price from sizes
         size_with_price = response.meta['size_with_price']
         colors = response.meta['color']
         sizes = response.meta['sizes']
@@ -133,7 +133,7 @@ class WittWeidenSpider(CrawlSpider):
             item['skus'] = self.get_skus(size_with_price)
             return item
 
-    def parse_colors_from_product(self, response):
+    def parse_colors_from_product(self, response):  # parse colors/ sizes / models  from product
         colors = response.meta['color']
         item = response.meta['item']
         size_with_price = response.meta['size_with_price']
