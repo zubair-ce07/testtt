@@ -10,8 +10,8 @@ import scrapy
 
 class GymboreeItem(scrapy.Item):
     title = scrapy.Field()
-    link = scrapy.Field()
-    spy_name = scrapy.Field()
+    url = scrapy.Field()
+    spider_name = scrapy.Field()
     description = scrapy.Field()
     retailer_sk = scrapy.Field()
     retailer = scrapy.Field()

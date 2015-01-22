@@ -22,14 +22,14 @@ class SpiderGymboree(CrawlSpider):
         "http://www.gymboree.com/"
     ]
 
-    first_page = '//ul/li[1]/a[contains(@href,"department") and contains(@href,"ASSORTMENT")]'
-    cat_page = '//*[@id="left-menu"]/ul[1]/li[1]/a[not(contains(@href,"#"))]'
-    items_page = './/div[@class="product-list-data"]/div[position() <4]//*[@class="collection-pricing"]/a'
+    first_page_xpath = '//ul/li[1]/a[contains(@href,"department") and contains(@href,"ASSORTMENT")]'
+    sub_page_xpath = '//*[@id="left-menu"]/ul[1]/li[1]/a[not(contains(@href,"#"))]'
+    items_page_xpath = './/div[@class="product-list-data"]/div[position() <4]//*[@class="collection-pricing"]/a'
     item_detail_page = '//body'
     rules = [
-        Rule(SgmlLinkExtractor(deny=[r'Eprd_id'], restrict_xpaths=first_page, process_value=link_break), follow=True),
-        Rule(SgmlLinkExtractor(deny=[r'Eprd_id'], restrict_xpaths=cat_page, process_value=link_break), follow=True),
-        Rule(SgmlLinkExtractor(restrict_xpaths=items_page, process_value=link_break), follow=True),
+        Rule(SgmlLinkExtractor(deny=[r'Eprd_id'], restrict_xpaths=first_page_xpath, process_value=link_break), follow=True),
+        Rule(SgmlLinkExtractor(deny=[r'Eprd_id'], restrict_xpaths=sub_page_xpath, process_value=link_break), follow=True),
+        Rule(SgmlLinkExtractor(restrict_xpaths=items_page_xpath, process_value=link_break), follow=True),
         Rule(SgmlLinkExtractor(deny=[r'index'], restrict_xpaths=item_detail_page, tags=('body'), attrs='onload',
                                process_value=product_link_break), callback='parse_get_detail')
         # Rules for crawling
@@ -43,8 +43,8 @@ class SpiderGymboree(CrawlSpider):
         for res in self.product_response.xpath('.//silhouette//product'):
             item['retailer'] = 'gymboree'
             item['currency'] = 'USD'
-            item['spy_name'] = self.name
-            item['link'] = self.get_link(res)
+            item['spider_name'] = self.name
+            item['url'] = self.get_url(res)
             item['title'] = self.get_title()
             item['skus'] = self.get_skus(res)
             item['retailer_sk'] = self.get_retailer_sk(res)
@@ -77,7 +77,7 @@ class SpiderGymboree(CrawlSpider):
             skus[id[0]] = arr
         return skus
 
-    def get_link(self, res):
+    def get_url(self, res):
         link = res.xpath('./@readReviewsURL').extract()[0]
         newlink = link.replace('#readReviews', '')
         m = newlink.find("&bmUID")
