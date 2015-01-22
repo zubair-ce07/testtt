@@ -4,8 +4,6 @@ from witt_weiden.items import WittWeidenItem
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.http.request import Request
-from scrapy import signals
-from scrapy.xlib.pydispatch import dispatcher
 import re
 
 
@@ -15,8 +13,8 @@ class WittWeidenSpider(CrawlSpider):
     start_urls = [
         "http://www.witt-weiden.de/"
     ]
-    main_menu_xpath = './/*[@id="nav-products"]/ul/li/a'
-    sub_menu_xpath = './/*[@class="nav subnav-list"]//a'
+    main_menu_xpath = './/*[@id="nav-products"]/ul/li/a'  # this rule for limited menu for all .//*[@id="nav-products"]/ul/li/a
+    sub_menu_xpath = './/*[@class="nav subnav-list"]//a'  # this rule for limited menu for all .//*[@class="nav subnav-list"]//a
     products_page_xpath = './/*[@id="article-grid"]//a'
     pagination_xpath = './/*[@id="content-footer"]//a[contains(descendant::span,"Weiter")]'
     rules = [
@@ -24,53 +22,147 @@ class WittWeidenSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths=main_menu_xpath)),
         Rule(LinkExtractor(restrict_xpaths=sub_menu_xpath)),
         Rule(LinkExtractor(restrict_xpaths=products_page_xpath),
-             process_request='save_links'),
-        Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
+             callback='get_product_detail'),
+        #Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
     ]
 
-    def __init__(self, *args, **kwargs):
-        super(WittWeidenSpider, self).__init__(*args, **kwargs)
-        dispatcher.connect(self.spider_closed, signals.spider_idle)
+    def get_product_detail(self, response):
+        item = WittWeidenItem()
+        item['retailer'] = 'witt-weiden'
+        item['spider_name'] = self.name
+        item['category'] = self.get_cat(response)
+        item['url'] = response.url
+        item['care'] = self.get_care(response)
+        item['title'] = self.get_title(response)
+        item['description'] = self.get_description(response)
+        item['image_urls'] = []
+        colors = []
+        size_with_price = {}
+        if response.xpath(".//*[@id='color-control-group']"):
+            colors = response.xpath(
+                ".//*[@id='color-control-group']/div/ul/li/a[not(contains(@href,'#'))]/@href"). \
+                extract()
+            return self.request_for_color(colors, item, size_with_price)
+        else:
+            self.get_images(response, item)
+            if response.xpath(".//*[@id='model-control-group']"):
+                models = response.xpath(
+                    ".//*[@id='model-control-group']//ul//li/a[not(contains(@href,'#'))]/@href"). \
+                    extract()
+                return self.request_for_models(models, colors, item, size_with_price)
+            else:
+                if response.xpath(".//*[@id='size-control-group']"):
+                    sizes = response.xpath(
+                        ".//*[@id='size-control-group']//ul/li/a[not(contains(@href,'#'))]/@href"). \
+                        extract()
+                    return self.request_for_size(sizes, colors, item, size_with_price, None)
+                else:
+                    price = self.get_price(response)
+                    color = self.get_color(response)
+                    size = self.get_size(response)
+                    size_with_price[size + "_" + color] = {'color': color,
+                                                           'size': size,
+                                                           'price': price}
+                    item['skus'] = self.get_skus(size_with_price)
+                    return item
 
-    def spider_closed(self, spider):
-        if self.urls:
-            self.crawler.engine.crawl(self.next_url_request(), spider)
-
-    model = []
-    urls = []
-
-
-    def request_for_size(self, sizes, colors, item, size_with_price):
-        return Request(url=sizes[0], callback=self.parse_price,
+    def request_for_size(self, sizes, colors, item, size_with_price, models):
+        return Request(url=sizes.pop(0), callback=self.parse_price_from_sizes,
                        meta={'color': colors,
                              'item': item,
                              'sizes': sizes,
-                             'size_with_price': size_with_price})
+                             'size_with_price': size_with_price, 'models': models})
 
     def request_for_color(self, colors, item, size_with_price):
-        return Request(url=colors[0], callback=self.parse_color,
+        return Request(url=colors.pop(0), callback=self.parse_colors_from_product,
                        meta={'color': colors,
                              'item': item,
                              'size_with_price': size_with_price})
 
     def request_for_models(self, models, colors, item, size_with_price):
-        return Request(url=models[0], callback=self.parse_size,
+        return Request(url=models.pop(0), callback=self.parse_size_from_models,
                        meta={'color': colors,
                              'item': item,
                              'models': models,
-                             'size_with_price': size_with_price})
+                             'size_with_price': size_with_price}, dont_filter=True)
 
-    def save_links(self, value):
-        if value.url not in self.urls:
-            self.urls.append(value.url)
-        return None
+    def parse_size_from_models(self, response):
+        size_with_price = response.meta['size_with_price']
+        colors = response.meta['color']
+        item = response.meta['item']
+        models = response.meta['models']
+        if response.xpath(".//*[@id='size-control-group']"):
+            sizes = response.xpath(
+                ".//*[@id='size-control-group']//ul/li/a[not(contains(@href,'#'))]/@href"). \
+                extract()
+            return self.request_for_size(sizes, colors, item, size_with_price, models)
 
-    def next_url_request(self):
-        if self.urls:
-            return Request(url=self.urls.pop(),
-                           callback=self.get_product_detail)
+        else:
+            price = self.get_price(response)
+            color = self.get_color(response)
+            size = self.get_size(response)
+            size_with_price[size + "_" + color] = {'color': color,
+                                                   'size': size,
+                                                   'price': price}
+        if models:
+            if colors:
+                return self.request_for_color(colors, item, size_with_price)
+            else:
+                item['skus'] = self.get_skus(size_with_price)
+                return item
 
-    def get_images(self,response, item):
+    def parse_price_from_sizes(self, response):
+        size_with_price = response.meta['size_with_price']
+        colors = response.meta['color']
+        sizes = response.meta['sizes']
+        models = response.meta['models']
+        item = response.meta['item']
+        size = self.get_size(response)
+        price = self.get_price(response)
+        color = self.get_color(response)
+        size_with_price[size + "_" + color] = {'color': color,
+                                               'size': size,
+                                               'price': price}
+        if sizes:
+            return self.request_for_size(sizes, colors, item, size_with_price, models)
+        elif models:
+            return self.request_for_models(models, colors, item, size_with_price)
+        elif colors:
+            return self.request_for_color(colors, item, size_with_price)
+        else:
+            item['skus'] = self.get_skus(size_with_price)
+            return item
+
+    def parse_colors_from_product(self, response):
+        colors = response.meta['color']
+        item = response.meta['item']
+        size_with_price = response.meta['size_with_price']
+        self.get_images(response, item)
+        if response.xpath(".//*[@id='model-control-group']"):
+            models = response.xpath(
+                ".//*[@id='model-control-group']//ul//li/a[not(contains(@href,'#'))]/@href"). \
+                extract()
+            return self.request_for_models(models, colors, item, size_with_price)
+        else:
+            if response.xpath(".//*[@id='size-control-group']"):
+                sizes = response.xpath(
+                    ".//*[@id='size-control-group']//ul/li/a[not(contains(@href,'#'))]/@href"). \
+                    extract()
+                return self.request_for_size(sizes, colors, item, size_with_price, None)
+            else:
+                price = self.get_price(response)
+                color = self.get_color(response)
+                size = self.get_size(response)
+                size_with_price[size + "_" + color] = {'color': color,
+                                                       'size': size,
+                                                       'price': price}
+                if colors:
+                    return self.request_for_color(colors, item, size_with_price)
+                else:
+                    item['skus'] = self.get_skus(size_with_price)
+                    return item
+
+    def get_images(self, response, item):
         images = response.xpath('.//*[@id="backviews" or @id="desktopZoom"]//img/@src').extract()
         for img in images:
             img = 'http://www.witt-weiden.de' + img
@@ -103,8 +195,8 @@ class WittWeidenSpider(CrawlSpider):
         categoryResponse = response.xpath('.//script[contains(.,"emospro.pageId")]/text()') \
             .extract()[0]
         match = re.search(r"pageId = 'Angebotsstrecke/Artikeldetailseite/*(.*)'", categoryResponse)
-        value = match.group(1)
-        categories = [category for category in value.split('/') if category.strip()]
+        category_raw_value = match.group(1)
+        categories = [category for category in category_raw_value.split('/') if category.strip()]
         return categories
 
     def get_color(self, response):
@@ -130,136 +222,12 @@ class WittWeidenSpider(CrawlSpider):
             .extract()[0].strip()
         price_in_points = response.xpath('.//*[@id="article-price"]//strong/sup/text()') \
             .extract()[0].strip()
-        if old_price:
+        if len(old_price) == 0:
             return (' ').join(new_price.split()) + price_in_points + currency_symbol
         else:
             return {'new_price': ' '.join(new_price.split()) + price_in_points + currency_symbol,
                     'old_price': ' '.join(old_price[0].split()) + currency_symbol}
 
     def get_skus(self, size):
-        skus = {}
-        for result in size:
-            arr = {}
-            arr['currency'] = 'Euro'
-            arr['colour'] = result[2]
-            arr['price'] = result[1]
-            arr['size'] = result[0]
-            skus[arr['size'] + '_' + arr['colour']] = arr
+        skus = size
         return skus
-
-    def parse_size(self, response):
-        size_with_price = response.meta['size_with_price']
-        colors = response.meta['color']
-        item = response.meta['item']
-        models = response.meta['models']
-        if models:
-            models.pop(0)
-            self.model = models
-            if response.xpath(".//*[@id='size-control-group']"):
-                sizes = response.xpath(
-                    ".//*[@id='size-control-group']//ul/li/a[not(contains(@href,'#'))]/@href"). \
-                    extract()
-                yield self.request_for_size(sizes, colors, item, size_with_price)
-            else:
-                price = self.get_price(response)
-                color = self.get_color(response)
-                size = self.get_size(response)
-                size_with_price.append([size, price, color])
-                if colors:
-                    yield self.request_for_color(colors, item, size_with_price)
-                else:
-                    item['skus'] = self.get_skus(size_with_price)
-                    yield item
-        else:
-            yield self.request_for_color(colors, item, size_with_price)
-
-    def parse_price(self, response):
-        size_with_price = response.meta['size_with_price']
-        colors = response.meta['color']
-        sizes = response.meta['sizes']
-        models = self.model
-        sizes.pop(0)
-        item = response.meta['item']
-        size = self.get_size(response)
-        price = self.get_price(response)
-
-        color = self.get_color(response)
-        size_with_price.append([size, price, color])
-        if sizes:
-            return self.request_for_size(sizes, colors, item, size_with_price)
-        elif models:
-            return self.request_for_models(models, colors, item, size_with_price)
-        else:
-            if colors:
-                return self.request_for_color(colors, item, size_with_price)
-            else:
-                item['skus'] = self.get_skus(size_with_price)
-                return item
-
-    def parse_color(self, response):
-        colors = response.meta['color']
-        item = response.meta['item']
-        size_with_price = response.meta['size_with_price']
-        self.get_images(response,item)
-        if colors:
-            colors.pop(0)
-            if response.xpath(".//*[@id='model-control-group']"):
-                models = response.xpath(
-                    ".//*[@id='model-control-group']//li/a[not(contains(@href,'#'))]/@href"). \
-                    extract()
-                return self.request_for_models(models, colors, item, size_with_price)
-            else:
-                if response.xpath(".//*[@id='size-control-group']"):
-                    sizes = response.xpath(
-                        ".//*[@id='size-control-group']//ul/li/a[not(contains(@href,'#'))]/@href"). \
-                        extract()
-                    return self.request_for_size(sizes, colors, item, size_with_price)
-                else:
-                    price = self.get_price(response)
-                    color = self.get_color(response)
-                    size = self.get_size(response)
-                    size_with_price.append([size, price, color])
-                    if colors:
-                        return self.request_for_color(colors, item, size_with_price)
-                    else:
-                        item['skus'] = self.get_skus(size_with_price)
-                        return item
-
-    def get_product_detail(self, response):
-        item = WittWeidenItem()
-        item['retailer'] = 'witt-weiden'
-        item['spider_name'] = self.name
-        item['category'] = self.get_cat(response)
-        item['url'] = response.url
-        item['care'] = self.get_care(response)
-        item['title'] = self.get_title(response)
-        item['description'] = self.get_description(response)
-        item['image_urls'] = []
-        colors = []
-        size_with_price = []
-        if response.xpath(".//*[@id='color-control-group']"):
-            colors = response.xpath(
-                ".//*[@id='color-control-group']/div/ul/li/a[not(contains(@href,'#'))]/@href"). \
-                extract()
-            yield self.request_for_color(colors, item, size_with_price)
-        else:
-            self.get_images(response,item)
-            if response.xpath(".//*[@id='model-control-group']"):
-                models = response.xpath(
-                    ".//*[@id='model-control-group']//li/a[not(contains(@href,'#'))]/@href"). \
-                    extract()
-                yield self.request_for_models(models, colors, item, size_with_price)
-            else:
-                if response.xpath(".//*[@id='size-control-group']"):
-                    sizes = response.xpath(
-                        ".//*[@id='size-control-group']//ul/li/a[not(contains(@href,'#'))]/@href"). \
-                        extract()
-                    yield self.request_for_size(sizes, colors, item, size_with_price)
-
-                else:
-                    price = self.get_price(response)
-                    color = self.get_color(response)
-                    size = self.get_size(response)
-                    size_with_price.append([size, price, color])
-                    item['skus'] = self.get_skus(size_with_price)
-                    yield item
