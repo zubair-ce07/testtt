@@ -77,22 +77,41 @@ class BottegavenetaSpider(CrawlSpider):
             description.append(values.xpath('./text()').extract())
         return description
 
-    def get_price(self, response):
-        if response.xpath('.//*[@class="price"]/text()'):
-            price = response.xpath('.//*[@class="price"]/text()').extract()[0]
+    def get_price(self, res):
+        if res.xpath('.//*[@class="price"]/text()'):
+            price = res.xpath('.//*[@class="price"]/text()').extract()[0]
         else:
-            price=response.xpath('.//*[@class="itemBoxPrice"]//text()').extract()[0]
+            price=res.xpath('.//*[@class="itemBoxPrice"]//text()').extract()[0]
         return price
 
-    def get_skus(self, response):
+    def get_skus(self, res):
         skus = {}
-        for sizes in response.xpath('.//*[@id="sizesUl"]/li'):
+        title = self.get_title(res)
+        for sizes in res.xpath('.//*[@id="sizesUl"]/li'):
             arr = {}
             arr['currency'] = 'USD'
-            arr['colour'] = self.get_color(response)
-            arr['price'] = self.get_price(response)
+            arr['colour'] = self.get_color(res)
+            arr['price'] = self.get_price(res)
             arr['size'] = sizes.xpath('./@title').extract()[0]
             skus[arr['size'] + '_' + arr['colour']] = arr
         return skus
 
-
+    def parse_get_detail(self, response):
+        self.product_response = response
+        item = BottegavenetaItem()
+        for res in self.product_response.xpath('.//*[@id="itemInfoBox"]'):
+            item['retailer'] = 'bottegaveneta'
+            if ('gb' in self.product_response.url):
+                item['currency'] = 'Pound'
+            else:
+                item['currency'] = 'USD'
+            item['spider_name'] = self.name
+            item['category'] = self.get_cat()
+            item['link'] = self.product_response.url
+            item['title'] = self.get_title(res)
+            item['retailer_sk'] = self.get_retailer_sk()
+            item['color'] = self.get_color(res)
+            item['image_urls'] = self.get_images(res)
+            item['description'] = self.get_description(res)
+            item['skus'] = self.get_skus(res)
+            yield item
