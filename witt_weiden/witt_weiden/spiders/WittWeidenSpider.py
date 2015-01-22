@@ -222,7 +222,7 @@ class WittWeidenSpider(CrawlSpider):
             .extract()[0].strip()
         price_in_points = response.xpath('.//*[@id="article-price"]//strong/sup/text()') \
             .extract()[0].strip()
-        if len(old_price) == 0:
+        if not old_price:
             return (' ').join(new_price.split()) + price_in_points + currency_symbol
         else:
             return {'new_price': ' '.join(new_price.split()) + price_in_points + currency_symbol,
