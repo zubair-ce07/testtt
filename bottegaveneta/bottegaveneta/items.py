@@ -11,7 +11,7 @@ import scrapy
 class BottegavenetaItem(scrapy.Item):
     title = scrapy.Field()
     category = scrapy.Field()
-    link = scrapy.Field()
+    url = scrapy.Field()
     spider_name = scrapy.Field()
     description = scrapy.Field()
     retailer_sk = scrapy.Field()
