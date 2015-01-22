@@ -13,9 +13,9 @@ class WittWeidenSpider(CrawlSpider):
     start_urls = [
         "http://www.witt-weiden.de/"
     ]
-    main_menu_xpath = './/*[@id="nav-products"]/ul/li/a'  # this rule for limited menu for all .//*[@id="nav-products"]/ul/li/a
-    sub_menu_xpath = './/*[@class="nav subnav-list"]//a'  # this rule for limited menu for all .//*[@class="nav subnav-list"]//a
-    products_page_xpath = './/*[@id="article-grid"]//a'
+    main_menu_xpath = './/*[@id="nav-products"]/ul/li/a'    # xpath for main menu
+    sub_menu_xpath = './/*[@class="nav subnav-list"]//a'    # xpath for sub menu
+    products_page_xpath = './/*[@id="article-grid"]//a'     # xpath for product
     pagination_xpath = './/*[@id="content-footer"]//a[contains(descendant::span,"Weiter")]'
     rules = [
 
