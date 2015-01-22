@@ -23,7 +23,7 @@ class WittWeidenSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths=sub_menu_xpath)),
         Rule(LinkExtractor(restrict_xpaths=products_page_xpath),
              callback='get_product_detail'),
-        #Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
+        Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
     ]
 
     def get_product_detail(self, response):
