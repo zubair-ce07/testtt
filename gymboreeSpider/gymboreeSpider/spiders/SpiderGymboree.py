@@ -37,7 +37,6 @@ class SpiderGymboree(CrawlSpider):
     product_response = ''
 
     def parse_get_detail(self, response):
-        print response
         self.product_response = response
         item = GymboreeItem()
         for res in self.product_response.xpath('.//silhouette//product'):
