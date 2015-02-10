@@ -33,7 +33,7 @@ class BabywalzspiderSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths=products_page_xpath, process_value=convert_into_absolute_url),
              callback='get_product_detail'),
         Rule(LinkExtractor(restrict_xpaths=sub_menu_items_xpath, process_value=convert_into_absolute_url)),
-        # Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
+        Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
     ]
 
     def get_skus(self, size):
@@ -69,7 +69,6 @@ class BabywalzspiderSpider(CrawlSpider):
         return description
 
     def get_price(self, response, jsonresponse):
-        def get_price(self, response, jsonresponse):
         new_price = jsonresponse
         old_price = response.xpath(".//*[@id='productOldPrice_span']/text()").extract()
         if (len(old_price) == 0) or (old_price[0] == u"0,00 €"):
