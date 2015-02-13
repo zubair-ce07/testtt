@@ -38,7 +38,7 @@ class GaleriaspiderSpider(CrawlSpider):
                           u"Seiflappen", u"Schürzen", u"Saunalaken", u"Saunakilt", u"Schulranzen", u"Platzsets",
                           u"Nackenstützkissen", u"Nackenrolle"]
 
-    products_page_xpath = '(.//*[@id="puePage"]//*[@class="module_PUE3_1x1_3erKachel"]/a)[position()<4]'
+    products_page_xpath = './/*[@id="puePage"]//*[@class="module_PUE3_1x1_3erKachel"]/a'
     pagination_xpath = './/*[@id="puePage"]//a[@class="nextPage"]'
     main_menu_items_xpath = './/*[@id="navBar"]/li[position()!=10 and position()!=26 ]/a'
     sub_menu_items_xpath = './/*[@class="leftNavigation"]//ul/li//li/a'
@@ -54,6 +54,93 @@ class GaleriaspiderSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths=sub_menu_items_xpath)),
         Rule(LinkExtractor(restrict_xpaths=pagination_xpath))
     ]
+
+    def get_product_detail(self, response):
+        shop_categoryResponse = self.get_text_from_node(response.xpath(
+            '//tr[contains(descendant::td,"Shop-Kategorie")]/td[not(contains(text(),"Shop-Kategorie"))]/text()'))
+        product_categoryResponse = self.get_text_from_node(response.xpath(
+            './/tr[contains(descendant::td,"Produktkategorie")]/td[not(contains(text(),"Produktkategorie"))]/text()'))
+        if (product_categoryResponse in self.product_categories) or (shop_categoryResponse in self.shop_categories):
+            item = GaleriaItem()
+            colors = []
+            product_images = []
+            size_with_price = []
+            item['title'] = self.get_title(response)
+            item['category'] = self.get_category(response)
+            url = response.url
+            item['url'] = url
+            item['spider_name'] = self.name
+            item['retailer'] = 'galeria-kaufhof'
+            item['description'] = self.get_description(response)
+            item['care'] = self.get_care(response)
+            if url:
+                match = re.search("/(\d+)$", url)
+                productid = match.group(1)
+            request_url = 'http://www.galeria-kaufhof.de/store/view/productdetail/%s?channel=desktop' % productid
+            new_response = requests.get(request_url)
+            new_response.raise_for_status()
+            json_response = new_response.json()
+            for attributes in json_response['product']['variantAttributes']:
+                if attributes['variantAttribute']['variantType'] == "COLOR":
+                    for attributes_value in attributes['variantAttribute']['values']:
+                        if attributes_value['value']['available']:
+                            colors.append(attributes_value['value']['hybrisId'])
+                        else:
+                            if json_response['product']['variantAttributes'][1]:
+                                size_attribute = json_response['product']['variantAttributes'][1]
+                                if size_attribute['variantAttribute']['label'] == u"Größe":
+                                    for size_attribute_value in size_attribute['variantAttribute']['values']:
+                                        price = self.get_price(json_response)
+                                        color = attributes_value['value']['parameter']['marketingColorName']
+                                        size = size_attribute_value['value']['parameter']['viewText']
+                                        available = False
+                                        size_with_price.append([color, size, available, price])
+                            else:
+                                price = self.get_price(json_response)
+                                size = u'OneSize'
+                                available = True
+                                size_with_price.append([color, size, available, price])
+            if not colors:
+                color = json_response['product']['hybrisId']
+                colors = [color]
+            self.color_details(size_with_price, colors, product_images)
+            skus = self.get_skus(size_with_price)
+            item['image_urls'] = product_images
+            item['skus'] = skus
+            yield item
+
+    def color_details(self, size_with_price, colors, product_images):
+        for colourid in colors:
+            request_url_ne = 'http://www.galeria-kaufhof.de/store/view/productdetail/' \
+                             + colourid + '?channel=desktop'
+            new_response = requests.get(request_url_ne)
+            new_response.raise_for_status()
+            json_response = new_response.json()
+            if json_response['product']['variantAttributes']:
+                new_attributes = json_response['product']['variantAttributes']
+                if new_attributes[0] and new_attributes[0]['variantAttribute']['variantType'] == "COLOR":
+                    for attributes_value in new_attributes[0]['variantAttribute']['values']:
+                        if attributes_value['value']['available']:
+                            if (attributes_value['value']['hybrisId'] == colourid):
+                                colorname = attributes_value['value']['parameter']['marketingColorName']
+                if new_attributes[1] and new_attributes[1]['variantAttribute']['label'] == u"Größe":
+                    for size_attribute in new_attributes[1]['variantAttribute']['values']:
+                        price = self.get_price(json_response)
+                        size = size_attribute['value']['parameter']['viewText']
+                        available = size_attribute['value']['available']
+                        size_with_price.append(
+                            [colorname, size, available, price])
+                else:
+                    price = self.get_price(json_response)
+                    size = u'OneSize'
+                    available = True
+                    size_with_price.append([colorname, size, available, price])
+                self.getimages(json_response['product']['productImages'],product_images)
+            else:
+                price = self.get_price(json_response)
+                self.getimages(json_response['product']['productImages'],product_images)
+
+                size_with_price.append([u'', u'OneSize', True, price])
 
     def get_skus(self, size):
         skus = {}
@@ -72,8 +159,7 @@ class GaleriaspiderSpider(CrawlSpider):
             product_images.append(image['image']['url'])
 
     def get_title(self, response):
-        title = response.xpath('.//*[@id="pdsPage"]//*[@class="productHeading"]/text()') \
-            .extract()[0]
+        title = self.get_text_from_node(response.xpath('.//*[@id="pdsPage"]//*[@class="productHeading"]/text()'))
         return title.strip()
 
     def get_care(self, response):
@@ -110,91 +196,21 @@ class GaleriaspiderSpider(CrawlSpider):
         else:
             return new_price
 
-    def color_details(self, size_with_price, colors, product_images):
-        for colourid in colors:
-            request_url_ne = 'http://www.galeria-kaufhof.de/store/view/productdetail/' \
-                             + colourid + '?channel=desktop'
-            new_response = requests.get(request_url_ne)
-            new_response.raise_for_status()
-            json_response = new_response.json()
-            if json_response['product']['variantAttributes']:
-                new_attributes = json_response['product']['variantAttributes']
-                if new_attributes[0] and new_attributes[0]['variantAttribute']['variantType'] == "COLOR":
-                    for attributes_value in new_attributes[0]['variantAttribute']['values']:
-                        if attributes_value['value']['available']:
-                            if (attributes_value['value']['hybrisId'] == colourid):
-                                colorname = attributes_value['value']['parameter']['marketingColorName']
-                if new_attributes[1] and new_attributes[1]['variantAttribute']['label'] == u"Größe":
-                    for size_attribute in new_attributes[1]['variantAttribute']['values']:
-                        price = self.get_price(json_response)
-                        size = size_attribute['value']['parameter']['viewText']
-                        available = size_attribute['value']['available']
-                        size_with_price.append(
-                            [colorname, size, available, price])
-                else:
-                    price = self.get_price(json_response)
-                    size = [u'OneSize']
-                    available = True
-                    size_with_price.append([colorname, size, available, price])
-                self.getimages(json_response['product']['productImages'],product_images)
-            else:
-                price = self.get_price(json_response)
-                self.getimages(json_response['product']['productImages'],product_images)
+    def get_text_from_node(self, node):
+        text_array = node.extract()
+        if text_array:
+            return self.normalize_space(text_array[0])
+        else:
+            return ''
 
-                size_with_price.append([u'', u'OneSize', True, price])
+    def normalize_space(self, text):
+        if isinstance(text, list):
+            for i in range(0, len(text)):
+                text[i] = self.normalize_space(text[i])
+            return text
+        else:
+            return ' '.join(text.split())
 
 
-    def get_product_detail(self, response):
-        shop_categoryResponse = response.xpath(
-            '//tr[contains(descendant::td,"Shop-Kategorie")]/td[not(contains(text(),"Shop-Kategorie"))]/text()').extract()[
-            0]
-        product_categoryResponse = response.xpath(
-            './/tr[contains(descendant::td,"Produktkategorie")]/td[not(contains(text(),"Produktkategorie"))]/text()').extract()[
-            0]
-        if (product_categoryResponse in self.product_categories) or (shop_categoryResponse in self.shop_categories):
-            item = GaleriaItem()
-            colors = []
-            product_images = []
-            size_with_price = []
-            item['title'] = self.get_title(response)
-            item['category'] = self.get_category(response)
-            item['url'] = url = response.url
-            item['spider_name'] = self.name
-            item['retailer'] = 'galeria-kaufhof'
-            item['description'] = self.get_description(response)
-            item['care'] = self.get_care(response)
-            if url:
-                match = re.search("/(\d+)$", url)
-                productid = match.group(1)
-            request_url = 'http://www.galeria-kaufhof.de/store/view/productdetail/' + productid + '?channel=desktop'
-            new_response = requests.get(request_url)
-            new_response.raise_for_status()
-            json_response = new_response.json()
-            for attributes in json_response['product']['variantAttributes']:
-                if attributes['variantAttribute']['variantType'] == "COLOR":
-                    for attributes_value in attributes['variantAttribute']['values']:
-                        if attributes_value['value']['available']:
-                            colors.append(attributes_value['value']['hybrisId'])
-                        else:
-                            if json_response['product']['variantAttributes'][1]:
-                                size_attribute = json_response['product']['variantAttributes'][1]
-                                if size_attribute['variantAttribute']['label'] == u"Größe":
-                                    for size_attribute_value in size_attribute['variantAttribute']['values']:
-                                        price = self.get_price(json_response)
-                                        color = attributes_value['value']['parameter']['marketingColorName']
-                                        size = size_attribute_value['value']['parameter']['viewText']
-                                        available = False
-                                        size_with_price.append([color, size, available, price])
-                            else:
-                                price = self.get_price(json_response)
-                                size = [u'OneSize']
-                                available = True
-                                size_with_price.append([color, size, available, price])
-            if not colors:
-                color = json_response['product']['hybrisId']
-                colors = [color]
-            self.color_details(size_with_price, colors, product_images)
-            skus = self.get_skus(size_with_price)
-            item['image_urls'] = product_images
-            item['skus'] = skus
-            yield item
+
+
