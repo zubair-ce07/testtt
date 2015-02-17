@@ -17,7 +17,7 @@ class ErnstringspiderSpider(CrawlSpider):
     name = "ErnstringSpider"
     allowed_domains = ["ernstings-family.de"]
     start_urls = (
-        'http://www.ernstings-family.de/kat/my-home-wohnaccessoires.html',
+        'http://www.ernstings-family.de/',
     )
     main_menu_xpath = './/*[@id="navi_main"]/li/a'  # xpath for  main menus
     sub_menu_xpath = ".//li[contains(@id,'catListEntry')]/a"  # xpath for  sub menus
@@ -31,7 +31,7 @@ class ErnstringspiderSpider(CrawlSpider):
              callback='get_product_detail')
     ]
 
-    counter = 1
+    page_counter = 1
 
     def get_product_detail(self, response):
         item = ErnstingsItem()
@@ -54,10 +54,10 @@ class ErnstringspiderSpider(CrawlSpider):
     def get_pagination(self, response):
         pagination_url = self.get_pagination_url(response)
         total_pages = self.get_pages_count(response)
-        self.counter += 1
-        for i in range(self.counter, int(total_pages) + 1):
-            request_url = pagination_url + '&page=%i' % self.counter
-            self.counter += 1
+        self.page_counter += 1
+        for i in range(self.page_counter, int(total_pages) + 1):
+            request_url = pagination_url + '&page=%i' % self.page_counter
+            self.page_counter += 1
             yield Request(url=request_url)
 
     def get_category(self, response):
