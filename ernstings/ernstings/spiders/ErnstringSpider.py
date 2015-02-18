@@ -13,6 +13,7 @@ def convert_into_absolute_url(url):
         return urljoin('http://www.ernstings-family.de/', url)
     return url
 
+
 class ErnstringspiderSpider(CrawlSpider):
     name = "ErnstringSpider"
     allowed_domains = ["ernstings-family.de"]
@@ -56,9 +57,9 @@ class ErnstringspiderSpider(CrawlSpider):
         total_pages = self.get_pages_count(response)
         self.page_counter += 1
         for i in range(self.page_counter, int(total_pages) + 1):
-            request_url = pagination_url + '&page=%i' % self.page_counter
-            self.page_counter += 1
+            request_url = pagination_url + '&page=%i' % i
             yield Request(url=request_url)
+        yield Request(url=response.url, dont_filter=True)
 
     def get_category(self, response):
         categories = self.normalize(response.xpath(".//*[@id='navi_crumb']/li//a//text()").extract())
