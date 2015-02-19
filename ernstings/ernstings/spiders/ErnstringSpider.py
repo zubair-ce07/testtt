@@ -5,11 +5,13 @@ from scrapy.contrib.linkextractors import LinkExtractor
 import re
 import json
 from urlparse import urljoin
+from urlparse import urlparse
 from scrapy.http.request import Request
 
 
 def convert_into_absolute_url(url):
-    if not url.startswith("http"):
+    parsed_url = urlparse(url)
+    if not parsed_url.scheme:
         return urljoin('http://www.ernstings-family.de/', url)
     return url
 
@@ -27,7 +29,7 @@ class ErnstringspiderSpider(CrawlSpider):
 
         Rule(LinkExtractor(deny=[u'/prospekt/das', u'/prospekt/', u'reisen'], restrict_xpaths=main_menu_xpath)),
         Rule(LinkExtractor(deny=[u'/prospekt/das', u'/prospekt/', u'reisen', u'/service/', u'spielen-lernen'],
-                           restrict_xpaths=sub_menu_xpath), callback='get_pagination'),
+                           restrict_xpaths=sub_menu_xpath), callback='get_pagination', follow=True),
         Rule(LinkExtractor(restrict_xpaths=products_page_xpath, process_value=convert_into_absolute_url),
              callback='get_product_detail')
     ]
@@ -59,7 +61,6 @@ class ErnstringspiderSpider(CrawlSpider):
         for i in range(self.page_counter, int(total_pages) + 1):
             request_url = pagination_url + '&page=%i' % i
             yield Request(url=request_url)
-        yield Request(url=response.url, dont_filter=True)
 
     def get_category(self, response):
         categories = self.normalize(response.xpath(".//*[@id='navi_crumb']/li//a//text()").extract())
