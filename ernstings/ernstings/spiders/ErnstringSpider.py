@@ -118,11 +118,15 @@ class ErnstringspiderSpider(CrawlSpider):
             return ''
 
     def get_price(self, response):
+        old_price = self.get_text_from_node(response.xpath(".//*[@id='prd_oldprice']//text()"))
         scriptdata = response.xpath('.//script[contains(.,"function init()")]/text()').extract()[0]
         price = ''
         if ('setDefaultPrice' in scriptdata):
             matchResult = re.search("varObj\.setDefaultPrice\('(.*)'", scriptdata)
             price = self.normalize(matchResult.group(1)).replace(u'&', u'').replace(u';', u'')
+            if old_price:
+                return {'new_price': price,
+                        'old_price': old_price}
         return price
 
     def get_skus(self, response):
