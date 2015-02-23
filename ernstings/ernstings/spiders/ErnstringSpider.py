@@ -27,14 +27,12 @@ class ErnstringspiderSpider(CrawlSpider):
     products_page_xpath = '//a[@class="product_title"]'  # xpath for product
     rules = [
 
-        Rule(LinkExtractor(deny=[u'/prospekt/das', u'/prospekt/', u'reisen'], restrict_xpaths=main_menu_xpath)),
+        Rule(LinkExtractor(deny=[u'/prospekt/das', u'/prospekt/', u'reisen'], restrict_xpaths=main_menu_xpath), callback='get_pagination', follow=True),
         Rule(LinkExtractor(deny=[u'/prospekt/das', u'/prospekt/', u'reisen', u'/service/', u'spielen-lernen'],
                            restrict_xpaths=sub_menu_xpath), callback='get_pagination', follow=True),
         Rule(LinkExtractor(restrict_xpaths=products_page_xpath, process_value=convert_into_absolute_url),
              callback='get_product_detail')
     ]
-
-    page_counter = 1
 
     def get_product_detail(self, response):
         item = ErnstingsItem()
@@ -57,8 +55,7 @@ class ErnstringspiderSpider(CrawlSpider):
     def get_pagination(self, response):
         pagination_url = self.get_pagination_url(response)
         total_pages = self.get_pages_count(response)
-        self.page_counter += 1
-        for i in range(self.page_counter, int(total_pages) + 1):
+        for i in range(2, int(total_pages) + 1):
             request_url = pagination_url + '&page=%i' % i
             yield Request(url=request_url)
 
@@ -79,14 +76,15 @@ class ErnstringspiderSpider(CrawlSpider):
         return retailer_sk
 
     def get_pages_count(self, response):
-        pagecount = response.xpath('//*[@class="category_product_list"]/@data-max-page').extract()[0]
-        return pagecount
+        pagecount = response.xpath('//*[@class="category_product_list"]/@data-max-page').extract()
+        return pagecount[0] if pagecount else '0'
 
     def get_pagination_url(self, response):
-        scriptdata = response.xpath('//script[contains(.,"endlessScrollingUrl")]/text()').extract()[0]
-        matchResult = re.search("'endlessScrollingUrl': '(.*)',", scriptdata)
-        url = matchResult.group(1)
-        return urljoin('http://www.ernstings-family.de/', url)
+        scriptdata = response.xpath('//script[contains(.,"endlessScrollingUrl")]/text()').extract()
+        if scriptdata:
+            matchResult = re.search("'endlessScrollingUrl': '(.*)',", scriptdata[0])
+            url = matchResult.group(1)
+            return urljoin('http://www.ernstings-family.de/', url)
 
     def get_color(self, response):
         color = self.get_text_from_node(response.xpath('.//*[@class="prd_color"]/text()'))
