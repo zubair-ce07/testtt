@@ -139,7 +139,7 @@ class ErnstringspiderSpider(CrawlSpider):
                     arr = {}
                     arr['currency'] = 'Euro'
                     arr['colour'] = color
-                    arr['size'] = size
+                    arr['size'] = 'One Size' if size=='-' or size=='' else size
                     arr['Price'] = self.get_price(response)
                     skus[sizes[size]["Farbe"][color]] = arr
         return skus
