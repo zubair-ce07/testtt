@@ -96,7 +96,6 @@ class ZipSpider(Spider):
                         'city_name': c.xpath('./text()').extract()[0]},
                 callback=self.parse_city_population
                 )                                               # Get Next city request
-            return
         elif counties:
             c = counties.pop(0)
             if len(counties) >= 1:
@@ -107,7 +106,6 @@ class ZipSpider(Spider):
                             'county_name': c.xpath('./text()').extract()[0]},
                     callback=self.parse_county_population, dont_filter=True
                     )                                               # Get Next County request
-                return
             elif len(counties) == 0:
                 zip_detail['county'] =  c.xpath('./text()').extract()[0]
                 yield zip_detail
