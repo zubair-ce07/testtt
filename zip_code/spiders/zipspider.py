@@ -11,7 +11,7 @@ class ZipSpider(Spider):
         with open('missing_zips.txt', 'r') as file:
             for line in file:
                 code = line.strip()
-                url = 'http://www.zip-codes.com/zip-code/'+code+'/zip-code-'+code+'.asp'
+                url = 'http://www.zip-codes.com/zip-code/%s/zip-code-%s.asp'%(code,code)
                 yield self.make_requests_from_url(url)
 
 
@@ -25,8 +25,8 @@ class ZipSpider(Spider):
             '//td[a[contains(text(),"City")]]/following-sibling::td//a')
         counties = response.xpath(
             '//td[a[contains(text(),"Counties")]]/following-sibling::td//a')
-        if cities:
-            c = cities.pop(0)
+        c = cities.pop(0)
+        if len(cities) >= 1:
             yield Request(
                 urlparse.urljoin(response.url, c.xpath('./@href').extract()[0]),
                 meta = {'cities': cities, 'item': zip_detail, 'counties' : counties,
@@ -34,6 +34,20 @@ class ZipSpider(Spider):
                     'city_name': c.xpath('./text()').extract()[0]},
                 callback=self.parse_city_population, dont_filter=True
                 )
+        elif len(cities) == 0:
+            zip_detail['city'] =  c.xpath('./text()').extract()[0]
+            county = counties.pop(0)
+            if len(counties) >= 1:
+                yield Request(
+                    urlparse.urljoin(response.url, county.xpath('./@href').extract()[0]),
+                    meta = {"counties": counties, 'item': zip_detail,
+                        'total_county_population' : 0,
+                        'county_name': county.xpath('./text()').extract()[0]},
+                    callback=self.parse_county_population, dont_filter=True
+                    )
+            elif len(counties) == 0:
+                zip_detail['county'] = county.xpath('./text()').extract()[0]
+                yield zip_detail
 
 
     # Compare Counties Population
@@ -85,12 +99,16 @@ class ZipSpider(Spider):
             return
         elif counties:
             c = counties.pop(0)
-            yield Request(
-                urlparse.urljoin(response.url, c.xpath('./@href').extract()[0]),
-                meta = {"counties": counties, 'item': zip_detail,
-                        'total_county_population' : 0,
-                        'county_name': c.xpath('./text()').extract()[0]},
-                callback=self.parse_county_population, dont_filter=True
-                )                                               # Get Next County request
-            return
+            if len(counties) >= 1:
+                yield Request(
+                    urlparse.urljoin(response.url, c.xpath('./@href').extract()[0]),
+                    meta = {"counties": counties, 'item': zip_detail,
+                            'total_county_population' : 0,
+                            'county_name': c.xpath('./text()').extract()[0]},
+                    callback=self.parse_county_population, dont_filter=True
+                    )                                               # Get Next County request
+                return
+            elif len(counties) == 0:
+                zip_detail['county'] =  c.xpath('./text()').extract()[0]
+                yield zip_detail
 
