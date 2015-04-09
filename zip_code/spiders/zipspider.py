@@ -29,8 +29,8 @@ class ZipSpider(Spider):
         if len(cities) >= 1:
             yield Request(
                 urlparse.urljoin(response.url, c.xpath('./@href').extract()[0]),
-                meta = {'cities': cities, 'item': zip_detail, 'counties' : counties,
-                    'total_city_population' : 0 , 'total_county_population' : 0,
+                meta = {'cities': cities, 'item': zip_detail,
+                    'counties' : counties, 'total_cities' : [],
                     'city_name': c.xpath('./text()').extract()[0]},
                 callback=self.parse_city_population, dont_filter=True
                 )
@@ -40,8 +40,7 @@ class ZipSpider(Spider):
             if len(counties) >= 1:
                 yield Request(
                     urlparse.urljoin(response.url, county.xpath('./@href').extract()[0]),
-                    meta = {"counties": counties, 'item': zip_detail,
-                        'total_county_population' : 0,
+                    meta = {"counties": counties, 'item': zip_detail, 'total_counties' :[],
                         'county_name': county.xpath('./text()').extract()[0]},
                     callback=self.parse_county_population, dont_filter=True
                     )
@@ -50,49 +49,50 @@ class ZipSpider(Spider):
                 yield zip_detail
 
 
-    # Compare Counties Population
+    # Get all counties with respective population
     def parse_county_population(self, response):
-        zip_detail=response.meta.get('item')
-        population = response.xpath(
+        zip_detail = response.meta.get('item')
+        county = []
+        county.append(response.xpath(
             '//td[contains(text(),"Total population")]/following-sibling::td//text()'
-            ).extract()[0]
-        total_county_population = response.meta.get('total_county_population')
-        if population > total_county_population:
-            zip_detail['county'] = response.meta.get('county_name')
-            total_county_population = population
+            ).extract()[0])
+        county.append(response.meta.get('county_name'))
+        total_counties = response.meta.get('total_counties')
+        total_counties.append(county)
         counties=response.meta.get('counties')
         if counties:
             c = counties.pop(0)
             yield Request(
                 urlparse.urljoin(response.url, c.xpath('./@href').extract()[0]),
                 meta = {'counties': counties, 'item': zip_detail,
-                        'total_county_population' : total_county_population,
+                        'total_counties' :total_counties,
                         'county_name': c.xpath('./text()').extract()[0]},
                 callback=self.parse_county_population
                 )
             return
+        zip_detail['counties'] = total_counties
         yield zip_detail
 
 
-    # Compare Cities population
+    # Get all cities with respective population
     def parse_city_population(self, response):
-        zip_detail=response.meta.get('item')
-        population = response.xpath(
+        zip_detail = response.meta.get('item')
+        city =  []
+        city.append(response.xpath(
             '//td[contains(text(),"Total population")]/following-sibling::td//text()'
-            ).extract()[0]
-        total_city_population = response.meta.get('total_city_population')
-        if population > total_city_population:
-            zip_detail['city'] = response.meta.get('city_name')
-            total_city_population = population
-        counties=response.meta.get('counties')
-        cities=response.meta.get('cities')
+            ).extract()[0])
+        city.append(response.meta.get('city_name'))
+        total_cities = response.meta.get('total_cities')
+        total_cities.append(city)
+        counties = response.meta.get('counties')
+        cities = response.meta.get('cities')
         if cities:
             c = cities.pop(0)
             yield Request(
                 urlparse.urljoin(response.url, c.xpath('./@href').extract()[0]),
-                meta = {'cities': cities, 'item': zip_detail, 'counties' : counties,
-                        'total_city_population' : total_city_population,
-                        'total_county_population' : 0,
+                meta = {'cities': cities, 'item': zip_detail,
+                        'counties' : counties,
+                        'total_cities' : total_cities,
                         'city_name': c.xpath('./text()').extract()[0]},
                 callback=self.parse_city_population
                 )                                               # Get Next city request
@@ -102,11 +102,13 @@ class ZipSpider(Spider):
                 yield Request(
                     urlparse.urljoin(response.url, c.xpath('./@href').extract()[0]),
                     meta = {"counties": counties, 'item': zip_detail,
-                            'total_county_population' : 0,
+                            'total_counties' : [],
                             'county_name': c.xpath('./text()').extract()[0]},
                     callback=self.parse_county_population, dont_filter=True
                     )                                               # Get Next County request
             elif len(counties) == 0:
                 zip_detail['county'] =  c.xpath('./text()').extract()[0]
+                zip_detail['cities'] = total_cities
                 yield zip_detail
+
 

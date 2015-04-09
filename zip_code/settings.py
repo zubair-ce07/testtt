@@ -13,6 +13,6 @@ BOT_NAME = 'zip_code'
 SPIDER_MODULES = ['zip_code.spiders']
 NEWSPIDER_MODULE = 'zip_code.spiders'
 DOWNLOAD_DELAY = 10
-
+ITEM_PIPELINES = ['zip_code.pipelines.ZipCodePipeline']
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'zip_code (+http://www.yourdomain.com)'
