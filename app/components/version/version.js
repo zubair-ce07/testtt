@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('myApp.version', [
-  'myApp.version.interpolate-filter',
-  'myApp.version.version-directive'
+angular.module('powersuite.version', [
+  'powersuite.version.interpolate-filter',
+  'powersuite.version.version-directive'
 ])
 
 .value('version', '0.1');

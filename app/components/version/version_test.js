@@ -1,7 +1,7 @@
 'use strict';
 
-describe('myApp.version module', function() {
-  beforeEach(module('myApp.version'));
+describe('powersuite.version module', function() {
+  beforeEach(module('powersuite.version'));
 
   describe('version service', function() {
     it('should return current version', inject(function(version) {
