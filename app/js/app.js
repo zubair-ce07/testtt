@@ -2,7 +2,9 @@
 
 var powersuiteApp = angular.module('powersuite', [
   'ngRoute',
+  'ngResource',
   'powersuiteControllers',
+  'powersuiteServices'
 ]);
 
 powersuiteApp.config(['$routeProvider',

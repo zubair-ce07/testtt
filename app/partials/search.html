@@ -1,1 +1,24 @@
 <p>this is search partial</p>
+
+<div ng-controller="SearchCtrl">
+    <form novalidate>
+        Statues: <input type="text" ng-model="dockets.states"/>
+        Keyword: <input type="email" ng-model="dockets.keyword"/>
+        Search Scope: <input type="date" ng-model="dockets.from"/>
+        <input type="date" ng-model="dockets.to"/>
+
+        <input type="button" ng-click="reset()" value="Reset"/>
+        <input type="submit" ng-click="searchDockets(dockets)" value="Search"/>
+    </form>
+
+    <div>
+        <p>{{dockets.states}}</p>
+
+        <p>{{dockets.keyword}}</p>
+
+        <p>{{dockets.to}}</p>
+
+        <p>{{dockets.from}}</p>
+    </div>
+
+</div>
