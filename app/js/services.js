@@ -16,6 +16,5 @@ powersuiteService.service('Dockets', function($resource, apiUrl, $http, $q, User
     this.getSchool = function() {
       return $http.get(apiUrl + '/schools/:1', {access_token: User.access_token, email: User.email});
     }
-
 });
 

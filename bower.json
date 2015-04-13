@@ -1,8 +1,8 @@
 {
   "name": "power-suite",
-  "description": "A starter project for AngularJS",
+  "description": "A starter project for PowerSuite",
   "version": "0.0.0",
-  "homepage": "https://github.com/angular/angular-seed",
+  "homepage": "https://github.com/muhammad-irfan-arbisoft/power-suite",
   "license": "MIT",
   "private": true,
   "dependencies": {
