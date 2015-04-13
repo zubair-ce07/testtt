@@ -2,15 +2,15 @@
 
 /* Controllers */
 
-var powersuitControllers = angular.module('powersuiteControllers', []);
+var powersuiteControllers = angular.module('powersuiteControllers', []);
 
-powersuitControllers.controller('SearchCtrl',
+powersuiteControllers.controller('SearchCtrl',
   function($scope) {
 
   }
 );
 
-powersuitControllers.controller('FavouritesCtrl',
+powersuiteControllers.controller('FavouritesCtrl',
   function($scope) {
 
   }
