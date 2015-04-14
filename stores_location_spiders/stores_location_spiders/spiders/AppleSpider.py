@@ -31,7 +31,6 @@ class AppleSpider(CrawlSpider):
                              "nl": "Netherlands",
                              "es": "Spain",
                              "se": "Sweden",
-                             "ch": "Switzerland",
                              "tr": "Turkey",
                              "uk": "United Kingdom",
                              "chde": "swizerland"}

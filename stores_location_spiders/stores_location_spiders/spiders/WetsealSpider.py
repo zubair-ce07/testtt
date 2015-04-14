@@ -14,9 +14,8 @@ class WetsealSpider(Spider):
 
     def parse(self, response):
         states = response.xpath(
-            ".//select[@id='dwfrm_storelocator_address_states_stateUSCA']//option/@value").extract()[
-                 1:]  # first option is 'select'
-        url = response.xpath("//form[@id='dwfrm_storelocator_state']/@action").extract()[0]
+            ".//select[@id='dwfrm_storelocator_address_states_stateUSCA']//option[@value!='']/@value").extract()
+        url = helper.get_text_from_node(response.xpath("//form[@id='dwfrm_storelocator_state']/@action"))
         for state in states:
             form_data = {'dwfrm_storelocator_address_states_stateUSCA': state,
                          "dwfrm_storelocator_findbystate": "Search"}

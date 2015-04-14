@@ -45,7 +45,8 @@ class HhgreggspiderSpider(CrawlSpider):
             item['trail'] = self.item_trail(response)
             item['features'] = self.item_features(response)
             item['specifications'] = self.item_specification(response)
-            item['price'] = self.item_price(response)
+            item['current_price'] = self.item_current_price(response)
+            item['original_price'] = self.item_original_price(response)
             item['currency'] = self.item_currency(
                 self.get_text_from_node(response.xpath('.//*[@class="price spacing"]/text()')))
             item['source_url'] = response.url
@@ -64,6 +65,8 @@ class HhgreggspiderSpider(CrawlSpider):
         item['sku'] = self.item_sku(item['product_id'])
         item['model'] = self.item_model(response)
         item['source_url'] = response.url
+        item['current_price'] = self.item_current_price(response)
+        item['original_price'] = self.item_original_price(response)
         products = []
         for product_info_div in response.xpath(
                 './/*[@id="mainBundleTabContainer"]//*[contains(@class,"kitTarget target")]'):
@@ -77,7 +80,8 @@ class HhgreggspiderSpider(CrawlSpider):
             product['mpn'] = self.item_mpn(product_info_div, True)
             product['upc'] = self.item_upc(product_info_div, True)
             product['features'] = self.item_features(product_info_div, True)
-            product['price'] = self.item_price(product_info_div, True)
+            product['current_price'] = self.item_current_price(product_info_div, True)
+            product['original_price'] = self.item_original_price(product_info_div, True)
             product['currency'] = self.item_currency(
                 self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]')))
             products.append(product)
@@ -138,27 +142,18 @@ class HhgreggspiderSpider(CrawlSpider):
                 features.append(li_text)
         return self.normalize(features)
 
-    def item_price(self, response, package_flag=False):
+    def item_current_price(self, response, package_flag=False):
         if package_flag:
-            original_price = response.xpath("(.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]")
-            current_price = response.xpath("(.//*[@id='price_details'])[1]//*[@class='price spacing']")
-        else:
-            original_price = response.xpath(".//*[contains(@class,'reg_price')]")
-            current_price = response.xpath('.//*[@class="price spacing"]')
+            return self.get_text_from_node(response.xpath("(.//*[@id='price_details'])[1]//*[@class='price spacing']/text()"))
+        if response.xpath('.//*[@class="price spacing"]'):
+            return self.get_text_from_node(response.xpath('.//*[@class="price spacing"]/text()'))
+        return self.get_text_from_node(response.xpath('.//*[@class="price offerprice bold"]/text()'))
 
-        if response.xpath(".//*[contains(@class,'reg_price')]"):
-            price = {'original_price': self.get_text_from_node(
-                original_price.xpath("./span[2]/text()")),
-                     'current_price': self.get_text_from_node(current_price.xpath('./text()')),
-                     'currency': self.item_currency(
-                         self.get_text_from_node(current_price.xpath('./text()')))
-            }
-        else:
-            price = {'current_price': self.get_text_from_node(current_price.xpath('./text()')),
-                     'currency': self.item_currency(
-                         self.get_text_from_node(current_price.xpath('./text()')))
-            }
-        return price
+    def item_original_price(self, response, package_flag=False):
+        if package_flag:
+            return self.get_text_from_node(
+                response.xpath("(.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]/span[2]/text()"))
+        return self.get_text_from_node(response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"))
 
     def item_trail(self, response):
         trail = []
@@ -210,7 +205,7 @@ class HhgreggspiderSpider(CrawlSpider):
 
     def item_primary_image_url(self, response, package_flag=False):
         if package_flag:
-            return self.get_text_from_node(response.xpath('//*[@class="static_img"]/@src'))
+            return self.get_text_from_node(response.xpath('//*[@class="static_img"]/@src')).strip('//')
         else:
             return self.get_text_from_node(response.xpath('//meta[@property="og:image"]/@content')).split('?')[0]
 
