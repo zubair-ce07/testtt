@@ -39,9 +39,9 @@
 
         <p>{{ dockets.word }}</p>
 
-        <p>{{ dockets.to | date : format : timezone }}</p>
+        <p>{{ dockets.to_date | date : format : timezone }}</p>
 
-        <p>{{ dockets.from | date : format : timezone }}</p>
+        <p>{{ dockets.from_date | date : format : timezone }}</p>
     </div>
 
 </div>
