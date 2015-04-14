@@ -30,26 +30,26 @@ class WetsealSpider(Spider):
 
     def parse_item(self, result, base_url):
         item = StoresLocationSpidersItem()
-        item['store_name'] = self.get_store_name(result)
-        item['store_id'] = self.get_store_id(result)
-        item['address'] = self.get_store_address(result)
+        item['store_name'] = self.store_name(result)
+        item['store_id'] = self.store_id(result)
+        item['address'] = self.store_address(result)
         address_parts = self.parse_address(item['address'])
         item.update(address_parts)
-        item['store_url'] = self.get_store_url(result, base_url)
-        item['store_floor_plan_url'] = self.get_store_map_url(result)
-        item['hours'] = self.get_store_hours(result)
+        item['store_url'] = self.store_url(result, base_url)
+        item['store_floor_plan_url'] = self.store_map_url(result)
+        item['hours'] = self.store_hours(result)
         item['country'] = 'United States'
         return item
 
-    def get_store_name(self, result):
+    def store_name(self, result):
         name = result.xpath(".//*[@class='store-name']//text()")
         return helper.get_text_from_node(name)
 
-    def get_store_id(self, result):
+    def store_id(self, result):
         store_id = result.xpath('.//td[1]/a/@id')
         return helper.get_text_from_node(store_id)
 
-    def get_store_address(self, result):
+    def store_address(self, result):
         address = result.xpath(".//*[@class='store-address']//text()").extract()
         if address:
             return [helper.normalize(x) for x in address]
@@ -64,22 +64,22 @@ class WetsealSpider(Spider):
             address_parts['phone_number'] = address[2]
             return address_parts
 
-    def get_store_url(self, result, base_url):
+    def store_url(self, result, base_url):
         store_url = result.xpath('.//td[1]/a/@href').extract()
         if store_url:
             url_parts = urlparse.urlparse(base_url)
             return url_parts.scheme + "://" + url_parts.netloc + store_url[0]
 
-    def get_store_map_url(self, result):
+    def store_map_url(self, result):
         map_url = result.xpath('//*[@class="store-map storelocator-results-link"]/a/@href').extract()
         if map_url:
             return map_url[0]
 
-    def get_store_hours(self, result):
+    def store_hours(self, result):
         lines = result.xpath(".//*[@class='store-hours']//text()").extract()
-        return self.get_hours_dict(lines)
+        return self.parse_hours(lines)
 
-    def get_hours_dict(self, hour_rows):
+    def parse_hours(self, hour_rows):
         hours = {}
         for row in helper.normalize(hour_rows):
             day_string = helper.normalize(re.findall("[A-Za[A-Za-z]+ *- *[A-Za-z]+|[A-Za-z]+|.*", row)[0])

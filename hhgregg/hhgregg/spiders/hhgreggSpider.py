@@ -153,8 +153,10 @@ class HhgreggspiderSpider(CrawlSpider):
         if package_flag:
             return self.get_text_from_node(
                 response.xpath("(.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]/span[2]/text()"))
-        return self.get_text_from_node(response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"))
-
+        if response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
+            return self.get_text_from_node(response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"))
+        else:
+            return self.item_current_price(response)
     def item_trail(self, response):
         trail = []
         for url in response.xpath('.//*[@id="breadcrumb"]/a[position()>1]/@href').extract():

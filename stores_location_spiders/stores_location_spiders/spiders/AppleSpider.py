@@ -38,17 +38,17 @@ class AppleSpider(CrawlSpider):
 
     def parse_item(self, response):
         item = StoresLocationSpidersItem()
-        address_parts = self.get_address_parts(response)
+        address_parts = self.parse_address_parts(response)
         item.update(address_parts)
-        item['country'] = self.get_country(response)
+        item['country'] = self.store_country(response)
         if item['country'] in ['us', 'United States']:
             item['address'] = self.construct_address(address_parts, response)
-        item['hours'] = self.get_hours(response, item["country"])
-        item['store_name'] = self.get_store_name(response)
+        item['hours'] = self.store_hours(response, item["country"])
+        item['store_name'] = self.store_name(response)
         item['store_url'] = response.url
-        item['store_image_url'] = self.get_store_image_url(response)
-        item['services'] = self.get_services(response)
-        request_url = self.get_url(response)
+        item['store_image_url'] = self.store_image_url(response)
+        item['services'] = self.store_services(response)
+        request_url = self.store_url(response)
         yield Request(url=request_url, meta={'item': item},
                       callback=self.parse_json)
 
@@ -67,18 +67,18 @@ class AppleSpider(CrawlSpider):
             item['store_floor_plan_url'] = map_url[0]
         return item
 
-    def get_city(self, response):
+    def store_city(self, response):
         city = response.xpath(".//span[@class='locality']/text()")
         return helper.get_text_from_node(city)
 
-    def get_country(self, response):
+    def store_country(self, response):
         for country_code, country_name in self.country_code_mappings.iteritems():
             if country_code in response.url.split('/'):
                 return country_name
         # In case of US, the url does not contain country_code.
         return self.country_code_mappings["us"]
 
-    def get_hours(self, response, country):
+    def store_hours(self, response, country):
         if country == self.country_code_mappings["us"]:  # ' Only US stores hours are neccessary
             info_rows = response.xpath(".//table[@class='store-info']//tr[count(td)=2]")
             hours = dict()
@@ -101,52 +101,52 @@ class AppleSpider(CrawlSpider):
                         hours[days.strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
             return hours
 
-    def get_phone_number(self, response):
+    def store_phone_number(self, response):
         phone_numbers = response.xpath(".//*[@class='telephone-number']//text()")
         return helper.get_text_from_node(phone_numbers)
 
-    def get_state(self, response):
+    def store_state(self, response):
         states = response.xpath(".//*[@class='region']//text()")
         return helper.get_text_from_node(states)
 
-    def get_store_name(self, response):
+    def store_name(self, response):
         store_name = response.xpath(".//*[@class='store-name']//text()")
         return helper.get_text_from_node(store_name)
 
-    def get_zipcode(self, response):
+    def store_zipcode(self, response):
         zip_codes = response.xpath(".//*[@class='postal-code']//text()")
         return helper.get_text_from_node(zip_codes)
 
-    def get_store_image_url(self, response):
+    def store_image_url(self, response):
         image_urls = response.xpath(".//*[@class='store-summary']//img/@src").extract()
         if image_urls:
             return image_urls[0]
 
-    def get_street_address(self, response):
+    def store_street_address(self, response):
         street_address = response.xpath(".//*[@class='street-address']//text()")
         return helper.get_text_from_node(street_address)
 
-    def get_address_parts(self, response):
+    def parse_address_parts(self, response):
         address_parts = {}
-        address_parts['city'] = self.get_city(response)
-        address_parts['state'] = self.get_state(response)
-        address_parts['zipcode'] = self.get_zipcode(response)
-        address_parts['phone_number'] = self.get_phone_number(response)
+        address_parts['city'] = self.store_city(response)
+        address_parts['state'] = self.store_state(response)
+        address_parts['zipcode'] = self.store_zipcode(response)
+        address_parts['phone_number'] = self.store_phone_number(response)
         return address_parts
 
     def construct_address(self, address_parts, response):
         address = []
-        address_parts['street_address'] = self.get_street_address(response)
+        address_parts['street_address'] = self.store_street_address(response)
         address.append(address_parts['street_address'])
         address.append(address_parts['city'] + ', ' + address_parts['state'] + ' ' + address_parts['zipcode'])
         return address
 
-    def get_services(self, response):
+    def store_services(self, response):
         services = response.xpath(".//*[contains(@class,'hero-nav')]//a[contains(@class,'block')]//img/@alt").extract()
         if services:
             return [helper.normalize(x) for x in services]
 
-    def get_url(self, response):
+    def store_url(self, response):
         url = response.xpath(".//script[contains(@src, 'maps_data.js')]/@src").extract()
         if url:
             return urljoin('http://www.apple.com/', url[0])
