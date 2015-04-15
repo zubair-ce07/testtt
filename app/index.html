@@ -15,22 +15,15 @@
 </head>
 <body ng-app="powersuite" >
 <div class="container">
-
   <div class="navbar">
-    <div class="navbar-inner">
-      <ul class="nav">
+      <ul class="nav nav-tabs">
         <li><a ui-sref="home">Home</a></li>
         <li><a ui-sref="search">Search</a></li>
         <li><a ui-sref="favorites">Favorites</a></li>
       </ul>
-    </div>
   </div>
 
-  <!--[if lt IE 7]>
-      <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-  <![endif]-->
-
-  <div ng-view></div>
+  <div ui-view></div>
 </div>
 
   <script src="bower_components/angular/angular.js"></script>
@@ -46,4 +39,4 @@
   <script src="components/version/version-directive.js"></script>
   <script src="components/version/interpolate-filter.js"></script>
 </body>
-</html>
+
