@@ -33,15 +33,10 @@
     </form>
 
     <div>
-        <p>{{ $scope.school }}</p>
+        <p>{{ school.admission }}</p>
+        <p>{{ dockets }}</p>
 
-        <p>{{ dockets.states }}</p>
 
-        <p>{{ dockets.word }}</p>
-
-        <p>{{ dockets.to_date | date : format : timezone }}</p>
-
-        <p>{{ dockets.from_date | date : format : timezone }}</p>
     </div>
 
 </div>

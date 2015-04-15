@@ -5,7 +5,10 @@ var powersuiteApp = angular.module('powersuite', [
   'ngResource',
   'powersuiteControllers',
   'powersuiteServices',
-  'ui.bootstrap'
+  'ui.bootstrap',
+    'ui.router',
+    'ui.bootstrap',
+    'ui.bootstrap.tpls'
 ]);
 
 powersuiteApp.config(['$routeProvider',
@@ -15,19 +18,37 @@ powersuiteApp.config(['$routeProvider',
         templateUrl: 'partials/search.html',
         controller: 'SearchCtrl'
       }).
-      when('/favourites', {
+      when('/favorites', {
         templateUrl: 'partials/favourites.html',
         controller: 'FavouritesCtrl'
       }).
       otherwise({
-        redirectTo: 'partials/search.html'
+        templateUrl: 'partials/home.html'
       });
   }]);
 
+powersuiteApp.config(function($stateProvider, $urlRouterProvider){
+  $urlRouterProvider.otherwise('/home');
+  $stateProvider
+      .state("home",{
+        url:'/home',
+        templateUrl:'partials/home.html'
+      })
+       .state('search',{
+        url: '/search',
+        templateUrl:'partials/search.html',
+        controller: 'SearchCtrl'
+      }).state('favorites',{
+        url: '/favorites',
+        templateUrl:'partials/favourites.html',
+        controller: 'FavouritesCtrl'
+      })
+});
+
 powersuiteApp.config(['$httpProvider', function($httpProvider) {
+  delete $httpProvider.defaults.headers.common["X-Requested-With"];
   $httpProvider.defaults.useXDomain = true;
   $httpProvider.defaults.withCredentials = true;
-  delete $httpProvider.defaults.headers.common["X-Requested-With"];
   $httpProvider.defaults.headers.common["Accept"] = "application/json";
   $httpProvider.defaults.headers.common["Content-Type"] = "application/json";
 }

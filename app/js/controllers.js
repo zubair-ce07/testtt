@@ -7,17 +7,22 @@ var powersuiteControllers = angular.module('powersuiteControllers', []);
 powersuiteControllers.controller('SearchCtrl', ['$scope', '$http', 'apiUrl', 'User', 'Dockets',
         function ($scope, $http, apiUrl, User, Dockets) {
             $scope.searchDockets = function (dockets) {
-                console.log(dockets);
-                $scope.school = Dockets.getSchool;
+                Dockets.getSchool().then(function(response){
+                    $scope.school = response.data;
+                    console.log($scope.school);
+                });
+                Dockets.getDockets().then(function(response){
+                    $scope.dockets = response.data;
+                    console.log($scope.dockets);
+                });
                 //$scope.dockets = Dockets.getDockets;
                 //$scope.school = $http({method: 'GET', url: apiUrl + '/schools/1', params: {access_token: User.access_token, email: User.email}});
-                console.log($scope.school);
-                $scope.dockets = {
-                    states: 10,
-                    word: "SEARCH",
-                    to_date: new Date(2015, 3, 12),
-                    from_date: new Date(2015, 3, 15)
-                };
+                //$scope.dockets = {
+                //    state: 10,
+                //    word: "SEARCH",
+                //    to_date: new Date(2015, 3, 12),
+                //    from_date: new Date(2015, 3, 15)
+                //};
             }
         }]
 );
@@ -65,3 +70,4 @@ powersuiteControllers.controller('DatePickerCtrl', function ($scope) {
     $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
     $scope.format = $scope.formats[0];
 });
+

@@ -11,23 +11,33 @@
   <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
   <link rel="stylesheet" href="css/app.css">
   <script src="bower_components/html5-boilerplate/js/vendor/modernizr-2.6.2.min.js"></script>
+
 </head>
 <body ng-app="powersuite" >
-  <ul class="menu">
-    <li><a href="#/search">Search</a></li>
-    <li><a href="#/favourites">Favourite</a></li>
-  </ul>
+<div class="container">
+
+  <div class="navbar">
+    <div class="navbar-inner">
+      <ul class="nav">
+        <li><a ui-sref="home">Home</a></li>
+        <li><a ui-sref="search">Search</a></li>
+        <li><a ui-sref="favorites">Favorites</a></li>
+      </ul>
+    </div>
+  </div>
 
   <!--[if lt IE 7]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
   <![endif]-->
 
   <div ng-view></div>
+</div>
 
   <script src="bower_components/angular/angular.js"></script>
   <script src="bower_components/angular-resource/angular-resource.js"></script>
   <script src="bower_components/angular-route/angular-route.js"></script>
   <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+  <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
   <script src="js/app.js"></script>
   <script src="js/controllers.js"></script>
   <script src="js/services.js"></script>
