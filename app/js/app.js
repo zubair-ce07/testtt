@@ -8,7 +8,8 @@ var powersuiteApp = angular.module('powersuite', [
     'ui.bootstrap',
     'ui.router',
     'ui.bootstrap',
-    'ui.bootstrap.tpls'
+    'ui.bootstrap.tpls',
+    'ngGrid'
 ]);
 //
 //powersuiteApp.config(['$routeProvider',
