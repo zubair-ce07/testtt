@@ -7,8 +7,10 @@
 
 
 from scrapy.item import Item, Field
+
+
 class DocumentsDownloadItem(Item):
     file_url = Field()
-    file_name =Field()
+    file_name = Field()
     file_location = Field()
-    page =Field()
+    page = Field()

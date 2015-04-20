@@ -8,7 +8,7 @@
 import scrapy
 from scrapy.item import Item, Field
 
-class StoresLocationSpidersItem(Item):
+class StoresLocationItem(Item):
     city = Field()
     address = Field()
     country = Field()

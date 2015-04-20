@@ -4,9 +4,8 @@ import urlparse
 from scrapy.http import FormRequest
 from scrapy.spider import Spider
 
-from stores_location_spiders.items import StoresLocationSpidersItem
-import helper
-
+from stores_location_spiders.items import StoresLocationItem
+from stores_location_spiders.helper import Helper
 
 class WetsealSpider(Spider):
     name = 'wetseal_spider'
@@ -15,7 +14,7 @@ class WetsealSpider(Spider):
     def parse(self, response):
         states = response.xpath(
             ".//select[@id='dwfrm_storelocator_address_states_stateUSCA']//option[@value!='']/@value").extract()
-        url = helper.get_text_from_node(response.xpath("//form[@id='dwfrm_storelocator_state']/@action"))
+        url = Helper.get_text_from_node(response.xpath("//form[@id='dwfrm_storelocator_state']/@action"))
         for state in states:
             form_data = {'dwfrm_storelocator_address_states_stateUSCA': state,
                          "dwfrm_storelocator_findbystate": "Search"}
@@ -29,7 +28,7 @@ class WetsealSpider(Spider):
             yield self.parse_item(result, response.url)
 
     def parse_item(self, result, base_url):
-        item = StoresLocationSpidersItem()
+        item = StoresLocationItem()
         item['store_name'] = self.store_name(result)
         item['store_id'] = self.store_id(result)
         item['address'] = self.store_address(result)
@@ -43,32 +42,31 @@ class WetsealSpider(Spider):
 
     def store_name(self, result):
         name = result.xpath(".//*[@class='store-name']//text()")
-        return helper.get_text_from_node(name)
+        return Helper.get_text_from_node(name)
 
     def store_id(self, result):
         store_id = result.xpath('.//td[1]/a/@id')
-        return helper.get_text_from_node(store_id)
+        return Helper.get_text_from_node(store_id)
 
     def store_address(self, result):
         address = result.xpath(".//*[@class='store-address']//text()").extract()
         if address:
-            return [helper.normalize(x) for x in address]
+            return [Helper.normalize(x) for x in address]
 
     def parse_address(self, address):
+        address_parts = {}
         if len(address) == 3:
-            address_parts = {}
-            second_line_parts = address[1].split(',')  # parse 2nd line of address for city , state and zip
-            address_parts['city'] = second_line_parts[0]
-            address_parts['state'] = second_line_parts[1].split()[0]
-            address_parts['zipcode'] = second_line_parts[1].split()[1]
             address_parts['phone_number'] = address[2]
-            return address_parts
+        second_line_parts = address[1].split(',')  # parse 2nd line of address for city , state and zip
+        address_parts['city'] = second_line_parts[0]
+        address_parts['state'] = second_line_parts[1].split()[0]
+        address_parts['zipcode'] = second_line_parts[1].split()[1]
+        return address_parts
 
     def store_url(self, result, base_url):
         store_url = result.xpath('.//td[1]/a/@href').extract()
         if store_url:
-            url_parts = urlparse.urlparse(base_url)
-            return url_parts.scheme + "://" + url_parts.netloc + store_url[0]
+            return urlparse.urljoin(base_url, store_url[0])
 
     def store_map_url(self, result):
         map_url = result.xpath('//*[@class="store-map storelocator-results-link"]/a/@href').extract()
@@ -81,12 +79,12 @@ class WetsealSpider(Spider):
 
     def parse_hours(self, hour_rows):
         hours = {}
-        for row in helper.normalize(hour_rows):
-            day_string = helper.normalize(re.findall("[A-Za[A-Za-z]+ *- *[A-Za-z]+|[A-Za-z]+|.*", row)[0])
-            hour_string = helper.normalize(row.replace(day_string, '').strip(':'))
+        for row in Helper.normalize(hour_rows):
+            day_string = Helper.normalize(re.findall("^[A-z]+\s*-?\s*[A-z]+", row)[0]).strip(':')
+            hour_string = Helper.normalize(row.replace(day_string, '').strip(':'))
             if hour_string and '-' not in hour_string:
                 if 'Now' not in day_string:
-                    hours[day_string.strip(':')] = {"status": hour_string}
+                    hours[day_string] = {"status": hour_string}
             else:
                 if ',' in day_string and hour_string:
                     # timing for consective days seperated by comma.
@@ -96,6 +94,6 @@ class WetsealSpider(Spider):
                         hours[day.strip()] = {"open": open_time.strip(), "close": close_time.strip()}
                 else:
                     open_time, close_time = hour_string.split('-')
-                    hours[day_string.strip(':').strip(':')] = {"open": open_time.strip(),
+                    hours[day_string] = {"open": open_time.strip(),
                                                                "close": close_time.strip()}
         return hours

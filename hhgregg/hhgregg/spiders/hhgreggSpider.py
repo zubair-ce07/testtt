@@ -154,7 +154,7 @@ class HhgreggspiderSpider(CrawlSpider):
             return self.get_text_from_node(
                 response.xpath("(.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]/span[2]/text()"))
         if response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
-            return self.get_text_from_node(response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"))
+            return self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
         else:
             return self.item_current_price(response)
     def item_trail(self, response):
@@ -197,8 +197,8 @@ class HhgreggspiderSpider(CrawlSpider):
             detail_specs = []
             for sub_specs in specs.xpath('./*[@class="specDetails"]/div'):
                 detail_specs.append({
-                    self.get_text_from_node(sub_specs.xpath('./*[@class="specdesc"]//text()')): self.get_text_from_node(
-                        sub_specs.xpath('./*[@class="specdesc_right"]//text()'))})
+                    self.get_text_from_node(sub_specs.xpath('./*[@class="specdesc"]//text() | ./*[@class="nospecdesc"]//text()')): self.get_text_from_node(
+                        sub_specs.xpath('./*[@class="specdesc_right"]//text() | ./*[@class="nospecdesc_right"]//text()'))})
             specification[self.get_text_from_node(specs.xpath('./*[@class="specHeader"]//text()'))] = detail_specs
         return specification
 
@@ -257,7 +257,7 @@ class HhgreggspiderSpider(CrawlSpider):
     def get_text_from_node(self, node):
         text_array = node.extract()
         if text_array:
-            return self.normalize(text_array[0])
+            return self.normalize(''.join(text_array))
         else:
             return ''
 
@@ -270,7 +270,7 @@ class HhgreggspiderSpider(CrawlSpider):
         else:
             return data
 
-    def clean(data):
+    def clean(self,data):
         return data.replace("\n", "")\
                 .replace("\r", "")\
                 .replace("\t", "").strip()
