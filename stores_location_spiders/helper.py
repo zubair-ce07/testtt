@@ -16,8 +16,6 @@ def normalize(data):
         return data
 
 def clean(data):
-    data = data.replace(u'&amp;', u'&').replace(u'&nbsp;', u' ')
-    return data.replace(u'\u00e2\u20ac\u2122', u"'").replace(u'\u00e2\u20ac\u0153', u'"').replace(
-        u'\u00e2\u20ac\ufffd', u'"').replace(u'\u2013', u"-").replace(u'\u00a0', u' ') \
-        .replace(u'\u2012', u"-").replace(u'\u2018', u"'").replace(u'\u2019', u"'").replace(u'\u201c', u'"') \
-        .replace(u'\u201d', u'"').replace(u'\xd0', u'-').strip()
+    return data.replace("\n", "")\
+                .replace("\r", "")\
+                .replace("\t", "").strip()
