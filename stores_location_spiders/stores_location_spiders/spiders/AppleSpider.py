@@ -2,13 +2,13 @@ import re
 from urlparse import urljoin
 
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
-from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.spiders import Rule
 from scrapy.http import Request
-from stores_location_spiders.helper import Helper
+from scrapinghub.spider import BaseSpider
 from stores_location_spiders.items import StoresLocationItem
 
 
-class AppleSpider(CrawlSpider):
+class AppleSpider(BaseSpider):
     name = 'apple_spider'
     start_urls = ['http://www.apple.com/retail/storelist/']  # http://www.apple.com/retail/storelist/
 
@@ -68,7 +68,7 @@ class AppleSpider(CrawlSpider):
 
     def store_city(self, response):
         city = response.xpath(".//span[@class='locality']/text()")
-        return Helper.get_text_from_node(city)
+        return self.get_text_from_node(city)
 
     def store_country(self, response):
         for country_code, country_name in self.country_code_mappings.iteritems():
@@ -82,8 +82,8 @@ class AppleSpider(CrawlSpider):
             info_rows = response.xpath(".//table[@class='store-info']//tr[count(td)=2]")
             hours = dict()
             for row in info_rows:
-                hours_data = Helper.get_text_from_node(row.xpath('./td[2]/text()'))
-                days = Helper.get_text_from_node(row.xpath('./td[1]/text()'))
+                hours_data = self.get_text_from_node(row.xpath('./td[2]/text()'))
+                days = self.get_text_from_node(row.xpath('./td[1]/text()'))
                 if hours_data and '-' not in hours_data:
                     hours[days.strip(':')] = {"status": hours_data}
                 else:
@@ -102,19 +102,19 @@ class AppleSpider(CrawlSpider):
 
     def store_phone_number(self, response):
         phone_numbers = response.xpath(".//*[@class='telephone-number']//text()")
-        return Helper.get_text_from_node(phone_numbers)
+        return self.get_text_from_node(phone_numbers)
 
     def store_state(self, response):
         states = response.xpath(".//*[@class='region']//text()")
-        return Helper.get_text_from_node(states)
+        return self.get_text_from_node(states)
 
     def store_name(self, response):
         store_name = response.xpath(".//*[@class='store-name']//text()")
-        return Helper.get_text_from_node(store_name)
+        return self.get_text_from_node(store_name)
 
     def store_zipcode(self, response):
         zip_codes = response.xpath(".//*[@class='postal-code']//text()")
-        return Helper.get_text_from_node(zip_codes)
+        return self.get_text_from_node(zip_codes)
 
     def store_image_url(self, response):
         image_urls = response.xpath(".//*[@class='store-summary']//img/@src").extract()
@@ -123,7 +123,7 @@ class AppleSpider(CrawlSpider):
 
     def store_street_address(self, response):
         street_address = response.xpath(".//*[@class='street-address']//text()")
-        return Helper.get_text_from_node(street_address)
+        return self.get_text_from_node(street_address)
 
     def parse_address_parts(self, response):
         address_parts = {}
@@ -143,7 +143,7 @@ class AppleSpider(CrawlSpider):
     def store_services(self, response):
         services = response.xpath(".//*[contains(@class,'hero-nav')]//a[contains(@class,'block')]//img/@alt").extract()
         if services:
-            return [Helper.normalize(x) for x in services]
+            return [self.normalize(x) for x in services]
 
     def store_url(self, response):
         url = response.xpath(".//script[contains(@src, 'maps_data.js')]/@src").extract()

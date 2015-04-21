@@ -2,19 +2,17 @@ import re
 import urlparse
 
 from scrapy.http import FormRequest
-from scrapy.spider import Spider
-
 from stores_location_spiders.items import StoresLocationItem
-from stores_location_spiders.helper import Helper
+from scrapinghub.spider import BaseSpider
 
-class WetsealSpider(Spider):
+class WetsealSpider(BaseSpider):
     name = 'wetseal_spider'
     start_urls = ['http://www.wetseal.com/Stores']
 
     def parse(self, response):
         states = response.xpath(
             ".//select[@id='dwfrm_storelocator_address_states_stateUSCA']//option[@value!='']/@value").extract()
-        url = Helper.get_text_from_node(response.xpath("//form[@id='dwfrm_storelocator_state']/@action"))
+        url = self.get_text_from_node(response.xpath("//form[@id='dwfrm_storelocator_state']/@action"))
         for state in states:
             form_data = {'dwfrm_storelocator_address_states_stateUSCA': state,
                          "dwfrm_storelocator_findbystate": "Search"}
@@ -42,16 +40,16 @@ class WetsealSpider(Spider):
 
     def store_name(self, result):
         name = result.xpath(".//*[@class='store-name']//text()")
-        return Helper.get_text_from_node(name)
+        return self.get_text_from_node(name)
 
     def store_id(self, result):
         store_id = result.xpath('.//td[1]/a/@id')
-        return Helper.get_text_from_node(store_id)
+        return self.get_text_from_node(store_id)
 
     def store_address(self, result):
         address = result.xpath(".//*[@class='store-address']//text()").extract()
         if address:
-            return [Helper.normalize(x) for x in address]
+            return [self.normalize(x) for x in address]
 
     def parse_address(self, address):
         address_parts = {}
@@ -79,9 +77,9 @@ class WetsealSpider(Spider):
 
     def parse_hours(self, hour_rows):
         hours = {}
-        for row in Helper.normalize(hour_rows):
-            day_string = Helper.normalize(re.findall("^[A-z]+\s*-?\s*[A-z]+", row)[0]).strip(':')
-            hour_string = Helper.normalize(row.replace(day_string, '').strip(':'))
+        for row in self.normalize(hour_rows):
+            day_string = self.normalize(re.findall("^[A-z]+\s*-?\s*[A-z]+", row)[0]).strip(':')
+            hour_string = self.normalize(row.replace(day_string, '').strip(':'))
             if hour_string and '-' not in hour_string:
                 if 'Now' not in day_string:
                     hours[day_string] = {"status": hour_string}

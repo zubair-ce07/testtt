@@ -5,12 +5,13 @@ import urllib
 
 from scrapy.http import Request
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
-from scrapy.contrib.spiders import CrawlSpider, Rule
+from scrapy.contrib.spiders import Rule
+from scrapinghub.spider import BaseSpider
 
 from newegg.items import NeweggItem
 
 
-class NeweggspiderSpider(CrawlSpider):
+class NeweggspiderSpider(BaseSpider):
     name = "NewEggSpider"
     allowed_domains = ["newegg.com"]
     start_urls = (
@@ -36,16 +37,16 @@ class NeweggspiderSpider(CrawlSpider):
         item['price'] = json_data['price']
         return item
 
-    def get_url(self, response):
+    def item_url(self, response):
         return response.url.split('&', 1)[0]
 
-    def get_sku(self, response):
+    def item_sku(self, response):
         query_string = urlparse.urlparse(response.url).query
         if query_string:
             sku = urlparse.parse_qs(query_string)['Item'][0]
             return sku
 
-    def get_title(self, response):
+    def item_title(self, response):
         title = response.xpath(".//*[@itemprop='name'][1]//text()").extract()
         if title:
             return self.normalize(title[0])
@@ -56,7 +57,7 @@ class NeweggspiderSpider(CrawlSpider):
         item['price'] = ('').join(self.normalize(price)).strip('-')
         return item
 
-    def get_json_data(self, response):
+    def item_json_data(self, response):
         json_string = response.xpath('//script[contains(text(), "ProductDetail")]//text()').extract()[0]
         json_string = self.normalize(json_string)
         price = re.search("product_sale_price:\['([^']+)'\]", json_string).group(1)
@@ -74,17 +75,3 @@ class NeweggspiderSpider(CrawlSpider):
                 request_url, last_page_number = last_page_url.split('Page-', 1)
                 for i in range(2, int(last_page_number) + 1):
                     yield Request('%sPage-%s' % (request_url, i))
-
-    def normalize(self, data):
-        if type(data) is str or type(data) is unicode:
-            return self.clean(data)
-        elif type(data) is list:
-            lines = [self.clean(x) for x in data]
-            return [line for line in lines if line]
-        else:
-            return data
-
-    def clean(data):
-        return data.replace("\n", "")\
-                .replace("\r", "")\
-                .replace("\t", "").strip()
