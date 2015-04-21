@@ -80,10 +80,7 @@ class WetsealSpider(BaseSpider):
         for row in self.normalize(hour_rows):
             day_string = self.normalize(re.findall("^[A-z]+\s*-?\s*[A-z]+", row)[0]).strip(':')
             hour_string = self.normalize(row.replace(day_string, '').strip(':'))
-            if hour_string and '-' not in hour_string:
-                if 'Now' not in day_string:
-                    hours[day_string] = {"status": hour_string}
-            else:
+            if hour_string and '-' in hour_string:
                 if ',' in day_string and hour_string:
                     # timing for consective days seperated by comma.
                     all_days = day_string.split(',')

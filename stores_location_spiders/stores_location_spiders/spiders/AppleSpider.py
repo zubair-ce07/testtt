@@ -40,7 +40,7 @@ class AppleSpider(BaseSpider):
         address_parts = self.parse_address_parts(response)
         item.update(address_parts)
         item['country'] = self.store_country(response)
-        if item['country'] in ['us', 'United States']:
+        if item['country'] == 'United States':
             item['address'] = self.construct_address(address_parts, response)
         item['hours'] = self.store_hours(response, item["country"])
         item['store_name'] = self.store_name(response)
@@ -67,7 +67,7 @@ class AppleSpider(BaseSpider):
         return item
 
     def store_city(self, response):
-        city = response.xpath(".//span[@class='locality']/text()")
+        city = response.xpath("(.//span[@class='locality']/text())[1]")
         return self.get_text_from_node(city)
 
     def store_country(self, response):
@@ -84,9 +84,7 @@ class AppleSpider(BaseSpider):
             for row in info_rows:
                 hours_data = self.get_text_from_node(row.xpath('./td[2]/text()'))
                 days = self.get_text_from_node(row.xpath('./td[1]/text()'))
-                if hours_data and '-' not in hours_data:
-                    hours[days.strip(':')] = {"status": hours_data}
-                else:
+                if hours_data and '-' in hours_data:
                     if ',' in days and hours_data:
                         # timing for consective days seperated by comma.
                         all_days = days.split(',')
@@ -94,26 +92,26 @@ class AppleSpider(BaseSpider):
                         for day in all_days:
                             hours[day.strip().strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
                     elif ':' not in days:
-                        hours['Mon - Sat'] = {'status': days}
+                        hours['Mon - Sun'] = {'Open': '00:00 AM','Close': '00:00 PM'}
                     else:
                         open_time, close_time = hours_data.split('-')
                         hours[days.strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
             return hours
 
     def store_phone_number(self, response):
-        phone_numbers = response.xpath(".//*[@class='telephone-number']//text()")
+        phone_numbers = response.xpath("(.//*[@class='telephone-number']//text())[1]")
         return self.get_text_from_node(phone_numbers)
 
     def store_state(self, response):
-        states = response.xpath(".//*[@class='region']//text()")
+        states = response.xpath("(.//*[@class='region']/text())[1]")
         return self.get_text_from_node(states)
 
     def store_name(self, response):
-        store_name = response.xpath(".//*[@class='store-name']//text()")
+        store_name = response.xpath("(.//*[@class='store-name']//text())[1]")
         return self.get_text_from_node(store_name)
 
     def store_zipcode(self, response):
-        zip_codes = response.xpath(".//*[@class='postal-code']//text()")
+        zip_codes = response.xpath("(.//*[@class='postal-code']//text())[1]")
         return self.get_text_from_node(zip_codes)
 
     def store_image_url(self, response):
@@ -122,7 +120,7 @@ class AppleSpider(BaseSpider):
             return image_urls[0]
 
     def store_street_address(self, response):
-        street_address = response.xpath(".//*[@class='street-address']//text()")
+        street_address = response.xpath("(.//*[@class='street-address']//text())[1]")
         return self.get_text_from_node(street_address)
 
     def parse_address_parts(self, response):
@@ -137,7 +135,7 @@ class AppleSpider(BaseSpider):
         address = []
         address_parts['street_address'] = self.store_street_address(response)
         address.append(address_parts['street_address'])
-        address.append(address_parts['city'] + ', ' + address_parts['state'] + ' ' + address_parts['zipcode'])
+        address.append("%s,%s, %s" %(address_parts['city'],address_parts['state'] ,address_parts['zipcode']))
         return address
 
     def store_services(self, response):
