@@ -22,7 +22,7 @@ class HhgreggspiderSpider(BaseSpider):
     rules = [
 
         Rule(LinkExtractor(deny=['/productfinder/'],
-                           restrict_xpaths=['(.//*[contains( @id,"WC_CachedHeaderDisplay_links")])[11]',
+                           restrict_xpaths=['.//*[contains( @id,"WC_CachedHeaderDisplay_links")]',
                                             './/*[@class="product_group_name product_info"]']),
              callback='parse_pagination', follow=True),
         Rule(LinkExtractor(restrict_xpaths=['.//*[@class="information"]/h3/a']),
@@ -102,7 +102,7 @@ class HhgreggspiderSpider(BaseSpider):
         return self.get_text_from_node(response.xpath('//meta[@property="og:description"]/@content'))
 
     def item_sku(self, product_id):
-        return product_id + '_is'
+        return '%s_is' % product_id
 
     def item_product_id(self, response, package_flag=False):
         if package_flag:
@@ -145,9 +145,16 @@ class HhgreggspiderSpider(BaseSpider):
 
     def item_current_price(self, response, package_flag=False):
         if package_flag:
-            return self.get_text_from_node(response.xpath("(.//*[@id='price_details'])[1]//*[@class='price spacing']/text()"))
+            return self.get_text_from_node(
+                response.xpath("(.//*[@id='price_details'])[1]//*[@class='price spacing']/text()"))
         if response.xpath('.//*[@class="price spacing"]'):
             return self.get_text_from_node(response.xpath('.//*[@class="price spacing"]/text()'))
+        if response.xpath(".//*[@id='checkoutModal']"):
+            price_script_text = response.xpath(
+                ".//script[contains(.,'omnitureProductTag') and contains(.,'prodView')]/text()").extract()
+            if price_script_text:
+                price = re.search('prodView","([^"]+)', price_script_text[0]).group(1)
+                return '$%s' % price
         return self.get_text_from_node(response.xpath('.//*[@class="price offerprice bold"]/text()'))
 
     def item_original_price(self, response, package_flag=False):
@@ -158,6 +165,7 @@ class HhgreggspiderSpider(BaseSpider):
             return self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
         else:
             return self.item_current_price(response)
+
     def item_trail(self, response):
         trail = []
         for url in response.xpath('.//*[@id="breadcrumb"]/a[position()>1]/@href').extract():
@@ -197,9 +205,12 @@ class HhgreggspiderSpider(BaseSpider):
         for specs in specification_group:
             detail_specs = []
             for sub_specs in specs.xpath('./*[@class="specDetails"]/div'):
-                detail_specs.append({
-                    self.get_text_from_node(sub_specs.xpath('./*[@class="specdesc"]//text() | ./*[@class="nospecdesc"]//text()')): self.get_text_from_node(
-                        sub_specs.xpath('./*[@class="specdesc_right"]//text() | ./*[@class="nospecdesc_right"]//text()'))})
+                property_name = self.get_text_from_node(sub_specs.xpath(
+                        './*[@class="specdesc"]//text() | ./*[@class="nospecdesc"]//text()'))
+                property_value = self.get_text_from_node(
+                        sub_specs.xpath(
+                            './*[@class="specdesc_right"]//text() | ./*[@class="nospecdesc_right"]//text()'))
+                detail_specs.append({property_name : property_value })
             specification[self.get_text_from_node(specs.xpath('./*[@class="specHeader"]//text()'))] = detail_specs
         return specification
 
@@ -209,8 +220,7 @@ class HhgreggspiderSpider(BaseSpider):
     def item_primary_image_url(self, response, package_flag=False):
         if package_flag:
             return self.get_text_from_node(response.xpath('//*[@class="static_img"]/@src')).strip('//')
-        else:
-            return self.get_text_from_node(response.xpath('//meta[@property="og:image"]/@content')).split('?')[0]
+        return self.get_text_from_node(response.xpath('//meta[@property="og:image"]/@content')).split('?')[0]
 
     def item_images(self, response):
         item = response.meta['item']

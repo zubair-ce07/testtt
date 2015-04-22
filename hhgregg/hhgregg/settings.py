@@ -9,8 +9,10 @@
 #
 
 BOT_NAME = 'hhgregg'
-DOWNLOAD_DELAY = 5
+DOWNLOAD_DELAY = 10
 
+
+HTTPCACHE_ENABLED = True
 SPIDER_MODULES = ['hhgregg.spiders']
 NEWSPIDER_MODULE = 'hhgregg.spiders'
 
