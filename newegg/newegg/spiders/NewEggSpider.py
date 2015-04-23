@@ -18,11 +18,14 @@ class NeweggspiderSpider(BaseSpider):
         'http://www.newegg.com/',
     )
 
-    rules = [Rule(SgmlLinkExtractor(deny = ['name=Newegg-Mobile-Apps','/MemoryFinder/','InkFinder/'], restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a','.//*[@class="categoryList primaryNav"]//a'])
+    rules = [Rule(SgmlLinkExtractor(deny=['name=Newegg-Mobile-Apps', '/MemoryFinder/', 'InkFinder/'],
+                                    restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
+                                                     './/*[@class="categoryList primaryNav"]//a',
+                                                     './/*[@class="categoryList secondaryNav"]//a'])
                   , callback='parse_pagination', follow=True),
              Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@title="View Details"]']),
                   callback='parse_item')
-            ]
+    ]
 
     def parse_item(self, response):
         item = NeweggItem()
@@ -35,7 +38,7 @@ class NeweggspiderSpider(BaseSpider):
         if response.xpath('.//*[@class="priceAction"]') or 'MAP' in item['price']:
             return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?%s' % item['url'].split('?', 1)[1],
                            callback=self.parse_price, meta={'item': item})
-        if 'Combo' in item['sku'] and item['price']=='$':
+        if 'Combo' in item['sku'] and item['price'] == '$':
             return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?ComboID=%s' % item['sku'],
                            callback=self.parse_price, meta={'item': item})
         return item
@@ -101,11 +104,11 @@ class NeweggspiderSpider(BaseSpider):
                         last_page_number = last_page_number.split('?')[0]
                     for i in range(2, int(last_page_number) + 1):
                         yield Request('%sPage-%s' % (request_url, i))
-        elif(response.xpath('.//span[@class="pageNum"]')):
-                for url in response.xpath('.//span[@class="pageNum"]/a/@href').extract():
-                    request_url = urllib.unquote(url.split(",'", 1)[1].split("',")[0])
-                    if 'newegg' not in request_url:
-                        request_page_number = url.split("',", 1)[1].split(",'")[0]
-                        request_url = '%s&Page=%s' % (response.url, request_page_number)
-                    yield Request(request_url)
+        elif (response.xpath('.//span[@class="pageNum"]')):
+            for url in response.xpath('.//span[@class="pageNum"]/a/@href').extract():
+                request_url = urllib.unquote(url.split(",'", 1)[1].split("',")[0])
+                if 'newegg' not in request_url:
+                    request_page_number = url.split("',", 1)[1].split(",'")[0]
+                    request_url = '%s&Page=%s' % (response.url, request_page_number)
+                yield Request(request_url)
 
