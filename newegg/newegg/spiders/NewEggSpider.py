@@ -26,10 +26,10 @@ class NeweggspiderSpider(BaseSpider):
 
     def parse_item(self, response):
         item = NeweggItem()
-        item['sku'] = self.get_sku(response)
-        item['title'] = self.get_title(response)
-        item['url'] = self.get_url(response)
-        json_data = self.get_json_data(response)
+        item['sku'] = self.item_sku(response)
+        item['title'] = self.item_title(response)
+        item['url'] = self.item_url(response)
+        json_data = self.item_json_data(response)
         item['brand'] = json_data['brand']
         if response.xpath('.//*[@class="priceAction"]'):
             return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?%s' % item['url'].split('?', 1)[1],
@@ -43,8 +43,11 @@ class NeweggspiderSpider(BaseSpider):
     def item_sku(self, response):
         query_string = urlparse.urlparse(response.url).query
         if query_string:
-            sku = urlparse.parse_qs(query_string)['Item'][0]
-            return sku
+            if 'Item' in query_string:
+                sku = urlparse.parse_qs(query_string)['Item'][0]
+                return sku
+            else:
+                return None
 
     def item_title(self, response):
         title = response.xpath(".//*[@itemprop='name'][1]//text()").extract()

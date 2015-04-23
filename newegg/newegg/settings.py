@@ -10,7 +10,10 @@
 from scrapy.settings.default_settings import DOWNLOAD_DELAY
 
 BOT_NAME = 'newegg'
+DOWNLOAD_DELAY = 5
 
+
+HTTPCACHE_ENABLED = True
 SPIDER_MODULES = ['newegg.spiders']
 NEWSPIDER_MODULE = 'newegg.spiders'
 DOWNLOAD_DELAY = 3
