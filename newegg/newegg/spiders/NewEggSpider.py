@@ -18,7 +18,7 @@ class NeweggspiderSpider(BaseSpider):
         'http://www.newegg.com/',
     )
 
-    rules = [Rule(SgmlLinkExtractor(deny=['name=Newegg-Mobile-Apps', '/MemoryFinder/', 'InkFinder/'],
+    rules = [Rule(SgmlLinkExtractor(deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Power-Supply-Wattage-Calculator', 'Finder/'],
                                     restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
                                                      './/*[@class="categoryList primaryNav"]//a',
                                                      './/*[@class="categoryList secondaryNav"]//a'])
