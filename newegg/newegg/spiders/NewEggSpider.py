@@ -18,7 +18,7 @@ class NeweggspiderSpider(BaseSpider):
         'http://www.newegg.com/',
     )
 
-    rules = [Rule(SgmlLinkExtractor(deny = ['name=Newegg-Mobile-Apps'], restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a','.//*[@class="blaNavigation"]//a'])
+    rules = [Rule(SgmlLinkExtractor(deny = ['name=Newegg-Mobile-Apps','/MemoryFinder/','InkFinder/'], restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a','.//*[@class="categoryList primaryNav"]//a'])
                   , callback='parse_pagination', follow=True),
              Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@title="View Details"]']),
                   callback='parse_item')
@@ -35,7 +35,9 @@ class NeweggspiderSpider(BaseSpider):
         if response.xpath('.//*[@class="priceAction"]') or 'MAP' in item['price']:
             return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?%s' % item['url'].split('?', 1)[1],
                            callback=self.parse_price, meta={'item': item})
-
+        if 'Combo' in item['sku'] and item['price']=='$':
+            return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?ComboID=%s' % item['sku'],
+                           callback=self.parse_price, meta={'item': item})
         return item
 
     def item_url(self, response):
@@ -63,18 +65,25 @@ class NeweggspiderSpider(BaseSpider):
     def parse_price(self, response):
         item = response.meta['item']
         price = response.xpath('.//*[contains(@class,"price-current")]//text()').extract()
-        item['price'] = ('').join(self.normalize(price)).strip('-')
+        item['price'] = ('').join(self.normalize(price)).strip(u'\u2013')
         return item
 
     def item_json_data(self, response):
-        json_string = response.xpath('//script[contains(text(), "ProductDetail")]//text()').extract()[0]
-        json_string = self.normalize(json_string)
-        price = re.search("product_sale_price:\['([^']+)'\]", json_string).group(1)
-        brand = re.search("product_manufacture:\['([^']+)'\]", json_string).group(1)
         data = dict()
-        data['price'] = '$' + price
-        data['brand'] = brand
-        return data
+        json_string = response.xpath('//script[contains(text(), "ProductDetail")]//text()').extract()
+        if json_string:
+            json_string = self.normalize(json_string[0])
+            price = re.search("product_sale_price:\['([^']+)'\]", json_string).group(1)
+            brand = re.search("product_manufacture:\['([^']+)'\]", json_string).group(1)
+            data['price'] = '$%s' % price
+            data['brand'] = brand
+            return data
+        else:
+            price = self.get_text_from_node(response.xpath('.//*[@id="singleFinalPrice"]/@content'))
+            data['price'] = '$%s' % price
+            data['brand'] = None
+            return data
+
 
     def parse_pagination(self, response):
         if response.xpath('.//*[@title="last page"]/parent::li[@class="enabled"]'):
@@ -95,5 +104,8 @@ class NeweggspiderSpider(BaseSpider):
         elif(response.xpath('.//span[@class="pageNum"]')):
                 for url in response.xpath('.//span[@class="pageNum"]/a/@href').extract():
                     request_url = urllib.unquote(url.split(",'", 1)[1].split("',")[0])
+                    if 'newegg' not in request_url:
+                        request_page_number = url.split("',", 1)[1].split(",'")[0]
+                        request_url = '%s&Page=%s' % (response.url, request_page_number)
                     yield Request(request_url)
 
