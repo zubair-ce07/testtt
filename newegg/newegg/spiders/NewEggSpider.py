@@ -15,33 +15,31 @@ class NeweggspiderSpider(BaseSpider):
     name = "NewEggSpider"
     allowed_domains = ["newegg.com"]
     start_urls = (
-        'http://www.newegg.com/',
+        'http://www.newegg.com/ProductSort/CategoryList.aspx?Depa=0&Name=All-Categories',
     )
 
-    rules = [Rule(SgmlLinkExtractor(deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Power-Supply-Wattage-Calculator', 'Finder/'],
-                                    restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
-                                                     './/*[@class="categoryList primaryNav"]//a',
-                                                     './/*[@class="categoryList secondaryNav"]//a'])
+    rules = [Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@class="catList"]/li/a'])
                   , callback='parse_pagination', follow=True),
              Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@title="View Details"]']),
                   callback='parse_item')
     ]
 
     def parse_item(self, response):
-        item = NeweggItem()
-        item['sku'] = self.item_sku(response)
-        item['title'] = self.item_title(response)
-        item['url'] = self.item_url(response)
-        json_data = self.item_json_data(response)
-        item['brand'] = json_data['brand']
-        item['price'] = json_data['price']
-        if response.xpath('.//*[@class="priceAction"]') or 'MAP' in item['price']:
-            return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?%s' % item['url'].split('?', 1)[1],
-                           callback=self.parse_price, meta={'item': item})
-        if 'Combo' in item['sku'] and item['price'] == '$':
-            return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?ComboID=%s' % item['sku'],
-                           callback=self.parse_price, meta={'item': item})
-        return item
+        if not response.xpath('.//*[@class="errorMsgWarning"]'):
+            item = NeweggItem()
+            item['sku'] = self.item_sku(response)
+            item['title'] = self.item_title(response)
+            item['url'] = self.item_url(response)
+            json_data = self.item_json_data(response)
+            item['brand'] = json_data['brand']
+            item['price'] = json_data['price']
+            if response.xpath('.//*[@class="priceAction"]') or 'MAP' in item['price']:
+                return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?%s' % item['url'].split('?', 1)[1],
+                               callback=self.parse_price, meta={'item': item})
+            if 'Combo' in item.get('sku') and item.get('price') == '$':
+                    return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?ComboID=%s' % item['sku'],
+                               callback=self.parse_price, meta={'item': item})
+            return item
 
     def item_url(self, response):
         return response.url
