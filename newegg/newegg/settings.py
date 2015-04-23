@@ -16,7 +16,7 @@ DOWNLOAD_DELAY = 5
 HTTPCACHE_ENABLED = True
 SPIDER_MODULES = ['newegg.spiders']
 NEWSPIDER_MODULE = 'newegg.spiders'
-DOWNLOAD_DELAY = 3
+
 FEED_FORMAT = 'jsonlines'
 FEED_URI = "jsons/%(name)s-%(time)s.json"
 

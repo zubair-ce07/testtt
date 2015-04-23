@@ -48,8 +48,7 @@ class HhgreggspiderSpider(BaseSpider):
             item['specifications'] = self.item_specification(response)
             item['current_price'] = self.item_current_price(response)
             item['original_price'] = self.item_original_price(response)
-            item['currency'] = self.item_currency(
-                self.get_text_from_node(response.xpath('.//*[@class="price spacing"]/text()')))
+            item['currency'] = self.item_currency(response)
             item['source_url'] = response.url
             item['primary_image_url'] = self.item_primary_image_url(response)
             return Request(
@@ -68,6 +67,7 @@ class HhgreggspiderSpider(BaseSpider):
         item['source_url'] = response.url
         item['current_price'] = self.item_current_price(response)
         item['original_price'] = self.item_original_price(response)
+        item['currency'] = self.item_currency(response)
         products = []
         for product_info_div in response.xpath(
                 './/*[@id="mainBundleTabContainer"]//*[contains(@class,"kitTarget target")]'):
@@ -83,23 +83,21 @@ class HhgreggspiderSpider(BaseSpider):
             product['features'] = self.item_features(product_info_div, True)
             product['current_price'] = self.item_current_price(product_info_div, True)
             product['original_price'] = self.item_original_price(product_info_div, True)
-            product['currency'] = self.item_currency(
-                self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]')))
             products.append(product)
-        item['products'] = products
+        item['items'] = products
         return Request(
-            url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(item['product_id']),
-            callback=self.item_images, meta={'item': item})
-
+                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                    item['product_id']),
+                callback=self.item_images, meta={'item': item})
     def item_title(self, response, package_flag=False):
         if package_flag:
-            return self.get_text_from_node(response.xpath('.//*[@class="bundles_kits_prod_details"]/h1/text()'))
+            return self.get_text_from_node(response.xpath('(.//*[@class="bundles_kits_prod_details"]/h1/text())[1]'))
         return self.get_text_from_node(response.xpath(".//*[@id='prod_detail_main']/h1/text()"))
 
     def item_description(self, response, package_flag=False):
         if package_flag:
-            return self.get_text_from_node(response.xpath('//meta[@name="description"]/@content'))
-        return self.get_text_from_node(response.xpath('//meta[@property="og:description"]/@content'))
+            return self.get_text_from_node(response.xpath('//meta[@name="description"]/@content')).strip('<br/>')
+        return self.get_text_from_node(response.xpath('//meta[@property="og:description"]/@content')).strip('<br/>')
 
     def item_sku(self, product_id):
         return '%s_is' % product_id
@@ -123,11 +121,12 @@ class HhgreggspiderSpider(BaseSpider):
                 response.xpath('.//*[@class="pr-rating pr-rounded average"]/text()'))
             rating = "%.2f" % (float(rating_in_points) * 100 / 5)
         else:
-            rating = 'No rating Yet'
+            rating= None
         return rating
 
     def item_model(self, response):
-        model_text = self.get_text_from_node(response.xpath('.//*[@class="model_no"]/text()')).strip('(').strip(')')
+        model_text = self.get_text_from_node(response.xpath('(.//*[@class="model_no"]/text())[1]')).strip('(').strip(
+            ')')
         model = model_text.split(':')[1]
         return model
 
@@ -145,24 +144,42 @@ class HhgreggspiderSpider(BaseSpider):
 
     def item_current_price(self, response, package_flag=False):
         if package_flag:
-            return self.get_text_from_node(
-                response.xpath("(.//*[@id='price_details'])[1]//*[@class='price spacing']/text()"))
-        if response.xpath('.//*[@class="price spacing"]'):
-            return self.get_text_from_node(response.xpath('.//*[@class="price spacing"]/text()'))
-        if response.xpath(".//*[@id='checkoutModal']"):
+            price = self.get_text_from_node(
+                response.xpath("((.//*[@id='price_details'])[1]//*[@class='price spacing']/text())[1]")).replace(',',
+                                                                                                                 '').replace(
+                '$', '')
+            return float(price) if price else None
+        elif response.xpath('.//*[@class="price spacing"]'):
+            price = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]')).replace(',',
+                                                                                                                '').replace(
+                '$', '')
+            return float(price) if price else None
+        elif response.xpath(".//*[@id='checkoutModal']"):
             price_script_text = response.xpath(
                 ".//script[contains(.,'omnitureProductTag') and contains(.,'prodView')]/text()").extract()
             if price_script_text:
                 price = re.search('prodView","([^"]+)', price_script_text[0]).group(1)
-                return '$%s' % price
-        return self.get_text_from_node(response.xpath('.//*[@class="price offerprice bold"]/text()'))
+                return float(price.replace(',', '')) if price else None
+        else:
+            price = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]')).replace(
+                '$',
+                '').replace(
+                ',', '')
+            return float(price) if price else None
 
     def item_original_price(self, response, package_flag=False):
         if package_flag:
-            return self.get_text_from_node(
-                response.xpath("(.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]/span[2]/text()"))
+            orignal_price = self.get_text_from_node(
+                response.xpath(
+                    "((.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]/span[2]/text())[1]")).replace(',',
+                                                                                                                    '').replace(
+                '$', '')
+            return float(orignal_price) if orignal_price else None
         if response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
-            return self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
+            orignal_price = self.get_text_from_node(
+                response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]")).replace('$', '').replace(',',
+                                                                                                                   '')
+            return float(orignal_price) if orignal_price else None
         else:
             return self.item_current_price(response)
 
@@ -182,8 +199,8 @@ class HhgreggspiderSpider(BaseSpider):
                     'following-sibling::*[1]/text()'))
         else:
             return self.get_text_from_node(
-                response.xpath('//*[span[contains(text(),"Product UPC")]]/'
-                               'following-sibling::*[1]/text()'))
+                response.xpath('(//*[span[contains(text(),"Product UPC")]]/'
+                               'following-sibling::*[1]/text())[1]'))
 
     def item_mpn(self, response, package_flag=False):
         if package_flag:
@@ -206,20 +223,28 @@ class HhgreggspiderSpider(BaseSpider):
             detail_specs = []
             for sub_specs in specs.xpath('./*[@class="specDetails"]/div'):
                 property_name = self.get_text_from_node(sub_specs.xpath(
-                        './*[@class="specdesc"]//text() | ./*[@class="nospecdesc"]//text()'))
+                    './*[@class="specdesc"]//text() | ./*[@class="nospecdesc"]//text()'))
                 property_value = self.get_text_from_node(
-                        sub_specs.xpath(
-                            './*[@class="specdesc_right"]//text() | ./*[@class="nospecdesc_right"]//text()'))
-                detail_specs.append({property_name : property_value })
+                    sub_specs.xpath(
+                        './*[@class="specdesc_right"]//text() | ./*[@class="nospecdesc_right"]//text()'))
+                detail_specs.append({property_name: property_value})
             specification[self.get_text_from_node(specs.xpath('./*[@class="specHeader"]//text()'))] = detail_specs
         return specification
 
-    def item_currency(self, data):
+    def item_currency(self, response):
+        if response.xpath('.//*[@class="price spacing"]'):
+            data = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]'))
+        elif response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
+            data = self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
+        else:
+            data = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
+
         return '$' if '$' in data else ''
 
     def item_primary_image_url(self, response, package_flag=False):
         if package_flag:
-            return self.get_text_from_node(response.xpath('//*[@class="static_img"]/@src')).strip('//')
+            return self.get_text_from_node(
+                response.xpath('(.//*[@class="prod_left"])[1]//*[@class="static_img"]/@src')).strip('//')
         return self.get_text_from_node(response.xpath('//meta[@property="og:image"]/@content')).split('?')[0]
 
     def item_images(self, response):

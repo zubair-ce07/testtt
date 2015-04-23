@@ -38,7 +38,7 @@ class NeweggspiderSpider(BaseSpider):
         return item
 
     def item_url(self, response):
-        return response.url.split('&', 1)[0]
+        return response.url
 
     def item_sku(self, response):
         query_string = urlparse.urlparse(response.url).query
@@ -52,7 +52,7 @@ class NeweggspiderSpider(BaseSpider):
     def item_title(self, response):
         title = response.xpath(".//*[@itemprop='name'][1]//text()").extract()
         if title:
-            return self.normalize(title[0])
+            return ' '.join(self.normalize(title[0]).split())
 
     def parse_price(self, response):
         item = response.meta['item']

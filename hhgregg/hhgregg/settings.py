@@ -9,7 +9,7 @@
 #
 
 BOT_NAME = 'hhgregg'
-DOWNLOAD_DELAY = 10
+DOWNLOAD_DELAY = 5
 
 
 HTTPCACHE_ENABLED = True

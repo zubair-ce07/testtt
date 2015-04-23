@@ -27,5 +27,5 @@ class HhgreggItem(scrapy.Item):
     source_url = scrapy.Field()
     primary_image_url = scrapy.Field()
     image_urls = scrapy.Field()
-    products = scrapy.Field()
+    items = scrapy.Field()
 
