@@ -31,10 +31,11 @@ class NeweggspiderSpider(BaseSpider):
         item['url'] = self.item_url(response)
         json_data = self.item_json_data(response)
         item['brand'] = json_data['brand']
-        if response.xpath('.//*[@class="priceAction"]'):
+        item['price'] = json_data['price']
+        if response.xpath('.//*[@class="priceAction"]') or 'MAP' in item['price']:
             return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?%s' % item['url'].split('?', 1)[1],
                            callback=self.parse_price, meta={'item': item})
-        item['price'] = json_data['price']
+
         return item
 
     def item_url(self, response):
