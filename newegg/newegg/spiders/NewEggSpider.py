@@ -7,7 +7,7 @@ from scrapy.http import Request
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
 from scrapinghub.spider import BaseSpider
-
+from scrapy import log
 from newegg.items import NeweggItem
 
 
@@ -18,7 +18,7 @@ class NeweggspiderSpider(BaseSpider):
         'http://www.newegg.com/',
     )
 
-    rules = [Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a','.//*[@class="categoryList primaryNav"]//a'])
+    rules = [Rule(SgmlLinkExtractor(deny = ['name=Newegg-Mobile-Apps'], restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a','.//*[@class="categoryList primaryNav"]//a'])
                   , callback='parse_pagination', follow=True),
              Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@title="View Details"]']),
                   callback='parse_item')
@@ -75,6 +75,19 @@ class NeweggspiderSpider(BaseSpider):
             last_page = response.xpath('.//*[@title="last page"]/@href').extract()
             if last_page:
                 last_page_url = urllib.unquote(last_page[0].split(",'", 1)[1].split("',")[0])
-                request_url, last_page_number = last_page_url.split('Page-', 1)
-                for i in range(2, int(last_page_number) + 1):
-                    yield Request('%sPage-%s' % (request_url, i))
+                self.log('url of last page: %s' % last_page_url, log.INFO)
+                if 'newegg' not in last_page_url:
+                    last_page_number = last_page[0].split("',", 1)[1].split(",'")[0]
+                    for i in range(2, int(last_page_number) + 1):
+                        yield Request('%s&Page=%s' % (response.url, last_page_number))
+                else:
+                    request_url, last_page_number = last_page_url.split('Page-', 1)
+                    if '?' in last_page_number:
+                        last_page_number = last_page_number.split('?')[0]
+                    for i in range(2, int(last_page_number) + 1):
+                        yield Request('%sPage-%s' % (request_url, i))
+        elif(response.xpath('.//span[@class="pageNum"]')):
+                for url in response.xpath('.//span[@class="pageNum"]/a/@href').extract():
+                    request_url = urllib.unquote(url.split(",'", 1)[1].split("',")[0])
+                    yield Request(request_url)
+
