@@ -43,9 +43,14 @@ class NeweggspiderSpider(BaseSpider):
     def item_sku(self, response):
         query_string = urlparse.urlparse(response.url).query
         if query_string:
-            if 'Item' in query_string:
-                sku = urlparse.parse_qs(query_string)['Item'][0]
-                return sku
+            if 'ItemList' in query_string:
+                sku = urlparse.parse_qs(query_string).get('ItemList')
+                if sku:
+                    return sku[0]
+            elif 'Item' in query_string:
+                sku = urlparse.parse_qs(query_string).get('Item')
+                if sku:
+                    return sku[0]
             else:
                 return None
 
