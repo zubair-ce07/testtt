@@ -3,11 +3,6 @@ import re
 from urlparse import urljoin, urlparse
 import json
 from scrapy import log
-import os
-import os.path
-from shutil import rmtree
-from hhgregg import settings
-from scrapy.utils.request import request_fingerprint
 
 from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors import LinkExtractor
@@ -117,33 +112,36 @@ class HhgreggspiderSpider(BaseSpider):
             catalogid = re.search("WCParamJS\[\"catalogId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
         productid = self.get_text_from_node(response.xpath(".//*[contains(@id,'productId')]/text()"))
         form_data = {
-                'catalogId': str(catalogid),
-                'langId': str(langId),
-                'quantity': '1',
-                'requesttype': 'ajax',
-                'storeId': str(storeid),
-                'zipCode': '10001'
-            }
+            'catalogId': str(catalogid),
+            'langId': str(langId),
+            'quantity': '1',
+            'requesttype': 'ajax',
+            'storeId': str(storeid),
+            'zipCode': '10001'
+        }
         if package_flag:
             form_data['partnum'] = str(item.get('model').strip())
             form_data['productType'] = 'Kit'
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
-                formdata=form_data, callback=self.check_item_availability, meta={'productid': productid, 'item': item, 'arg_data': form_data}, priority=10)
+                formdata=form_data, callback=self.check_item_availability,
+                meta={'productid': productid, 'item': item, 'arg_data': form_data}, priority=10)
         else:
             partnum_script_text = response.xpath('(.//script[contains(.,"partNumber")])[1]').extract()
             if partnum_script_text:
                 part_num_match = re.search('partNumber\s*=\s*"([^"]+)', partnum_script_text[0], re.IGNORECASE)
                 if part_num_match:
                     part_num = part_num_match.group(1).strip()
+                    form_data['partnum'] = (part_num)
             else:
-                    part_num = response.xpath('(.//*[contains(@id,"productIdForPartNum")])[1]/@id').extract()[0].split('_')[0]
-            form_data['partnum'] = (part_num)
+                part_num = response.xpath('(.//*[contains(@id,"productIdForPartNum")])[1]/@id').extract()[0].split('_')[
+                    0]
+                form_data['partnum'] = (part_num)
             content_type = {'Content-Type': 'application/x-www-form-urlencoded;'}
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, headers=content_type, callback=self.check_item_availability,
-                meta={'productid': productid, 'item': item , 'arg_data': form_data}, priority=10)
+                meta={'productid': productid, 'item': item, 'arg_data': form_data}, priority=10)
 
     def check_item_availability(self, response):
         item = response.meta['item']
@@ -151,43 +149,47 @@ class HhgreggspiderSpider(BaseSpider):
         productid = response.meta['productid']
         if response.body and not response.xpath(".//h1[contains(.,'Generic System Error ')]"):
             json_data = json.loads(response.body.strip().strip('*/').strip('/*'))
-        else:
-            req = FormRequest(
-                url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
-                formdata=form_data, callback=self.check_item_availability,
-                meta={'productid': productid, 'item': item , 'arg_data': form_data}, priority=1000, dont_filter=True)
-            self.delete_cached_page(req)
-            return req
+            if json_data.get('errorMessageKey') or not json_data.get('catEntryId0'):
+                item['available_instore'] = False
+                item['available_online'] = False
+                if item.get('items'):
+                    return self.parse_package_item_ratings(item['items'].pop(0), item)
+                return Request(
+                    url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                        item['product_id']),
+                    callback=self.item_images, meta={'item': item})
+            else:
+                form_data = {
+                    'catEntryId_0': str(json_data[u'catEntryId0']),
+                    'catalogId': str(json_data[u'catalogId'][0]),
+                    'deliveryAvailable': str(json_data[u'deliveryAvailable_0']),
+                    'inStoreOnly': 'false',
+                    'langId': str(json_data[u'langId'][0]),
+                    'numAvailableLocations': '0',
+                    'objectId': '',
+                    'partnum_0': str(json_data[u'partnum_0']),
+                    'pickupAvailable': str(json_data.get(u'pickupAvailable_0')),
+                    'productId_0': productid,
+                    'requesttype': 'ajax',
+                    'shippingAvailable': str(json_data.get(u'shippingAvailable_0')),
+                    'storeId': str(json_data[u'storeId'][0]),
+                    'zipCode': '10001'
 
-        if json_data.get('errorMessageKey') or not json_data.get('catEntryId0'):
-            item['available_instore'] = False
-            item['available_online'] = False
-            if item.get('items'):
-                return self.parse_package_item_ratings(item['items'].pop(0), item)
-            return Request(
-                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                    item['product_id']),
-                callback=self.item_images, meta={'item': item})
+                }
+                return FormRequest(url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckAvailabilityDisplay',
+                                   formdata=form_data, callback=self.item_availability, meta={'item': item},
+                                   priority=10)
         else:
-            form_data = {
-                'catEntryId_0': str(json_data[u'catEntryId0']),
-                'catalogId': str(json_data[u'catalogId'][0]),
-                'deliveryAvailable': str(json_data[u'deliveryAvailable_0']),
-                'inStoreOnly': 'false',
-                'langId': str(json_data[u'langId'][0]),
-                'numAvailableLocations': '0',
-                'objectId': '',
-                'partnum_0': str(json_data[u'partnum_0']),
-                'pickupAvailable': str(json_data.get(u'pickupAvailable_0')),
-                'productId_0': productid,
-                'requesttype': 'ajax',
-                'shippingAvailable': str(json_data.get(u'shippingAvailable_0')),
-                'storeId': str(json_data[u'storeId'][0]),
-                'zipCode': '10001'
-
-            }
-            return FormRequest(url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckAvailabilityDisplay',
-                               formdata=form_data, callback=self.item_availability, meta={'item': item}, priority=10)
+            retry = response.meta.get('retry') if response.meta.get('retry') else 1
+            form_data['retry'] = retry
+            if retry == 3:
+                req = FormRequest(
+                    url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
+                    formdata=form_data, callback=self.check_item_availability,
+                    meta={'productid': productid, 'item': item, 'arg_data': form_data, 'retry': retry + 1})
+                return req
+            else:
+                self.log('Incomplete Item Droped Due to Invalid availability Response', log.ERROR)
 
     def item_availability(self, response):
         item = response.meta['item']
@@ -201,11 +203,12 @@ class HhgreggspiderSpider(BaseSpider):
                 item['product_id']),
             callback=self.item_images, meta={'item': item})
 
-    def parse_package_item_ratings(self, product , item):
+    def parse_package_item_ratings(self, product, item):
         products = []
-        return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(), meta={'product':product, 'products':products, 'item':item}, callback=self.package_item_rating)
+        return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(),
+                       meta={'product': product, 'products': products, 'item': item}, callback=self.package_item_rating)
 
-    def package_item_rating(self,respons):
+    def package_item_rating(self, respons):
         product = respons.meta['product']
         products = respons.meta['products']
         item = respons.meta['item']
@@ -213,13 +216,15 @@ class HhgreggspiderSpider(BaseSpider):
         products.append(product)
         if item.get('items'):
             product = item['items'].pop(0)
-            return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(), meta={'product':product, 'products':products, 'item':item}, callback=self.package_item_rating)
+            return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(),
+                           meta={'product': product, 'products': products, 'item': item},
+                           callback=self.package_item_rating)
         else:
             item['items'] = products
             return Request(
-            url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                item['product_id']),
-            callback=self.item_images, meta={'item': item})
+                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                    item['product_id']),
+                callback=self.item_images, meta={'item': item})
 
     def item_title(self, response, package_flag=False):
         if package_flag:
@@ -290,9 +295,11 @@ class HhgreggspiderSpider(BaseSpider):
                 ".//script[contains(.,'omnitureProductTag') and contains(.,'prodView')]/text()").extract()
             if price_script_text:
                 price = re.search('prodView","([^"]+)', price_script_text[0]).group(1)
+            else:
+                price = ''
         else:
             price = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
-        return float(price.replace(',','').replace('$', '')) if price else None
+        return float(price.replace(',', '').replace('$', '')) if price else None
 
     def item_original_price(self, response, package_flag=False):
         if package_flag:
@@ -416,30 +423,3 @@ class HhgreggspiderSpider(BaseSpider):
                                           'resultType': 'products',
                                       },
                     )
-
-    def delete_cached_page(self, request):
-        ''' Delete a cached request from FilesystemCacheStorage. Returns True if successful. '''
-        if not settings.HTTPCACHE_ENABLED or not 'httpcache.FilesystemCacheStorage' in settings.HTTPCACHE_STORAGE:
-            self.log('HTTPCACHE is disabled or HTTPCACHE_STORAGE is not FilesystemCacheStorage.', log.WARNING)
-            return False
-        if not request and not isinstance(request, 'scrapy.http.request.Request'):
-            raise TypeError('Invalid argument "request"')
-        req_fp = request_fingerprint(request)
-        req_dir = os.path.join(settings.HTTPCACHE_DIR, self.name, req_fp[:2], req_fp)
-        if not os.path.exists(req_dir):
-            local_dir = os.path.join(os.getcwd(), '.scrapy',
-                                     settings.HTTPCACHE_DIR, self.name, req_fp[:2], req_fp)
-            # local_dir = os.path.join(os.getcwd(), '.scrapy', settings.HTTPCACHE_DIR, self.name, req_fp[:2], req_fp)
-            if not os.path.exists(local_dir):
-                self.log('Error deleting cached page. Path does not exist or permission denied %s' % req_dir, log.DEBUG)
-                return False
-            req_dir = local_dir
-        try:
-            rmtree(req_dir)
-            self.log('Deleted cached page %s, url %s' % (req_dir, request.url), log.DEBUG)
-            return True
-        except Exception as e:
-            self.log('Error deleting cached page %s, %s' % (req_dir, e), log.DEBUG)
-            return False
-    def get_parent_dir(self, directory):
-        return os.path.dirname(directory)
