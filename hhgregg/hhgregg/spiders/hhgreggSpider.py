@@ -2,6 +2,12 @@
 import re
 from urlparse import urljoin, urlparse
 import json
+from scrapy import log
+import os
+import os.path
+from shutil import rmtree
+from hhgregg import settings
+from scrapy.utils.request import request_fingerprint
 
 from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors import LinkExtractor
@@ -30,36 +36,37 @@ class HhgreggspiderSpider(BaseSpider):
     ]
 
     def get_product_detail(self, response):
-        if response.xpath('.//*[@class="kitItemList"]'):
-            return self.parse_packages(response)
-        else:
-            item = HhgreggItem()
-            item['description'] = self.item_description(response)
-            item['title'] = self.item_title(response)
-            item['brand'] = self.item_brand(response)
-            item['product_id'] = self.item_product_id(response)
-            item['sku'] = self.item_sku(item['product_id'])
-            item['model'] = self.item_model(response)
-            item['rating'] = self.item_rating(response)
-            item['mpn'] = self.item_mpn(response)
-            item['upc'] = self.item_upc(response)
-            item['trail'] = self.item_trail(response)
-            item['features'] = self.item_features(response)
-            item['specifications'] = self.item_specification(response)
-            item['current_price'] = self.item_current_price(response)
-            item['original_price'] = self.item_original_price(response)
-            item['currency'] = self.item_currency(response)
-            item['source_url'] = response.url
-            item['primary_image_url'] = self.item_primary_image_url(response)
-            if response.xpath(".//*[@class='available_soon_text2'][contains(.,'DISCONTINUED')]"):
-                item['available_instore'] = False
-                item['available_online'] = False
-                return Request(
-                    url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                        item['product_id']),
-                    callback=self.item_images, meta={'item': item})
+        if 'RFG%20H2O%20KIT' not in response.url and response.url!= 'http://www.hhgregg.com/':
+            if response.xpath('.//*[@class="kitItemList"]'):
+                return self.parse_packages(response)
             else:
-                return self.parse_item_availability(response, item)
+                item = HhgreggItem()
+                item['description'] = self.item_description(response)
+                item['title'] = self.item_title(response)
+                item['brand'] = self.item_brand(response)
+                item['product_id'] = self.item_product_id(response)
+                item['sku'] = self.item_sku(item['product_id'])
+                item['model'] = self.item_model(response)
+                item['rating'] = self.item_rating(response)
+                item['mpn'] = self.item_mpn(response)
+                item['upc'] = self.item_upc(response)
+                item['trail'] = self.item_trail(response)
+                item['features'] = self.item_features(response)
+                item['specifications'] = self.item_specification(response)
+                item['current_price'] = self.item_current_price(response)
+                item['original_price'] = self.item_original_price(response)
+                item['currency'] = self.item_currency(response)
+                item['source_url'] = response.url
+                item['primary_image_url'] = self.item_primary_image_url(response)
+                if response.xpath(".//*[@class='available_soon_text2'][contains(.,'DISCONTINUED')]"):
+                    item['available_instore'] = False
+                    item['available_online'] = False
+                    return Request(
+                        url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                            item['product_id']),
+                        callback=self.item_images, meta={'item': item})
+                else:
+                    return self.parse_item_availability(response, item)
 
     def parse_packages(self, response):
         item = HhgreggItem()
@@ -93,6 +100,8 @@ class HhgreggspiderSpider(BaseSpider):
         if response.xpath(".//*[@class='available_soon_text2'][contains(.,'DISCONTINUED')]"):
             item['available_instore'] = False
             item['available_online'] = False
+            if item.get('items'):
+                return self.parse_package_item_ratings(item['items'].pop(0), item)
             return Request(
                 url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
                     item['product_id']),
@@ -107,20 +116,20 @@ class HhgreggspiderSpider(BaseSpider):
             storeid = re.search("WCParamJS\[\"storeId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
             catalogid = re.search("WCParamJS\[\"catalogId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
         productid = self.get_text_from_node(response.xpath(".//*[contains(@id,'productId')]/text()"))
-        if package_flag:
-            form_data = {
+        form_data = {
                 'catalogId': str(catalogid),
                 'langId': str(langId),
-                'partnum': str(item.get('model').strip()),
-                'productType': 'Kit',
                 'quantity': '1',
                 'requesttype': 'ajax',
                 'storeId': str(storeid),
                 'zipCode': '10001'
             }
+        if package_flag:
+            form_data['partnum'] = str(item.get('model').strip())
+            form_data['productType'] = 'Kit'
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
-                formdata=form_data, callback=self.check_item_availability, meta={'productid': productid, 'item': item})
+                formdata=form_data, callback=self.check_item_availability, meta={'productid': productid, 'item': item, 'arg_data': form_data}, priority=10)
         else:
             partnum_script_text = response.xpath('(.//script[contains(.,"partNumber")])[1]').extract()
             if partnum_script_text:
@@ -129,28 +138,32 @@ class HhgreggspiderSpider(BaseSpider):
                     part_num = part_num_match.group(1).strip()
             else:
                     part_num = response.xpath('(.//*[contains(@id,"productIdForPartNum")])[1]/@id').extract()[0].split('_')[0]
-            form_data = {
-                'catalogId': str(catalogid),
-                'langId': str(langId),
-                'partnum': str(part_num),
-                'quantity': '1',
-                'requesttype': 'ajax',
-                'storeId': str(storeid),
-                'zipCode': '10001'
-            }
-            content_type = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+            form_data['partnum'] = (part_num)
+            content_type = {'Content-Type': 'application/x-www-form-urlencoded;'}
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, headers=content_type, callback=self.check_item_availability,
-                meta={'productid': productid, 'item': item})
+                meta={'productid': productid, 'item': item , 'arg_data': form_data}, priority=10)
 
     def check_item_availability(self, response):
         item = response.meta['item']
+        form_data = response.meta['arg_data']
         productid = response.meta['productid']
-        json_data = json.loads(response.body.strip().strip('*/').strip('/*'))
+        if response.body and not response.xpath(".//h1[contains(.,'Generic System Error ')]"):
+            json_data = json.loads(response.body.strip().strip('*/').strip('/*'))
+        else:
+            req = FormRequest(
+                url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
+                formdata=form_data, callback=self.check_item_availability,
+                meta={'productid': productid, 'item': item , 'arg_data': form_data}, priority=1000, dont_filter=True)
+            self.delete_cached_page(req)
+            return req
+
         if json_data.get('errorMessageKey') or not json_data.get('catEntryId0'):
             item['available_instore'] = False
             item['available_online'] = False
+            if item.get('items'):
+                return self.parse_package_item_ratings(item['items'].pop(0), item)
             return Request(
                 url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
                     item['product_id']),
@@ -174,14 +187,36 @@ class HhgreggspiderSpider(BaseSpider):
 
             }
             return FormRequest(url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckAvailabilityDisplay',
-                               formdata=form_data, callback=self.item_availability, meta={'item': item})
+                               formdata=form_data, callback=self.item_availability, meta={'item': item}, priority=10)
 
     def item_availability(self, response):
         item = response.meta['item']
         if response.xpath(".//div[contains(.,'Available in')]"):
             item['available_instore'] = True
             item['available_online'] = True
+        if item.get('items'):
+            return self.parse_package_item_ratings(item['items'].pop(0), item)
         return Request(
+            url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                item['product_id']),
+            callback=self.item_images, meta={'item': item})
+
+    def parse_package_item_ratings(self, product , item):
+        products = []
+        return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(), meta={'product':product, 'products':products, 'item':item}, callback=self.package_item_rating)
+
+    def package_item_rating(self,respons):
+        product = respons.meta['product']
+        products = respons.meta['products']
+        item = respons.meta['item']
+        product['rating'] = self.item_rating(respons)
+        products.append(product)
+        if item.get('items'):
+            product = item['items'].pop(0)
+            return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(), meta={'product':product, 'products':products, 'item':item}, callback=self.package_item_rating)
+        else:
+            item['items'] = products
+            return Request(
             url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
                 item['product_id']),
             callback=self.item_images, meta={'item': item})
@@ -379,3 +414,29 @@ class HhgreggspiderSpider(BaseSpider):
                                       },
                     )
 
+    def delete_cached_page(self, request):
+        ''' Delete a cached request from FilesystemCacheStorage. Returns True if successful. '''
+        if not settings.HTTPCACHE_ENABLED or not 'httpcache.FilesystemCacheStorage' in settings.HTTPCACHE_STORAGE:
+            self.log('HTTPCACHE is disabled or HTTPCACHE_STORAGE is not FilesystemCacheStorage.', log.WARNING)
+            return False
+        if not request and not isinstance(request, 'scrapy.http.request.Request'):
+            raise TypeError('Invalid argument "request"')
+        req_fp = request_fingerprint(request)
+        req_dir = os.path.join(settings.HTTPCACHE_DIR, self.name, req_fp[:2], req_fp)
+        if not os.path.exists(req_dir):
+            local_dir = os.path.join(os.getcwd(), '.scrapy',
+                                     settings.HTTPCACHE_DIR, self.name, req_fp[:2], req_fp)
+            # local_dir = os.path.join(os.getcwd(), '.scrapy', settings.HTTPCACHE_DIR, self.name, req_fp[:2], req_fp)
+            if not os.path.exists(local_dir):
+                self.log('Error deleting cached page. Path does not exist or permission denied %s' % req_dir, log.DEBUG)
+                return False
+            req_dir = local_dir
+        try:
+            rmtree(req_dir)
+            self.log('Deleted cached page %s, url %s' % (req_dir, request.url), log.DEBUG)
+            return True
+        except Exception as e:
+            self.log('Error deleting cached page %s, %s' % (req_dir, e), log.DEBUG)
+            return False
+    def get_parent_dir(self, directory):
+        return os.path.dirname(directory)

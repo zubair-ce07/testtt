@@ -7,10 +7,19 @@
 #
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #
-
+import os
 BOT_NAME = 'hhgregg'
 DOWNLOAD_DELAY = 5
 
+HTTPCACHE_IGNORE_HTTP_CODES = range(500,599)
+HTTPCACHE_DIR = os.environ.get('HTTPCACHE_DIR', 'httpcache')
+HTTPCACHE_EXPIRATION_SECS = 0 # Keep indefinitely
+HTTPCACHE_STORAGE = 'scrapy.contrib.httpcache.FilesystemCacheStorage'
+
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.contrib.downloadermiddleware.httpcompression.HttpCompressionMiddleware': None,
+	# Disable compression middleware, so the actual HTML pages are cached
+}
 
 HTTPCACHE_ENABLED = True
 SPIDER_MODULES = ['hhgregg.spiders']
