@@ -36,7 +36,7 @@ class HhgreggspiderSpider(BaseSpider):
     ]
 
     def get_product_detail(self, response):
-        if 'RFG%20H2O%20KIT' not in response.url and response.url!= 'http://www.hhgregg.com/':
+        if self.item_product_id(response):
             if response.xpath('.//*[@class="kitItemList"]'):
                 return self.parse_packages(response)
             else:
@@ -239,7 +239,10 @@ class HhgreggspiderSpider(BaseSpider):
             product_id = re.search("hhgregg\/([^_]+)_", response).group(1)
         else:
             script_text = response.xpath(".//script[contains(.,'entity.id')]").extract()
-            product_id = re.search("'entity.id=(.*)'", script_text[0]).group(1)
+            if script_text:
+                product_id = re.search("'entity.id=(.*)'", script_text[0]).group(1)
+            else:
+                product_id = None
         return product_id
 
     def item_brand(self, response):
