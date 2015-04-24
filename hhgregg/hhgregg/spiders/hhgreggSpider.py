@@ -124,7 +124,11 @@ class HhgreggspiderSpider(BaseSpider):
         else:
             partnum_script_text = response.xpath('(.//script[contains(.,"partNumber")])[1]').extract()
             if partnum_script_text:
-                part_num = re.search('partNumber\s*=\s*"(.*)"', partnum_script_text[0], re.IGNORECASE).group(1)
+                part_num_match = re.search('partNumber\s*=\s*"([^"]+)', partnum_script_text[0], re.IGNORECASE)
+                if part_num_match:
+                    part_num = part_num_match.group(1).strip()
+            else:
+                    part_num = response.xpath('(.//*[contains(@id,"productIdForPartNum")])[1]/@id').extract()[0].split('_')[0]
             form_data = {
                 'catalogId': str(catalogid),
                 'langId': str(langId),
@@ -144,7 +148,7 @@ class HhgreggspiderSpider(BaseSpider):
         item = response.meta['item']
         productid = response.meta['productid']
         json_data = json.loads(response.body.strip().strip('*/').strip('/*'))
-        if json_data.get('errorMessageKey') or json_data.get('redirecturl'):
+        if json_data.get('errorMessageKey') or not json_data.get('catEntryId0'):
             item['available_instore'] = False
             item['available_online'] = False
             return Request(
