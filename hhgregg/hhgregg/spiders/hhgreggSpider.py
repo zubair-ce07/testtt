@@ -244,27 +244,17 @@ class HhgreggspiderSpider(BaseSpider):
     def item_current_price(self, response, package_flag=False):
         if package_flag:
             price = self.get_text_from_node(
-                response.xpath("((.//*[@id='price_details'])[1]//*[@class='price spacing']/text())[1]")).replace(',',
-                                                                                                                 '').replace(
-                '$', '')
-            return float(price) if price else None
+                response.xpath("((.//*[@id='price_details'])[1]//*[@class='price spacing']/text())[1]"))
         elif response.xpath('.//*[@class="price spacing"]'):
-            price = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]')).replace(',',
-                                                                                                                '').replace(
-                '$', '')
-            return float(price) if price else None
+            price = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]'))
         elif response.xpath(".//*[@id='checkoutModal']"):
             price_script_text = response.xpath(
                 ".//script[contains(.,'omnitureProductTag') and contains(.,'prodView')]/text()").extract()
             if price_script_text:
                 price = re.search('prodView","([^"]+)', price_script_text[0]).group(1)
-                return float(price.replace(',', '')) if price else None
         else:
-            price = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]')).replace(
-                '$',
-                '').replace(
-                ',', '')
-            return float(price) if price else None
+            price = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
+        return float(price.replace(',','').replace('$', '')) if price else None
 
     def item_original_price(self, response, package_flag=False):
         if package_flag:
