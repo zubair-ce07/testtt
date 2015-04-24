@@ -17,30 +17,12 @@ class AppleSpider(BaseSpider):
             restrict_xpaths=".//div[@class='listing']//a"),
         callback='parse_item'),)
 
-    country_code_mappings = {"us": "United States",
-                             "au": "Australia",
-                             "br": "Brazil",
-                             "ca": "Canada",
-                             "cn": "China",
-                             "fr": "France",
-                             "de": "Germany",
-                             "hk": "Hong Kong",
-                             "it": "Italy",
-                             "jp": "Japan",
-                             "nl": "Netherlands",
-                             "es": "Spain",
-                             "se": "Sweden",
-                             "tr": "Turkey",
-                             "uk": "United Kingdom",
-                             "chde": "swizerland"}
-
-
     def parse_item(self, response):
         item = StoresLocationItem()
         address_parts = self.parse_address_parts(response)
         item.update(address_parts)
         item['country'] = self.store_country(response)
-        if item['country'] == 'United States':
+        if item['country'] == 'US':
             item['address'] = self.construct_address(address_parts, response)
         item['hours'] = self.store_hours(response, item["country"])
         item['store_name'] = self.store_name(response)
@@ -53,17 +35,14 @@ class AppleSpider(BaseSpider):
 
     def parse_json(self, response):
         item = response.meta['item']
-        map_url = re.findall('directions_link: "(.*)"', response.body)
         store_id = re.findall('store_number: "(.*)"', response.body)
-        if item['country'] != 'United States':  # address of US is already fetched.
+        if item['country'] != 'US':  # address of US is already fetched.
             address = re.findall('formatted_address: "(.*)"', response.body)
             if address:
                 address_lines = address[0].split('<br />')
                 item['address'] = address_lines
         if store_id:
             item['store_id'] = store_id[0]
-        if map_url:
-            item['store_floor_plan_url'] = map_url[0]
         return item
 
     def store_city(self, response):
@@ -71,14 +50,14 @@ class AppleSpider(BaseSpider):
         return self.get_text_from_node(city)
 
     def store_country(self, response):
-        for country_code, country_name in self.country_code_mappings.iteritems():
-            if country_code in response.url.split('/'):
-                return country_name
+        country = re.search('www.apple.com/(.*)/retail',response.url)
+        if country:
+                return country.group(1).upper()
         # In case of US, the url does not contain country_code.
-        return self.country_code_mappings["us"]
+        return 'US'
 
     def store_hours(self, response, country):
-        if country == self.country_code_mappings["us"]:  # ' Only US stores hours are neccessary
+        if country == "US":  # ' Only US stores hours are neccessary
             info_rows = response.xpath(".//table[@class='store-info']//tr[count(td)=2]")
             hours = dict()
             for row in info_rows:
