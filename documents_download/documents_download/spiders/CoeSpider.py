@@ -1,6 +1,7 @@
 from urlparse import urljoin, urlparse, parse_qs
 
 from scrapy import log
+from scrapinghub.spider import BaseSpider
 
 from scrapy.http import Request, FormRequest
 from scrapy.spider import Spider
@@ -8,7 +9,7 @@ from scrapy.spider import Spider
 from documents_download.items import DocumentsDownloadItem
 
 
-class CoeSpider(Spider):
+class CoeSpider(BaseSpider):
     name = 'coe_spider'
     start_urls = [
         'http://www.coe.int/T/CM/System/WCDsearch.asp?ShowRes=yes&DocType=docDecision&FilingPlan=fplCM_VolDecisions'
@@ -27,11 +28,11 @@ class CoeSpider(Spider):
                        callback=self.parse_frame_data)
 
     def parse_frame_data(self, response):
-        doc_links = response.xpath("//td[@class='paddingLR25px']//a//@href").extract()
-        for link in doc_links:
-            url = urljoin(self.base_url, link)
+        for link in response.xpath("//td[@class='paddingLR25px']//a"):
+            url = urljoin(self.base_url, self.get_text_from_node(link.xpath('.//@href')))
+            name = self.get_text_from_node(link.xpath('.//text()'))
             yield Request(url=url,
-                          callback=self.parse_download_link)
+                          callback=self.parse_download_link, meta={'name': name})
 
         next_page_number = int(response.xpath("//*[@class='WCDPagination_NumCourant']//text()").extract()[0]) + 1
         if response.xpath(".//a[contains(.,'Next')]"):
@@ -43,24 +44,45 @@ class CoeSpider(Spider):
 
     def parse_download_link(self, response):
         download_link = ''
+        doc_name = response.meta['name'].replace('/', '_')
         word_file_link = response.xpath(".//*[@class='WCDBar_docBarButton'][contains(text(),'WORD')]//@href").extract()
         if word_file_link:
             download_link = urljoin(self.base_url, word_file_link[0])
-        else:  # file may be in PDF format
+        elif response.xpath(".//*[@class='WCDBar_docBarButton'][contains(text(),'PDF')]"):  # file may be in PDF format
             pdf_file_link = response.xpath(
                 ".//*[@class='WCDBar_docBarButton'][contains(text(),'PDF')]//@href").extract()
             if pdf_file_link:
                 download_link = urljoin(self.base_url, pdf_file_link[0])
+        elif response.xpath(".//*[@class='WCDBar_docBarButton'][contains(text(),'DOWNLOAD')]") :
+            if response.xpath('.//*[@class="WCDRend_PrintablePaper"]/*[@class="WCDRend_link"]'):
+                for link in response.xpath('.//*[@class="WCDRend_PrintablePaper"]/*[@class="WCDRend_link"]//li/a'):
+                    download_link = urljoin(self.base_url, self.get_text_from_node(link.xpath('./@href')))
+                    item = DocumentsDownloadItem()
+                    item['file_url'] = download_link
+                    item['file_name'] = '%s_%s' % (doc_name,self.get_text_from_node(link.xpath('./text()')).replace('.pdf', '')) # item ID will be the file name
+                    yield item
+            else:
+                for i, link in enumerate(response.xpath('.//*[@id="SMenuImprimable"]//td/a')):
+                    download_link = urljoin(self.base_url, self.get_text_from_node(link.xpath('./@href')))
+                    item = DocumentsDownloadItem()
+                    item['file_url'] = download_link
+                    item['file_name'] = '%s_%s_%s' % (doc_name,self.get_text_from_node(link.xpath('./text()')),i) # item ID will be the file name
+                    yield item
+
+        else:
+            self.log("File does not exist in WORD or PDF format", level=log.WARNING)
         if download_link:
             item = DocumentsDownloadItem()
             item['file_url'] = download_link
-            item['file_name'] = self.get_title(download_link)  # item ID will be the file name
-            return item
-        else:
-            self.log("File does not exist in WORD or PDF format", level=log.WARNING)
+            item['file_name'] = doc_name  # item ID will be the file name
+            yield item
 
-    def get_title(self, url):
-        query_string = urlparse(url).query
-        if query_string:
-            doc_id = parse_qs(query_string)['DocId'][0]
-            return doc_id
+    def get_title(self,response,  url):
+        title = self.get_text_from_node(response.xpath('(.//*[@class="CM_SubTitle"]/b/text() | .//*[@class="WCDRend_Titre"]/text())[1]'))
+        if title:
+            return title
+        else:
+            query_string = urlparse(url).query
+            if query_string:
+                doc_id = parse_qs(query_string)['DocId'][0]
+                return doc_id

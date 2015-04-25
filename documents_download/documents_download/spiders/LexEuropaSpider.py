@@ -2,12 +2,13 @@
 from urlparse import urlparse, urljoin
 
 from scrapy.http import Request
-from scrapy.spider import Spider
-
+from urlparse import urljoin, urlparse, parse_qs
+from scrapinghub.spider import BaseSpider
 from documents_download.items import DocumentsDownloadItem
+import re
 
 
-class LexeuropaspiderSpider(Spider):
+class LexeuropaspiderSpider(BaseSpider):
     name = "LexEuropaSpider"
     allowed_domains = ["europa.eu"]
     start_urls = (
@@ -16,32 +17,33 @@ class LexeuropaspiderSpider(Spider):
 
     category_urls = []
     search_years = []
-	
+
     def parse(self, response):
-        # get only one category extract()[0:1]:
         for url in response.xpath('.//*[contains(@id,"arrow") and not(contains(.,"Positions"))]/@href').extract():
             self.category_urls.append(self.convert_into_absolute_url(url))
         return self.get_next_request()
 
     def get_documents(self, response):
-        search_terms = response.url.split('by:', 1)[1].split('&')[0] + '/' + \
-                       response.url.split('YEAR=', 1)[1].split('&')[0]
+        query_string = urlparse(response.url).query
+        year = parse_qs(query_string)['DD_YEAR'][0] if parse_qs(query_string).get('DD_YEAR') else ''
+        browse_by = parse_qs(query_string)['name'][0].split('by:', 1)[1] if parse_qs(query_string).get('name') else ''
+        search_terms = '%s/%s' % (browse_by, year)
         for url in response.xpath('.//a[*[text()="pdf"]]/@href').extract():
             complete_url = self.convert_into_absolute_url(url)
             item = DocumentsDownloadItem()
-            item['file_name'] = complete_url.split('X:')[1].split('&')[0]
+            file_name_match = re.search('([^:]+)&', url)
+            if file_name_match:
+                item['file_name'] = file_name_match.group(1)
             item['file_location'] = search_terms
             item['file_url'] = complete_url
             yield item
 
         # for next_page
-        total = response.xpath('.//*[@name="WT.oss_r"]/@content').extract()
-        if total:
-            pages = int(total[0]) / 10 + (int(total[0]) % 10 != 0)
-            for i in range(2, pages + 1):
-                url = response.url + '&page=%s' % i
-                yield Request(self.convert_into_absolute_url(url), callback=self.get_documents)
-        yield self.get_next_request()
+        if response.xpath('(.//span[@class="currentPage"])[1]/following-sibling::a[1]'):
+            next_page_url = self.get_text_from_node(response.xpath('(.//span[@class="currentPage"])[1]/following-sibling::a[1]/@href'))
+            yield Request(self.convert_into_absolute_url(next_page_url), callback=self.get_documents)
+        yield  self.get_next_request()
+
 
     def get_next_request(self):
         if self.search_years:
@@ -51,10 +53,9 @@ class LexeuropaspiderSpider(Spider):
 
     def get_years(self, response):
         years = response.xpath('.//*[@class="leaf"]')
-        # get only one year years[0:1]
         for year in years:
             year_text = year.xpath('./text()').extract()[0].strip()
-            if year_text != 'Other' and int(year_text) > 1980:
+            if year_text != 'Other' and int(year_text) > 1979:
                 url = self.convert_into_absolute_url(year.xpath('./a/@href').extract()[0])
                 self.search_years.append(url)
         return self.get_next_request()

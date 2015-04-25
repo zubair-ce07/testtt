@@ -2,11 +2,12 @@ from urlparse import urljoin, urlparse
 
 from scrapy.http import FormRequest, Request
 from scrapy.spider import Spider
+import re
 
 from documents_download.items import DocumentsDownloadItem
+from scrapinghub.spider import BaseSpider
 
-
-class OsceSpider(Spider):
+class OsceSpider(BaseSpider):
     name = 'osce_spider'
     start_urls = ["http://www.osce.org/resources/documents"]
 
@@ -14,33 +15,16 @@ class OsceSpider(Spider):
     page_to_crawl = 1
 
     def parse(self, response):
-        data = {"filters_1": '15',
-                "date_from": '1994',
-                "document_type": '462',
-                'language': 'en',
-                'op': 'Apply Filters',
-                'solrsort_field': 'score',
-                'solrsort_order': 'desc',
-                'rows': '10',
-                'filters_2': '0',
-                'filters_3': '0',
-                'filters_4': '0',
-                'date_to': '',
-                'form_build_id': 'form-b8269dd21d4683ff29b6cb35f1ada469',
-                'form_id': 'osce_search_form_resources'
-        }
-        url = urljoin(self.base_url, "/resources/documents")
-        yield FormRequest(url=url,
-                          formdata=data,
-                          callback=self.parse_listing)
+        return Request('http://www.osce.org/resources/documents/?filters=+im_taxonomy_vid_1:%2815%29+im_taxonomy_vid_22:%28462%29+sm_translations:%28en%29&solrsort=score%20desc&rows=10', callback=self.parse_listing)
 
     def parse_listing(self, response):
-        doc_download_links = response.xpath("//ul[@class='links']//a[contains(text(),'English')]//@href").extract()
-        for link in doc_download_links:
-            full_link = urljoin(self.base_url, link)
+        for link in response.xpath("//ul[@class='links']//a[contains(text(),'English')]"):
+            full_link = urljoin(self.base_url, self.get_text_from_node(link.xpath('.//@href')))
             item = DocumentsDownloadItem()
             item['file_url'] = full_link
-            item['file_name'] = self.get_title(full_link)  # item ID will be the file name
+            item['file_location'] = self.page_to_crawl
+            item['file_name'] = self.get_title(full_link, link, self.page_to_crawl)  # item ID will be the file name
+            item['file_location'] = self.page_to_crawl
             item['page'] = self.page_to_crawl
             yield item
 
@@ -51,16 +35,16 @@ class OsceSpider(Spider):
                           callback=self.parse_listing)
             self.page_to_crawl += 1
 
-    def get_title(self, url):
-        query_path = urlparse(url).path
-        if query_path:
-            parts = query_path.split('/')  # example /pc/12323
-            if len(parts) == 3:
-                doc_id = parts[2]
-            else:
-                doc_id = parts[1]
-            return doc_id
+    def get_title(self, url, response, page):
+        match_title = re.search('(\w+)\?', url)
+        if match_title:
+            title_id = match_title.group(1)
+        title = self.get_text_from_node(response.xpath('.//@title'))
 
+        if title and title_id:
+            return '%s_%s_%s' % (title, title_id, page)
+        else:
+            return '%s_%s' % (title_id, page)
 
 
 
