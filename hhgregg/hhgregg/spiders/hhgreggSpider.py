@@ -12,7 +12,7 @@ from scrapinghub.spider import BaseSpider
 from hhgregg.items import HhgreggItem
 
 
-class HhgreggspiderSpider(BaseSpider):
+class HhgreggSpider(BaseSpider):
     name = "hhgreggSpider"
     allowed_domains = ["hhgregg.com",
                        "scene7.com"]
