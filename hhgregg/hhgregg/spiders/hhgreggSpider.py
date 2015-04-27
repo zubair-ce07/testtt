@@ -106,17 +106,16 @@ class HhgreggSpider(BaseSpider):
 
     def parse_item_availability(self, response, item, package_flag=False):
         ParamJS_script_text = response.xpath('(.//script[contains(.,"WCParamJS")])[1]').extract()
-        if ParamJS_script_text:
-            langId = re.search("WCParamJS\[\"langId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
-            storeid = re.search("WCParamJS\[\"storeId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
-            catalogid = re.search("WCParamJS\[\"catalogId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
-        productid = self.get_text_from_node(response.xpath(".//*[contains(@id,'productId')]/text()"))
+        lang_id = re.search("WCParamJS\[\"langId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
+        store_id = re.search("WCParamJS\[\"storeId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
+        catalog_id = re.search("WCParamJS\[\"catalogId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
+        product_id = self.get_text_from_node(response.xpath(".//*[contains(@id,'productId')]/text()"))
         form_data = {
-            'catalogId': str(catalogid),
-            'langId': str(langId),
+            'catalogId': str(catalog_id),
+            'langId': str(lang_id),
             'quantity': '1',
             'requesttype': 'ajax',
-            'storeId': str(storeid),
+            'storeId': str(store_id),
             'zipCode': '10001'
         }
         if package_flag:
@@ -125,7 +124,7 @@ class HhgreggSpider(BaseSpider):
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, callback=self.check_item_availability,
-                meta={'productid': productid, 'item': item, 'arg_data': form_data}, priority=10)
+                meta={'productid': product_id, 'item': item, 'arg_data': form_data}, priority=10)
         else:
             partnum_script_text = response.xpath('(.//script[contains(.,"partNumber")])[1]').extract()
             if partnum_script_text:
@@ -141,7 +140,7 @@ class HhgreggSpider(BaseSpider):
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, headers=content_type, callback=self.check_item_availability,
-                meta={'productid': productid, 'item': item, 'arg_data': form_data}, priority=10)
+                meta={'productid': product_id, 'item': item, 'arg_data': form_data}, priority=10)
 
     def check_item_availability(self, response):
         item = response.meta['item']
@@ -221,12 +220,10 @@ class HhgreggSpider(BaseSpider):
             data = response.body.split('=', 1)[1].strip(';')
             try:
                 jsondata = json.loads(data)
+                if jsondata.get('rollup'):
+                    product['rating'] = self.normalize_rating(jsondata['rollup'].get('d'))
             except ValueError:
-                rating = self.normalize_rating(re.search('d:([^,]+)', data).group(1))
-
-            if jsondata and jsondata.get('rollup'):
-                rating = self.normalize_rating(jsondata['rollup'].get('d'))
-            product['rating'] = rating
+                product['rating'] = self.normalize_rating(re.search('d:([^,]+)', data).group(1))
             products.append(product)
             if item.get('items'):
                 product = item['items'].pop(0)
