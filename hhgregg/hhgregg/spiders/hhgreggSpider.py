@@ -22,11 +22,11 @@ class HhgreggspiderSpider(BaseSpider):
 
     rules = [
 
-        Rule(LinkExtractor(deny=['/productfinder/'],
+    Rule(LinkExtractor(deny=['/productfinder/'],
                            restrict_xpaths=['.//*[contains( @id,"WC_CachedHeaderDisplay_links")]',
                                             './/*[@class="product_group_name product_info"]']),
              callback='parse_pagination', follow=True),
-        Rule(LinkExtractor(restrict_xpaths=['.//*[@class="information"]/h3/a']),
+        Rule(LinkExtractor(deny=['RFG%20H2O%20KIT'], restrict_xpaths=['.//*[@class="information"]/h3/a']),
              callback='get_product_detail')
     ]
 
@@ -120,7 +120,7 @@ class HhgreggspiderSpider(BaseSpider):
             'zipCode': '10001'
         }
         if package_flag:
-            form_data['partnum'] = str(item.get('model').strip())
+            form_data['partnum'] = str(item.get('model'))
             form_data['productType'] = 'Kit'
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
@@ -205,26 +205,38 @@ class HhgreggspiderSpider(BaseSpider):
 
     def parse_package_item_ratings(self, product, item):
         products = []
-        return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(),
-                       meta={'product': product, 'products': products, 'item': item}, callback=self.package_item_rating)
+        return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
+        self.get_directory(product['model']), product['model']),
+                       meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
+                       callback=self.package_item_rating)
 
-    def package_item_rating(self, respons):
-        product = respons.meta['product']
-        products = respons.meta['products']
-        item = respons.meta['item']
-        product['rating'] = self.item_rating(respons)
-        products.append(product)
-        if item.get('items'):
-            product = item['items'].pop(0)
-            return Request('http://www.hhgregg.com/a/item/%s' % product['model'].strip(),
-                           meta={'product': product, 'products': products, 'item': item},
-                           callback=self.package_item_rating)
+    def package_item_rating(self, response):
+        packge_flag = response.meta['package_flag']
+        item = response.meta['item']
+        if packge_flag:
+            product = response.meta['product']
+            products = response.meta['products']
+            data = response.body.split('=', 1)[1].strip(';')
+            jsondata = json.loads(data)
+            if jsondata.get('rollup'):
+                rating = self.normalize_rating(jsondata['rollup'].get('d'))
+            product['rating'] = rating
+            products.append(product)
+            if item.get('items'):
+                product = item['items'].pop(0)
+                return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
+                self.get_directory(product['model']), product['model']),
+                               meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
+                               callback=self.package_item_rating, errback=self.handle_error)
+            else:
+                item['items'] = products
+                return Request(
+                    url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                        item['product_id']),
+                    callback=self.item_images, meta={'item': item})
         else:
-            item['items'] = products
-            return Request(
-                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                    item['product_id']),
-                callback=self.item_images, meta={'item': item})
+            item['rating'] = self.item_rating(response, item['model'])
+            return item
 
     def item_title(self, response, package_flag=False):
         if package_flag:
@@ -245,11 +257,10 @@ class HhgreggspiderSpider(BaseSpider):
         else:
             script_text = response.xpath(".//script[contains(.,'entity.id')]").extract()
             if script_text:
-                product_id = re.search("'entity.id=(.*)'", script_text[0]).group(1)
+                product_id = re.search("'entity.id=(.*)'", script_text[0]).group(1).strip()
             else:
                 product_id = None
         return product_id
-
     def item_brand(self, response):
         script_text = response.xpath(".//script[contains(.,'entity.brand')]").extract()
         brand = re.search("'entity.brand=(.*)'", script_text[0])
@@ -257,20 +268,29 @@ class HhgreggspiderSpider(BaseSpider):
             return brand.group(1)
         return None
 
-    def item_rating(self, response):
+    def normalize_rating(self, rating_in_points):
+        return "%.2f" % (float(rating_in_points) * 100 / 5) if rating_in_points else None
+
+    def item_rating(self, response, product_id=None):
+        rating = None
         if response.xpath('.//*[@class="pr-rating pr-rounded average"]'):
             rating_in_points = self.get_text_from_node(
                 response.xpath('.//*[@class="pr-rating pr-rounded average"]/text()'))
-            rating = "%.2f" % (float(rating_in_points) * 100 / 5)
-        else:
-            rating = None
+            rating = self.normalize_rating(rating_in_points)
+        if product_id:
+            data = response.body.split('=', 1)[1].strip(';')
+            jsondata = json.loads(data)
+            if jsondata['locales']['en_US'].get('p%s' % product_id):
+                product_json = jsondata['locales']['en_US'].get('p%s' % product_id)
+                if product_json.get('reviews'):
+                    rating = self.normalize_rating(product_json['reviews'].get('avg'))
         return rating
 
     def item_model(self, response):
         model_text = self.get_text_from_node(response.xpath('(.//*[@class="model_no"]/text())[1]')).strip('(').strip(
             ')')
         model = model_text.split(':')[1]
-        return model
+        return model.strip()
 
     def item_features(self, response, package_flag=False):
         features = []
@@ -395,8 +415,37 @@ class HhgreggspiderSpider(BaseSpider):
             else:
                 image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', image_items['i']['n']))
             item['image_urls'] = image_urls
+        if item.get('rating'):
+            return item
+        else:
+            return Request(
+                'http://www.hhgregg.com/reviews/pwr/content/%s/contents.js' % self.get_directory(item['model'].strip()),
+                callback=self.package_item_rating, meta={'package_flag': False, 'item': item},
+                errback=self.handle_error)
 
-        yield item
+
+    def handle_error(self, failure):
+        item = failure.value.response.meta['item']
+        package_flag = failure.value.response.meta['package_flag']
+        if package_flag:
+            product = failure.value.response.meta['product']
+            products = failure.value.response.meta['products']
+            product['rating'] = None
+            products.append(product)
+            if item.get('items'):
+                product = item['items'].pop(0)
+                return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
+                self.get_directory(product['model']), product['model']),
+                               meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
+                               callback=self.package_item_rating, errback=self.handle_error)
+            else:
+                item['items'] = products
+                return Request(
+                    url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                        item['product_id']),
+                    callback=self.item_images, meta={'item': item})
+        else:
+            return item
 
     def parse_pagination(self, response):
         if response.xpath('.//*[@class="pages center"]/a[img[@alt="Next"]]'):
