@@ -60,13 +60,15 @@ class CoeSpider(BaseSpider):
                     item = DocumentsDownloadItem()
                     item['file_url'] = download_link
                     item['file_name'] = '%s_%s' % (doc_name,self.get_text_from_node(link.xpath('./text()')).replace('.pdf', '')) # item ID will be the file name
+                    item['file_location'] = doc_name
                     yield item
             else:
                 for i, link in enumerate(response.xpath('.//*[@id="SMenuImprimable"]//td/a')):
                     download_link = urljoin(self.base_url, self.get_text_from_node(link.xpath('./@href')))
                     item = DocumentsDownloadItem()
                     item['file_url'] = download_link
-                    item['file_name'] = '%s_%s_%s' % (doc_name,self.get_text_from_node(link.xpath('./text()')),i) # item ID will be the file name
+                    item['file_name'] = '%s_%s_%s' % (doc_name,self.get_text_from_node(link.xpath('./text()')),i)
+                    item['file_location'] = doc_name# item ID will be the file name
                     yield item
 
         else:
@@ -77,12 +79,3 @@ class CoeSpider(BaseSpider):
             item['file_name'] = doc_name  # item ID will be the file name
             yield item
 
-    def get_title(self,response,  url):
-        title = self.get_text_from_node(response.xpath('(.//*[@class="CM_SubTitle"]/b/text() | .//*[@class="WCDRend_Titre"]/text())[1]'))
-        if title:
-            return title
-        else:
-            query_string = urlparse(url).query
-            if query_string:
-                doc_id = parse_qs(query_string)['DocId'][0]
-                return doc_id

@@ -41,10 +41,10 @@ class OsceSpider(BaseSpider):
             title_id = match_title.group(1)
         title = self.get_text_from_node(response.xpath('.//@title'))
 
-        if title and title_id:
-            return '%s_%s_%s' % (title, title_id, page)
+        if title and title_id and len(title) < 200:
+            return '%s_%s_PAGE%s' % (title.replace('/', '_'), title_id, page)
         else:
-            return '%s_%s' % (title_id, page)
+            return '%s_PAGE%s' % (title_id, page)
 
 
 
