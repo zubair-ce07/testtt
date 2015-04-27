@@ -180,9 +180,9 @@ class HhgreggspiderSpider(BaseSpider):
                                    formdata=form_data, callback=self.item_availability, meta={'item': item},
                                    priority=10)
         else:
-            retry = response.meta.get('retry') if response.meta.get('retry') else 1
+            retry = response.meta.get('retry', 1)
             form_data['retry'] = retry
-            if retry == 3:
+            if retry <= 3:
                 req = FormRequest(
                     url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                     formdata=form_data, callback=self.check_item_availability,
@@ -425,6 +425,10 @@ class HhgreggspiderSpider(BaseSpider):
             else:
                 image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', image_items['i']['n']))
             item['image_urls'] = image_urls
+            if not item.get('primary_image_url'):
+                for img in image_urls:
+                    if '_main' in img:
+                        item['primary_image_url'] = img
         if item.get('rating'):
             return item
         else:

@@ -9,7 +9,7 @@
 #
 import os
 BOT_NAME = 'hhgregg'
-DOWNLOAD_DELAY = 5
+DOWNLOAD_DELAY = 3
 
 HTTPCACHE_IGNORE_HTTP_CODES = range(500,599)
 HTTPCACHE_DIR = os.environ.get('HTTPCACHE_DIR', 'httpcache')
@@ -21,7 +21,7 @@ DOWNLOADER_MIDDLEWARES = {
 	# Disable compression middleware, so the actual HTML pages are cached
 }
 
-HTTPCACHE_ENABLED = True
+HTTPCACHE_ENABLED =False
 SPIDER_MODULES = ['hhgregg.spiders']
 NEWSPIDER_MODULE = 'hhgregg.spiders'
 
