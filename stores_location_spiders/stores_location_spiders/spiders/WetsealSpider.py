@@ -33,7 +33,6 @@ class WetsealSpider(BaseSpider):
         address_parts = self.parse_address(item['address'])
         item.update(address_parts)
         item['store_url'] = self.store_url(result, base_url)
-        item['store_floor_plan_url'] = self.store_map_url(result)
         item['hours'] = self.store_hours(result)
         item['country'] = 'United States'
         return item
@@ -65,11 +64,6 @@ class WetsealSpider(BaseSpider):
         store_url = result.xpath('.//td[1]/a/@href').extract()
         if store_url:
             return urlparse.urljoin(base_url, store_url[0])
-
-    def store_map_url(self, result):
-        map_url = result.xpath('//*[@class="store-map storelocator-results-link"]/a/@href').extract()
-        if map_url:
-            return map_url[0]
 
     def store_hours(self, result):
         lines = result.xpath(".//*[@class='store-hours']//text()").extract()
