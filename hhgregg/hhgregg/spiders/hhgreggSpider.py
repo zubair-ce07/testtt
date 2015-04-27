@@ -189,7 +189,7 @@ class HhgreggspiderSpider(BaseSpider):
                     meta={'productid': productid, 'item': item, 'arg_data': form_data, 'retry': retry + 1})
                 return req
             else:
-                self.log('Incomplete Item Droped Due to Invalid availability Response', log.ERROR)
+                self.log('Incomplete Item Droped Due to Invalid availability Response. Url = %s' % item['source_url'], log.ERROR)
 
     def item_availability(self, response):
         item = response.meta['item']
@@ -208,9 +208,9 @@ class HhgreggspiderSpider(BaseSpider):
         return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
         self.get_directory(product['model']), product['model']),
                        meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
-                       callback=self.package_item_rating)
+                       callback=self.parse_item_rating)
 
-    def package_item_rating(self, response):
+    def parse_item_rating(self, response):
         packge_flag = response.meta['package_flag']
         item = response.meta['item']
         if packge_flag:
@@ -227,7 +227,7 @@ class HhgreggspiderSpider(BaseSpider):
                 return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
                 self.get_directory(product['model']), product['model']),
                                meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
-                               callback=self.package_item_rating, errback=self.handle_error)
+                               callback=self.parse_item_rating, errback=self.handle_error)
             else:
                 item['items'] = products
                 return Request(
@@ -280,9 +280,9 @@ class HhgreggspiderSpider(BaseSpider):
         if product_id:
             data = response.body.split('=', 1)[1].strip(';')
             jsondata = json.loads(data)
-            if jsondata['locales']['en_US'].get('p%s' % product_id):
+            if jsondata['locales'].get('en_US'):
                 product_json = jsondata['locales']['en_US'].get('p%s' % product_id)
-                if product_json.get('reviews'):
+                if product_json and product_json.get('reviews'):
                     rating = self.normalize_rating(product_json['reviews'].get('avg'))
         return rating
 
@@ -420,7 +420,7 @@ class HhgreggspiderSpider(BaseSpider):
         else:
             return Request(
                 'http://www.hhgregg.com/reviews/pwr/content/%s/contents.js' % self.get_directory(item['model'].strip()),
-                callback=self.package_item_rating, meta={'package_flag': False, 'item': item},
+                callback=self.parse_item_rating, meta={'package_flag': False, 'item': item},
                 errback=self.handle_error)
 
 
@@ -437,7 +437,7 @@ class HhgreggspiderSpider(BaseSpider):
                 return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
                 self.get_directory(product['model']), product['model']),
                                meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
-                               callback=self.package_item_rating, errback=self.handle_error)
+                               callback=self.parse_item_rating, errback=self.handle_error)
             else:
                 item['items'] = products
                 return Request(
