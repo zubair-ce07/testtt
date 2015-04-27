@@ -15,10 +15,13 @@ class NeweggspiderSpider(BaseSpider):
     name = "NewEggSpider"
     allowed_domains = ["newegg.com"]
     start_urls = (
-        'http://www.newegg.com/ProductSort/CategoryList.aspx?Depa=0&Name=All-Categories',
+        'http://www.newegg.com/',
     )
 
-    rules = [Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@class="catList"]/li/a'])
+    rules = [Rule(SgmlLinkExtractor(deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Memory-Finder', 'Power-Supply-Wattage-Calculator', 'Battery-Finder', 'Cable-Finder', 'Notebook-Finder', 'Tablet-Finder', 'Windows-Device-Finder', 'HDTV-Finder'],
+                                    restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
+                                                     './/*[@class="categoryList primaryNav"]//a',
+                                                     './/*[@class="categoryList secondaryNav"]//a'])
                   , callback='parse_pagination', follow=True),
              Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@title="View Details"]']),
                   callback='parse_item')
@@ -85,15 +88,22 @@ class NeweggspiderSpider(BaseSpider):
             data['brand'] = None
             return data
 
+    def get_page_url(self, data):
+        page_url = re.search(",'([^']+)", data).group(1)
+        return page_url
+
+    def get_page_number(self, data):
+        page_number = re.search("',(\d+),", data).group(1)
+        return page_number
 
     def parse_pagination(self, response):
         if response.xpath('.//*[@title="last page"]/parent::li[@class="enabled"]'):
             last_page = response.xpath('.//*[@title="last page"]/@href').extract()
             if last_page:
-                last_page_url = urllib.unquote(last_page[0].split(",'", 1)[1].split("',")[0])
+                last_page_url = urllib.unquote(self.get_page_url(last_page[0]))
                 self.log('url of last page: %s' % last_page_url, log.INFO)
                 if 'newegg' not in last_page_url:
-                    last_page_number = last_page[0].split("',", 1)[1].split(",'")[0]
+                    last_page_number = self.get_page_number(last_page[0])
                     for i in range(2, int(last_page_number) + 1):
                         yield Request('%s&Page=%s' % (response.url, last_page_number))
                 else:
@@ -104,9 +114,10 @@ class NeweggspiderSpider(BaseSpider):
                         yield Request('%sPage-%s' % (request_url, i))
         elif (response.xpath('.//span[@class="pageNum"]')):
             for url in response.xpath('.//span[@class="pageNum"]/a/@href').extract():
-                request_url = urllib.unquote(url.split(",'", 1)[1].split("',")[0])
+                extracted_url = self.get_page_url(url)
+                request_url = urllib.unquote(extracted_url)
                 if 'newegg' not in request_url:
-                    request_page_number = url.split("',", 1)[1].split(",'")[0]
+                    request_page_number = self.get_page_number(url)
                     request_url = '%s&Page=%s' % (response.url, request_page_number)
                 yield Request(request_url)
 
