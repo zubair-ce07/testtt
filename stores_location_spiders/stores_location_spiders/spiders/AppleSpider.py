@@ -50,7 +50,7 @@ class AppleSpider(BaseSpider):
         return self.get_text_from_node(city)
 
     def store_country(self, response):
-        country = re.search('www.apple.com/([A-Za-z]+)/retail',response.url)
+        country = re.search('www.apple.com/([A-z]+)/retail',response.url)
         if country:
                 return country.group(1).upper()
         # In case of US, the url does not contain country_code.
