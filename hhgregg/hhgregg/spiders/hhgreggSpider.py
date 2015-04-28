@@ -36,21 +36,14 @@ class HhgreggSpider(BaseSpider):
                 return self.parse_packages(response)
             else:
                 item = HhgreggItem()
+                self.populate_item(response, item)
                 item['description'] = self.item_description(response)
-                item['title'] = self.item_title(response)
-                item['brand'] = self.item_brand(response)
-                item['product_id'] = self.item_product_id(response)
-                item['sku'] = self.item_sku(item['product_id'])
-                item['model'] = self.item_model(response)
                 item['rating'] = self.item_rating(response)
                 item['mpn'] = self.item_mpn(response)
                 item['upc'] = self.item_upc(response)
                 item['trail'] = self.item_trail(response)
                 item['features'] = self.item_features(response)
                 item['specifications'] = self.item_specification(response)
-                item['current_price'] = self.item_current_price(response)
-                item['original_price'] = self.item_original_price(response)
-                item['currency'] = self.item_currency(response)
                 item['source_url'] = response.url
                 item['primary_image_url'] = self.item_primary_image_url(response)
                 if response.xpath(".//*[@class='available_soon_text2'][contains(.,'DISCONTINUED')]"):
@@ -65,16 +58,9 @@ class HhgreggSpider(BaseSpider):
 
     def parse_packages(self, response):
         item = HhgreggItem()
+        self.populate_item(response, item)
         item['description'] = self.item_description(response, True)
-        item['title'] = self.item_title(response)
-        item['brand'] = self.item_brand(response)
-        item['product_id'] = self.item_product_id(response)
-        item['sku'] = self.item_sku(item['product_id'])
-        item['model'] = self.item_model(response)
         item['source_url'] = response.url
-        item['current_price'] = self.item_current_price(response)
-        item['original_price'] = self.item_original_price(response)
-        item['currency'] = self.item_currency(response)
         products = []
         for product_info_div in response.xpath(
                 './/*[@id="mainBundleTabContainer"]//*[contains(@class,"kitTarget target")]'):
@@ -104,6 +90,16 @@ class HhgreggSpider(BaseSpider):
         else:
             return self.parse_item_availability(response, item, True)
 
+    def populate_item(self, response, item):
+        item['title'] = self.item_title(response)
+        item['brand'] = self.item_brand(response)
+        item['product_id'] = self.item_product_id(response)
+        item['sku'] = self.item_sku(item['product_id'])
+        item['model'] = self.item_model(response)
+        item['current_price'] = self.item_current_price(response)
+        item['original_price'] = self.item_original_price(response)
+        item['currency'] = self.item_currency(response)
+
     def parse_item_availability(self, response, item, package_flag=False):
         ParamJS_script_text = response.xpath('(.//script[contains(.,"WCParamJS")])[1]').extract()
         lang_id = re.search("WCParamJS\[\"langId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
@@ -131,11 +127,11 @@ class HhgreggSpider(BaseSpider):
                 part_num_match = re.search('partNumber\s*=\s*"([^"]+)', partnum_script_text[0], re.IGNORECASE)
                 if part_num_match:
                     part_num = part_num_match.group(1).strip()
-                    form_data['partnum'] = (part_num)
+                    form_data['partnum'] = str(part_num)
             else:
                 part_num = response.xpath('(.//*[contains(@id,"productIdForPartNum")])[1]/@id').extract()[0].split('_')[
                     0]
-                form_data['partnum'] = (part_num)
+                form_data['partnum'] = str(part_num)
             content_type = {'Content-Type': 'application/x-www-form-urlencoded;'}
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
@@ -185,7 +181,7 @@ class HhgreggSpider(BaseSpider):
                 req = FormRequest(
                     url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                     formdata=form_data, callback=self.check_item_availability,
-                    meta={'productid': productid, 'item': item, 'arg_data': form_data, 'retry': retry + 1})
+                    meta={'productid': productid, 'item': item, 'arg_data': form_data, 'retry': retry+ 1})
                 return req
             else:
                 self.log('Incomplete Item Droped Due to Invalid availability Response. Url = %s' % item['source_url'],
@@ -214,7 +210,6 @@ class HhgreggSpider(BaseSpider):
         packge_flag = response.meta['package_flag']
         item = response.meta['item']
         if packge_flag:
-            jsondata = None
             product = response.meta['product']
             products = response.meta['products']
             data = response.body.split('=', 1)[1].strip(';')
