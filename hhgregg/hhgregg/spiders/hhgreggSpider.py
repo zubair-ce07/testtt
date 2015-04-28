@@ -176,7 +176,7 @@ class HhgreggSpider(BaseSpider):
                                    priority=10)
         else:
             retry = response.meta.get('retry', 1)
-            form_data['retry'] = retry
+            form_data['retry'] = str(retry)
             if retry <= 3:
                 req = FormRequest(
                     url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
