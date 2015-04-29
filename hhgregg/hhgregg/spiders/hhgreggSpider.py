@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 from urlparse import urljoin, urlparse
 import json
@@ -120,7 +119,8 @@ class HhgreggSpider(BaseSpider):
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, callback=self.check_item_availability,
-                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True}, priority=10)
+                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True},
+                priority=10)
         else:
             partnum_script_text = response.xpath('(.//script[contains(.,"partNumber")])[1]').extract()
             if partnum_script_text:
@@ -136,7 +136,8 @@ class HhgreggSpider(BaseSpider):
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, headers=content_type, callback=self.check_item_availability,
-                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True}, priority=10)
+                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True},
+                priority=10)
 
     def check_item_availability(self, response):
         item = response.meta['item']
@@ -181,7 +182,8 @@ class HhgreggSpider(BaseSpider):
                 req = FormRequest(
                     url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                     formdata=form_data, callback=self.check_item_availability,
-                    meta={'productid': productid, 'item': item, 'arg_data': form_data, 'retry': retry+ 1, 'dont_merge_cookies': True })
+                    meta={'productid': productid, 'item': item, 'arg_data': form_data, 'retry': retry + 1,
+                          'dont_merge_cookies': True})
                 return req
             else:
                 self.log('Incomplete Item Droped Due to Invalid availability Response. Url = %s' % item['source_url'],
@@ -455,15 +457,17 @@ class HhgreggSpider(BaseSpider):
 
     def parse_pagination(self, response):
         if response.xpath('.//*[@class="pages center"]/a[img[@alt="Next"]]'):
-            total_products = response.xpath('(.//*[@class="showing_prod"])[1]/text()').extract()
+            next_page_script = response.xpath('.//*[@class="pages center"]/a[img[@alt="Next"]]/@href').extract()[0]
+            next_page_size = re.search('pageSize\s*:\s*"([^"]+)', next_page_script).group(1)
             request_script_text = response.xpath(
                 '//script[contains(.,"SearchBasedNavigationDisplayJS.init")]/text()').extract()
             request_link = re.search("SearchBasedNavigationDisplayJS.init\('(.*)'", request_script_text[0]).group(1)
+            total_products = response.xpath('(.//*[@class="showing_prod"])[1]/text()').extract()
             if total_products:
                 total = total_products[0].split()[0]
-                pages = int(total) / 12 + (int(total) % 12 != 0)
+                pages = int(total) / int(next_page_size) + (int(total) % int(next_page_size) != 0)
                 for i in range(1, pages):
-                    begin_index = i * 12
+                    begin_index = i * int(next_page_size)
                     yield FormRequest(url=request_link,
                                       formdata={
                                           'NUMITEMSINCART': 'item(s)',
@@ -476,5 +480,4 @@ class HhgreggSpider(BaseSpider):
                                           'productBeginIndex': str(begin_index),
                                           'requesttype': 'ajax',
                                           'resultType': 'products',
-                                      },
-                    )
+                                      }, meta={'dont_merge_cookies': True})
