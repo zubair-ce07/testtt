@@ -50,7 +50,7 @@ class AppleSpider(BaseSpider):
         return self.get_text_from_node(city)
 
     def store_country(self, response):
-        country = re.search('www.apple.com/([A-z]+)/retail',response.url)
+        country = re.search('www.apple.com/([A-z]+)(/[A-z]+)?/retail',response.url)
         if country:
                 return country.group(1).upper()
         # In case of US, the url does not contain country_code.
@@ -70,11 +70,11 @@ class AppleSpider(BaseSpider):
                         open_time, close_time = hours_data.split('-')
                         for day in all_days:
                             hours[day.strip().strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
-                    elif ':' not in days:
-                        hours['Mon - Sun'] = {'Open': '00:00 AM','Close': '00:00 PM'}
                     else:
                         open_time, close_time = hours_data.split('-')
                         hours[days.strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
+                elif ':' not in days:
+                        hours['Mon - Sun'] = {'Open': '00:00 AM','Close': '00:00 PM'}
             return hours
 
     def store_phone_number(self, response):
