@@ -14,7 +14,7 @@ import re
 class DocumentsDownloadPipeline(FilesPipeline):
     # Overridden method
     def get_media_requests(self, item, info):
-        yield Request(url=item["file_url"], meta={"item": item})
+        yield Request(url=item["file_url"], meta={"item": item}, dont_filter=True)
 
     # Overridden method
     def file_path(self, request, response=None, info=None):

@@ -29,21 +29,40 @@ class LexeuropaspiderSpider(BaseSpider):
         browse_by = parse_qs(query_string)['name'][0].split('by:', 1)[1] if parse_qs(query_string).get('name') else ''
         search_terms = '%s/%s' % (browse_by, year)
         for url in response.xpath('.//a[*[text()="pdf"]]/@href').extract():
-            complete_url = self.convert_into_absolute_url(url)
+            complete_url = urljoin(response.url, url)
             item = DocumentsDownloadItem()
             file_name_match = re.search('([^:]+)&', url)
             if file_name_match:
                 item['file_name'] = file_name_match.group(1)
             item['file_location'] = search_terms
             item['file_url'] = complete_url
-            yield item
+            yield Request(complete_url, method="head",callback=self.parse_documents, meta={'item': item})
 
         # for next_page
         if response.xpath('(.//span[@class="currentPage"])[1]/following-sibling::a[1]'):
             next_page_url = self.get_text_from_node(response.xpath('(.//span[@class="currentPage"])[1]/following-sibling::a[1]/@href'))
             yield Request(self.convert_into_absolute_url(next_page_url), callback=self.get_documents)
-        yield  self.get_next_request()
+        yield self.get_next_request()
 
+    def parse_documents(self,response):
+        item = response.meta['item']
+        if 'html' in response.headers['Content-Type']:
+            yield Request(response.url, dont_filter=True, callback=self.parse_sub_documents, meta={'item': item})
+        else:
+            yield item
+        yield self.get_next_request()
+
+    def parse_sub_documents(self, response):
+        parent = response.meta['item']
+        file_location = '%s/%s' % (parent['file_location'],parent['file_name'])
+        for url in response.xpath('.//*[@class="buttonLike buttonLink"]/following-sibling::ul[1]/li/a/@href').extract():
+            item = DocumentsDownloadItem()
+            file_name = re.search('cellar\s*:\s*([^&]+)', url).group(1).replace('/','_')
+            item['file_url'] = urljoin(response.url,url)
+            item['file_location'] = file_location
+            item['file_name'] = file_name
+            yield item
+        yield self.get_next_request()
 
     def get_next_request(self):
         if self.search_years:
