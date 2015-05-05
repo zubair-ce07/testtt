@@ -24,7 +24,7 @@ class HhgreggSpider(BaseSpider):
 
     rules = [
 
-         Rule(LinkExtractor(deny=['/productfinder/'],
+        Rule(LinkExtractor(deny=['/productfinder/'],
                            restrict_xpaths=['.//*[contains( @id,"WC_CachedHeaderDisplay_links")]',
                                             './/*[@class="product_group_name product_info"]']),
              callback='parse_pagination', follow=True, process_request='add_error_handler'),
@@ -35,7 +35,8 @@ class HhgreggSpider(BaseSpider):
     def add_error_handler(self, request):
         request.meta["rules"] = True
         request.meta['dont_merge_cookies'] = True
-        req = Request(request.url, callback=request.callback, meta=request.meta, dont_filter=request.dont_filter, errback=self.handle_error)
+        req = Request(request.url, callback=request.callback, meta=request.meta, dont_filter=request.dont_filter,
+                      errback=self.handle_error)
         return req
 
     def get_product_detail(self, response):
@@ -55,7 +56,7 @@ class HhgreggSpider(BaseSpider):
                 item['specifications'] = self.item_specification(response)
                 item['source_url'] = response.url
                 item['primary_image_url'] = self.item_primary_image_url(response)
-                if response.xpath(".//*[@class='available_soon_text2'][contains(.,'DISCONTINUED')]"):
+                if response.xpath(".//*[@class='available_soon_text2']"):
                     item['available_instore'] = False
                     item['available_online'] = False
                     return Request(
@@ -65,7 +66,7 @@ class HhgreggSpider(BaseSpider):
                 else:
                     return self.parse_item_availability(response, item)
         else:
-            self.droped_items+=1
+            self.droped_items += 1
             self.log('Item Droped. Item has no Product ID', log.ERROR)
             self.log('Total Droped %s' % self.droped_items, log.INFO)
 
@@ -134,7 +135,8 @@ class HhgreggSpider(BaseSpider):
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, callback=self.check_item_availability,
-                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True}, dont_filter=True)
+                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True},
+                dont_filter=True)
         else:
             partnum_script_text = response.xpath('(.//script[contains(.,"partNumber")])[1]').extract()
             if partnum_script_text:
@@ -150,7 +152,8 @@ class HhgreggSpider(BaseSpider):
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
                 formdata=form_data, headers=content_type, callback=self.check_item_availability,
-                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True}, dont_filter=True)
+                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True},
+                dont_filter=True)
 
     def check_item_availability(self, response):
         item = response.meta['item']
@@ -186,7 +189,8 @@ class HhgreggSpider(BaseSpider):
 
                 }
                 return FormRequest(url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckAvailabilityDisplay',
-                                   formdata=form_data, callback=self.item_availability, meta={'item': item}, dont_filter=True)
+                                   formdata=form_data, callback=self.item_availability, meta={'item': item},
+                                   dont_filter=True)
         else:
             retry = response.meta.get('retry', 1)
             form_data['retry'] = str(retry)
@@ -445,7 +449,8 @@ class HhgreggSpider(BaseSpider):
             return item
         else:
             return Request(
-                'http://www.hhgregg.com/reviews/pwr/content/%s/contents.js' % self.rating_parameters(item['model'].strip()),
+                'http://www.hhgregg.com/reviews/pwr/content/%s/contents.js' % self.rating_parameters(
+                    item['model'].strip()),
                 callback=self.parse_item_rating, meta={'package_flag': False, 'item': item}, dont_filter=True,
                 errback=self.handle_error)
 
@@ -489,11 +494,11 @@ class HhgreggSpider(BaseSpider):
 
     def handle_error(self, failure):
         if failure.request.meta.get('rules'):
-            retry = failure.request.meta.get('retry',0)
-            failure.request.meta['retry'] = retry+1
+            retry = failure.request.meta.get('retry', 0)
+            failure.request.meta['retry'] = retry + 1
             failure.request.dont_filter = True
             if retry <= 3:
-                self.log('Request Retrying %s time ' % str(retry+1), log.INFO)
+                self.log('Request Retrying %s time ' % str(retry + 1), log.INFO)
                 return failure.request
             else:
                 self.log('Item droped Due to Twisted Failure', log.WARNING)
