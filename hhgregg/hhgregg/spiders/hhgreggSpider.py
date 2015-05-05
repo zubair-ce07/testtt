@@ -219,7 +219,7 @@ class HhgreggSpider(BaseSpider):
     def parse_package_item_ratings(self, product, item):
         products = []
         return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
-            self.get_directory(product['model']), product['model']),
+            self.rating_parameters(product['model']), product['model']),
                        meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
                        callback=self.parse_item_rating, dont_filter=True, errback=self.handle_error)
 
@@ -240,7 +240,7 @@ class HhgreggSpider(BaseSpider):
             if item.get('items'):
                 product = item['items'].pop(0)
                 return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
-                    self.get_directory(product['model']), product['model']),
+                    self.rating_parameters(product['model']), product['model']),
                                meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
                                callback=self.parse_item_rating, errback=self.handle_error, dont_filter=True)
             else:
@@ -445,7 +445,7 @@ class HhgreggSpider(BaseSpider):
             return item
         else:
             return Request(
-                'http://www.hhgregg.com/reviews/pwr/content/%s/contents.js' % self.get_directory(item['model'].strip()),
+                'http://www.hhgregg.com/reviews/pwr/content/%s/contents.js' % self.rating_parameters(item['model'].strip()),
                 callback=self.parse_item_rating, meta={'package_flag': False, 'item': item}, dont_filter=True,
                 errback=self.handle_error)
 
@@ -476,6 +476,17 @@ class HhgreggSpider(BaseSpider):
                                           'resultType': 'products',
                                       }, meta={'dont_merge_cookies': True})
 
+    def rating_parameters(self, product_id):
+        directory_path = 0
+        for letter in product_id:
+            char_ascii = ord(letter)
+            char_ascii = char_ascii * abs(255 - char_ascii)
+            directory_path += char_ascii
+        directory_path = directory_path % 1023
+        directory_path = "{:0>4}".format(directory_path)
+        directory_path = "%s/%s" % (directory_path[:2], directory_path[2:])
+        return directory_path
+
     def handle_error(self, failure):
         if failure.request.meta.get('rules'):
             retry = failure.request.meta.get('retry',0)
@@ -497,7 +508,7 @@ class HhgreggSpider(BaseSpider):
                 if item.get('items'):
                     product = item['items'].pop(0)
                     return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
-                        self.get_directory(product['model']), product['model']),
+                        self.rating_parameters(product['model']), product['model']),
                                    meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
                                    callback=self.parse_item_rating, errback=self.handle_error, dont_filter=True)
                 else:
