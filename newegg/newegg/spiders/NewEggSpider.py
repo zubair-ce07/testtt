@@ -3,7 +3,7 @@ import re
 import urlparse
 import urllib
 
-from scrapy.http import Request
+from scrapy.http import Request,FormRequest
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
 from scrapinghub.spider import BaseSpider
@@ -13,22 +13,28 @@ from newegg.items import NeweggItem
 
 class NeweggspiderSpider(BaseSpider):
     name = "NewEggSpider"
-    allowed_domains = ["newegg.com"]
+    # allowed_domains = ["newegg.com"]
     start_urls = (
         'http://www.newegg.com/',
     )
 
-    rules = [Rule(SgmlLinkExtractor(deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Memory-Finder', 'Power-Supply-Wattage-Calculator', 'Battery-Finder', 'Cable-Finder', 'Notebook-Finder', 'Tablet-Finder', 'Windows-Device-Finder', 'HDTV-Finder'],
-                                    restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
-                                                     './/*[@class="categoryList primaryNav"]//a',
-                                                     './/*[@class="categoryList secondaryNav"]//a'])
+    rules = [Rule(SgmlLinkExtractor(deny=['/Product/Product.aspx?Item=','name=Newegg-Mobile-Apps', 'Trade-In', 'Memory-Finder', 'Power-Supply-Wattage-Calculator', 'Battery-Finder', 'Cable-Finder', 'Notebook-Finder', 'Tablet-Finder', 'Windows-Device-Finder', 'HDTV-Finder'],
+                                    restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a[contains(.,"Music")]',
+                                                     './/h3[@class="aec-dcsnavHead" and contains(.,"Explore")]/following-sibling::div[@class="aec-dcsLinks aec-dcsLinksOpen"][1]//a'
+                                                     '//div[@class="aec-navTitle" and contains(.,"Deals")]/following-sibling::div[1]//a'
+                                                    # './/*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
+                                                     # './/*[@class="categoryList primaryNav"]//a',
+                                                     # './/*[@class="categoryList secondaryNav"]//a']
+                                                    ]
+
+                                                     )
                   , callback='parse_pagination', follow=True),
-             Rule(SgmlLinkExtractor(restrict_xpaths=['.//*[@title="View Details"]']),
-                  callback='parse_item')
+             # Rule(SgmlLinkExtractor(deny=['/Product/Product.aspx?Item='],restrict_xpaths=['.//*[@title="View Details"]','.//*[@class="aec-listlink"]']),
+             #      callback='parse_item')
     ]
 
     def parse_item(self, response):
-        if not response.xpath('.//*[@class="errorMsgWarning"]'):
+        if not 'Product' in response.url:
             item = NeweggItem()
             item['sku'] = self.item_sku(response)
             item['title'] = self.item_title(response)
@@ -39,7 +45,7 @@ class NeweggspiderSpider(BaseSpider):
             if response.xpath('.//*[@class="priceAction"]') or 'MAP' in item['price']:
                 return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?%s' % item['url'].split('?', 1)[1],
                                callback=self.parse_price, meta={'item': item})
-            if 'Combo' in item.get('sku') and item.get('price') == '$':
+            if item.get('sku') and 'Combo' in item.get('sku')  and item.get('price') == '$':
                     return Request('http://www.newegg.com/Product/MappingPrice2012.aspx?ComboID=%s' % item['sku'],
                                callback=self.parse_price, meta={'item': item})
             return item
@@ -62,13 +68,13 @@ class NeweggspiderSpider(BaseSpider):
                 return None
 
     def item_title(self, response):
-        title = response.xpath(".//*[@itemprop='name'][1]//text()").extract()
+        title = response.xpath(".//*[@itemprop='name'][1]//text() | .//*[@id='aec-product-title']//h1/text()").extract()
         if title:
             return ' '.join(self.normalize(title[0]).split())
 
     def parse_price(self, response):
         item = response.meta['item']
-        price = response.xpath('.//*[contains(@class,"price-current")]//text()').extract()
+        price = response.xpath('.//*[contains(@class,"price-current")]//text() | (.//*[@class="aec-nowprice"])[1]/text()').extract()
         item['price'] = ('').join(self.normalize(price)).strip(u'\u2013')
         return item
 
@@ -97,6 +103,17 @@ class NeweggspiderSpider(BaseSpider):
         return page_number
 
     def parse_pagination(self, response):
+        if response.xpath('.//*[@id="aec-totalresults"]'):
+            total_results = self.get_text_from_node(response.xpath('.//*[@id="aec-totalresults"]/@value')) if response.xpath('.//*[@id="aec-totalresults"]') else 0
+            if response.xpath('.//*[@id="aec-perpage"]'):
+                items_per_page = self.get_text_from_node(response.xpath('.//*[@id="aec-perpage"]/option[.="100"]/text()'))
+            else:
+                items_per_page = 25
+            total_pages = int(total_results) / int(items_per_page) + (int(total_results) % int(items_per_page) != 0)
+            for page_number in range(2, total_pages):
+                    parsed_url = urlparse.urlparse(response.url)
+                    yield Request(url='http://newegg.directtoustore.com/catalog/getgrid?%s&type=productsearch&sortCol=BestMatch&pageNum=%s&perPage=%s'%(parsed_url.query,page_number,items_per_page))
+
         if response.xpath('.//*[@title="last page"]/parent::li[@class="enabled"]'):
             last_page = response.xpath('.//*[@title="last page"]/@href').extract()
             if last_page:
@@ -105,7 +122,7 @@ class NeweggspiderSpider(BaseSpider):
                 if 'newegg' not in last_page_url:
                     last_page_number = self.get_page_number(last_page[0])
                     for i in range(2, int(last_page_number) + 1):
-                        yield Request('%s&Page=%s' % (response.url, last_page_number))
+                        yield Request('%s&Page=%s' % (response.url, i))
                 else:
                     request_url, last_page_number = last_page_url.split('Page-', 1)
                     if '?' in last_page_number:
