@@ -20,7 +20,7 @@ class LexeuropaspiderSpider(BaseSpider):
 
     def parse(self, response):
         for url in response.xpath('.//*[contains(@id,"arrow") and not(contains(.,"Positions"))]/@href').extract():
-            self.category_urls.append(self.convert_into_absolute_url(url))
+            self.category_urls.append(urljoin(response.url, url))
         return self.get_next_request()
 
     def get_documents(self, response):
@@ -41,7 +41,7 @@ class LexeuropaspiderSpider(BaseSpider):
         # for next_page
         if response.xpath('(.//span[@class="currentPage"])[1]/following-sibling::a[1]'):
             next_page_url = self.get_text_from_node(response.xpath('(.//span[@class="currentPage"])[1]/following-sibling::a[1]/@href'))
-            yield Request(self.convert_into_absolute_url(next_page_url), callback=self.get_documents)
+            yield Request(urljoin(response.url, next_page_url), callback=self.get_documents)
         yield self.get_next_request()
 
     def parse_documents(self,response):
@@ -75,13 +75,6 @@ class LexeuropaspiderSpider(BaseSpider):
         for year in years:
             year_text = year.xpath('./text()').extract()[0].strip()
             if year_text != 'Other' and int(year_text) > 1979:
-                url = self.convert_into_absolute_url(year.xpath('./a/@href').extract()[0])
+                url = urljoin(response.url, year.xpath('./a/@href').extract()[0])
                 self.search_years.append(url)
         return self.get_next_request()
-
-    def convert_into_absolute_url(self, url):
-        parsed_url = urlparse(url.strip('./').strip('../'))
-        if not parsed_url.scheme:
-            return urljoin('http://eur-lex.europa.eu/', url.strip('./').strip('../'))
-        return url
-
