@@ -137,7 +137,6 @@ class NeweggspiderSpider(BaseSpider):
             last_page = response.xpath('.//*[@title="last page"]/@href').extract()
             if last_page:
                 last_page_url = urllib.unquote(self.get_page_url(last_page[0]))
-                self.log('url of last page: %s' % last_page_url, log.INFO)
                 if 'newegg' not in last_page_url:
                     last_page_number = self.get_page_number(last_page[0])
                     for i in range(2, int(last_page_number) + 1):
