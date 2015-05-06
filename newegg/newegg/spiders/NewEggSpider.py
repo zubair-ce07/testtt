@@ -23,8 +23,7 @@ class NeweggspiderSpider(BaseSpider):
         deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Memory-Finder', 'Power-Supply-Wattage-Calculator',
               'Battery-Finder', 'Cable-Finder', 'Notebook-Finder', 'Tablet-Finder', 'Windows-Device-Finder',
               'HDTV-Finder'],
-        restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a[contains(.,"Music")]',
-                         './/h3[@class="aec-dcsnavHead" and contains(.,"Explore")]/following-sibling::div[@class="aec-dcsLinks aec-dcsLinksOpen"][1]//a',
+        restrict_xpaths=['.//h3[@class="aec-dcsnavHead" and contains(.,"Explore")]/following-sibling::div[@class="aec-dcsLinks aec-dcsLinksOpen"][1]//a',
                          './/*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
                          './/*[@class="categoryList primaryNav"]//a',
                          './/*[@class="categoryList secondaryNav"]//a'
