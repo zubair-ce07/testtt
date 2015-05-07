@@ -23,7 +23,7 @@ class OsceSpider(BaseSpider):
             item = DocumentsDownloadItem()
             item['file_url'] = full_link
             item['file_location'] = self.page_to_crawl
-            item['file_name'] = self.get_title(full_link, link, self.page_to_crawl)  # item ID will be the file name
+            item['file_name'] = self.get_title(full_link, link)  # item ID will be the file name
             item['file_location'] = self.page_to_crawl
             item['page'] = self.page_to_crawl
             yield item
@@ -35,16 +35,15 @@ class OsceSpider(BaseSpider):
                           callback=self.parse_listing)
             self.page_to_crawl += 1
 
-    def get_title(self, url, response, page):
+    def get_title(self, url, response, ):
         match_title = re.search('(\w+)\?', url)
-        if match_title:
-            title_id = match_title.group(1)
+        title_id = match_title.group(1)
         title = self.get_text_from_node(response.xpath('.//@title'))
 
         if title and title_id and len(title) < 200:
-            return '%s_%s_PAGE%s' % (title.replace('/', '_'), title_id, page)
+            return '%s_%s' % (title.replace('/', '_'), title_id)
         else:
-            return '%s_PAGE%s' % (title_id, page)
+            return '%s_%s' % (title.replace('/', '_')[:200], title_id)
 
 
 
