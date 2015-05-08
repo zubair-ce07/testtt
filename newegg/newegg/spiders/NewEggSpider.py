@@ -6,7 +6,6 @@ import urllib
 from scrapy.http import Request
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
-from scrapy import log
 
 from scrapinghub.spider import BaseSpider
 from newegg.items import NeweggItem
@@ -14,23 +13,22 @@ from newegg.items import NeweggItem
 
 class NeweggspiderSpider(BaseSpider):
     name = "NewEggSpider"
-    # allowed_domains = ["newegg.com"]
     start_urls = (
         'http://www.newegg.com/',
     )
 
-    rules = [Rule(SgmlLinkExtractor(
-        deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Memory-Finder', 'Power-Supply-Wattage-Calculator',
-              'Battery-Finder', 'Cable-Finder', 'Notebook-Finder', 'Tablet-Finder', 'Windows-Device-Finder',
-              'HDTV-Finder'],
-        restrict_xpaths=['.//h3[@class="aec-dcsnavHead" and contains(.,"Explore")]/following-sibling::div[@class="aec-dcsLinks aec-dcsLinksOpen"][1]//a',
-                         './/*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
-                         './/*[@class="categoryList primaryNav"]//a',
-                         './/*[@class="categoryList secondaryNav"]//a'
-        ]
+    def update_url(value):
+        if 'music?name=Music' in value:
+            return 'http://newegg.directtoustore.com/search?mod=AM'
+        return value
 
-    )
-                  , callback='parse_pagination', follow=True),
+    rules = [Rule(SgmlLinkExtractor( process_value= update_url,
+                                     deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Power-Supply-Wattage-Calculator',
+                                           'Finder'],
+                                     restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
+                                                      './/*[@class="categoryList primaryNav"]//a',
+                                                      './/*[@class="categoryList secondaryNav"]//a'
+                                     ]), callback='parse_pagination', follow=True),
              Rule(SgmlLinkExtractor(deny=['ShellShocker'],
                                     restrict_xpaths=['.//*[@title="View Details"]', './/*[@class="aec-listlink"]']),
                   callback='parse_item')
@@ -78,7 +76,7 @@ class NeweggspiderSpider(BaseSpider):
             return ' '.join(self.normalize(title[0]).split())
 
     def item_brand(self, response):
-        return self.get_text_from_node(response.xpath(".//li[span[contains(.,'Label')]]/text()"))
+        return self.get_text_from_node(response.xpath(".//li[span[contains(.,'Label')]]/text() | (.//dt[.='Brand']/following-sibling::dd[1])[1]/text()"))
 
     def item_price(self, response):
         price = self.get_text_from_node(response.xpath('(.//*[@class="aec-nowprice"])[1]/text()'))
@@ -98,7 +96,8 @@ class NeweggspiderSpider(BaseSpider):
         if json_string:
             json_string = self.normalize(json_string[0])
             price = re.search("product_sale_price:\['([^']+)'\]", json_string).group(1)
-            brand = re.search("product_manufacture:\['([^']+)'\]", json_string).group(1)
+            brand_match = re.search("product_manufacture:\['([^']+)'\]", json_string)
+            brand = brand_match.group(1) if brand_match else None
             data['price'] = '$%s' % price if price else None
             data['brand'] = brand
             return data

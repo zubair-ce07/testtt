@@ -21,6 +21,7 @@ class HhgreggSpider(BaseSpider):
 
     total_urls = []
     droped_items = 0
+    zipcode = '10001'
 
     rules = [
 
@@ -92,7 +93,7 @@ class HhgreggSpider(BaseSpider):
             product['original_price'] = self.item_original_price(product_info_div, True)
             products.append(product)
         item['items'] = products
-        if response.xpath(".//*[@class='available_soon_text2'][contains(.,'DISCONTINUED')]"):
+        if response.xpath(".//*[@class='available_soon_text2']"):
             item['available_instore'] = False
             item['available_online'] = False
             if item.get('items'):
@@ -127,7 +128,7 @@ class HhgreggSpider(BaseSpider):
             'quantity': '1',
             'requesttype': 'ajax',
             'storeId': str(store_id),
-            'zipCode': '10001'
+            'zipCode': self.zipcode
         }
         if package_flag:
             form_data['partnum'] = str(item.get('model'))
@@ -185,7 +186,7 @@ class HhgreggSpider(BaseSpider):
                     'requesttype': 'ajax',
                     'shippingAvailable': str(json_data.get(u'shippingAvailable_0')),
                     'storeId': str(json_data[u'storeId'][0]),
-                    'zipCode': '10001'
+                    'zipCode': self.zipcode
 
                 }
                 return FormRequest(url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckAvailabilityDisplay',
@@ -327,6 +328,9 @@ class HhgreggSpider(BaseSpider):
                 features.append(li_text)
         return self.normalize(features)
 
+    def normalize_price(self, price):
+        return float(price.replace(',', '').replace('$', '')) if price else None
+
     def item_current_price(self, response, package_flag=False):
         if package_flag:
             price = self.get_text_from_node(
@@ -345,21 +349,18 @@ class HhgreggSpider(BaseSpider):
                 price = ''
         else:
             price = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
-        return float(price.replace(',', '').replace('$', '')) if price else None
+        return self.normalize_price(price)
 
     def item_original_price(self, response, package_flag=False):
         if package_flag:
             original_price = self.get_text_from_node(
                 response.xpath(
-                    "((.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]/span[2]/text())[1]")).replace(',',
-                                                                                                                    '').replace(
-                '$', '')
-            return float(original_price) if original_price else None
+                    "((.//*[@id='price_details'])[1]//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
+            return self.normalize_price(original_price)
         if response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
             original_price = self.get_text_from_node(
-                response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]")).replace('$', '').replace(',',
-                                                                                                                   '')
-            return float(original_price) if original_price else None
+                response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
+            return self.normalize_price(original_price)
         else:
             return self.item_current_price(response)
 
@@ -481,7 +482,7 @@ class HhgreggSpider(BaseSpider):
                                           'resultType': 'products',
                                       }, meta={'dont_merge_cookies': True})
 
-    def rating_parameters(self, product_id):
+    def rating_parameters(self, product_id):    # generate directory parameters from product_id  for rating file
         directory_path = 0
         for letter in product_id:
             char_ascii = ord(letter)
@@ -501,7 +502,7 @@ class HhgreggSpider(BaseSpider):
                 self.log('Request Retrying %s time ' % str(retry + 1), log.INFO)
                 return failure.request
             else:
-                self.log('Item droped Due to Twisted Failure', log.WARNING)
+                self.log('Item droped Due to %s' % failure.value.message, log.WARNING)
         else:
             item = failure.value.response.meta['item']
             package_flag = failure.value.response.meta.get('package_flag')
