@@ -39,11 +39,7 @@ class OsceSpider(BaseSpider):
         match_title = re.search('(\w+)\?', url)
         title_id = match_title.group(1)
         title = self.get_text_from_node(response.xpath('.//@title'))
-
-        if title and title_id and len(title) < 200:
-            return '%s_%s' % (title.replace('/', '_'), title_id)
-        else:
-            return '%s_%s' % (title.replace('/', '_')[:200], title_id)
+        return '%s_%s' % (title.replace('/', '_')[:200], title_id)
 
 
 
