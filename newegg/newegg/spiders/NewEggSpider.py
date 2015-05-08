@@ -76,7 +76,7 @@ class NeweggspiderSpider(BaseSpider):
             return ' '.join(self.normalize(title[0]).split())
 
     def item_brand(self, response):
-        return self.get_text_from_node(response.xpath(".//li[span[contains(.,'Label')]]/text() | (.//dt[.='Brand']/following-sibling::dd[1])[1]/text()"))
+        return self.get_text_from_node(response.xpath(".//li[span[contains(.,'Label')]]/text()"))
 
     def item_price(self, response):
         price = self.get_text_from_node(response.xpath('(.//*[@class="aec-nowprice"])[1]/text()'))
@@ -97,7 +97,7 @@ class NeweggspiderSpider(BaseSpider):
             json_string = self.normalize(json_string[0])
             price = re.search("product_sale_price:\['([^']+)'\]", json_string).group(1)
             brand_match = re.search("product_manufacture:\['([^']+)'\]", json_string)
-            brand = brand_match.group(1) if brand_match else None
+            brand = brand_match.group(1) if brand_match else self.get_text_from_node("(.//dt[.='Brand']/following-sibling::dd[1])[1]/text()")
             data['price'] = '$%s' % price if price else None
             data['brand'] = brand
             return data
