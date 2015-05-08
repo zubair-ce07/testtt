@@ -17,14 +17,14 @@ class NeweggspiderSpider(BaseSpider):
         'http://www.newegg.com/',
     )
 
-    def manipulate_extracted_url(url):
+    def music_category_url(url):
         query = urlparse.urlparse(url).query
         if query and urlparse.parse_qs(query).get('name'):
             if urlparse.parse_qs(query).get('name')[0] == 'Music':
                 return 'http://newegg.directtoustore.com/search?mod=AM'
         return url
 
-    rules = [Rule(SgmlLinkExtractor( process_value= manipulate_extracted_url,
+    rules = [Rule(SgmlLinkExtractor( process_value= music_category_url,
                                      deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Power-Supply-Wattage-Calculator',
                                            'Finder'],
                                      restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
