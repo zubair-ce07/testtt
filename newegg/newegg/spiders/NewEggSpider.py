@@ -42,7 +42,7 @@ class NeweggspiderSpider(BaseSpider):
             item['sku'] = self.item_sku(response)
             item['title'] = self.item_title(response)
             item['url'] = self.item_url(response)
-            json_data = self.item_json_data(response)
+            json_data = self.item_data_from_script(response)
             item['brand'] = json_data['brand'] if json_data['brand'] else self.item_brand(response)
             item['price'] = json_data['price'] if json_data['price'] else self.item_price(response)
             if response.xpath('.//*[@class="priceAction"]') or 'MAP' in item['price'] or '$0.00' in item['price']:
@@ -92,13 +92,13 @@ class NeweggspiderSpider(BaseSpider):
         item['price'] = ('').join(self.normalize(price)).strip(u'\u2013')
         return item
 
-    def item_json_data(self, response):
+    def item_data_from_script(self, response):
         data = dict()
-        json_string = response.xpath('//script[contains(text(), "ProductDetail")]//text()').extract()
-        if json_string:
-            json_string = self.normalize(json_string[0])
-            price = re.search("product_sale_price:\['([^']+)'\]", json_string).group(1)
-            brand_match = re.search("product_manufacture:\['([^']+)'\]", json_string)
+        script_text = response.xpath('//script[contains(text(), "ProductDetail")]//text()').extract()
+        if script_text:
+            script_text = self.normalize(script_text[0])
+            price = re.search("product_sale_price:\['([^']+)'\]", script_text).group(1)
+            brand_match = re.search("product_manufacture:\['([^']+)'\]", script_text)
             brand = brand_match.group(1) if brand_match else self.get_text_from_node("(.//dt[.='Brand']/following-sibling::dd[1])[1]/text()")
             data['price'] = '$%s' % price if price else None
             data['brand'] = brand
