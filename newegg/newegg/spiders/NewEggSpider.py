@@ -125,14 +125,12 @@ class NeweggspiderSpider(BaseSpider):
             if response.xpath('.//*[@id="aec-perpage"]'):
                 items_per_page = self.get_text_from_node(
                     response.xpath('.//*[@id="aec-perpage"]/option[last()]/text()'))
-            else:
-                items_per_page = 25
-            total_pages = int(total_results) / int(items_per_page) + (int(total_results) % int(items_per_page) != 0)
-            for page_number in range(2, total_pages):
-                parsed_url = urlparse.urlparse(response.url)
-                yield Request(
-                    url='http://newegg.directtoustore.com/catalog/getgrid?%s&type=productsearch&sortCol=BestMatch&pageNum=%s&perPage=%s' % (
-                        parsed_url.query, page_number, items_per_page))
+                total_pages = int(total_results) / int(items_per_page) + (int(total_results) % int(items_per_page) != 0)
+                for page_number in range(2, total_pages):
+                    parsed_url = urlparse.urlparse(response.url)
+                    yield Request(
+                        url='http://newegg.directtoustore.com/catalog/getgrid?%s&type=productsearch&sortCol=BestMatch&pageNum=%s&perPage=%s' % (
+                            parsed_url.query, page_number, items_per_page))
 
         if response.xpath('.//*[@title="last page"]/parent::li[@class="enabled"]'):
             last_page = response.xpath('.//*[@title="last page"]/@href').extract()
