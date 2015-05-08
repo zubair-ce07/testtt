@@ -122,7 +122,7 @@ class NeweggspiderSpider(BaseSpider):
                 './/*[@id="aec-totalresults"]') else 0
             if response.xpath('.//*[@id="aec-perpage"]'):
                 items_per_page = self.get_text_from_node(
-                    response.xpath('.//*[@id="aec-perpage"]/option[.="100"]/text()'))
+                    response.xpath('.//*[@id="aec-perpage"]/option[last()]/text()'))
             else:
                 items_per_page = 25
             total_pages = int(total_results) / int(items_per_page) + (int(total_results) % int(items_per_page) != 0)
