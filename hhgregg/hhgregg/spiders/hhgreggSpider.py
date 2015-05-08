@@ -482,7 +482,11 @@ class HhgreggSpider(BaseSpider):
                                           'resultType': 'products',
                                       }, meta={'dont_merge_cookies': True})
 
-    def rating_parameters(self, product_id):    # generate directory parameters from product_id  for rating file
+    #  To get item rating request will be send at contents.js.
+    #  Directory for content.js differs with every product depends upon product id.
+    #  This method returns the directory path containing content.js depending on the product id.
+    #  This method is copied from the source javascript of website which is used to create directory path there.
+    def rating_parameters(self, product_id):
         directory_path = 0
         for letter in product_id:
             char_ascii = ord(letter)
