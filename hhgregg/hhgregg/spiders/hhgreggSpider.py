@@ -123,15 +123,15 @@ class HhgreggSpider(BaseSpider):
         catalog_id = re.search("WCParamJS\[\"catalogId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
         product_id = self.get_text_from_node(response.xpath(".//*[contains(@id,'productId')]/text()"))
         form_data = {
-            'catalogId': str(catalog_id),
-            'langId': str(lang_id),
+            'catalogId': catalog_id,
+            'langId': lang_id,
             'quantity': '1',
             'requesttype': 'ajax',
-            'storeId': str(store_id),
+            'storeId': store_id,
             'zipCode': self.zipcode
         }
         if package_flag:
-            form_data['partnum'] = str(item.get('model'))
+            form_data['partnum'] = item.get('model')
             form_data['productType'] = 'Kit'
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
@@ -144,11 +144,11 @@ class HhgreggSpider(BaseSpider):
                 part_num_match = re.search('partNumber\s*=\s*"([^"]+)', partnum_script_text[0], re.IGNORECASE)
                 if part_num_match:
                     part_num = part_num_match.group(1).strip()
-                    form_data['partnum'] = str(part_num)
+                    form_data['partnum'] = part_num
             else:
                 part_num = response.xpath('(.//*[contains(@id,"productIdForPartNum")])[1]/@id').extract()[0].split('_')[
                     0]
-                form_data['partnum'] = str(part_num)
+                form_data['partnum'] = part_num
             content_type = {'Content-Type': 'application/x-www-form-urlencoded;'}
             return FormRequest(
                 url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
