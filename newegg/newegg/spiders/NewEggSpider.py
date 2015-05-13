@@ -99,7 +99,7 @@ class NeweggspiderSpider(BaseSpider):
             script_text = self.normalize(script_text[0])
             price = re.search("product_sale_price:\['([^']+)'\]", script_text).group(1)
             brand_match = re.search("product_manufacture:\['([^']+)'\]", script_text)
-            brand = brand_match.group(1) if brand_match else self.get_text_from_node("(.//dt[.='Brand']/following-sibling::dd[1])[1]/text()")
+            brand = brand_match.group(1) if brand_match else self.get_text_from_node(response.xpath("(.//dt[.='Brand']/following-sibling::dd[1])[1]/text()"))
             data['price'] = '$%s' % price if price else None
             data['brand'] = brand
             return data
