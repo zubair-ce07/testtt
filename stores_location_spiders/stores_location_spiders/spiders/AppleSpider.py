@@ -50,9 +50,9 @@ class AppleSpider(BaseSpider):
         return self.get_text_from_node(city)
 
     def store_country(self, response):
-        country = re.search('www.apple.com/([A-z]+)(/[A-z]+)?/retail',response.url)
+        country = re.search('www.apple.com/([A-z]+)(/[A-z]+)?/retail', response.url)
         if country:
-                return country.group(1).upper()
+            return country.group(1).upper()
         # In case of US, the url does not contain country_code.
         return 'US'
 
@@ -72,9 +72,14 @@ class AppleSpider(BaseSpider):
                             hours[day.strip().strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
                     else:
                         open_time, close_time = hours_data.split('-')
-                        hours[days.strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
+                        if '-' in days:
+                            hour_timings = {"open": open_time.strip(), "close": close_time.strip()}
+                            self.parse_store_hours(days, hour_timings, hours)
+                        else:
+                            hours[days.strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
                 elif ':' not in days:
-                        hours['Mon - Sun'] = {'Open': '00:00 AM','Close': '00:00 PM'}
+                    hour_timings = {'Open': '00:00 am', 'Close': '00:00 pm'}
+                    self.parse_store_hours('Mon - Sun', hour_timings, hours)
             return hours
 
     def store_phone_number(self, response):
@@ -114,7 +119,7 @@ class AppleSpider(BaseSpider):
         address = []
         address_parts['street_address'] = self.store_street_address(response)
         address.append(address_parts['street_address'])
-        address.append("%s,%s, %s" %(address_parts['city'],address_parts['state'] ,address_parts['zipcode']))
+        address.append("%s,%s, %s" % (address_parts['city'], address_parts['state'], address_parts['zipcode']))
         return address
 
     def store_services(self, response):

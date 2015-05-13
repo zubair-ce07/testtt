@@ -70,7 +70,7 @@ class WetsealSpider(BaseSpider):
         return self.parse_hours(lines)
 
     def parse_hours(self, hour_rows):
-        hours = {}
+        hours = dict()
         for row in self.normalize(hour_rows):
             day_string = self.normalize(re.findall("^[A-z]+\s*-?\s*[A-z]+", row)[0]).strip(':')
             hour_string = self.normalize(row.replace(day_string, '').strip(':'))
@@ -83,6 +83,11 @@ class WetsealSpider(BaseSpider):
                         hours[day.strip()] = {"open": open_time.strip(), "close": close_time.strip()}
                 else:
                     open_time, close_time = hour_string.split('-')
-                    hours[day_string] = {"open": open_time.strip(),
+                    if '-' in day_string:
+                        hour_timings = {"open": open_time.strip(), "close": close_time.strip()}
+                        self.parse_store_hours(day_string, hour_timings, hours)
+                    else:
+                        hours[day_string] = {"open": open_time.strip(),
                                                                "close": close_time.strip()}
         return hours
+
