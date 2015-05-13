@@ -413,9 +413,14 @@ class HhgreggSpider(BaseSpider):
         return specification
 
     def item_currency(self, response):
-        price = self.item_current_price(response) if self.item_current_price(response) else self.item_original_price(
-            response)
-        return '$' if '$' in price else None
+        if response.xpath('.//*[@class="price spacing"]'):
+            data = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]'))
+        elif response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
+            data = self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
+        else:
+            data = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
+
+        return '$' if '$' in data else ''
 
     def item_primary_image_url(self, response, package_flag=False):
         if package_flag:
@@ -477,7 +482,7 @@ class HhgreggSpider(BaseSpider):
                                           'resultType': 'products',
                                       }, meta={'dont_merge_cookies': True})
 
-    # To get item rating request will be send at contents.js.
+    #  To get item rating request will be send at contents.js.
     #  Directory for content.js differs with every product depends upon product id.
     #  This method returns the directory path containing content.js depending on the product id.
     #  This method is copied from the source javascript of website which is used to create directory path there.
