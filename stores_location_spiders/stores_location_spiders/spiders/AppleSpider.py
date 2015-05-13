@@ -29,7 +29,7 @@ class AppleSpider(BaseSpider):
         item['store_url'] = response.url
         item['store_image_url'] = self.store_image_url(response)
         item['services'] = self.store_services(response)
-        request_url = self.store_url(response)
+        request_url = self.store_info_script_url(response)
         yield Request(url=request_url, meta={'item': item},
                       callback=self.parse_json)
 
@@ -126,7 +126,7 @@ class AppleSpider(BaseSpider):
         services = response.xpath(".//*[contains(@class,'hero-nav')]//a[contains(@class,'block')]//img/@alt").extract()
         return [self.normalize(x) for x in services]
 
-    def store_url(self, response):
+    def store_info_script_url(self, response):
         url = response.xpath(".//script[contains(@src, 'maps_data.js')]/@src").extract()
         if url:
             return urljoin('http://www.apple.com/', url[0])
