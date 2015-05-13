@@ -6,11 +6,7 @@ var powersuiteControllers = angular.module('powersuiteControllers', []);
 
 powersuiteControllers.controller('SearchCtrl', ['$scope', '$http', '$filter', 'apiUrl', 'User', 'Dockets',
         function ($scope, $http, $filter, apiUrl, User, Dockets) {
-
-
-
-
-
+            
             $scope.searchDockets = function (dockets) {
                 Dockets.getSchool().then(function(response){
                     $scope.school = response.data;
