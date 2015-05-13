@@ -74,12 +74,12 @@ class AppleSpider(BaseSpider):
                         open_time, close_time = hours_data.split('-')
                         if '-' in days:
                             hour_timings = {"open": open_time.strip(), "close": close_time.strip()}
-                            self.parse_store_hours(days, hour_timings, hours)
+                            self.parse_store_hours(days.strip(':'), hour_timings, hours, True)
                         else:
                             hours[days.strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
                 elif ':' not in days:
-                    hour_timings = {'Open': '00:00 am', 'Close': '00:00 pm'}
-                    self.parse_store_hours('Mon - Sun', hour_timings, hours)
+                    hour_timings = {'open': '00:00 am', 'close': '00:00 pm'}
+                    self.parse_store_hours('Mon - Sun', hour_timings, hours, True)
             return hours
 
     def store_phone_number(self, response):
