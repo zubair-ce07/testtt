@@ -85,9 +85,9 @@ class WetsealSpider(BaseSpider):
                     open_time, close_time = hour_string.split('-')
                     if '-' in day_string:
                         hour_timings = {"open": open_time.strip(), "close": close_time.strip()}
-                        self.parse_store_hours(day_string, hour_timings, hours)
+                        self.parse_store_hours(day_string.strip(':'), hour_timings, hours)
                     else:
-                        hours[day_string] = {"open": open_time.strip(),
+                        hours[day_string.strip(':')] = {"open": open_time.strip(),
                                                                "close": close_time.strip()}
         return hours
 
