@@ -40,7 +40,7 @@ class AppleSpider(BaseSpider):
             address = re.findall('formatted_address: "(.*)"', response.body)
             if address:
                 address_lines = address[0].split('<br />')
-                item['address'] = address_lines
+                item['address'] = self.normalize(address_lines)
         if store_id:
             item['store_id'] = store_id[0]
         return item
