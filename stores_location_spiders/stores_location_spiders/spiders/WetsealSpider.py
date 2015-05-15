@@ -38,17 +38,14 @@ class WetsealSpider(BaseSpider):
         return item
 
     def store_name(self, result):
-        name = result.xpath(".//*[@class='store-name']//text()")
-        return self.get_text_from_node(name)
+        return self.get_text_from_node(result.xpath(".//*[@class='store-name']//text()"))
 
     def store_id(self, result):
-        store_id = result.xpath('.//td[1]/a/@id')
-        return self.get_text_from_node(store_id)
+        return self.get_text_from_node(result.xpath('.//td[1]/a/@id'))
 
     def store_address(self, result):
         address = result.xpath(".//*[@class='store-address']//text()").extract()
-        if address:
-            return [self.normalize(x) for x in address]
+        return [self.normalize(x) for x in address]
 
     def parse_address(self, address):
         address_parts = {}
