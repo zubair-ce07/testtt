@@ -1,13 +1,13 @@
 import re
 from urlparse import urljoin, urlparse
 import json
-from scrapy import log
 
+from scrapy import log
 from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.http import FormRequest, Request
-from scrapinghub.spider import BaseSpider
 
+from scrapinghub.spider import BaseSpider
 from hhgregg.items import HhgreggItem
 
 
@@ -20,7 +20,7 @@ class HhgreggSpider(BaseSpider):
     )
 
     total_urls = []
-    droped_items = 0
+    dropped_items = 0
     zipcode = '10001'
 
     rules = [
@@ -67,9 +67,9 @@ class HhgreggSpider(BaseSpider):
                 else:
                     return self.parse_item_availability(response, item)
         else:
-            self.droped_items += 1
-            self.log('Item Droped. Item has no Product ID', log.ERROR)
-            self.log('Total Droped %s' % self.droped_items, log.INFO)
+            self.dropped_items += 1
+            self.log('Item Dropped. Item has no Product ID', log.ERROR)
+            self.log('Total Dropped %s' % self.dropped_items, log.INFO)
 
     def parse_packages(self, response):
         item = HhgreggItem()
@@ -203,7 +203,7 @@ class HhgreggSpider(BaseSpider):
                           'dont_merge_cookies': True}, dont_filter=True)
                 return req
             else:
-                self.log('Incomplete Item Droped Due to Invalid availability Response. Url = %s' % item['source_url'],
+                self.log('Incomplete Item Dropped Due to Invalid availability Response. Url = %s' % item['source_url'],
                          log.ERROR)
 
     def item_availability(self, response):
@@ -480,9 +480,9 @@ class HhgreggSpider(BaseSpider):
                                           'productBeginIndex': str(begin_index),
                                           'requesttype': 'ajax',
                                           'resultType': 'products',
-                                      }, meta={'dont_merge_cookies': True})
+                                          }, meta={'dont_merge_cookies': True})
 
-    #  To get item rating request will be send at contents.js.
+    # To get item rating request will be send at contents.js.
     #  Directory for content.js differs with every product depends upon product id.
     #  This method returns the directory path containing content.js depending on the product id.
     #  This method is copied from the source javascript of website which is used to create directory path there.
@@ -506,7 +506,7 @@ class HhgreggSpider(BaseSpider):
                 self.log('Request Retrying %s time ' % str(retry + 1), log.INFO)
                 return failure.request
             else:
-                self.log('Item droped Due to %s' % failure.value.message, log.WARNING)
+                self.log('Item Dropped Due to %s' % failure.value.message, log.WARNING)
         else:
             item = failure.value.response.meta['item']
             package_flag = failure.value.response.meta.get('package_flag')
