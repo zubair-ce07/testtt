@@ -3,8 +3,8 @@ from scrapy.contrib.spiders import CrawlSpider
 
 class BaseSpider(CrawlSpider):
 
-    full_names_of_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    abbreviation_of_days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+    full_names_of_days = [u'monday', u'tuesday', u'wednesday', u'thursday', u'friday', u'saturday', u'sunday']
+    abbreviation_of_days = [u'mon', u'tue', u'wed', u'thu', u'fri', u'sat', u'sun']
 
     def parse_store_hours(self, days, hour_timings, hours, abbreviation_flag=False):
         start_index, end_index = [self.abbreviation_of_days.index(s.strip()[:3]) for s in days.lower().split('-')]
