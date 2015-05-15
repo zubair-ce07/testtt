@@ -22,5 +22,5 @@ FILES_STORE = 'E:/downloads'
 ITEM_PIPELINES = [
     'documents_download.pipelines.DocumentsDownloadPipeline',
 ]
-DOWNLOAD_DELAY= 2
+DOWNLOAD_DELAY= 5
 DOWNLOAD_TIMEOUT = 500

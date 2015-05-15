@@ -7,8 +7,7 @@
 #
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #
-HTTPCACHE_ENABLED = True
-DOWNLOAD_DELAY = 2
+
 BOT_NAME = 'stores_location_spiders'
 
 SPIDER_MODULES = ['stores_location_spiders.spiders']
