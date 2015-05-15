@@ -5,9 +5,10 @@
     <title>AEE PowerSuite DocketDash</title>
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
-    <script src="bower_components/angular/angular.js"></script>
-    <script src="bower_components/jquery/dist/jquery.js"></script>
-    <script src="bower_components/bootstrap/js/button.js"></script>
+    <link rel="stylesheet" href="bower_components/select2/dist/css/select2.min.css">
+    <link rel="stylesheet" href="bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">
+
+
 </head>
 <body>
 <nav class="navbar navbar-default navbar-static-top">
@@ -37,35 +38,73 @@
 </ol>
 
 <div class="well well-lg container">
-    <form class="form-inline">
+    <div class="row">
+        <form class="form-inline">
 
-        <div class="form-group">
-            <label for="states">STATES</label>
-            <input type="text" class="form-control" id="states" placeholder="All States">
-        </div>
+            <div class="form-group col-md-6 col-lg-2">
+                <label for="states">STATES</label>
+                <select class="js-example-tags form-control" id="states" multiple="multiple">
+                    <option value="All">All Content</option>
+                    <option value="MDO">Meta Data Only</option>
+                    <option value="DN">Docket Number</option>
+                    <option value="MP">Major Parties</option>
+                </select>
+                <!--<input type="text" class="form-control" id="states" placeholder="All States">-->
+            </div>
 
-        <div class="form-group">
-            <label for="keyword">KEYWORD</label>
-            <input type="text" class="form-control" id="keyword" placeholder="Enter Term">
-        </div>
+            <div class="form-group col-md-6 col-lg-2">
+                <label for="keyword">KEYWORD</label>
+                <input type="text" class="form-control" id="keyword" placeholder="Enter Term">
+            </div>
 
-        <div class="form-group">
-            <label for="scope">SEARCH SCOPE</label>
-            <input type="text" class="form-control" id="scope" placeholder="All Content">
-        </div>
+            <div class="form-group col-md-6 col-lg-2">
+                <label for="scope">SEARCH SCOPE</label>
+                <select class="js-example-basic-single form-control" id="scope">
+                    <option value="All">All Content</option>
+                    <option value="MDO">Meta Data Only</option>
+                    <option value="DN">Docket Number</option>
+                    <option value="MP">Major Parties</option>
+                </select>
+                <!--<input type="text" class="form-control" id="scope" placeholder="All Content">-->
+            </div>
 
-        <div class="form-group">
-            <label for="filingbefore">LATEST FILING</label>
-            <input type="text" class="form-control" id="filingbefore" placeholder="Lastest filling after">
-        </div>
+            <div class="form-group col-md-6 col-lg-2">
+                <label for="filingbefore">LATEST FILING Before</label>
+                <input type="text" class="form-control actual_range" id="filingbefore" placeholder="Lastest filling after">
+            </div>
 
-        <div class="form-group">
-            <label class="sr-only" for="filingafter"></label>
-            <input type="text" class="form-control" id="filingafter" placeholder="Last filling before">
-        </div>
-         <button type="submit" class="btn btn-success">Search</button>
-    </form>
+            <div class="form-group col-md-6 col-lg-2">
+                <label for="filingafter">LATEST FILING After</label>
+                <input type="text" class="form-control actual_range" id="filingafter" placeholder="Last filling before">
+            </div>
+
+            <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
+                <div>
+                    <label for="docket-search"><a><span class="glyphicon glyphicon-remove"></span>Clear</a></label>
+                </div>
+
+                <button type="submit" id="docket-search" class="btn btn-success">Search</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 </body>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/bootstrap/js/button.js"></script>
+    <script src="bower_components/bootstrap/js/dropdown.js"></script>
+    <script src="bower_components/select2/dist/js/select2.min.js"></script>
+    <script src="bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <script>
+        $("#states").select2({
+         tags: true
+    })
+        $('#filingbefore').datepicker({
+      inputs: $('.actual_range').toArray()
+});
+        $('#filingafter').datepicker({
+      inputs: $('.actual_range').toArray()
+});
+    </script>
 </html>
