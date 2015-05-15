@@ -1,0 +1,71 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>AEE PowerSuite DocketDash</title>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/bootstrap/js/button.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top">
+    <div class="container">
+        <h3> Advance Energy Economy </h3>
+    </div>
+</nav>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">DocketDash</a>
+        </div>
+        <div>
+            <ul class="nav navbar-nav">
+                <li><a href="#">Search</a></li>
+                <li><a href="#">My Favorites</a></li>
+                <li><a href="#">Organization Favorites</a></li>
+                <li><a href="#">All Favorites</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<ol class="breadcrumb">
+    <li><a href="#">DocketDash</a></li>
+    <li class="active">Search</li>
+</ol>
+
+<div class="well well-lg container">
+    <form class="form-inline">
+
+        <div class="form-group">
+            <label for="states">STATES</label>
+            <input type="text" class="form-control" id="states" placeholder="All States">
+        </div>
+
+        <div class="form-group">
+            <label for="keyword">KEYWORD</label>
+            <input type="text" class="form-control" id="keyword" placeholder="Enter Term">
+        </div>
+
+        <div class="form-group">
+            <label for="scope">SEARCH SCOPE</label>
+            <input type="text" class="form-control" id="scope" placeholder="All Content">
+        </div>
+
+        <div class="form-group">
+            <label for="filingbefore">LATEST FILING</label>
+            <input type="text" class="form-control" id="filingbefore" placeholder="Lastest filling after">
+        </div>
+
+        <div class="form-group">
+            <label class="sr-only" for="filingafter"></label>
+            <input type="text" class="form-control" id="filingafter" placeholder="Last filling before">
+        </div>
+         <button type="submit" class="btn btn-success">Search</button>
+    </form>
+</div>
+
+</body>
+</html>
