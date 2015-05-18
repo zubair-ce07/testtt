@@ -6,7 +6,6 @@ from scrapy import log
 from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.http import FormRequest, Request
-
 from scrapinghub.spider import BaseSpider
 from hhgregg.items import HhgreggItem
 
@@ -19,9 +18,7 @@ class HhgreggSpider(BaseSpider):
         'http://www.hhgregg.com/',
     )
 
-    total_urls = []
     dropped_items = 0
-    zipcode = '10001'
 
     rules = [
 
@@ -42,8 +39,6 @@ class HhgreggSpider(BaseSpider):
 
     def get_product_detail(self, response):
         if self.item_product_id(response):
-            self.total_urls.append(response.url)
-            self.log("Total Urls %s" % len(self.total_urls))
             if response.xpath('.//*[@class="kitItemList"]'):
                 return self.parse_packages(response)
             else:
