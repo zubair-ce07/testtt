@@ -57,15 +57,10 @@ class HhgreggSpider(BaseSpider):
                 item['specifications'] = self.item_specification(response)
                 item['source_url'] = response.url
                 item['primary_image_url'] = self.item_primary_image_url(response)
-                if response.xpath(".//*[@class='available_soon_text2']"):
-                    item['available_instore'] = False
-                    item['available_online'] = False
-                    return Request(
+                return Request(
                         url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
                             item['product_id']),
                         callback=self.item_images, meta={'item': item}, dont_filter=True)
-                else:
-                    return self.parse_item_availability(response, item)
         else:
             self.dropped_items += 1
             self.log('Item Dropped. Item has no Product ID', log.ERROR)
@@ -93,17 +88,12 @@ class HhgreggSpider(BaseSpider):
             product['original_price'] = self.item_original_price(product_info_div, True)
             products.append(product)
         item['items'] = products
-        if response.xpath(".//*[@class='available_soon_text2']"):
-            item['available_instore'] = False
-            item['available_online'] = False
-            if item.get('items'):
-                return self.parse_package_item_ratings(item['items'].pop(0), item)
-            return Request(
-                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                    item['product_id']),
-                callback=self.item_images, meta={'item': item}, dont_filter=True)
-        else:
-            return self.parse_item_availability(response, item, True)
+        if item.get('items'):
+            return self.parse_package_item_ratings(item['items'].pop(0), item)
+        return Request(
+            url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                item['product_id']),
+            callback=self.item_images, meta={'item': item}, dont_filter=True)
 
     def populate_item(self, response, item):
         item['title'] = self.item_title(response)
@@ -115,111 +105,8 @@ class HhgreggSpider(BaseSpider):
         item['original_price'] = self.item_original_price(response)
         item['currency'] = self.item_currency(response)
         item['trail'] = self.item_trail(response)
-
-    def parse_item_availability(self, response, item, package_flag=False):
-        ParamJS_script_text = response.xpath('(.//script[contains(.,"WCParamJS")])[1]').extract()
-        lang_id = re.search("WCParamJS\[\"langId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
-        store_id = re.search("WCParamJS\[\"storeId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
-        catalog_id = re.search("WCParamJS\[\"catalogId\"\]='(.*)'", ParamJS_script_text[0]).group(1)
-        product_id = self.get_text_from_node(response.xpath(".//*[contains(@id,'productId')]/text()"))
-        form_data = {
-            'catalogId': catalog_id,
-            'langId': lang_id,
-            'quantity': '1',
-            'requesttype': 'ajax',
-            'storeId': store_id,
-            'zipCode': self.zipcode
-        }
-        if package_flag:
-            form_data['partnum'] = item.get('model')
-            form_data['productType'] = 'Kit'
-            return FormRequest(
-                url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
-                formdata=form_data, callback=self.check_item_availability,
-                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True},
-                dont_filter=True)
-        else:
-            partnum_script_text = response.xpath('(.//script[contains(.,"partNumber")])[1]').extract()
-            if partnum_script_text:
-                part_num_match = re.search('partNumber\s*=\s*"([^"]+)', partnum_script_text[0], re.IGNORECASE)
-                if part_num_match:
-                    part_num = part_num_match.group(1).strip()
-                    form_data['partnum'] = part_num
-            else:
-                part_num = response.xpath('(.//*[contains(@id,"productIdForPartNum")])[1]/@id').extract()[0].split('_')[
-                    0]
-                form_data['partnum'] = part_num
-            content_type = {'Content-Type': 'application/x-www-form-urlencoded;'}
-            return FormRequest(
-                url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
-                formdata=form_data, headers=content_type, callback=self.check_item_availability,
-                meta={'productid': product_id, 'item': item, 'arg_data': form_data, 'dont_merge_cookies': True},
-                dont_filter=True)
-
-    def check_item_availability(self, response):
-        item = response.meta['item']
-        form_data = response.meta['arg_data']
-        productid = response.meta['productid']
-        if response.body and not response.xpath(".//h1[contains(.,'Generic System Error ')]"):
-            json_data = json.loads(response.body.strip().strip('*/').strip('/*'))
-            if json_data.get('errorMessageKey') or not json_data.get('catEntryId0'):
-                item['available_instore'] = False
-                item['available_online'] = False
-                if item.get('items'):
-                    return self.parse_package_item_ratings(item['items'].pop(0), item)
-                return Request(
-                    url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                        item['product_id']),
-                    callback=self.item_images, meta={'item': item}, dont_filter=True)
-            else:
-                form_data = {
-                    'catEntryId_0': str(json_data[u'catEntryId0']),
-                    'catalogId': str(json_data[u'catalogId'][0]),
-                    'deliveryAvailable': str(json_data[u'deliveryAvailable_0']),
-                    'inStoreOnly': 'false',
-                    'langId': str(json_data[u'langId'][0]),
-                    'numAvailableLocations': '0',
-                    'objectId': '',
-                    'partnum_0': str(json_data[u'partnum_0']),
-                    'pickupAvailable': str(json_data.get(u'pickupAvailable_0')),
-                    'productId_0': productid,
-                    'requesttype': 'ajax',
-                    'shippingAvailable': str(json_data.get(u'shippingAvailable_0')),
-                    'storeId': str(json_data[u'storeId'][0]),
-                    'zipCode': self.zipcode
-
-                }
-                return FormRequest(url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckAvailabilityDisplay',
-                                   formdata=form_data, callback=self.item_availability, meta={'item': item},
-                                   dont_filter=True)
-        else:
-            retry = response.meta.get('retry', 1)
-            form_data['retry'] = str(retry)
-            if retry <= 3:
-                req = FormRequest(
-                    url='http://www.hhgregg.com/webapp/wcs/stores/servlet/AjaxCheckProductAvailabilityService',
-                    formdata=form_data, callback=self.check_item_availability,
-                    meta={'productid': productid, 'item': item, 'arg_data': form_data, 'retry': retry + 1,
-                          'dont_merge_cookies': True}, dont_filter=True)
-                return req
-            else:
-                self.log('Incomplete Item Dropped Due to Invalid availability Response. Url = %s' % item['source_url'],
-                         log.ERROR)
-
-    def item_availability(self, response):
-        item = response.meta['item']
-        if response.xpath(".//div[contains(.,'Available in')]"):
-            item['available_instore'] = True
-            item['available_online'] = True
-        else:
-            item['available_instore'] = False
-            item['available_online'] = False
-        if item.get('items'):
-            return self.parse_package_item_ratings(item['items'].pop(0), item)
-        return Request(
-            url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                item['product_id']),
-            callback=self.item_images, meta={'item': item}, dont_filter=True)
+        item['available_instore'] = self.item_available_instore(response)
+        item['available_online'] = self.item_available_online(response)
 
     def parse_package_item_ratings(self, product, item):
         products = []
@@ -257,6 +144,18 @@ class HhgreggSpider(BaseSpider):
         else:
             item['rating'] = self.item_rating(response, item['model'])
             return item
+
+    def item_available_online(self, response):
+        if response.xpath('.//*[@id="PDP_AddToCart"]'):
+            return True
+        else:
+            return False
+
+    def item_available_instore(self, response):
+        if response.xpath('.//form[@id="CheckAvailabilityForm"]') and response.xpath('.//*[@id="check_store_availability" and contains(@style,"display: block")]'):
+            return True
+        else:
+            return False
 
     def item_title(self, response, package_flag=False):
         if package_flag:
