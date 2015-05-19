@@ -64,19 +64,18 @@ class AppleSpider(BaseSpider):
                 hours_data = self.get_text_from_node(row.xpath('./td[2]/text()'))
                 days = self.get_text_from_node(row.xpath('./td[1]/text()'))
                 if hours_data and '-' in hours_data:
+                    open_time, close_time = [s.strip() for s in hours_data.split('-')]
                     if ',' in days:
                         # timing for consective days seperated by comma.
                         all_days = days.split(',')
-                        open_time, close_time = hours_data.split('-')
                         for day in all_days:
-                            hours[day.strip().strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
+                            hours[day.strip().strip(':')] = {"open": open_time, "close": close_time}
                     else:
-                        open_time, close_time = hours_data.split('-')
                         if '-' in days:
-                            hour_timings = {"open": open_time.strip(), "close": close_time.strip()}
+                            hour_timings = {"open": open_time, "close": close_time}
                             self.parse_store_hours(days.strip(':'), hour_timings, hours, True)
                         else:
-                            hours[days.strip(':')] = {"open": open_time.strip(), "close": close_time.strip()}
+                            hours[days.strip(':')] = {"open": open_time, "close": close_time}
                 elif ':' not in days:
                     hour_timings = {'open': '00:00 am', 'close': '00:00 pm'}
                     self.parse_store_hours('Mon - Sun', hour_timings, hours, True)
@@ -119,7 +118,7 @@ class AppleSpider(BaseSpider):
         address = []
         address_parts['street_address'] = self.store_street_address(response)
         address.append(address_parts['street_address'])
-        address.append("%s,%s, %s" % (address_parts['city'], address_parts['state'], address_parts['zipcode']))
+        address.append("%s,%s %s" % (address_parts['city'], address_parts['state'], address_parts['zipcode']))
         return address
 
     def store_services(self, response):

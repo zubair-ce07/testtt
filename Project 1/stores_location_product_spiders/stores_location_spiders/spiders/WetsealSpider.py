@@ -72,19 +72,18 @@ class WetsealSpider(BaseSpider):
             day_string = self.normalize(re.findall("^[A-z]+\s*-?\s*[A-z]+", row)[0]).strip(':')
             hour_string = self.normalize(row.replace(day_string, '').strip(':'))
             if hour_string and '-' in hour_string:
+                open_time, close_time = [s.strip() for s in hour_string.split('-')]
                 if ',' in day_string and hour_string:
                     # timing for consective days seperated by comma.
                     all_days = day_string.split(',')
-                    open_time, close_time = hour_string.split('-')
                     for day in all_days:
-                        hours[day.strip()] = {"open": open_time.strip(), "close": close_time.strip()}
+                        hours[day.strip()] = {"open": open_time, "close": close_time}
                 else:
-                    open_time, close_time = hour_string.split('-')
                     if '-' in day_string:
-                        hour_timings = {"open": open_time.strip(), "close": close_time.strip()}
+                        hour_timings = {"open": open_time, "close": close_time}
                         self.parse_store_hours(day_string.strip(':'), hour_timings, hours)
                     else:
-                        hours[day_string.strip(':')] = {"open": open_time.strip(),
-                                                               "close": close_time.strip()}
+                        hours[day_string.strip(':')] = {"open": open_time,
+                                                               "close": close_time}
         return hours
 
