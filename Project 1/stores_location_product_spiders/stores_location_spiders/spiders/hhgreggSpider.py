@@ -204,6 +204,12 @@ class HhgreggSpider(BaseSpider):
     def normalize_price(self, price):
         return float(price.replace(',', '').replace('$', '')) if price else None
 
+    def item_currency(self, response, price):
+        if not '$' in price:
+            price = self.get_text_from_node(
+                response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
+        return '$' if '$' in price else ''
+
     def item_current_price(self, response, package_flag=False):
         if package_flag:
             price = self.get_text_from_node(
@@ -211,22 +217,18 @@ class HhgreggSpider(BaseSpider):
             if not price:
                 price = self.get_text_from_node(
                     response.xpath("((.//*[@id='price_details'])[1]//*[@class='price offerprice bold']/text())[1]"))
-            currency = '$' if '$' in price else ''
         elif response.xpath('.//*[@class="price spacing"]'):
             price = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]'))
-            currency = '$' if '$' in price else ''
         elif response.xpath(".//*[@id='checkoutModal']"):
             price_script_text = response.xpath(
                 ".//script[contains(.,'omnitureProductTag') and contains(.,'prodView')]/text()").extract()
             if price_script_text:
                 price = re.search('prodView","([^"]+)', price_script_text[0]).group(1)
-                currency = '$'
             else:
                 price = ''
-                currency = ''
         else:
             price = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
-            currency = '$' if '$' in price else ''
+        currency = self.item_currency(response,price)
         return self.normalize_price(price), currency
 
     def item_original_price(self, response, package_flag=False):
