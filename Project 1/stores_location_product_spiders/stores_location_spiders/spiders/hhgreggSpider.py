@@ -61,7 +61,7 @@ class HhgreggSpider(BaseSpider):
             product['primary_image_url'] = self.item_primary_image_url(product_info_div, True)
             product['product_id'] = self.item_product_id(product['primary_image_url'], True)
             product['specifications'] = self.item_specification(product_info_div, True)
-            product['sku'] = self.item_sku(product['product_id'])
+            product['sku'] = self.item_sku(product['product_id'], response, True)
             product['mpn'] = self.item_mpn(product_info_div, True)
             product['upc'] = self.item_upc(product_info_div, True)
             product['features'] = self.item_features(product_info_div, True)
@@ -77,7 +77,7 @@ class HhgreggSpider(BaseSpider):
         item['title'] = self.item_title(response)
         item['brand'] = self.item_brand(response)
         item['product_id'] = self.item_product_id(response)
-        item['sku'] = self.item_sku(item['product_id'])
+        item['sku'] = self.item_sku(item['product_id'], response)
         item['model'] = self.item_model(response)
         item['current_price'], item['currency'] = self.item_current_price(response)
         item['original_price'] = self.item_original_price(response)
@@ -130,8 +130,18 @@ class HhgreggSpider(BaseSpider):
             return self.get_text_from_node(response.xpath('//meta[@name="description"]/@content')).strip('<br/>')
         return self.get_text_from_node(response.xpath('//meta[@property="og:description"]/@content')).strip('<br/>')
 
-    def item_sku(self, product_id):
-        return '%s_is' % product_id
+    def item_sku(self, product_id, response, package_flag=False):
+        sku_script = response.xpath(".//script[contains(.,'var sku=')]").extract()
+        if sku_script:
+            sku_match = re.search("var\s*sku=\s*'([^';]+)", sku_script[0])
+            sku = sku_match.group(1) if sku_match else None
+        else:
+            sku= None
+
+        if package_flag or not(sku):
+            return '%s_is' % product_id
+        else:
+            return sku
 
     def item_product_id(self, response, package_flag=False):
         if package_flag:
@@ -400,6 +410,5 @@ class HhgreggSpider(BaseSpider):
 
     def image_request(self, item):
         return Request(
-                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                    item['product_id']),
+                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % item['sku'],
                 callback=self.item_images, meta={'item': item}, dont_filter=True)
