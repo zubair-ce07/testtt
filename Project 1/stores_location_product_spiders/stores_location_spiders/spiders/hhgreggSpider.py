@@ -138,7 +138,7 @@ class HhgreggSpider(BaseSpider):
         else:
             sku= None
 
-        if not sku: return '%s_is' % product_id
+        if not sku: return '%s_is' % product_id  # pattern of sku contains product id and keyword '_is'
         else:
             return sku
 
