@@ -98,10 +98,7 @@ class HhgreggSpider(BaseSpider):
 
     def parse_package_item_ratings(self, product, item):
         products = []
-        return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
-            self.rating_parameters(product['model']), product['model']),
-                       meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
-                       callback=self.parse_item_rating, dont_filter=True, errback=self.handle_error)
+        self.request_for_item_rollup(product, item, products)
 
     def parse_item_rating(self, response):
         package_flag = response.meta['package_flag']
@@ -386,14 +383,16 @@ class HhgreggSpider(BaseSpider):
                 self.next_item_request(item, products)
             else:
                 return item
+    def request_for_item_rollup(self, product, item, products):
+        return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
+                self.rating_parameters(product['model']), product['model']),
+                           meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
+                           callback=self.parse_item_rating, errback=self.handle_error, dont_filter=True)
 
     def next_item_request(self, item, products):
         if item.get('items'):
             product = item['items'].pop(0)
-            return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
-                self.rating_parameters(product['model']), product['model']),
-                           meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
-                           callback=self.parse_item_rating, errback=self.handle_error, dont_filter=True)
+            return self.request_for_item_rollup(product, item, products)
         else:
             item['items'] = products
             return self.image_request(item)
