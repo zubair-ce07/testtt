@@ -6,6 +6,9 @@ class BaseSpider(CrawlSpider):
     full_names_of_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     abbreviation_of_days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
+    def __init__(self, *a, **kw):
+        super(BaseSpider, self).__init__(*a, **kw)
+
     def parse_store_hours(self, days, hour_timings, hours, abbreviation_flag=False):
         start_index, end_index = [self.abbreviation_of_days.index(s.strip()[:3]) for s in days.lower().split('-')]
         if abbreviation_flag:
@@ -14,9 +17,6 @@ class BaseSpider(CrawlSpider):
         else:
             for day in self.full_names_of_days[start_index:end_index + 1]:
                 hours[day.title()] = hour_timings
-
-    def __init__(self, *a, **kw):
-        super(BaseSpider, self).__init__(*a, **kw)
 
     def get_text_from_node(self, node):
         text_array = node.extract()
