@@ -290,16 +290,6 @@ class HhgreggSpider(BaseSpider):
             specification[self.get_text_from_node(specs.xpath('./*[@class="specHeader"]//text()'))] = detail_specs
         return specification
 
-    # def item_currency(self, response):
-    #     if response.xpath('.//*[@class="price spacing"]'):
-    #         data = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]'))
-    #     elif response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
-    #         data = self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
-    #     else:
-    #         data = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
-    #
-    #     return '$' if '$' in data else ''
-
     def item_primary_image_url(self, response, package_flag=False):
         if package_flag:
             return self.get_text_from_node(
