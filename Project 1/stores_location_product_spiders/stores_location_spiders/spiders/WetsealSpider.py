@@ -81,6 +81,8 @@ class WetsealSpider(BaseSpider):
                 else:
                     if '-' in day_string:
                         hour_timings = {"open": open_time, "close": close_time}
+                        # To parse and assign timing of open and close of store
+                        # This method parse days of week between given interval of days on website
                         self.parse_store_hours(day_string.strip(':'), hour_timings, hours)
                     else:
                         hours[day_string.strip(':')] = {"open": open_time,

@@ -73,10 +73,14 @@ class AppleSpider(BaseSpider):
                     else:
                         if '-' in days:
                             hour_timings = {"open": open_time, "close": close_time}
+                        # To parse and assign timing of open and close of store
+                        # This method parse days of week between given interval of days on website
                             self.parse_store_hours(days.strip(':'), hour_timings, hours, True)
                         else:
                             hours[days.strip(':')] = {"open": open_time, "close": close_time}
                 elif ':' not in days:
+                    # To parse and assign timing of open and close of store
+                    # when store timing is 24/7, 365 days a year
                     hour_timings = {'open': '00:00 am', 'close': '00:00 pm'}
                     self.parse_store_hours('Mon - Sun', hour_timings, hours, True)
             return hours
