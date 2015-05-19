@@ -103,7 +103,7 @@ class HhgreggSpider(BaseSpider):
             except ValueError:
                 product['rating'] = self.normalize_rating(re.search('d:([^,]+)', data).group(1))
             products.append(product)
-            self.next_item_request(item, products)
+            return self.next_item_request(item, products)
         else:
             item['rating'] = self.item_rating(response, item['model'])
             return item
@@ -401,6 +401,7 @@ class HhgreggSpider(BaseSpider):
         else:
             item['items'] = products
             return self.image_request(item)
+
     def add_error_handler(self, request):
         request.meta["rules"] = True
         request.meta['dont_merge_cookies'] = True
