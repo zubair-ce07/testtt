@@ -76,7 +76,7 @@ class HhgreggSpider(BaseSpider):
             product['mpn'] = self.item_mpn(product_info_div, True)
             product['upc'] = self.item_upc(product_info_div, True)
             product['features'] = self.item_features(product_info_div, True)
-            product['current_price'] = self.item_current_price(product_info_div, True)
+            product['current_price'], product['currency'] = self.item_current_price(product_info_div, True)
             product['original_price'] = self.item_original_price(product_info_div, True)
             products.append(product)
         item['items'] = products
