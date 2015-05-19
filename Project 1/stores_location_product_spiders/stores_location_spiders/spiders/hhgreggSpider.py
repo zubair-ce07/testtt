@@ -30,13 +30,6 @@ class HhgreggSpider(BaseSpider):
              callback='get_product_detail', process_request='add_error_handler', )
     ]
 
-    def add_error_handler(self, request):
-        request.meta["rules"] = True
-        request.meta['dont_merge_cookies'] = True
-        req = Request(request.url, callback=request.callback, meta=request.meta, dont_filter=request.dont_filter,
-                      errback=self.handle_error)
-        return req
-
     def get_product_detail(self, response):
         if self.item_product_id(response):
             if response.xpath('.//*[@class="kitItemList"]'):
@@ -402,7 +395,12 @@ class HhgreggSpider(BaseSpider):
         else:
             item['items'] = products
             return self.image_request(item)
-
+    def add_error_handler(self, request):
+        request.meta["rules"] = True
+        request.meta['dont_merge_cookies'] = True
+        req = Request(request.url, callback=request.callback, meta=request.meta, dont_filter=request.dont_filter,
+                      errback=self.handle_error)
+        return req
 
     def image_request(self, item):
         return Request(
