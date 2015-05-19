@@ -18,8 +18,6 @@ class HhgreggSpider(BaseSpider):
         'http://www.hhgregg.com/',
     )
 
-    dropped_items = 0
-
     rules = [
 
         Rule(LinkExtractor(deny=['/productfinder/'],
@@ -47,9 +45,7 @@ class HhgreggSpider(BaseSpider):
                 item['primary_image_url'] = self.item_primary_image_url(response)
                 return self.image_request(item)
         else:
-            self.dropped_items += 1
             self.log('Item Dropped. Item has no Product ID', log.ERROR)
-            self.log('Total Dropped %s' % self.dropped_items, log.INFO)
 
     def parse_packages(self, response):
         item = HhgreggItem()
