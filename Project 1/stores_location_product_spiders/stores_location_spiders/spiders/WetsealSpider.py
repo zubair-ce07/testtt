@@ -73,7 +73,7 @@ class WetsealSpider(BaseSpider):
             hour_string = self.normalize(row.replace(day_string, '').strip(':'))
             if hour_string and '-' in hour_string:
                 open_time, close_time = [s.strip() for s in hour_string.split('-')]
-                if ',' in day_string and hour_string:
+                if ',' in day_string:
                     # timing for consective days seperated by comma.
                     all_days = day_string.split(',')
                     for day in all_days:
