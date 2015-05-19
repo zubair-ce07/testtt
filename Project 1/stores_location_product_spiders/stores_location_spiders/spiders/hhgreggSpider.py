@@ -98,7 +98,7 @@ class HhgreggSpider(BaseSpider):
 
     def parse_package_item_ratings(self, product, item):
         products = []
-        self.request_for_item_rollup(product, item, products)
+        self.request_for_package_item_rating(product, item, products)
 
     def parse_item_rating(self, response):
         package_flag = response.meta['package_flag']
@@ -384,7 +384,7 @@ class HhgreggSpider(BaseSpider):
                 self.next_item_request(item, products)
             else:
                 return item
-    def request_for_item_rollup(self, product, item, products):
+    def request_for_package_item_rating(self, product, item, products):
         return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
                 self.rating_parameters(product['model']), product['model']),
                            meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
@@ -393,7 +393,7 @@ class HhgreggSpider(BaseSpider):
     def next_item_request(self, item, products):
         if item.get('items'):
             product = item['items'].pop(0)
-            return self.request_for_item_rollup(product, item, products)
+            return self.request_for_package_item_rating(product, item, products)
         else:
             item['items'] = products
             return self.image_request(item)
