@@ -64,7 +64,7 @@ class AppleSpider(BaseSpider):
                 hours_data = self.get_text_from_node(row.xpath('./td[2]/text()'))
                 days = self.get_text_from_node(row.xpath('./td[1]/text()'))
                 if hours_data and '-' in hours_data:
-                    if ',' in days and hours_data:
+                    if ',' in days:
                         # timing for consective days seperated by comma.
                         all_days = days.split(',')
                         open_time, close_time = hours_data.split('-')

@@ -7,11 +7,11 @@ from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.http import FormRequest, Request
 from scrapinghub.spider import BaseSpider
-from hhgregg.items import HhgreggItem
+from stores_location_spiders.items import HhgreggItem
 
 
 class HhgreggSpider(BaseSpider):
-    name = "hhgreggSpider"
+    name = "hhgregg_spider"
     allowed_domains = ["hhgregg.com",
                        "scene7.com"]
     start_urls = (
@@ -52,10 +52,7 @@ class HhgreggSpider(BaseSpider):
                 item['specifications'] = self.item_specification(response)
                 item['source_url'] = response.url
                 item['primary_image_url'] = self.item_primary_image_url(response)
-                return Request(
-                        url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                            item['product_id']),
-                        callback=self.item_images, meta={'item': item}, dont_filter=True)
+                return self.image_request(item)
         else:
             self.dropped_items += 1
             self.log('Item Dropped. Item has no Product ID', log.ERROR)
@@ -85,10 +82,7 @@ class HhgreggSpider(BaseSpider):
         item['items'] = products
         if item.get('items'):
             return self.parse_package_item_ratings(item['items'].pop(0), item)
-        return Request(
-            url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                item['product_id']),
-            callback=self.item_images, meta={'item': item}, dont_filter=True)
+        return self.image_request(item)
 
     def populate_item(self, response, item):
         item['title'] = self.item_title(response)
@@ -96,9 +90,8 @@ class HhgreggSpider(BaseSpider):
         item['product_id'] = self.item_product_id(response)
         item['sku'] = self.item_sku(item['product_id'])
         item['model'] = self.item_model(response)
-        item['current_price'] = self.item_current_price(response)
+        item['current_price'], item['currency'] = self.item_current_price(response)
         item['original_price'] = self.item_original_price(response)
-        item['currency'] = self.item_currency(response)
         item['trail'] = self.item_trail(response)
         item['available_instore'] = self.item_available_instore(response)
         item['available_online'] = self.item_available_online(response)
@@ -124,18 +117,7 @@ class HhgreggSpider(BaseSpider):
             except ValueError:
                 product['rating'] = self.normalize_rating(re.search('d:([^,]+)', data).group(1))
             products.append(product)
-            if item.get('items'):
-                product = item['items'].pop(0)
-                return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
-                    self.rating_parameters(product['model']), product['model']),
-                               meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
-                               callback=self.parse_item_rating, errback=self.handle_error, dont_filter=True)
-            else:
-                item['items'] = products
-                return Request(
-                    url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                        item['product_id']),
-                    callback=self.item_images, meta={'item': item}, dont_filter=True)
+            self.next_item_request(item, products)
         else:
             item['rating'] = self.item_rating(response, item['model'])
             return item
@@ -239,11 +221,13 @@ class HhgreggSpider(BaseSpider):
                 ".//script[contains(.,'omnitureProductTag') and contains(.,'prodView')]/text()").extract()
             if price_script_text:
                 price = re.search('prodView","([^"]+)', price_script_text[0]).group(1)
+                price = '%s$' % price
             else:
                 price = ''
         else:
             price = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
-        return self.normalize_price(price)
+        currency = '$' if '$' in price else ''
+        return self.normalize_price(price), currency
 
     def item_original_price(self, response, package_flag=False):
         if package_flag:
@@ -306,15 +290,15 @@ class HhgreggSpider(BaseSpider):
             specification[self.get_text_from_node(specs.xpath('./*[@class="specHeader"]//text()'))] = detail_specs
         return specification
 
-    def item_currency(self, response):
-        if response.xpath('.//*[@class="price spacing"]'):
-            data = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]'))
-        elif response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
-            data = self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
-        else:
-            data = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
-
-        return '$' if '$' in data else ''
+    # def item_currency(self, response):
+    #     if response.xpath('.//*[@class="price spacing"]'):
+    #         data = self.get_text_from_node(response.xpath('(.//*[@class="price spacing"]/text())[1]'))
+    #     elif response.xpath(".//*[contains(@class,'reg_price')]/span[2]/text()"):
+    #         data = self.get_text_from_node(response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
+    #     else:
+    #         data = self.get_text_from_node(response.xpath('(.//*[@class="price offerprice bold"]/text())[1]'))
+    #
+    #     return '$' if '$' in data else ''
 
     def item_primary_image_url(self, response, package_flag=False):
         if package_flag:
@@ -409,17 +393,24 @@ class HhgreggSpider(BaseSpider):
                 products = failure.value.response.meta['products']
                 product['rating'] = None
                 products.append(product)
-                if item.get('items'):
-                    product = item['items'].pop(0)
-                    return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
-                        self.rating_parameters(product['model']), product['model']),
-                                   meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
-                                   callback=self.parse_item_rating, errback=self.handle_error, dont_filter=True)
-                else:
-                    item['items'] = products
-                    return Request(
-                        url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
-                            item['product_id']),
-                        callback=self.item_images, meta={'item': item}, dont_filter=True)
+                self.next_item_request(item, products)
             else:
                 return item
+
+    def next_item_request(self, item, products):
+        if item.get('items'):
+            product = item['items'].pop(0)
+            return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
+                self.rating_parameters(product['model']), product['model']),
+                           meta={'product': product, 'products': products, 'item': item, 'package_flag': True},
+                           callback=self.parse_item_rating, errback=self.handle_error, dont_filter=True)
+        else:
+            item['items'] = products
+            return self.image_request(item)
+
+
+    def image_request(self, item):
+        return Request(
+                url='http://hhgregg.scene7.com/is/image//hhgregg/%s?req=set,json,UTF-8' % self.item_sku(
+                    item['product_id']),
+                callback=self.item_images, meta={'item': item}, dont_filter=True)
