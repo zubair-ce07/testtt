@@ -237,7 +237,8 @@ class HhgreggSpider(BaseSpider):
                 response.xpath("(.//*[contains(@class,'reg_price')]/span[2]/text())[1]"))
             return self.normalize_price(original_price)
         else:
-            return self.item_current_price(response)
+            original_price, currency = self.item_current_price(response)
+            return original_price
 
     def item_trail(self, response):
         trail = []
