@@ -46,7 +46,7 @@ class AppleSpider(BaseSpider):
         return item
 
     def store_city(self, response):
-        city = response.xpath(".//span[@class='locality']/text()")
+        city = response.xpath("(.//span[@class='locality']/text())[1]")
         return self.get_text_from_node(city)
 
     def store_country(self, response):
@@ -83,19 +83,19 @@ class AppleSpider(BaseSpider):
             return hours
 
     def store_phone_number(self, response):
-        phone_numbers = response.xpath(".//*[@class='telephone-number']//text()")
+        phone_numbers = response.xpath("(.//*[@class='telephone-number']//text())[1]")
         return self.get_text_from_node(phone_numbers)
 
     def store_state(self, response):
-        states = response.xpath(".//*[@class='region']/text()")
+        states = response.xpath("(.//*[@class='region']/text())[1]")
         return self.get_text_from_node(states)
 
     def store_name(self, response):
-        store_name = response.xpath(".//*[@class='store-name']//text()")
+        store_name = response.xpath("(.//*[@class='store-name']//text())[1]")
         return self.get_text_from_node(store_name)
 
     def store_zipcode(self, response):
-        zip_codes = response.xpath(".//*[@class='postal-code']//text()")
+        zip_codes = response.xpath("(.//*[@class='postal-code']//text())[1]")
         return self.get_text_from_node(zip_codes)
 
     def store_image_url(self, response):
@@ -104,7 +104,7 @@ class AppleSpider(BaseSpider):
             return image_urls[0]
 
     def store_street_address(self, response):
-        street_address = response.xpath(".//*[@class='street-address']//text()")
+        street_address = response.xpath("(.//*[@class='street-address']//text())[1]")
         return self.get_text_from_node(street_address)
 
     def parse_address_parts(self, response):
