@@ -61,7 +61,7 @@ class HhgreggSpider(BaseSpider):
             product['primary_image_url'] = self.item_primary_image_url(product_info_div, True)
             product['product_id'] = self.item_product_id(product['primary_image_url'], True)
             product['specifications'] = self.item_specification(product_info_div, True)
-            product['sku'] = self.item_sku(product['product_id'], response, True)
+            product['sku'] = self.item_sku(product['product_id'], response)
             product['mpn'] = self.item_mpn(product_info_div, True)
             product['upc'] = self.item_upc(product_info_div, True)
             product['features'] = self.item_features(product_info_div, True)
@@ -130,7 +130,7 @@ class HhgreggSpider(BaseSpider):
             return self.get_text_from_node(response.xpath('//meta[@name="description"]/@content')).strip('<br/>')
         return self.get_text_from_node(response.xpath('//meta[@property="og:description"]/@content')).strip('<br/>')
 
-    def item_sku(self, product_id, response, package_flag=False):
+    def item_sku(self, product_id, response):
         sku_script = response.xpath(".//script[contains(.,'var sku=')]").extract()
         if sku_script:
             sku_match = re.search("var\s*sku=\s*'([^';]+)", sku_script[0])
@@ -138,8 +138,7 @@ class HhgreggSpider(BaseSpider):
         else:
             sku= None
 
-        if package_flag or not(sku):
-            return '%s_is' % product_id
+        if not sku: return '%s_is' % product_id
         else:
             return sku
 
