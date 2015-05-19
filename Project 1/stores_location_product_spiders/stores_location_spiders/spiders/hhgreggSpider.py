@@ -87,7 +87,7 @@ class HhgreggSpider(BaseSpider):
 
     def parse_package_item_ratings(self, product, item):
         products = []
-        self.request_for_package_item_rating(product, item, products)
+        return self.request_for_package_item_rating(product, item, products)
 
     def parse_item_rating(self, response):
         package_flag = response.meta['package_flag']
@@ -385,7 +385,7 @@ class HhgreggSpider(BaseSpider):
                 products = failure.value.response.meta['products']
                 product['rating'] = None
                 products.append(product)
-                self.next_item_request(item, products)
+                return self.next_item_request(item, products)
             else:
                 return item
     def request_for_package_item_rating(self, product, item, products):
