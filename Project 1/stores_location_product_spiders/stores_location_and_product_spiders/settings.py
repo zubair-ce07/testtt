@@ -20,7 +20,7 @@ FEED_URI = "jsons/%(name)s-%(time)s.json"
 #USER_AGENT = 'stores_location_spiders (+http://www.yourdomain.com)'
 from datetime import datetime
 datetime.now().strftime("%Y%m%d_%H%M%S")
-HTTPCACHE_ENABLED = True
+HTTPCACHE_ENABLED = False
 
 DEFAULT_REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.104 Safari/537.36'
@@ -36,5 +36,5 @@ DEFAULT_REQUEST_HEADERS = {
 
 FEED_FORMAT = 'jsonlines'
 FEED_URI = "%(name)s_%(time)s.json"
-# DOWNLOAD_DELAY = 5
-# CONCURRENT_REQUESTS=5
+DOWNLOAD_DELAY = 5
+CONCURRENT_REQUESTS=5
