@@ -8,10 +8,10 @@
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #
 
-BOT_NAME = 'stores_location_spiders'
+BOT_NAME = 'stores_location_product_spiders'
 
-SPIDER_MODULES = ['stores_location_spiders.spiders']
-NEWSPIDER_MODULE = 'stores_location_spiders.spiders'
+SPIDER_MODULES = ['stores_location_and_product_spiders']
+NEWSPIDER_MODULE = 'stores_location_and_product_spiders'
 
 FEED_FORMAT = 'jsonlines'
 FEED_URI = "jsons/%(name)s-%(time)s.json"

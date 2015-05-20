@@ -5,7 +5,7 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
 from scrapy.http import Request
 from scrapinghub.spider import BaseSpider
-from stores_location_spiders.items import StoresLocationItem
+from stores_location_and_product_spiders.items import StoresLocationItem
 
 
 class AppleSpider(BaseSpider):

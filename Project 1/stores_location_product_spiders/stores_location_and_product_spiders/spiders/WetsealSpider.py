@@ -2,7 +2,7 @@ import re
 import urlparse
 
 from scrapy.http import FormRequest
-from stores_location_spiders.items import StoresLocationItem
+from stores_location_and_product_spiders.items import StoresLocationItem
 from scrapinghub.spider import BaseSpider
 
 class WetsealSpider(BaseSpider):

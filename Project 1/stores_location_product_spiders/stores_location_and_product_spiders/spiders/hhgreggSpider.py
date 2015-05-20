@@ -7,7 +7,7 @@ from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.http import FormRequest, Request
 from scrapinghub.spider import BaseSpider
-from stores_location_spiders.items import HhgreggItem
+from stores_location_and_product_spiders.items import HhgreggItem
 
 
 class HhgreggSpider(BaseSpider):
