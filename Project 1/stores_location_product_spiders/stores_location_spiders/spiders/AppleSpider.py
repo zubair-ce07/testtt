@@ -58,7 +58,7 @@ class AppleSpider(BaseSpider):
 
     def store_hours(self, response, country):
         if country == "US":  # ' Only US stores hours are neccessary
-            info_rows = response.xpath(".//table[@class='store-info']//tr[count(td)=2]")
+            info_rows = response.xpath("//table[@class='store-info' and contains(.,'Store hours:') ]//tr[count(td)=2]")
             hours = dict()
             for row in info_rows:
                 hours_data = self.get_text_from_node(row.xpath('./td[2]/text()'))
@@ -68,8 +68,12 @@ class AppleSpider(BaseSpider):
                     if ',' in days:
                         # timing for consective days seperated by comma.
                         all_days = days.split(',')
+                        hour_timings = {"open": open_time, "close": close_time}
                         for day in all_days:
-                            hours[day.strip().strip(':')] = {"open": open_time, "close": close_time}
+                            if '-' in day:
+                                self.parse_store_hours(day.strip(':'), hour_timings, hours, True)
+                            else:
+                                hours[day.strip().strip(':')] = hour_timings
                     else:
                         if '-' in days:
                             hour_timings = {"open": open_time, "close": close_time}
