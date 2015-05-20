@@ -302,19 +302,21 @@ class HhgreggSpider(BaseSpider):
         image_urls = []
         json_response = response.body
         if json_response:
-            extract_json = re.search('s7jsonResponse\((.*})', json_response).group(1)
-            json_decode = json.loads(extract_json)
-            image_items = json_decode['set']['item']
-            if isinstance(image_items, list):
-                for items in json_decode['set']['item']:
-                    image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', items['i']['n']))
-            else:
-                image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', image_items['i']['n']))
-            item['image_urls'] = image_urls
-            if not item.get('primary_image_url'):
-                for img in image_urls:
-                    if '_main' in img:
-                        item['primary_image_url'] = img
+            extract_json = re.search('s7jsonResponse\((.*})', json_response)
+            if extract_json:
+                json_decode = json.loads(extract_json.group(1))
+                image_items = json_decode['set']['item']
+                if isinstance(image_items, list):
+                    for items in json_decode['set']['item']:
+                        image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', items['i']['n']))
+                else:
+                    image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', image_items['i']['n']))
+
+        if not item.get('primary_image_url'):
+            for img in image_urls:
+                if '_main' in img:
+                    item['primary_image_url'] = img
+        item['image_urls'] = image_urls
         if item.get('rating'):
             return item
         else:
