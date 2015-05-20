@@ -45,7 +45,7 @@ class HhgreggSpider(BaseSpider):
                 item['primary_image_url'] = self.item_primary_image_url(response)
                 return self.image_request(item)
         else:
-            self.log('Item Dropped. Item has no Product ID', log.ERROR)
+            self.log('Item Dropped. Item has no Product ID', log.WARNING)
 
     def parse_packages(self, response):
         item = HhgreggItem()
