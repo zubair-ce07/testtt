@@ -9,6 +9,13 @@
 class StoresLocationProductPipeline(object):
     def process_item(self, item, spider):
         for key_name in list(item.keys()):
-            if not(item[key_name]):
-                del item[key_name]
+            self.delete_empty_key(item, key_name)
+            if key_name == 'items':
+                for all_products in item[key_name]:
+                    for sub_key in list(all_products.keys()):
+                        self.delete_empty_key(all_products, sub_key)
         return item
+
+    def delete_empty_key(self, item, key):
+        if not(item[key]):
+            del item[key]
