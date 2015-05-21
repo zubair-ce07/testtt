@@ -52,8 +52,6 @@ class WetsealSpider(BaseSpider):
         address.append(complete_address[0])
         if len(complete_address) == 3:
             address_parts['phone_number'] = complete_address[2]
-            address.append(complete_address[2])
-
         second_line_parts = complete_address[1].split(',')  # parse 2nd line of address for city , state and zip
         address_parts['city'] = second_line_parts[0]
         address_parts['state'] = second_line_parts[1].split()[0]

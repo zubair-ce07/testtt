@@ -22,7 +22,7 @@ class AppleSpider(BaseSpider):
         address_parts = self.parse_address_parts(response)
         item.update(address_parts)
         item['country'] = self.store_country(response)
-        item['address'] = self.construct_address(address_parts, response)
+        item['address'] = self.construct_address(response)
         item['hours'] = self.store_hours(response, item["country"])
         item['store_name'] = self.store_name(response)
         item['store_url'] = response.url
@@ -110,14 +110,15 @@ class AppleSpider(BaseSpider):
 
     def parse_address_parts(self, response):
         address_parts = {}
+        address_parts['city'] = self.store_city(response)
+        address_parts['state'] = self.store_state(response)
+        address_parts['zipcode'] = self.store_zipcode(response)
         address_parts['phone_number'] = self.store_phone_number(response)
         return address_parts
 
-    def construct_address(self, address_parts, response):
+    def construct_address(self,response):
         address = []
-        address_parts['street_address'] = self.store_street_address(response)
-        address.append(address_parts['street_address'])
-        address.append(address_parts['phone_number'])
+        address.append(self.store_street_address(response))
         return address
 
     def store_services(self, response):
