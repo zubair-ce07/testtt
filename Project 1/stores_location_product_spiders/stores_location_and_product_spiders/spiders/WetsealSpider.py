@@ -29,8 +29,7 @@ class WetsealSpider(BaseSpider):
         item = StoresLocationItem()
         item['store_name'] = self.store_name(result)
         item['store_id'] = self.store_id(result)
-        item['address'] = self.store_address(result)
-        address_parts = self.parse_address(item['address'])
+        address_parts = self.parse_address(self.store_address(result))
         item.update(address_parts)
         item['store_url'] = self.store_url(result, base_url)
         item['hours'] = self.store_hours(result)
@@ -47,14 +46,19 @@ class WetsealSpider(BaseSpider):
         address = result.xpath(".//*[@class='store-address']//text()").extract()
         return [self.normalize(x) for x in address]
 
-    def parse_address(self, address):
+    def parse_address(self, complete_address):
         address_parts = {}
-        if len(address) == 3:
-            address_parts['phone_number'] = address[2]
-        second_line_parts = address[1].split(',')  # parse 2nd line of address for city , state and zip
+        address = []
+        address.append(complete_address[0])
+        if len(complete_address) == 3:
+            address_parts['phone_number'] = complete_address[2]
+            address.append(complete_address[2])
+
+        second_line_parts = complete_address[1].split(',')  # parse 2nd line of address for city , state and zip
         address_parts['city'] = second_line_parts[0]
         address_parts['state'] = second_line_parts[1].split()[0]
         address_parts['zipcode'] = second_line_parts[1].split()[1]
+        address_parts['address'] = address
         return address_parts
 
     def store_url(self, result, base_url):

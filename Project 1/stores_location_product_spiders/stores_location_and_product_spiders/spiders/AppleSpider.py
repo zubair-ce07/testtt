@@ -22,8 +22,7 @@ class AppleSpider(BaseSpider):
         address_parts = self.parse_address_parts(response)
         item.update(address_parts)
         item['country'] = self.store_country(response)
-        if item['country'] == 'US':
-            item['address'] = self.construct_address(address_parts, response)
+        item['address'] = self.construct_address(address_parts, response)
         item['hours'] = self.store_hours(response, item["country"])
         item['store_name'] = self.store_name(response)
         item['store_url'] = response.url
@@ -35,12 +34,7 @@ class AppleSpider(BaseSpider):
 
     def parse_json(self, response):
         item = response.meta['item']
-        store_id = re.findall('store_number: "(.*)"', response.body)
-        if item['country'] != 'US':  # address of US is already fetched.
-            address = re.findall('formatted_address: "(.*)"', response.body)
-            if address:
-                address_lines = address[0].split('<br />')
-                item['address'] = self.normalize(address_lines)
+        store_id = re.findall('store_number: "R(\d+)"', response.body)
         if store_id:
             item['store_id'] = store_id[0]
         return item
@@ -116,9 +110,6 @@ class AppleSpider(BaseSpider):
 
     def parse_address_parts(self, response):
         address_parts = {}
-        address_parts['city'] = self.store_city(response)
-        address_parts['state'] = self.store_state(response)
-        address_parts['zipcode'] = self.store_zipcode(response)
         address_parts['phone_number'] = self.store_phone_number(response)
         return address_parts
 
@@ -126,7 +117,7 @@ class AppleSpider(BaseSpider):
         address = []
         address_parts['street_address'] = self.store_street_address(response)
         address.append(address_parts['street_address'])
-        address.append("%s,%s %s" % (address_parts['city'], address_parts['state'], address_parts['zipcode']))
+        address.append(address_parts['phone_number'])
         return address
 
     def store_services(self, response):
