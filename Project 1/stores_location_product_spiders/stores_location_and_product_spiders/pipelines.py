@@ -17,5 +17,5 @@ class StoresLocationProductPipeline(object):
         return item
 
     def delete_empty_key(self, item, key):
-        if not(item[key]):
+        if not(item[key]) and isinstance(item[key], bool) == False:
             del item[key]
