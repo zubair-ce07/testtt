@@ -22,6 +22,10 @@ from datetime import datetime
 datetime.now().strftime("%Y%m%d_%H%M%S")
 HTTPCACHE_ENABLED = False
 
+ITEM_PIPELINES = [
+    'stores_location_and_product_spiders.pipelines.StoresLocationProductPipeline',
+]
+
 DEFAULT_REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.104 Safari/537.36'
 }
