@@ -38,11 +38,11 @@
             <li><a href="#">DocketDash</a></li>
             <li class="active">Search</li>
         </ol>
+        <div ng-controller="SearchCtrl">
+        <div class="well well-lg container">
 
-        <div class="well well-lg container" ng-controller="SearchCtrl">
-            <h1>{{name}}</h1>
             <div class="row">
-                <form class="form-inline" >
+                <form class="form-inline">
 
                     <div class="form-group col-xs-12 col-md-6 col-lg-2">
                         <label for="states">STATES</label>
@@ -83,19 +83,24 @@
                             <label for="docket-search"><a><span class="glyphicon glyphicon-remove"></span>Clear</a></label>
                         </div>
 
-                        <button type="submit" id="docket-search" ng-click="searchDockets()" class="btn btn-success">Search</button>
+                        <button type="submit" id="docket-search" ng-click="click_dockets()" class="btn btn-success">Search</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div id="table_data"></div>
-        </ng-view>
+
+        <div ng-include="'app/search/partials/search.html'"></div>
+
+            </div>
+    </ng-view>
 </div>
 </body>
 
+
 <script src="bower_components/angular/angular.js"></script>
 <script src="bower_components/jquery/dist/jquery.js"></script>
+<script src="bower_components/angular-route/angular-route.min.js"></script>
 <script src="bower_components/bootstrap/js/button.js"></script>
 <script src="bower_components/bootstrap/js/dropdown.js"></script>
 <script src="bower_components/select2/dist/js/select2.min.js"></script>
@@ -103,6 +108,7 @@
 <script src="bower_components/angular-resource/angular-resource.min.js"></script>
 <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
 <script src="app/app.js"></script>
+<script src="app/search/service.js"></script>
 <script src="app/search/controller.js"></script>
 <script>
     $("#states").select2({
@@ -116,12 +122,9 @@
     });
 
     $(function(){
-          $("#states").load("app/state/states.html");
-        });
+        $("#states").load("app/state/states.html");
+    });
 
-//     $(function(){
-//          $("#table_data").load("app/search/search.html");
-//        });
 
 </script>
 

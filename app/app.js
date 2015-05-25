@@ -1,1 +1,1 @@
-var ngdocket = angular.module('ngdocket',[]);
+var ngdocket = angular.module('ngdocket', ['ngResource']);
