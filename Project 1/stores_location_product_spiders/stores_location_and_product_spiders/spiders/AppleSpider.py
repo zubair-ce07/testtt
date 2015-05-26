@@ -35,8 +35,7 @@ class AppleSpider(BaseSpider):
     def parse_store_id(self, response):
         item = response.meta['item']
         store_id = re.findall('store_number: "R(\d+)"', response.body)
-        if store_id:
-            item['store_id'] = store_id[0]
+        item['store_id'] = store_id[0]
         return item
 
     def store_city(self, response):
@@ -51,7 +50,7 @@ class AppleSpider(BaseSpider):
         return 'US'
 
     def store_hours(self, response, country):
-        if country == "US":  # ' Only US stores hours are neccessary
+         if country == "US":  # ' Only US stores hours are neccessary
             info_rows = response.xpath("//table[@class='store-info' and contains(.,'Store hours:') ]//tr[count(td)=2]")
             hours = dict()
             for row in info_rows:
@@ -59,23 +58,13 @@ class AppleSpider(BaseSpider):
                 days = self.get_text_from_node(row.xpath('./td[1]/text()'))
                 if hours_data and '-' in hours_data:
                     open_time, close_time = [s.strip() for s in hours_data.split('-')]
-                    if ',' in days:
-                        # timing for consective days seperated by comma.
-                        all_days = days.split(',')
-                        hour_timings = {"open": open_time, "close": close_time}
-                        for day in all_days:
-                            if '-' in day:
-                                self.parse_store_hours(day.strip(':'), hour_timings, hours, True)
-                            else:
-                                hours[day.strip().strip(':')] = hour_timings
-                    else:
-                        if '-' in days:
-                            hour_timings = {"open": open_time, "close": close_time}
-                            # To parse and assign timing of open and close of store
-                            # This method parse days of week between given interval of days on website
-                            self.parse_store_hours(days.strip(':'), hour_timings, hours, True)
+                    hour_timings = {"open": open_time, "close": close_time}
+                    all_days = days.split(',')
+                    for day in all_days:
+                        if '-' in day:
+                            self.parse_store_hours(day.strip(':'), hour_timings, hours, True)
                         else:
-                            hours[days.strip(':')] = {"open": open_time, "close": close_time}
+                            hours[day.strip().strip(':')] = hour_timings
                 elif ':' not in days:
                     # To parse and assign timing of open and close of store
                     # when store timing is 24/7, 365 days a year
@@ -122,5 +111,4 @@ class AppleSpider(BaseSpider):
 
     def store_info_script_url(self, response):
         url = response.xpath(".//script[contains(@src, 'maps_data.js')]/@src").extract()
-        if url:
-            return urljoin('http://www.apple.com/', url[0])
+        return urljoin('http://www.apple.com/', url[0])
