@@ -22,7 +22,7 @@ class AppleSpider(BaseSpider):
         address_parts = self.parse_address_parts(response)
         item.update(address_parts)
         item['country'] = self.store_country(response)
-        item['address'] = self.construct_address(response)
+        item['address'] = self.store_street_address(response)
         item['hours'] = self.store_hours(response, item["country"])
         item['store_name'] = self.store_name(response)
         item['store_url'] = response.url
@@ -30,9 +30,9 @@ class AppleSpider(BaseSpider):
         item['services'] = self.store_services(response)
         request_url = self.store_info_script_url(response)
         yield Request(url=request_url, meta={'item': item},
-                      callback=self.parse_json)
+                      callback=self.parse_store_id)
 
-    def parse_json(self, response):
+    def parse_store_id(self, response):
         item = response.meta['item']
         store_id = re.findall('store_number: "R(\d+)"', response.body)
         if store_id:
@@ -105,8 +105,8 @@ class AppleSpider(BaseSpider):
             return image_urls[0]
 
     def store_street_address(self, response):
-        street_address = response.xpath("(.//*[@class='street-address']//text())[1]")
-        return self.get_text_from_node(street_address)
+        street_address = response.xpath("(.//*[@class='street-address']//text())[1]").extract()
+        return self.normalize(street_address)
 
     def parse_address_parts(self, response):
         address_parts = {}
@@ -115,11 +115,6 @@ class AppleSpider(BaseSpider):
         address_parts['zipcode'] = self.store_zipcode(response)
         address_parts['phone_number'] = self.store_phone_number(response)
         return address_parts
-
-    def construct_address(self, response):
-        address = []
-        address.append(self.store_street_address(response))
-        return address
 
     def store_services(self, response):
         services = response.xpath(".//*[contains(@class,'hero-nav')]//a[contains(@class,'block')]//img/@alt").extract()
