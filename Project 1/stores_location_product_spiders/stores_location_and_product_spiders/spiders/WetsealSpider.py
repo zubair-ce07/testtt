@@ -48,7 +48,6 @@ class WetsealSpider(BaseSpider):
 
     def parse_address(self, complete_address):
         """
-
         Address block contains city, state, zipcode, street address and phone number information
         this method is used to populate these fields after parsing address block
         """
@@ -59,8 +58,9 @@ class WetsealSpider(BaseSpider):
             address_parts['phone_number'] = complete_address[2]
         second_line_parts = complete_address[1].split(',')  # parse 2nd line of address for city , state and zip
         address_parts['city'] = second_line_parts[0]
-        address_parts['state'] = second_line_parts[1].split()[0]
-        address_parts['zipcode'] = second_line_parts[1].split()[1]
+        state_zip = second_line_parts[1].split()
+        address_parts['state'] = state_zip[0]
+        address_parts['zipcode'] = state_zip[1]
         address_parts['address'] = address
         return address_parts
 
@@ -74,25 +74,26 @@ class WetsealSpider(BaseSpider):
         return self.parse_hours(lines)
 
     def parse_hours(self, hour_rows):
+        """
+        Create day time dict from timings available on the website
+        """
         hours = dict()
         for row in self.normalize(hour_rows):
             day_string = self.normalize(re.findall("^[A-z]+\s*-?\s*[A-z]+", row)[0]).strip(':')
             hour_string = self.normalize(row.replace(day_string, '').strip(':'))
             if hour_string and '-' in hour_string:
-                open_time, close_time = [s.strip() for s in hour_string.split('-')]
+                open_time, close_time = self.normalize(hour_string.split('-'))
+                hour_timings = {"open": open_time, "close": close_time}
                 if ',' in day_string:
-                    # timing for consective days seperated by comma.
+                    # timing for consecutive days separated by comma.
                     all_days = day_string.split(',')
                     for day in all_days:
-                        hours[day.strip()] = {"open": open_time, "close": close_time}
+                        hours[day.strip()] = hour_timings
                 else:
                     if '-' in day_string:
-                        hour_timings = {"open": open_time, "close": close_time}
-                        # To parse and assign timing of open and close of store
                         # This method parse days of week between given interval of days on website
                         self.parse_store_hours(day_string.strip(':'), hour_timings, hours)
                     else:
-                        hours[day_string.strip(':')] = {"open": open_time,
-                                                               "close": close_time}
+                        hours[day_string.strip(':')] = hour_timings
         return hours
 

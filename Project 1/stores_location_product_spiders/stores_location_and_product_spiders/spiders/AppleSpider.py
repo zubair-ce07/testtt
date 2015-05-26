@@ -12,7 +12,7 @@ class AppleSpider(BaseSpider):
     name = 'apple_spider'
     start_urls = ['http://www.apple.com/retail/storelist/']
 
-    rules = ( Rule(
+    rules = (Rule(
         SgmlLinkExtractor(
             restrict_xpaths=".//div[@class='listing']//a"),
         callback='parse_item'),)
@@ -50,14 +50,17 @@ class AppleSpider(BaseSpider):
         return 'US'
 
     def store_hours(self, response, country):
-         if country == "US":  # ' Only US stores hours are neccessary
+        """
+        Create day time dict from timings available on the website
+        """
+        if country == "US":  # ' Only US stores hours are neccessary
             info_rows = response.xpath("//table[@class='store-info' and contains(.,'Store hours:') ]//tr[count(td)=2]")
             hours = dict()
             for row in info_rows:
                 hours_data = self.get_text_from_node(row.xpath('./td[2]/text()'))
                 days = self.get_text_from_node(row.xpath('./td[1]/text()'))
                 if hours_data and '-' in hours_data:
-                    open_time, close_time = [s.strip() for s in hours_data.split('-')]
+                    open_time, close_time = self.normalize(hours_data.split('-'))
                     hour_timings = {"open": open_time, "close": close_time}
                     all_days = days.split(',')
                     for day in all_days:

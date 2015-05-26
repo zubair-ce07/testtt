@@ -28,10 +28,7 @@ class BaseSpider(CrawlSpider):
         To extract text from xpath node
         """
         text_array = node.extract()
-        if text_array:
-            return self.normalize(''.join(text_array))
-        else:
-            return ''
+        return self.normalize(''.join(text_array))
 
     def normalize(self, data):
         """

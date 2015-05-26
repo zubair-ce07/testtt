@@ -19,7 +19,6 @@ class HhgreggSpider(BaseSpider):
     )
 
     rules = [
-
         Rule(LinkExtractor(deny=['/productfinder/'],
                            restrict_xpaths=['.//*[contains( @id,"WC_CachedHeaderDisplay_links")]',
                                             './/*[@class="product_group_name product_info"]']),
@@ -57,9 +56,8 @@ class HhgreggSpider(BaseSpider):
         item['description'] = self.item_description(response, True)
         item['source_url'] = response.url
         products = []
-        """
-        populate sub items of package products
-        """
+
+        # populate sub items of package product
         for product_info_div in response.xpath(
                 './/*[@id="mainBundleTabContainer"]//*[contains(@class,"kitTarget target")]'):
             product = dict()
@@ -77,7 +75,7 @@ class HhgreggSpider(BaseSpider):
             products.append(product)
         item['items'] = products
         if item.get('items'):
-            return self.parse_package_item_ratings(item['items'].pop(0), item)
+            return self.request_package_item_ratings(item['items'].pop(0), item)
         return self.image_request(item)
 
     def populate_item(self, response, item):
@@ -95,7 +93,7 @@ class HhgreggSpider(BaseSpider):
         item['available_instore'] = self.item_available_instore(response)
         item['available_online'] = self.item_available_online(response)
 
-    def parse_package_item_ratings(self, product, item):
+    def request_package_item_ratings(self, product, item):
         products = []
         return self.request_for_package_item_rating(product, item, products)
 
@@ -148,14 +146,12 @@ class HhgreggSpider(BaseSpider):
 
     def item_product_id(self, response, package_flag=False):
         if package_flag:
-            product_id = re.search("hhgregg\/([^_]+)_", response).group(1)
+            return re.search("hhgregg\/([^_]+)_", response).group(1)
         else:
             script_text = response.xpath(".//script[contains(.,'entity.id')]").extract()
             if script_text:
-                product_id = re.search("'entity.id=(.*)'", script_text[0]).group(1).strip()
-            else:
-                product_id = None
-        return product_id
+                return re.search("'entity.id=(.*)'", script_text[0]).group(1).strip()
+        return None
 
     def item_brand(self, response):
         script_text = response.xpath(".//script[contains(.,'entity.brand')]").extract()
@@ -194,7 +190,7 @@ class HhgreggSpider(BaseSpider):
             features_group = response.xpath('.//*[@class="features_list"]/ul/li')
         for li in features_group:
             li_text = self.get_text_from_node(li.xpath('.//text()'))
-            if 'View Energy Guide' not in li_text:  # features contains View Energy Guide text which is not a feature
+            if 'View Energy Guide' not in li_text:  # Sometimes feature contains "View Energy Guide" text which is not a valid feature
                 features.append(li_text)
         return self.normalize(features)
 
