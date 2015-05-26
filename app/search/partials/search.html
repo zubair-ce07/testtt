@@ -16,13 +16,13 @@
         <tbody>
         <tr ng-repeat="docket in dockets">
             <td>{{docket.state_id}}</td>
-            <td>{{docket.title}}</td>
+            <td><a ng-href="">{{docket.title}}</a></td>
             <td>{{docket.state}}</td>
             <td>{{docket.filing_count}}</td>
             <td>{{docket.latest_filing_update_on}}</td>
             <td>{{docket.filed_on}}</td>
             <td>{{docket.status}}</td>
-            <td></td>
+            <td> <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></td>
 
         </tr>
         </tbody>
