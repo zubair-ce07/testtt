@@ -193,7 +193,7 @@ class HhgreggSpider(BaseSpider):
         else:
             features_group = response.xpath('.//*[@class="features_list"]/ul/li')
         for li in features_group:
-            li_text = ' '.join(li.xpath('.//text()').extract())
+            li_text = self.get_text_from_node(li.xpath('.//text()'))
             if 'View Energy Guide' not in li_text:  # features contains View Energy Guide text which is not a feature
                 features.append(li_text)
         return self.normalize(features)
