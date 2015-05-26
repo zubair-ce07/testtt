@@ -1,30 +1,100 @@
-<div class=" well container" ng-show= dockets>
-    <h1></h1>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>DOCKET NUMBER</th>
-            <th>TITLE</th>
-            <th>STATE</th>
-            <th># FILINGS</th>
-            <th>LATEST FILING</th>
-            <th>DATE OPENED</th>
-            <th>STATUS</th>
-            <th>FAVORITE</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr ng-repeat="docket in dockets">
-            <td>{{docket.state_id}}</td>
-            <td><a ng-href="">{{docket.title}}</a></td>
-            <td>{{docket.state}}</td>
-            <td>{{docket.filing_count}}</td>
-            <td>{{docket.latest_filing_update_on}}</td>
-            <td>{{docket.filed_on}}</td>
-            <td>{{docket.status}}</td>
-            <td> <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></td>
+<div ng-controller="SearchCtrl">
+    <div class="well well-lg container">
 
-        </tr>
-        </tbody>
-    </table>
+        <div class="row">
+            <form class="form-inline">
+                <div class="form-group col-xs-12 col-md-6 col-lg-2">
+                    <label for="states">STATES</label>
+                    <select ng-options="state.abbreviation as state.name for state in states track by state.abbreviation"
+                            ng-model="selected" class="js-example-tags form-control" id="states" multiple="multiple">
+                    </select>
+                </div>
+
+                <div class="form-group col-md-6 col-lg-2">
+                    <label for="keyword">KEYWORD</label>
+                    <input type="text" class="form-control" ng-model="docket.keyword" id="keyword"
+                           placeholder="Enter Term">
+                </div>
+
+                <div class="form-group col-md-6 col-lg-2">
+                    <label for="scope">SEARCH SCOPE</label>
+                    <select class="js-example-basic-single form-control" ng-model="docket.scope" id="scope">
+                        <option value="All">All Content</option>
+                        <option value="MDO">Meta Data Only</option>
+                        <option value="DN">Docket Number</option>
+                        <option value="MP">Major Parties</option>
+                    </select>
+                    <!--<input type="text" class="form-control" id="scope" placeholder="All Content">-->
+                </div>
+
+                <div class="form-group col-md-6 col-lg-2">
+                    <label for="filingbefore">LATEST FILING Before</label>
+                    <input type="text" class="form-control actual_range" id="filingbefore"
+                           ng-model="docket.filingBefore"
+                           placeholder="Lastest filling after">
+                </div>
+
+                <div class="form-group col-md-6 col-lg-2">
+                    <label for="filingafter">LATEST FILING After</label>
+                    <input type="text" class="form-control actual_range" id="filingafter" ng-model="docket.filingAfter"
+                           placeholder="Last filling before">
+                </div>
+
+                <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
+                    <div>
+                        <label for="docket-search"><a><span class="glyphicon glyphicon-remove"></span>Clear</a></label>
+                    </div>
+
+                    <button type="submit" id="docket-search" ng-click="click_dockets()" class="btn btn-success">Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class=" well container" ng-show=dockets>
+        <h1></h1>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>DOCKET NUMBER</th>
+                <th>TITLE</th>
+                <th>STATE</th>
+                <th># FILINGS</th>
+                <th>LATEST FILING</th>
+                <th>DATE OPENED</th>
+                <th>STATUS</th>
+                <th>FAVORITE</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="docket in dockets">
+                <td>{{docket.state_id}}</td>
+                <td><a ng-href="">{{docket.title}}</a></td>
+                <td>{{docket.state}}</td>
+                <td>{{docket.filing_count}}</td>
+                <td>{{docket.latest_filing_update_on}}</td>
+                <td>{{docket.filed_on}}</td>
+                <td>{{docket.status}}</td>
+                <td><span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<script>
+    $("#states").select2({
+        tags: true
+    })
+    $('#filingbefore').datepicker({
+        inputs: $('.actual_range').toArray()
+    });
+    $('#filingafter').datepicker({
+        inputs: $('.actual_range').toArray()
+    });
+
+
+</script>
+
+

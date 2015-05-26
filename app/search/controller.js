@@ -1,5 +1,5 @@
-ngdocket.controller('SearchCtrl', ['$scope','Docket',
-    function($scope, Docket){
+ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
+    function ($scope, Docket, $http) {
         $scope.click_dockets = function() {
 
            $scope.dockets = Docket.get().$promise.then(function(data){
@@ -7,15 +7,8 @@ ngdocket.controller('SearchCtrl', ['$scope','Docket',
                $scope.dockets = data.dockets;
             });
         };
+        $http.get('app/state/state.json').success(function (data) {
+            $scope.states = data;
+        });
     }
-]);
-
-ngdocket.controller('StateCtrl', ['$scope','$http', function($scope, $http)
-		{
-			$http.get('app/state/state.json').success (function(data){
-				$scope.states = data;
-		});
-
-		}
-
 ]);

@@ -15,7 +15,6 @@
 </head>
 <body >
 <div ng-app = "ngdocket">
-    <ng-view>
         <nav class="navbar navbar-default navbar-static-top">
             <div class="container">
                 <h3> Advance Energy Economy </h3>
@@ -28,7 +27,7 @@
                 </div>
                 <div>
                     <ul class="nav navbar-nav">
-                        <li><a href="#">Search</a></li>
+                        <li><a href="#search">Search</a></li>
                         <li><a href="#">My Favorites</a></li>
                         <li><a href="#">Organization Favorites</a></li>
                         <li><a href="#">All Favorites</a></li>
@@ -41,9 +40,8 @@
             <li><a href="#">DocketDash</a></li>
             <li class="active">Search</li>
         </ol>
-        <div ng-controller="SearchCtrl">
-     <div ng-include="'app/search/partials/form.html'"></div>
-            </div>
+    <ng-view>
+
     </ng-view>
 </div>
 </body>
