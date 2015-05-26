@@ -10,7 +10,7 @@ from stores_location_and_product_spiders.items import StoresLocationItem
 
 class AppleSpider(BaseSpider):
     name = 'apple_spider'
-    start_urls = ['http://www.apple.com/retail/storelist/']  # http://www.apple.com/retail/storelist/
+    start_urls = ['http://www.apple.com/retail/storelist/']
 
     rules = ( Rule(
         SgmlLinkExtractor(
@@ -71,8 +71,8 @@ class AppleSpider(BaseSpider):
                     else:
                         if '-' in days:
                             hour_timings = {"open": open_time, "close": close_time}
-                        # To parse and assign timing of open and close of store
-                        # This method parse days of week between given interval of days on website
+                            # To parse and assign timing of open and close of store
+                            # This method parse days of week between given interval of days on website
                             self.parse_store_hours(days.strip(':'), hour_timings, hours, True)
                         else:
                             hours[days.strip(':')] = {"open": open_time, "close": close_time}
@@ -116,7 +116,7 @@ class AppleSpider(BaseSpider):
         address_parts['phone_number'] = self.store_phone_number(response)
         return address_parts
 
-    def construct_address(self,response):
+    def construct_address(self, response):
         address = []
         address.append(self.store_street_address(response))
         return address

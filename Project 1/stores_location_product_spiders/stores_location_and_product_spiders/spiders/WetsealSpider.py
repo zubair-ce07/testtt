@@ -47,6 +47,9 @@ class WetsealSpider(BaseSpider):
         return [self.normalize(x) for x in address]
 
     def parse_address(self, complete_address):
+        """
+        to parse address of store
+        """
         address_parts = {}
         address = []
         address.append(complete_address[0])

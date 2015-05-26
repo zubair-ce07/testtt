@@ -10,6 +10,11 @@ class BaseSpider(CrawlSpider):
         super(BaseSpider, self).__init__(*a, **kw)
 
     def parse_store_hours(self, days, hour_timings, hours, abbreviation_flag=False):
+        """
+        To parse the given interval of days in to series of days
+        e.g
+        Mon-Sat (Mon, Tue, Wed, Thu, Fri, Sat)
+        """
         start_index, end_index = [self.abbreviation_of_days.index(s.strip()[:3]) for s in days.lower().split('-')]
         if abbreviation_flag:
             for day in self.abbreviation_of_days[start_index:end_index + 1]:
@@ -19,6 +24,9 @@ class BaseSpider(CrawlSpider):
                 hours[day.title()] = hour_timings
 
     def get_text_from_node(self, node):
+        """
+        To extract text from xpath node
+        """
         text_array = node.extract()
         if text_array:
             return self.normalize(''.join(text_array))
@@ -26,6 +34,10 @@ class BaseSpider(CrawlSpider):
             return ''
 
     def normalize(self, data):
+        """
+
+        To normalize (spaces) and clean str, list data
+        """
         if type(data) is str or type(data) is unicode:
             return self.clean(data)
         elif type(data) is list:

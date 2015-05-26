@@ -23,9 +23,9 @@ class HhgreggSpider(BaseSpider):
         Rule(LinkExtractor(deny=['/productfinder/'],
                            restrict_xpaths=['.//*[contains( @id,"WC_CachedHeaderDisplay_links")]',
                                             './/*[@class="product_group_name product_info"]']),
-             callback='parse_pagination', follow=True, process_request='add_error_handler'),
+             callback='parse_pagination', follow=True),
         Rule(LinkExtractor(restrict_xpaths=['.//*[@class="information"]/h3/a']),
-             callback='get_product_detail', process_request='add_error_handler', )
+             callback='get_product_detail')
     ]
 
     def get_product_detail(self, response):
@@ -109,16 +109,11 @@ class HhgreggSpider(BaseSpider):
             return item
 
     def item_available_online(self, response):
-        if response.xpath('.//*[@id="PDP_AddToCart"]'):
-            return True
-        else:
-            return False
+        return True if response.xpath('.//*[@id="PDP_AddToCart"]') else False
 
     def item_available_instore(self, response):
-        if response.xpath('.//form[@id="CheckAvailabilityForm"]') and response.xpath('.//*[@id="check_store_availability" and contains(@style,"display: block")]'):
-            return True
-        else:
-            return False
+        is_available = response.xpath('.//form[@id="CheckAvailabilityForm"]') and response.xpath('.//*[@id="check_store_availability" and contains(@style,"display: block")]')
+        return True if is_available else False
 
     def item_title(self, response, package_flag=False):
         if package_flag:
@@ -160,9 +155,6 @@ class HhgreggSpider(BaseSpider):
             return brand.group(1)
         return None
 
-    def normalize_rating(self, rating_in_points):
-        return "%.2f" % (float(rating_in_points) * 100 / 5) if rating_in_points else None
-
     def item_rating(self, response, product_id=None):
         rating = None
         if response.xpath('.//*[@class="pr-rating pr-rounded average"]'):
@@ -198,9 +190,6 @@ class HhgreggSpider(BaseSpider):
             if 'View Energy Guide' not in li_text:
                 features.append(li_text)
         return self.normalize(features)
-
-    def normalize_price(self, price):
-        return float(price.replace(',', '').replace('$', '')) if price else None
 
     def item_currency(self, response, price):
         if not '$' in price:
@@ -311,7 +300,6 @@ class HhgreggSpider(BaseSpider):
                         image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', items['i']['n']))
                 else:
                     image_urls.append(urljoin('http://hhgregg.scene7.com/is/image/', image_items['i']['n']))
-
         if not item.get('primary_image_url'):
             for img in image_urls:
                 if '_main' in img:
@@ -326,7 +314,23 @@ class HhgreggSpider(BaseSpider):
                 callback=self.parse_item_rating, meta={'package_flag': False, 'item': item}, dont_filter=True,
                 errback=self.handle_error)
 
+    def normalize_price(self, price):
+        """
+            To normalize price according to requirements
+        """
+        return float(price.replace(',', '').replace('$', '')) if price else None
+
+    def normalize_rating(self, rating_in_points):
+        """
+            To normalize rating according to requirements
+            Normalized to 100 scale: 3.5/5 = 70
+        """
+        return "%.2f" % (float(rating_in_points) * 100 / 5) if rating_in_points else None
+
     def parse_pagination(self, response):
+        """
+            To get links of pages  and send request on the pages for multi-page categories
+        """
         if response.xpath('.//*[@class="pages center"]/a[img[@alt="Next"]]'):
             next_page_script = response.xpath('.//*[@class="pages center"]/a[img[@alt="Next"]]/@href').extract()[0]
             next_page_size = re.search('pageSize\s*:\s*"([^"]+)', next_page_script).group(1)
@@ -353,11 +357,13 @@ class HhgreggSpider(BaseSpider):
                                           'resultType': 'products',
                                           }, meta={'dont_merge_cookies': True})
 
-    # To get item rating request will be send at contents.js.
-    #  Directory for content.js differs with every product depends upon product id.
-    #  This method returns the directory path containing content.js depending on the product id.
-    #  This method is copied from the source javascript of website which is used to create directory path there.
     def rating_parameters(self, product_id):
+        """
+            To get item rating request will be send at contents.js.
+            Directory for content.js differs with every product depends upon product id.
+            This method returns the directory path containing content.js depending on the product id.
+            This method is copied from the source javascript of website which is used to create directory path there.
+        """
         directory_path = 0
         for letter in product_id:
             char_ascii = ord(letter)
@@ -369,26 +375,20 @@ class HhgreggSpider(BaseSpider):
         return directory_path
 
     def handle_error(self, failure):
-        if failure.request.meta.get('rules'):
-            retry = failure.request.meta.get('retry', 0)
-            failure.request.meta['retry'] = retry + 1
-            failure.request.dont_filter = True
-            if retry <= 3:
-                self.log('Request Retrying %s time ' % str(retry + 1), log.INFO)
-                return failure.request
-            else:
-                self.log('Item Dropped Due to %s' % failure.value.message, log.WARNING)
+        """
+        To handle error in Request
+        """
+        item = failure.value.response.meta['item']
+        package_flag = failure.value.response.meta.get('package_flag')
+        if package_flag:
+            product = failure.value.response.meta['product']
+            products = failure.value.response.meta['products']
+            product['rating'] = None
+            products.append(product)
+            return self.next_item_request(item, products)
         else:
-            item = failure.value.response.meta['item']
-            package_flag = failure.value.response.meta.get('package_flag')
-            if package_flag:
-                product = failure.value.response.meta['product']
-                products = failure.value.response.meta['products']
-                product['rating'] = None
-                products.append(product)
-                return self.next_item_request(item, products)
-            else:
-                return item
+            return item
+
     def request_for_package_item_rating(self, product, item, products):
         return Request('http://www.hhgregg.com/reviews/pwr/content/%s/%s-en_US-rollup.js' % (
                 self.rating_parameters(product['model']), product['model']),
@@ -402,13 +402,6 @@ class HhgreggSpider(BaseSpider):
         else:
             item['items'] = products
             return self.image_request(item)
-
-    def add_error_handler(self, request):
-        request.meta["rules"] = True
-        request.meta['dont_merge_cookies'] = True
-        req = Request(request.url, callback=request.callback, meta=request.meta, dont_filter=request.dont_filter,
-                      errback=self.handle_error)
-        return req
 
     def image_request(self, item):
         return Request(
