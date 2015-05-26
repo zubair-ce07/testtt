@@ -1,4 +1,4 @@
-<div ng-controller="SearchCtrl">
+
     <div class="well well-lg container">
 
         <div class="row">
@@ -51,5 +51,16 @@
 
     <div ng-include="'app/search/partials/search.html'"></div>
 
-</div>
+<script>
+    $("#states").select2({
+        tags: true
+    })
+    $('#filingbefore').datepicker({
+        inputs: $('.actual_range').toArray()
+    });
+    $('#filingafter').datepicker({
+        inputs: $('.actual_range').toArray()
+    });
 
+
+</script>
