@@ -23,9 +23,9 @@ class HhgreggSpider(BaseSpider):
         Rule(LinkExtractor(deny=['/productfinder/'],
                            restrict_xpaths=['.//*[contains( @id,"WC_CachedHeaderDisplay_links")]',
                                             './/*[@class="product_group_name product_info"]']),
-             callback='parse_pagination', follow=True),
+             callback='parse_pagination', follow=True),  # this rule is used to pickup category urls
         Rule(LinkExtractor(restrict_xpaths=['.//*[@class="information"]/h3/a']),
-             callback='get_product_detail')
+             callback='get_product_detail')  # this rule is used to pickup urls of products
     ]
 
     def get_product_detail(self, response):
