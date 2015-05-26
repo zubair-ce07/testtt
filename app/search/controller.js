@@ -9,3 +9,13 @@ ngdocket.controller('SearchCtrl', ['$scope','Docket',
         };
     }
 ]);
+
+ngdocket.controller('StateCtrl', ['$scope','$http', function($scope, $http)
+		{
+			$http.get('app/state/state.json').success (function(data){
+				$scope.states = data;
+		});
+
+		}
+
+])
