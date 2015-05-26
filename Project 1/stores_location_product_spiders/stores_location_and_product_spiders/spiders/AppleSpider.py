@@ -118,7 +118,7 @@ class AppleSpider(BaseSpider):
 
     def store_services(self, response):
         services = response.xpath(".//*[contains(@class,'hero-nav')]//a[contains(@class,'block')]//img/@alt").extract()
-        return [self.normalize(x) for x in services]
+        return self.normalize(services)
 
     def store_info_script_url(self, response):
         url = response.xpath(".//script[contains(@src, 'maps_data.js')]/@src").extract()
