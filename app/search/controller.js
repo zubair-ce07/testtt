@@ -18,4 +18,4 @@ ngdocket.controller('StateCtrl', ['$scope','$http', function($scope, $http)
 
 		}
 
-])
+]);

@@ -44,14 +44,12 @@
                 <div class="row">
                     <form class="form-inline">
 
-                        <div class="form-group col-xs-12 col-md-6 col-lg-2">
+                        <div class="form-group col-xs-12 col-md-6 col-lg-2" ng-controller="StateCtrl">
                             <label for="states">STATES</label>
-                            <select class="js-example-tags form-control" ng-model="docket.states" id="states" multiple="multiple" placeholder=" States">
-                                <div ng-controller="StateCtrl">
-                                    <div ng-repeat="state in states">
-                                        <option value="'{{state.abbreviation}}'">{{state.name}}</option>
-                                    </div>
-                                </div>
+                            <select style="width: auto" ng-options="state.abbreviation as state.name for state in states track by state.abbreviation" ng-model="selected" class="js-example-tags form-control" id="states" multiple="multiple" >
+                            <!--<select class="js-example-tags form-control" ng-model="docket.states" id="states" multiple="multiple" >-->
+
+                                        <!--<option ng-repeat="state in states value="{{state.abbreviation}}">{{state.name}}</option>-->
                             </select>
                             <!--<input type="text" class="form-control" id="states" placeholder="All States">-->
                         </div>
@@ -112,7 +110,7 @@
 <script src="bower_components/angular-resource/angular-resource.min.js"></script>
 <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
 <script src="app/app.js"></script>
-<script src="app/search/service.js"></script>
+<script src="app/search/factory/service.js"></script>
 <script src="app/search/controller.js"></script>
 <script>
     $("#states").select2({
@@ -123,10 +121,6 @@
     });
     $('#filingafter').datepicker({
         inputs: $('.actual_range').toArray()
-    });
-
-    $(function(){
-        $("#states").load("app/state/states.html");
     });
 
 
