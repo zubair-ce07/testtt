@@ -23,9 +23,9 @@ class HhgreggSpider(BaseSpider):
         Rule(LinkExtractor(deny=['/productfinder/'],
                            restrict_xpaths=['.//*[contains( @id,"WC_CachedHeaderDisplay_links")]',
                                             './/*[@class="product_group_name product_info"]']),
-             callback='parse_pagination', follow=True),  # this rule is used to pickup category urls
+             callback='parse_pagination', follow=True),  # this rule is used to pick category urls
         Rule(LinkExtractor(restrict_xpaths=['.//*[@class="information"]/h3/a']),
-             callback='get_product_detail')  # this rule is used to pickup urls of products
+             callback='get_product_detail')  # this rule is used to pick urls of products
     ]
 
     def get_product_detail(self, response):
@@ -48,11 +48,18 @@ class HhgreggSpider(BaseSpider):
             self.log('Item Dropped. Item has no Product ID', log.WARNING)
 
     def parse_packages(self, response):
+        """
+        Package Products has multiple Product.
+        To parse Package Products
+        """
         item = HhgreggItem()
         self.populate_item(response, item)
         item['description'] = self.item_description(response, True)
         item['source_url'] = response.url
         products = []
+        """
+        populate sub items of package products
+        """
         for product_info_div in response.xpath(
                 './/*[@id="mainBundleTabContainer"]//*[contains(@class,"kitTarget target")]'):
             product = dict()
@@ -74,6 +81,9 @@ class HhgreggSpider(BaseSpider):
         return self.image_request(item)
 
     def populate_item(self, response, item):
+        """
+        to populate common attributes of  Package products and Simple products
+        """
         item['title'] = self.item_title(response)
         item['brand'] = self.item_brand(response)
         item['product_id'] = self.item_product_id(response)
@@ -118,12 +128,14 @@ class HhgreggSpider(BaseSpider):
     def item_title(self, response, package_flag=False):
         if package_flag:
             return self.get_text_from_node(response.xpath('(.//*[@class="bundles_kits_prod_details"]/h1/text())[1]'))
-        return self.get_text_from_node(response.xpath(".//*[@id='prod_detail_main']/h1/text()"))
+        else:
+            return self.get_text_from_node(response.xpath(".//*[@id='prod_detail_main']/h1/text()"))
 
     def item_description(self, response, package_flag=False):
         if package_flag:
             return self.get_text_from_node(response.xpath('//meta[@name="description"]/@content')).strip('<br/>')
-        return self.get_text_from_node(response.xpath('//meta[@property="og:description"]/@content')).strip('<br/>')
+        else:
+            return self.get_text_from_node(response.xpath('//meta[@property="og:description"]/@content')).strip('<br/>')
 
     def item_sku(self, product_id, response):
         sku_script = response.xpath(".//script[contains(.,'var sku=')]").extract()
@@ -132,10 +144,7 @@ class HhgreggSpider(BaseSpider):
             sku = sku_match.group(1) if sku_match else None
         else:
             sku= None
-
-        if not sku: return '%s_is' % product_id  # pattern of sku contains product id and keyword '_is'
-        else:
-            return sku
+        return sku if sku else '%s_is' % product_id  # pattern of sku contains product id and keyword '_is'
 
     def item_product_id(self, response, package_flag=False):
         if package_flag:
@@ -151,9 +160,7 @@ class HhgreggSpider(BaseSpider):
     def item_brand(self, response):
         script_text = response.xpath(".//script[contains(.,'entity.brand')]").extract()
         brand = re.search("'entity.brand=(.*)'", script_text[0])
-        if brand:
-            return brand.group(1)
-        return None
+        return brand.group(1) if brand else None
 
     def item_rating(self, response, product_id=None):
         rating = None
@@ -284,7 +291,8 @@ class HhgreggSpider(BaseSpider):
         if package_flag:
             return self.get_text_from_node(
                 response.xpath('(.//*[@class="prod_left"])[1]//*[@class="static_img"]/@src')).strip('//')
-        return self.get_text_from_node(response.xpath('//meta[@property="og:image"]/@content')).split('?')[0]
+        else:
+            return self.get_text_from_node(response.xpath('//meta[@property="og:image"]/@content')).split('?')[0]
 
     def item_images(self, response):
         item = response.meta['item']
@@ -316,7 +324,8 @@ class HhgreggSpider(BaseSpider):
 
     def normalize_price(self, price):
         """
-            To normalize price according to requirements
+            To normalize price
+            remove currency symbol and comma and covert price into float
         """
         return float(price.replace(',', '').replace('$', '')) if price else None
 
@@ -376,7 +385,8 @@ class HhgreggSpider(BaseSpider):
 
     def handle_error(self, failure):
         """
-        To handle error in Request
+        When item has no rating request fails
+        To handle error in Request and return the certain item
         """
         item = failure.value.response.meta['item']
         package_flag = failure.value.response.meta.get('package_flag')
