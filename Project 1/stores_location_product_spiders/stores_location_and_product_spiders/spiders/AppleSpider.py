@@ -98,6 +98,11 @@ class AppleSpider(BaseSpider):
         return self.normalize(street_address)
 
     def parse_address_parts(self, response):
+        """
+
+        Address block contains city, state, zipcode, phone number information
+        this method is used to populate these fields after parsing address block
+        """
         address_parts = {}
         address_parts['city'] = self.store_city(response)
         address_parts['state'] = self.store_state(response)

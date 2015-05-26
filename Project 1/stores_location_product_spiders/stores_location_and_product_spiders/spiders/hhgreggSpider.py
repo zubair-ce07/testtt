@@ -49,8 +49,8 @@ class HhgreggSpider(BaseSpider):
 
     def parse_packages(self, response):
         """
-        Package Products has multiple Product.
-        To parse Package Products
+        This method is used to parse multiple products with in a package.
+
         """
         item = HhgreggItem()
         self.populate_item(response, item)
@@ -82,7 +82,7 @@ class HhgreggSpider(BaseSpider):
 
     def populate_item(self, response, item):
         """
-        to populate common attributes of  Package products and Simple products
+        This method is used to populate common attributes of a package or a product
         """
         item['title'] = self.item_title(response)
         item['brand'] = self.item_brand(response)
@@ -194,7 +194,7 @@ class HhgreggSpider(BaseSpider):
             features_group = response.xpath('.//*[@class="features_list"]/ul/li')
         for li in features_group:
             li_text = ' '.join(li.xpath('.//text()').extract())
-            if 'View Energy Guide' not in li_text:  # features contains View Energy Guide text which is not a feature 
+            if 'View Energy Guide' not in li_text:  # features contains View Energy Guide text which is not a feature
                 features.append(li_text)
         return self.normalize(features)
 
@@ -324,21 +324,21 @@ class HhgreggSpider(BaseSpider):
 
     def normalize_price(self, price):
         """
-            To normalize price
-            remove currency symbol and comma and covert price into float
+            This method removes currency symbol and comma and coverts price into float
         """
         return float(price.replace(',', '').replace('$', '')) if price else None
 
     def normalize_rating(self, rating_in_points):
         """
-            To normalize rating according to requirements
+            This method normalizes rating according to requirements
+            e.g
             Normalized to 100 scale: 3.5/5 = 70
         """
         return "%.2f" % (float(rating_in_points) * 100 / 5) if rating_in_points else None
 
     def parse_pagination(self, response):
         """
-            To get links of pages  and send request on the pages for multi-page categories
+            This method extracts urls of multi-page category pages and sends request on them
         """
         if response.xpath('.//*[@class="pages center"]/a[img[@alt="Next"]]'):
             next_page_script = response.xpath('.//*[@class="pages center"]/a[img[@alt="Next"]]/@href').extract()[0]
@@ -385,8 +385,7 @@ class HhgreggSpider(BaseSpider):
 
     def handle_error(self, failure):
         """
-        When item has no rating request fails
-        To handle error in Request and return the certain item
+        This method handles http 404 error for rating pages and sets rating as None
         """
         item = failure.value.response.meta['item']
         package_flag = failure.value.response.meta.get('package_flag')

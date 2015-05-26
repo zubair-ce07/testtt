@@ -48,11 +48,9 @@ class WetsealSpider(BaseSpider):
 
     def parse_address(self, complete_address):
         """
-        to parse address of store
 
-        Address block divided into
-        city, state, zipcode, street address and phone number
-
+        Address block contains city, state, zipcode, street address and phone number information
+        this method is used to populate these fields after parsing address block
         """
         address_parts = {}
         address = []
