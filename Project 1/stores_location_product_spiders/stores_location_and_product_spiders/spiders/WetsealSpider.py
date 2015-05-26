@@ -44,7 +44,7 @@ class WetsealSpider(BaseSpider):
 
     def store_address(self, result):
         address = result.xpath(".//*[@class='store-address']//text()").extract()
-        return [self.normalize(x) for x in address]
+        return self.normalize(address)
 
     def parse_address(self, complete_address):
         """
