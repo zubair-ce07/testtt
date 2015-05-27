@@ -25,7 +25,7 @@ class NeweggspiderSpider(BaseSpider):
         return url
 
     rules = [Rule(SgmlLinkExtractor( process_value= music_category_url,
-                                     deny=['name=Newegg-Mobile-Apps', 'Trade-In', 'Power-Supply-Wattage-Calculator',
+                                     deny=['name=Training-Certifications','name=Newegg-Mobile-Apps', 'Trade-In', 'Power-Supply-Wattage-Calculator',
                                            'Finder'],
                                      restrict_xpaths=['.//*[@id="itmBrowseNav"]//*[@class="nav-row"]//a',
                                                       './/*[@class="categoryList primaryNav"]//a',
