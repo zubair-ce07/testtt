@@ -17,8 +17,8 @@ ngdocket.controller('DetailCtrl', ['$scope', 'DocketDetail','$routeParams',
 
             var id = $routeParams.id
             $scope.docketsDetail = DocketDetail.get(id).$promise.then(function (data) {
-                console.log(data.dockets);
-                $scope.docketsDetail = data.dockets;
+                console.log(data.dockets[0]);
+                $scope.docketsDetail = data.dockets[0];
             });
     }
 ]);
