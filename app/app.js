@@ -8,6 +8,12 @@ ngdocket.config(['$routeProvider', function ($routeProvider) {
             controller: 'SearchCtrl'
             //activetab: 'manage'
         }).
+        when('/dockets/:id',
+        {
+            templateUrl: 'app/search/partials/docket_details.html',
+            controller: 'DetailCtrl'
+            //activetab: 'manage'
+        }).
         otherwise({redirectTo: '/index.html'})
 }
 ]);
