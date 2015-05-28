@@ -1,0 +1,60 @@
+<div ng-controller="FillingCtrl">
+    <div class="container">
+        <div class="panel panel-primary">
+            <div class="panel-heading">{{docket.filings[0].description}}</div>
+            <div class="panel-body">
+                <dl class="dl-horizontal">
+                    <dt>Parent Docket</dt>
+                    <dd>{{docket.title}}</dd>
+
+                    <dt>Filed On</dt>
+                    <dd>{{docket.filings[0].filed_on}}</dd>
+
+                    <dt>Page count</dt>
+                    <dd>{{docket.filings[0].total_pages}}</dd>
+
+                    <dt>Filing Parties</dt>
+                    <dd><span ng-repeat="filing_party in docket.filings[0].filing_parties">
+                    {{filing_party}}
+                </span></dd>
+
+                    <dt>Filing Types</dt>
+                    <dd><span ng-repeat="type in docket.filings[0].types">
+                    {{type}}
+                </span></dd>
+
+                    <dt>Select File</dt>
+                    <dd>
+                        <ui-select ng-model="d0c_selected" theme="selectize" ng-disabled="disabled"
+                                   style="width: 300px;">
+                            <ui-select-match placeholder="Select or search a country in the list...">
+                                {{$select.selected.name}}
+                            </ui-select-match>
+                            <ui-select-choices repeat="country in documents">
+                                <span ng-bind-html="country.title"></span>
+                            </ui-select-choices>
+                        </ui-select>
+                        <!--<select2 ng-model="obj.field" ng-options="val.id as val.name for val in values"></select2>-->
+                        <!--<select ng-model="selected_document" id="documents">-->
+                        <!--<option ng-repeat="document in docket.filings[0].documents" value="{{document.source_url}}">{{document.title}}</option>-->
+                        <!--</select>-->
+                        <!--<select2 ng-model="values.query" options="queryOptions"></select2>-->
+                        <!--<select2 ng-model="obj" ng-options="document.title for document in docket.filings[0].documents"></select2>-->
+                        <!--<select2 ng-model="selectedItem" ng-options="document.title for document in docket.filings[0].documents track by document.download_url"-->
+                        <!--id="documents"></select2>-->
+                        <!--<select ng-options="document.title for document in docket.filings[0].documents track by document.download_url"-->
+                        <!--ng-model="selected_file" class="js-example-tags form-control" id="documents">-->
+                        <!--</select>-->
+                    </dd>
+                    <dt>Selected</dt>
+                    <dd>{{selected_file}}</dd>
+                    <dd>{{d0c_selected}}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    //    $("#documents").select2({})
+</script>

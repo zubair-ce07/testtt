@@ -1,4 +1,4 @@
-var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute']);
+var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute', 'ui.select', 'ngSanitize']);
 
 ngdocket.config(['$routeProvider', function ($routeProvider) {
     $routeProvider.
@@ -6,6 +6,16 @@ ngdocket.config(['$routeProvider', function ($routeProvider) {
         {
             templateUrl: 'app/search/partials/search.html',
             controller: 'SearchCtrl'
+            //activetab: 'manage'
+        }).when('/docket/:docketId',
+        {
+            templateUrl: 'app/search/partials/docket_details.html',
+            controller: 'DetailCtrl'
+            //activetab: 'manage'
+        }).when('/docket/:docket/filing/:filing',
+        {
+            templateUrl: 'app/search/partials/filing.html',
+            controller: 'FillingCtrl'
             //activetab: 'manage'
         }).
         when('/dockets/:id',
