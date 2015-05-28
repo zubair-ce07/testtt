@@ -12,7 +12,7 @@ ngdocket.config(['$routeProvider', function ($routeProvider) {
             templateUrl: 'app/search/partials/docket_details.html',
             controller: 'DetailCtrl'
             //activetab: 'manage'
-        }).when('/docket/:docket/filing/:filing',
+        }).when('/dockets/:docket/filings/:filing',
         {
             templateUrl: 'app/search/partials/filing.html',
             controller: 'FillingCtrl'
