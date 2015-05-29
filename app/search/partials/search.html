@@ -84,8 +84,7 @@
                     </tr>
 
                     </thead>
-                    <tbody infinite-scroll='getNextDockets()' infinite-scroll-disabled='disable_scoll'
-                           infinite-scroll-distance='1'>
+                    <tbody infinite-scroll='getNextDockets()' infinite-scroll-disabled='disable_scoll' infinite-scroll-distance='1'>
                     <tr ng-repeat="docket in dockets">
                         <td>{{docket.state_id}}</td>
                         <td><a ng-href="#dockets/{{docket.id}}">{{docket.title}}</a></td>

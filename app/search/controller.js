@@ -20,7 +20,7 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http', 'Reddit',
                 for (var i = 0; i < resp.data.dockets.length; i++) {
                     $scope.dockets.push(resp.data.dockets[i]);
                 }
-                $scope.reddit.cursor = resp.data.metadata.cursor;//loop throught response dockets and add them at the end of array.. $scope.dockets.push(resp[i])
+                $scope.reddit.cursor= resp.data.metadata.cursor;//loop throught response dockets and add them at the end of array.. $scope.dockets.push(resp[i])
                 //set cursor from response
                 $scope.disable_scoll = false;
             });
@@ -46,15 +46,15 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http', 'Reddit',
 ngdocket.controller('DetailCtrl', ['$scope', 'DocketDetail','$routeParams',
     function ($scope, DocketDetail,$routeParams) {
 
-            var id = $routeParams.id
-            $scope.docketsDetail = DocketDetail.get(id).$promise.then(function (data) {
-                console.log(data.dockets[0]);
-                $scope.docketsDetail = data.dockets[0];
-            });
+        var id = $routeParams.id
+        $scope.docketsDetail = DocketDetail.get(id).$promise.then(function (data) {
+            console.log(data.dockets[0]);
+            $scope.docketsDetail = data.dockets[0];
+        });
     }
 ]);
 
 
-ngdocket.controller('DemoController', ['$scope', 'Reddit', function ($scope, Reddit) {
+ngdocket.controller('DemoController',['$scope','Reddit',  function($scope, Reddit) {
 
 }]);

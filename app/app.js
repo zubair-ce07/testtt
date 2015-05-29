@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute', 'infinite-scroll', 'ui.select', 'ngSanitize']);
+=======
+var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute','infinite-scroll']);
+>>>>>>> 6dea22f805082b9f28f435b83e6ba924a8287958
 
 ngdocket.config(['$routeProvider', function ($routeProvider) {
     $routeProvider.
