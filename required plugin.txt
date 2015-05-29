@@ -1,0 +1,2 @@
+For select 2
+    bower install ui-select

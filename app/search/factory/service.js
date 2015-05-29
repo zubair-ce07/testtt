@@ -12,17 +12,26 @@ ngdocket.factory('Docket', ['$resource', function($resource) {
     return new Docket;
 }]);
 
-ngdocket.factory('Filing', ['$resource', function ($resource) {
-    function Filing() {
-        this.service = $resource('http://aeedocketapi-staging.appspot.com/dockets/4503923427639296/filings/5348024557502464?api_key=d4dc4045dd431d43b317190a41b982aa',
-            {
-                callback: "JSON_CALLBACK"
-            }
-        );
-    }
+ngdocket.factory('Reddit', function ($http) {
+    var Reddit = {
+        dockets: [],
+        busy: false,
+        cursor: '',
+        get: function () {
+            /*if (this.busy) return;
+             this.busy = true;*/
 
-    Filing.prototype.get = function () {
-        return this.service.get();
+            var url = 'http://aeedocketapi-staging.appspot.com/dockets?api_key=d4dc4045dd431d43b317190a41b982aa&cursor=' + this.cursor + '&json=JSON_CALLBACK"';
+            return $http.get(url).success(function (data) {
+                /*var items = data.dockets;
+                 for (var i = 0; i < items.length; i++) {
+                 this.dockets.push(items[i]);
+                 }
+                 this.cursor = data.metadata.cursor;
+                 this.busy = false;*/
+            });
+    }
     };
-    return new Filing;
-}]);
+
+    return Reddit;
+});

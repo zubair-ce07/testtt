@@ -1,4 +1,4 @@
-var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute', 'ui.select', 'ngSanitize']);
+var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute', 'infinite-scroll', 'ui.select', 'ngSanitize']);
 
 ngdocket.config(['$routeProvider', function ($routeProvider) {
     $routeProvider.
@@ -9,7 +9,7 @@ ngdocket.config(['$routeProvider', function ($routeProvider) {
             //activetab: 'manage'
         }).when('/dockets/:id/filings/:id',
         {
-            templateUrl: 'app/search/partials/filing.html',
+            templateUrl: 'app/filings/partials/view.html',
             controller: 'FillingCtrl'
             //activetab: 'manage'
         }).
@@ -22,3 +22,34 @@ ngdocket.config(['$routeProvider', function ($routeProvider) {
         otherwise({redirectTo: '/index.html'})
 }
 ]);
+
+
+ngdocket.filter('propsFilter', function () {
+    return function (items, props) {
+        var out = [];
+
+        if (angular.isArray(items)) {
+            items.forEach(function (item) {
+                var itemMatches = false;
+
+                var keys = Object.keys(props);
+                for (var i = 0; i < keys.length; i++) {
+                    var prop = keys[i];
+                    var text = props[prop].toLowerCase();
+                    if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                        itemMatches = true;
+                        break;
+                    }
+                }
+                if (itemMatches) {
+                    out.push(item);
+                }
+            });
+        } else {
+            // Let the output be the input untouched
+            out = items;
+        }
+
+        return out;
+    }
+});
