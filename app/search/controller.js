@@ -1,5 +1,5 @@
-ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http', 'Reddit',
-    function ($scope, Docket, $http, Reddit) {
+ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
+    function ($scope, Docket, $http) {
         $scope.states = []
         $scope.select2states = {};
         //    $scope.click_dockets = function() {
@@ -10,24 +10,18 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http', 'Reddit',
         //    };
 
 
-        $scope.reddit = Reddit;
-
-        //Reddit.get();*/
+        $scope.docket = Docket;
         $scope.dockets = [];
         var getDockets = function () {
-            Reddit.get($scope.reddit.cursor).then(function (resp) {
-                //$scope.dockets = resp.data.dockets;//loop throught response dockets and add them at the end of array.. $scope.dockets.push(resp[i])
+            Docket.get($scope.docket.cursor).then(function (resp) {
                 for (var i = 0; i < resp.data.dockets.length; i++) {
                     $scope.dockets.push(resp.data.dockets[i]);
                 }
-                $scope.reddit.cursor= resp.data.metadata.cursor;//loop throught response dockets and add them at the end of array.. $scope.dockets.push(resp[i])
-                //set cursor from response
+                $scope.docket.cursor= resp.data.metadata.cursor;
                 $scope.disable_scoll = false;
             });
         };
-        //getDockets();
         $scope.disable_scoll = false;
-
         $scope.getNextDockets = function () {
             if ($scope.disable_scoll) {
                 return;
@@ -54,7 +48,3 @@ ngdocket.controller('DetailCtrl', ['$scope', 'DocketDetail','$routeParams',
     }
 ]);
 
-
-ngdocket.controller('DemoController',['$scope','Reddit',  function($scope, Reddit) {
-
-}]);

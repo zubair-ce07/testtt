@@ -142,7 +142,7 @@
             <tbody>
             <tr ng-repeat="filing in docketsDetail.filings">
                 <td>{{filing.filed_on}}</td>
-                <td><a ng-href="filings/{{filing.id}}" >{{filing.description}}</a></td>
+                <td><a ng-href="#dockets/{{docketsDetail.id}}/filings/{{filing.id}}" >{{filing.description}}</a></td>
                 <td> {{filing.filing_parties[0]}}</td>
                 <td>{{filing.types[0]}}</td>
                 <td>{{filing.documents.length}}</td>
