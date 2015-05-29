@@ -1,14 +1,14 @@
 ngdocket.factory('Filing', ['$resource', function ($resource) {
     function Filing() {
-        this.service = $resource('http://aeedocketapi-staging.appspot.com/dockets/4503923427639296/filings/5348024557502464?api_key=d4dc4045dd431d43b317190a41b982aa',
+        this.service = $resource('http://aeedocketapi-staging.appspot.com/dockets/:docket_id/filings/:filing_id?api_key=d4dc4045dd431d43b317190a41b982aa',
             {
-                callback: "JSON_CALLBACK"
+                callback: "JSON_CALLBACK", docket_id: '@docket_id', filing_id: '@filing_id'
             }
         );
     }
 
-    Filing.prototype.get = function () {
-        return this.service.get();
+    Filing.prototype.get = function (docket_id, filing_id) {
+        return this.service.get({docket_id: docket_id, filing_id: filing_id});
     };
     return new Filing;
 }]);

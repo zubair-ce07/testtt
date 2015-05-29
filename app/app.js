@@ -7,7 +7,7 @@ ngdocket.config(['$routeProvider', function ($routeProvider) {
             templateUrl: 'app/search/partials/search.html',
             controller: 'SearchCtrl'
             //activetab: 'manage'
-        }).when('/dockets/:id/filings/:id',
+        }).when('/dockets/:docket_id/filings/:filing_id',
         {
             templateUrl: 'app/filings/partials/view.html',
             controller: 'FillingCtrl'
@@ -19,7 +19,17 @@ ngdocket.config(['$routeProvider', function ($routeProvider) {
             controller: 'DetailCtrl'
             //activetab: 'manage'
         }).
-        otherwise({redirectTo: '/index.html'})
+        when('/',
+        {
+            templateUrl: 'app/index/partials/view.html'
+            //activetab: 'manage'
+        }).
+        when('/404',
+        {
+            templateUrl: 'app/404/partials/view.html'
+            //activetab: 'manage'
+        }).
+        otherwise({redirectTo: '/404'})
 }
 ]);
 
