@@ -1,4 +1,4 @@
-var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute', 'infinite-scroll', 'ui.select', 'ngSanitize']);
+var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute', 'infinite-scroll', 'ui.select', 'ngSanitize','720kb.datepicker']);
 
 ngdocket.config(['$routeProvider', function ($routeProvider) {
     $routeProvider.

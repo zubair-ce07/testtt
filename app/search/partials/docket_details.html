@@ -1,157 +1,159 @@
 <div ng-controller="DetailCtrl">
-    <div class="well well-lg container">
-        <div class="row">
-            <div class=" col-md-6">
-                <h2><a href=""> PUC</a>  {{docketsDetail.state}}: {{docketsDetail.state_id}}</h2>
-            </div>
+    <div ng-if="showDetails">
+        <div class="well well-lg container">
+            <div class="row">
+                <div class=" col-md-6">
+                    <h2><a href=""> PUC</a>  {{docketsDetail.state}}: {{docketsDetail.state_id}}</h2>
+                </div>
 
-            <div class="col-md-6" style="text-align: right;">
-                <h1> <a href="#"><span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></a></h1>
+                <div class="col-md-6" style="text-align: right;">
+                    <h1> <a href="#"><span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></a></h1>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="panel-default  col-sm-6">
-                <div class="panel-heading" >STATUS:- {{docketsDetail.status}}</div>
-                <ul class="list-group">
-                    <li class="list-group-item">UPDATED: {{docketsDetail.latest_filing_updated_on}} </li>
-                    <li class="list-group-item">OPENED: {{docketsDetail.filed_on}}</li>
-                </ul>
-            </div>
-            <div class="panel col-md-6">
-                <div class="row">
-                    <h6>SUMMARY FOR COMPANY</h6>
-                    <div style="text-align: right;">
-                        <h6> <a href="#">EDIT</a></h6>
+            <div class="row">
+                <div class="panel-default  col-sm-6">
+                    <div class="panel-heading" >STATUS:- {{docketsDetail.status}}</div>
+                    <ul class="list-group">
+                        <li class="list-group-item">UPDATED: {{docketsDetail.latest_filing_updated_on}} </li>
+                        <li class="list-group-item">OPENED: {{docketsDetail.filed_on}}</li>
+                    </ul>
+                </div>
+                <div class="panel col-md-6">
+                    <div class="row">
+                        <h6>SUMMARY FOR COMPANY</h6>
+                        <div style="text-align: right;">
+                            <h6> <a href="#">EDIT</a></h6>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <form>
-                        <div class="form-group">
-                            <textarea class="form-control" id="summary" placeholder="click here to add your company's summary of this Docket"></textarea>
-                        </div>
-                        <div class="form-group" style="width: 100px;">
-                            <label for="priority">PRIORITY</label>
-                            <select class="js-example-basic-single form-control" id="priority">
-                                <option value="">-</option>
-                                <option value="low">LOW</option>
-                                <option value="high">HIGH</option>
-                            </select>
-                        </div>
-                        <div class="form-group" align="right";>
-                            <button type="submit" class="btn btn-default">Save Changes</button>
-                        </div>
-                    </form>
-                </div>
-
-            </div>
-
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <h4>{{docketsDetail.title}}</h4>
-                <strong><h6>MAJOR PARTIES:</h6></strong>
-                <ul ng-repeat="parties in docketsDetail.major_parties">
-                    <li>{{parties}}</li>
-                </ul>
-                <strong><h6>DOCKET TYPE:</h6></strong>
-                <p>{{docketsDetail.proceeding_type}} </p>
-
-                <h4><a href="{{docketsDetail.source_url}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span>Source - Original Docket</a></h4>
-            </div>
-
-            <div class="panel col-md-6">
-                <div class="row">
-                    <h6>COMMENTS</h6>
-                    <form>
-                        <div class="form-group">
-                            <textarea class="form-control" id="comment" placeholder="Add your comment on this Docket"></textarea>
-                        </div>
-                        <div class="form-group" align="right";>
-                            <button type="submit" class="btn btn-default">Post</button>
-                        </div>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-
-
-
-    <div class="well well-lg container">
-
-        <div class="row">
-            <form class="form-inline">
-
-                <div class="form-group col-md-6 col-lg-2">
-                    <label for="keyword">KEYWORD</label>
-                    <input type="text" class="form-control" ng-model="docket.keyword" id="keyword"
-                           placeholder="Enter Term">
-                </div>
-
-                <div class="form-group col-md-6 col-lg-2">
-                    <label for="scope">SEARCH SCOPE</label>
-                    <select class="js-example-basic-single form-control" ng-model="dockets.scope" id="scope">
-                        <option value="All">All Content</option>
-                        <option value="MDO">Meta Data Only</option>
-                        <option value="DN">Docket Number</option>
-                        <option value="MP">Major Parties</option>
-                    </select>
-                </div>
-
-                <div class="form-group col-md-6 col-lg-2">
-                    <label for="filingAfter">FILING ON AFTER</label>
-                    <input type="text" class="form-control actual_range" id="filingAfter"
-                           ng-model="dockets.filingAfter"
-                           placeholder="Filling on After">
-                </div>
-
-                <div class="form-group col-md-6 col-lg-2">
-                    <label for="filingBefore">FILING ON BEFORE</label>
-                    <input type="text" class="form-control actual_range" id="filingBefore" ng-model="docket.filingBefore"
-                           placeholder="Last filling before">
-                </div>
-
-                <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
-                    <div>
-                        <label for="docket-search"><a><span class="glyphicon glyphicon-remove"></span>Clear</a></label>
+                    <div class="row">
+                        <form>
+                            <div class="form-group">
+                                <textarea class="form-control" id="summary" placeholder="click here to add your company's summary of this Docket"></textarea>
+                            </div>
+                            <div class="form-group" style="width: 100px;">
+                                <label for="priority">PRIORITY</label>
+                                <select class="js-example-basic-single form-control" id="priority">
+                                    <option value="">-</option>
+                                    <option value="low">LOW</option>
+                                    <option value="high">HIGH</option>
+                                </select>
+                            </div>
+                            <div class="form-group" align="right";>
+                                <button type="submit" class="btn btn-default">Save Changes</button>
+                            </div>
+                        </form>
                     </div>
 
-                    <button type="submit" id="docket-search" class="btn btn-success">Search
-                    </button>
                 </div>
-            </form>
+
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>{{docketsDetail.title}}</h4>
+                    <strong><h6>MAJOR PARTIES:</h6></strong>
+                    <ul ng-repeat="parties in docketsDetail.major_parties">
+                        <li>{{parties}}</li>
+                    </ul>
+                    <strong><h6>DOCKET TYPE:</h6></strong>
+                    <p>{{docketsDetail.proceeding_type}} </p>
+
+                    <h4><a href="{{docketsDetail.source_url}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span>Source - Original Docket</a></h4>
+                </div>
+
+                <div class="panel col-md-6">
+                    <div class="row">
+                        <h6>COMMENTS</h6>
+                        <form>
+                            <div class="form-group">
+                                <textarea class="form-control" id="comment" placeholder="Add your comment on this Docket"></textarea>
+                            </div>
+                            <div class="form-group" align="right";>
+                                <button type="submit" class="btn btn-default">Post</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
-    </div>
 
-    <div class="container" ng-show=docketsDetail.filings[0]>
-        <h1></h1>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>DATE FILED</th>
-                <th>TITLE</th>
-                <th>FILING PARTIES</th>
-                <th>TYPE</th>
-                <th># DOCUMENTS</th>
-                <th>TOTAL PAGES</th>
-                <th>PDF PREVIEW</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-repeat="filing in docketsDetail.filings">
-                <td>{{filing.filed_on}}</td>
-                <td><a ng-href="#dockets/{{docketsDetail.id}}/filings/{{filing.id}}" >{{filing.description}}</a></td>
-                <td> {{filing.filing_parties[0]}}</td>
-                <td>{{filing.types[0]}}</td>
-                <td>{{filing.documents.length}}</td>
-                <td>{{filing.total_pages}}</td>
 
-                <td><a href="#"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
 
-            </tr>
-            </tbody>
-        </table>
+        <div class="well well-lg container">
+
+            <div class="row">
+                <form class="form-inline">
+
+                    <div class="form-group col-md-6 col-lg-2">
+                        <label for="keyword">KEYWORD</label>
+                        <input type="text" class="form-control" ng-model="docket.keyword" id="keyword"
+                               placeholder="Enter Term">
+                    </div>
+
+                    <div class="form-group col-md-6 col-lg-2">
+                        <label for="scope">SEARCH SCOPE</label>
+                        <select class="js-example-basic-single form-control" ng-model="dockets.scope" id="scope">
+                            <option value="All">All Content</option>
+                            <option value="MDO">Meta Data Only</option>
+                            <option value="DN">Docket Number</option>
+                            <option value="MP">Major Parties</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-6 col-lg-2">
+                        <label for="filingAfter">FILING ON AFTER</label>
+                        <input type="text" class="form-control actual_range" id="filingAfter"
+                               ng-model="dockets.filingAfter"
+                               placeholder="Filling on After">
+                    </div>
+
+                    <div class="form-group col-md-6 col-lg-2">
+                        <label for="filingBefore">FILING ON BEFORE</label>
+                        <input type="text" class="form-control actual_range" id="filingBefore" ng-model="docket.filingBefore"
+                               placeholder="Last filling before">
+                    </div>
+
+                    <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
+                        <div>
+                            <label for="docket-search"><a><span class="glyphicon glyphicon-remove"></span>Clear</a></label>
+                        </div>
+
+                        <button type="submit" id="docket-search" class="btn btn-success">Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="container" ng-show=docketsDetail.filings[0]>
+            <h1></h1>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>DATE FILED</th>
+                    <th>TITLE</th>
+                    <th>FILING PARTIES</th>
+                    <th>TYPE</th>
+                    <th># DOCUMENTS</th>
+                    <th>TOTAL PAGES</th>
+                    <th>PDF PREVIEW</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="filing in docketsDetail.filings">
+                    <td>{{filing.filed_on}}</td>
+                    <td><a ng-href="#dockets/{{docketsDetail.id}}/filings/{{filing.id}}" >{{filing.description}}</a></td>
+                    <td> {{filing.filing_parties[0]}}</td>
+                    <td>{{filing.types[0]}}</td>
+                    <td>{{filing.documents.length}}</td>
+                    <td>{{filing.total_pages}}</td>
+
+                    <td><a href="#"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a></td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>

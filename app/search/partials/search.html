@@ -13,7 +13,7 @@
                     <ui-select ng-model="select2states.states" theme="select2" multiple class="form-control"
                                style="padding: 0!important; height: auto;">
                         <ui-select-match placeholder="Select State(s)">
-                            {{$item.abbreviation}}
+                            {{$item.name}}
                         </ui-select-match>
                         <ui-select-choices
                                 repeat="document in states| propsFilter: {name: $select.search}">
@@ -21,36 +21,40 @@
                         </ui-select-choices>
                     </ui-select>
                 </div>
-                <div>{{select2states.states}}</div>
+
                 <div class="form-group col-md-6 col-lg-2">
                     <label for="keyword">KEYWORD</label>
-                    <input type="text" class="form-control" ng-model="docket.keyword" id="keyword"
+                    <input type="text" class="form-control" ng-model="keyword" id="keyword"
                            placeholder="Enter Term">
                 </div>
 
                 <div class="form-group col-md-6 col-lg-2">
                     <label for="scope">SEARCH SCOPE</label>
-                    <select class="js-example-basic-single form-control" ng-model="docket.scope" id="scope">
-                        <option value="All">All Content</option>
-                        <option value="MDO">Meta Data Only</option>
-                        <option value="DN">Docket Number</option>
-                        <option value="MP">Major Parties</option>
+                    <select class="js-example-basic-single form-control" ng-model="scope" id="scope">
+                        <option value="all">All Content</option>
+                        <option value="meta-data">Meta Data Only</option>
+                        <option value="state-id">Docket Number</option>
+                        <option value="major-parties">Major Parties</option>
                     </select>
                     <!--<input type="text" class="form-control" id="scope" placeholder="All Content">-->
                 </div>
 
                 <div class="form-group col-md-6 col-lg-2">
                     <label for="filingbefore">LATEST FILING Before</label>
-                    <input type="text" class="form-control actual_range" id="filingbefore"
-                           ng-model="docket.filingBefore"
-                           placeholder="Lastest filling after">
+                    <datepicker date-format="yyyy-MM-dd">
+                    <input type="text" class="form-control" id="filingbefore"
+                           ng-model="filingBefore"
+                           placeholder="Lastest filling Before">
+                        </datepicker>
                 </div>
 
                 <div class="form-group col-md-6 col-lg-2">
                     <label for="filingafter">LATEST FILING After</label>
-                    <input type="text" class="form-control actual_range" id="filingafter"
-                           ng-model="docket.filingAfter"
-                           placeholder="Last filling before">
+                    <datepicker date-format="yyyy-MM-dd">
+                    <input type="text" class="form-control" id="filingafter"
+                           ng-model="filingAfter"
+                           placeholder="Last filling After">
+                        </datepicker>
                 </div>
 
                 <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
@@ -66,7 +70,8 @@
             </form>
         </div>
     </div>
-    <div class=" well container">
+
+    <div class=" well container" ng-if="dockets">
         <h1></h1>
 
         <div>
@@ -108,15 +113,6 @@
 
 </div>
 
-<script>
-    $('#filingbefore').datepicker({
-        inputs: $('.actual_range').toArray()
-    });
-    $('#filingafter').datepicker({
-        inputs: $('.actual_range').toArray()
-    });
 
-
-</script>
 
 
