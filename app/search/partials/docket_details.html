@@ -87,31 +87,36 @@
 
                     <div class="form-group col-md-6 col-lg-2">
                         <label for="keyword">KEYWORD</label>
-                        <input type="text" class="form-control" ng-model="docket.keyword" id="keyword"
+                        <input type="text" class="form-control" ng-model="keyword" id="keyword"
                                placeholder="Enter Term">
                     </div>
 
                     <div class="form-group col-md-6 col-lg-2">
                         <label for="scope">SEARCH SCOPE</label>
-                        <select class="js-example-basic-single form-control" ng-model="dockets.scope" id="scope">
-                            <option value="All">All Content</option>
-                            <option value="MDO">Meta Data Only</option>
-                            <option value="DN">Docket Number</option>
-                            <option value="MP">Major Parties</option>
+                        <select class="js-example-basic-single form-control" ng-model="scope" id="scope">
+                            <option value="all">All Content</option>
+                            <option value="meta-data">Meta Data Only</option>
+                            <option value="state-id">Docket Number</option>
+                            <option value="major-parties">Major Parties</option>
                         </select>
                     </div>
 
                     <div class="form-group col-md-6 col-lg-2">
                         <label for="filingAfter">FILING ON AFTER</label>
-                        <input type="text" class="form-control actual_range" id="filingAfter"
-                               ng-model="dockets.filingAfter"
+                        <datepicker date-format="yyyy-MM-dd">
+                        <input type="text" class="form-control" id="filingAfter"
+                               ng-model="after"
                                placeholder="Filling on After">
+                            </datepicker>
                     </div>
+
 
                     <div class="form-group col-md-6 col-lg-2">
                         <label for="filingBefore">FILING ON BEFORE</label>
-                        <input type="text" class="form-control actual_range" id="filingBefore" ng-model="docket.filingBefore"
+                        <datepicker date-format="yyyy-MM-dd">
+                        <input type="text" class="form-control " id="filingBefore" ng-model="before"
                                placeholder="Last filling before">
+                            </datepicker>
                     </div>
 
                     <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">

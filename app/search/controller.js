@@ -19,39 +19,52 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
         $scope.click_dockets = function() {
             $scope.docket = Docket;
             $scope.dockets = [];
+            $scope.dockets_found='';
+            $scope.count = 0;
+            $scope.flag = 0;
+            getDockets();
+        };
+        var getDockets = function () {
+            $scope.state = [];
+            if ($scope.select2states.states) {
+                for (var i = 0, len = $scope.select2states.states.length; i < len; i++) {
 
-
-            var getDockets = function () {
-                $scope.state= [];
-                if ($scope.select2states.states)
-                {
-                    for (var i = 0, len = $scope.select2states.states.length; i < len; i++) {
-
-                        $scope.state[i] = $scope.select2states.states[i].abbreviation;
-                    }
+                    $scope.state[i] = $scope.select2states.states[i].abbreviation;
                 }
-                console.log($scope.state);
-                $scope.docket.state = $scope.state
-                $scope.docket.keyword =  $scope.keyword;
-                $scope.docket.scope =  $scope.scope;
-                $scope.docket.before =  $scope.filingBefore;
-                $scope.docket.after =  $scope.filingAfter;
-                Docket.get($scope.docket.state, $scope.docket.cursor, $scope.docket.keyword,$scope.docket.scope,$scope.docket.before, $scope.docket.after).then(function (resp) {
+            }
+            console.log($scope.state);
+            $scope.docket.state = $scope.state
+            $scope.docket.keyword = $scope.keyword;
+            $scope.docket.scope = $scope.scope;
+            $scope.docket.before = $scope.filingBefore;
+            $scope.docket.after = $scope.filingAfter;
+            if ($scope.flag != 1) {
+                Docket.get($scope.docket.state, $scope.docket.cursor, $scope.docket.keyword, $scope.docket.scope, $scope.docket.before, $scope.docket.after).then(function (resp) {
                     for (var i = 0; i < resp.data.dockets.length; i++) {
-                        $scope.dockets.push(resp.data.dockets[i]);
+                        if (resp.data.metadata.cursor != '' || $scope.flag != 1) {
+                            $scope.dockets.push(resp.data.dockets[i]);
+                            $scope.count = $scope.count + 1;
+                        }
+                    }
+                    if (resp.data.metadata.cursor == '') {
+                        $scope.flag = 1;
                     }
                     $scope.docket.cursor = resp.data.metadata.cursor;
-                    $scope.disable_scoll = false;
+                    $scope.dockets_found = resp.data.metadata.dockets_found;
+                    $scope.disable_scroll = false;
+
                 });
-            };
-            $scope.disable_scoll = false;
-            $scope.getNextDockets = function () {
-                if ($scope.disable_scoll) {
-                    return;
-                }
-                getDockets();
-                $scope.disable_scoll = true;
-            };
+            }
+
+        };
+        $scope.disable_scroll = false;
+        $scope.getNextDockets = function () {
+            if ($scope.disable_scroll) {
+                return;
+            }
+            $scope.disable_scroll = true;
+            getDockets();
+
         };
 
 
@@ -65,7 +78,7 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
 ngdocket.controller('DetailCtrl', ['$scope', 'DocketDetail','$routeParams',
     function ($scope, DocketDetail,$routeParams) {
 
-        var id = $routeParams.id
+        var id = $routeParams.id;
         $scope.docketsDetail = DocketDetail.get(id).$promise.then(function (data) {
             console.log(data.dockets[0]);
             $scope.docketsDetail = data.dockets[0];
@@ -73,6 +86,8 @@ ngdocket.controller('DetailCtrl', ['$scope', 'DocketDetail','$routeParams',
         if ($scope.docketsDetail != null) {
             $scope.showDetails=true
         };
+
+
 
     }
 ]);

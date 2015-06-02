@@ -42,19 +42,19 @@
                 <div class="form-group col-md-6 col-lg-2">
                     <label for="filingbefore">LATEST FILING Before</label>
                     <datepicker date-format="yyyy-MM-dd">
-                    <input type="text" class="form-control" id="filingbefore"
-                           ng-model="filingBefore"
-                           placeholder="Lastest filling Before">
-                        </datepicker>
+                        <input type="text" class="form-control" id="filingbefore"
+                               ng-model="filingBefore"
+                               placeholder="Lastest filling Before">
+                    </datepicker>
                 </div>
 
                 <div class="form-group col-md-6 col-lg-2">
                     <label for="filingafter">LATEST FILING After</label>
                     <datepicker date-format="yyyy-MM-dd">
-                    <input type="text" class="form-control" id="filingafter"
-                           ng-model="filingAfter"
-                           placeholder="Last filling After">
-                        </datepicker>
+                        <input type="text" class="form-control" id="filingafter"
+                               ng-model="filingAfter"
+                               placeholder="Last filling After">
+                    </datepicker>
                 </div>
 
                 <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
@@ -69,45 +69,45 @@
                 </div>
             </form>
         </div>
+        <div ng-if="dockets.length" >
+            <h4 style="text-align: center;">Docket Found: {{dockets_found}}</h4>
+        </div>
     </div>
 
-    <div class=" well container" ng-if="dockets">
-        <h1></h1>
+    <div class=" well container table-container" ng-if="dockets.length" >
+        <table  class="table table-striped">
+            <thead>
+            <tr>
+                <th>DOCKET NUMBER</th>
+                <th>TITLE</th>
+                <th>STATE</th>
+                <th># FILINGS</th>
+                <th>LATEST FILING</th>
+                <th>DATE OPENED</th>
+                <th>STATUS</th>
+                <th>FAVORITE</th>
+            </tr>
 
-        <div>
-            <div>
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>DOCKET NUMBER</th>
-                        <th>TITLE</th>
-                        <th>STATE</th>
-                        <th># FILINGS</th>
-                        <th>LATEST FILING</th>
-                        <th>DATE OPENED</th>
-                        <th>STATUS</th>
-                        <th>FAVORITE</th>
-                    </tr>
+            </thead>
+            <tbody  infinite-scroll="getNextDockets()"
+                    infinite-scroll-disabled="disable_scroll"
+                    infinite-scroll-distance="1">
+            <tr ng-repeat="docket in dockets">
+                <td>{{docket.state_id}}</td>
+                <td><a ng-href="#dockets/{{docket.id}}">{{docket.title}}</a></td>
+                <td>{{docket.state}}</td>
+                <td>{{docket.filing_count}}</td>
+                <td>{{docket.latest_filing_update_on}}</td>
+                <td>{{docket.filed_on}}</td>
+                <td>{{docket.status}}</td>
+                <td>
+                    <a href="#"> <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
 
-                    </thead>
-                    <tbody infinite-scroll='getNextDockets()' infinite-scroll-disabled='disable_scoll' infinite-scroll-distance='1'>
-                    <tr ng-repeat="docket in dockets">
-                        <td>{{docket.state_id}}</td>
-                        <td><a ng-href="#dockets/{{docket.id}}">{{docket.title}}</a></td>
-                        <td>{{docket.state}}</td>
-                        <td>{{docket.filing_count}}</td>
-                        <td>{{docket.latest_filing_update_on}}</td>
-                        <td>{{docket.filed_on}}</td>
-                        <td>{{docket.status}}</td>
-                        <td>
-                            <a href="#"> <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                <div ng-show='disable_scoll'>Loading data...</div>
-            </div>
-        </div>
+        <div ng-show='disable_scoll'>Loading data...</div>
 
     </div>
 
