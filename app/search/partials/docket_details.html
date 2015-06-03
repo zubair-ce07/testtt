@@ -1,4 +1,9 @@
+
 <div ng-controller="DetailCtrl">
+    <ol class="breadcrumb">
+        <li><a href="#">DocketDash</a></li>
+        <li class="active">{{navigation}}</li>
+    </ol>
     <div ng-if="showDetails">
         <div class="well well-lg container">
             <div class="row">
@@ -49,15 +54,15 @@
             </div>
             <div class="row">
                 <div class="col-md-6">
-                    <h4>{{docketsDetail.title}}</h4>
-                    <strong><h6>MAJOR PARTIES:</h6></strong>
+                    <h5>{{docketsDetail.title}}</h5>
+                    <h6><strong>MAJOR PARTIES:</strong></h6>
                     <ul ng-repeat="parties in docketsDetail.major_parties">
                         <li>{{parties}}</li>
                     </ul>
-                    <strong><h6>DOCKET TYPE:</h6></strong>
+                    <h6><strong>DOCKET TYPE:</strong></h6>
                     <p>{{docketsDetail.proceeding_type}} </p>
 
-                    <h4><a href="{{docketsDetail.source_url}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span>Source - Original Docket</a></h4>
+                    <h4><a href="{{docketsDetail.source_url}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span><strong>Source - Original Docket</strong></a></h4>
                 </div>
 
                 <div class="panel col-md-6">
@@ -104,19 +109,19 @@
                     <div class="form-group col-md-6 col-lg-2">
                         <label for="filingAfter">FILING ON AFTER</label>
                         <datepicker date-format="yyyy-MM-dd">
-                        <input type="text" class="form-control" id="filingAfter"
-                               ng-model="after"
-                               placeholder="Filling on After">
-                            </datepicker>
+                            <input type="text" class="form-control" id="filingAfter"
+                                   ng-model="after"
+                                   placeholder="Filling on After">
+                        </datepicker>
                     </div>
 
 
                     <div class="form-group col-md-6 col-lg-2">
                         <label for="filingBefore">FILING ON BEFORE</label>
                         <datepicker date-format="yyyy-MM-dd">
-                        <input type="text" class="form-control " id="filingBefore" ng-model="before"
-                               placeholder="Last filling before">
-                            </datepicker>
+                            <input type="text" class="form-control " id="filingBefore" ng-model="before"
+                                   placeholder="Last filling before">
+                        </datepicker>
                     </div>
 
                     <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
@@ -124,14 +129,17 @@
                             <label for="docket-search"><a><span class="glyphicon glyphicon-remove"></span>Clear</a></label>
                         </div>
 
-                        <button type="submit" id="docket-search" class="btn btn-success">Search
+                        <button type="submit" id="docket-search" ng-click="click_filings()" class="btn btn-success">Search
                         </button>
                     </div>
                 </form>
             </div>
+            <div ng-if="filings.length" >
+                <h4 style="text-align: center;">Filings Found: {{filings_found}}</h4>
+            </div>
         </div>
 
-        <div class="container" ng-show=docketsDetail.filings[0]>
+        <div class="container" ng-if=filings.length>
             <h1></h1>
             <table class="table table-striped">
                 <thead>
@@ -145,8 +153,10 @@
                     <th>PDF PREVIEW</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr ng-repeat="filing in docketsDetail.filings">
+                <tbody infinite-scroll="getNextFilings()"
+                       infinite-scroll-disabled="disable_scroll"
+                       infinite-scroll-distance="1">
+                <tr ng-repeat="filing in filings">
                     <td>{{filing.filed_on}}</td>
                     <td><a ng-href="#dockets/{{docketsDetail.id}}/filings/{{filing.id}}" >{{filing.description}}</a></td>
                     <td> {{filing.filing_parties[0]}}</td>

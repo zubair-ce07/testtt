@@ -6,24 +6,16 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
         $scope.filingAfter = '';
         $scope.states = [];
         $scope.select2states = {};
-
-
-
-        //    $scope.click_dockets = function() {
-        //
-        //       $scope.dockets = Docket.get().$promise.then(function(data){
-        //           $scope.dockets = data.dockets;
-        //        });
-        //    };
+        $scope.navigation = 'Search';
 
         $scope.click_dockets = function() {
             $scope.docket = Docket;
             $scope.dockets = [];
             $scope.dockets_found='';
-            $scope.count = 0;
             $scope.flag = 0;
             getDockets();
         };
+
         var getDockets = function () {
             $scope.state = [];
             if ($scope.select2states.states) {
@@ -33,7 +25,7 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
                 }
             }
             console.log($scope.state);
-            $scope.docket.state = $scope.state
+            $scope.docket.state = $scope.state;
             $scope.docket.keyword = $scope.keyword;
             $scope.docket.scope = $scope.scope;
             $scope.docket.before = $scope.filingBefore;
@@ -75,18 +67,78 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
     }
 ]);
 
-ngdocket.controller('DetailCtrl', ['$scope', 'DocketDetail','$routeParams',
-    function ($scope, DocketDetail,$routeParams) {
+ngdocket.controller('DetailCtrl', ['$scope','FilingFactory', 'DocketDetail','Filing','$routeParams',
+    function ($scope, FilingFactory, DocketDetail, Filing ,$routeParams) {
+        $scope.keyword='';
+        $scope.scope = '';
+        $scope.filings= [];
+        $scope.before = '';
+        $scope.after = '';
+        $scope.showDetails = false;
+        $scope.navigation = 'Docket';
 
         var id = $routeParams.id;
+
         $scope.docketsDetail = DocketDetail.get(id).$promise.then(function (data) {
-            console.log(data.dockets[0]);
             $scope.docketsDetail = data.dockets[0];
+            $scope.filings = $scope.docketsDetail.filings;
+            $scope.filings_found = $scope.docketsDetail.filings.length;
+
         });
+
         if ($scope.docketsDetail != null) {
             $scope.showDetails=true
+        }
+
+        $scope.click_filings = function() {
+            $scope.filing = Filing;
+            $scope.filings = [];
+            $scope.filings_found='';
+            $scope.flag = 0;
+            getFilings();
         };
 
+        var getFilings = function () {
+            if ($scope.flag != 1) {
+                FilingFactory.getFilings({
+                    keyword : $scope.keyword,
+                    scope : $scope.scope,
+                    before : $scope.before,
+                    after : $scope.after,
+                    docket : id,
+                    cursor : $scope.cursor
+                })
+                    .then(function (resp) {
+                    for (var i = 0; i < resp.dockets[0].filings.length; i++) {
+                        if (resp.metadata.cursor != '' || $scope.flag != 1) {
+                            $scope.filings.push(resp.dockets[0].filings[i]);
+                            $scope.count = $scope.count + 1;
+                        }
+                    }
+                    if (resp.metadata.cursor == '') {
+                        $scope.flag = 1;
+                    }
+                    $scope.cursor = resp.metadata.cursor;
+                    $scope.filings_found = resp.metadata.documents_found;
+                    $scope.disable_scroll = false;
+                    $scope.disable_click = false;
+
+                });
+            }
+
+        };
+
+        $scope.disable_scroll = false;
+        $scope.disable_click = true;
+        $scope.getNextFilings = function () {
+
+            if ($scope.disable_scroll || $scope.disable_click) {
+                return;
+            }
+            $scope.disable_scroll = true;
+            getFilings();
+
+        };
 
 
     }

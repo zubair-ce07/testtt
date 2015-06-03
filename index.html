@@ -17,40 +17,35 @@
 
     <!--Font Awesome-->
     <link rel="stylesheet" href="bower_components/components-font-awesome/css/font-awesome.min.css">
-<style>
-body {
-    font-family: Rockwell;
-}
-</style>
+    <style>
+        body {
+            font-family: Rockwell;
+        }
+    </style>
 
 </head>
 <body >
 <div ng-app = "ngdocket">
-        <nav class="navbar navbar-inverse navbar-static-top">
-            <div class="container" >
-                <h3> <img src="app/images/logo.png"></h3>
+    <nav class="navbar navbar-inverse navbar-static-top">
+        <div class="container" >
+            <h3> <img src="app/images/logo.png"></h3>
+        </div>
+    </nav>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">DocketDash</a>
             </div>
-        </nav>
-        <nav class="navbar navbar-inverse">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <a class="navbar-brand" href="#">DocketDash</a>
-                </div>
-                <div>
-                    <ul class="nav navbar-nav">
-                        <li><a href="#search">Search</a></li>
-                        <li><a href="#">My Favorites</a></li>
-                        <li><a href="#">Organization Favorites</a></li>
-                        <li><a href="#">All Favorites</a></li>
-                    </ul>
-                </div>
+            <div>
+                <ul class="nav navbar-nav">
+                    <li><a href="#search">Search</a></li>
+                    <li><a href="#">My Favorites</a></li>
+                    <li><a href="#">Organization Favorites</a></li>
+                    <li><a href="#">All Favorites</a></li>
+                </ul>
             </div>
-        </nav>
-
-        <ol class="breadcrumb">
-            <li><a href="#">DocketDash</a></li>
-            <li class="active">Search</li>
-        </ol>
+        </div>
+    </nav>
     <ng-view>
 
     </ng-view>
@@ -70,6 +65,7 @@ body {
 <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
 <script src="bower_components/angular-ui-select/dist/select.js"></script>
 <script src="app/app.js"></script>
+<script src="app/search/factory/filing.js"></script>
 <script src="app/search/factory/service.js"></script>
 <script src="app/search/factory/details.js"></script>
 <script src="app/search/controller.js"></script>

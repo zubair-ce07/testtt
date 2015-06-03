@@ -5,6 +5,10 @@
 </style>
 
 <div ng-controller="FillingCtrl">
+    <ol class="breadcrumb">
+        <li><a href="#">DocketDash</a></li>
+        <li class="active">{{navigation}}</li>
+    </ol>
     <div class="container">
         <div class="panel panel-primary">
             <div class="panel-heading">{{docket.filings[0].description}}</div>

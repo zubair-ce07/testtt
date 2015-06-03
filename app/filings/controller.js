@@ -2,6 +2,7 @@ ngdocket.controller('FillingCtrl', ['$scope', 'Filing', '$routeParams', '$locati
     function ($scope, Filing, $routeParams, $location) {
         var docket_id = $routeParams.docket_id,
             filing_id = $routeParams.filing_id;
+        $scope.navigation = 'Filing';
         $scope.filing = Filing.get(docket_id, filing_id).$promise.then(function (data) {
             if (data.error) {
                 console.log('Docket not found or filing not found');
