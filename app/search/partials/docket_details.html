@@ -23,9 +23,9 @@
                         <li class="list-group-item">OPENED: {{docketsDetail.filed_on}}</li>
                     </ul>
                 </div>
-                <div class="panel col-md-6">
+                <div class="panel col-md-6 " style="padding: 30px">
                     <div class="row">
-                        <h6>SUMMARY FOR COMPANY</h6>
+                        <h5><strong>SUMMARY FOR COMPANY</strong></h5>
                         <div style="text-align: right;">
                             <h6> <a href="#">EDIT</a></h6>
                         </div>
@@ -65,9 +65,9 @@
                     <h4><a href="{{docketsDetail.source_url}}"><span class="glyphicon glyphicon-link" aria-hidden="true"></span><strong>Source - Original Docket</strong></a></h4>
                 </div>
 
-                <div class="panel col-md-6">
+                <div class="panel col-md-6" style="padding: 30px">
                     <div class="row">
-                        <h6>COMMENTS</h6>
+                        <h6><strong>COMMENTS</strong></h6>
                         <form>
                             <div class="form-group">
                                 <textarea class="form-control" id="comment" placeholder="Add your comment on this Docket"></textarea>
@@ -139,8 +139,7 @@
             </div>
         </div>
 
-        <div class="container" ng-if=filings.length>
-            <h1></h1>
+        <div class="well container" style="padding: 30px" ng-if=filings.length>
             <table class="table table-striped">
                 <thead>
                 <tr>
