@@ -4,6 +4,8 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
         $scope.scope = '';
         $scope.filingBefore = '';
         $scope.filingAfter = '';
+        $scope.type = '';
+        $scope.order = '';
         $scope.states = [];
         $scope.select2states = {};
         $scope.navigation = 'Search';
@@ -30,8 +32,19 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
             $scope.docket.scope = $scope.scope;
             $scope.docket.before = $scope.filingBefore;
             $scope.docket.after = $scope.filingAfter;
+            $scope.docket.type = $scope.type;
+            $scope.docket.order = $scope.order;
             if ($scope.flag != 1) {
-                Docket.get($scope.docket.state, $scope.docket.cursor, $scope.docket.keyword, $scope.docket.scope, $scope.docket.before, $scope.docket.after).then(function (resp) {
+                Docket.get(
+                    $scope.docket.state,
+                    $scope.docket.cursor,
+                    $scope.docket.keyword,
+                    $scope.docket.scope,
+                    $scope.docket.before,
+                    $scope.docket.after,
+                    $scope.docket.type,
+                    $scope.docket.order
+                ).then(function (resp) {
                     for (var i = 0; i < resp.data.dockets.length; i++) {
                         if (resp.data.metadata.cursor != '' || $scope.flag != 1) {
                             $scope.dockets.push(resp.data.dockets[i]);

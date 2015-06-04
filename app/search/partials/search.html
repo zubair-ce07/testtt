@@ -26,13 +26,13 @@
                     </ui-select>
                 </div>
 
-                <div class="form-group col-md-6 col-lg-2">
+                <div class="form-group col-md-4 col-lg-2">
                     <label for="keyword">KEYWORD</label>
                     <input type="text" class="form-control" ng-model="keyword" id="keyword"
                            placeholder="Enter Term">
                 </div>
 
-                <div class="form-group col-md-6 col-lg-2">
+                <div class="form-group col-md-4 col-lg-2">
                     <label for="scope">SEARCH SCOPE</label>
                     <select class="js-example-basic-single form-control" ng-model="scope" id="scope">
                         <option value="all">All Content</option>
@@ -43,25 +43,43 @@
                     <!--<input type="text" class="form-control" id="scope" placeholder="All Content">-->
                 </div>
 
-                <div class="form-group col-md-6 col-lg-2">
-                    <label for="filingbefore">LATEST FILING Before</label>
+                <div class="form-group col-md-4 col-lg-2">
+                    <label for="filingbefore">LATEST FILING</label>
                     <datepicker date-format="yyyy-MM-dd">
                         <input type="text" class="form-control" id="filingbefore"
                                ng-model="filingBefore"
                                placeholder="Lastest filling Before">
                     </datepicker>
-                </div>
-
-                <div class="form-group col-md-6 col-lg-2">
-                    <label for="filingafter">LATEST FILING After</label>
                     <datepicker date-format="yyyy-MM-dd">
                         <input type="text" class="form-control" id="filingafter"
                                ng-model="filingAfter"
                                placeholder="Last filling After">
                     </datepicker>
                 </div>
+                <div class="form-group col-md-4 col-lg-2">
+                    <label for="sort">ORDER CATAGORY</label>
+                    <select class="js-example-basic-single form-control" ng-model="type" id="sort">
+                        <option value="state_id">Docket Number</option>
+                        <option value="title">Title</option>
+                        <option value="state">State</option>
+                        <option value="filing_count"># Filings</option>
+                        <option value="latest_filing_updated_on">Latest Filing</option>
+                        <option value="filed_on">Date</option>
+                        <option value="status">Status</option>
+                    </select>
+                    </div>
+                    <!--<input type="text" class="form-control" id="scope" placeholder="All Content">-->
+                    <div class="form-group col-md-4 col-lg-2">
+                    <label for="sort">ORDER TYPE</label>
+                    <select class="js-example-basic-single form-control" ng-model="order">
+                        <option value="ASC">Ascending</option>
+                        <option value="DESC">Descending</option>
 
-                <div class=" submit-search col-xs-12 col-md-6 col-lg-2 ">
+                    </select>
+                    <!--<input type="text" class="form-control" id="scope" placeholder="All Content">-->
+                </div>
+
+                <div class="submit-search col-md-4 col-lg-2 " align="right";>
                     <div>
                         <label for="docket-search"><a><span
                                 class="glyphicon glyphicon-remove"></span>Clear</a></label>
@@ -82,13 +100,13 @@
         <table  class="table table-striped">
             <thead>
             <tr>
-                <th>DOCKET NUMBER <span class="fa fa-sort"></span></th>
-                <th>TITLE <span class="fa fa-sort fa-sm"></span></th>
-                <th>STATE <span class="fa fa-sort fa-sm"></span></th>
-                <th># FILINGS <span class="fa fa-sort fa-sm"></span></th>
-                <th> LATEST FILING<span class="fa fa-sort fa-sm"></span></th>
-                <th>DATE<span class="fa fa-sort fa-sm"></span></th>
-                <th>STATUS<span class="fa fa-sort fa-sm"></span></th>
+                <th>DOCKET NUMBER</th>
+                <th>TITLE</th>
+                <th>STATE</th>
+                <th># FILINGS</th>
+                <th>LATEST FILING</th>
+                <th>DATE</th>
+                <th>STATUS</th>
                 <th>FAVORITE</th>
             </tr>
 

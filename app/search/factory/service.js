@@ -8,6 +8,8 @@ ngdocket.factory('Docket', function ($http, $resource) {
         scope: '',
         before: '',
         after: '',
+        type:'',
+        order: '',
         get: function () {
             var url = 'http://aeedocketapi-staging.appspot.com/dockets';
             return $http.get(url,
@@ -20,6 +22,8 @@ ngdocket.factory('Docket', function ($http, $resource) {
                         filed_on_before: this.before,
                         filed_on_after: this.after,
                         'states[]': this.state,
+                        sort: this.type,
+                        direction: this.order,
                         json: 'JSON_CALLBACK'
                     }
                 }
