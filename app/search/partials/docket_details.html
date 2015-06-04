@@ -1,8 +1,9 @@
 
 <div ng-controller="DetailCtrl">
     <ol class="breadcrumb">
-        <li><a href="#">DocketDash</a></li>
-        <li class="active">{{navigation}}</li>
+        <li>DOCKETDASH</li>
+        <li>{{navigation}}</li>
+        <li class="active">{{docketsDetail.state}}: {{docketsDetail.state_id}}</li>
     </ol>
     <div ng-if="showDetails">
         <div class="well well-lg container">

@@ -8,7 +8,7 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
         $scope.order = '';
         $scope.states = [];
         $scope.select2states = {};
-        $scope.navigation = 'Search';
+        $scope.navigation = 'DOCKETS';
 
         $scope.click_dockets = function() {
             $scope.docket = Docket;
@@ -88,7 +88,7 @@ ngdocket.controller('DetailCtrl', ['$scope','FilingFactory', 'DocketDetail','Fil
         $scope.before = '';
         $scope.after = '';
         $scope.showDetails = false;
-        $scope.navigation = 'Docket';
+        $scope.navigation = 'DOCKETS';
 
         var id = $routeParams.id;
 
