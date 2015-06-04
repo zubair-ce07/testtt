@@ -1,8 +1,7 @@
 var ngdocket = angular.module('ngdocket', ['ngResource', 'ngRoute', 'infinite-scroll', 'ui.select', 'ngSanitize','720kb.datepicker']);
 
-ngdocket.config(['$routeProvider', '$resourceProvider', function ($routeProvider, $resourceProvider) {
-
-    $resourceProvider.defaults.stripTrailingSlashes = false;
+ngdocket.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
+            $httpProvider.defaults.stripTrailingSlashes = false;
 
     $routeProvider.
         when('/search',
