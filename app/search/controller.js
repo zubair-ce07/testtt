@@ -1,5 +1,5 @@
-ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
-    function ($scope, Docket, $http) {
+ngdocket.controller('SearchCtrl', ['$scope', 'Docket','Polling','Poll' , '$http',
+    function ($scope, Docket, Polling, Poll, $http) {
         $scope.keyword='';
         $scope.scope = '';
         $scope.filingBefore = '';
@@ -9,6 +9,11 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
         $scope.states = [];
         $scope.select2states = {};
         $scope.navigation = 'DOCKETS';
+        $scope.polling_id ='';
+        $scope.page = 0;
+        $scope.more = true;
+        $scope.mark= false;
+
 
         $scope.click_dockets = function() {
             $scope.docket = Docket;
@@ -26,7 +31,7 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
                     $scope.state[i] = $scope.select2states.states[i].abbreviation;
                 }
             }
-            console.log($scope.state);
+
             $scope.docket.state = $scope.state;
             $scope.docket.keyword = $scope.keyword;
             $scope.docket.scope = $scope.scope;
@@ -34,31 +39,87 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket', '$http',
             $scope.docket.after = $scope.filingAfter;
             $scope.docket.type = $scope.type;
             $scope.docket.order = $scope.order;
-            if ($scope.flag != 1) {
-                Docket.get(
-                    $scope.docket.state,
-                    $scope.docket.cursor,
-                    $scope.docket.keyword,
-                    $scope.docket.scope,
-                    $scope.docket.before,
-                    $scope.docket.after,
-                    $scope.docket.type,
-                    $scope.docket.order
-                ).then(function (resp) {
-                    for (var i = 0; i < resp.data.dockets.length; i++) {
-                        if (resp.data.metadata.cursor != '' || $scope.flag != 1) {
-                            $scope.dockets.push(resp.data.dockets[i]);
-                            $scope.count = $scope.count + 1;
-                        }
-                    }
-                    if (resp.data.metadata.cursor == '') {
-                        $scope.flag = 1;
-                    }
-                    $scope.docket.cursor = resp.data.metadata.cursor;
-                    $scope.dockets_found = resp.data.metadata.dockets_found;
-                    $scope.disable_scroll = false;
 
-                });
+            if ($scope.flag != 1) {
+                if ($scope.scope == 'all' && !$scope.polling_id && $scope.page == 0 && ($scope.keyword && $scope.keyword.length > 2)) {
+
+                    Polling.getPollId(
+                        {
+                            state: $scope.state,
+                            keyword: $scope.keyword,
+                            scope : $scope.scope,
+                            before : $scope.filingBefore,
+                            after : $scope.filingAfter,
+                            type : $scope.type,
+                            order : $scope.order
+                        }
+
+                    ).then(function (resp) {
+                            $scope.polling_id = resp.poll_id;
+                            if($scope.polling_id.length>1) {
+                                $scope.page = 1;
+                            }
+                            $scope.disable_scroll = false;
+                            getDockets();
+                        });
+
+
+                }else if($scope.polling_id.length>1){
+
+                    Poll.getPollDocket({
+                            page: $scope.page,
+                            poll_id: $scope.polling_id
+                        }
+                    ).then(function (resp) {
+
+                            for (var i = 0; i < resp.dockets.length; i++) {
+                                if (resp.metadata.more ==false && $scope.mark == false){
+                                    $scope.dockets = [];
+                                    $scope.mark= true;
+                                }
+                                if ($scope.flag != 1) {
+                                    $scope.dockets.push(resp.dockets[i]);
+
+                                }
+
+                            }
+
+                            if (Math.ceil(resp.metadata.count/30) == $scope.page) {
+                                $scope.flag = 1;
+                            }
+
+                            $scope.page = resp.metadata.page + 1;
+                            $scope.more = resp.metadata.more;
+                            $scope.dockets_found = resp.metadata.count;
+                            $scope.disable_scroll = false;
+                        });
+
+                } else {
+                    Docket.get(
+                        $scope.docket.state,
+                        $scope.docket.cursor,
+                        $scope.docket.keyword,
+                        $scope.docket.scope,
+                        $scope.docket.before,
+                        $scope.docket.after,
+                        $scope.docket.type,
+                        $scope.docket.order
+                    ).then(function (resp) {
+                            for (var i = 0; i < resp.data.dockets.length; i++) {
+                                if (resp.data.metadata.cursor != '' || $scope.flag != 1) {
+                                    $scope.dockets.push(resp.data.dockets[i]);
+
+                                }
+                            }
+                            if (resp.data.metadata.cursor == '') {
+                                $scope.flag = 1;
+                            }
+                            $scope.docket.cursor = resp.data.metadata.cursor;
+                            $scope.dockets_found = resp.data.metadata.dockets_found;
+                            $scope.disable_scroll = false;
+
+                        });
+                }
             }
 
         };
@@ -122,21 +183,21 @@ ngdocket.controller('DetailCtrl', ['$scope','FilingFactory', 'DocketDetail','Fil
                     cursor : $scope.cursor
                 })
                     .then(function (resp) {
-                    for (var i = 0; i < resp.dockets[0].filings.length; i++) {
-                        if (resp.metadata.cursor != '' || $scope.flag != 1) {
-                            $scope.filings.push(resp.dockets[0].filings[i]);
-                            $scope.count = $scope.count + 1;
-                        }
-                    }
-                    if (resp.metadata.cursor == '') {
-                        $scope.flag = 1;
-                    }
-                    $scope.cursor = resp.metadata.cursor;
-                    $scope.filings_found = resp.metadata.documents_found;
-                    $scope.disable_scroll = false;
-                    $scope.disable_click = false;
+                        for (var i = 0; i < resp.dockets[0].filings.length; i++) {
+                            if (resp.metadata.cursor != '' || $scope.flag != 1) {
+                                $scope.filings.push(resp.dockets[0].filings[i]);
 
-                });
+                            }
+                        }
+                        if (resp.metadata.cursor == '') {
+                            $scope.flag = 1;
+                        }
+                        $scope.cursor = resp.metadata.cursor;
+                        $scope.filings_found = resp.metadata.documents_found;
+                        $scope.disable_scroll = false;
+                        $scope.disable_click = false;
+
+                    });
             }
 
         };
