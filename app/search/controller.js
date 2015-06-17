@@ -1,5 +1,5 @@
-ngdocket.controller('SearchCtrl', ['$scope', 'Docket','Polling','Poll' , '$http',
-    function ($scope, Docket, Polling, Poll, $http) {
+ngdocket.controller('SearchCtrl', ['$scope', 'Docket','Polling','Poll' , '$http', '$route',
+    function ($scope, Docket, Polling, Poll, $http, $route) {
         $scope.keyword='';
         $scope.scope = '';
         $scope.filingBefore = '';
@@ -120,6 +120,9 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket','Polling','Poll' , '$http'
 
                         });
                 }
+            } else
+            {
+                $scope.page = 1;
             }
 
         };
@@ -133,7 +136,16 @@ ngdocket.controller('SearchCtrl', ['$scope', 'Docket','Polling','Poll' , '$http'
 
         };
 
-
+        $scope.clearForm = function() {
+            $scope.keyword='';
+            $scope.scope = '';
+            $scope.filingBefore = '';
+            $scope.filingAfter = '';
+            $scope.type = '';
+            $scope.order = '';
+            $scope.states = [];
+            $scope.select2states = {};
+        };
 
         $http.get('app/state/state.json').success(function (data) {
             $scope.states = data;
@@ -200,6 +212,13 @@ ngdocket.controller('DetailCtrl', ['$scope','FilingFactory', 'DocketDetail','Fil
                     });
             }
 
+        };
+
+         $scope.cleanForm = function() {
+            $scope.keyword='';
+            $scope.scope = '';
+            $scope.before = '';
+            $scope.after = '';
         };
 
         $scope.disable_scroll = false;

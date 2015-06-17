@@ -23,8 +23,8 @@ ngdocket.config(['$routeProvider', '$httpProvider', function ($routeProvider, $h
         }).
         when('/',
         {
-            templateUrl: 'app/index/partials/view.html'
-            //activetab: 'manage'
+            templateUrl: 'app/search/partials/search.html',
+            controller: 'SearchCtrl'
         }).
         when('/404',
         {
