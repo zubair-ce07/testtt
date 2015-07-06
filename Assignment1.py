@@ -1,5 +1,7 @@
 __author__ = 'mazharshah'
-
+# __author__ = 'mazharshah'
+import os
+import csv
 
 def display_hottest_day_info(info):
     print('\nHottest day of each year:\n')
@@ -29,94 +31,120 @@ def display_Max_Min_info(info):
         print('\t\t\t\t'.join([str(x) for x in element]))
 
 
-
-import os
-list = os.listdir("/home/mazharshah/Desktop/weatherdata/")   # list will have all the names of files within a directory
-
-yearList = range(1996, 2012)
-monthList = [
-    'Jan', 'Feb', 'Mar',
-    'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep',
-    'oct', 'Nov', 'Dec'
-    ]
+# Picking all the names of files in a directory
+files_list = sorted(os.listdir("weatherdata/"))
 
 max_min_Data = []
 hot_day_data = []
 cold_day_data = []
 
-path = "/home/mazharshah/Desktop/weatherdata/lahore_weather_"
+# Fetching year from first file
+year = int(files_list[0][-12:-8])
 
+max_temp_c = -1000
+max_temp_day = None
 
-for year in yearList:
+min_temp_c = 1000
+min_temp_day = None
 
-    maxTempList = []
-    minTempList = []
-    maxHumidityList = []
-    minHumidityList = []
-    dateMaxTempList = []
-    dateMinTempList = []
+max_humidity = -1000
+min_humidity = 1000
 
-    for month in monthList:
-        file_to_Read = path + str(year) + "_" \
-                            + str(month) + ".txt"
+for file_name in files_list:
 
-        # print file_to_Read
-        if file_to_Read[-27:] in list:
-            with open(file_to_Read) as f:
-                lines = f.readlines()
+    year_month = file_name[:-4][-8:].split("_")
 
-                for row in lines:
-                    line = row.split(',')
-                    if len(line) == 23:
+    if int(year) < int(year_month[0]):
+        # Making one Row of a result! i.e. for Max-Min Temperature
+        yearlyData = [
+            year, max_temp_c,
+            min_temp_c,
+            max_humidity,
+            min_humidity
+        ]
 
-                        # Max-Temperature Column# is 1
-                        if line[1].isdigit():
-                            maxTempList.append(int(line[1]))
-                            dateMaxTempList.append(line[0])
+        # This is the ROW of Hottest day table
+        hot_day_info = [
+            year,
+            max_temp_day,
+            max_temp_c
+        ]
 
-                        # Min Temperature Column# is 3
-                        if line[3].isdigit():
-                            minTempList.append(int(line[3]))
-                            dateMinTempList.append(line[0])
+        # This is the Row of Coldest Day table
+        cold_day_info = [
+            year,
+            min_temp_day,
+            min_temp_c
+        ]
 
-                        # Max Humidity Column# is 7
-                        if line[7].isdigit():
-                            maxHumidityList.append(int(line[7]))
+        # Contains every year's Max-Min Temperature
+        max_min_Data.append(yearlyData)
 
-                        # Min Humidity Column# is 9
-                        if line[9].isdigit():
-                            minHumidityList.append(int(line[9]))
+        # Contains Every year's Hottest day and Temp
+        hot_day_data.append(hot_day_info)
 
-    maxTemperature = max(maxTempList)
-    minTemperature = min(minTempList)
+        # Contains Every year's Coldest day and Temp
+        cold_day_data.append(cold_day_info)
 
-    # Making one Row of a result! i.e. for Max-Min Temperature
-    yearlyData = [
-        year, maxTemperature,
-        minTemperature,
-        max(maxHumidityList),
-        min(minHumidityList)
-    ]
+        # Re-Initializing variables
+        max_temp_c = -1000
+        max_temp_day = None
 
-    # This is the ROW of Hottest day table
-    hot_day_info = [year,
-                    dateMaxTempList[maxTempList.index(max(maxTempList))],
-                    maxTemperature
-    ]
+        min_temp_c = 1000
+        min_temp_day = None
 
-    # This is the Row of Coldest Day table
-    cold_day_info = [year,
-                     dateMinTempList[minTempList.index(minTemperature)],
-                     minTemperature
-    ]
+        max_humidity = -1000
+        min_humidity = 1000
 
-    max_min_Data.append(yearlyData)         # Contains every year's Max-Min Temperature
-    hot_day_data.append(hot_day_info)       # Contains Every year's Hottest day and Temp
-    cold_day_data.append(cold_day_info)     # Contains Every year's Coldest day and Temp
+        year = year_month[0]
+
+    # ======================================================#
+    #           Else Part
+    # ======================================================#
+
+    file_path = 'weatherdata/' + file_name
+
+    with open(file_path) as f:
+        lines = f.readlines()[1:-1]
+
+        file_dict = csv.DictReader(lines)
+
+        for day_row in file_dict:
+            # print day_row#["PKT"]
+
+            day_temperature = day_row['Max TemperatureC']
+
+            if day_temperature is not '':
+                if int(day_temperature) > int(max_temp_c):
+                    try:
+                        max_temp_day = day_row['PKT']
+                    except KeyError:
+                        max_temp_day = day_row['PKST']
+                    max_temp_c = day_temperature
+
+            day_temperature = day_row['Min TemperatureC']
+            if day_temperature is not '':
+                if int(day_temperature) < int(min_temp_c):
+                    try:
+                        min_temp_day = day_row['PKT']
+                    except KeyError:
+                        min_temp_day = day_row['PKST']
+
+                    min_temp_c = day_temperature
+
+            day_humidity = day_row['Max Humidity']
+            if day_humidity is not '':
+                if int(day_humidity) > int(max_humidity):
+                    max_humidity = day_humidity
+
+            day_humidity = day_row[' Min Humidity']
+            if day_humidity is not '':
+                if int(day_humidity) < int(min_humidity):
+                    max_humidity = day_humidity
 
 
 print display_hottest_day_info(hot_day_data)
-print display_coldest_day_info(cold_day_data)
-print display_Max_Min_info(max_min_Data)
 
+print display_coldest_day_info(cold_day_data)
+
+print display_Max_Min_info(max_min_Data)
