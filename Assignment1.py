@@ -31,6 +31,17 @@ def display_Max_Min_info(info):
         print('\t\t\t\t'.join([str(x) for x in element]))
 
 
+# First of All Take input from user ..
+print ' For Annual Max_Min Temperature Press 1\n' \
+      ' For Hottest Day of Each year Press 2\n' \
+      ' For Coldest day of Each year Press 3'
+
+report_no = input('Enter Report No: ')
+
+
+if report_no == int and report_no in [1, 2, 3]:
+    print 'No is : ', report_no
+
 # Picking all the names of files in a directory
 files_list = sorted(os.listdir("weatherdata/"))
 
@@ -143,8 +154,11 @@ for file_name in files_list:
                     max_humidity = day_humidity
 
 
-print display_hottest_day_info(hot_day_data)
-
-print display_coldest_day_info(cold_day_data)
-
-print display_Max_Min_info(max_min_Data)
+if report_no == 1:
+    print display_Max_Min_info(max_min_Data)
+elif report_no == 2:
+        print display_hottest_day_info(hot_day_data)
+elif report_no == 3:
+    print display_coldest_day_info(cold_day_data)
+else:
+    "Wrong Input!!"
