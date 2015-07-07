@@ -43,7 +43,8 @@ def main(argv):
         if len(args) != 2:
             print('Usage:\tweatherman <report#> <directory path> ')
             return
-
+        if not str(args[1])[-1].__eq__('/'):
+            args[1] = args[1] + '/'
         # print args[0], args[1]
 
         report_no = int(args[0])
