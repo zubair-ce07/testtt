@@ -5,6 +5,7 @@ import sys
 import argparse
 from enum import Enum
 
+
 # enum class for catering the option selected by user
 class UserChoice(Enum):
     yearly_report = 1
@@ -165,24 +166,26 @@ def main():
         maxH = (-1000)
 
         # opening file
-        filepath = path + "/" + filename
+        lines = []
+        filepath = os.path.join(path, filename)
         with open(filepath, 'r') as file_current:
-            # using csv to read records
             lines = file_current.readlines()[1:-1]
-            records = csv.DictReader(lines)
-            for row in records:
-                date = row.get('PKT') or row.get('PKST')
-                if row['Max TemperatureC']:
-                    maxT = int(row.get('Max TemperatureC'))
-                if row['Min TemperatureC']:
-                    minT = int(row.get('Min TemperatureC'))
-                if row['Max Humidity']:
-                    maxH = int(row.get('Max Humidity'))
-                if row[' Min Humidity']:
-                    minH = int(row.get(' Min Humidity'))
 
-                # Adding each record to list
-                temp_list.append(WeatherRecord(date, maxT, minT, maxH, minH))
+        # using csv to read records
+        records = csv.DictReader(lines)
+        for row in records:
+            date = row.get('PKT') or row.get('PKST')
+            if row['Max TemperatureC']:
+                maxT = int(row.get('Max TemperatureC'))
+            if row['Min TemperatureC']:
+                minT = int(row.get('Min TemperatureC'))
+            if row['Max Humidity']:
+                maxH = int(row.get('Max Humidity'))
+            if row[' Min Humidity']:
+                minH = int(row.get(' Min Humidity'))
+
+            # Adding each record to list
+            temp_list.append(WeatherRecord(date, maxT, minT, maxH, minH))
 
         # updating the dictionary with new updated list of records
         yearly_data[year] = temp_list
