@@ -7,6 +7,16 @@ import csv
 import sys
 import argparse
 
+from enum import Enum
+
+
+class ReportNo(Enum):
+
+    annual_temp_humidity = 1
+    annual_hottest_day = 2
+    annual_coldest_day = 3
+
+
 def display_hottest_day_info(info):
     print('\nHottest day of each year:\n')
     headings = ['Year', 'Date', 'Temp']
@@ -163,12 +173,15 @@ def main():
                 if day_humidity is not '':
                     if int(day_humidity) < int(min_humidity):
                         max_humidity = day_humidity
-    if report_no == int(1):
+    if report_no == ReportNo.annual_temp_humidity.value:
         print display_Max_Min_info(max_min_Data)
-    elif report_no == 2:
+
+    elif report_no == ReportNo.annual_hottest_day.value:
             print display_hottest_day_info(hot_day_data)
-    elif report_no == 3:
+
+    elif report_no == ReportNo.annual_coldest_day.value:
         print display_coldest_day_info(cold_day_data)
+
     else:
         print('Usage:\tweatherman <report#> <directory path> ')
         sys.exit(2)
