@@ -115,10 +115,6 @@ def main():
         parser.add_argument("report")
         parser.add_argument("data_dir_path")
         args = parser.parse_args()
-    except:
-        print instructions()
-        sys.exit()
-    try:
         option = int(args.report)
     except:
         print instructions()
@@ -131,60 +127,58 @@ def main():
         print("Directory path not found : " + path)
         instructions()
         sys.exit()
-    try:
-        # iterating through every file
-        for filename in os.listdir(path):
-            # splitting the filename to get the year
-            tokens = filename.split("_")
-            year = tokens[2]
 
-            # test list of records for local calculation
-            temp_list = []
+    # iterating through every file
+    for filename in os.listdir(path):
+        # splitting the filename to get the year
+        if filename.find("_") is -1:
+            print("File in given directory doesnt seems right ")
+            sys.exit()
+        tokens = filename.split("_")
+        year = tokens[2]
 
-            # if entry exists against that year in dictionary
-            # retrieve the list
-            if year in yearly_data:
-                temp_list = yearly_data[year]
-            # otherwise add new list to dictionary
-            else:
-                yearly_data[year] = temp_list
-                yearlist.append(year)
+        # test list of records for local calculation
+        temp_list = []
 
-            # initializing to dummy values
-            date = "no date specified"
-            minT = 1000
-            maxT = (-1000)
-            minH = 1000
-            maxH = (-1000)
-            # opening file
-            file = open(path + "/" + filename, 'r')
-
-            # using csv to read records
-            lines = file.readlines()[1:-1]
-            records = csv.DictReader(lines)
-            for row in records:
-                try:
-                    date = row['PKT']
-                except KeyError:
-                    date = row['PKST']
-                if row['Max TemperatureC'] is not '':
-                    maxT = int(row['Max TemperatureC'])
-                if row['Min TemperatureC'] is not '':
-                    minT = int(row['Min TemperatureC'])
-                if row['Max Humidity'] is not '':
-                    maxH = int(row['Max Humidity'])
-                if row[' Min Humidity'] is not '':
-                    minH = int(row[' Min Humidity'])
-
-                # Adding each record to list
-                temp_list.append(WeatherRecord(date, maxT, minT, maxH, minH))
-
-            file.close()
-            # updating the dictionary with new updated list of records
+        # if entry exists against that year in dictionary
+        # retrieve the list
+        if year in yearly_data:
+            temp_list = yearly_data[year]
+        # otherwise add new list to dictionary
+        else:
             yearly_data[year] = temp_list
-    except:
-        instructions()
-        sys.exit()
+            yearlist.append(year)
+
+        # initializing to dummy values
+        date = "no date specified"
+        minT = 1000
+        maxT = (-1000)
+        minH = 1000
+        maxH = (-1000)
+        # opening file
+        file = open(path + "/" + filename, 'r')
+
+        # using csv to read records
+        lines = file.readlines()[1:-1]
+        records = csv.DictReader(lines)
+        for row in records:
+            date =  row.get('PKT') or row.get('PKST')
+            if row['Max TemperatureC'] is not '':
+                maxT = int(row.get('Max TemperatureC'))
+            if row['Min TemperatureC'] is not '':
+                minT = int(row.get('Min TemperatureC'))
+            if row['Max Humidity'] is not '':
+                maxH = int(row.get('Max Humidity'))
+            if row[' Min Humidity'] is not '':
+                minH = int(row.get(' Min Humidity'))
+
+            # Adding each record to list
+            temp_list.append(WeatherRecord(date, maxT, minT, maxH, minH))
+
+        file.close()
+        # updating the dictionary with new updated list of records
+        yearly_data[year] = temp_list
+
     # sorting year records to get organized results
     yearlist.sort()
 
