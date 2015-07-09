@@ -3,6 +3,13 @@ import csv
 import os
 import sys
 import argparse
+from enum import Enum
+
+# enum class for catering the option selected by user
+class UserChoice(Enum):
+    yearly_report = 1
+    maxtemp_report = 2
+    mintemp_report = 3
 
 
 # class that will contain the data entries for organized functioning
@@ -18,14 +25,14 @@ class WeatherRecord(object):
 # contains the logic if user selects option one
 # that is generation of Annual report
 def yearly_weather_report(yearly_data, yearlist):
-    heads=["Year","MaxTemp","MinTemp"," MaxHumid","MinHumid"]
+    heads = ["Year", "MaxTemp", "MinTemp", " MaxHumid", "MinHumid"]
     print('\t\t'.join(heads))
     print("---------------------------------------------------------------------")
     # going through every year
     for year in yearlist:
         # getting list against year from dictionary
         list_cur = yearly_data[year]
-        list_display= []
+        list_display = []
         list_display.append(year)
 
         # Sorting list on Max Temp
@@ -46,10 +53,11 @@ def yearly_weather_report(yearly_data, yearlist):
 
         print('\t\t'.join(list_display))
 
+
 # contains the logic if user selects option two
 # that is generation of Yearly Max temp report
 def max_temp_report(yearly_data, yearlist):
-    heads=["Year","Date","MaxTemp"]
+    heads = ["Year", "Date", "MaxTemp"]
     print('\t\t'.join(heads))
     print("-----------------------------------------------")
     # going through every year
@@ -60,9 +68,9 @@ def max_temp_report(yearly_data, yearlist):
         # Sorting list on Max Temp
         list_cur.sort(key=lambda x: x.maxTemp, reverse=True)
 
-        list_display= []
+        list_display = []
         list_display.append(year)
-        list_display.append(str(list_cur[0].date ))
+        list_display.append(str(list_cur[0].date))
         list_display.append(str(list_cur[0].maxTemp))
         print('\t\t'.join(list_display))
 
@@ -70,7 +78,7 @@ def max_temp_report(yearly_data, yearlist):
 # contains the logic if user selects option two
 # that is generation of Yearly Min temp report
 def min_temp_report(yearly_data, yearlist):
-    heads=["Year","Date","Min Temp"]
+    heads = ["Year", "Date", "Min Temp"]
     print('\t\t'.join(heads))
     print("--------------------------------------------")
 
@@ -80,9 +88,9 @@ def min_temp_report(yearly_data, yearlist):
         list_cur = yearly_data[year]
         # Sorting list on Max Temp
         list_cur.sort(key=lambda x: x.minTemp, reverse=False)
-        list_display= []
+        list_display = []
         list_display.append(year)
-        list_display.append(str(list_cur[0].date ))
+        list_display.append(str(list_cur[0].date))
         list_display.append(str(list_cur[0].minTemp))
         print('\t\t'.join(list_display))
 
@@ -155,27 +163,27 @@ def main():
         maxT = (-1000)
         minH = 1000
         maxH = (-1000)
+
         # opening file
-        file = open(path + "/" + filename, 'r')
+        filepath = path + "/" + filename
+        with open(filepath, 'r') as file_current:
+            # using csv to read records
+            lines = file_current.readlines()[1:-1]
+            records = csv.DictReader(lines)
+            for row in records:
+                date = row.get('PKT') or row.get('PKST')
+                if row['Max TemperatureC']:
+                    maxT = int(row.get('Max TemperatureC'))
+                if row['Min TemperatureC']:
+                    minT = int(row.get('Min TemperatureC'))
+                if row['Max Humidity']:
+                    maxH = int(row.get('Max Humidity'))
+                if row[' Min Humidity']:
+                    minH = int(row.get(' Min Humidity'))
 
-        # using csv to read records
-        lines = file.readlines()[1:-1]
-        records = csv.DictReader(lines)
-        for row in records:
-            date =  row.get('PKT') or row.get('PKST')
-            if row['Max TemperatureC'] is not '':
-                maxT = int(row.get('Max TemperatureC'))
-            if row['Min TemperatureC'] is not '':
-                minT = int(row.get('Min TemperatureC'))
-            if row['Max Humidity'] is not '':
-                maxH = int(row.get('Max Humidity'))
-            if row[' Min Humidity'] is not '':
-                minH = int(row.get(' Min Humidity'))
+                # Adding each record to list
+                temp_list.append(WeatherRecord(date, maxT, minT, maxH, minH))
 
-            # Adding each record to list
-            temp_list.append(WeatherRecord(date, maxT, minT, maxH, minH))
-
-        file.close()
         # updating the dictionary with new updated list of records
         yearly_data[year] = temp_list
 
@@ -183,15 +191,19 @@ def main():
     yearlist.sort()
 
     # function calls against user choice
-    if option == 1:
+    if option == UserChoice.yearly_report.value:
         yearly_weather_report(yearly_data, yearlist)  # annual weather report
-    elif option == 2:
+
+    elif option == UserChoice.maxtemp_report.value:
         max_temp_report(yearly_data, yearlist)  # max temp report
-    elif option == 3:
+
+    elif option == UserChoice.mintemp_report.value:
         min_temp_report(yearly_data, yearlist)  # min temp report
+
     else:
         instructions()
         sys.exit()
+
 
 if __name__ == "__main__":
     main()
