@@ -13,13 +13,12 @@ class OrsaySpider(CrawlSpider):
     start_urls = ['http://www.orsay.com/']
 
     # this will extract all the links of the products in website.Also includes pagination
-    rules = (Rule(SgmlLinkExtractor(allow=("orsay.com/",), restrict_xpaths=("//ul[@id='nav']/li/ul/li/a",))),
-             Rule(SgmlLinkExtractor(allow=("orsay.com/de-de/",), restrict_xpaths=(
-             "//div[@class='pages']/ul[@class='pagination']/li/a[@title='Weiter']",)),
-                  follow=True),
-             Rule(SgmlLinkExtractor(allow=("orsay.com/de-de/",),
-                                    restrict_xpaths=("//ul[@id='products-list']/li/article/div/a",)),
-                  callback="parse_product")
+    rules = (Rule(SgmlLinkExtractor(restrict_xpaths=("//ul[@id='nav']/li/ul/li/a",))),
+             Rule(SgmlLinkExtractor(restrict_xpaths=(
+                 "//div[@class='pages']/ul[@class='pagination']/li/a[@title='Weiter']",
+                 "//ul[@id='products-list']/li/article/div/a")),
+                 callback="parse_product",
+                 follow=True)
              )
 
     # it parses all the details of one particular product
@@ -84,8 +83,7 @@ class OrsaySpider(CrawlSpider):
 
     # for language
     def get_lang(self, sel):
-        lang = sel.xpath("/html/@lang").extract()[0]
-        return lang
+        return sel.xpath("/html/@lang").extract()[0]
 
     # for product name
     def get_name(self, sel1):
@@ -142,14 +140,10 @@ class OrsaySpider(CrawlSpider):
     # for sku previous prices
     def get_sku_previous_price(self, sel1):
         # previous pricess
-        prev = []
-        for i in sel1.xpath(
-                "//div[@class='product-main-info']/div/p[@class='old-price']"
-                "/span[@class='price']/text()").extract():
-            prev.append(i.strip())
         prev_prices = []
-        for s in prev:
-            prev_prices.append(re.sub("[^\d\.]", "", s))
+        for s in sel1.xpath( "//div[@class='product-main-info']/div/p[@class='old-price']"
+                             "/span[@class='price']/text()").extract():
+            prev_prices.append(re.sub("[^\d.]", "", s.strip()))
         return prev_prices
 
     # for sku color
