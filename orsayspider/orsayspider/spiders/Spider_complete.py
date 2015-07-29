@@ -13,12 +13,11 @@ class OrsaySpider(CrawlSpider):
     start_urls = ['http://www.orsay.com/']
 
     # this will extract all the links of the products in website.Also includes pagination
-    rules = (Rule(SgmlLinkExtractor(restrict_xpaths=("//ul[@id='nav']/li/ul/li/a",))),
-             Rule(SgmlLinkExtractor(restrict_xpaths=(
-                 "//div[@class='pages']/ul[@class='pagination']/li/a[@title='Weiter']",
-                 "//ul[@id='products-list']/li/article/div/a")),
-                 callback="parse_product",
-                 follow=True)
+    rules = (Rule(SgmlLinkExtractor(restrict_xpaths=("//ul[@id='nav']/li/ul/li/a",
+                                                     "//div[@class='pages']/ul[@class='pagination']/li/a[@title='Weiter']",)),
+                  follow=True),
+             Rule(SgmlLinkExtractor(restrict_xpaths=("//ul[@id='products-list']/li/article/div/a",)),
+                  callback="parse_product")
              )
 
     # it parses all the details of one particular product
