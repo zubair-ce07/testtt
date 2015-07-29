@@ -12,26 +12,15 @@ class OrsaySpider(CrawlSpider):
     allowed_domains = ["orsay.com"]
     start_urls = ['http://www.orsay.com/']
 
-    # this will extract all the links of the main categories in website
-    rules = (Rule(SgmlLinkExtractor(allow=(), restrict_xpaths=("//ul[@id='nav']/li/ul/li/a")),
-                  callback="parse_links"),
+    # this will extract all the links of the products in website.Also includes pagination
+    rules = (Rule(SgmlLinkExtractor(allow=("orsay.com/",), restrict_xpaths=("//ul[@id='nav']/li/ul/li/a",))),
+             Rule(SgmlLinkExtractor(allow=("orsay.com/de-de/",), restrict_xpaths=(
+             "//div[@class='pages']/ul[@class='pagination']/li/a[@title='Weiter']",)),
+                  follow=True),
+             Rule(SgmlLinkExtractor(allow=("orsay.com/de-de/",),
+                                    restrict_xpaths=("//ul[@id='products-list']/li/article/div/a",)),
+                  callback="parse_product")
              )
-
-    # it extracts all the product links present in each category
-    def parse_links(self, response):
-
-        # checking fort pagination
-        nextpage = response.xpath("//div[@class='pages']/ul[@class='pagination']"
-                                  "/li/a[@title='Weiter']/@href")
-        if len(nextpage):
-            next_page_url = response.urljoin(nextpage[0].extract())
-            yield scrapy.Request(next_page_url, callback=self.parse)
-
-        # getting all products on current page
-        product_links = response.xpath("//ul[@id='products-list']/li/article/div/a/@href")
-        for href in product_links:
-            full_url = response.urljoin(href.extract())
-            yield scrapy.Request(full_url, callback=self.parse_product)
 
     # it parses all the details of one particular product
     def parse_product(self, response):
@@ -45,123 +34,133 @@ class OrsaySpider(CrawlSpider):
         # Making an object of our class present in items.py
         item = orsayItem()
 
-        self.get_retailer_sku(sel1, item)
-        self.get_description(sel, item)
-        self.get_category(response.url, item)
-        self.get_image_urls(sel, item)
-        self.get_care(sel, item)
-        self.get_lang(sel, item)
-        self.get_name(sel1, item)
-        self.get_currency(sel1, item)
-        self.get_skus(sel, item)
+        item['retailer_sku'] = self.get_retailer_sku(sel1)
+        item['description'] = self.get_description(sel)
+        item['category'] = self.get_category(response.url)
+        item['image_urls'] = self.get_image_urls(sel)
+        item['care'] = self.get_care(sel)
+        item['lang'] = self.get_lang(sel)
+        item['name'] = self.get_name(sel1)
+        item['currency'] = self.get_currency(sel1)
         item['url_orignal'] = response.url
-
+        item['skus'] = {}
+        item['skus'] = self.get_skus(sel)
         yield item
 
     # for sku retailer id
-    def get_retailer_sku(self, sel1, item):
+    def get_retailer_sku(self, sel1):
+        sku = ""
         sku = sel1.xpath("//p[@class='sku']/text()").extract()
-        print ("sku ", sku)
-        if len(sku):
+        if sku:
             sku1 = sku[0].strip()
-            item['retailer_sku'] = re.findall('\d+', sku1)[0]
+            sku = re.findall('\d+', sku1)[0]
+        return sku
 
     # for product description
-    def get_description(self, sel, item):
-        item['description'] = [i.strip() for i in
-                               sel.xpath("//div[@class='product-info six columns']"
-                                         "/p/text()").extract()]
+    def get_description(self, sel):
+        description = [i.strip() for i in
+                       sel.xpath("//div[@class='product-info six columns']"
+                                 "/p/text()").extract()]
+        return description
 
     # extracting the category from url
-    def get_category(self, url, item):
+    def get_category(self, url):
+        category = []
         url_link = url.split("/")
         if (len(url_link) > 5):
-            item['category'] = url_link[4:-1]
-        else:
-            item['category'] = []
+            category = url_link[4:-1]
+        return category
 
     # image urls
-    def get_image_urls(self, sel, item):
-        item['image_urls'] = sel.xpath("//div[@id='product_media']/div/img/@src").extract()
+    def get_image_urls(self, sel):
+        return sel.xpath("//div[@id='product_media']/div/img/@src").extract()
 
     # care for product
-    def get_care(self, sel, item):
-        item['care'] = [i.strip() for i in
-                        sel.xpath("//p[@class='material']/text() |"
-                                  " //ul[@class='caresymbols']/li/img/@src").extract()]
+    def get_care(self, sel):
+        care = [i.strip() for i in
+                sel.xpath("//p[@class='material']/text() |"
+                          " //ul[@class='caresymbols']/li/img/@src").extract()]
+        return care
 
     # for language
-    def get_lang(self, sel, item):
-        item['lang'] = sel.xpath("/html/@lang").extract()[0]
+    def get_lang(self, sel):
+        lang = sel.xpath("/html/@lang").extract()[0]
+        return lang
 
     # for product name
-    def get_name(self, sel1, item):
-        item['name'] = sel1.xpath("//h2[@class='product-name']/text()").extract()[0].strip()
+    def get_name(self, sel1):
+        return sel1.xpath("//h2[@class='product-name']/text()").extract()[0].strip()
+
+        # for getting currency
+
+    def get_raw_price_currency(self, sel1):
+        # price for currency
+        price_curr = sel1.xpath("//div[@class='product-main-info']"
+                                "//span[@class='price']/text()").extract()
+        if not price_curr:
+            price_curr = sel1.xpath("//p[@class='special-price']"
+                                    "/span[@class='price']/text()").extract()
+        return price_curr
 
     # for getting currency
-    def get_currency(self, sel1, item):
+    def get_currency(self, sel1):
         # price for currency
-        price = sel1.xpath("//div[@class='product-main-info']"
-                           "/div/span/span[@class='price']/text()").extract()
-        if not len(price):
-            price = sel1.xpath("//p[@class='special-price']"
-                               "/span[@class='price']/text()").extract()
-        item['currency'] = price[0].strip()[-3:]
+        currency = self.get_raw_price_currency(sel1)
+        return currency[0].strip()[-3:]
 
     # for skus
-    def get_skus(self, sel1, item):
+    def get_skus(self, sel1):
         # sku as dictionary
-        item['skus'] = {}
+        item_sku = {}
 
-        colors = sel1.xpath("//ul[@class='product-colors']/li/a/@href").extract()
-        length = len(colors)
+        in_item = skuItem()
 
-        if length:
+        in_item['price'] = self.get_sku_price(sel1)
+        in_item['previous_prices'] = self.get_sku_previous_price(sel1)
+        in_item['currency'] = self.get_currency(sel1)
+        # getting selected color info ..
+        # as each color is associated with different retailer_id
+        in_item['colour'] = self.get_sku_color(sel1)
+        # size available
+        size_list = self.get_sku_size_list(sel1)
 
-            in_item = skuItem()
+        # adding sku with color+size key in skus dictionary
+        for sz in size_list:
+            in_item_t = skuItem(in_item)
+            in_item_t['size'] = sz
+            color_size = in_item_t['colour'] + "_" + sz
+            item_sku[color_size] = in_item_t
 
-            self.get_sku_price(sel1, in_item)
-            self.get_sku_color(sel1, in_item)
-            self.get_sku_previous_price(sel1, in_item)
-            # extracting price from currency
-            in_item['currency'] = item['currency']
-            # size available
-            size_list = self.get_sku_size_list(sel1)
-
-            # adding sku with color+size key in skus dictionary
-            for sz in size_list:
-                in_item_t = skuItem(in_item)
-                in_item_t['size'] = sz
-                color_size = in_item_t['colour'] + "_" + sz
-                item['skus'][color_size] = in_item_t
+        return item_sku
 
     # for Sku price
-    def get_sku_price(self, sel1, in_item):
+    def get_sku_price(self, sel1):
         # price
-        price = sel1.xpath("//div[@class='product-main-info']"
-                           "/div/span/span[@class='price']/text()").extract()
-        if not len(price):
-            price = sel1.xpath("//p[@class='special-price']"
-                               "/span[@class='price']/text()").extract()
-        in_item['price'] = re.sub("[^\d\.]", "", price[0].strip())
+        price = self.get_raw_price_currency(sel1)
+        return re.sub("[^\d\.]", "", price[0].strip())
 
     # for sku previous prices
-    def get_sku_previous_price(self, sel1, in_item):
+    def get_sku_previous_price(self, sel1):
         # previous pricess
         prev = []
         for i in sel1.xpath(
                 "//div[@class='product-main-info']/div/p[@class='old-price']"
                 "/span[@class='price']/text()").extract():
             prev.append(i.strip())
-        in_item['previous_prices'] = []
+        prev_prices = []
         for s in prev:
-            in_item['previous_prices'].append(re.sub("[^\d\.]", "", s))
+            prev_prices.append(re.sub("[^\d\.]", "", s))
+        return prev_prices
 
     # for sku color
-    def get_sku_color(self, sel1, in_item):
+    def get_sku_color(self, sel1):
         # color
-        in_item['colour'] = sel1.xpath("//li[@class='active']"
-                                       "/a/img[@class='has-tip']/@alt").extract()[0].strip()
+        color = sel1.xpath("//li[@class='active']"
+                          "/a/img[@class='has-tip']/@alt").extract()
+        if color:
+            return color[0].strip()
+        else:
+            return "no_color"
 
     # for sku available sizes
     def get_sku_size_list(self, sel1):
