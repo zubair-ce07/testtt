@@ -14,7 +14,8 @@ class OrsaySpider(CrawlSpider):
 
     # this will extract all the links of the products in website.Also includes pagination
     rules = (Rule(SgmlLinkExtractor(restrict_xpaths=("//ul[@id='nav']/li/ul/li/a",
-                                                     "//div[@class='pages']/ul[@class='pagination']/li/a[@title='Weiter']",)),
+                                                     "//div[@class='pages']/ul[@class='pagination']"
+                                                     "/li/a[@title='Weiter']",)),
                   follow=True),
              Rule(SgmlLinkExtractor(restrict_xpaths=("//ul[@id='products-list']/li/article/div/a",)),
                   callback="parse_product")
@@ -45,18 +46,15 @@ class OrsaySpider(CrawlSpider):
         item['skus'] = self.get_skus(sel)
 
         more_colors = self.get_colors(sel)
-
-        #here is the problem, dont know why this function is not called
-        self.make_sku_requests(more_colors, item)
-
-        ##############
+        return self.make_sku_requests(more_colors, item)
 
     # for sku request for more colors
-    def make_sku_requests(self,more_colors, item):
+    def make_sku_requests(self, more_colors, item):
         if more_colors:
             full_url = more_colors.pop(0)
-            #full_url = response.urljoin(my_url)
-            req = scrapy.Request(full_url, callback=self.parse_color_sku, meta={'item': item, 'urls': more_colors})
+            # full_url = response.urljoin(my_url)
+            req = scrapy.Request(full_url, callback=self.parse_color_sku,
+                                 meta={'item': item, 'urls': more_colors})
             yield req
         else:
             yield item
@@ -65,16 +63,8 @@ class OrsaySpider(CrawlSpider):
     def get_colors(self, sel):
         colors = sel.xpath("//ul[@class='product-colors']/li/a/@href").extract()
         if colors:
-            #remove the current colors
-            #saves one page crawling
-            my_url = colors.pop(0)
-        return colors
-    # for colors list
-    def get_colors(self, sel):
-        colors = sel.xpath("//ul[@class='product-colors']/li/a/@href").extract()
-        if colors:
-            #remove the current colors
-            #saves one page crawling
+            # remove the current colors
+            # saves one page crawling
             my_url = colors.pop(0)
         return colors
 
@@ -115,8 +105,7 @@ class OrsaySpider(CrawlSpider):
 
     # for language
     def get_lang(self, sel):
-        return  sel.xpath("/html/@lang").extract()[0]
-
+        return sel.xpath("/html/@lang").extract()[0]
 
     # for product name
     def get_name(self, sel1):
@@ -174,8 +163,8 @@ class OrsaySpider(CrawlSpider):
     def get_sku_previous_price(self, sel1):
         # previous pricess
         prev_prices = []
-        for s in sel1.xpath( "//div[@class='product-main-info']//p[@class='old-price']"
-                             "//span[@class='price']/text()").extract():
+        for s in sel1.xpath("//div[@class='product-main-info']//p[@class='old-price']"
+                            "//span[@class='price']/text()").extract():
             prev_prices.append(re.sub("[^\d.]", "", s.strip()))
         return prev_prices
 
@@ -183,7 +172,7 @@ class OrsaySpider(CrawlSpider):
     def get_sku_color(self, sel1):
         # color
         color = sel1.xpath("//li[@class='active']"
-                          "/a/img[@class='has-tip']/@alt").extract()
+                           "/a/img[@class='has-tip']/@alt").extract()
         if color:
             return color[0].strip()
         else:
@@ -209,12 +198,10 @@ class OrsaySpider(CrawlSpider):
         sel = response.xpath("/html")
         sel1 = response.xpath("//div[@id='product_main']")
 
-        #images of new color
-        images= self.get_image_urls(sel)
+        # images of new color
+        images = self.get_image_urls(sel)
         item['image_urls'].extend(images)
 
         color_skus_dict = self.get_skus(sel)
         item['skus'].update(color_skus_dict)
-
-        #yeild request
-        self.make_sku_requests(urls,item)
+        return self.make_sku_requests(urls, item)
