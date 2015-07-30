@@ -44,17 +44,32 @@ class OrsaySpider(CrawlSpider):
         item['skus'] = {}
         item['skus'] = self.get_skus(sel)
 
-        more_colors= self.get_colors(sel)
+        more_colors = self.get_colors(sel)
+
+        #here is the problem, dont know why this function is not called
+        self.make_sku_requests(more_colors, item)
+
+        ##############
+
+    # for sku request for more colors
+    def make_sku_requests(self,more_colors, item):
         if more_colors:
-            my_url = more_colors.pop(0)
-            full_url = response.urljoin(my_url)
+            full_url = more_colors.pop(0)
+            #full_url = response.urljoin(my_url)
             req = scrapy.Request(full_url, callback=self.parse_color_sku, meta={'item': item, 'urls': more_colors})
             yield req
         else:
             yield item
 
-        ##############
-    # for sku retailer id
+    # for colors list
+    def get_colors(self, sel):
+        colors = sel.xpath("//ul[@class='product-colors']/li/a/@href").extract()
+        if colors:
+            #remove the current colors
+            #saves one page crawling
+            my_url = colors.pop(0)
+        return colors
+    # for colors list
     def get_colors(self, sel):
         colors = sel.xpath("//ul[@class='product-colors']/li/a/@href").extract()
         if colors:
@@ -201,10 +216,5 @@ class OrsaySpider(CrawlSpider):
         color_skus_dict = self.get_skus(sel)
         item['skus'].update(color_skus_dict)
 
-        if len(urls):
-            my_url = urls.pop(0)
-            full_url = response.urljoin(my_url)
-            req = scrapy.Request(full_url, callback=self.parse_color_sku, meta={'item': item, 'urls': urls})
-            yield req
-        else:
-            yield item
+        #yeild request
+        self.make_sku_requests(urls,item)
