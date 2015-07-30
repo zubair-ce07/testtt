@@ -43,7 +43,25 @@ class OrsaySpider(CrawlSpider):
         item['url_orignal'] = response.url
         item['skus'] = {}
         item['skus'] = self.get_skus(sel)
-        yield item
+
+        more_colors= self.get_colors(sel)
+        if more_colors:
+            my_url = more_colors.pop(0)
+            full_url = response.urljoin(my_url)
+            req = scrapy.Request(full_url, callback=self.parse_color_sku, meta={'item': item, 'urls': more_colors})
+            yield req
+        else:
+            yield item
+
+        ##############
+    # for sku retailer id
+    def get_colors(self, sel):
+        colors = sel.xpath("//ul[@class='product-colors']/li/a/@href").extract()
+        if colors:
+            #remove the current colors
+            #saves one page crawling
+            my_url = colors.pop(0)
+        return colors
 
     # for sku retailer id
     def get_retailer_sku(self, sel1):
@@ -51,7 +69,7 @@ class OrsaySpider(CrawlSpider):
         sku = sel1.xpath("//p[@class='sku']/text()").extract()
         if sku:
             sku1 = sku[0].strip()
-            sku = re.findall('\d+', sku1)[0]
+            sku = re.findall('\d{6}', sku1)[0]
         return sku
 
     # for product description
@@ -82,7 +100,8 @@ class OrsaySpider(CrawlSpider):
 
     # for language
     def get_lang(self, sel):
-        return sel.xpath("/html/@lang").extract()[0]
+        return  sel.xpath("/html/@lang").extract()[0]
+
 
     # for product name
     def get_name(self, sel1):
@@ -96,7 +115,7 @@ class OrsaySpider(CrawlSpider):
                                 "//span[@class='price']/text()").extract()
         if not price_curr:
             price_curr = sel1.xpath("//p[@class='special-price']"
-                                    "/span[@class='price']/text()").extract()
+                                    "//span[@class='price']/text()").extract()
         return price_curr
 
     # for getting currency
@@ -140,8 +159,8 @@ class OrsaySpider(CrawlSpider):
     def get_sku_previous_price(self, sel1):
         # previous pricess
         prev_prices = []
-        for s in sel1.xpath( "//div[@class='product-main-info']/div/p[@class='old-price']"
-                             "/span[@class='price']/text()").extract():
+        for s in sel1.xpath( "//div[@class='product-main-info']//p[@class='old-price']"
+                             "//span[@class='price']/text()").extract():
             prev_prices.append(re.sub("[^\d.]", "", s.strip()))
         return prev_prices
 
@@ -166,3 +185,26 @@ class OrsaySpider(CrawlSpider):
             size_list = ["oneSize"]
 
         return size_list
+
+    def parse_color_sku(self, response):
+
+        item = response.meta["item"]
+        urls = response.meta["urls"]
+
+        sel = response.xpath("/html")
+        sel1 = response.xpath("//div[@id='product_main']")
+
+        #images of new color
+        images= self.get_image_urls(sel)
+        item['image_urls'].extend(images)
+
+        color_skus_dict = self.get_skus(sel)
+        item['skus'].update(color_skus_dict)
+
+        if len(urls):
+            my_url = urls.pop(0)
+            full_url = response.urljoin(my_url)
+            req = scrapy.Request(full_url, callback=self.parse_color_sku, meta={'item': item, 'urls': urls})
+            yield req
+        else:
+            yield item
