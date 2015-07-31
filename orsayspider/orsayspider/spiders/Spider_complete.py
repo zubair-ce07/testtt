@@ -37,7 +37,6 @@ class OrsaySpider(CrawlSpider):
         item['name'] = self.get_name(sel1)
         item['currency'] = self.get_currency(sel1)
         item['url_orignal'] = response.url
-        item['skus'] = {}
         item['skus'] = self.get_skus(sel)
 
         more_colors = self.get_colors(sel)
@@ -63,11 +62,7 @@ class OrsaySpider(CrawlSpider):
 
     # for sku retailer id
     def get_retailer_sku(self, sel1):
-        sku = sel1.xpath("//p[@class='sku']/text()").extract()
-        if sku:
-            sku1 = sku[0].strip()
-            sku = re.findall('\d{6}', sku1)[0]
-        return sku
+        return sel1.xpath("//p[@class='sku']/text()").re("\d{6}")[0]
 
     # for product description
     def get_description(self, sel):
@@ -85,7 +80,7 @@ class OrsaySpider(CrawlSpider):
 
     # image urls
     def get_image_urls(self, sel):
-        return sel.xpath("//div[@id='product_media']/div/img/@src").extract()
+        return sel.xpath("//*[@id='product_media']//div/a/@href").extract()
 
     # care for product
     def get_care(self, sel):
@@ -128,11 +123,13 @@ class OrsaySpider(CrawlSpider):
         in_item['colour'] = self.get_sku_color(sel1)
         # get sizes available
         size_list = self.get_sku_size_list(sel1)
+        out_stock_list = self.get_sku_outofstock(sel1)
 
         # adding sku with color+size key in skus dictionary
         for sz in size_list:
             in_item_t = skuItem(in_item)
             in_item_t['size'] = sz
+            in_item_t['out_of_stock'] = sz in out_stock_list
             color_size = in_item_t['colour'] + "_" + sz
             item_sku[color_size] = in_item_t
         return item_sku
@@ -160,11 +157,16 @@ class OrsaySpider(CrawlSpider):
     # for sku available sizes
     def get_sku_size_list(self, sel1):
         size_list = [i.strip() for i in sel1.xpath(
-            "//ul/li[@class='size-box ship-available']/text()").extract()]
+            "//*[@id='product-options-wrapper']//ul/li/text()").extract()]
         # if page doesnt have size
-        if (not size_list) or (size_list[0] == "0"):
+        if not size_list or size_list[0] == "0":
             size_list = ["oneSize"]
+        return size_list
 
+    # for sku out of stock
+    def get_sku_outofstock(self, sel1):
+        size_list = [i.strip() for i in sel1.xpath(
+            "//ul/li[@class='size-box ship-available size-unavailable']/text()").extract()]
         return size_list
 
     def parse_color_sku(self, response):
@@ -179,7 +181,6 @@ class OrsaySpider(CrawlSpider):
         images = self.get_image_urls(sel)
         item['image_urls'].extend(images)
         # get skus for current color
-        color_skus_dict = self.get_skus(sel1)
-        item['skus'].update(color_skus_dict)
+        item['skus'].update(self.get_skus(sel1))
         #generates further request call
         return self.make_sku_requests(urls, item)

@@ -16,6 +16,7 @@ class skuItem(scrapy.Item):
     previous_prices = scrapy.Field()
     colour = scrapy.Field()
     size = scrapy.Field()
+    out_of_stock = scrapy.Field()
 
 class orsayItem(scrapy.Item):
     # define the fields for your item here like:
