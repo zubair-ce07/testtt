@@ -16,5 +16,5 @@ class gulItem(scrapy.Item):
     item_brand_id = scrapy.Field()
     item_category_name= scrapy.Field()
     item_description= scrapy.Field()
-    item_is_avaiable= scrapy.Field()
+    item_is_available= scrapy.Field()
 
