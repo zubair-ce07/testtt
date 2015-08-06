@@ -5,7 +5,7 @@ from scrapy.linkextractors.sgml import SgmlLinkExtractor
 from gulahmed.items import gulItem
 
 
-class GulahmedSpider(CrawlSpider):
+class GulAhmedSpider(CrawlSpider):
     name = "gulahmed"
     allowed_domains = ["gulahmedshop.com"]
     start_urls = ['http://www.gulahmedshop.com/']
@@ -39,7 +39,7 @@ class GulahmedSpider(CrawlSpider):
         sel = response.xpath("/html")
 
         item = gulItem()
-        item['item_is_avaiable'] = response.meta["availability"]
+        item['item_is_available'] = response.meta["availability"]
         item['item_url'] = response.url
         item['item_category_name'] = self.get_category(sel)
         item['item_brand_id'] = self.get_brand_id(sel)
