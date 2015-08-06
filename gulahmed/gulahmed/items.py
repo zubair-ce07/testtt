@@ -17,6 +17,4 @@ class gulItem(scrapy.Item):
     item_category_name= scrapy.Field()
     item_description= scrapy.Field()
     item_is_avaiable= scrapy.Field()
-    item_size = scrapy.Field()
-    item_color = scrapy.Field()
 
