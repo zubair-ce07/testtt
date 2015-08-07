@@ -25,19 +25,23 @@ SECRET_KEY = 'n#um4du7==q6div32na99(w^7^z+@j5b-!#k9i2lo=lr*w7f#y'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'eproperty',
+    'grappelli.dashboard',
+    'grappelli',
+    'django.contrib.admin',
+    'web',
+    'web.users',
+    'web.posts'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -51,7 +55,15 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'epropertyproject.urls'
+ROOT_URLCONF = 'web.urls'
+
+# Custom user settings
+
+AUTH_USER_MODEL = 'users.User'
+
+AUTHENTICATION_BACKENDS = [
+    'web.users.authentication_backend.EmailAuthenticationBackend',
+    ]
 
 TEMPLATES = [
     {
@@ -69,17 +81,22 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'epropertyproject.wsgi.application'
+WSGI_APPLICATION = 'eproperty.wsgi.application'
 
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'eproperty',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        }
 }
 
 
@@ -88,7 +105,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Karachi'
 
 USE_I18N = True
 
@@ -100,8 +117,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/staticfiles-files/
 
-STATIC_URL = '/staticfiles/'
+STATIC_URL = '/static/'
 
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,  'templates'),
 )
+
+# login url
+
+LOGIN_URL = ''
+
+# grappelli settings
+
+GRAPPELLI_ADMIN_TITLE = 'Admin Panel'
