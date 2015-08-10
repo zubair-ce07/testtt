@@ -1,0 +1,26 @@
+{% extends "web/base.html" %}
+
+
+{% block title %}Login {% endblock %}
+
+{% block content %}
+
+    <div class="center-align-less-width">
+
+
+        <form action="{% url 'index' %}" method="post">
+            {% csrf_token %}
+            {{ login_form }}
+            <br/><br/>
+            <input type="submit" value="Sign in"/>
+        </form>
+
+        <b>New here? then lets </b><a href = "{% url 'sign_up' %}"> Sign up </a>
+        <br/><b> To login as an admin</b>
+        <a href = "{% url 'admin:index' %}">  click here </a>
+
+
+
+    </div>
+
+{% endblock %}

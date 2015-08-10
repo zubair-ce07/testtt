@@ -1,0 +1,21 @@
+{% extends "web/base.html" %}
+
+
+{% block title %}Sign Up {% endblock %}
+
+{% block content %}
+
+    <br/><br/><br/><br/>
+
+    <div class="center-align-less-width">
+
+        <form action="{% url 'sign_up' %}" method="post">
+            {% csrf_token %}
+            {{ sign_up_form }}
+            <br/><br/>
+            <input type="submit" value="Sign up"/>
+        </form>
+
+    </div>
+
+{% endblock %}
