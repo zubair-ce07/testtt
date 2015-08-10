@@ -36,8 +36,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'grappelli.dashboard',
-    'grappelli',
     'django.contrib.admin',
     'web',
     'web.users',
@@ -93,7 +91,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'eproperty',
         'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'PASSWORD': 'rehan1234',
         'HOST': 'localhost',
         'PORT': '5432',
         }
@@ -127,6 +125,3 @@ TEMPLATE_DIRS = (
 
 LOGIN_URL = ''
 
-# grappelli settings
-
-GRAPPELLI_ADMIN_TITLE = 'Admin Panel'
