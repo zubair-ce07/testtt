@@ -8,13 +8,12 @@
 import scrapy
 
 
-class gulItem(scrapy.Item):
-    item_code= scrapy.Field()
-    item_price= scrapy.Field()
-    item_url= scrapy.Field()
-    item_image_url= scrapy.Field()
+class KaprePkItem(scrapy.Item):
+    item_code = scrapy.Field()
+    item_price = scrapy.Field()
+    item_url = scrapy.Field()
+    item_image_url = scrapy.Field()
     item_brand_id = scrapy.Field()
-    item_category_name= scrapy.Field()
-    item_description= scrapy.Field()
-    item_is_available= scrapy.Field()
-
+    item_category_name = scrapy.Field()
+    item_description = scrapy.Field()
+    item_is_available = scrapy.Field()
