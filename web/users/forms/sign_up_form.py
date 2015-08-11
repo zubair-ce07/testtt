@@ -2,6 +2,7 @@ import datetime
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.core.validators import validate_email
 import re
 from django_countries import countries
 from django_countries.fields import LazyTypedChoiceField
@@ -10,7 +11,6 @@ from web.users.exceptions import MustContainSpecialCharacter, EmailAlreadyExists
 from cities_light.models import City
 from cities_light.models import Country
 from cities_light.models import Region
-
 
 
 class SignUpForm(forms.Form):
@@ -23,11 +23,10 @@ class SignUpForm(forms.Form):
     last_name = forms.CharField(widget=forms.TextInput(), max_length=100)
 
     country = LazyTypedChoiceField(choices=countries, widget=CountrySelectWidget())
-    city = forms.ModelChoiceField(queryset=City.objects.all().values_list('name_ascii')[:10])
+    city = forms.ModelChoiceField(queryset=City.objects.all())
     street_or_block = forms.CharField(widget=forms.TextInput(), max_length=100)
     zip_code = forms.CharField(widget=forms.TextInput(), max_length=100)
 
-    #forms.ChoiceField(choices=list(countries), widget=CountrySelectWidget())
     GENDER_CHOICES = [('male', 'Male'), ('female', 'Female')]
     gender = forms.ChoiceField(choices=GENDER_CHOICES, widget=forms.RadioSelect())
     date_of_birth = forms.DateField(initial=datetime.date.today, widget=forms.DateInput(attrs={'type': 'date'}))
@@ -41,13 +40,25 @@ class SignUpForm(forms.Form):
     class PasswordTooShort(PasswordTooShort):
         pass
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
+    def clean(self):
+        password = self.cleaned_data.get('password')
+        confirm_password = self.cleaned_data.get('confirm_password')
 
+        if password and confirm_password != password:
+            raise forms.ValidationError("Passwords don't match")
+
+        return self.cleaned_data
+
+    def clean_email(self):
+
+        email = self.cleaned_data.get('email')
         try:
+            validate_email(email)
             self.check_if_exists(email=email)
         except self.EmailAlreadyExists as ex:
             raise ValidationError(ex.message)
+        except ValidationError:
+            raise ValidationError('email is not correct')
 
         return email
 

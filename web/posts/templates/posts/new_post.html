@@ -1,0 +1,26 @@
+{% extends "web/base.html" %}
+
+
+{% block title %}Login {% endblock %}
+
+{% block content %}
+
+    <div class="center-align-less-width">
+
+        <form action="{% url 'new_post' %}" method="post">
+            {% csrf_token %}
+            {{ new_post_form }}
+            <br/><br/>
+
+            <input type="submit" value="Post"/>
+        </form>
+
+        {% if msg %}
+            <br/>{{ msg }}<br/>
+        {% endif %}
+
+        <a href = "{% url 'account' %}">  Back </a>
+
+    </div>
+
+{% endblock %}

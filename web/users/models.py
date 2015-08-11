@@ -3,29 +3,18 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class Address(models.Model):
-    zip_code = models.CharField(max_length=50, unique=True)
+    zip_code = models.CharField(max_length=50)
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
-    state = models.CharField(max_length=255)
+    country = models.CharField(max_length=255)
 
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, email, first_name, last_name, address, gender, password=None):
-
-        if not email:
-            raise ValueError('Users must have an email address')
-        if not first_name:
-            raise ValueError('Users must choose a first name')
-        if not last_name:
-            raise ValueError('Users must choose a last name')
-        if not gender:
-            raise ValueError('Users must select gender')
-        if not address:
-            raise ValueError('Address must be given.')
+    def create_user(self, email, first_name, last_name, address, gender, dob, password=None):
 
         user = self.model(email=UserManager.normalize_email(email), first_name=first_name,
-                          last_name=last_name, address=address, gender=gender)
+                          last_name=last_name, address=address, gender=gender, dob=dob)
         user.set_password(password)
         user.save(using=self._db)
 

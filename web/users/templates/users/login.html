@@ -15,6 +15,10 @@
             <input type="submit" value="Sign in"/>
         </form>
 
+        <br/>
+        <b> {{ msg|default:'' }} </b>
+        <br/>
+
         <b>New here? then lets </b><a href = "{% url 'sign_up' %}"> Sign up </a>
         <br/><b> To login as an admin</b>
         <a href = "{% url 'admin:index' %}">  click here </a>
