@@ -10,9 +10,7 @@ class Address(models.Model):
 
 
 class UserManager(BaseUserManager):
-
     def create_user(self, email, first_name, last_name, address, gender, dob, password=None):
-
         user = self.model(email=UserManager.normalize_email(email), first_name=first_name,
                           last_name=last_name, address=address, gender=gender, dob=dob)
         user.set_password(password)
@@ -21,7 +19,6 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, first_name, last_name, address, gender, password):
-
         user = self.create_user(email=email, first_name=first_name, last_name=last_name,
                                 address=address, gender=gender, password=password)
         user.is_admin = True
@@ -31,7 +28,6 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-
     email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)

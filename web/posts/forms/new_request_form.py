@@ -2,13 +2,13 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 
-class RequestForm(forms.Form):
+class NewRequestForm(forms.Form):
 
     message = forms.CharField(widget=forms.Textarea(), max_length=512, required=False)
     requested_price = forms.DecimalField(max_digits=100, decimal_places=3)
 
     def clean_requested_price(self):
-        expected_price = self.cleaned_data.get('requested_price')
-        if expected_price <= 0.0:
+        requested_price = self.cleaned_data.get('requested_price')
+        if requested_price <= 0.0:
             raise ValidationError('Price must be non-negative!')
-        return expected_price
+        return requested_price

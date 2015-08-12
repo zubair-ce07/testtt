@@ -1,10 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+{% extends "web/base.html" %}
 
-</body>
-</html>
+
+{% block title %}Posts {% endblock %}
+
+{% block content %}
+
+
+
+    <div class="center-align-less-width">
+
+        {% if posts %}
+
+            {% for post in posts %}
+                {% if not post.is_post_expired %}
+                    <div class="post">
+                        <a href = "{% url 'post_details' post_id=post.id %}">  {{ post.title }} </a><br/>
+                        Date : {{ post.posted_on }}<br/>
+                        Sold? : {{ post.is_sold }}<br/>
+                        Views : {{ post.get_number_of_views }}<br/>
+                        Expired in {{ post.time_until_expired.days }} days<br/>
+
+                    </div>
+                {% endif %}
+
+            {% endfor %}
+        {% else %}
+            <b> No Ads to show!</b>
+        {% endif %}
+    </div>
+
+{% endblock %}

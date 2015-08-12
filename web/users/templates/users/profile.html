@@ -1,0 +1,26 @@
+{% extends "web/base.html" %}
+
+
+{% block title %}Profile {% endblock %}
+
+{% block content %}
+
+    <div class="center-align-less-width">
+
+        {{ user.first_name }}<br/>
+        {{ user.last_name }}<br/>
+        {{ user.email }}<br/>
+        {{ user.address.country }}<br/>
+        {{ user.address.city }}<br/>
+        {{ user.address.street }}<br/>
+        {{ user.address.zip_code }}<br/>
+        {{ user.dob }}<br/>
+        {{ user.gender }}<br/>
+
+        <a class="no-decoration" href = "{% url 'edit_profile' %}">  Edit </a>
+
+
+
+    </div>
+
+{% endblock %}

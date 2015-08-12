@@ -1,5 +1,4 @@
 
-
 .no-decoration {
     text-decoration: none;
 }
@@ -22,10 +21,16 @@
     width: 25%;
 }
 
-.center-align-text{
+.center-align-text {
     text-align: center;
 }
 
-.fill-parent-element{
-    width:100%
+.fill-parent-element {
+    width: 100%
+}
+
+.post {
+    border-style: solid;
+    border-width: 5px;
+    border-color: bisque;
 }

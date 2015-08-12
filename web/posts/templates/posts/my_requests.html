@@ -1,10 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+{% extends "web/base.html" %}
 
-</body>
-</html>
+
+{% block title %}My Requests {% endblock %}
+
+{% block content %}
+
+    <div class="center-align-less-width">
+
+        {% if requests %}
+            {% for request in requests %}
+                <div class="post">
+
+                    <a href = "{% url 'post_details' post_id=request.post.id %}">  {{ request.post.title }} </a><br/>
+                    {{ request.requested_on }}--
+                    {{ request.status }}
+
+                </div>
+            {% endfor %}
+        {% endif %}
+        <br/>
+        <a href = "{% url 'account' %}">  Home </a>
+
+    </div>
+
+{% endblock %}

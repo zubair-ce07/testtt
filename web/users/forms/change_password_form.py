@@ -1,6 +1,7 @@
 import re
 from django import forms
 from django.contrib.auth import authenticate
+from web.users.exceptions import PasswordTooShort, MustContainSpecialCharacter
 
 
 class ChangePasswordForm(forms.Form):
@@ -8,6 +9,12 @@ class ChangePasswordForm(forms.Form):
     old_password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
     new_password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
     confirm_password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
+
+    class MustContainSpecialCharacter(MustContainSpecialCharacter):
+        pass
+
+    class PasswordTooShort(PasswordTooShort):
+        pass
 
     def __init__(self, user, *args, **kwargs):
         self.user = user

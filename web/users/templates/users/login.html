@@ -10,7 +10,7 @@
 
         <form action="{% url 'index' %}" method="post">
             {% csrf_token %}
-            {{ login_form }}
+            {{ login_form.as_p }}
             <br/><br/>
             <input type="submit" value="Sign in"/>
         </form>

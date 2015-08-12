@@ -1,7 +1,7 @@
 {% extends "web/base.html" %}
 
 
-{% block title %}Login {% endblock %}
+{% block title %}New {% endblock %}
 
 {% block content %}
 
@@ -9,7 +9,7 @@
 
         <form action="{% url 'new_post' %}" method="post">
             {% csrf_token %}
-            {{ new_post_form }}
+            {{ new_post_form.as_p }}
             <br/><br/>
 
             <input type="submit" value="Post"/>

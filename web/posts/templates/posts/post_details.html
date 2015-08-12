@@ -1,0 +1,30 @@
+{% extends "web/base.html" %}
+
+
+{% block title %}Details {% endblock %}
+
+{% block content %}
+
+    <div class="center-align-less-width">
+
+        {{ post.posted_by.get_full_name }}<br/>
+        {{ post.title }}<br/>
+        {{ post.posted_on }}<br/>
+
+        {% if requests %}
+            {% for request in requests %}
+                <div class="post">
+                    {{ request.price }}
+                    {{ request.requested_on }}
+                    {{ request.message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        <br/>
+        <a href = "{% url 'new_request' post_id=post.id %}">  New Request </a>
+        <br/>
+        <a href = "{% url 'account' %}">  Home </a>
+
+    </div>
+
+{% endblock %}

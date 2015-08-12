@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils import timezone
-from datetime import datetime, timedelta
 from web.users.models import Address
 
 
@@ -20,9 +19,13 @@ class Post(models.Model):
     is_expired = models.BooleanField(default=False)
 
     @property
+    def get_number_of_views(self):
+        return self.post_views.all().count()
+
+    @property
     def is_post_expired(self):
         if not self.is_expired:
-            time_delta = self.expired_on - datetime.now()
+            time_delta = self.expired_on - timezone.now()
             if time_delta.total_seconds() < 0:
                 self.is_expired = True
                 self.save()
@@ -39,7 +42,7 @@ class Post(models.Model):
 
     def reactivate_post(self, days):
         self.is_expired = False
-        self.expired_on = datetime.now() + timedelta(days=days)
+        self.expired_on = timezone.now() + timezone.timedelta(days=days)
         self.save()
 
 
@@ -50,6 +53,7 @@ class Picture(models.Model):
 
 
 class Request(models.Model):
+    requested_by = models.ForeignKey('users.User', related_name='requests')
     post = models.ForeignKey('Post', related_name='requests')
     message = models.CharField(max_length=512)
     price = models.DecimalField(decimal_places=3, max_digits=100)

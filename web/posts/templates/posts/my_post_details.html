@@ -1,0 +1,32 @@
+{% extends "web/base.html" %}
+
+
+{% block title %}Details {% endblock %}
+
+{% block content %}
+
+    <div class="center-align-less-width">
+
+        {{ post.title }}
+        {{ post.posted_on }}
+
+        {% if requests %}
+            {% for request in requests %}
+                <div class="post">
+                    {{ request.price }}
+                    {{ request.requested_on }}
+                    {{ request.message }}
+                    {{ request.status }}
+                    <br/>
+                    <a href = "{% url 'accept_request' post_id=post.id request_id=request.id %}">  Accept </a>
+                    <a href = "{% url 'reject_request' post_id=post.id request_id=request.id %}">  Reject </a>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <br/>
+        <a href = "{% url 'account' %}">  Home </a>
+
+    </div>
+
+{% endblock %}

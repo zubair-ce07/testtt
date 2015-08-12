@@ -1,0 +1,26 @@
+{% extends "web/base.html" %}
+
+
+{% block title %}Edit Profile {% endblock %}
+
+{% block content %}
+
+    <div class="center-align-less-width">
+
+
+        <form action="{% url 'edit_profile' %}" method="post">
+            {% csrf_token %}
+            {{ edit_profile_form.as_p }}
+            <br/><br/>
+            <input type="submit" value="Save"/>
+        </form>
+
+
+
+        <a href = "{% url 'account' %}">  Cancel </a>
+
+
+
+    </div>
+
+{% endblock %}

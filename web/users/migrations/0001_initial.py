@@ -13,10 +13,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='User',
             fields=[
-                ('id', models.AutoField(primary_key=True, verbose_name='ID', auto_created=True, serialize=False)),
+                ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True, serialize=False)),
                 ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('email', models.EmailField(max_length=255, verbose_name='email address', unique=True)),
+                ('last_login', models.DateTimeField(null=True, blank=True, verbose_name='last login')),
+                ('email', models.EmailField(max_length=255, unique=True, verbose_name='email address')),
                 ('first_name', models.CharField(max_length=255)),
                 ('last_name', models.CharField(max_length=255)),
                 ('gender', models.CharField(max_length=100)),
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Address',
             fields=[
-                ('id', models.AutoField(primary_key=True, verbose_name='ID', auto_created=True, serialize=False)),
+                ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True, serialize=False)),
                 ('zip_code', models.CharField(max_length=50)),
                 ('street', models.CharField(max_length=255)),
                 ('city', models.CharField(max_length=255)),
