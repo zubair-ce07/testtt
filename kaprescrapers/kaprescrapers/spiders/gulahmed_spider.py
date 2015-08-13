@@ -2,7 +2,7 @@ __author__ = 'mateenahmeed'
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
-from gulahmed.items import KaprePkItem
+from kaprescrapers.items import KaprePkItem
 
 
 class GulAhmedSpider(CrawlSpider):
@@ -36,7 +36,7 @@ class GulAhmedSpider(CrawlSpider):
 
         item = KaprePkItem()
         item['item_is_available'] = response.meta["availability"]
-        item['item_url'] = response.url
+        item['source_url'] = response.url
         item['item_category_name'] = self.get_category(sel)
         item['item_brand_id'] = self.brand_id
         item['item_code'] = self.get_item_code(sel)
