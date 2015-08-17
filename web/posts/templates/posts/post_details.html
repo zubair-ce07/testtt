@@ -135,7 +135,7 @@
                                                                     <span class='btn cls-rejected'> {{ request.status }} </span>
                                                                 {% endifequal %}
                                                                 {% ifequal request.status 'pending' %}
-                                                                    <span class='btn cls-rejected'> {{ request.status }} </span>
+                                                                    <span class='btn cls-pending'> {{ request.status }} </span>
                                                                 {% endifequal %}
                                                             </li>
 
@@ -153,7 +153,7 @@
 
                         {% endif %}
 
-                        {% if not is_owners_post %}
+                        {% if not is_owners_post and not post.is_sold %}
                             <p class="center col-md-5">
                                 <a class="btn btn-primary" href="{% url 'new_request' post_id=post.id %}">New
                                     Request</a>

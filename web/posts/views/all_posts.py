@@ -8,7 +8,5 @@ class AllPostsView(View):
     template_name = 'posts/all_posts.html'
 
     def get(self, request):
-        return render(request, self.template_name, dict(views_on_post=3, posts=Post.objects.all()))
+        return render(request, self.template_name, dict(posts=Post.objects.all().order_by('-id')))
 
-    def post(self, request):
-        pass

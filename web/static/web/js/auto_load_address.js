@@ -29,17 +29,22 @@ function fillInAddress() {
   var place = autocomplete.getPlace();
 
   for (var component in componentForm) {
-    document.getElementById(component).value = '';
-    document.getElementById(component).disabled = false;
+    if (document.getElementById(component)) {
+      document.getElementById(component).value = '';
+      document.getElementById(component).disabled = false;
+    }
   }
 
   // Get each component of the address from the place details
   // and fill the corresponding field on the form.
   for (var i = 0; i < place.address_components.length; i++) {
     var addressType = place.address_components[i].types[0];
+    //alert(addressType + ":" + place.address_components[i]['short_name']);
     if (componentForm[addressType]) {
       var val = place.address_components[i][componentForm[addressType]];
-      document.getElementById(addressType).value = val;
+      if (document.getElementById(addressType)) {
+        document.getElementById(addressType).value = val;
+      }
     }
   }
 }

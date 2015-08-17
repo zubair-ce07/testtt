@@ -14,10 +14,7 @@
                     <a href="#">Account</a>
                 </li>
                 <li>
-                    <a href="#">Post</a>
-                </li>
-                <li>
-                    <a href="#">New Request</a>
+                    <a href="#">My Offers</a>
                 </li>
             </ul>
         </div>
@@ -27,7 +24,7 @@
             <div class="box col-md-12">
                 <div class="box-inner">
                     <div class="box-header well" data-original-title="">
-                        <h2><i class="glyphicon glyphicon-share-alt"></i> My Requests </h2>
+                        <h2><i class="glyphicon glyphicon-share-alt"></i> My Offers</h2>
 
                         <div class="box-icon">
                             <i class="glyphicon glyphicon-star-empty"></i>
@@ -66,7 +63,7 @@
                                                     <span class='cls-rejected'> {{ request.status }} </span>
                                                 {% endifequal %}
                                                 {% ifequal request.status 'pending' %}
-                                                    <span class='cls-rejected'> {{ request.status }} </span>
+                                                    <span class='cls-pending'> {{ request.status }} </span>
                                                 {% endifequal %}
                                             </li>
                                             <li>
@@ -79,7 +76,7 @@
 
                         {% else %}
 
-                            <h2 class="whitesmoke-dark"> you didn't send any request yet!</h2>
+                            <h2 class="whitesmoke-dark"> You didn't send any request yet!</h2>
 
                         {% endif %}
 

@@ -36,6 +36,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'grappelli.dashboard',
+    'grappelli',
     'django.contrib.admin',
     'web',
     'web.users',
@@ -91,7 +93,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'eproperty',
         'USER': 'postgres',
-        'PASSWORD': 'rehan1234',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
         }
@@ -124,3 +126,17 @@ TEMPLATE_DIRS = (
 # login url
 
 LOGIN_URL = ''
+
+# grappelli settings
+
+GRAPPELLI_ADMIN_TITLE = 'eProperty Admin Panel'
+
+GRAPPELLI_INDEX_DASHBOARD = 'custom_admin_dashboard.CustomIndexDashboard'
+
+# mailer demon Settings
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'muhammadrehan69@gmail.com'
+EMAIL_HOST_PASSWORD = '######'
+EMAIL_PORT = 587

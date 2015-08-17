@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from django.shortcuts import render, redirect
 from django.views.generic import View
 from web.users.forms.sign_up_form import SignUpForm
@@ -5,7 +6,7 @@ from web.users.models import Address, User
 
 
 class SignUpView(View):
-    template_name = 'users/sign_up.html'
+    template_name = 'users/index.html'
 
     def get(self, request):
         return render(request, self.template_name, dict(sign_up_form=SignUpForm()))
@@ -32,7 +33,7 @@ class SignUpView(View):
             address.save()
             User.objects.create_user(email=email, first_name=first_name, last_name=last_name,
                                      address=address, gender=gender, dob=date_of_birth, password=password)
-            response = redirect('/')
+            response = redirect(reverse('login'))
 
         else:
             response = render(request, self.template_name, dict(sign_up_form=form))

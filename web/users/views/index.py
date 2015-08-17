@@ -7,4 +7,4 @@ class IndexView(View):
     template_name = "users/index.html"
 
     def get(self, request):
-        return render(request, self.template_name, dict(sign_up_form=SignUpForm(), customized_search_form="CustomizedSearchForm"))
+        return render(request, self.template_name, dict(sign_up_form=SignUpForm()))

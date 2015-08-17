@@ -65,17 +65,4 @@
         <!--/row-->
     </div>
 
-    <div class="center-align-less-width">
-
-        <form action="{% url 'new_request' post_id=post_id %}" method="post">
-            {% csrf_token %}
-            {{ new_request_form.as_p }}
-            <br/><br/>
-
-            <input type="submit" value="Send"/>
-        </form>
-
-
-    </div>
-
 {% endblock %}

@@ -7,26 +7,89 @@
 
 
 
-    <div class="center-align-less-width">
+    <div id="content" class="col-lg-10 col-sm-10">
+        <!-- content starts -->
 
-        {% if posts %}
+        <div>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="#">Account</a>
+                </li>
+                <li>
+                    <a href="#">Posts</a>
+                </li>
+            </ul>
+        </div>
 
-            {% for post in posts %}
-                {% if not post.is_post_expired %}
-                    <div class="post">
-                        <a href = "{% url 'post_details' post_id=post.id %}">  {{ post.title }} </a><br/>
-                        Date : {{ post.posted_on }}<br/>
-                        Sold? : {{ post.is_sold }}<br/>
-                        Views : {{ post.get_number_of_views }}<br/>
-                        Expired in {{ post.time_until_expired.days }} days<br/>
+        <!-- All posts -->
+        <div class="row">
+            <div class="box col-md-12">
+                <div class="box-inner">
+                    <div class="box-header well" data-original-title="">
+                        <h2><i class="glyphicon glyphicon-list-alt"></i> Posts </h2>
+
+                        <div class="box-icon">
+                            <i class="glyphicon glyphicon-star-empty"></i>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <!-- put your content here -->
+
+                        {% if posts %}
+
+                            {% for post in posts %}
+
+                                {% if not post.is_post_expired %}
+
+                                    <div class="horizontal-card">
+
+                                        <div class="horizontal-card-inner">
+
+                                            <div class="top-right-side">
+                                                <div class="cls-posted-by"><span> <i
+                                                        class="glyphicon glyphicon-eye-open"></i> {{ post.get_number_of_views }} | by {{ post.posted_by.get_full_name }} </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="card-title">
+                                                <a href="{% url 'post_details' post_id=post.id %}"> {{ post.title }} </a>
+                                            </div>
+
+                                            <div class="exerpt">
+                                                This Ad will expire in {{ post.time_until_expired.days }} day(s).
+                                            </div>
+                                            <ul class="data">
+                                                <li>
+                                                    {% if post.is_sold %}
+                                                        <span class='cls-pending'> Sold </span>
+                                                    {% else %}
+                                                        <span class='cls-approved'> Offers {{ post.requests.count }}</span>
+                                                    {% endif %}
+                                                </li>
+                                                <li>
+                                                    <span class='cls-date'>  Posted on {{ post.posted_on }}</span>
+                                                </li>
+                                            </ul>
+
+                                        </div>
+                                    </div>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        {% else %}
+                            <h2 class="whitesmoke-dark"> No posts to show!</h2>
+                        {% endif %}
+
 
                     </div>
-                {% endif %}
+                </div>
+            </div>
+        </div>
+        <!--/row-->
 
-            {% endfor %}
-        {% else %}
-            <b> No Ads to show!</b>
-        {% endif %}
+
     </div>
 
 {% endblock %}
