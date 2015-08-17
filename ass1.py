@@ -63,13 +63,13 @@ def generate_report(reportNumber, directory):
 
         if reportNumber == '1' :			
             # Print the maximun temperature in specified format
-            print('{:4}'.format(year)+"             "+'{:5}'.format(maximunTemp)+"             "+'{:5}'.format(minimunTemp)+"            "+'{:5}'.format(maximumHumidity)+"            "+'{:5}'.format(minimumHumidity));			
+            print '{:4}'.format(year)+"             "+'{:5}'.format(maximunTemp)+"             "+'{:5}'.format(minimunTemp)+"            "+'{:5}'.format(maximumHumidity)+"            "+'{:5}'.format(minimumHumidity)			
 			
         elif reportNumber == '2' :
-            print('{:4}'.format(year)+"             "+'{:10}'.format(hottet_day_date)+"             "+'{:5}'.format(maximunTemp))
+            print '{:4}'.format(year)+"             "+'{:10}'.format(hottet_day_date)+"             "+'{:5}'.format(maximunTemp)
 			
         elif reportNumber == '3' :
-            print('{:4}'.format(year)+"             "+'{:10}'.format(coolest_day_date)+"             "+'{:5}'.format(minimunTemp))
+            print '{:4}'.format(year)+"             "+'{:10}'.format(coolest_day_date)+"             "+'{:5}'.format(minimunTemp)
 			
         year = year + 1;
 		
