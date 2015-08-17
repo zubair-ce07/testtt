@@ -8,7 +8,7 @@ def generate_report(reportNumber, directory):
 		
     year=1996;
     if reportNumber == 1 :
-		# Min/Max temperature
+        # Min/Max temperature
         print("Year        MAX Temp         MIN Temp         MAX Humidity         MIN Humidity")
         print ("---------------------------------------------------------------------------------------")
 		
@@ -20,9 +20,9 @@ def generate_report(reportNumber, directory):
         print("Year                Date                Temp")
         print("-----------------------------------------------")
 
-	# Traverse all files of all years
+    # Traverse all files of all years
     while (year<2012):
-		# list=glob.glob("/home/rosheen/Assignemnts/weatherdata/*"+str(year)+"*.txt");
+        # list=glob.glob("/home/rosheen/Assignemnts/weatherdata/*"+str(year)+"*.txt");
         list=glob.glob(directory+"/*"+str(year)+"*.txt");
 			
         maximunTemp=0
@@ -32,52 +32,52 @@ def generate_report(reportNumber, directory):
         hottet_day_date=""
         coolest_day_date=""
 		
-		# Traverse all the files of a specific year
+        # Traverse all the files of a specific year
         for i in range(len(list)):
 
             file = open(list[i], "r");
-			# Skip first two lines
+            # Skip first two lines
             next(file)
             next(file)
 			
-			# Traverse all the lines of a file
+            # Traverse all the lines of a file
             for line in file:
                 currentline =line.split(",");
 						
-				# Maximun temperature	
+                # Maximun temperature	
                 if((len(currentline) > 1) and currentline[1] != '' and (int(currentline[1]) >= maximunTemp)):
                     maximunTemp=int(currentline[1])
                     hottet_day_date=currentline[0]
 					
-				# Min temperature
+                # Min temperature
                 if(len(currentline) > 1 and currentline[3] != '' and int(currentline[3]) < minimunTemp):
                     minimunTemp=int(currentline[3])
                     coolest_day_date=currentline[0]
 					
-				# Minimum Humidity
+                # Minimum Humidity
                 if(len(currentline) > 1 and currentline[9] != '' and int(currentline[9]) < minimumHumidity):
                     minimumHumidity=int(currentline[9])
 				
-				# Maximum Humidity
+                # Maximum Humidity
                 if((len(currentline) > 1) and currentline[7] != '' and (int(currentline[7]) >= maximumHumidity)):
                     maximumHumidity=int(currentline[7])
 
         if reportNumber == 1 :			
-			# Print the maximun temperature in specified format
-			# print(str(year)+"             "+str(maximunTemp)+"               "+str(minimunTemp)+"               "+str(maximumHumidity)+"               "+str(minimumHumidity));
+            # Print the maximun temperature in specified format
+            # print(str(year)+"             "+str(maximunTemp)+"               "+str(minimunTemp)+"               "+str(maximumHumidity)+"               "+str(minimumHumidity));
             print('{:4}'.format(year)+"             "+'{:5}'.format(maximunTemp)+"             "+'{:5}'.format(minimunTemp)+"            "+'{:5}'.format(maximumHumidity)+"            "+'{:5}'.format(minimumHumidity));			
 			
         elif reportNumber == 2 :
-			# print(str(year)+"             "+hottet_day_date+"             "+str(maximunTemp))
+            # print(str(year)+"             "+hottet_day_date+"             "+str(maximunTemp))
             print('{:4}'.format(year)+"             "+'{:10}'.format(hottet_day_date)+"             "+'{:5}'.format(maximunTemp))
 			
         elif reportNumber == 3 :
-			# print(str(year)+"             "+coolest_day_date+"             "+str(minimunTemp))
+            # print(str(year)+"             "+coolest_day_date+"             "+str(minimunTemp))
             print('{:4}'.format(year)+"             "+'{:10}'.format(coolest_day_date)+"             "+'{:5}'.format(minimunTemp))
 			
         year = year + 1;
 		
-	# Close opend file
+    # Close opend file
     file.close();
 		
     return None
