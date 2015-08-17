@@ -5,6 +5,13 @@ import csv
 
 def generate_report(reportNumber, directory):
 		
+    # Read first file to get a year with lowest year
+    list = glob.glob(directory+ "/*.txt")
+    # sorted(list, key=numericalSort)
+    print list
+    lowest_year = list[0]
+    highest_year = list[-1]	
+    print highest_year
     year = 1996;
     if reportNumber == '1' :
         # Min/Max temperature
@@ -19,6 +26,10 @@ def generate_report(reportNumber, directory):
         print "Year                Date                Temp"
         print "-----------------------------------------------"
 
+    #with open('/home/rosheen/Assignemnts/weatherdata/lahore_weather_1996_Dec.txt', 'rb') as csvfile:
+     #   spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+      #  for row in spamreader:
+       #         print ', '.join(row)
     # Traverse all files of all years
     while (year < 2012):
 	
@@ -32,34 +43,37 @@ def generate_report(reportNumber, directory):
         coolest_day_date = ""
 		
         # Traverse all the files of a specific year
-        for i in range(len(list)):
-
+        for i in range(len(list)):						
             file = open(list[i], "r");
-            # Skip first two lines
-            next(file)
-            next(file)
-			
-            # Traverse all the lines of a file
-            for line in file:
-                currentline =line.split(",");
-						
-                # Maximun temperature	
-                if((len(currentline) > 1) and currentline[1] != '' and (int(currentline[1]) >= maximunTemp)):
-                    maximunTemp=int(currentline[1])
-                    hottet_day_date=currentline[0]
+            with open(list[i], 'rb') as csvfile:
+                spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                # Skip first two lines
+                spamreader.next()
+                spamreader.next()
+               
+                # Traverse all the lines of a file
+                for line in spamreader:
+                    str1 = line[0]
+                    line = str1
+                    currentline = line.split(",");
+		    				
+                    # Maximun temperature	
+                    if((len(currentline) > 1) and currentline[1] != '' and (int(currentline[1]) >= maximunTemp)):
+                        maximunTemp = int(currentline[1])
+                        hottet_day_date = currentline[0]
+				    	
+                    # Min temperature
+                    if(len(currentline) > 1 and currentline[3] != '' and int(currentline[3]) < minimunTemp):
+                        minimunTemp = int(currentline[3])
+                        coolest_day_date = currentline[0]
 					
-                # Min temperature
-                if(len(currentline) > 1 and currentline[3] != '' and int(currentline[3]) < minimunTemp):
-                    minimunTemp=int(currentline[3])
-                    coolest_day_date=currentline[0]
-					
-                # Minimum Humidity
-                if(len(currentline) > 1 and currentline[9] != '' and int(currentline[9]) < minimumHumidity):
-                    minimumHumidity=int(currentline[9])
+                    # Minimum Humidity
+                    if(len(currentline) > 1 and currentline[9] != '' and int(currentline[9]) < minimumHumidity):
+                        minimumHumidity = int(currentline[9])
 				
-                # Maximum Humidity
-                if((len(currentline) > 1) and currentline[7] != '' and (int(currentline[7]) >= maximumHumidity)):
-                    maximumHumidity=int(currentline[7])
+                    # Maximum Humidity
+                    if((len(currentline) > 1) and currentline[7] != '' and (int(currentline[7]) >= maximumHumidity)):
+                        maximumHumidity = int(currentline[7])
 
         if reportNumber == '1' :			
             # Print the maximun temperature in specified format
