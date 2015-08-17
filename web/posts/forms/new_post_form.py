@@ -1,31 +1,40 @@
-from cities_light.models import City
 from django import forms
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django_countries import countries
-from django_countries.fields import LazyTypedChoiceField
-from django_countries.widgets import CountrySelectWidget
 
 
 class NewPostForm(forms.Form):
-
     KIND_CHOICES = [('house', 'House'), ('plot', 'Plot'),
                     ('commercial_plot', 'Commercial Plot'), ('commercial_building', 'Commercial Building'),
-                    ('flat', 'Flat'), ('shop', 'Shop'), ('farm_house', 'Farm House'),]
+                    ('flat', 'Flat'), ('shop', 'Shop'), ('farm_house', 'Farm House'), ]
 
-    title = forms.CharField(widget=forms.TextInput(), max_length=255)
-    area = forms.DecimalField(max_digits=100, decimal_places=3)
+    title = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Title'}),
+                            max_length=255)
+    area = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Area (in square meters)'}),
+        max_digits=100, decimal_places=3)
 
-    country = LazyTypedChoiceField(choices=countries, widget=CountrySelectWidget())
-    city = forms.ModelChoiceField(queryset=City.objects.all())
-    street_or_block = forms.CharField(widget=forms.TextInput(), max_length=100)
-    zip_code = forms.CharField(widget=forms.TextInput(), max_length=100)
+    country = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'country', 'placeholder': 'Country', 'disabled': 'true'}), max_length=100)
+    state = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'administrative_area_level_1', 'placeholder': 'State', 'disabled': 'true'}), max_length=100)
+    city = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'locality', 'placeholder': 'City', 'disabled': 'true'}), max_length=100)
+    route = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'route', 'placeholder': 'Route', 'disabled': 'true'}), max_length=100)
+    street_or_block = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'street_number', 'placeholder': 'Street or block', 'disabled': 'true'}), max_length=100)
+    zip_code = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'postal_code', 'placeholder': 'Zip code', 'disabled': 'true'}), max_length=100)
 
-    description = forms.CharField(widget=forms.Textarea(), max_length=1024)
-    kind = forms.ChoiceField(choices=KIND_CHOICES)
-    contact_number = forms.CharField(widget=forms.TextInput(), max_length=50)
-    demand = forms.DecimalField(max_digits=100, decimal_places=3)
-    expired_on = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'date'}))
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Write description'}), max_length=1024)
+    kind = forms.ChoiceField(widget=forms.Select(attrs={'class':' form-control'}), choices=KIND_CHOICES)
+    contact_number = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contact #'}), max_length=50)
+    demand = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price($)'}),
+                                max_digits=100, decimal_places=3)
+    expired_on = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'date', 'class': 'form-control'}))
 
     def clean_title(self):
         title = self.cleaned_data.get('title')

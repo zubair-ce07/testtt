@@ -16,8 +16,6 @@ class PostDetailsView(View):
         filter_criteria = Q(post_viewed=post) & Q(viewed_by=request.user)
         if not PostView.objects.filter(filter_criteria).exists():
             PostView(viewed_by=request.user, post_viewed=post).save()
-        return render(request, self.template_name, dict(requests=requests, post=post))
+        is_owners_post = True if post.posted_by == request.user else False
+        return render(request, self.template_name, dict(is_owners_post=is_owners_post, requests=requests, post=post))
 
-    def post(self, request, post_id):
-        response = None
-        return response

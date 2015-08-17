@@ -37,11 +37,9 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-    'django_countries',
     'web',
     'web.users',
     'web.posts',
-    'cities_light',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -93,7 +91,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'eproperty',
         'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'PASSWORD': 'rehan1234',
         'HOST': 'localhost',
         'PORT': '5432',
         }

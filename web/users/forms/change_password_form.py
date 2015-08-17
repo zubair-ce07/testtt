@@ -5,10 +5,12 @@ from web.users.exceptions import PasswordTooShort, MustContainSpecialCharacter
 
 
 class ChangePasswordForm(forms.Form):
-
-    old_password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
-    new_password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
-    confirm_password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Old password'}), max_length=100)
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'New password'}), max_length=100)
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'}), max_length=100)
 
     class MustContainSpecialCharacter(MustContainSpecialCharacter):
         pass

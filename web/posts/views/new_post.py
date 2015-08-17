@@ -8,7 +8,6 @@ from web.users.models import Address
 
 
 class NewPostView(View):
-
     template_name = 'posts/new_post.html'
 
     def get(self, request):
@@ -25,6 +24,8 @@ class NewPostView(View):
             country = form.cleaned_data.get('country')
             city = form.cleaned_data.get('city')
             street_or_block = form.cleaned_data.get('street_or_block')
+            route = form.cleaned_data.get('route')
+            state = form.cleaned_data.get('state')
             zip_code = form.cleaned_data.get('zip_code')
             description = form.cleaned_data.get('description')
             kind = form.cleaned_data.get('kind')
@@ -32,7 +33,8 @@ class NewPostView(View):
             demand = form.cleaned_data.get('demand')
             expired_on = form.cleaned_data.get('expired_on')
 
-            address = Address(zip_code=zip_code, street=street_or_block, city=city, country=country)
+            address = Address(zip_code=zip_code, route=route, street=street_or_block, city=city, state=state,
+                              country=country)
             address.save()
             Post(posted_by=request.user, title=title, area=area, location=address, description=description,
                  kind=kind, contact_number=contact_number, demanded_price=demand, expired_on=expired_on).save()

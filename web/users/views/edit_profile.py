@@ -24,6 +24,7 @@ class EditProfileView(View):
             user.address.country = form.cleaned_data.get('country')
             user.address.city = str(form.cleaned_data.get('city'))
             user.address.street = form.cleaned_data.get('street_or_block')
+            user.address.route = form.cleaned_data.get('route')
             user.address.zip_code = form.cleaned_data.get('zip_code')
             user.address.save()
             user.save()

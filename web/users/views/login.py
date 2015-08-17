@@ -36,6 +36,6 @@ class LogInView(View):
             response_message = 'Please fill in the fields'
 
         if response_message:
-            response = render(request, self.template_name, dict(msg=response_message, sign_in_form=form))
+            response = render(request, self.template_name, dict(msg=response_message, login_form=form))
 
         return response

@@ -5,21 +5,105 @@
 
 {% block content %}
 
-    <div class="center-align-less-width">
+    <div id="content" class="col-lg-10 col-sm-10">
+        <!-- content starts -->
 
-        <form action="{% url 'new_post' %}" method="post">
-            {% csrf_token %}
-            {{ new_post_form.as_p }}
-            <br/><br/>
+        <div>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="#">Account</a>
+                </li>
+                <li>
+                    <a href="#">New Post</a>
+                </li>
+            </ul>
+        </div>
 
-            <input type="submit" value="Post"/>
-        </form>
+        <!-- new post -->
+        <div class="row">
+            <div class="box col-md-12">
+                <div class="box-inner">
+                    <div class="box-header well" data-original-title="">
+                        <h2><i class="glyphicon glyphicon-plus"></i> New </h2>
 
-        {% if msg %}
-            <br/>{{ msg }}<br/>
-        {% endif %}
+                        <div class="box-icon">
+                            <i class="glyphicon glyphicon-star-empty"></i>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <!-- put your content here -->
 
-        <a href = "{% url 'account' %}">  Back </a>
+                        <form role="form" action="{% url 'new_post' %}" method="post" >
+
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                <label>Title</label>
+                                {{ new_post_form.title }}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Area</label>
+                                {{ new_post_form.area }}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Address</label>
+                                <input id="autocomplete" class="form-control" placeholder="Type its location"
+                                       onFocus="geolocate()" type="text"/>
+                            </div>
+
+                            <div class="form-group">
+                                {{ new_post_form.zip_code }}
+                                {{ new_post_form.street_or_block }}
+                                {{ new_post_form.route }}
+                                {{ new_post_form.city }}
+                                {{ new_post_form.state }}
+                                {{ new_post_form.country }}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Type</label>
+                                {{ new_post_form.kind }}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Contact number</label>
+                                {{ new_post_form.contact_number }}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Price($)</label>
+                                {{ new_post_form.demand }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="comment">Description:</label>
+                                {{ new_post_form.description }}
+                            </div>
+
+                            <div class="form-group">
+                                <label> Expiry date </label>
+
+                                <div class='input-group date'>
+                                    {{ new_post_form.expired_on }}
+					                    <span class="input-group-addon">
+					                        <span class="glyphicon glyphicon-calendar"></span>
+					                    </span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default">Post</button>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--/row-->
 
     </div>
 

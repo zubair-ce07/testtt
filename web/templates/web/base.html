@@ -1,18 +1,146 @@
 <!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <title> {% block title %}  {% endblock %} </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="eProperty, a platform to deal in lands">
+    <meta name="author" content="Muhammad Rehan">
+
+    <!-- The styles -->
     {% load staticfiles %}
-    <link rel="stylesheet" type="text/css" href="{% static 'web/style.css' %}" />
-    <title> eProperty-{% block title %}  {% endblock %} </title>
+    <link rel="stylesheet" type="text/css" href="{% static 'web/css/bootstrap/bootstrap-spacelab.min.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'web/css/eproperty-app.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'web/css/post-card.css' %}" />
+    <!-- jQuery -->
+    <script type="text/javascript" src="{% static 'web/js/jquery/jquery.min.js' %}"></script>
+
+    <!-- The HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- The fav icon -->
+    <link rel="shortcut icon" href="{% static 'web/img/favicon.ico' %}">
+
 </head>
+
 <body>
+    <!-- topbar starts -->
+    <div class="navbar navbar-default" role="navigation">
+		<div class="navbar-inner">
 
-<div id="content">
 
-    {% block content %} {% endblock %}
+            {% if not user.is_authenticated %}
+                <!-- sign in button starts -->
+                <div class="btn-group pull-right" style="padding-right:15px;">
+                        <a href="{% url 'login' %}" class=" btn btn-default white" style="text-decoration:none;" ><i class="glyphicon glyphicon-user"></i> Sign in</a>
 
-</div>
+                </div>
+                <!-- sign in button ends -->
+            {% else %}
+
+                <button type="button" class="navbar-toggle pull-left animated flip">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+
+                <!-- user dropdown starts -->
+                <div class="btn-group pull-right">
+                    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        <i class="glyphicon glyphicon-user"></i><span class="hidden-sm hidden-xs"> {{ user.get_full_name }} </span>
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'profile' %}">Profile</a></li>
+                        <li class="divider"></li>
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                    </ul>
+                </div>
+                <!-- user dropdown ends -->
+            {% endif %}
+
+            <a class="navbar-brand" href="{% url 'index' %}"> <img alt="eProperty Logo" src="{% static 'web/img/logo20.png' %}" class="hidden-xs"/>
+                <span>eProperty</span></a>
+
+		</div>
+    </div>
+    <!-- topbar ends -->
+    <div class="ch-container">
+        <div class="row">
+
+            {% if user.is_authenticated %}
+                <!-- left menu starts -->
+                <div class="col-sm-2 col-lg-2">
+                    <div class="sidebar-nav">
+                        <div class="nav-canvas">
+                            <div class="nav-sm nav nav-stacked">
+
+                            </div>
+                            <ul class="nav nav-pills nav-stacked main-menu">
+
+                                <li class="nav-header">Account</li>
+                                <li><a href="{% url 'account' %}"><i class="glyphicon glyphicon-home"></i><span> Account </span></a></li>
+                                <li><a href="{% url 'new_post' %}"><i class="glyphicon glyphicon-plus"></i><span> New post</span></a></li>
+                                <li><a href="{% url 'my_posts' %}"><i class="glyphicon glyphicon-list-alt"></i><span> My Posts</span></a></li>
+                                <li><a href="{% url 'my_requests' %}"><i class="glyphicon glyphicon-share-alt"></i><span> My Requests</span></a></li>
+
+                                <li class="accordion">
+                                    <a href="#"><i class="glyphicon glyphicon-cog"></i><span> Account Settings</span></a>
+                                    <ul class="nav nav-pills nav-stacked">
+                                        <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+                                        <li><a href="{% url 'change_password' %}">Change Password</a></li>
+                                    </ul>
+                                </li>
+
+                                <li><a href="{% url 'new_request' post_id=1 %}"><i class="glyphicon glyphicon-share-alt"></i><span> New Request</span></a></li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!--/span-->
+                <!-- left menu ends -->
+            {% endif %}
+
+            <noscript>
+                <div class="alert alert-block col-md-12">
+                    <h4 class="alert-heading">Warning!</h4>
+
+                    <p>You need to have <a href="http://en.wikipedia.org/wiki/JavaScript" target="_blank">JavaScript</a>
+                        enabled to use this site.</p>
+                </div>
+            </noscript>
+
+            {% block content %} {% endblock %}
+
+        </div><!--/#content.col-md-0-->
+    </div><!--/fluid-row-->
+
+    <hr>
+
+    <footer>
+        <p class="col-md-9 col-sm-9 col-xs-12 copyright">&copy; <a href="https://www.facebook.com/Its.MRehan" target="_blank">Muhammad
+                Rehan</a> 2012 - 2015</p>
+
+        <p class="col-md-3 col-sm-3 col-xs-12 powered-by">Powered by: <a
+                href="#">eProperty</a></p>
+    </footer>
+
+</div><!--/.fluid-container-->
+
+    <!-- external javascript -->
+    <script type="text/javascript" src="{% static 'web/js/bootstrap/bootstrap.min.js' %}"></script>
+    <!-- application script for eProperty -->
+    <script type="text/javascript" src="{% static 'web/js/eproperty-app.js' %}"></script>
+    <!-- autocomplete Api Google -->
+    <script src="https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=places&callback=initAutocomplete"
+            async defer></script>
+    <!-- address auto complete code -->
+    <script type="text/javascript" src="{% static 'web/js/auto_load_address.js' %}"></script>
 
 </body>
 </html>

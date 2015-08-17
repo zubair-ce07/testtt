@@ -5,7 +5,9 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 class Address(models.Model):
     zip_code = models.CharField(max_length=50)
     street = models.CharField(max_length=255)
+    route = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
+    state = models.CharField(max_length=255)
     country = models.CharField(max_length=255)
 
 

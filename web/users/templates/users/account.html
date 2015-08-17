@@ -5,40 +5,89 @@
 
 {% block content %}
 
-{#    <h3> Welcome {{ username }} ! </h3>#}
-{##}
-{#    <br/><br/>#}
-{##}
-{#    <a class="no-decoration" href="{% url 'profile' %}"> Profile </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{#    <a class="no-decoration" href="{% url 'logout' %}"> Logout </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{#    <a class="no-decoration" href="{% url 'add_product' %}"> Add Product </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{#    <a class="no-decoration" href="{% url 'products' %}"> Products </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{#    <a class="no-decoration" href="{% url 'orders' %}"> My Orders </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{#    <a class="no-decoration" href="{% url 'sales' %}"> Sales </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{#    <a class="no-decoration" href="{% url 'top_five_reserved_products' %}"> Top 5 most ordered products </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{#    <a class="no-decoration" href="{% url 'top_five_customers' %}"> Top 5 Customers (who ordered most) </a>#}
-{#    {% filter linebreaks %} {% endfilter %}#}
-{##}
-{##}
-{#    <div class="center-align-less-width">#}
-{##}
-{#        <form action="{% url 'account' %}" method="post">#}
-{#            {% csrf_token %}#}
-{#            {{ url_form }}#}
-{#            <br/><br/>#}
-{#            <input type="submit" value="Search"/>#}
-{#        </form>#}
-{##}
-{#    </div>#}
+    <div id="content" class="col-lg-10 col-sm-10">
+            <!-- content starts -->
 
-    Welcome <b> {{ name }} </b> !
+            <div>
+				<ul class="breadcrumb" >
+					<li>
+						<a href="#">Account</a>
+					</li>
+					<li>
+						<a href="#">Search</a>
+					</li>
+				</ul>
+			</div>
+
+			<div class="row">
+
+				<!-- customize search starts -->
+				<div class="box col-md-12">
+					<div class="box-inner">
+
+						<div class="box-header well" data-original-title="">
+							<h2><i class="glyphicon glyphicon-search"></i> Search the properties that suit you!</h2>
+
+							<div class="box-icon">
+								<i class="glyphicon glyphicon-star-empty"></i>
+							</div>
+						</div>
+
+						<div class="box-content">
+							<!-- put your content here -->
+
+							<form role="form">
+
+								 <div class="form-group">
+								 	<label>Location</label>
+									<input id="autocomplete" class="form-control" placeholder="Choose location or any"
+								             onFocus="geolocate()" type="text"/>
+								</div>
+
+								<div class="form-group">
+									<input class="field" id="street_number" placeholder="Sreet" disabled="true"/>
+									<input class="field" id="route"
+              disabled="true" placeholder='route'/>
+									<input class="field" id="locality" placeholder='City' disabled="true"/>
+									<input class="field" id="administrative_area_level_1" placeholder='State' disabled="true"/>
+									<input class="field" id="postal_code" placeholder='Zip code' disabled="true"/>
+									<input class="field" id="country" placeholder='Country' disabled="true"/>
+								</div>
+
+								<div class="form-group">
+								  <label>Type</label>
+								  <select class="form-control">
+								    <option>House</option>
+								    <option>Plot</option>
+								    <option>Commercial plot</option>
+								    <option>other</option>
+								  </select>
+								</div>
+
+								<div class="form-group">
+			                        <label>Area(meter squares)</label>
+			                        <input type="number" class="form-control" placeholder="Any">
+			                    </div>
+
+			                    <div class="form-group">
+			                    	<p class="budget">Price range?</p>
+									<input type="range" name="range" id="range" min="0" max="300" step="5" value="175"/>
+									<output for="range" class="output"></output>
+								</div>
+
+								<div class="form-group">
+			                    	 <button type="submit" class="btn btn-default">Search</button>
+			                    </div>
+
+							</form>
+                            <!-- End customize search -->
+
+						</div>
+				</div><!-- /box-inner -->
+
+              </div>
+            </div><!--/row-->
+    </div>
 
     <a href = "{% url 'new_post' %}">  New Post </a> <br/>
     <a href = "{% url 'change_password' %}">  change password </a> <br/>

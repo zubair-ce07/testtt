@@ -5,21 +5,93 @@
 
 {% block content %}
 
-    <div class="center-align-less-width">
+    <div id="content" class="col-lg-10 col-sm-10">
+        <!-- content starts -->
 
-        {% if requests %}
-            {% for request in requests %}
-                <div class="post">
+        <div>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="#">Account</a>
+                </li>
+                <li>
+                    <a href="#">Post</a>
+                </li>
+                <li>
+                    <a href="#">New Request</a>
+                </li>
+            </ul>
+        </div>
 
-                    <a href = "{% url 'post_details' post_id=request.post.id %}">  {{ request.post.title }} </a><br/>
-                    {{ request.requested_on }}--
-                    {{ request.status }}
+        <!-- My Requests -->
+        <div class="row">
+            <div class="box col-md-12">
+                <div class="box-inner">
+                    <div class="box-header well" data-original-title="">
+                        <h2><i class="glyphicon glyphicon-share-alt"></i> My Requests </h2>
 
+                        <div class="box-icon">
+                            <i class="glyphicon glyphicon-star-empty"></i>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <!-- put your content here -->
+
+                        {% if requests %}
+
+                            {% for request in requests %}
+
+                                <div class="horizontal-card">
+
+                                    <div class="horizontal-card-inner">
+
+                                        <div class="top-right-side">
+                                            <div class="cls-posted-by">
+                                                <span> Posted by {{ request.post.posted_by.get_full_name }} </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="card-title">
+                                            <a href="{% url 'post_details' post_id=request.post.id %}"> {{ request.post.title }} </a>
+                                        </div>
+
+                                        <div class="exerpt">
+                                            {{ request.message }}
+                                        </div>
+                                        <ul class="data">
+                                            <li>
+                                                {% ifequal request.status 'accepted' %}
+                                                    <span class='cls-approved'> {{ request.status }} </span>
+                                                {% endifequal %}
+                                                {% ifequal request.status 'rejected' %}
+                                                    <span class='cls-rejected'> {{ request.status }} </span>
+                                                {% endifequal %}
+                                                {% ifequal request.status 'pending' %}
+                                                    <span class='cls-rejected'> {{ request.status }} </span>
+                                                {% endifequal %}
+                                            </li>
+                                            <li>
+                                                <span class='cls-date'> Requested on {{ request.requested_on }} </span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                        {% else %}
+
+                            <h2 class="whitesmoke-dark"> you didn't send any request yet!</h2>
+
+                        {% endif %}
+
+
+
+
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-        <br/>
-        <a href = "{% url 'account' %}">  Home </a>
+            </div>
+            <!--/row-->
+
+        </div>
 
     </div>
 

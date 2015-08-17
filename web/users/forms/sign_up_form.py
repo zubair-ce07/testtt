@@ -14,22 +14,35 @@ from cities_light.models import Region
 
 
 class SignUpForm(forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
+                             max_length=100)
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}),
+                               max_length=100)
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm password'}), max_length=100)
 
-    email = forms.EmailField(widget=forms.EmailInput(), max_length=100)
-    password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
-    confirm_password = forms.CharField(widget=forms.PasswordInput(), max_length=100)
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First name'}),
+                                 max_length=100)
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last name'}),
+                                max_length=100)
 
-    first_name = forms.CharField(widget=forms.TextInput(), max_length=100)
-    last_name = forms.CharField(widget=forms.TextInput(), max_length=100)
-
-    country = LazyTypedChoiceField(choices=countries, widget=CountrySelectWidget())
-    city = forms.ModelChoiceField(queryset=City.objects.all())
-    street_or_block = forms.CharField(widget=forms.TextInput(), max_length=100)
-    zip_code = forms.CharField(widget=forms.TextInput(), max_length=100)
+    country = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'country', 'placeholder': 'Country', 'disabled': 'true'}), max_length=100)
+    state = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'administrative_area_level_1', 'placeholder': 'State', 'disabled': 'true'}), max_length=100)
+    city = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'locality', 'placeholder': 'City', 'disabled': 'true'}), max_length=100)
+    route = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'route', 'placeholder': 'Route', 'disabled': 'true'}), max_length=100)
+    street_or_block = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'street_number', 'placeholder': 'Street or block', 'disabled': 'true'}), max_length=100)
+    zip_code = forms.CharField(widget=forms.TextInput(
+        attrs={'id': 'postal_code', 'placeholder': 'Zip code', 'disabled': 'true'}), max_length=100)
 
     GENDER_CHOICES = [('male', 'Male'), ('female', 'Female')]
     gender = forms.ChoiceField(choices=GENDER_CHOICES, widget=forms.RadioSelect())
-    date_of_birth = forms.DateField(initial=datetime.date.today, widget=forms.DateInput(attrs={'type': 'date'}))
+    date_of_birth = forms.DateField(initial=datetime.date.today,
+                                    widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}))
 
     class EmailAlreadyExists(EmailAlreadyExists):
         pass

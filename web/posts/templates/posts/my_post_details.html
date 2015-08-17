@@ -5,28 +5,176 @@
 
 {% block content %}
 
-    <div class="center-align-less-width">
+    <div id="content" class="col-lg-10 col-sm-10">
+        <!-- content starts -->
 
-        {{ post.title }}
-        {{ post.posted_on }}
+        <div>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="#">Account</a>
+                </li>
+                <li>
+                    <a href="#">My Posts</a>
+                </li>
+                <li>
+                    <a href="#">Post</a>
+                </li>
+            </ul>
+        </div>
 
-        {% if requests %}
-            {% for request in requests %}
-                <div class="post">
-                    {{ request.price }}
-                    {{ request.requested_on }}
-                    {{ request.message }}
-                    {{ request.status }}
-                    <br/>
-                    <a href = "{% url 'accept_request' post_id=post.id request_id=request.id %}">  Accept </a>
-                    <a href = "{% url 'reject_request' post_id=post.id request_id=request.id %}">  Reject </a>
+        <!-- My post Details -->
+        <div class="row">
+            <div class="box col-md-12">
+                <div class="box-inner">
+                    <div class="box-header well" data-original-title="">
+                        <h2><i class="glyphicon glyphicon-list-alt"></i> Post details </h2>
+
+                        <div class="box-icon">
+                            <i class="glyphicon glyphicon-star-empty"></i>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <!-- Post details starts -->
+
+                        <div class="horizontal-card">
+
+                            <div class="horizontal-card-inner">
+
+                                <div class="top-right-side">
+                                    <div class="cls-posted-by"><span> <i
+                                            class="glyphicon glyphicon-eye-open"></i> {{ post.get_number_of_views }} | by {{ post.posted_by.get_full_name }} </span>
+                                    </div>
+                                </div>
+
+                                <div class="card-title">
+                                    {{ post.title }}
+                                </div>
+
+                                <div class="exerpt">
+                                    <p class="whitesmoke-dark"> {{ post.description }} </p>
+
+
+                                </div>
+
+                                <div class="post-details">
+                                    Area is {{ post.area }} meter squares<br/>
+                                    Address : street
+                                    # {{ post.location.street }}, {{ post.location.city }}, {{ post.location.state }}, {{ post.location.country }}<br/>
+                                    Type : {{ post.kind }}<br/>
+                                    Contact #{{ post.contact_number }}<br/>
+                                    Price {{ post.demanded_price }}$<br/>
+                                    Expired in {{ post.time_until_expired.days }}
+                                    day(s) {{ post.time_until_expired.hours }}
+                                    hour(s) {{ post.time_until_expired.minutes }} minute(s)<br/>
+                                </div>
+
+
+                                <ul class="data-light-green">
+                                    <li>
+                                        {% if post.is_sold %}
+                                            <span class='cls-pending'> Sold </span>
+                                        {% else %}
+                                            <span class='cls-approved'> Offers {{ post.requests.count }}</span>
+                                        {% endif %}
+                                    </li>
+                                    <li>
+                                        <span class='cls-date'>  Posted on {{ post.posted_on }}</span>
+                                    </li>
+                                </ul>
+
+                            </div>
+                        </div>
+
+                        <!-- post details ends -->
+
+                        {% if requests %}
+
+
+                            <!-- requests on post starts  -->
+
+                            <div class="row">
+                                <div class="box col-md-12">
+                                    <div class="box-inner">
+                                        <div class="box-header well" data-original-title="">
+                                            <h2><i class="glyphicon glyphicon-share-alt"></i> Offers </h2>
+
+                                            <div class="box-icon">
+                                                <i class="glyphicon glyphicon-star-empty"></i>
+                                            </div>
+                                        </div>
+                                        <div class="box-content">
+
+                                            {% for request in requests %}
+
+                                                <div class="horizontal-card">
+
+                                                    <div class="horizontal-card-inner">
+
+                                                        <div class="top-right-side">
+                                                            <div class="cls-posted-by">
+                                                                <span> {{ request.price }} $ <i
+                                                                        class="glyphicon glyphicon-tags"></i>
+                                                                 --Offer by {{ request.requested_by.get_full_name }}</span></span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="card-title">
+                                                            {{ request.message }}
+                                                        </div>
+
+                                                        <div class="exerpt">
+                                                            Requested on {{ request.requested_on }}
+                                                        </div>
+
+                                                        <ul class="data-light-green">
+                                                            <li>
+                                                                {% ifequal request.status 'accepted' %}
+                                                                    <span class='btn cls-approved'> {{ request.status }} </span>
+                                                                {% endifequal %}
+                                                                {% ifequal request.status 'rejected' %}
+                                                                    <span class='btn cls-rejected'> {{ request.status }} </span>
+                                                                {% endifequal %}
+                                                                {% ifequal request.status 'pending' %}
+                                                                    <span class='btn cls-rejected'> {{ request.status }} </span>
+                                                                {% endifequal %}
+                                                            </li>
+
+                                                            {% ifequal request.status 'pending' %}
+                                                                <li>
+                                                                    <span class='cls-approved'>
+                                                                        <a class='btn '
+                                                                           href="{% url 'accept_request' post_id=post.id request_id=request.id %}">
+                                                                            Accept </a>
+                                                                    </span>
+                                                                </li>
+                                                                <li>
+                                                                    <span class='cls-rejected'>
+                                                                        <a class='btn '
+                                                                           href="{% url 'reject_request' post_id=post.id request_id=request.id %}">
+                                                                            Reject </a>
+                                                                    </span>
+                                                                </li>
+                                                            {% endifequal %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            <!-- requests on post ends  -->
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% endif %}
+
+
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-
-        <br/>
-        <a href = "{% url 'account' %}">  Home </a>
-
+            </div>
+        </div>
+        <!--/row-->
     </div>
 
 {% endblock %}
