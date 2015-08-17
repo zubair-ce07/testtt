@@ -1,11 +1,11 @@
 import sys
 import glob
+import csv
 
 
 def generate_report(reportNumber, directory):
 		
-    year=1996;
-    print reportNumber
+    year = 1996;
     if reportNumber == '1' :
         # Min/Max temperature
         print "Year        MAX Temp         MIN Temp         MAX Humidity         MIN Humidity"
