@@ -21,7 +21,7 @@ def generate_report(reportNumber, directory):
 
     # Traverse all files of all years
     while (year < 2012):
-        # list=glob.glob("/home/rosheen/Assignemnts/weatherdata/*"+str(year)+"*.txt");
+	
         list = glob.glob(directory+ "/*"+str(year)+ "*.txt");
 			
         maximunTemp = 0
