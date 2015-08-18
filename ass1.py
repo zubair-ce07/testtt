@@ -28,7 +28,7 @@ def min_max_temperature(lowest_year, highest_year, directory):
     # Traverse all files of all years
     while (year <= highest_year):
 	
-        list1 = glob.glob(directory+ "/*"+str(year)+ "*.txt");
+        list1 = glob.glob(directory+ "/*"+ str(year)+ "*.txt");
 			
         maximunTemp = 0
         minimunTemp = 10000
@@ -38,7 +38,7 @@ def min_max_temperature(lowest_year, highest_year, directory):
         # Traverse all the files of a specific year
         for i in range(len(list1)):						
             with open(list1[i], 'rb') as csvfile:
-                reader1 = csv.reader(csvfile, delimiter=',', quotechar='|')
+                reader1 = csv.reader(csvfile, delimiter = ',')
                 # Skip first two lines
                 reader1.next()
                 reader1.next()
@@ -79,7 +79,7 @@ def hottest_day(lowest_year, highest_year, directory):
     # Traverse all files of all years
     while (year <= highest_year):
 	
-        list1 = glob.glob(directory+ "/*"+str(year)+ "*.txt");
+        list1 = glob.glob(directory+ "/*"+ str(year)+ "*.txt");
 			
         maximunTemp = 0
         hottet_day_date = ""
@@ -87,7 +87,7 @@ def hottest_day(lowest_year, highest_year, directory):
         # Traverse all the files of a specific year
         for i in range(len(list1)):						
             with open(list1[i], 'rb') as csvfile:
-                reader1 = csv.reader(csvfile, delimiter=',', quotechar='|')
+                reader1 = csv.reader(csvfile, delimiter = ',')
                 # Skip first two lines
                 reader1.next()
                 reader1.next()
@@ -118,7 +118,7 @@ def coolest_day(lowest_year, highest_year, directory):
     # Traverse all files of all years
     while (year <= highest_year):
 	
-        list1 = glob.glob(directory+ "/*"+str(year)+ "*.txt");
+        list1 = glob.glob(directory+ "/*"+ str(year)+ "*.txt");
 			
         minimunTemp = 10000
         coolest_day_date = ""
@@ -126,7 +126,7 @@ def coolest_day(lowest_year, highest_year, directory):
         # Traverse all the files of a specific year
         for i in range(len(list1)):						
             with open(list1[i], 'rb') as csvfile:
-                reader1 = csv.reader(csvfile, delimiter=',', quotechar='|')
+                reader1 = csv.reader(csvfile, delimiter = ',')
                 # Skip first two lines
                 reader1.next()
                 reader1.next()
