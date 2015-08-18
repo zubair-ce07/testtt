@@ -19,42 +19,12 @@ def sort_nicely(l):
     l.sort(key=alphanum_key)
     return l
 
+def min_max_temperature(lowest_year, highest_year, directory):
 
-def generate_report(reportNumber, directory):
-		
-    # Read first file to get a year with lowest year
-    list1 = glob.glob(directory+ "/*.txt")
-    list1 = sort_nicely(list1)
-    lowest_year = list1[0]
-    highest_year = list1[-1]
-	
-    lowest_year = lowest_year.split('/')
-    lowest_year = lowest_year[-1]
-    lowest_year = lowest_year.split('_')
-    lowest_year = lowest_year[-2]
-	
-    highest_year = highest_year.split('/')
-    highest_year = highest_year[-1]
-    highest_year = highest_year.split('_')
-    highest_year = highest_year[-2]
-	
-    highest_year = int(highest_year)
-    lowest_year = int(lowest_year)
-	
-    year = lowest_year;
-    if reportNumber == 1 :
-        # Min/Max temperature
-        print "Year        MAX Temp         MIN Temp         MAX Humidity         MIN Humidity"
-        print "--------------------------------------------------------------------------------"
-		
-    elif reportNumber == 2 :
-        print "Year                Date                Temp"
-        print "-----------------------------------------------"
-
-    elif reportNumber == 3 :
-        print "Year                Date                Temp"
-        print "-----------------------------------------------"
-		
+    year = lowest_year
+    # Min/Max temperature
+    print "Year        MAX Temp         MIN Temp         MAX Humidity         MIN Humidity"
+    print "--------------------------------------------------------------------------------"
     # Traverse all files of all years
     while (year <= highest_year):
 	
@@ -64,8 +34,55 @@ def generate_report(reportNumber, directory):
         minimunTemp = 10000
         maximumHumidity = 0
         minimumHumidity = 10000
+		
+        # Traverse all the files of a specific year
+        for i in range(len(list1)):						
+            with open(list1[i], 'rb') as csvfile:
+                reader1 = csv.reader(csvfile, delimiter=',', quotechar='|')
+                # Skip first two lines
+                reader1.next()
+                reader1.next()
+               
+                # Traverse all the lines of a file
+                for line in reader1:
+                    currentline = line
+		    				
+                    # Maximun temperature	
+                    if((len(currentline) > 1) and currentline[1] != '' and (int(currentline[1]) >= maximunTemp)):
+                        maximunTemp = int(currentline[1])
+				    	
+                    # Min temperature
+                    if(len(currentline) > 1 and currentline[3] != '' and int(currentline[3]) < minimunTemp):
+                        minimunTemp = int(currentline[3])				
+					
+                    # Minimum Humidity
+                    if(len(currentline) > 1 and currentline[9] != '' and int(currentline[9]) < minimumHumidity):
+                        minimumHumidity = int(currentline[9])
+				
+                    # Maximum Humidity
+                    if((len(currentline) > 1) and currentline[7] != '' and (int(currentline[7]) >= maximumHumidity)):
+                        maximumHumidity = int(currentline[7])
+							
+        # Print the maximun temperature in specified format
+        print '{:4}'.format(year)+"             "+'{:5}'.format(maximunTemp)+"             "+'{:5}'.format(minimunTemp)+"            "+'{:5}'.format(maximumHumidity)+"            "+'{:5}'.format(minimumHumidity)			
+			
+        year = year + 1;
+    
+    return None
+	
+	
+def hottest_day(lowest_year, highest_year, directory):
+
+    year = lowest_year
+    print "Year                Date                Temp"
+    print "-----------------------------------------------"
+    # Traverse all files of all years
+    while (year <= highest_year):
+	
+        list1 = glob.glob(directory+ "/*"+str(year)+ "*.txt");
+			
+        maximunTemp = 0
         hottet_day_date = ""
-        coolest_day_date = ""
 		
         # Traverse all the files of a specific year
         for i in range(len(list1)):						
@@ -83,36 +100,55 @@ def generate_report(reportNumber, directory):
                     if((len(currentline) > 1) and currentline[1] != '' and (int(currentline[1]) >= maximunTemp)):
                         maximunTemp = int(currentline[1])
                         hottet_day_date = currentline[0]
+						
+        # Print the maximun temperature in specified format
+        print '{:4}'.format(year)+"             "+'{:10}'.format(hottet_day_date)+"             "+'{:5}'.format(maximunTemp)
+			
+        year = year + 1;
 				    	
+
+    return None
+	
+	
+def coolest_day(lowest_year, highest_year, directory):
+
+    year = lowest_year
+    print "Year                Date                Temp"
+    print "-----------------------------------------------"
+    # Traverse all files of all years
+    while (year <= highest_year):
+	
+        list1 = glob.glob(directory+ "/*"+str(year)+ "*.txt");
+			
+        minimunTemp = 10000
+        coolest_day_date = ""
+		
+        # Traverse all the files of a specific year
+        for i in range(len(list1)):						
+            with open(list1[i], 'rb') as csvfile:
+                reader1 = csv.reader(csvfile, delimiter=',', quotechar='|')
+                # Skip first two lines
+                reader1.next()
+                reader1.next()
+               
+                # Traverse all the lines of a file
+                for line in reader1:
+                    currentline = line
+		    				
                     # Min temperature
                     if(len(currentline) > 1 and currentline[3] != '' and int(currentline[3]) < minimunTemp):
                         minimunTemp = int(currentline[3])
                         coolest_day_date = currentline[0]
-					
-                    # Minimum Humidity
-                    if(len(currentline) > 1 and currentline[9] != '' and int(currentline[9]) < minimumHumidity):
-                        minimumHumidity = int(currentline[9])
-				
-                    # Maximum Humidity
-                    if((len(currentline) > 1) and currentline[7] != '' and (int(currentline[7]) >= maximumHumidity)):
-                        maximumHumidity = int(currentline[7])
-
-        if reportNumber == 1 :			
-            # Print the maximun temperature in specified format
-            print '{:4}'.format(year)+"             "+'{:5}'.format(maximunTemp)+"             "+'{:5}'.format(minimunTemp)+"            "+'{:5}'.format(maximumHumidity)+"            "+'{:5}'.format(minimumHumidity)			
-			
-        elif reportNumber == 2 :
-            print '{:4}'.format(year)+"             "+'{:10}'.format(hottet_day_date)+"             "+'{:5}'.format(maximunTemp)
-			
-        elif reportNumber == 3 :
-            print '{:4}'.format(year)+"             "+'{:10}'.format(coolest_day_date)+"             "+'{:5}'.format(minimunTemp)
+						
+        # Print the coolest day in specified format
+        print '{:4}'.format(year)+"             "+'{:10}'.format(coolest_day_date)+"             "+'{:5}'.format(minimunTemp)
 			
         year = year + 1;
-		
-		
+				    	
+
     return None
-		
-	
+
+
 def main(argv):
 	
     
@@ -131,7 +167,33 @@ def main(argv):
         sys.exit();
 		
     elif(argv.filename != '' and argv.num != 0):
-        generate_report(argv.num, argv.filename)
+        directory = argv.filename
+        reportNumber = argv.num
+        # Read first file to get a year with lowest year
+        list1 = glob.glob(directory+ "/*.txt")
+        list1 = sort_nicely(list1)
+        lowest_year = list1[0]
+        highest_year = list1[-1]
+	
+        lowest_year = lowest_year.split('/')
+        lowest_year = lowest_year[-1]
+        lowest_year = lowest_year.split('_')
+        lowest_year = lowest_year[-2]
+	
+        highest_year = highest_year.split('/')
+        highest_year = highest_year[-1]
+        highest_year = highest_year.split('_')
+        highest_year = highest_year[-2]
+	
+        highest_year = int(highest_year)
+        lowest_year = int(lowest_year)
+		
+        if reportNumber == 1:
+            min_max_temperature(lowest_year, highest_year, directory)
+        elif reportNumber == 2:
+            hottest_day(lowest_year, highest_year, directory)
+        elif reportNumber == 3:
+            coolest_day(lowest_year, highest_year, directory)
 		
     return None
 		
