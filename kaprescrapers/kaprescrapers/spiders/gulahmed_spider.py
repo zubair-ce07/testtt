@@ -1,11 +1,12 @@
 __author__ = 'mateenahmeed'
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
-from kaprescrapers.items import KaprePkItem
+from kaprescrapers.items import Garment
+from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
 
 
-class GulAhmedSpider(CrawlSpider):
+class GulAhmedSpider(KapreBaseSpider):
     name = "gulahmed"
     allowed_domains = ["gulahmedshop.com"]
     start_urls = ['http://www.gulahmedshop.com/']
@@ -34,7 +35,7 @@ class GulAhmedSpider(CrawlSpider):
     def parse_product(self, response):
         sel = response.xpath("/html")
 
-        item = KaprePkItem()
+        item = Garment()
         item['item_is_available'] = response.meta["availability"]
         item['source_url'] = response.url
         item['item_category_name'] = self.get_category(sel)
@@ -72,4 +73,3 @@ class GulAhmedSpider(CrawlSpider):
     def get_availability(self, sel):
         available = sel.xpath(".//div[@class='entry-main']//span/text()").extract()[0]
         return not "Not" in available
-

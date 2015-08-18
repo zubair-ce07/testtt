@@ -1,13 +1,14 @@
 __author__ = 'mateenahmeed'
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
-from kaprescrapers.items import KaprePkItem
+from kaprescrapers.items import Garment
+from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
 import re
 from urlparse import urlparse
 
 
-class BareezeSpider(CrawlSpider):
+class BareezeSpider(KapreBaseSpider):
     name = "bareeze"
     allowed_domains = ["www.bareeze.com"]
     start_urls = ['http://www.bareeze.com/pk/shop/']
@@ -37,7 +38,7 @@ class BareezeSpider(CrawlSpider):
     def parse_product(self, response):
         sel = response.xpath("/html")
 
-        item = KaprePkItem()
+        item = Garment()
         item['item_price'] = response.meta["price"]
         item['source_url'] = response.url
         item['item_category_name'] = self.get_category(response.url)

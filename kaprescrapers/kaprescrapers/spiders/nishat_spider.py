@@ -1,11 +1,12 @@
 __author__ = 'mateenahmeed'
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
-from kaprescrapers.items import KaprePkItem
+from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
+from kaprescrapers.items import Garment
 import re
 
 
-class NishatSpider(CrawlSpider):
+class NishatSpider(KapreBaseSpider):
     name = "nishat"
     allowed_domains = ["nishatlinen.com"]
     start_urls = ['http://nishatlinen.com/']
@@ -24,7 +25,7 @@ class NishatSpider(CrawlSpider):
     def parse_product(self, response):
         sel = response.xpath("/html")
 
-        item = KaprePkItem()
+        item = Garment()
         item['source_url'] = response.url
         item['item_category_name'] = self.get_category(sel)
         item['item_brand_id'] = self.brand_id

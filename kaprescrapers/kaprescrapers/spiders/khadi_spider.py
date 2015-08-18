@@ -1,11 +1,12 @@
 __author__ = 'mateenahmeed'
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
-from kaprescrapers.items import KaprePkItem
+from kaprescrapers.items import Garment
+from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
 
 
-class KhadiSpider(CrawlSpider):
+class KhadiSpider(KapreBaseSpider):
     name = "khadi"
     allowed_domains = ["khaadionline.com"]
     brand_id = 11
@@ -30,7 +31,7 @@ class KhadiSpider(CrawlSpider):
     def parse_product(self, response):
         sel = response.xpath("/html")
 
-        item = KaprePkItem()
+        item = Garment()
         item['source_url'] = response.url
         item['item_category_name'] = self.get_category(sel)
         item['item_brand_id'] = self.brand_id

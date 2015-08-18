@@ -8,7 +8,7 @@
 import scrapy
 
 
-class KaprePkItem(scrapy.Item):
+class Garment(scrapy.Item):
     item_code = scrapy.Field()
     item_price = scrapy.Field()
     source_url = scrapy.Field()

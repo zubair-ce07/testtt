@@ -1,10 +1,11 @@
 __author__ = 'mateenahmeed'
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
-from kaprescrapers.items import KaprePkItem
+from kaprescrapers.items import Garment
+from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
 
 
-class AlkaramSpider(CrawlSpider):
+class AlkaramSpider(KapreBaseSpider):
     name = "alkaram"
     allowed_domains = ["alkaramstudio.com"]
     start_urls = ['http://www.alkaramstudio.com/']
@@ -24,7 +25,7 @@ class AlkaramSpider(CrawlSpider):
     def parse_product(self, response):
         sel = response.xpath("//*[@class='product-essential']")
 
-        item = KaprePkItem()
+        item = Garment()
         item['item_is_available'] = True
         item['source_url'] = response.url
         item['item_category_name'] = self.get_category(sel)
