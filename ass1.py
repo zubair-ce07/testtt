@@ -157,6 +157,7 @@ def main(argv):
         reportNumber = argv.num
 		
         list2 = read_files(directory)
+        del list2[0]
 		
         if reportNumber == 1:
             min_max_temperature(list2)
