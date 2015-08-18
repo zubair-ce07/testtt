@@ -38,7 +38,7 @@ def min_max_temperature(lowest_year, highest_year, directory):
         # Traverse all the files of a specific year
         for i in range(len(list1)):						
             with open(list1[i], 'rb') as csvfile:
-                reader1 = csv.reader(csvfile, delimiter = ',')
+                reader1 = csv.reader(csvfile)
                 # Skip first two lines
                 reader1.next()
                 reader1.next()
@@ -87,7 +87,7 @@ def hottest_day(lowest_year, highest_year, directory):
         # Traverse all the files of a specific year
         for i in range(len(list1)):						
             with open(list1[i], 'rb') as csvfile:
-                reader1 = csv.reader(csvfile, delimiter = ',')
+                reader1 = csv.reader(csvfile)
                 # Skip first two lines
                 reader1.next()
                 reader1.next()
@@ -126,7 +126,7 @@ def coolest_day(lowest_year, highest_year, directory):
         # Traverse all the files of a specific year
         for i in range(len(list1)):						
             with open(list1[i], 'rb') as csvfile:
-                reader1 = csv.reader(csvfile, delimiter = ',')
+                reader1 = csv.reader(csvfile)
                 # Skip first two lines
                 reader1.next()
                 reader1.next()
