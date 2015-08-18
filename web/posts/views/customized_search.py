@@ -20,7 +20,7 @@ class CustomizedSearchView(View):
             kind = form.cleaned_data.get('kind')
             max_price = form.cleaned_data.get('max_price')
 
-            filter_criteria = Q(kind=kind)
+            filter_criteria = Q(kind=kind, is_expired=False)
             if max_price:
                 filter_criteria &= Q(demanded_price__range=[0, max_price])
             if country:
@@ -33,7 +33,7 @@ class CustomizedSearchView(View):
                 filter_criteria |= Q(location__route=route)
 
             posts = Post.objects.filter(filter_criteria)
-            posts = posts.order_by('-id') if posts.exists() else None
+            posts = posts.order_by('-id') if posts.exists() else []
             response = render(request, 'posts/all_posts.html', dict(posts=posts))
         else:
             response = render(request, 'users/account.html', dict(customized_search_form=form))

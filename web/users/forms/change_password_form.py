@@ -1,6 +1,7 @@
 import re
+
 from django import forms
-from django.contrib.auth import authenticate
+
 from web.users.exceptions import PasswordTooShort, MustContainSpecialCharacter
 
 
@@ -23,9 +24,7 @@ class ChangePasswordForm(forms.Form):
         super(ChangePasswordForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        # TODO: Don't use the authenticate function here, instead use the builtin django method to check the user's password
-
-        if authenticate(username=self.user.email, password=self.cleaned_data.get('old_password')):
+        if self.user.check_password(self.cleaned_data.get('old_password')):
             password = self.cleaned_data.get('new_password')
             confirm_password = self.cleaned_data.get('confirm_password')
 
@@ -39,13 +38,12 @@ class ChangePasswordForm(forms.Form):
     def clean_new_password(self):
         password = self.cleaned_data.get('new_password')
         try:
-            self.check_password(password=password)
+            self.validate_password(password=password)
         except (self.PasswordTooShort, self.MustContainSpecialCharacter) as ex:
             raise forms.ValidationError(ex.message)
         return password
 
-    #TODO: Please update the name of this function and make it validate_password instead.
-    def check_password(self, password):
+    def validate_password(self, password):
         password = self.cleaned_data.get('new_password')
         if len(password) < 8:
             raise self.PasswordTooShort

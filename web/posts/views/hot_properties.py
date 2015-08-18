@@ -8,5 +8,6 @@ class HotPropertiesView(View):
     template_name = 'posts/all_posts.html'
 
     def get(self, request):
-        return render(request, self.template_name,
-                      dict(posts=sorted(Post.objects.all(), key=lambda m: -m.get_number_of_views)))
+        posts = Post.objects.filter(is_expired=False)
+        posts = sorted(posts, key=lambda m: -m.get_number_of_views) if posts.exists() else []
+        return render(request, self.template_name, dict(posts=posts))

@@ -9,5 +9,5 @@ class MyRequestsView(View):
 
     def get(self, request):
         requests = Request.objects.filter(requested_by=request.user)
-        requests = requests if requests.exists() else None
+        requests = requests if requests.exists() else []
         return render(request, self.template_name, dict(requests=requests))
