@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from eproperty.decorators import is_logged_in
 from web.users.views.account import AccountView
 from web.users.views.activate_users import ActivateUsersView
-from web.users.views.admin_sign_up import AdminSignUpView
 from web.users.views.change_password import ChangePasswordView
 from web.users.views.deactivate_users import DeactivateUsersView
 from web.users.views.edit_profile import EditProfileView
@@ -19,7 +18,6 @@ urlpatterns = [
     url(r'^$', is_logged_in(IndexView.as_view()), name='index'),
     url(r'^login/$', is_logged_in(LogInView.as_view()), name='login'),
     url(r'^sign-up/$', is_logged_in(SignUpView.as_view()), name='sign_up'),
-    url(r'^admin-sign-up/$', is_logged_in(AdminSignUpView.as_view()), name='admin_sign_up'),
     url(r'^account/$', login_required(AccountView.as_view()), name='account'),
     url(r'^account/password/reset/$', login_required(ChangePasswordView.as_view()), name='change_password'),
     url(r'^account/logout/$', login_required(LogoutView.as_view()), name='logout'),
