@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.views.generic import View
+
 from web.posts.models import Request
 
 
 class MyRequestsView(View):
-
     template_name = 'posts/my_requests.html'
 
     def get(self, request):

@@ -1,10 +1,9 @@
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
-from web.posts.views.accept_request import AcceptRequestView
 
+from web.posts.views.accept_request import AcceptRequestView
 from web.posts.views.all_posts import AllPostsView
 from web.posts.views.customized_search import CustomizedSearchView
-from web.posts.views.file_upload import FileUploadView, my_post
 from web.posts.views.hot_properties import HotPropertiesView
 from web.posts.views.my_post_details import MyPostDetailsView
 from web.posts.views.my_posts import MyPostsView
@@ -29,6 +28,4 @@ urlpatterns = [
         name='accept_request'),
     url(r'^post/(?P<post_id>\d+)/request/(?P<request_id>\d+)/reject/$', login_required(RejectRequestView.as_view()),
         name='reject_request'),
-
-    url(r'^upload/$', my_post, name='file_upload')
 ]

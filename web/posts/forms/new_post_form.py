@@ -34,6 +34,7 @@ class NewPostForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contact #'}), max_length=50)
     demand = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price($)'}),
                                 max_digits=100, decimal_places=3)
+
     expired_on = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'date', 'class': 'form-control'}))
 
     def clean_title(self):

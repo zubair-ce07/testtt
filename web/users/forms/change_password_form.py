@@ -23,7 +23,6 @@ class ChangePasswordForm(forms.Form):
         super(ChangePasswordForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-
         if authenticate(username=self.user.email, password=self.cleaned_data.get('old_password')):
             password = self.cleaned_data.get('new_password')
             confirm_password = self.cleaned_data.get('confirm_password')
@@ -36,7 +35,6 @@ class ChangePasswordForm(forms.Form):
         return self.cleaned_data
 
     def clean_new_password(self):
-
         password = self.cleaned_data.get('new_password')
         try:
             self.check_password(password=password)

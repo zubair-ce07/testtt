@@ -1,10 +1,9 @@
 from django.core.urlresolvers import reverse
-from django.shortcuts import HttpResponseRedirect, redirect
+from django.shortcuts import redirect
 from django.utils.decorators import wraps, available_attrs
 
 
 def is_logged_in(function=None):
-
     def decorator(view_func):
         @wraps(view_func, assigned=available_attrs(view_func))
         def wrapped_view(request, *args, **kwargs):
@@ -12,6 +11,7 @@ def is_logged_in(function=None):
                 return redirect(reverse('account'))
             else:
                 return view_func(request, *args, **kwargs)
+
         return wrapped_view
 
     if function:

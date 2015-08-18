@@ -63,7 +63,7 @@ AUTH_USER_MODEL = 'users.User'
 
 AUTHENTICATION_BACKENDS = [
     'web.users.authentication_backend.EmailAuthenticationBackend',
-    ]
+]
 
 TEMPLATES = [
     {
@@ -96,7 +96,7 @@ DATABASES = {
         'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
-        }
+    }
 }
 
 
@@ -119,9 +119,15 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = 'staticfiles'
+
 TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR,  'templates'),
+    os.path.join(BASE_DIR, 'templates'),
 )
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_URL = '/media/'
 
 # login url
 
@@ -131,7 +137,7 @@ LOGIN_URL = ''
 
 GRAPPELLI_ADMIN_TITLE = 'eProperty Admin Panel'
 
-GRAPPELLI_INDEX_DASHBOARD = 'custom_admin_dashboard.CustomIndexDashboard'
+GRAPPELLI_INDEX_DASHBOARD = 'admin.dashboard.CustomIndexDashboard'
 
 # mailer demon Settings
 

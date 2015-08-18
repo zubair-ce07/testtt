@@ -15,14 +15,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Picture',
-            fields=[
-                ('id', models.AutoField(serialize=False, auto_created=True, primary_key=True, verbose_name='ID')),
-                ('url', models.CharField(max_length=1024)),
-                ('is_expired', models.BooleanField(default=False)),
-            ],
-        ),
-        migrations.CreateModel(
             name='Post',
             fields=[
                 ('id', models.AutoField(serialize=False, auto_created=True, primary_key=True, verbose_name='ID')),
@@ -61,10 +53,5 @@ class Migration(migrations.Migration):
                 ('post', models.ForeignKey(related_name='requests', to='posts.Post')),
                 ('requested_by', models.ForeignKey(related_name='requests', to=settings.AUTH_USER_MODEL)),
             ],
-        ),
-        migrations.AddField(
-            model_name='picture',
-            name='post',
-            field=models.ForeignKey(related_name='pictures', to='posts.Post'),
         ),
     ]

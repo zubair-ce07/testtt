@@ -4,13 +4,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.core.validators import validate_email
 import re
-from django_countries import countries
-from django_countries.fields import LazyTypedChoiceField
-from django_countries.widgets import CountrySelectWidget
 from web.users.exceptions import MustContainSpecialCharacter, EmailAlreadyExists, PasswordTooShort
-from cities_light.models import City
-from cities_light.models import Country
-from cities_light.models import Region
 
 
 class SignUpForm(forms.Form):

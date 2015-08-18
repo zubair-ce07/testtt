@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+
 from web.users.models import Address
 
 
@@ -48,7 +49,7 @@ class Post(models.Model):
 
 class Picture(models.Model):
     post = models.ForeignKey('Post', related_name='pictures')
-    url = models.CharField(max_length=1024)
+    image = models.FileField(upload_to='images/')
     is_expired = models.BooleanField(default=False)
 
 

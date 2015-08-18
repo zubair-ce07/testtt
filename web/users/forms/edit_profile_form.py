@@ -1,9 +1,5 @@
 import datetime
-from cities_light.models import City
 from django import forms
-from django_countries import countries
-from django_countries.fields import LazyTypedChoiceField
-from django_countries.widgets import CountrySelectWidget
 
 
 class EditProfileForm(forms.Form):

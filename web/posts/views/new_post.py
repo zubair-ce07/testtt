@@ -1,9 +1,9 @@
-from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.shortcuts import render, redirect
 from django.views.generic import View
+
 from web.posts.forms.new_post_form import NewPostForm
-from web.posts.models import Post
+from web.posts.models import Post, Picture
 from web.users.models import Address
 
 
@@ -16,7 +16,7 @@ class NewPostView(View):
     def post(self, request):
 
         response = None
-        form = NewPostForm(request.POST)
+        form = NewPostForm(request.POST, request.FILES)
         if form.is_valid():
 
             title = form.cleaned_data.get('title')
@@ -27,6 +27,7 @@ class NewPostView(View):
             route = form.cleaned_data.get('route')
             state = form.cleaned_data.get('state')
             zip_code = form.cleaned_data.get('zip_code')
+            image = request.FILES.get('image')
             description = form.cleaned_data.get('description')
             kind = form.cleaned_data.get('kind')
             contact_number = form.cleaned_data.get('contact_number')
@@ -38,6 +39,7 @@ class NewPostView(View):
             address.save()
             Post(posted_by=request.user, title=title, area=area, location=address, description=description,
                  kind=kind, contact_number=contact_number, demanded_price=demand, expired_on=expired_on).save()
+
             response = redirect(reverse('my_posts'))
 
         else:

@@ -32,13 +32,13 @@ class CustomIndexDashboard(Dashboard):
                     column=1,
                     collapsible=False,
                     models=('django.contrib.*',),
-                    ),
+                ),
                 modules.AppList(
                     _('Applications'),
                     column=1,
                     css_classes=('collapse closed',),
                     exclude=('django.contrib.*',),
-                    )
+                )
             ]
         ))
 
@@ -49,7 +49,7 @@ class CustomIndexDashboard(Dashboard):
             column=1,
             css_classes=('collapse closed',),
             exclude=('django.contrib.*',),
-            ))
+        ))
 
         # append an app list module for "Administration"
         self.children.append(modules.ModelList(
@@ -57,7 +57,7 @@ class CustomIndexDashboard(Dashboard):
             column=1,
             collapsible=False,
             models=('django.contrib.*',),
-            ))
+        ))
 
         # append another link list module for "support".
         self.children.append(modules.LinkList(
@@ -68,8 +68,8 @@ class CustomIndexDashboard(Dashboard):
                     'title': _('FileBrowser'),
                     'url': '/admin/filebrowser/browse/',
                     'external': False,
-                    },
-                ]
+                },
+            ]
         ))
 
         # append another link list module for "support".
@@ -81,18 +81,18 @@ class CustomIndexDashboard(Dashboard):
                     'title': _('Django Documentation'),
                     'url': 'http://docs.djangoproject.com/',
                     'external': True,
-                    },
+                },
                 {
                     'title': _('Grappelli Documentation'),
                     'url': 'http://packages.python.org/django-grappelli/',
                     'external': True,
-                    },
+                },
                 {
                     'title': _('Grappelli Google-Code'),
                     'url': 'http://code.google.com/p/django-grappelli/',
                     'external': True,
-                    },
-                ]
+                },
+            ]
         ))
 
         # append another link list module for "custom actions".
@@ -102,15 +102,15 @@ class CustomIndexDashboard(Dashboard):
             children=[
                 {
                     'title': _('inactivate all users'),
-                    'url': reverse('inactivate_users'),
+                    'url': reverse('deactivate_users'),
                     'external': False,
-                    },
+                },
                 {
                     'title': _('activate all users'),
                     'url': reverse('activate_users'),
                     'external': False,
-                    },
-                ]
+                },
+            ]
         ))
 
         # append a feed module
@@ -127,6 +127,6 @@ class CustomIndexDashboard(Dashboard):
             limit=5,
             collapsible=False,
             column=3,
-            ))
+        ))
 
 
