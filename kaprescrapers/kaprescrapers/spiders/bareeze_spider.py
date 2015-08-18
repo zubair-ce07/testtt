@@ -16,7 +16,7 @@ class BareezeSpider(KapreBaseSpider):
 
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=("//*[@id='nav']//li/ul",
-                                                "//a[@title = 'Next']"
+                                                "//a[@title='Next']"
                                                 )),
              follow=True,
              callback="parse_items"),
@@ -24,9 +24,9 @@ class BareezeSpider(KapreBaseSpider):
 
     # this will parse all the products on current page
     def parse_items(self, response):
-        product_links = response.xpath("//*[@class= 'product_detail']")
+        product_links = response.xpath("//*[@class='product_detail']")
         for href in product_links:
-            plink = href.xpath(".//*[@class= 'product-name']//a/@href").extract()
+            plink = href.xpath(".//*[@class='product-name']//a/@href").extract()
             full_url = response.urljoin(plink[0])
             price = self.get_price(href)
             # price demanded is on products pages so we are taking price from here
@@ -72,8 +72,8 @@ class BareezeSpider(KapreBaseSpider):
 
     # price for product
     def get_price(self, sel):
-        price = sel.xpath(".//*[@class= 'price']/text()").extract()[-1].strip()
-        return price.split(" ")[-1]
+        price = sel.xpath(".//*[@class='price']/text()").extract()[-1].strip()
+        return re.sub("PKR ", '', price)
 
     def is_on_sale(self, sel):
         on_sale = sel.xpath("//*[@class='full-product-price']//*[@class='old-price']/text()").extract()

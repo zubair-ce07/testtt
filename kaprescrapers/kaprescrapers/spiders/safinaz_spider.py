@@ -4,6 +4,7 @@ from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
 from kaprescrapers.items import Garment
 from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
+import re
 
 
 class SafinazSpider(KapreBaseSpider):
@@ -14,14 +15,14 @@ class SafinazSpider(KapreBaseSpider):
 
     rules = (
         Rule(SgmlLinkExtractor(deny=("accessories", "Acoustics"),
-                               restrict_xpaths=("//*[@class= 'top-menu']/li/a",
+                               restrict_xpaths=("//*[@class='top-menu']/li/a",
                                                 )),
              callback="parse_items"),
     )
 
     # this will parse all the products on current page
     def parse_items(self, response):
-        product_links = response.xpath("//*[@class= 'product-item']")
+        product_links = response.xpath("//*[@class='product-item']")
         for href in product_links:
             plink = href.xpath(".//*[@class='product-title']/a/@href").extract()
             full_url = response.urljoin(plink[0])
@@ -66,7 +67,7 @@ class SafinazSpider(KapreBaseSpider):
     # price for product
     def get_price(self, sel):
         price = sel.xpath(".//*[@class='product-price']/span/text()").extract()[0].strip()
-        return price.split(" ")[-1]
+        return re.sub("PKR. ", '', price)
 
     def is_on_sale(self, sel):
         on_sale = sel.xpath(".//*[@class='price old-price']").extract()

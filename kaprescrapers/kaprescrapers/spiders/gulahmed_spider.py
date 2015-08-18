@@ -4,6 +4,7 @@ from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
 from kaprescrapers.items import Garment
 from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
+import re
 
 
 class GulAhmedSpider(KapreBaseSpider):
@@ -23,7 +24,7 @@ class GulAhmedSpider(KapreBaseSpider):
     # this will parse all the products on current page
     def parse_items(self, response):
         # getting all products on current page
-        product_links = response.xpath("//*[@id='main-content']//div[@class ='product']")
+        product_links = response.xpath("//*[@id='main-content']//div[@class='product']")
         for href in product_links:
             plink = href.xpath(".//div[@class='entry-media']/a/@href").extract()
             full_url = response.urljoin(plink[0])
@@ -67,8 +68,8 @@ class GulAhmedSpider(KapreBaseSpider):
     # price for product
     def get_price(self, sel):
         price = sel.xpath("//article[@class='entry-content']"
-                          "//span[contains(., 'Price')]/following::span[1]//text()").extract()[0].strip()
-        return price.split(" ")[-1]
+                          "//span[contains(.,'Price')]/following::span[1]//text()").extract()[0].strip()
+        return re.sub("Rs. ", '', price)
 
     def get_availability(self, sel):
         available = sel.xpath(".//div[@class='entry-main']//span/text()").extract()[0]

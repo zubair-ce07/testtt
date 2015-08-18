@@ -4,6 +4,7 @@ from scrapy.spiders import Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
 from kaprescrapers.items import Garment
 from kaprescrapers.spiders.KapreBaseSpider import KapreBaseSpider
+import re
 
 
 class KhadiSpider(KapreBaseSpider):
@@ -11,13 +12,14 @@ class KhadiSpider(KapreBaseSpider):
     allowed_domains = ["khaadionline.com"]
     brand_id = 11
 
+    # first rule is modified as per client's demand using position()
     rules = (
         Rule(SgmlLinkExtractor(deny=("view-all", "accessories"),
                                restrict_xpaths=("//*[@id='nav']//li[position() < 4 ]",
                                                 "//ul[@class='categories-tree']/li[contains(@class,'level1')]/a",
-                                                "//*[@title = 'Next']"
+                                                "//*[@title='Next']"
                                                 ))),
-        Rule(SgmlLinkExtractor(restrict_xpaths=("//*[contains(@class ,'product-grid')]//*[@class='product-image']",
+        Rule(SgmlLinkExtractor(restrict_xpaths=("//*[contains(@class,'product-grid')]//*[@class='product-image']",
                                                 )),
              callback="parse_product")
     )
@@ -45,7 +47,7 @@ class KhadiSpider(KapreBaseSpider):
 
     # for item code
     def get_item_code(self, sel):
-        return sel.xpath(".//*[@class= 'product-code']/strong/text()").extract()[0].strip()
+        return sel.xpath(".//*[@class='product-code']/strong/text()").extract()[0].strip()
 
     # for product description
     def get_description(self, sel):
@@ -55,6 +57,7 @@ class KhadiSpider(KapreBaseSpider):
     # category
     def get_category(self, sel):
         category = sel.xpath(".//*[contains(@class,'breadcrumbs')]//li/a/text()").extract()
+        # these categories are demanded in this way by client
         if len(category) > 3:
             return category[2].strip()
         return category[-1].strip() if category else "uncategorized"
@@ -66,13 +69,10 @@ class KhadiSpider(KapreBaseSpider):
 
     # price for product
     def get_price(self, sel):
-        price = sel.xpath(".//*[@class='regular-price']//*[@class='price']/text()").extract()
-        if not price:
-            price = sel.xpath(".//*[@class='special-price']//*[@class='price']/text()").extract()
-        return (price[0].strip()).split(" ")[-1]
+        price = sel.xpath(".//*[@class='regular-price' or @class='special-price']"
+                          "//*[@class='price']/text()").extract()[0].strip()
+        return re.sub("PKR ", '', price)
 
     def is_on_sale(self, sel):
         on_sale = sel.xpath(".//*[@class='special-price']//*[@class='price']/text()").extract()
-        if on_sale:
-            return True
-        return False
+        return True if on_sale else False

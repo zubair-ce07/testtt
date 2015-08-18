@@ -12,9 +12,10 @@ class NishatSpider(KapreBaseSpider):
     start_urls = ['http://nishatlinen.com/']
     brand_id = 2
 
+    # first rule is modified as per client's demand using position()
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=("//*[@id='header']//ul[contains(@class,'nav')]/li[position()<5]",
-                                                "//div[@class= 'links']//a"
+                                                "//div[@class='links']//a"
                                                 ))),
         Rule(SgmlLinkExtractor(restrict_xpaths=("//div[@class='product']//a",
                                                 )),
@@ -62,20 +63,20 @@ class NishatSpider(KapreBaseSpider):
 
     # price for product
     def get_price(self, sel):
-        price = sel.xpath("//*[@id='product']//div[@class= 'price']//p/text() |"
-                          "//*[@id='product']//*[@class= 'special_price']/text()").extract()
+        price = sel.xpath("//*[@id='product']//div[@class='price' or @class='special_price']//text()").extract()
+        # removing empty results
+        price = filter(None, [s.strip() for s in price])
         if price:
-            return (price[0].strip()).split(" ")[-1]
+            return re.sub("Rs ", '', price[0])
         return "TBA"
 
     def is_on_sale(self, sel):
-        on_sale = sel.xpath("//*[@id='product']//*[@class= 'special_price']/text()").extract()
+        on_sale = sel.xpath("//*[@id='product']//*[@class='special_price']/text()").extract()
         return True if on_sale else False
 
     def is_available(self, sel):
-        # if comming soon
-        tba_check = self.get_price(sel)
-        if "TBA" in tba_check:
+        # if product coming soon
+        if "TBA" in self.get_price(sel):
             return False
         sold = sel.xpath("//*[@id='product']//span[contains(.,'sold')]/text()").extract()
         return False if sold else True
