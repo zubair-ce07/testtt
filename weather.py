@@ -10,5 +10,5 @@ class Weather:
         self.year = year
     
 
-    def displayEmployee(self):
+    def displayWeather(self):
         print "Maximum Temperature : ", self.max_temp,  ", Minimun Temperature : ", self.min_temp,   ", Minimun Humidity : ", self.min_hum,   ", Maximun Humidity : ", self.max_hum,   ", Hottest Day : ", self.hot_day,   ", Coolest Day : ", self.cool_day
