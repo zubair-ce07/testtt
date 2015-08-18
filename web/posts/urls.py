@@ -24,6 +24,10 @@ urlpatterns = [
     url(r'^(?P<post_id>\d+)/$', login_required(PostDetailsView.as_view()), name='post_details'),
     url(r'^(?P<post_id>\d+)/request/$', login_required(NewRequestView.as_view()), name='new_request'),
     url(r'^my-post/(?P<post_id>\d+)/$', login_required(MyPostDetailsView.as_view()), name='my_post_details'),
+
+
+    #TODO: Please merge these two URLs and views and use the querystring parameter as the status i.e., ?status=accept or ?status=reject
+    #TODO: The new URL could be ^(?P<post_id>\d+)/request/(?P<request_id>\d+)/process-request/
     url(r'^(?P<post_id>\d+)/request/(?P<request_id>\d+)/accept/$', login_required(AcceptRequestView.as_view()),
         name='accept_request'),
     url(r'^post/(?P<post_id>\d+)/request/(?P<request_id>\d+)/reject/$', login_required(RejectRequestView.as_view()),

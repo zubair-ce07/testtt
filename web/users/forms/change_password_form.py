@@ -23,6 +23,8 @@ class ChangePasswordForm(forms.Form):
         super(ChangePasswordForm, self).__init__(*args, **kwargs)
 
     def clean(self):
+        # TODO: Don't use the authenticate function here, instead use the builtin django method to check the user's password
+
         if authenticate(username=self.user.email, password=self.cleaned_data.get('old_password')):
             password = self.cleaned_data.get('new_password')
             confirm_password = self.cleaned_data.get('confirm_password')
@@ -42,6 +44,7 @@ class ChangePasswordForm(forms.Form):
             raise forms.ValidationError(ex.message)
         return password
 
+    #TODO: Please update the name of this function and make it validate_password instead.
     def check_password(self, password):
         password = self.cleaned_data.get('new_password')
         if len(password) < 8:

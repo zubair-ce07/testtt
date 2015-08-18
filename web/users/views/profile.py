@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.generic import View
 
 
+#TODO: Merge edit profile page in this page.
 class ProfileView(View):
 
     template_name = 'users/profile.html'

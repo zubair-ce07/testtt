@@ -9,7 +9,7 @@ from web.posts.models import Request, Post
 class AcceptRequestView(View):
     # noinspection PyMethodMayBeStatic
     def get(self, request, post_id, request_id):
-
+        # TODO: not accepted yet, it would be request_to_process
         accepted_request = Request.objects.get(pk=request_id)
         accepted_request.status = 'accepted'
         accepted_request.save()

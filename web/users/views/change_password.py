@@ -12,7 +12,7 @@ class ChangePasswordView(View):
         return render(request, self.template_name, dict(change_password_form=ChangePasswordForm(request.user)))
 
     def post(self, request):
-
+        #TODO: No Need to declare this variable here.!
         response = None
         form = ChangePasswordForm(request.user, request.POST)
         if form.is_valid():

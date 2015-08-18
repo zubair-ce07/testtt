@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from web.posts.models import Request
 
 
+#TODO: merge this in the process request URL.
 class RejectRequestView(View):
     # noinspection PyMethodMayBeStatic
     def get(self, request, post_id, request_id):

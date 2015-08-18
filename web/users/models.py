@@ -2,15 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
-class Address(models.Model):
-    zip_code = models.CharField(max_length=50)
-    street = models.CharField(max_length=255)
-    route = models.CharField(max_length=255)
-    city = models.CharField(max_length=255)
-    state = models.CharField(max_length=255)
-    country = models.CharField(max_length=255)
-
-
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, address, gender, dob, password=None):
         user = self.model(email=UserManager.normalize_email(email), first_name=first_name,
@@ -33,8 +24,10 @@ class User(AbstractBaseUser):
     email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    address = models.OneToOneField(Address)
+    address = models.OneToOneField('Address')
     gender = models.CharField(max_length=100)
+
+    #TODO: it could be born_on
     dob = models.DateField()
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
@@ -71,6 +64,16 @@ class User(AbstractBaseUser):
         """Is the user a member of staff?
            Simplest possible answer: All admins are staff"""
         return self.is_admin
+
+
+class Address(models.Model):
+    zip_code = models.CharField(max_length=50)
+    street = models.CharField(max_length=255)
+    route = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    state = models.CharField(max_length=255)
+    country = models.CharField(max_length=255)
+
 
 
 
