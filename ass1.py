@@ -41,21 +41,18 @@ def read_files(directory):
 		
     for i in range(len(list1)):						
         with open(list1[i], 'rb') as csvfile:
-            reader1 = csv.reader(csvfile)
-            # Skip first two lines
-            reader1.next()
-            reader1.next()
+            next(csvfile)
+            reader1 = csv.DictReader(csvfile)
                
             # Traverse all the lines of a file
             for line in reader1:
-                currentline = line
-		    				
-                if((len(currentline) > 1)):
-                    date = currentline[0]
-                    maximunTemp = currentline[1]
-                    minimunTemp = currentline[3]
-                    minimumHumidity = currentline[9]
-                    maximumHumidity = currentline[7]
+		    			
+                if(line['Max TemperatureC'] != None):
+                    date = line.get('PKT') or line.get('PKST')
+                    maximunTemp = line['Max TemperatureC']
+                    minimunTemp = line['Min TemperatureC']
+                    minimumHumidity = line[' Min Humidity']
+                    maximumHumidity = line['Max Humidity']
                     year = date.split('-');
                     year = int(year[0])
                     w1= Weather(maximunTemp, minimunTemp, maximumHumidity, minimumHumidity, date, year)
