@@ -81,7 +81,7 @@ def min_max_temperature(lowest_year, highest_year, list2):
         minimunTemp = 10000
         maximumHumidity = 0
         minimumHumidity = 10000
-	    # Calculating for specific year
+        # Calculating for specific year
         for index in range(len(list2)):
 
             if(  list2[index].year == year and list2[index].max_temp != '' and int(list2[index].max_temp) > maximunTemp):
@@ -112,7 +112,7 @@ def hottest_day(lowest_year, highest_year, list2):
 	
         maximunTemp = 0
         date = None
-	    # Calculating for specific year
+        # Calculating for specific year
         for index in range(len(list2)):
 
             if(  list2[index].year == year and list2[index].max_temp != '' and int(list2[index].max_temp) > maximunTemp):
@@ -139,7 +139,7 @@ def coolest_day(lowest_year, highest_year, list2):
 	
         minimunTemp = 10000
         date = None
-	    # Calculating for specific year
+        # Calculating for specific year
         for index in range(len(list2)):
 
             if(  list2[index].year == year and list2[index].min_temp != '' and int(list2[index].min_temp) < minimunTemp):
