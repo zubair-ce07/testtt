@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from web.posts.models import Post, Request, PostView, Picture
+from web.posts.models import Post, Request, PostView
 
 
 class PostInline(admin.TabularInline):
@@ -21,14 +21,8 @@ class PostViewInline(admin.TabularInline):
     extra = 1
 
 
-class PictureInline(admin.TabularInline):
-    model = Picture
-    classes = ('grp-collapse grp-closed',)
-    extra = 1
-
-
 class PostAdmin(admin.ModelAdmin):
-    inlines = [PostViewInline, RequestInline, PictureInline]
+    inlines = [PostViewInline, RequestInline]
     list_display = ('email', 'name', 'title', 'area', 'address', 'description',
                     'kind', 'contact_number', 'demanded_price', 'is_sold',
                     'sold_on', 'posted_on', 'expired_on')
@@ -86,18 +80,6 @@ class PostViewAdmin(admin.ModelAdmin):
     def email(self, post_view):
         return post_view.viewed_by.email
 
-
-class PictureAdmin(admin.ModelAdmin):
-    list_display = ('post_title', 'image', 'is_expired')
-    list_filter = ('post__kind', 'is_expired')
-    search_fields = ('post__kind', 'post__posted_by__email', 'post__posted_by__first_name',
-                     'post__posted_by__last_name')
-
-    # noinspection PyMethodMayBeStatic
-    def post_title(self, picture):
-        return picture.post.title
-
 admin.site.register(Post, PostAdmin)
 admin.site.register(Request, RequestAdmin)
 admin.site.register(PostView, PostViewAdmin)
-admin.site.register(Picture, PictureAdmin)

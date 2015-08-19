@@ -25,4 +25,4 @@ urlpatterns = [
                   url(r'^posts/', include('web.posts.urls')),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-handler404 = 'web.users.views.error404.view_404'
+handler404 = 'shared.views.error404.view_404'

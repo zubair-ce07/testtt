@@ -8,7 +8,7 @@ def is_logged_in(function=None):
         @wraps(view_func, assigned=available_attrs(view_func))
         def wrapped_view(request, *args, **kwargs):
             if request.user.is_authenticated():
-                return redirect(reverse('account'))
+                return redirect(reverse('dashboard'))
             else:
                 return view_func(request, *args, **kwargs)
 

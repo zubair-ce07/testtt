@@ -9,5 +9,5 @@ class HotPropertiesView(View):
 
     def get(self, request):
         posts = Post.objects.filter(is_expired=False)
-        posts = sorted(posts, key=lambda m: -m.get_number_of_views) if posts.exists() else []
+        posts = sorted(posts, key=lambda m: -m.number_of_views) if posts.exists() else []
         return render(request, self.template_name, dict(posts=posts))

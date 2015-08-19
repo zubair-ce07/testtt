@@ -14,14 +14,13 @@ class NewRequestView(View):
             initial={'requested_price': Post.objects.get(pk=post_id).demanded_price})))
 
     def post(self, request, post_id):
-        response = None
-        form = NewRequestForm(request.POST)
-        if form.is_valid():
-            message = form.cleaned_data.get('message')
-            requested_price = form.cleaned_data.get('requested_price')
+        new_request_form = NewRequestForm(request.POST)
+        if new_request_form.is_valid():
+            message = new_request_form.cleaned_data.get('message')
+            requested_price = new_request_form.cleaned_data.get('requested_price')
             post = Post.objects.get(pk=post_id)
             Request(requested_by=request.user, post=post, message=message, price=requested_price).save()
             response = redirect(reverse('post_details', args=[post_id]))
         else:
-            response = render(request, self.template_name, dict(new_request_form=form))
+            response = render(request, self.template_name, dict(new_request_form=new_request_form))
         return response

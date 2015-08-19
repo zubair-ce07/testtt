@@ -5,31 +5,30 @@ from web.users.models import Address
 
 
 class Post(models.Model):
+
+    KIND_CHOICES = [('house', 'House'), ('plot', 'Plot'),
+                    ('commercial_plot', 'Commercial Plot'), ('commercial_building', 'Commercial Building'),
+                    ('flat', 'Flat'), ('shop', 'Shop'), ('farm_house', 'Farm House'), ]
+
     posted_by = models.ForeignKey('users.User', related_name='posts')
     title = models.CharField(max_length=255)
     area = models.DecimalField(decimal_places=3, max_digits=100)
     location = models.OneToOneField(Address)
 
-    #TODO: This should be a TextField
-    description = models.CharField(max_length=1024)
+    description = models.TextField(max_length=1024)
 
-    #TODO: Choices should be properly defined here for kind
-    kind = models.CharField(max_length=255)
+    kind = models.CharField(max_length=255, choices=KIND_CHOICES)
     contact_number = models.CharField(max_length=255)
     demanded_price = models.DecimalField(decimal_places=3, max_digits=100)
     is_sold = models.BooleanField(default=False)
 
-    # TODO: Thos should not be a required field and should not have the default value.
-    # TODO: Make it optional and only populate when the property has actually been sold.
-    sold_on = models.DateTimeField(default=timezone.now)
+    sold_on = models.DateTimeField(blank=True, null=True)
     posted_on = models.DateTimeField(default=timezone.now)
     expired_on = models.DateTimeField()
     is_expired = models.BooleanField(default=False)
 
-
-    # TODO: Don't use get_ with the property.
     @property
-    def get_number_of_views(self):
+    def number_of_views(self):
         return self.post_views.all().count()
 
     # TODO: As we already know this is related to Post, no need to add post in the property name
@@ -52,27 +51,16 @@ class Post(models.Model):
             days_hours_minutes_dict = dict(days=days, hours=hours, minutes=minutes)
         return days_hours_minutes_dict
 
-    # TODO: UNUSED CODE... Remove this code.
-    def reactivate_post(self, days):
-        self.is_expired = False
-        self.expired_on = timezone.now() + timezone.timedelta(days=days)
-        self.save()
-
-
-#TODO: Not using this model. remove this model.
-class Picture(models.Model):
-    post = models.ForeignKey('Post', related_name='pictures')
-    image = models.FileField(upload_to='images/')
-    is_expired = models.BooleanField(default=False)
-
 
 class Request(models.Model):
+    STATUS_CHOICES = [('pending', 'pending'), ('rejected', 'rejected'),
+                      ('accepted', 'accepted')]
+
     requested_by = models.ForeignKey('users.User', related_name='requests')
     post = models.ForeignKey('Post', related_name='requests')
     message = models.CharField(max_length=512)
     price = models.DecimalField(decimal_places=3, max_digits=100)
-    #TODO: Use choice properly
-    status = models.CharField(max_length=255, default='pending')
+    status = models.CharField(max_length=255, choices=STATUS_CHOICES, default='pending')
     requested_on = models.DateTimeField(default=timezone.now)
 
 

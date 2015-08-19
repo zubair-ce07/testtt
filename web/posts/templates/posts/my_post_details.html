@@ -11,7 +11,7 @@
         <div>
             <ul class="breadcrumb">
                 <li>
-                    <a href="#">Account</a>
+                    <a href="#">Home</a>
                 </li>
                 <li>
                     <a href="#">My Posts</a>
@@ -42,7 +42,7 @@
 
                                 <div class="top-right-side">
                                     <div class="cls-posted-by"><span> <i
-                                            class="glyphicon glyphicon-eye-open"></i> {{ post.get_number_of_views }} | by {{ post.posted_by.get_full_name }} </span>
+                                            class="glyphicon glyphicon-eye-open"></i> {{ post.number_of_views }} | by {{ post.posted_by.get_full_name }} </span>
                                     </div>
                                 </div>
 
@@ -143,14 +143,14 @@
                                                                 <li>
                                                                     <span class='cls-approved'>
                                                                         <a class='btn '
-                                                                           href="{% url 'accept_request' post_id=post.id request_id=request.id %}">
+                                                                           href="{% url 'process_request' post_id=post.id request_id=request.id status='accepted'%}">
                                                                             Accept </a>
                                                                     </span>
                                                                 </li>
                                                                 <li>
                                                                     <span class='cls-rejected'>
                                                                         <a class='btn '
-                                                                           href="{% url 'reject_request' post_id=post.id request_id=request.id %}">
+                                                                           href="{% url 'process_request' post_id=post.id request_id=request.id status='rejected'%}">
                                                                             Reject </a>
                                                                     </span>
                                                                 </li>

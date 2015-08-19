@@ -9,16 +9,15 @@ from web.posts.models import Post
 class CustomizedSearchView(View):
     # noinspection PyMethodMayBeStatic
     def post(self, request):
-        response = None
-        form = CustomizedSearchForm(request.POST)
-        if form.is_valid():
+        customized_search_form = CustomizedSearchForm(request.POST)
+        if customized_search_form.is_valid():
 
-            country = form.cleaned_data.get('country')
-            state = form.cleaned_data.get('state')
-            city = form.cleaned_data.get('city')
-            route = form.cleaned_data.get('route')
-            kind = form.cleaned_data.get('kind')
-            max_price = form.cleaned_data.get('max_price')
+            country = customized_search_form.cleaned_data.get('country')
+            state = customized_search_form.cleaned_data.get('state')
+            city = customized_search_form.cleaned_data.get('city')
+            route = customized_search_form.cleaned_data.get('route')
+            kind = customized_search_form.cleaned_data.get('kind')
+            max_price = customized_search_form.cleaned_data.get('max_price')
 
             filter_criteria = Q(kind=kind, is_expired=False)
             if max_price:
@@ -36,6 +35,6 @@ class CustomizedSearchView(View):
             posts = posts.order_by('-id') if posts.exists() else []
             response = render(request, 'posts/all_posts.html', dict(posts=posts))
         else:
-            response = render(request, 'users/account.html', dict(customized_search_form=form))
+            response = render(request, 'users/home.html', dict(customized_search_form=customized_search_form))
 
         return response

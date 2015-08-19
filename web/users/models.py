@@ -3,17 +3,17 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, first_name, last_name, address, gender, dob, password=None):
+    def create_user(self, email, first_name, last_name, address, gender, born_on, password=None):
         user = self.model(email=UserManager.normalize_email(email), first_name=first_name,
-                          last_name=last_name, address=address, gender=gender, dob=dob)
+                          last_name=last_name, address=address, gender=gender, born_on=born_on)
         user.set_password(password)
         user.save(using=self._db)
 
         return user
 
-    def create_superuser(self, email, first_name, last_name, address, gender, dob, password):
+    def create_superuser(self, email, first_name, last_name, address, gender, born_on, password):
         user = self.create_user(email=email, first_name=first_name, last_name=last_name,
-                                address=address, gender=gender, dob=dob, password=password)
+                                address=address, gender=gender, born_on=born_on, password=password)
         user.is_admin = True
         user.save(using=self._db)
 
@@ -27,8 +27,7 @@ class User(AbstractBaseUser):
     address = models.OneToOneField('Address')
     gender = models.CharField(max_length=100)
 
-    #TODO: it could be born_on
-    dob = models.DateField()
+    born_on = models.DateField()
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 

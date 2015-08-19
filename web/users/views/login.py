@@ -13,20 +13,20 @@ class LogInView(View):
 
     def post(self, request):
         response = None
-        form = LogInForm(request.POST)
+        sign_in_form = LogInForm(request.POST)
         response_message = ''
 
-        if form.is_valid():
+        if sign_in_form.is_valid():
 
-            email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')
+            email = sign_in_form.cleaned_data.get('email')
+            password = sign_in_form.cleaned_data.get('password')
             user = authenticate(username=email, password=password)
 
             if user:
                 if user.is_active:
 
                     login(request, user)
-                    response = redirect(reverse('account'))
+                    response = redirect(reverse('dashboard'))
 
                 else:
                     response_message = 'Account has been disabled'
@@ -36,6 +36,6 @@ class LogInView(View):
             response_message = 'Please fill in the fields'
 
         if response_message:
-            response = render(request, self.template_name, dict(msg=response_message, login_form=form))
+            response = render(request, self.template_name, dict(msg=response_message, login_form=sign_in_form))
 
         return response

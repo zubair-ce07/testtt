@@ -11,7 +11,7 @@
         <div>
             <ul class="breadcrumb">
                 <li>
-                    <a href="#">Account</a>
+                    <a href="#">Home</a>
                 </li>
                 <li>
                     <a href="#">All Posts</a>
@@ -42,7 +42,7 @@
 
                                 <div class="top-right-side">
                                     <div class="cls-posted-by"><span> <i
-                                            class="glyphicon glyphicon-eye-open"></i> {{ post.get_number_of_views }} | by {{ post.posted_by.get_full_name }} </span>
+                                            class="glyphicon glyphicon-eye-open"></i> {{ post.number_of_views }} | by {{ post.posted_by.get_full_name }} </span>
                                     </div>
                                 </div>
 
@@ -154,7 +154,7 @@
                         {% endif %}
 
                         {% if not is_owners_post and not post.is_sold %}
-                            <p class="center col-md-5">k
+                            <p class="center col-md-5">
                                 <a class="btn btn-primary" href="{% url 'new_request' post_id=post.id %}">New
                                     Request</a>
                             </p>

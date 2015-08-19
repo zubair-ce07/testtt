@@ -12,15 +12,13 @@ class ChangePasswordView(View):
         return render(request, self.template_name, dict(change_password_form=ChangePasswordForm(request.user)))
 
     def post(self, request):
-        #TODO: No Need to declare this variable here.!
-        response = None
-        form = ChangePasswordForm(request.user, request.POST)
-        if form.is_valid():
+        change_password_form = ChangePasswordForm(request.user, request.POST)
+        if change_password_form.is_valid():
             user = request.user
-            user.set_password(form.cleaned_data.get('new_password'))
+            user.set_password(change_password_form.cleaned_data.get('new_password'))
             user.save()
-            response = redirect('/')
+            response = redirect(reverse('index'))
         else:
-            response = render(request, self.template_name, dict(change_password_form=form))
+            response = render(request, self.template_name, dict(change_password_form=change_password_form))
 
         return response

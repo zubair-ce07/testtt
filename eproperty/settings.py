@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'web',
     'web.users',
     'web.posts',
+    'shared',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -144,5 +145,5 @@ GRAPPELLI_INDEX_DASHBOARD = 'admin.dashboard.CustomIndexDashboard'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'muhammadrehan69@gmail.com'
-EMAIL_HOST_PASSWORD = '######'
+EMAIL_HOST_PASSWORD = 'lahoreSADA$%'
 EMAIL_PORT = 587

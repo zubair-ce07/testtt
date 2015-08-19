@@ -5,22 +5,91 @@
 
 {% block content %}
 
-    <div class="center-align-less-width">
+    <div id="content" class="col-lg-10 col-sm-10">
+        <!-- content starts -->
 
-        {{ user.first_name }}<br/>
-        {{ user.last_name }}<br/>
-        {{ user.email }}<br/>
-        {{ user.address.country }}<br/>
-        {{ user.address.city }}<br/>
-        {{ user.address.street }}<br/>
-        {{ user.address.zip_code }}<br/>
-        {{ user.dob }}<br/>
-        {{ user.gender }}<br/>
+        <div>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="#">Home</a>
+                </li>
+                <li>
+                    <a href="#">Account Settings</a>
+                </li>
+                <li>
+                    <a href="#">Profile</a>
+                </li>
+            </ul>
+        </div>
+        <!-- Edit Profile -->
+        <div class="row">
+            <div class="box col-md-12">
+                <div class="box-inner">
+                    <div class="box-header well" data-original-title="">
+                        <h2><i class="glyphicon  glyphicon-edit"></i> Profile </h2>
 
-        <a class="no-decoration" href = "{% url 'edit_profile' %}">  Edit </a>
+                        <div class="box-icon">
+                            <i class="glyphicon glyphicon-star-empty"></i>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <!-- put your content here -->
+
+                        <form role="form" action="{% url 'profile' %}" method="post">
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                <label>First Name</label>
+                                {{ edit_profile_form.first_name }}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                {{ edit_profile_form.last_name }}
+                            </div>
+
+                            <div class="form-group">
+                                <label>Address</label>
+                                <input id="autocomplete" class="form-control" placeholder="Enter your new address to change old one"
+                                       onFocus="geolocate()" type="text"/>
+                            </div>
+
+                            <div class="form-group">
+                                {{ edit_profile_form.zip_code }}
+                                {{ edit_profile_form.street_or_block }}
+                                {{ edit_profile_form.route }}
+                                {{ edit_profile_form.city }}
+                                {{ edit_profile_form.state }}
+                                {{ edit_profile_form.country }}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="radio-inline">{{ edit_profile_form.gender }}</label>
+                            </div>
+
+                            <div class="form-group">
+                                <label> Date of birth</label>
+
+                                <div class='input-group date' id='datepicker1'>
+                                    {{ edit_profile_form.date_of_birth }}
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                            </div>
 
 
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default">Save changes</button>
+                                <a class="btn btn-default" href="{% url 'dashboard' %}"> Cancel </a>
+                            </div>
+                        </form>
 
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--/row-->
     </div>
 
 {% endblock %}

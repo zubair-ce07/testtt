@@ -1,4 +1,3 @@
-from django.db.models import Q
 from django.shortcuts import render
 from django.views.generic import View
 from web.posts.models import Post

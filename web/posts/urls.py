@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 
-from web.posts.views.accept_request import AcceptRequestView
+from web.posts.views.process_request import ProcessRequestView
 from web.posts.views.all_posts import AllPostsView
 from web.posts.views.customized_search import CustomizedSearchView
 from web.posts.views.hot_properties import HotPropertiesView
@@ -11,8 +11,6 @@ from web.posts.views.my_requests import MyRequestsView
 from web.posts.views.new_post import NewPostView
 from web.posts.views.new_request import NewRequestView
 from web.posts.views.post_details import PostDetailsView
-from web.posts.views.reject_request import RejectRequestView
-
 
 urlpatterns = [
     url(r'^search/$', login_required(CustomizedSearchView.as_view()), name='customized_search'),
@@ -24,12 +22,6 @@ urlpatterns = [
     url(r'^(?P<post_id>\d+)/$', login_required(PostDetailsView.as_view()), name='post_details'),
     url(r'^(?P<post_id>\d+)/request/$', login_required(NewRequestView.as_view()), name='new_request'),
     url(r'^my-post/(?P<post_id>\d+)/$', login_required(MyPostDetailsView.as_view()), name='my_post_details'),
-
-
-    #TODO: Please merge these two URLs and views and use the querystring parameter as the status i.e., ?status=accept or ?status=reject
-    #TODO: The new URL could be ^(?P<post_id>\d+)/request/(?P<request_id>\d+)/process-request/
-    url(r'^(?P<post_id>\d+)/request/(?P<request_id>\d+)/accept/$', login_required(AcceptRequestView.as_view()),
-        name='accept_request'),
-    url(r'^post/(?P<post_id>\d+)/request/(?P<request_id>\d+)/reject/$', login_required(RejectRequestView.as_view()),
-        name='reject_request'),
+    url(r'^(?P<post_id>\d+)/process-request/(?P<request_id>\d+)/(?P<status>\w+)/$',
+        login_required(ProcessRequestView.as_view()), name='process_request'),
 ]

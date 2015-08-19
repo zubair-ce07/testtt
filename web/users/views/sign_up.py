@@ -12,30 +12,29 @@ class SignUpView(View):
         return render(request, self.template_name, dict(sign_up_form=SignUpForm()))
 
     def post(self, request):
-        response = None
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')
-            first_name = form.cleaned_data.get('first_name')
-            last_name = form.cleaned_data.get('last_name')
-            country = form.cleaned_data.get('country')
-            city = form.cleaned_data.get('city')
-            street_or_block = form.cleaned_data.get('street_or_block')
-            route = form.cleaned_data.get('route')
-            zip_code = form.cleaned_data.get('zip_code')
-            state = form.cleaned_data.get('state')
-            gender = form.cleaned_data.get('gender')
-            date_of_birth = form.cleaned_data.get('date_of_birth')
+        sign_up_form = SignUpForm(request.POST)
+        if sign_up_form.is_valid():
+            email = sign_up_form.cleaned_data.get('email')
+            password = sign_up_form.cleaned_data.get('password')
+            first_name = sign_up_form.cleaned_data.get('first_name')
+            last_name = sign_up_form.cleaned_data.get('last_name')
+            country = sign_up_form.cleaned_data.get('country')
+            city = sign_up_form.cleaned_data.get('city')
+            street_or_block = sign_up_form.cleaned_data.get('street_or_block')
+            route = sign_up_form.cleaned_data.get('route')
+            zip_code = sign_up_form.cleaned_data.get('zip_code')
+            state = sign_up_form.cleaned_data.get('state')
+            gender = sign_up_form.cleaned_data.get('gender')
+            date_of_birth = sign_up_form.cleaned_data.get('date_of_birth')
 
             address = Address(zip_code=zip_code, route=route, street=street_or_block, city=city, state=state,
                               country=country)
             address.save()
             User.objects.create_user(email=email, first_name=first_name, last_name=last_name,
-                                     address=address, gender=gender, dob=date_of_birth, password=password)
+                                     address=address, gender=gender, born_on=date_of_birth, password=password)
             response = redirect(reverse('login'))
 
         else:
-            response = render(request, self.template_name, dict(sign_up_form=form))
+            response = render(request, self.template_name, dict(sign_up_form=sign_up_form))
 
         return response

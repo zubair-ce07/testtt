@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import View
 
 from web.posts.forms.new_post_form import NewPostForm
-from web.posts.models import Post, Picture
+from web.posts.models import Post
 from web.users.models import Address
 
 
@@ -15,24 +15,22 @@ class NewPostView(View):
 
     def post(self, request):
 
-        response = None
-        form = NewPostForm(request.POST, request.FILES)
-        if form.is_valid():
+        new_post_form = NewPostForm(request.POST, request.FILES)
+        if new_post_form.is_valid():
 
-            title = form.cleaned_data.get('title')
-            area = form.cleaned_data.get('area')
-            country = form.cleaned_data.get('country')
-            city = form.cleaned_data.get('city')
-            street_or_block = form.cleaned_data.get('street_or_block')
-            route = form.cleaned_data.get('route')
-            state = form.cleaned_data.get('state')
-            zip_code = form.cleaned_data.get('zip_code')
-            image = request.FILES.get('image')
-            description = form.cleaned_data.get('description')
-            kind = form.cleaned_data.get('kind')
-            contact_number = form.cleaned_data.get('contact_number')
-            demand = form.cleaned_data.get('demand')
-            expired_on = form.cleaned_data.get('expired_on')
+            title = new_post_form.cleaned_data.get('title')
+            area = new_post_form.cleaned_data.get('area')
+            country = new_post_form.cleaned_data.get('country')
+            city = new_post_form.cleaned_data.get('city')
+            street_or_block = new_post_form.cleaned_data.get('street_or_block')
+            route = new_post_form.cleaned_data.get('route')
+            state = new_post_form.cleaned_data.get('state')
+            zip_code = new_post_form.cleaned_data.get('zip_code')
+            description = new_post_form.cleaned_data.get('description')
+            kind = new_post_form.cleaned_data.get('kind')
+            contact_number = new_post_form.cleaned_data.get('contact_number')
+            demand = new_post_form.cleaned_data.get('demand')
+            expired_on = new_post_form.cleaned_data.get('expired_on')
 
             address = Address(zip_code=zip_code, route=route, street=street_or_block, city=city, state=state,
                               country=country)
@@ -43,6 +41,6 @@ class NewPostView(View):
             response = redirect(reverse('my_posts'))
 
         else:
-            response = render(request, self.template_name, dict(new_post_form=form))
+            response = render(request, self.template_name, dict(new_post_form=new_post_form))
 
         return response
