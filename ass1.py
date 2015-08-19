@@ -24,7 +24,7 @@ def sort_nicely(l):
 		
 def read_files(directory):
 		
-    # Read first file to get a year with lowest year
+    # Read all files
     list1 = glob.glob(directory+ "/*.txt")
 	
     w = Weather('', '', '', '', '', 0)
@@ -60,8 +60,7 @@ def read_files(directory):
                     year = int(year[0])
                     w1= Weather(maximunTemp, minimunTemp, maximumHumidity, minimumHumidity, date, year)
                     list2.append(w1)						
-		
-		
+				
     return list2
 	
 	
