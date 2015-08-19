@@ -148,12 +148,8 @@ def coolest_day(lowest_year, highest_year, weather_list):
 
     return None
 
+def application_usage_info():
 
-def main(argv):
-	
-    
-    if (argv.filename == '' or argv.num == 0):
-		
         print "No arguments have been passed" 
         print "Usage: weatherman <report Number> <data_dir>"
 
@@ -165,6 +161,14 @@ def main(argv):
         print "[data_dir]" 
         print "Directory containing weather data files"
         sys.exit();
+
+
+def main(argv):
+	
+    
+    if (argv.filename == '' or argv.num == 0):
+		
+        application_usage_info()
 		
     elif(argv.filename != '' and argv.num != 0):
         directory = argv.filename
