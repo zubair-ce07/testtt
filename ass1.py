@@ -26,111 +26,129 @@ def read_files(directory):
 		
     # Read first file to get a year with lowest year
     list1 = glob.glob(directory+ "/*.txt")
-    list1 = sort_nicely(list1)
-    lowest_year = list1[0]
-    highest_year = list1[-1]
 	
-    lowest_year = lowest_year.split('/')
-    lowest_year = lowest_year[-1]
-    lowest_year = lowest_year.split('_')
-    lowest_year = lowest_year[-2]
-	
-    highest_year = highest_year.split('/')
-    highest_year = highest_year[-1]
-    highest_year = highest_year.split('_')
-    highest_year = highest_year[-2]
-	
-    highest_year = int(highest_year)
-    lowest_year = int(lowest_year)
-	
-    year = lowest_year
-	
-    w = Weather(0, 0, 0, 0, "", "", 0)
+    w = Weather('', '', '', '', '', 0)
     list2 = [w]
 		
-    # Traverse all files of all years
-    while (year <= highest_year):
-	
-        list1 = glob.glob(directory+ "/*"+str(year)+ "*.txt");
-			
-        maximunTemp = 0
-        minimunTemp = 10000
-        maximumHumidity = 0
-        minimumHumidity = 10000
-        hottet_day_date = ""
-        coolest_day_date = ""
-		
-        # Traverse all the files of a specific year
-        for i in range(len(list1)):						
-            with open(list1[i], 'rb') as csvfile:
-                reader1 = csv.reader(csvfile, delimiter=',', quotechar='|')
-                # Skip first two lines
-                reader1.next()
-                reader1.next()
-               
-                # Traverse all the lines of a file
-                for line in reader1:
-                    currentline = line
-		    				
-                    # Maximun temperature	
-                    if((len(currentline) > 1) and currentline[1] != '' and (int(currentline[1]) >= maximunTemp)):
-                        maximunTemp = int(currentline[1])
-                        hottet_day_date = currentline[0]
-				    	
-                    # Min temperature
-                    if(len(currentline) > 1 and currentline[3] != '' and int(currentline[3]) < minimunTemp):
-                        minimunTemp = int(currentline[3])
-                        coolest_day_date = currentline[0]
-					
-                    # Minimum Humidity
-                    if(len(currentline) > 1 and currentline[9] != '' and int(currentline[9]) < minimumHumidity):
-                        minimumHumidity = int(currentline[9])
-				
-                    # Maximum Humidity
-                    if((len(currentline) > 1) and currentline[7] != '' and (int(currentline[7]) >= maximumHumidity)):
-                        maximumHumidity = int(currentline[7])
+    # Traverse all files of all years	
+    maximunTemp = None
+    minimunTemp = None
+    maximumHumidity = None
+    minimumHumidity = None
+    date = ""
+    year = 0
 
-        w1= Weather(maximunTemp, minimunTemp, maximumHumidity, minimumHumidity, hottet_day_date, coolest_day_date, year)
-        list2.append(w1)
-			
-        year = year + 1
+		
+    for i in range(len(list1)):						
+        with open(list1[i], 'rb') as csvfile:
+            reader1 = csv.reader(csvfile)
+            # Skip first two lines
+            reader1.next()
+            reader1.next()
+               
+            # Traverse all the lines of a file
+            for line in reader1:
+                currentline = line
+		    				
+                if((len(currentline) > 1)):
+                    date = currentline[0]
+                    maximunTemp = currentline[1]
+                    minimunTemp = currentline[3]
+                    minimumHumidity = currentline[9]
+                    maximumHumidity = currentline[7]
+                    year = date.split('-');
+                    year = int(year[0])
+                    w1= Weather(maximunTemp, minimunTemp, maximumHumidity, minimumHumidity, date, year)
+                    list2.append(w1)						
 		
 		
     return list2
 	
 	
-def min_max_temperature(list2):
-
+def min_max_temperature(lowest_year, highest_year, list2):
+    
     # Min/Max temperature
     print "Year        MAX Temp         MIN Temp         MAX Humidity         MIN Humidity"
     print "--------------------------------------------------------------------------------"
-	
-    for index in range(len(list2)):
-        print '{:4}'.format(list2[index].year)+"             "+'{:5}'.format(list2[index].max_temp)+"             "+'{:5}'.format(list2[index].min_temp)+"            "+'{:5}'.format(list2[index].max_hum)+"            "+'{:5}'.format(list2[index].min_hum)			
 
+	
+    year = lowest_year
+
+    # Traverse for all years
+    while (year <= highest_year):
+	
+        maximunTemp = 0
+        minimunTemp = 10000
+        maximumHumidity = 0
+        minimumHumidity = 10000
+	    # Calculating for specific year
+        for index in range(len(list2)):
+
+            if(  list2[index].year == year and list2[index].max_temp != '' and int(list2[index].max_temp) > maximunTemp):
+                maximunTemp = int(list2[index].max_temp)
+            if( list2[index].year == year and  list2[index].min_temp != '' and int(list2[index].min_temp) <= minimunTemp):
+                minimunTemp = int(list2[index].min_temp)
+            if( list2[index].year == year and  list2[index].max_hum != '' and int(list2[index].max_hum) >= maximumHumidity):
+                maximumHumidity = int(list2[index].max_hum)
+            if( list2[index].year == year and  list2[index].min_hum != '' and int(list2[index].min_hum) <= minimumHumidity):
+                minimumHumidity = int(list2[index].min_hum)
+			
+	    	
+        print '{:4}'.format(year)+"             "+'{:5}'.format(maximunTemp)+"             "+'{:5}'.format(minimunTemp)+"            "+'{:5}'.format(maximumHumidity)+"            "+'{:5}'.format(minimumHumidity)			
+        year = year + 1
    
     return None
 	
 	
-def hottest_day(list2):
+def hottest_day(lowest_year, highest_year, list2):
 
     print "Year                Date                Temp"
     print "-----------------------------------------------"
 	
-    for index in range(len(list2)):
-        print '{:4}'.format(list2[index].year)+"             "+'{:10}'.format(list2[index].hot_day)+"             "+'{:5}'.format(list2[index].max_temp)
+    year = lowest_year
+	
+    # Traverse for all years
+    while (year <= highest_year):
+	
+        maximunTemp = 0
+        date = None
+	    # Calculating for specific year
+        for index in range(len(list2)):
+
+            if(  list2[index].year == year and list2[index].max_temp != '' and int(list2[index].max_temp) > maximunTemp):
+                maximunTemp = int(list2[index].max_temp)
+                date = list2[index].date
+			    	
+        print '{:4}'.format(year)+"             "+'{:10}'.format(date)+"             "+'{:5}'.format(maximunTemp)
+        year = year + 1
+		
 
     return None
 	
 	
-def coolest_day(list2):
+def coolest_day(lowest_year, highest_year, list2):
 
 
     print "Year                Date                Temp"
     print "-----------------------------------------------"
 	
-    for index in range(len(list2)):
-        print '{:4}'.format(list2[index].year)+"             "+'{:10}'.format(list2[index].cool_day)+"             "+'{:5}'.format(list2[index].min_temp)
+    year = lowest_year
+	
+    # Traverse for all years
+    while (year <= highest_year):
+	
+        minimunTemp = 10000
+        date = None
+	    # Calculating for specific year
+        for index in range(len(list2)):
+
+            if(  list2[index].year == year and list2[index].min_temp != '' and int(list2[index].min_temp) < minimunTemp):
+                minimunTemp = int(list2[index].min_temp)
+                date = list2[index].date
+			    	
+        print '{:4}'.format(year)+"             "+'{:10}'.format(date)+"             "+'{:5}'.format(minimunTemp)
+        year = year + 1
+	
 
     return None
 
@@ -159,12 +177,33 @@ def main(argv):
         list2 = read_files(directory)
         del list2[0]
 		
+		
+        # Read first file to get a year with lowest year
+        list1 = glob.glob(directory+ "/*.txt")
+        list1 = sort_nicely(list1)
+        lowest_year = list1[0]
+        highest_year = list1[-1]
+	
+        lowest_year = lowest_year.split('/')
+        lowest_year = lowest_year[-1]
+        lowest_year = lowest_year.split('_')
+        lowest_year = lowest_year[-2]
+	
+        highest_year = highest_year.split('/')
+        highest_year = highest_year[-1]
+        highest_year = highest_year.split('_')
+        highest_year = highest_year[-2]
+	
+        highest_year = int(highest_year)
+        lowest_year = int(lowest_year)
+		
+		
         if reportNumber == 1:
-            min_max_temperature(list2)
+            min_max_temperature(lowest_year, highest_year, list2)
         elif reportNumber == 2:
-            hottest_day(list2)
+            hottest_day(lowest_year, highest_year, list2)
         elif reportNumber == 3:
-            coolest_day(list2)
+            coolest_day(lowest_year, highest_year, list2)
 		
     return None
 		
