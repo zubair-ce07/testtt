@@ -1,0 +1,70 @@
+<div id="content" class="col-lg-10 col-sm-10">
+    <!-- content starts -->
+
+    <div>
+        <ul class="breadcrumb" >
+            <li>
+                <a href="#">Home</a>
+            </li>
+            <li>
+                <a href="#">Search</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="row">
+
+        <!-- customize search starts -->
+        <div class="box col-md-12">
+            <div class="box-inner">
+
+                <div class="box-header well" data-original-title="">
+                    <h2><i class="glyphicon glyphicon-search"></i> Search the properties that suit you!</h2>
+
+                    <div class="box-icon">
+                        <i class="glyphicon glyphicon-star-empty"></i>
+                    </div>
+                </div>
+
+                <div class="box-content" >
+                    <!-- put your content here -->
+
+                    <form role="form" action="{% url 'customized_search' %}" method="post">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input id="autocomplete" class="form-control" placeholder="Choose location or any"
+                                   onFocus="geolocate()" type="text"/>
+                        </div>
+
+                        <div class="form-group">
+                            {{ customized_search_form.route }}
+                            {{ customized_search_form.city }}
+                            {{ customized_search_form.state }}
+                            {{ customized_search_form.country }}
+                        </div>
+
+                        <div class="form-group">
+                            <label>Type</label>
+                            {{ customized_search_form.kind }}
+                        </div>
+
+                        <div class="form-group">
+                            <label>Max Price</label>
+                            {{ customized_search_form.max_price }}
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-default">Search</button>
+                        </div>
+
+                    </form>
+                    <!-- End customize search -->
+
+                </div>
+            </div><!-- /box-inner -->
+
+        </div>
+    </div><!--/row-->
+</div>

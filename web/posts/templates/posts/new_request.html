@@ -1,0 +1,68 @@
+{% extends "web/base.html" %}
+
+
+{% block title %} New Request {% endblock %}
+
+{% block content %}
+
+    <div id="content" class="col-lg-10 col-sm-10">
+        <!-- content starts -->
+
+        <div>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="#">Home</a>
+                </li>
+                <li>
+                    <a href="#">Post</a>
+                </li>
+                <li>
+                    <a href="#">New Request</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- new Request -->
+        <div class="row">
+            <div class="box col-md-12">
+                <div class="box-inner">
+                    <div class="box-header well" data-original-title="">
+                        <h2><i class="glyphicon glyphicon-plus"></i> New </h2>
+
+                        <div class="box-icon">
+                            <i class="glyphicon glyphicon-star-empty"></i>
+                        </div>
+                    </div>
+                    <div class="box-content">
+                        <!-- put your content here -->
+
+                        <form role="form" action="{% url 'new_request' post_id=post_id %}" method="post">
+
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                <label>Offered price($)</label>
+                                {{ new_request_form.requested_price }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="comment">Message</label>
+                                {{ new_request_form.message }}
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default">Send</button>
+                                <a class="btn btn-default" href="{% url 'dashboard' %}"> Cancel </a>
+                            </div>
+
+                        </form>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--/row-->
+    </div>
+
+{% endblock %}
