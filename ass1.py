@@ -25,10 +25,10 @@ def sort_nicely(l):
 def read_files(directory):
 		
     # Read all files
-    list1 = glob.glob(directory+ "/*.txt")
+    list_of_file_names = glob.glob(directory+ "/*.txt")
 	
     w = Weather('', '', '', '', '', 0)
-    list2 = [w]
+    weather_list = [w]
 		
     # Traverse all files of all years	
     maximunTemp = None
@@ -39,8 +39,8 @@ def read_files(directory):
     year = 0
 
 		
-    for i in range(len(list1)):						
-        with open(list1[i], 'rb') as csvfile:
+    for i in range(len(list_of_file_names)):						
+        with open(list_of_file_names[i], 'rb') as csvfile:
             next(csvfile)
             reader1 = csv.DictReader(csvfile)
                
@@ -56,12 +56,12 @@ def read_files(directory):
                     year = date.split('-');
                     year = int(year[0])
                     w1= Weather(maximunTemp, minimunTemp, maximumHumidity, minimumHumidity, date, year)
-                    list2.append(w1)						
+                    weather_list.append(w1)						
 				
-    return list2
+    return weather_list
 	
 	
-def min_max_temperature(lowest_year, highest_year, list2):
+def min_max_temperature(lowest_year, highest_year, weather_list):
     
     # Min/Max temperature
     print "Year        MAX Temp         MIN Temp         MAX Humidity         MIN Humidity"
@@ -78,16 +78,16 @@ def min_max_temperature(lowest_year, highest_year, list2):
         maximumHumidity = 0
         minimumHumidity = 10000
         # Calculating for specific year
-        for index in range(len(list2)):
+        for index in range(len(weather_list)):
 
-            if(  list2[index].year == year and list2[index].max_temp != '' and int(list2[index].max_temp) > maximunTemp):
-                maximunTemp = int(list2[index].max_temp)
-            if( list2[index].year == year and  list2[index].min_temp != '' and int(list2[index].min_temp) <= minimunTemp):
-                minimunTemp = int(list2[index].min_temp)
-            if( list2[index].year == year and  list2[index].max_hum != '' and int(list2[index].max_hum) >= maximumHumidity):
-                maximumHumidity = int(list2[index].max_hum)
-            if( list2[index].year == year and  list2[index].min_hum != '' and int(list2[index].min_hum) <= minimumHumidity):
-                minimumHumidity = int(list2[index].min_hum)
+            if(  weather_list[index].year == year and weather_list[index].max_temp != '' and int(weather_list[index].max_temp) > maximunTemp):
+                maximunTemp = int(weather_list[index].max_temp)
+            if( weather_list[index].year == year and  weather_list[index].min_temp != '' and int(weather_list[index].min_temp) <= minimunTemp):
+                minimunTemp = int(weather_list[index].min_temp)
+            if( weather_list[index].year == year and  weather_list[index].max_hum != '' and int(weather_list[index].max_hum) >= maximumHumidity):
+                maximumHumidity = int(weather_list[index].max_hum)
+            if( weather_list[index].year == year and  weather_list[index].min_hum != '' and int(weather_list[index].min_hum) <= minimumHumidity):
+                minimumHumidity = int(weather_list[index].min_hum)
 			
 	    	
         print '{:4}'.format(year)+"             "+'{:5}'.format(maximunTemp)+"             "+'{:5}'.format(minimunTemp)+"            "+'{:5}'.format(maximumHumidity)+"            "+'{:5}'.format(minimumHumidity)			
@@ -96,7 +96,7 @@ def min_max_temperature(lowest_year, highest_year, list2):
     return None
 	
 	
-def hottest_day(lowest_year, highest_year, list2):
+def hottest_day(lowest_year, highest_year, weather_list):
 
     print "Year                Date                Temp"
     print "-----------------------------------------------"
@@ -109,11 +109,11 @@ def hottest_day(lowest_year, highest_year, list2):
         maximunTemp = 0
         date = None
         # Calculating for specific year
-        for index in range(len(list2)):
+        for index in range(len(weather_list)):
 
-            if(  list2[index].year == year and list2[index].max_temp != '' and int(list2[index].max_temp) > maximunTemp):
-                maximunTemp = int(list2[index].max_temp)
-                date = list2[index].date
+            if(  weather_list[index].year == year and weather_list[index].max_temp != '' and int(weather_list[index].max_temp) > maximunTemp):
+                maximunTemp = int(weather_list[index].max_temp)
+                date = weather_list[index].date
 			    	
         print '{:4}'.format(year)+"             "+'{:10}'.format(date)+"             "+'{:5}'.format(maximunTemp)
         year = year + 1
@@ -122,7 +122,7 @@ def hottest_day(lowest_year, highest_year, list2):
     return None
 	
 	
-def coolest_day(lowest_year, highest_year, list2):
+def coolest_day(lowest_year, highest_year, weather_list):
 
 
     print "Year                Date                Temp"
@@ -136,11 +136,11 @@ def coolest_day(lowest_year, highest_year, list2):
         minimunTemp = 10000
         date = None
         # Calculating for specific year
-        for index in range(len(list2)):
+        for index in range(len(weather_list)):
 
-            if(  list2[index].year == year and list2[index].min_temp != '' and int(list2[index].min_temp) < minimunTemp):
-                minimunTemp = int(list2[index].min_temp)
-                date = list2[index].date
+            if(  weather_list[index].year == year and weather_list[index].min_temp != '' and int(weather_list[index].min_temp) < minimunTemp):
+                minimunTemp = int(weather_list[index].min_temp)
+                date = weather_list[index].date
 			    	
         print '{:4}'.format(year)+"             "+'{:10}'.format(date)+"             "+'{:5}'.format(minimunTemp)
         year = year + 1
@@ -170,15 +170,15 @@ def main(argv):
         directory = argv.filename
         reportNumber = argv.num
 		
-        list2 = read_files(directory)
-        del list2[0]
+        weather_list = read_files(directory)
+        del weather_list[0]
 		
 		
         # Read first file to get a year with lowest year
-        list1 = glob.glob(directory+ "/*.txt")
-        list1 = sort_nicely(list1)
-        lowest_year = list1[0]
-        highest_year = list1[-1]
+        list_of_file_names = glob.glob(directory+ "/*.txt")
+        list_of_file_names = sort_nicely(list_of_file_names)
+        lowest_year = list_of_file_names[0]
+        highest_year = list_of_file_names[-1]
 	
         lowest_year = lowest_year.split('/')
         lowest_year = lowest_year[-1]
@@ -195,11 +195,11 @@ def main(argv):
 		
 		
         if reportNumber == 1:
-            min_max_temperature(lowest_year, highest_year, list2)
+            min_max_temperature(lowest_year, highest_year, weather_list)
         elif reportNumber == 2:
-            hottest_day(lowest_year, highest_year, list2)
+            hottest_day(lowest_year, highest_year, weather_list)
         elif reportNumber == 3:
-            coolest_day(lowest_year, highest_year, list2)
+            coolest_day(lowest_year, highest_year, weather_list)
 		
     return None
 		
