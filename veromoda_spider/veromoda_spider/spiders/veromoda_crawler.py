@@ -7,7 +7,7 @@ from veromoda_spider.items		import skuItem
 from scrapy.http		import Request
 from scrapy.utils.serialize import ScrapyJSONEncoder
 
-class veromoda_crawler(BaseSpider):
+class VeromodaCrawler(BaseSpider):
     name = "veromoda"
     allowed_domians = ["veromoda.com"]
     start_urls = ["http://www.veromoda.com/vero-moda/jjumpsuits/vmsassa-flare-2-4-jumpsuit-nfs/10146606,en_GB,pd.html?dwvar_10146606_colorPattern=10146606_Black/"]
