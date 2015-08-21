@@ -1,0 +1,8 @@
+{"10146606":
+{"variations":
+{"variants":
+[{"id":"5712836246839","inWarehouse":true,"attributes":{"colorPattern":"10146606_Black","size":"M"},"pricing":{"standard":"48.0","sale":"48.0","isPromoPrice":false,"quantities":[{"unit":"","value":"1.0"}]}},
+{"id":"5712836629410","inWarehouse":true,"attributes":{"colorPattern":"10146606_Black","size":"XS"},"pricing":{"standard":"48.0","sale":"48.0","isPromoPrice":false,"quantities":[{"unit":"","value":"1.0"}]}},
+{"id":"5712836629427","inWarehouse":true,"attributes":{"colorPattern":"10146606_Black","size":"S"},"pricing":{"standard":"48.0","sale":"48.0","isPromoPrice":false,"quantities":[{"unit":"","value":"1.0"}]}},
+{"id":"5712836629434","inWarehouse":true,"attributes":{"colorPattern":"10146606_Black","size":"L"},"pricing":{"standard":"48.0","sale":"48.0","isPromoPrice":false,"quantities":[{"unit":"","value":"1.0"}]}},
+{"id":"5712836629458","inWarehouse":true,"attributes":{"colorPattern":"10146606_Black","size":"XL"},"pricing":{"standard":"48.0","sale":"48.0","isPromoPrice":false,"quantities":[{"unit":"","value":"1.0"}]}}]}}}
