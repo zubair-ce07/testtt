@@ -1,12 +1,10 @@
 from django import forms
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from web.posts.models import Post
 
 
 class NewPostForm(forms.Form):
-    KIND_CHOICES = [('house', 'House'), ('plot', 'Plot'),
-                    ('commercial_plot', 'Commercial Plot'), ('commercial_building', 'Commercial Building'),
-                    ('flat', 'Flat'), ('shop', 'Shop'), ('farm_house', 'Farm House'), ]
 
     title = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Title'}),
                             max_length=255)
@@ -29,7 +27,7 @@ class NewPostForm(forms.Form):
 
     description = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Write description'}), max_length=1024)
-    kind = forms.ChoiceField(widget=forms.Select(attrs={'class':' form-control'}), choices=KIND_CHOICES)
+    kind = forms.ChoiceField(widget=forms.Select(attrs={'class':' form-control'}), choices=Post.KindChoices.CHOICES)
     contact_number = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contact #'}), max_length=50)
     demand = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price($)'}),

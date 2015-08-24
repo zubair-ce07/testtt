@@ -1,10 +1,8 @@
 from django import forms
+from web.posts.models import Post
 
 
 class CustomizedSearchForm(forms.Form):
-    KIND_CHOICES = [('house', 'House'), ('plot', 'Plot'),
-                    ('commercial_plot', 'Commercial Plot'), ('commercial_building', 'Commercial Building'),
-                    ('flat', 'Flat'), ('shop', 'Shop'), ('farm_house', 'Farm House'), ]
 
     country = forms.CharField(widget=forms.TextInput(
         attrs={'type': 'hidden', 'id': 'country', 'placeholder': 'Country', 'disabled': 'true'}), required=False,
@@ -20,7 +18,7 @@ class CustomizedSearchForm(forms.Form):
         attrs={'type': 'hidden', 'id': 'route', 'placeholder': 'Route', 'disabled': 'true'}), required=False,
         max_length=100)
 
-    kind = forms.ChoiceField(widget=forms.Select(attrs={'class': ' form-control'}), choices=KIND_CHOICES)
+    kind = forms.ChoiceField(widget=forms.Select(attrs={'class': ' form-control'}), choices=Post.KindChoices.CHOICES)
 
     max_price = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price($)'}),
                                    required=False, max_digits=100, decimal_places=3)

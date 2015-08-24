@@ -5,23 +5,34 @@ from web.users.models import Address
 
 
 class Post(models.Model):
+    class KindChoices(object):
+        HOUSE = 'house'
+        PLOT = 'plot'
+        COMMERCIAL_PLOT = 'commercial_plot'
+        COMMERCIAL_BUILDING = 'commercial_building'
+        FLAT = 'flat'
+        SHOP = 'shop'
+        FARM_HOUSE = 'farm_house'
 
-    KIND_CHOICES = [('house', 'House'), ('plot', 'Plot'),
-                    ('commercial_plot', 'Commercial Plot'), ('commercial_building', 'Commercial Building'),
-                    ('flat', 'Flat'), ('shop', 'Shop'), ('farm_house', 'Farm House'), ]
+        CHOICES = (
+            (HOUSE, 'House'),
+            (PLOT, 'Plot'),
+            (COMMERCIAL_PLOT, 'Commercial Plot'),
+            (COMMERCIAL_BUILDING, 'Commercial Building'),
+            (FLAT, 'Flat'),
+            (SHOP, 'Shop'),
+            (FARM_HOUSE, 'Farm House')
+        )
 
     posted_by = models.ForeignKey('users.User', related_name='posts')
     title = models.CharField(max_length=255)
     area = models.DecimalField(decimal_places=3, max_digits=100)
     location = models.OneToOneField(Address)
-
-    description = models.TextField(max_length=1024)
-
-    kind = models.CharField(max_length=255, choices=KIND_CHOICES)
+    description = models.TextField()
+    kind = models.CharField(max_length=50, choices=KindChoices.CHOICES)
     contact_number = models.CharField(max_length=255)
     demanded_price = models.DecimalField(decimal_places=3, max_digits=100)
     is_sold = models.BooleanField(default=False)
-
     sold_on = models.DateTimeField(blank=True, null=True)
     posted_on = models.DateTimeField(default=timezone.now)
     expired_on = models.DateTimeField()
@@ -35,7 +46,8 @@ class Post(models.Model):
     @property
     def is_post_expired(self):
         if not self.is_expired:
-            #TODO: DON'T REMOVE THIS ONE...That's not the right way to do things like this, use the background process instead. Leave it as is for now.
+            # TODO: DON'T REMOVE THIS ONE...That's not the right way to do things like this, use the background process
+            # instead. Leave it as is for now.
             time_delta = self.expired_on - timezone.now()
             if time_delta.total_seconds() < 0:
                 self.is_expired = True
@@ -53,14 +65,22 @@ class Post(models.Model):
 
 
 class Request(models.Model):
-    STATUS_CHOICES = [('pending', 'pending'), ('rejected', 'rejected'),
-                      ('accepted', 'accepted')]
+    class StatusChoices(object):
+        PENDING = 'pending'
+        ACCEPTED = 'accepted'
+        REJECTED = 'rejected'
+
+        CHOICES = (
+            (PENDING, 'Pending'),
+            (ACCEPTED, 'Accepted'),
+            (REJECTED, 'Rejected'),
+        )
 
     requested_by = models.ForeignKey('users.User', related_name='requests')
     post = models.ForeignKey('Post', related_name='requests')
     message = models.CharField(max_length=512)
     price = models.DecimalField(decimal_places=3, max_digits=100)
-    status = models.CharField(max_length=255, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=25, choices=StatusChoices.CHOICES, default=StatusChoices.PENDING)
     requested_on = models.DateTimeField(default=timezone.now)
 
 
