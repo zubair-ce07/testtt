@@ -42,18 +42,6 @@ class Post(models.Model):
     def number_of_views(self):
         return self.post_views.all().count()
 
-    # TODO: As we already know this is related to Post, no need to add post in the property name
-    @property
-    def is_post_expired(self):
-        if not self.is_expired:
-            # TODO: DON'T REMOVE THIS ONE...That's not the right way to do things like this, use the background process
-            # instead. Leave it as is for now.
-            time_delta = self.expired_on - timezone.now()
-            if time_delta.total_seconds() < 0:
-                self.is_expired = True
-                self.save()
-        return self.is_expired
-
     @property
     def time_until_expired(self):
         days_hours_minutes_dict = None
