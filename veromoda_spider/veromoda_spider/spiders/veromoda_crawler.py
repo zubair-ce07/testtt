@@ -74,6 +74,7 @@ class VeromodaCrawler(CrawlSpider):
         name = name.strip()
         return name
 		
+		
     def parse_product(self, response):
 	
         hxs = HtmlXPathSelector(response)
@@ -82,9 +83,9 @@ class VeromodaCrawler(CrawlSpider):
         category = hxs.select('//div[@id="breadcrumb"]/div/a/span/text()').extract()
         care_instructions = hxs.select('//div[@class="tabs__half  tabs__half--last"]/div[@class="tabs__content"]/p/text()').extract()
         name = self.get_name(hxs.select('//h1[@class="productname"]/text()').extract()[0])
-        description = hxs.select('//div[@class="tabs__half tabs__half--first"]/div[@class="tabs__content"]/p/text()').extract()
+        description = hxs.select('//div[@class="tabs__half tabs__half--first"]/div[@class="tabs__content"]/p/text()').extract()		
         # Not Working
-        img_urls =  hxs.select('//*[@id="pdpMain"]/script[2]/text()').extract()
+        img_urls =  self.get_images(hxs.select('(//div[@id="pdpMain"]//script)[7]/text()').extract()[0])
         url_orignal = response.url     
         brand = hxs.select('//*[@id="jsCurrentBrand"]/text()').extract()
         product_id = hxs.select('//*[@id="pdpMain"]/div[1]/div[2]/div[1]/a/@href').extract()
@@ -102,6 +103,17 @@ class VeromodaCrawler(CrawlSpider):
         skus =  self.get_skus(hxs.select('//div[@id="jsVariantsJSON"]/comment()').extract()[0], product_id)
         item["skus"] = skus
         yield item
+		
+
+    def get_images(self, image_urls):
+	
+        # Convert Unicode to string
+        [str(x) for x in image_urls]
+        # Remove white space characters
+        image_urls = image_urls.strip()
+        image_urls = re.findall('http.*jpg', image_urls)
+
+        return image_urls
 			
 			
 
