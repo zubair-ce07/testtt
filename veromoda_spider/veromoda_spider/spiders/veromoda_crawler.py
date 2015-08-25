@@ -70,7 +70,6 @@ class VeromodaCrawler(CrawlSpider):
     def get_name(self, name):
 	
         # Remove white space characters
-        # name = re.sub(ur'\s', u'', name, flags=re.UNICODE)
         name = name.strip()
         return name
 		
@@ -84,7 +83,6 @@ class VeromodaCrawler(CrawlSpider):
         care_instructions = hxs.select('//div[@class="tabs__half  tabs__half--last"]/div[@class="tabs__content"]/p/text()').extract()
         name = self.get_name(hxs.select('//h1[@class="productname"]/text()').extract()[0])
         description = hxs.select('//div[@class="tabs__half tabs__half--first"]/div[@class="tabs__content"]/p/text()').extract()		
-        # Not Working
         img_urls =  self.get_images(hxs.select('(//div[@id="pdpMain"]//script)[7]/text()').extract()[0])
         url_orignal = response.url     
         brand = hxs.select('//*[@id="jsCurrentBrand"]/text()').extract()
@@ -111,6 +109,7 @@ class VeromodaCrawler(CrawlSpider):
         [str(x) for x in image_urls]
         # Remove white space characters
         image_urls = image_urls.strip()
+        #Getting only urls from the given string
         image_urls = re.findall('http.*jpg', image_urls)
 
         return image_urls
