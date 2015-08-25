@@ -22,9 +22,14 @@ class VeromodaSpiderItem(scrapy.Item):
     gender = scrapy.Field()
 	
 class skuItem(scrapy.Item):
+
     currency = scrapy.Field()
     price = scrapy.Field()
     out_of_stock = scrapy.Field()
     color = scrapy.Field()
     size = scrapy.Field()
 
+	
+	
+	
+	

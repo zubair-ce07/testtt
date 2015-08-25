@@ -6,14 +6,41 @@ from veromoda_spider.items		import VeromodaSpiderItem
 from veromoda_spider.items		import skuItem
 from scrapy.http		import Request
 from scrapy.utils.serialize import ScrapyJSONEncoder
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.linkextractors import LinkExtractor
 
-class VeromodaCrawler(BaseSpider):
+class VeromodaCrawler(CrawlSpider):
+
     name = "veromoda"
     allowed_domians = ["veromoda.com"]
-    start_urls = ["http://www.veromoda.com/vero-moda/jjumpsuits/vmsassa-flare-2-4-jumpsuit-nfs/10146606,en_GB,pd.html?dwvar_10146606_colorPattern=10146606_Black/"]
-
-    def get_skus(self, skus):
+    start_urls = ["http://www.veromoda.com/"]
 	
+	
+    # Set the rules for scraping all the avaliable products of a website
+    rules = (
+        Rule(
+            SgmlLinkExtractor(restrict_xpaths=(
+                "//*[@id='category_1']/a")),
+             callback='parse_item',follow=True
+        ),
+		Rule(
+            SgmlLinkExtractor(restrict_xpaths=(
+                "//*[@id='category-level-1']/li/a")),
+             callback='parse_item',follow=True
+        ),
+		Rule(
+            SgmlLinkExtractor(restrict_xpaths=(
+                "//div[@class='thumbnail']/a")),
+             callback='parse_product'
+        ),
+
+    )
+	
+	
+    def get_skus(self, skus, product_id):
+	
+        product_id = str(product_id[0])
         # Make a dictionary
         skus_dictionary={}
 		
@@ -25,45 +52,44 @@ class VeromodaCrawler(BaseSpider):
         [str(x) for x in skus]
         # Convert string to dictionary
         skus = json.loads(skus)
+
         # Check how many items are there in the dictionary
-        length_of_skus = len(skus["10146606"]["variations"]["variants"])
-        i = 0
-        while (i < length_of_skus):
+
+        for s in skus[product_id]["variations"]["variants"]:
+		
             item = skuItem()
-            item["price"] = skus["10146606"]["variations"]["variants"][i]["pricing"]["standard"]
-            item["out_of_stock"] = not(skus["10146606"]["variations"]["variants"][i]["inWarehouse"])
-            item["color"] = skus["10146606"]["variations"]["variants"][i]["attributes"]["colorPattern"]
-            item["size"] = skus["10146606"]["variations"]["variants"][i]["attributes"]["size"]
-            key = skus["10146606"]["variations"]["variants"][i]["id"]
+            item["price"] = s["pricing"]["standard"]
+            item["out_of_stock"] = not(s["inWarehouse"])
+            item["color"] = s["attributes"]["colorPattern"]
+            item["size"] = s["attributes"]["size"]
+            key = s["id"]
             skus_dictionary[key] = item 
-            i = i + 1
 
         return skus_dictionary
 		
     def get_name(self, name):
 	
         # Remove white space characters
-        name = re.sub(ur'\s', u'', name, flags=re.UNICODE)
+        # name = re.sub(ur'\s', u'', name, flags=re.UNICODE)
+        name = name.strip()
         return name
 		
-    def parse(self, response):
+    def parse_product(self, response):
 	
         hxs = HtmlXPathSelector(response)
 		
-        # Extracting data grom the page 
+        # Extracting data from the page of one product
         category = hxs.select('//div[@id="breadcrumb"]/div/a/span/text()').extract()
         care_instructions = hxs.select('//div[@class="tabs__half  tabs__half--last"]/div[@class="tabs__content"]/p/text()').extract()
         name = self.get_name(hxs.select('//h1[@class="productname"]/text()').extract()[0])
         description = hxs.select('//div[@class="tabs__half tabs__half--first"]/div[@class="tabs__content"]/p/text()').extract()
         # Not Working
         img_urls =  hxs.select('//*[@id="pdpMain"]/script[2]/text()').extract()
-        url_orignal = response.url
-        skus =  self.get_skus(hxs.select('//div[@id="jsVariantsJSON"]/comment()').extract()[0])
+        url_orignal = response.url     
         brand = hxs.select('//*[@id="jsCurrentBrand"]/text()').extract()
         product_id = hxs.select('//*[@id="pdpMain"]/div[1]/div[2]/div[1]/a/@href').extract()
-		
-		
-        
+
+        # Defining an object for storing the product data		
         item = VeromodaSpiderItem()
         item ["product_id"] = product_id
         item["care"] = care_instructions[0]
@@ -73,6 +99,7 @@ class VeromodaCrawler(BaseSpider):
         item["image_urls"] = img_urls
         item["url_orignal"] = url_orignal
         item["brand"] = brand
+        skus =  self.get_skus(hxs.select('//div[@id="jsVariantsJSON"]/comment()').extract()[0], product_id)
         item["skus"] = skus
         yield item
 			
