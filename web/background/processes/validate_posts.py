@@ -11,15 +11,15 @@ class ValidateAllPostsThread(threading.Thread):
         self.delay = delay
 
     def run(self):
-        self.validate_posts(self.delay)
+        while True:
+            self.validate_posts()
+            time.sleep(self.delay)
 
     # noinspection PyMethodMayBeStatic
-    def validate_posts(self, delay):
-        while True:
-            posts = Post.objects.exclude(is_expired=True)
-            for post in posts:
-                time_delta = post.expired_on - timezone.now()
-                if time_delta.total_seconds() < 0:
-                    post.is_expired = True
-                    post.save()
-            time.sleep(delay)
+    def validate_posts(self):
+
+        for post in Post.objects.exclude(is_expired=True):
+            time_delta = post.expired_on - timezone.now()
+            if time_delta.total_seconds() < 0:
+                post.is_expired = True
+                post.save()

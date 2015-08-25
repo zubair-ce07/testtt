@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from __future__ import absolute_import
 import os
+from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -147,3 +149,14 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'muhammadrehan69@gmail.com'
 EMAIL_HOST_PASSWORD = 'lahoreSADA$%'
 EMAIL_PORT = 587
+
+# Celery Settings
+BROKER_URL = 'amqp://rehan:rehan@localhost:5672//'
+
+CELERYBEAT_SCHEDULE = {
+    # Executes every 10 seconds
+    'validate-posts-every-10-seconds': {
+        'task': 'web.posts.tasks.validate_posts',
+        'schedule': timedelta(seconds=10),
+        },
+    }

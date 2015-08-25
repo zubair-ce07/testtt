@@ -16,4 +16,4 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'eproperty.settings'
 
 application = get_wsgi_application()
 
-ValidateAllPostsThread(10).start()
+# ValidateAllPostsThread(10).start()
