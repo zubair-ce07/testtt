@@ -21,17 +21,13 @@ class VeromodaCrawler(CrawlSpider):
     rules = (
         Rule(
             SgmlLinkExtractor(restrict_xpaths=(
-                "//*[@id='category_1']/a")),
+                "//*[@id='category_1']",
+                "//*[@id='category-level-1']/li")),
             callback='parse_item',follow=True
         ),
         Rule(
             SgmlLinkExtractor(restrict_xpaths=(
-                "//*[@id='category-level-1']/li/a")),
-            callback='parse_item',follow=True
-        ),
-        Rule(
-            SgmlLinkExtractor(restrict_xpaths=(
-                "//div[@class='thumbnail']/a")),
+                "//div[@class='thumbnail']")),
             callback='parse_product'
         ),
 
@@ -41,7 +37,7 @@ class VeromodaCrawler(CrawlSpider):
 
         product_id = str(product_id[0])
         # Make a dictionary
-        skus_dictionary={}
+        skus_collection={}
 
         # Using regular expression to remove comments
         skus = re.sub(ur'\s', u'', skus, flags=re.UNICODE)
@@ -62,16 +58,10 @@ class VeromodaCrawler(CrawlSpider):
             item["out_of_stock"] = not(s["inWarehouse"])
             item["color"] = s["attributes"]["colorPattern"]
             item["size"] = s["attributes"]["size"]
-            key = s["id"]
-            skus_dictionary[key] = item
+            skus_collection[s["id"]] = item
 
-        return skus_dictionary
+        return skus_collection
 
-    def get_name(self, name):
-
-        # Remove white space characters
-        name = name.strip()
-        return name
 
     def parse_product(self, response):
 
@@ -80,7 +70,7 @@ class VeromodaCrawler(CrawlSpider):
         # Extracting data from the page of one product
         category = hxs.select('//div[@id="breadcrumb"]/div/a/span/text()').extract()
         care_instructions = hxs.select('//div[@class="tabs__half  tabs__half--last"]/div[@class="tabs__content"]/p/text()').extract()
-        name = self.get_name(hxs.select('//h1[@class="productname"]/text()').extract()[0])
+        name = (hxs.select('//h1[@class="productname"]/text()').extract()[0]).strip()
         description = hxs.select('//div[@class="tabs__half tabs__half--first"]/div[@class="tabs__content"]/p/text()').extract()
         img_urls = self.get_images(hxs.select('(//div[@id="pdpMain"]//script)[7]/text()').extract()[0])
         url_orignal = response.url
