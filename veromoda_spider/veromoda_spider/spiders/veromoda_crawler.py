@@ -44,8 +44,6 @@ class VeromodaCrawler(CrawlSpider):
         skus = re.sub(ur'<!--\[\w*\]>', u'', skus, flags=re.UNICODE)
         skus = re.sub(ur'<!\[\w*\]-->', u'', skus, flags=re.UNICODE)
 
-        # Convert Unicode to string
-        [str(x) for x in skus]
         # Convert string to dictionary
         skus = json.loads(skus)
 
