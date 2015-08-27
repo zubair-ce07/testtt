@@ -9,6 +9,7 @@ import scrapy
 
 
 class VeromodaSpiderItem(scrapy.Item):
+
     # define the fields for your item here like:
     category = scrapy.Field()
     product_id = scrapy.Field()
@@ -20,7 +21,8 @@ class VeromodaSpiderItem(scrapy.Item):
     care = scrapy.Field()
     name = scrapy.Field()
     gender = scrapy.Field()
-	
+
+
 class skuItem(scrapy.Item):
 
     currency = scrapy.Field()
@@ -29,7 +31,4 @@ class skuItem(scrapy.Item):
     color = scrapy.Field()
     size = scrapy.Field()
 
-	
-	
-	
-	
+
