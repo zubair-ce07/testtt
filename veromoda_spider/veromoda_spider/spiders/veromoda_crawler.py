@@ -9,6 +9,7 @@ from scrapy.utils.serialize import ScrapyJSONEncoder
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.linkextractors import LinkExtractor
+import logging
 
 
 class VeromodaCrawler(CrawlSpider):
@@ -21,13 +22,13 @@ class VeromodaCrawler(CrawlSpider):
     rules = (
         Rule(
             SgmlLinkExtractor(restrict_xpaths=(
-                "//*[@id='category_1']",
-                "//*[@id='category-level-1']/li")),
+                "//*[@id='category_1']/a",
+                "//*[@id='category-level-1']/li/a")),
             callback='parse_item',follow=True
         ),
         Rule(
             SgmlLinkExtractor(restrict_xpaths=(
-                "//div[@class='thumbnail']")),
+                "//div[@class='thumbnail']/a")),
             callback='parse_product'
         ),
 
@@ -41,6 +42,7 @@ class VeromodaCrawler(CrawlSpider):
 
         # Using regular expression to remove comments
         skus = re.sub(ur'\s', u'', skus, flags=re.UNICODE)
+        logging.info(type(skus))
         skus = re.sub(ur'<!--\[\w*\]>', u'', skus, flags=re.UNICODE)
         skus = re.sub(ur'<!\[\w*\]-->', u'', skus, flags=re.UNICODE)
 
@@ -73,7 +75,6 @@ class VeromodaCrawler(CrawlSpider):
         img_urls = self.get_images(hxs.select('(//div[@id="pdpMain"]//script)[7]/text()').extract()[0])
         url_orignal = response.url
         brand = hxs.select('//*[@id="jsCurrentBrand"]/text()').extract()
-        # product_id = hxs.select('//*[@id="pdpMain"]/div[1]/div[2]/div[1]/a/@href').extract()
         product_id = hxs.select('//div[@class="productimage js-product-image concealed"]/a/@href').extract()
 
         # Defining an object for storing the product data
@@ -92,8 +93,6 @@ class VeromodaCrawler(CrawlSpider):
 
     def get_images(self, image_urls):
 
-        # Convert Unicode to string
-        [str(x) for x in image_urls]
         # Remove white space characters
         image_urls = image_urls.strip()
         # Getting only urls from the given string
