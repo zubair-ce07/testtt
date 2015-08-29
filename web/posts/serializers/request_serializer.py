@@ -1,15 +1,18 @@
 from rest_framework import serializers
-from web.posts.models import PostView, Post, Request
-from web.posts.serializers.post_serializer import PostSerializer
-from web.users.models import User
-from web.users.serializers.user_serializer import UserSerializer
+from web.posts.models import Request
 
 
 class RequestSerializer(serializers.ModelSerializer):
 
-    user_id = serializers.PrimaryKeyRelatedField(source='requested_by', queryset=User.objects.all())
-    post_id = serializers.PrimaryKeyRelatedField(source='post', queryset=Post.objects.all())
+    user_id = serializers.PrimaryKeyRelatedField(source='requested_by', read_only=True)
+    post_id = serializers.PrimaryKeyRelatedField(source='post', read_only=True)
 
     class Meta:
         model = Request
-        fields = ('user_id', 'post_id', 'message', 'price', 'requested_on')
+        fields = ('id', 'user_id', 'post_id', 'message', 'price', 'status', 'requested_on')
+
+    # noinspection PyMethodMayBeStatic
+    def validate_requested_price(self, requested_price):
+        if requested_price <= 0.0:
+            raise serializers.ValidationError('Price must be non-negative!')
+        return requested_price

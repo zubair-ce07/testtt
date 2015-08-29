@@ -1,17 +1,24 @@
-from django.conf.urls import url, include
-from django.contrib.auth.decorators import login_required
-from rest_framework.routers import DefaultRouter
-from web.posts.views.all_posts_viewset import AllPostsViewSet
-from web.posts.views.my_posts_viewset import MyPostsViewSet
-from web.posts.views.requests_list import RequestListViewSet
-from web.posts.views.requests_viewset import RequestViewSet
+from django.conf.urls import url
+from web.posts.views.all_posts import AllPostsViewSet
+from web.posts.views.my_posts import MyPostsViewSet
+from web.posts.views.new_post import NewPostViewSet
+from web.posts.views.post_details import PostDetailsViewSet
+from web.posts.views.process_request import ProcessRequestViewSet
+from web.posts.views.my_requests import MyRequestsViewSet
+from web.posts.views.requests_on_post import RequestsOnPostViewSet
+from web.posts.views.new_request import NewRequestViewSet
+from web.constants import *
 
-router = DefaultRouter()
-router.register(r'all', AllPostsViewSet)
-router.register(r'my-posts', MyPostsViewSet)
-router.register(r'requests', RequestViewSet)
-router.register(r'requestslist', RequestListViewSet)
+
 
 urlpatterns = [
-    url(r'', include(router.urls)),
+    url(r'^posts/my-posts$', MyPostsViewSet.as_view(METHOD_GET_LIST), name='my_posts'),
+    url(r'^posts/all$', AllPostsViewSet.as_view(METHOD_GET_LIST), name='all_posts'),
+    url(r'^posts/(?P<pk>\d+)$', PostDetailsViewSet.as_view(METHOD_GET_RETRIEVE), name='post_details'),
+    url(r'^posts/new$', NewPostViewSet.as_view(METHOD_POST_CREATE), name='new_post'),
+    url(r'^posts/(?P<post_id>\d+)/request/new$', NewRequestViewSet.as_view(METHOD_POST_CREATE), name='new_request'),
+    url(r'^my-requests/$', MyRequestsViewSet.as_view(METHOD_GET_LIST), name='my_requests'),
+    url(r'^posts/(?P<post_id>\d+)/requests$', RequestsOnPostViewSet.as_view(METHOD_GET_LIST), name='requests_on_posts'),
+    url(r'^posts/(?P<post_id>\d+)/process-request/(?P<pk>\d+)$', ProcessRequestViewSet.as_view(METHOD_PUT_UPDATE),
+        name='process_request'),
 ]

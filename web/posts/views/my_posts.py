@@ -5,14 +5,11 @@ from web.posts.models import Post
 from web.posts.serializers.post_serializer import PostSerializer
 
 
-class AllPostsViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.RetrieveModelMixin,
-                      GenericViewSet):
+class MyPostsViewSet(mixins.ListModelMixin, GenericViewSet):
 
-    queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def perform_create(self, serializer):
-        serializer.save(posted_by=self.request.user)
+    def get_queryset(self):
+        self.queryset = Post.objects.filter(is_expired=False, posted_by=self.request.user)
+        return self.queryset

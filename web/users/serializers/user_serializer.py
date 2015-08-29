@@ -22,7 +22,10 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         address_data = validated_data.pop('address')
+        password = validated_data.pop('password')
         user = User.objects.create(address=Address.objects.create(**address_data), **validated_data)
+        user.set_password(password)
+        user.save()
         return user
 
     def update(self, instance, validated_data):

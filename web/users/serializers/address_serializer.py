@@ -2,7 +2,7 @@ from rest_framework import serializers
 from web.users.models import Address
 
 
-class AddressSerializer(serializers.HyperlinkedModelSerializer):
+class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Address

@@ -21,15 +21,11 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
 # Create a router and register our viewsets with it.
-from web.users.views.user_viewset import UserViewSet
-
-
 
 urlpatterns = [
-
                   # url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^', include('web.users.urls')),
-                  url(r'^posts/', include('web.posts.urls')),
+                  url(r'^', include('web.posts.urls')),
                   url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
