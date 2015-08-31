@@ -4,10 +4,11 @@ from rest_framework.viewsets import GenericViewSet
 from web.posts.models import Request, Post
 from web.posts.permissions import IsPostOfCurrentUser
 from web.posts.serializers.process_request_serializer import ProcessRequestSerializer
-from web.posts.serializers.request_serializer import RequestSerializer
 
 
-class ProcessRequestViewSet(mixins.UpdateModelMixin, GenericViewSet):
+class ProcessRequestViewSet(mixins.RetrieveModelMixin,
+                            mixins.UpdateModelMixin,
+                            GenericViewSet):
 
     serializer_class = ProcessRequestSerializer
     permission_classes = (permissions.IsAuthenticated, IsPostOfCurrentUser)

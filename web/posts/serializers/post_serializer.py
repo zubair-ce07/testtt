@@ -3,6 +3,7 @@ from rest_framework import serializers
 from web.posts.models import Post
 from web.users.models import Address
 from web.users.serializers.address_serializer import AddressSerializer
+from web.constants import *
 
 
 class PostSerializer(serializers.HyperlinkedModelSerializer):
@@ -29,26 +30,26 @@ class PostSerializer(serializers.HyperlinkedModelSerializer):
     # noinspection PyMethodMayBeStatic
     def validate_title(self, title):
         if len(title) < 5:
-            raise serializers.ValidationError('Title is too short elaborate more!')
+            raise serializers.ValidationError(TITLE_IS_TOO_SHORT)
         return title
 
     # noinspection PyMethodMayBeStatic
     def validate_area(self, area):
         if area <= 0.0:
-            raise serializers.ValidationError('Area must be non-negative!')
+            raise serializers.ValidationError(MUST_BE_NON_NEGATIVE)
         return area
 
     # noinspection PyMethodMayBeStatic
     def validate_expired_on(self, expired_on):
         time_delta = expired_on - timezone.now()
         if time_delta.total_seconds() < 0:
-            raise serializers.ValidationError('give valid expiry time for your post')
+            raise serializers.ValidationError(GIVE_VALID_TIME)
         return expired_on
 
     # noinspection PyMethodMayBeStatic
     def validate_demand(self, demand):
         if demand <= 0.0:
-            raise serializers.ValidationError('Demanded price must be non-negative!')
+            raise serializers.ValidationError(MUST_BE_NON_NEGATIVE)
         return demand
 
     def create(self, validated_data):

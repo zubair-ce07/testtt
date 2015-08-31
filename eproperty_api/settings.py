@@ -45,7 +45,6 @@ INSTALLED_APPS = (
     'web.users',
     'rest_framework',
     'web.posts',
-    #'shared',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -64,10 +63,6 @@ ROOT_URLCONF = 'web.urls'
 # Custom user settings
 
 AUTH_USER_MODEL = 'users.User'
-#
-# AUTHENTICATION_BACKENDS = [
-#     'web.users.authentication_backend.EmailAuthenticationBackend',
-# ]
 
 TEMPLATES = [
     {
@@ -137,12 +132,18 @@ MEDIA_URL = '/media/'
 
 LOGIN_URL = ''
 
+# grappelli settings
+
+GRAPPELLI_ADMIN_TITLE = 'eProperty Admin Panel'
+
+GRAPPELLI_INDEX_DASHBOARD = 'admin.dashboard.CustomIndexDashboard'
+
 # mailer demon Settings
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'muhammadrehan69@gmail.com'
-EMAIL_HOST_PASSWORD = 'lahoreSADA$%'
+EMAIL_HOST_PASSWORD = '##########'
 EMAIL_PORT = 587
 
 # Celery Settings

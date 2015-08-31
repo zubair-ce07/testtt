@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from web.posts.models import Request
 
@@ -15,6 +16,7 @@ class ProcessRequestSerializer(serializers.ModelSerializer):
         status = validated_data.get('status', instance.status)
         if status == Request.StatusChoices.ACCEPTED:
             instance.post.is_sold = True
+            instance.post.sold_on = timezone.now()
             instance.post.save()
             instance.post.requests.filter(status=Request.StatusChoices.PENDING).\
                 exclude(pk=instance.id).\
