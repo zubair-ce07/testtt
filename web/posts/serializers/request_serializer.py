@@ -1,6 +1,6 @@
 from rest_framework import serializers
+from web.constants import MUST_BE_NON_NEGATIVE
 from web.posts.models import Request
-from web.constants import *
 
 
 class RequestSerializer(serializers.ModelSerializer):

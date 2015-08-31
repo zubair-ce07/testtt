@@ -33,17 +33,17 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = (
+    'grappelli',
+    'grappelli.dashboard',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'grappelli.dashboard',
-    'grappelli',
     'django.contrib.admin',
+    'rest_framework',
     'web',
     'web.users',
-    'rest_framework',
     'web.posts',
 )
 
@@ -156,3 +156,4 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(seconds=10),
         },
     }
+

@@ -11,8 +11,7 @@ class MyRequestsViewSet(mixins.ListModelMixin, GenericViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        self.queryset = Request.objects.filter(requested_by=self.request.user)
-        return self.queryset
+        return Request.objects.filter(requested_by=self.request.user)
 
 
 

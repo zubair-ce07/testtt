@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from web.constants import METHOD_GET_LIST, METHOD_GET_RETRIEVE, METHOD_POST_CREATE, METHOD_PUT_UPDATE, merge
 from web.posts.views.all_posts import AllPostsViewSet
 from web.posts.views.my_posts import MyPostsViewSet
 from web.posts.views.new_post import NewPostViewSet
@@ -7,7 +8,6 @@ from web.posts.views.process_request import ProcessRequestViewSet
 from web.posts.views.my_requests import MyRequestsViewSet
 from web.posts.views.requests_on_post import RequestsOnPostViewSet
 from web.posts.views.new_request import NewRequestViewSet
-from web.constants import *
 
 
 urlpatterns = [

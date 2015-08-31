@@ -1,9 +1,9 @@
 from django.utils import timezone
 from rest_framework import serializers
+from web.constants import TITLE_IS_TOO_SHORT, MUST_BE_NON_NEGATIVE, GIVE_VALID_TIME
 from web.posts.models import Post
 from web.users.models import Address
 from web.users.serializers.address_serializer import AddressSerializer
-from web.constants import *
 
 
 class PostSerializer(serializers.HyperlinkedModelSerializer):
@@ -54,5 +54,6 @@ class PostSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         location_data = validated_data.pop('location')
-        post = Post.objects.create(location=Address.objects.create(**location_data), **validated_data)
+        location = Address.objects.create(**location_data)
+        post = Post.objects.create(location=location, **validated_data)
         return post

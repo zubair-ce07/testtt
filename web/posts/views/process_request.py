@@ -14,8 +14,8 @@ class ProcessRequestViewSet(mixins.RetrieveModelMixin,
     permission_classes = (permissions.IsAuthenticated, IsPostOfCurrentUser)
 
     def get_queryset(self):
-        self.queryset = Request.objects.filter(post=Post.objects.get(pk=self.kwargs.get('post_id')))
-        return self.queryset
+        post_id = self.kwargs.get('post_id')
+        return Request.objects.filter(post=Post.objects.get(pk=post_id))
 
 
 

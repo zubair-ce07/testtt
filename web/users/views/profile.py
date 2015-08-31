@@ -13,5 +13,4 @@ class ProfileViewSet(mixins.UpdateModelMixin,
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        self.queryset = User.objects.filter(pk=self.request.user.id)
-        return self.queryset
+        return User.objects.filter(pk=self.request.user.id)

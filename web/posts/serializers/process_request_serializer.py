@@ -18,9 +18,10 @@ class ProcessRequestSerializer(serializers.ModelSerializer):
             instance.post.is_sold = True
             instance.post.sold_on = timezone.now()
             instance.post.save()
-            instance.post.requests.filter(status=Request.StatusChoices.PENDING).\
-                exclude(pk=instance.id).\
-                update(status=Request.StatusChoices.REJECTED)
+            pending_requests = instance.post.requests.\
+                filter(status=Request.StatusChoices.PENDING).\
+                exclude(pk=instance.id)
+            pending_requests.update(status=Request.StatusChoices.REJECTED)
             instance.status = status
         else:
             instance.status = status

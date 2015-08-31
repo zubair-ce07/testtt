@@ -1,8 +1,8 @@
 import re
 from rest_framework import serializers
+from web.constants import PASSWORD_IS_TOO_SHORT, MUST_HAVE_A_SPECIAL_CHARACTER
 from web.users.models import User, Address
 from web.users.serializers.address_serializer import AddressSerializer
-from web.constants import *
 
 
 class UserSerializer(serializers.ModelSerializer):

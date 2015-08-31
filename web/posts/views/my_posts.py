@@ -11,5 +11,4 @@ class MyPostsViewSet(mixins.ListModelMixin, GenericViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        self.queryset = Post.objects.filter(is_expired=False, posted_by=self.request.user)
-        return self.queryset
+        return Post.objects.filter(is_expired=False, posted_by=self.request.user)

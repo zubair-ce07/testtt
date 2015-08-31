@@ -1,10 +1,10 @@
 from django.conf.urls import url
+from web.constants import METHOD_POST_CREATE, METHOD_GET_LIST, METHOD_PUT_UPDATE
 from web.users.views.activate_users import ActivateUsersView
 from web.users.views.change_password import ChangePasswordViewSet
 from web.users.views.deactivate_users import DeactivateUsersView
 from web.users.views.profile import ProfileViewSet
 from web.users.views.sign_up import SignUpViewSet
-from web.constants import *
 from django.contrib.auth.decorators import login_required
 
 urlpatterns = [

@@ -12,11 +12,11 @@ class PostDetailsViewSet(mixins.RetrieveModelMixin, GenericViewSet):
 
     def get_queryset(self):
         """ Setting Queryset and saving the current user's view on this particular post if its not already there. """
-        self.queryset = Post.objects.filter(is_expired=False)
         try:
-            post = Post.objects.get(pk=self.kwargs.get('pk'))
+            post_id = self.kwargs.get('pk')
+            post = Post.objects.get(pk=post_id)
             if not PostView.objects.filter(post_viewed=post, viewed_by=self.request.user).exists():
                 PostView(viewed_by=self.request.user, post_viewed=post).save()
         except Post.DoesNotExist:
             pass
-        return self.queryset
+        return Post.objects.filter(is_expired=False)

@@ -12,5 +12,7 @@ class NewRequestViewSet(mixins.CreateModelMixin, GenericViewSet):
     permission_classes = (permissions.IsAuthenticated, IsNotPostOfCurrentUser)
 
     def perform_create(self, serializer):
-        serializer.save(requested_by=self.request.user, post=Post.objects.get(pk=self.kwargs.get('post_id')))
+        post_id = self.kwargs.get('post_id')
+        post = Post.objects.get(pk=post_id)
+        serializer.save(requested_by=self.request.user, post=post)
 

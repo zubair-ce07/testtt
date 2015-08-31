@@ -1,6 +1,6 @@
 import re
 from rest_framework import serializers
-from web.constants import *
+from web.constants import ENTER_CORRECT_OLD_PASSWORD, PASSWORD_IS_TOO_SHORT, MUST_HAVE_A_SPECIAL_CHARACTER
 
 
 class ChangePasswordSerializer(serializers.Serializer):
