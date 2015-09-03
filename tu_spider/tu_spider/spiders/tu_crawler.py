@@ -3,7 +3,7 @@ import json
 from scrapy.spiders import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 from tu_spider.items import TuSpiderItem
-from tu_spider.items import skuItem
+from tu_spider.items import SkuItem
 from scrapy.http import Request
 from scrapy.utils.serialize import ScrapyJSONEncoder
 from scrapy.spiders import CrawlSpider, Rule
@@ -39,7 +39,7 @@ class TuCrawler(CrawlSpider):
     def parse_skus(self, response):
 
         hxs = HtmlXPathSelector(text=response)
-        item = skuItem()
+        item = SkuItem()
 
         p = (hxs.select("//p[@class='big-price']/span[1]/text()").extract()[0]).strip()
         item["price"] = re.sub(ur'\D', u'', p, flags=re.UNICODE)

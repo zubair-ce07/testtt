@@ -23,7 +23,7 @@ class TuSpiderItem(scrapy.Item):
     merch_info = scrapy.Field()
 
 
-class skuItem(scrapy.Item):
+class SkuItem(scrapy.Item):
     currency = scrapy.Field()
     price = scrapy.Field()
     previous_prices = scrapy.Field()
