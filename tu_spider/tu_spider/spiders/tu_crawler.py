@@ -1,29 +1,19 @@
 import re
-from scrapy import log
-import json
 from scrapy.spiders import BaseSpider
 from scrapy.selector import HtmlXPathSelector
 from tu_spider.items import TuSpiderItem
 from tu_spider.items import SkuItem
 from scrapy.http import Request
-from scrapy.utils.serialize import ScrapyJSONEncoder
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors.sgml import SgmlLinkExtractor
-from scrapy.linkextractors import LinkExtractor
 import logging
-import requests
-import urllib2
 from urlparse import urljoin
-from scrapy.shell import inspect_response
-
 
 
 class TuCrawler(CrawlSpider):
     name = "tu"
     allowed_domians = ["tuclothing.sainsburys.co.uk"]
     start_urls = ["http://tuclothing.sainsburys.co.uk"]
-	
-	
+
     # Set the rules for scraping all the available products of a website
     rules = (
         Rule(
@@ -40,13 +30,12 @@ class TuCrawler(CrawlSpider):
 
     )
 
-
     def parse_product(self, response):
 
         hxs = HtmlXPathSelector(response)
 
         # Defining an object for storing the product data
-        item = TuSpiderItem() # that will always create a new item
+        item = TuSpiderItem()  # that will always create a new item
 
         # Extracting data from the page of one product
         url_orignal = response.url
@@ -64,7 +53,6 @@ class TuCrawler(CrawlSpider):
         care_instructions[1] = care_instructions[1].strip()
         gender = category[0]
 
-        
         item["product_id"] = product_id
         item["care"] = care_instructions
         item["category"] = category
@@ -79,7 +67,6 @@ class TuCrawler(CrawlSpider):
         for i in self.get_skus(hxs.select("//select[@id='Size']/option/@value").extract(), item, response.url):
             yield i
 
-
     def get_skus(self, skus, item, url):
 
         # Make a dictionary
@@ -88,16 +75,14 @@ class TuCrawler(CrawlSpider):
         for s in skus[1:]:
             # Making full URL
             url_of_sku = urljoin(url_domain, s)
-            yield Request(url_of_sku, callback=self.parse_skus, meta={'item':item }, dont_filter=True)
-	    	   
-	
+            yield Request(url_of_sku, callback=self.parse_skus, meta={'item': item}, dont_filter=True)
+
     def parse_skus(self, response):
 
         hxs = HtmlXPathSelector(response)
         item = response.meta['item']
         skus_collection = item['skus']
         logging.info(skus_collection)
-
 
         item1 = SkuItem()
 
