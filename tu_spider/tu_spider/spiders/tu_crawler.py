@@ -89,7 +89,6 @@ class TuCrawler(CrawlSpider):
             # Making full URL
             url_of_sku = urljoin(url_domain, s)
             yield Request(url_of_sku, callback=self.parse_skus, meta={'item':item }, dont_filter=True)
-            #logging.info( url_of_sku ) #open this url in browser and verify its working correctly.
 	    	   
 	
     def parse_skus(self, response):
