@@ -38,7 +38,7 @@ class TuCrawler(CrawlSpider):
         item = TuSpiderItem()  # that will always create a new item
 
         # Extracting data from the page of one product
-        url_orignal = response.url
+        url_original = response.url
         product_id = hxs.select("//div[@class='productDetails_product_code']/text()[2]").extract()
         brand = hxs.select("//*[@itemprop='brand']/@content").extract()
         image_urls = hxs.select('//ul[@class="productImages"]//li/a/@href').extract()
@@ -59,7 +59,7 @@ class TuCrawler(CrawlSpider):
         item["name"] = name
         item["description"] = description
         item["image_urls"] = image_urls
-        item["url_orignal"] = url_orignal
+        item["url_original"] = url_original
         item["brand"] = brand
         item["gender"] = gender
         item['skus'] = {}
@@ -69,12 +69,9 @@ class TuCrawler(CrawlSpider):
 
     def get_skus(self, skus, item, url):
 
-        # Make a dictionary
-        skus_collection = {}
-        url_domain = url
         for s in skus[1:]:
             # Making full URL
-            url_of_sku = urljoin(url_domain, s)
+            url_of_sku = urljoin(url, s)
             yield Request(url_of_sku, callback=self.parse_skus, meta={'item': item}, dont_filter=True)
 
     def parse_skus(self, response):

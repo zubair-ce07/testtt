@@ -13,7 +13,7 @@ class TuSpiderItem(scrapy.Item):
     category = scrapy.Field()
     product_id = scrapy.Field()
     description = scrapy.Field()
-    url_orignal = scrapy.Field()
+    url_original = scrapy.Field()
     brand = scrapy.Field()
     image_urls = scrapy.Field()
     skus = scrapy.Field()
