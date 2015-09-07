@@ -1,6 +1,7 @@
 import re
 from scrapy.spiders import BaseSpider
 from scrapy.selector import HtmlXPathSelector
+from scrapy.linkextractors.sgml import SgmlLinkExtractor
 from tu_spider.items import TuSpiderItem
 from tu_spider.items import SkuItem
 from scrapy.http import Request
