@@ -65,8 +65,8 @@ class TuCrawler(CrawlSpider):
         item["gender"] = gender
         item['skus'] = {}
 
-        for i in self.get_skus(hxs.select("//select[@id='Size']/option/@value").extract(), item, response.url):
-            yield i
+        return self.get_skus(hxs.select("//select[@id='Size']/option/@value").extract(), item, response.url)
+         
 
     def get_skus(self, skus, item, url):
 
