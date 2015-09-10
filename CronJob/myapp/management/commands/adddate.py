@@ -10,12 +10,12 @@ class Command(BaseCommand):
     help = 'Converts the date from PST to UTC & vice versa'
 
     def handle(self, *args, **options):
-        new_tz = pytz.timezone('America/Los_Angeles')
+        new_tz = pytz.timezone('Asia/Karachi')
         objs = DateTimeModel.objects.all()
 
         for object in objs:
 
-            if object.timezone == 'America/Los_Angeles':
+            if object.timezone == 'Asia/Karachi':
                 new_dt = object.now.replace(tzinfo=new_tz)
                 new_dt = new_dt.astimezone(pytz.utc)
 
@@ -27,4 +27,4 @@ class Command(BaseCommand):
 
                 DateTimeModel.objects.filter(pk=object.pk).update(
                     now=new_dt.replace(tzinfo=None),
-                    timezone='America/Los_Angeles')
+                    timezone='Asia/Karachi')

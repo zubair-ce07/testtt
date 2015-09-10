@@ -36,6 +36,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
     'south',
     'myapp',
 )
@@ -88,3 +89,9 @@ TEMPLATE_DIRS = (os.path.join(BASE_DIR,  'templates'),)
 # Enable timezone
 
 USE_TZ = True
+
+# Adding Cronjobs
+
+CRONJOBS = [
+    ('*/1 * * * *', 'django.core.management.call_command', ['adddate'])
+    ]

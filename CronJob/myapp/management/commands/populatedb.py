@@ -38,12 +38,13 @@ class Command(BaseCommand):
         count = 1
         objs = []
 
-        new_tz = pytz.timezone('America/Los_Angeles')
+        new_tz = pytz.timezone('Asia/Karachi')
         new_dt = timezone.now().astimezone(new_tz)
+        new_dt.dst(is_dst=False)
 
         while count <= 15:
             objs.append(
-                DateTimeModel(now=new_dt.replace(tzinfo=None), timezone='America/Los_Angeles')
+                DateTimeModel(now=new_dt.replace(tzinfo=None), timezone='Asia/Karachi')
             )
             count += 1
 
