@@ -50,9 +50,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'CronJob.urls'
+ROOT_URLCONF = 'cron_job.urls'
 
-WSGI_APPLICATION = 'CronJob.wsgi.application'
+WSGI_APPLICATION = 'cron_job.wsgi.application'
 
 
 # Database
@@ -93,5 +93,5 @@ USE_TZ = True
 # Adding Cronjobs
 
 CRONJOBS = [
-    ('*/1 * * * *', 'django.core.management.call_command', ['converttimezones'])
+    ('*/1 * * * *', 'django.core.management.call_command', ['convert_time_zone'])
     ]
