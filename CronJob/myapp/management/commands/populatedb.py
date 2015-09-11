@@ -10,25 +10,24 @@ class Command(BaseCommand):
     help = "Creates users and timezone entries in the database"
 
     def handle(self, *args, **options):
-        #self.create_users()
+        self.create_users()
         self.create_date_entries()
 
     def create_users(self):
         count = 1
-        objs = []
+        user_objects = []
 
         while count <= 5:
-            user = self.get_user(count)
-            objs.append(User(username=user['username'],
-                             password=user['password'], email=user['email']
-                             )
-                        )
+            user = self.dummy_user_credentials(count)
+            user_objects.append(User(username=user['username'],
+                                     password=user['password'], email=user['email'])
+                                )
             count += 1
 
-        User.objects.bulk_create(objs)
+        User.objects.bulk_create(user_objects)
         self.stdout.write('Successfully created users')
 
-    def get_user(self, count):
+    def dummy_user_credentials(self, count):
         user = {'username': 'user{num}'.format(num=count),
                 'password': 'user{num}'.format(num=count),
                 'email': 'user{num}@user.com'.format(num=count)}
@@ -36,17 +35,17 @@ class Command(BaseCommand):
 
     def create_date_entries(self):
         count = 1
-        objs = []
+        datetime_objects = []
 
-        new_tz = pytz.timezone('Asia/Karachi')
-        new_dt = timezone.now().astimezone(new_tz)
-        new_dt.dst(is_dst=False)
+        karachi_timezone = pytz.timezone('Asia/Karachi')
+        new_datetime = timezone.now().astimezone(karachi_timezone)
 
         while count <= 15:
-            objs.append(
-                DateTimeModel(now=new_dt.replace(tzinfo=None), timezone='Asia/Karachi')
+            datetime_objects.append(
+                DateTimeModel(now=new_datetime.replace(tzinfo=None), 
+                              timezone=karachi_timezone.zone)
             )
             count += 1
 
-        DateTimeModel.objects.bulk_create(objs)
+        DateTimeModel.objects.bulk_create(datetime_objects)
         self.stdout.write('Successfully created date entries')

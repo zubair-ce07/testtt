@@ -93,5 +93,5 @@ USE_TZ = True
 # Adding Cronjobs
 
 CRONJOBS = [
-    ('*/1 * * * *', 'django.core.management.call_command', ['adddate'])
+    ('*/1 * * * *', 'django.core.management.call_command', ['converttimezones'])
     ]
