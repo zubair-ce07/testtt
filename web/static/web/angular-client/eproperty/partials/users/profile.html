@@ -1,0 +1,92 @@
+<div id="content" class="col-lg-10 col-sm-10">
+    <!-- content starts -->
+
+    <div>
+        <ul class="breadcrumb">
+            <li>
+                <a href="#">Home</a>
+            </li>
+            <li>
+                <a href="#">Account Settings</a>
+            </li>
+            <li>
+                <a href="#">Profile</a>
+            </li>
+        </ul>
+    </div>
+    <!-- Edit Profile -->
+    <div class="row">
+        <div class="box col-md-12">
+            <div class="box-inner">
+                <div class="box-header well" data-original-title="">
+                    <h2><i class="glyphicon  glyphicon-edit"></i> Profile </h2>
+
+                    <div class="box-icon">
+                        <i class="glyphicon glyphicon-star-empty"></i>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <!-- put your content here -->
+
+                    <form role="form" name="profileForm">
+
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" class="form-control" ng-required="true" placeholder="First name" ng-model="user.first_name"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" class="form-control" ng-required="true" placeholder="Last name" ng-model="user.last_name"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input id="autocomplete" class="form-control"
+                                   placeholder="Enter your new address to change old one"
+                                   onFocus="geolocate()" type="text"/>
+                        </div>
+
+                        <div class="form-group">
+                            <input type="text" ng-autocomplete class="form-control" id="postal_code"  ng-required="true" placeholder="zip code" disabled="true" ng-model="user.address.zip_code"/>
+                            <input type="text" ng-autocomplete class="form-control" id="street_number" ng-required="true" placeholder="Street" disabled="true" ng-model="user.address.street"/>
+                            <input type="text" ng-autocomplete class="form-control" id="route" ng-required="true" placeholder="Route" disabled="true" ng-model="user.address.route"/>
+                            <input type="text" ng-autocomplete class="form-control" id="locality" ng-required="true" placeholder="City" disabled="true" ng-model="user.address.city"/>
+                            <input type="text" ng-autocomplete class="form-control" id="administrative_area_level_1" ng-required="true" placeholder="State" disabled="true" ng-model="user.address.state"/>
+                            <input type="text" ng-autocomplete class="form-control" id="country" ng-required="true" placeholder="Country" disabled="true" ng-model="user.address.country"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="radio-inline">
+                                <input type="radio" ng-model="user.gender" value="male">Male
+                                <br/>
+                                <input type="radio" ng-model="user.gender" value="female">Female
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+
+                            <label> Date of birth</label>
+
+                            <div class='input-group date'>
+                                <input type="date"  ng-autocomplete ng-required="true" class="form-control" ng-model="born_on"/>
+
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-default" ng-click="update(profileForm)">Save changes</button>
+                            <a class="btn btn-default" href="#/dashboard"> Cancel </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/row-->
+</div>

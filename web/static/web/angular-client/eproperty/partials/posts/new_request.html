@@ -1,0 +1,59 @@
+<div id="content" class="col-lg-10 col-sm-10">
+    <!-- content starts -->
+
+    <div>
+        <ul class="breadcrumb">
+            <li>
+                <a href="#">Home</a>
+            </li>
+            <li>
+                <a href="#">Post</a>
+            </li>
+            <li>
+                <a href="#">New Request</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- new Request -->
+    <div class="row">
+        <div class="box col-md-12">
+            <div class="box-inner">
+                <div class="box-header well" data-original-title="">
+                    <h2><i class="glyphicon glyphicon-plus"></i> New </h2>
+
+                    <div class="box-icon">
+                        <i class="glyphicon glyphicon-star-empty"></i>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <!-- put your content here -->
+
+                    <form role="form" name="newRequestForm">
+                        <fieldset>
+                            <div class="form-group">
+                                <label>Offered price($)</label>
+                                <input type="number" ng-autocomplete ng-model="request.price" class="form-control"
+                                       step="1" placeholder="Your offer($)" ng-required="true"/>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="comment">Message</label>
+                                <textarea ng-autocomplete ng-model="request.message" class="form-control" rows="5"
+                                          placeholder="Write your message.." ng-required="true"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-default" ng-click="createRequest(newRequestForm)">Send</button>
+                                <a class="btn btn-default" href="#/dashboard"> Cancel </a>
+                            </div>
+                        </fieldset>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/row-->
+</div>

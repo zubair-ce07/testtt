@@ -6,18 +6,22 @@ from web.users.models import Address
 from web.users.serializers.address_serializer import AddressSerializer
 
 
-class PostSerializer(serializers.HyperlinkedModelSerializer):
+class PostSerializer(serializers.ModelSerializer):
 
     location = AddressSerializer()
     user_id = serializers.PrimaryKeyRelatedField(source='posted_by', read_only=True)
     number_of_views = serializers.SerializerMethodField(source='get_number_of_views', read_only=True)
     is_sold = serializers.BooleanField(read_only=True)
+    posted_on = serializers.DateTimeField(read_only=True)
     time_until_expired = serializers.SerializerMethodField(source='get_time_until_expired', read_only=True)
+    full_name = serializers.SerializerMethodField(source='get_full_name', read_only=True)
+    number_of_requests = serializers.SerializerMethodField(source='get_number_of_requests', read_only=True)
 
     class Meta:
         model = Post
-        fields = ('id', 'user_id', 'title', 'area', 'location', 'description', 'kind', 'number_of_views',
-                  'contact_number', 'demanded_price', 'expired_on', 'is_sold', 'time_until_expired')
+        fields = ('id', 'user_id', 'title', 'full_name', 'area', 'location', 'description', 'kind', 'number_of_views',
+                  'contact_number', 'demanded_price', 'posted_on', 'expired_on', 'is_sold', 'number_of_requests',
+                  'time_until_expired')
 
     # noinspection PyMethodMayBeStatic
     def get_number_of_views(self, post):
@@ -26,6 +30,14 @@ class PostSerializer(serializers.HyperlinkedModelSerializer):
     # noinspection PyMethodMayBeStatic
     def get_time_until_expired(self, post):
         return post.time_until_expired
+
+    # noinspection PyMethodMayBeStatic
+    def get_full_name(self, post):
+        return post.posted_by.get_full_name()
+
+    # noinspection PyMethodMayBeStatic
+    def get_number_of_requests(self, post):
+        return post.requests.count()
 
     # noinspection PyMethodMayBeStatic
     def validate_title(self, title):

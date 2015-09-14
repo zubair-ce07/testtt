@@ -18,10 +18,13 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 
-urlpatterns = [
-                  url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
-                  url(r'^admin/', include(admin.site.urls)),
-                  url(r'^', include('web.users.urls')),
-                  url(r'^', include('web.posts.urls')),
-                  url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+from web.views.index import IndexView
+
+
+urlpatterns = [url(r'^$', IndexView.as_view(), name='home'),
+               url(r'^grappelli/', include('grappelli.urls')),
+               url(r'^admin/', include(admin.site.urls)),
+               url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+               url(r'^user-api/', include('web.users.urls')),
+               url(r'^post-api/', include('web.posts.urls')),
+               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

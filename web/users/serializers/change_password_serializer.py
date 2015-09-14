@@ -1,6 +1,7 @@
 import re
 from rest_framework import serializers
-from web.constants import ENTER_CORRECT_OLD_PASSWORD, PASSWORD_IS_TOO_SHORT, MUST_HAVE_A_SPECIAL_CHARACTER
+from web.constants import ENTER_CORRECT_OLD_PASSWORD, PASSWORD_IS_TOO_SHORT, MUST_HAVE_A_SPECIAL_CHARACTER, \
+    PASSWORDS_DONT_MATCH
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -18,7 +19,7 @@ class ChangePasswordSerializer(serializers.Serializer):
             password = data.get('new_password')
             confirm_password = data.get('confirm_password')
             if password and confirm_password != password:
-                raise serializers.ValidationError()
+                raise serializers.ValidationError(PASSWORDS_DONT_MATCH)
         else:
             raise serializers.ValidationError(ENTER_CORRECT_OLD_PASSWORD)
         return data

@@ -1,0 +1,100 @@
+<div id="content" class="col-lg-10 col-sm-10">
+    <!-- content starts -->
+
+    <div>
+        <ul class="breadcrumb">
+            <li>
+                <a href="#">Home</a>
+            </li>
+            <li>
+                <a href="#">New Post</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- new post -->
+    <div class="row">
+        <div class="box col-md-12">
+            <div class="box-inner">
+                <div class="box-header well" data-original-title="">
+                    <h2><i class="glyphicon glyphicon-plus"></i> New </h2>
+
+                    <div class="box-icon">
+                        <i class="glyphicon glyphicon-star-empty"></i>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <!-- put your content here -->
+
+                    <form role="form" name="newPostForm">
+
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" class="form-control" placeholder="Title" ng-model="post.title" ng-required="true"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Area</label>
+                            <input type="number" step="1" class="form-control" placeholder="Area (in square meters)" required ng-model="post.area"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input id="autocomplete" class="form-control" placeholder="Enter your address"
+                                   onFocus="geolocate()" type="text"/>
+                        </div>
+
+                        <div class="form-group">
+                            <input type="text" ng-autocomplete class="form-control" id="postal_code" placeholder="zip code"  ng-model="post.location.zip_code" required/>
+                            <input type="text" ng-autocomplete class="form-control" id="street_number" placeholder="Street"  ng-model="post.location.street" required/>
+                            <input type="text" ng-autocomplete class="form-control" id="route" placeholder="Route"  ng-model="post.location.route" required/>
+                            <input type="text" ng-autocomplete class="form-control" id="locality" placeholder="City" ng-model="post.location.city" required/>
+                            <input type="text" ng-autocomplete class="form-control" id="administrative_area_level_1" placeholder="State" ng-model="post.location.state" required/>
+                            <input type="text" ng-autocomplete class="form-control" id="country" placeholder="Country" ng-model="post.location.country" required/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select ng-model="post.kind" class="form-control" ng-options="kind.index as kind.value for kind in kinds" required>
+                                <option value="">Please Select an Option</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Contact number</label>
+                            <input type="text" class="form-control" placeholder="Contact #" ng-model="post.contact_number" required/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Price($)</label>
+                            <input type="number" step="1" class="form-control" placeholder="Price($)" ng-model="post.demanded_price" required/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="comment">Description:</label>
+                            <textarea ng-autocomplete ng-model="post.description" class="form-control" rows="5" placeholder="Write description.." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label> Expiry date </label>
+
+                            <div class='input-group date'>
+                                <input type="datetime-local" ng-autocomplete class="form-control" ng-model="expired_on" required/>
+					                    <span class="input-group-addon">
+					                        <span class="glyphicon glyphicon-calendar"></span>
+					                    </span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-default" ng-click="createPost(newPostForm)">Post</button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/row-->
+</div>
