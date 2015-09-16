@@ -7,6 +7,6 @@ from web.posts.serializers.post_serializer import PostSerializer
 
 class AllPostsViewSet(mixins.ListModelMixin, GenericViewSet):
 
-    queryset = Post.objects.filter(is_expired=False)
+    queryset = Post.objects.filter(is_expired=False).order_by('-id')
     serializer_class = PostSerializer
     permission_classes = (permissions.IsAuthenticated,)

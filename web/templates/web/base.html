@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="eproperty">
+<head>
+
+    <meta charset="utf-8">
+    <title ng-model="pageTitle"> </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="eProperty, a platform to deal in lands">
+    <meta name="author" content="Muhammad Rehan">
+
+    <!-- The styles -->
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'web/css/bootstrap/bootstrap-spacelab.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'web/css/eproperty-app.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'web/css/post-card.css' %}"/>
+    <!-- jQuery -->
+    <script type="text/javascript" src="{% static 'web/js/jquery/jquery.min.js' %}"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-resource.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-cookies.js"></script>
+
+    <!-- The HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- The fav icon -->
+    <link rel="shortcut icon" href="{% static 'web/img/favicon.ico' %}">
+
+</head>
+
+<body ng-controller="epropertyController">
+<!-- topbar starts -->
+<div class="navbar navbar-default" role="navigation">
+    <div class="navbar-inner">
+
+
+        <div ng-if="!isAuthenticated">
+            <!-- sign in button starts -->
+            <div class="btn-group pull-right" style="padding-right:15px;">
+                <a href="#/sign-in" class=" btn btn-default white no-decoration"><i
+                        class="glyphicon glyphicon-user"></i> Sign in</a>
+
+            </div>
+            <!-- sign in button ends -->
+        </div>
+
+        <div ng-if="isAuthenticated">
+
+            <button type="button" class="navbar-toggle pull-left animated flip">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- user dropdown starts -->
+            <div class="btn-group pull-right">
+                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <i class="glyphicon glyphicon-user"></i><span
+                        class="hidden-sm hidden-xs"> {{ user.get_full_name }} </span>
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a href="/account/profile">Profile</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#/account/logout">Logout</a></li>
+                </ul>
+            </div>
+            <!-- user dropdown ends -->
+
+            <!-- Hot properties button starts -->
+            <div class="btn-group pull-right">
+                <a href="#/posts/hot" class=" btn btn-default white no-decoration"><i
+                        class="glyphicon glyphicon-fire"></i> Hot Properties</a>
+
+            </div>
+            <!-- button ends -->
+
+            <!-- All properties button starts -->
+            <div class="btn-group pull-right">
+                <a href="#/posts/all" class=" btn btn-default white no-decoration"><i
+                        class="glyphicon glyphicon-globe"></i> All Properties</a>
+
+            </div>
+            <!-- button ends -->
+
+        </div> <!-- ng-if ends-->
+
+        <a class="navbar-brand" href="#/"> <img alt="eProperty Logo"
+                                                               src="{% static 'web/img/logo20.png' %}"
+                                                               class="hidden-xs"/>
+            <span>eProperty</span>
+        </a>
+
+    </div>
+</div>
+<!-- topbar ends -->
+<div class="ch-container">
+    <div class="row">
+
+        <div ng-if="isAuthenticated">
+
+            <!-- left menu starts -->
+            <div class="col-sm-2 col-lg-2">
+                <div class="sidebar-nav">
+                    <div class="nav-canvas">
+                        <div class="nav-sm nav nav-stacked">
+
+                        </div>
+                        <ul class="nav nav-pills nav-stacked main-menu">
+
+                            <li class="nav-header">Dashboard</li>
+                            <li><a href="#/dashboard"><i
+                                    class="glyphicon glyphicon-home"></i><span> Home </span></a></li>
+                            <li><a href="#/posts/post/new"><i
+                                    class="glyphicon glyphicon-plus"></i><span> New post</span></a></li>
+                            <li><a href="#/posts/my-posts"><i class="glyphicon glyphicon-list-alt"></i><span> My posts</span></a>
+                            </li>
+                            <li><a href="#/my-requests"><i class="glyphicon glyphicon-share-alt"></i><span> My offers</span></a>
+                            </li>
+
+                            <li class="accordion">
+                                <a href="#"><i class="glyphicon glyphicon-cog"></i><span> Account settings</span></a>
+                                <ul class="nav nav-pills nav-stacked">
+                                    <li><a href="#/account/profile">Profile</a></li>
+                                    <li><a href="#/account/password/change">Change password</a></li>
+                                </ul>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+            <!--/span-->
+            <!-- left menu ends -->
+        </div>
+            <!-- ng-if ends -->
+
+        <noscript>
+            <div class="alert alert-block col-md-12">
+                <h4 class="alert-heading">Warning!</h4>
+
+                <p>You need to have <a href="http://en.wikipedia.org/wiki/JavaScript" target="_blank">JavaScript</a>
+                    enabled to use this site.</p>
+            </div>
+        </noscript>
+
+{#        {% block content %} {% endblock %}#}
+        <div ng-view></div>
+
+    </div>
+    <!--/#content.col-md-0-->
+</div>
+<!--/fluid-row-->
+
+<hr>
+
+<footer>
+    <p class="col-md-9 col-sm-9 col-xs-12 copyright">&copy; <a href="https://www.facebook.com/Its.MRehan"
+                                                               target="_blank">Muhammad
+        Rehan</a> 2012 - 2015</p>
+
+    <p class="col-md-3 col-sm-3 col-xs-12 powered-by">Powered by: <a
+            href="#">eProperty</a></p>
+</footer>
+
+
+<!-- external javascript -->
+<script type="text/javascript" src="{% static 'web/js/bootstrap/bootstrap.min.js' %}"></script>
+<!-- application script for eProperty -->
+<script type="text/javascript" src="{% static 'web/js/eproperty-app.js' %}"></script>
+<!-- angular js client app -->
+<script type="text/javascript" src="{% static 'web/angular-client/eproperty/eproperty.js' %}"></script>
+<script type="text/javascript" src="{% static 'web/angular-client/eproperty/routers.js' %}"></script>
+<script type="text/javascript" src="{% static 'web/angular-client/eproperty/services.js' %}"></script>
+<script type="text/javascript" src="{% static 'web/angular-client/eproperty/controllers/users.js' %}"></script>
+<script type="text/javascript" src="{% static 'web/angular-client/eproperty/controllers/posts.js' %}"></script>
+<!-- autocomplete Api Google -->
+<script src="https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=places&callback=initAutocomplete"
+        async defer></script>
+<!-- address auto complete code -->
+<script type="text/javascript" src="{% static 'web/js/auto_load_address.js' %}"></script>
+</body>
+</html>

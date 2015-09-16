@@ -1,0 +1,79 @@
+<div id="content" class="col-lg-10 col-sm-10">
+    <!-- content starts -->
+
+    <div>
+        <ul class="breadcrumb">
+            <li>
+                <a href="#">Home</a>
+            </li>
+            <li>
+                <a href="#">My Offers</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- My Requests -->
+    <div class="row">
+        <div class="box col-md-12">
+            <div class="box-inner">
+                <div class="box-header well" data-original-title="">
+                    <h2><i class="glyphicon glyphicon-share-alt"></i> My Offers</h2>
+
+                    <div class="box-icon">
+                        <i class="glyphicon glyphicon-star-empty"></i>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <!-- put your content here -->
+
+                    <div ng-repeat="request in requests">
+
+                        <div class="horizontal-card">
+
+                            <div class="horizontal-card-inner">
+
+                                <div class="top-right-side">
+                                    <div class="cls-posted-by">
+                                        <span> Posted by {{ request.posted_by_full_name }} </span>
+                                    </div>
+                                </div>
+
+                                <div class="card-title">
+                                    <a href="#/posts/{{ request.post_id }}"> {{ request.post_title }} </a>
+                                </div>
+
+                                <div class="exerpt">
+                                    {{ request.message }}
+                                </div>
+                                <ul class="data">
+                                    <li>
+                                        <span ng-if="request.status === 'accepted'"
+                                              class='cls-approved'> {{ request.status }} </span>
+                                        <span ng-if="request.status === 'rejected'"
+                                              class='cls-rejected'> {{ request.status }} </span>
+                                        <span ng-if="request.status === 'pending'"
+                                              class='cls-pending'> {{ request.status }} </span>
+                                    </li>
+                                    <li>
+                                        <span class='cls-date'> Requested on {{ request.requested_on | date: 'yyyy/MM/dd HH:mm:ss'}} </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div ng-if="!requests">
+
+                        <h2 class="whitesmoke-dark"> You didn't send any request yet!</h2>
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+        <!--/row-->
+
+    </div>
+
+</div>

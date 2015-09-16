@@ -1,0 +1,79 @@
+<div id="content" class="col-lg-10 col-sm-10">
+    <!-- content starts -->
+
+    <div>
+        <ul class="breadcrumb">
+            <li>
+                <a href="#">Home</a>
+            </li>
+            <li>
+                <a href="#">Posts</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- All posts -->
+    <div class="row">
+        <div class="box col-md-12">
+            <div class="box-inner">
+                <div class="box-header well" data-original-title="">
+                    <h2><i class="glyphicon glyphicon-list-alt"></i> Posts </h2>
+
+                    <div class="box-icon">
+                        <i class="glyphicon glyphicon-star-empty"></i>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <!-- put your content here -->
+
+                    <div ng-if="posts">
+
+                        <div ng-repeat="post in posts">
+
+                                <div class="horizontal-card">
+
+                                    <div class="horizontal-card-inner">
+
+                                        <div class="top-right-side">
+                                            <div class="cls-posted-by"><span> <i
+                                                    class="glyphicon glyphicon-eye-open"></i> {{ post.number_of_views }} | by {{ post.full_name }} </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="card-title">
+                                            <a href="#/posts/{{post.id}}"> {{ post.title }} </a>
+                                        </div>
+
+                                        <div class="exerpt">
+                                            This Ad will expire in {{ post.time_until_expired.days }} day(s).
+                                        </div>
+                                        <ul class="data">
+                                            <li>
+                                                <span ng-if="post.is_sold" class='cls-pending'> Sold </span>
+                                                <span ng-if="!post.is_sold" class='cls-approved'> Offers {{ post.number_of_requests }}</span>
+                                            </li>
+                                            <li>
+                                                <span class='cls-date'>  Posted on {{ post.posted_on | date: 'yyyy/MM/dd HH:mm:ss'}}</span>
+                                            </li>
+                                        </ul>
+
+                                    </div>
+                                </div>
+
+                        </div>
+
+                    </div>
+
+                    <div ng-if="!posts">
+                        <h2 class="whitesmoke-dark"> No posts to show!</h2>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/row-->
+
+
+</div>

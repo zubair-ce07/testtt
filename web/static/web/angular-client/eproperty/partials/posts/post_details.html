@@ -1,0 +1,167 @@
+<div id="content" class="col-lg-10 col-sm-10">
+    <!-- content starts -->
+
+    <div>
+        <ul class="breadcrumb">
+            <li>
+                <a href="#">Home</a>
+            </li>
+            <li>
+                <a href="#">Post</a>
+            </li>
+            <li>
+                <a href="#">Details</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- My post Details -->
+    <div class="row">
+        <div class="box col-md-12">
+            <div class="box-inner">
+                <div class="box-header well" data-original-title="">
+                    <h2><i class="glyphicon glyphicon-list-alt"></i> Post details </h2>
+
+                    <div class="box-icon">
+                        <i class="glyphicon glyphicon-star-empty"></i>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <!-- Post details starts -->
+
+                    <div class="horizontal-card">
+
+                        <div class="horizontal-card-inner">
+
+                            <div class="top-right-side">
+                                <div class="cls-posted-by"><span> <i
+                                        class="glyphicon glyphicon-eye-open"></i> {{ post.number_of_views }} | by {{ post.full_name }} </span>
+                                </div>
+                            </div>
+
+                            <div class="card-title">
+                                {{ post.title }}
+                            </div>
+
+                            <div class="exerpt">
+                                <p class="whitesmoke-dark"> {{ post.description }} </p>
+
+
+                            </div>
+
+                            <div class="post-details">
+                                Area is {{ post.area }} meter squares<br/>
+                                Address : street
+                                # {{ post.location.street }}, {{ post.location.route }}, {{ post.location.city }}, {{ post.location.state }}, {{ post.location.country }}<br/>
+                                Type : {{ post.kind }}<br/>
+                                Contact #{{ post.contact_number }}<br/>
+                                Price {{ post.demanded_price }}$<br/>
+                                Expired in {{ post.time_until_expired.days }}
+                                day(s) {{ post.time_until_expired.hours }}
+                                hour(s) {{ post.time_until_expired.minutes }} minute(s)<br/>
+                            </div>
+
+
+                            <ul class="data-light-green">
+                                <li>
+                                    <span ng-if="post.is_sold" class='cls-pending'> Sold </span>
+                                    <span ng-if="!post.is_sold"
+                                          class='cls-approved'> Offers {{ post.number_of_requests }}</span>
+                                </li>
+                                <li>
+                                    <span class='cls-date'>  Posted on {{ post.posted_on | date: 'yyyy/MM/dd HH:mm:ss'}}</span>
+                                </li>
+                            </ul>
+
+                        </div>
+                    </div>
+
+                    <!-- post details ends -->
+
+                    <!-- requests on post starts  -->
+
+                    <div class="row">
+                        <div class="box col-md-12">
+                            <div class="box-inner">
+                                <div class="box-header well" data-original-title="">
+                                    <h2><i class="glyphicon glyphicon-share-alt"></i> Offers </h2>
+
+                                    <div class="box-icon">
+                                        <i class="glyphicon glyphicon-star-empty"></i>
+                                    </div>
+                                </div>
+                                <div class="box-content">
+
+
+                                    <div ng-repeat="request in requests">
+
+                                        <div class="horizontal-card">
+
+                                            <div class="horizontal-card-inner">
+
+                                                <div class="top-right-side">
+                                                    <div class="cls-posted-by">
+                                                                <span> {{ request.price }} $ <i
+                                                                        class="glyphicon glyphicon-tags"></i>
+                                                                    --Offer by {{ request.requested_by_full_name }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card-title">
+                                                    {{ request.message }}
+                                                </div>
+
+                                                <div class="exerpt">
+                                                    Requested on {{ request.requested_on | date: 'yyyy/MM/dd HH:mm:ss'}}
+                                                </div>
+
+                                                <ul class="data-light-green">
+                                                    <li>
+                                                        <span ng-if="request.status === 'accepted'"
+                                                              class='btn cls-approved'> {{ request.status }} </span>
+                                                        <span ng-if="request.status === 'rejected'"
+                                                              class='btn cls-rejected'> {{ request.status }} </span>
+                                                        <span ng-if="request.status === 'pending'"
+                                                              class='btn cls-pending'> {{ request.status }} </span>
+                                                    </li>
+
+
+                                                    <li ng-if="post.user_id === user.id && request.status === 'pending'">
+                                                        <span class='cls-approved'>
+                                                            <a class='btn '
+                                                               href="#/posts/{{post.id}}/process-request/{{request.id}}/accepted">
+                                                                Accept </a>
+                                                        </span>
+                                                    </li>
+                                                    <li ng-if="post.user_id === user.id && request.status === 'pending'">
+                                                        <span class='cls-rejected'>
+                                                            <a class='btn '
+                                                               href="#/posts/{{post.id}}/process-request/{{request.id}}/rejected">
+                                                                Reject </a>
+                                                        </span>
+                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- ng-repeat ends here -->
+                                    <!-- requests on post ends  -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div ng-if="post.user_id !== user.id && !post.is_sold">
+                        <p class="center col-md-5">
+                            <a class="btn btn-primary" href="#/posts/{{ post.id }}/request/new">New Request</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/row-->
+</div>

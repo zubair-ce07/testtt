@@ -5,10 +5,11 @@ from web.posts.models import Post
 from web.posts.serializers.post_serializer import PostSerializer
 
 
-class MyPostsViewSet(mixins.ListModelMixin, GenericViewSet):
+class HotPropertiesViewSet(mixins.ListModelMixin, GenericViewSet):
 
     serializer_class = PostSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Post.objects.filter(is_expired=False, posted_by=self.request.user).order_by('-id')
+        posts = Post.objects.filter(is_expired=False)
+        return sorted(posts, key=lambda post: -post.number_of_views);

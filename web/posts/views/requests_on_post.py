@@ -15,7 +15,7 @@ class RequestsOnPostViewSet(mixins.ListModelMixin, GenericViewSet):
         post_id = self.kwargs.get('post_id')
         post = Post.objects.get(pk=post_id)
         if current_user == post.posted_by:
-            queryset = Request.objects.filter(post=post)
+            queryset = Request.objects.filter(post=post).order_by('-id')
         else:
-            queryset = Request.objects.filter(post=post, requested_by=current_user)
+            queryset = Request.objects.filter(post=post, requested_by=current_user).order_by('-id')
         return queryset
