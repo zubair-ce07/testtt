@@ -6,6 +6,7 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst
 from scrapy.http import Request
 from scrapy.selector import HtmlXPathSelector
+from scrapy.selector import Selector
 
 
 class SizeCrawler(CrawlSpider):
@@ -26,8 +27,8 @@ class SizeCrawler(CrawlSpider):
 
     def add_gender(self, response):
 
-        hxs = HtmlXPathSelector(response)
-        urls = hxs.select("//*[@id='categoryMenu']//li/a/@href").extract()
+        hxs = Selector(response)
+        urls = hxs.xpath("//*[@id='categoryMenu']//li/a/@href").extract()
 
         #: Modifying url else it will give 402 error
         for i in range(len(urls)):
@@ -42,8 +43,8 @@ class SizeCrawler(CrawlSpider):
 
     def get_product_links(self, response):
 
-        hxs = HtmlXPathSelector(response)
-        products_links = hxs.select("//div[@class='product-list gallery-view medium-images']/ol//h2/a/@href").extract()
+        hxs = Selector(response)
+        products_links = hxs.xpath("//div[@class='product-list gallery-view medium-images']/ol//h2/a/@href").extract()
         #: Get all Products
         for link in products_links:
             yield Request(link, callback=self.parse_product, meta={'gender': response.meta.get('gender')})

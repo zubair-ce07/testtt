@@ -18,7 +18,7 @@ class SizeSpiderItem(scrapy.Item):
     spider_name = scrapy.Field()
     retailer = scrapy.Field()
     currency = scrapy.Field(
-        output_processor=Compose(lambda v: re.findall('title = "\w*"', v[0])[0].split('=')[-1]),
+        output_processor=Compose(lambda v: re.findall('title="\w*"', v[0])[0].split('=')[-1]),
     )
     market = scrapy.Field()
     category = scrapy.Field()
@@ -48,7 +48,7 @@ class SizeSpiderItem(scrapy.Item):
 class SkuItem(scrapy.Item):
 
     currency = scrapy.Field(
-        output_processor=Compose(lambda v: re.findall('title = "\w*"', v[0])[0].split('=')[-1]),
+        output_processor=Compose(lambda v: re.findall('title="\w*"', v[0])[0].split('=')[-1]),
     )
     price = scrapy.Field(
         output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE)),
