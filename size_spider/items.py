@@ -12,6 +12,11 @@ from scrapy.loader.processors import TakeFirst, MapCompose, Join, Compose
 from scrapy.utils.markup import replace_escape_chars
 
 
+def compact(s):
+    """ returns None if string is empty, otherwise string itself """
+    return s if s else None
+
+
 class SizeSpiderItem(scrapy.Item):
 
     # define the fields for your item here like:
@@ -24,7 +29,7 @@ class SizeSpiderItem(scrapy.Item):
     category = scrapy.Field()
     retailer_sku = scrapy.Field()
     price = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE)),
+        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE), compact),
     )
     description = scrapy.Field(
         output_processor=MapCompose(unicode.strip, lambda v: replace_escape_chars(v, replace_by=u' ')),
@@ -36,7 +41,8 @@ class SizeSpiderItem(scrapy.Item):
     trail = scrapy.Field()
     skus = scrapy.Field()
     care = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: replace_escape_chars(v, replace_by=u' '))
+        input_processor=MapCompose(lambda v: replace_escape_chars(v, replace_by=u' ')),
+        output_processor=Compose(lambda v: v[2] if len(v) > 3 else u'')
     )
     name = scrapy.Field(
         output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\xa0', u' ', v, flags=re.UNICODE)),
@@ -51,7 +57,7 @@ class SkuItem(scrapy.Item):
         output_processor=Compose(lambda v: re.findall('title="\w*"', v[0])[0].split('=')[-1]),
     )
     price = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE)),
+        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE), compact),
     )
     color = scrapy.Field(
         output_processor=MapCompose(unicode.strip),
@@ -60,3 +66,6 @@ class SkuItem(scrapy.Item):
     out_of_stock = scrapy.Field(
         output_processor=MapCompose(lambda v: True if v != 'in stock' else False),
     )
+
+
+
