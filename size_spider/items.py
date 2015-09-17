@@ -20,22 +20,32 @@ def compact(s):
 class SizeSpiderItem(scrapy.Item):
 
     # define the fields for your item here like:
-    spider_name = scrapy.Field()
-    retailer = scrapy.Field()
+    spider_name = scrapy.Field(
+        output_processor=TakeFirst()
+    )
+    retailer = scrapy.Field(
+        output_processor=TakeFirst()
+    )
     currency = scrapy.Field(
         output_processor=Compose(lambda v: re.findall('title="\w*"', v[0])[0].split('=')[-1]),
     )
-    market = scrapy.Field()
+    market = scrapy.Field(
+        output_processor=TakeFirst()
+    )
     category = scrapy.Field()
-    retailer_sku = scrapy.Field()
+    retailer_sku = scrapy.Field(
+        output_processor=TakeFirst()
+    )
     price = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE), compact),
+        output_processor=TakeFirst(),
+        input_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE), compact),
     )
     description = scrapy.Field(
         output_processor=MapCompose(unicode.strip, lambda v: replace_escape_chars(v, replace_by=u' ')),
     )
     brand = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: v.split(u'\xa0')[0]),
+        output_processor=TakeFirst(),
+        input_processor=MapCompose(unicode.strip, lambda v: v.split(u'\xa0')[0]),
     )
     image_urls = scrapy.Field()
     trail = scrapy.Field()
@@ -46,10 +56,15 @@ class SizeSpiderItem(scrapy.Item):
         output_processor=Compose(lambda v: v[2] if len(v) > 3 else u'')
     )
     name = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\xa0', u' ', v, flags=re.UNICODE)),
+        input_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\xa0', u' ', v, flags=re.UNICODE)),
+        output_processor=TakeFirst()
     )
-    url = scrapy.Field()
-    gender = scrapy.Field()
+    url = scrapy.Field(
+        output_processor=TakeFirst()
+    )
+    gender = scrapy.Field(
+        output_processor=TakeFirst()
+    )
 
 
 class SkuItem(scrapy.Item):
@@ -58,10 +73,12 @@ class SkuItem(scrapy.Item):
         output_processor=Compose(lambda v: re.findall('title="\w*"', v[0])[0].split('=')[-1]),
     )
     price = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE), compact),
+        output_processor=TakeFirst(),
+        input_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE), compact),
     )
     color = scrapy.Field(
-        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'-', '', v, flags=re.UNICODE)),
+        input_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'-', '', v, flags=re.UNICODE)),
+        output_processor=TakeFirst()
     )
     size = scrapy.Field()
     out_of_stock = scrapy.Field(

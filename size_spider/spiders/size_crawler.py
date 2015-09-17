@@ -52,7 +52,7 @@ class SizeCrawler(CrawlSpider):
     def parse_product(self, response):
 
         l = ItemLoader(item=SizeSpiderItem(), response=response)
-        l.add_xpath('spider_name', CrawlSpider.name)
+        l.add_value('spider_name', self.name)
         l.add_value('retailer', 'size-uk')
         l.add_xpath('currency', '//*[@id="productAttributes"]/comment()[1]')
         l.add_value('market', 'UK')
@@ -60,7 +60,7 @@ class SizeCrawler(CrawlSpider):
         l.add_value('retailer_sku', response.url.split('/')[-2])
         l.add_xpath('price', '//*[@id="productName"]/div/text()')
         l.add_xpath('description', '//div[@id="productInfo"]/p/text()')
-        l.add_xpath('brand', '(//h1[@class="product-name fn"]/text())[1]', TakeFirst())
+        l.add_xpath('brand', '(//h1[@class="product-name fn"]/text())[1]')
         l.add_xpath('image_urls', '//img[@class="mainImage"]/@src')
         l.add_value('skus', self.get_skus(response))
         l.add_xpath('care', '//div[@id="productInfo"]/p/text()')
@@ -90,6 +90,6 @@ class SizeCrawler(CrawlSpider):
             new_item['currency'] = items['currency']
             new_item['size'] = item
             new_item['out_of_stock'] = items['out_of_stock'][items['size'].index(item)]
-            skus_collection['{0}_{1}'.format(str(new_item['color'][0]), str(item))] = new_item
+            skus_collection['{0}_{1}'.format(str(new_item['color']), str(item))] = new_item
 
         return skus_collection
