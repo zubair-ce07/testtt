@@ -61,7 +61,7 @@ class SizeCrawler(CrawlSpider):
         l.add_xpath('price', '//*[@id="productName"]/div/text()')
         l.add_xpath('description', '//div[@id="productInfo"]/p/text()')
         l.add_xpath('brand', '(//h1[@class="product-name fn"]/text())[1]', TakeFirst())
-        l.add_xpath('image_urls', '//div[@data-component-name="product-other-views"]/img/@src')
+        l.add_xpath('image_urls', '//img[@class="mainImage"]/@src')
         l.add_value('skus', self.get_skus(response))
         l.add_xpath('care', '//div[@id="productInfo"]/p/text()')
         l.add_xpath('name', '(//h1[@class="product-name fn"]/text())[1]')

@@ -41,7 +41,8 @@ class SizeSpiderItem(scrapy.Item):
     trail = scrapy.Field()
     skus = scrapy.Field()
     care = scrapy.Field(
-        input_processor=MapCompose(lambda v: replace_escape_chars(v, replace_by=u' ')),
+        input_processor=MapCompose(lambda v: replace_escape_chars(v, replace_by=u''),
+                                   lambda v: re.sub(ur'-', '', v, flags=re.UNICODE)),
         output_processor=Compose(lambda v: v[2] if len(v) > 3 else u'')
     )
     name = scrapy.Field(
@@ -60,7 +61,7 @@ class SkuItem(scrapy.Item):
         output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'\D', '', v, flags=re.UNICODE), compact),
     )
     color = scrapy.Field(
-        output_processor=MapCompose(unicode.strip),
+        output_processor=MapCompose(unicode.strip, lambda v: re.sub(ur'-', '', v, flags=re.UNICODE)),
     )
     size = scrapy.Field()
     out_of_stock = scrapy.Field(
