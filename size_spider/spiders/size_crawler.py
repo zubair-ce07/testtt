@@ -5,8 +5,10 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import TakeFirst
 from scrapy.http import Request
-from scrapy.selector import HtmlXPathSelector
 from scrapy.selector import Selector
+import logging
+import json
+import re
 
 
 class SizeCrawler(CrawlSpider):
@@ -61,14 +63,13 @@ class SizeCrawler(CrawlSpider):
         l.add_xpath('price', '//*[@id="productName"]/div/text()')
         l.add_xpath('description', '//div[@id="productInfo"]/p/text()')
         l.add_xpath('brand', '(//h1[@class="product-name fn"]/text())[1]')
-        l.add_xpath('image_urls', '//img[@class="mainImage"]/@src')
         l.add_value('skus', self.get_skus(response))
         l.add_xpath('care', '//div[@id="productInfo"]/p/text()')
         l.add_xpath('name', '(//h1[@class="product-name fn"]/text())[1]')
         l.add_value('url', response.url)
         l.add_value('gender', response.meta['gender'])
-
-        return l.load_item()
+        url = str(Selector(response).xpath('//img[@class="mainImage"]/@src')[0].extract().split('_a')[0]+'_is.js').replace('/i/','/s/')
+        yield Request(url, callback=self.get_images, meta={'item': l})
 
     def get_skus(self, response):
 
@@ -93,3 +94,15 @@ class SizeCrawler(CrawlSpider):
             skus_collection['{0}_{1}'.format(str(new_item['color']), str(item))] = new_item
 
         return skus_collection
+
+    def get_images(self, response):
+
+        l = response.meta['item']
+        json_data = response.body
+        json_data = re.search('{.*}', json_data).group()
+        json_data = json.loads(unicode(json_data))
+
+        for item in json_data['items']:
+            l.add_value('image_urls', item['src'])
+
+        return l.load_item()
