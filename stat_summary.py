@@ -18,5 +18,5 @@ class StatSummary(object):
         self.total_bytes_downloaded += no_of_bytes
 
     def calculate_average_size(self):
-        self.avg_page_size = self.total_bytes_downloaded/self.no_of_requests
+        self.avg_page_size = self.total_bytes_downloaded / self.no_of_requests
         return self.avg_page_size

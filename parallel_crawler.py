@@ -64,7 +64,7 @@ class ParallelCrawler(object):
 
             #: set subtraction
             #: Removing duplicates within all process
-            links = links-set(self.seen_urls)
+            links = links - set(self.seen_urls)
             links = list(links)
 
             for link in links:
