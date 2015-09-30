@@ -1,11 +1,9 @@
-__author__ = "root"
 from multiprocessing import Process, Manager
-import re
 from time import sleep
-import stat_summary
 from multiprocessing.queues import JoinableQueue
 import requests
 import logging
+import my_parser
 
 logging.basicConfig(level=logging.DEBUG,
                     format='(%(processName)-10s) %(message)s',  #: Output the Process Name just for checking purposes
@@ -14,15 +12,21 @@ logging.basicConfig(level=logging.DEBUG,
 
 class ParallelCrawler(object):
 
-    def __init__(self, base_url1, no_of_parallel_requests=0, download_delay=0):
+    def __init__(self, base_url1,  allowed_domain, no_of_parallel_requests=0, download_delay=0):
 
         self.download_delay = download_delay
         self.base_url = base_url1
         self.no_of_parallel_requests = no_of_parallel_requests
-        self.summary = stat_summary.StatSummary()   #: Making Statistics summary object to save statistics saved
+        self.allowed_domain = allowed_domain
+
         self.queue = JoinableQueue()        # Making a queue to share urls b/w all processes
         self.queue.put(self.base_url)      # Initializing queue by base url
+
         self.seen_urls = Manager().list()  # list of URLs that have already been seen
+        self.seen_urls.append(self.base_url)
+
+        self.total_requests = Manager().Value('i', 0)  # Shared variable b/w processes
+        self.total_bytes = Manager().Value('i', 0)     # Shared variable b/w processes
 
     def make_processes(self):
 
@@ -32,32 +36,25 @@ class ParallelCrawler(object):
             p.start()
         self.queue.join()
 
-        #: Now calculate average size of the page
-        self.summary.calculate_average_size()
+        return self.total_bytes.value, self.total_requests.value
 
-    #: Parallel Crawling will be done in Processes
+    #: Crawl requests in parallel
     def crawl(self):
 
         while True:
-
             url = self.queue.get()
-
-            #: add url in the list of seen urls
-            self.seen_urls.append(url)
-
             html = requests.get(url).text
 
-            #: Set total bytes downloaded (in Bytes)
             size = html.__sizeof__()
 
-            self.summary.add_bytes(size)
+            #: Increment the requests number and total bytes downloaded
+            self.total_requests.value += 1
+            self.total_bytes.value += size
 
-            #: Increment the requests number
-            self.summary.increment_request()
-
-            #: use re.findall to get all the links
-            links = re.findall('"((http)s?://.*?)"', html)
-            links = map(lambda x: x[0], links)
+            #: Finding all the links in a page
+            parser = my_parser.MyParser(self.base_url, self.allowed_domain)
+            parser.feed(html)
+            links = parser.get_data()
 
             #: Removing duplicates within a certain process
             links = set(links)
@@ -69,6 +66,7 @@ class ParallelCrawler(object):
 
             for link in links:
                 if link != 'http://':
+                    self.seen_urls.append(link)
                     self.queue.put(link)
 
             #: Sleep for the time given in the download delay

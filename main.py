@@ -1,32 +1,31 @@
-__author__ = 'root'
 ##########################
 # Command Line Interface #
 ##########################
 import parallel_crawler
-import sys
+import argparse
 import stat_summary
 
 
 def main(args):
 
-    if len(args) < 3:
-        print("No arguments have been passed. Exiting System")
-        sys.exit()
+    pc = parallel_crawler.ParallelCrawler(args.base_url, args.allowed_domain, args.no_of_parallel_requests,
+                                          args.download_delay)
+    total_bytes, total_requests = pc.make_processes()
+    ss = stat_summary.StatSummary(total_requests, total_bytes)
 
-    elif len(args) >= 3:
-        print "Starting the project"
-        pc = parallel_crawler.ParallelCrawler(args[0], int(args[1]), int(args[2]))
-        pc.make_processes()
-
-        #: Output the calculated results
-        statistics_summary = pc.summary
-        print '##########################'
-        print '#         Output         #'
-        print '##########################'
-        print statistics_summary.avg_page_size
-        print statistics_summary.no_of_requests
-        print statistics_summary.total_bytes_downloaded
+    #: Output the calculated results
+    print '##########################'
+    print '#         Output         #'
+    print '##########################'
+    ss.display_summary()
     return
 
+#: Sample input
+#: python main.py "" "arbisoft.com" 4 0
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('base_url', nargs='?', action="store", default='http://arbisoft.com/', type=str)
+    parser.add_argument('allowed_domain', nargs='?', action="store", default='arbisoft.com', type=str)
+    parser.add_argument('no_of_parallel_requests', nargs='?', action="store", default=2, type=int)
+    parser.add_argument('download_delay', nargs='?', action="store", default=0, type=int)
+    main(parser.parse_args())
