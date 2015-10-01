@@ -3,7 +3,7 @@ from time import sleep
 from multiprocessing.queues import JoinableQueue
 import requests
 import logging
-import my_parser
+import links_parser
 
 logging.basicConfig(level=logging.DEBUG,
                     format='(%(processName)-10s) %(message)s',  #: Output the Process Name just for checking purposes
@@ -52,7 +52,7 @@ class ParallelCrawler(object):
             self.total_bytes.value += size
 
             #: Finding all the links in a page
-            parser = my_parser.MyParser(self.base_url, self.allowed_domain)
+            parser = links_parser.LinksParser(self.base_url, self.allowed_domain)
             parser.feed(html)
             links = parser.get_data()
 

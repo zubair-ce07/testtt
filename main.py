@@ -21,7 +21,7 @@ def main(args):
     return
 
 #: Sample input
-#: python main.py "" "arbisoft.com" 4 0
+#: python main.py "http://arbisoft.com" "arbisoft.com" 4 0
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('base_url', nargs='?', action="store", default='http://arbisoft.com/', type=str)

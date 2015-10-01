@@ -1,9 +1,8 @@
 from HTMLParser import HTMLParser
-from urlparse import urlparse
-from urlparse import urljoin
+from urlparse import urlparse, urljoin
 
 
-class MyParser(HTMLParser):
+class LinksParser(HTMLParser):
 
     def __init__(self, base_url, allowed_domain):
         HTMLParser.__init__(self)
@@ -35,6 +34,7 @@ class MyParser(HTMLParser):
                         if full_url[-1] != '/':
                             full_url += '/'
                         self.data.append(full_url)
+                        break
 
     def get_data(self):
         return self.data
