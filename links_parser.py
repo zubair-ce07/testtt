@@ -34,7 +34,7 @@ class LinksParser(HTMLParser):
                         if full_url[-1] != '/':
                             full_url += '/'
                         self.urls.append(full_url)
-                        break
+                    break
 
     def get_urls(self):
         return self.urls
