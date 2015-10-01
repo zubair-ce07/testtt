@@ -6,7 +6,7 @@ class LinksParser(HTMLParser):
 
     def __init__(self, base_url, allowed_domain):
         HTMLParser.__init__(self)
-        self.data = []
+        self.urls = []
         self.base_url = base_url
         self.allowed_domain = allowed_domain
 
@@ -33,8 +33,8 @@ class LinksParser(HTMLParser):
                         #  will be considered different
                         if full_url[-1] != '/':
                             full_url += '/'
-                        self.data.append(full_url)
+                        self.urls.append(full_url)
                         break
 
-    def get_data(self):
-        return self.data
+    def get_urls(self):
+        return self.urls

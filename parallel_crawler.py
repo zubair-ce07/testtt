@@ -54,7 +54,7 @@ class ParallelCrawler(object):
             #: Finding all the links in a page
             parser = links_parser.LinksParser(self.base_url, self.allowed_domain)
             parser.feed(html)
-            links = parser.get_data()
+            links = parser.get_urls()
 
             #: Removing duplicates within a certain process
             links = set(links)
