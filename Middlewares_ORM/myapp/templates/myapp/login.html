@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Log in</title>
+</head>
+
+<body>
+
+{% if user.is_authenticated %}
+    <strong>Congratulations! You're logged in!</strong> <br \> <br \>
+    <button onclick="location.href='/myapp/logout'">Logout</button>
+
+{% else %}
+
+    {%  if error %}
+        <strong>Username or password is incorrect</strong>
+    {%  endif %}
+
+    <form id=user method="post" action="/myapp/login/">
+        {% csrf_token %}
+
+        <table>
+            <tr>
+                <td>{{ form.email.label_tag }}</td>
+                <td>{{ form.email }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.password.label_tag }}</td>
+                <td>{{ form.password }}</td>
+            </tr>
+        </table>
+
+        <input type="submit" name="submit" value="Login" />
+
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}" />
+        {% endif %}
+    </form>
+
+ {% endif %}
+
+</body>
+
+</html>
