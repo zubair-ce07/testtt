@@ -9,6 +9,7 @@ from scrapy.selector import HtmlXPathSelector, XmlXPathSelector
 import logging
 from scrapy.http import Request
 import article
+import xml.etree.ElementTree as ET
 
 logging.basicConfig(level=logging.DEBUG,
                     format='(%(processName)-10s) %(message)s',  #: Output the Process Name just for checking purposes
@@ -55,12 +56,19 @@ class SheegoParseSpider(BaseParseSpider):
         garment['skus'] = {}
 
         #: Function to generate requests for each color
-        garment = self.get_colours(hxs, garment)
+        queue = self.get_colours(hxs)
+        queue = map(lambda x: x.replace(meta={'item': garment}), queue)
+
+        garment['meta'] = {}
+        garment['meta']['requests_queue'] = queue
 
         #: Function to generate the requests for getting information regarding OUT_Of_Stock for each sku
-        garment = self.skus(hxs, garment)
+        queue, key_list = self.skus(hxs)
+        queue = map(lambda x: x.replace(meta={'item': garment, 'key': key_list}), queue)
 
-        yield self.next_request_or_garment(garment)[0]
+        garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + queue
+
+        return self.next_request_or_garment(garment)
 
     def parse_skus_and_images(self, response):
 
@@ -85,7 +93,7 @@ class SheegoParseSpider(BaseParseSpider):
 
         #: Get the current color value
         color = clean(HtmlXPathSelector(response).select('//div[@class="color js-variantSelector"]/div/span/text()'))[0]
-        #: "Detect color" of base.py is not working here for all colors thats why I used regular expression
+        #: "Detect color" of base.py is not working here for all colors that's why I used regular expression
         color = re.sub(u'\W', u'', color,  flags=re.UNICODE)
 
         #: Remove non-acsii characters else not acceptable as key value
@@ -117,13 +125,7 @@ class SheegoParseSpider(BaseParseSpider):
 
         #: Update the sku element of the garment
         garment['skus'].update(skus)
-        req = self.next_request_or_garment(garment)
-
-        #: if Return value of "self.next_request_or_garment" is "Request" then return req[0] if :garment" then return req
-        try:
-            yield req[0]
-        except KeyError:
-            yield req
+        return self.next_request_or_garment(garment)
 
     def set_skus_availability(self, response):
 
@@ -141,9 +143,9 @@ class SheegoParseSpider(BaseParseSpider):
             garment['skus'].update(skus)
             index += 1
 
-        yield self.next_request_or_garment(garment)[0]
+        return self.next_request_or_garment(garment)
 
-    def skus(self, hxs, garment):
+    def skus(self, hxs):
 
         #: Get the ids from color urls to get the information regarding std_promotion
         ids = clean(hxs.select('//ul[@class="cover list-unstyled list-inline"]//a/@href'))
@@ -178,10 +180,11 @@ class SheegoParseSpider(BaseParseSpider):
                 g.generate_one_element(a)
                 #: Make a post request for each sku item to get the information regarding out_of_stock
             index += 1
-        body = g.append_static_elements()
-        queue = [Request('http://www.sheego.de/request/kal.php', method='POST', body=body, callback=self.set_skus_availability, meta={'item': garment, 'key': key_list}, dont_filter=True)]
-        garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + queue
-        return garment
+        body = g.print_xml()
+        logging.info(body)
+        queue = [Request('http://www.sheego.de/request/kal.php', method='POST', body=body, callback=self.set_skus_availability, dont_filter=True)]
+
+        return queue, key_list
 
     def product_brand(self, hxs):
         return clean(hxs.select('(//div[@class="brand"]//text())[2]'))
@@ -198,17 +201,15 @@ class SheegoParseSpider(BaseParseSpider):
     def product_category(self, hxs):
         return clean(hxs.select('(//ul[@class="breadcrumb"])[1]//a/text()'))
 
-    def get_colours(self, hxs, garment):
+    def get_colours(self, hxs):
 
         queue = []
         colors = clean(hxs.select('//ul[@class="cover list-unstyled list-inline"]//a/@href'))
 
         for color in colors:
-            queue = queue + [Request(color, callback=self.parse_skus_and_images, meta={'item': garment}, dont_filter=True)]
-        garment['meta'] = {}
-        garment['meta']['requests_queue'] = queue
+            queue = queue + [Request(color, callback=self.parse_skus_and_images, dont_filter=True)]
 
-        return garment
+        return queue
 
 
 class SheegoCrawlSpider(BaseCrawlSpider, Mixin):
@@ -241,24 +242,32 @@ class SheegoUKCrawlSpider(SheegoCrawlSpider, MixinUK):
 class GenerateXML(object):
     def __init__(self):
         self.xml = ''
+        self.append_static_elements()
 
     def generate_one_element(self, article):
 
-        self.xml = self.xml + '<Article>'
-        self.xml = self.xml + '<CompleteCatalogItemNo>' + article.complete_catalog_item_no + '</CompleteCatalogItemNo>'
-        self.xml = self.xml + '<SizeAlphaText>' + article.size_alpha_tex + '</SizeAlphaText>'
-        self.xml = self.xml + '<Std_Promotion>' + article.std_promotion + '</Std_Promotion>'
-        self.xml = self.xml + '<CustomerCompanyID>' + str(article.customer_company_id) + '</CustomerCompanyID>'
-        self.xml = self.xml + '</Article>'
+        parent = self.xml.find('.//Articles')
+        a = ET.SubElement(parent, 'Article')
+        b = ET.SubElement(a, 'CompleteCatalogItemNo')
+        b.text = str(article.complete_catalog_item_no)
+        c = ET.SubElement(a, 'SizeAlphaText')
+        c.text = str(article.size_alpha_tex)
+        d = ET.SubElement(a, 'Std_Promotion')
+        d.text = article.std_promotion
+        e = ET.SubElement(a, 'CustomerCompanyID')
+        e.text = str(article.customer_company_id)
 
     def append_static_elements(self):
 
-        xml = '<?xml version="1.0" encoding="utf-8"?>' + '<tns:KALAvailabilityRequest xmlns:tns="http://www.schwab.de/KAL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.schwab.de/KAL http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd">'
-        xml = xml + '<Articles>'
-        xml = xml + self.xml
-        xml = xml + '</Articles>'
-        xml = xml + '</tns:KALAvailabilityRequest>'
-        self.xml = xml
-        return self.xml
+        a = ET.Element('tns:KALAvailabilityRequest')
+        a.set("xmlns:tns", "http://www.schwab.de/KAL")
+        a.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+        a.set("xsi:schemaLocation", "http://www.schwab.de/KAL http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd")
+        ET.SubElement(a, 'Articles')
+        self.xml = a
+
+    def print_xml(self):
+        return ET.tostring(self.xml)
+
 
 
