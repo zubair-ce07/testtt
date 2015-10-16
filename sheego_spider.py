@@ -11,6 +11,7 @@ from scrapy.http import Request
 import article
 import xml.etree.ElementTree as ET
 
+
 logging.basicConfig(level=logging.DEBUG,
                     format='(%(processName)-10s) %(message)s',  #: Output the Process Name just for checking purposes
                     )
@@ -32,6 +33,7 @@ class SheegoParseSpider(BaseParseSpider):
 
     price_x = '//div[@class="price holder"]/span/text()[1]'
 
+    #: Callback function
     def parse(self, response):
 
         hxs = HtmlXPathSelector(response)
@@ -55,136 +57,134 @@ class SheegoParseSpider(BaseParseSpider):
         garment['image_urls'] = []
         garment['skus'] = {}
 
-        #: Function to generate requests for each color
-        queue = self.get_colours(hxs)
-        queue = map(lambda x: x.replace(meta={'item': garment}), queue)
+        #: Function to generate the requests for every sku
+        queue = self.skus(response)
+        #: Passing garment as meta data for each request
+        queue = map(lambda x: x.replace(meta={'item': garment, 'dont_redirect': True, "handle_httpstatus_list": [301]}), queue)
 
+        #: Initialize several data that you need while processing skus
         garment['meta'] = {}
         garment['meta']['requests_queue'] = queue
-
-        #: Function to generate the requests for getting information regarding OUT_Of_Stock for each sku
-        queue, key_list = self.skus(hxs)
-        queue = map(lambda x: x.replace(meta={'item': garment, 'key': key_list}), queue)
-
-        garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + queue
+        garment['meta']['seen_colors'] = []
+        g = GenerateXML()
+        garment['meta']['body'] = g
+        garment['meta']['key_list'] = []
 
         return self.next_request_or_garment(garment)
 
-    def parse_skus_and_images(self, response):
-
-        #: Get the data that has been set  in the Request.meta
-        garment = response.meta['item']
-
-        #: Get all the images for a specific color
-        format_1s = clean(HtmlXPathSelector(response).select('//div[@class="js-product-thumbs-slider"]//a/img/@data-src'))
-
-        # Generate the urls for Zoom _ format images manually
-        format_zoom = map(lambda x: x.split('format_1s'), format_1s)
-        #: Filter out the elements of format_zoom on the bases of length
-        format_zoom = filter(lambda x: len(x) == 2, format_zoom)
-        #: Make a new image url
-        format_zoom = map(lambda x: x[0] + "format_zoom" + x[1], format_zoom)
-
-        #: Include all the parsed url in the garment
-        garment['image_urls'] = garment['image_urls'] + format_1s + format_zoom
-
-        #: Get all the sizes of a specific color
-        size_list = clean(HtmlXPathSelector(response).select('//div[@class=" js-variantSelector size clearfix"]//button/@data-noa-size'))
-
-        #: Get the current color value
-        color = clean(HtmlXPathSelector(response).select('//div[@class="color js-variantSelector"]/div/span/text()'))[0]
-        #: "Detect color" of base.py is not working here for all colors that's why I used regular expression
-        color = re.sub(u'\W', u'', color,  flags=re.UNICODE)
-
-        #: Remove non-acsii characters else not acceptable as key value
-        color = ''.join([i if ord(i) < 128 else ' ' for i in color])
-
-        #: Update skus for each size of current color
-        skus = {}
-        previous_price, price, currency = self.product_pricing(HtmlXPathSelector(response))
-
-        for size in size_list:
-
-            key = str(color) + "_" + str(size)
-            sku = {
-                'price': price,
-                'currency': currency,
-                'size': size,
-                'colour': color,
-                'out_of_stock': garment['skus'][key]['out_of_stock']
-            }
-            if previous_price:
-                sku['previous_price'] = previous_price
-            else:
-                #: Set previous price if base.py can not detect it
-                previous_price = clean(HtmlXPathSelector(response).select('//div[@class="price holder"]/span/sub[@class="wrongprice"]/text()'))
-                if previous_price:
-                    sku['previous_price'] = re.sub(u'\D', u'', previous_price[0],  flags=re.UNICODE)
-
-            skus[key] = sku
-
-        #: Update the sku element of the garment
-        garment['skus'].update(skus)
-        return self.next_request_or_garment(garment)
-
+    #: Callback function that update availability status for each sku
     def set_skus_availability(self, response):
 
-        skus = {}
         garment = response.meta['item']
-        key_list = response.meta['key']
+        key_list = garment['meta']['key_list']
 
         index = 1
         for key in key_list:
-            sel = clean(XmlXPathSelector(response).select('(//Stock/text())[' + str(index) + ']'))[0]
-            sku = {
-                'out_of_stock': not int(sel)
-            }
-            skus[key] = sku
-            garment['skus'].update(skus)
+            sel = clean(XmlXPathSelector(response).select('(//DeliveryStatement/text())[' + str(index) + ']'))[0]
+            #: Updating sku
+            garment['skus'][key]['out_of_stock'] = not int(sel)
             index += 1
 
         return self.next_request_or_garment(garment)
 
-    def skus(self, hxs):
+    #: Callback function
+    def skus(self, response):
 
-        #: Get the ids from color urls to get the information regarding std_promotion
-        ids = clean(hxs.select('//ul[@class="cover list-unstyled list-inline"]//a/@href'))
+        hxs = HtmlXPathSelector(response)
+        #: Get art no from javascript of all sku Item which will be needed for all sku info
+        script = clean(hxs.select('//div[@id="detailsuggestion"]/following::script[1]/text()'))[0]
+        script = re.search('articlesString\(.*?\)', script).group()
+        script = re.search("\'.*\'", script).group()
+        script = script.split(';')
 
-        colors = clean(hxs.select('//ul[@class="cover list-unstyled list-inline"]//a//img/@title'))
-        colors = map(lambda x: re.sub(u'\W', u'', x,  flags=re.UNICODE), colors)
+        #: Remove quotation marks from start and end
+        script[0] = script[0][1::]
+        script[-1] = script[-1][:-1]
 
-        if len(ids) != len(colors):
-            #: Get div information also
-            colors1 = clean(hxs.select('//ul[@class="cover list-unstyled list-inline"]//a//div/text()'))
-            #: Get only last word from a sentence
-            colors1 = map(lambda x: x.rsplit(None, 1)[-1], colors1)
-            colors =  colors + colors1
-
-        #: If any of the color has non ascii character the remove it otherwise it will not be acceptable as key
-        colors = map(lambda x: ''.join([i if ord(i) < 128 else ' ' for i in x]), colors)
-
-        sizes = clean(hxs.select('//div[@data-toggle="buttons-checkbox"]/button/@data-noa-size'))
+        queue = []
 
         index = 0
+        while index in range(len(script)):
+            url1 = response.url.split('_')
+            url = url1[0] + '_' + url1[1].split('-')[0] + '-' + script[index][0:6] + '-' + script[index+1] + '-' + script[index][6:] + '.html'
+            req = [Request(url, callback=self.parse_skus, dont_filter="True")]
+            queue = queue + req
+            index += 2
 
-        g = GenerateXML()
-        key_list = []
-        for color in colors:
+        return queue
 
-            id1 = ids[index].split('_')[1].split('p.html')[0].split('-')
-            for size in sizes:
+    #: Call back function for extracting data for each sku
+    def parse_skus(self, response):
 
-                key_list.append(str(color) + "_" + str(size))
-                #: Generate a body here for each request
-                a = article.Article(id1[1]+id1[2], size, id1[2])
-                g.generate_one_element(a)
-                #: Make a post request for each sku item to get the information regarding out_of_stock
-            index += 1
-        body = g.print_xml()
-        logging.info(body)
-        queue = [Request('http://www.sheego.de/request/kal.php', method='POST', body=body, callback=self.set_skus_availability, dont_filter=True)]
+        garment = response.meta['item']
+        hxs = HtmlXPathSelector(response)
 
-        return queue, key_list
+        color = clean(hxs.select('//div[contains(text(),"Farbe ")]/span/text()'))[0]
+        color = (''.join([i if ord(i) < 128 else ' ' for i in color])).strip()
+
+        #: Getting images for every color if its not been seen before
+        if color not in garment['meta']['seen_colors']:
+
+            # Add color in seen colors
+            garment['meta']['seen_colors'] = garment['meta']['seen_colors'] + [color]
+
+            format_1s = clean(hxs.select('//div[@id="thumbslider"]//a//img/@data-src'))
+
+            # Generate the urls for Zoom _ format images manually
+            format_zoom = map(lambda x: x.split('format_1s'), format_1s)
+            #: Filter out the elements of format_zoom on the bases of length
+            format_zoom = filter(lambda x: len(x) == 2, format_zoom)
+            #: Make a new image url
+            format_zoom = map(lambda x: x[0] + "format_zoom" + x[1], format_zoom)
+
+            #: Include all the parsed image urls in the garment
+            garment['image_urls'] = garment['image_urls'] + format_1s + format_zoom
+
+        skus = {}
+        previous_price, price, currency = self.product_pricing(HtmlXPathSelector(response))
+
+        size = clean(hxs.select('//button[contains(@class,"btn active")]/text()'))[0]
+
+        key = str(color) + "_" + str(size)
+        sku = {
+            'price': price,
+            'currency': currency,
+            'size': size,
+            'colour': color,
+        }
+        if previous_price:
+            sku['previous_price'] = previous_price
+        else:
+            #: Set previous price if base.py can not detect it
+            previous_price = clean(HtmlXPathSelector(response).select('//sub[@class="wrongprice"]/text()'))
+            if previous_price:
+                sku['previous_price'] = re.sub(u'\D', u'', previous_price[0],  flags=re.UNICODE)
+
+        skus[key] = sku
+
+        #: Update the sku element of garment
+        garment['skus'].update(skus)
+
+        #: This list is needed in checking out_of_stock
+        garment['meta']['key_list'] = garment['meta']['key_list'] + [key]
+
+        #: Now create the body for each sku so we can check availability later
+        artNr = clean(hxs.select('//input[@name="artNr"]/@value'))[0]
+        promotion_std = clean(hxs.select('//input[@name="aid"]/@value'))[0].split('-')[-1]
+
+        size = clean(response.url.split('-')[-2])
+        #: Generate a body here for each sku
+        a = article.Article(artNr, size, promotion_std)
+        g = garment['meta']['body']
+        g.generate_one_element(a)
+
+        #: If all the skus have been processed then generate POST request for checking the availability
+        if len(garment['meta']['requests_queue']) == 0:
+            body = garment['meta']['body']
+            body = body.print_xml()
+            garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + [Request('http://www.sheego.de/request/kal.php', method='POST', body=body, meta={'item': garment}, callback=self.set_skus_availability, dont_filter=True)]
+
+        return self.next_request_or_garment(garment)
 
     def product_brand(self, hxs):
         return clean(hxs.select('(//div[@class="brand"]//text())[2]'))
@@ -200,16 +200,6 @@ class SheegoParseSpider(BaseParseSpider):
 
     def product_category(self, hxs):
         return clean(hxs.select('(//ul[@class="breadcrumb"])[1]//a/text()'))
-
-    def get_colours(self, hxs):
-
-        queue = []
-        colors = clean(hxs.select('//ul[@class="cover list-unstyled list-inline"]//a/@href'))
-
-        for color in colors:
-            queue = queue + [Request(color, callback=self.parse_skus_and_images, dont_filter=True)]
-
-        return queue
 
 
 class SheegoCrawlSpider(BaseCrawlSpider, Mixin):
@@ -232,6 +222,11 @@ class SheegoCrawlSpider(BaseCrawlSpider, Mixin):
 
 class SheegoUKParseSpider(SheegoParseSpider, MixinUK):
     name = MixinUK.retailer + '-parse'
+
+
+class SheegoUKCrawlSpider(SheegoCrawlSpider, MixinUK):
+    name = MixinUK.retailer + '-crawl'
+    parse_spider = SheegoUKParseSpider()
 
 
 class SheegoUKCrawlSpider(SheegoCrawlSpider, MixinUK):
@@ -268,6 +263,5 @@ class GenerateXML(object):
 
     def print_xml(self):
         return ET.tostring(self.xml)
-
 
 
