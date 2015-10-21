@@ -141,11 +141,11 @@ class SheegoParseSpider(BaseParseSpider):
             garment['image_urls'] = garment['image_urls'] + format_1s + format_zoom
 
         skus = {}
-        previous_price, price, currency = self.product_pricing(HtmlXPathSelector(response))
+        previous_price, price, currency = self.product_pricing(hxs)
 
         size = clean(hxs.select('//button[contains(@class,"btn active")]/text()'))[0]
 
-        key = str(color) + "_" + str(size)
+        key = color + "_" + size
         sku = {
             'price': price,
             'currency': currency,
@@ -166,7 +166,7 @@ class SheegoParseSpider(BaseParseSpider):
         garment['skus'].update(skus)
 
         #: This list is needed in checking out_of_stock
-        garment['meta']['key_list'] = garment['meta']['key_list'] + [key]
+        garment['meta']['key_list'] += [key]
 
         #: Now create the body for each sku so we can check availability later
         artNr = clean(hxs.select('//input[@name="artNr"]/@value'))[0]
@@ -179,7 +179,7 @@ class SheegoParseSpider(BaseParseSpider):
         g.generate_one_element(a)
 
         #: If all the skus have been processed then generate POST request for checking the availability
-        if len(garment['meta']['requests_queue']) == 0:
+        if garment['meta']['requests_queue']:
             body = garment['meta']['body']
             body = body.print_xml()
             garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + [Request('http://www.sheego.de/request/kal.php', method='POST', body=body, meta={'item': garment}, callback=self.set_skus_availability, dont_filter=True)]
@@ -240,7 +240,6 @@ class GenerateXML(object):
         self.append_static_elements()
 
     def generate_one_element(self, article):
-
         parent = self.xml.find('.//Articles')
         a = ET.SubElement(parent, 'Article')
         b = ET.SubElement(a, 'CompleteCatalogItemNo')
@@ -253,7 +252,6 @@ class GenerateXML(object):
         e.text = str(article.customer_company_id)
 
     def append_static_elements(self):
-
         a = ET.Element('tns:KALAvailabilityRequest')
         a.set("xmlns:tns", "http://www.schwab.de/KAL")
         a.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
