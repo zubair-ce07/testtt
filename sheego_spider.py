@@ -98,18 +98,18 @@ class SheegoParseSpider(BaseParseSpider):
         script = script.split(';')
 
         #: Remove quotation marks from start and end
-        script[0] = script[0][1::]
-        script[-1] = script[-1][:-1]
+        script[0] = script[0].strip("'")
+        script[-1] = script[-1].strip("'")
+
 
         queue = []
 
-        index = 0
-        while index in range(len(script)):
+        it = iter(script)
+        for script in it:
             url1 = response.url.split('_')
-            url = url1[0] + '_' + url1[1].split('-')[0] + '-' + script[index][0:6] + '-' + script[index+1] + '-' + script[index][6:] + '.html'
+            url = url1[0] + '_' + url1[1].split('-')[0] + '-' + script[0:6] + '-' + next(it) + '-' + script[6:] + '.html'
             req = [Request(url, callback=self.parse_skus, dont_filter="True")]
             queue = queue + req
-            index += 2
 
         return queue
 
@@ -179,7 +179,7 @@ class SheegoParseSpider(BaseParseSpider):
         g.generate_one_element(a)
 
         #: If all the skus have been processed then generate POST request for checking the availability
-        if garment['meta']['requests_queue']:
+        if not garment['meta']['requests_queue']:
             body = garment['meta']['body']
             body = body.print_xml()
             garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + [Request('http://www.sheego.de/request/kal.php', method='POST', body=body, meta={'item': garment}, callback=self.set_skus_availability, dont_filter=True)]
