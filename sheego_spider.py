@@ -120,7 +120,7 @@ class SheegoParseSpider(BaseParseSpider):
         hxs = HtmlXPathSelector(response)
 
         color = clean(hxs.select('//div[contains(text(),"Farbe ")]/span/text()'))[0]
-        color = (''.join([i if ord(i) < 128 else ' ' for i in color])).strip()
+        color = re.sub(u'\W', u'', color,  flags=re.UNICODE)
 
         #: Getting images for every color if its not been seen before
         if color not in garment['meta']['seen_colors']:
