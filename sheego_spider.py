@@ -76,7 +76,7 @@ class SheegoParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     #: Callback function that update availability status for each sku
-    def set_skus_availability(self, response):
+    def parse_skus_availability(self, response):
 
         garment = response.meta['item']
         key_list = garment['meta']['key_list']
@@ -91,7 +91,7 @@ class SheegoParseSpider(BaseParseSpider):
 
         return self.next_request_or_garment(garment)
 
-    #: Callback function
+    #: Function to generate requests for each sku
     def skus(self, response):
 
         hxs = HtmlXPathSelector(response)
@@ -106,7 +106,6 @@ class SheegoParseSpider(BaseParseSpider):
         #: Remove quotation marks from start and end
         script[0] = script[0].strip("'")
         script[-1] = script[-1].strip("'")
-
 
         queue = []
 
@@ -196,7 +195,7 @@ class SheegoParseSpider(BaseParseSpider):
             body = body.print_xml()
             req = Request('http://www.sheego.de/request/kal.php', method='POST',
                           body=body, meta={'item': garment},
-                          callback=self.set_skus_availability, dont_filter=True)
+                          callback=self.parse_skus_availability, dont_filter=True)
             garment['meta']['requests_queue'] += [req]
 
         return self.next_request_or_garment(garment)
