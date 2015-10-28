@@ -44,7 +44,7 @@ class SheegoParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, hxs, response)
-        previous_price, price, currency = self.product_pricing(HtmlXPathSelector(response))
+        previous_price, price, currency = self.product_pricing(hxs)
 
         #: Setting parameters for a garment
         garment['price'] = price
@@ -53,15 +53,17 @@ class SheegoParseSpider(BaseParseSpider):
         garment['gender'] = 'women'
         garment['brand'] = self.product_brand(hxs)
 
-        #: Initializing Image_urls list and skus Dictionary to avoid errors in further processing
+        #: Initializing Image_urls list and skus Dictionary to avoid
+        #: errors in further processing
         garment['image_urls'] = []
         garment['skus'] = {}
 
         #: Function to generate the requests for every sku
         queue = self.skus(response)
         #: Passing garment as meta data for each request
-        queue = map(lambda x: x.replace(meta={'item': garment, 'dont_redirect': True, "handle_httpstatus_list": [301]}),
-                    queue)
+        queue = map(
+            lambda x: x.replace(meta={'item': garment, 'dont_redirect': True}),
+            queue)
 
         #: Initialize several data that you need while processing skus
         garment['meta'] = {}
@@ -81,7 +83,8 @@ class SheegoParseSpider(BaseParseSpider):
 
         index = 1
         for key in key_list:
-            sel = clean(XmlXPathSelector(response).select('(//DeliveryStatement/text())[' + str(index) + ']'))[0]
+            xpath = '(//DeliveryStatement/text())[' + str(index) + ']'
+            sel = clean(XmlXPathSelector(response).select(xpath))[0]
             #: Updating sku
             garment['skus'][key]['out_of_stock'] = not int(sel)
             index += 1
@@ -92,8 +95,10 @@ class SheegoParseSpider(BaseParseSpider):
     def skus(self, response):
 
         hxs = HtmlXPathSelector(response)
-        #: Get art no from javascript of all sku Item which will be needed for all sku info
-        script = clean(hxs.select('//div[@id="detailsuggestion"]/following::script[1]/text()'))[0]
+        #: Get art no from javascript of all sku Item which will
+        #: be needed for all sku info
+        script = clean(hxs.select('//div[@id="detailsuggestion"]/'
+                                  'following::script[1]/text()'))[0]
         script = re.search('articlesString\(.*?\)', script).group()
         script = re.search("\'.*\'", script).group()
         script = script.split(';')
@@ -108,8 +113,8 @@ class SheegoParseSpider(BaseParseSpider):
         it = iter(script)
         for script in it:
             url1 = response.url.split('_')
-            url = url1[0] + '_' + url1[1].split('-')[0] + '-' + script[0:6] + '-' + next(it) + '-' \
-                + script[6:] + '.html'
+            url = url1[0] + '_' + url1[1].split('-')[0] + '-' + script[0:6] \
+                + '-' + next(it) + '-' + script[6:] + '.html'
             req = [Request(url, callback=self.parse_skus, dont_filter="True")]
             queue = queue + req
 
@@ -128,9 +133,10 @@ class SheegoParseSpider(BaseParseSpider):
         if color not in garment['meta']['seen_colors']:
 
             # Add color in seen colors
-            garment['meta']['seen_colors'] = garment['meta']['seen_colors'] + [color]
+            garment['meta']['seen_colors'] += [color]
 
-            format_1s = clean(hxs.select('//div[@id="thumbslider"]//a//img/@data-src'))
+            format_1s = clean(hxs.select(
+                '//div[@id="thumbslider"]//a//img/@data-src'))
 
             # Generate the urls for Zoom _ format images manually
             format_zoom = map(lambda x: x.split('format_1s'), format_1s)
@@ -140,7 +146,7 @@ class SheegoParseSpider(BaseParseSpider):
             format_zoom = map(lambda x: x[0] + "format_zoom" + x[1], format_zoom)
 
             #: Include all the parsed image urls in the garment
-            garment['image_urls'] = garment['image_urls'] + format_1s + format_zoom
+            garment['image_urls'] += format_1s + format_zoom
 
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
@@ -158,9 +164,11 @@ class SheegoParseSpider(BaseParseSpider):
             sku['previous_price'] = previous_price
         else:
             #: Set previous price if base.py can not detect it
-            previous_price = clean(HtmlXPathSelector(response).select('//sub[@class="wrongprice"]/text()'))
+            xpath = '//sub[@class="wrongprice"]/text()'
+            previous_price = clean(HtmlXPathSelector(response).select(xpath))
             if previous_price:
-                sku['previous_price'] = re.sub(u'\D', u'', previous_price[0],  flags=re.UNICODE)
+                sku['previous_price'] = re.sub(u'\D', u'', previous_price[0],
+                                               flags=re.UNICODE)
 
         skus[key] = sku
 
@@ -172,7 +180,8 @@ class SheegoParseSpider(BaseParseSpider):
 
         #: Now create the body for each sku so we can check availability later
         artNr = clean(hxs.select('//input[@name="artNr"]/@value'))[0]
-        promotion_std = clean(hxs.select('//input[@name="aid"]/@value'))[0].split('-')[-1]
+        promotion_std = clean(hxs.select('//input[@name="aid"]/@value'))[0]
+        promotion_std = promotion_std.split('-')[-1]
 
         size = clean(response.url.split('-')[-2])
         #: Generate a body here for each sku
@@ -180,13 +189,15 @@ class SheegoParseSpider(BaseParseSpider):
         g = garment['meta']['body']
         g.generate_one_element(a)
 
-        #: If all the skus have been processed then generate POST request for checking the availability
+        #: If all the skus have been processed then generate POST request for
+        #: checking the availability
         if not garment['meta']['requests_queue']:
             body = garment['meta']['body']
             body = body.print_xml()
-            req = Request('http://www.sheego.de/request/kal.php', method='POST', body=body, meta={'item': garment},
+            req = Request('http://www.sheego.de/request/kal.php', method='POST',
+                          body=body, meta={'item': garment},
                           callback=self.set_skus_availability, dont_filter=True)
-            garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + [req]
+            garment['meta']['requests_queue'] += [req]
 
         return self.next_request_or_garment(garment)
 
@@ -197,12 +208,15 @@ class SheegoParseSpider(BaseParseSpider):
         return clean(hxs.select('(//span[@itemprop="name"]/text())[1]'))
 
     def product_description(self, hxs):
-        return clean(hxs.select('//div[@id="moreinfo-highlight"]//li/text()')) \
-            + clean(hxs.select('(//div[@itemprop="description"])[1]/text()'))
+        xpath1 = '//div[@id="moreinfo-highlight"]//li/text()'
+        xpath2 = '(//div[@itemprop="description"])[1]/text()'
+        return clean(hxs.select(xpath1)) + clean(hxs.select(xpath2))
 
     def product_care(self, hxs):
-        return clean(hxs.select('(//td//span[text()="Materialzusammensetzung"]/following::td[1]/text())[1]  | '
-                                '(//dl[@class="dl-horizontal articlequality"])[1]//text()'))
+        xpath = '(//td//span[text()="Materialzusammensetzung"]/following' \
+                '::td[1]/text())[1] | (//dl[@class="dl-horizontal ' \
+                'articlequality"])[1]//text()'
+        return clean(hxs.select(xpath))
 
     def product_category(self, hxs):
         return clean(hxs.select('(//ul[@class="breadcrumb"])[1]//a/text()'))
@@ -215,7 +229,7 @@ class SheegoCrawlSpider(BaseCrawlSpider, Mixin):
 
         Rule(
             SgmlLinkExtractor(restrict_xpaths=(
-                '(//ul[@class="mainnav__ul js-mainnav-ul"]/li//a)[position() < 4]')),
+                '(//ul[@class="mainnav__ul js-mainnav-ul"]/li//a)')),
             callback='parse', follow=True
         ),
         Rule(
@@ -262,7 +276,8 @@ class GenerateXML(object):
         a.set("xmlns:tns", "http://www.schwab.de/KAL")
         a.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
         a.set("xsi:schemaLocation",
-              "http://www.schwab.de/KAL http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd")
+              "http://www.schwab.de/KAL "
+              "http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd")
         ET.SubElement(a, 'Articles')
         self.xml = a
 
