@@ -60,7 +60,8 @@ class SheegoParseSpider(BaseParseSpider):
         #: Function to generate the requests for every sku
         queue = self.skus(response)
         #: Passing garment as meta data for each request
-        queue = map(lambda x: x.replace(meta={'item': garment, 'dont_redirect': True, "handle_httpstatus_list": [301]}), queue)
+        queue = map(lambda x: x.replace(meta={'item': garment, 'dont_redirect': True, "handle_httpstatus_list": [301]}),
+                    queue)
 
         #: Initialize several data that you need while processing skus
         garment['meta'] = {}
@@ -107,7 +108,8 @@ class SheegoParseSpider(BaseParseSpider):
         it = iter(script)
         for script in it:
             url1 = response.url.split('_')
-            url = url1[0] + '_' + url1[1].split('-')[0] + '-' + script[0:6] + '-' + next(it) + '-' + script[6:] + '.html'
+            url = url1[0] + '_' + url1[1].split('-')[0] + '-' + script[0:6] + '-' + next(it) + '-' \
+                + script[6:] + '.html'
             req = [Request(url, callback=self.parse_skus, dont_filter="True")]
             queue = queue + req
 
@@ -182,7 +184,9 @@ class SheegoParseSpider(BaseParseSpider):
         if not garment['meta']['requests_queue']:
             body = garment['meta']['body']
             body = body.print_xml()
-            garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + [Request('http://www.sheego.de/request/kal.php', method='POST', body=body, meta={'item': garment}, callback=self.set_skus_availability, dont_filter=True)]
+            req = Request('http://www.sheego.de/request/kal.php', method='POST', body=body, meta={'item': garment},
+                          callback=self.set_skus_availability, dont_filter=True)
+            garment['meta']['requests_queue'] = garment['meta']['requests_queue'] + [req]
 
         return self.next_request_or_garment(garment)
 
@@ -193,10 +197,12 @@ class SheegoParseSpider(BaseParseSpider):
         return clean(hxs.select('(//span[@itemprop="name"]/text())[1]'))
 
     def product_description(self, hxs):
-        return clean(hxs.select('//div[@id="moreinfo-highlight"]//li/text()')) + clean(hxs.select('(//div[@itemprop="description"])[1]/text()'))
+        return clean(hxs.select('//div[@id="moreinfo-highlight"]//li/text()')) \
+            + clean(hxs.select('(//div[@itemprop="description"])[1]/text()'))
 
     def product_care(self, hxs):
-        return clean(hxs.select('(//td//span[text()="Materialzusammensetzung"]/following::td[1]/text())[1]  | (//dl[@class="dl-horizontal articlequality"])[1]//text()'))
+        return clean(hxs.select('(//td//span[text()="Materialzusammensetzung"]/following::td[1]/text())[1]  | '
+                                '(//dl[@class="dl-horizontal articlequality"])[1]//text()'))
 
     def product_category(self, hxs):
         return clean(hxs.select('(//ul[@class="breadcrumb"])[1]//a/text()'))
@@ -255,7 +261,8 @@ class GenerateXML(object):
         a = ET.Element('tns:KALAvailabilityRequest')
         a.set("xmlns:tns", "http://www.schwab.de/KAL")
         a.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
-        a.set("xsi:schemaLocation", "http://www.schwab.de/KAL http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd")
+        a.set("xsi:schemaLocation",
+              "http://www.schwab.de/KAL http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd")
         ET.SubElement(a, 'Articles')
         self.xml = a
 
