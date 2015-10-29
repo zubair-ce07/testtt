@@ -36,7 +36,8 @@ class MangoParseSpider(BaseParseSpider):
         hxs = HtmlXPathSelector(response)
 
         #: Initialize the garment object by giving it a unique id
-        unique_id = clean(hxs.select('//div[@class="referenciaProducto row-fluid"]/text()'))
+        xpath_id = '//div[@class="referenciaProducto row-fluid"]/text()'
+        unique_id = clean(hxs.select(xpath_id))
         unique_id = re.search(u'REF. \d*', unique_id[0], flags=re.UNICODE).group()
         unique_id = unique_id.split('. ')[1]
         garment = self.new_unique_garment(unique_id)
@@ -65,7 +66,8 @@ class MangoParseSpider(BaseParseSpider):
         return small_images + large_images
 
     def skus(self, hxs):
-        sku_info_strings = clean(hxs.select('//input[@class="inputOcultoColor"]/@value'))
+        xpath_skus = '//input[@class="inputOcultoColor"]/@value'
+        sku_info_strings = clean(hxs.select(xpath_skus))
         color_list = clean(hxs.select('//div[@class="_color_div_on"]//img/@title'))
         #: Remove spaces from color list
         color_list = map(lambda x: x.strip(), color_list)
@@ -116,7 +118,8 @@ class MangoParseSpider(BaseParseSpider):
         return previous_price, price, currency
 
     def product_gender(self, hxs):
-        gender = clean(hxs.select('//li[contains(@class,"currentBrandMenu")]/a/text()'))[0]
+        xpath_gen = '//li[contains(@class,"currentBrandMenu")]/a/text()'
+        gender = clean(hxs.select(xpath_gen))[0]
         if gender == 'Plus Size':
             gender = 'Women'
         return gender
