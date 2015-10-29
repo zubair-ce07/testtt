@@ -3,8 +3,8 @@
 
 class DemoUTF(object):
 
-    def __init__(self, string1):
-        self.string1 = string1
+    def __init__(self, str_to_convert):
+        self.str_to_convert = str_to_convert
 
     def show_in_utf8(self):
 
@@ -13,18 +13,18 @@ class DemoUTF(object):
         print '##########################'
 
         print "Same string in Binary"
-        print map(lambda x: "{0:08b}".format(ord(x)), self.string1)
+        print map(lambda x: "{0:08b}".format(ord(x)), self.str_to_convert)
 
         print "Same string code points in decimal"
-        for c in self.string1: print ord(c)
+        for c in self.str_to_convert: print ord(c)
 
         print "Same string in UTF-8"
 
-        u = self.string1.encode('utf-8')
+        u = self.str_to_convert.encode('utf-8')
         print 'Separated Bytes'
         print map(lambda x: "{0:08b}".format(ord(x)), u)
         print 'All Bytes Combined'
-        print '{:b}'.format(int(self.string1.encode('utf-8').encode('hex'), 16))
+        print '{:b}'.format(int(self.str_to_convert.encode('utf-8').encode('hex'), 16))
 
     def show_in_utf16(self):
 
@@ -35,17 +35,17 @@ class DemoUTF(object):
         print '##########################'
 
         print "Same String in Binary"
-        print map(lambda x: "{0:08b}".format(ord(x)), self.string1)
+        print map(lambda x: "{0:08b}".format(ord(x)), self.str_to_convert)
 
         print "Same string code points in decimal"
-        for c in self.string1: print ord(c)
+        for c in self.str_to_convert: print ord(c)
 
         print "Same string in UTF-16"
-        u = self.string1.encode('utf-16')
+        u = self.str_to_convert.encode('utf-16')
         print 'Separated Bytes'
         print map(lambda x: "{0:08b}".format(ord(x)), u)
         print 'All Bytes Combined'
-        print '{:b}'.format(int(self.string1.encode('utf-16').encode('hex'), 16))
+        print '{:b}'.format(int(self.str_to_convert.encode('utf-16').encode('hex'), 16))
 
     def show_in_utf32(self):
         # First show in binary
@@ -55,17 +55,17 @@ class DemoUTF(object):
         print '##########################'
 
         print "Same string in Binary"
-        print map(lambda x: "{0:08b}".format(ord(x)), self.string1)
+        print map(lambda x: "{0:08b}".format(ord(x)), self.str_to_convert)
 
         print "Same string code points in decimal"
-        for c in self.string1: print ord(c)
+        for c in self.str_to_convert: print ord(c)
 
         print "Same string in UTF-32"
-        u = self.string1.encode('utf-32')
+        u = self.str_to_convert.encode('utf-32')
         print 'Separated Bytes'
         print map(lambda x: "{0:08b}".format(ord(x)), u)
         print 'All Bytes Combined'
-        print '{:b}'.format(int(self.string1.encode('utf-32').encode('hex'), 16))
+        print '{:b}'.format(int(self.str_to_convert.encode('utf-32').encode('hex'), 16))
 
 
 def main():
