@@ -79,11 +79,7 @@ class MangoParseSpider(BaseParseSpider):
 
             for size in sizes:
                 actual_size = size[2].split(' -')[0]
-                out_of_stock = size[1]
-                if out_of_stock == 'false':
-                    out_of_stock = True
-                else:
-                    out_of_stock = False
+                out_of_stock = size[1] == 'false'
 
                 key = color + "_" + actual_size
                 sku = {
