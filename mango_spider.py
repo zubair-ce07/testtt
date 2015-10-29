@@ -36,10 +36,7 @@ class MangoParseSpider(BaseParseSpider):
         hxs = HtmlXPathSelector(response)
 
         #: Initialize the garment object by giving it a unique id
-        xpath_id = '//div[@class="referenciaProducto row-fluid"]/text()'
-        unique_id = clean(hxs.select(xpath_id))
-        unique_id = re.search(u'REF. \d*', unique_id[0], flags=re.UNICODE).group()
-        unique_id = unique_id.split('. ')[1]
+        unique_id = self.product_id(hxs)
         garment = self.new_unique_garment(unique_id)
         if garment is None:
             return
@@ -142,6 +139,12 @@ class MangoParseSpider(BaseParseSpider):
 
     def product_category(self, hxs):
         return clean(hxs.select('//div[@class="pull-left breadcrumb_container"]/a//text()'))
+
+    def product_id(self, hxs):
+        xpath_id = '//div[@class="referenciaProducto row-fluid"]/text()'
+        unique_id = clean(hxs.select(xpath_id))
+        unique_id = re.search(u'REF. \d*', unique_id[0], flags=re.UNICODE).group()
+        return unique_id.split('. ')[1]
 
 
 class MangoCrawlSpider(BaseCrawlSpider, Mixin):
