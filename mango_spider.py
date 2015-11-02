@@ -155,11 +155,6 @@ class MangoCrawlSpider(BaseCrawlSpider, Mixin):
                 '//div[contains(@class,"contentMenu__menu")]/div[1]/div//a')),
             callback='parse_urls', follow=True
         ),
-        Rule(
-            SgmlLinkExtractor(restrict_xpaths=(
-                '//div[@class="span12 product__page"]/div/div[1]//a')),
-            callback='parse_item'
-        ),
     )
 
     def parse_urls(self, response):
@@ -167,9 +162,14 @@ class MangoCrawlSpider(BaseCrawlSpider, Mixin):
         hxs = HtmlXPathSelector(response)
         urls = clean(hxs.select('//div[@class="span12 product__page"]/div/div[1]//a/@href'))
 
+        #: Updating the trail information
+        trail_part = [(response.meta.get('link_text', ''), response.url)]
+        trail_part = response.meta.get('trail', []) + trail_part
+
         #: Generate requests for above extracted products links
         for url in urls:
-            yield Request(urlparse.urljoin(response.url, url), callback='parse_item')
+            #: urlparse.urljoin was not working correctly here
+            yield Request("http://shop.mango.com/" + url, callback=self.parse_item, meta={'trail': trail_part})
 
         #: Check the page have further catalog pages or not
         catalog_page = clean(hxs.select('//input[@id="Form:SVBusc:SVBusc_4:catalogPage"]/@value'))
@@ -193,10 +193,13 @@ class MangoCrawlSpider(BaseCrawlSpider, Mixin):
                                '3Aj_id_d3%3AscrollContainer+SVPie%3ApanelPiePagina+Form%3ASVBusc%3ASVBusc_4%' \
                                '3AcatalogPage+Form%3ASVBusc%3ASVBusc_4%3AprendasMangoNextPage&Form=Form' \
                                '&javax.faces.ViewState=' + view_state + 'Form%3ASVBusc%3ASVBusc_4=' + gender
-            req = Request(url, callback=self.parse_next_pages)
-            yield req
+            yield Request(url, callback=self.parse_next_pages, meta={'trail': trail_part})
 
     def parse_next_pages(self, response):
+
+        #: Updating the trail information
+        trail_part = [(response.meta.get('link_text', ''), response.url)]
+        trail_part = response.meta.get('trail', []) + trail_part
 
         # Check whether catalog page have products listing or not
         flag = re.findall('"_mng_hiddenScrollOn" value=".*?"', response.body)[0]
@@ -204,23 +207,25 @@ class MangoCrawlSpider(BaseCrawlSpider, Mixin):
 
             hxs = HtmlXPathSelector(response)
             body = clean(hxs.select('//update[@id="Form:SVBusc:SVBusc_4:prendasMangoNextPage"]'))[0]
-            #: Find the tag update which have relevant links of products
+            #: Find the tag <update> which have relevant links of products
             links = re.findall('<a href=".*?"', body)
+            #: Eliminate the irrelevant information
             links = map(lambda x: x.strip('<a href="'), links)
             links = map(lambda x: x.strip('"'), links)
 
             #: Generate requests for above extracted product links
             for link in links:
-                yield Request(urljoin(response.url, link), callback='parse_item')
+                yield Request("http://shop.mango.com/" + link, callback=self.parse_item,  meta={'trail': trail_part})
 
             #: Generate requests for next Catalog page
             parsed = urlparse.urlparse(response.url)
             #: Increment in the value of Catalog page number
             value = int((urlparse.parse_qs(parsed.query)['Form:SVBusc:SVBusc_4:catalogPage'])[0])
             value += 1
+            #: Generate the new request for next page by giving new catalog page number
             url = re.sub('Form:SVBusc:SVBusc_4:catalogPage=.*?&', 'Form:SVBusc:SVBusc_4:catalogPage='
                          + str(value), response.url)
-            yield Request(url, callback=self.parse_next_pages)
+            yield Request(url, callback=self.parse_next_pages,  meta={'trail': trail_part})
 
 
 class MangoUKParseSpider(MangoParseSpider, MixinUK):
