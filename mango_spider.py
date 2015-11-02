@@ -133,7 +133,7 @@ class MangoParseSpider(BaseParseSpider):
         care = clean(hxs.select('//div[@class="composicion"]//text()'))
         care = map(lambda x: x.strip('-'), care)
         #: Remove all the elements which are empty from the care list
-        return [x for x in care if x]
+        return clean(care)
 
     def product_category(self, hxs):
         return clean(hxs.select('//div[@class="pull-left breadcrumb_container"]/a//text()'))
