@@ -62,7 +62,7 @@ class MangoParseSpider(BaseParseSpider):
         #: Generate same images for large format
         large_images = map(lambda x: x.split('S1'), small_images)
         large_images = map(lambda x: x[0] + "S6" + x[1], large_images)
-        return small_images + large_images
+        return large_images
 
     def skus(self, hxs):
         xpath_skus = '//input[@class="inputOcultoColor"]/@value'
