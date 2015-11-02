@@ -140,9 +140,9 @@ class MangoParseSpider(BaseParseSpider):
 
     def product_id(self, hxs):
         xpath_id = '//div[@class="referenciaProducto row-fluid"]/text()'
-        unique_id = clean(hxs.select(xpath_id))
-        unique_id = re.search(u'REF. \d*', unique_id[0], flags=re.UNICODE).group()
-        return unique_id.split('. ')[1]
+        unique_id = clean(hxs.select(xpath_id).re(r'REF. (\d+)'))[0]
+        logging.info(unique_id)
+        return unique_id
 
 
 class MangoCrawlSpider(BaseCrawlSpider, Mixin):
