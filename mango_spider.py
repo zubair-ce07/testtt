@@ -212,13 +212,8 @@ class MangoCrawlSpider(BaseCrawlSpider, Mixin):
                 yield Request("http://shop.mango.com/" + link, callback=self.parse_item,  meta={'trail': trail_part})
 
             #: Generate requests for next Catalog page
-            parsed = urlparse.urlparse(response.url)
-            #: Increment in the value of Catalog page number
-            value = int((urlparse.parse_qs(parsed.query)['Form:SVBusc:SVBusc_4:catalogPage'])[0])
-            value += 1
-            #: Generate the new request for next page by giving new catalog page number
-            url = re.sub('Form:SVBusc:SVBusc_4:catalogPage=.*?&', 'Form:SVBusc:SVBusc_4:catalogPage='
-                         + str(value), response.url)
+            catalog_value = str(int(re.findall(r'Form%3ASVBusc%3ASVBusc_4%3AcatalogPage=(.*?)&', response.url)[0])+1)
+            url = re.sub(r'(?<=Form%3ASVBusc%3ASVBusc_4%3AcatalogPage=)\d*', catalog_value, response.url)
             yield Request(url, callback=self.parse_next_pages,  meta={'trail': trail_part})
 
 
