@@ -139,7 +139,6 @@ class MangoParseSpider(BaseParseSpider):
     def product_id(self, hxs):
         xpath_id = '//div[@class="referenciaProducto row-fluid"]/text()'
         unique_id = clean(hxs.select(xpath_id).re(r'REF. (\d+)'))[0]
-        logging.info(unique_id)
         return unique_id
 
 
@@ -206,10 +205,7 @@ class MangoCrawlSpider(BaseCrawlSpider, Mixin):
             hxs = HtmlXPathSelector(response)
             body = clean(hxs.select('//update[@id="Form:SVBusc:SVBusc_4:prendasMangoNextPage"]'))[0]
             #: Find the tag <update> which have relevant links of products
-            links = re.findall('<a href=".*?"', body)
-            #: Eliminate the irrelevant information
-            links = map(lambda x: x.strip('<a href="'), links)
-            links = map(lambda x: x.strip('"'), links)
+            links = re.findall(r'<a href="(.*?)"', body)
 
             #: Generate requests for above extracted product links
             for link in links:
