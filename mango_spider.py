@@ -68,8 +68,6 @@ class MangoParseSpider(BaseParseSpider):
         xpath_skus = '//input[@class="inputOcultoColor"]/@value'
         sku_info_strings = clean(hxs.select(xpath_skus))
         color_list = clean(hxs.select('//div[@class="_color_div_on"]//img/@title'))
-        #: Remove spaces from color list
-        color_list = map(lambda x: x.strip(), color_list)
 
         skus = {}
         for color, sku_info_string in zip(color_list, sku_info_strings):
