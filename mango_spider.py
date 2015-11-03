@@ -7,7 +7,6 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 import logging
 from scrapy.http import Request
-import urlparse
 
 
 logging.basicConfig(level=logging.DEBUG,
