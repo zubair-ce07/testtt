@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
-from base import BaseParseSpider, BaseCrawlSpider, CurrencyParser
+from base import BaseParseSpider, BaseCrawlSpider
 from base import clean
-from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 import logging
@@ -52,10 +51,40 @@ colors = {1081: {"Apple"}, 451: {"Aqua"}, 424: {"Beige"}, 474: {"Biscuit"}, 61: 
           592: {"Multi"}, 591: {"Orange"}, 601: {"Pink"}, 596: {"Purple"}, 599: {"Red"}, 590: {"Silver"},
           597: {"White"}, 593: {"Yellow"}}
 
+brands = {637: "50FiftyGifts", 1135: "AliceScott", 638: "ApplestoPearsGiftLTD", 640: "ArchivistLimited",
+          1120: "AromaHome", 646: "ArtebeneLTD", 648: "AuteurLTD", 656: "Bajo", 662: "BallonRouge",
+          933: "Bando", 841: "BathHouse", 667: "BestYears", 817: "BigTomatoCompany", 1111: "Black&Blum",
+          680: "BlackBlum", 683: "Broste", 697: "CanovaGifts", 700: "ChronicleStationery", 1146: "CicoBooks",
+          704: "CoachHouseAntiques", 1100: "ContainerGroup", 1093: "Corkcicle", 711: "Cubic", 715: "Doiy",
+          1116: "Donkey", 716: "DonkeyProducts", 1143: "ElectricJelly", 1148: "ElisaWerbler", 717: "Firebox",
+          1107: "Funtime", 1092: "Gamago", 1059: "GiftRepublic", 1112: "GingerFox", 1113: "Graphique",
+          1131: "HappyJackson", 633: "HeyHolla", 1091: "Host", 719: "HouseofMarbles,BoveyTracy", 721: "J-ME",
+          720: "JasmineLiving", 723: "Kabloom", 1149: "Kakkoii", 1130: "KatieLeamon", 818: "KeepCupLTD",
+          1114: "Kikkerland", 733: "Kikkerland,KikkerlandEuropeB", 1139: "KING&MCGAWLTD", 1102: "KnockKnock",
+          735: "KorresNaturalProducts", 1117: "Lagoon", 1150: "LaurenceKing", 782: "Luckies", 780: "MamaMio",
+          1094: "Men'sSociety", 1095: "Men'sSociety", 1109: "MeriMeri", 1119: "Mustard",
+          798: "NaturalProducts", 816: "NewgateClocks", 1136: "NineteenSeventyThree", 1030: "OllyB",
+          842: "OrangeTreeToys", 1089: "Ototo", 821: "Outliving", 1101: "Paladone", 820: "PetitJour",
+          1151: "PlutoProdukter", 819: "PolsPotten", 822: "PomPomGalore", 823: "PresentTime",
+          1118: "ProfessorPuzzle", 1132: "PutinkiOy", 1133: "RaspberryBlossom", 824: "RexInternational",
+          826: "RiceA/S", 1145: "Ridley'sGamesRoom", 825: "Root7", 1142: "SafariLife", 828: "SewHeartFelt",
+          827: "Sifcon", 830: "SophieArcari", 1057: "SpinningHat", 829: "StingintheTail",
+          1134: "StoptheClock", 832: "StudioRoof", 1144: "SUCKUK", 831: "SuckUK", 907: "SunnylifeAustralia",
+          833: "TalkingTables", 834: "TaylorsEyeWitness", 1115: "TeNeues", 835: "TemerityJones",
+          1147: "ThabtoLondon", 1137: "TheArtFile", 839: "TheWrapPaperLTD", 838: "TransPacificLTD",
+          837: "Uberstar", 836: "VintagePlayingCards", 1058: "Viski", 1090: "Viski", 840: "WildandWolf",
+          1110: "WolfandWolf", 256: "OliverBonas", 26: "Poem", 28: "VeroModa", 280: "Vila", 586: "Bobble",
+          25: "Emily&Fin", 496: "Fred&Friends", 511: "JennieMaizels", 510: "LSA", 513: "Rogerlaborde",
+          27: "SugarhillBoutique", 514: "Suki", 507: "TemerityJonesofLondon", 279: "Zatchels"}
+
 class Mixin(object):
     retailer = 'oliver'
     allowed_domains = ['www.oliverbonas.com']
     pfx = ['https://www.oliverbonas.com/api/category/fashion/category/all/verbosity/3',
+           'https://www.oliverbonas.com/api/category/jewellery/category/all/verbosity/3',
+           'https://www.oliverbonas.com/api/category/accessories/category/all/verbosity/3']
+
+    '''pfx = ['https://www.oliverbonas.com/api/category/fashion/category/all/verbosity/3',
            'https://www.oliverbonas.com/api/category/jewellery/category/all/verbosity/3',
            'https://www.oliverbonas.com/api/category/accessories/category/all/verbosity/3',
            'https://www.oliverbonas.com/api/category/furniture/category/all/verbosity/3',
@@ -64,7 +93,7 @@ class Mixin(object):
            'https://www.oliverbonas.com/api/category/sale/category/clothing/verbosity/3',
            'https://www.oliverbonas.com/api/category/sale/category/furniture/verbosity/3',
            'https://www.oliverbonas.com/api/category/sale/category/jewellery/verbosity/3',
-           'https://www.oliverbonas.com/api/category/sale/category/fashion-accessories/verbosity/3']
+           'https://www.oliverbonas.com/api/category/sale/category/fashion-accessories/verbosity/3']'''
 
 
 class MixinUK(Mixin):
@@ -88,13 +117,18 @@ class OliverParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, hxs, response)
 
+        #: check for industry if homeware or furniture set it to homeware
+        if 'homeware' in response.url or 'furniture' in response.url:
+            garment['industry'] = 'homeware'
+
         #: Setting parameters for a garment
-        garment['price'] = json_data['product'][0]['price']
+        garment['price'] = clean(str(json_data['product'][0]['price']))
         garment['currency'] = "GBP"
         garment['spider_name'] = self.name
         garment['gender'] = "Womens"
-        garment['brand'] = json_data['product'][0]['meta']['title'].split(' - ')[2]
-        garment['image_urls'] = self.image_urls(json_data)
+        garment['brand'] = self.product_brands(json_data)
+        #: garment['brand'] = clean(json_data['product'][0]['meta']['title'].split(' - ')[2])
+        garment['image_urls'] = clean(self.image_urls(json_data))
         queue = self.skus(json_data)
         #: Passing garment as meta data for each request
         queue = map(
@@ -137,6 +171,11 @@ class OliverParseSpider(BaseParseSpider):
             list.append(" https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart"
                         "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image)
         return list
+
+    def product_brands(self, json_data):
+        brand_id = json_data['product'][0]['brand']
+        brand = brands[brand_id]
+        return brand
 
     def skus(self, json_data):
         queue = []
@@ -195,8 +234,10 @@ class OliverParseSpider(BaseParseSpider):
             logging.info("In loop")
             if 'color' in product:
                 color = list(colors[product['color']])
-            else:
+            elif 'colors' in product:
                 color = list(colors[product['colors'][0]])
+            else:
+                color = ['no_color_mentioned']
 
             color = color[0]
             #: check whether size exists or not
@@ -258,15 +299,6 @@ class OliverParseSpider(BaseParseSpider):
 
 class OliverCrawlSpider(BaseCrawlSpider, Mixin):
 
-    #: Set the rules for scraping all the available products of a website
-    rules = (
-
-        Rule(
-            SgmlLinkExtractor(restrict_xpaths=(
-                '//div[contains(@class,"contentMenu__menu")]/div[1]/div//a')),
-            callback='parse_urls', follow=True
-        ),
-    )
 
     def parse_start_url(self, response):
 
@@ -282,6 +314,8 @@ class OliverCrawlSpider(BaseCrawlSpider, Mixin):
         yield req
 
     def parse_urls(self, response):
+
+        #: Reject all urls which are not under specified brands
         logging.info("In parse   urls   ")
 
         #: Updating the trail information
