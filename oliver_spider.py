@@ -2,7 +2,6 @@
 import re
 from base import BaseParseSpider, BaseCrawlSpider
 from base import clean
-from scrapy.selector import HtmlXPathSelector
 import logging
 from scrapy.http import Request
 import json
@@ -13,6 +12,7 @@ logging.basicConfig(level=logging.DEBUG,
                     )
 
 
+#: source : https://www.oliverbonas.com/js/app.min.js
 sizes = {'1127': '11" x 14"', '930': "120 x 60cm", '927': "120x170cm", '928': "140x200cm", '929': "160x230cm",
         '1068': "17mm", '931': "180x120cm", '1067': "19mm", '1076': "2-3 Year", '1124': '3" x 4"',
         '619': "32A", '612': "32B", '613': "32C", '614': "32D", '629': "34A", '615': "34B", '616': "34C",
@@ -32,6 +32,7 @@ sizes = {'1127': '11" x 14"', '930': "120 x 60cm", '927': "120x170cm", '928': "1
         '435': '42', '430': '52', '429': '54', '428': '56', '251': "60X90", '401': "Small",
         '1043': "Medium", '361': "Large", '402': "Extra Large"}
 
+#: source : https://www.oliverbonas.com/js/app.min.js
 colors = {1081: "Apple", 451: "Aqua", 424: "Beige", 474: "Biscuit", 61: "Black", 437: "Blk/ivy",
           410: "Blossom", 58: "Blue", 489: "Bluetit", 463: "Bright Red", 441: "Bright red", 59: "Brown",
           457: "Camellia", 470: "Clear", 409: "Clover", 408: "Cobalt", 286: "Copper", 290: "Coral",
@@ -50,6 +51,7 @@ colors = {1081: "Apple", 451: "Aqua", 424: "Beige", 474: "Biscuit", 61: "Black",
           592: "Multi", 591: "Orange", 601: "Pink", 596: "Purple", 599: "Red", 590: "Silver",
           597: "White", 593: "Yellow"}
 
+#: source : https://www.oliverbonas.com/js/app.min.js
 brands = {637: "50FiftyGifts", 1135: "AliceScott", 638: "ApplestoPearsGiftLTD", 640: "ArchivistLimited",
           1120: "AromaHome", 646: "ArtebeneLTD", 648: "AuteurLTD", 656: "Bajo", 662: "BallonRouge",
           933: "Bando", 841: "BathHouse", 667: "BestYears", 817: "BigTomatoCompany", 1111: "Black&Blum",
@@ -75,6 +77,7 @@ brands = {637: "50FiftyGifts", 1135: "AliceScott", 638: "ApplestoPearsGiftLTD", 
           1110: "WolfandWolf", 256: "OliverBonas", 26: "Poem", 28: "VeroModa", 280: "Vila", 586: "Bobble",
           25: "Emily&Fin", 496: "Fred&Friends", 511: "JennieMaizels", 510: "LSA", 513: "Rogerlaborde",
           27: "SugarhillBoutique", 514: "Suki", 507: "TemerityJonesofLondon", 279: "Zatchels"}
+
 
 class Mixin(object):
     retailer = 'oliver'
@@ -106,7 +109,6 @@ class OliverParseSpider(BaseParseSpider):
             #: It means product don't has any data
             return None
 
-        hxs = HtmlXPathSelector(response)
         json_data = json.loads(response.body)
         product = json_data['product'][0]
 
@@ -117,10 +119,6 @@ class OliverParseSpider(BaseParseSpider):
 
         self.boilerplate_minimal(garment, response)
 
-        #: check for industry if homeware or furniture set it to homeware
-        if 'homeware' in response.url or 'furniture' in response.url:
-            garment['industry'] = 'homeware'
-
         #: Setting parameters for a garment
         garment['price'] = clean(str(product['price']))
         garment['currency'] = "GBP"
@@ -129,44 +127,64 @@ class OliverParseSpider(BaseParseSpider):
         garment['brand'] = self.product_brands(json_data)
         garment['image_urls'] = clean(self.image_urls(json_data))
         garment['name'] = product['meta']['title'].split(' - ')[0]
-        garment['description'] = [product['meta']['description']]
+        garment['description'] = self.product_description(product)
+        garment['category'] = self.product_category(product)
+        garment['url_original'] = self.product_original_url(response.url)
+        garment['care'] = self.product_care(product)
+        garment['industry'] = self.product_industry(response.url)
 
         queue = self.skus(json_data)
         #: Passing garment as meta data for each request
         queue = map(lambda x: x.replace(meta={'item': garment}), queue)
+
+        #: Initializing skus Dictionary to avoid errors in further processing
         garment['meta'] = {}
-        garment['category'] = []
-        garment['meta']['requests_queue'] = queue
-
-        if 'features' in product:
-            garment['description'] += product['features']
-        if 'short_description' in product:
-            garment['description'] += [product['short_description']]
-        if 'info' in product:
-            garment['care'] = product['info']
-
-        for label in product['breadcrumbs']:
-            garment['category'].append(label['label'])
-
-        original_url = re.sub('/verbosity/3', '', response.url)
-        original_url = re.sub('/api/product', '', original_url)
-        garment['url_original'] = original_url
-
-        #: Initializing Image_urls list and skus Dictionary to avoid
-        #: errors in further processing
         garment['skus'] = {}
+        garment['meta']['requests_queue'] = queue
         garment['meta']['key_list'] = []
 
         return self.next_request_or_garment(garment)
 
+    def product_industry(self, url):
+        industry = ''
+        #: check for industry if homeware or furniture set it to homeware
+        if 'homeware' in url or 'furniture' in url:
+            industry = 'homeware'
+        return industry
+
+    def product_care(self, product):
+        care = []
+        if 'info' in product:
+            care = product['info']
+        return care
+
+    def product_category(self, product):
+        category = []
+        for label in product['breadcrumbs']:
+            category.append(label['label'])
+        return category
+
+    def product_original_url(self, url):
+        original_url = re.sub('/verbosity/3', '', url)
+        original_url = re.sub('/api/product', '', original_url)
+        return original_url
+
+    def product_description(self, product):
+        description = [product['meta']['description']]
+        if 'features' in product:
+            description += product['features']
+        if 'short_description' in product:
+            description += [product['short_description']]
+        return description
+
     def image_urls(self, json_data):
         images = json_data['product'][0]['media']
-        list = []
+        images_list = []
         for image in images:
             image = image['image']
-            list.append(" https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart"
+            images_list.append(" https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart"
                         "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image)
-        return list
+        return images_list
 
     def product_brands(self, json_data):
         brand_id = json_data['product'][0]['brand']
@@ -220,12 +238,11 @@ class OliverParseSpider(BaseParseSpider):
             if 'info' not in garment and 'info' in product:
                 garment['care'] = product['info']
             #: Set Color
+            color = ''
             if 'color' in product:
                 color = colors[product['color']]
             elif 'colors' in product:
                 color = colors[product['colors'][0]]
-            else:
-                color = 'no_color_mentioned'
 
             #: Set Size
             #: Check whether size exists or not
@@ -275,9 +292,7 @@ class OliverCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_start_url(self, response):
         #: Updating the trail information
-        trail_part = [(response.meta.get('link_text', ''), response.url)]
-        trail_part = response.meta.get('trail', []) + trail_part
-
+        trail_part = self.add_trail(response)
         ids = re.findall('"id":(\d*)', response.body)[1:]
         ids = ','.join(ids)
         url = 'https://www.oliverbonas.com/api/product/' + ids + '/verbosity/2'
@@ -286,13 +301,16 @@ class OliverCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_urls(self, response):
         #: Updating the trail information
-        trail_part = [(response.meta.get('link_text', ''), response.url)]
-        trail_part = response.meta.get('trail', []) + trail_part
-
+        trail_part = self.add_trail(response)
         urls = re.findall('"url":"(.*?)"', response.body)
         urls = map(lambda x: 'https://www.oliverbonas.com/api/product' + x + '/verbosity/3', urls)
         for url in urls:
             yield Request(url, callback=self.parse_item,  meta={'trail': trail_part})
+
+    def add_trail(self, response):
+        trail_part = [(response.meta.get('link_text', ''), response.url)]
+        trail_part = response.meta.get('trail', []) + trail_part
+        return trail_part
 
 
 class OliverUKParseSpider(OliverParseSpider, MixinUK):
