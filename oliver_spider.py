@@ -124,7 +124,7 @@ class OliverParseSpider(BaseParseSpider):
         garment['currency'] = "GBP"
         garment['spider_name'] = self.name
         garment['gender'] = "Womens"
-        garment['brand'] = self.product_brands(json_data)
+        garment['brand'] = self.product_brand(json_data)
         garment['image_urls'] = clean(self.image_urls(json_data))
         garment['name'] = product['meta']['title'].split(' - ')[0]
         garment['description'] = self.product_description(product)
@@ -186,7 +186,7 @@ class OliverParseSpider(BaseParseSpider):
                         "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image)
         return images_list
 
-    def product_brands(self, json_data):
+    def product_brand(self, json_data):
         brand_id = json_data['product'][0]['brand']
         brand = brands[brand_id]
         return brand
