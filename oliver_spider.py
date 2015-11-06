@@ -115,7 +115,7 @@ class OliverParseSpider(BaseParseSpider):
         if garment is None:
             return
 
-        self.boilerplate_normal(garment, hxs, response)
+        self.boilerplate_minimal(garment, response)
 
         #: check for industry if homeware or furniture set it to homeware
         if 'homeware' in response.url or 'furniture' in response.url:
@@ -269,15 +269,6 @@ class OliverParseSpider(BaseParseSpider):
             garment['skus'][key]['out_of_stock'] = 'isOut' in stock
 
         return self.next_request_or_garment(garment)
-
-    def product_name(self, hxs):
-        return None
-
-    def product_description(self, hxs):
-        return None
-
-    def product_care(self, hxs):
-        return None
 
 
 class OliverCrawlSpider(BaseCrawlSpider, Mixin):
