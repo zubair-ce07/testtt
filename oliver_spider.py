@@ -145,75 +145,6 @@ class OliverParseSpider(BaseParseSpider):
 
         return self.next_request_or_garment(garment)
 
-    def product_industry(self, url):
-        industry = ''
-        #: check for industry if homeware or furniture set it to homeware
-        if 'homeware' in url or 'furniture' in url:
-            industry = 'homeware'
-        return industry
-
-    def product_care(self, product):
-        care = []
-        if 'info' in product:
-            care = product['info']
-        return care
-
-    def product_category(self, product):
-        category = []
-        for label in product['breadcrumbs']:
-            category.append(label['label'])
-        return category
-
-    def product_original_url(self, url):
-        original_url = re.sub('/verbosity/3', '', url)
-        original_url = re.sub('/api/product', '', original_url)
-        return original_url
-
-    def product_description(self, product):
-        description = [product['meta']['description']]
-        if 'features' in product:
-            description += product['features']
-        if 'short_description' in product:
-            description += [product['short_description']]
-        return description
-
-    def image_urls(self, json_data):
-        images = json_data['product'][0]['media']
-        images_list = []
-        for image in images:
-            images_list.append(" https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart"
-                        "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image['image'])
-        return images_list
-
-    def product_brand(self, json_data):
-        brand_id = json_data['product'][0]['brand']
-        return brands[brand_id]
-
-    def skus(self, json_data):
-        queue = []
-        product = json_data['product'][0]
-        #: check for parent which has all related sku information
-        if 'parent' in product:
-            #: Go to parent to extract all sku information
-            url = "https://www.oliverbonas.com/api/product/" + str(product['parent']) + "/verbosity/3"
-            queue += [Request(url, callback=self.parse_parent)]
-
-        elif product['options']:
-            #: Check if it is the parent itself and has children children_list itself
-            #: Extract children_list of all skus
-            children_list = ','.join(str(e) for e in product['options']['configurable']['children'])
-            #: Form a URL
-            url = "https://www.oliverbonas.com/api/product/" + children_list + "/verbosity/3"
-            queue += [Request(url, callback=self.parse_skus)]
-        else:
-            #: If a product does not have a parent nor a children
-            #: It means a product has only one sku
-            #: Form a URL
-            url = "https://www.oliverbonas.com/api/product/" + str(product['id']) + "/verbosity/3"
-            queue += [Request(url, callback=self.parse_skus)]
-
-        return queue
-
     def parse_parent(self, response):
         garment = response.meta['item']
         json_data = json.loads(response.body)
@@ -282,6 +213,75 @@ class OliverParseSpider(BaseParseSpider):
             garment['skus'][key]['out_of_stock'] = 'isOut' in stock
 
         return self.next_request_or_garment(garment)
+
+    def product_industry(self, url):
+        industry = ''
+        #: check for industry if homeware or furniture set it to homeware
+        if 'homeware' in url or 'furniture' in url:
+            industry = 'homeware'
+        return industry
+
+    def product_care(self, product):
+        care = []
+        if 'info' in product:
+            care = product['info']
+        return care
+
+    def product_category(self, product):
+        category = []
+        for label in product['breadcrumbs']:
+            category.append(label['label'])
+        return category
+
+    def product_original_url(self, url):
+        url = url.replace('/verbosity/3', '')
+        original_url = url.replace('/api/product', '')
+        return original_url
+
+    def product_description(self, product):
+        description = [product['meta']['description']]
+        if 'features' in product:
+            description += product['features']
+        if 'short_description' in product:
+            description += [product['short_description']]
+        return description
+
+    def image_urls(self, json_data):
+        images = json_data['product'][0]['media']
+        images_list = []
+        for image in images:
+            images_list.append(" https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart"
+                        "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image['image'])
+        return images_list
+
+    def product_brand(self, json_data):
+        brand_id = json_data['product'][0]['brand']
+        return brands[brand_id]
+
+    def skus(self, json_data):
+        queue = []
+        product = json_data['product'][0]
+        #: check for parent which has all related sku information
+        if 'parent' in product:
+            #: Go to parent to extract all sku information
+            url = "https://www.oliverbonas.com/api/product/" + str(product['parent']) + "/verbosity/3"
+            queue += [Request(url, callback=self.parse_parent)]
+
+        elif product['options']:
+            #: Check if it is the parent itself and has children children_list itself
+            #: Extract children_list of all skus
+            children_list = ','.join(str(e) for e in product['options']['configurable']['children'])
+            #: Form a URL
+            url = "https://www.oliverbonas.com/api/product/" + children_list + "/verbosity/3"
+            queue += [Request(url, callback=self.parse_skus)]
+        else:
+            #: If a product does not have a parent nor a children
+            #: It means a product has only one sku
+            #: Form a URL
+            url = "https://www.oliverbonas.com/api/product/" + str(product['id']) + "/verbosity/3"
+            queue += [Request(url, callback=self.parse_skus)]
+
+        return queue
 
 
 class OliverCrawlSpider(BaseCrawlSpider, Mixin):
