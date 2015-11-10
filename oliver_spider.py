@@ -134,8 +134,6 @@ class OliverParseSpider(BaseParseSpider):
         garment['industry'] = self.product_industry(response.url)
 
         queue = self.skus(json_data)
-        #: Passing garment as meta data for each request
-        queue = map(lambda x: x.replace(meta={'item': garment}), queue)
 
         #: Initializing skus Dictionary to avoid errors in further processing
         garment['meta'] = {}
@@ -146,7 +144,7 @@ class OliverParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def parse_parent(self, response):
-        garment = response.meta['item']
+        garment = response.meta['garment']
         json_data = json.loads(response.body)
         #: Extract children_list of all skus
         children_list = ','.join(str(e) for e in json_data['product'][0]['options']['configurable']['children'])
@@ -157,7 +155,7 @@ class OliverParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def parse_skus(self, response):
-        garment = response.meta['item']
+        garment = response.meta['garment']
         json_data = json.loads(response.body)
         skus = {}
 
@@ -204,7 +202,7 @@ class OliverParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def parse_stock(self, response):
-        garment = response.meta['item']
+        garment = response.meta['garment']
         key_list = garment['meta']['key_list']
         json_data = json.loads(response.body)
 
