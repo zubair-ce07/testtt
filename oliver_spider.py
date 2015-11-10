@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 
 class Mixin(object):
-    retailer = 'oliver-bonas'
+    retailer = 'oliverbonas'
     allowed_domains = ['www.oliverbonas.com']
     pfx = ['https://www.oliverbonas.com/api/category/fashion/category/all/verbosity/3',
            'https://www.oliverbonas.com/api/category/jewellery/category/all/verbosity/3',
@@ -25,7 +25,7 @@ class Mixin(object):
            'https://www.oliverbonas.com/api/category/sale/category/furniture/verbosity/3',
            'https://www.oliverbonas.com/api/category/sale/category/jewellery/verbosity/3',
            'https://www.oliverbonas.com/api/category/sale/category/fashion-accessories/verbosity/3']
-    
+
     #: source : https://www.oliverbonas.com/js/app.min.js
     sizes = {'1127': '11" x 14"', '930': "120 x 60cm", '927': "120x170cm", '928': "140x200cm", '929': "160x230cm",
              '1068': "17mm", '931': "180x120cm", '1067': "19mm", '1076': "2-3 Year", '1124': '3" x 4"',
@@ -99,7 +99,7 @@ class MixinUK(Mixin):
     start_urls = Mixin.pfx
 
 
-class OliverParseSpider(BaseParseSpider):
+class OliverBonasParseSpider(BaseParseSpider):
 
     #: Callback function
     def parse(self, response):
@@ -291,7 +291,7 @@ class OliverParseSpider(BaseParseSpider):
         return queue
 
 
-class OliverCrawlSpider(BaseCrawlSpider, Mixin):
+class OliverBonasCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_start_url(self, response):
         #: Updating the trail information
@@ -315,12 +315,12 @@ class OliverCrawlSpider(BaseCrawlSpider, Mixin):
         return trail_part
 
 
-class OliverUKParseSpider(OliverParseSpider, MixinUK):
+class OliverBonasUKParseSpider(OliverBonasParseSpider, MixinUK):
     name = MixinUK.retailer + '-parse'
 
 
-class OliverUKCrawlSpider(OliverCrawlSpider, MixinUK):
+class OliverBonasUKCrawlSpider(OliverBonasCrawlSpider, MixinUK):
     name = MixinUK.retailer + '-crawl'
-    parse_spider = OliverUKParseSpider()
+    parse_spider = OliverBonasUKParseSpider()
 
 
