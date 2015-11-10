@@ -201,11 +201,11 @@ class OliverParseSpider(BaseParseSpider):
             queue += [Request(url, callback=self.parse_parent)]
 
         elif product['options']:
-            #: Check if it is the parent itself and has children list itself
-            #: Extract list of all skus
-            list = ','.join(str(e) for e in product['options']['configurable']['children'])
+            #: Check if it is the parent itself and has children children_list itself
+            #: Extract children_list of all skus
+            children_list = ','.join(str(e) for e in product['options']['configurable']['children'])
             #: Form a URL
-            url = "https://www.oliverbonas.com/api/product/" + list + "/verbosity/3"
+            url = "https://www.oliverbonas.com/api/product/" + children_list + "/verbosity/3"
             queue += [Request(url, callback=self.parse_skus)]
         else:
             #: If a product does not have a parent nor a children
@@ -219,10 +219,10 @@ class OliverParseSpider(BaseParseSpider):
     def parse_parent(self, response):
         garment = response.meta['item']
         json_data = json.loads(response.body)
-        #: Extract list of all skus
-        list = ','.join(str(e) for e in json_data['product'][0]['options']['configurable']['children'])
+        #: Extract children_list of all skus
+        children_list = ','.join(str(e) for e in json_data['product'][0]['options']['configurable']['children'])
         #: Form a URL
-        url = "https://www.oliverbonas.com/api/product/" + list + "/verbosity/3"
+        url = "https://www.oliverbonas.com/api/product/" + children_list + "/verbosity/3"
         req = Request(url, callback=self.parse_skus, meta={'item': garment})
         garment['meta']['requests_queue'] += [req]
 
