@@ -181,15 +181,13 @@ class OliverParseSpider(BaseParseSpider):
         images = json_data['product'][0]['media']
         images_list = []
         for image in images:
-            image = image['image']
             images_list.append(" https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart"
-                        "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image)
+                        "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image['image'])
         return images_list
 
     def product_brand(self, json_data):
         brand_id = json_data['product'][0]['brand']
-        brand = brands[brand_id]
-        return brand
+        return brands[brand_id]
 
     def skus(self, json_data):
         queue = []
@@ -223,8 +221,7 @@ class OliverParseSpider(BaseParseSpider):
         children_list = ','.join(str(e) for e in json_data['product'][0]['options']['configurable']['children'])
         #: Form a URL
         url = "https://www.oliverbonas.com/api/product/" + children_list + "/verbosity/3"
-        req = Request(url, callback=self.parse_skus, meta={'item': garment})
-        garment['meta']['requests_queue'] += [req]
+        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_skus, meta={'item': garment})]
 
         return self.next_request_or_garment(garment)
 
@@ -271,8 +268,7 @@ class OliverParseSpider(BaseParseSpider):
         #: Now check their stock information
         url = re.sub('/[0-9]$', '/1', response.url)
         url = re.sub('product', 'stock', url)
-        req = Request(url, callback=self.parse_stock, meta={'item': garment})
-        garment['meta']['requests_queue'] += [req]
+        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_stock, meta={'item': garment})]
 
         return self.next_request_or_garment(garment)
 
@@ -296,8 +292,7 @@ class OliverCrawlSpider(BaseCrawlSpider, Mixin):
         ids = re.findall('"id":(\d*)', response.body)[1:]
         ids = ','.join(ids)
         url = 'https://www.oliverbonas.com/api/product/' + ids + '/verbosity/2'
-        req = Request(url, callback=self.parse_urls,  meta={'trail': trail_part})
-        yield req
+        yield Request(url, callback=self.parse_urls,  meta={'trail': trail_part})
 
     def parse_urls(self, response):
         #: Updating the trail information
