@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 
 class Mixin(object):
-    retailer = 'oliver'
+    retailer = 'oliver-bonas'
     allowed_domains = ['www.oliverbonas.com']
     pfx = ['https://www.oliverbonas.com/api/category/fashion/category/all/verbosity/3',
            'https://www.oliverbonas.com/api/category/jewellery/category/all/verbosity/3',
@@ -25,6 +25,7 @@ class Mixin(object):
            'https://www.oliverbonas.com/api/category/sale/category/furniture/verbosity/3',
            'https://www.oliverbonas.com/api/category/sale/category/jewellery/verbosity/3',
            'https://www.oliverbonas.com/api/category/sale/category/fashion-accessories/verbosity/3']
+    
     #: source : https://www.oliverbonas.com/js/app.min.js
     sizes = {'1127': '11" x 14"', '930': "120 x 60cm", '927': "120x170cm", '928': "140x200cm", '929': "160x230cm",
              '1068': "17mm", '931': "180x120cm", '1067': "19mm", '1076': "2-3 Year", '1124': '3" x 4"',
@@ -131,7 +132,7 @@ class OliverParseSpider(BaseParseSpider):
         garment['care'] = self.product_care(product)
         garment['industry'] = self.product_industry(response.url)
 
-        queue = self.skus(json_data)
+        queue = self.parent_children_request(json_data)
 
         #: Initializing skus Dictionary to avoid errors in further processing
         garment['meta'] = {}
@@ -155,12 +156,30 @@ class OliverParseSpider(BaseParseSpider):
     def parse_skus(self, response):
         garment = response.meta['garment']
         json_data = json.loads(response.body)
-        skus = {}
 
+        skus, key_list, care = self.skus(json_data, 'care' not in garment)
+        garment['meta']['key_list'] = key_list
+        if care:
+            garment['care'] = care
+        #: Update the sku element of garment
+        garment['skus'].update(skus)
+
+        #: Now check their stock information
+        url = re.sub('/[0-9]$', '/1', response.url)
+        url = re.sub('product', 'stock', url)
+        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_stock, meta={'item': garment})]
+
+        return self.next_request_or_garment(garment)
+
+    def skus(self, json_data, flag):
+
+        skus = {}
+        key_list = []
+        care = ''
         for product in json_data['product']:
             #: Set info if not already set
-            if 'info' not in garment and 'info' in product:
-                garment['care'] = product['info']
+            if flag and 'info' in product:
+                care = product['info']
             #: Set Color
             color = ''
             if 'color' in product:
@@ -187,17 +206,9 @@ class OliverParseSpider(BaseParseSpider):
 
             skus[key] = sku
             #: This list is needed in checking out_of_stock
-            garment['meta']['key_list'] += [key]
+            key_list += [key]
 
-        #: Update the sku element of garment
-        garment['skus'].update(skus)
-
-        #: Now check their stock information
-        url = re.sub('/[0-9]$', '/1', response.url)
-        url = re.sub('product', 'stock', url)
-        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_stock, meta={'item': garment})]
-
-        return self.next_request_or_garment(garment)
+        return skus, key_list, care
 
     def parse_stock(self, response):
         garment = response.meta['garment']
@@ -254,7 +265,7 @@ class OliverParseSpider(BaseParseSpider):
         brand_id = json_data['product'][0]['brand']
         return Mixin.brands[brand_id]
 
-    def skus(self, json_data):
+    def parent_children_request(self, json_data):
         queue = []
         product = json_data['product'][0]
         #: check for parent which has all related sku information
