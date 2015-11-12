@@ -46,7 +46,6 @@ class Mixin(object):
              '435': '42', '430': '52', '429': '54', '428': '56', '251': "60X90", '401': "Small",
              '1043': "Medium", '361': "Large", '402': "Extra Large"}
 
-    #: source : https://www.oliverbonas.com/js/app.min.js
     colors = {1081: "Apple", 451: "Aqua", 424: "Beige", 474: "Biscuit", 61: "Black", 437: "Blk/ivy",
               410: "Blossom", 58: "Blue", 489: "Bluetit", 463: "Bright Red", 441: "Bright red", 59: "Brown",
               457: "Camellia", 470: "Clear", 409: "Clover", 408: "Cobalt", 286: "Copper", 290: "Coral",
@@ -65,7 +64,6 @@ class Mixin(object):
               592: "Multi", 591: "Orange", 601: "Pink", 596: "Purple", 599: "Red", 590: "Silver",
               597: "White", 593: "Yellow"}
 
-    #: source : https://www.oliverbonas.com/js/app.min.js
     brands = {637: "50FiftyGifts", 1135: "AliceScott", 638: "ApplestoPearsGiftLTD", 640: "ArchivistLimited",
               1120: "AromaHome", 646: "ArtebeneLTD", 648: "AuteurLTD", 656: "Bajo", 662: "BallonRouge",
               933: "Bando", 841: "BathHouse", 667: "BestYears", 817: "BigTomatoCompany", 1111: "Black&Blum",
@@ -101,6 +99,9 @@ class MixinUK(Mixin):
 
 class OliverBonasParseSpider(BaseParseSpider):
 
+    image_url_t = " https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart" \
+                  "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/%s"
+
     #: Callback function
     def parse(self, response):
 
@@ -108,8 +109,8 @@ class OliverBonasParseSpider(BaseParseSpider):
             #: It means product don't has any data
             return None
 
-        json_data = json.loads(response.body)
-        product = json_data['product'][0]
+        jsn = json.loads(response.body)
+        product = jsn['product'][0]
 
         #: Initialize the garment object by giving it a unique id
         garment = self.new_unique_garment(str(product['id']))
@@ -122,79 +123,60 @@ class OliverBonasParseSpider(BaseParseSpider):
         garment['price'] = clean(str(product['price']))
         garment['currency'] = "GBP"
         garment['spider_name'] = self.name
-        garment['gender'] = "Womens"
-        garment['brand'] = self.product_brand(json_data)
-        garment['image_urls'] = clean(self.image_urls(json_data))
+        garment['brand'] = self.product_brand(jsn)
+        garment['image_urls'] = clean(self.image_urls(jsn))
         garment['name'] = product['meta']['title'].split(' - ')[0]
         garment['description'] = self.product_description(product)
         garment['category'] = self.product_category(product)
-        garment['url_original'] = self.product_original_url(response.url)
+        garment['url_original'] = self.product_original_url(product)
         garment['care'] = self.product_care(product)
-        garment['industry'] = self.product_industry(response.url)
-
-        queue = self.parent_children_request(json_data)
+        if 'homeware' in response.url or 'furniture' in response.url:
+            garment['industry'] = 'homeware'
+        else:
+            garment['gender'] = "Women"
 
         #: Initializing skus Dictionary to avoid errors in further processing
-        garment['meta'] = {}
+        garment['meta'] = {'requests_queue': self.skus_requests(jsn)}
         garment['skus'] = {}
-        garment['meta']['requests_queue'] = queue
-        garment['meta']['key_list'] = []
 
         return self.next_request_or_garment(garment)
 
     def parse_parent(self, response):
         garment = response.meta['garment']
-        json_data = json.loads(response.body)
+        jsn = json.loads(response.body)
         #: Extract children_list of all skus
-        children_list = ','.join(str(e) for e in json_data['product'][0]['options']['configurable']['children'])
+        children_list = ','.join(str(e) for e in jsn['product'][0]['options']['configurable']['children'])
         #: Form a URL
         url = "https://www.oliverbonas.com/api/product/" + children_list + "/verbosity/3"
-        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_skus, meta={'item': garment})]
+        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_skus)]
 
         return self.next_request_or_garment(garment)
 
     def parse_skus(self, response):
         garment = response.meta['garment']
-        json_data = json.loads(response.body)
-
-        skus, key_list, care = self.skus(json_data, 'care' not in garment)
-        garment['meta']['key_list'] = key_list
-        if care:
-            garment['care'] = care
+        jsn = json.loads(response.body)
         #: Update the sku element of garment
-        garment['skus'].update(skus)
-
+        garment['skus'].update(self.skus(jsn))
         #: Now check their stock information
-        url = re.sub('/[0-9]$', '/1', response.url)
-        url = re.sub('product', 'stock', url)
-        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_stock, meta={'item': garment})]
+        url = re.sub('/[0-9]$', '/1', response.url).replace('product', 'stock')
+        garment['meta']['requests_queue'] += [Request(url, callback=self.parse_oos)]
 
         return self.next_request_or_garment(garment)
 
-    def skus(self, json_data, flag):
+    def skus(self, jsn):
 
         skus = {}
-        key_list = []
-        care = ''
-        for product in json_data['product']:
-            #: Set info if not already set
-            if flag and 'info' in product:
-                care = product['info']
+        for product in jsn['product']:
             #: Set Color
-            color = ''
-            if 'color' in product:
-                color = Mixin.colors[product['color']]
-            elif 'colors' in product:
-                color = Mixin.colors[product['colors'][0]]
+            color = self.colors.get(product.get('color')) or self.colors.get(product.get('colors', [''])[0]) or ''
 
             #: Set Size
             #: Check whether size exists or not
             if 'size' in product:
-                size = Mixin.sizes[str(product['size'])]
+                size = self.sizes[str(product['size'])]
             else:
-                size = 'one-size'
+                size = self.one_size
 
-            key = color + "_" + size
             sku = {
                 'price': product['price'],
                 'currency': "GBP",
@@ -204,68 +186,39 @@ class OliverBonasParseSpider(BaseParseSpider):
             if 'org_price' in product:
                 sku['previous_price'] = product['org_price']
 
-            skus[key] = sku
-            #: This list is needed in checking out_of_stock
-            key_list += [key]
+            skus[color + "_" + size] = sku
 
-        return skus, key_list, care
+        return skus
 
-    def parse_stock(self, response):
+    def parse_oos(self, response):
         garment = response.meta['garment']
-        key_list = garment['meta']['key_list']
-        json_data = json.loads(response.body)
-
-        for key, stock in zip(key_list, json_data['stock']):
+        key_list = garment['skus'].keys()
+        jsn = json.loads(response.body)
+        for key, stock in zip(key_list, jsn['stock']):
             #: Updating sku
             garment['skus'][key]['out_of_stock'] = 'isOut' in stock
 
         return self.next_request_or_garment(garment)
 
-    def product_industry(self, url):
-        industry = ''
-        #: check for industry if homeware or furniture set it to homeware
-        if 'homeware' in url or 'furniture' in url:
-            industry = 'homeware'
-        return industry
-
     def product_care(self, product):
-        care = []
-        if 'info' in product:
-            care = product['info']
-        return care
+        return product.get('info')
 
     def product_category(self, product):
-        category = []
-        for label in product['breadcrumbs']:
-            category.append(label['label'])
-        return category
+        return [label['label'] for label in product['breadcrumbs']]
 
-    def product_original_url(self, url):
-        url = url.replace('/verbosity/3', '')
-        original_url = url.replace('/api/product', '')
-        return original_url
+    def product_original_url(self, product):
+        return 'https://www.oliverbonas.com' + product["url"]
 
     def product_description(self, product):
-        description = [product['meta']['description']]
-        if 'features' in product:
-            description += product['features']
-        if 'short_description' in product:
-            description += [product['short_description']]
-        return description
+        return clean([product['meta'].get('description'), product.get('short_description', '')])
 
-    def image_urls(self, json_data):
-        images = json_data['product'][0]['media']
-        images_list = []
-        for image in images:
-            images_list.append(" https://thumbor-gc.tomandco.uk/unsafe/fit-in/950x665/center/middle/smart"
-                        "/filters:fill(white)/www.oliverbonas.com//static/media/catalog/" + image['image'])
-        return images_list
+    def image_urls(self, jsn):
+        return [self.image_url_t % image['image'] for image in jsn['product'][0].get('media')]
 
-    def product_brand(self, json_data):
-        brand_id = json_data['product'][0]['brand']
-        return Mixin.brands[brand_id]
+    def product_brand(self, jsn):
+        return self.brands[jsn['product'][0]['brand']]
 
-    def parent_children_request(self, json_data):
+    def skus_requests(self, json_data):
         queue = []
         product = json_data['product'][0]
         #: check for parent which has all related sku information
