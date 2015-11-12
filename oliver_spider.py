@@ -249,18 +249,17 @@ class OliverBonasCrawlSpider(BaseCrawlSpider, Mixin):
     def parse_start_url(self, response):
         #: Updating the trail information
         trail_part = self.add_trail(response)
-        ids = re.findall('"id":(\d*)', response.body)[1:]
-        ids = ','.join(ids)
-        url = 'https://www.oliverbonas.com/api/product/' + ids + '/verbosity/2'
-        yield Request(url, callback=self.parse_urls,  meta={'trail': trail_part})
+        jsn = json.loads(response.body)
+        for product in jsn['category'][0]['products']:
+            url = 'https://www.oliverbonas.com/api/product/' + str(product['id']) + '/verbosity/2'
+            yield Request(url, callback=self.parse_urls,  meta={'trail': trail_part})
 
     def parse_urls(self, response):
         #: Updating the trail information
         trail_part = self.add_trail(response)
-        urls = re.findall('"url":"(.*?)"', response.body)
-        urls = map(lambda x: 'https://www.oliverbonas.com/api/product' + x + '/verbosity/3', urls)
-        for url in urls:
-            yield Request(url, callback=self.parse_item,  meta={'trail': trail_part})
+        jsn = json.loads(response.body)
+        url = 'https://www.oliverbonas.com/api/product' + jsn['product'][0]['url'] + '/verbosity/3'
+        yield Request(url, callback=self.parse_item,  meta={'trail': trail_part})
 
     def add_trail(self, response):
         trail_part = [(response.meta.get('link_text', ''), response.url)]
