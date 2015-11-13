@@ -258,8 +258,10 @@ class OliverBonasCrawlSpider(BaseCrawlSpider, Mixin):
         #: Updating the trail information
         trail_part = self.add_trail(response)
         jsn = json.loads(response.body)
-        url = 'https://www.oliverbonas.com/api/product' + jsn['product'][0]['url'] + '/verbosity/3'
-        yield Request(url, callback=self.parse_item,  meta={'trail': trail_part})
+        # Check product response is empty
+        if jsn['product']:
+            url = 'https://www.oliverbonas.com/api/product' + jsn['product'][0]['url'] + '/verbosity/3'
+            yield Request(url, callback=self.parse_item,  meta={'trail': trail_part})
 
     def add_trail(self, response):
         trail_part = [(response.meta.get('link_text', ''), response.url)]
