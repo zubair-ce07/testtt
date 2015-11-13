@@ -216,7 +216,7 @@ class OliverBonasParseSpider(BaseParseSpider):
         return [self.image_url_t % image['image'] for image in jsn['product'][0].get('media')]
 
     def product_brand(self, jsn):
-        return self.brands[jsn['product'][0]['brand']]
+        return self.brands[jsn['product'][0].get('brand', 256)]
 
     def skus_requests(self, json_data):
         queue = []
