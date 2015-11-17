@@ -7,6 +7,7 @@ from scrapy.selector import HtmlXPathSelector
 import json
 from scrapy.contrib.spiders import Rule
 from scrapy.http import Request
+from scrapy.contrib.loader.processor import TakeFirst
 
 
 logging.basicConfig(level=logging.DEBUG,
@@ -32,6 +33,7 @@ class MixinZA(Mixin):
 class SuperbalistParseSpider(BaseParseSpider):
 
     price_x = "(//span[@class='price price-retail']/text())[2]  |  //span[@class='price jsSpanItemPrice']/text()"
+    take_first = TakeFirst()
 
     def parse(self, response):
 
@@ -67,7 +69,7 @@ class SuperbalistParseSpider(BaseParseSpider):
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
         color = clean(hxs.select("//strong[text()='Colour']/following::div[1]/text()")) or ['']
-        ids = json.loads(clean(hxs.select("//div[@class='jsProductAttributeWidget']/@data-tree"))[0])
+        ids = json.loads(self.take_first(clean(hxs.select("//div[@class='jsProductAttributeWidget']/@data-tree"))))
         if not ids['children']:
             sku_ids = clean(hxs.select("//div[@class='jsProductAttributeWidget']/@data-sku_id"))
             sizes = [self.one_size]
@@ -80,7 +82,7 @@ class SuperbalistParseSpider(BaseParseSpider):
             sku = {
                 'currency': currency or self.product_currency(hxs),
                 'size': size,
-                'colour': color[0],
+                'colour': self.take_first(color),
             }
             if previous_price:
                 sku['previous_price'] = previous_price
@@ -89,7 +91,7 @@ class SuperbalistParseSpider(BaseParseSpider):
         return skus, queue
 
     def product_currency(self, hxs):
-        return clean(hxs.select("//meta[@itemprop='priceCurrency']/@content"))[0]
+        return self.take_first(clean(hxs.select("//meta[@itemprop='priceCurrency']/@content")))
 
     def product_images(self, hxs):
         return clean(hxs.select('//div[@class="layout pdp-gallery carousel-y"]//img/@src'))
@@ -98,7 +100,7 @@ class SuperbalistParseSpider(BaseParseSpider):
         return url.split('/')[-1]
 
     def product_name(self, hxs):
-        return clean(hxs.select("//h1[@class='headline-tight']/text()"))[0]
+        return self.take_first(clean(hxs.select("//h1[@class='headline-tight']/text()")))
 
     def product_gender(self, url):
         return url.split('/')[3]
@@ -114,8 +116,8 @@ class SuperbalistParseSpider(BaseParseSpider):
         return clean(hxs.select("//div[@itemprop='description']//text()"))
 
     def product_brand(self, hxs):
-        return clean(hxs.select("//a[@itemprop='brand']/text()")[0] or
-                     hxs.select("//strong[text()='Brand']/following::div[1]/text()")[0])
+        return self.take_first(clean(hxs.select("//a[@itemprop='brand']/text()") or
+                     hxs.select("//strong[text()='Brand']/following::div[1]/text()")))
 
 
 class SuperbalistCrawlSpider(BaseCrawlSpider, Mixin):
