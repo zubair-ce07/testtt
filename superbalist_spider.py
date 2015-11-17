@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from base import BaseParseSpider, BaseCrawlSpider
+from base import BaseParseSpider, BaseCrawlSpider, CurrencyParser
 from base import clean
 import logging
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
@@ -58,7 +58,7 @@ class SuperbalistParseSpider(BaseParseSpider):
         garment = response.meta['garment']
         jsn = json.loads(response.body)
         garment['skus'][response.url.split('/')[-1]]['out_of_stock'] = jsn['status'] == 'SOLD OUT'
-        garment['skus'][response.url.split('/')[-1]]['price'] = jsn['price']
+        garment['skus'][response.url.split('/')[-1]]['price'] = CurrencyParser.lowest_price(jsn['price'])
         return self.next_request_or_garment(garment)
 
     def skus(self, hxs):
