@@ -17,16 +17,16 @@ logging.basicConfig(level=logging.DEBUG,
 class Mixin(object):
     retailer = 'superbalist'
     allowed_domains = ['superbalist.com']
-    pfx = ['http://superbalist.com/browse/women?page=1',
-           'http://superbalist.com/browse/men?page=1',
-           'http://superbalist.com/browse/apartment/decor?page=1',
-           'http://superbalist.com/browse/apartment/bedding-bath?page=1']
+    start_urls_with_meta = [['http://superbalist.com/browse/women?page=1', {'gender': 'women'}],
+                            ['http://superbalist.com/browse/men?page=1', {'gender': 'men'}],
+                            ['http://superbalist.com/browse/apartment/decor?page=1', {'industry': 'homeware'}],
+                            ['http://superbalist.com/browse/apartment/bedding-bath?page=1', {'industry': 'homeware'}]]
 
 
 class MixinZA(Mixin):
     retailer = Mixin.retailer + '-za'
     market = 'ZA'
-    start_urls = Mixin.pfx
+    start_urls = Mixin.start_urls_with_meta
 
 
 class SuperbalistParseSpider(BaseParseSpider):
@@ -47,10 +47,8 @@ class SuperbalistParseSpider(BaseParseSpider):
         garment['currency'] = self.product_currency(hxs)
         garment['spider_name'] = self.name
         garment['image_urls'] = self.product_images(hxs)
-        if 'apartment' in response.url:
-            garment['industry'] = 'homeware'
-        else:
-            garment['gender'] = self.product_gender(response.url)
+        garment['gender'] = response.meta.get('gender')
+        garment['industry'] = response.meta.get('industry')
         garment['skus'], queue = self.skus(hxs)
         garment['meta'] = {'requests_queue': queue}
 
