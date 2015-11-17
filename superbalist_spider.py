@@ -17,7 +17,10 @@ logging.basicConfig(level=logging.DEBUG,
 class Mixin(object):
     retailer = 'superbalist'
     allowed_domains = ['superbalist.com']
-    pfx = ['http://superbalist.com/browse?page=1']
+    pfx = ['http://superbalist.com/browse/women?page=1',
+           'http://superbalist.com/browse/men?page=1',
+           'http://superbalist.com/browse/apartment/decor?page=1',
+           'http://superbalist.com/browse/apartment/bedding-bath?page=1']
 
 
 class MixinZA(Mixin):
@@ -28,14 +31,11 @@ class MixinZA(Mixin):
 
 class SuperbalistParseSpider(BaseParseSpider):
 
-    #: Path of money string
     price_x = "(//span[@class='price price-retail']/text())[2]  |  //span[@class='price jsSpanItemPrice']/text()"
 
-    #: Callback function
     def parse(self, response):
 
         hxs = HtmlXPathSelector(response)
-        #: Initialize the garment object by giving it a unique id
         garment = self.new_unique_garment(self.product_id(response.url))
         if garment is None:
             return
@@ -43,12 +43,14 @@ class SuperbalistParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, hxs, response)
         previous_price, price, currency = self.product_pricing(hxs)
 
-        #: Setting parameters for a garment
         garment['price'] = price
         garment['currency'] = self.product_currency(hxs)
         garment['spider_name'] = self.name
         garment['image_urls'] = self.product_images(hxs)
-        garment['gender'] = self.product_gender(response.url.split('/')[3])
+        if 'apartment' in response.url:
+            garment['industry'] = 'homeware'
+        else:
+            garment['gender'] = self.product_gender(response.url)
         garment['skus'], queue = self.skus(hxs)
         garment['meta'] = {'requests_queue': queue}
 
@@ -68,14 +70,12 @@ class SuperbalistParseSpider(BaseParseSpider):
         previous_price, price, currency = self.product_pricing(hxs)
         color = clean(hxs.select("//strong[text()='Colour']/following::div[1]/text()")) or ['']
         ids = json.loads(clean(hxs.select("//div[@class='jsProductAttributeWidget']/@data-tree"))[0])
-        #: If there is no children
         if not ids['children']:
             sku_ids = clean(hxs.select("//div[@class='jsProductAttributeWidget']/@data-sku_id"))
             sizes = [self.one_size]
         else:
             sku_ids = map(lambda x: str(x['sku_id']), ids['children']['size']['options'].values())
             sizes = map(lambda x: str(x['value']), ids['children']['size']['options'].values())
-        # Requests for checking oos
         queue = map(lambda x: Request(url=oos_url % x, callback=self.parse_oos), sku_ids)
 
         for sku_id, size in zip(sku_ids, sizes):
@@ -91,7 +91,6 @@ class SuperbalistParseSpider(BaseParseSpider):
         return skus, queue
 
     def product_currency(self, hxs):
-        #: If base.py can't detect currency
         return clean(hxs.select("//meta[@itemprop='priceCurrency']/@content"))[0]
 
     def product_images(self, hxs):
@@ -103,8 +102,8 @@ class SuperbalistParseSpider(BaseParseSpider):
     def product_name(self, hxs):
         return clean(hxs.select("//h1[@class='headline-tight']/text()"))[0]
 
-    def product_gender(self, value):
-        return value if value in ['women', 'men'] else None
+    def product_gender(self, url):
+        return url.split('/')[3]
 
     def product_care(self, hxs):
         return clean(hxs.select("//strong[text()='Fabrication']/following::div[1]/text() "
@@ -122,7 +121,6 @@ class SuperbalistParseSpider(BaseParseSpider):
 
 
 class SuperbalistCrawlSpider(BaseCrawlSpider, Mixin):
-    #: Set the rules for scraping all the available products of a website
     rules = (
 
         Rule(
