@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from base import BaseParseSpider, BaseCrawlSpider, CurrencyParser
 from base import clean
-import logging
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 import json
@@ -11,34 +10,24 @@ from scrapy.contrib.loader.processor import TakeFirst
 from urlparse import urlparse
 
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='(%(processName)-10s) %(message)s',  #: Output the Process Name just for checking purposes
-                    )
-
-
 class Mixin(object):
-    retailer = 'superbalist'
+    retailer = 'superbalist-za'
     allowed_domains = ['superbalist.com']
-    start_urls_with_meta = [['http://superbalist.com/browse/women?page=1', {'gender': 'women'}],
-                            ['http://superbalist.com/browse/men?page=1', {'gender': 'men'}],
-                            ['http://superbalist.com/browse/apartment/decor?page=1', {'industry': 'homeware'}],
-                            ['http://superbalist.com/browse/apartment/bedding-bath?page=1', {'industry': 'homeware'}]]
-
-
-class MixinZA(Mixin):
-    retailer = Mixin.retailer + '-za'
     market = 'ZA'
-    start_urls = Mixin.start_urls_with_meta
+    start_urls_with_meta = [('http://superbalist.com/browse/women?page=1', {'gender': 'women'}),
+                            ('http://superbalist.com/browse/men?page=1', {'gender': 'men'}),
+                            ('http://superbalist.com/browse/apartment/decor?page=1', {'industry': 'homeware'}),
+                            ('http://superbalist.com/browse/apartment/bedding-bath?page=1', {'industry': 'homeware'})]
 
 
-class SuperbalistParseSpider(BaseParseSpider):
+class SuperbalistParseSpider(BaseParseSpider, Mixin):
 
+    name = Mixin.retailer + '-parse'
     price_x = "(//span[@class='price price-retail']/text())[2]  |  //span[@class='price jsSpanItemPrice']/text()"
     oos_url_t = 'http://superbalist.com/products/check_availability/%s'
     take_first = TakeFirst()
 
     def parse(self, response):
-
         hxs = HtmlXPathSelector(response)
         garment = self.new_unique_garment(self.product_id(response.url))
         if garment is None:
@@ -67,7 +56,6 @@ class SuperbalistParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def skus(self, hxs):
-
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
         color = clean(hxs.select("//strong[text()='Colour']/following::div[1]/text()")) or ['']
@@ -76,8 +64,8 @@ class SuperbalistParseSpider(BaseParseSpider):
             sku_ids = clean(hxs.select("//div[@class='jsProductAttributeWidget']/@data-sku_id"))
             sizes = [self.one_size]
         else:
-            sku_ids = map(lambda x: str(x['sku_id']), ids['children']['size']['options'].values())
-            sizes = map(lambda x: str(x['value']), ids['children']['size']['options'].values())
+            sku_ids = [x['sku_id'] for x in ids['children']['size']['options'].values()]
+            sizes = [str(x['value']) for x in ids['children']['size']['options'].values()]
 
         for sku_id, size in zip(sku_ids, sizes):
             sku = {
@@ -87,7 +75,7 @@ class SuperbalistParseSpider(BaseParseSpider):
             }
             if previous_price:
                 sku['previous_price'] = previous_price
-            skus[sku_id] = sku
+            skus["%s" % sku_id] = sku
 
         return skus
 
@@ -101,8 +89,7 @@ class SuperbalistParseSpider(BaseParseSpider):
         return clean(hxs.select('//div[@class="layout pdp-gallery carousel-y"]//img/@src'))
 
     def product_id(self, url):
-        pr = urlparse(url)
-        return clean(pr.path.split('/')[-1])
+        return clean(urlparse(url).path.split('/')[-1])
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h1[@class='headline-tight']/text()")))
@@ -123,26 +110,20 @@ class SuperbalistParseSpider(BaseParseSpider):
 
 
 class SuperbalistCrawlSpider(BaseCrawlSpider, Mixin):
+    name = Mixin.retailer + '-crawl'
+    parse_spider = SuperbalistParseSpider()
+
+    listings_x = [
+        '//li[@class="paginate-next"]',
+    ]
+
+    products_x = [
+        "//div[@class='layout bucket-list bucket-list-6']//a",
+    ]
+
     rules = (
-
-        Rule(
-            SgmlLinkExtractor(restrict_xpaths=(
-                '//li[@class="paginate-next"]')),
-            callback='parse', follow=True
-        ),
-        Rule(
-            SgmlLinkExtractor(restrict_xpaths=(
-                "//div[@class='layout bucket-list bucket-list-6']//a")),
-            callback='parse_item'
-        ),
+        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item'),
     )
-
-class SuperbalistZAParseSpider(SuperbalistParseSpider, MixinZA):
-    name = MixinZA.retailer + '-parse'
-
-
-class SuperbalistZACrawlSpider(SuperbalistCrawlSpider, MixinZA):
-    name = MixinZA.retailer + '-crawl'
-    parse_spider = SuperbalistZAParseSpider()
 
 
