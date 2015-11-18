@@ -8,6 +8,7 @@ import json
 from scrapy.contrib.spiders import Rule
 from scrapy.http import Request
 from scrapy.contrib.loader.processor import TakeFirst
+from urlparse import urlparse
 
 
 logging.basicConfig(level=logging.DEBUG,
@@ -33,6 +34,7 @@ class MixinZA(Mixin):
 class SuperbalistParseSpider(BaseParseSpider):
 
     price_x = "(//span[@class='price price-retail']/text())[2]  |  //span[@class='price jsSpanItemPrice']/text()"
+    oos_url_t = 'http://superbalist.com/products/check_availability/%s'
     take_first = TakeFirst()
 
     def parse(self, response):
@@ -48,23 +50,23 @@ class SuperbalistParseSpider(BaseParseSpider):
         garment['price'] = price
         garment['currency'] = self.product_currency(hxs)
         garment['spider_name'] = self.name
+        garment['category'] = self.product_category(response.url)
         garment['image_urls'] = self.product_images(hxs)
         garment['gender'] = response.meta.get('gender')
         garment['industry'] = response.meta.get('industry')
-        garment['skus'], queue = self.skus(hxs)
-        garment['meta'] = {'requests_queue': queue}
+        garment['skus'] = self.skus(hxs)
+        garment['meta'] = {'requests_queue': self.oos_requests(garment)}
 
         return self.next_request_or_garment(garment)
 
     def parse_oos(self, response):
         garment = response.meta['garment']
         jsn = json.loads(response.body)
-        garment['skus'][response.url.split('/')[-1]]['out_of_stock'] = jsn['status'] == 'SOLD OUT'
-        garment['skus'][response.url.split('/')[-1]]['price'] = CurrencyParser.lowest_price(jsn['price'])
+        garment['skus'][jsn['sku_id']]['out_of_stock'] = jsn['status'] == 'SOLD OUT'
+        garment['skus'][jsn['sku_id']]['price'] = CurrencyParser.lowest_price(jsn['price'])
         return self.next_request_or_garment(garment)
 
     def skus(self, hxs):
-        oos_url = 'http://superbalist.com/products/check_availability/%s'
 
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
@@ -76,7 +78,6 @@ class SuperbalistParseSpider(BaseParseSpider):
         else:
             sku_ids = map(lambda x: str(x['sku_id']), ids['children']['size']['options'].values())
             sizes = map(lambda x: str(x['value']), ids['children']['size']['options'].values())
-        queue = map(lambda x: Request(url=oos_url % x, callback=self.parse_oos), sku_ids)
 
         for sku_id, size in zip(sku_ids, sizes):
             sku = {
@@ -88,7 +89,10 @@ class SuperbalistParseSpider(BaseParseSpider):
                 sku['previous_price'] = previous_price
             skus[sku_id] = sku
 
-        return skus, queue
+        return skus
+
+    def oos_requests(self, garment):
+        return [Request(url=self.oos_url_t % x, callback=self.parse_oos) for x in garment['skus'].keys()]
 
     def product_currency(self, hxs):
         return self.take_first(clean(hxs.select("//meta[@itemprop='priceCurrency']/@content")))
@@ -97,20 +101,18 @@ class SuperbalistParseSpider(BaseParseSpider):
         return clean(hxs.select('//div[@class="layout pdp-gallery carousel-y"]//img/@src'))
 
     def product_id(self, url):
-        return url.split('/')[-1]
+        pr = urlparse(url)
+        return clean(pr.path.split('/')[-1])
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h1[@class='headline-tight']/text()")))
-
-    def product_gender(self, url):
-        return url.split('/')[3]
 
     def product_care(self, hxs):
         return clean(hxs.select("//strong[text()='Fabrication']/following::div[1]/text() "
                                 "| //strong[text()='Material']/following::div[1]/text()"))
 
-    def product_category(self, hxs):
-        return clean(hxs.select("//li[@class='nav-breadcrumb-item']/a/text()"))
+    def product_category(self, url):
+        return urlparse(url).path.split('/')[1:-2] if isinstance(url, str) else None
 
     def product_description(self, hxs):
         return clean(hxs.select("//div[@itemprop='description']//text()"))
@@ -134,7 +136,6 @@ class SuperbalistCrawlSpider(BaseCrawlSpider, Mixin):
             callback='parse_item'
         ),
     )
-
 
 class SuperbalistZAParseSpider(SuperbalistParseSpider, MixinZA):
     name = MixinZA.retailer + '-parse'
