@@ -14,6 +14,7 @@ class Mixin(object):
     retailer = 'ovs-it'
     allowed_domains = ['ovs.it']
     market = 'IT'
+    lang = 'it'
     start_urls_with_meta = [('http://www.ovs.it/', {}),
                             ('http://www.ovs.it/beauty/makeup', {'gender': 'women'}),
                             ('http://www.ovs.it/beauty/corpo-e-bagno', {'gender': 'women'}),
@@ -45,7 +46,6 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         garment['currency'] = currency
         garment['spider_name'] = self.name
         garment['category'] = self.product_category(garment)
-        garment['lang'] = self.product_lang(hxs)
         garment['gender'] = response.meta.get('gender') or self.product_gender(garment)
         garment['outlet'] = self.product_outlet(garment)
         garment['image_urls'] = []
@@ -108,10 +108,6 @@ class OVSParseSpider(BaseParseSpider, Mixin):
 
     def product_brand(self, hxs):
         return "OVS"
-
-    def product_lang(self, hxs):
-        return self.take_first(clean(hxs.select('//ul[@class="menu-utility-style menu-utility'
-                                                '-language"]//a[@class="active"]/text()')))
 
     def product_outlet(self, garment):
         return urlparse(garment['trail'][-1][1]).path.split('/')[1] == 'outlet'
