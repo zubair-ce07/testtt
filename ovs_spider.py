@@ -84,9 +84,8 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         sizes = clean((hxs.select("//ul[@class='swatches size']//a/@href")))
         for color in colors:
             for size in sizes:
-                color = color.split('?')[-1]
-                size = '&' + size.split('&')[-1]
-                queue += [Request(url=self.oos_url_t % (color, size), callback=self.parse_skus)]
+                queue += [Request(url=self.oos_url_t % (color.split('?')[-1], '&' + size.split('&')[-1])
+                                  , callback=self.parse_skus)]
         return queue
 
     def product_images(self, hxs):
