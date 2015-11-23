@@ -16,9 +16,6 @@ class Mixin(object):
     market = 'IT'
     lang = 'it'
     start_urls_with_meta = [('http://www.ovs.it/', {}),
-                            ('http://www.ovs.it/beauty/makeup', {'gender': 'women'}),
-                            ('http://www.ovs.it/beauty/corpo-e-bagno', {'gender': 'women'}),
-                            ('http://www.ovs.it/beauty/accessori', {'gender': 'women'}),
                             ('http://www.ovs.it/beauty/profumi/profumi-donna', {'gender': 'women'}),
                             ('http://www.ovs.it/beauty/profumi/profumi-uomo', {'gender': 'men'})]
 
@@ -40,11 +37,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, hxs, response)
-        previous_price, price, currency = self.product_pricing(hxs)
 
-        garment['price'] = price
-        garment['currency'] = currency
-        garment['spider_name'] = self.name
         garment['category'] = self.product_category(garment)
         garment['gender'] = response.meta.get('gender') or self.product_gender(garment)
         garment['outlet'] = self.product_outlet(garment)
@@ -131,9 +124,14 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
         "//div[@class='search-result-content']//a[@class='thumb-link']",
     ]
 
+    beauty_x = [
+        "//div[@class='search-result-content']//a[@class='thumb-link']",
+    ]
+
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='process_request'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=beauty_x), callback='parse_and_add_women'),
     )
 
     def process_request(self, req):
