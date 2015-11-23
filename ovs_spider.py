@@ -16,9 +16,7 @@ class Mixin(object):
     allowed_domains = ['ovs.it']
     market = 'IT'
     lang = 'it'
-    start_urls_with_meta = [('http://www.ovs.it/', {}),
-                            ('http://www.ovs.it/beauty/profumi/profumi-donna', {'gender': 'women'}),
-                            ('http://www.ovs.it/beauty/profumi/profumi-uomo', {'gender': 'men'})]
+    start_urls = ['http://www.ovs.it/']
 
 
 class OVSParseSpider(BaseParseSpider, Mixin):
@@ -28,7 +26,8 @@ class OVSParseSpider(BaseParseSpider, Mixin):
     oos_url_t = "http://www.ovs.it/on/demandware.store/Sites-ovs-italy-Site/it_IT/Product-Variation?%s%s&Quantity=1&format=ajax"
     images_url_x = "(//a[@class='thumbnail-link'])[position() > 1]/@href | (//img[@class='primary-image']/@src)[1]"
     gender = {'donna': 'women', 'uomo': 'men', 'ragazza-9-14-anni': 'girls', 'ragazzo-9-14-anni': 'boys',
-              'bambina-2-8-anni': 'girls', 'bambino-2-8-anni': 'boys'}
+              'bambina-2-8-anni': 'girls', 'bambino-2-8-anni': 'boys', 'beauty': 'women', 'profumi-donna': 'women',
+              'profumi-uomo': 'men'}
     take_first = TakeFirst()
 
     def parse(self, response):
@@ -40,7 +39,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, hxs, response)
 
         garment['category'] = self.product_category(garment)
-        garment['gender'] = response.meta.get('gender') or self.product_gender(garment)
+        garment['gender'] = self.product_gender(garment)
         garment['outlet'] = self.product_outlet(garment)
         garment['image_urls'] = []
         garment['skus'] = {}
@@ -110,7 +109,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, garment):
         key = garment['category']
-        return self.gender.get(key[0]) or self.gender.get(key[1]) or self.gender.get(key[-1]) or 'unisex-kids'
+        return self.gender.get(key[-1]) or self.gender.get(key[0]) or self.gender.get(key[1]) or 'unisex-kids'
 
 
 class OVSCrawlSpider(BaseCrawlSpider, Mixin):
@@ -121,20 +120,16 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
         "(//li[@class='current-page'])[1]/following::li[1]",
         '//a[text()="Collezione"]/following-sibling::div//a',
         '//li[@class="sellable  last"]//div[@class="level-3"]//a',
+        "//div[text()='Beauty']/following::li[not(@class='last')][position() < 6]",
     ]
 
     products_x = [
         "//div[@class='search-result-content']//a[@class='thumb-link']",
     ]
 
-    beauty_x = [
-        "//div[text()='Beauty']/following::li[position() < 4]",
-    ]
-
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='remove_query_string'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=beauty_x), callback='parse_and_add_women'),
     )
 
     def remove_query_string(self, req):
