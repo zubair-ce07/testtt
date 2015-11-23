@@ -132,11 +132,11 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='process_request'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='remove_query_string'),
         Rule(SgmlLinkExtractor(restrict_xpaths=beauty_x), callback='parse_and_add_women'),
     )
 
-    def process_request(self, req):
+    def remove_query_string(self, req):
         return req.replace(url=req.url.split('?')[0])
 
 
