@@ -96,7 +96,8 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         return self.take_first(clean(hxs.select("//h1[@class='product-name']//text()")))
 
     def product_care(self, hxs):
-        return clean(hxs.select("//div[@itemprop='shortDescription']//text()"))
+        return clean(hxs.select("//div[@itemprop='shortDescription']//text() |"
+                                " //div[@id='containerDrySymbolsDefault']//div/@title"))
 
     def product_category(self, garment):
         return urlparse(garment['trail'][-1][1]).path.split('/')[1:] if isinstance(garment, Garment) else None
