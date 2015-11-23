@@ -50,11 +50,18 @@ class OVSParseSpider(BaseParseSpider, Mixin):
     def parse_skus(self, response):
         garment = response.meta['garment']
         hxs = HtmlXPathSelector(response)
+        garment['image_urls'] += self.image_urls(hxs, [x['colour'] for x in garment['skus'].values()])
+        garment['skus'].update(self.skus(hxs))
+        return self.next_request_or_garment(garment)
+
+    def image_urls(self, hxs, colors):
         color = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[1]/text()')))
-        if color not in [x['colour'] for x in garment['skus'].values()]:
-            garment['image_urls'] += clean(hxs.select(self.images_url_t))
+        return clean(hxs.select(self.images_url_t)) if color not in colors else []
+
+    def skus(self, hxs):
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
+        color = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[1]/text()')))
         size = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[2]/text()')))
         out_of_stock = bool(clean(hxs.select("//p[@class='non-in-stock-msg']/text()")))
         sku = {
@@ -67,9 +74,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         if previous_price:
             sku['previous_price'] = previous_price
         skus[color + '_' + size] = sku
-        garment['skus'].update(skus)
-
-        return self.next_request_or_garment(garment)
+        return skus
 
     def oos_requests(self, hxs):
         queue = []
@@ -80,9 +85,6 @@ class OVSParseSpider(BaseParseSpider, Mixin):
                 queue += [Request(url=self.oos_url_t % (color.split('?')[-1], '&' + size.split('&')[-1])
                                   , callback=self.parse_skus)]
         return queue
-
-    def product_images(self, hxs):
-        return clean(hxs.select("//ul[@class='thumbnails_ul']//a/@href"))
 
     def product_id(self, url):
         return clean(urlparse(url).path.split('/')[-1].strip('.html'))
