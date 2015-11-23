@@ -44,7 +44,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         garment['outlet'] = self.product_outlet(garment)
         garment['image_urls'] = []
         garment['skus'] = {}
-        garment['meta'] = {'requests_queue': self.oos_requests(hxs)}
+        garment['meta'] = {'requests_queue': self.sku_requests(hxs)}
 
         return self.next_request_or_garment(garment)
 
@@ -77,15 +77,15 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         skus[color + '_' + size] = sku
         return skus
 
-    def oos_requests(self, hxs):
-        queue = []
+    def sku_requests(self, hxs):
+        requests = []
         colors = clean(hxs.select("//ul[@class='swatches Color']//a/@href"))
         sizes = clean((hxs.select("//ul[@class='swatches size']//a/@href")))
         for color in colors:
             for size in sizes:
-                queue += [Request(url=self.oos_url_t % (color.split('?')[-1], '&' + size.split('&')[-1])
+                requests += [Request(url=self.oos_url_t % (color.split('?')[-1], '&' + size.split('&')[-1])
                                   , callback=self.parse_skus)]
-        return queue
+        return requests
 
     def product_id(self, url):
         return clean(urlparse(url).path.split('/')[-1].strip('.html'))
@@ -106,7 +106,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         return "OVS"
 
     def product_outlet(self, garment):
-        return urlparse(garment['trail'][-1][1]).path.split('/')[1] == 'outlet'
+        return 'outlet' in garment['category']
 
     def product_gender(self, garment):
         key = urlparse(garment['trail'][-1][1]).path.split('/')[1:]
@@ -118,7 +118,7 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = OVSParseSpider()
 
     listings_x = [
-        "(//li[@class='current-page'])[1]/following::li[1]//@href",
+        "(//li[@class='current-page'])[1]/following::li[1]",
         '//a[text()="Collezione"]/following-sibling::div//a',
         '//li[@class="sellable  last"]//div[@class="level-3"]//a',
     ]
