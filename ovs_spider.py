@@ -8,7 +8,7 @@ from scrapy.http import Request
 from scrapy.contrib.loader.processor import TakeFirst
 from urlparse import urlparse
 from skuscraper.items import Garment
-from scrapy.utils.url import url_query_cleaner as uqc
+from scrapy.utils.url import url_query_cleaner as uqc, url_query_parameter as uqp
 
 
 class Mixin(object):
@@ -24,6 +24,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     price_x = "//div[@class='product-price']//text()"
     oos_url_t = "http://www.ovs.it/on/demandware.store/Sites-ovs-italy-Site/it_IT/Product-Variation?%s%s&Quantity=1&format=ajax"
+    size_x = '//a[contains(@href,"%s")]/@title'
     images_url_x = "(//a[@class='thumbnail-link'])[position() > 1]/@href | (//img[@class='primary-image']/@src)[1]"
     gender = {'donna': 'women', 'uomo': 'men', 'ragazza-9-14-anni': 'girls', 'ragazzo-9-14-anni': 'boys',
               'bambina-2-8-anni': 'girls', 'bambino-2-8-anni': 'boys', 'beauty': 'women', 'profumi-donna': 'women',
@@ -50,20 +51,22 @@ class OVSParseSpider(BaseParseSpider, Mixin):
     def parse_skus(self, response):
         garment = response.meta['garment']
         hxs = HtmlXPathSelector(response)
-        garment['image_urls'] += self.image_urls(hxs, [x['colour'] for x in garment['skus'].values()])
-        garment['skus'].update(self.skus(hxs))
+        garment['image_urls'] += [uqc(x) for x in self.image_urls(hxs, [x['colour'] for x in garment['skus'].values()])]
+        garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
     def image_urls(self, hxs, colors):
         color = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[1]/text()')))
         return clean(hxs.select(self.images_url_x)) if color not in colors else []
 
-    def skus(self, hxs):
+    def skus(self, response):
+        hxs = HtmlXPathSelector(response)
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
         color = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[1]/text()')))
-        size = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[2]/text()')))
-        out_of_stock = bool(clean(hxs.select("//p[@class='non-in-stock-msg']/text()")))
+        size = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[2]/text()')) or clean
+        (hxs.select('//a[contains(@href,"' + uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') + '_size') + '")]/@title')))
+        out_of_stock = not bool(clean(hxs.select("//p[@class='in-stock-msg']/text()")))
         sku = {
             'price': price,
             'currency': currency,
@@ -72,7 +75,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
             'out_of_stock': out_of_stock
         }
         if previous_price:
-            sku['previous_price'] = [previous_price]
+            sku['previous_prices'] = [previous_price]
         skus[color + '_' + size] = sku
         return skus
 
@@ -82,8 +85,8 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         sizes = clean((hxs.select("//ul[@class='swatches size']//a/@href")))
         for color in colors:
             for size in sizes:
-                requests += [Request(url=self.oos_url_t % (color.split('?')[-1], '&' + size.split('&')[-1])
-                                  , callback=self.parse_skus)]
+                requests += [Request(url=self.oos_url_t % (color.split('?')[-1], '&' + size.split('&')[-1]),
+                                     callback=self.parse_skus)]
         return requests
 
     def product_id(self, url):
@@ -115,18 +118,15 @@ class OVSParseSpider(BaseParseSpider, Mixin):
 class OVSCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = OVSParseSpider()
-
     listings_x = [
         "(//li[@class='current-page'])[1]/following::li[1]",
-        '//a[text()="Collezione"]/following-sibling::div//a',
-        '//li[@class="sellable  last"]//div[@class="level-3"]//a',
+        "//a[text()='Collezione']/following-sibling::div//a",
+        "//li[@class='sellable  last']//div[@class='level-3']//a",
         "//div[text()='Beauty']/following::li[not(@class='last')][position() < 6]",
     ]
-
     products_x = [
         "//div[@class='search-result-content']//a[@class='thumb-link']",
     ]
-
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='remove_query_string'),
