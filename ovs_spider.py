@@ -109,7 +109,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         return 'outlet' in garment['category']
 
     def product_gender(self, garment):
-        key = urlparse(garment['trail'][-1][1]).path.split('/')[1:]
+        key = garment['category']
         return self.gender.get(key[0]) or self.gender.get(key[1]) or self.gender.get(key[-1]) or 'unisex-kids'
 
 
