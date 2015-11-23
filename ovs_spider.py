@@ -8,6 +8,7 @@ from scrapy.http import Request
 from scrapy.contrib.loader.processor import TakeFirst
 from urlparse import urlparse
 from skuscraper.items import Garment
+from scrapy.utils.url import url_query_cleaner as uqc
 
 
 class Mixin(object):
@@ -137,7 +138,7 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
     )
 
     def remove_query_string(self, req):
-        return req.replace(url=req.url.split('?')[0])
+        return req.replace(url=uqc(req.url))
 
 
 
