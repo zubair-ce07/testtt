@@ -73,7 +73,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
             'out_of_stock': out_of_stock
         }
         if previous_price:
-            sku['previous_price'] = previous_price
+            sku['previous_price'] = [previous_price]
         skus[color + '_' + size] = sku
         return skus
 
