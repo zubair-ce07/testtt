@@ -25,7 +25,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     price_x = "//div[@class='product-price']//text()"
     oos_url_t = "http://www.ovs.it/on/demandware.store/Sites-ovs-italy-Site/it_IT/Product-Variation?%s%s&Quantity=1&format=ajax"
-    images_url_t = "(//a[@class='thumbnail-link'])[position() > 1]/@href | (//img[@class='primary-image']/@src)[1]"
+    images_url_x = "(//a[@class='thumbnail-link'])[position() > 1]/@href | (//img[@class='primary-image']/@src)[1]"
     gender = {'donna': 'women', 'uomo': 'men', 'ragazza-9-14-anni': 'girls', 'ragazzo-9-14-anni': 'boys',
               'bambina-2-8-anni': 'girls', 'bambino-2-8-anni': 'boys'}
     take_first = TakeFirst()
@@ -56,7 +56,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, hxs, colors):
         color = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[1]/text()')))
-        return clean(hxs.select(self.images_url_t)) if color not in colors else []
+        return clean(hxs.select(self.images_url_x)) if color not in colors else []
 
     def skus(self, hxs):
         skus = {}
@@ -127,7 +127,7 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     beauty_x = [
-        "//div[@class='search-result-content']//a[@class='thumb-link']",
+        "//div[text()='Beauty']/following::li[position() < 4]",
     ]
 
     rules = (
