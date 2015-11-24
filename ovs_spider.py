@@ -133,13 +133,5 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
     deny_urls = ('ovs-for-expo', 'html', 'ovs-app-community', 'studentlovsshopping')
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=deny_urls), callback='parse'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='remove_query_str'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: uqc(r)), callback='parse_item'),
     )
-
-    def remove_query_str(self, req):
-        return req.replace(url=uqc(req.url))
-
-
-
-
-
