@@ -13,7 +13,7 @@ from scrapy.utils.url import url_query_cleaner as uqc, url_query_parameter as uq
 
 class Mixin(object):
     retailer = 'ovs-it'
-    allowed_domains = ['ovs.it']
+    allowed_domains = ['www.ovs.it']
     market = 'IT'
     lang = 'it'
     start_urls = ['http://www.ovs.it/']
@@ -23,7 +23,8 @@ class OVSParseSpider(BaseParseSpider, Mixin):
 
     name = Mixin.retailer + '-parse'
     price_x = "//div[@class='product-price']//text()"
-    oos_url_t = "http://www.ovs.it/on/demandware.store/Sites-ovs-italy-Site/it_IT/Product-Variation?%s%s&Quantity=1&format=ajax"
+    sku_url_t = "http://www.ovs.it/on/demandware.store/Sites-ovs-italy-Site/it_IT/Product-Variation?%s%s&Quantity=1" \
+                "&format=ajax"
     size_x = '//a[contains(@href,"%s")]/@title'
     images_url_x = "(//a[@class='thumbnail-link'])[position() > 1]/@href | (//img[@class='primary-image']/@src)[1]"
     gender = {'donna': 'women', 'uomo': 'men', 'ragazza-9-14-anni': 'girls', 'ragazzo-9-14-anni': 'boys',
@@ -65,7 +66,8 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         previous_price, price, currency = self.product_pricing(hxs)
         color = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[1]/text()')))
         size = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[2]/text()')) or
-                               clean(hxs.select(self.size_x % uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') + '_size'))))
+                               clean(hxs.select(self.size_x % uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') +
+                                                                  '_size'))))
         out_of_stock = not bool(clean(hxs.select("//p[@class='in-stock-msg']/text()")))
         sku = {
             'price': price,
@@ -85,7 +87,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         sizes = clean((hxs.select("//ul[@class='swatches size']//a/@href")))
         for color in colors:
             for size in sizes:
-                requests += [Request(url=self.oos_url_t % (color.split('?')[-1], '&' + size.split('&')[-1]),
+                requests += [Request(url=self.sku_url_t % (color.split('?')[-1], '&' + size.split('&')[-1]),
                                      callback=self.parse_skus)]
         return requests
 
@@ -128,12 +130,13 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
     products_x = [
         "//div[@class='search-result-content']//a[@class='thumb-link']",
     ]
+    deny_urls = ('ovs-for-expo', 'html', 'ovs-app-community', 'studentlovsshopping')
     rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='remove_query_string'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=deny_urls), callback='parse'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item', process_request='remove_query_str'),
     )
 
-    def remove_query_string(self, req):
+    def remove_query_str(self, req):
         return req.replace(url=uqc(req.url))
 
 
