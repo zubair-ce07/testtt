@@ -130,8 +130,8 @@ class OVSCrawlSpider(BaseCrawlSpider, Mixin):
     products_x = [
         "//div[@class='search-result-content']//a[@class='thumb-link']",
     ]
-    deny_urls = ('ovs-for-expo', 'html', 'ovs-app-community', 'studentlovsshopping')
+    deny_r = ['ovs-for-expo', 'html', 'ovs-app-community', 'studentlovsshopping']
     rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=deny_urls), callback='parse'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=deny_r), callback='parse'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: uqc(r)), callback='parse_item'),
     )
