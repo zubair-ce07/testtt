@@ -64,8 +64,8 @@ class OVSParseSpider(BaseParseSpider, Mixin):
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
         color = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[1]/text()')))
-        size = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[2]/text()')) or clean
-        (hxs.select('//a[contains(@href,"' + uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') + '_size') + '")]/@title')))
+        size = self.take_first(clean(hxs.select('(//li[@class="selected-value"])[2]/text()')) or
+                               clean(hxs.select(self.size_x % uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') + '_size'))))
         out_of_stock = not bool(clean(hxs.select("//p[@class='in-stock-msg']/text()")))
         sku = {
             'price': price,
@@ -97,7 +97,7 @@ class OVSParseSpider(BaseParseSpider, Mixin):
 
     def product_care(self, hxs):
         return clean(hxs.select("//div[@itemprop='shortDescription']//text() |"
-                                " //div[@id='containerDrySymbolsDefault']//div/@title"))
+                                " //div[@id='containerDrySymbolsDefault']//div[not(@title='null')]/@title"))
 
     def product_category(self, garment):
         return urlparse(garment['trail'][-1][1]).path.split('/')[1:] if isinstance(garment, Garment) else None
