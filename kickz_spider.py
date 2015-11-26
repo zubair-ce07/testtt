@@ -99,11 +99,8 @@ class KickzParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def sku_requests(self, hxs):
-        requests = []
         colors = clean(hxs.select("//a[@class='chooseColorLink']/@href"))
-        for color in colors:
-            requests += [Request(url=self.sku_url_t % color, callback=self.parse_skus)]
-        return requests
+        return [Request(url=self.sku_url_t % color, callback=self.parse_skus) for color in colors]
 
     def product_id(self, hxs):
         return self.take_first(clean(hxs.select("//span[@itemprop='productID']/text()")))
