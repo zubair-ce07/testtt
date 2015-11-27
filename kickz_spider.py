@@ -7,6 +7,7 @@ from scrapy.contrib.spiders import Rule
 from scrapy.http import Request
 from scrapy.contrib.loader.processor import TakeFirst
 from skuscraper.items import Garment
+import re
 
 
 class Mixin(object):
@@ -28,8 +29,9 @@ class KickzParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     sku_url_t = "https://www.kickz.com/de/%s"
     price_x = "//span[@class='currentPriceId']//text() |  //span[@id='oldPriceId']/text()"
+    coming_soon_x = "//div[@id='counter_header']"
     take_first = TakeFirst()
-    unwanted_tokens = {
+    unwanted_categories = {
         u'energy',
         u'drinks',
         u'gutscheine',
@@ -47,14 +49,12 @@ class KickzParseSpider(BaseParseSpider, Mixin):
             return
 
         tokens = tokenize(self.product_category(hxs))
-        if tokens & self.unwanted_tokens:
-            self.log('Dropped unwanted item')
+        if tokens & self.unwanted_categories:
+            self.log('Drop unwanted item at %s' % response.url)
             return
 
         self.boilerplate_normal(garment, hxs, response)
-        garment['category'] = self.product_category(hxs)
-        garment['brand'] = self.product_brand(garment)
-        garment['gender'] = response.meta.get('gender')
+        garment['gender'] = self.product_gender(hxs) or response.meta.get('gender')
         garment['skus'] = self.skus(response)
         garment['image_urls'] = []
         garment['meta'] = {'requests_queue': self.sku_requests(hxs) + self.image_urls(hxs)}
@@ -71,31 +71,35 @@ class KickzParseSpider(BaseParseSpider, Mixin):
         garment = response.meta['garment']
         if response.status != 404:
             garment['image_urls'] += [response.url]
+        else:
+            garment['meta'].update({'requests_queue':
+                        garment['meta'].get('requests_queue')[:-(6-int(re.search('(\d).jpg', response.url).group(1)))]})
         return self.next_request_or_garment(garment)
 
     def image_urls(self, hxs):
         image_urls = clean(hxs.select("//ul[@id='thumblist']//img[not(@style='display: none;')]/@data-zoom-img"))
-        return [Request(url=x, callback=self.parse_image_urls) for x in image_urls]
+        return list(reversed([Request(url=x, callback=self.parse_image_urls) for x in image_urls]))
 
     def skus(self, response):
         hxs = HtmlXPathSelector(response)
         skus = {}
         color = self.take_first(clean(hxs.select("//span[@id='variantColorId']//text()")))
         skus_data = clean(hxs.select("//div[@class='chooseSizeContainer'][1]/div/a/@onclick"))
-        skus_data = [x.strip("ProductDetails.changeSizeAffectedLinks( '").strip("');").split("', '") for x in skus_data]
+        skus_data = [re.search("'(.*)'", x).group().split("', '") for x in skus_data]
 
         for sku_data in skus_data:
+
             sku = {
                 'price': CurrencyParser.lowest_price(sku_data[2]),
                 'currency': CurrencyParser.currency(sku_data[2]),
-                'size': sku_data[5],
+                'size': self.one_size if sku_data[5] == 'one' else sku_data[5],
                 'colour': color,
-                'out_of_stock': not clean(sku_data[8]),
+                'out_of_stock': bool(clean(hxs.select(self.coming_soon_x))),
                 'previous_prices': [CurrencyParser.lowest_price([sku_data[1]][0])]
             }
             if self.take_first(sku['previous_prices']) == sku['price']:
                     sku.pop('previous_prices')
-            skus[sku_data[0]] = sku
+            skus[sku_data[0].strip("'")] = sku
         return skus
 
     def sku_requests(self, hxs):
@@ -103,7 +107,13 @@ class KickzParseSpider(BaseParseSpider, Mixin):
         return [Request(url=self.sku_url_t % color, callback=self.parse_skus) for color in colors]
 
     def product_id(self, hxs):
-        return self.take_first(clean(hxs.select("//span[@itemprop='productID']/text()")))
+        return self.take_first(clean(hxs.select("//input[@name='productErp']/@value")))
+
+    def product_gender(self, hxs):
+        if ('boy' or 'boys') in (self.product_name(hxs)).lower():
+            return 'boys'
+        if ('girls' or 'girl') in (self.product_name(hxs)).lower():
+            return 'girls'
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h1[@id='prodNameId']/text()")))
@@ -112,7 +122,7 @@ class KickzParseSpider(BaseParseSpider, Mixin):
         return clean(hxs.select("//b[text()='Material:']/ancestor::div[1]/text()"))
 
     def product_category(self, hxs):
-        return clean([x.strip('>') for x in clean(hxs.select("//div[@class='breadcrumb_catalog']//text()"))[:-2]])
+        return clean([x.strip('>') for x in clean(hxs.select("//div[@class='breadcrumb_catalog']//text()"))[1:-2]])
 
     def product_description(self, hxs):
         return clean(hxs.select("//h2[starts-with(text(),'Markeninfo')]/preceding-sibling::"
