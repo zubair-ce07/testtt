@@ -84,8 +84,7 @@ class KickzParseSpider(BaseParseSpider, Mixin):
         hxs = HtmlXPathSelector(response)
         skus = {}
         color = self.take_first(clean(hxs.select("//span[@id='variantColorId']//text()")))
-        skus_data = clean(hxs.select("//div[@class='chooseSizeContainer'][1]/div/a/@onclick"))
-        skus_data = [re.search("'(.*)'", x).group().split("', '") for x in skus_data]
+        skus_data = [x.re("'(.*)'") for x in hxs.select("//div[@class='chooseSizeContainer'][1]/div/a/@onclick")]
 
         for sku_data in skus_data:
 
@@ -99,7 +98,7 @@ class KickzParseSpider(BaseParseSpider, Mixin):
             }
             if self.take_first(sku['previous_prices']) == sku['price']:
                     sku.pop('previous_prices')
-            skus[sku_data[0].strip("'")] = sku
+            skus[sku_data[0]] = sku
         return skus
 
     def sku_requests(self, hxs):
