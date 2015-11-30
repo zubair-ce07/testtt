@@ -55,8 +55,11 @@ class KickzParseSpider(BaseParseSpider, Mixin):
             self.log('Drop unwanted item at %s' % response.url)
             return
 
-        self.boilerplate_normal(garment, hxs, response)
+        self.boilerplate(garment, hxs, response)
+        garment['name'] = self.product_name(hxs)
+        garment['category'] = self.product_category(hxs)
         garment['brand'] = self.product_brand(garment)
+        garment['care'] = self.product_care(hxs)
         garment['gender'] = self.product_gender((self.product_name(hxs)).lower()) or response.meta.get('gender')
         if hxs.select("//span[@class='priceOfftxt'][starts-with(text(),'Leider ausverkauft')]"):
             garment['out_of_stock'] = 'True'
@@ -133,10 +136,6 @@ class KickzParseSpider(BaseParseSpider, Mixin):
     def product_category(self, hxs):
         category = clean([x.strip('>') for x in clean(hxs.select("//div[@class='breadcrumb_catalog']//text()"))[1:-2]])
         return list(map(itemgetter(0), groupby(category)))
-
-    def product_description(self, hxs):
-        return clean(hxs.select("//h2[starts-with(text(),'Markeninfo')]/preceding-sibling::"
-                                "div[@class='details_text']//text()[not(ancestor::style)]"))
 
     def product_brand(self, garment):
         return garment['category'][-1] if isinstance(garment, Garment) else None
