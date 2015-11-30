@@ -54,7 +54,8 @@ class KickzParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, hxs, response)
-        garment['gender'] = self.product_gender(hxs) or response.meta.get('gender')
+        garment['brand'] = self.product_brand(garment)
+        garment['gender'] = self.product_gender((self.product_name(hxs)).lower()) or response.meta.get('gender')
         garment['skus'] = self.skus(response)
         garment['image_urls'] = []
         garment['meta'] = {'requests_queue': self.sku_requests(hxs) + self.image_urls(hxs)}
@@ -108,10 +109,10 @@ class KickzParseSpider(BaseParseSpider, Mixin):
     def product_id(self, hxs):
         return self.take_first(clean(hxs.select("//input[@name='productErp']/@value")))
 
-    def product_gender(self, hxs):
-        if ('boy' or 'boys') in (self.product_name(hxs)).lower():
+    def product_gender(self, name):
+        if ('boy' or 'boys') in name:
             return 'boys'
-        if ('girls' or 'girl') in (self.product_name(hxs)).lower():
+        if ('girls' or 'girl') in name:
             return 'girls'
 
     def product_name(self, hxs):
