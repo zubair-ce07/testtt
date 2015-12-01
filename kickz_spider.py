@@ -81,16 +81,17 @@ class KickzParseSpider(BaseParseSpider, Mixin):
 
     def parse_image_urls(self, response):
         garment = response.meta['garment']
-        if response.status != 404:
+        if response.status != 404 and response.url not in garment['image_urls']:
             garment['image_urls'] += [response.url]
         else:
-            garment['meta'].update({'requests_queue':
-                        garment['meta'].get('requests_queue')[:-(6-int(re.search('(\d).jpg', response.url).group(1)))]})
+            for _ in range(6-int(re.search('(\d).jpg', response.url).group(1))):
+                garment['meta']['requests_queue'].pop()
+
         return self.next_request_or_garment(garment)
 
     def image_urls(self, hxs):
         image_urls = clean(hxs.select("//ul[@id='thumblist']//img[not(@style='display: none;')]/@data-zoom-img"))
-        return list(reversed([Request(url=x, callback=self.parse_image_urls) for x in image_urls]))
+        return list(reversed([Request(url=x, callback=self.parse_image_urls, dont_filter=True) for x in image_urls]))
 
     def skus(self, response):
         hxs = HtmlXPathSelector(response)
