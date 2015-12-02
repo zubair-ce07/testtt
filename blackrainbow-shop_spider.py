@@ -30,6 +30,7 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, hxs, response)
+        garment['category'] = self.product_category(response.url)
         garment['gender'] = 'men'
         garment['image_urls'] = self.image_urls(hxs)
         if self.out_of_stock(hxs):
