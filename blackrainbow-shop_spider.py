@@ -81,7 +81,7 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
         return self.take_first(clean(hxs.select("//div[@class='brand']//img/@alt")))
 
     def product_description(self, hxs):
-        return ''
+        return []
 
     def product_care(self, hxs):
         return []
