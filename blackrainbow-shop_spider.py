@@ -32,7 +32,6 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
             return self.out_of_stock_garment(response, pid)
         self.boilerplate_normal(garment, hxs, response)
         garment['category'] = self.product_category(response.url)
-        garment['gender'] = 'men'
         garment['image_urls'] = self.image_urls(hxs)
         garment['skus'] = self.skus(hxs)
         return garment
@@ -96,6 +95,6 @@ class BlackrainbowShopCrawlSpider(BaseCrawlSpider, Mixin):
         "//ul[@id='list-products']//li/a",
     ]
     rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse_and_add_men'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item'),
     )
