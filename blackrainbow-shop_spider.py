@@ -28,15 +28,13 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
         garment = self.new_unique_garment(pid)
         if garment is None:
             return
-
+        if self.out_of_stock(hxs):
+            return self.out_of_stock_garment(response, pid)
         self.boilerplate_normal(garment, hxs, response)
         garment['category'] = self.product_category(response.url)
         garment['gender'] = 'men'
         garment['image_urls'] = self.image_urls(hxs)
-        if self.out_of_stock(hxs):
-            return self.out_of_stock_garment(response, pid)
-        else:
-            garment['skus'] = self.skus(hxs)
+        garment['skus'] = self.skus(hxs)
         return garment
 
     def skus(self, hxs):
