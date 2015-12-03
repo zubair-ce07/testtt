@@ -78,7 +78,8 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
         return urlparse(url).path.split('/')[2:-1] if isinstance(url, str) else None
 
     def product_brand(self, hxs):
-        return self.take_first(clean(hxs.select("//div[@class='brand']//img/@alt")))
+        return self.take_first(clean(hxs.select("//div[@class='brand']//img/@alt"))) \
+               or self.product_name(hxs).split()[0]
 
     def product_description(self, hxs):
         return []
