@@ -37,7 +37,7 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
             return self.out_of_stock_garment(response, pid)
         else:
             garment['skus'] = self.skus(hxs)
-        return self.next_request_or_garment(garment)
+        return garment
 
     def skus(self, hxs):
         skus = {}
