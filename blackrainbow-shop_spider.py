@@ -43,22 +43,22 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
         skus = {}
         color = self.detect_colour(self.product_name(hxs).lower().replace('/', ' '))
         sizes = clean(hxs.select("//div[@id='attributes']/select/option/text()")) or [self.one_size]
-        products_data = [x.split(', ') for x in
-                         clean(hxs.select("//div[@id='center_column']/script/text()").re('addCombination\((.*)\);'))]
+        products_data = [x.split(', ') for x in clean(hxs.select("//div[@id='center_column']/script/text()")
+                                                      .re('addCombination\((.*)\);'))]
         previous_price, price, currency = self.product_pricing(hxs)
 
-        for size, product_data in zip(sizes, products_data):
+        for index, size in enumerate(sizes):
             size = self.one_size if size == 'TU' else size
             sku = {
                 'price': price,
                 'currency': currency,
                 'size': size,
                 'colour': color,
-                'out_of_stock': product_data[2] == '0',
+                'out_of_stock': products_data[index][2] == '0' if len(products_data) > 0 else False,
             }
             if previous_price:
                 sku['previous_prices'] = [previous_price]
-            skus[product_data[0]] = sku
+            skus[products_data[index][0] if len(products_data) > 0 else color + '_' + size] = sku
         return skus
 
     def out_of_stock(self, hxs):
@@ -92,7 +92,7 @@ class BlackrainbowShopCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = BlackrainbowShopParseSpider()
     listings_x = [
-        "//a[text()='HAUTS' or text()='BAS' or text()='CHAUSSURES' or text()='ACCESSORIES']/following::ul[1]/li",
+        "//a[text()='HAUTS' or text()='BAS' or text()='CHAUSSURES' or text()='ACCESSOIRES']/following::ul[1]/li",
     ]
     products_x = [
         "//ul[@id='list-products']//li/a",
