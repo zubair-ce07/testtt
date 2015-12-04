@@ -51,11 +51,11 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
                 'currency': currency,
                 'size': size,
                 'colour': color,
-                'out_of_stock': products_data[index][2] == '0' if len(products_data) > 0 else False,
+                'out_of_stock': products_data[index][2] == '0' if products_data else False,
             }
             if previous_price:
                 sku['previous_prices'] = [previous_price]
-            skus[products_data[index][0] if len(products_data) > 0 else color + '_' + size] = sku
+            skus[products_data[index][0] if products_data else color + '_' + size] = sku
         return skus
 
     def out_of_stock(self, hxs):
