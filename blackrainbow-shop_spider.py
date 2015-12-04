@@ -16,7 +16,7 @@ class Mixin(object):
     start_urls = ['http://www.blackrainbow-shop.com/fr/']
 
 
-class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
+class BlackrainbowParseSpider(BaseParseSpider, Mixin):
 
     name = Mixin.retailer + '-parse'
     price_x = "//span[@id='old_price_display']/text() | //span[@id='our_price_display']/text()"
@@ -86,9 +86,9 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
         return []
 
 
-class BlackrainbowShopCrawlSpider(BaseCrawlSpider, Mixin):
+class BlackrainbowCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
-    parse_spider = BlackrainbowShopParseSpider()
+    parse_spider = BlackrainbowParseSpider()
     listings_x = [
         "//a[text()='HAUTS' or text()='BAS' or text()='CHAUSSURES' or text()='ACCESSOIRES']/following::ul[1]/li",
     ]
