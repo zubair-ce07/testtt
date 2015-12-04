@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from base import BaseParseSpider, BaseCrawlSpider
-from base import clean
+from base import clean, tokenize
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.spiders import Rule
@@ -38,7 +38,7 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, hxs):
         skus = {}
-        color = self.detect_colour(self.product_name(hxs).lower().replace('/', ' '))
+        color = " ".join(clean(self.detect_colour(x) for x in tokenize(self.product_name(hxs))))
         sizes = clean(hxs.select("//div[@id='attributes']/select/option/text()")) or [self.one_size]
         products_data = [x.split(', ') for x in clean(hxs.select("//div[@id='center_column']/script/text()")
                                                       .re('addCombination\((.*)\);'))]
