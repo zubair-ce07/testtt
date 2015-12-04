@@ -9,7 +9,7 @@ from urlparse import urlparse
 
 
 class Mixin(object):
-    retailer = 'blackrainbow-shop-fr'
+    retailer = 'blackrainbow-fr'
     allowed_domains = ['www.blackrainbow-shop.com']
     market = 'FR'
     lang = 'fr'
@@ -29,7 +29,7 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
         if garment is None:
             return
         if self.out_of_stock(hxs):
-            return self.out_of_stock_garment(response, pid)
+            return self.out_of_stock_item(hxs, response, pid)
         self.boilerplate_normal(garment, hxs, response)
         garment['category'] = self.product_category(response.url)
         garment['image_urls'] = self.image_urls(hxs)
