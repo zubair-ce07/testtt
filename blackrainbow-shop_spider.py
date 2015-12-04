@@ -55,7 +55,8 @@ class BlackrainbowShopParseSpider(BaseParseSpider, Mixin):
             }
             if previous_price:
                 sku['previous_prices'] = [previous_price]
-            skus[products_data[index][0] if products_data else color + '_' + size] = sku
+            key = products_data[index][0] if products_data else color + '_' + size
+            skus[key] = sku
         return skus
 
     def out_of_stock(self, hxs):
