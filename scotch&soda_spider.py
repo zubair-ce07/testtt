@@ -129,8 +129,8 @@ class ScotchandSodaParseSpider(BaseParseSpider):
     def product_care(self, hxs):
         care1 = clean(hxs.select("//span[starts-with(text(), 'What it') or"
                                 " starts-with(text(), 'Woraus der Artikel')]/text()"))
-        care2 = self.raw_description(hxs)
-        return care1 + [x for x in care2 if self.care_criteria_simplified(x)]
+        raw_desc = self.raw_description(hxs)
+        return care1 + [x for x in raw_desc if self.care_criteria_simplified(x)]
 
 
 class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
@@ -145,7 +145,8 @@ class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
     ]
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: url_query_cleaner(r)), callback='parse_item'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: url_query_cleaner(r)),
+             callback='parse_item'),
     )
 
 
