@@ -11,7 +11,7 @@ from urlparse import urlparse
 
 
 class Mixin(object):
-    retailer = 'scotchsoda'
+    retailer = 'scotchandsoda'
     allowed_domains = ['www.scotch-soda.com']
     pfx = 'https://www.scotch-soda.com/'
 
@@ -28,7 +28,7 @@ class MixinDE(Mixin):
     start_urls = [Mixin.pfx + 'de/de/home']
 
 
-class ScotchSodaParseSpider(BaseParseSpider):
+class ScotchandSodaParseSpider(BaseParseSpider):
 
     price_x = "//span[@class='product-price']//text()"
     take_first = TakeFirst()
@@ -131,7 +131,7 @@ class ScotchSodaParseSpider(BaseParseSpider):
         return care1 + [x for x in care2 if self.care_criteria_simplified(x)]
 
 
-class ScotchSodaCrawlSpider(BaseCrawlSpider, Mixin):
+class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
 
     listings_x = [
         "//li[@class='pagination__item pagination__item--next']/a",
@@ -147,21 +147,21 @@ class ScotchSodaCrawlSpider(BaseCrawlSpider, Mixin):
     )
 
 
-class ScotchSodaUKParseSpider(ScotchSodaParseSpider, MixinUK):
+class ScotchandSodaUKParseSpider(ScotchandSodaParseSpider, MixinUK):
     name = MixinUK.retailer + '-parse'
 
 
-class ScotchSodaUKCrawlSpider(ScotchSodaCrawlSpider, MixinUK):
+class ScotchandSodaUKCrawlSpider(ScotchandSodaCrawlSpider, MixinUK):
     name = MixinUK.retailer + '-crawl'
-    parse_spider = ScotchSodaUKParseSpider()
+    parse_spider = ScotchandSodaUKParseSpider()
 
 
-class ScotchSodaDEParseSpider(ScotchSodaParseSpider, MixinDE):
+class ScotchandSodaDEParseSpider(ScotchandSodaParseSpider, MixinDE):
     name = MixinDE.retailer + '-parse'
 
 
-class ScotchSodaDECrawlSpider(ScotchSodaCrawlSpider, MixinDE):
+class ScotchandSodaDECrawlSpider(ScotchandSodaCrawlSpider, MixinDE):
     name = MixinDE.retailer + '-crawl'
-    parse_spider = ScotchSodaDEParseSpider()
+    parse_spider = ScotchandSodaDEParseSpider()
 
 
