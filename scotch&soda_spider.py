@@ -79,8 +79,8 @@ class ScotchandSodaParseSpider(BaseParseSpider):
                                  "__list js-collapsible--pdp']/li/a/text()"))
         for color in colors:
             for size in sizes:
-                yield Request(url=color + '&dwvar_' + self.product_id(hxs) + '_size=' + size +
-                                   '&format=ajax&Quantity=1',callback=self.parse_skus)
+                sku_url = color + '&dwvar_' + self.product_id(hxs) + '_size=' + size + '&format=ajax&Quantity=1'
+                yield Request(url=sku_url, callback=self.parse_skus)
 
     def skus(self, response):
         hxs = HtmlXPathSelector(response)
