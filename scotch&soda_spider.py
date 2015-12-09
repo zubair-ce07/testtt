@@ -86,8 +86,9 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         hxs = HtmlXPathSelector(response)
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
-        color = url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_color')
-        size = url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_size')
+        pid = 'dwvar_' + url_query_parameter(response.url, 'pid')
+        color = url_query_parameter(response.url, pid + '_color')
+        size = url_query_parameter(response.url, pid + '_size')
         size = self.one_size if size == 'OS' or (not size) else size
         sku = {
             'price': price,
