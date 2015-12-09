@@ -6,7 +6,7 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
 from scrapy.http import Request
-from scrapy.utils.url import url_query_parameter as uqp, url_query_cleaner as uqc
+from scrapy.utils.url import url_query_parameter, url_query_cleaner
 from urlparse import urlparse
 
 
@@ -67,7 +67,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
     def parse_skus(self, response):
         garment = response.meta['garment']
         hxs = HtmlXPathSelector(response)
-        if uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') + '_color') not in \
+        if url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_color') not in \
                 [x.get('color') for x in garment['skus'].itervalues()]:
             garment['image_urls'] += self.image_urls(hxs)
         garment['skus'].update(self.skus(response))
@@ -84,8 +84,8 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         hxs = HtmlXPathSelector(response)
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
-        color = uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') + '_color')
-        size = uqp(response.url, 'dwvar_' + uqp(response.url, 'pid') + '_size')
+        color = url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_color')
+        size = url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_size')
         size = self.one_size if size == 'OS' or (not size) else size
         sku = {
             'price': price,
@@ -143,7 +143,7 @@ class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
     ]
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: uqc(r)), callback='parse_item'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: url_query_cleaner(r)), callback='parse_item'),
     )
 
 
