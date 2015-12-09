@@ -32,7 +32,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
     price_x = "//span[@class='product-price']//text()"
     take_first = TakeFirst()
-    gender_map = {
+    brand_map = {
         u'women': u'Maison Scotch',
         u'damen': u'Maison Scotch',
         u'men': u'Scotch & Soda',
@@ -77,8 +77,10 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         colors = clean(hxs.select("//ul[@id='js-swatches']/li/a/@href"))
         sizes = clean(hxs.select("//ul[@class='swatches size product-property__list product-property--sizes"
                                  "__list js-collapsible--pdp']/li/a/text()"))
-        return [Request(url=color + '&dwvar_' + self.product_id(hxs) + '_size=' + size + '&format=ajax&Quantity=1',
-                        callback=self.parse_skus) for color in colors for size in sizes]
+        for color in colors:
+            for size in sizes:
+                yield Request(url=color + '&dwvar_' + self.product_id(hxs) + '_size=' + size +
+                                   '&format=ajax&Quantity=1',callback=self.parse_skus)
 
     def skus(self, response):
         hxs = HtmlXPathSelector(response)
@@ -115,7 +117,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
     def product_brand(self, category):
         category = unicode(category)
-        return self.gender_map.get(category) if isinstance(category, unicode) else None
+        return self.brand_map.get(category) if isinstance(category, unicode) else None
 
     def raw_description(self, hxs):
         return clean(hxs.select("//span[@class='fabric']//li/text()"))
