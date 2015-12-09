@@ -7,6 +7,7 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
 from scrapy.http import Request
 from scrapy.utils.url import url_query_parameter as uqp, url_query_cleaner as uqc
+from urlparse import urlparse
 
 
 class Mixin(object):
@@ -32,15 +33,16 @@ class ScotchSodaParseSpider(BaseParseSpider):
     price_x = "//span[@class='product-price']//text()"
     take_first = TakeFirst()
     gender_map = {
-        u'Women': u'Maison Scotch',
-        u'Damen': u'Maison Scotch',
-        u'Men': u'Scotch & Soda',
-        u'Herren': u'Scotch & Soda',
-        u'Girls': u"Scotch R'Belle",
-        u'Mädchen': u"Scotch R'Belle",
-        u'Boys': u'Scotch Shrunk',
-        u'Jungen': u'Scotch Shrunk',
-        u'Living': u'Scotch & Soda',
+        u'women': u'Maison Scotch',
+        u'damen': u'Maison Scotch',
+        u'men': u'Scotch & Soda',
+        u'herren': u'Scotch & Soda',
+        u'girls': u"Scotch R'Belle",
+        u'mädchen': u"Scotch R'Belle",
+        u'madchen': u"Scotch R'Belle",
+        u'boys': u'Scotch Shrunk',
+        u'jungen': u'Scotch Shrunk',
+        u'living': u'Scotch & Soda',
     }
 
     def parse(self, response):
@@ -50,11 +52,12 @@ class ScotchSodaParseSpider(BaseParseSpider):
         if garment is None:
             return
         self.boilerplate_normal(garment, hxs, response)
-        if 'Living' in garment['category']:
+        garment['category'] = self.product_category(response)
+        if 'living' in [x.lower() for x in garment['category']]:
             garment['industry'] = 'homeware'
         else:
             garment['gender'] = garment['category'][0]
-        garment['brand'] = self.product_brand(garment['category'][0])
+        garment['brand'] = self.product_brand(garment['category'][0].lower())
         garment['skus'] = {}
         garment['image_urls'] = []
         garment['meta'] = {'requests_queue': self.skus_requests(hxs)}
@@ -105,10 +108,13 @@ class ScotchSodaParseSpider(BaseParseSpider):
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h2[@class='product-name']/text()")))
 
-    def product_category(self, hxs):
-        return clean(hxs.select("//div[@class='grid__unit s-1-1 breadcrumbs']//li//text()"))[1:]
+    def product_category(self, response):
+        if not isinstance(response, HtmlXPathSelector):
+            return clean(HtmlXPathSelector(response).select("//div[@class='grid__unit s-1-1 breadcrumbs']//li//text()")
+                        )[1:] or urlparse(response.url).path.split('/')[4:-2]
 
     def product_brand(self, category):
+        category = unicode(category)
         return self.gender_map.get(category) if isinstance(category, unicode) else None
 
     def raw_description(self, hxs):
