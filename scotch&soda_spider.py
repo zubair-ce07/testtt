@@ -81,7 +81,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         if url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_color') not in \
                 [x.get('color') for x in garment['skus'].itervalues()]:
             garment['image_urls'] += self.image_urls(hxs)
-        garment['skus'].update(self.skus(response))
+        garment['skus'].update(self.skus(hxs, response.url))
         return self.next_request_or_garment(garment)
 
     def skus_requests(self, hxs):
@@ -95,13 +95,12 @@ class ScotchandSodaParseSpider(BaseParseSpider):
                 requests += [Request(url=sku_url, callback=self.parse_skus)]
         return requests
 
-    def skus(self, response):
-        hxs = HtmlXPathSelector(response)
+    def skus(self, hxs, url):
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
-        pid = 'dwvar_' + url_query_parameter(response.url, 'pid')
-        color = url_query_parameter(response.url, pid + '_color')
-        size = url_query_parameter(response.url, pid + '_size')
+        pid = 'dwvar_' + url_query_parameter(url, 'pid')
+        color = url_query_parameter(url, pid + '_color')
+        size = url_query_parameter(url, pid + '_size')
         size = self.one_size if size == 'OS' or (not size) else size
         sku = {
             'price': price,
