@@ -58,7 +58,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         if 'living' in [x.lower() for x in garment['category']]:
             garment['industry'] = 'homeware'
         else:
-            garment['gender'] = garment['category'][0].replace(u'\xe4', u'a')
+            garment['gender'] = garment['category'][0].replace(u'\xe4', u'a').lower()
 
         garment['brand'] = self.product_brand(garment['category'][0].lower())
         garment['skus'] = {}
@@ -126,17 +126,18 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         return self.brand_map.get(category) if isinstance(category, unicode) else None
 
     def raw_description(self, hxs):
-        return clean(hxs.select("//span[@class='fabric']//li/text()"))
+        return clean(hxs.select("//span[@class='fabric']//li/text() |"
+                                " //div[@class='product-short-description']/text()"))
 
     def product_description(self, hxs):
         raw_desc = self.raw_description(hxs)
-        return [x for x in raw_desc if not self.care_criteria_simplified(x)]
+        return [x for x in raw_desc if not self.care_criteria(x)]
 
     def product_care(self, hxs):
         care = clean(hxs.select("//span[starts-with(text(), 'What it') or"
                                 " starts-with(text(), 'Woraus der Artikel')]/text()"))
         raw_desc = self.raw_description(hxs)
-        return care + [x for x in raw_desc if self.care_criteria_simplified(x)]
+        return care + [x for x in raw_desc if self.care_criteria(x)]
 
 
 class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
