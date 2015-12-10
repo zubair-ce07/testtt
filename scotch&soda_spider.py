@@ -26,6 +26,13 @@ class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
     start_urls = [Mixin.pfx + 'de/de/home']
+    gender_map = {
+        u'damen': u'women',
+        u'herren': u'men',
+        u'mädchen': u'girls',
+        u'madchen': u'girls',
+        u'jungen': u'boys',
+    }
 
 
 class ScotchandSodaParseSpider(BaseParseSpider):
@@ -58,7 +65,8 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         if 'living' in [x.lower() for x in garment['category']]:
             garment['industry'] = 'homeware'
         else:
-            garment['gender'] = garment['category'][0].replace(u'\xe4', u'a').lower()
+            gender = garment['category'][0].replace(u'\xe4', u'a').lower()
+            garment['gender'] = self.gender_map.get(gender, '') if hasattr(self, 'gender_map') else gender
 
         garment['brand'] = self.product_brand(garment['category'][0].lower())
         garment['skus'] = {}
