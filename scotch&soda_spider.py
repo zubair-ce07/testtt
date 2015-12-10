@@ -51,12 +51,15 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         garment = self.new_unique_garment(pid)
         if garment is None:
             return
+
         self.boilerplate_normal(garment, hxs, response)
+
         garment['category'] = self.product_category(response)
         if 'living' in [x.lower() for x in garment['category']]:
             garment['industry'] = 'homeware'
         else:
             garment['gender'] = garment['category'][0]
+
         garment['brand'] = self.product_brand(garment['category'][0].lower())
         garment['skus'] = {}
         garment['image_urls'] = []
