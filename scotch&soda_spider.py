@@ -36,7 +36,6 @@ class MixinDE(Mixin):
 
 
 class ScotchandSodaParseSpider(BaseParseSpider):
-
     price_x = "//span[@class='product-price']//text()"
     take_first = TakeFirst()
     brand_map = {
@@ -54,9 +53,10 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
+
         pid = self.product_id(hxs)
         garment = self.new_unique_garment(pid)
-        if garment is None:
+        if not garment:
             return
 
         self.boilerplate_normal(garment, hxs, response)
@@ -78,10 +78,14 @@ class ScotchandSodaParseSpider(BaseParseSpider):
     def parse_skus(self, response):
         garment = response.meta['garment']
         hxs = HtmlXPathSelector(response)
-        if url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_color') not in \
-                [x.get('color') for x in garment['skus'].itervalues()]:
+
+        sku_color = url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_color')
+        parsed_colors = [x.get('color') for x in garment['skus'].itervalues()]
+        if sku_color not in parsed_colors:
             garment['image_urls'] += self.image_urls(hxs)
-        garment['skus'].update(self.skus(response))
+
+        garment['skus'].update(self.skus(hxs, response.url))
+
         return self.next_request_or_garment(garment)
 
     def skus_requests(self, hxs):
@@ -89,20 +93,24 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         sizes = clean(hxs.select("//ul[@class='swatches size product-property__list product-property--sizes"
                                  "__list js-collapsible--pdp']/li/a/text()"))
         requests = []
+        sku_url_t = '%s&dwvar_' + self.product_id(hxs) + '_size=%s&format=ajax&Quantity=1'
         for color in colors:
             for size in sizes:
-                sku_url = color + '&dwvar_' + self.product_id(hxs) + '_size=' + size + '&format=ajax&Quantity=1'
-                requests += [Request(url=sku_url, callback=self.parse_skus)]
+                sku_url = sku_url_t % (color, size)
+                requests.append(Request(sku_url, callback=self.parse_skus))
+
         return requests
 
-    def skus(self, response):
-        hxs = HtmlXPathSelector(response)
+    def skus(self, hxs, url):
         skus = {}
         previous_price, price, currency = self.product_pricing(hxs)
-        pid = 'dwvar_' + url_query_parameter(response.url, 'pid')
-        color = url_query_parameter(response.url, pid + '_color')
-        size = url_query_parameter(response.url, pid + '_size')
+
+        pid = 'dwvar_' + url_query_parameter(url, 'pid')
+        color = url_query_parameter(url, pid + '_color')
+        size = url_query_parameter(url, pid + '_size')
+
         size = self.one_size if size == 'OS' or (not size) else size
+
         sku = {
             'price': price,
             'currency': currency,
@@ -110,9 +118,12 @@ class ScotchandSodaParseSpider(BaseParseSpider):
             'color': color,
             'out_of_stock': bool(hxs.select("//span[@class='out-of-stock']")),
         }
+
         if previous_price:
             sku['previous_prices'] = [previous_price]
+
         skus[color + '_' + size if color else size] = sku
+
         return skus
 
     def product_id(self, hxs):
@@ -125,9 +136,13 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         return self.take_first(clean(hxs.select("//h2[@class='product-name']/text()")))
 
     def product_category(self, response):
-        if isinstance(response, Response):
-            return clean(HtmlXPathSelector(response).select("//div[@class='grid__unit s-1-1 breadcrumbs']//li//text()")
-                        )[1:] or urlparse(response.url).path.split('/')[4:-2]
+        if not isinstance(response, Response):
+            return
+
+        xpath = "//div[contains(@class,'breadcrumbs')]//li//text()"
+        # The or part is for a rare case when breadcrumbs are empty
+        return clean(HtmlXPathSelector(response).select(xpath))[1:] or\
+               urlparse(response.url).path.split('/')[4:-2]
 
     def product_brand(self, category):
         category = unicode(category)
@@ -182,5 +197,3 @@ class ScotchandSodaDEParseSpider(ScotchandSodaParseSpider, MixinDE):
 class ScotchandSodaDECrawlSpider(ScotchandSodaCrawlSpider, MixinDE):
     name = MixinDE.retailer + '-crawl'
     parse_spider = ScotchandSodaDEParseSpider()
-
-
