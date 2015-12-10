@@ -5,7 +5,7 @@ from scrapy.contrib.spiders import Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
-from scrapy.http import Request
+from scrapy.http import Request, Response
 from scrapy.utils.url import url_query_parameter, url_query_cleaner
 from urlparse import urlparse
 
@@ -80,10 +80,12 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         colors = clean(hxs.select("//ul[@id='js-swatches']/li/a/@href"))
         sizes = clean(hxs.select("//ul[@class='swatches size product-property__list product-property--sizes"
                                  "__list js-collapsible--pdp']/li/a/text()"))
+        requests = []
         for color in colors:
             for size in sizes:
                 sku_url = color + '&dwvar_' + self.product_id(hxs) + '_size=' + size + '&format=ajax&Quantity=1'
-                yield Request(url=sku_url, callback=self.parse_skus)
+                requests += [Request(url=sku_url, callback=self.parse_skus)]
+        return requests
 
     def skus(self, response):
         hxs = HtmlXPathSelector(response)
@@ -115,7 +117,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         return self.take_first(clean(hxs.select("//h2[@class='product-name']/text()")))
 
     def product_category(self, response):
-        if not isinstance(response, HtmlXPathSelector):
+        if isinstance(response, Response):
             return clean(HtmlXPathSelector(response).select("//div[@class='grid__unit s-1-1 breadcrumbs']//li//text()")
                         )[1:] or urlparse(response.url).path.split('/')[4:-2]
 
@@ -131,22 +133,23 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         return [x for x in raw_desc if not self.care_criteria_simplified(x)]
 
     def product_care(self, hxs):
-        care1 = clean(hxs.select("//span[starts-with(text(), 'What it') or"
+        care = clean(hxs.select("//span[starts-with(text(), 'What it') or"
                                 " starts-with(text(), 'Woraus der Artikel')]/text()"))
         raw_desc = self.raw_description(hxs)
-        return care1 + [x for x in raw_desc if self.care_criteria_simplified(x)]
+        return care + [x for x in raw_desc if self.care_criteria_simplified(x)]
 
 
 class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
-
     listings_x = [
         "//li[@class='pagination__item pagination__item--next']/a",
         "//b[@class='nav-dropdown__h'][contains(text(), 'Categories') or contains(text(), 'Kategorien')]"
         "/parent::div//ul",
     ]
+
     products_x = [
         "//ul[@id='js-search-result-items']//a",
     ]
+
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: url_query_cleaner(r)),
