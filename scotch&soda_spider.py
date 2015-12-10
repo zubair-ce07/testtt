@@ -58,7 +58,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         if 'living' in [x.lower() for x in garment['category']]:
             garment['industry'] = 'homeware'
         else:
-            garment['gender'] = garment['category'][0]
+            garment['gender'] = garment['category'][0].replace(u'\xe4', u'a')
 
         garment['brand'] = self.product_brand(garment['category'][0].lower())
         garment['skus'] = {}
