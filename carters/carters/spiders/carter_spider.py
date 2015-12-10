@@ -1,42 +1,40 @@
 # -*- coding: utf-8 -*-
 import re
 
-import scrapy
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy.http.request import Request
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 
 from carters.items import CartersProduct
 
 
-class CarterSpiderSpider(scrapy.Spider):
+class CarterSpiderSpider(CrawlSpider):
     name = "carter_spider"
     start_urls = (
         'http://www.carters.com/',
     )
     categories_link = set()
     products_link = set()
-    product_variations_link = set()
     added_product_ids = set()
 
-    def parse(self, response):
-        return self.parse_categories_links(response)
-
-    def parse_categories_links(self, response):
-        self.categories_link.update(response.xpath(
-            ".//*[@id='navigation']/nav/ul/li//div[@class='subnav-categories']//li[contains(@class,'carters')]//a/@href"
-            ).extract())
-        return self.get_next_category()
-
-    def get_next_category(self):
-        if self.categories_link:
-            simple_url = self.categories_link.pop()
-            view_all_url = "{0}?cgid={1}&startRow=0&sz=all".format(simple_url.rsplit('?', 1)[0],
-                                                                   simple_url.rsplit('/', 1)[1].rsplit('?', 1)[0])
-            return Request(view_all_url, callback=self.parse_products_links)
-        return self.get_next_product()
+    rules = (
+        Rule(SgmlLinkExtractor(
+            allow='.com/carters-[a-z-0-9]+\?navID=header',
+            deny='outfits',
+            restrict_xpaths=".//*[@id='navigation']/nav/ul/li//div[@class='subnav-categories']"),
+            callback="parse_products_links", process_links="process_category_links"))
 
     def get_next_product(self):
         if self.products_link:
             return Request(self.products_link.pop(), callback=self.parse_product)
+
+    def process_category_links(self, links):
+        processed_links = set()
+        for link in links:
+            link.url = "{0}?cgid={1}&startRow=0&sz=all".format(link.url.rsplit('?', 1)[0],
+                                                               link.url.rsplit('/', 1)[1].rsplit('?', 1)[0])
+            processed_links.add(link)
+        return processed_links
 
     def parse_products_links(self, response):
         for link in response.xpath(".//li[@class='grid-tile']//div[@class='product-image']/a/@href").extract():
@@ -44,7 +42,7 @@ class CarterSpiderSpider(scrapy.Spider):
                 link = 'http://www.carters.com{0}'.format(link)
             if self.is_valid_link(link):
                 self.products_link.add(link)
-        return self.get_next_category()
+        return self.get_next_product()
 
     def parse_product(self, response):
         product = CartersProduct()
@@ -58,19 +56,21 @@ class CarterSpiderSpider(scrapy.Spider):
         product['description'], product['care'] = self.product_description_and_care(response)
         product['gender'] = self.detect_gender(response.url)
         product['skus'] = {}
-        self.product_variations_link.update(response.xpath(".//li[@class='emptyswatch']/a/@href").extract())
-        return self.get_next_size(product)
+        product_variations_link = set(response.xpath(".//li[@class='emptyswatch']/a/@href").extract())
+        return self.get_next_size(product, product_variations_link)
 
-    def get_next_size(self, product):
-        if self.product_variations_link:
-            yield Request(self.product_variations_link.pop(), callback=self.parse_product_variation,
-                          meta={"product": product}, dont_filter=True)
+    def get_next_size(self, product, product_variations_link):
+        if product_variations_link:
+            yield Request(product_variations_link.pop(), callback=self.parse_product_variation,
+                          meta={"product": product, "product_variations_link": product_variations_link},
+                          dont_filter=True)
             return
         yield product
         yield self.get_next_product()
 
     def parse_product_variation(self, response):
         product = response.meta['product']
+        product_variations_link = response.meta['product_variations_link']
         size_details = {}
         size_details['colour'] = self.product_color(response)
         size_details['size'] = self.product_size(response)
@@ -79,7 +79,7 @@ class CarterSpiderSpider(scrapy.Spider):
         size_details['currency'] = self.get_currency_symbol(price)
         size_details['previous_prices'] = self.product_previous_prices(response)
         product['skus']['{0}_{1}'.format(size_details['colour'], size_details['size'])] = size_details
-        return self.get_next_size(product)
+        return self.get_next_size(product, product_variations_link)
 
     def is_valid_link(self, link):
         if 'outfits' not in link:
@@ -88,7 +88,6 @@ class CarterSpiderSpider(scrapy.Spider):
                 self.added_product_ids.add(product_id)
                 return True
         return False
-
 
     def detect_gender(self, url):
         if 'boy' in url:
@@ -134,9 +133,9 @@ class CarterSpiderSpider(scrapy.Spider):
             care_index = ""
         return self.normaliz_string_list(node.xpath(
             ".//ul[@class='benefits']//text() | .//ul[@class='customSpecs']//*[position() != last(){0} ]//text()"
-            .format(care_index)).extract()),\
-            [self.get_line_from_node(
-                node.xpath(".//ul[@class='customSpecs']//*[position() = last(){0}]".format(care_index)))]
+            .format(care_index)).extract()), \
+               [self.get_line_from_node(
+                   node.xpath(".//ul[@class='customSpecs']//*[position() = last(){0}]".format(care_index)))]
 
     def get_price_digits(self, price):
         return re.sub('\D', '', price)
