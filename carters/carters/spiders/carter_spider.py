@@ -13,20 +13,17 @@ class CarterSpiderSpider(CrawlSpider):
     start_urls = (
         'http://www.carters.com/',
     )
-    categories_link = set()
-    products_link = set()
     added_product_ids = set()
-
     rules = (
         Rule(SgmlLinkExtractor(
-            allow='.com/carters-[a-z-0-9]+\?navID=header',
+            allow='.com/carters-[-a-z0-9]+\?navID=header',
             deny='outfits',
             restrict_xpaths=".//*[@id='navigation']/nav/ul/li//div[@class='subnav-categories']"),
-            callback="parse_products_links", process_links="process_category_links"))
-
-    def get_next_product(self):
-        if self.products_link:
-            return Request(self.products_link.pop(), callback=self.parse_product)
+            process_links="process_category_links"),
+        Rule(SgmlLinkExtractor(
+            restrict_xpaths=".//li[@class='grid-tile']//div[@class='product-image']", unique=True),
+            callback="parse_product", process_links="process_product_links")
+    )
 
     def process_category_links(self, links):
         processed_links = set()
@@ -36,13 +33,14 @@ class CarterSpiderSpider(CrawlSpider):
             processed_links.add(link)
         return processed_links
 
-    def parse_products_links(self, response):
-        for link in response.xpath(".//li[@class='grid-tile']//div[@class='product-image']/a/@href").extract():
-            if 'http' not in link:
-                link = 'http://www.carters.com{0}'.format(link)
-            if self.is_valid_link(link):
-                self.products_link.add(link)
-        return self.get_next_product()
+    def process_product_links(self, links):
+        processed_links = []
+        for link in links:
+            if 'http' not in link.url:
+                link.url = 'http://www.carters.com{0}'.format(link.url)
+            if self.is_valid_link(link.url):
+                processed_links.append(link)
+        return processed_links
 
     def parse_product(self, response):
         product = CartersProduct()
@@ -61,12 +59,10 @@ class CarterSpiderSpider(CrawlSpider):
 
     def get_next_size(self, product, product_variations_link):
         if product_variations_link:
-            yield Request(product_variations_link.pop(), callback=self.parse_product_variation,
+            return Request(product_variations_link.pop(), callback=self.parse_product_variation,
                           meta={"product": product, "product_variations_link": product_variations_link},
                           dont_filter=True)
-            return
-        yield product
-        yield self.get_next_product()
+        return product
 
     def parse_product_variation(self, response):
         product = response.meta['product']
@@ -134,8 +130,8 @@ class CarterSpiderSpider(CrawlSpider):
         return self.normaliz_string_list(node.xpath(
             ".//ul[@class='benefits']//text() | .//ul[@class='customSpecs']//*[position() != last(){0} ]//text()"
             .format(care_index)).extract()), \
-               [self.get_line_from_node(
-                   node.xpath(".//ul[@class='customSpecs']//*[position() = last(){0}]".format(care_index)))]
+            [self.get_line_from_node(
+                node.xpath(".//ul[@class='customSpecs']//*[position() = last(){0}]".format(care_index)))]
 
     def get_price_digits(self, price):
         return re.sub('\D', '', price)
