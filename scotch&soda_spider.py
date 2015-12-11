@@ -6,7 +6,6 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
 from scrapy.http import Request, Response
-from scrapy.utils.url import url_query_parameter, url_query_cleaner
 from urlparse import urlparse
 
 
@@ -36,7 +35,6 @@ class MixinDE(Mixin):
 
 
 class ScotchandSodaParseSpider(BaseParseSpider):
-
     price_x = "//span[@class='product-price']//text()"
     take_first = TakeFirst()
     brand_map = {
@@ -54,9 +52,10 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
+
         pid = self.product_id(hxs)
         garment = self.new_unique_garment(pid)
-        if garment is None:
+        if not garment:
             return
 
         self.boilerplate_normal(garment, hxs, response)
@@ -69,8 +68,8 @@ class ScotchandSodaParseSpider(BaseParseSpider):
             garment['gender'] = self.gender_map.get(gender, '') if hasattr(self, 'gender_map') else gender
 
         garment['brand'] = self.product_brand(garment['category'][0].lower())
-        garment['skus'] = {}
-        garment['image_urls'] = []
+        garment['skus'] = self.skus(hxs)
+        garment['image_urls'] = self.image_urls(hxs)
         garment['meta'] = {'requests_queue': self.skus_requests(hxs)}
 
         return self.next_request_or_garment(garment)
@@ -78,40 +77,44 @@ class ScotchandSodaParseSpider(BaseParseSpider):
     def parse_skus(self, response):
         garment = response.meta['garment']
         hxs = HtmlXPathSelector(response)
-        if url_query_parameter(response.url, 'dwvar_' + url_query_parameter(response.url, 'pid') + '_color') not in \
-                [x.get('color') for x in garment['skus'].itervalues()]:
-            garment['image_urls'] += self.image_urls(hxs)
-        garment['skus'].update(self.skus(hxs, response.url))
+
+        garment['image_urls'] += self.image_urls(hxs)
+        garment['skus'].update(self.skus(hxs))
+
         return self.next_request_or_garment(garment)
 
     def skus_requests(self, hxs):
-        colors = clean(hxs.select("//ul[@id='js-swatches']/li/a/@href"))
+        color_urls = clean(hxs.select("//li[@class='emptyswatch product-property__item color-swatch js-color-selector']"
+                                      "/a/@href"))
+        return [Request(color_url, callback=self.parse_skus) for color_url in color_urls]
+
+    def skus(self, hxs):
+        skus = {}
+        oos_xpath = "//a[text()='%s']/parent::li/@class"
+        previous_price, price, currency = self.product_pricing(hxs)
+
+        color = self.take_first(clean(hxs.select("//span[@class='product-property__label-value mobile-hidden']/b"
+                                                 "/text()")))
         sizes = clean(hxs.select("//ul[@class='swatches size product-property__list product-property--sizes"
                                  "__list js-collapsible--pdp']/li/a/text()"))
-        requests = []
-        for color in colors:
-            for size in sizes:
-                sku_url = color + '&dwvar_' + self.product_id(hxs) + '_size=' + size + '&format=ajax&Quantity=1'
-                requests += [Request(url=sku_url, callback=self.parse_skus)]
-        return requests
 
-    def skus(self, hxs, url):
-        skus = {}
-        previous_price, price, currency = self.product_pricing(hxs)
-        pid = 'dwvar_' + url_query_parameter(url, 'pid')
-        color = url_query_parameter(url, pid + '_color')
-        size = url_query_parameter(url, pid + '_size')
-        size = self.one_size if size == 'OS' or (not size) else size
-        sku = {
-            'price': price,
-            'currency': currency,
-            'size': size,
-            'color': color,
-            'out_of_stock': bool(hxs.select("//span[@class='out-of-stock']")),
-        }
-        if previous_price:
-            sku['previous_prices'] = [previous_price]
-        skus[color + '_' + size if color else size] = sku
+        sizes = [self.one_size if x == 'OS' or (not x) else x for x in sizes]
+
+        for size in sizes:
+            sku = {
+                'price': price,
+                'currency': currency,
+                'size': size,
+                'color': color,
+                'out_of_stock': self.take_first(clean(hxs.select(oos_xpath % size))) ==
+                                'product-property__item emptyswatch not-available js-size-selector',
+            }
+
+            if previous_price:
+                sku['previous_prices'] = [previous_price]
+
+            skus[color + '_' + size if color else size] = sku
+
         return skus
 
     def product_id(self, hxs):
@@ -124,9 +127,13 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         return self.take_first(clean(hxs.select("//h2[@class='product-name']/text()")))
 
     def product_category(self, response):
-        if isinstance(response, Response):
-            return clean(HtmlXPathSelector(response).select("//div[@class='grid__unit s-1-1 breadcrumbs']//li//text()")
-                        )[1:] or urlparse(response.url).path.split('/')[4:-2]
+        if not isinstance(response, Response):
+            return
+
+        xpath = "//div[contains(@class,'breadcrumbs')]//li//text()"
+        # The or part is for a rare case when breadcrumbs are empty
+        return clean(HtmlXPathSelector(response).select(xpath))[1:] or\
+               urlparse(response.url).path.split('/')[4:-2]
 
     def product_brand(self, category):
         category = unicode(category)
@@ -160,7 +167,7 @@ class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=products_x, process_value=lambda r: url_query_cleaner(r)),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x),
              callback='parse_item'),
     )
 
@@ -181,5 +188,3 @@ class ScotchandSodaDEParseSpider(ScotchandSodaParseSpider, MixinDE):
 class ScotchandSodaDECrawlSpider(ScotchandSodaCrawlSpider, MixinDE):
     name = MixinDE.retailer + '-crawl'
     parse_spider = ScotchandSodaDEParseSpider()
-
-
