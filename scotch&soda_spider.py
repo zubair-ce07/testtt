@@ -98,13 +98,12 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         sizes = clean(hxs.select("//ul[@class='swatches size product-property__list product-property--sizes"
                                  "__list js-collapsible--pdp']/li/a/text()"))
 
-        sizes = [self.one_size if x == 'OS' or (not x) else x for x in sizes]
-
         for size in sizes:
+            size_m = self.one_size if size == 'OS' or (not size) else size
             sku = {
                 'price': price,
                 'currency': currency,
-                'size': size,
+                'size': size_m,
                 'color': color,
                 'out_of_stock': self.take_first(clean(hxs.select(oos_xpath % size))) ==
                                 'product-property__item emptyswatch not-available js-size-selector',
@@ -113,7 +112,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
             if previous_price:
                 sku['previous_prices'] = [previous_price]
 
-            skus[color + '_' + size if color else size] = sku
+            skus[color + '_' + size_m if color else size_m] = sku
 
         return skus
 
@@ -133,7 +132,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         xpath = "//div[contains(@class,'breadcrumbs')]//li//text()"
         # The or part is for a rare case when breadcrumbs are empty
         return clean(HtmlXPathSelector(response).select(xpath))[1:] or\
-               urlparse(response.url).path.split('/')[4:-2]
+               urlparse(response.url).path.split('/')[3:-2]
 
     def product_brand(self, category):
         category = unicode(category)
