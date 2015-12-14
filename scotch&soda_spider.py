@@ -101,7 +101,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
                 'price': price,
                 'currency': currency,
                 'size': size_m,
-                'color': color,
+                'colour': color,
                 'out_of_stock': 'not-available' in self.take_first(clean(hxs.select(oos_xpath % size))),
             }
 
