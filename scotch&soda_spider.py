@@ -137,8 +137,8 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
         xpath = "//div[contains(@class,'breadcrumbs')]//li//text()"
         # The or part is for a rare case when breadcrumbs are empty
-        return clean([x.strip('Sale US') for x in clean(HtmlXPathSelector(response).select(xpath))[1:]]) or\
-               urlparse(response.url).path.split('/')[3:-2]
+        return clean([x.replace('Sale US', '') for x in clean(HtmlXPathSelector(response).select(xpath))[1:]]) or\
+               clean([x.replace('sale-us', '') for x in urlparse(response.url).path.split('/')[3:-2]])
 
     def product_brand(self, category):
         category = unicode(category)
