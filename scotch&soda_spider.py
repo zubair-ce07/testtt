@@ -92,8 +92,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         oos_xpath = "//a[text()='%s']/parent::li/@class"
         previous_price, price, currency = self.product_pricing(hxs)
 
-        color = self.take_first(clean(hxs.select("//span[@class='product-property__label-value mobile-hidden']/b"
-                                                 "/text()")))
+        color = self.take_first(clean(hxs.select("//span[contains(@class,'value mobile-hidden')]//b/text()")))
         sizes = clean(hxs.select("//ul[contains(@class,'sizes__list')]/li/a/text()"))
 
         for size in sizes:
@@ -132,7 +131,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
         xpath = "//div[contains(@class,'breadcrumbs')]//li//text()"
         # The or part is for a rare case when breadcrumbs are empty
-        return clean(HtmlXPathSelector(response).select(xpath))[1:] or\
+        return clean([x.strip('Sale US') for x in clean(HtmlXPathSelector(response).select(xpath))[1:]]) or\
                urlparse(response.url).path.split('/')[3:-2]
 
     def product_brand(self, category):
