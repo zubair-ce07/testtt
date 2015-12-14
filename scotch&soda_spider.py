@@ -64,8 +64,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         if 'living' in [x.lower() for x in garment['category']]:
             garment['industry'] = 'homeware'
         else:
-            gender = garment['category'][0].replace(u'\xe4', u'a').lower()
-            garment['gender'] = self.gender_map.get(gender, '') if hasattr(self, 'gender_map') else gender
+            garment['gender'] = self.product_gender(garment['category'])
 
         garment['brand'] = self.product_brand(garment['category'][0].lower())
         garment['skus'] = self.skus(hxs)
@@ -84,8 +83,8 @@ class ScotchandSodaParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def skus_requests(self, hxs):
-        color_urls = clean(hxs.select("//li[@class='emptyswatch product-property__item color-swatch js-color-selector']"
-                                      "/a/@href"))
+        color_urls = clean(hxs.select("//*[@id='js-swatches']//li[contains(@class,'color-swatch') and "
+                                      "not(contains(@class,'is-selected'))]//a/@href"))
         return [Request(color_url, callback=self.parse_skus) for color_url in color_urls]
 
     def skus(self, hxs):
@@ -95,8 +94,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
         color = self.take_first(clean(hxs.select("//span[@class='product-property__label-value mobile-hidden']/b"
                                                  "/text()")))
-        sizes = clean(hxs.select("//ul[@class='swatches size product-property__list product-property--sizes"
-                                 "__list js-collapsible--pdp']/li/a/text()"))
+        sizes = clean(hxs.select("//ul[contains(@class,'sizes__list')]/li/a/text()"))
 
         for size in sizes:
             size_m = self.one_size if size == 'OS' or (not size) else size
@@ -105,8 +103,7 @@ class ScotchandSodaParseSpider(BaseParseSpider):
                 'currency': currency,
                 'size': size_m,
                 'color': color,
-                'out_of_stock': self.take_first(clean(hxs.select(oos_xpath % size))) ==
-                                'product-property__item emptyswatch not-available js-size-selector',
+                'out_of_stock': 'not-available' in self.take_first(clean(hxs.select(oos_xpath % size))),
             }
 
             if previous_price:
@@ -118,6 +115,10 @@ class ScotchandSodaParseSpider(BaseParseSpider):
 
     def product_id(self, hxs):
         return self.take_first(clean(hxs.select("//span[@class='article-number']/text()"))).split(': ')[1]
+
+    def product_gender(self, category):
+        gender = category[0].replace(u'\xe4', u'a').lower()
+        return self.gender_map.get(gender, '') if hasattr(self, 'gender_map') else gender
 
     def image_urls(self, hxs):
         return clean(hxs.select("(//ul[@id='js-pdp-carousel'])[1]//a/@href"))
@@ -143,14 +144,12 @@ class ScotchandSodaParseSpider(BaseParseSpider):
                                 " //div[@class='product-short-description']/text()"))
 
     def product_description(self, hxs):
-        raw_desc = self.raw_description(hxs)
-        return [x for x in raw_desc if not self.care_criteria(x)]
+        return [x for x in self.raw_description(hxs) if not self.care_criteria(x)]
 
     def product_care(self, hxs):
         care = clean(hxs.select("//span[starts-with(text(), 'What it') or"
                                 " starts-with(text(), 'Woraus der Artikel')]/text()"))
-        raw_desc = self.raw_description(hxs)
-        return care + [x for x in raw_desc if self.care_criteria(x)]
+        return care + [x for x in self.raw_description(hxs) if self.care_criteria(x)]
 
 
 class ScotchandSodaCrawlSpider(BaseCrawlSpider, Mixin):
