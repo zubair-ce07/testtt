@@ -21,6 +21,12 @@ class MixinUK(Mixin):
     start_urls = [Mixin.pfx + 'gb/en/home']
 
 
+class MixinUS(Mixin):
+    retailer = Mixin.retailer + '-us'
+    market = 'US'
+    start_urls = [Mixin.pfx + 'us/en/home']
+
+
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
@@ -185,3 +191,12 @@ class ScotchandSodaDEParseSpider(ScotchandSodaParseSpider, MixinDE):
 class ScotchandSodaDECrawlSpider(ScotchandSodaCrawlSpider, MixinDE):
     name = MixinDE.retailer + '-crawl'
     parse_spider = ScotchandSodaDEParseSpider()
+
+
+class ScotchandSodaUSParseSpider(ScotchandSodaParseSpider, MixinUS):
+    name = MixinUS.retailer + '-parse'
+
+
+class ScotchandSodaUSCrawlSpider(ScotchandSodaCrawlSpider, MixinUS):
+    name = MixinUS.retailer + '-crawl'
+    parse_spider = ScotchandSodaUSParseSpider()
