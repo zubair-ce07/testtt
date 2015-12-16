@@ -52,6 +52,8 @@ class CarterSpiderSpider(CrawlSpider):
         if gender:
             product['gender'] = gender
         product['skus'] = {}
+        if response.xpath(".//ul[contains(@class,'size')]/li[@class='selected']"):
+            product['skus'].update(self.product_size_details(response))
         product_variations_link = set(response.xpath(".//li[@class='emptyswatch']/a/@href").extract())
         return self.get_next_size(product, product_variations_link)
 
@@ -134,7 +136,7 @@ class CarterSpiderSpider(CrawlSpider):
             node.xpath(".//ul[@class='customSpecs']//*[position() = last(){0}]".format(care_index)))]
 
     def get_price_digits(self, price):
-        return re.sub('\D', '', price)
+        return int(re.sub('\D', '', price))
 
     def get_currency_symbol(self, price):
         return re.sub(r'[\d,.\s]', '', price)
