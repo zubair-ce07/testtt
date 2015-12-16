@@ -60,8 +60,8 @@ class CarterSpiderSpider(CrawlSpider):
     def get_next_size(self, product, product_variations_link):
         if product_variations_link:
             return Request(product_variations_link.pop(), callback=self.parse_product_variation,
-                          meta={"product": product, "product_variations_link": product_variations_link},
-                          dont_filter=True)
+                           meta={"product": product, "product_variations_link": product_variations_link},
+                           dont_filter=True)
         return product
 
     def parse_product_variation(self, response):
@@ -116,7 +116,7 @@ class CarterSpiderSpider(CrawlSpider):
         return self.get_attribute_value_from_node(node.xpath(".//div[@class='primary-logo']/a/@title"))
 
     def product_image_urls(self, node):
-        return node.xpath(".//div[contains(@class,'product-image-container')]//img/@src").extract()
+        return node.xpath(".//img[@class='primary-image']/@src").extract()
 
     def get_care_index(self, node):
         if node.xpath(".//ul[@class='customSpecs']/li//*"):
