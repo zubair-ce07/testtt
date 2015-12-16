@@ -15,14 +15,12 @@ class CarterSpiderSpider(CrawlSpider):
     )
     added_product_ids = set()
     rules = (
-        Rule(SgmlLinkExtractor(
-            deny=('outfits', 'oshkosh'),
-            restrict_xpaths=".//*[@id='navigation']//li[contains(@class,'carters')]"),
-            callback='request_next_product_page', follow=True),
-        Rule(SgmlLinkExtractor(
-            deny=('outfits', 'oshkosh'),
-            restrict_xpaths=".//li[@class='grid-tile']//div[@class='product-image']"),
-            callback="parse_product", process_links='filter_products_links')
+        Rule(SgmlLinkExtractor(deny=('outfits', 'oshkosh'),
+                               restrict_xpaths=".//*[@id='navigation']//li[contains(@class,'carters')]")),
+        Rule(SgmlLinkExtractor(restrict_xpaths="(.//a[contains(@class,'page-next')])[1]")),
+        Rule(SgmlLinkExtractor(deny=('outfits', 'oshkosh'),
+                               restrict_xpaths=".//li[@class='grid-tile']//div[@class='product-image']"),
+             callback="parse_product", process_links='filter_products_links')
     )
 
     def filter_products_links(self, links):
@@ -31,11 +29,6 @@ class CarterSpiderSpider(CrawlSpider):
             if self.is_valid_link(link.url):
                 filtered_links.append(link)
         return filtered_links
-
-    def request_next_product_page(self, response):
-        next_page = self.get_attribute_value_from_node(response.xpath("(.//a[contains(@class,'page-next')]/@href)[1]"))
-        if next_page:
-            return Request(next_page, self.parse)
 
     def is_valid_link(self, link):
         product_id = link.split('.html', 1)[0].rsplit('/', 1)[1]
