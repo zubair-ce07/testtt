@@ -49,9 +49,7 @@ class CarterSpiderSpider(CrawlSpider):
         product['url_original'] = response.url
         product['description'] = self.product_description(response)
         product['care'] = self.product_care(response)
-        gender = self.detect_gender(response.url)
-        if gender:
-            product['gender'] = gender
+        product['gender'] = self.detect_gender(response.url)
         product['skus'] = {}
         product['image_urls'] = set()
         product_variations_links = self.get_variations_links(response)
