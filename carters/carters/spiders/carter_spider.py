@@ -38,6 +38,8 @@ class CarterSpiderSpider(CrawlSpider):
         return True
 
     def parse_product(self, response):
+        if not response.xpath(".//div[contains(@class,'product-detail-cols')]"):
+            return None
         product = CartersProduct()
         product['category'] = self.product_category(response)
         product['retailer_sku'] = self.product_retailer_sku(response)
@@ -45,30 +47,42 @@ class CarterSpiderSpider(CrawlSpider):
         product['name'] = self.product_name(response)
         product['brand'] = self.product_brand(response)
         product['url_original'] = response.url
-        product['image_urls'] = self.product_image_urls(response)
         product['description'] = self.product_description(response)
         product['care'] = self.product_care(response)
         gender = self.detect_gender(response.url)
         if gender:
             product['gender'] = gender
         product['skus'] = {}
-        if response.xpath(".//ul[contains(@class,'size')]/li[@class='selected']"):
-            product['skus'].update(self.product_size_details(response))
-        product_variations_link = set(response.xpath(".//li[@class='emptyswatch']/a/@href").extract())
-        return self.get_next_size(product, product_variations_link)
+        product['image_urls'] = set()
 
-    def get_next_size(self, product, product_variations_link):
-        if product_variations_link:
-            return Request(product_variations_link.pop(), callback=self.parse_product_variation,
-                           meta={"product": product, "product_variations_link": product_variations_link},
+        product_variations_links = set(response.xpath(".//li[@class='emptyswatch']/a/@href").extract())
+        current_color = self.get_line_from_node(response.xpath(
+                                                ".//ul[contains(@class,'color')]/li[@class='selectedColor']"))
+        colors = self.normaliz_string_list(response.xpath(".//ul[contains(@class,'color')]/li/*/text()").extract())
+        for url in response.xpath(".//ul[contains(@class,'size')]/li[@class='emptyswatch']//a/@href").extract():
+            for color in colors:
+                product_variations_links.add(url.replace(current_color, color))
+
+        if response.xpath(".//ul[contains(@class,'size')]/li[@class='selected']"):
+            response.meta['product'] = product
+            response.meta['product_variations_links'] = product_variations_links
+            return self.parse_product_variation(response)
+        return self.get_next_size(product, product_variations_links)
+
+    def get_next_size(self, product, product_variations_links):
+        if product_variations_links:
+            return Request(product_variations_links.pop(), callback=self.parse_product_variation,
+                           meta={"product": product, "product_variations_links": product_variations_links},
                            dont_filter=True)
+        product['image_urls'] = list(product['image_urls'])
         return product
 
     def parse_product_variation(self, response):
         product = response.meta['product']
-        product_variations_link = response.meta['product_variations_link']
+        product_variations_links = response.meta['product_variations_links']
+        product['image_urls'].add(self.product_image_url(response))
         product['skus'].update(self.product_size_details(response))
-        return self.get_next_size(product, product_variations_link)
+        return self.get_next_size(product, product_variations_links)
 
     def product_size_details(self, response):
         size_details = {}
@@ -90,8 +104,10 @@ class CarterSpiderSpider(CrawlSpider):
             return 'unisex-kids'
 
     def product_previous_prices(self, node):
-        return [
-            self.get_price_digits(self.get_line_from_node(node.xpath(".//span[@class='price-standard']"), deep=False))]
+        price = self.get_line_from_node(node.xpath(".//span[@class='price-standard']"), deep=False)
+        if price:
+            return [self.get_price_digits(price)]
+        return []
 
     def product_price(self, node):
         return self.get_line_from_node(node.xpath(".//span[@itemprop='price']"))
@@ -115,8 +131,8 @@ class CarterSpiderSpider(CrawlSpider):
     def product_brand(self, node):
         return self.get_attribute_value_from_node(node.xpath(".//div[@class='primary-logo']/a/@title"))
 
-    def product_image_urls(self, node):
-        return node.xpath(".//img[@class='primary-image']/@src").extract()
+    def product_image_url(self, node):
+        return self.get_attribute_value_from_node(node.xpath(".//a[contains(@class,'product-image')]/@href"))
 
     def get_care_index(self, node):
         if node.xpath(".//ul[@class='customSpecs']/li//*"):
