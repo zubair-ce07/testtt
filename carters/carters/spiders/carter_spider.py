@@ -16,8 +16,8 @@ class CarterSpiderSpider(CrawlSpider):
     added_product_ids = set()
     rules = (
         Rule(SgmlLinkExtractor(deny=('outfits', 'oshkosh'),
-                               restrict_xpaths=".//*[@id='navigation']//li[contains(@class,'carters')]")),
-        Rule(SgmlLinkExtractor(restrict_xpaths="(.//a[contains(@class,'page-next')])[1]")),
+                               restrict_xpaths=(".//*[@id='navigation']//li[contains(@class,'carters')]",
+                                                "(.//a[contains(@class,'page-next')])[1]"))),
         Rule(SgmlLinkExtractor(deny=('outfits', 'oshkosh'),
                                restrict_xpaths=".//li[@class='grid-tile']//div[@class='product-image']"),
              callback="parse_product", process_links='filter_products_links')
@@ -54,7 +54,14 @@ class CarterSpiderSpider(CrawlSpider):
             product['gender'] = gender
         product['skus'] = {}
         product['image_urls'] = set()
+        product_variations_links = self.get_variations_links(response)
+        if response.xpath(".//ul[contains(@class,'size')]/li[@class='selected']"):
+            response.meta['product'] = product
+            response.meta['product_variations_links'] = product_variations_links
+            return self.parse_product_variation(response)
+        return self.get_next_variation(product, product_variations_links)
 
+    def get_variations_links(self, response):
         product_variations_links = set(response.xpath(".//li[@class='emptyswatch']/a/@href").extract())
         current_color = self.get_line_from_node(response.xpath(
                                                 ".//ul[contains(@class,'color')]/li[@class='selectedColor']"))
@@ -62,14 +69,9 @@ class CarterSpiderSpider(CrawlSpider):
         for url in response.xpath(".//ul[contains(@class,'size')]/li[@class='emptyswatch']//a/@href").extract():
             for color in colors:
                 product_variations_links.add(url.replace(current_color, color))
+        return product_variations_links
 
-        if response.xpath(".//ul[contains(@class,'size')]/li[@class='selected']"):
-            response.meta['product'] = product
-            response.meta['product_variations_links'] = product_variations_links
-            return self.parse_product_variation(response)
-        return self.get_next_size(product, product_variations_links)
-
-    def get_next_size(self, product, product_variations_links):
+    def get_next_variation(self, product, product_variations_links):
         if product_variations_links:
             return Request(product_variations_links.pop(), callback=self.parse_product_variation,
                            meta={"product": product, "product_variations_links": product_variations_links},
@@ -82,7 +84,7 @@ class CarterSpiderSpider(CrawlSpider):
         product_variations_links = response.meta['product_variations_links']
         product['image_urls'].add(self.product_image_url(response))
         product['skus'].update(self.product_size_details(response))
-        return self.get_next_size(product, product_variations_links)
+        return self.get_next_variation(product, product_variations_links)
 
     def product_size_details(self, response):
         size_details = {}
@@ -105,9 +107,7 @@ class CarterSpiderSpider(CrawlSpider):
 
     def product_previous_prices(self, node):
         price = self.get_line_from_node(node.xpath(".//span[@class='price-standard']"), deep=False)
-        if price:
-            return [self.get_price_digits(price)]
-        return []
+        return [self.get_price_digits(price)] if price else []
 
     def product_price(self, node):
         return self.get_line_from_node(node.xpath(".//span[@itemprop='price']"))
@@ -135,10 +135,7 @@ class CarterSpiderSpider(CrawlSpider):
         return self.get_attribute_value_from_node(node.xpath(".//a[contains(@class,'product-image')]/@href"))
 
     def get_care_index(self, node):
-        if node.xpath(".//ul[@class='customSpecs']/li//*"):
-            return "-1"
-        else:
-            return ""
+        return "-1" if node.xpath(".//ul[@class='customSpecs']/li//*") else ""
 
     def product_description(self, node):
         care_index = self.get_care_index(node)
