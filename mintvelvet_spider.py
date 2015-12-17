@@ -110,7 +110,8 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
         return clean(hxs.select("//dd[@id='product_details']/p/text()"))
 
     def merch_info(self, hxs, url):
-        if "web-exclusives" in url:
+        des_cat_and_url = ' '.join(self.product_description(hxs) + self.product_category(hxs) + [url])
+        if ("Web Exclusive" or "Web Exclusives" or "web-exclusives") in des_cat_and_url:
             return ["Web Exclusive"]
 
 
