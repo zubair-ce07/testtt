@@ -56,9 +56,8 @@ class CarterSpiderSpider(CrawlSpider):
         product['image_urls'] = set()
         product_variations_links = self.get_variations_links(response)
         if response.xpath(".//ul[contains(@class,'size')]/li[@class='selected']"):
-            response.meta['product'] = product
-            response.meta['product_variations_links'] = product_variations_links
-            return self.parse_product_variation(response)
+            product['image_urls'].add(self.product_image_url(response))
+            product['skus'].update(self.product_size_details(response))
         return self.get_next_variation(product, product_variations_links)
 
     def get_variations_links(self, response):
