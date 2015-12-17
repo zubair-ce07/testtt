@@ -37,8 +37,8 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
             garment['gender'] = 'women'
 
         garment['skus'] = self.skus(hxs)
-        img_reqs, garment['image_urls'] = self.image_urls(hxs)
-        garment['meta'] = {'requests_queue': img_reqs}
+        image_requests, garment['image_urls'] = self.image_urls(hxs)
+        garment['meta'] = {'requests_queue': image_requests}
 
         return self.next_request_or_garment(garment)
 
@@ -95,7 +95,7 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
         return self.take_first(clean(hxs.select("//h1[@itemprop='name']/text()")))
 
     def product_category(self, hxs):
-        return clean(hxs.select("//div[@id='breadcrumbs']//text()"))[1:-1]
+        return list(set(clean(hxs.select("//div[@id='breadcrumbs']//text()"))[1:-1]))
 
     def product_description(self, hxs):
         return clean(hxs.select("//div[@class='product_description']//text()"))
