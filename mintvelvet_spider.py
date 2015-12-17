@@ -36,28 +36,33 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
         else:
             garment['gender'] = 'women'
 
+        garment['merch_info'] = self.merch_info(hxs, response.url)
         garment['skus'] = self.skus(hxs)
         image_requests, garment['image_urls'] = self.image_urls(hxs)
         garment['meta'] = {'requests_queue': image_requests}
 
         return self.next_request_or_garment(garment)
 
-    def parse_image_urls(self, response):
+    def parse_images(self, response):
         garment = response.meta['garment']
 
         if response.status != 404 and response.url not in garment['image_urls']:
             garment['image_urls'] += [response.url]
             img_url = response.url.split('.jpg')[0].split('_')
             next_img_url = img_url[0] + '_' + str(int(img_url[1]) + 1) + '.jpg'
-            garment['meta']['requests_queue'] += [Request(url=next_img_url, callback=self.parse_image_urls,
+            garment['meta']['requests_queue'] += [Request(url=next_img_url, callback=self.parse_images,
                                                           dont_filter=True, meta={'handle_httpstatus_list': [404]})]
+        if not garment['meta']['requests_queue']:
+            if len(garment['image_urls']) > 3:
+                garment['image_urls'].insert(0, garment['image_urls'].pop(2))
+
         return self.next_request_or_garment(garment)
 
     def skus(self, hxs):
         skus = {}
-        oos_xpath = "//span[text()='%s']/ancestor::li/@class"
-        sku_id_x1 = "//span[text()='%s']/ancestor::li/@data-value"
-        sku_id_x2 = "//span[text()='%s']/preceding-sibling::input/@value"
+        oos_xpath_t = "//span[text()='%s']/ancestor::li/@class"
+        sku_id1_xpath_t = "//span[text()='%s']/ancestor::li/@data-value"
+        sku_id2_xpath_t = "//span[text()='%s']/preceding-sibling::input/@value"
         previous_price, price, currency = self.product_pricing(hxs)
 
         color = " ".join(clean(self.detect_colour(x) for x in tokenize(self.product_name(hxs))))
@@ -69,13 +74,14 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
                 'currency': currency,
                 'size': size,
                 'colour': color,
-                'out_of_stock': 'no_stock' in self.take_first(clean(hxs.select(oos_xpath % size))),
+                'out_of_stock': 'no_stock' in self.take_first(clean(hxs.select(oos_xpath_t % size))),
             }
 
             if previous_price:
                 sku['previous_prices'] = [previous_price]
 
-            sku_id = self.take_first(clean(hxs.select(sku_id_x1 % size)) or clean(hxs.select(sku_id_x2 % size)))
+            sku_id = self.take_first(clean(hxs.select(sku_id1_xpath_t % size)) or
+                                     clean(hxs.select(sku_id2_xpath_t % size)))
             skus[sku_id] = sku
 
         return skus
@@ -89,7 +95,7 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
     def image_urls(self, hxs):
         image_url = self.take_first(clean(hxs.select("//a[@class='zoom']/@href")))
         next_img_url = image_url.split('.jpg')[0] + '_1.jpg'
-        return [Request(url=next_img_url, callback=self.parse_image_urls)], [image_url]
+        return [Request(url=next_img_url, callback=self.parse_images)], [image_url]
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h1[@itemprop='name']/text()")))
@@ -102,6 +108,10 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
 
     def product_care(self, hxs):
         return clean(hxs.select("//dd[@id='product_details']/p/text()"))
+
+    def merch_info(self, hxs, url):
+        if "web-exclusives" in url:
+            return ["Web Exclusive"]
 
 
 class MintVelvetCrawlSpider(BaseCrawlSpider, Mixin):
