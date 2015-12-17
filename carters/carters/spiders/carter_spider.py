@@ -52,9 +52,9 @@ class CarterSpiderSpider(CrawlSpider):
         product['gender'] = self.detect_gender(response.url)
         product['skus'] = {}
         product['image_urls'] = set()
+        product['image_urls'].add(self.product_image_url(response))
         product_variations_links = self.get_variations_links(response)
         if response.xpath(".//ul[contains(@class,'size')]/li[@class='selected']"):
-            product['image_urls'].add(self.product_image_url(response))
             product['skus'].update(self.product_size_details(response))
         return self.get_next_variation(product, product_variations_links)
 
@@ -132,18 +132,18 @@ class CarterSpiderSpider(CrawlSpider):
         return self.get_attribute_value_from_node(node.xpath(".//a[contains(@class,'product-image')]/@href"))
 
     def get_care_index(self, node):
-        return "-1" if node.xpath(".//ul[@class='customSpecs']/li//*") else ""
+        return "-1" if node.xpath(".//ul[@class='customSpecs']/li[position() = last()]//*") else ""
 
     def product_description(self, node):
         care_index = self.get_care_index(node)
         return self.normaliz_string_list(node.xpath(
-            ".//ul[@class='benefits']//text() | .//ul[@class='customSpecs']//*[position() != last(){0} ]//text()"
+            ".//ul[@class='benefits']//text() | .//ul[@class='customSpecs']//li[position() != last(){0} ]//text()"
             .format(care_index)).extract())
 
     def product_care(self, node):
         care_index = self.get_care_index(node)
         return [self.get_line_from_node(
-            node.xpath(".//ul[@class='customSpecs']//*[position() = last(){0}]".format(care_index)))]
+            node.xpath(".//ul[@class='customSpecs']//li[position() = last(){0}]".format(care_index)))]
 
     def get_price_digits(self, price):
         return int(re.sub('\D', '', price))
