@@ -7,6 +7,7 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
 from scrapy.http import Request
 from urlparse import urlparse
+import re
 
 
 class Mixin(object):
@@ -111,7 +112,7 @@ class MintVelvetParseSpider(BaseParseSpider, Mixin):
 
     def merch_info(self, hxs, url):
         des_cat_and_url = ' '.join(self.product_description(hxs) + self.product_category(hxs) + [url])
-        if any([x in des_cat_and_url for x in ["Web Exclusive", "Web Exclusives", "web-exclusives"]]):
+        if re.findall('web.exclusive', des_cat_and_url, re.I):
             return ["Web Exclusive"]
 
 
