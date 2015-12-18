@@ -8,8 +8,8 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from carters.items import CartersProduct
 
 
-class CarterSpiderSpider(CrawlSpider):
-    name = "carter_spider"
+class CartersSpider(CrawlSpider):
+    name = "carters_spider"
     start_urls = (
         'http://www.carters.com/',
     )
