@@ -5,6 +5,7 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
 from urlparse import urlparse
 import json
+import re
 from scrapy.http import Request
 
 
@@ -40,6 +41,7 @@ class PrimarkParseSpider(BaseParseSpider, Mixin):
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
 
+        #: Re issue Request if data of the product is not loaded correctly
         if not self.product_name(hxs):
             return self.retry_request(response)
 
@@ -126,7 +128,8 @@ class PrimarkCrawlSpider(BaseCrawlSpider, Mixin):
 
         if json_data['Products']:
             url = response.url.split('/')
-            next_page_url = '/'.join(url[:-5] + [str(int(url[-5]) + 1)] + url[-4:])
+            next_page_r = re.compile('/(\d)/500')
+            next_page_url = re.sub(next_page_r, '/' + str(int(re.findall(next_page_r, url)[0]) + 1) + '/500', url)
             yield Request(url=next_page_url, callback=self.parse_start_url, meta={'trail': trail_part})
 
     def add_trail(self, response):
