@@ -4,6 +4,7 @@ import json
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.http.request import Request
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.selector import Selector
 
 from chichiclothing.items import ChichiClothingItem
 
@@ -13,23 +14,24 @@ class ChichiSpider(CrawlSpider):
     allowed_domains = ['chichiclothing.com']
     start_urls = ('http://www.chichiclothing.com/',)
     rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=".//div[@id='Menu']//a"),
+        Rule(SgmlLinkExtractor(restrict_xpaths=".//div[@id='Menu']"),
              callback='request_next_product_page'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=".//div[@class='xProductDetails']//a"), callback='parse_product'))
+        Rule(SgmlLinkExtractor(restrict_xpaths=".//div[@class='xProductDetails']"), callback='parse_product'))
 
     def request_next_product_page(self, response):
-        if response.xpath(".//li[@class='ActivePage']/following-sibling::a"):
-            page = int(self.get_line_from_node(response.xpath("(.//li[@class='ActivePage'])[1]"))) + 1
-            category_id = response.meta.get('category_id')
-            if not category_id:
-                category_id = self.get_attribute_value_from_node(
-                    response.xpath("(.//*[contains(@href,'categoryid')]/@href)[1]"))
-                category_id = category_id.rsplit('categoryid=', 1)[1].split('&', 1)[0]
-            url = 'http://www.chichiclothing.com/categories_ajax.php?catid={0}&fromwhichrefine=&' \
-                  'price_min=&price_max=&page={1}&sort=etailpreferred&search_query='.format(category_id, page)
-            yield Request(url, self.request_next_product_page, meta={"category_id": category_id})
         for r in self.parse(response):
             yield r
+        if not response.xpath(".//li[@class='ActivePage']/following-sibling::a"):
+            return
+        page = int(self.get_line_from_node(response.xpath("(.//li[@class='ActivePage'])[1]"))) + 1
+        category_id = response.meta.get('category_id')
+        if not category_id:
+            category_id = self.get_attribute_value_from_node(
+                response.xpath("(.//*[contains(@href,'categoryid')]/@href)[1]"))
+            category_id = category_id.rsplit('categoryid=', 1)[1].split('&', 1)[0]
+        url = 'http://www.chichiclothing.com/categories_ajax.php?catid={0}&fromwhichrefine=&' \
+              'price_min=&price_max=&page={1}&sort=etailpreferred&search_query='.format(category_id, page)
+        yield Request(url, self.request_next_product_page, meta={"category_id": category_id})
 
     def parse_product(self, response):
         product = ChichiClothingItem()
@@ -79,9 +81,11 @@ class ChichiSpider(CrawlSpider):
     def product_size_details(self, response):
         size_details = response.meta['size_details']
         json_response = json.loads(response.body)
-        price = json_response['price']
-        size_details['price'] = self.get_price_digits(price)
-        size_details['currency'] = self.get_currency_symbol(price)
+        size_details['price'] = self.get_price_digits(json_response['unformattedPrice'])
+        if 'strike' in json_response['price']:
+            size_details['currency'] = self.get_currency_symbol(json_response['saveAmount'])
+        else:
+            size_details['currency'] = self.get_currency_symbol(json_response['price'])
         key = '{0}_{1}'.format(size_details['color'], size_details['size'])
         return {key: size_details}
 
@@ -107,7 +111,7 @@ class ChichiSpider(CrawlSpider):
 
     def product_color(self, node):
         color = self.get_line_from_node(node.xpath(".//div[@id='buyablediv']/following-sibling::div//span"))
-        return color if color else node.xpath(".//div[@id='colourswatch']/a/@title").extract()
+        return color
 
     def product_price(self, node):
         if node.xpath(".//div[contains(@class,'has-sale-price')]"):
