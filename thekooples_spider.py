@@ -21,7 +21,7 @@ class Mixin(object):
 class TheKooplesParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + '-parse'
     take_first = TakeFirst()
-    price_x = "//div[@class='price-box']//text()"
+    price_x = "//div[@class='price-info']//text()"
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -45,6 +45,9 @@ class TheKooplesParseSpider(Mixin, BaseParseSpider):
 
     def parse_skus(self, response):
         garment = response.meta['garment']
+        if 'no-route' in response.url:
+            return self.next_request_or_garment(garment)
+
         hxs = HtmlXPathSelector(response)
 
         garment['image_urls'] += self.image_urls(hxs)
