@@ -89,7 +89,7 @@ class TheKooplesParseSpider(Mixin, BaseParseSpider):
         return clean(hxs.select("//img[@class='gallery-image']/@src"))
 
     def product_id(self, hxs):
-        return self.take_first(clean(hxs.select("//p[@class='product-ref']/text()").re('Ref : ([A-Z]*[0-9]*)')))
+        return self.take_first(clean(hxs.select("//p[@class='product-ref']/text()").re('Ref : (.*)')))[:-5]
 
     def product_category(self, url):
         return urlparse(url).path.split('/')[2:-1] if isinstance(url, str) else None
@@ -122,12 +122,14 @@ class TheKooplesCrawlSpider(Mixin, BaseCrawlSpider):
 
     products_x = '//ul[@id="products-grid-sort"]'
 
-    rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=men_x,  process_value=lambda x: x.replace('&ajax=1', '')),
-             process_request=reset_cookies, callback='parse_and_add_men'),
+    deny_r = ['costumes.html']
 
-        Rule(SgmlLinkExtractor(restrict_xpaths=women_x, process_value=lambda x: x.replace('&ajax=1', '')),
-             process_request=reset_cookies, callback='parse_and_add_women'),
+    rules = (
+        Rule(SgmlLinkExtractor(restrict_xpaths=men_x, deny=deny_r, process_value=lambda x: x.replace('&ajax=1', '')),
+             callback='parse_and_add_men'),
+
+        Rule(SgmlLinkExtractor(restrict_xpaths=women_x, deny=deny_r, process_value=lambda x: x.replace('&ajax=1', '')),
+             callback='parse_and_add_women'),
 
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x),
              process_request=reset_cookies, callback='parse_item')
