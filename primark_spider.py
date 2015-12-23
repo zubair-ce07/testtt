@@ -127,9 +127,8 @@ class PrimarkCrawlSpider(BaseCrawlSpider, Mixin):
             yield Request(url=product_url, callback=self.parse_item,  meta={'trail': trail_part})
 
         if json_data['Products']:
-            url = response.url.split('/')
-            current_page_num = re.findall(r'/(\d+)/500', url)[0]
-            next_page_url = url.replace(current_page_num, str(int(current_page_num)+1), 1)
+            current_page_num = re.findall(r'/(\d+)/500', response.url)[0]
+            next_page_url = response.url.replace(current_page_num, str(int(current_page_num)+1), 1)
             yield Request(url=next_page_url, callback=self.parse_start_url, meta={'trail': trail_part})
 
     def add_trail(self, response):
