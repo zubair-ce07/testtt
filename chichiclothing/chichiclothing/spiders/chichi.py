@@ -19,8 +19,8 @@ class ChichiSpider(CrawlSpider):
         Rule(SgmlLinkExtractor(restrict_xpaths=".//div[@class='xProductDetails']"), callback='parse_product'))
 
     def request_next_product_page(self, response):
-        for r in self.parse(response):
-            yield r
+        for request in self.parse(response):
+            yield request
         if not response.xpath(".//li[@class='ActivePage']/following-sibling::a"):
             return
         page = int(self.get_line_from_node(response.xpath("(.//li[@class='ActivePage'])[1]"))) + 1
@@ -110,8 +110,7 @@ class ChichiSpider(CrawlSpider):
         return node.xpath(".//*[@class='prodpicsidethumb']//img/@zoom").extract()
 
     def product_color(self, node):
-        color = self.get_line_from_node(node.xpath(".//div[@id='buyablediv']/following-sibling::div//span"))
-        return color
+        return self.get_line_from_node(node.xpath(".//div[@id='buyablediv']/following-sibling::div//span"))
 
     def product_price(self, node):
         if node.xpath(".//div[contains(@class,'has-sale-price')]"):
