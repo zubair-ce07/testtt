@@ -8,6 +8,7 @@ from scrapy.contrib.loader.processor import TakeFirst
 from urlparse import urlparse
 import re
 import json
+from scrapy.utils.url import url_query_cleaner
 
 
 class Mixin(object):
@@ -116,19 +117,20 @@ class TheKooplesCrawlSpider(Mixin, BaseCrawlSpider):
     name = Mixin.retailer + '-crawl'
     parse_spider = TheKooplesParseSpider()
 
+    next_page_x = "//div[@class='pages']//li"
     section_x_t = "//ul[@class='level0']/parent::li[contains(@data-code,'%s')]//ul"
-    men_x = section_x_t % '-MEN'
-    women_x = section_x_t % 'WOMEN'
+    men_x = [section_x_t % '-MEN', next_page_x]
+    women_x = [section_x_t % 'WOMEN', next_page_x]
 
     products_x = '//ul[@id="products-grid-sort"]'
 
     deny_r = ['costumes.html']
 
     rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=men_x, deny=deny_r, process_value=lambda x: x.replace('&ajax=1', '')),
+        Rule(SgmlLinkExtractor(restrict_xpaths=men_x, deny=deny_r, process_value=lambda x: url_query_cleaner(x, 'p')),
              callback='parse_and_add_men'),
 
-        Rule(SgmlLinkExtractor(restrict_xpaths=women_x, deny=deny_r, process_value=lambda x: x.replace('&ajax=1', '')),
+        Rule(SgmlLinkExtractor(restrict_xpaths=women_x, deny=deny_r, process_value=lambda x: url_query_cleaner(x, 'p')),
              callback='parse_and_add_women'),
 
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x),
