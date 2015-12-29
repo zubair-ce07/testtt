@@ -2,7 +2,6 @@ import re
 import json
 import urlparse
 
-from w3lib.url import add_or_replace_parameter
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.http.request import Request
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
@@ -30,7 +29,7 @@ class ChichiSpider(CrawlSpider):
             category_id = self.get_attribute_value_from_node(
                 response.xpath("(.//*[contains(@href,'categoryid')]/@href)[1]"))
             params = urlparse.parse_qs(urlparse.urlparse(category_id).query)
-            category_id = params['categoryid']
+            category_id = params['categoryid'][0]
         next_page_url = 'http://www.chichiclothing.com/categories_ajax.php?catid={0}&fromwhichrefine=&' \
               'price_min=&price_max=&page={1}&sort=etailpreferred&search_query='.format(category_id, page)
         yield Request(next_page_url, self.request_next_product_page, meta={"category_id": category_id})
