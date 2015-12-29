@@ -38,7 +38,7 @@ class ChichiSpider(CrawlSpider):
         product = ChichiClothingItem()
         product['url_original'] = response.url
         product['brand'] = 'Chi Chi'
-        product['gender'] = 'Girls'
+        product['gender'] = 'women'
         product['name'] = self.product_name(response)
         product['category'] = self.product_categories(response)
         product['retailer_sku'] = self.product_retailer_sku(response)
@@ -47,8 +47,9 @@ class ChichiSpider(CrawlSpider):
         product['care'] = self.product_care(response)
         product['image_urls'] = self.product_images_urls(response)
         product['skus'] = {}
-        variations_details = self.get_variations_details(response, product['retailer_sku'])
+        variations_details = self.get_variations_details(response, product)
         return self.get_next_variation(product, variations_details)
+
 
     def get_next_variation(self, product, product_variations_details):
         if product_variations_details:
@@ -64,34 +65,52 @@ class ChichiSpider(CrawlSpider):
         product['skus'].update(self.product_size_details(response))
         return self.get_next_variation(product, product_variations_details)
 
-    def get_variations_details(self, response, product_id):
+    def get_variations_details(self, response, product):
         variations_details = []
         previous_prices = self.product_previous_prices(response)
         color = self.product_color(response)
+        size_detail_template = {}
+        if previous_prices:
+            size_detail_template['previous_prices'] = previous_prices
+        if color:
+            size_detail_template['color'] = color
         for variation in response.xpath(".//div[@class='Value']//li[contains(@class,'sizeli')] |"
                                         " (.//div[@class='miniprod'])[1]//li[contains(@class,'sizeli')]"):
-            size_details = {}
+            size_details = size_detail_template
             size_details['size'] = self.get_line_from_node(variation)
-            size_details['color'] = color
-            size_details['previous_prices'] = previous_prices
-            url = 'http://www.chichiclothing.com/remote.php?w=GetVariationOptions&productId={0}&options={1}'\
-                .format(product_id, self.get_attribute_value_from_node(variation.xpath('@rel')))
-            variations_details.append((size_details, url))
+            variation_url = 'http://www.chichiclothing.com/remote.php?w=GetVariationOptions&productId={0}&options={1}'\
+                .format(product['retailer_sku'], self.get_attribute_value_from_node(variation.xpath('@rel')))
+            variations_details.append((size_details, variation_url))
+        if not variations_details:
+            key = '{0}_One Size'.format(color)
+            size_detail = size_detail_template
+            size_detail['size'] = "One Size"
+            if previous_prices and previous_prices[0] == product['price']:
+                del size_detail['previous_prices']
+            size_detail['price'] = product['price']
+            size_detail['currency'] = self.get_currency_symbol(self.product_price(response))
+            product['skus'][key] = size_detail
         return variations_details
 
     def product_size_details(self, response):
         size_details = response.meta['size_details']
         json_response = json.loads(response.body)
+        size_details['in_stock'] = json_response['instock']
         size_details['price'] = self.get_price_digits(json_response['unformattedPrice'])
         if 'strike' in json_response['price']:
             size_details['currency'] = self.get_currency_symbol(json_response['saveAmount'])
         else:
             size_details['currency'] = self.get_currency_symbol(json_response['price'])
-        key = '{0}_{1}'.format(size_details['color'], size_details['size'])
+        if size_details.get('previous_prices') and size_details['price'] == size_details['previous_prices'][0]:
+            del size_details['previous_prices']
+        color = size_details.get('color')
+        if not color:
+            color = ''
+        key = '{0}_{1}'.format(color, size_details['size'])
         return {key: size_details}
 
     def product_categories(self, node):
-        return self.get_text_from_node(node.xpath(".//*[@id='ProductBreadcrumb']/ul"))
+        return self.get_text_from_node(node.xpath(".//*[@id='ProductBreadcrumb']/ul/li/*[text() !=  'Home']"))
 
     def product_name(self, node):
         return self.get_attribute_value_from_node(node.xpath(".//*[@name='prodname']/@value"))
@@ -101,8 +120,8 @@ class ChichiSpider(CrawlSpider):
             ".//*[contains(@class,'acpdcontent')] | .//div[@class='miniprod'][1]/textarea"))
 
     def product_care(self, node):
-        return self.get_text_from_node(node.xpath(
-            ".//h2[contains(@class,'accordion-header') and contains(text(),'CARE')]/following-sibling::div"))
+        return self.normaliz_string_list(self.get_text_from_node(node.xpath(
+            ".//h2[contains(@class,'accordion-header') and contains(text(),'CARE')]/following-sibling::div")))
 
     def product_retailer_sku(self, node):
         return self.get_attribute_value_from_node(node.xpath("(.//input[@name='product_id'])[1]/@value"))
@@ -115,7 +134,7 @@ class ChichiSpider(CrawlSpider):
 
     def product_price(self, node):
         if node.xpath(".//div[contains(@class,'has-sale-price')]"):
-            return self.get_line_from_node(node.xpath(".//span[@class='saleprice']"), deep=False)
+            return self.get_line_from_node(node.xpath(".//span[@class='saleprice']"), deep=False).split(':')[-1]
         return self.get_line_from_node(node.xpath(
             ".//div[@id='productprice']/span | (.//*[@class='miniprod'])[1]/div[1]"), deep=False)
 
@@ -131,9 +150,9 @@ class ChichiSpider(CrawlSpider):
         return int(re.sub('\\D', '', price))
 
     def normaliz_string_list(self, s_list):
-        return [ s.strip() for s in s_list if s.strip() ]
+        return [s.strip(' -') for s in s_list if s.strip(' -')]
 
-    def get_text_from_node(self, node, deep = True):
+    def get_text_from_node(self, node, deep=True):
         if not node:
             return []
         _text = './/text()'
