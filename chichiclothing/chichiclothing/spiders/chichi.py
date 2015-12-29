@@ -50,7 +50,6 @@ class ChichiSpider(CrawlSpider):
         variations_details = self.get_variations_details(response, product)
         return self.get_next_variation(product, variations_details)
 
-
     def get_next_variation(self, product, product_variations_details):
         if product_variations_details:
             (size_details, url) = product_variations_details.pop()
@@ -76,7 +75,8 @@ class ChichiSpider(CrawlSpider):
             size_detail_template['color'] = color
         for variation in response.xpath(".//div[@class='Value']//li[contains(@class,'sizeli')] |"
                                         " (.//div[@class='miniprod'])[1]//li[contains(@class,'sizeli')]"):
-            size_details = size_detail_template
+            size_details = {}
+            size_details.update(size_detail_template)
             size_details['size'] = self.get_line_from_node(variation)
             variation_url = 'http://www.chichiclothing.com/remote.php?w=GetVariationOptions&productId={0}&options={1}'\
                 .format(product['retailer_sku'], self.get_attribute_value_from_node(variation.xpath('@rel')))
@@ -88,19 +88,22 @@ class ChichiSpider(CrawlSpider):
             if previous_prices and previous_prices[0] == product['price']:
                 del size_detail['previous_prices']
             size_detail['price'] = product['price']
-            size_detail['currency'] = self.get_currency_symbol(self.product_price(response))
+            size_detail['currency'] = self.get_currency_code(self.product_price(response))
             product['skus'][key] = size_detail
         return variations_details
 
     def product_size_details(self, response):
         size_details = response.meta['size_details']
         json_response = json.loads(response.body)
-        size_details['in_stock'] = json_response['instock']
+        if json_response['instock'] == 'true':
+            size_details['out_of_stock'] = False
+        else:
+            size_details['out_of_stock'] = True
         size_details['price'] = self.get_price_digits(json_response['unformattedPrice'])
         if 'strike' in json_response['price']:
-            size_details['currency'] = self.get_currency_symbol(json_response['saveAmount'])
+            size_details['currency'] = self.get_currency_code(json_response['saveAmount'])
         else:
-            size_details['currency'] = self.get_currency_symbol(json_response['price'])
+            size_details['currency'] = self.get_currency_code(json_response['price'])
         if size_details.get('previous_prices') and size_details['price'] == size_details['previous_prices'][0]:
             del size_details['previous_prices']
         color = size_details.get('color')
@@ -143,8 +146,12 @@ class ChichiSpider(CrawlSpider):
             ".//span[@class='rrp'] | (.//*[@class='miniprod'])[1]/div[1]/*"), deep=False)
         return [self.get_price_digits(previous_price)] if previous_price else []
 
-    def get_currency_symbol(self, price):
-        return re.sub('[\\d,.\\s]', '', price)
+    def get_currency_code(self, price):
+        symbol = re.sub('[\\d,.\\s]', '', price)
+        if symbol == '$':
+            return 'USD'
+        else:
+            return 'GBP'
 
     def get_price_digits(self, price):
         return int(re.sub('\\D', '', price))
@@ -161,7 +168,7 @@ class ChichiSpider(CrawlSpider):
         str_list = [x.strip() for x in node.xpath(_text).extract() if len(x.strip()) > 0 ]
         return str_list
 
-    def get_line_from_node(self, node, deep = True, sep = ' '):
+    def get_line_from_node(self, node, deep = True, sep=' '):
         lines = self.get_text_from_node(node, deep)
         if not lines:
             return ''
@@ -172,4 +179,3 @@ class ChichiSpider(CrawlSpider):
         if value:
             return value[0].strip()
         return ''
-
