@@ -21,15 +21,19 @@ class ChichiSpider(CrawlSpider):
     def request_next_product_page(self, response):
         for request in self.parse(response):
             yield request
+
         if not response.xpath(".//li[@class='ActivePage']/following-sibling::a"):
             return
+
         page = int(self.get_line_from_node(response.xpath("(.//li[@class='ActivePage'])[1]"))) + 1
         category_id = response.meta.get('category_id')
+
         if not category_id:
             category_id = self.get_attribute_value_from_node(
                 response.xpath("(.//*[contains(@href,'categoryid')]/@href)[1]"))
             params = urlparse.parse_qs(urlparse.urlparse(category_id).query)
             category_id = params['categoryid'][0]
+
         next_page_url = 'http://www.chichiclothing.com/categories_ajax.php?catid={0}&fromwhichrefine=&' \
               'price_min=&price_max=&page={1}&sort=etailpreferred&search_query='.format(category_id, page)
         yield Request(next_page_url, self.request_next_product_page, meta={"category_id": category_id})
@@ -52,7 +56,7 @@ class ChichiSpider(CrawlSpider):
 
     def get_next_variation(self, product, product_variations_details):
         if product_variations_details:
-            (size_details, url) = product_variations_details.pop()
+            size_details, url = product_variations_details.pop()
             return Request(url, callback=self.parse_product_variation,
                            meta={'product': product,'product_variations_details': product_variations_details,
                                  'size_details': size_details})
