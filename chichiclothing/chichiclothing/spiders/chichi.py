@@ -95,10 +95,7 @@ class ChichiSpider(CrawlSpider):
     def product_size_details(self, response):
         size_details = response.meta['size_details']
         json_response = json.loads(response.body)
-        if json_response['instock'] == 'true':
-            size_details['out_of_stock'] = False
-        else:
-            size_details['out_of_stock'] = True
+        size_details['out_of_stock'] = not json_response['instock']
         size_details['price'] = self.get_price_digits(json_response['unformattedPrice'])
         if 'strike' in json_response['price']:
             size_details['currency'] = self.get_currency_code(json_response['saveAmount'])
