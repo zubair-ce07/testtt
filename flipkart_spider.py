@@ -10,6 +10,7 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.utils.url import url_query_cleaner
 from scrapy.link import Link
 from w3lib.url import add_or_replace_parameter
+from scrapy.utils.url import url_query_parameter
 
 # Site will eventually ban spider on concurrent requests. Ban takes some time to expire.
 
@@ -313,16 +314,16 @@ class FlipkartCrawlSpider(BaseCrawlSpider, Mixin):
 '''
 Use these as start_urls
 # Lifestyle/Men
-http://mobileapi.flipkart.net/2/discover/getSearch?store=2oq/s9b&start=0&count=10&disableMultipleImage=true&ads-offset=1&valid=true
+http://mobileapi.flipkart.net/3/discover/getSearch?store=2oq/s9b&start=0&count=10&disableMultipleImage=true
 
 Lifestyle/Women
-http://mobileapi.flipkart.net/2/discover/getSearch?store=2oq/c1r&start=0&count=10&disableMultipleImage=true&ads-offset=1&valid=true
+http://mobileapi.flipkart.net/3/discover/getSearch?store=2oq/c1r&start=0&count=10&disableMultipleImage=true
 
 Lifestyle/Kids
-http://mobileapi.flipkart.net/2/discover/getSearch?store=2oq/mpf&start=0&count=10&disableMultipleImage=true&ads-offset=1&valid=true
+http://mobileapi.flipkart.net/3/discover/getSearch?store=2oq/mpf&start=0&count=10&disableMultipleImage=true
 
 Lifestyle/Baby/Infant Wear
-http://mobileapi.flipkart.net/2/discover/getSearch?store=kyh/mjf&start=0&count=10&disableMultipleImage=true&ads-offset=1&valid=true
+http://mobileapi.flipkart.net/3/discover/getSearch?store=kyh/mjf&start=0&count=10&disableMultipleImage=true
 '''
 
 
@@ -337,8 +338,12 @@ class FlipkartMobileParseSpider(BaseParseSpider, MixinM):
     name = MixinM.retailer + '-parse'
 
     def parse(self, response):
-        product = json.loads(response.body)['RESPONSE']['productInfo'].values()[0]
+        product = json.loads(response.body)['RESPONSE']['productInfo'].values()
 
+        if not product:
+            return
+
+        product = product[0]
         sku_id = self.product_id(product)
         garment = self.new_unique_garment(sku_id)
         if not garment:
@@ -406,7 +411,10 @@ class FlipkartMobileParseSpider(BaseParseSpider, MixinM):
 
         if product['swatch']:
             color = product['swatch'].get('color', {}).get('product.swatch.value')
-            for size, info in product['swatch']['size']['product.swatch.about'].iteritems():
+
+            oos_info = {'isAvailable': product['availabilityDetails']['product.availability.status'] == 'In Stock.'}
+
+            for size, info in product['swatch'].get('size', {}).get('product.swatch.about', {self.one_size: oos_info}).iteritems():
                 sku = {
                     'currency': currency,
                     'size': size if size != 'Free' else self.one_size,
@@ -460,9 +468,10 @@ class FlipkartMobileCrawlSpider(BaseCrawlSpider, MixinM):
     name = MixinM.retailer + '-crawl'
     parse_spider = FlipkartMobileParseSpider()
 
-    url_prefix = 'http://mobileapi.flipkart.net/2/discover'
-    listing_url_t = url_prefix + '/getSearch?store=%s&start=0&count=10&disableMultipleImage=true&ads-offset=1&valid=true'
-    product_url_t = url_prefix + '/productInfo/0?pids=%s&lids=%s&disableMultipleImage=true'
+    url_prefix = 'http://mobileapi.flipkart.net/'
+
+    listing_url_t = url_prefix + "3/discover/getSearch?store=%s&start=0&count=10&disableMultipleImage=true"
+    product_url_t = url_prefix + '2/discover/productInfo/0?pids=%s&lids=%s&disableMultipleImage=true'
 
     def __init__(self, start_url):
         self.start_urls = [start_url]
@@ -480,18 +489,18 @@ class FlipkartMobileCrawlSpider(BaseCrawlSpider, MixinM):
             return
 
         # paging
-        if data['REQUEST']['params']['start'] == '0':
+        if url_query_parameter(response.url, 'start') == '0':
             total_products = data['RESPONSE']['search']['metadata']['totalProduct']
             default_page_size = 10
-            total_pages = int(math.ceil(total_products * 1.0 / default_page_size * 1.0))
 
-            for page_number in range(2, total_pages + 1):
-                url = re.sub(r'start=\d+', 'start=' + str(page_number), response.url)
+            for product_number in range(11, total_products, default_page_size):
+                url = re.sub(r'start=\d+', 'start=' + str(product_number), response.url)
                 yield Request(url, meta={'trail': self.add_trail(response)})
 
         # products list
         for product in data['RESPONSE']['product'].values():
-            url = self.product_url_t % (product['productId'], product['preferredListingId'])
+            url = self.product_url_t % (product['action']['params']['productId'],
+                                        product['action']['params']['listingId'])
             yield Request(url, meta={'trail': self.add_trail(response)}, callback=self.parse_spider.parse)
 
     def add_trail(self, response):
