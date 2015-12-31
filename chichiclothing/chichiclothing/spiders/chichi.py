@@ -13,6 +13,9 @@ class ChichiSpider(CrawlSpider):
     name = 'chichi_spider'
     allowed_domains = ['chichiclothing.com']
     start_urls = ('http://www.chichiclothing.com/',)
+    next_page_url_template = 'http://www.chichiclothing.com/categories_ajax.php?catid={0}&fromwhichrefine=&' \
+                             'price_min=&price_max=&page={1}&sort=etailpreferred&search_query='
+
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=".//div[@id='Menu']"),
              callback='request_next_product_page'),
@@ -34,8 +37,7 @@ class ChichiSpider(CrawlSpider):
             params = urlparse.parse_qs(urlparse.urlparse(category_id).query)
             category_id = params['categoryid'][0]
 
-        next_page_url = 'http://www.chichiclothing.com/categories_ajax.php?catid={0}&fromwhichrefine=&' \
-              'price_min=&price_max=&page={1}&sort=etailpreferred&search_query='.format(category_id, page)
+        next_page_url = self.next_page_url_template.format(category_id, page)
         yield Request(next_page_url, self.request_next_product_page, meta={"category_id": category_id})
 
     def parse_product(self, response):
@@ -81,13 +83,15 @@ class ChichiSpider(CrawlSpider):
         if color:
             size_detail_template['color'] = color
 
-        for variation in response.xpath(".//div[@class='Value']//li[contains(@class,'sizeli')] |"
-                                        " (.//div[@class='miniprod'])[1]//li[contains(@class,'sizeli')]"):
+        variations = response.xpath(".//div[@class='Value']//li[contains(@class,'sizeli')] | "
+                                    "(.//div[@class='miniprod'])[1]//li[contains(@class,'sizeli')]")
+        variation_url_template = 'http://www.chichiclothing.com/remote.php?w=GetVariationOptions&productId={0}&options={1}'
+
+        for variation in variations:
             size_details = {}
             size_details.update(size_detail_template)
             size_details['size'] = self.get_line_from_node(variation)
-            variation_url = 'http://www.chichiclothing.com/remote.php?w=GetVariationOptions&productId={0}&options={1}'\
-                .format(product['retailer_sku'], self.get_attribute_value_from_node(variation.xpath('@rel')))
+            variation_url = variation_url_template.format(product['retailer_sku'], self.get_attribute_value_from_node(variation.xpath('@rel')))
             variations_details.append((size_details, variation_url))
 
         if not variations_details:
@@ -118,10 +122,7 @@ class ChichiSpider(CrawlSpider):
         if size_details.get('previous_prices') and size_details['price'] == size_details['previous_prices'][0]:
             del size_details['previous_prices']
 
-        color = size_details.get('color')
-        if not color:
-            color = ''
-
+        color = size_details.get('color','')
         key = '{0}_{1}'.format(color, size_details['size'])
         return {key: size_details}
 
