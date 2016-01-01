@@ -418,11 +418,12 @@ class FlipkartMobileParseSpider(BaseParseSpider, MixinM):
                 .iteritems()
             for size, info in skus_data:
                 size = size if size != 'Free' else self.one_size
+                sku_price = info.get('selling_price')
                 sku = {
                     'currency': currency,
                     'size': size,
                     'out_of_stock': not info['isAvailable'],
-                    'price': info.get('selling_price') or price
+                    'price': CurrencyParser.float_conversion(sku_price) if sku_price else price
                 }
 
                 if color:
