@@ -9,14 +9,17 @@ from scrapy.http import FormRequest
 from topshop.items import TopshopItem
 
 
-class ChichiSpider(CrawlSpider):
+class TopshopSpider(CrawlSpider):
     name = 'topshop_crawl'
     allowed_domains = ['topshop.com']
     start_urls = ('http://www.topshop.com/',)
+    required_keys = ['dimSelected', 'catalogId', 'storeId', 'langId']
+    image_url_t = "http://media.topshop.com/wcsstore/TopShop/images/catalog/{0}{1}_large.jpg"
+
     rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=(".//*[@id='nav_catalog_menu']/li[position() < 8]/a",)),
+        Rule(SgmlLinkExtractor(restrict_xpaths=(".//*[@id='nav_catalog_menu']/li/a[not(contains(@href, 'home'))]",)),
              callback='request_next_page'),
-        Rule(SgmlLinkExtractor(restrict_xpaths=".//*[@class='product']/li[@class='product_image']"),
+        Rule(SgmlLinkExtractor(restrict_xpaths=".//*[@class='product']//li[@class='product_image']"),
              callback='parse_product')
     )
 
@@ -24,13 +27,12 @@ class ChichiSpider(CrawlSpider):
         for request in self.parse(response):
             yield request
 
-        url = self.get_attribute_value_from_node(response.xpath("(.//li[@class='show_next']//a)[1]/@href"))
-        if url:
-            params = dict(urlparse.parse_qsl(urlparse.urlsplit(url).query))
-            url = url.split('?', 1)[0]
-            required_keys = ['dimSelected', 'catalogId', 'storeId', 'langId']
-            required_params = {key: params[key] for key in required_keys }
-            yield FormRequest(url, formdata=required_params, dont_filter=True,
+        next_page_url = self.get_attribute_value_from_node(response.xpath("(.//li[@class='show_next']//a)[1]/@href"))
+        if next_page_url:
+            params = dict(urlparse.parse_qsl(urlparse.urlsplit(next_page_url).query))
+            next_page_url = next_page_url.split('?', 1)[0]
+            required_params = {key: params[key] for key in self.required_keys}
+            yield FormRequest(next_page_url, formdata=required_params, dont_filter=True,
                               callback=self.request_next_page, method='POST')
 
     def parse_product(self, response):
@@ -51,26 +53,26 @@ class ChichiSpider(CrawlSpider):
         product['description'] = self.product_description(response)
         product['market'] = self.product_market(response)
         product['currency'] = self.product_currency(response)
-        product['skus'] = self.product_variations(product_data, product['price'], product['currency'])
+        product['skus'] = self.product_skus(product_data, product['price'], product['currency'])
         return product
 
-    def product_variations(self, product_data, price, currency):
-        variations = {}
-        variation_template = {"colour": product_data["colour"], "price": price, "currency": currency}
+    def product_skus(self, product_data, price, currency):
+        skus = {}
+        sku_template = {"colour": product_data["colour"], "price": price, "currency": currency}
 
         if product_data['prices'].get('was'):
-            variation_template['previous_price'] = self.get_price_digits(product_data['prices']['was'])
+            sku_template['previous_price'] = self.get_price_digits(product_data['prices']['was'])
 
         for item in product_data['items']:
-            variation = {}
-            variation.update(variation_template)
-            variation['size'] = item['size']
-            variations[item['sku']] = variation
+            sku = {}
+            sku.update(sku_template)
+            sku['size'] = item['size']
+            sku[item['sku']] = sku
 
-        return variations
+        return skus
 
     def product_data(self, node):
-        product_data = self.get_line_from_node(node.xpath(".//*[@id='product_column_3_espot_2']/following-sibling::*"))
+        product_data = self.get_line_from_node(node.xpath(".//script[contains(text(),'productData')]"))
         return yaml.load(re.sub(':', ': ', ' '.join(product_data.split('=', 1)[-1].split())))
 
     def product_retailer_sku(self, node):
@@ -93,18 +95,16 @@ class ChichiSpider(CrawlSpider):
             ".//*[@class='product_price']/span | .//*[contains(@class,'now_price')]/span"))
 
     def product_images_urls(self, thumbnail_suffixes, product_code):
-        image_urls = ["http://media.topshop.com/wcsstore/TopShop/images/catalog/{0}_large.jpg".format(product_code)]
+        image_urls = [self.image_url_t.format(product_code, '')]
 
         for suffix in thumbnail_suffixes[1:]:
-            image_urls.append(
-                "http://media.topshop.com/wcsstore/TopShop/images/catalog/{0}{1}_large.jpg".format(
-                    product_code, suffix))
+            image_urls.append(self.image_url_t.format(product_code, suffix))
 
         return image_urls
 
     def product_brand(self, name):
         brand = name.lower().split(' by ')
-        return brand[1] if len(brand) > 1 else ''
+        return brand[1] if len(brand) > 1 else 'Top shop'
 
     def product_market(self, node):
         return self.get_attribute_value_from_node(node.xpath(".//*[@id='region_select']/div/@class")).split(' ', 1)[1]
