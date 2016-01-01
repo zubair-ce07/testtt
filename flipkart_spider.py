@@ -411,15 +411,18 @@ class FlipkartMobileParseSpider(BaseParseSpider, MixinM):
 
         if product['swatch']:
             color = product['swatch'].get('color', {}).get('product.swatch.value')
-
+            # OOS info in case size is not also available
             oos_info = {'isAvailable': product['availabilityDetails']['product.availability.status'] == 'In Stock.'}
 
-            for size, info in product['swatch'].get('size', {}).get('product.swatch.about', {self.one_size: oos_info}).iteritems():
+            skus_data = product['swatch'].get('size', {}).get('product.swatch.about', {self.one_size: oos_info})\
+                .iteritems()
+            for size, info in skus_data:
+                size = size if size != 'Free' else self.one_size
                 sku = {
                     'currency': currency,
-                    'size': size if size != 'Free' else self.one_size,
+                    'size': size,
                     'out_of_stock': not info['isAvailable'],
-                    'price': price
+                    'price': info.get('selling_price') or price
                 }
 
                 if color:
@@ -484,8 +487,7 @@ class FlipkartMobileCrawlSpider(BaseCrawlSpider, MixinM):
         if data['RESPONSE']['search']['storeMetaInfoList']:
             for category in data['RESPONSE']['search']['storeMetaInfoList']:
                 url = self.listing_url_t % category['id']
-                r = Request(url, meta={'trail': self.add_trail(response)})
-                yield r
+                yield Request(url, meta={'trail': self.add_trail(response)})
             return
 
         # paging
