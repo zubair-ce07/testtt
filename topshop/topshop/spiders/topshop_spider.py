@@ -53,11 +53,11 @@ class TopshopSpider(CrawlSpider):
         product['description'] = self.product_description(response)
         product['market'] = self.product_market(response)
         product['currency'] = self.product_currency(response)
-        out_of_stock_skus = response.xpath(".//option[@class='stock_zero']/@value").extract()
-        product['skus'] = self.product_skus(product_data, product['price'], product['currency'], out_of_stock_skus)
+        product['skus'] = self.product_skus(product_data, product['price'], product['currency'], response)
         return product
 
-    def product_skus(self, product_data, price, currency, out_of_stock_skus):
+    def product_skus(self, product_data, price, currency, response):
+        out_of_stock_skus = response.xpath(".//option[@class='stock_zero']/@value").extract()
         skus = {}
         sku_template = {"colour": product_data["colour"], "price": price, "currency": currency}
 
@@ -67,7 +67,7 @@ class TopshopSpider(CrawlSpider):
         for item in product_data['items']:
             sku = {}
             sku.update(sku_template)
-            sku['out_of_stock'] = True if item['size'] in out_of_stock_skus else False
+            sku['out_of_stock'] = item['size'] in out_of_stock_skus
             sku['size'] = 'One Size' if item['size'].lower() == 'one' else item['size']
 
             skus[item['sku']] = sku
