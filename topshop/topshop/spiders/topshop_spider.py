@@ -67,7 +67,7 @@ class TopshopSpider(CrawlSpider):
             sku = {}
             sku.update(sku_template)
             sku['size'] = item['size']
-            sku[item['sku']] = sku
+            skus[item['sku']] = sku
 
         return skus
 
