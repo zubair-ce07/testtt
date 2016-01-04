@@ -53,10 +53,11 @@ class TopshopSpider(CrawlSpider):
         product['description'] = self.product_description(response)
         product['market'] = self.product_market(response)
         product['currency'] = self.product_currency(response)
-        product['skus'] = self.product_skus(product_data, product['price'], product['currency'])
+        out_of_stock_skus = response.xpath(".//option[@class='stock_zero']/@value").extract()
+        product['skus'] = self.product_skus(product_data, product['price'], product['currency'], out_of_stock_skus)
         return product
 
-    def product_skus(self, product_data, price, currency):
+    def product_skus(self, product_data, price, currency, out_of_stock_skus):
         skus = {}
         sku_template = {"colour": product_data["colour"], "price": price, "currency": currency}
 
@@ -66,7 +67,9 @@ class TopshopSpider(CrawlSpider):
         for item in product_data['items']:
             sku = {}
             sku.update(sku_template)
-            sku['size'] = item['size']
+            sku['out_of_stock'] = True if item['size'] in out_of_stock_skus else False
+            sku['size'] = 'One Size' if item['size'].lower() == 'one' else item['size']
+
             skus[item['sku']] = sku
 
         return skus
@@ -104,7 +107,7 @@ class TopshopSpider(CrawlSpider):
 
     def product_brand(self, name):
         brand = name.lower().split(' by ')
-        return brand[1] if len(brand) > 1 else 'Top shop'
+        return brand[1].title() if len(brand) > 1 else 'Top Shop'
 
     def product_market(self, node):
         return self.get_attribute_value_from_node(node.xpath(".//*[@id='region_select']/div/@class")).split(' ', 1)[1]
