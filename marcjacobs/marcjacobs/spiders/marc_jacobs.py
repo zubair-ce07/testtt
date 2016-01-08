@@ -13,6 +13,9 @@ class MarcJacobsSpider(CrawlSpider):
     name = "marc_jacobs"
     genders = ['boys', 'girls', 'mens', 'men', 'womens', 'women']
     possible_one_sizes = ['OS', '1SZ', 'O/S']
+    nav_bar_path = ".//*[@id='navigation']//div[@class='level-2']"
+    pagination_path = ".//div[@data-grid-url]"
+    products_path = ".//div[contains(@class,'product-tile')]"
 
     start_urls = (
         'http://www.marcjacobs.com/',
@@ -20,10 +23,10 @@ class MarcJacobsSpider(CrawlSpider):
 
     rules = (
 
-        Rule(SgmlLinkExtractor(restrict_xpaths=".//*[@id='navigation']//div[@class='level-2']"),),
-        Rule(SgmlLinkExtractor(restrict_xpaths=".//div[@data-grid-url]", tags=('div',), attrs=('data-grid-url',)),
+        Rule(SgmlLinkExtractor(restrict_xpaths=nav_bar_path),),
+        Rule(SgmlLinkExtractor(restrict_xpaths= pagination_path, tags=('div',), attrs=('data-grid-url',)),
              process_links="process_next_page_url"),
-        Rule(SgmlLinkExtractor(restrict_xpaths=".//div[contains(@class,'product-tile')]"),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_path),
              callback='parse_product')
     )
 
@@ -211,3 +214,4 @@ class MarcJacobsSpider(CrawlSpider):
 
     def get_currency(self, price):
         return re.sub(r'[\d,.\s]', '', price)
+
