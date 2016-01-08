@@ -8,7 +8,6 @@ from scrapy.contrib.loader.processor import TakeFirst
 from urlparse import urlparse
 import re
 import json
-import logging
 
 
 class Mixin(object):
@@ -72,10 +71,11 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def skus(self, hxs):
-        seen_colors = []
+        seen_colors = media_urls = denim_length = []
         skus = {}
         json_data = self.take_first(clean(hxs.select("//script[contains(text(), 'new Product.Config(')]//text()")))
         json_data = json.loads(re.findall('Product.Config\(({.*})', json_data)[0])
+        skus_info = self.skus_data(hxs)
         colors = json_data['attributes']['92']['options']
         sizes = json_data['attributes']['173']['options']
         try:
@@ -83,46 +83,43 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
         except KeyError:
             denim_lengths = []
 
-        stock_info = self.oos_data(hxs)
-        media_urls = []
-
         previous_price, price, currency = self.product_pricing(hxs)
 
-        for key, stock_item in stock_info.iteritems():
+        for key, sku_item in skus_info.iteritems():
             ids = key.split(',')
             if len(ids) == 3:
-                color, size, denim = key.split(',')
+                color_id, size_id, denim_id = key.split(',')
             elif len(ids) == 2:
-                logging.info(key.split(','))
-                color, size = key.split(',')
-                denim = None
+                color_id, size_id = key.split(',')
+                denim_id = None
             else:
                 continue
-            color = [x['label'] for x in colors if x['id'] == color][0]
-            size = [x['label'] for x in sizes if x['id'] == size][0]
-            denim_length = []
-            if denim:
-                denim_length = [x['label'] for x in denim_lengths if x['id'] == denim][0]
+            color = [x['label'] for x in colors if x['id'] == color_id][0]
+            size = [x['label'] for x in sizes if x['id'] == size_id][0]
+
+            if denim_id:
+                denim_length = [x['label'] for x in denim_lengths if x['id'] == denim_id][0]
             size = size if size != 'One size fits all' else self.one_size
             sku = {
                 'price': price,
                 'currency': currency,
                 'size': size,
                 'colour': color,
-                'out_of_stock': stock_item['not_is_in_stock'],
+                'out_of_stock': sku_item['not_is_in_stock'],
             }
 
             if previous_price:
                 sku['previous_prices'] = [previous_price]
 
-            skus[color + '_' + size + '_' + denim_length if denim_length else size + '_' + color] = sku
-            # if color not in seen_colors:
-            #     seen_colors += color
-            #     media_urls += [stock_item['media_url']]
+            sku_key = color + '_' + size + '_' + denim_length if denim_length else color + '_' + size
+            skus[sku_key] = sku
+            if color not in seen_colors:
+                seen_colors += [color]
+                media_urls += [sku_item['media_url']]
 
         return skus, media_urls
 
-    def oos_data(self, hxs):
+    def skus_data(self, hxs):
         stock_info = self.take_first(clean(hxs.select("//script[contains(text(), 'AmConfigurableData(')]//text()")))
         return json.loads(re.findall('AmConfigurableData\(({.*})', stock_info)[0])
 
