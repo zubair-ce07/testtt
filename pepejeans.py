@@ -183,10 +183,10 @@ class PepeJeansCrawlSpider(Mixin, BaseCrawlSpider):
     def parse_pages(self, response):
         hxs = HtmlXPathSelector(response)
         total_pages = clean(hxs.select(self.pagination_x))
-        url_t = '%s?is_ajax=1&p=%s&is_scroll=1'
+        url_t = response.url + '?is_ajax=1&p=%s&is_scroll=1'
         if total_pages:
             for page_no in range(int(total_pages[0]) + 1):
-                url = url_t % (response.url, str(page_no))
+                url = url_t % str(page_no)
                 yield Request(url, callback=self.parse, meta={'trail': self.add_trail(response)})
 
     def add_trail(self, response):
