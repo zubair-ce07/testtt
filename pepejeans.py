@@ -19,6 +19,7 @@ class Mixin(object):
 class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
+    lang = 'en'
     start_urls = [Mixin.pfx + 'en_gb/']
     gender_map = (
         ('boy', 'boys'),
@@ -32,6 +33,7 @@ class MixinUK(Mixin):
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
+    lang = 'de'
     start_urls = [Mixin.pfx + 'de_de/']
     gender_map = (
         ('boy', 'boys'),
