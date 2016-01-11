@@ -76,7 +76,7 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
         json_data = self.take_first(clean(hxs.select("//script[contains(text(), 'new Product.Config(')]//text()")))
         json_data = json.loads(re.findall('Product.Config\(({.*})', json_data)[0])
         skus_info = self.skus_data(hxs)
-        
+
         colors = json_data['attributes']['92']['options']
         sizes = json_data['attributes']['173']['options']
         denim_lengths = json_data.get('attributes').get('212', {}).get('options', [])
@@ -159,7 +159,7 @@ class PepeJeansCrawlSpider(Mixin, BaseCrawlSpider):
     deny_r = ['campaigns']
     next_page_x_t = "//div[contains(@id,'am-pager-count')]//text()"
     listings_x = [
-        "//li[contains(@class,'level0')][3]",
+        "//li[contains(@class,'level0')]",
     ]
     products_x = [
         "//li[@class='item last']",
