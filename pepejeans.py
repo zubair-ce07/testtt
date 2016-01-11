@@ -71,17 +71,15 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def skus(self, hxs):
-        seen_colors = media_urls = denim_length = []
-        skus = {}
+        seen_colors, media_urls, denim_length, skus = [], [], [], {}
+
         json_data = self.take_first(clean(hxs.select("//script[contains(text(), 'new Product.Config(')]//text()")))
         json_data = json.loads(re.findall('Product.Config\(({.*})', json_data)[0])
         skus_info = self.skus_data(hxs)
+        
         colors = json_data['attributes']['92']['options']
         sizes = json_data['attributes']['173']['options']
-        try:
-            denim_lengths = json_data['attributes']['212']['options']
-        except KeyError:
-            denim_lengths = []
+        denim_lengths = json_data.get('attributes').get('212', {}).get('options', [])
 
         previous_price, price, currency = self.product_pricing(hxs)
 
@@ -94,11 +92,15 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
                 denim_id = None
             else:
                 continue
-            color = [x['label'] for x in colors if x['id'] == color_id][0]
-            size = [x['label'] for x in sizes if x['id'] == size_id][0]
 
-            if denim_id:
-                denim_length = [x['label'] for x in denim_lengths if x['id'] == denim_id][0]
+            try:
+                color = [x['label'] for x in colors if x['id'] == color_id][0]
+                size = [x['label'] for x in sizes if x['id'] == size_id][0]
+                if denim_id:
+                    denim_length = [x['label'] for x in denim_lengths if x['id'] == denim_id][0]
+            except IndexError:
+                continue
+
             size = size if size != 'One size fits all' else self.one_size
             sku = {
                 'price': price,
@@ -115,9 +117,9 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
             skus[sku_key] = sku
             if color not in seen_colors:
                 seen_colors += [color]
-                media_urls += [sku_item['media_url']]
+                media_urls += [sku_item.get('media_url', '')]
 
-        return skus, media_urls
+        return skus, clean(media_urls)
 
     def skus_data(self, hxs):
         stock_info = self.take_first(clean(hxs.select("//script[contains(text(), 'AmConfigurableData(')]//text()")))
@@ -154,14 +156,14 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
 
 
 class PepeJeansCrawlSpider(Mixin, BaseCrawlSpider):
+    deny_r = ['campaigns']
+    next_page_x_t = "//div[contains(@id,'am-pager-count')]//text()"
     listings_x = [
-        "//li[contains(@class,'level0')][2]",
+        "//li[contains(@class,'level0')][3]",
     ]
     products_x = [
         "//li[@class='item last']",
     ]
-    next_page_x_t = "//div[contains(@id,'am-pager-count')]//text()"
-    deny_r = ['campaigns']
 
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=deny_r),
