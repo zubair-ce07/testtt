@@ -48,7 +48,7 @@ class MixinDE(Mixin):
 
 class PepeJeansParseSpider(Mixin, BaseParseSpider):
     take_first = TakeFirst()
-    price_x = "//span[@class='price']//text()"
+    price_x = "//div[@class='price-info']//span[@class='price']//text()"
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
