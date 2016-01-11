@@ -39,7 +39,9 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
         ('madchen', 'girls'),
         ('junge', 'boys'),
         ('frau', 'women'),
+        ('damen', 'women'),
         ('mann', 'men'),
+        ('herren', 'men'),
         ('kid', 'unisex-kids'),
     )
 
@@ -101,7 +103,7 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
             except IndexError:
                 continue
 
-            size = size if size != 'One size fits all' else self.one_size
+            size = self.one_size if size in ['One size fits all', '0'] else size
             sku = {
                 'price': price,
                 'currency': currency,
@@ -157,7 +159,7 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
 
 class PepeJeansCrawlSpider(Mixin, BaseCrawlSpider):
     deny_r = ['campaigns']
-    next_page_x_t = "//div[contains(@id,'am-pager-count')]//text()"
+    pagination_x = "//div[contains(@id,'am-pager-count')]//text()"
     listings_x = [
         "//li[contains(@class,'level0')]",
     ]
@@ -174,7 +176,7 @@ class PepeJeansCrawlSpider(Mixin, BaseCrawlSpider):
 
     def parse_pages(self, response):
         hxs = HtmlXPathSelector(response)
-        total_pages = clean(hxs.select(self.next_page_x_t))
+        total_pages = clean(hxs.select(self.pagination_x))
         if total_pages:
             for page_no in range(int(total_pages[0]) + 1):
                 url = response.url + '?is_ajax=1&p=' + str(page_no) + '&is_scroll=1'
