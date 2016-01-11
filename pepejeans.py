@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from base import BaseParseSpider, BaseCrawlSpider, clean
+from base import BaseParseSpider, BaseCrawlSpider, clean, tokenize
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
 from scrapy.http import Request
@@ -150,7 +150,7 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
 
     def product_gender(self, category):
         for x, y in self.gender_map:
-            if x in category:
+            if x in tokenize(category):
                 return y
         return 'unisex-kids'
 
