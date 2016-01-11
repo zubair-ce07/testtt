@@ -136,7 +136,7 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
     def image_urls(self, hxs, media_urls):
         images_data = clean(hxs.select("//script[contains(text(),'imageZoom')]"))[1:]
         images_url = clean([re.findall("imageZoom = '(.*?)';", x)[0] for x in images_data])
-        return images_url, [Request(url=x, callback=self.parse_images) for x in media_urls]
+        return list(reversed(images_url)), [Request(url=x, callback=self.parse_images) for x in media_urls]
 
     def product_id(self, hxs):
         return self.take_first(clean(hxs.select("//p[@class='ref']//text()").re('SKU: (.*)')))
