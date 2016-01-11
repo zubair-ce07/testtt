@@ -20,22 +20,22 @@ class MixinUK(Mixin):
     retailer = Mixin.retailer + '-uk'
     market = 'UK'
     start_urls = [Mixin.pfx + 'en_gb/']
+    gender_map = (
+        ('boy', 'boys'),
+        ('girl', 'girls'),
+        ('women', 'women'),
+        ('men', 'men'),
+        ('kid', 'unisex-kids'),
+    )
 
 
 class MixinDE(Mixin):
     retailer = Mixin.retailer + '-de'
     market = 'DE'
     start_urls = [Mixin.pfx + 'de_de/']
-
-
-class PepeJeansParseSpider(Mixin, BaseParseSpider):
-    take_first = TakeFirst()
-    price_x = "//span[@class='price']//text()"
     gender_map = (
         ('boy', 'boys'),
         ('girl', 'girls'),
-        ('women', 'women'),
-        ('men', 'men'),
         ('madchen', 'girls'),
         ('junge', 'boys'),
         ('frau', 'women'),
@@ -44,6 +44,11 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
         ('herren', 'men'),
         ('kid', 'unisex-kids'),
     )
+
+
+class PepeJeansParseSpider(Mixin, BaseParseSpider):
+    take_first = TakeFirst()
+    price_x = "//span[@class='price']//text()"
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -75,18 +80,19 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
     def skus(self, hxs):
         seen_colors, media_urls, denim_length, skus = [], [], [], {}
 
-        json_data = self.take_first(clean(hxs.select("//script[contains(text(), 'new Product.Config(')]//text()")))
-        json_data = json.loads(re.findall('Product.Config\(({.*})', json_data)[0])
+        mapping_info = self.take_first(clean(hxs.select("//script[contains(text(), 'new Product.Config(')]//text()")))
+        mapping_info = json.loads(re.findall('Product.Config\(({.*})', mapping_info)[0])
         skus_info = self.skus_data(hxs)
 
-        colors = json_data['attributes']['92']['options']
-        sizes = json_data['attributes']['173']['options']
-        denim_lengths = json_data.get('attributes').get('212', {}).get('options', [])
+        colors = mapping_info['attributes']['92']['options']
+        sizes = mapping_info['attributes']['173']['options']
+        denim_lengths = mapping_info.get('attributes').get('212', {}).get('options', [])
 
         previous_price, price, currency = self.product_pricing(hxs)
 
         for key, sku_item in skus_info.iteritems():
             ids = key.split(',')
+
             if len(ids) == 3:
                 color_id, size_id, denim_id = key.split(',')
             elif len(ids) == 2:
