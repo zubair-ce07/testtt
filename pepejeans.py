@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from base import BaseParseSpider, BaseCrawlSpider, clean, tokenize, reset_cookies, CurrencyParser
+from base import BaseParseSpider, BaseCrawlSpider, clean
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
 from scrapy.http import Request
