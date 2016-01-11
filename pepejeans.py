@@ -112,6 +112,9 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
                 continue
 
             size = self.one_size if size in ['One size fits all', '0'] else size
+            if denim_length:
+                size = size + '/' + denim_length
+
             sku = {
                 'price': price,
                 'currency': currency,
@@ -123,8 +126,7 @@ class PepeJeansParseSpider(Mixin, BaseParseSpider):
             if previous_price:
                 sku['previous_prices'] = [previous_price]
 
-            sku_key = color + '_' + size + '_' + denim_length if denim_length else color + '_' + size
-            skus[sku_key] = sku
+            skus[color + '_' + size] = sku
             if color not in seen_colors:
                 seen_colors += [color]
                 media_urls += [sku_item.get('media_url', '')]
