@@ -81,12 +81,13 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_id(self, hxs):
-        return self.take_first(clean(hxs.select("//em[contains(@class,'description-item-num')]//text()")
-                                     .re("Item #:(.*)")))
+        id_xpath = "//em[contains(@class,'description-item-num')]//text()"
+        return self.take_first(clean(hxs.select(id_xpath).re("Item #:(.*)")))
 
     def product_brand(self, hxs):
-        return (self.take_first(clean(hxs.select("//div[contains(@class,'description-blurb-logo')]//a/@href")
-                .re('brands\/(.*).html'))) or '').title().replace('-', ' ')
+        brand_xpath = "//div[contains(@class,'description-blurb-logo')]//a/@href"
+        brand = self.take_first(clean(hxs.select(brand_xpath).re('brands\/(.*).html'))) or ''
+        return brand.title().replace('-', ' ')
 
     def image_urls(self, hxs):
         images_data = self.take_first(clean(hxs.select("//div[contains(@class,'preview-gallery')]//@data-product")))
@@ -94,8 +95,8 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return ['https:' + image['imagePath'] for color in images_data for image in color]
 
     def product_name(self, hxs):
-        return self.take_first(clean(hxs.select("//h1[@class='global-page-header__title']//text()"))).lower()\
-            .replace(self.product_brand(hxs).lower(), '').title()
+        name = self.take_first(clean(hxs.select("//h1[@class='global-page-header__title']//text()")))
+        return name.lower().replace(self.product_brand(hxs).lower(), '').title()
 
     def product_category(self, hxs):
         return clean([category.strip('/') for category in
@@ -131,20 +132,19 @@ class SportChekCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_start_url(self, response):
         product_url_t = 'https://' + self.allowed_domains[0] + '%s.html'
+        meta_data = {'trail': self.add_trail(response), 'gender': response.meta['gender']}
 
         json_data = json.loads(response.body)
         total_products = int(json_data['resultCount']['total'])
         products_data = json_data['products']
 
         for product in products_data:
-            yield Request(url=product_url_t % product['pagePath'], callback=self.parse_item,
-                          meta={'trail': self.add_trail(response), 'gender': response.meta['gender']})
+            yield Request(url=product_url_t % product['pagePath'], callback=self.parse_item, meta=meta_data)
 
         page_no = int(url_query_parameter(response.url, 'page'))
         if total_products - (page_no * 50) > 0:
             next_page_url = add_or_replace_parameter(response.url, 'page', str(page_no + 1))
-            yield Request(next_page_url, callback=self.parse_start_url, meta={'trail': self.add_trail(response),
-                                                                              'gender': response.meta['gender']})
+            yield Request(next_page_url, callback=self.parse_start_url, meta=meta_data)
 
     def add_trail(self, response):
         trail_part = [(response.meta.get('link_text', ''), response.url)]
