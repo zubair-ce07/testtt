@@ -19,13 +19,21 @@ class Mixin(object):
     start_urls_with_meta = [(url_t % 'Kids', {'gender': 'unisex-kids'}),
                             (url_t % 'Men', {'gender': 'men'}),
                             (url_t % 'Women', {'gender': 'women'}),
-                            (url_t % 'Fan Shop', {'gender': 'men'})]
+                            (url_t % 'Fan Shop', {'gender': 'men'}),
+                            (url_t % 'Accessories', {'gender': 'unisex-adults'})]
 
 
 class SportChekParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     price_x = "//span[@class='product-detail__price-text']//text()"
     take_first = TakeFirst()
+    gender_map = (
+        ('boy', 'boys'),
+        ('girl', 'girls'),
+        ('women', 'women'),
+        ('men', 'men'),
+        ('kid', 'unisex-kids'),
+    )
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -37,9 +45,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, hxs, response)
 
-        if garment['gender'] == 'unisex-kids':
-            garment['gender'] = self.product_gender(garment['name'].lower())
-
+        garment['gender'] = self.product_gender(garment['name'].lower(), garment['gender'])
         garment['merch_info'] = self.merch_info(hxs)
         garment['image_urls'] = self.image_urls(hxs)
         garment['skus'] = self.skus(hxs)
@@ -91,12 +97,11 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
     def product_category(self, hxs):
         return clean([x.strip('/') for x in clean(hxs.select("//div[@class='page-breadcrumb']//text()"))])[1:]
 
-    def product_gender(self, name):
-        if 'boy' in name:
-            return 'boys'
-        if 'girl' in name:
-            return 'girls'
-        return 'unisex-kids'
+    def product_gender(self, name, default_gender):
+        for x, y in self.gender_map:
+            if x in name:
+                return y
+        return default_gender
 
     def product_description(self, hxs):
         return clean(hxs.select("//*[contains(text(),'           Features')]/following-sibling::div//text() |"
