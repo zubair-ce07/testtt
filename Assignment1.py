@@ -7,21 +7,21 @@ import argparse
 # calculate the min and max values
 def weather_compare(date, max_temp, min_temp,
                     max_humidity, min_humidity, year):
-    if max_temp != '':
+    if max_temp:
         if int(max_temp) > int(weather_dic[year]['Max_Temp_Dic']['Max_Temp']):
             weather_dic[year]['Max_Temp_Dic']['Max_Temp'] = max_temp
             weather_dic[year]['Max_Temp_Dic']['date'] = date
 
-    if min_temp != '':
+    if min_temp:
         if int(min_temp) < int(weather_dic[year]['Min_Temp_Dic']['Min_Temp']) or \
                         weather_dic[year]['Min_Temp_Dic']['Min_Temp'] == '':
             weather_dic[year]['Min_Temp_Dic']['Min_Temp'] = min_temp
             weather_dic[year]['Min_Temp_Dic']['date'] = date
 
-    if max_humidity != '':
+    if max_humidity:
         if int(max_humidity) > int(weather_dic[year]['Max_Humidity']):
             weather_dic[year]['Max_Humidity'] = max_humidity
-    if min_humidity != '':
+    if min_humidity:
         if int(min_humidity) < int(weather_dic[year]['Min_Humidity']) or \
                         weather_dic[year]['Min_Humidity'] == '':
             weather_dic[year]['Min_Humidity'] = min_humidity
@@ -29,16 +29,16 @@ def weather_compare(date, max_temp, min_temp,
 
 # assign values to empty parameters
 def value_replace(year):
-    if weather_dic[year]['Max_Temp_Dic']['Max_Temp'] == '':
+    if not weather_dic[year]['Max_Temp_Dic']['Max_Temp']:
         weather_dic[year]['Max_Temp_Dic']['Max_Temp'] = -1000
 
-    if weather_dic[year]['Min_Temp_Dic']['Min_Temp'] == '':
+    if not weather_dic[year]['Min_Temp_Dic']['Min_Temp']:
         weather_dic[year]['Min_Temp_Dic']['Min_Temp'] = 1000
 
-    if weather_dic[year]['Max_Humidity'] == '':
+    if not weather_dic[year]['Max_Humidity']:
         weather_dic[year]['Max_Humidity'] = -1000
 
-    if weather_dic[year]['Min_Humidity'] == '':
+    if not weather_dic[year]['Min_Humidity']:
         weather_dic[year]['Min_Humidity'] = 1000
 
 
