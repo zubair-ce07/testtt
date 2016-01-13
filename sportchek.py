@@ -10,7 +10,6 @@ from scrapy.utils.url import url_query_parameter, add_or_replace_parameter
 
 class Mixin(object):
     market = 'CA'
-    lang = 'en-ca'
     retailer = 'sportchek-ca'
     allowed_domains = ['www.sportchek.ca', 'fgl.scene7.com']
     url_t = 'https://www.sportchek.ca/services/sportchek/search-and-promote/products?' \
@@ -25,7 +24,7 @@ class Mixin(object):
 
 class SportChekParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    price_x = "//span[@class='product-detail__price-text']//text()"
+    price_x = "//div[contains(@class,'price-wrap ')]//span[contains(text(), '$')]//text()"
     take_first = TakeFirst()
     gender_map = (
         ('boy', 'boys'),
@@ -116,6 +115,11 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
 
 class SportChekCrawlSpider(BaseCrawlSpider, Mixin):
+    #: We do not want to crawl "Electronics" under "Deals & Offers"
+    #: https://www.sportchek.ca/categories/equipment.html
+    #: We do not want to crawl "Equipment"
+    #: https://www.sportchek.ca/categories/chek-tech.html
+
     name = Mixin.retailer + '-crawl'
     parse_spider = SportChekParseSpider()
 
