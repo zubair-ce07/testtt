@@ -55,12 +55,14 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         skus_data = self.take_first(clean(hxs.select("//div[@data-module-type='SkuSelector']//@data-product-variants")))
         skus_data = json.loads(skus_data)['variants']
 
-        previous_price, price, currency = self.product_pricing(hxs)
+        try:
+            previous_price, price, currency = self.product_pricing(hxs)
+        except IndexError:
+            previous_price = price = ''
 
         for sku_data in skus_data:
             size = sku_data['sizeTitle']
             sku = {
-                'price': price,
                 'currency': 'CAD',
                 'size': self.one_size if size in ['N/S', 'NS'] else size,
                 'colour': sku_data['colorTitle'],
@@ -69,6 +71,8 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
             if sku_data['colorTitle'] == '99 NO COLOR':
                 sku.pop('colour')
+            if price:
+                sku['price'] = price
             if previous_price:
                 sku['previous_prices'] = [previous_price]
 
@@ -87,7 +91,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
     def image_urls(self, hxs):
         images_data = self.take_first(clean(hxs.select("//div[contains(@class,'preview-gallery')]//@data-product")))
         images_data = json.loads(images_data)['imageDetails'].values()
-        return ['https:' + y['imagePath'] for x in images_data for y in x]
+        return ['https:' + image['imagePath'] for color in images_data for image in color]
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h1[@class='global-page-header__title']//text()"))).lower()\
