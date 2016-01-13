@@ -52,7 +52,8 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, hxs):
         skus = {}
-        skus_data = self.take_first(clean(hxs.select("//div[@data-module-type='SkuSelector']//@data-product-variants")))
+        skus_xpath = "//div[@data-module-type='SkuSelector']//@data-product-variants"
+        skus_data = self.take_first(clean(hxs.select(skus_xpath)))
         skus_data = json.loads(skus_data)['variants']
 
         try:
@@ -90,8 +91,10 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return brand.title().replace('-', ' ')
 
     def image_urls(self, hxs):
-        images_data = self.take_first(clean(hxs.select("//div[contains(@class,'preview-gallery')]//@data-product")))
+        images_xpath = "//div[contains(@class,'preview-gallery')]//@data-product"
+        images_data = self.take_first(clean(hxs.select(images_xpath)))
         images_data = json.loads(images_data)['imageDetails'].values()
+
         return ['https:' + image['imagePath'] for color in images_data for image in color]
 
     def product_name(self, hxs):
@@ -99,8 +102,8 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return name.lower().replace(self.product_brand(hxs).lower(), '').title()
 
     def product_category(self, hxs):
-        return clean([category.strip('/') for category in
-                      clean(hxs.select("//div[@class='page-breadcrumb']//text()"))])[1:]
+        categories = clean(hxs.select("//div[@class='page-breadcrumb']//text()"))
+        return clean([category.strip('/') for category in categories])[1:]
 
     def product_gender(self, garment):
         name_l = garment['name'].lower()
@@ -110,14 +113,17 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return garment['gender']
 
     def product_description(self, hxs):
-        return clean(hxs.select("//*[contains(text(),'Features')]/following-sibling::div//text() |"
-                                " //div[contains(@class,'description-blurb-text')]//p[1]//text()"))
+        desc1_xpath = "//*[contains(text(),'Features')]/following-sibling::div//text()"
+        desc2_xpath = "//div[contains(@class,'description-blurb-text')]//p[1]//text()"
+        return clean(hxs.select(desc1_xpath + " | " + desc2_xpath))
 
     def product_care(self, hxs):
-        return clean(hxs.select("//*[contains(text(), 'Specifications')]/following-sibling::div//text()"))
+        care_xpath = "//*[contains(text(), 'Specifications')]/following-sibling::div//text()"
+        return clean(hxs.select(care_xpath))
 
     def merch_info(self, hxs):
-        if hxs.select("//div[@class='product-detail__options']//div[@class='product-detail__promotion']"):
+        merch_info_xpath = "//div[@class='product-detail__promotion']"
+        if hxs.select(merch_info_xpath):
             return ["Web Exclusive"]
 
 
