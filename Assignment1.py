@@ -1,7 +1,7 @@
 import glob
 import os
-import sys
 import csv
+import argparse
 
 
 # calculate the min and max values
@@ -78,56 +78,67 @@ def collect_results(date, weather_variables):
 
 def report_annual():
     print "Annual Max/Min Temperature" + '\n'
-    print "   Year 	" + "MAX Temp 	" + "MIN Temp 	" + "MAX Humidity 	" + "MIN Humidity 	"
+    print "   Year  " + "MAX Temp   " + "MIN Temp   " + "MAX Humidity   " + "MIN Humidity   "
     print '\n' + "   -------------------------------------------------------------------------"
 
     for key in weather_dic:
-        print "   " + key + "		 " + weather_dic[key]['Max_Temp_Dic']['Max_Temp'] + "	 	  " + \
-              weather_dic[key]['Min_Temp_Dic']['Min_Temp'] + "		   " + weather_dic[key][
-                  'Max_Humidity'] + " 	    	  " + weather_dic[key]['Min_Humidity']
+        print "   " + key + "        " + weather_dic[key]['Max_Temp_Dic']['Max_Temp'] + "         " + \
+              weather_dic[key]['Min_Temp_Dic']['Min_Temp'] + "         " + weather_dic[key][
+                  'Max_Humidity'] + "             " + weather_dic[key]['Min_Humidity']
     print '\n'
 
 
 def report_coolday():
     print "Hottest Day Of Each Year" + '\n'
-    print "   Year 	 " + "  Date 	" + "MAX Temp"
+    print "   Year   " + "  Date    " + "MAX Temp"
     print '\n' + "   ------------------------------------"
 
     for key in weather_dic:
-        print "   " + key + " 	" + weather_dic[key]['Max_Temp_Dic']['date'] + " 	 " + \
+        print "   " + key + "   " + weather_dic[key]['Max_Temp_Dic']['date'] + "     " + \
               weather_dic[key]['Max_Temp_Dic']['Max_Temp']
     print '\n'
 
 
 def report_hotday():
     print "Cooldest Day of Each Year" '\n'
-    print "   Year 	 " + "  Date 	" + "MIN Temp"
+    print "   Year   " + "  Date    " + "MIN Temp"
     print '\n' + "   ------------------------------------"
 
     for key in weather_dic:
-        print "   " + key + " 	" + weather_dic[key]['Min_Temp_Dic']['date'] + " 	 " + \
+        print "   " + key + "   " + weather_dic[key]['Min_Temp_Dic']['date'] + "     " + \
               weather_dic[key]['Min_Temp_Dic']['Min_Temp']
     print '\n'
 
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    # Add arguments
+    parser.add_argument(
+            '-r', '--report', type=str, nargs='+')
+    parser.add_argument(
+            '-d', '--directory', type=str, default='weatherdata')
+    # Array for all arguments passed to script
+    args = parser.parse_args()
+    # Assign args to variables
+    report = args.report
+    directory = args.directory
+    # Return all variable values
+    return directory, report
+
+
 def main():
-    arg_list = []
-    for arg in sys.argv:
-        arg_list.append(arg)
-    if len(arg_list) > 1:
-
-        read_weather_data(arg_list[2])
-
-        if int(arg_list[1]) == 1:
+    directory, report = get_args()
+    read_weather_data(directory)
+    if report:
+        if int(report[0]) == 1:
             report_annual()
 
-        if int(arg_list[1]) == 2:
+        if int(report[0]) == 2:
             report_coolday()
 
-        if int(arg_list[1]) == 3:
+        if int(report[0]) == 3:
             report_hotday()
     else:
-        read_weather_data('weatherdata')
         report_annual()
         report_coolday()
         report_hotday()
