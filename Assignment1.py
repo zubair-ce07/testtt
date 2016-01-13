@@ -137,7 +137,8 @@ def main():
         print '\nUsage:   weatherman \n'
         print '[Report #] \n1 for Annual Max/Min Temperature \n' \
               '2 for Hottest day of each year \n3 for coldest day of each year \n'
-        print '[data_dir] \nDirectory containing weather data files'
+        print '[data_dir] \nDirectory containing weather data files \n'
+        print 'For Example : python filename.py -r 1 -d /project/weatherdata'
 
 
 weather_dic = {}
