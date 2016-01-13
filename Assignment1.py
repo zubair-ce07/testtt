@@ -110,7 +110,7 @@ def get_args():
     parser.add_argument(
             '-r', '--report', type=str, nargs='+')
     parser.add_argument(
-            '-d', '--directory', type=str, default='weatherdata')
+            '-d', '--directory', type=str)
     # Array for all arguments passed to script
     args = parser.parse_args()
     # Assign args to variables
@@ -122,8 +122,9 @@ def get_args():
 
 def main():
     directory, report = get_args()
-    read_weather_data(directory)
-    if report:
+
+    if report and directory:
+        read_weather_data(directory)
         if int(report[0]) == 1:
             report_annual()
 
@@ -133,9 +134,10 @@ def main():
         if int(report[0]) == 3:
             report_hottestday()
     else:
-        report_annual()
-        report_coldestday()
-        report_hottestday()
+        print '\nUsage:   weatherman \n'
+        print '[Report #] \n1 for Annual Max/Min Temperature \n' \
+              '2 for Hottest day of each year \n3 for coldest day of each year \n'
+        print '[data_dir] \nDirectory containing weather data files'
 
 
 weather_dic = {}
