@@ -125,20 +125,20 @@ def main():
 
     if report and directory:
         read_weather_data(directory)
-        if int(report[0]) == 1:
+        if report[0] == '1':
             report_annual()
 
-        if int(report[0]) == 2:
+        if report[0] == '2':
             report_coldestday()
 
-        if int(report[0]) == 3:
+        if report[0] == '3':
             report_hottestday()
     else:
         print '\nUsage:   weatherman \n'
         print '[Report #] \n1 for Annual Max/Min Temperature \n' \
               '2 for Hottest day of each year \n3 for coldest day of each year \n'
         print '[data_dir] \nDirectory containing weather data files \n'
-        print 'For Example : python filename.py -r 1 -d /project/weatherdata'
+        print 'For Example : python Assignment1.py -r 1 -d /project/weatherdata'
 
 
 weather_dic = {}
