@@ -13,8 +13,8 @@ def weather_compare(date, max_temp, min_temp,
             weather_dic[year]['Max_Temp_Dic']['date'] = date
 
     if min_temp:
-        if int(min_temp) < int(weather_dic[year]['Min_Temp_Dic']['Min_Temp']) or \
-                        weather_dic[year]['Min_Temp_Dic']['Min_Temp'] == '':
+        if int(min_temp) < int(weather_dic[year]['Min_Temp_Dic']['Min_Temp']) or not \
+                weather_dic[year]['Min_Temp_Dic']['Min_Temp']:
             weather_dic[year]['Min_Temp_Dic']['Min_Temp'] = min_temp
             weather_dic[year]['Min_Temp_Dic']['date'] = date
 
@@ -23,13 +23,13 @@ def weather_compare(date, max_temp, min_temp,
             weather_dic[year]['Max_Humidity'] = max_humidity
 
     if min_humidity:
-        if int(min_humidity) < int(weather_dic[year]['Min_Humidity']) or \
-                        weather_dic[year]['Min_Humidity'] == '':
+        if int(min_humidity) < int(weather_dic[year]['Min_Humidity']) or not \
+                weather_dic[year]['Min_Humidity']:
             weather_dic[year]['Min_Humidity'] = min_humidity
 
 
 # assign values to empty parameters
-def value_replace(year):
+def replace_empty_values(year):
     if not weather_dic[year]['Max_Temp_Dic']['Max_Temp']:
         weather_dic[year]['Max_Temp_Dic']['Max_Temp'] = -1000
 
@@ -66,12 +66,11 @@ def collect_results(date, weather_variables):
                                                  'Min_Temp': weather_variables['Min TemperatureC']},
                                 'Max_Humidity': weather_variables['Max Humidity'],
                                 'Min_Humidity': weather_variables[' Min Humidity']}
-        value_replace(year[0])
-    else:
-        if len(year[0]) > 2:
-            weather_compare(date, weather_variables['Max TemperatureC'],
-                            weather_variables['Min TemperatureC'], weather_variables['Max Humidity'],
-                            weather_variables[' Min Humidity'], year[0])
+        replace_empty_values(year[0])
+    elif len(year[0]) > 2:
+        weather_compare(date, weather_variables['Max TemperatureC'],
+                        weather_variables['Min TemperatureC'], weather_variables['Max Humidity'],
+                        weather_variables[' Min Humidity'], year[0])
 
 
 def report_annual():
@@ -85,8 +84,8 @@ def report_annual():
     print '\n'
 
 
-def report_coolday():
-    print "Hottest Day Of Each Year" + '\n'
+def report_coldestday():
+    print "Coldest  Day Of Each Year" + '\n'
     print "   Year   " + "  Date    " + "MAX Temp"
     print '\n' + "   ------------------------------------"
     for key in weather_dic:
@@ -95,8 +94,8 @@ def report_coolday():
     print '\n'
 
 
-def report_hotday():
-    print "Cooldest Day of Each Year" '\n'
+def report_hottestday():
+    print "Hottest Day of Each Year" '\n'
     print "   Year   " + "  Date    " + "MIN Temp"
     print '\n' + "   ------------------------------------"
     for key in weather_dic:
@@ -129,14 +128,14 @@ def main():
             report_annual()
 
         if int(report[0]) == 2:
-            report_coolday()
+            report_coldestday()
 
         if int(report[0]) == 3:
-            report_hotday()
+            report_hottestday()
     else:
         report_annual()
-        report_coolday()
-        report_hotday()
+        report_coldestday()
+        report_hottestday()
 
 
 weather_dic = {}
