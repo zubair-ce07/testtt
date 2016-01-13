@@ -21,6 +21,7 @@ def weather_compare(date, max_temp, min_temp,
     if max_humidity:
         if int(max_humidity) > int(weather_dic[year]['Max_Humidity']):
             weather_dic[year]['Max_Humidity'] = max_humidity
+
     if min_humidity:
         if int(min_humidity) < int(weather_dic[year]['Min_Humidity']) or \
                         weather_dic[year]['Min_Humidity'] == '':
@@ -45,7 +46,6 @@ def value_replace(year):
 # Read data From File
 def read_weather_data(data_directory):
     os.chdir(data_directory)
-
     for file_name in glob.glob("*.txt"):
         with open(file_name) as csvfile:
             next(csvfile, None)
@@ -59,7 +59,6 @@ def read_weather_data(data_directory):
 
 def collect_results(date, weather_variables):
     year = date.split('-')
-
     if year[0] not in weather_dic and len(year[0]) > 2:
         weather_dic[year[0]] = {'Max_Temp_Dic': {'date': date,
                                                  'Max_Temp': weather_variables['Max TemperatureC']},
@@ -67,7 +66,6 @@ def collect_results(date, weather_variables):
                                                  'Min_Temp': weather_variables['Min TemperatureC']},
                                 'Max_Humidity': weather_variables['Max Humidity'],
                                 'Min_Humidity': weather_variables[' Min Humidity']}
-
         value_replace(year[0])
     else:
         if len(year[0]) > 2:
@@ -80,7 +78,6 @@ def report_annual():
     print "Annual Max/Min Temperature" + '\n'
     print "   Year  " + "MAX Temp   " + "MIN Temp   " + "MAX Humidity   " + "MIN Humidity   "
     print '\n' + "   -------------------------------------------------------------------------"
-
     for key in weather_dic:
         print "   " + key + "        " + weather_dic[key]['Max_Temp_Dic']['Max_Temp'] + "         " + \
               weather_dic[key]['Min_Temp_Dic']['Min_Temp'] + "         " + weather_dic[key][
@@ -92,7 +89,6 @@ def report_coolday():
     print "Hottest Day Of Each Year" + '\n'
     print "   Year   " + "  Date    " + "MAX Temp"
     print '\n' + "   ------------------------------------"
-
     for key in weather_dic:
         print "   " + key + "   " + weather_dic[key]['Max_Temp_Dic']['date'] + "     " + \
               weather_dic[key]['Max_Temp_Dic']['Max_Temp']
@@ -103,7 +99,6 @@ def report_hotday():
     print "Cooldest Day of Each Year" '\n'
     print "   Year   " + "  Date    " + "MIN Temp"
     print '\n' + "   ------------------------------------"
-
     for key in weather_dic:
         print "   " + key + "   " + weather_dic[key]['Min_Temp_Dic']['date'] + "     " + \
               weather_dic[key]['Min_Temp_Dic']['Min_Temp']
