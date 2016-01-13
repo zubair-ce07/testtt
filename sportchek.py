@@ -98,12 +98,13 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
             .replace(self.product_brand(hxs).lower(), '').title()
 
     def product_category(self, hxs):
-        return clean([x.strip('/') for x in clean(hxs.select("//div[@class='page-breadcrumb']//text()"))])[1:]
+        return clean([category.strip('/') for category in
+                      clean(hxs.select("//div[@class='page-breadcrumb']//text()"))])[1:]
 
     def product_gender(self, name, default_gender):
-        for x, y in self.gender_map:
-            if x in name:
-                return y
+        for key_word, gender in self.gender_map:
+            if key_word in name:
+                return gender
         return default_gender
 
     def product_description(self, hxs):
