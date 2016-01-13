@@ -44,7 +44,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, hxs, response)
 
-        garment['gender'] = self.product_gender(garment['name'].lower(), garment['gender'])
+        garment['gender'] = self.product_gender(garment)
         garment['merch_info'] = self.merch_info(hxs)
         garment['image_urls'] = self.image_urls(hxs)
         garment['skus'] = self.skus(hxs)
@@ -101,11 +101,12 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return clean([category.strip('/') for category in
                       clean(hxs.select("//div[@class='page-breadcrumb']//text()"))])[1:]
 
-    def product_gender(self, name, default_gender):
+    def product_gender(self, garment):
+        name_l = garment['name'].lower()
         for key_word, gender in self.gender_map:
-            if key_word in name:
+            if key_word in name_l:
                 return gender
-        return default_gender
+        return garment['gender']
 
     def product_description(self, hxs):
         return clean(hxs.select("//*[contains(text(),'           Features')]/following-sibling::div//text() |"
