@@ -109,7 +109,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return garment['gender']
 
     def product_description(self, hxs):
-        return clean(hxs.select("//*[contains(text(),'           Features')]/following-sibling::div//text() |"
+        return clean(hxs.select("//*[contains(text(),'Features')]/following-sibling::div//text() |"
                                 " //div[contains(@class,'description-blurb-text')]//p[1]//text()"))
 
     def product_care(self, hxs):
