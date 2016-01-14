@@ -58,6 +58,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         skus_data = json.loads(skus_data)['variants']
 
         try:
+            # For some products price is available only after adding to cart
             previous_price, price, currency = self.product_pricing(hxs)
         except IndexError:
             previous_price = price = ''
@@ -73,6 +74,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
             if sku_data['color'] == '99':
                 sku.pop('colour')
+
             if price:
                 sku['price'] = price
             if previous_price:
@@ -83,17 +85,17 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_id(self, hxs):
-        id_xpath = "//em[contains(@class,'description-item-num')]//text()"
-        return self.take_first(clean(hxs.select(id_xpath).re("Item #:(.*)")))
+        xpath = "//em[contains(@class,'description-item-num')]//text()"
+        return self.take_first(clean(hxs.select(xpath).re("Item #:(.*)")))
 
     def product_brand(self, hxs):
-        brand_xpath = "//div[contains(@class,'description-blurb-logo')]//a/@href"
-        brand = self.take_first(clean(hxs.select(brand_xpath).re('brands\/(.*).html'))) or ''
-        return brand.title().replace('-', ' ')
+        xpath = "//div[contains(@class,'description-blurb-logo')]//a/@href"
+        brand = self.take_first(clean(hxs.select(xpath).re('brands\/(.*).html'))) or ''
+        return brand.title().replace('-', ' ') or 'Sportchek'
 
     def image_urls(self, hxs):
-        images_xpath = "//div[contains(@class,'preview-gallery')]//@data-product"
-        images_data = self.take_first(clean(hxs.select(images_xpath)))
+        xpath = "//div[contains(@class,'preview-gallery')]//@data-product"
+        images_data = self.take_first(clean(hxs.select(xpath)))
         images_data = json.loads(images_data)['imageDetails'].values()
 
         return ['https:' + image['imagePath'] for color in images_data for image in color]
@@ -108,28 +110,30 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, garment):
         name_l = garment['name'].lower()
-        for key_word, gender in self.gender_map:
-            if key_word in name_l:
+        for gender_str, gender in self.gender_map:
+            if gender_str in name_l:
                 return gender
+
         return garment['gender']
 
     def product_description(self, hxs):
         desc1_xpath = "//*[contains(text(),'Features')]/following-sibling::div//text()"
         desc2_xpath = "//div[contains(@class,'description-blurb-text')]//p[1]//text()"
-        return clean(hxs.select(desc1_xpath + " | " + desc2_xpath))
+        return clean(hxs.select(desc1_xpath + "|" + desc2_xpath))
 
     def product_care(self, hxs):
-        care_xpath = "//*[contains(text(), 'Specifications')]/following-sibling::div//li[not(a)]//text()"
-        return clean(hxs.select(care_xpath))
+        xpath = "//*[contains(text(), 'Specifications')]/following-sibling::div//li[not(a)]//text()"
+        return clean(hxs.select(xpath))
 
     def merch_info(self, hxs):
-        merch_info_xpath = "//div[@class='product-detail__promo_desktop']//span//text()"
-        merch_info = clean(hxs.select(merch_info_xpath))
+        xpath = "//div[@class='product-detail__promo_desktop']//span//text()"
+        merch_info = clean(hxs.select(xpath))
 
         merch_info_str = ' '.join(merch_info)
         key_words = 'exclusive|online.only|price.shown.includes'
         if re.findall(key_words, merch_info_str, re.I):
             return merch_info
+        return []
 
 
 class SportChekCrawlSpider(BaseCrawlSpider, Mixin):
