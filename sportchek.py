@@ -65,7 +65,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         for sku_data in skus_data:
             size = sku_data['sizeTitle']
             sku = {
-                'currency': 'CAD',
+                'currency': self._CURRENCY_REMAP.get((self.market, currency), currency),
                 'size': self.one_size if size in ['N/S', 'NS'] else size,
                 'colour': sku_data['colorTitle'],
                 'out_of_stock': sku_data['available'] == 0,
@@ -124,7 +124,12 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
 
     def merch_info(self, hxs):
         merch_info_xpath = "//div[@class='product-detail__promo_desktop']//span//text()"
-        return clean(hxs.select(merch_info_xpath))
+        merch_info = clean(hxs.select(merch_info_xpath))
+
+        merch_info_str = ' '.join(merch_info)
+        key_words = 'exclusive|online.only|price.shown.includes'
+        if re.findall(key_words, merch_info_str, re.I):
+            return merch_info
 
 
 class SportChekCrawlSpider(BaseCrawlSpider, Mixin):
