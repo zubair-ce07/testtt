@@ -122,9 +122,8 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return clean(hxs.select(care_xpath))
 
     def merch_info(self, hxs):
-        merch_info_xpath = "//div[@class='product-detail__promotion']"
-        if hxs.select(merch_info_xpath):
-            return ["Web Exclusive"]
+        merch_info_xpath = "//div[@class='product-detail__promo_desktop']//span//text()"
+        return clean(hxs.select(merch_info_xpath))
 
 
 class SportChekCrawlSpider(BaseCrawlSpider, Mixin):
