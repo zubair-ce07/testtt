@@ -118,7 +118,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         return clean(hxs.select(desc1_xpath + " | " + desc2_xpath))
 
     def product_care(self, hxs):
-        care_xpath = "//*[contains(text(), 'Specifications')]/following-sibling::div//text()"
+        care_xpath = "//*[contains(text(), 'Specifications')]/following-sibling::div//li[not(a)]//text()"
         return clean(hxs.select(care_xpath))
 
     def merch_info(self, hxs):
