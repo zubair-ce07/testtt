@@ -6,6 +6,7 @@ from scrapy.contrib.loader.processor import TakeFirst
 import json
 from scrapy.http import Request
 from scrapy.utils.url import url_query_parameter, add_or_replace_parameter
+import re
 
 
 class Mixin(object):
@@ -45,9 +46,9 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, hxs, response)
 
         garment['gender'] = self.product_gender(garment)
-        garment['merch_info'] = self.merch_info(hxs)
         garment['image_urls'] = self.image_urls(hxs)
         garment['skus'] = self.skus(hxs)
+        garment['merch_info'] = self.merch_info(hxs)
         return garment
 
     def skus(self, hxs):
@@ -70,7 +71,7 @@ class SportChekParseSpider(BaseParseSpider, Mixin):
                 'out_of_stock': sku_data['available'] == 0,
             }
 
-            if sku_data['colorTitle'] == '99 NO COLOR':
+            if sku_data['color'] == '99':
                 sku.pop('colour')
             if price:
                 sku['price'] = price
