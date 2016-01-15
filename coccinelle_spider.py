@@ -4,6 +4,7 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
+import re
 
 
 class Mixin(object):
@@ -48,7 +49,8 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
 
     def skus(self, hxs):
         skus = {}
-        colors = clean(hxs.select("(//div[@id='swatch_holder_272'])[1]//img/@alt"))
+        #: Get colors from images_url in rare case when color label is  missing
+        colors = clean(hxs.select("(//div[@id='swatch_holder_272'])[1]//img/@alt")) or self.get_colors(hxs)
 
         previous_price, price, currency = self.product_pricing(hxs)
 
@@ -67,6 +69,11 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
             skus[color] = sku
 
         return skus
+
+    def get_colors(self, hxs):
+        images = self.image_urls(hxs)
+        pattern = "_(\w+?)\d+?_"
+        return list(set([re.findall(pattern, image)[0].lower() for image in images]))
 
     def product_id(self, hxs):
         id_xpath = "//*[starts-with(text(), 'Cod')]//text()"
