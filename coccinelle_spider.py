@@ -55,18 +55,18 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
         previous_price, price, currency = self.product_pricing(hxs)
 
         for color in colors:
+            size = self.one_size
             sku = {
                 'price': price,
                 'currency': currency,
-                'size': self.one_size,
+                'size': size,
                 'colour': color,
-                'out_of_stock': False
             }
 
             if previous_price:
                 sku['previous_prices'] = [previous_price]
 
-            skus[color] = sku
+            skus[color + '_' + size] = sku
 
         return skus
 
@@ -76,8 +76,7 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
         return list(set([re.findall(pattern, image)[0].lower() for image in images]))
 
     def product_id(self, hxs):
-        id_xpath = "//*[starts-with(text(), 'Cod')]//text()"
-        return self.take_first(clean(hxs.select(id_xpath).re("Cod.(.*)")))
+        return self.take_first(clean(hxs.select("//input[@name='product']/@value")))
 
     def product_brand(self, hxs):
         return 'Coccinelle'
@@ -96,7 +95,7 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
         return clean([category.strip('-') for category in categories])[1:-1]
 
     def raw_description(self, hxs):
-        return clean(hxs.select("//div[@class='panel']//text()"))
+        return clean(hxs.select("//div[@class='panel']//text()[not(parent::h2)]"))
 
     def product_description(self, hxs):
         return [rd for rd in self.raw_description(hxs) if not self.care_criteria(rd)]
