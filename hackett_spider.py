@@ -63,13 +63,34 @@ class HackettParseSpider(Mixin, BaseParseSpider):
 
         previous_price, base_price, currency = self.product_pricing(hxs)
 
+        skus, color_ids = self.set_colors(colors, skus)
+        skus = self.set_sizes(sizes, lengths, skus)
+        skus = self.set_lengths(lengths, skus)
+
+        for sku_id in skus:
+            sku = {
+                'price': skus[sku_id].get('price', 0) + base_price,
+                'currency': currency,
+            }
+
+            if sku['price'] == skus[sku_id]['previous_prices'][0]:
+                skus[sku_id].pop('previous_prices')
+
+            skus[sku_id].update(sku)
+
+        return skus, color_ids
+
+    def set_colors(self, colors, skus):
+        color_ids = []
         for color in colors:
             color_ids += [color['id']]
             for product in color['products']:
                 skus[product] = {
                     'colour': color['label'],
                 }
+        return skus, color_ids
 
+    def set_sizes(self, sizes, lengths, skus):
         for size in sizes:
             for product in size['products']:
                 sku = {
@@ -87,7 +108,9 @@ class HackettParseSpider(Mixin, BaseParseSpider):
                     skus[product].update(sku)
                 else:
                     skus[product] = sku
+        return skus
 
+    def set_lengths(self, lengths, skus):
         for length in lengths:
             for product in length['products']:
                 sku = {
@@ -96,19 +119,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
                     'previous_prices': [CurrencyParser.float_conversion(float(length['oldPrice']))],
                 }
                 skus[product].update(sku)
-
-        for sku_id in skus:
-            sku = {
-                'price': skus[sku_id].get('price', 0) + base_price,
-                'currency': currency,
-            }
-
-            if sku['price'] == skus[sku_id]['previous_prices'][0]:
-                skus[sku_id].pop('previous_prices')
-
-            skus[sku_id].update(sku)
-
-        return skus, color_ids
+        return skus
 
     def image_requests(self, response, color_ids):
         hxs = HtmlXPathSelector(response)
