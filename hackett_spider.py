@@ -21,13 +21,13 @@ class HackettParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + '-parse'
     take_first = TakeFirst()
     price_x = "//div[@class='product-shop']//span[contains(@id,'price')]//text()"
-    skus_xpath = "//script[contains(text(), 'new Product.Config(')]//text()"
+    skus_x = "//script[contains(text(), 'new Product.Config(')]//text()"
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
 
         pid = self.product_id(hxs)
-        if not hxs.select(self.skus_xpath):
+        if not hxs.select(self.skus_x):
             return self.out_of_stock_garment(response, pid)
 
         garment = self.new_unique_garment(pid)
@@ -54,7 +54,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
     def skus(self, hxs):
         skus, color_ids = {}, []
 
-        skus_info = self.take_first(clean(hxs.select(self.skus_xpath)))
+        skus_info = self.take_first(clean(hxs.select(self.skus_x)))
         skus_info = json.loads(re.findall('Product.Config\(({.*})\); lwParams', skus_info)[0])
 
         colors = skus_info.get('attributes').get('85', {}).get('options', [])
@@ -132,12 +132,12 @@ class HackettParseSpider(Mixin, BaseParseSpider):
         return self.take_first(clean(hxs.select("//input[@name='product']/@value")))
 
     def product_brand(self, hxs):
-        cat_name = ' '.join(self.product_category(hxs) + [self.product_name(hxs)])
+        cat_name = ' '.join(self.product_category(hxs) + [self.product_name(hxs)]).lower()
 
-        if re.findall('aston.martin', cat_name, re.I):
+        if 'aston martin' in cat_name:
             return "Aston Martin"
 
-        if re.findall('murdock', cat_name, re.I):
+        if 'murdock' in cat_name:
             return "Murdock"
 
         return "Hackett"
