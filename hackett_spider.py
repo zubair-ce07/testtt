@@ -170,8 +170,9 @@ class HackettParseSpider(Mixin, BaseParseSpider):
 
     def product_care(self, hxs):
         care = self.take_first(clean(hxs.select("//div[@class='product-attributtes']//text()")))
-        care = care.split('~')[0]
-        return [care] + [rd for rd in self.raw_description(hxs) if self.care_criteria(rd)]
+        care = clean(care.split('~')[0].title())
+        care = [care] + [rd.title() for rd in self.raw_description(hxs) if self.care_criteria(rd)]
+        return list(set(care))
 
 
 class HackettCrawlSpider(BaseCrawlSpider, Mixin):
