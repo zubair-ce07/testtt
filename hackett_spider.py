@@ -22,6 +22,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
     take_first = TakeFirst()
     price_x = "//div[@class='product-shop']//span[contains(@id,'price')]//text()"
     skus_x = "//script[contains(text(), 'new Product.Config(')]//text()"
+    images_utl_t = 'http://www.hackett.com/gb/optiongallery/index/index/?isAjax=1&variation=%s&product=%s'
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -123,14 +124,12 @@ class HackettParseSpider(Mixin, BaseParseSpider):
 
     def image_requests(self, response, color_ids):
         hxs = HtmlXPathSelector(response)
-        requests = []
-
-        url_t = 'http://www.hackett.com/gb/optiongallery/index/index/?isAjax=1&variation=%s&product=%s'
         product_id = self.product_id(hxs)
+        requests = []
 
         for color_id in color_ids:
             if color_id not in response.url:
-                url = url_t % ('{"85":' + color_id + '}', product_id)
+                url = self.images_url_t % ('{"85":' + color_id + '}', product_id)
                 requests += [Request(url, callback=self.parse_images)]
         return requests
 
