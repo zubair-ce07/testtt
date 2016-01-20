@@ -5,6 +5,7 @@ from scrapy.contrib.spiders import Rule
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
 import re
+import json
 
 
 class Mixin(object):
@@ -28,7 +29,7 @@ class MixinDE(Mixin):
 
 class CoccinelleParseSpider(Mixin, BaseParseSpider):
     take_first = TakeFirst()
-    price_x = "//div[@class='product-type-data clearer']//span[@class='price']//text()"
+    price_x = "//span[@class='price']//text()"
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -51,11 +52,15 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
         skus = {}
         #: Get colors from images_url in rare case when color label is  missing
         colors = clean(hxs.select("(//div[@id='swatch_holder_272'])[1]//img/@alt")) or self.get_colors(hxs)
+        color_ids = clean(hxs.select("(//div[@id='swatch_holder_272'])[1]//img/@rel"))
 
-        previous_price, price, currency = self.product_pricing(hxs)
+        color_prices = self.get_prices(hxs)
 
-        for color in colors:
+        for color, color_id in zip(colors, color_ids):
+            hxs = HtmlXPathSelector(text=color_prices[color_id])
+            previous_price, price, currency = self.product_pricing(hxs)
             size = self.one_size
+
             sku = {
                 'price': price,
                 'currency': currency,
@@ -69,6 +74,15 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
             skus[color + '_' + size] = sku
 
         return skus
+
+    def get_prices(self, hxs):
+        prices_dict = {}
+        color_prices = self.take_first(clean(hxs.select('//script[contains(text(), "prices_mappings")]//text()')))
+        color_prices = json.loads(re.findall("prices_mappings\['.*?'\] = ({.*}); images", color_prices)[0])
+
+        for color_price in color_prices.values():
+            prices_dict.update({color_price['272']: color_price['price']})
+        return prices_dict
 
     def get_colors(self, hxs):
         images = self.image_urls(hxs)
