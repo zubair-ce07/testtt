@@ -23,6 +23,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
     price_x = "//div[@class='product-shop']//span[contains(@id,'price')]//text()"
     skus_x = "//script[contains(text(), 'new Product.Config(')]//text()"
     images_url_t = 'http://www.hackett.com/gb/optiongallery/index/index/?isAjax=1&variation=%s&product=%s'
+    name_x = "//li[@class='product']//text()"
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -149,7 +150,8 @@ class HackettParseSpider(Mixin, BaseParseSpider):
         return self.take_first(clean(hxs.select("//input[@name='product']/@value")))
 
     def product_brand(self, hxs):
-        soup = ' '.join(self.product_category(hxs) + [self.product_name(hxs)]).lower()
+        name = self.take_first(clean(hxs.select(self.name_x)))
+        soup = ' '.join(self.product_category(hxs) + [name]).lower()
 
         if 'aston martin' in soup:
             return "Aston Martin"
@@ -164,7 +166,8 @@ class HackettParseSpider(Mixin, BaseParseSpider):
         return clean(hxs.select(xpath))
 
     def product_name(self, hxs):
-        return self.take_first(clean(hxs.select("//li[@class='product']//text()")))
+        name = self.take_first(clean(hxs.select(self.name_x))).lower()
+        return clean(name.replace(self.product_brand(hxs).lower(), '').title())
 
     def product_category(self, hxs):
         return clean(hxs.select("//div[@class='breadcrumbs']//li/a/text()"))[1:]
@@ -186,7 +189,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
 class HackettCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = HackettParseSpider()
-    # website is senstive to crawl speed. Increase download delay if running into 503.
+    # website is sensitive to crawl speed. Increase download delay if running into 503.
 
     listings_x = [
         "//li[contains(@class,'level')]//a[not(following-sibling::ul)]",
