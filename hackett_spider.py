@@ -22,7 +22,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
     take_first = TakeFirst()
     price_x = "//div[@class='product-shop']//span[contains(@id,'price')]//text()"
     skus_x = "//script[contains(text(), 'new Product.Config(')]//text()"
-    images_utl_t = 'http://www.hackett.com/gb/optiongallery/index/index/?isAjax=1&variation=%s&product=%s'
+    images_url_t = 'http://www.hackett.com/gb/optiongallery/index/index/?isAjax=1&variation=%s&product=%s'
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -64,6 +64,8 @@ class HackettParseSpider(Mixin, BaseParseSpider):
 
         previous_price, base_price, currency = self.product_pricing(hxs)
 
+        # skus could have varying prices which are available along with size or length
+        # therefore we look for prices in size if length is not available
         skus, color_ids = self.set_colors(colors, skus)
         skus = self.set_sizes(sizes, lengths, skus)
         skus = self.set_lengths(lengths, skus)
@@ -89,6 +91,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
                 skus[product] = {
                     'colour': color['label'],
                 }
+
         return skus, color_ids
 
     def set_sizes(self, sizes, lengths, skus):
@@ -109,6 +112,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
                     skus[product].update(sku)
                 else:
                     skus[product] = sku
+
         return skus
 
     def set_lengths(self, lengths, skus):
@@ -120,6 +124,7 @@ class HackettParseSpider(Mixin, BaseParseSpider):
                     'previous_prices': [CurrencyParser.float_conversion(float(length['oldPrice']))],
                 }
                 skus[product].update(sku)
+
         return skus
 
     def image_requests(self, response, color_ids):
@@ -131,23 +136,25 @@ class HackettParseSpider(Mixin, BaseParseSpider):
             if color_id not in response.url:
                 url = self.images_url_t % ('{"85":' + color_id + '}', product_id)
                 requests += [Request(url, callback=self.parse_images)]
+
         return requests
 
     def product_gender(self, hxs):
         if "kids" in tokenize(self.product_category(hxs)):
             return "boys"
+
         return "men"
 
     def product_id(self, hxs):
         return self.take_first(clean(hxs.select("//input[@name='product']/@value")))
 
     def product_brand(self, hxs):
-        cat_name = ' '.join(self.product_category(hxs) + [self.product_name(hxs)]).lower()
+        soup = ' '.join(self.product_category(hxs) + [self.product_name(hxs)]).lower()
 
-        if 'aston martin' in cat_name:
+        if 'aston martin' in soup:
             return "Aston Martin"
 
-        if 'murdock' in cat_name:
+        if 'murdock' in soup:
             return "Murdock"
 
         return "Hackett"
@@ -172,25 +179,25 @@ class HackettParseSpider(Mixin, BaseParseSpider):
         care = self.take_first(clean(hxs.select("//div[@class='product-attributtes']//text()")))
         care = clean(care.split('~')[0].title())
         care = [care] + [rd.title() for rd in self.raw_description(hxs) if self.care_criteria(rd)]
+
         return list(set(care))
 
 
 class HackettCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = HackettParseSpider()
+    # website is senstive to crawl speed. Increase download delay if running into 503.
 
     listings_x = [
         "//li[contains(@class,'level')]//a[not(following-sibling::ul)]",
         "//li[@class='current']/following-sibling::li[1]//a",
     ]
+
     products_x = [
         "//div[@class='faux-column']//li/a",
     ]
 
     rules = (
-        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x),
-             callback='parse'),
-
-        Rule(SgmlLinkExtractor(restrict_xpaths=products_x)
-             , callback='parse_item')
+        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x), callback='parse'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=products_x), callback='parse_item')
     )
