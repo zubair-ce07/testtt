@@ -46,15 +46,16 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
 
         garment['image_urls'] = self.image_urls(hxs)
         garment['skus'] = self.skus(hxs)
+
         return garment
 
     def skus(self, hxs):
         skus = {}
         #: Get colors from images_url in rare case when color label is  missing
-        colors = clean(hxs.select("(//div[@id='swatch_holder_272'])[1]//img/@alt")) or self.get_colors(hxs)
+        colors = clean(hxs.select("(//div[@id='swatch_holder_272'])[1]//img/@alt")) or self.product_colors(hxs)
         color_ids = clean(hxs.select("(//div[@id='swatch_holder_272'])[1]//img/@rel"))
 
-        color_prices = self.get_prices(hxs)
+        color_prices = self.skus_price_html(hxs)
 
         for color, color_id in zip(colors, color_ids):
             hxs = HtmlXPathSelector(text=color_prices[color_id])
@@ -75,16 +76,17 @@ class CoccinelleParseSpider(Mixin, BaseParseSpider):
 
         return skus
 
-    def get_prices(self, hxs):
-        prices_dict = {}
+    def skus_price_html(self, hxs):
+        prices_mapping = {}
         color_prices = self.take_first(clean(hxs.select('//script[contains(text(), "prices_mappings")]//text()')))
         color_prices = json.loads(re.findall("prices_mappings\['.*?'\] = ({.*}); images", color_prices)[0])
 
         for color_price in color_prices.values():
-            prices_dict.update({color_price['272']: color_price['price']})
-        return prices_dict
+            prices_mapping.update({color_price['272']: color_price['price']})
 
-    def get_colors(self, hxs):
+        return prices_mapping
+
+    def product_colors(self, hxs):
         images = self.image_urls(hxs)
         pattern = "_(\w+?)\d+?_"
         return list(set([re.findall(pattern, image)[0].lower() for image in images]))
