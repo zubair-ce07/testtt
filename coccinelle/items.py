@@ -21,4 +21,3 @@ class CoccinelleItem(scrapy.Item):
     sku = scrapy.Field()
     price = scrapy.Field()
     colours = scrapy.Field()
-    pass
