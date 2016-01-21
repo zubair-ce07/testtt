@@ -12,13 +12,12 @@ class CoccinelleSpider(CrawlSpider):
     start_urls = [
         "http://www.coccinelle.com/gb_en"]
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=("//*[@id='nav']/li",))),
-        Rule(LinkExtractor(restrict_xpaths=("//*[@class='next']",))),
+        Rule(LinkExtractor(restrict_xpaths=("//*[@id='nav']/li", "//*[@class='next']",))),
         Rule(LinkExtractor(allow=(".html",),
                            restrict_xpaths=("//*[@class = 'item' or @class ='item product_big right']",)),
              callback='parse_product'),
     )
-    
+
     def parse_product(self, response):
         item = CoccinelleItem()
         item['description'] = self.get_description(response)
@@ -57,10 +56,10 @@ class CoccinelleSpider(CrawlSpider):
         price = re.sub(r'[^0-9.]+', '', price[0])
         sku = {}
         for c in colors:
-            item = dict(currency=currency, price=price, color=c, size='One Size')
+            item = {'currency': currency, 'price': price, 'color': c, 'size': 'One Size'}
             sku[c + '_One size'] = item
         if colors:
-            sku['_One Size'] = dict(currency=currency, price=price, color='', size='One Size')
+            sku['_One Size'] = {'currency': currency, 'price': price, 'color': '', 'size': 'One Size'}
         return sku
 
     def get_category(self, response):
