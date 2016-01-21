@@ -10,7 +10,8 @@ class CoccinelleSpider(CrawlSpider):
     name = "coccinelle"
     allowed_domains = ["coccinelle.com"]
     start_urls = [
-        "http://www.coccinelle.com/gb_en"]
+        "http://www.coccinelle.com/gb_en/"]
+
     rules = (
         Rule(LinkExtractor(restrict_xpaths=("//*[@id='nav']/li", "//*[@class='next']",))),
         Rule(LinkExtractor(allow=(".html",),
@@ -47,19 +48,9 @@ class CoccinelleSpider(CrawlSpider):
         colors = response.xpath(
                 "//*[@class ='product-options']//*[contains(@class , 'swatches_single-swatch swatch_color')]"
                 "/img/@alt").extract()
-        price = response.xpath(
-                "//*[@class = 'product-type-data clearer']//*[@class= 'special-price' or @class= 'regular-price']"
-                "//*[@class='price']/text()").extract()
-
-        price = self.clean_list(price)
-        currency = self.currency(price[0][0].encode('utf-8'))
-        price = re.sub(r'[^0-9.]+', '', price[0])
+        price = response.xpath("//*[@class = 'product-type-data clearer'] //*[@class='price']/text()").extract()
         sku = {}
-        for c in colors:
-            item = {'currency': currency, 'price': price, 'color': c, 'size': 'One Size'}
-            sku[c + '_One size'] = item
-        if colors:
-            sku['_One Size'] = {'currency': currency, 'price': price, 'color': '', 'size': 'One Size'}
+        self.sku(price, colors, sku)
         return sku
 
     def get_category(self, response):
@@ -86,3 +77,25 @@ class CoccinelleSpider(CrawlSpider):
             conv = locale.localeconv()
             if conv['currency_symbol'] == curr_sign:
                 return conv['int_curr_symbol']
+
+    def sku(self, price, colors, sku):
+        price = self.clean_list(price)
+        currency = self.currency(price[0][0].encode('utf-8'))
+        price_list = []
+        for pr in price:
+            price_list.append(re.sub(r'[^0-9.]+', '', pr))
+        for c in colors:
+            self.put_item(c, price_list, sku, currency)
+
+        if not colors:
+            self.put_item('', price_list, sku, currency)
+        return sku
+
+    def put_item(self, color, price_list, sku, currency):
+        if len(price_list) > 1:
+            item = {'currency': currency, 'special_price': price_list[0], 'regular_price': price_list[1],
+                    'color': color, 'size': 'One Size'}
+        else:
+            item = {'currency': currency, 'price': price_list[0], 'color': color, 'size': 'One Size'}
+        sku[color + '_One size'] = item
+        return sku
