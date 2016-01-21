@@ -1,29 +1,24 @@
 import scrapy
 from coccinelle.items import CoccinelleItem
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 import locale
 import re
 
 
-class CoccinelleSpider(scrapy.Spider):
+class CoccinelleSpider(CrawlSpider):
     name = "coccinelle"
     allowed_domains = ["coccinelle.com"]
     start_urls = [
         "http://www.coccinelle.com/gb_en"]
-
-    def parse(self, response):
-        for href in response.xpath("//*[@id='nav']/li//a/@href"):
-            url = response.urljoin(href.extract())
-            yield scrapy.Request(url, callback=self.parse_url_list)
-
-    def parse_url_list(self, response):
-        for href in response.xpath("//*[@class = 'item' or @class ='item product_big right']/a/@href"):
-            url = response.urljoin(href.extract())
-            if '.html' in url:
-                yield scrapy.Request(url, callback=self.parse_product)
-        next_href = response.xpath("//*[@class='next']//a/@href").extract()
-        if next_href:
-            yield scrapy.Request(next_href[0], callback=self.parse_url_list)
-
+    rules = (
+        Rule(LinkExtractor(restrict_xpaths=("//*[@id='nav']/li",))),
+        Rule(LinkExtractor(restrict_xpaths=("//*[@class='next']",))),
+        Rule(LinkExtractor(allow=(".html",),
+                           restrict_xpaths=("//*[@class = 'item' or @class ='item product_big right']",)),
+             callback='parse_product'),
+    )
+    
     def parse_product(self, response):
         item = CoccinelleItem()
         item['description'] = self.get_description(response)
