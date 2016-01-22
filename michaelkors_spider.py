@@ -16,14 +16,13 @@ class Mixin(object):
     retailer = 'michaelkors-us'
     allowed_domains = ['www.michaelkors.com', 'michaelkors.scene7.com']
 
-    url_t = 'http://www.michaelkors.com%s'
+    url_prefix = 'http://www.michaelkors.com%s'
 
-    start_urls_with_meta = [(url_t % '/_/N-28ee', {'gender': 'women'}),
-                            (url_t % '/men/_/N-2861', {'gender': 'men'}),
-                            (url_t % '/shoes/kids/_/N-28ik', {'gender': 'girls'}),
-                            (url_t % '/accessories/_/N-282b', {'gender': 'women'}),
-                            (url_t % '/watches/watch-hunger-stop/_/N-28z7', {'gender': 'men'}),
-    ]
+    start_urls_with_meta = [(url_prefix % '/_/N-28ee', {'gender': 'women'}),
+                            (url_prefix % '/men/_/N-2861', {'gender': 'men'}),
+                            (url_prefix % '/shoes/kids/_/N-28ik', {'gender': 'girls'}),
+                            (url_prefix % '/accessories/_/N-282b', {'gender': 'women'}),
+                            (url_prefix % '/watches/watch-hunger-stop/_/N-28z7', {'gender': 'men'})]
 
 
 class MichaelKorsParseSpider(BaseParseSpider, Mixin):
@@ -39,6 +38,9 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
 
+        if hxs.select("//div[contains(.,'This product is no longer available')]"):
+            return
+
         pid = self.product_id(hxs)
         garment = self.new_unique_garment(pid)
         if not garment:
@@ -48,7 +50,7 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
 
         garment['merch_info'] = self.merch_info(hxs)
         garment['skus'], garment['image_urls'] = {}, []
-        garment['meta'] = {'requests_queue': self.sku_requests(hxs) + self.category_request(hxs)}
+        garment['meta'] = {'requests_queue': self.color_requests(hxs) + self.category_request(hxs)}
 
         return self.next_request_or_garment(garment)
 
@@ -75,7 +77,7 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
         color_id = url_query_parameter(response.url, 'color')
         product_id = url_query_parameter(response.url, 'productId')
 
-        #: If sizes for a product does not exists
+        #: If sizes for a product does not exist
         if not hxs.select("//select[@class='size_select']"):
             garment['skus'].update(self.skus(hxs))
 
@@ -112,7 +114,7 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
 
         return [Request(url, callback=self.parse_category)]
 
-    def sku_requests(self, hxs):
+    def color_requests(self, hxs):
         requests = []
         xpath = "//ul[contains(@class,'color_swatch')]//li//@onclick"
         product_id = self.product_id(hxs)
@@ -128,14 +130,13 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
     def skus(self, hxs):
         skus = {}
         color = self.take_first(clean(hxs.select("//span[@class='product_color_swatch']//text()")))
-        color = color.strip(' - Sold Out')
         size = self.take_first(clean(hxs.select("//span[@class='product_size_labels']/text()").re('SIZE:(.*)')))
 
         previous_price, price, currency = self.product_pricing(hxs)
 
         sku = {
             'size': size if size else self.one_size,
-            'colour': color,
+            'colour': color.strip(' - Sold Out') if color else color,
             'out_of_stock': hxs.select("//div[@class='outofstock-pdp']") != [],
             'price': price,
             'currency': currency
@@ -156,7 +157,7 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
         return self.take_first(clean(hxs.select("//input[@id='productId']//@value")))
 
     def product_brand(self, hxs):
-        return self.take_first(clean(hxs.select("//h1[@class='brand_name']//text()")))
+        return self.take_first(clean(hxs.select("//h1[@class='brand_name']//text()"))) or "Michael Kors"
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h1[@class='prod_name']//text()")))
@@ -170,8 +171,8 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
 
     def product_description(self, hxs):
         xpath = "//div[contains(@class,'description_tabs_1')]//text()"
-        desc = self.take_first(clean(hxs.select(xpath)))
-        desc = [desc] + [rd.title() for rd in self.raw_description(hxs) if not self.care_criteria(rd)]
+        desc = clean(hxs.select(xpath))
+        desc = desc + [rd.title() for rd in self.raw_description(hxs) if not self.care_criteria(rd)]
 
         return desc
 
@@ -201,37 +202,35 @@ class MichaelKorsCrawlSpider(BaseCrawlSpider, Mixin):
     rules = (
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=deny_r,
                                process_value=lambda url: "http://www.michaelkors.com%s" % url)
-             , callback='parse_pages'),
+             , callback='parse_listing'),
 
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x,
                                process_value=lambda url: url_query_cleaner(url))
              , callback='parse_item')
     )
 
-    def parse_pages(self, response):
-
-        meta_data = {'trail': self.add_trail(response), 'gender': response.meta['gender']}
+    def parse_listing(self, response):
         hxs = HtmlXPathSelector(response)
+        meta_data = {'trail': self.add_trail(response), 'gender': response.meta['gender']}
         products = clean(hxs.select("//div[@class='product_panel']//a/@href"))
 
         for product in products:
             if 'http://' not in product:
-                product = 'http://www.michaelkors.com/' + product
+                product = 'http://www.michaelkors.com/%s' % product
 
             yield Request(product, callback=self.parse_item, meta=meta_data)
 
         if hxs.select("//input[@id='totalRecord']/@value"):
-            #: yield next pages
             total_items = clean(hxs.select("//input[@id='totalRecord']/@value"))[0]
-            deptCatId = clean(hxs.select("//input[@id='deptCatId']/@value"))[0]
-            N = clean(hxs.select("//input[@id='navValue']/@value"))[0]
-            rlPath = clean(hxs.select("//input[@id='rlPath']/@value"))[0]
+            dept_cat_id = clean(hxs.select("//input[@id='deptCatId']/@value"))[0]
+            n = clean(hxs.select("//input[@id='navValue']/@value"))[0]
+            rl_path = clean(hxs.select("//input[@id='rlPath']/@value"))[0]
 
             products_per_page = 42
 
             for item_no in range(products_per_page, int(total_items), products_per_page):
-                url = self.pagination_url_t % (item_no, N, deptCatId, rlPath)
-                yield Request(url, callback=self.parse_pages, meta=meta_data)
+                url = self.pagination_url_t % (item_no, n, dept_cat_id, rl_path)
+                yield Request(url, callback=self.parse_listing, meta=meta_data)
 
     def add_trail(self, response):
         trail_part = [(response.meta.get('link_text', ''), response.url)]
