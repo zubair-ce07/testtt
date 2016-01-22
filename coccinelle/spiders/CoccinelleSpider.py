@@ -26,9 +26,8 @@ class CoccinelleSpider(CrawlSpider):
         item['name'] = self.get_product_name(response)
         item['url'] = response.url
         item['sku'] = self.get_sku(response)
-        cat_sku = self.get_category(response)
-        item['category'] = cat_sku[0]
-        item['retailer_sku'] = cat_sku[1]
+        item['category'] = self.get_category(response)
+        item['retailer_sku'] = self.get_retailer_sku(response)
         item['gender'] = 'women'
         item['brand'] = 'Coccinelle'
         yield item
@@ -45,19 +44,25 @@ class CoccinelleSpider(CrawlSpider):
         return response.xpath("//*[@class='product-name']/h1/text()").extract()
 
     def get_sku(self, response):
-        colors = response.xpath(
-                "//*[@class ='product-options']//*[contains(@class , 'swatches_single-swatch swatch_color')]"
-                "/img/@alt").extract()
-        price = response.xpath("//*[@class = 'product-type-data clearer'] //*[@class='price']/text()").extract()
+        colors = self.get_colors(response)
+        price = self.get_price(response)
         sku = {}
         self.sku(price, colors, sku)
         return sku
 
+    def get_price(self, response):
+        return response.xpath("//*[@class = 'product-type-data clearer'] //*[@class='price']/text()").extract()
+
+    def get_colors(self, response):
+        return response.xpath(
+                "//*[@class ='product-options']//*[contains(@class , 'swatches_single-swatch swatch_color')]"
+                "/img/@alt").extract()
+
     def get_category(self, response):
-        script = response.xpath("//script[contains(text(), 'cateory')]/text()")
-        category = script.re('cateory":"([^\"]+)')
-        retailer_sku = script.re('sku":"([^\"]+)')
-        return category, retailer_sku
+        return response.xpath("//script[contains(text(), 'cateory')]/text()").re('cateory":"([^\"]+)')
+
+    def get_retailer_sku(self, response):
+        return response.xpath("//script[contains(text(), 'cateory')]/text()").re('sku":"([^\"]+)')
 
     def clean_list(self, data):
         text = []
@@ -93,7 +98,7 @@ class CoccinelleSpider(CrawlSpider):
 
     def put_item(self, color, price_list, sku, currency):
         if len(price_list) > 1:
-            item = {'currency': currency, 'special_price': price_list[0], 'regular_price': price_list[1],
+            item = {'currency': currency, 'price': price_list[0], 'previous_price': price_list[1],
                     'color': color, 'size': 'One Size'}
         else:
             item = {'currency': currency, 'price': price_list[0], 'color': color, 'size': 'One Size'}
