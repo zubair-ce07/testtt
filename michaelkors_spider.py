@@ -121,7 +121,10 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, hxs):
         skus = {}
-        color = self.take_first(clean(hxs.select("//span[@class='product_color_swatch']//text()"))) or ''
+        color1 = self.take_first(clean(hxs.select("//span[@class='product_color_swatch']//text()")))
+        color2 = self.take_first(clean(hxs.select("//ul[contains(@class,'color')]//li[@class='selected']//img/@title")
+                                       .re('<br/>(.*)')))
+        color = color1 or color2 or ''
         size = self.take_first(clean(hxs.select("//span[@class='product_size_labels']/text()").re('SIZE:(.*)')))
 
         previous_price, price, currency = self.product_pricing(hxs)
