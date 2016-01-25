@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import json
-from base import clean
+from base import clean, Garment
 from scrapy.http import Request
 from scrapy.contrib.spiders import Rule
 from scrapy.selector import HtmlXPathSelector
@@ -18,11 +18,16 @@ class Mixin(object):
 
     url_prefix = 'http://www.michaelkors.com%s'
 
-    start_urls_with_meta = [(url_prefix % '/_/N-28ee', {'gender': 'women'}),
-                            (url_prefix % '/men/_/N-2861', {'gender': 'men'}),
-                            (url_prefix % '/shoes/kids/_/N-28ik', {'gender': 'girls'}),
-                            (url_prefix % '/accessories/_/N-282b', {'gender': 'women'}),
-                            (url_prefix % '/watches/watch-hunger-stop/_/N-28z7', {'gender': 'men'})]
+    start_urls_with_meta = [(url_prefix % '/_/N-28ee', {'gender': 'women',
+                                                        'link_text': 'Women'}),
+                            (url_prefix % '/men/_/N-2861', {'gender': 'men',
+                                                            'link_text': 'Men'}),
+                            (url_prefix % '/shoes/kids/_/N-28ik', {'gender': 'girls',
+                                                                   'link_text': 'Kids'}),
+                            (url_prefix % '/accessories/_/N-282b', {'gender': 'women',
+                                                                    'link_text': 'Accessories'}),
+                            (url_prefix % '/watches/watch-hunger-stop/_/N-28z7', {'gender': 'men',
+                                                                                  'link_text': 'Watches'})]
 
 
 class MichaelKorsParseSpider(BaseParseSpider, Mixin):
@@ -31,8 +36,7 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
 
     price_x = "//div[@id='productPrice']//text()"
     image_url_t = '%s?req=set,json,UTF-8&labelkey=label&id=222835650&handler=s7sdkJSONResponse'
-    category_url_t = 'http://www.michaelkors.com/common/ajax/ajaxBreadCrumbs.jsp?productId=%s&isReferer=true'
-    sku_url_t = 'http://www.michaelkors.com/browse/pdp/ajax/ajaxProductDetailsInclude.jsp?productId=%s&color' \
+    sku_url_t = 'http://www.michaelkors.com/browse/pdp/ajax/ajaxProductDetailsInclude.jsp?productId=%s_%s&color' \
                 '=%s&skuId=%s'
 
     def parse(self, response):
@@ -48,17 +52,10 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, hxs, response)
 
+        garment['category'] = self.product_category(garment)
         garment['merch_info'] = self.merch_info(hxs)
         garment['skus'], garment['image_urls'] = {}, []
-        garment['meta'] = {'requests_queue': self.color_requests(hxs) + self.category_request(hxs)}
-
-        return self.next_request_or_garment(garment)
-
-    def parse_category(self, response):
-        hxs = HtmlXPathSelector(response)
-        garment = response.meta['garment']
-
-        garment['category'] = self.product_category(hxs)
+        garment['meta'] = {'requests_queue': self.color_requests(hxs)}
 
         return self.next_request_or_garment(garment)
 
@@ -75,7 +72,7 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
         garment = response.meta['garment']
 
         color_id = url_query_parameter(response.url, 'color')
-        product_id = url_query_parameter(response.url, 'productId')
+        product_id = url_query_parameter(response.url, 'productId').split('_')[1]
 
         #: If sizes for a product does not exist
         if not hxs.select("//select[@class='size_select']"):
@@ -84,7 +81,7 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
         skus_id = clean(hxs.select("//select[@class='size_select']//option[position() > 1]/@value"))
 
         for sku_id in skus_id:
-            url = self.sku_url_t % (product_id, color_id, sku_id)
+            url = self.sku_url_t % (self.market, product_id, color_id, sku_id)
             garment['meta']['requests_queue'] += [Request(url, callback=self.parse_skus)]
 
         garment['meta']['requests_queue'] += self.images_request(hxs)
@@ -109,11 +106,6 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
 
         return [Request(url=self.image_url_t % url, callback=self.parse_images)]
 
-    def category_request(self, hxs):
-        url = self.category_url_t % self.product_id(hxs)
-
-        return [Request(url, callback=self.parse_category)]
-
     def color_requests(self, hxs):
         requests = []
         xpath = "//ul[contains(@class,'color_swatch')]//li//@onclick"
@@ -122,21 +114,21 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
         color_ids = [color_data.split("','")[1] for color_data in colors_data]
 
         for color_id in color_ids:
-            url = self.sku_url_t % (product_id, color_id, '')
+            url = self.sku_url_t % (self.market, product_id, color_id, '')
             requests += [Request(url, callback=self.parse_colors)]
 
         return requests
 
     def skus(self, hxs):
         skus = {}
-        color = self.take_first(clean(hxs.select("//span[@class='product_color_swatch']//text()")))
+        color = self.take_first(clean(hxs.select("//span[@class='product_color_swatch']//text()"))) or ''
         size = self.take_first(clean(hxs.select("//span[@class='product_size_labels']/text()").re('SIZE:(.*)')))
 
         previous_price, price, currency = self.product_pricing(hxs)
 
         sku = {
             'size': size if size else self.one_size,
-            'colour': color.strip(' - Sold Out') if color else color,
+            'colour': color.strip(' - Sold Out'),
             'out_of_stock': hxs.select("//div[@class='outofstock-pdp']") != [],
             'price': price,
             'currency': currency
@@ -154,16 +146,18 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_id(self, hxs):
-        return self.take_first(clean(hxs.select("//input[@id='productId']//@value")))
+        return self.take_first(clean(hxs.select("//input[@id='productId']//@value"))).split('_')[1]
 
     def product_brand(self, hxs):
-        return self.take_first(clean(hxs.select("//h1[@class='brand_name']//text()"))) or "Michael Kors"
+        brand = self.take_first(clean(hxs.select("//h1[@class='brand_name']//text()"))) or "Michael Kors"
+        return re.findall('Michael Kors Kid|Michael Michael Kors|Michael Kors', brand.title(), re.I)[0]
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select("//h1[@class='prod_name']//text()")))
 
-    def product_category(self, hxs):
-        return clean(hxs.select("//div[@class='breadcrumb']//text()"))[1:-1]
+    def product_category(self, garment):
+        if isinstance(garment, Garment):
+            return clean([trail[0] for trail in garment['trail']])
 
     def raw_description(self, hxs):
         xpath = "//div[contains(@class,'description_tabs_2')]//text()"
@@ -172,16 +166,19 @@ class MichaelKorsParseSpider(BaseParseSpider, Mixin):
     def product_description(self, hxs):
         xpath = "//div[contains(@class,'description_tabs_1')]//text()"
         desc = clean(hxs.select(xpath))
-        desc = desc + [rd.title() for rd in self.raw_description(hxs) if not self.care_criteria(rd)]
+        desc = desc + [rd.strip('-').strip('"') for rd in self.raw_description(hxs) if not self.care_criteria(rd)]
 
-        return desc
+        return clean(desc)
 
     def product_care(self, hxs):
-        return [rd for rd in self.raw_description(hxs) if self.care_criteria(rd)]
+        return clean([rd.strip('-').strip('"') for rd in self.raw_description(hxs) if self.care_criteria(rd)])
 
     def merch_info(self, hxs):
-        if 'exclusive' in ' '.join(self.product_category(hxs)).lower():
+        soup = ' '.join(self.product_description(hxs)).lower()
+
+        if 'exclusive' in soup:
             return ['EXCLUSIVELY OURS']
+        return []
 
 
 class MichaelKorsCrawlSpider(BaseCrawlSpider, Mixin):
