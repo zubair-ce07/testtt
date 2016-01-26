@@ -5,20 +5,19 @@ from scrapy.linkextractors import LinkExtractor
 import locale
 import re
 import copy
-from scrapy.selector import Selector
+from scrapy.contrib.loader.processor import TakeFirst
 
 
 class ThomaspinkSpider(CrawlSpider):
     name = "thomaspink"
     allowed_domains = ["thomaspink.com"]
+    take_first = TakeFirst()
     start_urls = [
         "http://www.thomaspink.com/"]
-    rules = (
-        Rule(LinkExtractor(restrict_xpaths=(".//*[@id='main_navigation_level_1']//a", "//*[@class='next']",))),
-        Rule(LinkExtractor(
-                           restrict_xpaths=("//*[@class='image_container']",)),
-             callback='parse_product'),
-    )
+
+    rules = (Rule(LinkExtractor(restrict_xpaths=(".//*[@id='main_navigation_level_1']//a", "//*[@class='next']",))),
+             Rule(LinkExtractor(restrict_xpaths=("//*[@class='image_container']",)), callback='parse_product'),
+             )
 
     def parse_product(self, response):
         item = ThomaspinkItem()
@@ -40,11 +39,7 @@ class ThomaspinkSpider(CrawlSpider):
                 "//*[@id='product_overview']/p[2]/text()").extract()
 
     def get_care(self, response):
-        care = response.xpath(
-                "//*[@id='product_overview']//li/text()").extract()
-        for c in care:
-            if '%' in c:
-                return c
+        return [c for c in response.xpath("//*[@id='product_overview']//li/text()").extract() if '%' in c]
 
     def get_image_urls(self, response):
         return response.xpath(
@@ -74,11 +69,7 @@ class ThomaspinkSpider(CrawlSpider):
     def get_colors(self, response):
         color = response.xpath(
                 "//*[@class='also_available']//*[@class = 'current_colour']/text()").extract()
-        if color:
-            return color
-        else:
-            color.append("")
-            return color
+        return self.take_first(color)
 
     def get_size(self, response):
         return response.xpath("//*[@id='size_selector']//thead/tr//text()").extract()
@@ -142,7 +133,8 @@ class ThomaspinkSpider(CrawlSpider):
             for s, a in zip(sizes, availability[1:]):
                 self.check_stock(self.is_available(a), item, "")
                 item['size'] = s
-                sku[color[0] + "_" + s] = copy.deepcopy(item)
+                key = color + '_' + s if color is not None else s
+                sku[key] = copy.deepcopy(item)
                 self.del_stock_info('out_of_stock', item)
 
         else:
@@ -150,7 +142,8 @@ class ThomaspinkSpider(CrawlSpider):
                 self.check_stock(self.is_available(ra), item, "regular")
                 self.check_stock(self.is_available(la), item, "long")
                 item['size'] = s
-                sku[color[0] + "_" + s] = copy.deepcopy(item)
+                key = color + '_' + s if color is not None else s
+                sku[key] = copy.deepcopy(item)
                 self.del_stock_info('regular_out_of_stock', item)
                 self.del_stock_info('long_out_of_stock', item)
             return sku
@@ -158,9 +151,9 @@ class ThomaspinkSpider(CrawlSpider):
     def put_item(self, color, price_list, currency):
         if len(price_list) > 1:
             item = {'currency': currency, 'price': price_list[1], 'previous_price': price_list[0],
-                    'color': color[0]}
+                    'color': color}
         else:
-            item = {'currency': currency, 'price': price_list[0], 'color': color[0]}
+            item = {'currency': currency, 'price': price_list[0], 'color': color}
         return item
 
     def is_available(self, avail):
