@@ -81,16 +81,12 @@ class ThomaspinkSpider(CrawlSpider):
 
     def get_gender(self, response):
         gender = response.xpath("//*[@id='crumbs']/li/a/text()").extract()
-        if gender[2].encode('utf-8') == "Mens":
+        if 'Sale' in gender:
+            return gender[3].encode('utf-8').split("'")[0]
+        elif 'Accessories' in gender:
             return 'Men'
-        elif gender[2].encode('utf-8') == "Womens":
-            return 'Women'
         else:
-            gen = gender[3].encode('utf-8').split(" ")
-            if gen[0] == "Women's" or gen[0] == "Men's":
-                return gen[0]
-            else:
-                return 'Men'
+            return gender[2][:-1]
 
     def get_retailer_sku(self, url):
         parse_url = url.split('/')
