@@ -37,7 +37,7 @@ class ThomaspinkSpider(CrawlSpider):
         return [c for c in response.xpath("//*[@id='product_overview']//li/text()").extract() if '%' in c]
 
     def get_image_urls(self, response):
-        return response.xpath("//*[@id='alternative_images']/li/img/@src").extract()
+        return response.xpath("//*[@id='alternative_images']//img/@src").extract()
 
     def get_product_name(self, response):
         return self.clean_list(response.xpath("//*[@id='product_heading']/h1/text()").extract())
@@ -61,7 +61,7 @@ class ThomaspinkSpider(CrawlSpider):
         return response.xpath("//*[@class='product_price']//text()").re('(.\w+[.]\d\d)')
 
     def get_colors(self, response):
-        color = response.xpath("//*[@class='also_available']//*[@class = 'current_colour']/text()").extract()
+        color = response.xpath("//*[@class='also_available']//*[@class='current_colour']/text()").extract()
         return self.take_first(color)
 
     def get_size(self, response):
@@ -71,13 +71,13 @@ class ThomaspinkSpider(CrawlSpider):
         return response.xpath("//tbody//td")
 
     def check_regular_availability(self, response):
-        return response.xpath("//tbody/tr[@class = 'Regular sizing_row']//td")
+        return response.xpath("//tbody/tr[@class='Regular sizing_row']//td")
 
     def check_long_availability(self, response):
-        return response.xpath("//tbody/tr[@class = 'Long sizing_row']//td")
+        return response.xpath("//tbody/tr[@class='Long sizing_row']//td")
 
     def get_category(self, response):
-        return response.xpath("//*[ @class = 'hide']/a/text()").extract()
+        return response.xpath("//*[@class='hide']/a/text()").extract()
 
     def get_gender(self, response):
         gender = response.xpath("//*[@id='crumbs']/li/a/text()").extract()
@@ -89,8 +89,7 @@ class ThomaspinkSpider(CrawlSpider):
             return gender[2][:-1]
 
     def get_retailer_sku(self, url):
-        parse_url = url.split('/')
-        return parse_url[-1]
+        return re.findall('\d+', url)
 
     def clean_list(self, data):
         text = []
@@ -118,18 +117,18 @@ class ThomaspinkSpider(CrawlSpider):
             price_list.append(re.sub(r'[^0-9.]+', '', pr))
         item = self.put_item(color, price_list, currency)
         if not long_availability:
-            for s, a in zip(sizes, availability[1:]):
-                self.check_stock(self.is_available(a), item, "")
-                item['size'] = s
-                key = color + '_' + s if color is not None else s
+            for size, avail in zip(sizes, availability[1:]):
+                self.check_stock(self.is_available(avail), item, "")
+                item['size'] = size
+                key = color + '_' + size if color is not None else size
                 sku[key] = copy.deepcopy(item)
                 self.del_stock_info('out_of_stock', item)
         else:
-            for s, ra, la in zip(sizes, availability[1:], long_availability[1:]):
-                self.check_stock(self.is_available(ra), item, "regular")
-                self.check_stock(self.is_available(la), item, "long")
-                item['size'] = s
-                key = color + '_' + s if color is not None else s
+            for size, regular_avail, long_avail in zip(sizes, availability[1:], long_availability[1:]):
+                self.check_stock(self.is_available(regular_avail), item, "regular")
+                self.check_stock(self.is_available(long_avail), item, "long")
+                item['size'] = size
+                key = color + '_' + size if color is not None else size
                 sku[key] = copy.deepcopy(item)
                 self.del_stock_info('regular_out_of_stock', item)
                 self.del_stock_info('long_out_of_stock', item)
