@@ -22,7 +22,7 @@ class ThomaspinkSpider(CrawlSpider):
         item['name'] = self.get_product_name(response)
         item['url'] = response.url
         item['care'] = self.get_care(response)
-        item['sku'] = self.get_sku(response)
+        item['skus'] = self.get_sku(response)
         item['category'] = self.get_category(response)
         item['retailer_sku'] = self.get_retailer_sku(item['url'])
         item['gender'] = self.get_gender(response)
@@ -45,7 +45,6 @@ class ThomaspinkSpider(CrawlSpider):
     def get_sku(self, response):
         colors = self.get_colors(response)
         price = self.get_price(response)
-        print price
         sku = {}
         sizes = self.clean_list(self.get_size(response))
         if sizes[1] in sizes[2:]:
@@ -112,20 +111,15 @@ class ThomaspinkSpider(CrawlSpider):
         item = self.common_sku(color, price_list, currency)
         if not long_availability:
             for size, avail in zip(sizes, availability[1:]):
-                self.check_stock(self.is_available(avail), item, "")
-                item['size'] = size
-                key = color + '_' + size if color else size
-                sku[key] = copy.deepcopy(item)
-                self.del_stock_info('out_of_stock', item)
+                self.check_stock(self.is_available(avail), item)
+                self.item_in_sku(sku, item, '', color, size)
+
         else:
             for size, regular_avail, long_avail in zip(sizes, availability[1:], long_availability[1:]):
-                self.check_stock(self.is_available(regular_avail), item, "regular")
-                self.check_stock(self.is_available(long_avail), item, "long")
-                item['size'] = size
-                key = color + '_' + size if color else size
-                sku[key] = copy.deepcopy(item)
-                self.del_stock_info('regular_out_of_stock', item)
-                self.del_stock_info('long_out_of_stock', item)
+                self.check_stock(self.is_available(regular_avail), item)
+                self.item_in_sku(sku, item, '/regular', color, size)
+                self.check_stock(self.is_available(long_avail), item)
+                self.item_in_sku(sku, item, '/long', color, size)
             return sku
 
     def common_sku(self, color, price_list, currency):
@@ -139,13 +133,16 @@ class ThomaspinkSpider(CrawlSpider):
     def is_available(self, avail):
         return avail.xpath(".//*[@class='not_available']/text()").extract()
 
-    def check_stock(self, is_available, item, check):
+    def check_stock(self, is_available, item):
         if is_available and is_available[0].encode('utf-8') == 'Not available':
-            if not check:
-                item['out_of_stock'] = True
-            else:
-                item[check + '_out_of_stock'] = True
+            item['out_of_stock'] = True
 
     def del_stock_info(self, out_of_stock, item):
         if out_of_stock in item:
             del item[out_of_stock]
+
+    def item_in_sku(self, sku, item, style, color, size):
+        item['size'] = size + style if style else size
+        key = color + '_' + item['size'] if color else item['size']
+        sku[key] = copy.deepcopy(item)
+        self.del_stock_info('out_of_stock', item)

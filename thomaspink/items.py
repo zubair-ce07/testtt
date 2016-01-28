@@ -20,7 +20,7 @@ class ThomaspinkItem(scrapy.Item):
     gender = scrapy.Field()
     name = scrapy.Field()
     retailer_sku = scrapy.Field()
-    sku = scrapy.Field()
+    skus = scrapy.Field()
     color = scrapy.Field()
     price = scrapy.Field()
     size = scrapy.Field()
