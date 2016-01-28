@@ -8,6 +8,7 @@ from scrapy.contrib.loader.processor import TakeFirst
 
 
 class ThomaspinkSpider(CrawlSpider):
+    gender_map = {'Men': 'Men', 'Women': 'Women', "Men's Sale": 'Men', "Women's Sale": 'Women', 'Accessories': 'Men'}
     name = "thomaspink"
     allowed_domains = ["thomaspink.com"]
     take_first = TakeFirst()
@@ -81,12 +82,11 @@ class ThomaspinkSpider(CrawlSpider):
 
     def get_gender(self, response):
         gender = response.xpath("//*[@id='crumbs']/li/a/text()").extract()
-        if 'Sale' in gender:
-            return gender[3].encode('utf-8').split("'")[0]
-        elif 'Accessories' in gender:
-            return 'Men'
-        else:
-            return gender[2][:-1]
+        gender = "".join(gender)
+        for key in self.gender_map:
+            if key in gender:
+                return self.gender_map[key]
+        return 'Men'
 
     def get_retailer_sku(self, url):
         return re.findall('\d+', url)
