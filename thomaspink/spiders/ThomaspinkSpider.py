@@ -114,7 +114,7 @@ class ThomaspinkSpider(CrawlSpider):
             for size, avail in zip(sizes, availability[1:]):
                 self.check_stock(self.is_available(avail), item, "")
                 item['size'] = size
-                key = color + '_' + size if color is not None else size
+                key = color + '_' + size if color else size
                 sku[key] = copy.deepcopy(item)
                 self.del_stock_info('out_of_stock', item)
         else:
@@ -122,7 +122,7 @@ class ThomaspinkSpider(CrawlSpider):
                 self.check_stock(self.is_available(regular_avail), item, "regular")
                 self.check_stock(self.is_available(long_avail), item, "long")
                 item['size'] = size
-                key = color + '_' + size if color is not None else size
+                key = color + '_' + size if color else size
                 sku[key] = copy.deepcopy(item)
                 self.del_stock_info('regular_out_of_stock', item)
                 self.del_stock_info('long_out_of_stock', item)
