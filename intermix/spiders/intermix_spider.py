@@ -8,7 +8,7 @@ import json
 import scrapy
 
 
-class ThomaspinkSpider(CrawlSpider):
+class IntermixSpider(CrawlSpider):
     name = "intermix"
     allowed_domains = ["intermixonline.com", "s7d2.scene7.com"]
     start_urls = ["https://www.intermixonline.com/basket.do?method=updateCountry&loc=landing&country=us"]
@@ -21,9 +21,10 @@ class ThomaspinkSpider(CrawlSpider):
         item['name'] = self.get_product_name(response)
         item['url'] = response.url
         item['care'] = self.get_care(response)
-        item['skus'] = self.get_sku(response)
+        product_info = self.get_prod_info(response)
+        item['skus'] = self.get_sku(response, product_info)
         item['category'] = self.get_category(response)
-        item['retailer_sku'] = self.get_retailer_sku(response)
+        item['retailer_sku'] = self.get_retailer_sku(product_info)
         item['gender'] = 'Women'
         item['brand'] = 'INTERMIX'
         item['market'] = 'US'
@@ -44,13 +45,13 @@ class ThomaspinkSpider(CrawlSpider):
     def get_product_name(self, response):
         return self.clean_list(response.xpath("//*[@class='detailDesigner']/text()").extract())
 
-    def get_sku(self, response):
+    def get_sku(self, response, product_info):
         sku = {}
-        colors = self.get_colors(response)
+        colors = self.get_colors(product_info)
         price = self.clean_list(self.get_price(response))
         previous_price = self.clean_list(self.get_previous_price(response))
-        availability = self.check_availability(response)
-        size = self.get_size(response)
+        availability = self.check_availability(product_info)
+        size = self.get_size(product_info)
         self.sku(price, colors, sku, size, availability, previous_price)
         return sku
 
@@ -60,21 +61,15 @@ class ThomaspinkSpider(CrawlSpider):
     def get_previous_price(self, response):
         return response.xpath("//*[@class='ml-item-price-was']/text()").extract()
 
-    def get_colors(self, response):
+    def get_colors(self, product_info):
         color = {}
-        product_info = json.loads(response.xpath(
-                "//script[contains(text(),'buildEnhancedDependentOptionMenuObjects')]/text()").re(
-                'buildEnhancedDependentOptionMenuObjects\((\{.*?})\);')[0])
         for item_color in range(len(product_info['aOptionTypes']['1']['options'])):
             color[product_info['aOptionTypes']['1']['options'][str(item_color)]['iOptionPk']] = \
                 product_info['aOptionTypes']['1']['options'][str(item_color)]['sOptionName']
         return color
 
-    def get_size(self, response):
+    def get_size(self, product_info):
         sizes = {}
-        product_info = json.loads(response.xpath(
-                "//script[contains(text(),'buildEnhancedDependentOptionMenuObjects')]/text()").re(
-                'buildEnhancedDependentOptionMenuObjects\((\{.*?})\);')[0])
         for size in range(len(product_info['aOptionTypes']['0']['options'])):
             sizes[product_info['aOptionTypes']['0']['options'][str(size)]['iOptionPk']] = \
                 product_info['aOptionTypes']['0']['options'][str(size)]['sOptionName']
@@ -83,10 +78,7 @@ class ThomaspinkSpider(CrawlSpider):
     def get_category(self, response):
         return response.xpath("//*[@class ='detailbrand']//a/text()").extract()[0].strip()
 
-    def get_retailer_sku(self, response):
-        product_info = json.loads(response.xpath(
-                "//script[contains(text(),'buildEnhancedDependentOptionMenuObjects')]/text()").re(
-                'buildEnhancedDependentOptionMenuObjects\((\{.*?})\);')[0])
+    def get_retailer_sku(self, product_info):
         return product_info['iProductPk']
 
     def clean_list(self, data):
@@ -126,11 +118,8 @@ class ThomaspinkSpider(CrawlSpider):
             item = {'currency': currency, 'price': price[0], 'color': color}
         return item
 
-    def check_availability(self, response):
+    def check_availability(self, product_info):
         sku = {}
-        product_info = json.loads(response.xpath(
-                "//script[contains(text(),'buildEnhancedDependentOptionMenuObjects')]/text()").re(
-                'buildEnhancedDependentOptionMenuObjects\((\{.*?})\);')[0])
         for item_no in range(len(product_info['aOptionSkus'])):
             sku[product_info['aOptionSkus'][str(item_no)]['skuOptions']['0']['iOptionPk'] +
                 product_info['aOptionSkus'][str(item_no)]['skuOptions']['1']['iOptionPk']] = \
@@ -139,11 +128,12 @@ class ThomaspinkSpider(CrawlSpider):
 
     def prod_color_id(self, response):
         colors_ids = {}
-        product_info = json.loads(response.xpath(
+        product_color_info = json.loads(response.xpath(
                 "//script[contains(text(),'buildDetailImageSwatchObjects')]/text()").re(
                 'buildDetailImageSwatchObjects\((\{.*)\)')[0])
-        for item_color in range(len(product_info['oOptionType']['options'])):
-            colors_ids[item_color] = product_info['oOptionType']['options'][str(item_color)]['optionDetailImageLoc']
+        for item_color in range(len(product_color_info['oOptionType']['options'])):
+            colors_ids[item_color] = product_color_info['oOptionType']['options'][str(item_color)][
+                'optionDetailImageLoc']
         return colors_ids
 
     def get_prod_image_urls(self, response):
@@ -169,3 +159,8 @@ class ThomaspinkSpider(CrawlSpider):
                         0] + "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse")
         yield scrapy.Request(request[0], meta={'item': item, 'request': request[1:]},
                              callback=self.get_prod_image_urls)
+
+    def get_prod_info(self, response):
+        return json.loads(response.xpath(
+                "//script[contains(text(),'buildEnhancedDependentOptionMenuObjects')]/text()").re(
+                'buildEnhancedDependentOptionMenuObjects\((\{.*?})\);')[0])
