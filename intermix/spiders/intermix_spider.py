@@ -10,7 +10,8 @@ from scrapy.http.request import Request
 class IntermixSpider(CrawlSpider):
     name = "intermix"
     allowed_domains = ["intermixonline.com", "s7d2.scene7.com"]
-    image_url = "https://s7d2.scene7.com/is/image/Intermix/"
+    image_url_before = "https://s7d2.scene7.com/is/image/Intermix/"
+    image_url_after = "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse"
     start_urls = ["https://www.intermixonline.com/basket.do?method=updateCountry&loc=landing&country=us"]
     rules = (Rule(LinkExtractor(restrict_xpaths=("//*[@id='navbarUl']",))),
              Rule(LinkExtractor(restrict_xpaths=("//*[@class= 'ml-thumb-image']",)), callback='parse_product'),)
@@ -55,11 +56,9 @@ class IntermixSpider(CrawlSpider):
         if previous_price:
             previous_price[0] = re.sub('\$', '', previous_price[0])
         for item_no in product_info['aOptionSkus']:
-            sku[colors[product_info['aOptionSkus'][str(item_no)]['skuOptions']['1']['iOptionPk']] + '_' + sizes[
-                product_info['aOptionSkus'][str(item_no)]['skuOptions']['0']['iOptionPk']]] = self.common_sku(
-                    colors[product_info['aOptionSkus'][str(item_no)]['skuOptions']['1']['iOptionPk']],
-                    price, previous_price, self.currency(price[0]),
-                    sizes[product_info['aOptionSkus'][str(item_no)]['skuOptions']['0']['iOptionPk']])
+            color = colors[product_info['aOptionSkus'][str(item_no)]['skuOptions']['1']['iOptionPk']]
+            size = sizes[product_info['aOptionSkus'][str(item_no)]['skuOptions']['0']['iOptionPk']]
+            sku[color + '_' + size] = self.common_sku(color, price, previous_price, self.currency(price[0]), size)
         if len(colors) * len(sizes) > len(sku):
             for color in colors:
                 for size in sizes:
@@ -144,8 +143,7 @@ class IntermixSpider(CrawlSpider):
         color_id = self.prod_color_id(response)
         for id in color_id:
             color = color_id[id].split('?')
-            request_url.append(
-                    self.image_url + color[0] + "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse")
+            request_url.append(self.image_url_before + color[0] + self.image_url_afte)
         yield Request(request_url[0], meta={'item': item, 'request': request_url[1:]},
                       callback=self.get_prod_image_urls)
 
