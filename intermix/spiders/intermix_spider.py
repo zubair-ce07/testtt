@@ -3,14 +3,14 @@ from intermix.items import IntermixItem
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import re
-import copy
 import json
-import scrapy
+from scrapy.http.request import Request
 
 
 class IntermixSpider(CrawlSpider):
     name = "intermix"
     allowed_domains = ["intermixonline.com", "s7d2.scene7.com"]
+    image_url = "https://s7d2.scene7.com/is/image/Intermix/"
     start_urls = ["https://www.intermixonline.com/basket.do?method=updateCountry&loc=landing&country=us"]
     rules = (Rule(LinkExtractor(restrict_xpaths=("//*[@id='navbarUl']",))),
              Rule(LinkExtractor(restrict_xpaths=("//*[@class= 'ml-thumb-image']",)), callback='parse_product'),)
@@ -21,7 +21,7 @@ class IntermixSpider(CrawlSpider):
         item['name'] = self.get_product_name(response)
         item['url'] = response.url
         item['care'] = self.get_care(response)
-        product_info = self.get_prod_info(response)
+        product_info = self.get_product_info(response)
         item['skus'] = self.get_sku(response, product_info)
         item['category'] = self.get_category(response)
         item['retailer_sku'] = self.get_retailer_sku(product_info)
@@ -29,7 +29,7 @@ class IntermixSpider(CrawlSpider):
         item['brand'] = 'INTERMIX'
         item['market'] = 'US'
         item['image_urls'] = []
-        return self.prepare_request(response, item)
+        return self.request_for_product_images(response, item)
 
     def get_description(self, response):
         des = self.clean_list(response.xpath("//*[@id='productDetailDescription']//div/text()").extract())
@@ -50,9 +50,23 @@ class IntermixSpider(CrawlSpider):
         colors = self.get_colors(product_info)
         price = self.clean_list(self.get_price(response))
         previous_price = self.clean_list(self.get_previous_price(response))
-        availability = self.check_availability(product_info)
-        size = self.get_size(product_info)
-        self.sku(price, colors, sku, size, availability, previous_price)
+        sizes = self.get_size(product_info)
+        price[0] = re.sub('\$', '', price[0])
+        if previous_price:
+            previous_price[0] = re.sub('\$', '', previous_price[0])
+        for item_no in product_info['aOptionSkus']:
+            sku[colors[product_info['aOptionSkus'][str(item_no)]['skuOptions']['1']['iOptionPk']] + '_' + sizes[
+                product_info['aOptionSkus'][str(item_no)]['skuOptions']['0']['iOptionPk']]] = self.common_sku(
+                    colors[product_info['aOptionSkus'][str(item_no)]['skuOptions']['1']['iOptionPk']],
+                    price, previous_price, self.currency(price[0]),
+                    sizes[product_info['aOptionSkus'][str(item_no)]['skuOptions']['0']['iOptionPk']])
+        if len(colors) * len(sizes) > len(sku):
+            for color in colors:
+                for size in sizes:
+                    if colors[color] + '_' + sizes[size] not in sku:
+                        sku[colors[color] + '_' + sizes[size]] = self.common_sku(colors[color], price, previous_price,
+                                                                                 self.currency(price[0]), sizes[size])
+                        sku[colors[color] + '_' + sizes[size]]['out_of_stock'] = True
         return sku
 
     def get_price(self, response):
@@ -63,14 +77,14 @@ class IntermixSpider(CrawlSpider):
 
     def get_colors(self, product_info):
         color = {}
-        for item_color in range(len(product_info['aOptionTypes']['1']['options'])):
+        for item_color in product_info['aOptionTypes']['1']['options']:
             color[product_info['aOptionTypes']['1']['options'][str(item_color)]['iOptionPk']] = \
                 product_info['aOptionTypes']['1']['options'][str(item_color)]['sOptionName']
         return color
 
     def get_size(self, product_info):
         sizes = {}
-        for size in range(len(product_info['aOptionTypes']['0']['options'])):
+        for size in product_info['aOptionTypes']['0']['options']:
             sizes[product_info['aOptionTypes']['0']['options'][str(size)]['iOptionPk']] = \
                 product_info['aOptionTypes']['0']['options'][str(size)]['sOptionName']
         return sizes
@@ -94,44 +108,20 @@ class IntermixSpider(CrawlSpider):
         if u'$' in price:
             return 'AUD'
 
-    def sku(self, price, colors, sku, sizes, availability, previous_price):
-        currency = self.currency(price[0])
-        price[0] = re.sub('\$', '', price[0])
-        if previous_price:
-            previous_price[0] = re.sub('\$', '', previous_price[0])
-        for color in colors:
-            item = self.common_sku(colors[color], price, previous_price, currency)
-            for size in sizes:
-                if size + color in availability and availability[size + color] == True:
-                    pass
-                else:
-                    item['out of stock'] = True
-                item['size'] = sizes[size]
-                sku[colors[color] + '_' + sizes[size]] = copy.deepcopy(item)
-        return sku
-
-    def common_sku(self, color, price, previous_price, currency):
+    def common_sku(self, color, price, previous_price, currency, size):
         if previous_price:
             item = {'currency': currency, 'price': price[0], 'previous_price': previous_price[0],
-                    'color': color}
+                    'color': color, 'size': size}
         else:
             item = {'currency': currency, 'price': price[0], 'color': color}
         return item
-
-    def check_availability(self, product_info):
-        sku = {}
-        for item_no in range(len(product_info['aOptionSkus'])):
-            sku[product_info['aOptionSkus'][str(item_no)]['skuOptions']['0']['iOptionPk'] +
-                product_info['aOptionSkus'][str(item_no)]['skuOptions']['1']['iOptionPk']] = \
-                product_info['aOptionSkus'][str(item_no)]['inStock']
-        return sku
 
     def prod_color_id(self, response):
         colors_ids = {}
         product_color_info = json.loads(response.xpath(
                 "//script[contains(text(),'buildDetailImageSwatchObjects')]/text()").re(
                 'buildDetailImageSwatchObjects\((\{.*)\)')[0])
-        for item_color in range(len(product_color_info['oOptionType']['options'])):
+        for item_color in product_color_info['oOptionType']['options']:
             colors_ids[item_color] = product_color_info['oOptionType']['options'][str(item_color)][
                 'optionDetailImageLoc']
         return colors_ids
@@ -139,28 +129,27 @@ class IntermixSpider(CrawlSpider):
     def get_prod_image_urls(self, response):
         item = response.meta['item']
         product_info = json.loads(re.findall('\((\{.*)\,', response.body, flags=0)[0])
-        for item_image in range(len(product_info['set']['item'])):
+        for item_image in product_info['set']['item']:
             item['image_urls'].append(
-                    "https://intermix.scene7.com/is/image/" + product_info['set']['item'][item_image]['i']['n'])
+                    "https://intermix.scene7.com/is/image/" + item_image['i']['n'])
         if response.meta['request']:
-            yield scrapy.Request(response.meta['request'][0],
-                                 meta={'item': item, 'request': response.meta['request'][1:]},
-                                 callback=self.get_prod_image_urls)
+            yield Request(response.meta['request'][0],
+                          meta={'item': item, 'request': response.meta['request'][1:]},
+                          callback=self.get_prod_image_urls)
         else:
             yield item
 
-    def prepare_request(self, response, item):
-        request = []
+    def request_for_product_images(self, response, item):
+        request_url = []
         color_id = self.prod_color_id(response)
         for id in color_id:
             color = color_id[id].split('?')
-            request.append(
-                    "https://s7d2.scene7.com/is/image/Intermix/" + color[
-                        0] + "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse")
-        yield scrapy.Request(request[0], meta={'item': item, 'request': request[1:]},
-                             callback=self.get_prod_image_urls)
+            request_url.append(
+                    self.image_url + color[0] + "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse")
+        yield Request(request_url[0], meta={'item': item, 'request': request_url[1:]},
+                      callback=self.get_prod_image_urls)
 
-    def get_prod_info(self, response):
+    def get_product_info(self, response):
         return json.loads(response.xpath(
                 "//script[contains(text(),'buildEnhancedDependentOptionMenuObjects')]/text()").re(
                 'buildEnhancedDependentOptionMenuObjects\((\{.*?})\);')[0])
