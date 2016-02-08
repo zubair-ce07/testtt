@@ -141,8 +141,8 @@ class IntermixSpider(CrawlSpider):
         color_id = self.prod_color_id(response)
         for id in color_id:
             color = color_id[id].split('?')
-            request_url.append('{0}{1}{2}'.format("https://s7d2.scene7.com/is/image/Intermix/", color[0],
-                                                  "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse"))
+            request_url.append('https://s7d2.scene7.com/is/image/Intermix/{0}?req=set,json,UTF-8&labelkey=\
+                                label&handler=s7sdkJSONResponse'.format(color[0]))
         yield Request(request_url.pop(), meta={'item': item, 'request': request_url},
                       callback=self.get_prod_image_urls)
 
