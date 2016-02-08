@@ -10,8 +10,6 @@ from scrapy.http.request import Request
 class IntermixSpider(CrawlSpider):
     name = "intermix"
     allowed_domains = ["intermixonline.com", "s7d2.scene7.com"]
-    image_url_before = "https://s7d2.scene7.com/is/image/Intermix/"
-    image_url_after = "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse"
     start_urls = ["https://www.intermixonline.com/basket.do?method=updateCountry&loc=landing&country=us"]
     rules = (Rule(LinkExtractor(restrict_xpaths=("//*[@id='navbarUl']",))),
              Rule(LinkExtractor(restrict_xpaths=("//*[@class= 'ml-thumb-image']",)), callback='parse_product'),)
@@ -132,8 +130,8 @@ class IntermixSpider(CrawlSpider):
             item['image_urls'].append(
                     "https://intermix.scene7.com/is/image/" + item_image['i']['n'])
         if response.meta['request']:
-            yield Request(response.meta['request'][0],
-                          meta={'item': item, 'request': response.meta['request'][1:]},
+            yield Request(response.meta['request'].pop(),
+                          meta={'item': item, 'request': response.meta['request']},
                           callback=self.get_prod_image_urls)
         else:
             yield item
@@ -143,8 +141,9 @@ class IntermixSpider(CrawlSpider):
         color_id = self.prod_color_id(response)
         for id in color_id:
             color = color_id[id].split('?')
-            request_url.append(self.image_url_before + color[0] + self.image_url_afte)
-        yield Request(request_url[0], meta={'item': item, 'request': request_url[1:]},
+            request_url.append('{0}{1}{2}'.format("https://s7d2.scene7.com/is/image/Intermix/", color[0],
+                                                  "?req=set,json,UTF-8&labelkey=label&handler=s7sdkJSONResponse"))
+        yield Request(request_url.pop(), meta={'item': item, 'request': request_url},
                       callback=self.get_prod_image_urls)
 
     def get_product_info(self, response):
