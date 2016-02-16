@@ -15,14 +15,12 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
     name = '{0}-parse'.format(Mixin.retailer)
     take_first = TakeFirst()
     currency = 'AUD'
-    brand = 'Lorna Jane'
     UNWANTED_CATEGORIES = set(['Books',
      'Exercise Mats',
      'Gym Towels',
      'MNB Shop',
      'Water Bottles',
      'Books by Lorna Jane Clarkson'])
-    one_size = 'One Size'
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
@@ -55,12 +53,13 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
                 previous_price = self.take_first(size.select('@price').extract())
                 if price:
                     sku['price'] = CurrencyParser.lowest_price(price)
-                    sku['previous_prices'] = CurrencyParser.lowest_price(previous_price)
+                    sku['previous_prices'] = [CurrencyParser.lowest_price(previous_price)]
                 else:
                     sku['price'] = CurrencyParser.lowest_price(previous_price)
 
                 sku['colour'] = self.take_first(colour.select('@title').extract())
-                sku['currency'] = self.currency
+                sku['currency'] = CurrencyParser.currency(
+                    self.take_first(hxs.select(".//meta[@property='og:price:currency']/@content").extract()))
                 sku['out_of_stock'] = self.take_first(size.select('@stocklevel').extract()) == '0'
                 skus['{0}_{1}'.format(sku['colour'], sku['size'])] = sku
 
@@ -71,7 +70,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
         return 'out' in hxs.select(".//*[@class='prod_block left']//text()")
 
     def product_brand(self, hxs):
-        return self.brand
+        return 'Lorna Jane'
 
     def product_care(self, hxs):
         return [x for x in self.product_description(hxs) if self.care_criteria(x)]
@@ -88,7 +87,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
                 if not re.match('PH:[0-9 ]+ for more info', x)]
 
     def product_image_urls(self, hxs):
-        urls = clean(hxs.select(".//*[@id='gallery_base']//a/@rev"))
+        urls = clean(hxs.select(".//*[@id='gallery_base']//@rev"))
         return [ urlparse.urljoin('http://www.lornajane.com.au/', image_url) for image_url in urls ]
 
     def product_id(self, hxs):
