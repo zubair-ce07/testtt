@@ -16,7 +16,6 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
     take_first = TakeFirst()
     currency = 'AUD'
     brand = 'Lorna Jane'
-    test_urls = open('url_pattrens.txt', 'w')
     UNWANTED_CATEGORIES = set(['Books',
      'Exercise Mats',
      'Gym Towels',
