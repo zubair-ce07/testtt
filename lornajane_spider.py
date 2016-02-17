@@ -55,15 +55,11 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
             for size in sizes:
                 sku = {}
                 sku['size'] = self.take_first(size.select('@size').extract())
-                sku['size'] = self.one_size if sku['size']=='One Sz' else sku['size']
-                price = self.take_first(size.select('@discount').extract())
-                previous_price = self.take_first(size.select('@price').extract())
+                sku['size'] = self.one_size if sku['size'] == 'One Sz' else sku['size']
+                previous_price, sku['price'], sku['currency'] = self.extract_prices(size, '@discount|@price')
 
-                if price:
-                    sku['price'] = CurrencyParser.lowest_price(price)
-                    sku['previous_prices'] = [CurrencyParser.lowest_price(previous_price)]
-                else:
-                    sku['price'] = CurrencyParser.lowest_price(previous_price)
+                if previous_price:
+                    sku['previous_prices'] = [previous_price]
 
                 sku['colour'] = self.take_first(colour.select('@title').extract())
                 sku['currency'] = CurrencyParser.currency(
@@ -73,7 +69,6 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-
     def out_of_stock(self, hxs):
         return 'out' in hxs.select(".//*[@class='prod_block left']//text()")
 
@@ -81,7 +76,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
         return 'Lorna Jane'
 
     def product_care(self, hxs):
-        return [x for x in self.product_description(hxs) if self.care_criteria(x)]
+        return [x for x in self.raw_description(hxs) if self.care_criteria(x)]
 
     def product_name(self, hxs):
         return self.take_first(clean(hxs.select(".//*[@id='productDetailUpdateable']//h2//text()")))
@@ -90,13 +85,16 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
         return clean(hxs.select(
             ".//*[@id='breadcrumb']//ul//a[not(contains(text(),'Home') or contains(text(),'Categories'))]//text()"))
 
+    def raw_description(self, hxs):
+        return clean(hxs.select(".//*[@id='tab-details']//text()"))
+
     def product_description(self, hxs):
-        return [x for x in clean(hxs.select(".//*[@id='tab-details']//text()"))
-                if not re.match('PH:[0-9 ]+ for more info', x) and not self.care_criteria(x)]
+        return [x for x in self.raw_description(hxs)
+                if not re.match('PH:[0-9 ]+ for more info', x) and not self.care_criteria(x) and len(x) > 1]
 
     def image_urls(self, hxs):
         urls = clean(hxs.select(".//*[@id='gallery_base']/@rev"))
-        return [ urlparse.urljoin('http://www.lornajane.com.au/', image_url) for image_url in urls ]
+        return [urlparse.urljoin('http://www.lornajane.com.au/', image_url) for image_url in urls]
 
     def product_id(self, hxs):
         return self.take_first(clean(hxs.select('(.//*[@productcode]/@productcode)[1]')))
