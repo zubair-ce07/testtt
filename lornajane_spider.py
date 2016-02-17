@@ -6,15 +6,16 @@ from scrapy.contrib.spiders import Rule
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.loader.processor import TakeFirst
 
+
 class Mixin(object):
     retailer = 'lornajane-au'
     market = 'AU'
     start_urls = ['http://www.lornajane.com.au/']
 
+
 class LornajaneParseSpider(BaseParseSpider, Mixin):
     name = '{0}-parse'.format(Mixin.retailer)
     take_first = TakeFirst()
-    currency = 'AUD'
     UNWANTED_CATEGORIES = set(['Books',
      'Exercise Mats',
      'Gym Towels',
@@ -25,18 +26,22 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
         categories = self.product_category(hxs)
+
         if set(categories) & self.UNWANTED_CATEGORIES:
             return 
+
         pid = self.product_id(hxs)
         garment = self.new_unique_garment(pid)
+
         if not garment:
             return 
+
         if self.out_of_stock(hxs):
             return self.out_of_stock_item(hxs, response, pid)
 
         self.boilerplate_normal(garment, hxs, response)
         garment['gender'] = 'women'
-        garment['image_urls'] = self.product_image_urls(hxs)
+        garment['image_urls'] = self.image_urls(hxs)
         garment['skus'] = self.skus(hxs)
         return garment
 
@@ -44,13 +49,16 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
         skus = {}
         sizes = hxs.select(".//*[@name = 'productCodePost']")
         colours = hxs.select(".//*[@id='colour-size-picker-container']//li")
+
         for colour in colours:
+
             for size in sizes:
                 sku = {}
                 sku['size'] = self.take_first(size.select('@size').extract())
                 sku['size'] = self.one_size if sku['size']=='One Sz' else sku['size']
                 price = self.take_first(size.select('@discount').extract())
                 previous_price = self.take_first(size.select('@price').extract())
+
                 if price:
                     sku['price'] = CurrencyParser.lowest_price(price)
                     sku['previous_prices'] = [CurrencyParser.lowest_price(previous_price)]
@@ -84,10 +92,10 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
 
     def product_description(self, hxs):
         return [x for x in clean(hxs.select(".//*[@id='tab-details']//text()"))
-                if not re.match('PH:[0-9 ]+ for more info', x)]
+                if not re.match('PH:[0-9 ]+ for more info', x) and not self.care_criteria(x)]
 
-    def product_image_urls(self, hxs):
-        urls = clean(hxs.select(".//*[@id='gallery_base']//@rev"))
+    def image_urls(self, hxs):
+        urls = clean(hxs.select(".//*[@id='gallery_base']/@rev"))
         return [ urlparse.urljoin('http://www.lornajane.com.au/', image_url) for image_url in urls ]
 
     def product_id(self, hxs):
@@ -104,5 +112,3 @@ class LornajaneCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x, deny=denied_paths), callback='parse_item')]
 
     parse_spider = LornajaneParseSpider()
-
-
