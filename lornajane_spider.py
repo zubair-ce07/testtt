@@ -31,6 +31,10 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
             return 
 
         pid = self.product_id(hxs)
+
+        if not pid:
+            return
+
         garment = self.new_unique_garment(pid)
 
         if not garment:
@@ -56,6 +60,10 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
                 sku = {}
                 sku['size'] = self.take_first(size.select('@size').extract())
                 sku['size'] = self.one_size if sku['size'] == 'One Sz' else sku['size']
+
+                if not [x for x in size.select('@discount|@price').extract() if x.strip()]:
+                    continue
+
                 previous_price, sku['price'], sku['currency'] = self.extract_prices(size, '@discount|@price')
 
                 if previous_price:
