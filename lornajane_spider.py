@@ -40,11 +40,10 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return 
 
-        if self.out_of_stock(hxs):
+        if self.out_of_stock(hxs, response):
             return self.out_of_stock_item(hxs, response, pid)
 
         self.boilerplate_normal(garment, hxs, response)
-        garment['gender'] = 'women'
         garment['image_urls'] = self.image_urls(hxs)
         garment['skus'] = self.skus(hxs)
         return garment
@@ -61,7 +60,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
                 sku['size'] = self.take_first(size.select('@size').extract())
                 sku['size'] = self.one_size if sku['size'] == 'One Sz' else sku['size']
 
-                if not [x for x in size.select('@discount|@price').extract() if x.strip()]:
+                if not clean(size.select('@discount|@price')):
                     continue
 
                 previous_price, sku['price'], sku['currency'] = self.extract_prices(size, '@discount|@price')
@@ -77,7 +76,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-    def out_of_stock(self, hxs):
+    def out_of_stock(self, hxs, response):
         return 'out' in hxs.select(".//*[@class='prod_block left']//text()")
 
     def product_brand(self, hxs):
@@ -114,7 +113,7 @@ class LornajaneCrawlSpider(BaseCrawlSpider, Mixin):
     products_x = [".//*[@id='content']//*[@class='details']"]
     denied_paths = ['books', 'lornajane.com.au/(A|M)[0-9]+/', '/MNB']
     rules = [
-        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=denied_paths), callback='parse'),
+        Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=denied_paths), callback='parse_and_add_women'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x, deny=denied_paths), callback='parse_item')]
 
     parse_spider = LornajaneParseSpider()
