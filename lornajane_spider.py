@@ -1,6 +1,6 @@
-from base import BaseParseSpider, BaseCrawlSpider, clean, CurrencyParser
 import urlparse
-import re
+
+from base import BaseParseSpider, BaseCrawlSpider, clean, CurrencyParser
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.contrib.spiders import Rule
 from scrapy.selector import HtmlXPathSelector
@@ -17,18 +17,18 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
     name = '{0}-parse'.format(Mixin.retailer)
     take_first = TakeFirst()
     UNWANTED_CATEGORIES = set(['Books',
-     'Exercise Mats',
-     'Gym Towels',
-     'MNB Shop',
-     'Water Bottles',
-     'Books by Lorna Jane Clarkson'])
+                               'Exercise Mats',
+                               'Gym Towels',
+                               'MNB Shop',
+                               'Water Bottles',
+                               'Books by Lorna Jane Clarkson'])
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
         categories = self.product_category(hxs)
 
         if set(categories) & self.UNWANTED_CATEGORIES:
-            return 
+            return
 
         pid = self.product_id(hxs)
 
@@ -38,7 +38,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
         garment = self.new_unique_garment(pid)
 
         if not garment:
-            return 
+            return
 
         if self.out_of_stock(hxs, response):
             return self.out_of_stock_item(hxs, response, pid)
@@ -97,7 +97,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
 
     def product_description(self, hxs):
         return [x for x in self.raw_description(hxs)
-                if not re.match('PH:[0-9 ]+ for more info', x) and not self.care_criteria(x) and len(x) > 1]
+                if 'for more info' not in x and not self.care_criteria(x) and len(x) > 1]
 
     def image_urls(self, hxs):
         urls = clean(hxs.select(".//*[@id='gallery_base']//a/@href"))
@@ -109,11 +109,11 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
 
 class LornajaneCrawlSpider(BaseCrawlSpider, Mixin):
     name = '{0}-crawl'.format(Mixin.retailer)
+    parse_spider = LornajaneParseSpider()
+
     listings_x = [".//*[@id='ShopLink' or @id ='SaleLink']//li//a", ".//*[@class='pager']//a"]
     products_x = [".//*[@id='content']//*[@class='details']"]
     denied_paths = ['books', 'lornajane.com.au/(A|M)[0-9]+/', '/MNB']
     rules = [
         Rule(SgmlLinkExtractor(restrict_xpaths=listings_x, deny=denied_paths), callback='parse_and_add_women'),
         Rule(SgmlLinkExtractor(restrict_xpaths=products_x, deny=denied_paths), callback='parse_item')]
-
-    parse_spider = LornajaneParseSpider()
