@@ -100,7 +100,7 @@ class LornajaneParseSpider(BaseParseSpider, Mixin):
                 if not re.match('PH:[0-9 ]+ for more info', x) and not self.care_criteria(x) and len(x) > 1]
 
     def image_urls(self, hxs):
-        urls = clean(hxs.select(".//*[@id='gallery_base']/@rev"))
+        urls = clean(hxs.select(".//*[@id='gallery_base']//a/@rev"))
         return [urlparse.urljoin('http://www.lornajane.com.au/', image_url) for image_url in urls]
 
     def product_id(self, hxs):
