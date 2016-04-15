@@ -49,8 +49,9 @@ class BlueflySpiderSpider(scrapy.Spider):
         return map(unicode.strip, response.xpath('//*[contains(@class,"mz-price-message")]//text()').extract())
 
     def product_name(self, response):
-        name = response.xpath("//*[contains(@class,'mz-breadcrumb-current')]//text()").extract()
-        return name[0].split(' ', 1)[1]
+        prod_name = response.xpath("//*[contains(@class,'mz-breadcrumb-current')]//text()").extract()[0]
+        brand_name = response.xpath("//*[contains(@class,'mz-productbrand')]/a/text()").extract()[0]
+        return prod_name.replace(brand_name+" ", '').title()
 
     def product_retailer(self, response):
         return map(unicode.strip,
@@ -58,19 +59,19 @@ class BlueflySpiderSpider(scrapy.Spider):
 
     def product_sku(self, response):
         skus = {}
-        sizes = response.xpath("//*[contains(@class,'mz-productoptions-valuecontainer')]//span/text()").extract()
+        sizes = response.xpath("//*[contains(@class,'mz-productoptions-sizebox')]")
         price = map(unicode.strip, response.xpath("//*[contains(@class,'mz-price is-saleprice')]//text()").extract())[0]
         price = price[1:]
         prev_price = map(unicode.strip,
                          response.xpath("//*[contains(@class,'mz-price is-crossedout')]//text()").extract())[-1]
         prev_price = prev_price[1:]
-        keys = response.xpath("//*[contains(@class,'mz-productoptions-sizebox')]//@data-value").extract()
-        for key, size in zip(keys, sizes):
+        for size in sizes:
             sku = {}
             sku['color'] = response.xpath("//*[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
             sku['currency'] = 'USD'
             sku['previous_prices'] = prev_price
             sku['price'] = price
-            sku['size'] = size
-            skus[key] = sku
+            sku['size'] = size.xpath('.//text()').extract()
+            key = size.xpath('@data-value').extract()
+            skus[key[0]] = sku
         return skus
