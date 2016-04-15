@@ -76,7 +76,7 @@ class BlueflySpider(scrapy.Spider):
         gender_list = ['Women', 'Men', 'Kids', 'Girls', ' Boys']
         category = self.get_category(response)
         for gender in category:
-            return gender if gender in gender_list else 'unknown'
+            return gender if gender in gender_list else 'unisex-adults'
 
     def skus(self, response):
         skus = {}
