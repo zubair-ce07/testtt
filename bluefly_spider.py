@@ -1,29 +1,20 @@
-import scrapy
-from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 from bluefly.items import BlueflyItem
 
 
-class BlueflySpider(scrapy.Spider):
+class BlueflySpider(CrawlSpider):
     name = "bluefly"
     allowed_domains = ["bluefly.com"]
     start_urls = [
         "http://www.bluefly.com/"
     ]
-
-    def parse(self, response):
-        for href in response.xpath('//*[@class="sitenav-sub-column"]//li//@href'):
-            url = response.urljoin(href.extract())
-            yield Request(url, callback=self.parse_product_list)
-
-    def parse_product_list(self, response):
-        for href in response.xpath('//li[@class="mz-productlist-item"]//@href'):
-            url = response.urljoin(href.extract())
-            yield Request(url, callback=self.parse_product_details)
-        next_page = response.xpath('//*[@class="mz-pagenumbers-next"]/@href').extract()
-        if next_page:
-            next_page_url = response.urljoin(next_page[0])
-            yield Request(next_page_url, callback=self.parse_product_list)
+    rules = (
+        Rule(LinkExtractor(
+            restrict_xpaths=['//*[@class="sitenav-sub-column"]//li', '//*[@class="mz-pagenumbers-next"]'])),
+        Rule(LinkExtractor(restrict_xpaths='//li[@class="mz-productlist-item"]'), callback='parse_product_details'),
+    )
 
     def parse_product_details(self, response):
         item = BlueflyItem()
