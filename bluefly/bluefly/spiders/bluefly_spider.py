@@ -1,28 +1,21 @@
-import scrapy
 from bluefly.items import BlueflyItem
+from scrapy.linkextractor import LinkExtractor
+from scrapy.spider import CrawlSpider, Rule
 
 
-class BlueflySpiderSpider(scrapy.Spider):
+class BlueflySpiderSpider(CrawlSpider):
     name = "bluefly_spider"
     allowed_domains = ["bluefly.com"]
     start_urls = [
         'http://www.bluefly.com',
     ]
 
-    def parse(self, response):
-        for href in response.css("ul.sitenav-sub-column > li > a::attr('href')"):
-            url = response.urljoin(href.extract())
-            yield scrapy.Request(url, callback=self.parse_product_pages)
-
-    def parse_product_pages(self, response):
-        for product_href in response.xpath("//*[contains(@class,'mz-productlist-list mz-l-tiles')]//li//@href"):
-            url = response.urljoin(product_href.extract())
-            yield scrapy.Request(url, callback=self.parse_product_contents)
-
-        next_page = response.xpath("//*[contains(@class,'mz-pagenumbers-next')]//@href")
-        if next_page:
-            url = response.urljoin(next_page[0].extract())
-            yield scrapy.Request(url, self.parse_product_pages)
+    rules = (
+        Rule(LinkExtractor(restrict_xpaths=["//ul[contains(@class,'sitenav-sub-column')]//li",
+                                            "//*[contains(@class,'mz-pagenumbers-next')]"])),
+        Rule(LinkExtractor(restrict_xpaths=["//*[contains(@class,'mz-productlist-list mz-l-tiles')]//li"]),
+             callback='parse_product_contents'),
+    )
 
     def parse_product_contents(self, response):
         item = BlueflyItem()
@@ -114,3 +107,4 @@ class BlueflySpiderSpider(scrapy.Spider):
             prev_price = prev_price[-1]
             prev_price = [prev_price.split('$', 1)[-1]]
         return prev_price
+
