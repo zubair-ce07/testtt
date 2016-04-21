@@ -22,12 +22,12 @@ class BlueflySpiderSpider(CrawlSpider):
         item['brand'] = self.product_brand(response)
         item['category'] = self.product_category(response)
         item['description'] = self.product_description(response)
-        item['gender'] = 'women'
+        item['gender'] = self.product_gender(response)
         item['image_urls'] = self.product_image_urls(response)
         item['market'] = 'US'
         item['merch_info'] = self.product_merch_info(response)
         item['name'] = self.product_name(response)
-        item['retailer'] = 'bluefly'
+        item['retailer'] = self.product_retailer(response)
         item['retailer_sku'] = self.product_retailer_sku(response)
         item['skus'] = self.product_sku(response)
         item['url'] = response.url
@@ -53,58 +53,56 @@ class BlueflySpiderSpider(CrawlSpider):
         return response.xpath('//a[contains(@class,"mz-productimages-thumb")]//@data-zoom-image').extract()
 
     def product_merch_info(self, response):
-        return map(unicode.strip, response.xpath('//*[contains(@class,"mz-price-message")]//text()').extract())
+        merch_info = response.xpath('//div[contains(@class,"mz-price-message")]/text()').extract()
+        return [merch_info[0].strip()] if merch_info else ''
 
     def product_name(self, response):
-        prod_name = response.xpath("//*[contains(@class,'mz-breadcrumb-current')]//text()").extract()[0]
-        brand_name = self.product_brand(response)
-        return prod_name.replace(brand_name+" ", '').title()
+        name = response.xpath("//*[contains(@class,'mz-breadcrumb-current')]//text()").extract()[0]
+        brand = self.product_brand(response)
+        return name.replace(brand + " ", '').title()
 
     def product_retailer(self, response):
-        return map(unicode.strip,
-                   response.xpath('//*[contains(@class,"site-toggler bluefly active")]//text()').extract())[0]
+        return response.xpath('//a/div[contains(@class,"site-toggler")]//text()').extract()[0].strip()
+
+    def product_gender(self, response):
+        gender_list = ['Women', 'Men', 'Kids', 'Girls', ' Boys']
+        category = self.product_category(response)
+        for gender in category:
+            return gender if gender in gender_list else 'unisex-adults'
 
     def product_sku(self, response):
         skus = {}
         sizes = response.xpath("//*[contains(@class,'mz-productoptions-sizebox')]")
+        colour = response.xpath("//span[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
+        prev_price = self.product_prev_price(response)
+        price = self.product_price(response)
         if sizes:
             for size in sizes:
                 sku = {}
-                sku['colour'] = response.xpath("//span[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
+                sku['colour'] = colour
                 sku['currency'] = 'USD'
-                prev_price = self.product_prev_price(response)
                 if prev_price:
                     sku['previous_prices'] = prev_price
-                sku['price'] = self.product_price(response)
+                sku['price'] = price
                 sku['size'] = size.xpath('.//text()').extract()
                 key = size.xpath('@data-value').extract()
                 skus[key[0]] = sku
         else:
             sku = {}
-            sku['colour'] = response.xpath("//span[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
+            sku['colour'] = colour
             sku['currency'] = 'USD'
-            prev_price =  self.product_prev_price(response)
             if prev_price:
                 sku['previous_prices'] = prev_price
-            sku['price'] = self.product_price(response)
+            sku['price'] = price
             sku['size'] = 'One Size'
-            skus[0] = sku
+            key = self.product_retailer_sku(response)
+            skus[key] = sku
         return skus
 
     def product_price(self, response):
-        price = map(unicode.strip, response.xpath("//*[contains(@class,'mz-price is-saleprice')]//text()").extract())
-        if price:
-            price = price[0]
-        else:
-            price = map(unicode.strip, response.xpath("//*[contains(@class,'mz-price')]//text()").extract())[1]
-        price = price.split('$', 1)[-1]
-        return price
+        price = response.xpath('//div[@itemprop="price"]//text() | //div[@class="mz-price"]//text()').extract()
+        return price[0].strip().split('$', 1)[-1]
 
     def product_prev_price(self, response):
-        prev_price = map(unicode.strip,
-                         response.xpath("//*[contains(@class,'mz-price is-crossedout')]//text()").extract())
-        if prev_price:
-            prev_price = prev_price[-1]
-            prev_price = [prev_price.split('$', 1)[-1]]
-        return prev_price
-
+        prev_price = response.xpath("//*[contains(@class,'mz-price is-crossedout')]//text()").extract()
+        return prev_price[-1].strip().split('$', 1)[-1] if prev_price else ''
