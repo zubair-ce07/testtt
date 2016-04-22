@@ -65,34 +65,35 @@ class BlueflySpiderSpider(CrawlSpider):
         return response.xpath('//a/div[contains(@class,"site-toggler")]//text()').extract()[0].strip()
 
     def product_gender(self, response):
-        available_gender = ['Women', 'Men', 'Kids', 'Girls', ' Boys']
+        available_genders = ['Women', 'Men', 'Kids', 'Girls', ' Boys']
         category = self.product_category(response)
         for gender in category:
-            if gender in available_gender:
+            if gender in available_genders:
                 return gender
         return 'unisex-adults'
 
     def product_sku(self, response):
         skus = {}
-        sku = {}
-        sku['colour'] = response.xpath("//span[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
-        sku['currency'] = 'USD'
+        sku_common = {}
+        sku_common['colour'] = response.xpath(
+            "//span[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
+        sku_common['currency'] = 'USD'
         prev_price = self.product_prev_price(response)
         if prev_price:
-            sku['previous_prices'] = prev_price
-        sku['price'] = self.product_price(response)
+            sku_common['previous_prices'] = prev_price
+        sku_common['price'] = self.product_price(response)
 
         sizes = response.xpath("//*[contains(@class,'mz-productoptions-sizebox')]")
         if sizes:
             for size in sizes:
-                sku_with_size = sku.copy()
-                sku_with_size['size'] = size.xpath('.//text()').extract()
+                sku = {'size': size.xpath('.//text()').extract()[0]}
+                sku.update(sku_common)
                 key = size.xpath('@data-value').extract()
-                skus[key[0]] = sku_with_size
+                skus[key[0]] = sku
         else:
-            sku['size'] = 'One Size'
+            sku_common['size'] = 'One Size'
             key = self.product_retailer_sku(response)
-            skus[key] = sku
+            skus[key] = sku_common
         return skus
 
     def product_price(self, response):
