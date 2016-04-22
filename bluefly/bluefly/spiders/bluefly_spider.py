@@ -65,35 +65,31 @@ class BlueflySpiderSpider(CrawlSpider):
         return response.xpath('//a/div[contains(@class,"site-toggler")]//text()').extract()[0].strip()
 
     def product_gender(self, response):
-        gender_list = ['Women', 'Men', 'Kids', 'Girls', ' Boys']
+        available_gender = ['Women', 'Men', 'Kids', 'Girls', ' Boys']
         category = self.product_category(response)
         for gender in category:
-            return gender if gender in gender_list else 'unisex-adults'
+            if gender in available_gender:
+                return gender
+        return 'unisex-adults'
 
     def product_sku(self, response):
         skus = {}
-        sizes = response.xpath("//*[contains(@class,'mz-productoptions-sizebox')]")
-        colour = response.xpath("//span[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
+        sku = {}
+        sku['colour'] = response.xpath("//span[contains(@class,'mz-productoptions-optionvalue')]//text()").extract()
+        sku['currency'] = 'USD'
         prev_price = self.product_prev_price(response)
-        price = self.product_price(response)
+        if prev_price:
+            sku['previous_prices'] = prev_price
+        sku['price'] = self.product_price(response)
+
+        sizes = response.xpath("//*[contains(@class,'mz-productoptions-sizebox')]")
         if sizes:
             for size in sizes:
-                sku = {}
-                sku['colour'] = colour
-                sku['currency'] = 'USD'
-                if prev_price:
-                    sku['previous_prices'] = prev_price
-                sku['price'] = price
-                sku['size'] = size.xpath('.//text()').extract()
+                sku_with_size = sku.copy()
+                sku_with_size['size'] = size.xpath('.//text()').extract()
                 key = size.xpath('@data-value').extract()
-                skus[key[0]] = sku
+                skus[key[0]] = sku_with_size
         else:
-            sku = {}
-            sku['colour'] = colour
-            sku['currency'] = 'USD'
-            if prev_price:
-                sku['previous_prices'] = prev_price
-            sku['price'] = price
             sku['size'] = 'One Size'
             key = self.product_retailer_sku(response)
             skus[key] = sku
