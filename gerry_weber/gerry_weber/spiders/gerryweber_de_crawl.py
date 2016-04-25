@@ -70,19 +70,17 @@ class GerryweberDeCrawlSpider(CrawlSpider):
     def product_sku(self, response):
         skus = {}
         sku_common = {}
-        colours = response.xpath('//div[contains(@class,"color")]/ul/li/div/a/@title').extract()
-        sizes = response.xpath('//div[contains(@class,"swatches size")]/ul/li/div/a/@data-value').extract()
+        colours = response.xpath('//li[contains(@class,"swatchimage")]//a/@title').extract()
         sku_common['currency'] = self.product_currency(response)
         sku_common['price'] = self.product_price(response)
-        index = 0
 
         for color in colours:
+            sizes = response.xpath('//div[contains(@class,"swatches size")]/ul/li/div/a/@data-value').extract()
             if sizes:
                 for size in sizes:
                     sku = {'size': size, 'colour': color}
                     sku.update(sku_common)
-                    skus[index] = sku
-                    index += 1
+                    skus[color+'_'+size] = sku
             else:
                 sku = {'size': 'One Size', 'colour': color}
                 sku.update(sku_common)
