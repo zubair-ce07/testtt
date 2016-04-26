@@ -27,6 +27,7 @@ class GerryweberDeCrawlSpider(CrawlSpider):
         item['category'] = self.product_category(response)
         item['retailer_sku'] = self.product_retailer_sku(response)
         item['price'] = self.product_price(response)
+        item['prev_price'] = self.product_previous_price(response)
         item['description'] = self.product_description(response)
         item['url_original'] = response.url
         item['brand'] = self.product_brand(response)
@@ -47,10 +48,14 @@ class GerryweberDeCrawlSpider(CrawlSpider):
 
     def product_retailer_sku(self, response):
         retailer_sku = response.xpath('//div[contains(@class, "itemNo")]//text()').extract()
-        return retailer_sku[0].split(' ', 1)[-1]
+        return retailer_sku[0].split()[-1]
 
     def product_price(self, response):
         return response.xpath('//div[contains(@class,"salesprice")]/span/text()').extract()[0]
+
+    def product_previous_price(self, response):
+        prev_price = response.xpath('//div[contains(@class,"standardprice")]/text()').extract()
+        return [prev_price[0].strip()] if prev_price else []
 
     def product_description(self, response):
         return response.xpath('//span[@itemprop="description"]/text()').extract()
@@ -73,14 +78,18 @@ class GerryweberDeCrawlSpider(CrawlSpider):
         colours = response.xpath('//li[contains(@class,"swatchimage")]//a/@title').extract()
         sku_common['currency'] = self.product_currency(response)
         sku_common['price'] = self.product_price(response)
-
         for color in colours:
-            sizes = response.xpath('//div[contains(@class,"swatches size")]/ul/li/div/a/@data-value').extract()
+            sizes = response.xpath('//div[contains(@class,"swatches size")]/ul/li')
             if sizes:
                 for size in sizes:
-                    sku = {'size': size, 'colour': color}
+                    size_val = size.xpath('.//div/a/@data-value').extract()[0]
+                    oos = sizes.xpath('./@class').extract()[0]
+                    out_of_stock = False
+                    if "unselectable" in oos:
+                        out_of_stock = True
+                    sku = {'size': size_val, 'colour': color, 'out_of_stock': out_of_stock}
                     sku.update(sku_common)
-                    skus[color+'_'+size] = sku
+                    skus[color + '_' + size_val] = sku
             else:
                 sku = {'size': 'One Size', 'colour': color}
                 sku.update(sku_common)
