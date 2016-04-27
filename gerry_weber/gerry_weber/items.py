@@ -9,7 +9,6 @@ class GerryweberItem(scrapy.Item):
     category = scrapy.Field()
     retailer_sku = scrapy.Field()
     price = scrapy.Field()
-    prev_price = scrapy.Field()
     description = scrapy.Field()
     url_original = scrapy.Field()
     brand = scrapy.Field()

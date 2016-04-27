@@ -27,7 +27,6 @@ class GerryweberDeCrawlSpider(CrawlSpider):
         item['category'] = self.product_category(response)
         item['retailer_sku'] = self.product_retailer_sku(response)
         item['price'] = self.product_price(response)
-        item['prev_price'] = self.product_previous_price(response)
         item['description'] = self.product_description(response)
         item['url_original'] = response.url
         item['brand'] = self.product_brand(response)
@@ -55,7 +54,7 @@ class GerryweberDeCrawlSpider(CrawlSpider):
 
     def product_previous_price(self, response):
         prev_price = response.xpath('//div[contains(@class,"standardprice")]/text()').extract()
-        return [prev_price[0].strip()] if prev_price else []
+        return [prev_price[0].strip()] if prev_price else ''
 
     def product_description(self, response):
         return response.xpath('//span[@itemprop="description"]/text()').extract()
@@ -78,12 +77,15 @@ class GerryweberDeCrawlSpider(CrawlSpider):
         colours = response.xpath('//li[contains(@class,"swatchimage")]//a/@title').extract()
         sku_common['currency'] = self.product_currency(response)
         sku_common['price'] = self.product_price(response)
+        prev_price = self.product_previous_price(response)
+        if prev_price:
+            sku_common['previous_price'] = prev_price
         for color in colours:
             sizes = response.xpath('//div[contains(@class,"swatches size")]/ul/li')
             if sizes:
                 for size in sizes:
                     size_val = size.xpath('.//div/a/@data-value').extract()[0]
-                    oos = sizes.xpath('./@class').extract()[0]
+                    oos = size.xpath('./@class').extract()[0]
                     out_of_stock = False
                     if "unselectable" in oos:
                         out_of_stock = True
