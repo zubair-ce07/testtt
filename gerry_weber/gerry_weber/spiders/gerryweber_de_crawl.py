@@ -10,10 +10,12 @@ class GerryweberDeCrawlSpider(CrawlSpider):
         'http://www.house-of-gerryweber.de/'
     ]
 
+    listings_xpath = ['//div[@class="nav_bg_head_tab"]',
+                      '//ul[@id="nav_catmenu"]//li',
+                      '//a[@class="scrollforward"]']
+
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=['//div[@class="nav_bg_head_tab"]',
-                                            '//ul[@id="nav_catmenu"]//li',
-                                            '//a[@class="scrollforward"]'])),
+        Rule(LinkExtractor(restrict_xpaths=listings_xpath)),
         Rule(LinkExtractor(restrict_xpaths=['//ul[@class="cat_products"]/li']),
              callback='parse_product_contents'),
     )
@@ -43,7 +45,7 @@ class GerryweberDeCrawlSpider(CrawlSpider):
         yield item
 
     def product_category(self, response):
-        return response.xpath('//li[contains(@class,"active")]/a//text()').extract()
+        return response.css('li.active a::text').extract()
 
     def product_retailer_sku(self, response):
         retailer_sku = response.xpath('//div[contains(@class, "itemNo")]//text()').extract()
@@ -79,22 +81,20 @@ class GerryweberDeCrawlSpider(CrawlSpider):
         sku_common['price'] = self.product_price(response)
         prev_price = self.product_previous_price(response)
         if prev_price:
-            sku_common['previous_price'] = prev_price
+            sku_common['previous_prices'] = prev_price
         for color in colours:
             sizes = response.xpath('//div[contains(@class,"swatches size")]/ul/li')
             if sizes:
                 for size in sizes:
                     size_val = size.xpath('.//div/a/@data-value').extract()[0]
-                    oos = size.xpath('./@class').extract()[0]
-                    out_of_stock = False
-                    if "unselectable" in oos:
-                        out_of_stock = True
-                    sku = {'size': size_val, 'colour': color, 'out_of_stock': out_of_stock}
+                    sku = {'size': size_val,
+                           'colour': color,
+                           'out_of_stock' : "unselectable" in size.xpath('./@class').extract()[0]
+                    }
                     sku.update(sku_common)
                     skus[color + '_' + size_val] = sku
             else:
                 sku = {'size': 'One Size', 'colour': color}
                 sku.update(sku_common)
-                key = self.product_retailer_sku(response)
-                skus[key] = sku
+                skus[color + '_OneSize'] = sku
         return skus
