@@ -1,0 +1,25 @@
+import scrapy
+
+
+class GerryweberItem(scrapy.Item):
+    spider_name = scrapy.Field()
+    retailer = scrapy.Field()
+    currency = scrapy.Field()
+    market = scrapy.Field()
+    category = scrapy.Field()
+    retailer_sku = scrapy.Field()
+    price = scrapy.Field()
+    description = scrapy.Field()
+    url_original = scrapy.Field()
+    brand = scrapy.Field()
+    image_urls = scrapy.Field()
+    trail = scrapy.Field()
+    crawl_id = scrapy.Field()
+    date = scrapy.Field()
+    skus = scrapy.Field()
+    care = scrapy.Field()
+    lang = scrapy.Field()
+    name = scrapy.Field()
+    url = scrapy.Field()
+    gender = scrapy.Field()
+    industry = scrapy.Field()
