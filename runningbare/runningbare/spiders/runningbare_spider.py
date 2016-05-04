@@ -67,12 +67,12 @@ class RunningbareSpiderSpider(CrawlSpider):
         requests = []
         colours = response.xpath('//div[contains(@class,"selectcolour")]/@title').extract()
         size_chart = response.xpath('//div[contains(@class,"selectsize")]/@title').extract()
+        url = 'http://www.runningbare.com.au/product/getskudata'
+        header = {"Content-Type": "application/json; charset=UTF-8",
+                  "X-Requested-With": "XMLHttpRequest"}
 
         for colour in colours:
             request_data = self.get_request_data(response, colour)
-            url = 'http://www.runningbare.com.au/product/getskudata'
-            header = {"Content-Type": "application/json; charset=UTF-8",
-                      "X-Requested-With": "XMLHttpRequest"}
             requests += [Request(url, method="POST", body=request_data, callback=self.get_product_skus, headers=header,
                                  meta={'size_chart': size_chart, 'colour': colour})]
         return requests
