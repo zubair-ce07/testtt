@@ -20,13 +20,11 @@ class RunningbareSpiderSpider(CrawlSpider):
     )
 
     def parse_pagination(self, response):
-        request = ''
         if response.xpath('//a[@class="link"]'):
             category_id = response.xpath('//article/@data-categoryid')[0].extract()
             url = 'http://www.runningbare.com.au/product/list?categoryId={category_id}&page=-1&' \
                   'viewName=ProductListItems&ts=1462180932717'.format(category_id=category_id)
-            request = Request(url)
-        yield request
+            yield Request(url)
 
     def parse_product_contents(self, response):
         item = RunningBareProduct()
@@ -71,11 +69,11 @@ class RunningbareSpiderSpider(CrawlSpider):
         size_chart = response.xpath('//div[contains(@class,"selectsize")]/@title').extract()
 
         for colour in colours:
-            request_data = self.get_product_details(response, colour)
+            request_data = self.get_request_data(response, colour)
             url = 'http://www.runningbare.com.au/product/getskudata'
             header = {"Content-Type": "application/json; charset=UTF-8",
                       "X-Requested-With": "XMLHttpRequest"}
-            requests += [Request(url, method="POST", body=request_data, callback=self.sku_details, headers=header,
+            requests += [Request(url, method="POST", body=request_data, callback=self.get_product_skus, headers=header,
                                  meta={'size_chart': size_chart, 'colour': colour})]
         return requests
 
@@ -87,7 +85,7 @@ class RunningbareSpiderSpider(CrawlSpider):
         price = self.product_price(response)
         return [prev_price] if prev_price != price else ''
 
-    def get_product_details(self, response, colour):
+    def get_request_data(self, response, colour):
         product_id = response.xpath('//input[@id="ProductId"]/@value').extract()[0]
         size = response.xpath('//div[contains(@class,"selectsize")]/@data-value').extract()[0]
         return json.dumps({"productId": product_id, "colour": colour, "size": "",
@@ -95,7 +93,7 @@ class RunningbareSpiderSpider(CrawlSpider):
                                              {"name": "Size", "selectedValues": [size]}]})
 
     def sku_details(self, response):
-        item = response.meta['item']
+        skus = {}
         size_chart = response.meta['size_chart']
         colour = response.meta['colour']
         body = json.loads(response.body)
@@ -111,8 +109,8 @@ class RunningbareSpiderSpider(CrawlSpider):
             sku.update(sku_common)
             if not any(oos['value'] == size.lower() for oos in product_data):
                 sku['out_of_stock'] = True
-            item['skus'][colour + '_' + size] = sku
-        yield self.handle_request(item)
+            skus[colour + '_' + size] = sku
+        return skus
 
     def handle_request(self, item):
         if item['requests']:
@@ -122,3 +120,8 @@ class RunningbareSpiderSpider(CrawlSpider):
         else:
             item.pop('requests')
             return item
+
+    def get_product_skus(self, response):
+        item = response.meta['item']
+        item['skus'].update(self.sku_details(response))
+        yield self.handle_request(item)
