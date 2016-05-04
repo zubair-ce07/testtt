@@ -1,5 +1,5 @@
 import json
-from runningbare.items import RunningbareItem
+from runningbare.items import RunningBareProduct
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.http import Request
@@ -20,17 +20,16 @@ class RunningbareSpiderSpider(CrawlSpider):
     )
 
     def parse_pagination(self, response):
-        page = response.xpath('//li[@class="active"]/a/@data-page').extract()
-        if page:
+        request = ''
+        if response.xpath('//a[@class="link"]'):
             category_id = response.xpath('//article/@data-categoryid')[0].extract()
-
-            url = 'http://www.runningbare.com.au/product/list?categoryId={category_id}&page={page}&' \
-                  'viewName=ProductListItems&ts=1462180932717'.format(category_id=category_id, page=page)
-            request = Request(url, method="GET", callback=self.sku_details)
-            yield request
+            url = 'http://www.runningbare.com.au/product/list?categoryId={category_id}&page=-1&' \
+                  'viewName=ProductListItems&ts=1462180932717'.format(category_id=category_id)
+            request = Request(url)
+        yield request
 
     def parse_product_contents(self, response):
-        item = RunningbareItem()
+        item = RunningBareProduct()
         item['spider_name'] = self.name
         item['retailer'] = 'runningbare-au'
         item['currency'] = 'AUD'
@@ -48,15 +47,8 @@ class RunningbareSpiderSpider(CrawlSpider):
         item['gender'] = 'women'
         item['industry'] = None
         item['skus'] = {}
-        item['requests'] = self.product_sku(response, item)
-
-        if item['requests']:
-            req = item['requests'].pop()
-            req.meta['item'] = item
-            yield req
-        else:
-            item.pop('requests')
-            yield item
+        item['requests'] = self.sku_requests(response)
+        yield self.handle_request(item)
 
     def product_name(self, response):
         return response.xpath('//h1[@class="hidden-xs productTitle"]/text()').extract()
@@ -73,7 +65,7 @@ class RunningbareSpiderSpider(CrawlSpider):
     def product_image_urls(self, response):
         return response.xpath('//li[@class="fullscreen-thumbnails"]/a/img/@src').extract()
 
-    def product_sku(self, response, item):
+    def sku_requests(self, response):
         requests = []
         colours = response.xpath('//div[contains(@class,"selectcolour")]/@title').extract()
         size_chart = response.xpath('//div[contains(@class,"selectsize")]/@title').extract()
@@ -91,47 +83,42 @@ class RunningbareSpiderSpider(CrawlSpider):
         return response.xpath('//em/descendant::text()').extract()
 
     def product_previous_price(self, response):
-        if response.xpath('//span[contains(@class,"hidden")]/text()').extract():
-            return ''
-        else:
-            return [response.xpath('//span[contains(@class,"was")]/text()').extract()[0][1:]]
+        prev_price = response.xpath('//span[contains(@class,"was")]/text()').extract()[0][1:]
+        price = self.product_price(response)
+        return [prev_price] if prev_price != price else ''
 
     def get_product_details(self, response, colour):
-        id = response.xpath('//input[@id="ProductId"]/@value').extract()[0]
+        product_id = response.xpath('//input[@id="ProductId"]/@value').extract()[0]
         size = response.xpath('//div[contains(@class,"selectsize")]/@data-value').extract()[0]
-        return json.dumps({"productId": id, "colour": colour, "size": "",
+        return json.dumps({"productId": product_id, "colour": colour, "size": "",
                            "skuSelections": [{"name": "Colour", "selectedValues": [colour]},
                                              {"name": "Size", "selectedValues": [size]}]})
 
     def sku_details(self, response):
-        try:
-            item = response.meta['item']
-            size_chart = response.meta['size_chart']
-            colour = response.meta['colour']
-            sku_common = {}
-            body = json.loads(response.body)
-            price = round(body['data']['price'], 2)
-            sku_common['colour'] = colour
-            sku_common['currency'] = 'AUD'
-            sku_common['price'] = price
-            prev_price = round(body['data']['rrp'], 2)
-            if price != prev_price:
-                sku_common['previous_prices'] = [prev_price]
+        item = response.meta['item']
+        size_chart = response.meta['size_chart']
+        colour = response.meta['colour']
+        body = json.loads(response.body)
+        price = round(body['data']['price'], 2)
+        sku_common = {'colour': colour, 'currency': 'AUD', 'price': price}
+        prev_price = round(body['data']['rrp'], 2)
+        if price != prev_price:
+            sku_common['previous_prices'] = [prev_price]
 
-            product_data = body['data']['skuSelectorData'][0]['availableOptions']
-            for size in size_chart:
-                sku = {'size': size, 'colour': colour}
-                sku.update(sku_common)
-                if not any(oos['value'] == size.lower() for oos in product_data):
-                    sku['out_of_stock'] = True
-                item['skus'][colour + '_' + size] = sku
+        product_data = body['data']['skuSelectorData'][0]['availableOptions']
+        for size in size_chart:
+            sku = {'size': size, 'colour': colour}
+            sku.update(sku_common)
+            if not any(oos['value'] == size.lower() for oos in product_data):
+                sku['out_of_stock'] = True
+            item['skus'][colour + '_' + size] = sku
+        yield self.handle_request(item)
 
-            if item['requests']:
-                req = item['requests'].pop()
-                req.meta['item'] = item
-                yield req
-            else:
-                item.pop('requests')
-                yield item
-        except:
-            yield
+    def handle_request(self, item):
+        if item['requests']:
+            req = item['requests'].pop()
+            req.meta['item'] = item
+            return req
+        else:
+            item.pop('requests')
+            return item

@@ -1,7 +1,7 @@
 import scrapy
 
 
-class RunningbareItem(scrapy.Item):
+class RunningBareProduct(scrapy.Item):
     spider_name = scrapy.Field()
     retailer = scrapy.Field()
     currency = scrapy.Field()
