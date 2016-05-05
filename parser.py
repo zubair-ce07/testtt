@@ -1,14 +1,24 @@
 # -*- coding: utf-8 -*-
+import argparse
+import csv
 import os
 
 KEY_YEAR = "year"
 KEY_DATE = "date"
 KEY_TEMP = "temp"
 
-KEY_MAX_TEMP = "Max TemperatureC";
-KEY_MIN_TEMP = "Min TemperatureC";
+KEY_MAX_TEMP = "Max TemperatureC"
+KEY_MIN_TEMP = "Min TemperatureC"
 KEY_MAX_HUMD = "Max Humidity"
 KEY_MIN_HUMD = "Min Humidity"
+
+KEY_ANNUAL_DATA = "Yearly Data"
+KEY_HOTTEST_DAY_DATA = "Hottest Data"
+KEY_COLDEST_DAY_DATA = "Coldest Data"
+
+ANNUAL_REPORT = 1
+HOTTEST_DAY_REPORT = 2
+COLDEST_DAY_REPORT = 3
 
 
 def annual_report(data):
@@ -36,87 +46,103 @@ def coldest_report(data):
         print key, "\t", str(year[KEY_DATE]), "\t" + str(year[KEY_TEMP])
 
 
-def main():
-    print "**********WEATHERMAN**********"
-
+def analyse_data(data_dir):
     titles = ""
     currentDate = ""
     yearlyData = dict()
     hottestDayData = dict()
     coldestDayData = dict()
+    weatherFiles = os.listdir(data_dir)
+    if not len(weatherFiles):
+        print "data directory is empty"
+    else:
+        for weatherFile in weatherFiles:
+            monthFileName = os.path.abspath(os.path.join(data_dir, weatherFile))
+            with open(monthFileName, 'r') as monthlyFile:
+                csv_f = csv.reader(monthlyFile)
+                titles = []
+                for index, row in enumerate(csv_f):
+                    if index == 0:
+                        continue
+                    if index == 1:
+                        for item in row:
+                            titles.append(item)
+                        continue
+                    dayData = dict()
+                    if not row[0].__contains__("<!--"):
+                        parsedDayList = row
+                        for index, title in enumerate(titles):
+                            dayData[str.strip(title)] = parsedDayList[index]
+                        currentDate = str(dayData.get('PKT') or dayData.get('PKST'))
+                        selectedYear = int(currentDate.split("-").__getitem__(0))
+                        if selectedYear not in yearlyData:
+                            yearData = dict()
+                            yearData[KEY_MAX_TEMP] = -99
+                            yearData[KEY_MIN_TEMP] = 99
+                            yearData[KEY_MAX_HUMD] = -99
+                            yearData[KEY_MIN_HUMD] = 99
+                            yearlyData[selectedYear] = yearData
 
-    reportNumber = raw_input("Please enter \n1 for Annual Max/Min Temperature\n2 for Hottest day of each year\n"
-                             "3 for coldest day of each year​\n")
-    data_dir = raw_input("Please enter data directory path for weather files\n")
+                            hottestDay = dict()
+                            hottestDay[KEY_DATE] = ""
+                            hottestDay[KEY_TEMP] = -99
+                            hottestDayData[selectedYear] = hottestDay
 
-    if reportNumber == "" or data_dir == "":
-        print "Please provide Report number and Data Directory Path"
+                            coldestDay = dict()
+                            coldestDay[KEY_DATE] = ""
+                            coldestDay[KEY_TEMP] = -99
+                            coldestDayData[selectedYear] = coldestDay
+                        if dayData[KEY_MAX_TEMP]:
+                            if yearlyData[selectedYear][KEY_MAX_TEMP] < int(dayData[KEY_MAX_TEMP]):
+                                yearlyData[selectedYear][KEY_MAX_TEMP] = int(dayData[KEY_MAX_TEMP])
+                                hottestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MAX_TEMP])
+                                hottestDayData[selectedYear][KEY_DATE] = currentDate
+                        if dayData[KEY_MIN_TEMP]:
+                            if yearlyData[selectedYear][KEY_MIN_TEMP] > int(dayData[KEY_MIN_TEMP]):
+                                yearlyData[selectedYear][KEY_MIN_TEMP] = int(dayData[KEY_MIN_TEMP])
+                                coldestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MIN_TEMP])
+                                coldestDayData[selectedYear][KEY_DATE] = currentDate
+                        if dayData[KEY_MAX_HUMD]:
+                            if yearlyData[selectedYear][KEY_MAX_HUMD] < int(dayData[KEY_MAX_HUMD]):
+                                yearlyData[selectedYear][KEY_MAX_HUMD] = int(dayData[KEY_MAX_HUMD])
+                        if dayData[KEY_MIN_HUMD]:
+                            if yearlyData[selectedYear][KEY_MIN_HUMD] > int(dayData[KEY_MIN_HUMD]):
+                                yearlyData[selectedYear][KEY_MIN_HUMD] = int(dayData[KEY_MIN_HUMD])
+    return {KEY_ANNUAL_DATA: yearlyData, KEY_HOTTEST_DAY_DATA: hottestDayData, KEY_COLDEST_DAY_DATA: coldestDayData}
 
-    try:
-        weatherFiles = os.listdir(data_dir)
-        if len(weatherFiles) == 0:
-            print "data directory is empty"
+
+def main():
+    print "**********WEATHERMAN**********"
+
+    analysedData = dict()
+    dataDirectory = ""
+    reportNumber = ANNUAL_REPORT
+
+    argumentParser = argparse.ArgumentParser(prog='Weatherman')
+    argumentParser.add_argument('-d', '--dir', help='Data Directory')  # optional
+    argumentParser.add_argument('-r', '--report', help='Report Number', type=int)  # positional
+    arguments = argumentParser.parse_args()
+    if arguments.dir:
+        if not os.path.dirname(arguments.dir):
+            print "Please provide correct data directory path"
+            return
         else:
-            for weatherFile in weatherFiles:
-                monthFileName = os.path.abspath(os.path.join(data_dir, weatherFile))
-                with open(monthFileName, 'r') as monthlyFile:
-                    if monthlyFile.readline() == "\r\n":
-                        titles = monthlyFile.readline().strip().split(",")
-                    for day in monthlyFile:
-                        dayData = dict()
-                        if not day.__contains__("<!--"):
-                            parsedDayList = day.strip().split(",")
-                            for index, title in enumerate(titles):
-                                dayData[str.strip(title)] = parsedDayList[index]
-                            if 'PKT' in dayData:
-                                currentDate = str(dayData['PKT'])
-                                selectedYear = int(str(dayData['PKT']).split("-").__getitem__(0))
-                            elif 'PKST' in dayData:
-                                currentDate = str(dayData['PKST'])
-                                selectedYear = int(str(dayData['PKST']).split("-").__getitem__(0))
-                            if selectedYear not in yearlyData:
-                                yearData = dict()
-                                yearData[KEY_MAX_TEMP] = -99
-                                yearData[KEY_MIN_TEMP] = 99
-                                yearData[KEY_MAX_HUMD] = -99
-                                yearData[KEY_MIN_HUMD] = 99
-                                yearlyData[selectedYear] = yearData
+            dataDirectory = arguments.dir
+    else:
+        argumentParser.print_help()
+        return
+    if arguments.report:
+        reportNumber = arguments.report
 
-                                hottestDay = dict()
-                                hottestDay[KEY_DATE] = ""
-                                hottestDay[KEY_TEMP] = -99
-                                hottestDayData[selectedYear] = hottestDay
+    analysedData = analyse_data(dataDirectory)
 
-                                coldestDay = dict()
-                                coldestDay[KEY_DATE] = ""
-                                coldestDay[KEY_TEMP] = -99
-                                coldestDayData[selectedYear] = coldestDay
-                            if dayData[KEY_MAX_TEMP] != '':
-                                if yearlyData[selectedYear][KEY_MAX_TEMP] < int(dayData[KEY_MAX_TEMP]):
-                                    yearlyData[selectedYear][KEY_MAX_TEMP] = int(dayData[KEY_MAX_TEMP])
-                                    hottestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MAX_TEMP])
-                                    hottestDayData[selectedYear][KEY_DATE] = currentDate
-                            if dayData[KEY_MIN_TEMP] != '':
-                                if yearlyData[selectedYear][KEY_MIN_TEMP] > int(dayData[KEY_MIN_TEMP]):
-                                    yearlyData[selectedYear][KEY_MIN_TEMP] = int(dayData[KEY_MIN_TEMP])
-                                    coldestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MIN_TEMP])
-                                    coldestDayData[selectedYear][KEY_DATE] = currentDate
-                            if dayData[KEY_MAX_HUMD] != '':
-                                if yearlyData[selectedYear][KEY_MAX_HUMD] < int(dayData[KEY_MAX_HUMD]):
-                                    yearlyData[selectedYear][KEY_MAX_HUMD] = int(dayData[KEY_MAX_HUMD])
-                            if dayData[KEY_MIN_HUMD] != '':
-                                if yearlyData[selectedYear][KEY_MIN_HUMD] > int(dayData[KEY_MIN_HUMD]):
-                                    yearlyData[selectedYear][KEY_MIN_HUMD] = int(dayData[KEY_MIN_HUMD])
+    if reportNumber == ANNUAL_REPORT:
+        annual_report(analysedData[KEY_ANNUAL_DATA])
+    if reportNumber == HOTTEST_DAY_REPORT:
+        hottest_report(analysedData[KEY_HOTTEST_DAY_DATA])
+    if reportNumber == COLDEST_DAY_REPORT:
+        coldest_report(analysedData[KEY_COLDEST_DAY_DATA])
 
-            print "You pressed " + reportNumber
-            if reportNumber == "1":
-                annual_report(yearlyData)
-            if reportNumber == "2":
-                hottest_report(hottestDayData)
-            if reportNumber == "3":
-                coldest_report(coldestDayData)
-    except OSError:
-        print "Not a Directory Path"
 
 if __name__ == '__main__':
     main()
