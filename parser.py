@@ -68,55 +68,51 @@ def analyse_data(data_dir):
     for weatherFile in weatherFiles:
         monthFileName = os.path.abspath(os.path.join(data_dir, weatherFile))
         with open(monthFileName, 'r') as monthlyFile:
-            csv_f = csv.reader(monthlyFile)
-            titles = []
-            for index, row in enumerate(csv_f):
-                if not index:
-                    continue
-                if index == 1:
-                    for item in row:
-                        titles.append(item)
-                    continue
-                dayData = dict()
-                if not row[0].__contains__("<!--"):
-                    parsedDayList = row
-                    for index, title in enumerate(titles):
-                        dayData[str.strip(title)] = parsedDayList[index]
-                    currentDate = str(dayData.get('PKT') or dayData.get('PKST'))
-                    selectedYear = int(currentDate.split("-").__getitem__(0))
-                    if selectedYear not in yearlyData:
-                        yearData = dict()
-                        yearData[KEY_MAX_TEMPERATURE] = -99
-                        yearData[KEY_MIN_TEMPERATURE] = 99
-                        yearData[KEY_MAX_HUMIDITY] = -99
-                        yearData[KEY_MIN_HUMIDITY] = 99
-                        yearlyData[selectedYear] = yearData
+            next(monthlyFile)
+            csvData = csv.DictReader(monthlyFile, delimiter=',', quotechar='"')
+            for row in csvData:
+                for key in row:
+                    newKey = str(key).strip()
+                    row[newKey] = row.pop(key)
+                dayData = row
 
-                        hottestDay = dict()
-                        hottestDay[KEY_DATE] = ""
-                        hottestDay[KEY_TEMP] = -99
-                        hottestDayData[selectedYear] = hottestDay
+                currentDate = str(dayData.get('PKT') or dayData.get('PKST'))
+                if currentDate.__contains__("<!--"):
+                    continue
+                selectedYear = int(currentDate.split("-").__getitem__(0))
+                if selectedYear not in yearlyData:
+                    yearData = dict()
+                    yearData[KEY_MAX_TEMPERATURE] = -99
+                    yearData[KEY_MIN_TEMPERATURE] = 99
+                    yearData[KEY_MAX_HUMIDITY] = -99
+                    yearData[KEY_MIN_HUMIDITY] = 99
+                    yearlyData[selectedYear] = yearData
 
-                        coldestDay = dict()
-                        coldestDay[KEY_DATE] = ""
-                        coldestDay[KEY_TEMP] = -99
-                        coldestDayData[selectedYear] = coldestDay
-                    if dayData[KEY_MAX_TEMPERATURE]:
-                        if yearlyData[selectedYear][KEY_MAX_TEMPERATURE] < int(dayData[KEY_MAX_TEMPERATURE]):
-                            yearlyData[selectedYear][KEY_MAX_TEMPERATURE] = int(dayData[KEY_MAX_TEMPERATURE])
-                            hottestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MAX_TEMPERATURE])
-                            hottestDayData[selectedYear][KEY_DATE] = currentDate
-                    if dayData[KEY_MIN_TEMPERATURE]:
-                        if yearlyData[selectedYear][KEY_MIN_TEMPERATURE] > int(dayData[KEY_MIN_TEMPERATURE]):
-                            yearlyData[selectedYear][KEY_MIN_TEMPERATURE] = int(dayData[KEY_MIN_TEMPERATURE])
-                            coldestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MIN_TEMPERATURE])
-                            coldestDayData[selectedYear][KEY_DATE] = currentDate
-                    if dayData[KEY_MAX_HUMIDITY]:
-                        if yearlyData[selectedYear][KEY_MAX_HUMIDITY] < int(dayData[KEY_MAX_HUMIDITY]):
-                            yearlyData[selectedYear][KEY_MAX_HUMIDITY] = int(dayData[KEY_MAX_HUMIDITY])
-                    if dayData[KEY_MIN_HUMIDITY]:
-                        if yearlyData[selectedYear][KEY_MIN_HUMIDITY] > int(dayData[KEY_MIN_HUMIDITY]):
-                            yearlyData[selectedYear][KEY_MIN_HUMIDITY] = int(dayData[KEY_MIN_HUMIDITY])
+                    hottestDay = dict()
+                    hottestDay[KEY_DATE] = ""
+                    hottestDay[KEY_TEMP] = -99
+                    hottestDayData[selectedYear] = hottestDay
+
+                    coldestDay = dict()
+                    coldestDay[KEY_DATE] = ""
+                    coldestDay[KEY_TEMP] = -99
+                    coldestDayData[selectedYear] = coldestDay
+                if dayData[KEY_MAX_TEMPERATURE]:
+                    if yearlyData[selectedYear][KEY_MAX_TEMPERATURE] < int(dayData[KEY_MAX_TEMPERATURE]):
+                        yearlyData[selectedYear][KEY_MAX_TEMPERATURE] = int(dayData[KEY_MAX_TEMPERATURE])
+                        hottestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MAX_TEMPERATURE])
+                        hottestDayData[selectedYear][KEY_DATE] = currentDate
+                if dayData[KEY_MIN_TEMPERATURE]:
+                    if yearlyData[selectedYear][KEY_MIN_TEMPERATURE] > int(dayData[KEY_MIN_TEMPERATURE]):
+                        yearlyData[selectedYear][KEY_MIN_TEMPERATURE] = int(dayData[KEY_MIN_TEMPERATURE])
+                        coldestDayData[selectedYear][KEY_TEMP] = int(dayData[KEY_MIN_TEMPERATURE])
+                        coldestDayData[selectedYear][KEY_DATE] = currentDate
+                if dayData[KEY_MAX_HUMIDITY]:
+                    if yearlyData[selectedYear][KEY_MAX_HUMIDITY] < int(dayData[KEY_MAX_HUMIDITY]):
+                        yearlyData[selectedYear][KEY_MAX_HUMIDITY] = int(dayData[KEY_MAX_HUMIDITY])
+                if dayData[KEY_MIN_HUMIDITY]:
+                    if yearlyData[selectedYear][KEY_MIN_HUMIDITY] > int(dayData[KEY_MIN_HUMIDITY]):
+                        yearlyData[selectedYear][KEY_MIN_HUMIDITY] = int(dayData[KEY_MIN_HUMIDITY])
     return {KEY_ANNUAL_DATA: yearlyData, KEY_HOTTEST_DAY_DATA: hottestDayData, KEY_COLDEST_DAY_DATA: coldestDayData}
 
 
