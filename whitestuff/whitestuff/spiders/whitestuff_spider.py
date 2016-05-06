@@ -54,7 +54,7 @@ class WhitestuffSpiderSpider(CrawlSpider):
         return [response.xpath('//div[@class="mtb"]//text()').extract()[0]]
 
     def product_name(self, response):
-        return response.css('h1.f-bold::text').extract()
+        return response.css('h1.f-bold::text').extract()[0]
 
     def product_image_urls(self, response):
         images = []
