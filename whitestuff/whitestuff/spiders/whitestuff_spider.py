@@ -42,13 +42,13 @@ class WhitestuffSpiderSpider(CrawlSpider):
         yield item
 
     def product_category(self, response):
-        return response.xpath('//div[@id="crumb"]//a//text()').extract()
+        return response.xpath('//div[@id="crumb"]//a//text()').extract()[1:]
 
     def product_price(self, response):
         return response.xpath('//meta[@property="product:price:amount"]//@content').extract()[0]
 
     def product_retailer_sku(self, response):
-        return response.xpath('//div[@class="float-right f-12 pt"]//text()').extract()[0].split()[-1]
+        return response.xpath('//meta[@itemprop="sku"]//@content').extract()[1][:6]
 
     def product_description(self, response):
         return [response.xpath('//div[@class="mtb"]//text()').extract()[0]]
@@ -62,8 +62,7 @@ class WhitestuffSpiderSpider(CrawlSpider):
         data = re.findall('imgItems = ({[\s|\S]*})\s*//REM', script[0])[0]
         image_data = json.loads(data)
 
-        base_url = 'http://8ecd5324393ba533cde7-3564c0ef81381895aa2677fe0727dfd2.r62.cf3.' \
-                   'rackcdn.com/images/products/large/'
+        base_url = response.xpath('//meta[@property="og:image"]//@content').extract()[0].rsplit('/', 1)[0] + '/'
         for image in image_data.values():
             urls = image.strip('#').split('#')
             for url in urls:
