@@ -5,10 +5,10 @@ import string
 from scrapy.http import Request
 from scrapy.http import FormRequest
 from dignityhealth.items import DoctorProfile
-from scrapy.selector import HtmlXPathSelector
+from scrapy.selector import Selector
 
 
-class DignityhealthSpiderSpider(scrapy.Spider):
+class DignityHealthSpider(scrapy.Spider):
     name = "dignityhealth_spider"
     allowed_domains = ["dignityhealth.org"]
     start_urls = ['http://www.dignityhealth.org/stmarymedical/find-a-doctor']
@@ -50,22 +50,19 @@ class DignityhealthSpiderSpider(scrapy.Spider):
 
     def get_doctor_ids(self, data):
         html = data['d']['Html']
-        hxs = HtmlXPathSelector(text=html)
-        doctor_ids = hxs.xpath('//*[@class="View_Profile_Button"]//@href').extract()
+        doctor_ids = Selector(text=html).xpath('//*[@class="View_Profile_Button"]//@href').extract()
         return doctor_ids
-
 
     def parse_pagination(self, page):
         url = 'http://www.dignityhealth.org/stmarymedical/FindADoctor/WS_FindADoctor_Results.asmx/Get_Page'
         header = {"Content-Type": "application/json",
                   "X-Requested-With": "XMLHttpRequest",
                   'Accept': 'application/json, text/javascript, */*; q=0.01'}
-        payload = {"page": str(page)}
-        payload = json.dumps(payload)
-        return Request(url, method="POST", body=payload, callback=self.parse_response_data,
+        payload = json.dumps({"page": str(page)})
+        return Request(url, method="POST", body=payload, callback=self.parse_json_response,
                        headers=header, meta={"page": page})
 
-    def parse_response_data(self, response):
+    def parse_json_response(self, response):
         data = json.loads(response.body)
         page = response.meta['page']
         return self.parse_doctor_profiles(data, page)
