@@ -56,7 +56,7 @@ class DignityHealthSpider(scrapy.Spider):
             last_page = data['d']['Number_Of_Pages']
 
         if last_page == 0:
-            yield self.create_search_request()
+            yield self.send_next_search_request(response)
 
         header = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"}
         index = 0
@@ -86,11 +86,6 @@ class DignityHealthSpider(scrapy.Spider):
         return Request(url, method="POST", body=payload, callback=self.parse_doctor_profiles,
                        headers=header, meta={"page": page}, dont_filter=True)
 
-    def create_search_request(self):
-        header = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"}
-        url = 'http://www.dignityhealth.org/stmarymedical/'
-        return Request(url=url, callback=self.send_next_search_request, headers=header, dont_filter=True)
-
     def parse_profile_contents(self, response):
         doctor = DoctorProfile()
         doctor['crawled_date'] = str(datetime.datetime.now())
@@ -111,7 +106,7 @@ class DignityHealthSpider(scrapy.Spider):
         yield doctor
 
         if 'search_request' in response.meta:
-            yield self.create_search_request()
+            yield self.send_next_search_request(response)
 
         elif 'next_page' in response.meta:
             yield self.make_pagination_request(response.meta['next_page'] + 1)
