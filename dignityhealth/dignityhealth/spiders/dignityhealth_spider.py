@@ -6,6 +6,7 @@ from scrapy.http import Request
 from scrapy.http import FormRequest
 from dignityhealth.items import DoctorProfile
 from scrapy.selector import Selector
+from scrapy.exceptions import CloseSpider
 
 
 class DignityHealthSpider(scrapy.Spider):
@@ -14,58 +15,93 @@ class DignityHealthSpider(scrapy.Spider):
     start_urls = ['http://www.dignityhealth.org/stmarymedical/find-a-doctor']
 
     def parse(self, response):
-        states = response.xpath('//div[@id="FindADoctorSearch_DropDownList_State__Panel_List_Items"]'
-                                '//div/text()').extract()[1:]
-        cities = string.lowercase
-        for state in states:
-            for city in cities:
-                yield FormRequest.from_response(
-                    response,
-                    formdata={'FindADoctorSearch$DropDownList_State$HiddenField_Value': state,
-                              'FindADoctorSearch$DropDownList_Distance$HiddenField_Value': '100',
-                              'FindADoctorSearch$TextBox_City_Real': city},
-                    formxpath='//form[@id="form1"]',
-                    dont_click=True,
-                    url='http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Results.aspx',
-                    callback=self.parse_doctor_profiles)
+        # states = response.xpath('//div[@id="FindADoctorSearch_DropDownList_State__Panel_List_Items"]'
+        #                         '//div/text()').extract()[1:]
+        # cities = string.lowercase
 
-    def parse_doctor_profiles(self, response, current_page=1):
+        states = ['CA', 'AZ']
+        cities = 'abc'
+
+        if 'city' in response.meta:
+            city = response.meta['city']
+            state = response.meta['state']
+            city, state = self.get_next_city_state(city, state, len(cities))
+        else:
+            city = 0
+            state = 0
+
+        if state < len(states):
+            yield FormRequest.from_response(
+                response,
+                formdata={'FindADoctorSearch$DropDownList_State$HiddenField_Value': states[state],
+                          'FindADoctorSearch$DropDownList_Distance$HiddenField_Value': '5',
+                          'FindADoctorSearch$TextBox_City_Real': cities[city]},
+                formxpath='//form[@id="form1"]',
+                dont_click=True,
+                url='http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Results.aspx',
+                callback=self.parse_doctor_profiles,
+                meta={"city": city, "state": state})
+        else:
+            raise CloseSpider('All States and cities crawled')
+
+    def get_next_city_state(self, city, state, cities_size):
+        city += 1
+        if city == cities_size:
+            city = 0
+            state += 1
+        return city, state
+
+    def parse_doctor_profiles(self, response):
         base_url = "http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Profile.aspx?id="
+        city = response.meta['city']
+        state = response.meta['state']
+        current_page = response.meta['page'] if 'page' in response.meta else 1
+
         if current_page == 1:
             doctor_ids = response.xpath('//*[@class="View_Profile_Button"]//@href').extract()
             last_page = int(response.xpath('//span[@id="FindADoctorResults_Div_Page_Selector__Label_Total"]'
                                            '//text()').extract()[0])
         else:
-            doctor_ids = self.get_doctor_ids(response)
-            last_page = response['d']['Number_Of_Pages']
+            data = json.loads(response.body)
+            doctor_ids = self.get_doctor_ids(data)
+            last_page = data['d']['Number_Of_Pages']
 
+        if last_page == 0:
+            yield self.create_search_request(city, state)
+
+        header = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"}
+        index = 0
+        size = len(doctor_ids)
         for doctor_id in doctor_ids:
+            index += 1
+            meta = {"city": city, "state": state}
+            if current_page + 1 > last_page and index == size:
+                meta['search_request'] = 1
+            elif (last_page != 0 and current_page != last_page) and index == size:
+                meta['next_page'] = current_page
             doc_id = doctor_id.split("'")[1]
-            url = base_url+doc_id
-            header = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"}
-            yield Request(url=url, callback=self.parse_profile_contents, headers=header)
-
-        if last_page != 0 and current_page != last_page:
-            yield self.parse_pagination(current_page+1)
+            url = base_url + doc_id
+            yield Request(url=url, callback=self.parse_profile_contents, headers=header, meta=meta, dont_filter=True)
 
     def get_doctor_ids(self, data):
         html = data['d']['Html']
         doctor_ids = Selector(text=html).xpath('//*[@class="View_Profile_Button"]//@href').extract()
         return doctor_ids
 
-    def parse_pagination(self, page):
+    def make_pagination_request(self, page, city, state):
         url = 'http://www.dignityhealth.org/stmarymedical/FindADoctor/WS_FindADoctor_Results.asmx/Get_Page'
         header = {"Content-Type": "application/json",
                   "X-Requested-With": "XMLHttpRequest",
                   'Accept': 'application/json, text/javascript, */*; q=0.01'}
         payload = json.dumps({"page": str(page)})
-        return Request(url, method="POST", body=payload, callback=self.parse_json_response,
-                       headers=header, meta={"page": page})
+        return Request(url, method="POST", body=payload, callback=self.parse_doctor_profiles,
+                       headers=header, meta={"page": page, "city": city, "state": state}, dont_filter=True)
 
-    def parse_json_response(self, response):
-        data = json.loads(response.body)
-        page = response.meta['page']
-        return self.parse_doctor_profiles(data, page)
+    def create_search_request(self, city, state):
+        header = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"}
+        url = 'http://www.dignityhealth.org/stmarymedical/'
+        return Request(url=url, callback=self.parse, headers=header,
+                       meta={"city": city, "state": state}, dont_filter=True)
 
     def parse_profile_contents(self, response):
         doctor = DoctorProfile()
@@ -85,6 +121,12 @@ class DignityHealthSpider(scrapy.Spider):
             if not doctor[key]:
                 doctor.pop(key)
         yield doctor
+
+        if 'search_request' in response.meta:
+            yield self.create_search_request(response.meta['city'], response.meta['state'])
+        elif 'next_page' in response.meta:
+            yield self.make_pagination_request(response.meta['next_page'] + 1, response.meta['city'],
+                                               response.meta['state'])
 
     def doctor_gender(self, response):
         gender = response.xpath('//span[contains(@id,"Sex")]//text()').extract()
@@ -113,7 +155,9 @@ class DignityHealthSpider(scrapy.Spider):
         hospitals = response.xpath('//td[@id="Td_Location"]//span[contains(@id,"PracticeLocations_Label_Facility")]'
                                    '/text()').extract()
         for hospital in hospitals:
-            affiliations += [{'name': hospital}]
+            affiliation = {'name': hospital}
+            if affiliation not in affiliations:
+                affiliations += [affiliation]
         return affiliations
 
     def doctor_medical_school(self, response):
@@ -131,7 +175,8 @@ class DignityHealthSpider(scrapy.Spider):
         if statements:
             for index, statement in enumerate(statements):
                 if 'Care' in statement:
-                    return statements[index+1] if index < len(statements)-1 else None
+                    doc_statement = statements[index] + statements[index + 1] if index < len(statements) - 1 else None
+                    return doc_statement.split(':')[-1].strip() if doc_statement else None
         else:
             return None
 
@@ -142,14 +187,16 @@ class DignityHealthSpider(scrapy.Spider):
         addresses = []
         table = response.xpath('//table[@id="Table_PracticeLocations"]//tr')
         for row in table:
+            address = {}
             phone = row.xpath('.//span[@class="Label_Phone"]//text()').extract()
             street = row.xpath('.//span[contains(@id,"StreetAddress")]/text()').extract()
             state = row.xpath('.//span[contains(@id,"CityStateZIP")]/text()').extract()
             if street and state:
-                address = {"other": [street[0], state[0]]}
+                address['other'] = [street[0], state[0]]
             if phone:
                 address['phone'] = phone[0]
-            addresses += [address]
+            if address and address not in addresses:
+                addresses += [address]
         return addresses
 
     def doctor_graduate_education(self, response):
