@@ -18,10 +18,10 @@ class BonitaSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(allow=('http://www.bonita.de/home/women', 'http://www.bonita.de/home/men'))),
-        Rule(LinkExtractor(restrict_xpaths=('//ul[@id="categoryContentMenu"]/li[1]/ul/li/a',
-                                            '//nav[@class="paginator"]/ul/li[@class="next"]/a'))),
+        Rule(LinkExtractor(restrict_xpaths=('//ul[@id="categoryContentMenu"]/li[1]/ul/li',
+                                            '//nav[@class="paginator"]/ul/li[@class="next"]'))),
         Rule(LinkExtractor(restrict_xpaths='//div[@id="categoryArticleWrapperWrapper"]'
-                                           '/div[@class="categoryArticleWrapper"]/div[@class="categoryArticle"]/a'),
+                                           '/div[@class="categoryArticleWrapper"]/div[@class="categoryArticle"]'),
              callback='parse_product_info')
     )
 
