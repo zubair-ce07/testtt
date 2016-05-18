@@ -11,6 +11,14 @@ from scrapy.item import Item, Field
 from scrapy.loader.processors import Compose, MapCompose, TakeFirst
 
 
+def get_gender(gender):
+
+    if gender == u'D':
+        return 'women'
+    else:
+        return 'men'
+
+
 def filter_numbers(sku):
     sku = str(sku)
     all = string.maketrans('', '')
@@ -30,7 +38,7 @@ class ProductItem(Item):
     care = Field(input_processor=MapCompose(unicode.strip))
     category = Field()
     description = Field(input_processor=MapCompose(unicode.strip))
-    gender = Field(output_processor=TakeFirst())
+    gender = Field(input_processor=MapCompose(TakeFirst(), get_gender), output_processor=TakeFirst())
     image_urls = Field(input_processor=MapCompose(unicode.strip))
     lang = Field(output_processor=TakeFirst())
     market = Field(output_processor=TakeFirst())
