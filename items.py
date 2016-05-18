@@ -13,7 +13,7 @@ from scrapy.loader.processors import Compose, MapCompose, TakeFirst
 
 def get_gender(gender):
 
-    if gender == u'D':
+    if gender == 'D':
         return 'women'
     else:
         return 'men'
@@ -58,7 +58,6 @@ class SkuItemDetail(Item):
 
 class SkuItem(scrapy.Item):
     def __setitem__(self, key, value):
-        print key
         if key not in self.fields:
             self.fields[key] = scrapy.Field()
         super(SkuItem, self).__setitem__(key, value)
