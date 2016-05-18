@@ -15,12 +15,9 @@ class DignityHealthSpider(scrapy.Spider):
     start_urls = ['http://www.dignityhealth.org/stmarymedical/find-a-doctor']
 
     def parse(self, response):
-        # states = response.xpath('//div[@id="FindADoctorSearch_DropDownList_State__Panel_List_Items"]'
-        #                         '//div/text()').extract()[1:]
-        # cities = string.lowercase
-
-        states = ['CA', 'AZ']
-        cities = 'abc'
+        states = response.xpath('//div[@id="FindADoctorSearch_DropDownList_State__Panel_List_Items"]'
+                                '//div/text()').extract()[1:]
+        cities = string.lowercase
 
         if 'city' in response.meta:
             city = response.meta['city']
@@ -34,7 +31,7 @@ class DignityHealthSpider(scrapy.Spider):
             yield FormRequest.from_response(
                 response,
                 formdata={'FindADoctorSearch$DropDownList_State$HiddenField_Value': states[state],
-                          'FindADoctorSearch$DropDownList_Distance$HiddenField_Value': '5',
+                          'FindADoctorSearch$DropDownList_Distance$HiddenField_Value': '100',
                           'FindADoctorSearch$TextBox_City_Real': cities[city]},
                 formxpath='//form[@id="form1"]',
                 dont_click=True,
