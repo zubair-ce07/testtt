@@ -25,7 +25,7 @@ class DignityHealthSpider(scrapy.Spider):
             return FormRequest.from_response(
                 response,
                 formdata={'FindADoctorSearch$DropDownList_State$HiddenField_Value': params[0],
-                          'FindADoctorSearch$DropDownList_Distance$HiddenField_Value': '5',
+                          'FindADoctorSearch$DropDownList_Distance$HiddenField_Value': '100',
                           'FindADoctorSearch$TextBox_City_Real': params[1]},
                 formxpath='//form[@id="form1"]',
                 dont_click=True,
