@@ -7,7 +7,6 @@ from scrapy.http import Request
 from scrapy.http import FormRequest
 from dignityhealth.items import DoctorProfile
 from scrapy.selector import Selector
-from scrapy.exceptions import CloseSpider
 
 
 class DignityHealthSpider(scrapy.Spider):
