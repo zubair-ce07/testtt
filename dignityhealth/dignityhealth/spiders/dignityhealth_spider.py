@@ -16,7 +16,7 @@ class DignityHealthSpider(scrapy.Spider):
     search_params = ''
 
     def parse(self, response):
-        self.get_search_parameters(response)
+        self.set_search_parameters(response)
         yield self.send_next_search_request(response)
 
     def send_next_search_request(self, response):
@@ -30,9 +30,9 @@ class DignityHealthSpider(scrapy.Spider):
                 formxpath='//form[@id="form1"]',
                 dont_click=True,
                 url='http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Results.aspx',
-                callback=self.parse_doctor_profiles)
+                callback=self.parse_paging)
 
-    def get_search_parameters(self, response):
+    def set_search_parameters(self, response):
         states = response.xpath('//div[@id="FindADoctorSearch_DropDownList_State__Panel_List_Items"]'
                                 '//div/text()').extract()[1:]
         cities = list(string.lowercase)
@@ -42,7 +42,7 @@ class DignityHealthSpider(scrapy.Spider):
         if self.search_params:
             return self.search_params.pop(0)
 
-    def parse_doctor_profiles(self, response):
+    def parse_paging(self, response):
         base_url = "http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Profile.aspx?id="
         current_page = response.meta['page'] if 'page' in response.meta else 1
 
@@ -67,10 +67,10 @@ class DignityHealthSpider(scrapy.Spider):
             if current_page + 1 > last_page and index == size:
                 meta = {'search_request': 1}
             elif (last_page != 0 and current_page != last_page) and index == size:
-                meta = {'next_page': current_page}
+                meta = {'next_page': current_page+1}
             doc_id = doctor_id.split("'")[1]
             url = base_url + doc_id
-            yield Request(url=url, callback=self.parse_profile_contents, headers=header, meta=meta, dont_filter=True)
+            yield Request(url=url, callback=self.parse_profile, headers=header, meta=meta, dont_filter=True)
 
     def get_doctor_ids(self, data):
         html = data['d']['Html']
@@ -83,10 +83,10 @@ class DignityHealthSpider(scrapy.Spider):
                   "X-Requested-With": "XMLHttpRequest",
                   'Accept': 'application/json, text/javascript, */*; q=0.01'}
         payload = json.dumps({"page": str(page)})
-        return Request(url, method="POST", body=payload, callback=self.parse_doctor_profiles,
+        return Request(url, method="POST", body=payload, callback=self.parse_paging,
                        headers=header, meta={"page": page}, dont_filter=True)
 
-    def parse_profile_contents(self, response):
+    def parse_profile(self, response):
         doctor = DoctorProfile()
         doctor['crawled_date'] = str(datetime.datetime.now())
         doctor['gender'] = self.doctor_gender(response)
@@ -109,7 +109,7 @@ class DignityHealthSpider(scrapy.Spider):
             yield self.send_next_search_request(response)
 
         elif 'next_page' in response.meta:
-            yield self.make_pagination_request(response.meta['next_page'] + 1)
+            yield self.make_pagination_request(response.meta['next_page'])
 
     def doctor_gender(self, response):
         gender = response.xpath('//span[contains(@id,"Sex")]//text()').extract()
