@@ -14,9 +14,8 @@ class DignityHealthSpider(scrapy.Spider):
     allowed_domains = ["dignityhealth.org"]
     start_urls = ['http://www.dignityhealth.org/stmarymedical/find-a-doctor']
     search_params = []
-    page = 0
-    last_page = 0
-    search_request = ''
+    pages = []
+    next_search_request = ''
 
     def parse(self, response):
         self.set_search_parameters(response)
@@ -25,7 +24,6 @@ class DignityHealthSpider(scrapy.Spider):
     def send_next_search_request(self, response):
         state, city = self.get_next_search_params()
         if state and city:
-            self.page = 0
             return FormRequest.from_response(
                 response,
                 formdata={'FindADoctorSearch$DropDownList_State$HiddenField_Value': state,
@@ -43,47 +41,48 @@ class DignityHealthSpider(scrapy.Spider):
         self.search_params = list(itertools.product(states, cities))
 
     def get_next_search_params(self):
-        return self.search_params.pop(0) if self.search_params else None, None
+        return self.search_params.pop(0) if self.search_params else (None, None)
 
     def parse_first_page(self, response):
-        self.last_page = int(response.xpath('//span[@id="FindADoctorResults_Div_Page_Selector__Label_Total"]'
-                                            '//text()').extract()[0])
-        if self.last_page > 0:
-            for page in range(1, self.last_page + 1):
-                yield self.make_pagination_request(page)
-            self.search_request = self.send_next_search_request(response)
+        last_page = int(response.xpath('//span[@id="FindADoctorResults_Div_Page_Selector__Label_Total"]'
+                                       '//text()').extract()[0])
+        if last_page > 0:
+            self.next_search_request = self.send_next_search_request(response)
+            self.pages = list(range(1, last_page+1))
+            yield self.make_pagination_request()
+
         else:
             yield self.send_next_search_request(response)
 
-    def parse_list_page(self, response, doctor_ids):
+    def parse_list_page(self, response):
+        data = json.loads(response.body)
+        doctor_ids = self.get_doctor_ids(data)
         base_url = "http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Profile.aspx?id="
         header = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"}
         for doctor_id in doctor_ids:
             doc_id = doctor_id.split("'")[1]
             url = base_url + doc_id
             yield Request(url=url, callback=self.parse_profile, headers=header, dont_filter=True)
-        self.page += 1
-        if self.page == self.last_page:
-            self.page = 0
-            yield self.search_request
 
-    def parse_pages(self, response):
-        data = json.loads(response.body)
-        doctor_ids = self.get_doctor_ids(data)
-        return self.parse_list_page(response, doctor_ids)
+        if self.pages:
+            yield self.make_pagination_request()
+        else:
+            yield self.next_search_request
 
     def get_doctor_ids(self, data):
         html = data['d']['Html']
         doctor_ids = Selector(text=html).xpath('//*[@class="View_Profile_Button"]//@href').extract()
         return doctor_ids
 
-    def make_pagination_request(self, page):
+    def make_pagination_request(self):
+        page = self.pages.pop(0)
         url = 'http://www.dignityhealth.org/stmarymedical/FindADoctor/WS_FindADoctor_Results.asmx/Get_Page'
         header = {"Content-Type": "application/json",
                   "X-Requested-With": "XMLHttpRequest",
                   'Accept': 'application/json, text/javascript, */*; q=0.01'}
         payload = json.dumps({"page": str(page)})
-        return Request(url, method="POST", body=payload, callback=self.parse_pages, headers=header, dont_filter=True)
+        return Request(url, method="POST", body=payload, callback=self.parse_list_page,
+                       headers=header, dont_filter=True)
 
     def parse_profile(self, response):
         doctor = DoctorProfile()
