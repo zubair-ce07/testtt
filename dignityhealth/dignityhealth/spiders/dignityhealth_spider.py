@@ -23,7 +23,7 @@ class DignityHealthSpider(scrapy.Spider):
         yield self.send_next_search_request(response)
 
     def send_next_search_request(self, response):
-        (state, city) = self.get_next_search_params()
+        state, city = self.get_next_search_params()
         if state and city:
             self.page = 0
             return FormRequest.from_response(
