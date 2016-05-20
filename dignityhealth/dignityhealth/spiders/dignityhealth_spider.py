@@ -13,24 +13,28 @@ class DignityHealthSpider(scrapy.Spider):
     name = "dignityhealth_spider"
     allowed_domains = ["dignityhealth.org"]
     start_urls = ['http://www.dignityhealth.org/stmarymedical/find-a-doctor']
-    search_params = ''
+    search_params = []
+    page = 0
+    last_page = 0
+    search_request = ''
 
     def parse(self, response):
         self.set_search_parameters(response)
         yield self.send_next_search_request(response)
 
     def send_next_search_request(self, response):
-        params = self.get_next_search_params()
-        if params:
+        (state, city) = self.get_next_search_params()
+        if state and city:
+            self.page = 0
             return FormRequest.from_response(
                 response,
-                formdata={'FindADoctorSearch$DropDownList_State$HiddenField_Value': params[0],
+                formdata={'FindADoctorSearch$DropDownList_State$HiddenField_Value': state,
                           'FindADoctorSearch$DropDownList_Distance$HiddenField_Value': '100',
-                          'FindADoctorSearch$TextBox_City_Real': params[1]},
+                          'FindADoctorSearch$TextBox_City_Real': city},
                 formxpath='//form[@id="form1"]',
                 dont_click=True,
                 url='http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Results.aspx',
-                callback=self.parse_paging)
+                callback=self.parse_first_page)
 
     def set_search_parameters(self, response):
         states = response.xpath('//div[@id="FindADoctorSearch_DropDownList_State__Panel_List_Items"]'
@@ -39,38 +43,34 @@ class DignityHealthSpider(scrapy.Spider):
         self.search_params = list(itertools.product(states, cities))
 
     def get_next_search_params(self):
-        if self.search_params:
-            return self.search_params.pop(0)
+        return self.search_params.pop(0) if self.search_params else (None, None)
 
-    def parse_paging(self, response):
-        base_url = "http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Profile.aspx?id="
-        current_page = response.meta['page'] if 'page' in response.meta else 1
-
-        if current_page == 1:
-            doctor_ids = response.xpath('//*[@class="View_Profile_Button"]//@href').extract()
-            last_page = int(response.xpath('//span[@id="FindADoctorResults_Div_Page_Selector__Label_Total"]'
-                                           '//text()').extract()[0])
+    def parse_first_page(self, response):
+        self.last_page = int(response.xpath('//span[@id="FindADoctorResults_Div_Page_Selector__Label_Total"]'
+                                            '//text()').extract()[0])
+        if self.last_page > 0:
+            for page in range(1, self.last_page + 1):
+                yield self.make_pagination_request(page)
+            self.search_request = self.send_next_search_request(response)
         else:
-            data = json.loads(response.body)
-            doctor_ids = self.get_doctor_ids(data)
-            last_page = data['d']['Number_Of_Pages']
-
-        if last_page == 0:
             yield self.send_next_search_request(response)
 
+    def parse_list_page(self, response, doctor_ids):
+        base_url = "http://www.dignityhealth.org/stmarymedical/WF_FindADoc_Profile.aspx?id="
         header = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"}
-        index = 0
-        size = len(doctor_ids)
         for doctor_id in doctor_ids:
-            index += 1
-            meta = {}
-            if current_page + 1 > last_page and index == size:
-                meta = {'search_request': 1}
-            elif (last_page != 0 and current_page != last_page) and index == size:
-                meta = {'next_page': current_page+1}
             doc_id = doctor_id.split("'")[1]
             url = base_url + doc_id
-            yield Request(url=url, callback=self.parse_profile, headers=header, meta=meta, dont_filter=True)
+            yield Request(url=url, callback=self.parse_profile, headers=header, dont_filter=True)
+        self.page += 1
+        if self.page == self.last_page:
+            self.page = 0
+            yield self.search_request
+
+    def parse_pages(self, response):
+        data = json.loads(response.body)
+        doctor_ids = self.get_doctor_ids(data)
+        return self.parse_list_page(response, doctor_ids)
 
     def get_doctor_ids(self, data):
         html = data['d']['Html']
@@ -83,8 +83,7 @@ class DignityHealthSpider(scrapy.Spider):
                   "X-Requested-With": "XMLHttpRequest",
                   'Accept': 'application/json, text/javascript, */*; q=0.01'}
         payload = json.dumps({"page": str(page)})
-        return Request(url, method="POST", body=payload, callback=self.parse_paging,
-                       headers=header, meta={"page": page}, dont_filter=True)
+        return Request(url, method="POST", body=payload, callback=self.parse_pages, headers=header, dont_filter=True)
 
     def parse_profile(self, response):
         doctor = DoctorProfile()
@@ -104,12 +103,6 @@ class DignityHealthSpider(scrapy.Spider):
             if not doctor[key]:
                 doctor.pop(key)
         yield doctor
-
-        if 'search_request' in response.meta:
-            yield self.send_next_search_request(response)
-
-        elif 'next_page' in response.meta:
-            yield self.make_pagination_request(response.meta['next_page'])
 
     def doctor_gender(self, response):
         gender = response.xpath('//span[contains(@id,"Sex")]//text()').extract()
