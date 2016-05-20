@@ -43,7 +43,7 @@ class DignityHealthSpider(scrapy.Spider):
         self.search_params = list(itertools.product(states, cities))
 
     def get_next_search_params(self):
-        return self.search_params.pop(0) if self.search_params else (None, None)
+        return self.search_params.pop(0) if self.search_params else None, None
 
     def parse_first_page(self, response):
         self.last_page = int(response.xpath('//span[@id="FindADoctorResults_Div_Page_Selector__Label_Total"]'
