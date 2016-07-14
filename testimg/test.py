@@ -1,59 +1,66 @@
 import os.path
 import sys
-Report = sys.argv[1]
-path = sys.argv[2]
+import csv
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("R",help="input the report number")
+parser.add_argument("filepath",help="input the path that contains data files")
+args = parser.parse_args()
+
+
 def NotEmpty(stri):
     "This checks if the character is empty"
     if (stri==''):
         return 0;
     else:
         return 1;
-Stats= []
-HottestDays = []
-print("This is report number: "+Report)
-years = ["1996","1997","1998","1999","2000","2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011"]
-for year in years:
-    reportNumber=1
-    date = '1993-8-2'
-    maxTemp = -100
-    minTemp = 100
-    maxHumid = 0
-    minHumid = 100
-    months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-    for month in months:
-        if os.path.isfile(path+"lahore_weather_"+year+"_"+month+".txt"):
-            data =  open(path+"lahore_weather_"+year+"_"+month+".txt")
-            string = data.read()
-            splitted= string.split("\n") 
-            del splitted[1]
-            del splitted[0]
-            del splitted[len(splitted)-1]
-            del splitted[len(splitted)-1]
-            for day in splitted:
-                daydata = day.split(",")
-                if (NotEmpty(daydata[1])):
-                    if (int(daydata[1])>maxTemp):
-                        date=daydata[0]
-                        maxTemp=int(daydata[1])
-                if (NotEmpty(daydata[3])):
-                    if (int(daydata[3]) < minTemp):
-                        minTemp = int(daydata[3])
-                if (NotEmpty(daydata[7])):
-                    if (int(daydata[7]) > maxHumid):
-                        maxHumid = int(daydata[7])
-                if (NotEmpty(daydata[9])):
-                    if (int(daydata[9]) < minHumid):
-                        minHumid = int(daydata[9])
-    Stats.append(year+"        "+str(maxTemp)+"              "+str(minTemp)+"               "+str(maxHumid)+"                  "+str(minHumid))
-    HottestDays.append(year+"        "+date+"     "+str(maxTemp))
-print("Year        MAX Temp        MIN Temp        MAX Humidity        MIN Humidity")
-print("--------------------------------------------------------------------------")
-for stat in Stats:
-    print(stat)
-print("Year        Date          Temp")
-print("------------------------------")
-for hottestday in HottestDays:
-    print(hottestday)
+
+
+def main():
+    "Main function of this program"
+    Stats= []
+    HottestDays = []
+    print("This is report number: "+args.R)
+    for year in range(1996,2011):
+        reportNumber=1
+        date = '1993-8-2'
+        maxTemp = -100
+        minTemp = 100
+        maxHumid = 0
+        minHumid = 100
+        months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+        for month in months:
+            if os.path.isfile(args.filepath+"lahore_weather_"+str(year)+"_"+month+".txt"):
+                with open(args.filepath+"lahore_weather_"+str(year)+"_"+month+".txt") as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for row in reader:
+                        if (NotEmpty(row['Max TemperatureC'])):
+                            if (int(row['Max TemperatureC']) > maxTemp):
+                                date = row['PKT']
+                                maxTemp = int(row['Max TemperatureC'])
+                        if (NotEmpty(row['Min TemperatureC'])):
+                            if (int(row['Min TemperatureC']) < minTemp):
+                                minTemp = int(row['Min TemperatureC'])
+                        if (NotEmpty(row['Max Humidity'])):
+                            if (int(row['Max Humidity']) > maxHumid):
+                                maxHumid = int(row['Max Humidity'])
+                        if (NotEmpty(row['Min Humidity'])):
+                            if (int(row['Min Humidity']) < minHumid):
+                                minHumid = int(row['Min Humidity'])
+        Stats.append(str(year)+"        "+str(maxTemp)+"              "+str(minTemp)+"               "+str(maxHumid)+"                  "+str(minHumid))
+        HottestDays.append(str(year)+"        "+date+"     "+str(maxTemp))
+    print("Year        MAX Temp        MIN Temp        MAX Humidity        MIN Humidity")
+    print("--------------------------------------------------------------------------")
+    for stat in Stats:
+        print(stat)
+    print("Year        Date          Temp")
+    print("------------------------------")
+    for hottestday in HottestDays:
+        print(hottestday)
+    return 0;
+
+
+main()
 
 
 
