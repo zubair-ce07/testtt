@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 def display():
     "Displays the output of the report"
-    print("This is report number: " + args.R)
+    print'{0} {1}'.format("This is report number: ",args.R)
     print("Year        MAX Temp        MIN Temp        MAX Humidity        MIN Humidity")
     print("--------------------------------------------------------------------------")
     for stat in __stats__:
@@ -31,7 +31,6 @@ def display():
 def main():
     "Main function of this program"
     for year in range(1996,2011):
-        reportNumber=1
         months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
         for month in months:
             if os.path.isfile(args.filepath+"lahore_weather_"+str(year)+"_"+month+".txt"):
