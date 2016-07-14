@@ -3,13 +3,13 @@ import sys
 import csv
 import argparse
 
-__date__ = '1993-8-2'
-__maxTemp__ = -100
-__minTemp__ = 100
-__maxHumid__ = 0
-__minHumid__ = 100
-__stats__ = []
-__hottestdays__ = []
+_date = '1993-8-2'
+_maxTemp = -100
+_minTemp = 100
+_maxHumid = 0
+_minHumid = 100
+_stats = []
+_hottestdays = []
 parser = argparse.ArgumentParser()
 parser.add_argument("R",help="input the report number")
 parser.add_argument("filepath",help="input the path that contains data files")
@@ -20,11 +20,11 @@ def display():
     print'{0} {1}'.format("This is report number: ",args.R)
     print("Year        MAX Temp        MIN Temp        MAX Humidity        MIN Humidity")
     print("--------------------------------------------------------------------------")
-    for stat in __stats__:
+    for stat in _stats:
         print(stat)
     print("Year        Date          Temp")
     print("------------------------------")
-    for hottestday in __hottestdays__:
+    for hottestday in _hottestdays:
         print(hottestday)
 
 
@@ -37,21 +37,21 @@ def main():
                 with open(args.filepath+"lahore_weather_"+str(year)+"_"+month+".txt") as csvfile:
                     reader = csv.DictReader(csvfile)
                     for row in reader:
-                        if not row['Max TemperatureC']:
+                        if row['Max TemperatureC']:
                             if (int(row['Max TemperatureC']) > maxTemp):
                                 date = row['PKT']
                                 maxTemp = int(row['Max TemperatureC'])
-                        if not row['Min TemperatureC']:
+                        if row['Min TemperatureC']:
                             if (int(row['Min TemperatureC']) < minTemp):
                                 minTemp = int(row['Min TemperatureC'])
-                        if not row['Max Humidity']:
+                        if row['Max Humidity']:
                             if (int(row['Max Humidity']) > maxHumid):
                                 maxHumid = int(row['Max Humidity'])
-                        if not row['Min Humidity']:
+                        if row['Min Humidity']:
                             if (int(row['Min Humidity']) < minHumid):
                                 minHumid = int(row['Min Humidity'])
-        __stats__.append(str(year) + "        " + str(maxTemp) + "              " + str(minTemp) + "               " + str(maxHumid) + "                  " + str(minHumid))
-        __hottestdays__.append(str(year) + "        " + date + "     " + str(maxTemp))
+        _stats.append(str(year) + "        " + str(maxTemp) + "              " + str(minTemp) + "               " + str(maxHumid) + "                  " + str(minHumid))
+        _hottestdays.append(str(year) + "        " + date + "     " + str(maxTemp))
 
 
 if __name__ == "__main__": main()
