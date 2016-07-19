@@ -4,7 +4,6 @@ import argparse
 _key_occurence_stats = dict()
 _values_of_keys = dict()
 
-
 def extract_all_keys(dict_):
     "Function that extracts all the keys of a dictionary at all levels"
     for key in dict_:
@@ -68,19 +67,19 @@ def main():
                 parsed_dict  = json.loads(each_json)
                 # extract all the values and their count corresponding to the key args.f
                 extract_all_values(parsed_dict, given_key,0)
-            print '{0} {1}'.format("Total Rows ",str(Count))
-            print key_
+            print('{0} {1}'.format("Total Rows ",str(Count)))
+            print(key_)
             allstats = _values_of_keys.keys()
             for everystat in allstats:
-                print '{0} {1} {2}'.format(everystat,", ", str(_values_of_keys[everystat]))
+                print('{0} {1} {2}'.format(everystat,", ", str(_values_of_keys[everystat])))
         else:
             for each_json in jsons:
                 parsed_dict = json.loads(each_json)
                 extract_all_keys(parsed_dict)
-            print '{0} {1}'.format("Total Rows",str(Count))
+            print('{0} {1}'.format("Total Rows",str(Count)))
             allkeys = _key_occurence_stats.keys()
             for everykey in allkeys:
                 perc = float((int(_key_occurence_stats[everykey])) / 0.66)
-                print '{0} {1} {2} {3}'.format(everykey,": [",str(perc),"%]")
+                print('{0} {1} {2} {3}'.format(everykey,": [",str(perc),"%]"))
 
 if __name__ == "__main__": main()
