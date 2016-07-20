@@ -2,11 +2,8 @@ import argparse
 import json
 import collections
 
-_output = dict()
-_file_one_name = ""
-_file_two_name = ""
 
-def document_matcher(document_one, document_two):
+def document_matcher(document_one, document_two,file_one_name,file_two_name):
     "This function given two documents of type lists containing dict elements returns\
     the filed differences of the two documents (in the form of a dict) if the documents\
     matched the conditions otherwise it returns 0"
@@ -21,15 +18,15 @@ def document_matcher(document_one, document_two):
                     if (collections.Counter(document_one.get(each_key)) != collections.Counter(
                             document_two.get(each_key))):
                         dict_of_each_difference = dict()
-                        dict_of_each_difference[_file_two_name] = document_two.get(each_key)
-                        dict_of_each_difference[_file_one_name] = document_one.get(each_key)
+                        dict_of_each_difference[file_two_name] = document_two.get(each_key)
+                        dict_of_each_difference[file_one_name] = document_one.get(each_key)
                         dict_of_each_difference["field"] = each_key
                         list_of_all_diffs.append(dict_of_each_difference)
                 else:
                     if (document_one.get(each_key) != document_two.get(each_key)):
                         dict_of_each_difference = dict()
-                        dict_of_each_difference[_file_two_name] = document_two.get(each_key)
-                        dict_of_each_difference[_file_one_name] = document_one.get(each_key)
+                        dict_of_each_difference[file_two_name] = document_two.get(each_key)
+                        dict_of_each_difference[file_one_name] = document_one.get(each_key)
                         dict_of_each_difference["field"] = each_key
                         list_of_all_diffs.append(dict_of_each_difference)
         my_dict_result["field_diffs"] = list_of_all_diffs
@@ -38,7 +35,7 @@ def document_matcher(document_one, document_two):
         return 0
 
 
-def filing_matcher(filing_one, filing_two):
+def filing_matcher(filing_one, filing_two,file_one_name,file_two_name):
     "given two filings matches them and then returns a dict containing all the differences in the two filings"
     if ((filing_one.get('slug') == filing_two.get('slug'))
          or (filing_one.get('state_id') and (filing_one.get('state_id')==filing_two.get('state_id')))
@@ -51,15 +48,15 @@ def filing_matcher(filing_one, filing_two):
                 if type(filing_one[each_filing_key]) is list:
                     if (collections.Counter(filing_one.get(each_filing_key)) != collections.Counter(filing_two.get(each_filing_key))):
                         each_diff = dict()
-                        each_diff[_file_two_name] = filing_two.get(each_filing_key)
-                        each_diff[_file_one_name] = filing_one.get(each_filing_key)
+                        each_diff[file_two_name] = filing_two.get(each_filing_key)
+                        each_diff[file_one_name] = filing_one.get(each_filing_key)
                         each_diff["field"] = each_filing_key
                         all_diffs.append(each_diff)
                 else:
                     if (filing_one.get(each_filing_key) != filing_two.get(each_filing_key)):
                         each_diff=dict()
-                        each_diff[_file_two_name] = filing_two.get(each_filing_key)
-                        each_diff[_file_one_name] = filing_one.get(each_filing_key)
+                        each_diff[file_two_name] = filing_two.get(each_filing_key)
+                        each_diff[file_one_name] = filing_one.get(each_filing_key)
                         each_diff["field"] = each_filing_key
                         all_diffs.append(each_diff)
         my_dict["field_diffs"] = all_diffs
@@ -67,11 +64,40 @@ def filing_matcher(filing_one, filing_two):
         second_documents = filing_two["documents"]
         document_diffs_list = []
         document_diffs_dict = dict()
+        document_data = []
         for each_doc in first_documents:
+            no_match_found = 1
             for every_doc in second_documents:
-                match_result = document_matcher(each_doc, every_doc)
+                match_result = document_matcher(each_doc, every_doc,file_one_name,file_two_name)
                 if (match_result):
+                    no_match_found = 0
                     document_diffs_list.append(match_result)
+            if (no_match_found):
+                document_data_dict = dict()
+                document_data_dict["source_url"]=each_doc.get("source_url")
+                document_data_dict["blob_name"] = each_doc.get("blob_name")
+                document_data_dict["name"] = each_doc.get("name")
+                document_data_dict["extension"] = each_doc.get("extension")
+                document_data_dict["slug"] = each_doc.get("slug")
+                document_data.append(document_data_dict)
+        for each_doc in second_documents:
+            no_match_found = 1
+            for every_doc in first_documents:
+                match_result = document_matcher(each_doc, every_doc,file_one_name,file_two_name)
+                if (match_result):
+                    no_match_found = 0
+            if (no_match_found):
+                document_data_dict = dict()
+                document_data_dict["source_url"] = each_doc.get("source_url")
+                document_data_dict["blob_name"] = each_doc.get("blob_name")
+                document_data_dict["name"] = each_doc.get("name")
+                document_data_dict["extension"] = each_doc.get("extension")
+                document_data_dict["slug"] = each_doc.get("slug")
+                document_data.append(document_data_dict)
+        if document_data:
+            old_docs = dict()
+            old_docs["old documents"]=document_data
+            document_diffs_dict["documents not matched"]=old_docs
         document_diffs_dict["field_diffs"] = document_diffs_list
         my_dict["document_diffs"] = document_diffs_dict
         return my_dict
@@ -90,8 +116,9 @@ def main():
         docket_one = json.load(f)
     with open(args.secondfile) as f:
         docket_two = json.load(f)
-    _file_one_name = (args.firstfile.split('.'))[0]
-    _file_two_name = (args.secondfile.split('.'))[0]
+    output = dict()
+    file_one_name = (args.firstfile.split('.'))[0]
+    file_two_name = (args.secondfile.split('.'))[0]
     skip_fields = {'run_id','uploaded','modified','crawled_at','end_time','_id','job_id','request_fingerprint',
                    'start_time','spider_name','filings'}
     if (docket_one['slug']==docket_two['slug']):
@@ -101,35 +128,35 @@ def main():
                 if type(docket_one[each_json]) is list:
                     if (collections.Counter(docket_one[each_json]) != collections.Counter(docket_two.get(each_json))):
                         difference = dict()
-                        difference[_file_two_name] = docket_two.get(each_json)
-                        difference[_file_one_name]=docket_one[each_json]
+                        difference[file_two_name] = docket_two.get(each_json)
+                        difference[file_one_name]=docket_one[each_json]
                         difference["field"] = each_json
                         docket_diffs.append(difference)
 
                 else:
                     if (docket_one[each_json] != docket_two.get(each_json)):
                         difference = dict()
-                        difference[_file_two_name] = docket_two.get(each_json)
-                        difference[_file_one_name] = docket_one[each_json]
+                        difference[file_two_name] = docket_two.get(each_json)
+                        difference[file_one_name] = docket_one[each_json]
                         difference["field"] = each_json
                         docket_diffs.append(difference)
-        _output['meta_changes']=docket_diffs
+        output['meta_changes']=docket_diffs
         first_filings = docket_one["filings"]
         second_filings = docket_two["filings"]
         filing_diffs_list = []
         filing_diffs_dict = dict()
         for each_element in first_filings:
             for every_element in second_filings:
-                result_of_match = filing_matcher(each_element,every_element)
+                result_of_match = filing_matcher(each_element,every_element,file_one_name,file_two_name)
                 if (result_of_match):
                     filing_diffs_list.append(result_of_match)
         filing_diffs_dict["field_diffs"] = filing_diffs_list
-        _output['filing_changes']=filing_diffs_dict
+        output['filing_changes']=filing_diffs_dict
         if args.o:
             with open(args.o, 'w') as output_json:
-                json.dump(_output, output_json)
+                json.dump(output, output_json)
         else:
-            print(_output)
+            print(output)
 
 
 if __name__ == "__main__": main()
