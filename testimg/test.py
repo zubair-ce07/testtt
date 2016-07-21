@@ -7,16 +7,21 @@ _stats = dict()
 
 def display(reportnumber):
     "Displays the output of the report"
-    print'{0} {1}'.format("This is report number: ",reportnumber)
-    print("Year        MAX Temp        MIN Temp        MAX Humidity        MIN Humidity")
-    print("--------------------------------------------------------------------------")
-    for key in _stats.keys():
-        print'{0}        {1}               {2}               {3}                   {4}'.format\
-            (key,(_stats[key])["maxtemp"],(_stats[key])["mintemp"],(_stats[key])["maxhumid"],(_stats[key])["minhumid"])
-    print("Year        Date          Temp")
-    print("------------------------------")
-    for key in _stats.keys():
-        print'{0}        {1}              {2}'.format(key,(_stats[key])["date"],(_stats[key])["maxtemp"])
+    if (int(reportnumber)==1):
+        print'{0} {1}'.format("This is report number: ",reportnumber)
+        print("Year         MAX Temp         MIN Temp         MAX Humidity         MIN Humidity")
+        print("--------------------------------------------------------------------------------")
+        for key in _stats.keys():
+            print'{0: <5}        {1: <5}               {2: <5}               {3: <5}                   {4: <5}'.format\
+                (key,(_stats[key])["maxtemp"],(_stats[key])["mintemp"],(_stats[key])["maxhumid"],(_stats[key])["minhumid"])
+    else:
+        if (int(reportnumber)==2):
+            print'{0} {1}'.format("This is report number: ", reportnumber)
+            print("Year          Date                 Temp")
+            print("---------------------------------------")
+            for key in _stats.keys():
+                print'{0: <5}        {1: <10}              {2: <5}'.format(key,(_stats[key])["date"],(_stats[key])["maxtemp"])
+
 
 
 def main():
@@ -25,32 +30,41 @@ def main():
     parser.add_argument("R", help="input the report number")
     parser.add_argument("filepath", help="input the path that contains data files")
     args = parser.parse_args()
-    os.chdir(args.filepath)
-    files = glob.glob("*.txt")
+    try:
+        os.chdir(args.filepath)
+        files = glob.glob("*.txt")
 
-    for file in files:
-            year = (int(filter(str.isdigit, file)))
-            with open(file) as csvfile:
-                reader = csv.DictReader(csvfile)
-                date =''
-                maxtemp = -100
-                mintemp = 100
-                maxhumid = 0
-                minhumid = 100
-                for row in reader:
-                    if row.get('Max TemperatureC'):
-                        if (int(row['Max TemperatureC']) > maxtemp):
-                            date = row.get('PKT')
-                            maxtemp = int(row['Max TemperatureC'])
-                    if row.get('Min TemperatureC'):
-                        if (int(row['Min TemperatureC']) < mintemp):
-                            mintemp = int(row['Min TemperatureC'])
-                    if row.get('Max Humidity'):
-                        if (int(row['Max Humidity']) > maxhumid):
-                            maxhumid = int(row['Max Humidity'])
-                    if row.get('Min Humidity'):
-                        if (int(row['Min Humidity']) < minhumid):
-                            minhumid = int(row['Min Humidity'])
+        for file_ in files:
+                year = (int(filter(str.isdigit, file_)))
+                date = ''
+                with open(file_) as f:
+                    next(f)  # discard first row from file -- see notes
+                    max_row = max(csv.reader(f), key=lambda row: row[1])
+                    date = max_row[0]
+                    maxtemp = max_row[1]
+                with open(file_) as csvfile:
+                    next(csvfile)
+                    values = []
+                    for row in csv.reader(csvfile):
+                        if row[3]:
+                            values.append(row[3])
+                    if values:
+                        mintemp = min(values)
+                    else:
+                        mintemp = 'No data'
+                with open(file_) as csvfile:
+                    next(csvfile)
+                    values = []
+                    for row in csv.reader(csvfile):
+                        if row[3]:
+                            values.append(row[3])
+                    if values:
+                        minhumid = min(values)
+                    else:
+                        minhumid = 'No data'
+                with open(file_) as csvfile:
+                    next(csvfile)
+                    maxhumid = max(row[7] for row in csv.reader(csvfile))
                 if year in _stats:
                     data = _stats[year]
                     if (maxtemp > data['maxtemp']):
@@ -70,7 +84,9 @@ def main():
                     temp['minhumid'] = minhumid
                     temp['date'] = date
                     _stats[year] = temp
-    display(args.R)
+        display(args.R)
+    except OSError:
+        print("The directory path is not valid")
 
 
 if __name__ == "__main__":
