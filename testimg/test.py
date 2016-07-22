@@ -5,18 +5,17 @@ import glob
 
 _stats = dict()
 
-def display(reportnumber):
+def display(number):
     "Displays the output of the report"
-    number = int(reportnumber)
     if (number==1):
-        print'{0} {1}'.format("This is report number: ",reportnumber)
+        print'{0} {1}'.format("This is report number: ",number)
         print("Year         MAX Temp         MIN Temp         MAX Humidity         MIN Humidity")
         print("--------------------------------------------------------------------------------")
         for key in _stats.keys():
             print'{0: <5}        {1: <5}               {2: <5}               {3: <5}                   {4: <5}'.format\
                 (key,(_stats[key])["maxtemp"],(_stats[key])["mintemp"],(_stats[key])["maxhumid"],(_stats[key])["minhumid"])
     elif (number==2):
-            print'{0} {1}'.format("This is report number: ", reportnumber)
+            print'{0} {1}'.format("This is report number: ", number)
             print("Year          Date                 Temp")
             print("---------------------------------------")
             for key in _stats.keys():
@@ -35,58 +34,84 @@ def main():
         files = glob.glob("*.txt")
     except OSError:
         print("The directory path is not valid")
-
+    reportnumber = int(args.R)
     for file_ in files:
             year = (int(filter(str.isdigit, file_)))
             date = ''
-            with open(file_) as f:
-                next(f)  # discard first row from file -- see notes
-                max_row = max(csv.reader(f), key=lambda row: row[1])
-                date = max_row[0]
-                maxtemp = max_row[1]
-                f.seek(0)
-                next(f)
-                maxhumid = max(row[7] for row in csv.reader(f))
-                f.seek(0)
-                next(f)
-                values_temp = []
-                for row in csv.reader(f):
-                    if row[3]:
-                        values_temp.append(row[3])
-                if values_temp:
-                    mintemp = min(values_temp)
-                else:
-                    mintemp = 'No data'
-                f.seek(0)
-                next(f)
-                values_humid = []
-                for row in csv.reader(f):
-                    if row[3]:
-                        values_humid.append(row[3])
-                if values_humid:
-                    minhumid = min(values_humid)
-                else:
-                    minhumid = 'No data'
-            if year in _stats:
-                data = _stats[year]
-                if (maxtemp > data['maxtemp']):
-                    (_stats[year])['maxtemp'] = maxtemp
-                if (mintemp < data['mintemp']):
-                    (_stats[year])['mintemp'] = mintemp
-                if (maxhumid > data['maxhumid']):
-                    (_stats[year])['maxhumid'] = maxhumid
-                if (minhumid < data['minhumid']):
-                    (_stats[year])['minhumid'] = minhumid
+            if (reportnumber==1):
+                with open(file_) as f:
+                    data = csv.DictReader(f)
+                    max_temp_data = []
+                    min_temp_data = []
+                    max_humid_data = []
+                    min_humid_data = []
+                    for row in data:
+                        if row.get('Max TemperatureC'):
+                            max_temp_data.append(row.get('Max TemperatureC'))
+                        if row.get('Min TemperatureC'):
+                            min_temp_data.append(row.get('Min TemperatureC'))
+                        if row.get('Max Humidity'):
+                            max_humid_data.append(row.get('Max Humidity'))
+                        if row.get('Max Humidity'):
+                            min_humid_data.append(row.get(' Min Humidity'))
+                    if max_temp_data:
+                        maxtemp = max(max_temp_data)
+                    else:
+                        maxtemp="N/A"
+                    if min_temp_data:
+                        mintemp = min(min_temp_data)
+                    else:
+                        mintemp = "N/A"
+                    if max_humid_data:
+                        maxhumid = max(max_humid_data)
+                    else:
+                        maxhumid = "N/A"
+                    if min_humid_data:
+                        minhumid = min(min_humid_data)
+                    else:
+                        minhumid = "N/A"
+                if year in _stats:
+                    data = _stats[year]
+                    if (maxtemp > data['maxtemp']):
+                        (_stats[year])['maxtemp'] = maxtemp
+                    if (mintemp < data['mintemp']):
+                        (_stats[year])['mintemp'] = mintemp
+                    if (maxhumid > data['maxhumid']):
+                        (_stats[year])['maxhumid'] = maxhumid
+                    if (minhumid < data['minhumid']):
+                        (_stats[year])['minhumid'] = minhumid
 
-            else:
-                temp = dict()
-                temp['maxtemp'] = maxtemp
-                temp['mintemp'] = mintemp
-                temp['maxhumid'] = maxhumid
-                temp['minhumid'] = minhumid
-                temp['date'] = date
-                _stats[year] = temp
-    display(args.R)
+                else:
+                    temp = dict()
+                    temp['maxtemp'] = maxtemp
+                    temp['mintemp'] = mintemp
+                    temp['maxhumid'] = maxhumid
+                    temp['minhumid'] = minhumid
+                    temp['date'] = date
+                    _stats[year] = temp
+            elif(reportnumber==2):
+                with open(file_) as f:
+                    data = csv.DictReader(f)
+                    maxtemp = -100
+                    date = ''
+                    for row in data:
+                        temp_value = row.get('Max TemperatureC')
+                        if temp_value:
+                            if (temp_value > maxtemp):
+                                maxtemp = temp_value
+                                date = row.get('PKT')
+                    if year in _stats:
+                        data = _stats[year]
+                        if (maxtemp > data['maxtemp']):
+                            (_stats[year])['maxtemp'] = maxtemp
+                    else:
+                        temp = dict()
+                        temp['maxtemp'] = maxtemp
+                        temp['date'] = date
+                        _stats[year] = temp
+
+
+    display(reportnumber)
 
 
 if __name__ == "__main__":
