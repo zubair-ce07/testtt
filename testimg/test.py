@@ -7,15 +7,15 @@ _stats = dict()
 
 def display(reportnumber):
     "Displays the output of the report"
-    if (int(reportnumber)==1):
+    number = int(reportnumber)
+    if (number==1):
         print'{0} {1}'.format("This is report number: ",reportnumber)
         print("Year         MAX Temp         MIN Temp         MAX Humidity         MIN Humidity")
         print("--------------------------------------------------------------------------------")
         for key in _stats.keys():
             print'{0: <5}        {1: <5}               {2: <5}               {3: <5}                   {4: <5}'.format\
                 (key,(_stats[key])["maxtemp"],(_stats[key])["mintemp"],(_stats[key])["maxhumid"],(_stats[key])["minhumid"])
-    else:
-        if (int(reportnumber)==2):
+    elif (number==2):
             print'{0} {1}'.format("This is report number: ", reportnumber)
             print("Year          Date                 Temp")
             print("---------------------------------------")
@@ -33,60 +33,60 @@ def main():
     try:
         os.chdir(args.filepath)
         files = glob.glob("*.txt")
-
-        for file_ in files:
-                year = (int(filter(str.isdigit, file_)))
-                date = ''
-                with open(file_) as f:
-                    next(f)  # discard first row from file -- see notes
-                    max_row = max(csv.reader(f), key=lambda row: row[1])
-                    date = max_row[0]
-                    maxtemp = max_row[1]
-                with open(file_) as csvfile:
-                    next(csvfile)
-                    values = []
-                    for row in csv.reader(csvfile):
-                        if row[3]:
-                            values.append(row[3])
-                    if values:
-                        mintemp = min(values)
-                    else:
-                        mintemp = 'No data'
-                with open(file_) as csvfile:
-                    next(csvfile)
-                    values = []
-                    for row in csv.reader(csvfile):
-                        if row[3]:
-                            values.append(row[3])
-                    if values:
-                        minhumid = min(values)
-                    else:
-                        minhumid = 'No data'
-                with open(file_) as csvfile:
-                    next(csvfile)
-                    maxhumid = max(row[7] for row in csv.reader(csvfile))
-                if year in _stats:
-                    data = _stats[year]
-                    if (maxtemp > data['maxtemp']):
-                        (_stats[year])['maxtemp'] = maxtemp
-                    if (mintemp < data['mintemp']):
-                        (_stats[year])['mintemp'] = mintemp
-                    if (maxhumid > data['maxhumid']):
-                        (_stats[year])['maxhumid'] = maxhumid
-                    if (minhumid < data['minhumid']):
-                        (_stats[year])['minhumid'] = minhumid
-
-                else:
-                    temp = dict()
-                    temp['maxtemp'] = maxtemp
-                    temp['mintemp'] = mintemp
-                    temp['maxhumid'] = maxhumid
-                    temp['minhumid'] = minhumid
-                    temp['date'] = date
-                    _stats[year] = temp
-        display(args.R)
     except OSError:
         print("The directory path is not valid")
+
+    for file_ in files:
+            year = (int(filter(str.isdigit, file_)))
+            date = ''
+            with open(file_) as f:
+                next(f)  # discard first row from file -- see notes
+                max_row = max(csv.reader(f), key=lambda row: row[1])
+                date = max_row[0]
+                maxtemp = max_row[1]
+                f.seek(0)
+                next(f)
+                maxhumid = max(row[7] for row in csv.reader(f))
+                f.seek(0)
+                next(f)
+                values_temp = []
+                for row in csv.reader(f):
+                    if row[3]:
+                        values_temp.append(row[3])
+                if values_temp:
+                    mintemp = min(values_temp)
+                else:
+                    mintemp = 'No data'
+                f.seek(0)
+                next(f)
+                values_humid = []
+                for row in csv.reader(f):
+                    if row[3]:
+                        values_humid.append(row[3])
+                if values_humid:
+                    minhumid = min(values_humid)
+                else:
+                    minhumid = 'No data'
+            if year in _stats:
+                data = _stats[year]
+                if (maxtemp > data['maxtemp']):
+                    (_stats[year])['maxtemp'] = maxtemp
+                if (mintemp < data['mintemp']):
+                    (_stats[year])['mintemp'] = mintemp
+                if (maxhumid > data['maxhumid']):
+                    (_stats[year])['maxhumid'] = maxhumid
+                if (minhumid < data['minhumid']):
+                    (_stats[year])['minhumid'] = minhumid
+
+            else:
+                temp = dict()
+                temp['maxtemp'] = maxtemp
+                temp['mintemp'] = mintemp
+                temp['maxhumid'] = maxhumid
+                temp['minhumid'] = minhumid
+                temp['date'] = date
+                _stats[year] = temp
+    display(args.R)
 
 
 if __name__ == "__main__":
