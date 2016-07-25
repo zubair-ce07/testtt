@@ -100,7 +100,7 @@ def main():
         files_found = glob.glob("*.txt")
     except OSError:
         print("The directory path is not valid")
-        sys.exit()
+        sys.exit('failed')
     report_num = int(args.R)
     if (report_num == 1):
         Generate_report_one(files_found)
