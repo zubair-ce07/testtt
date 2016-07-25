@@ -76,9 +76,7 @@ def Generate_report_two(files):
             list_of_dictionaries = list(iteratable_dictionaries)
             row_of_max_temp = max(list_of_dictionaries, key=lambda x: x.get('Max TemperatureC'))
             max_temp = row_of_max_temp['Max TemperatureC']
-            date = row_of_max_temp.get('PKT')
-            if not date:
-                date = row_of_max_temp.get('PKST')
+            date = row_of_max_temp.get('PKT') or row_of_max_temp.get('PKST')
             if year in _stats:
                 year_data = _stats[year]
                 if (row_of_max_temp['Max TemperatureC'] > year_data['maxtemp']):
@@ -103,12 +101,12 @@ def main():
     except OSError:
         print("The directory path is not valid")
         sys.exit()
-    reportnum = int(args.R)
-    if (reportnum == 1):
+    report_num = int(args.R)
+    if (report_num == 1):
         Generate_report_one(files_found)
-    elif (reportnum == 2):
+    elif (report_num == 2):
         Generate_report_two(files_found)
-    display(reportnum)
+    display(report_num)
 
 
 if __name__ == "__main__":
