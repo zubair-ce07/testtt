@@ -24,18 +24,12 @@ def display(report_number):
 
 
 def min_or_max_key_value(list_of_dicts, key, min_or_max):
-
+    "Function that returns the max value of a key from a list of dictionaries"
     seq = [x[key] for x in list_of_dicts if x[key] != '']
-    if (min_or_max== 'min' and seq):
-        if seq:
-            return min(seq)
-        else:
-            return '200'
+    if (min_or_max== 'min'):
+        return min(seq) if seq else '200'
     elif (min_or_max== 'max'):
-        if seq:
-            return max(seq)
-        else:
-            return '-200'
+        return max(seq) if seq else '-200'
 
 
 def Generate_report_one(files):
@@ -85,8 +79,8 @@ def Generate_report_two(files):
             if not date:
                 date = row_of_max_temp.get('PKST')
             if year in _stats:
-                iteratable_dictionaries = _stats[year]
-                if (row_of_max_temp['Max TemperatureC'] > iteratable_dictionaries['maxtemp']):
+                year_data = _stats[year]
+                if (row_of_max_temp['Max TemperatureC'] > year_data['maxtemp']):
                     (_stats[year])['maxtemp'] = row_of_max_temp['Max TemperatureC']
             else:
                 temp_dict = {}
