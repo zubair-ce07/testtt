@@ -21,6 +21,7 @@ def display(report_number):
             print("---------------------------------------")
             for key in _stats.keys():
                 print'{0: <5}        {1: <10}              {2: <5}'.format(key,(_stats[key])["date"],(_stats[key])["maxtemp"])
+    return
 
 
 def min_or_max_key_value(list_of_dicts, key, min_or_max):
@@ -87,6 +88,7 @@ def Generate_report_two(files):
                 temp_dict['maxtemp'] = max_temp
                 temp_dict['date'] = date
                 _stats[year] = temp_dict
+    return
 
 
 def main():
