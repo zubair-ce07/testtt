@@ -24,9 +24,13 @@ def display(report_number):
     return
 
 
-def min_or_max_key_value(list_of_dicts, key, min_or_max):
+def min_or_max_key_value(list_of_dicts, key, min_or_max,previous_value,year):
     "Function that returns the max value of a key from a list of dictionaries"
+    previous = 0
+    if (_stats.get(year)): previous = (_stats.get(year)).get(previous_value)
     seq = [x[key] for x in list_of_dicts if x[key] != '']
+    if previous:
+        seq.append(previous)
     if (min_or_max== 'min'):
         return min(seq) if seq else '200'
     elif (min_or_max== 'max'):
@@ -41,28 +45,17 @@ def Generate_report_one(files):
         with open(file_) as f:
             iteratable_dicts = csv.DictReader(f)
             list_of_dictionaries = list(iteratable_dicts)
-            min_temp = min_or_max_key_value(list_of_dictionaries, 'Min TemperatureC', 'min')
-            max_temp = min_or_max_key_value(list_of_dictionaries, 'Max TemperatureC', 'max')
-            min_humid = min_or_max_key_value(list_of_dictionaries, ' Min Humidity', 'min')
-            max_humid = min_or_max_key_value(list_of_dictionaries, 'Max Humidity', 'max')
-        if year in _stats:
-            year_data = _stats[year]
-            if (max_temp > year_data['maxtemp']):
-                (_stats[year])['maxtemp'] = max_temp
-            if (min_temp < year_data['mintemp']):
-                (_stats[year])['mintemp'] = min_temp
-            if (max_humid > year_data['maxhumid']):
-                (_stats[year])['maxhumid'] = max_humid
-            if (min_humid < year_data['minhumid']):
-                (_stats[year])['minhumid'] = min_humid
-        else:
-            temp_dict = {}
-            temp_dict['maxtemp'] = max_temp
-            temp_dict['mintemp'] = min_temp
-            temp_dict['maxhumid'] = max_humid
-            temp_dict['minhumid'] = min_humid
-            temp_dict['date'] = date
-            _stats[year] = temp_dict
+            min_temp = min_or_max_key_value(list_of_dictionaries, 'Min TemperatureC', 'min','mintemp',year)
+            max_temp = min_or_max_key_value(list_of_dictionaries, 'Max TemperatureC', 'max','maxtemp',year)
+            min_humid = min_or_max_key_value(list_of_dictionaries, ' Min Humidity', 'min','minhumid',year)
+            max_humid = min_or_max_key_value(list_of_dictionaries, 'Max Humidity', 'max','maxhumid',year)
+        temp_dict = {}
+        temp_dict['maxtemp'] = max_temp
+        temp_dict['mintemp'] = min_temp
+        temp_dict['maxhumid'] = max_humid
+        temp_dict['minhumid'] = min_humid
+        temp_dict['date'] = date
+        _stats[year] = temp_dict
     return
 
 
@@ -100,7 +93,7 @@ def main():
         files_found = glob.glob("*.txt")
     except OSError:
         print("The directory path is not valid")
-        sys.exit('failed')
+        sys.exit(1)
     report_num = int(args.R)
     if (report_num == 1):
         Generate_report_one(files_found)
