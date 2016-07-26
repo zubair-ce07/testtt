@@ -37,7 +37,6 @@ def Generate_report_one(files):
     "function to calculate all the statistics from the given files and generate report number one"
     for file_ in files:
         year = (int(filter(str.isdigit, file_)))
-        date = ''
         with open(file_) as f:
             iteratable_dicts = csv.DictReader(f)
             list_of_dictionaries = list(iteratable_dicts)
@@ -52,7 +51,6 @@ def Generate_report_one(files):
         temp_dict['Min TemperatureC'] = min_temp
         temp_dict['Max Humidity'] = max_humid
         temp_dict[' Min Humidity'] = min_humid
-        temp_dict['date'] = date
         _stats[year] = temp_dict
     return
 
@@ -65,18 +63,15 @@ def Generate_report_two(files):
         with open(file_) as f:
             iteratable_dictionaries = csv.DictReader(f)
             list_of_dictionaries = list(iteratable_dictionaries)
+            if year in _stats:
+                list_of_dictionaries.append(_stats[year])
             row_of_max_temp = max(list_of_dictionaries, key=lambda x: x.get('Max TemperatureC'))
             max_temp = row_of_max_temp['Max TemperatureC']
             date = row_of_max_temp.get('PKT') or row_of_max_temp.get('PKST')
-            if year in _stats:
-                year_data = _stats[year]
-                if (row_of_max_temp['Max TemperatureC'] > year_data['maxtemp']):
-                    (_stats[year])['maxtemp'] = row_of_max_temp['Max TemperatureC']
-            else:
-                temp_dict = {}
-                temp_dict['maxtemp'] = max_temp
-                temp_dict['date'] = date
-                _stats[year] = temp_dict
+            temp_dict = {}
+            temp_dict['maxtemp'] = max_temp
+            temp_dict['date'] = date
+            _stats[year] = temp_dict
     return
 
 
