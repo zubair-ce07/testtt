@@ -14,7 +14,7 @@ def display(report_number):
         print("--------------------------------------------------------------------------------")
         for key in _stats.keys():
             print'{0: <5}        {1: <5}               {2: <5}               {3: <5}                   {4: <5}'.format\
-                (key,(_stats[key])["maxtemp"],(_stats[key])["mintemp"],(_stats[key])["maxhumid"],(_stats[key])["minhumid"])
+                (key,(_stats[key])["Max TemperatureC"],(_stats[key])["Min TemperatureC"],(_stats[key])["Max Humidity"],(_stats[key])[" Min Humidity"])
     elif (report_number==2):
             print'{0} {1}'.format("This is report number: ", report_number)
             print("Year          Date                 Temp")
@@ -24,13 +24,9 @@ def display(report_number):
     return
 
 
-def min_or_max_key_value(list_of_dicts, key, min_or_max,previous_value,year):
+def min_or_max_key_value(list_of_dicts, key, min_or_max):
     "Function that returns the max value of a key from a list of dictionaries"
-    previous = 0
-    if (_stats.get(year)): previous = (_stats.get(year)).get(previous_value)
     seq = [x[key] for x in list_of_dicts if x[key] != '']
-    if previous:
-        seq.append(previous)
     if (min_or_max== 'min'):
         return min(seq) if seq else '200'
     elif (min_or_max== 'max'):
@@ -45,15 +41,17 @@ def Generate_report_one(files):
         with open(file_) as f:
             iteratable_dicts = csv.DictReader(f)
             list_of_dictionaries = list(iteratable_dicts)
-            min_temp = min_or_max_key_value(list_of_dictionaries, 'Min TemperatureC', 'min','mintemp',year)
-            max_temp = min_or_max_key_value(list_of_dictionaries, 'Max TemperatureC', 'max','maxtemp',year)
-            min_humid = min_or_max_key_value(list_of_dictionaries, ' Min Humidity', 'min','minhumid',year)
-            max_humid = min_or_max_key_value(list_of_dictionaries, 'Max Humidity', 'max','maxhumid',year)
+            if year in _stats:
+                list_of_dictionaries.append(_stats[year])
+            min_temp = min_or_max_key_value(list_of_dictionaries, 'Min TemperatureC', 'min')
+            max_temp = min_or_max_key_value(list_of_dictionaries, 'Max TemperatureC', 'max')
+            min_humid = min_or_max_key_value(list_of_dictionaries, ' Min Humidity', 'min')
+            max_humid = min_or_max_key_value(list_of_dictionaries, 'Max Humidity', 'max')
         temp_dict = {}
-        temp_dict['maxtemp'] = max_temp
-        temp_dict['mintemp'] = min_temp
-        temp_dict['maxhumid'] = max_humid
-        temp_dict['minhumid'] = min_humid
+        temp_dict['Max TemperatureC'] = max_temp
+        temp_dict['Min TemperatureC'] = min_temp
+        temp_dict['Max Humidity'] = max_humid
+        temp_dict[' Min Humidity'] = min_humid
         temp_dict['date'] = date
         _stats[year] = temp_dict
     return
