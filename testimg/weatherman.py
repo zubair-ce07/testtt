@@ -6,7 +6,7 @@ import sys
 from collections import namedtuple
 
 
-def display_weather_stats(report_number, stats):
+def display_report(report_number, stats):
     """Displays the output of the report"""
     if (report_number == 1):
         print'{0} {1}'.format("This is report number: ", report_number)
@@ -34,8 +34,8 @@ def display_weather_stats(report_number, stats):
     return
 
 
-def min_or_max_key_value(list_of_dicts, key, min_or_max):
-    """Function that returns the max value of a key from a list of dictionaries"""
+def min_or_max_value(list_of_dicts, key, min_or_max):
+    """Returns the max or min value of a key from a list of dictionaries"""
     seq = [x[key] for x in list_of_dicts if x[key] != '']
     if (min_or_max == 'min'):
         return min(seq) if seq else '200'
@@ -51,22 +51,28 @@ def calculate_yearly_weather_report(month_data_parsed, year, stats):
                                   'Min TemperatureC': stats[year].min_temp,
                                   'Max Humidity': stats[year].max_humid,
                                   ' Min Humidity': stats[year].min_humid})
-    min_temp = min_or_max_key_value(month_data_parsed, 'Min TemperatureC', 'min')
-    max_temp = min_or_max_key_value(month_data_parsed, 'Max TemperatureC', 'max')
-    min_humid = min_or_max_key_value(month_data_parsed, ' Min Humidity', 'min')
-    max_humid = min_or_max_key_value(month_data_parsed, 'Max Humidity', 'max')
+    min_temp = min_or_max_value(month_data_parsed, 'Min TemperatureC', 'min')
+    max_temp = min_or_max_value(month_data_parsed, 'Max TemperatureC', 'max')
+    min_humid = min_or_max_value(month_data_parsed, ' Min Humidity', 'min')
+    max_humid = min_or_max_value(month_data_parsed, 'Max Humidity', 'max')
     stats[year] = year_stats(max_temp, min_temp, max_humid, min_humid)
 
 
-def yearly_weather_report(files, stats):
-    """function to generate report number 1: the max temperate, min temparature. max humidity and min humidity for every year"""
+def yearly_weather_report(files, stats, report_number):
+    """function to generate weather reports:
+    Report 1: the max temperate, min temparature. max humidity and min humidity for every year
+    Report 2: the hottest days of each year"""
     for file_ in files:
         year = (int(filter(str.isdigit, file_)))
         with open(file_) as f:
             month_data = csv.DictReader(f)
             month_data_parsed = list(month_data)
-            calculate_yearly_weather_report(month_data_parsed, year, stats)
-    display_weather_stats(1, stats)
+            if (report_number == 1):
+                calculate_yearly_weather_report(month_data_parsed, year, stats)
+            elif (report_number == 2):
+                calculate_yearly_hottest_days(month_data_parsed, year, stats)
+
+    display_report(report_number, stats)
     return
 
 
@@ -79,18 +85,6 @@ def calculate_yearly_hottest_days(month_data_parsed, year, stats):
     max_temp = row_of_max_temp['Max TemperatureC']
     date = row_of_max_temp.get('PKT') or row_of_max_temp.get('PKST')
     stats[year] = year_stats(date, max_temp)
-    return
-
-
-def yearly_hottest_days_report(files, stats):
-    """function to generate report number 2: hottest days of each year"""
-    for file_ in files:
-        year = (int(filter(str.isdigit, file_)))
-        with open(file_) as f:
-            month_data = csv.DictReader(f)
-            month_data_parsed = list(month_data)
-            calculate_yearly_hottest_days(month_data_parsed, year, stats)
-    display_weather_stats(2, stats)
     return
 
 
@@ -108,10 +102,7 @@ def main():
         sys.exit(1)
     report_num = int(args.R)
     stats = {}
-    if (report_num == 1):
-        yearly_weather_report(files_found, stats)
-    elif (report_num == 2):
-        yearly_hottest_days_report(files_found, stats)
+    yearly_weather_report(files_found, stats, report_num)
 
 
 if __name__ == "__main__":
