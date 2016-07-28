@@ -10,7 +10,7 @@ def extract_all_keys(given_dictionary, previous_key, key_occurence_stats):
             key_occurence_stats[key] += 1
         else:
             key_occurence_stats[key] = 1
-        if type(given_dictionary[each_key]) is dict:
+        if isinstance(given_dictionary[each_key],dict):
             extract_all_keys(given_dictionary[each_key],
                              key + '.', key_occurence_stats)
     return
