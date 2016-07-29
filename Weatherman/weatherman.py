@@ -30,7 +30,7 @@ def display_report(report_number, stats):
 
 def min_or_max_value(list_of_dicts, key, min_or_max):
     """Returns the max or min value of a key from a list of dictionaries"""
-    seq = [x[key] for x in list_of_dicts if x[key] != '']
+    seq = [x[key] for x in list_of_dicts if x[key]]
     if (min_or_max == 'min'):
         return min(seq) if seq else '200'
     elif (min_or_max == 'max'):
@@ -84,8 +84,8 @@ def calculate_yearly_hottest_days(month_data_parsed, year, stats):
 def main():
     """Main function of this program"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("R", help="input the report number")
-    parser.add_argument("filepath", help="input the path that contains data files")
+    parser.add_argument("reportnumber", help = "input the report number", type = int)
+    parser.add_argument("filepath", help = "input the path that contains data files")
     args = parser.parse_args()
     try:
         os.chdir(args.filepath)
@@ -93,9 +93,9 @@ def main():
     except OSError:
         print("The directory path is not valid")
         sys.exit(1)
-    report_num = int(args.R)
+    report_number = args.reportnumber
     stats = {}
-    yearly_weather_report(files_found, stats, report_num)
+    yearly_weather_report(files_found, stats, report_number)
 
 
 if __name__ == "__main__":
