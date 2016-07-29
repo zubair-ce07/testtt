@@ -9,28 +9,22 @@ from collections import namedtuple
 def display_report(report_number, stats):
     """Displays the output of the report"""
     if (report_number == 1):
-        print'{0} {1}'.format("This is report number: ", report_number)
+        print('This is report number: {0}'.format(report_number))
         print("Year         MAX Temp         MIN Temp"
               "         MAX Humidity         MIN Humidity")
         print("----------------------------------------"
               "----------------------------------------")
         for each_year in stats:
-            print('{0: <5}        {1: <5}               {2: <5}'
-                  '               {3: <5}                   {4: <5}'
-                  .format(each_year,
-                          (stats[each_year]).max_temp,
-                          (stats[each_year]).min_temp,
-                          (stats[each_year]).max_humid,
-                          (stats[each_year]).min_humid))
+            print('{0: <12} {year_stats.max_temp: <16} {year_stats.min_temp: <17}'
+                  '{year_stats.max_humid: <20} {year_stats.min_humid: <5}'
+                  .format(each_year,year_stats = stats[each_year]))
     elif (report_number == 2):
-            print'{0} {1}'.format("This is report number: ", report_number)
+            print('This is report number: {0}'.format(report_number))
             print("Year          Date                 Temp")
             print("---------------------------------------")
             for each_year in stats:
-                print'{0: <5}        {1: <10}              {2: <5}'\
-                    .format(each_year,
-                            (stats[each_year]).date,
-                            (stats[each_year]).max_temp)
+                print'{0: <13} {year_stats.date: <20} {year_stats.max_temp: <5}'\
+                    .format(each_year,year_stats = stats[each_year])
     return
 
 
@@ -71,7 +65,6 @@ def yearly_weather_report(files, stats, report_number):
                 calculate_yearly_weather_report(month_data_parsed, year, stats)
             elif (report_number == 2):
                 calculate_yearly_hottest_days(month_data_parsed, year, stats)
-
     display_report(report_number, stats)
     return
 
