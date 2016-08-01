@@ -2,64 +2,87 @@ import json
 import argparse
 
 
-def extract_all_keys(given_dictionary, previous_key, key_occurence_stats):
-    """Function that extracts all the keys of a dictionary at all levels"""
-    for each_key in given_dictionary:
-        key = previous_key+each_key
-        if key in key_occurence_stats:
-            key_occurence_stats[key] += 1
-        else:
-            key_occurence_stats[key] = 1
-        if isinstance(given_dictionary[each_key],dict):
-            extract_all_keys(given_dictionary[each_key],
-                             key + '.', key_occurence_stats)
-    return
-
-
 def extract_all_keys_occurences(jsons_list, total_rows):
     key_occurence_stats = {}
     for each_json in jsons_list:
         parsed_json = json.loads(each_json)
-        extract_all_keys(parsed_json, '', key_occurence_stats)
-    print('{0} {1}'.format('Total Rows', total_rows))
+        calculate_key_occurences(parsed_json, '', key_occurence_stats,1)
+    print('Total Rows {0}'.format(total_rows))
     for everykey in key_occurence_stats:
         percentage_occurence = float(((key_occurence_stats[everykey]) / total_rows) * 100)
-        print('{0} {1} {2} {3}'.format(everykey, ": [", round(percentage_occurence, 2), "%]"))
+        print('{0} : [ {1} %]'.format(everykey, round(percentage_occurence, 2)))
     return
 
 
-def calculate_key_occurences(given_tree_data, parent_key, values_of_keys):
-    """extract all the values from the given tree and store them in values of keys"""
+def calculate_key_occurences(given_tree_data, parent_key, values_of_keys,type_flag):
+    """ Extract all the values from the given tree and store them in values of keys
+    If the type flag is on the type of the values are also printed"""
     if isinstance(given_tree_data, dict):
         for each_key_of_json in given_tree_data:
-            calculate_key_occurences(given_tree_data[each_key_of_json],
-                                     parent_key + '.' + each_key_of_json, values_of_keys)
+            if parent_key:
+                calculate_key_occurences(given_tree_data[each_key_of_json],
+                                     parent_key + '.' + each_key_of_json, values_of_keys,type_flag)
+            else:
+                calculate_key_occurences(given_tree_data[each_key_of_json],
+                                         parent_key + each_key_of_json, values_of_keys,type_flag)
     elif isinstance(given_tree_data, list):
         for each_list_item in given_tree_data:
-            count = 0
             calculate_key_occurences(each_list_item,
-                                     parent_key + "[" + str(count) + "]", values_of_keys)
-            count += 1
+                                     parent_key, values_of_keys,type_flag)
     else:
-        extracted_key = parent_key+":"+str(given_tree_data)
+        if type_flag:
+            extracted_key = parent_key + ":" + str(given_tree_data) + "   " + str(type(given_tree_data))
+        else:
+            extracted_key = parent_key + ":" + str(given_tree_data)
         if extracted_key in values_of_keys:
             values_of_keys[extracted_key] += 1
         else:
             values_of_keys[extracted_key] = 1
 
 
-def extract_value(json_dict, key_heirarchy):
-    """given a key heirarchy extracts its value in the given json if it exists"""
-    if (len(key_heirarchy) > 1):
-        for each_key in json_dict:
-            if (each_key == key_heirarchy[0] and isinstance(json_dict[each_key], dict)):
-                return extract_value(json_dict[each_key], key_heirarchy[1:])
-        return False
-    elif (len(key_heirarchy) == 1):
-        for each_key in json_dict:
-            if (each_key == key_heirarchy[0]):
-                return json_dict[each_key]
-        return False
+def flatten(nested_list):
+    for each_item in nested_list:
+        if isinstance(each_item, (list,tuple)):
+            for each_sub_item in flatten(each_item):
+                yield each_sub_item
+        else:
+            yield each_item
+
+
+def extract_value(json_input, key_heirarchy):
+    """ Given a key heirarchy extracts its value in the given json if it exists"""
+    if len(key_heirarchy) > 1:
+        if isinstance(json_input, dict):
+            for each_key in json_input:
+                if each_key == key_heirarchy[0] and isinstance(json_input[each_key], (dict,list)):
+                    return extract_value(json_input[each_key], key_heirarchy[1:])
+            return False
+        elif isinstance(json_input, list):
+            values_extracted = []
+            for each_value in json_input:
+                if isinstance(each_value,(dict,list)):
+                    values_extracted.append(extract_value(each_value,key_heirarchy))
+            if any(values_extracted):
+                filter(lambda a: a != False, flatten(values_extracted))
+                return values_extracted
+            else:
+                return False
+    elif len(key_heirarchy) == 1:
+        if isinstance(json_input, dict):
+            for each_key in json_input:
+                if each_key == key_heirarchy[0]:
+                    return json_input[each_key]
+            return False
+        elif isinstance(json_input, list):
+            subvalues_extracted = []
+            for each_value in json_input:
+                if isinstance(each_value, (dict,list)):
+                    subvalues_extracted.append(extract_value(each_value, key_heirarchy))
+            if any(subvalues_extracted):
+                filter(lambda a: a != False, flatten(subvalues_extracted))
+                return subvalues_extracted
+            else:
+                return False
     return False
 
 
@@ -71,17 +94,21 @@ def calculate_unique_values(jsons_list, total_rows, input_key):
         parsed_json = json.loads(each_json)
         key_heirarchy_value = extract_value(parsed_json, key_heirarchy)
         if key_heirarchy_value:
-            calculate_key_occurences(key_heirarchy_value, input_key, values_of_keys)
-    print('{0} {1}'.format('Total Rows ', total_rows))
+            if isinstance(key_heirarchy_value,list):
+                for each_extracted_value in key_heirarchy_value:
+                    calculate_key_occurences(each_extracted_value, input_key, values_of_keys,0)
+            else:
+                calculate_key_occurences(key_heirarchy_value, input_key, values_of_keys,0)
+    print('Total Rows  {0}'.format(total_rows))
     for everystat in values_of_keys:
-        print('{0} {1} {2}'.format(everystat, ", ", values_of_keys[everystat]))
+        print('{0} ,  {1}'.format(everystat, values_of_keys[everystat]))
     return
 
 
 def main():
-    """The main function of the program"""
+    """ The main function of the program"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--f", help="input the JSON key whose values need to be listed")
+    parser.add_argument("--f","--input_key", help="input the JSON key whose values need to be listed")
     parser.add_argument("filepath", help="input the JSON file path")
     args = parser.parse_args()
     with open(args.filepath) as f:
