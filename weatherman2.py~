@@ -3,7 +3,7 @@ import sys
 import re
 import csv
 
-weatherman_report_data = {}   # Initializing dictionary to store data. 
+weatherman_report_data = {}
 
 
 def is_key_present(x):
