@@ -18,11 +18,16 @@ def is_empty(lis):
         return True
 
 
-def basic_weather_report_of_every_year():      # For report 1 each key value has four values in list.
-    for filename in os.listdir(dir):           # weatherdata[year1][0] = Maximum temperature ,
-        with open(filename) as csvfile:        # weatherdata[year1][1] = Minimum temperature ,
-            name = csvfile.name                # weatherdata[year1][2] = Maximum humidity ,
-            year = (re.split('_', name))       # weatherdata[year1][3] = Minimum humidity
+'''
+For report 1 each key value has four values in list. weatherdata[year1][0] = Maximum temperature.
+weatherdata[year1][1] = Minimum temperature. weatherdata[year1][1] = Minimum temperature
+weatherdata[year1][2] = Maximum humidity , weatherdata[year1][3] = Minimum humidity
+'''
+def basic_weather_report_of_every_year():
+    for filename in os.listdir(dir):
+        with open(filename) as csvfile:
+            name = csvfile.name
+            year = (re.split('_', name))
             year1 = int(year[2])
             next(csvfile)
             reader = csv.DictReader(csvfile)
@@ -104,11 +109,17 @@ def basic_weather_report_of_every_year():      # For report 1 each key value has
               weatherman_report_data.get(key)[2], "               ", weatherman_report_data.get(key)[3])
 
 
-def find_hottest_day_of_every_year_report2():  # It will report the Hottest day of each year
-    for filename in os.listdir(dir):  # For report 2, each dictioanry has two values in list i.e
-        with open(filename) as csvfile:  # weather_data_report[year1][0] represents date of hottest
-            name = csvfile.name  # day, while weatherman_data_report[year1][1] stores temperature
-            year = (re.split('_', name))  # on that day.
+
+'''
+For report 2, each dictioanry has two values in list i.e
+weather_data_report[year1][0] represents date of hottest
+day, while weatherman_data_report[year1][1] stores temperature on that day.
+'''
+def find_hottest_day_of_every_year_report2():  #It will generate weather report about hottest day of each year.
+    for filename in os.listdir(dir):
+        with open(filename) as csvfile:
+            name = csvfile.name
+            year = (re.split('_', name))
             year1 = int(year[2])
             next(csvfile)
             reader = csv.DictReader(csvfile)
@@ -154,11 +165,15 @@ def find_hottest_day_of_every_year_report2():  # It will report the Hottest day 
     for keys in weatherman_report_data:
         print(keys, "          ", (weatherman_report_data[keys][1]), "        ", weatherman_report_data[keys][0])
 
-
+'''
+For report 3, each dictioanry has two values in list i.e
+weather_data_report[year1][0] represents date of coolest
+day & weatherman_data_report[year1][1] stores temperature on that day.
+'''
 def find_coolest_day_of_every_year_report3():  # It will report the coolest day of each year.
-    for filename in os.listdir(dir):           # For report 3, each dictioanry has two values in list i.e
-        with open(filename) as csvfile:        # weather_data_report[year1][0] represents date of coolest
-            name = csvfile.name                # day & weatherman_data_report[year1][1] stores temperature on that day.
+    for filename in os.listdir(dir):
+        with open(filename) as csvfile:
+            name = csvfile.name
             minimum_temperatures = []  # To store 'Min TemperatureC' key values of a file
             year = (re.split('_', name))
             year1 = int(year[2])
