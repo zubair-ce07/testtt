@@ -4,12 +4,13 @@ import argparse
 
 def extract_all_keys_occurences(input_tree):
     key_occurence_stats = {}
+    total_rows = len(input_tree)
     for each_value in input_tree:
         parsed_value = json.loads(each_value)
         calculate_key_occurences(parsed_value, '', key_occurence_stats, 1)
-    print('Total Rows {0}'.format(len(input_tree)))
+    print('Total Rows {0}'.format(total_rows))
     for every_key in key_occurence_stats:
-        percentage_occurence = float(((key_occurence_stats[every_key]) / len(input_tree)) * 100)
+        percentage_occurence = float(((key_occurence_stats[every_key]) / total_rows) * 100)
         print('{0} : [ {1} %]'.format(every_key, round(percentage_occurence, 2)))
     return
 
@@ -34,24 +35,21 @@ def calculate_key_occurences(given_tree_data, parent_key, values_of_keys, variab
 
 def extract_value(json_input, key_heirarchy):
     """ Given a key heirarchy extracts its value in the given json if it exists"""
+    key_heirarchy_level = len(key_heirarchy)
     if isinstance(json_input, dict):
-        if len(key_heirarchy) > 1:
-            for each_key in json_input:
-                if each_key == key_heirarchy[0] and isinstance(json_input[each_key], (dict, list)):
-                    return extract_value(json_input[each_key], key_heirarchy[1:])
-            return False
-        else:
-            for each_key in json_input:
-                if each_key == key_heirarchy[0]:
-                    return json_input[each_key]
-            return False
+        for each_key in json_input:
+            if each_key == key_heirarchy[0] and isinstance(json_input[each_key], (dict, list)) and key_heirarchy_level > 1:
+                return extract_value(json_input[each_key], key_heirarchy[1:])
+            if each_key == key_heirarchy[0] and key_heirarchy_level == 1:
+                return json_input[each_key]
+        return False
     elif isinstance(json_input, list):
         values_extracted = []
         for each_value in json_input:
             if isinstance(each_value,(dict, list)):
                 values_extracted.append(extract_value(each_value, key_heirarchy))
         if any(values_extracted):
-            filter(lambda a: a != False, values_extracted)
+            filter(None, values_extracted)
             return values_extracted
         else:
             return False
