@@ -5,7 +5,7 @@ import collections
 
 def value_difference(value_one, value_two, input_json, file_one, file_two):
     dict_of_difference = {}
-    if ((collections.Counter(value_one) != collections.Counter(value_two)) or (value_one != value_two)):
+    if (collections.Counter(value_one) != collections.Counter(value_two)) or (value_one != value_two):
         dict_of_difference[file_two] = value_two
         dict_of_difference[file_one] = value_one
         dict_of_difference["field"] = input_json
@@ -124,8 +124,8 @@ def main():
         docket_one = json.load(f)
     with open(args.secondfile) as f:
         docket_two = json.load(f)
-    file_one_name = (args.firstfile.split('.'))[0]
-    file_two_name = (args.secondfile.split('.'))[0]
+    file_one_name = args.firstfile.split('.')[0]
+    file_two_name = args.secondfile.split('.')[0]
     skip_fields = {'run_id', 'uploaded', 'modified', 'crawled_at', 'end_time', '_id','job_id', 'request_fingerprint',
                    'start_time', 'spider_name', 'filings'}
     docket_differences = docket_matcher(docket_one, docket_two, skip_fields, file_one_name, file_two_name)
