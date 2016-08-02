@@ -3,7 +3,7 @@ import sys
 import re
 import csv
 
-weatherman_report_data = {}   # Initializing dictionary to store data. 
+weatherman_report_data = {}
 
 
 def is_key_present(x):
@@ -121,7 +121,7 @@ def find_hottest_day_of_every_year_report2():  # It will report the Hottest day 
                             weatherman_report_data[year1][0] = x
 
             else:
-                weatherman_report_data[year1] = [0, 0, 0, 0, '', '']
+                weatherman_report_data[year1] = [0,'']
                 for row in reader:
                     maximum_temperature = row.get('Max TemperatureC')
                     if maximum_temperature:
@@ -144,15 +144,15 @@ def find_hottest_day_of_every_year_report2():  # It will report the Hottest day 
                         x = int(maximum_temperature)
                         if x == weatherman_report_data[year1][0]:
                             if 'PKT' in HeaderList:
-                                weatherman_report_data[year1][4] = row.get('PKT')
+                                weatherman_report_data[year1][1] = row.get('PKT')
                             if 'PKST' in HeaderList:
-                                weatherman_report_data[year1][4] = row.get('PKST')
+                                weatherman_report_data[year1][1] = row.get('PKST')
 
     print("This is report# 2")
     print("year" + "             " + "Date" + "              " + "Temp")
     print("--------------------------------------------")
     for keys in weatherman_report_data:
-        print(keys, "          ", (weatherman_report_data[keys][4]), "        ", weatherman_report_data[keys][0])
+        print(keys, "          ", (weatherman_report_data[keys][1]), "        ", weatherman_report_data[keys][0])
 
 
 def find_coolest_day_of_every_year_report3():  # It will report the coolest day of each year.
