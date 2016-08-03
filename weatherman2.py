@@ -13,12 +13,12 @@ class Report_number(Enum):
 
 
 '''
-For report 1 each key value has a dictianry with four keys as its value.
-Those four keys are 'Max-TempC', 'Min-TempC','Max-Hum' & 'Min-Hum.
+This function calculates all required parameters and
+stores them in a dictionary & return in the end.
 '''
 
 
-def basic_weather_report_of_every_year():
+def getting_weather_report_dictionary():
     weatherman_report_data = {}
     for filename in os.listdir(dir):
         with open(filename) as csvfile:
@@ -27,8 +27,9 @@ def basic_weather_report_of_every_year():
             file_year = int(year[2])
             next(csvfile)
             reader = csv.DictReader(csvfile)
-            minimum_temperatures = []       # To store 'Min TemperatureC' key values of a file.
-            minimum_humidities = []         # To store 'Min Temperature' key values of a file.
+            minimum_humidities = []                 # To store 'Min Temperature' key values of a file.
+            minimum_temperatures_dictionary = {}    # This dictionary has a key date & minimum temperature
+                                                    # on that day as value & datea of key values of a file.
 
             if file_year in weatherman_report_data:  # Updating values of existing key
                 for row in reader:
@@ -36,16 +37,18 @@ def basic_weather_report_of_every_year():
                     minimum_temperature = row.get('Min TemperatureC')
                     maximum_humidity = row.get('Max Humidity')
                     minimum_humidity = row.get(' Min Humidity')
+                    date_ = row.get('PKT') or row.get('PKST')
 
                     if maximum_temperature:  # Calculating maximum temperature
                         x = int(maximum_temperature)
                         if weatherman_report_data[file_year]['Max-tempC'] < x:
                             weatherman_report_data[file_year]['Max-tempC'] = x
+                            weatherman_report_data[file_year]['Max-Temp-date'] = date_
 
-                    if minimum_temperature:
-                        minimum_temperatures.append(minimum_temperature)
+                    if minimum_temperature:   # Adding minimum temperatures & dates in  minimum_temperatures_dictionary
+                        minimum_temperatures_dictionary[date_] = minimum_temperature
 
-                    if maximum_humidity:  # Calculating maximum humidity
+                    if maximum_humidity:     # Calculating maximum humidity
                         x = int(maximum_humidity)
                         if weatherman_report_data[file_year]['Max-Hum'] < x:
                             weatherman_report_data[file_year]['Max-Hum'] = x
@@ -53,21 +56,24 @@ def basic_weather_report_of_every_year():
                     if minimum_humidity:
                         minimum_humidities.append(minimum_humidity)
             else:
+                # Adding a new key
                 weatherman_report_data[file_year] = {'Max-tempC': 0, 'Min-TempC': 0, 'Max-Hum': 0,
-                                                     'Min-Hum': 0}  # Adding a new key
+                                                     'Min-Hum': 0, 'Max-Temp-date':'', 'Min-Temp-date':''}
                 for row in reader:
                     maximum_temperature = row.get('Max TemperatureC')
                     minimum_temperature = row.get('Min TemperatureC')
                     maximum_humidity = row.get('Max Humidity')
                     minimum_humidity = row.get(' Min Humidity')
+                    date_ = row.get('PKT') or row.get['PKST']
 
                     if maximum_temperature:
                         x = int(maximum_temperature)
                         if weatherman_report_data[file_year]['Max-tempC'] < x:
                             weatherman_report_data[file_year]['Max-tempC'] = x
+                            weatherman_report_data[file_year]['Max-Temp-date']=date_
 
                     if minimum_temperature:
-                        minimum_temperatures.append(minimum_temperature)
+                        minimum_temperatures_dictionary[date_] = minimum_temperature
 
                     if maximum_humidity:
                         x = int(maximum_humidity)
@@ -77,14 +83,17 @@ def basic_weather_report_of_every_year():
                     if minimum_humidity:
                         minimum_humidities.append(minimum_humidity)
 
-            if minimum_temperatures:
-                min_temp_value = min(minimum_temperatures)
+            if minimum_temperatures_dictionary:
+                min_temp_date = min(minimum_temperatures_dictionary, key=minimum_temperatures_dictionary.get)
+                min_temp_value = min(minimum_temperatures_dictionary.values())
                 x = int(min_temp_value)
             if not weatherman_report_data[file_year]['Min-TempC']:
                 weatherman_report_data[file_year]['Min-TempC'] = x
+                weatherman_report_data[file_year]['Min-Temp-date'] = min_temp_date
             else:
                 if weatherman_report_data[file_year]['Min-TempC'] > x:
                     weatherman_report_data[file_year]['Min-TempC'] = x
+                    weatherman_report_data[file_year]['Min-Temp-date'] = min_temp_date
 
             if minimum_humidities:
                 min_temp_value = min(minimum_humidities)
@@ -95,136 +104,42 @@ def basic_weather_report_of_every_year():
                 if weatherman_report_data[file_year]['Min-Hum'] > x:
                     weatherman_report_data[file_year]['Min-Hum'] = x
 
-    print("This is report# 1")
+    return weatherman_report_data
+
+
+def basic_weather_Report():
+    weather_report = getting_weather_report_dictionary()
     print(
         "Year" + "  " + "Maximum Temprature " + "  " + "Minimum Temprature" + "   " + "Maximum Humidity" + "   " + "Minimum Humidity")
     print("-----------------------------------------------------------------------------------")
+    for key in weather_report:
+        print(key, '\t\t', weather_report.get(key)['Max-tempC'], '\t\t',
+              weather_report.get(key)['Min-TempC'], '\t\t',
+              weather_report.get(key)['Max-Hum'], '\t\t', weather_report.get(key)['Min-Hum'])
 
-    for key in weatherman_report_data:
-        print(key, '\t\t', weatherman_report_data.get(key)['Max-tempC'], '\t\t',
-              weatherman_report_data.get(key)['Min-TempC'], '\t\t',
-              weatherman_report_data.get(key)['Max-Hum'], '\t\t', weatherman_report_data.get(key)['Min-Hum'])
 
-
-'''
-For this report each key in weather_report_data dictionary has a dictionary value which has further two key.
-One is 'Date' to store hottest day of year & second is 'Max-TempC to store the temperature on that day'
-'''
-
-def find_hottest_day_of_every_year_report2():  # It will generate weather report about hottest day of each year.
-    weatherman_report_data = {}
-    for filename in os.listdir(dir):
-        with open(filename) as csvfile:
-            name = csvfile.name
-            year = (re.split('_', name))
-            file_year = int(year[2])
-            next(csvfile)
-            reader = csv.DictReader(csvfile)
-            if file_year in weatherman_report_data:
-                for row in reader:
-                    maximum_temperature = row.get('Max TemperatureC')
-                    if maximum_temperature:
-                        x = int(maximum_temperature)
-                        if weatherman_report_data[file_year]['Max-TempC'] < x:
-                            weatherman_report_data[file_year]['Max-TempC'] = x
-
-            else:
-                weatherman_report_data[file_year] = {'Max-TempC': 0, 'Date': ''}
-                for row in reader:
-                    maximum_temperature = row.get('Max TemperatureC')
-                    if maximum_temperature:
-                        x = int(maximum_temperature)
-                        if weatherman_report_data[file_year]['Max-TempC'] < x:
-                            weatherman_report_data[file_year]['Max-TempC'] = x
-
-    for filename in os.listdir(dir):
-        with open(filename) as csvfile:
-            name = csvfile.name
-            year = (re.split('_', name))
-            file_year = int(year[2])
-            next(csvfile)
-            reader = csv.DictReader(csvfile)
-            HeaderList = reader.fieldnames
-            if file_year in weatherman_report_data:
-                for row in reader:
-                    maximum_temperature = row.get('Max TemperatureC')
-                    if maximum_temperature:
-                        x = int(maximum_temperature)
-                        if x == weatherman_report_data[file_year]['Max-TempC']:
-                            weatherman_report_data[file_year]['Date'] = row.get('PKT') or row.get('PKST')
-
+def hottest_day_of_each_year():
+    weather_report = getting_weather_report_dictionary()
     print("This is report# 2")
     print("year" + "              " + "Date" + "                " + "Temp")
     print("--------------------------------------------")
-    for keys in weatherman_report_data:
-        print(keys, '\t\t', (weatherman_report_data[keys]['Date']), '\t\t',
-              weatherman_report_data[keys]['Max-TempC'])
-
-'''
-For this report each key in weather_report_data dictionary has a dictionary value which has further two key.
-One is 'Date' to store coolest day of year & second is 'Min-tempC to store the temperature on that day'
-'''
+    for key in weather_report:
+        print(key, '\t\t', weather_report.get(key)['Max-Temp-date'], '\t\t',
+              weather_report.get(key)['Max-tempC'])
 
 
-def find_coolest_day_of_every_year_report3():  # It will report the coolest day of each year.
-    weatherman_report_data = {}
-    for filename in os.listdir(dir):
-        with open(filename) as csvfile:
-            name = csvfile.name
-            minimum_temperatures = []  # To store 'Min TemperatureC' key values of a file
-            year = (re.split('_', name))
-            file_year = int(year[2])
-            next(csvfile)
-            reader = csv.DictReader(csvfile)
-            if file_year in weatherman_report_data:
-                for row in reader:
-                    minimum_temperature = row.get('Min TemperatureC')
-                    if minimum_temperature:
-                        minimum_temperatures.append(minimum_temperature)
-            else:
-                weatherman_report_data[file_year] = {'Min-tempC': 0, 'Date': ''}
-                for row in reader:
-                    minimum_temperature = row.get('Min TemperatureC')
-                    if minimum_temperature:
-                        minimum_temperatures.append(minimum_temperature)
-
-        if minimum_temperatures:
-            min_temp_value = min(minimum_temperatures)
-            x = int(min_temp_value)
-
-        if not weatherman_report_data[file_year]['Min-tempC']:
-            weatherman_report_data[file_year]['Min-tempC'] = x
-        else:
-            if weatherman_report_data[file_year]['Min-tempC'] > x:
-                weatherman_report_data[file_year]['Min-tempC'] = x
-
-    for filename in os.listdir(dir):
-        with open(filename) as csvfile:
-            name = csvfile.name
-            year = (re.split('_', name))
-            file_year = int(year[2])
-            next(csvfile)
-            reader = csv.DictReader(csvfile)
-            HeaderList = reader.fieldnames
-            if file_year in weatherman_report_data:
-                for row in reader:
-                    minimum_temperature = row.get('Min TemperatureC')
-                    if minimum_temperature:
-                        x = int(minimum_temperature)
-                        if x == weatherman_report_data[file_year]['Min-tempC']:
-                            weatherman_report_data[file_year]['Date'] = row.get('PKT') or row.get('PKST')
-
+def coolest_day_of_each_year():
+    weather_report = getting_weather_report_dictionary()
     print("This is report# 3")
-    print("year" +"               " + "Date" + "               "+ "Temp")
+    print("year" + "              " + "Date" + "                " + "Temp")
     print("--------------------------------------------")
-    for keys in weatherman_report_data:
-        print(keys, '\t\t', (weatherman_report_data[keys]['Date']), '\t\t', weatherman_report_data[keys]['Min-tempC'])
+    for key in weather_report:
+        print(key, '\t\t', weather_report.get(key)['Min-Temp-date'], '\t\t',
+              weather_report.get(key)['Min-TempC'])
 
 
 if __name__ == '__main__':
-    print(Report_number.basicweatherreport)
     parser = argparse.ArgumentParser()
-
     parser.add_argument("Reportnumber", help="input the report number", type=int)
     parser.add_argument("data_dir", help="input the path that contains data files")
     args = parser.parse_args()
@@ -236,11 +151,11 @@ if __name__ == '__main__':
     dir = os.getcwd()
 
     if Report_no == Report_number.basicweatherreport.value:
-        basic_weather_report_of_every_year()
+       basic_weather_Report()
     elif Report_no == Report_number.hottestdayreport.value:
-        find_hottest_day_of_every_year_report2()
+        hottest_day_of_each_year()
     elif Report_no == Report_number.coolestdayreport.value:
-        find_coolest_day_of_every_year_report3()
+        coolest_day_of_each_year()
     else:
         print("No such report found /n"
               "select correct report number")
