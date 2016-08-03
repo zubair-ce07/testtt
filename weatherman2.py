@@ -107,15 +107,28 @@ def getting_weather_report_dictionary():
     return weatherman_report_data
 
 
+'''
+This function basic_weather_report outputs formatted
+report containg maximum temperature, minimum temperature,
+maximum humidity & minimum humidity yearly.
+'''
+
+
 def basic_weather_Report():
     weather_report = getting_weather_report_dictionary()
-    print(
-        "Year" + "  " + "Maximum Temprature " + "  " + "Minimum Temprature" + "   " + "Maximum Humidity" + "   " + "Minimum Humidity")
+    print("Year" + "  " + "Maximum Temprature " + "  " + "Minimum Temprature" +
+          "   " + "Maximum Humidity" + "   " + "Minimum Humidity")
     print("-----------------------------------------------------------------------------------")
     for key in weather_report:
         print(key, '\t\t', weather_report.get(key)['Max-tempC'], '\t\t',
               weather_report.get(key)['Min-TempC'], '\t\t',
               weather_report.get(key)['Max-Hum'], '\t\t', weather_report.get(key)['Min-Hum'])
+
+
+'''
+This function outputs formatted report comtaing
+maximum temperature & date of that day.
+'''
 
 
 def hottest_day_of_each_year():
@@ -128,6 +141,10 @@ def hottest_day_of_each_year():
               weather_report.get(key)['Max-tempC'])
 
 
+'''
+This function outputs formatted report comtaing
+minimum temperature & date of that day.
+'''
 def coolest_day_of_each_year():
     weather_report = getting_weather_report_dictionary()
     print("This is report# 3")
@@ -140,6 +157,7 @@ def coolest_day_of_each_year():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+
     parser.add_argument("Reportnumber", help="input the report number", type=int)
     parser.add_argument("data_dir", help="input the path that contains data files")
     args = parser.parse_args()
