@@ -51,8 +51,7 @@ def extract_value(tree_input, key_heirarchy):
             if isinstance(each_value, (dict, list)):
                 values_extracted.append(extract_value(each_value, key_heirarchy))
         if any(values_extracted):
-            filter(None, values_extracted)
-            return values_extracted
+            return list(filter(None, values_extracted))
         else:
             return False
     return False
@@ -75,13 +74,13 @@ def calculate_unique_values(input_data, input_key):
 def main():
     """ The main function of the program"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--input_key", help="input the JSON key whose values need to be listed")
+    parser.add_argument("-f", "--find_key", help="input the JSON key whose values need to be listed")
     parser.add_argument("filepath", help="input the JSON file path")
     args = parser.parse_args()
     with open(args.filepath) as f:
         input_data = f.readlines()
-        calculate_unique_values(input_data, args.input_key)\
-            if args.input_key else extract_all_keys_occurences(input_data)
+        calculate_unique_values(input_data, args.find_key)\
+            if args.find_key else extract_all_keys_occurences(input_data)
 
 if __name__ == "__main__":
     main()
