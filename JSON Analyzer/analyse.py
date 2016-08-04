@@ -22,10 +22,10 @@ def calculate_key_occurences(given_tree_data, parent_key, values_of_keys, variab
         for each_tree_item in given_tree_data:
             parent_child_heirarchy = parent_key + '.' + each_tree_item if parent_key else each_tree_item
             calculate_key_occurences(given_tree_data[each_tree_item],
-                                         parent_child_heirarchy, values_of_keys, variable_type_flag)
+                                     parent_child_heirarchy, values_of_keys, variable_type_flag)
     elif isinstance(given_tree_data, list):
-        for each_list_item in given_tree_data:
-            calculate_key_occurences(each_list_item,
+        for each_item in given_tree_data:
+            calculate_key_occurences(each_item,
                                      parent_key, values_of_keys, variable_type_flag)
     else:
         extracted_key = parent_key + ":" + str(given_tree_data) + "   " + str(type(given_tree_data))\
@@ -33,20 +33,22 @@ def calculate_key_occurences(given_tree_data, parent_key, values_of_keys, variab
         values_of_keys[extracted_key] = values_of_keys.get(extracted_key, 0) + 1
 
 
-def extract_value(json_input, key_heirarchy):
+def extract_value(tree_input, key_heirarchy):
     """ Given a key heirarchy extracts its value in the given json if it exists"""
     key_heirarchy_level = len(key_heirarchy)
-    if isinstance(json_input, dict):
-        for each_key in json_input:
-            if each_key == key_heirarchy[0] and isinstance(json_input[each_key], (dict, list)) and key_heirarchy_level > 1:
-                return extract_value(json_input[each_key], key_heirarchy[1:])
+    if isinstance(tree_input, dict):
+        for each_key in tree_input:
+            if (each_key == key_heirarchy[0] and
+                    isinstance(tree_input[each_key], (dict, list)) and
+                    key_heirarchy_level > 1):
+                return extract_value(tree_input[each_key], key_heirarchy[1:])
             if each_key == key_heirarchy[0] and key_heirarchy_level == 1:
-                return json_input[each_key]
+                return tree_input[each_key]
         return False
-    elif isinstance(json_input, list):
+    elif isinstance(tree_input, list):
         values_extracted = []
-        for each_value in json_input:
-            if isinstance(each_value,(dict, list)):
+        for each_value in tree_input:
+            if isinstance(each_value, (dict, list)):
                 values_extracted.append(extract_value(each_value, key_heirarchy))
         if any(values_extracted):
             filter(None, values_extracted)
@@ -56,15 +58,15 @@ def extract_value(json_input, key_heirarchy):
     return False
 
 
-def calculate_unique_values(input_json_data, input_key):
+def calculate_unique_values(input_data, input_key):
     """ Given a json list calculates all unique values and their count of the input_key in each json"""
     values_of_keys = {}
     key_heirarchy = input_key.split(".")
-    for each_key in input_json_data:
-        parsed_json = json.loads(each_key)
-        key_heirarchy_value = extract_value(parsed_json, key_heirarchy)
+    for item in input_data:
+        parsed_data = json.loads(item)
+        key_heirarchy_value = extract_value(parsed_data, key_heirarchy)
         calculate_key_occurences(key_heirarchy_value, input_key, values_of_keys, 0)
-    print('Total Rows  {0}'.format(len(input_json_data)))
+    print('Total Rows  {0}'.format(len(input_data)))
     for everystat in values_of_keys:
         print('{0} , {1}'.format(everystat, values_of_keys[everystat]))
     return
@@ -73,12 +75,13 @@ def calculate_unique_values(input_json_data, input_key):
 def main():
     """ The main function of the program"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--f", "--input_key", help="input the JSON key whose values need to be listed")
+    parser.add_argument("-f", "--input_key", help="input the JSON key whose values need to be listed")
     parser.add_argument("filepath", help="input the JSON file path")
     args = parser.parse_args()
     with open(args.filepath) as f:
-        input_json_data = f.readlines()
-        calculate_unique_values(input_json_data, args.f) if args.f else extract_all_keys_occurences(input_json_data)
+        input_data = f.readlines()
+        calculate_unique_values(input_data, args.input_key)\
+            if args.input_key else extract_all_keys_occurences(input_data)
 
 if __name__ == "__main__":
     main()
