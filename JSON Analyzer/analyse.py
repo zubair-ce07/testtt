@@ -74,7 +74,7 @@ def calculate_unique_values(input_data, input_key):
 def main():
     """ The main function of the program"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--find_key", help="input the JSON key whose values need to be listed")
+    parser.add_argument("-f", "--field", help="input the JSON key whose values need to be listed")
     parser.add_argument("filepath", help="input the JSON file path")
     args = parser.parse_args()
     with open(args.filepath) as f:
