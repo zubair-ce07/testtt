@@ -45,41 +45,41 @@ def document_matcher(document_one, document_two):
     return document_difference
 
 
-def filing_matcher(filing_one, filing_two):
+def filing_matcher(local_filing, remote_filing):
     """given two filings matches them and then returns a dict containing all the differences in the two filings"""
     filing_difference = {}
-    if filing_matched(filing_one, filing_two):
+    if filing_matched(local_filing, remote_filing):
         skip_fields = {"documents"}
-        first_documents = filing_one["documents"]
-        second_documents = filing_two["documents"]
-        remove_fields(filing_one, skip_fields)
+        local_documents = local_filing["documents"]
+        remote_documents = remote_filing["documents"]
+        remove_fields(local_filing, skip_fields)
         all_diffs = []
-        for each_filing_key in filing_one:
-                difference = value_difference(filing_one.get(each_filing_key), filing_two.get(each_filing_key), each_filing_key)
+        for each_filing_key in local_filing:
+                difference = value_difference(local_filing.get(each_filing_key), remote_filing.get(each_filing_key), each_filing_key)
                 if difference:
                     all_diffs.append(difference)
         filing_difference["field_diffs"] = all_diffs
         all_document_diffs = []
         document_differences = {}
         unmatched_documents = []
-        documents_cartesian_product = list(itertools.product(first_documents, second_documents))
-        for product in documents_cartesian_product:
-            match_result = document_matcher(product[0], product[1])
+        documents_cartesian_product = itertools.product(local_documents, remote_documents)
+        for each_combination in documents_cartesian_product:
+            match_result = document_matcher(each_combination[0], each_combination[1])
             if match_result:
                 all_document_diffs.append(match_result)
                 try:
-                    first_documents.remove(product[0])
-                    second_documents.remove(product[1])
+                    local_documents.remove(each_combination[0])
+                    remote_documents.remove(each_combination[1])
                 except ValueError:
                     pass
-        if second_documents:
+        if remote_documents:
             old_docs = {}
-            old_docs["old documents"] = second_documents
+            old_docs["old documents"] = remote_documents
             unmatched_documents.append(old_docs)
             document_differences["documents not matched"] = unmatched_documents
-        if first_documents:
+        if local_documents:
             new_docs = {}
-            new_docs["new documents"] = first_documents
+            new_docs["new documents"] = local_documents
             unmatched_documents.append(new_docs)
             document_differences["documents not matched"] = unmatched_documents
         document_differences["field_diffs"] = all_document_diffs
@@ -87,48 +87,48 @@ def filing_matcher(filing_one, filing_two):
     return filing_difference
 
 
-def remove_fields(hash_table, fields):
+def remove_fields(input_dictionary, fields):
     for field in fields:
-        if field in hash_table:
-            del hash_table[field]
+        if field in input_dictionary:
+            del input_dictionary[field]
 
 
-def docket_matcher(docket_one, docket_two):
+def docket_matcher(local_docket, remote_docket):
     """given two dockets matches them and then stores the difference as a dictionary in output"""
     docket_difference = {}
     skip_fields = {"run_id", "uploaded", "modified", "crawled_at", "end_time", "_id", "job_id", "request_fingerprint",
                    "start_time", "spider_name", "filings"}
-    first_filings = docket_one["filings"]
-    second_filings = docket_two["filings"]
-    remove_fields(docket_one, skip_fields)
-    if docket_one["slug"] == docket_two["slug"]:
+    local_filings = local_docket["filings"]
+    remote_filings = remote_docket["filings"]
+    remove_fields(local_docket, skip_fields)
+    if local_docket["slug"] == remote_docket["slug"]:
         docket_diffs = []
-        for each_item in docket_one:
-            difference = value_difference(docket_one[each_item], docket_two.get(each_item), each_item)
+        for each_item in local_docket:
+            difference = value_difference(local_docket[each_item], remote_docket.get(each_item), each_item)
             if difference:
                 docket_diffs.append(difference)
         docket_difference["meta_changes"] = docket_diffs
         all_filing_diffs = []
         filing_differences = {}
         unmatched_filings = []
-        filings_cartesian_product = list(itertools.product(first_filings, second_filings))
+        filings_cartesian_product = list(itertools.product(local_filings, remote_filings))
         for product in filings_cartesian_product:
             result_of_match = filing_matcher(product[0], product[1])
             if result_of_match:
                 all_filing_diffs.append(result_of_match)
                 try:
-                    first_filings.remove(product[0])
-                    second_filings.remove(product[1])
+                    local_filings.remove(product[0])
+                    remote_filings.remove(product[1])
                 except ValueError:
                     pass
-        if second_filings:
+        if remote_filings:
             old_filings = {}
-            old_filings["old filings"] = second_filings
+            old_filings["old filings"] = remote_filings
             unmatched_filings.append(old_filings)
             filing_differences["filings not matched"] = unmatched_filings
-        if first_filings:
+        if local_filings:
             new_filings = {}
-            new_filings["new filings"] = first_filings
+            new_filings["new filings"] = local_filings
             unmatched_filings.append(new_filings)
             filing_differences["filings not matched"] = unmatched_filings
         filing_differences["field_diffs"] = all_filing_diffs
@@ -144,10 +144,10 @@ def main():
     parser.add_argument("remote", help="input the second JSON file")
     args = parser.parse_args()
     with open(args.local) as f:
-        docket_one = json.load(f)
+        local_docket = json.load(f)
     with open(args.remote) as f:
-        docket_two = json.load(f)
-    docket_differences = docket_matcher(docket_one, docket_two)
+        remote_docket = json.load(f)
+    docket_differences = docket_matcher(local_docket, remote_docket)
     if args.output:
         with open(args.output, "w") as output_json:
             json.dump(docket_differences, output_json)
