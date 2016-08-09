@@ -1,6 +1,7 @@
 import argparse
 import json
 import collections
+import itertools
 
 FILE_ONE_NAME = "local"
 FILE_TWO_NAME = "remote"
@@ -15,14 +16,14 @@ def value_difference(value_one, value_two, field_of_difference):
     return value_difference
 
 
-def filing_match(filing_one, filing_two):
+def filing_matched(filing_one, filing_two):
     return True if ((filing_one.get("slug") == filing_two.get("slug")) or
             (filing_one.get("state_id", 1) == filing_two.get("state_id")) or
             ((filing_one.get("description") == filing_two.get("description")) and
                  (filing_one.get("filed_on") == filing_two.get("filed_on")))) else False
 
 
-def document_match(document_one, document_two):
+def document_matched(document_one, document_two):
     return True if ((document_one.get("slug") == document_two.get("slug")) or
             (document_one.get("source_url") == document_two.get("source_url"))) else False
 
@@ -31,63 +32,54 @@ def document_matcher(document_one, document_two):
     """This function given two documents returns the filed differences of the two documents
     (in the form of a dict) if the documents matched the conditions"""
     document_difference = {}
-    if document_match(document_one, document_two):
+    if document_matched(document_one, document_two):
         skip_fields = {"ons3"}
+        remove_fields(document_one,skip_fields)
         all_diffs = []
         for document_one_key in document_one:
-            if document_one_key not in skip_fields:
-                difference = value_difference(document_one.get(document_one_key),
-                                              document_two.get(document_one_key), document_one_key)
-                if difference:
-                    all_diffs.append(difference)
+            difference = value_difference(document_one.get(document_one_key),
+                                            document_two.get(document_one_key), document_one_key)
+            if difference:
+                all_diffs.append(difference)
         document_difference["field_diffs"] = all_diffs
     return document_difference
 
 
-def unmatched(matching_function, first_item, second_item):
-    unmatched = []
-    for each_item in first_item:
-        no_match_found = True
-        for every_item in second_item:
-            match_result = matching_function(each_item, every_item)
-            if match_result:
-                no_match_found = False
-        if no_match_found:
-            unmatched.append(each_item)
-    return unmatched
-
 def filing_matcher(filing_one, filing_two):
     """given two filings matches them and then returns a dict containing all the differences in the two filings"""
     filing_difference = {}
-    if filing_match(filing_one, filing_two):
+    if filing_matched(filing_one, filing_two):
         skip_fields = {"documents"}
+        first_documents = filing_one["documents"]
+        second_documents = filing_two["documents"]
+        remove_fields(filing_one, skip_fields)
         all_diffs = []
         for each_filing_key in filing_one:
-            if each_filing_key not in skip_fields:
                 difference = value_difference(filing_one.get(each_filing_key), filing_two.get(each_filing_key), each_filing_key)
                 if difference:
                     all_diffs.append(difference)
         filing_difference["field_diffs"] = all_diffs
-        first_documents = filing_one["documents"]
-        second_documents = filing_two["documents"]
         all_document_diffs = []
         document_differences = {}
         unmatched_documents = []
-        for each_doc in first_documents:
-            for every_doc in second_documents:
-                match_result = document_matcher(each_doc, every_doc)
-                if match_result:
-                    all_document_diffs.append(match_result)
-        unmatched_new_documents = unmatched(document_match, first_documents, second_documents)
-        unmatched_old_documents = unmatched(document_match, second_documents, first_documents)
-        if unmatched_old_documents:
+        documents_cartesian_product = list(itertools.product(first_documents, second_documents))
+        for product in documents_cartesian_product:
+            match_result = document_matcher(product[0], product[1])
+            if match_result:
+                all_document_diffs.append(match_result)
+                try:
+                    first_documents.remove(product[0])
+                    second_documents.remove(product[1])
+                except ValueError:
+                    pass
+        if second_documents:
             old_docs = {}
-            old_docs["old documents"] = unmatched_old_documents
+            old_docs["old documents"] = second_documents
             unmatched_documents.append(old_docs)
             document_differences["documents not matched"] = unmatched_documents
-        if unmatched_new_documents:
+        if first_documents:
             new_docs = {}
-            new_docs["new documents"] = unmatched_new_documents
+            new_docs["new documents"] = first_documents
             unmatched_documents.append(new_docs)
             document_differences["documents not matched"] = unmatched_documents
         document_differences["field_diffs"] = all_document_diffs
@@ -95,37 +87,48 @@ def filing_matcher(filing_one, filing_two):
     return filing_difference
 
 
-def docket_matcher(docket_one, docket_two, skip_fields):
+def remove_fields(hash_table, fields):
+    for field in fields:
+        if field in hash_table:
+            del hash_table[field]
+
+
+def docket_matcher(docket_one, docket_two):
     """given two dockets matches them and then stores the difference as a dictionary in output"""
     docket_difference = {}
+    skip_fields = {"run_id", "uploaded", "modified", "crawled_at", "end_time", "_id", "job_id", "request_fingerprint",
+                   "start_time", "spider_name", "filings"}
+    first_filings = docket_one["filings"]
+    second_filings = docket_two["filings"]
+    remove_fields(docket_one, skip_fields)
     if docket_one["slug"] == docket_two["slug"]:
         docket_diffs = []
         for each_item in docket_one:
-            if each_item not in skip_fields:
-                difference = value_difference(docket_one[each_item], docket_two.get(each_item), each_item)
-                if difference:
-                    docket_diffs.append(difference)
+            difference = value_difference(docket_one[each_item], docket_two.get(each_item), each_item)
+            if difference:
+                docket_diffs.append(difference)
         docket_difference["meta_changes"] = docket_diffs
-        first_filings = docket_one["filings"]
-        second_filings = docket_two["filings"]
         all_filing_diffs = []
         filing_differences = {}
         unmatched_filings = []
-        for filing_one in first_filings:
-            for filing_two in second_filings:
-                result_of_match = filing_matcher(filing_one, filing_two)
-                if result_of_match:
-                    all_filing_diffs.append(result_of_match)
-        unmatched_new_filings = unmatched(filing_match, first_filings, second_filings)
-        unmatched_old_filings = unmatched(filing_match, second_filings, first_filings)
-        if unmatched_old_filings:
+        filings_cartesian_product = list(itertools.product(first_filings, second_filings))
+        for product in filings_cartesian_product:
+            result_of_match = filing_matcher(product[0], product[1])
+            if result_of_match:
+                all_filing_diffs.append(result_of_match)
+                try:
+                    first_filings.remove(product[0])
+                    second_filings.remove(product[1])
+                except ValueError:
+                    pass
+        if second_filings:
             old_filings = {}
-            old_filings["old filings"] = unmatched_filings
+            old_filings["old filings"] = second_filings
             unmatched_filings.append(old_filings)
             filing_differences["filings not matched"] = unmatched_filings
-        if unmatched_new_filings:
+        if first_filings:
             new_filings = {}
-            new_filings["new filings"] = unmatched_filings
+            new_filings["new filings"] = first_filings
             unmatched_filings.append(new_filings)
             filing_differences["filings not matched"] = unmatched_filings
         filing_differences["field_diffs"] = all_filing_diffs
@@ -144,9 +147,7 @@ def main():
         docket_one = json.load(f)
     with open(args.remote) as f:
         docket_two = json.load(f)
-    skip_fields = {"run_id", "uploaded", "modified", "crawled_at", "end_time", "_id", "job_id", "request_fingerprint",
-                   "start_time", "spider_name", "filings"}
-    docket_differences = docket_matcher(docket_one, docket_two, skip_fields)
+    docket_differences = docket_matcher(docket_one, docket_two)
     if args.output:
         with open(args.output, "w") as output_json:
             json.dump(docket_differences, output_json)
