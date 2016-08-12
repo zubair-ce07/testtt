@@ -24,36 +24,35 @@ class Weather_Data_App:
         self.mean_temperature = mean_temp
         self.date_ = row_date
 
-
 '''
 This functon outputs yearly weather report,
 containing maximum temperature, minimum temperature,
 maximum humidity& minimum humidity.
 '''
 
-
 def get_yearly_weather_report(stats):
     year_report = {}
     for year in stats:      #iterating through every key
-        cur_stats = stats[year]
+        temp_stats = stats[year]
         display_stats = []
 
-        max_temp_year = max(map(attrgetter('maximum_temperature'), cur_stats))   #calculating yearly maximum temperature
+        max_temp_year = max(map(attrgetter('maximum_temperature'), temp_stats))   #calculating yearly maximum temperature
         display_stats.append(max_temp_year)
-        min_temp_year = min(map(attrgetter('minimum_temperature'), cur_stats))  #calculating yearly minimum temperature
+        min_temp_year = min(map(attrgetter('minimum_temperature'), temp_stats))  #calculating yearly minimum temperature
         display_stats.append(min_temp_year)
-        max_hum_year = max(map(attrgetter('maximum_temperature'), cur_stats))   #calculating yearly maximum humidity
+        max_hum_year = max(map(attrgetter('maximum_temperature'), temp_stats))   #calculating yearly maximum humidity
         display_stats.append(max_hum_year)
-        min_hum_year = min(map(attrgetter('minimum_temperature'), cur_stats))   #calculating yearly minimum humidity
+        min_hum_year = min(map(attrgetter('minimum_temperature'), temp_stats))   #calculating yearly minimum humidity
         display_stats.append(min_hum_year)
 
         year_report[year] = display_stats
+
     print("This is report# 1")
-    print("Year" + "  " + "Maximum Temperature " + "  " + "Minimum Temperature"
-	 +"   " + "Maximum Humidity" + "   " + "Minimum Humidity")
+    print("Year" + "  " + "Maximum Temperature " + "  " + "Minimum Temperature" +
+              "   " + "Maximum Humidity" + "   " + "Minimum Humidity")
     print("-----------------------------------------------------------------------------------------")
 
-    for key in year_report:
+    for key in sorted(year_report):
         print('{0: <16} {1: <16} {2: <16} {3: <16} {4: <16}'.format(key, year_report.get(key)[0],
                                                                     year_report.get(key)[1], year_report.get(key)[2],
                                                                     year_report.get(key)[3]))
@@ -68,19 +67,19 @@ def get_hottest_day_report(stats):
 
     for year in stats:          #iterating through every key
         temp_records = []
-        cur_stats = stats[year]
+        temp_stats = stats[year]
 
         # Sorting list according to maximum temperature
-        cur_stats.sort(key=lambda x: x.maximum_temperature, reverse=True)
+        temp_stats.sort(key=lambda x: x.maximum_temperature, reverse=True)
 
-        temp_records.append(str(cur_stats[0].date_))
-        temp_records.append(str(cur_stats[0].maximum_temperature))
+        temp_records.append(str(temp_stats[0].date_))
+        temp_records.append(str(temp_stats[0].maximum_temperature))
         max_temp_records[year] = temp_records
 
     print("This is report# 2")
     print("year" '\t\t'"Date"'\t\t'"Temp")
     print("--------------------------------------------")
-    for key in max_temp_records:
+    for key in sorted(max_temp_records):
         print('{0: <16} {1: <16} {2: <16}'.format(key, max_temp_records.get(key)[0],
                                                   max_temp_records.get(key)[1]))
 
@@ -94,22 +93,20 @@ def get_coolest_day_report(stats):
     min_temp_records = {}
     for year in stats:          #iterating over years
 
-        cur_stats = stats[year]     # getting list against year from dictionary
+        temp_stats = stats[year]     # getting list against year from dictionary
         temp_records = []
 
         # Sorting list according to mainimum temperature
-        cur_stats.sort(key=lambda x: x.minimum_temperature, reverse=False)
-        temp_records.append(str(cur_stats[0].date_))
-        temp_records.append(str(cur_stats[0].minimum_temperature))
+        temp_stats.sort(key=lambda x: x.minimum_temperature, reverse=False)
+        temp_records.append(str(temp_stats[0].date_))
+        temp_records.append(str(temp_stats[0].minimum_temperature))
         min_temp_records[year] = temp_records
     print("This is report# 3")
     print("year" '\t\t'"Date"'\t\t'"Temp")
     print("--------------------------------------------")
-    for key in min_temp_records:
+    for key in sorted(min_temp_records):
         print('{0: <16} {1: <16} {2: <16}'.format(key, min_temp_records.get(key)[0],
                                                   min_temp_records.get(key)[1]))
-
-'''This function returns mean temperature of a month'''
 
 
 def calculate_mean_temperature_of_month(data_path):
@@ -205,6 +202,7 @@ def get_yearly_records(data_path, yearly_records):
     return yearly_records
 
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reportnumber", help="input the report number", type=int)
@@ -231,3 +229,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
