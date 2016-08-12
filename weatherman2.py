@@ -1,166 +1,115 @@
-import os
-import re
 import csv
+import os
+import sys
 import argparse
-from collections import namedtuple
+import re
 from enum import Enum
+from operator import attrgetter
 
 
-class REPORT_NUMBER(Enum):
-    basicweatherreport = 1
-    hottestdayreport = 2
-    coolestdayreport = 3
+class Report_Number(Enum):
+    yearly_weather_report = 1
+    hottest_day_report = 2
+    coolest_day_report = 3
     mean_temperature_report = 4
 
 
-def reading_and_processing_data(reader, stats, min_temps, min_hums, year):
-    for row in reader:
-        max_temp = row.get('Max TemperatureC')
-        min_temp = row.get('Min TemperatureC')
-        max_hum = row.get('Max Humidity')
-        min_hum = row.get(' Min Humidity')
-        row_date = row.get('PKT') or row.get('PKST')
-
-        if min_hum:  # Adding minimum humidities in a list
-            min_hums.append(min_hum)
-
-        if min_temp:  # Adding minimum temperatures & dates in  minimum_temperatures_dictionary
-            min_temps[row_date] = min_temp
-
-        if max_temp:  # Calculating maximum temperature & respective date
-            max_int = int(max_temp)
-            if stats[year].maximum_temperature == 0:
-                stats[year] = stats[year]._replace(maximum_temperature=max_int)
-                stats[year] = stats[year]._replace(max_temp_date=row_date)
-            elif stats[year].maximum_temperature < max_int:
-                stats[year] = stats[year]._replace(maximum_temperature=max_int)
-                stats[year] = stats[year]._replace(max_temp_date=row_date)
-
-        if max_hum:  # Calculating maximum_humidity
-            hum_int = int(max_hum)
-            if stats[year].maximum_humidity == 0:
-                stats[year] = stats[year]._replace(maximum_humidity=hum_int)
-            elif stats[year].maximum_humidity < hum_int:
-                stats[year] = stats[year]._replace(maximum_humidity=hum_int)
-
-    '''Calculating minimum temperature of each year and
-        respective date in following block of code'''
-
-    min_date = ''
-    min_hum_value = 0
-    min_temp_value = 0
-    if min_hums:
-        min_hum_value = min(min_hums)
-    if stats[year].minimum_humidity == 0:
-        stats[year] = stats[year]._replace(minimum_humidity=min_hum_value)
-    elif int(stats[year].minimum_humidity) > int(min_hum_value):
-        stats[year] = stats[year]._replace(minimum_humidity=min_hum_value)
-
-    if min_temps:
-        min_temp_value = min(min_temps.values())
-        min_date = min(min_temps, key=min_temps.get)
-
-    if stats[year].minimum_temperature == 0:
-        stats[year] = stats[year]._replace(minimum_temperature=min_temp_value)
-        stats[year] = stats[year]._replace(min_temp_date=min_date)
-    elif int(stats[year].minimum_temperature) > int(min_temp_value):
-        stats[year] = stats[year]._replace(minimum_temperature=min_temp_value)
-        stats[year] = stats[year]._replace(min_temp_date=min_date)
-
-    return stats
+class Weather_Data_App:
+    # Initializing class members of a weather_data instance
+    def __init__(self, max_temp, min_temp, max_hum, min_hum, mean_temp, row_date):
+        self.maximum_temperature = max_temp
+        self.minimum_temperature = min_temp
+        self.maximum_humidity = max_hum
+        self.minimum_humidity = min_hum
+        self.mean_temperature = mean_temp
+        self.date_ = row_date
 
 
 '''
-This function calculates all required parameters and
-stores them in a dictionary & return in the end.
+This functon outputs yearly weather report,
+containing maximum temperature, minimum temperature,
+maximum humidity& minimum humidity.
 '''
 
 
-def getting_weather_report(data_path):
-    weatherman_report_data = {}
-    stat1 = namedtuple('stat1',
-                       'maximum_temperature minimum_temperature maximum_humidity minimum_humidity max_temp_date'
-                       ' min_temp_date')
-    year_stats = stat1(maximum_temperature=0, minimum_temperature=0, maximum_humidity=0, minimum_humidity=0,
-                       max_temp_date='', min_temp_date='')
-    for filename in os.listdir(data_path):
-        file_path = os.path.join(data_path, filename)
-        with open(file_path) as csvfile:
-            name = csvfile.name
-            year = (re.split('_', name))
-            file_year = int(year[2])
-            next(csvfile)
-            reader = csv.DictReader(csvfile)
-            minimum_humidities = []  # To store 'Min Temperature' key values of a file.'''
-            min_temp_and_date = {}
-            ''' Above dictionary has a key date & minimum temperature
-                on that day as value & datea of key values of a file.'''
+def get_yearly_weather_report(stats):
+    year_report = {}
+    for year in stats:      #iterating through every key
+        cur_stats = stats[year]
+        display_stats = []
 
-            if file_year in weatherman_report_data:  # Updating values of existing key
-                reading_and_processing_data(reader,
-                                            weatherman_report_data, min_temp_and_date,
-                                            minimum_humidities, file_year)
+        max_temp_year = max(map(attrgetter('maximum_temperature'), cur_stats))   #calculating yearly maximum temperature
+        display_stats.append(max_temp_year)
+        min_temp_year = min(map(attrgetter('minimum_temperature'), cur_stats))  #calculating yearly minimum temperature
+        display_stats.append(min_temp_year)
+        max_hum_year = max(map(attrgetter('maximum_temperature'), cur_stats))   #calculating yearly maximum humidity
+        display_stats.append(max_hum_year)
+        min_hum_year = min(map(attrgetter('minimum_temperature'), cur_stats))   #calculating yearly minimum humidity
+        display_stats.append(min_hum_year)
 
-            else:  # Adding a new key
-                weatherman_report_data[file_year] = year_stats
-                reading_and_processing_data(reader,
-                                            weatherman_report_data, min_temp_and_date,
-                                            minimum_humidities, file_year)
-    return weatherman_report_data
+        year_report[year] = display_stats
+    print("This is report# 1")
+    print("Year" + "  " + "Maximum Temperature " + "  " + "Minimum Temperature"
+	 +"   " + "Maximum Humidity" + "   " + "Minimum Humidity")
+    print("-----------------------------------------------------------------------------------------")
 
-
+    for key in year_report:
+        print('{0: <16} {1: <16} {2: <16} {3: <16} {4: <16}'.format(key, year_report.get(key)[0],
+                                                                    year_report.get(key)[1], year_report.get(key)[2],
+                                                                    year_report.get(key)[3]))
 '''
-This function basic_weather_report outputs formatted
-report containg maximum temperature, minimum temperature,
-maximum humidity & minimum humidity yearly.
+This function returns information regarding
+hottest day of ech year.
 '''
 
 
-def yearly_weather_report(absolute_data_Path):
-    weather_report = getting_weather_report(absolute_data_Path)
-    print("Year" + "  " + "Maximum Temprature " + "  " + "Minimum Temprature" +
-          "   " + "Maximum Humidity" + "   " + "Minimum Humidity")
-    print("-----------------------------------------------------------------------------------")
-    for key in weather_report:
-        print('{0: <16} {1: <16} {2: <16} {3: <16} {4: <16}'.format(key, weather_report.get(key)[0],
-                                                                    weather_report.get(key)[1],
-                                                                    weather_report.get(key)[2],
-                                                                    weather_report.get(key)[3]))
+def get_hottest_day_report(stats):
+    max_temp_records = {}
 
+    for year in stats:          #iterating through every key
+        temp_records = []
+        cur_stats = stats[year]
 
-'''
-This function outputs formatted report comtaing
-maximum temperature & date of that day.
-'''
+        # Sorting list according to maximum temperature
+        cur_stats.sort(key=lambda x: x.maximum_temperature, reverse=True)
 
+        temp_records.append(str(cur_stats[0].date_))
+        temp_records.append(str(cur_stats[0].maximum_temperature))
+        max_temp_records[year] = temp_records
 
-def hottest_day_of_each_year(absolute_data_path):
-    weather_report = getting_weather_report(absolute_data_path)
     print("This is report# 2")
     print("year" '\t\t'"Date"'\t\t'"Temp")
     print("--------------------------------------------")
-    for key in weather_report:
-        print('{0: <16} {1: <16} {2: <16}'.format(key, weather_report.get(key)[4],
-                                                  weather_report.get(key)[0]))
+    for key in max_temp_records:
+        print('{0: <16} {1: <16} {2: <16}'.format(key, max_temp_records.get(key)[0],
+                                                  max_temp_records.get(key)[1]))
 
 
 '''
-This function outputs formatted report comtaing
-minimum temperature & date of that day.
+This function returns information regarding
+coolest day of ech year.
 '''
 
+def get_coolest_day_report(stats):
+    min_temp_records = {}
+    for year in stats:          #iterating over years
 
-def coolest_day_of_each_year(absolute_data_path):
-    weather_report = getting_weather_report(absolute_data_path)
+        cur_stats = stats[year]     # getting list against year from dictionary
+        temp_records = []
+
+        # Sorting list according to mainimum temperature
+        cur_stats.sort(key=lambda x: x.minimum_temperature, reverse=False)
+        temp_records.append(str(cur_stats[0].date_))
+        temp_records.append(str(cur_stats[0].minimum_temperature))
+        min_temp_records[year] = temp_records
     print("This is report# 3")
-    print("year"'\t\t' + "Date"'\t\t' "Temp")
+    print("year" '\t\t'"Date"'\t\t'"Temp")
     print("--------------------------------------------")
-    for key in weather_report:
-        print('{0: <16} {1: <16} {2: <16}'.format(key, weather_report.get(key)[5],
-                                                  weather_report.get(key)[1]))
+    for key in min_temp_records:
+        print('{0: <16} {1: <16} {2: <16}'.format(key, min_temp_records.get(key)[0],
+                                                  min_temp_records.get(key)[1]))
 
-
-'''This function outputs average temprature of a given month of the year'''
+'''This function returns mean temperature of a month'''
 
 
 def calculate_mean_temperature_of_month(data_path):
@@ -174,7 +123,7 @@ def calculate_mean_temperature_of_month(data_path):
         file_path = os.path.join(data_path, file_)
         with open(file_path) as csvfile:
             name = csvfile.name
-            filename_ = (re.split ('[_ .]', name))
+            filename_ = (re.split('[_ .]', name))
             month_year_parsed = (re.split('-', month_year))
             for key in month_:
                 if month_year_parsed[0] in month_[key]:
@@ -194,6 +143,68 @@ def calculate_mean_temperature_of_month(data_path):
     print("Average temperature = ", average)
 
 
+'''This function collect all record objects from a file'''
+
+
+def get_records_from_file(reader):
+
+    # intializng a record
+    file_records = []
+
+    w = Weather_Data_App(0, 0, 0, 0, 0, '')
+    for row in reader:
+        if row.get('Max TemperatureC'):
+            max_temp = int(row.get('Max TemperatureC'))
+            w.maximum_temperature = max_temp
+        if row.get('Min TemperatureC'):
+            min_temp = int(row.get('Min TemperatureC'))
+            w.minimum_temperature = min_temp
+        if row.get('Max Humidity'):
+            max_hum = int(row.get('Max Humidity'))
+            w.maximum_humidity = max_hum
+        if row.get(' Min Humidity'):
+            min_hum = int(row.get(' Min Humidity'))
+            w.minimum_humidity = min_hum
+        if row.get('Mean TemperatureC'):
+            mean_temp = int(row.get('Mean TemperatureC'))
+            w.mean_temperature = mean_temp
+        rowdate = row.get('PKT') or row.get('PKST')
+        w.date_ = rowdate
+        if w:
+            file_records.append(w)
+    return file_records
+
+
+'''This function gathers all all record objects related to
+a year and stores them as key(year)-values in a dictionary'''
+
+def get_yearly_records(data_path, yearly_records):
+    for file_ in os.listdir(data_path):
+        if file_.find("_") is -1:
+            print("File in given directory doesnt seems right ")
+            sys.exit()
+        tokens = file_.split("_")
+        year = tokens[2]
+
+        file_path = os.path.join(data_path, file_)
+
+        with open(file_path) as csvfile:
+            lines = csvfile.readlines()[1:-1]
+            temp_list = []
+            reader = csv.DictReader(lines)
+
+            if year in yearly_records:
+                temp_list = yearly_records[year]
+                temp_list.extend(get_records_from_file(reader))
+                yearly_records[year] = temp_list
+            else:
+                yearly_records[year] = temp_list
+                temp_list.extend(get_records_from_file(reader))
+                yearly_records[year] = temp_list
+
+    return yearly_records
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("reportnumber", help="input the report number", type=int)
@@ -201,20 +212,22 @@ def main():
     args = parser.parse_args()
     report_no = args.reportnumber
     weatherdata_path = args.weatherdatapath
+    stats = {}
     if os.path.exists(weatherdata_path):
-        if report_no == REPORT_NUMBER.basicweatherreport.value:
-            yearly_weather_report(weatherdata_path)
-        elif report_no == REPORT_NUMBER.hottestdayreport.value:
-            hottest_day_of_each_year(weatherdata_path)
-        elif report_no == REPORT_NUMBER.coolestdayreport.value:
-            coolest_day_of_each_year(weatherdata_path)
-        elif report_no == REPORT_NUMBER.mean_temperature_report.value:
+        if report_no == Report_Number.yearly_weather_report.value:
+            temp_stats = get_yearly_records(weatherdata_path, stats)
+            get_yearly_weather_report(temp_stats)
+        elif report_no == Report_Number.hottest_day_report.value:
+            temp_stats = get_yearly_records(weatherdata_path, stats)
+            get_hottest_day_report(temp_stats)
+        elif report_no == Report_Number.coolest_day_report.value:
+            temp_stats = get_yearly_records(weatherdata_path, stats)
+            get_coolest_day_report(temp_stats)
+        elif report_no == Report_Number.mean_temperature_report.value:
             calculate_mean_temperature_of_month(weatherdata_path)
         else:
             print("No such report found /n"
                   "select correct report number")
 
-
 if __name__ == '__main__':
     main()
-
