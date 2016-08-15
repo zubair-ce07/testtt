@@ -14,7 +14,7 @@ class Report_Number(Enum):
     mean_temperature_report = 4
 
 
-class Weather_Data_App:
+class Weather_Data:
     # Initializing class members of a weather_data instance
     def __init__(self, max_temp, min_temp, max_hum, min_hum, mean_temp, row_date):
         self.maximum_temperature = max_temp
@@ -148,7 +148,7 @@ def get_records_from_file(reader):
     # intializng a record
     file_records = []
 
-    w = Weather_Data_App(0, 0, 0, 0, 0, '')
+    w = Weather_Data(0, 0, 0, 0, 0, '')
     for row in reader:
         if row.get('Max TemperatureC'):
             max_temp = int(row.get('Max TemperatureC'))
