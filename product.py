@@ -1,7 +1,6 @@
 __author__ = 'sayyeda'
 
 import scrapy
-import json
 import re
 from scrapy.selector import Selector
 from scrapy.http import FormRequest
