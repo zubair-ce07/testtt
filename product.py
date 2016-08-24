@@ -16,12 +16,11 @@ class ProductDetails(scrapy.Spider):
 
     def parse(self, response):  # getting links for all categories
         links = response.xpath(
-            ".//*[@id='main-menu']//li/div/div/div/ul[contains(@class, 'childLeafNode')]/div//li[contains(@class,"
-            " 'yCmsComponent')]/a/@href").extract()
+            ".//*[@id='main-menu']//ul[contains(@class,'childLeafNode')]//li[contains(@class,'yCmsComponent')]//a/@href").extract()
         all_categories = []
         for item in links:
             if not ('http' in item):
-                sub_link = "http://www.asics.com" + item
+                sub_link = response.urljoin(item)
                 all_categories.append(sub_link)
 
         for items in all_categories:
@@ -32,77 +31,44 @@ class ProductDetails(scrapy.Spider):
             request = scrapy.Request(items, callback=self.pagination)
             yield request
 
-    def pagination(self, response): # getting links for next pages of same category
-            next_pages = response.xpath(".//*[contains(@class, 'nm center')]/a/@href").extract()
-            next_page_links = []
-            for item in next_pages:
-                item_ = "http://www.asics.com" + item
-                next_page_links.append(item_)
+    def pagination(self, response):  # getting links for next pages of same category
+        next_pages = response.xpath(".//*[contains(@class, 'nm center')]/a/@href").extract()
+        next_page_links = []
+        for item in next_pages:
+            item_ = response.urljoin(item)
+            next_page_links.append(item_)
 
-            for item_ in next_page_links:
-                next_page_request = scrapy.Request(item_, callback=self.parse_product_link)
-                yield next_page_request
-
+        for item_ in next_page_links:
+            next_page_request = scrapy.Request(item_, callback=self.parse_product_link)
+            yield next_page_request
 
 
     def parse_product_link(self, response):  # getting links of product pages
         links = response.xpath(".//*[contains(@class, 'product-list')]/div/div/a/@href").extract()
         product_links = []
         for item in links:
-            product_link = "http://www.asics.com" + item
+            product_link = response.urljoin(item)
             product_links.append(product_link)
 
         for items in product_links:
             request = scrapy.Request(items, callback=self.parse_product_details)
             yield request
 
-    def parse_product_details(self, response):  # Retrieving required product details.
+        for items in product_links:
+            request = scrapy.Request(items, callback=self.get_skus)
+            yield request
 
-        item_obj = ProductSpiderItem()
-
-        item_obj['spider_name'] = 'asics-us-crawl',
-        item_obj['retailer'] = 'asics-us',
-        item_obj['currency'] = response.xpath(
-            ".//html/head/meta[@property='og:price:currency']/@content").extract()
-        item_obj['price'] = response.xpath(".//*[contains(@class, 'price')]/span//text()").extract()[-1].strip()
-        item_obj['market'] = 'US'
-        current_color = response.xpath(".//*[contains(@class, 'border')]/text()").extract()[0].strip()
-        color = re.split(':', current_color)
-        if color:
-            item_obj['color'] = color[1].strip()
+        for items in product_links:
+            request = scrapy.Request(items, callback=self.get_img_urls)
+            yield request
 
 
-        main_category = response.xpath(".//*[contains(@id, 'breadcrumb')]/ul/li[3]/a/span/text()").extract()
-        sub_category = response.xpath(".//*[contains(@id, 'breadcrumb')]/ul/li[5]/a/span/text()").extract()
-        all_category = [main_category[0], sub_category[0]]
-        item_obj['category'] = all_category
-
-        description = response.xpath("//*[contains(@class, 'tabInfoChildContent')]/text()").extract()[3].strip()
-        if description:
-            item_obj['description'] = description
-
-        href = response.url
-        item_obj['url_original'] = href
-
-        brand = response.xpath(".//*[contains(@class, 'singleProduct')]/meta[1]/@content").extract()[0]
-        item_obj['brand'] = brand
-
-        first_img_link = response.xpath(".//*[contains(@id, 'product-image-0')]/@data-big").extract()[0]
-        sec_img_link = response.xpath(".//*[contains(@id, 'product-image-0')]/@data-rstmb").extract()[0]
-        img_src = response.xpath(".//*[contains(@id, 'product-image-0')]/@src").extract()[0]
-        imgurls = [first_img_link, sec_img_link, img_src]
-
-        if imgurls:
-            item_obj['img_urls'] = imgurls
-
+    def get_skus(self, response):	#retrieving skus
         skus = {}
-
         sel = response.xpath(".//*[contains(@id, 'SelectSizeDropDown')]/li[@class = 'SizeOption inStock']")
 
         for item in sel:
             sku_details = {}
-            if color:
-                sku_details['color'] = color[1].strip()
             sku_details['Sku ID'] = item.xpath("meta[1]/@content").extract()[0]
             sku_details['currency'] = item.xpath("meta[3]/@content").extract()
             sku_details['price'] = item.xpath("meta[4]/@content").extract()[0]
@@ -110,44 +76,85 @@ class ProductDetails(scrapy.Spider):
             size = ' '.join(size_.split())
             sku_details['size'] = size
 
-            prev_price =  response.xpath(".//*[contains(@class, 'markdown' )]/del/text()").extract()
+            current_color = response.xpath(".//*[contains(@class, 'border')]/text()").extract()[0].strip()
+            color = re.split(':', current_color)
+            if color:
+                sku_details['color'] = color[1].strip()
+
+            prev_price = response.xpath(".//*[contains(@class, 'markdown' )]/del/text()").extract()
             if prev_price:
-                sku_details['previous price'] = response.xpath(".//*[contains(@class, 'markdown' )]/del/text()").extract()[0]
+                sku_details['previous price'] = response.xpath(".//*[contains(@class,"
+                                                               " 'markdown' )]/del/text()").extract()[0]
             sku_details['Availability'] = 'true'
             skus[sku_details['Sku ID']] = sku_details
+        return skus
 
-        item_obj['skus'] = skus
+    def get_img_urls(self, response):  # getting image-URLS
+        url_list = []
 
+        sel = response.xpath(".//*[contains(@id, 'product-image-0')]")
+        for items in sel:
+            first_img_link = items.xpath("./@data-big").extract()[0]
+            sec_img_link = items.xpath("./@data-rstmb").extract()[0]
+            img_src = items.xpath("./@src").extract()[0]
+            img_urls = [first_img_link, sec_img_link, img_src]
+            url_list = img_urls
+        return url_list
+
+
+    def parse_product_details(self, response):  # Retrieving required product details.
+        garment = ProductSpiderItem()
+
+        garment['spider_name'] = 'asics-us-crawl'
+        garment['retailer'] = 'asics-us',
+
+        garment['currency'] = response.xpath(
+            ".//html/head/meta[@property='og:price:currency']/@content").extract()
+
+        garment['price'] = response.xpath(".//*[contains(@class, 'price')]/span//text()").extract()[-1].strip()
+
+        garment['market'] = 'US'
+
+        current_color = response.xpath(".//*[contains(@class, 'border')]/text()").extract()[0].strip()
+        color = re.split(':', current_color)
+        if color:
+            garment['color'] = color[1].strip()
+
+        garment['category'] = response.xpath(
+            "//*[contains(@id, 'breadcrumb')]/ul/li[not (@class='active')]/a[not(@href='/us/en-us/')]/span/text()").extract()
+
+        garment['description'] = response.xpath(".//*[contains(@class, 'tabInfoChildContent')]/text()").extract()[
+            3].strip()
+
+        garment['url_original'] = response.url
+
+        garment['brand'] = response.xpath(".//*[contains(@class, 'singleProduct')]/meta[1]/@content").extract()[0]
+
+        garment['img_urls'] = self.get_img_urls(response)
+
+        garment['skus'] = self.get_skus(response)
 
         name = response.xpath(".//*[contains(@class, 'single-prod-title')]/text()").extract()[-1]
         if name:
-            item_obj['name'] = name
+            garment['name'] = name
 
-        item_obj['url'] = href
+        garment['url'] = response.url
 
-        for item in all_category:
+        for item in garment['category']:
             if 'men' in item:
-                item_obj['gender'] = 'Male'
+                garment['gender'] = 'Male'
 
             if 'women' in item:
-                item_obj['gender'] = 'Female'
+                garment['gender'] = 'Female'
 
             if not ('men' in item and 'women' in item):
-                item_obj['gender'] = 'Unisex'
+                garment['gender'] = 'Unisex'
 
             if 'kids' in item:
-                item_obj['gender'] = 'Children'
+                garment['gender'] = 'Children'
 
-        available_color = response.xpath(".//*[contains(@class, 'colorVariant')]/img/@alt").extract()
-        available_colors = []
-        for item in available_color:
-            item_ = item.strip()
-            available_colors.append(item_)
-        item_obj['available_colors'] = available_colors
+        yield garment
 
-
-
-        yield item_obj
 
 
 
