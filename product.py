@@ -9,19 +9,16 @@ from scrapy.selector import Selector
 from scrapy.http import FormRequest
 
 
-class ProductDetails(scrapy.Spider):
-    name = 'product_details'
+class AsicsSpider(scrapy.Spider):
+    name = 'asics_spider'
     allowed_domain = "asics.com"
     start_urls = ["http://www.asics.com/us/en-us/"]
 
     def parse(self, response):  # getting links for all categories
-        links = response.xpath(
-            ".//*[@id='main-menu']//ul[contains(@class,'childLeafNode')]//li[contains(@class,'yCmsComponent')]//a/@href").extract()
-        all_categories = []
-        for item in links:
-            if not ('http' in item):
-                sub_link = response.urljoin(item)
-                all_categories.append(sub_link)
+        links = response.xpath(".//*[@id='main-menu']//ul[contains(@class,'childLeafNode')]"
+                               "//li[contains(@class,'yCmsComponent')]//a/@href").extract()
+
+        all_categories = [response.urljoin(item) for item in links]
 
         for items in all_categories:
             request = scrapy.Request(items, callback=self.parse_product_link)
@@ -117,15 +114,14 @@ class ProductDetails(scrapy.Spider):
                 gender_ = 'Children'
         return gender_
 
-
+   
     def parse_product_details(self, response):  # Retrieving required product details.
         garment = ProductSpiderItem()
 
         garment['spider_name'] = 'asics-us-crawl'
         garment['retailer'] = 'asics-us',
 
-        garment['currency'] = response.xpath(
-            ".//html/head/meta[@property='og:price:currency']/@content").extract()
+        garment['currency'] = 'USD'
 
         garment['price'] = response.xpath(".//*[contains(@class, 'price')]/span//text()").extract()[-1].strip()
 
