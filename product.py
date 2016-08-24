@@ -63,7 +63,7 @@ class ProductDetails(scrapy.Spider):
             yield request
 
 
-    def get_skus(self, response):	#retrieving skus
+    def get_skus(self, response):
         skus = {}
         sel = response.xpath(".//*[contains(@id, 'SelectSizeDropDown')]/li[@class = 'SizeOption inStock']")
 
@@ -100,6 +100,22 @@ class ProductDetails(scrapy.Spider):
             img_urls = [first_img_link, sec_img_link, img_src]
             url_list = img_urls
         return url_list
+
+    def get_gender(self, category_list):
+        gender_ = ''
+        for item in category_list:
+            if 'men' in item:
+                gender_ = 'Male'
+
+            if 'women' in item:
+                gender_ = 'Female'
+
+            if not ('men' in item and 'women' in item):
+                gender_ = 'Unisex'
+
+            if 'kids' in item:
+                gender_ = 'Children'
+        return gender_
 
 
     def parse_product_details(self, response):  # Retrieving required product details.
@@ -140,18 +156,7 @@ class ProductDetails(scrapy.Spider):
 
         garment['url'] = response.url
 
-        for item in garment['category']:
-            if 'men' in item:
-                garment['gender'] = 'Male'
-
-            if 'women' in item:
-                garment['gender'] = 'Female'
-
-            if not ('men' in item and 'women' in item):
-                garment['gender'] = 'Unisex'
-
-            if 'kids' in item:
-                garment['gender'] = 'Children'
+        garment['gender']= self.get_gender(garment['category'])
 
         yield garment
 
