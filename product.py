@@ -1,7 +1,6 @@
 __author__ = 'sayyeda'
 
 import scrapy
-import json
 import re
 from productspider.items import ProductSpiderItem
 
@@ -21,48 +20,28 @@ class AsicsSpider(scrapy.Spider):
         all_categories = [response.urljoin(item) for item in links]
 
         for items in all_categories:
-            request = scrapy.Request(items, callback=self.parse_product_link)
-            yield request
+            yield scrapy.Request(items, callback=self.parse_product_link)
 
         for items in all_categories:
-            request = scrapy.Request(items, callback=self.pagination)
-            yield request
+            yield scrapy.Request(items, callback=self.pagination)
 
     def pagination(self, response):  # getting links for next pages of same category
-        next_pages = response.xpath(".//*[contains(@class, 'nm center')]/a/@href").extract()
-        next_page_links = []
-        for item in next_pages:
-            item_ = response.urljoin(item)
-            next_page_links.append(item_)
+        next_pages = response.xpath(".//*[contains(@class,'nm center')]/a/@href").extract()
+        next_page_links = [response.urljoin(item) for item in next_pages]
 
         for item_ in next_page_links:
-            next_page_request = scrapy.Request(item_, callback=self.parse_product_link)
-            yield next_page_request
-
+            yield scrapy.Request(item_, callback=self.parse_product_link)
 
     def parse_product_link(self, response):  # getting links of product pages
         links = response.xpath(".//*[contains(@class, 'product-list')]/div/div/a/@href").extract()
-        product_links = []
-        for item in links:
-            product_link = response.urljoin(item)
-            product_links.append(product_link)
+        product_links = [response.urljoin(item) for item in links]
 
         for items in product_links:
-            request = scrapy.Request(items, callback=self.parse_product_details)
-            yield request
-
-        for items in product_links:
-            request = scrapy.Request(items, callback=self.get_skus)
-            yield request
-
-        for items in product_links:
-            request = scrapy.Request(items, callback=self.get_img_urls)
-            yield request
-
+            yield scrapy.Request(items, callback=self.parse_product_details)
 
     def get_skus(self, response):
         skus = {}
-        sel = response.xpath(".//*[contains(@id, 'SelectSizeDropDown')]/li[@class = 'SizeOption inStock']")
+        sel = response.xpath(".//*[contains(@id, 'SelectSizeDropDown')]/li[@class='SizeOption inStock']")
 
         for item in sel:
             sku_details = {}
@@ -73,16 +52,16 @@ class AsicsSpider(scrapy.Spider):
             size = ' '.join(size_.split())
             sku_details['size'] = size
 
-            current_color = response.xpath(".//*[contains(@class, 'border')]/text()").extract()[0].strip()
+            current_color = response.xpath(".//*[contains(@class,'border')]/text()").extract()[0].strip()
             color = re.split(':', current_color)
             if color:
                 sku_details['color'] = color[1].strip()
 
-            prev_price = response.xpath(".//*[contains(@class, 'markdown' )]/del/text()").extract()
+            prev_price = response.xpath(".//*[contains(@class,'markdown' )]/del/text()").extract()
             if prev_price:
                 sku_details['previous price'] = response.xpath(".//*[contains(@class,"
                                                                " 'markdown' )]/del/text()").extract()[0]
-            sku_details['Availability'] = 'true'
+            sku_details['out_of_stock'] = 'false'
             skus[sku_details['Sku ID']] = sku_details
         return skus
 
@@ -114,7 +93,7 @@ class AsicsSpider(scrapy.Spider):
                 gender_ = 'Children'
         return gender_
 
-   
+
     def parse_product_details(self, response):  # Retrieving required product details.
         garment = ProductSpiderItem()
 
@@ -152,7 +131,7 @@ class AsicsSpider(scrapy.Spider):
 
         garment['url'] = response.url
 
-        garment['gender']= self.get_gender(garment['category'])
+        garment['gender'] = self.get_gender(garment['category'])
 
         yield garment
 
