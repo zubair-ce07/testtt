@@ -22,13 +22,38 @@ class WeatherReading:
         self.max_humidity = max_humidity
         self.min_humidity = min_humidity
 
+    def __repr__(self, report_no=-1):
+
+        if report_no == WeatherReport.annual_min_max_reading.value:
+            return '%d\t\t%s\t\t\t%s\t\t\t%s\t\t%s' % (
+                datetime.strptime(str(self.date), "%Y-%m-%d").year,
+                self.max_temperature,
+                self.min_temperature,
+                self.max_humidity,
+                self.min_humidity)
+        elif report_no == WeatherReport.annual_max_temperature.value:
+            return '%s\t\t%s\t\t\t%s' % (
+                datetime.strptime(str(self.date), "%Y-%m-%d").year,
+                self.date,
+                self.max_temperature)
+        elif report_no == WeatherReport.annual_min_temperature.value:
+            return '%s\t\t%s\t\t\t%s' % (
+                datetime.strptime(str(self.date), "%Y-%m-%d").year,
+                self.date,
+                self.min_temperature)
+        else:
+            return "WeatherReading(%s,%s,%s,%s,%s)" % (self.date,
+                                                       self.max_temperature,
+                                                       self.min_temperature,
+                                                       self.max_humidity,
+                                                       self.min_humidity)
+
 
 def import_data_from_files(data_dir):
-    os.chdir(data_dir)
 
     weather_readings = {}
 
-    for weather_file in glob.glob('*.txt'):
+    for weather_file in glob.glob(data_dir + '*.txt'):
         with open(weather_file, "r") as csvfile:
             readable_lines = csvfile.readlines()[1:-1]
             reader = csv.DictReader(readable_lines)
@@ -37,9 +62,9 @@ def import_data_from_files(data_dir):
                 date = row.get('PKT') or row.get('PKST')
                 year = datetime.strptime(str(date), "%Y-%m-%d").year
                 max_temp = int(row.get('Max TemperatureC') if row['Max TemperatureC'] else -100)
-                min_temp = int(row.get('Min TemperatureC') if row['Max TemperatureC'] else 100)
-                max_humid = int(row.get('Max Humidity') if row['Max TemperatureC'] else -1)
-                min_humid = int(row.get(' Min Humidity') if row['Max TemperatureC'] else 101)
+                min_temp = int(row.get('Min TemperatureC') if row['Min TemperatureC'] else 100)
+                max_humid = int(row.get('Max Humidity') if row['Max Humidity'] else -1)
+                min_humid = int(row.get(' Min Humidity') if row[' Min Humidity'] else 101)
                 if year not in weather_readings:
                     weather_readings[year] = []
                 weather_readings[year].append(
@@ -71,7 +96,7 @@ def get_yearly_min_max_readings(weather_readings):
         max_humid = max(year_weather_reading, key=lambda x: x.max_humidity)
         min_humid = min(year_weather_reading, key=lambda x: x.min_humidity)
 
-        yearly_min_max_readings[year] = WeatherReading(year,
+        yearly_min_max_readings[year] = WeatherReading(str(year) + "-1-1",
                                                        max_temp.max_temperature,
                                                        min_temp.min_temperature,
                                                        max_humid.max_humidity,
@@ -84,10 +109,7 @@ def print_yearly_coldest_day(coldest_days):
     print('%s\t\t%s\t\t\t\t%s' % ("Year", "Date", "Temp"))
     print('------------------------------------------------------------')
     for year, coldest_day in coldest_days.items():
-        print('%s\t\t%s\t\t\t%s' % (
-            year,
-            coldest_day.date,
-            coldest_day.min_temperature))
+        print(coldest_day.__repr__(WeatherReport.annual_min_temperature.value))
 
 
 def print_yearly_hottest_day(hottest_days):
@@ -95,10 +117,7 @@ def print_yearly_hottest_day(hottest_days):
     print('%s\t\t%s\t\t\t\t%s' % ("Year", "Date", "Temp"))
     print('------------------------------------------------------------')
     for year, hottest_day in hottest_days.items():
-        print('%s\t\t%s\t\t\t%s' % (
-            year,
-            hottest_day.date,
-            hottest_day.max_temperature))
+        print(hottest_day.__repr__(WeatherReport.annual_max_temperature.value))
 
 
 def print_yearly_report(yearly_min_max_readings):
@@ -112,12 +131,7 @@ def print_yearly_report(yearly_min_max_readings):
     print(
         '------------------------------------------------------------------------------------------')
     for year, yearly_reading in yearly_min_max_readings.items():
-        print('%d\t\t%s\t\t\t%s\t\t\t%s\t\t%s' % (
-            year,
-            yearly_reading.max_temperature,
-            yearly_reading.min_temperature,
-            yearly_reading.max_humidity,
-            yearly_reading.min_humidity))
+        print(yearly_reading.__repr__(WeatherReport.annual_min_max_reading.value))
 
 
 def print_weather_report(weather_readings, report_no):
