@@ -40,10 +40,10 @@ def import_data_from_files(data_dir):
             for row in reader:
                 date = row.get('PKT') or row.get('PKST')
                 year = datetime.strptime(str(date), "%Y-%m-%d").year
-                max_temp = int(row.get('Max TemperatureC') if row['Max TemperatureC'] else -100)
-                min_temp = int(row.get('Min TemperatureC') if row['Min TemperatureC'] else 100)
-                max_humid = int(row.get('Max Humidity') if row['Max Humidity'] else -1)
-                min_humid = int(row.get(' Min Humidity') if row[' Min Humidity'] else 101)
+                max_temp = int(row.get('Max TemperatureC') or -100)
+                min_temp = int(row.get('Min TemperatureC') or 100)
+                max_humid = int(row.get('Max Humidity') or -1)
+                min_humid = int(row.get(' Min Humidity') or 101)
                 if year not in weather_readings:
                     weather_readings[year] = []
                 weather_readings[year].append(
