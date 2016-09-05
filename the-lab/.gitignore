@@ -55,3 +55,7 @@ target/
 
 # PyCharm
 .idea
+
+# Assignment Temp Files
+weatherdata/
+manual.txt
