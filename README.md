@@ -13,4 +13,4 @@ The purpose of this repo is to help the team lead and his team member in trainin
 1. Push the code and create a pull request against your *name-master* branch.
 
 Do not add log files, temp files etc.
-**Do not check-in anything in master branch**.
+**Do not merge/push anything in master branch**.
