@@ -21,7 +21,7 @@ class SheegoSpider(CrawlSpider):
     def parse_sheego_item(self, response):
         sheego_item = SheegoSpiderItem()
         sheego_item['gender'] = 'women'
-        sheego_item['category'] = ['abc', 'def']
+        sheego_item['category'] = self.get_category(response)
         sheego_item['pid'] = '460721119'
         sheego_item['description'] = self.get_item_description(response)
         sheego_item['brand'] = self.get_item_brand(response)
@@ -34,8 +34,12 @@ class SheegoSpider(CrawlSpider):
                         (response.xpath('//div[@class="moreinfo-color colors"]/ul/li/a/@href').extract())]
         return self.find_next_colour(color_links, sheego_item)
 
+    def get_category(self, response):
+        return response.xpath('//ul[@class="breadcrumb"]/li/a/text()').extract()[1:]
+
     def get_item_brand(self, response):
-        return self.normalize_string(response.xpath('//div[@class="brand"]/text()').extract()[0])
+        brand = self.normalize_string(response.xpath('//div[@class="brand"]/text()').extract()[0])
+        return brand if brand else self.normalize_string(response.xpath('//div[@class="brand"]/a/text()').extract()[0])
 
     def get_item_name(self, response):
         return self.normalize_string(response.xpath('//span[@itemprop="name"]/text()').extract()[0])
