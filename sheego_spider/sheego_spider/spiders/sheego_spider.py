@@ -46,12 +46,10 @@ class SheegoSpider(CrawlSpider):
     def item_description_care(self, response):
         description = response.xpath('//div[@id="moreinfo-highlight"]/ul/li/text()').extract()
         description.append(
-            self.normalize_string(self.get_text(response, '//div[@itemprop="description"]/text()[1]')))
-        item_details = response.xpath('//div[@class="js-articledetails"]//td/descendant::text()').extract()
-        while item_details:
-            value = item_details.pop()
-            property = item_details.pop()
-            description.append(property + ' ' + value)
+            self.normalize_string(self.get_text(response, '//div[@itemprop="description"]//text()')))
+        description_selectors = response.xpath('//div[@class="js-articledetails"]//tr')
+        for description_selector in description_selectors:
+            description.append(self.get_text(description_selector, './/text()'))
         description.append(self.normalize_string(self.get_text(response,
         '//div[@class="js-articledetails"]/dl[@class="dl-horizontal articlenumber"]/descendant::text()')))
         care = []
@@ -59,7 +57,7 @@ class SheegoSpider(CrawlSpider):
                                           '//div[@class="js-articledetails"]//dl[@class="dl-horizontal articlecare"]/dt/text()')
         if care_instructions:
             care.append(care_instructions)
-            care.append(self.get_text(response, '//template[@class="js-tooltip-content"]/b/text()'))
+            care.append(' '.join(set(response.xpath('//dl[@class="dl-horizontal articlecare"]//template[@class="js-tooltip-content"]/b/text()').extract())))
         item_content = self.get_text(response, '//div[@itemprop="description"]/br/following-sibling::text()')
         if item_content:
                 material_content = self.normalize_string(' '.join(item_content))
@@ -68,7 +66,7 @@ class SheegoSpider(CrawlSpider):
                     care.append(material_content)
         care.extend([s for s in description if 'Material' in s])
             # material description needs to be omitted becuase it will be a part of item_care
-        return [s for s in description if not 'Material' in s], care
+        return [s for s in description if 'Material' not in s], care
 
     def get_next_colour(self, color_links, item):
         if color_links:
