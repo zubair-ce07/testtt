@@ -45,8 +45,7 @@ class SheegoSpider(CrawlSpider):
 
     def item_description_care(self, response):
         description = response.xpath('//div[@id="moreinfo-highlight"]/ul/li/text()').extract()
-        description.append(
-            self.normalize_string(self.get_text(response, '//div[@itemprop="description"]//text()')))
+        description.append(' '.join(set(response.xpath('//div[@itemprop="description"]//text()').extract())))
         description_selectors = response.xpath('//div[@class="js-articledetails"]//tr')
         for description_selector in description_selectors:
             description.append(self.get_text(description_selector, './/text()'))
