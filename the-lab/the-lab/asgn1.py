@@ -10,50 +10,32 @@ class WeatherDataParser(object):
 		self.year = ''
 		self.dataFolderPath = dataFolderPath;
 	
-	def getYear (self): 
-		return self.year;
-
-	def getDate (self):
-		return self.date;
-
-	def getMinTemp(self):
-		return self.minTemp;
-
-	def getMaxTemp(self):
-		return self.maxTemp;
-
-	def getMinHumidity(self):
-		return self.minHumidity;
-
-	def getMaxHumidity(self):
-		return self.maxHumidity;
-
 	@staticmethod
-	def extractMaxTemp(record):
+	def __extractMaxTemp(record):
 		if record [1] != '':
 			return int(record [1]);
 
 	@staticmethod
-	def extractMinTemp(record):
+	def __extractMinTemp(record):
 		if record [3] != '':
 			return int(record [3]);
 
 	@staticmethod
-	def extractMaxHumidity(record):
+	def __extractMaxHumidity(record):
 		if record [7] != '':
 			return int(record [7]);
 
 	@staticmethod
-	def extractMinHumidity(record):
+	def __extractMinHumidity(record):
 		if record [9] != '':
 			return int(record [9]);
 
 	@staticmethod
-	def extractDate(record):
+	def __extractDate(record):
 		return record [0].replace ('-', '/');
 
 	@staticmethod
-	def extractYear(record):
+	def __extractYear(record):
 		return record [0].split ('-') [0];
 	
 	def parseFile(self):
@@ -74,25 +56,25 @@ class WeatherDataParser(object):
 
 			if firstTime == 1:
 				firstTime = 0;
-				minTemp = self.extractMinTemp (splittedLine);
-				minHumidity = self.extractMinHumidity (splittedLine);
-				maxTemp = self.extractMaxTemp (splittedLine);
-				hottestDay = self.extractDate (splittedLine);
-				maxHumidity = self.extractMaxHumidity (splittedLine);
-				year = self.extractYear (splittedLine);
+				minTemp = self.__extractMinTemp (splittedLine);
+				minHumidity = self.__extractMinHumidity (splittedLine);
+				maxTemp = self.__extractMaxTemp (splittedLine);
+				hottestDay = self.__extractDate (splittedLine);
+				maxHumidity = self.__extractMaxHumidity (splittedLine);
+				year = self.__extractYear (splittedLine);
 
-			if self.extractMaxTemp(splittedLine) > maxTemp or maxTemp is None:
-				maxTemp = self.extractMaxTemp(splittedLine);
-				hottestDay = self.extractDate (splittedLine);
+			if self.__extractMaxTemp(splittedLine) > maxTemp or maxTemp is None:
+				maxTemp = self.__extractMaxTemp(splittedLine);
+				hottestDay = self.__extractDate (splittedLine);
 
-			if self.extractMaxHumidity(splittedLine) > maxTemp or maxHumidity is None:
-				maxHumidity = self.extractMaxHumidity(splittedLine);
+			if self.__extractMaxHumidity(splittedLine) > maxTemp or maxHumidity is None:
+				maxHumidity = self.__extractMaxHumidity(splittedLine);
 
-			if self.extractMinHumidity(splittedLine)< minHumidity or minHumidity is None:
-				minHumidity = self.extractMinHumidity (splittedLine);
+			if self.__extractMinHumidity(splittedLine)< minHumidity or minHumidity is None:
+				minHumidity = self.__extractMinHumidity (splittedLine);
 
-			if self.extractMinTemp (splittedLine) < minHumidity or minTemp is None:
-				minTemp = self.extractMinTemp (splittedLine);
+			if self.__extractMinTemp (splittedLine) < minHumidity or minTemp is None:
+				minTemp = self.__extractMinTemp (splittedLine);
 
 		self.minTemp = minTemp;
 		self.maxTemp = maxTemp;
