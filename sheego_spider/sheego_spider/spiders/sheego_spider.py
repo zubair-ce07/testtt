@@ -51,7 +51,7 @@ class SheegoSpider(CrawlSpider):
         for description_selector in description_selectors:
             description.append(self.get_text(description_selector, './/text()'))
         description.append(self.normalize_string(self.get_text(response,
-        '//div[@class="js-articledetails"]/dl[@class="dl-horizontal articlenumber"]/descendant::text()')))
+        '//div[@class="js-articledetails"]/dl[@class="dl-horizontal articlenumber"]//text()')))
         care = []
         care_instructions = self.get_text(response,
                                           '//div[@class="js-articledetails"]//dl[@class="dl-horizontal articlecare"]/dt/text()')
