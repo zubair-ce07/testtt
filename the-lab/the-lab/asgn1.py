@@ -1,112 +1,157 @@
 from os import listdir
 from os.path import isfile, join
-from sys import argv
+import argparse
+import csv
+
 
 class WeatherDataParser(object):
 
 	def __init__(self, fileName,dataFolderPath):
-		# print 'init file: ', fileName;
 		self.fileName = fileName;
-		self.year = ''
 		self.dataFolderPath = dataFolderPath;
+
+	@staticmethod
+	def __extractYear(str):
+		return str.split ('-') [0];
 	
 	@staticmethod
-	def __extractMaxTemp(record):
-		if record [1] != '':
-			return int(record [1]);
+	def __toInt(str):
+		if str is not None and str != '':
+			return int (str);
 
-	@staticmethod
-	def __extractMinTemp(record):
-		if record [3] != '':
-			return int(record [3]);
-
-	@staticmethod
-	def __extractMaxHumidity(record):
-		if record [7] != '':
-			return int(record [7]);
-
-	@staticmethod
-	def __extractMinHumidity(record):
-		if record [9] != '':
-			return int(record [9]);
-
-	@staticmethod
-	def __extractDate(record):
-		return record [0].replace ('-', '/');
-
-	@staticmethod
-	def __extractYear(record):
-		return record [0].split ('-') [0];
-	
 	def parseFile(self):
-		file = open (dataFolderPath+self.fileName, 'r');
+		with open(self.dataFolderPath+self.fileName) as csvfile:
+			firstTime = 1
+			csvfile.seek (0)
+			next (csvfile)
+			reader = csv.DictReader(csvfile)
 
-		# Skip first two lines
-		file.readline();
-		file.readline();
+			for row in reader:
 
+				if firstTime == 1:
+					firstTime = 0;
+
+					minTemp = self.__toInt(row ['Min TemperatureC']);
+					maxTemp = self.__toInt(row ['Max TemperatureC']);
 	
-		firstTime = 1
+					if 'PKT' in row.keys():
+						dateKey = 'PKT'
+					else:
+						dateKey = 'PKST'
 
-		for line in file:
-			splittedLine = line.split (',');
-			
-			if len (splittedLine) <= 1:
-				break;
+					hottestDay = row [dateKey];
+					year = self.__extractYear (row[dateKey]);
 
-			if firstTime == 1:
-				firstTime = 0;
-				minTemp = self.__extractMinTemp (splittedLine);
-				minHumidity = self.__extractMinHumidity (splittedLine);
-				maxTemp = self.__extractMaxTemp (splittedLine);
-				hottestDay = self.__extractDate (splittedLine);
-				maxHumidity = self.__extractMaxHumidity (splittedLine);
-				year = self.__extractYear (splittedLine);
+					minHumidity = self.__toInt(row [' Min Humidity']);
+					maxHumidity = self.__toInt(row ['Max Humidity']);
 
-			if self.__extractMaxTemp(splittedLine) > maxTemp or maxTemp is None:
-				maxTemp = self.__extractMaxTemp(splittedLine);
-				hottestDay = self.__extractDate (splittedLine);
+				val = self.__toInt(row ['Max TemperatureC'])
+				if val is not None and (maxTemp is None or val > maxTemp):
+					maxTemp = val;
+					hottestDay = row [dateKey];
+					year = self.__extractYear (row[dateKey]);
 
-			if self.__extractMaxHumidity(splittedLine) > maxTemp or maxHumidity is None:
-				maxHumidity = self.__extractMaxHumidity(splittedLine);
+				val = self.__toInt(row ['Max Humidity'])
+				if val is not None and (maxHumidity is None or val > maxTemp):
+					maxHumidity = val;
 
-			if self.__extractMinHumidity(splittedLine)< minHumidity or minHumidity is None:
-				minHumidity = self.__extractMinHumidity (splittedLine);
+				val = self.__toInt(row [' Min Humidity'])
+				if val is not None and (minHumidity is None or val < minHumidity):
+					minHumidity = val;
 
-			if self.__extractMinTemp (splittedLine) < minHumidity or minTemp is None:
-				minTemp = self.__extractMinTemp (splittedLine);
+				val = self.__toInt(row ['Min TemperatureC']);
+				if val is not None and (minTemp is None or val < minTemp):
+					minTemp = val;
 
-		self.minTemp = minTemp;
-		self.maxTemp = maxTemp;
-		self.minHumidity = minHumidity;
-		self.maxHumidity = maxHumidity;
-		self.hottestDay = hottestDay
-		self.year = year
+			self.minTemp = minTemp;
+			self.maxTemp = maxTemp;
+			self.minHumidity = minHumidity;
+			self.maxHumidity = maxHumidity;
+			self.hottestDay = hottestDay
+			self.year = year
 
-if len (argv) != 3:
-	print 'usage: ', argv [0], ' [report#] [data_dir]';
-	exit ();
+def generateAnnualReport (parsedDataList):
+	firstTime = 1
 
-dataFolderPath = argv [2];
+	annualDictionary = {}
 
-try:
-	allFileNames = [f for f in listdir(dataFolderPath) if isfile(join(dataFolderPath, f))]
-except OSError:
-	print 'Invalid directory name'
-	exit ();
+	for parsedData in parsedDataList:
+		
+		if not parsedData.year in annualDictionary.keys():
+			annualDictionary [parsedData.year] = {}
+			annualDictionary [parsedData.year]['minTemp'] = parsedData.minTemp
+			annualDictionary [parsedData.year]['maxTemp'] = parsedData.maxTemp 
+			annualDictionary [parsedData.year]['minHumidity'] = parsedData.minHumidity
+			annualDictionary [parsedData.year]['maxHumidity'] = parsedData.maxHumidity
+			annualDictionary [parsedData.year]['hottestDay'] = parsedData.hottestDay
+			annualDictionary [parsedData.year]['year'] = parsedData.year;
+		else:
+
+			val = parsedData.maxTemp
+			if val is not None and (annualDictionary [parsedData.year]['maxTemp'] is None or val > annualDictionary [parsedData.year]['maxTemp']):
+				annualDictionary [parsedData.year]['maxTemp'] = val;
+				annualDictionary [parsedData.year]['hottestDay'] = parsedData.hottestDay;
+				annualDictionary [parsedData.year]['year'] = parsedData.year;
+
+			val = parsedData.maxHumidity
+			if val is not None and (annualDictionary [parsedData.year]['maxHumidity'] is None or val > annualDictionary [parsedData.year]['maxHumidity']):
+				annualDictionary [parsedData.year]['maxHumidity'] = val;
+
+			val = parsedData.minTemp;
+			if val is not None and (annualDictionary [parsedData.year]['minTemp'] is None or val < annualDictionary [parsedData.year]['minTemp']):
+				annualDictionary [parsedData.year]['minTemp'] = val;
+
+			val = parsedData.minHumidity
+			if val is not None and (annualDictionary [parsedData.year]['minHumidity'] is None or val < annualDictionary [parsedData.year]['minHumidity']):
+				annualDictionary [parsedData.year]['minHumidity'] = val;
 	
-if int (argv [1]) == 1:
-	print 'Year\t\tMAX Temp\tMIN Temp\tMAX Humidity\t MIN Humidity'
-	print '-----------------------------------------------------------------------------'
-else:
-	print 'Hotest days of each year';
-	print 'Year\tDate\t\tTemp';
+	return annualDictionary;
 
-for fileName in allFileNames:
-	parser = WeatherDataParser(fileName, dataFolderPath);
-	parser.parseFile();
-	if int (argv [1]) == 1:
+def printAnnualWeatherReport (parsedDataList): 
+
+	print ('Year\t\tMAX Temp\tMIN Temp\tMAX Humidity\t  Min Humidity')
+	print ('-----------------------------------------------------------------------------')
+	count = 0
+	annualDictionary = generateAnnualReport (parsedDataList);
+	for year,yearData in annualDictionary.items ():
+		print (yearData['year'], '\t\t', yearData['maxTemp'], '\t\t', yearData['minTemp'], '\t\t',  yearData['maxHumidity'], '\t\t', yearData['minHumidity']);
+
+def printHottestDays(parsedDataList):
+
+	print ('Hotest days of each year');
+	print ('Year\tDate\t\tTemp');
+	annualDictionary = generateAnnualReport (parsedDataList);
+	for year,yearData in annualDictionary.items ():
+		print (yearData['year'], '\t', yearData['hottestDay'].replace ('-', '/'), '\t', yearData['maxTemp']);	
+
+def main():
+
+	parser = argparse.ArgumentParser(description='Example with non-optional arguments')
+
+	parser.add_argument('reportID', help='Use 1 for Annual Max/Min Temperature and 2 for Hottest day of each year',action="store", type=int)
+	parser.add_argument('data_dir', action="store", help='Path of directory containing weather data files')
+
+	args = parser.parse_args()
+
+	dataFolderPath = args.data_dir;
+
+	try:
+		allFileNames = [f for f in listdir(dataFolderPath) if isfile(join(dataFolderPath, f))]
+	except OSError as err:
+		print("OS error: {0}".format(err))
+		exit ();
 	
-		print parser.year, '\t\t', parser.maxTemp, '\t\t', parser.minTemp, '\t\t',  parser.maxHumidity, '\t\t', parser.minHumidity;
+	parsedFileDataList= [];
+
+	for fileName in allFileNames:
+		weatherDataParser = WeatherDataParser(fileName, dataFolderPath);
+		weatherDataParser.parseFile();
+		parsedFileDataList.append (weatherDataParser);
+
+	if args.reportID == 1:
+		printAnnualWeatherReport (parsedFileDataList);
 	else:
-		print parser.year, '\t', parser.hottestDay, '\t', parser.maxTemp	
+		printHottestDays (parsedFileDataList);
+
+if __name__ == "__main__":
+	main()

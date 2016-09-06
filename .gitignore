@@ -57,5 +57,5 @@ target/
 .idea
 
 # Assignment Temp Files
-weatherdata/
-manual.txt
+the-lab/the-lab/weatherdata/
+the-lab/the-lab/manual.txt
