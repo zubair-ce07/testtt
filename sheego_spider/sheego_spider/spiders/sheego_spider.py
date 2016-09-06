@@ -19,10 +19,11 @@ class SheegoSpider(CrawlSpider):
         item = SheegoSpiderItem()
         item['gender'] = 'women'
         item['category'] = self.item_category(response)
-        item['description'] = self.item_description(response)
         item['brand'] = self.item_brand(response)
         item['image_urls'] = []
-        item['care'] = self.item_care(response, item['description'])
+        description = self.item_description(response)
+        item['care'] = self.item_care(response, description)
+        item['description'] = [s for s in description if not 'Material' in s]  # material description needs to be omitted becuase it will be a part of item_care
         item['skus'] = {}
         item['name'] = self.item_name(response)
         item['url_original'] = response.url
@@ -30,26 +31,26 @@ class SheegoSpider(CrawlSpider):
                         response.xpath('//div[@class="moreinfo-color colors"]/ul/li/a/@href').extract()]
         return self.get_next_colour(color_links, item)
 
-    def extract_and_join(self, response_text):
-        return ' '.join(response_text.extract())
+    def get_text(self, response, xpath):
+        return ' '.join(response.xpath(xpath).extract())
 
     def item_category(self, response):
         return response.xpath('//ul[@class="breadcrumb"]/li/a/text()').extract()[1:]
 
     def item_brand(self, response):
-        brand = self.normalize_string(self.extract_and_join(response.xpath('//div[@class="brand"]/text()')))
-        return brand if brand else self.normalize_string(self.extract_and_join(response.xpath('//div[@class="brand"]/a/text()')))
+        return self.normalize_string(self.get_text(response, '//div[@class="brand"]/text()')) or\
+               self.normalize_string(self.get_text(response, '//div[@class="product-header visible-sm visible-xs"]//div[@class="brand"]/a/text()'))
 
     def item_name(self, response):
-        return self.normalize_string(' '.join(response.xpath('//span[@itemprop="name"]/text()').extract()))
+        return self.normalize_string(self.get_text(response, '//div[@class="product-header visible-sm visible-xs"]//span[@itemprop="name"]/text()'))
 
     def item_care(self, response, description):
         care = []
-        care_instructions = response.xpath('//div[@class="js-articledetails"]//dl[@class="dl-horizontal articlecare"]/dt/text()').extract()
+        care_instructions = self.get_text(response, '//div[@class="js-articledetails"]//dl[@class="dl-horizontal articlecare"]/dt/text()')
         if care_instructions:
-            care.append(' '.join(care_instructions))
-            care.append(' '.join(response.xpath('//template[@class="js-tooltip-content"]/b/text()').extract()))
-            item_content = response.xpath('//div[@itemprop="description"]/text()[2]').extract()
+            care.append(care_instructions)
+            care.append(self.get_text(response, '//template[@class="js-tooltip-content"]/b/text()'))
+            item_content = self.get_text(response, '//div[@itemprop="description"]/text()[2]')
             if item_content:
                 care.append(
                     self.normalize_string(' '.join(item_content)))
@@ -59,15 +60,14 @@ class SheegoSpider(CrawlSpider):
     def item_description(self, response):
         description = response.xpath('//div[@id="moreinfo-highlight"]/ul/li/text()').extract()
         description.append(
-            self.normalize_string(self.extract_and_join(response.xpath('//div[@itemprop="description"]/text()[1]'))))
+            self.normalize_string(self.get_text(response, '//div[@itemprop="description"]/text()[1]')))
         item_details = response.xpath('//div[@class="js-articledetails"]//td/descendant::text()').extract()
         while item_details:
             value = item_details.pop()
-            type = item_details.pop()
-            description.append(type + ' ' + value)
-        description.append(self.normalize_string(self.extract_and_join(response.xpath(
-        '//div[@class="js-articledetails"]/dl[@class="dl-horizontal articlenumber"]/descendant::text()'))))
-        description = [s for s in description if not 'Material' in s]  # material description needs to be omitted becuase it will be a part of item_care
+            property = item_details.pop()
+            description.append(property + ' ' + value)
+        description.append(self.normalize_string(self.get_text(response,
+        '//div[@class="js-articledetails"]/dl[@class="dl-horizontal articlenumber"]/descendant::text()')))
         return description
 
     def get_next_colour(self, color_links, item):
@@ -87,8 +87,6 @@ class SheegoSpider(CrawlSpider):
             '//div[@class="js-sizeSelector cover js-moreinfo-size"]/div/button[not(@disabled = "disabled")]/text()').extract() or response.xpath('//div[@id="variants"]/div/select/option/text()').extract()[1:]
         item['image_urls'].extend(self.item_image_urls(response))
         size_data = []
-        aid = ''
-        formdata = {}
         if sizes:
             parentid = ' '.join(response.xpath('//input[@name="parentid"]/@value').extract())
             splitted_parentid = parentid.rsplit("-", 1)
@@ -96,16 +94,15 @@ class SheegoSpider(CrawlSpider):
                 aid = splitted_parentid[0] + '-' + size.split('/')[0] + '-' + splitted_parentid[1]
                 aid = aid[:-1]  # the last letter of url (aid) is not needed in form request aid
                 size_data.append(aid)
-            formdata = {'aid': aid, 'anid': aid,
-                        'parentid': aid}
-        return self.get_next_size(response, formdata, size_data, color_links, item)
+        return self.get_next_size(response, size_data, color_links, item)
 
     def item_image_urls(self, response):
         return response.xpath('//div[@class="thumbs"]//a/@data-image').extract()
 
-    def get_next_size(self, response, formdata, size_data, color_links, item):
+    def get_next_size(self, response, size_data, color_links, item):
         if size_data:
             aid = size_data.pop()
+            formdata = {}
             formdata['aid'] = aid
             formdata['anid'] = aid
             formdata['parentid'] = aid
@@ -121,32 +118,38 @@ class SheegoSpider(CrawlSpider):
 
     def parse_size(self, response):
         url = response.meta['url']
-        formdata = response.meta['formdata']
         size_data = response.meta['size_data']
         item = response.meta['item']
         color_links = response.meta['color_links']
         if not (response.xpath('//div[@id="articlenotfound"]').extract() or response.xpath('//div[@class="searchagain"]/h2/text()').extract()):
-            price_details = self.item_skus(response)
-            item['skus'][price_details['colour'] + '_' + price_details['size']] = price_details
-            return self.get_next_size(url, formdata, size_data, color_links, item)
+            skus = self.item_skus(response)
+            item['skus'][skus['colour'] + '_' + skus['size']] = skus
+            return self.get_next_size(url,  size_data, color_links, item)
         else:
-            return self.get_next_size(url, formdata, size_data, color_links, item)
+            return self.get_next_size(url,  size_data, color_links, item)
 
     def item_skus(self, response):
         skus = {}
         if response.xpath('//span[@class="lastprice at-lastprice"]/sub').extract():
-            skus['price'] = self.normalize_string(' '.join(
-                response.xpath('//span[@class="lastprice at-lastprice"]/sub/following-sibling::text()').extract()))
-            skus['previous_prices'] = response.xpath(
-                '//span[@class="lastprice at-lastprice"]/sub/text()').extract()
+            skus['price'] = self.normalize_string(self.get_text(response, '//span[@class="lastprice at-lastprice"]/sub/following-sibling::text()'))
+            skus['previous_prices'] = [self.normalize_string(self.get_text(response, '//span[@class="lastprice at-lastprice"]/sub/text()'))]
         else:
             skus['previous_prices'] = []
-            skus['price'] = self.normalize_string(
-                ' '.join(response.xpath('//span[@class="lastprice at-lastprice"]/text()').extract()))
+            skus['price'] = self.skus_price(response)
         skus['currency'] = 'EUR'
-        skus['colour'] = response.xpath('//span[@class="at-dv-color"]/text()').extract()[0].split(' ')[1]
-        skus['size'] = response.xpath('//span[@class="at-dv-size"]/text()').extract()[0].split(' ')[1]
+        skus['colour'] = self.skus_colour(response)
+        skus['size'] = self.skus_size(response)
         return skus
+
+    def skus_price(self, response):
+        return self.normalize_string(
+                self.get_text(response, '//span[@class="lastprice at-lastprice"]/text()'))
+
+    def skus_colour(self, response):
+        return ' '.join(response.xpath('//a[@class="color-item active js-ajax "]/@title').extract())
+
+    def skus_size(self, response):
+        return response.xpath('//span[@class="at-dv-size"]/text()').extract()[0].split(' ')[1]
 
     def normalize_string(self, input_string):
         return ''.join(input_string.split())
