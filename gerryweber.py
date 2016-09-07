@@ -38,15 +38,15 @@ class GerryScrapper(CrawlSpider):
         garment['image_urls'] = response.xpath(".//*[contains(@id, 'zoom')]/@href").extract()
         garment['gender'] = 'female'
         garment['skus'] = {}
-        colors_dict = self.color_mapping(response)
+        colors_map = self.get_color_map(response)
 
         # this request is to get all the skus f one product
-        yield scrapy.Request(url=self.requesting_for_skus(response),
-                            meta={'garment': garment, 'color_dict': colors_dict},
+        yield scrapy.Request(url=self.skus_request_url(response),
+                            meta={'garment': garment, 'color_map': colors_map},
                             callback=self.product_skus)
 
     # this is to get response of json request to get skus.
-    def requesting_for_skus(self, response):
+    def skus_request_url(self, response):
         product_ID = response.xpath("//*[contains(@id,'recommendations')]/@data-pid").extract()[0]
         req_link = 'http://www.house-of-gerryweber.de/on/demandware.store/Sites-DE-Site/de/Product-GetVariants?pid=&format=json'
         tokens = req_link.split('=')
@@ -56,7 +56,7 @@ class GerryScrapper(CrawlSpider):
     # calculating skus
     def product_skus(self, response):
         garment = response.meta['garment']
-        color_dict = response.meta['color_dict']
+        color_map = response.meta['color_map']
         sku = {}
         variant = response.text
         variant_dict_string = str(variant)
@@ -65,12 +65,12 @@ class GerryScrapper(CrawlSpider):
 
         for items in variants_list:
             size = self.get_size(items)
-            for key in color_dict:
-                if items['attributes']['color'] in color_dict:
+            for key in color_map:
+                if items['attributes']['color'] in color_map:
                     sku_details = {}
                     sku_details['size'] = size
-                    sku_key = (color_dict[key] + '_' + size)
-                    sku_details['color'] = color_dict[key]
+                    sku_key = (color_map[key] + '_' + size)
+                    sku_details['color'] = color_map[key]
                     sku_details['price'] = items['pricing']['sale']
                     sku_details['in_stock'] = items['avLevels']['IN_STOCK']
                     sku_details['previous_price'] = [items['pricing']['standard']]
@@ -80,23 +80,24 @@ class GerryScrapper(CrawlSpider):
         yield garment
 
     def get_size(self, Dict):
-        if Dict['attributes']['size']:
+        if 'size' in Dict['attributes']:
             return Dict['attributes']['size']
-        return 'ONE'
+        else:
+            size = 'One'
+            return size
+
 
     # this is to get the dictionary of colors, with color_id as key &
     # title as its value
-    def color_mapping(self, response):
+    def get_color_map(self, response):
         sel = response.xpath("//*[@class='swatches color']/ul//li/div/a")
-        color_dict = {}
+        color_map = {}
         for item in sel:
             data_value = item.xpath("./@data-value").extract()[0]
             title = item.xpath("./@title").extract()[0]
+            color_map[data_value] = title
 
-
-            color_dict[data_value] = title
-
-        return color_dict
+        return color_map
 
     def product_name(self, response):
         return response.xpath("//*[contains(@class, 'productname')]//span[@itemprop='name']/text()").extract()[0]
