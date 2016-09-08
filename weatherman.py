@@ -2,7 +2,8 @@ from datetime import datetime
 import csv
 import sys
 import argparse
-
+import fnmatch
+import os
 
 class Weather(object):
     __date_format = "%Y-%m-%d"
@@ -16,24 +17,24 @@ class Weather(object):
         self.year = year
         self.month = month
         self.file_names = []
-        self.file_data = []
+        self.file_rows = []
         self.parse_file_names()
         self.get_rows()
 
     def get_lowest(self, column_num):
-        sorted_list = sorted([row for row in self.file_data if row[column_num] != ''],
+        sorted_list = sorted([row for row in self.file_rows if row[column_num] != ''],
                              key=lambda row: int(row[column_num]), reverse=False)
         return sorted_list[0][0], sorted_list[0][column_num]
 
     def get_highest(self, column_num):
-        sorted_list = sorted([row for row in self.file_data if row[column_num] != ''],
+        sorted_list = sorted([row for row in self.file_rows if row[column_num] != ''],
                              key=lambda row: int(row[column_num]), reverse=True)
         return sorted_list[0][0], sorted_list[0][column_num]
 
     def get_average(self, column_num):
         sum = 0
         count = 0
-        for row in self.file_data:
+        for row in self.file_rows:
             if row[column_num] != '':
                 count += 1
                 sum += int(row[column_num])
@@ -43,19 +44,24 @@ class Weather(object):
 
     def parse_file_names(self):
         if self.month:
-            self.file_names.append("/lahore_weather_" + str(self.year) + "_" + Util.get_month_name(self.month) + ".txt")
+            for file in os.listdir(self.path):
+                if fnmatch.fnmatch(file, "*"+str(self.year) + "_" + Util.get_month_name(self.month)+'.txt'):
+                    self.file_names.append(file)
         else:
-            for i in range(1, 13):
-                self.file_names.append("/lahore_weather_" + str(self.year) + "_" + Util.get_month_name(i) + ".txt")
+            for file in os.listdir(self.path):
+                if fnmatch.fnmatch(file, "*"+str(self.year) + '_*.txt'):
+                    self.file_names.append(file)
 
     def get_rows(self):
         file_not_found_count = 0
+        if len(self.file_names) == 0:
+            raise FileNotFoundError
         for file_name in self.file_names:
             try:
-                csv_file = open(self.path + file_name, "r")
+                csv_file = open(self.path + "/"+file_name, "r")
                 reader = csv.DictReader(csv_file, delimiter=',')
                 for row in Weather.get_next_row(reader):
-                    self.file_data.append(row)
+                    self.file_rows.append(row)
             except:
                 file_not_found_count += 1
                 if file_not_found_count == len(self.file_names):
@@ -97,7 +103,7 @@ class Weather(object):
     def separate_bar_chart_monthly(self):
         date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
-        for row in self.file_data:
+        for row in self.file_rows:
             date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
@@ -116,7 +122,7 @@ class Weather(object):
     def single_bar_chart_monthly(self):
         date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
-        for row in self.file_data:
+        for row in self.file_rows:
             date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
