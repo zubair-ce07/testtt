@@ -42,7 +42,6 @@ class WeatherParser(object):
         self.file_names = []
         self.parse_file_names()
         self.get_rows()
-        pass
 
     def parse_file_names(self):
         if self.month:
