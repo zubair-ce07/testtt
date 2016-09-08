@@ -16,22 +16,24 @@ class Weather(object):
         self.year = year
         self.month = month
         self.file_names = []
+        self.file_data = []
         self.parse_file_names()
+        self.get_rows()
 
     def get_lowest(self, column_num):
-        sorted_list = sorted([row for row in self.get_rows() if row[column_num] != ''],
+        sorted_list = sorted([row for row in self.file_data if row[column_num] != ''],
                              key=lambda row: int(row[column_num]), reverse=False)
         return sorted_list[0][0], sorted_list[0][column_num]
 
     def get_highest(self, column_num):
-        sorted_list = sorted([row for row in self.get_rows() if row[column_num] != ''],
+        sorted_list = sorted([row for row in self.file_data if row[column_num] != ''],
                              key=lambda row: int(row[column_num]), reverse=True)
         return sorted_list[0][0], sorted_list[0][column_num]
 
     def get_average(self, column_num):
         sum = 0
         count = 0
-        for row in self.get_rows():
+        for row in self.file_data:
             if row[column_num] != '':
                 count += 1
                 sum += int(row[column_num])
@@ -53,7 +55,7 @@ class Weather(object):
                 csv_file = open(self.path + file_name, "r")
                 reader = csv.DictReader(csv_file, delimiter=',')
                 for row in Weather.get_next_row(reader):
-                    yield row
+                    self.file_data.append(row)
             except:
                 file_not_found_count += 1
                 if file_not_found_count == len(self.file_names):
@@ -95,7 +97,7 @@ class Weather(object):
     def separate_bar_chart_monthly(self):
         date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
-        for row in self.get_rows():
+        for row in self.file_data:
             date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
@@ -114,7 +116,7 @@ class Weather(object):
     def single_bar_chart_monthly(self):
         date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
-        for row in self.get_rows():
+        for row in self.file_data:
             date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
