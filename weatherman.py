@@ -1,44 +1,48 @@
 from datetime import datetime
 import csv
-import sys
 import argparse
 import fnmatch
 import os
-import os.path
 
 
 class Weather(object):
     __date_format = "%Y-%m-%d"
 
-    def __init__(self, path, year, month=0):
-        self.path = path
-        self.year = year
-        self.month = month
-        self.file_names = []
-        self.file_rows = []
-        self.parse_file_names()
-        self.get_rows()
+    def __init__(self, weather_parser):
+        self.weather_parser = weather_parser
 
     def get_lowest(self, column_name):
-        condition = [row for row in self.file_rows if row[column_name] != '']
+        condition = [row for row in self.weather_parser.file_rows if row[column_name] != '']
         sorted_list = sorted(condition, key=lambda row: int(row[column_name]), reverse=False)
         return sorted_list[0][Util.get_date_key(sorted_list[0])], sorted_list[0][column_name]
 
     def get_highest(self, column_name):
-        condition = [row for row in self.file_rows if row[column_name] != '']
+        condition = [row for row in self.weather_parser.file_rows if row[column_name] != '']
         sorted_list = sorted(condition, key=lambda row: int(row[column_name]), reverse=True)
         return sorted_list[0][Util.get_date_key(sorted_list[0])], sorted_list[0][column_name]
 
     def get_average(self, column_name):
         sum = 0
         count = 0
-        for row in self.file_rows:
+        for row in self.weather_parser.file_rows:
             if row[column_name] is not None:
                 count += 1
                 sum += int(row[column_name])
         if count == 0:
             return 0
         return sum/count
+
+
+class WeatherParser(object):
+    def __init__(self, path, year, month=0):
+        self.file_rows = []
+        self.path = path
+        self.year = year
+        self.month = month
+        self.file_names = []
+        self.parse_file_names()
+        self.get_rows()
+        pass
 
     def parse_file_names(self):
         if self.month:
@@ -62,7 +66,7 @@ class Weather(object):
                 csv_file = open(full_path, "r")
                 next(csv_file)
                 reader = csv.DictReader(csv_file, delimiter=',')
-                for row in Weather.get_next_row(reader):
+                for row in WeatherParser.get_next_row(reader):
                     self.file_rows.append(row)
             except:
                 file_not_found_count += 1
@@ -116,10 +120,11 @@ class ReportGenerator(object):
         print("Average Humidity: ", str(current) + "%")
 
     def generate_multi_line_bar_chart(self):
-        date_str = str(self.weather.year)+"-" + str(self.weather.month) + "-01"
+        weather_parser = self.weather.weather_parser
+        date_str = str(weather_parser.year)+"-" + str(weather_parser.month) + "-01"
         date_object = Util.get_formatted_date(date_str)
-        print(date_object.strftime("%B"), self.weather.year)
-        for row in self.weather.file_rows:
+        print(date_object.strftime("%B"), weather_parser.year)
+        for row in weather_parser.file_rows:
             date_object = Util.get_formatted_date(row[Util.get_date_key(row)])
             try:
                 max = int(row['Max TemperatureC'])
@@ -136,10 +141,12 @@ class ReportGenerator(object):
                 pass
 
     def generate_single_line_bar_chart(self):
-        date_str = str(self.weather.year) + "-" + str(self.weather.month) + "-01"
+        weather_parser = self.weather.weather_parser
+        print("ii")
+        date_str = str(weather_parser.year) + "-" + str(weather_parser.month) + "-01"
         date_object = Util.get_formatted_date(date_str)
-        print(date_object.strftime("%B"), self.weather.year)
-        for row in self.weather.file_rows:
+        print(date_object.strftime("%B"), weather_parser.year)
+        for row in weather_parser.file_rows:
             date_object = Util.get_formatted_date(row[Util.get_date_key(row)])
             try:
                 max = int(row['Max TemperatureC'])
@@ -158,7 +165,6 @@ class Util(object):
     @staticmethod
     def get_formatted_date(date_str=""):
         date_format = "%Y-%m-%d"
-        from datetime import datetime
         if not date_str:
             return datetime.today().date()
         return datetime.strptime(date_str, date_format).date()
@@ -186,23 +192,23 @@ def main():
     parsed = parser.parse_args()
     try:
         if parsed.e:
-            weather = Weather(parsed.e[1], parsed.e[0])
-            report_generator = ReportGenerator(weather)
+            weather_parser = WeatherParser(parsed.e[1], parsed.e[0])
+            report_generator = ReportGenerator(Weather(weather_parser))
             report_generator.generate_extreme_condition_report()
         elif parsed.a:
             temp = parsed.a[0].split("/")
-            weather = Weather(parsed.a[1], temp[0], int(temp[1]))
-            report_generator = ReportGenerator(weather)
+            weather_parser = WeatherParser(parsed.a[1], temp[0], int(temp[1]))
+            report_generator = ReportGenerator(Weather(weather_parser))
             report_generator.generate_average_condition_report()
         elif parsed.c:
             temp = parsed.c[0].split("/")
-            weather = Weather(parsed.c[1], temp[0], int(temp[1]))
-            report_generator = ReportGenerator(weather)
+            weather_parser = WeatherParser(parsed.c[1], temp[0], int(temp[1]))
+            report_generator = ReportGenerator(Weather(weather_parser))
             report_generator.generate_multi_line_bar_chart()
         elif parsed.s:
             temp = parsed.s[0].split("/")
-            weather = Weather(parsed.s[1], temp[0], int(temp[1]))
-            report_generator = ReportGenerator(weather)
+            weather_parser = WeatherParser(parsed.s[1], temp[0], int(temp[1]))
+            report_generator = ReportGenerator(Weather(weather_parser))
             report_generator.generate_single_line_bar_chart()
     except FileNotFoundError:
         print("No Such File Exists!!")
