@@ -3,6 +3,10 @@ from os.path import isfile, join
 import os
 import argparse
 import csv
+import numpy as np
+import matplotlib.pyplot as plt
+
+
 
 ALL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -267,6 +271,43 @@ def print_monthly_weather_chart(data_param, data_directory):
             day += 1
 
 
+def create_bar_chart (daily_weather_data):
+    N = len (daily_weather_data)
+    max_temperatures = []
+    min_temperatures = []
+    days = []
+    count = 1
+    for day_weather_data in daily_weather_data:
+        if day_weather_data['max_temp']:
+            max_temperatures.append(day_weather_data['max_temp'])
+        else:
+            max_temperatures.append(0)
+
+        if day_weather_data['min_temp']:
+            min_temperatures.append(day_weather_data['min_temp'])
+        else:
+            min_temperatures.append(0)
+        days.append(count)
+        count += 1
+
+    ind = np.arange(N)  # the x locations for the groups
+    width = 0.5  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(ind, max_temperatures, width, color='r')
+    rects2 = ax.bar(ind + width, min_temperatures, width, color='b')
+
+    # add some text for labels, title and axes ticks
+    ax.set_ylabel('Temperature (C)')
+    ax.set_title('Min/Max temperatures')
+    ax.set_xticks(ind + width)
+    ax.set_xticklabels(days)
+
+    ax.legend((rects1[0], rects2[0]), ('Max', 'Min'))
+
+    plt.savefig("Graph.pdf")
+
+
 def print_monthly_weather_combined_chart(data_param, data_directory):
     files_to_read = get_file_read_list(data_param)
     if len(files_to_read) == 1:
@@ -279,6 +320,8 @@ def print_monthly_weather_combined_chart(data_param, data_directory):
             __blue_marker = EscapeSequence.BLUE + "+" + EscapeSequence.WHITE
             print(str(day), __red_marker * day_weather['max_temp'], __blue_marker * day_weather['min_temp'], day_weather['max_temp'], '-', day_weather['min_temp'])
             day += 1
+
+        create_bar_chart(daily_weather_data)
 
 
 def print_extreme_weather_values(date_param, data_directory):
