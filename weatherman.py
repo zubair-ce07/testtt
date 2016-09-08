@@ -84,22 +84,27 @@ class Weather(object):
                 continue
             prev = row
 
+
+class ReportGenerator(object):
+    def __init__(self, weather):
+        self.weather = weather
+
     def generate_extreme_condition_report(self):
-        current = self.get_highest(1)
+        current = self.weather.get_highest(1)
         date_object = Util.get_formatted_date(current[0])
         result = "Highest: " + str(current[1]) + "C on"
         result += date_object.strftime("%B")
         result += " "
         result += date_object.strftime("%d")
         print(result)
-        current = self.get_lowest(3)
+        current = self.weather.get_lowest(3)
         date_object = Util.get_formatted_date(current[0])
         result = "Lowest: " + str(current[1]) + "C on"
         result += date_object.strftime("%B")
         result += " "
         result += date_object.strftime("%d")
         print(result)
-        current = self.get_highest(7)
+        current = self.weather.get_highest(7)
         date_object = Util.get_formatted_date(current[0])
         result = "Humid: " + str(current[1]) + "%" + " on"
         result += date_object.strftime("%B")
@@ -108,18 +113,18 @@ class Weather(object):
         print(result)
 
     def generate_average_condition_report(self):
-        current = self.get_highest(2)
+        current = self.weather.get_highest(2)
         print("Highest Average: ", str(current[1]) + "C")
-        current = self.get_lowest(2)
+        current = self.weather.get_lowest(2)
         print("Lowest Average: ", str(current[1]) + "C")
-        current = self.get_average(8)
+        current = self.weather.get_average(8)
         print("Average Humidity: ", str(current) + "%")
 
     def generate_multi_line_bar_chart(self):
-        date_str = str(self.year)+"-" + str(self.month) + "-01"
+        date_str = str(self.weather.year)+"-" + str(self.weather.month) + "-01"
         date_object = Util.get_formatted_date(date_str)
-        print(date_object.strftime("%B"), self.year)
-        for row in self.file_rows:
+        print(date_object.strftime("%B"), self.weather.year)
+        for row in self.weather.file_rows:
             date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
@@ -136,10 +141,10 @@ class Weather(object):
                 pass
 
     def generate_single_line_bar_chart(self):
-        date_str = str(self.year) + "-" + str(self.month) + "-01"
+        date_str = str(self.weather.year) + "-" + str(self.weather.month) + "-01"
         date_object = Util.get_formatted_date(date_str)
-        print(date_object.strftime("%B"), self.year)
-        for row in self.file_rows:
+        print(date_object.strftime("%B"), self.weather.year)
+        for row in self.weather.file_rows:
             date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
@@ -152,7 +157,6 @@ class Weather(object):
                 print("\033[0m", str(min) + "C-" + str(max) + "C")
             except:
                 pass
-
 
 class Util(object):
     @staticmethod
@@ -179,20 +183,24 @@ def main():
     parsed = parser.parse_args()
     try:
         if parsed.e:
-            weather_data = Weather(parsed.e[1], parsed.e[0])
-            weather_data.generate_extreme_condition_report()
+            weather = Weather(parsed.e[1], parsed.e[0])
+            report_generator = ReportGenerator(weather)
+            report_generator.generate_extreme_condition_report()
         elif parsed.a:
             temp = parsed.a[0].split("/")
-            weather_data = Weather(parsed.a[1], temp[0], int(temp[1]))
-            weather_data.generate_average_condition_report()
+            weather = Weather(parsed.a[1], temp[0], int(temp[1]))
+            report_generator = ReportGenerator(weather)
+            report_generator.generate_average_condition_report()
         elif parsed.c:
             temp = parsed.c[0].split("/")
-            weather_data = Weather(parsed.c[1], temp[0], int(temp[1]))
-            weather_data.generate_multi_line_bar_chart()
+            weather = Weather(parsed.c[1], temp[0], int(temp[1]))
+            report_generator = ReportGenerator(weather)
+            report_generator.generate_multi_line_bar_chart()
         elif parsed.s:
             temp = parsed.s[0].split("/")
-            weather_data = Weather(parsed.s[1], temp[0], int(temp[1]))
-            weather_data.generate_single_line_bar_chart()
+            weather = Weather(parsed.s[1], temp[0], int(temp[1]))
+            report_generator = ReportGenerator(weather)
+            report_generator.generate_single_line_bar_chart()
     except FileNotFoundError:
         print("No Such File Exists!!")
     except Exception as e:
