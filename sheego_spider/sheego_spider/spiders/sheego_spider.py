@@ -40,11 +40,7 @@ class SheegoSpider(CrawlSpider):
         return request
 
     def generate_kal_body(self, response):
-        scripts = response.xpath('//script[@type="text/javascript"]').extract()
-        kal_data = ''
-        for script in scripts:
-            if 'setKALAvailability' in script:
-                kal_data = script
+        kal_data = self.get_text(response, '//script[@type="text/javascript" and contains(text(), "setKALAvailability" )]/text()')
         kal_data = re.search('String\(\'(\w+;\w+(;\w+;\w+)+)', kal_data).group(1).split(';')
         articles = etree.Element('Articles')
         while kal_data:
@@ -75,13 +71,13 @@ class SheegoSpider(CrawlSpider):
         if not root.findall('.//LocalError'):
             availablities = root.findall('.//ArticleAvailability')
             for availabity in availablities:
-                if availabity.findall('.//Stock')[0].text == '1' or availabity.findall('.//DeliveryDesignation')[0].text == '2':
-                    item_code = availabity.findall('.//CompleteCatalogItemNo')[0].text
+                if availabity.find('.//Stock').text == '1' or availabity.find('.//DeliveryDesignation').text == '2':
+                    item_code = availabity.find('.//CompleteCatalogItemNo').text
                     if item_code in articles_available:
-                        articles_available[item_code].append(availabity.findall('.//SizeAlphaText')[0].text)
+                        articles_available[item_code].append(availabity.find('.//SizeAlphaText').text)
                     else:
-                        articles_available[item_code] = [availabity.findall('.//SizeAlphaText')[0].text]
-            colour_codes = list(articles_available.keys())
+                        articles_available[item_code] = [availabity.find('.//SizeAlphaText').text]
+            colour_codes = articles_available.keys()
             sizes_in_stock = list(articles_available.values())
             for colour_code in colour_codes:
                 promotion_id = re.search('(\d{2}|[A-z])$', colour_code).group(1)
