@@ -81,7 +81,7 @@ class Weather(object):
                 continue
             prev = row
 
-    def generate_yearly_report(self):
+    def generate_extreme_condition_report(self):
         current = self.get_highest(1)
         date_object = Util.get_formatted_date(current[0])
         print("Highest: ", str(current[1]) + "C", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
@@ -92,7 +92,7 @@ class Weather(object):
         date_object = Util.get_formatted_date(current[0])
         print("Humid: ", str(current[1]) + "%", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
 
-    def generate_monthly_report(self):
+    def generate_average_condition_report(self):
         current = self.get_highest(2)
         print("Highest Average: ", str(current[1]) + "C")
         current = self.get_lowest(2)
@@ -100,7 +100,7 @@ class Weather(object):
         current = self.get_average(8)
         print("Average Humidity: ", str(current) + "%")
 
-    def separate_bar_chart_monthly(self):
+    def generate_multi_line_bar_chart(self):
         date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
         for row in self.file_rows:
@@ -116,10 +116,10 @@ class Weather(object):
                 for temp in range(0, min):
                     print("\033[94m+", end="")
                 print("\033[0m", str(min) + "C")
-            except Exception as e:
-                print(e)
+            except :
+                pass
 
-    def single_bar_chart_monthly(self):
+    def generate_single_line_bar_chart(self):
         date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
         for row in self.file_rows:
@@ -152,29 +152,29 @@ class Util(object):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Description of your program')
+    parser = argparse.ArgumentParser(description='Weather Data Analyser')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-a', nargs=2)
-    group.add_argument('-b', nargs=2)
-    group.add_argument('-c', nargs=2)
-    group.add_argument('-e', nargs=2)
+    group.add_argument('-a', help='Averages', nargs=2)
+    group.add_argument('-s', help='Single Line Charts', nargs=2)
+    group.add_argument('-c', help='Charts', nargs=2)
+    group.add_argument('-e', help='Extremes', nargs=2)
     parsed = parser.parse_args()
     try:
         if parsed.e:
             weather_data = Weather(parsed.e[1], parsed.e[0])
-            weather_data.generate_yearly_report()
+            weather_data.generate_extreme_condition_report()
         elif parsed.a:
             temp = parsed.a[0].split("/")
             weather_data = Weather(parsed.a[1], temp[0], int(temp[1]))
-            weather_data.generate_monthly_report()
+            weather_data.generate_average_condition_report()
         elif parsed.c:
             temp = parsed.c[0].split("/")
             weather_data = Weather(parsed.c[1], temp[0], int(temp[1]))
-            weather_data.separate_bar_chart_monthly()
-        elif parsed.b:
-            temp = parsed.b[0].split("/")
-            weather_data = Weather(parsed.b[1], temp[0], int(temp[1]))
-            weather_data.single_bar_chart_monthly()
+            weather_data.generate_multi_line_bar_chart()
+        elif parsed.s:
+            temp = parsed.s[0].split("/")
+            weather_data = Weather(parsed.s[1], temp[0], int(temp[1]))
+            weather_data.generate_single_line_bar_chart()
     except FileNotFoundError:
         print("No Such File Exists!!")
     except Exception as e:
