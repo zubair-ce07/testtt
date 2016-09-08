@@ -1,13 +1,10 @@
 from datetime import datetime
 import csv
 import sys
-'''
-    WeatherData class is responsible for reading and parsing the files
-    and sorting the data accordingly
-'''
+import argparse
 
 
-class WeatherData(object):
+class Weather(object):
     __date_format = "%Y-%m-%d"
 
     def __init__(self, path, year, month=0):
@@ -18,24 +15,23 @@ class WeatherData(object):
         self.path = path
         self.year = year
         self.month = month
+        self.file_names = []
+        self.parse_file_names()
 
-    def __get_lowest(self, column_num):
-        # Gives the lowest element of any column from the data file
-        sorted_list = sorted([row for row in self.__get_rows() if row[column_num] != ''],
+    def get_lowest(self, column_num):
+        sorted_list = sorted([row for row in self.get_rows() if row[column_num] != ''],
                              key=lambda row: int(row[column_num]), reverse=False)
         return sorted_list[0][0], sorted_list[0][column_num]
 
-    def __get_highest(self, column_num):
-        # Gives the highest element of any column from the data files
-        sorted_list = sorted([row for row in self.__get_rows() if row[column_num] != ''],
+    def get_highest(self, column_num):
+        sorted_list = sorted([row for row in self.get_rows() if row[column_num] != ''],
                              key=lambda row: int(row[column_num]), reverse=True)
         return sorted_list[0][0], sorted_list[0][column_num]
 
-    def __get_average(self, column_num):
-        # Calculate the average of a column
+    def get_average(self, column_num):
         sum = 0
         count = 0
-        for row in self.__get_rows():
+        for row in self.get_rows():
             if row[column_num] != '':
                 count += 1
                 sum += int(row[column_num])
@@ -43,93 +39,64 @@ class WeatherData(object):
             return 0
         return sum/count
 
-    def __get_rows(self):
-        # Checks if the we have to apply operation on a single month file or all files of the given year
-        # and returns the generator for the files to access rows
+    def parse_file_names(self):
         if self.month:
-            file_name = "/lahore_weather_" + str(self.year) + "_" + WeatherData.__get_month_name(self.month) + ".txt"
+            self.file_names.append("/lahore_weather_" + str(self.year) + "_" + Util.get_month_name(self.month) + ".txt")
+        else:
+            for i in range(1, 13):
+                self.file_names.append("/lahore_weather_" + str(self.year) + "_" + Util.get_month_name(i) + ".txt")
+
+    def get_rows(self):
+        file_not_found_count = 0
+        for file_name in self.file_names:
             try:
-                csv_file = open(self.path+file_name, "r")
-                reader = csv.reader(csv_file, delimiter=',')
-                for row in WeatherData.__get_next_row(reader):
+                csv_file = open(self.path + file_name, "r")
+                reader = csv.DictReader(csv_file, delimiter=',')
+                for row in Weather.get_next_row(reader):
                     yield row
             except:
-                raise
-        else:
-            file_not_found_count = 0
-            for i in range(1,13):
-                file_name = "/lahore_weather_" + str(self.year) + "_" + WeatherData.__get_month_name(i) + ".txt"
-                try:
-                    csv_file = open(self.path + file_name, "r")
-                    reader = csv.reader(csv_file, delimiter=',')
-                    for row in WeatherData.__get_next_row(reader):
-                        yield row
-                except:
-                    file_not_found_count += 1
-                    if file_not_found_count == 12:
-                        raise
+                file_not_found_count += 1
+                if file_not_found_count == len(self.file_names):
+                    raise
 
     @staticmethod
-    def __get_month_name(month):
-        # Gives the name of the given month number
-        return WeatherData.__get_formatted_date("2000-" + str(month) + "-01").strftime("%b")
-
-    @staticmethod
-    def __get_next_row(reader):
-        # Generator is modified so that we can ignore the first & last line of the data
+    def get_next_row(reader):
         prev = None
         is_first = True
         for row in reader:
             if len(row) == 0:
                 continue
             if prev:
-                yield prev
+                yield prev[None]
             if is_first:
                 is_first = False
                 continue
             prev = row
 
-    @staticmethod
-    def __get_formatted_date(date_str=""):
-        # Format the date and time
-        format = "%Y-%m-%d"
-        from datetime import datetime
-        if not date_str:
-            return datetime.today().date()
-        return datetime.strptime(date_str, format).date()
-
-    def task1(self):
-        # Function to handle task1
-        # Highest Temp is in column 1
-        current = self.__get_highest(1)
-        date_object = WeatherData.__get_formatted_date(current[0])
+    def generate_yearly_report(self):
+        current = self.get_highest(1)
+        date_object = Util.get_formatted_date(current[0])
         print("Highest: ", str(current[1]) + "C", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
-        # Lowest temp is in column 3
-        current = self.__get_lowest(3)
-        date_object = WeatherData.__get_formatted_date(current[0])
+        current = self.get_lowest(3)
+        date_object = Util.get_formatted_date(current[0])
         print("Lowest: ", str(current[1]) + "C", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
-        # Humidity is in column 7
-        current = self.__get_highest(7)
-        date_object = WeatherData.__get_formatted_date(current[0])
+        current = self.get_highest(7)
+        date_object = Util.get_formatted_date(current[0])
         print("Humid: ", str(current[1]) + "%", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
 
-    def task2(self):
-        # Function to handle task2
-        # Average temp is in column 2
-        current = self.__get_highest(2)
+    def generate_monthly_report(self):
+        current = self.get_highest(2)
         print("Highest Average: ", str(current[1]) + "C")
-        current = self.__get_lowest(2)
+        current = self.get_lowest(2)
         print("Lowest Average: ", str(current[1]) + "C")
-        # Average Humidity is in column 8
-        current = self.__get_average(8)
+        current = self.get_average(8)
         print("Average Humidity: ", str(current) + "%")
 
-    def task3(self):
-        # Function to handle task 3
-        date_object = self.__get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
+    def separate_bar_chart_monthly(self):
+        date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
-        for row in self.__get_rows():
-            date_object = self.__get_formatted_date(row[0])
+        for row in self.get_rows():
+            date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
                 print(date_object.strftime("%d"), end="")
@@ -141,15 +108,14 @@ class WeatherData(object):
                 for temp in range(0, min):
                     print("\033[94m+", end="")
                 print("\033[0m", str(min) + "C")
-            except:
-                pass
+            except Exception as e:
+                print(e)
 
-    def task4(self):
-        # Function to handle task 4
-        date_object = self.__get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
+    def single_bar_chart_monthly(self):
+        date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
         print(date_object.strftime("%B"),self.year)
-        for row in self.__get_rows():
-            date_object = self.__get_formatted_date(row[0])
+        for row in self.get_rows():
+            date_object = Util.get_formatted_date(row[0])
             try:
                 max = int(row[1])
                 min = int(row[3])
@@ -163,34 +129,48 @@ class WeatherData(object):
                 pass
 
 
-def print_err(msg):
-    print(msg+"\nWrong arguments!!\nweatherman.py -switch year/month /path/to/file")
+class Util(object):
+    @staticmethod
+    def get_formatted_date(date_str=""):
+        date_format = "%Y-%m-%d"
+        from datetime import datetime
+        if not date_str:
+            return datetime.today().date()
+        return datetime.strptime(date_str, date_format).date()
+
+    @staticmethod
+    def get_month_name(month):
+        return Util.get_formatted_date("2000-" + str(month) + "-01").strftime("%b")
 
 
 def main():
-    if len(sys.argv) == 4:
-        try:
-            if sys.argv[1] == "-e":
-                weather_data = WeatherData(sys.argv[3],sys.argv[2])
-                weather_data.task1()
-            elif sys.argv[1] == "-a":
-                temp = sys.argv[2].split("/")
-                weather_data = WeatherData(sys.argv[3],temp[0], int(temp[1]))
-                weather_data.task2()
-            elif sys.argv[1] == "-c":
-                temp = sys.argv[2].split("/")
-                weather_data = WeatherData(sys.argv[3],temp[0], int(temp[1]))
-                weather_data.task3()
-            elif sys.argv[1] == "-b":
-                temp = sys.argv[2].split("/")
-                weather_data = WeatherData(sys.argv[3],temp[0], int(temp[1]))
-                weather_data.task4()
-        except FileNotFoundError:
-            print_err("No Such File Exists!!")
-        except:
-            print_err("")
-    else:
-        print_err("")
+    parser = argparse.ArgumentParser(description='Description of your program')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-a', nargs=2)
+    group.add_argument('-b', nargs=2)
+    group.add_argument('-c', nargs=2)
+    group.add_argument('-e', nargs=2)
+    parsed = parser.parse_args()
+    try:
+        if parsed.e:
+            weather_data = Weather(parsed.e[1], parsed.e[0])
+            weather_data.generate_yearly_report()
+        elif parsed.a:
+            temp = parsed.a[0].split("/")
+            weather_data = Weather(parsed.a[1], temp[0], int(temp[1]))
+            weather_data.generate_monthly_report()
+        elif parsed.c:
+            temp = parsed.c[0].split("/")
+            weather_data = Weather(parsed.c[1], temp[0], int(temp[1]))
+            weather_data.separate_bar_chart_monthly()
+        elif parsed.b:
+            temp = parsed.b[0].split("/")
+            weather_data = Weather(parsed.b[1], temp[0], int(temp[1]))
+            weather_data.single_bar_chart_monthly()
+    except FileNotFoundError:
+        print("No Such File Exists!!")
+    except Exception as e:
+        print(e)
 
 if __name__ == "__main__":
     main()
