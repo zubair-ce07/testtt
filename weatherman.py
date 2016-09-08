@@ -5,6 +5,7 @@ import argparse
 import fnmatch
 import os
 
+
 class Weather(object):
     __date_format = "%Y-%m-%d"
 
@@ -22,13 +23,13 @@ class Weather(object):
         self.get_rows()
 
     def get_lowest(self, column_num):
-        sorted_list = sorted([row for row in self.file_rows if row[column_num] != ''],
-                             key=lambda row: int(row[column_num]), reverse=False)
+        condition = [row for row in self.file_rows if row[column_num] != '']
+        sorted_list = sorted(condition, key=lambda row: int(row[column_num]), reverse=False)
         return sorted_list[0][0], sorted_list[0][column_num]
 
     def get_highest(self, column_num):
-        sorted_list = sorted([row for row in self.file_rows if row[column_num] != ''],
-                             key=lambda row: int(row[column_num]), reverse=True)
+        condition = [row for row in self.file_rows if row[column_num] != '']
+        sorted_list = sorted(condition, key=lambda row: int(row[column_num]), reverse=True)
         return sorted_list[0][0], sorted_list[0][column_num]
 
     def get_average(self, column_num):
@@ -44,8 +45,10 @@ class Weather(object):
 
     def parse_file_names(self):
         if self.month:
+            pattern = "*" + str(self.year) + "*"
+            pattern += Util.get_month_name(self.month) + '.txt'
             for file in os.listdir(self.path):
-                if fnmatch.fnmatch(file, "*"+str(self.year) + "_" + Util.get_month_name(self.month)+'.txt'):
+                if fnmatch.fnmatch(file, pattern):
                     self.file_names.append(file)
         else:
             for file in os.listdir(self.path):
@@ -84,13 +87,25 @@ class Weather(object):
     def generate_extreme_condition_report(self):
         current = self.get_highest(1)
         date_object = Util.get_formatted_date(current[0])
-        print("Highest: ", str(current[1]) + "C", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
+        result = "Highest: " + str(current[1]) + "C on"
+        result += date_object.strftime("%B")
+        result += " "
+        result += date_object.strftime("%d")
+        print(result)
         current = self.get_lowest(3)
         date_object = Util.get_formatted_date(current[0])
-        print("Lowest: ", str(current[1]) + "C", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
+        result = "Lowest: " + str(current[1]) + "C on"
+        result += date_object.strftime("%B")
+        result += " "
+        result += date_object.strftime("%d")
+        print(result)
         current = self.get_highest(7)
         date_object = Util.get_formatted_date(current[0])
-        print("Humid: ", str(current[1]) + "%", " on", date_object.strftime("%B"), " ", date_object.strftime("%d"))
+        result = "Humid: " + str(current[1]) + "%" + " on"
+        result += date_object.strftime("%B")
+        result += " "
+        result += date_object.strftime("%d")
+        print(result)
 
     def generate_average_condition_report(self):
         current = self.get_highest(2)
@@ -101,8 +116,9 @@ class Weather(object):
         print("Average Humidity: ", str(current) + "%")
 
     def generate_multi_line_bar_chart(self):
-        date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
-        print(date_object.strftime("%B"),self.year)
+        date_str = str(self.year)+"-" + str(self.month) + "-01"
+        date_object = Util.get_formatted_date(date_str)
+        print(date_object.strftime("%B"), self.year)
         for row in self.file_rows:
             date_object = Util.get_formatted_date(row[0])
             try:
@@ -116,12 +132,13 @@ class Weather(object):
                 for temp in range(0, min):
                     print("\033[94m+", end="")
                 print("\033[0m", str(min) + "C")
-            except :
+            except:
                 pass
 
     def generate_single_line_bar_chart(self):
-        date_object = Util.get_formatted_date(str(self.year)+"-" + str(self.month) + "-01")
-        print(date_object.strftime("%B"),self.year)
+        date_str = str(self.year) + "-" + str(self.month) + "-01"
+        date_object = Util.get_formatted_date(date_str)
+        print(date_object.strftime("%B"), self.year)
         for row in self.file_rows:
             date_object = Util.get_formatted_date(row[0])
             try:
@@ -148,7 +165,8 @@ class Util(object):
 
     @staticmethod
     def get_month_name(month):
-        return Util.get_formatted_date("2000-" + str(month) + "-01").strftime("%b")
+        date_str = "2000-" + str(month) + "-01"
+        return Util.get_formatted_date(date_str).strftime("%b")
 
 
 def main():
