@@ -71,22 +71,23 @@ class Weather(object):
 
 
 class WeatherParser(object):
-    def __init__(self, user_input):
+    def __init__(self, path, year, month=0):
         self.file_names = []
-        self.user_input = user_input
+        self.path = path
+        self.year = str(year)
+        self.month = month
         self.parse_file_names()
 
     def parse_file_names(self):
-        if self.user_input.month:
-            year = str(self.user_input.year)
-            month = Util.get_month_name(self.user_input.month)
-            pattern = "*{}*{}.txt".format(year, month)
-            for file in os.listdir(os.path.basename(self.user_input.path)):
+        if self.month:
+            month = Util.get_month_name(self.month)
+            pattern = "*{}*{}.txt".format(self.year, month)
+            for file in os.listdir(os.path.basename(self.path)):
                 if fnmatch.fnmatch(file, pattern):
                     self.file_names.append(file)
         else:
-            for file in os.listdir(os.path.basename(self.user_input.path)):
-                if fnmatch.fnmatch(file, "*{}_*.txt".format(str(self.user_input.year))):
+            for file in os.listdir(os.path.basename(self.path)):
+                if fnmatch.fnmatch(file, "*{}_*.txt".format(str(self.year))):
                     self.file_names.append(file)
 
     def get_rows(self):
@@ -96,7 +97,7 @@ class WeatherParser(object):
             raise FileNotFoundError
         for file_name in self.file_names:
             try:
-                full_path = os.path.join(os.path.basename(self.user_input.path), file_name)
+                full_path = os.path.join(os.path.basename(self.path), file_name)
                 csv_file = open(full_path, "r")
                 next(csv_file)
                 reader = csv.DictReader(csv_file, delimiter=',')
@@ -120,9 +121,8 @@ class WeatherParser(object):
 
 
 class ReportGenerator(object):
-    def __init__(self, user_input):
-        self.user_input = user_input
-        weather_parser = WeatherParser(user_input)
+    def __init__(self, path, year, month=0):
+        weather_parser = WeatherParser(path, year, month)
         self.weather_records = weather_parser.get_rows()
 
     def generate_extreme_condition_report(self):
@@ -148,11 +148,12 @@ class ReportGenerator(object):
         print("Average Humidity:  {}%".format(str(current)))
 
     def generate_multi_line_bar_chart(self):
-        date_str = str(self.user_input.year)+"-" + str(self.user_input.month) + "-01"
-        date_object = Util.get_formatted_date(date_str)
-        print(date_object.strftime("%B"), self.user_input.year)
+        first_time = True
         for record in self.weather_records:
             try:
+                if first_time:
+                    first_time = False
+                    print(record.report_date.strftime("%B"), record.report_date.year)
                 max = record.max_temp_c
                 if max is None:
                     raise
@@ -169,11 +170,12 @@ class ReportGenerator(object):
                 pass
 
     def generate_single_line_bar_chart(self):
-        date_str = "{}-{}-01".format(str(self.user_input.year), str(self.user_input.month))
-        date_object = Util.get_formatted_date(date_str)
-        print(date_object.strftime("%B"), self.user_input.year)
+        first_time = True
         for record in self.weather_records:
             try:
+                if first_time:
+                    first_time = False
+                    print(record.report_date.strftime("%B"), record.report_date.year)
                 max = record.max_temp_c
                 min = record.min_temp_c
                 if max is None or min is None:
@@ -207,13 +209,6 @@ class EmptyFileException(Exception):
         pass
 
 
-class UserInput(object):
-    def __init__(self, path, year, month=0):
-        self.path = path
-        self.year = year
-        self.month = month
-
-
 def main():
     parser = argparse.ArgumentParser(description='Weather Data Analyser')
     group = parser.add_mutually_exclusive_group(required=True)
@@ -224,23 +219,19 @@ def main():
     parsed = parser.parse_args()
     try:
         if parsed.e:
-            user_input = UserInput(parsed.e[1], parsed.e[0])
-            report_generator = ReportGenerator(user_input)
+            report_generator = ReportGenerator(parsed.e[1], parsed.e[0])
             report_generator.generate_extreme_condition_report()
         elif parsed.a:
             temp = parsed.a[0].split("/")
-            user_input = UserInput(parsed.a[1], temp[0], int(temp[1]))
-            report_generator = ReportGenerator(user_input)
+            report_generator = ReportGenerator(parsed.a[1], temp[0], int(temp[1]))
             report_generator.generate_average_condition_report()
         elif parsed.c:
             temp = parsed.c[0].split("/")
-            user_input = UserInput(parsed.c[1], temp[0], int(temp[1]))
-            report_generator = ReportGenerator(user_input)
+            report_generator = ReportGenerator(parsed.c[1], temp[0], int(temp[1]))
             report_generator.generate_multi_line_bar_chart()
         elif parsed.s:
             temp = parsed.s[0].split("/")
-            user_input = UserInput(parsed.s[1], temp[0], int(temp[1]))
-            report_generator = ReportGenerator(user_input)
+            report_generator = ReportGenerator(parsed.s[1], temp[0], int(temp[1]))
             report_generator.generate_single_line_bar_chart()
     except FileNotFoundError:
         print("No Such File Exists!!")
