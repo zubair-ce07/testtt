@@ -157,7 +157,7 @@ class WeatherDataParser(object):
 # <------------- END OF CLASS ---------------->
 
 
-def is_valid_point(value):
+def is_valid_integer(value):
     """ Returns 1 if the input is a valid integer and returns 0 otherwise"""
     if value is not None:
         return 1
@@ -189,7 +189,7 @@ def generate_annual_report(parsed_data_list):
             # Update the min/max temperatures and Humidities if required
 
             val = parsedData.max_temp
-            if is_valid_point(val) and (
+            if is_valid_integer(val) and (
                             annual_dictionary[parsedData.year]['max_temp'] is None or
                             val > annual_dictionary[parsedData.year]['max_temp']):
                 # Update max temperature, hottest day and the current year
@@ -199,7 +199,7 @@ def generate_annual_report(parsed_data_list):
                 annual_dictionary[parsedData.year]['year'] = parsedData.year
 
             val = parsedData.max_humidity
-            if is_valid_point(val) and (
+            if is_valid_integer(val) and (
                             annual_dictionary[parsedData.year]['max_humidity'] is None or
                             val > annual_dictionary[parsedData.year]['max_humidity']):
                 # Update the max Humidity
@@ -207,7 +207,7 @@ def generate_annual_report(parsed_data_list):
                 annual_dictionary[parsedData.year]['max_humidity'] = val
 
             val = parsedData.min_temp
-            if is_valid_point(val) and (
+            if is_valid_integer(val) and (
                             annual_dictionary[parsedData.year]['min_temp'] is None or
                             val < annual_dictionary[parsedData.year]['min_temp']):
                 # Update the minimum Temperature
@@ -215,7 +215,7 @@ def generate_annual_report(parsed_data_list):
                 annual_dictionary[parsedData.year]['min_temp'] = val
 
             val = parsedData.min_humidity
-            if is_valid_point(val) and (
+            if is_valid_integer(val) and (
                             annual_dictionary[parsedData.year]['min_humidity'] is None or
                             val < annual_dictionary[parsedData.year]['min_humidity']):
                 # Update the minimum Temperature
