@@ -1,7 +1,7 @@
 import os
 import csv
-import sys
 import calendar
+import argparse
 
 
 def skip_last_line(it):
@@ -38,24 +38,20 @@ class Weather:
             for file_name in files:
                 file_path = os.path.join(root, file_name)
                 with open(file_path) as file:
-                    if file.closed:
-                        print("unable to read from:", file_name)
-                        continue
-                    else:
-                        next(file)
-                        csv_file = csv.DictReader(file)
-                        for line in skip_last_line(csv_file):
-                            if not line["Min TemperatureC"] or \
-                                            not line["Max TemperatureC"] or \
-                                            not line["Max Humidity"]:
-                                # Do not read this particular day if its -
-                                # - missing values of Min or Max temp or humidity
-                                continue
-                            self.__dated_weather_data.append((str(line.get("PKT") or
-                                                                  line.get("PKST")),
-                                                              int(line.get("Max TemperatureC")),
-                                                              int(line.get("Min TemperatureC")),
-                                                              int(line.get("Max Humidity"))))
+                    next(file)
+                    csv_file = csv.DictReader(file)
+                    for line in skip_last_line(csv_file):
+                        if not line["Min TemperatureC"] or \
+                                        not line["Max TemperatureC"] or \
+                                        not line["Max Humidity"]:
+                            # Do not read this particular day if its -
+                            # - missing values of Min or Max temp or humidity
+                            continue
+                        self.__dated_weather_data.append((str(line.get("PKT") or
+                                                              line.get("PKST")),
+                                                          int(line.get("Max TemperatureC")),
+                                                          int(line.get("Min TemperatureC")),
+                                                          int(line.get("Max Humidity"))))
 
     def process_data(self, _year, _month):
         days_in_month = 0
@@ -180,23 +176,27 @@ class Weather:
 
 
 def main():
-    args = len(sys.argv)
-    if args == 4:
-        option = str(sys.argv[1])
-        term = str(sys.argv[2]).split("/")
-        path = str(sys.argv[3])
-        if option == "-c" or option == "-b":
-            weather = Weather(path, term[0], term[1])
-        else:
-            weather = Weather(path)
-        if option == "-e":
-            weather.annual_report(term[0])
-        elif option == "-a":
-            weather.monthly_avg_report(term[0], term[1])
-        elif option == "-c":
-            weather.month_chart_dual()
-        elif option == "-b":
-            weather.month_chart_bonus()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", help="Annual Report of Extreme Weather", nargs=2)
+    parser.add_argument("-a", help="Monthly average", nargs=2)
+    parser.add_argument("-c", help="Monthly Bar Chart", nargs=2)
+    parser.add_argument("-b", help="Bonus Chart", nargs=2)
+    arg = parser.parse_args()
+    if arg.e:
+        weather = Weather(arg.e[1])
+        weather.annual_report(arg.e[0])
+    elif arg.a:
+        weather = Weather(arg.a[1])
+        term = str(arg.a[0]).split("/")
+        weather.monthly_avg_report(term[0], term[1])
+    elif arg.c:
+        term = str(arg.c[0]).split("/")
+        weather = Weather(arg.c[1], term[0], term[1])
+        weather.month_chart_dual()
+    elif arg.b:
+        term = str(arg.b[0]).split("/")
+        weather = Weather(arg.b[1], term[0], term[1])
+        weather.month_chart_bonus()
 
 if __name__ == '__main__':
     main()
