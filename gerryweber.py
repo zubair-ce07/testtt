@@ -6,6 +6,8 @@ import json
 from scrapy.spider import CrawlSpider, Rule
 from gerrywebber.items import GerrywebberItem
 from scrapy.linkextractor import LinkExtractor
+import urllib.parse as urlparse
+from urllib.parse import urlencode
 
 class GerryScrapper(CrawlSpider):
     name = "Gerry_Webber"
@@ -48,22 +50,25 @@ class GerryScrapper(CrawlSpider):
     # this is to get response of json request to get skus.
     def skus_request_url(self, response):
         product_ID = response.xpath("//*[contains(@id,'recommendations')]/@data-pid").extract()[0]
-        req_link = 'http://www.house-of-gerryweber.de/on/demandware.store/Sites-DE-Site/de/Product-GetVariants?pid=&format=json'
-        tokens = req_link.split('=')
-        req_href = tokens[0] + '=' + product_ID + tokens[1] + tokens[2]
-        return req_href
+        url = "http://www.house-of-gerryweber.de/on/demandware.store/Sites-DE-Site/de/Product-GetVariants?pid=&format=json"
+        params = {'pid': product_ID}
+        url_parts = list(urlparse.urlparse(url))
+        query = dict(urlparse.parse_qsl(url_parts[4]))
+        query.update(params)
+        url_parts[4] = urlencode(query)
+        link = (urlparse.urlunparse(url_parts))
+
+        return link
 
     # calculating skus
     def product_skus(self, response):
         garment = response.meta['garment']
         color_map = response.meta['color_map']
         sku = {}
-        variant = response.text
-        variant_dict_string = str(variant)
-        variant_dict = json.loads(variant_dict_string)
-        variants_list = variant_dict['variations']['variants']
+        Product_variants = json.loads(response.text)
+        variants = Product_variants['variations']['variants']
 
-        for items in variants_list:
+        for items in variants:
             size = self.get_size(items)
             for key in color_map:
                 if items['attributes']['color'] in color_map:
@@ -79,12 +84,10 @@ class GerryScrapper(CrawlSpider):
         garment['skus'] = sku
         yield garment
 
-    def get_size(self, Dict):
-        if 'size' in Dict['attributes']:
-            return Dict['attributes']['size']
-        else:
-            size = 'One'
-            return size
+    def get_size(self, variants):
+        if 'size' in variants['attributes']:
+            return variants['attributes']['size']
+        return "OneSize"
 
 
     # this is to get the dictionary of colors, with color_id as key &
