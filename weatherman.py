@@ -18,18 +18,33 @@ class Weather(object):
 
     @staticmethod
     def row_to_weather(row):
-        report_date = row.get("PKT") or row.get("PKST")
-        max_temp_c = row.get("Max TemperatureC")
-        mean_temp_c = row.get("Mean TemperatureC")
-        min_temp_c = row.get("Min TemperatureC")
-        max_humidity = row.get("Max Humidity")
-        mean_humidity = row.get(" Mean Humidity")
+        report_date = Util.get_formatted_date(row.get("PKT") or row.get("PKST"))
+        try:
+            max_temp_c = int(row.get("Max TemperatureC"))
+        except:
+            max_temp_c = None
+        try:
+            mean_temp_c = int(row.get("Mean TemperatureC"))
+        except:
+            mean_temp_c = None
+        try:
+            min_temp_c = int(row.get("Min TemperatureC"))
+        except:
+            min_temp_c = None
+        try:
+            max_humidity = int(row.get("Max Humidity"))
+        except:
+            max_humidity = None
+        try:
+            mean_humidity = int(row.get(" Mean Humidity"))
+        except:
+            mean_humidity = None
         return Weather(report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity)
 
     @staticmethod
     def get_lowest(weather_records, column_name):
         condition = [record for record in weather_records if getattr(record, column_name)]
-        sorted_list = sorted(condition, key=lambda record: int(getattr(record, column_name)), reverse=False)
+        sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=False)
         if len(sorted_list) is 0:
             raise EmptyFileException
         return sorted_list[0].report_date, getattr(sorted_list[0], column_name)
@@ -37,10 +52,10 @@ class Weather(object):
     @staticmethod
     def get_highest(weather_records, column_name):
         condition = [record for record in weather_records if getattr(record, column_name)]
-        sorted_list = sorted(condition, key=lambda record: int(getattr(record, column_name)), reverse=True)
+        sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=True)
         if len(sorted_list) is 0:
             raise EmptyFileException
-        return sorted_list[0].report_date, getattr(sorted_list[0],column_name)
+        return sorted_list[0].report_date, getattr(sorted_list[0], column_name)
 
     @staticmethod
     def get_average(weather_records, column_name):
@@ -49,7 +64,7 @@ class Weather(object):
         for record in weather_records:
             if getattr(record, column_name):
                 count += 1
-                sum += int(getattr(record, column_name))
+                sum += getattr(record, column_name)
         if count is 0:
             return 0
         return sum/count
@@ -112,19 +127,16 @@ class ReportGenerator(object):
 
     def generate_extreme_condition_report(self):
         current = Weather.get_highest(self.weather_records, 'max_temp_c')
-        date_object = Util.get_formatted_date(current[0])
-        month = date_object.strftime("%B")
-        day = date_object.strftime("%d")
+        month = current[0].strftime("%B")
+        day = current[0].strftime("%d")
         print("Highest: {}C on {} {}".format(str(current[1]), month, day))
         current = Weather.get_lowest(self.weather_records, 'min_temp_c')
-        date_object = Util.get_formatted_date(current[0])
-        month = date_object.strftime("%B")
-        day = date_object.strftime("%d")
+        month = current[0].strftime("%B")
+        day = current[0].strftime("%d")
         print("Lowest: {}C on {} {}".format(str(current[1]), month, day))
         current = Weather.get_highest(self.weather_records, "max_humidity")
-        date_object = Util.get_formatted_date(current[0])
-        month = date_object.strftime("%B")
-        day = date_object.strftime("%d")
+        month = current[0].strftime("%B")
+        day = current[0].strftime("%d")
         print("Humid: {}% on {} {}".format(str(current[1]), month, day))
 
     def generate_average_condition_report(self):
@@ -140,15 +152,16 @@ class ReportGenerator(object):
         date_object = Util.get_formatted_date(date_str)
         print(date_object.strftime("%B"), self.user_input.year)
         for record in self.weather_records:
-            date_object = Util.get_formatted_date(record.report_date)
             try:
-                max = int(record.max_temp_c)
-                print(date_object.strftime("%d"), end="")
+                max = record.max_temp_c
+                if max is None:
+                    raise
+                print(record.report_date.strftime("%d"), end="")
                 for temp in range(0, max):
                     print("\033[91m+", end="")
                 print("\033[0m", max, "C")
-                min = int(record.min_temp_c)
-                print(date_object.strftime("%d"), end="")
+                min = record.min_temp_c
+                print(record.report_date.strftime("%d"), end="")
                 for temp in range(0, min):
                     print("\033[94m+", end="")
                 print("\033[0m", str(min) + "C")
@@ -160,11 +173,12 @@ class ReportGenerator(object):
         date_object = Util.get_formatted_date(date_str)
         print(date_object.strftime("%B"), self.user_input.year)
         for record in self.weather_records:
-            date_object = Util.get_formatted_date(record.report_date)
             try:
-                max = int(record.max_temp_c)
-                min = int(record.min_temp_c)
-                print(date_object.strftime("%d"), end="")
+                max = record.max_temp_c
+                min = record.min_temp_c
+                if max is None or min is None:
+                    raise
+                print(record.report_date.strftime("%d"), end="")
                 for temp in range(0, min):
                     print("\033[94m+", end="")
                 for temp in range(1, max):
