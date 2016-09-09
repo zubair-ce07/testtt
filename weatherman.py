@@ -12,6 +12,8 @@ def skip_last_line(it):
 
 
 class Weather:
+    __dated_weather_data = []
+    # date, maxTemp, minTemp, maxHumid
     __month = ""
     __year = ""
     __specified_month_temp = []
@@ -28,9 +30,10 @@ class Weather:
     def __init__(self, path_to_dir, _year="", _month=""):
         self.__year = _year
         self.__month = _month
-        Weather.read_data(self, path_to_dir, _year, _month)
+        Weather.read_data(self, path_to_dir)
+        Weather.process_data(self, _year, _month)
 
-    def read_data(self, path_to_dir, _year, _month):
+    def read_data(self, path_to_dir):
         for root, dirs, files in os.walk(path_to_dir):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
@@ -40,81 +43,100 @@ class Weather:
                         continue
                     else:
                         next(file)
-                        csv_reader = csv.DictReader(file)
-                        days_in_month = 0
-                        max_temp_sum = 0
-                        min_temp_sum = 0
-                        humidity_sum = 0
-                        highest_temp = 0
-                        highest_temp_date = ""
-                        lowest_temp = 100
-                        lowest_temp_date = ""
-                        most_humidity = 0
-                        most_humid_day = ""
-                        d = ""
-                        for line in skip_last_line(csv_reader):
+                        csv_file = csv.DictReader(file)
+                        for line in skip_last_line(csv_file):
                             if not line["Min TemperatureC"] or \
                                             not line["Max TemperatureC"] or \
                                             not line["Max Humidity"]:
                                 # Do not read this particular day if its -
                                 # - missing values of Min or Max temp or humidity
                                 continue
-                            min_temp = int(line.get("Min TemperatureC"))
-                            max_temp = int(line.get("Max TemperatureC"))
-                            humidity = int(line.get("Max Humidity"))
-                            date = str(line.get("PKT") or line.get("PKST"))
-                            d = date.split("-")
-                            if d[0] == _year and d[1] == _month:
-                                self.__specified_month_temp.append((d[2], max_temp, min_temp))
-                            max_temp_sum += max_temp
-                            min_temp_sum += min_temp
-                            humidity_sum += humidity
-                            days_in_month += 1
-                            if highest_temp < max_temp:
-                                highest_temp = max_temp
-                                highest_temp_date = d
+                            self.__dated_weather_data.append((str(line.get("PKT") or
+                                                                  line.get("PKST")),
+                                                              int(line.get("Max TemperatureC")),
+                                                              int(line.get("Min TemperatureC")),
+                                                              int(line.get("Max Humidity"))))
 
-                            if lowest_temp > min_temp:
-                                lowest_temp = min_temp
-                                lowest_temp_date = d
+    def process_data(self, _year, _month):
+        days_in_month = 0
+        max_temp_sum = 0
+        min_temp_sum = 0
+        humidity_sum = 0
+        highest_temp = 0
+        highest_temp_date = ""
+        lowest_temp = 100
+        lowest_temp_date = ""
+        most_humidity = 0
+        most_humid_day = ""
+        prev_month = (str(self.__dated_weather_data[0]).split("-"))[1]
+        for row in self.__dated_weather_data:
+            date = row[0]
+            max_temp = row[1]
+            min_temp = row[2]
+            humidity = row[3]
+            d = date.split("-")
+            curr_year = d[0]
+            curr_month = d[1]
+            if curr_year == _year and curr_month == _month:
+                self.__specified_month_temp.append((d[2], max_temp, min_temp))
+            max_temp_sum += max_temp
+            min_temp_sum += min_temp
+            humidity_sum += humidity
+            days_in_month += 1
+            if highest_temp < max_temp:
+                highest_temp = max_temp
+                highest_temp_date = d
+            if lowest_temp > min_temp:
+                lowest_temp = min_temp
+                lowest_temp_date = d
+            if most_humidity < humidity:
+                most_humidity = humidity
+                most_humid_day = d
+            if days_in_month > 0 and prev_month != curr_month:
+                prev_month = curr_month
+                max_temp_avg = max_temp_sum / days_in_month
+                min_temp_avg = min_temp_sum / days_in_month
+                humidity_avg = humidity_sum / days_in_month
+                days_in_month = 0
+                max_temp_sum = 0
+                min_temp_sum = 0
+                humidity_sum = 0
+                self.__monthly_avg_temp.append((d[0], d[1], round(max_temp_avg),
+                                                round(min_temp_avg), round(humidity_avg)))
+                highest_temp_tuple = (highest_temp_date[0],
+                                      highest_temp_date[1],
+                                      highest_temp_date[2], highest_temp)
+                for year in self.__yearly_max_temp:
+                    if year[0] == highest_temp_date[0] and \
+                                    int(year[3]) < highest_temp:
+                        self.__yearly_max_temp.remove(year)
+                self.__yearly_max_temp.append(highest_temp_tuple)
+                lowest_temp_tuple = (lowest_temp_date[0],
+                                     lowest_temp_date[1],
+                                     lowest_temp_date[2], lowest_temp)
+                for year in self.__yearly_min_temp:
+                    if year[0] == lowest_temp_date[0] and \
+                                    int(year[3]) > lowest_temp:
+                        self.__yearly_min_temp.remove(year)
+                self.__yearly_min_temp.append(lowest_temp_tuple)
+                most_humid_tuple = (most_humid_day[0],
+                                    most_humid_day[1],
+                                    most_humid_day[2], most_humidity)
+                for year in self.__yearly_max_humidity:
+                    if year[0] == most_humid_day[0] and \
+                            int(year[3] < most_humidity):
+                        self.__yearly_max_humidity.remove(year)
+                self.__yearly_max_humidity.append(most_humid_tuple)
+                highest_temp = 0
+                highest_temp_date = ""
+                lowest_temp = 100
+                lowest_temp_date = ""
+                most_humidity = 0
+                most_humid_day = ""
 
-                            if most_humidity < humidity:
-                                most_humidity = humidity
-                                most_humid_day = d
-
-                        if days_in_month > 0:
-                            max_temp_avg = max_temp_sum / days_in_month
-                            min_temp_avg = min_temp_sum / days_in_month
-                            humidity_avg = humidity_sum / days_in_month
-                            self.__monthly_avg_temp.append((d[0], d[1], round(max_temp_avg),
-                                                            round(min_temp_avg), round(humidity_avg)))
-                            highest_temp_tuple = (highest_temp_date[0],
-                                                  highest_temp_date[1],
-                                                  highest_temp_date[2], highest_temp)
-                            for year in self.__yearly_max_temp:
-                                if year[0] == highest_temp_date[0] and \
-                                                int(year[3]) < highest_temp:
-                                    self.__yearly_max_temp.remove(year)
-                            self.__yearly_max_temp.append(highest_temp_tuple)
-                            lowest_temp_tuple = (lowest_temp_date[0],
-                                                 lowest_temp_date[1],
-                                                 lowest_temp_date[2], lowest_temp)
-                            for year in self.__yearly_min_temp:
-                                if year[0] == lowest_temp_date[0] and \
-                                                int(year[3]) > lowest_temp:
-                                    self.__yearly_min_temp.remove(year)
-                            self.__yearly_min_temp.append(lowest_temp_tuple)
-                            most_humid_tuple = (most_humid_day[0],
-                                                most_humid_day[1],
-                                                most_humid_day[2], most_humidity)
-                            for year in self.__yearly_max_humidity:
-                                if year[0] == most_humid_day[0] and \
-                                        int(year[3] < most_humidity):
-                                    self.__yearly_max_humidity.remove(year)
-                            self.__yearly_max_humidity.append(most_humid_tuple)
-                        self.__yearly_max_temp.sort(key=lambda tup: tup[0])
-                        self.__yearly_min_temp.sort(key=lambda tup: tup[0])
-                        self.__yearly_max_humidity.sort(key=lambda tup: tup[0])
+        self.__yearly_max_temp.sort(key=lambda tup: tup[0])
+        self.__yearly_min_temp.sort(key=lambda tup: tup[0])
+        self.__yearly_max_humidity.sort(key=lambda tup: tup[0])
 
     def annual_report(self, year_str):
         for year in self.__yearly_max_temp:
