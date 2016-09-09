@@ -46,14 +46,15 @@ class WeatherParser(object):
 
     def parse_file_names(self):
         if self.user_input.month:
-            pattern = "*" + str(self.user_input.year) + "*"
-            pattern += Util.get_month_name(self.user_input.month) + '.txt'
+            year = str(self.user_input.year)
+            month = Util.get_month_name(self.user_input.month)
+            pattern = "*{}*{}.txt".format(year,month)
             for file in os.listdir(os.path.basename(self.user_input.path)):
                 if fnmatch.fnmatch(file, pattern):
                     self.file_names.append(file)
         else:
             for file in os.listdir(os.path.basename(self.user_input.path)):
-                if fnmatch.fnmatch(file, "*"+str(self.user_input.year) + '_*.txt'):
+                if fnmatch.fnmatch(file, "*{}_*.txt".format(str(self.user_input.year))):
                     self.file_names.append(file)
 
     def get_rows(self):
@@ -99,33 +100,27 @@ class ReportGenerator(object):
     def generate_extreme_condition_report(self):
         current = self.weather.get_highest('Max TemperatureC')
         date_object = Util.get_formatted_date(current[0])
-        result = "Highest: " + str(current[1]) + "C on"
-        result += date_object.strftime("%B")
-        result += " "
-        result += date_object.strftime("%d")
-        print(result)
+        month = date_object.strftime("%B")
+        day = date_object.strftime("%d")
+        print("Highest: {}C on {} {}".format(str(current[1]), month, day))
         current = self.weather.get_lowest('Min TemperatureC')
         date_object = Util.get_formatted_date(current[0])
-        result = "Lowest: " + str(current[1]) + "C on"
-        result += date_object.strftime("%B")
-        result += " "
-        result += date_object.strftime("%d")
-        print(result)
+        month = date_object.strftime("%B")
+        day = date_object.strftime("%d")
+        print("Lowest: {}C on {} {}".format(str(current[1]), month, day))
         current = self.weather.get_highest("Max Humidity")
         date_object = Util.get_formatted_date(current[0])
-        result = "Humid: " + str(current[1]) + "%" + " on"
-        result += date_object.strftime("%B")
-        result += " "
-        result += date_object.strftime("%d")
-        print(result)
+        month = date_object.strftime("%B")
+        day = date_object.strftime("%d")
+        print("Humid: {}% on {} {}".format(str(current[1]), month, day))
 
     def generate_average_condition_report(self):
         current = self.weather.get_highest('Mean TemperatureC')
-        print("Highest Average: ", str(current[1]) + "C")
+        print("Highest Average: {}C".format(str(current[1])))
         current = self.weather.get_lowest('Mean TemperatureC')
-        print("Lowest Average: ", str(current[1]) + "C")
+        print("Lowest Average:  {}C".format(str(current[1])))
         current = self.weather.get_average(' Mean Humidity')
-        print("Average Humidity: ", str(current) + "%")
+        print("Average Humidity:  {}%".format(str(current)))
 
     def generate_multi_line_bar_chart(self):
         date_str = str(self.user_input.year)+"-" + str(self.user_input.month) + "-01"
@@ -148,7 +143,7 @@ class ReportGenerator(object):
                 pass
 
     def generate_single_line_bar_chart(self):
-        date_str = str(self.user_input.year) + "-" + str(self.user_input.month) + "-01"
+        date_str = "{}-{}-01".format(str(self.user_input.year), str(self.user_input.month))
         date_object = Util.get_formatted_date(date_str)
         print(date_object.strftime("%B"), self.user_input.year)
         for row in self.weather_records:
@@ -176,7 +171,7 @@ class Util(object):
 
     @staticmethod
     def get_month_name(month):
-        date_str = "2000-" + str(month) + "-01"
+        date_str = "2000-{}-01".format(str(month))
         return Util.get_formatted_date(date_str).strftime("%b")
 
     @staticmethod
@@ -231,8 +226,8 @@ def main():
         print("No Such File Exists!!")
     except EmptyFileException as e:
         print("Given Data Files are empty for selected column")
-    except Exception as e:
-        print(e)
+    except Exception :
+        print("Wrong year/month")
 
 if __name__ == "__main__":
     main()
