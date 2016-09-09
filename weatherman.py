@@ -31,7 +31,6 @@ class Weather:
         Weather.read_data(self, path_to_dir, _year, _month)
 
     def read_data(self, path_to_dir, _year, _month):
-        file_count = 0
         for root, dirs, files in os.walk(path_to_dir):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
@@ -40,7 +39,6 @@ class Weather:
                         print("unable to read from:", file_name)
                         continue
                     else:
-                        # print("Reading From:", file_name)
                         next(file)
                         csv_reader = csv.DictReader(file)
                         days_in_month = 0
@@ -55,18 +53,16 @@ class Weather:
                         most_humid_day = ""
                         d = ""
                         for line in skip_last_line(csv_reader):
-                            if line["Min TemperatureC"] == "" or \
-                                            line["Max TemperatureC"] == "" or \
-                                            line["Max Humidity"] == "":
+                            if not line["Min TemperatureC"] or \
+                                            not line["Max TemperatureC"] or \
+                                            not line["Max Humidity"]:
                                 # Do not read this particular day if its -
                                 # - missing values of Min or Max temp or humidity
                                 continue
                             min_temp = int(line.get("Min TemperatureC"))
                             max_temp = int(line.get("Max TemperatureC"))
                             humidity = int(line.get("Max Humidity"))
-                            date = str(line.get("PKT"))
-                            if date == "None":
-                                date = str(line.get("PKST"))
+                            date = str(line.get("PKT") or line.get("PKST"))
                             d = date.split("-")
                             if d[0] == _year and d[1] == _month:
                                 self.__specified_month_temp.append((d[2], max_temp, min_temp))
@@ -77,49 +73,48 @@ class Weather:
                             if highest_temp < max_temp:
                                 highest_temp = max_temp
                                 highest_temp_date = d
+
                             if lowest_temp > min_temp:
                                 lowest_temp = min_temp
                                 lowest_temp_date = d
+
                             if most_humidity < humidity:
                                 most_humidity = humidity
                                 most_humid_day = d
+
                         if days_in_month > 0:
                             max_temp_avg = max_temp_sum / days_in_month
                             min_temp_avg = min_temp_sum / days_in_month
                             humidity_avg = humidity_sum / days_in_month
                             self.__monthly_avg_temp.append((d[0], d[1], round(max_temp_avg),
                                                             round(min_temp_avg), round(humidity_avg)))
-
                             highest_temp_tuple = (highest_temp_date[0],
                                                   highest_temp_date[1],
                                                   highest_temp_date[2], highest_temp)
                             for year in self.__yearly_max_temp:
-                                if year[0] == highest_temp_date[0]:
+                                if year[0] == highest_temp_date[0] and \
+                                                int(year[3]) < highest_temp:
                                     self.__yearly_max_temp.remove(year)
                             self.__yearly_max_temp.append(highest_temp_tuple)
-
                             lowest_temp_tuple = (lowest_temp_date[0],
                                                  lowest_temp_date[1],
                                                  lowest_temp_date[2], lowest_temp)
                             for year in self.__yearly_min_temp:
-                                if year[0] == lowest_temp_date[0]:
+                                if year[0] == lowest_temp_date[0] and \
+                                                int(year[3]) > lowest_temp:
                                     self.__yearly_min_temp.remove(year)
                             self.__yearly_min_temp.append(lowest_temp_tuple)
-
                             most_humid_tuple = (most_humid_day[0],
                                                 most_humid_day[1],
                                                 most_humid_day[2], most_humidity)
                             for year in self.__yearly_max_humidity:
-                                if year[0] == most_humid_day[0]:
+                                if year[0] == most_humid_day[0] and \
+                                        int(year[3] < most_humidity):
                                     self.__yearly_max_humidity.remove(year)
                             self.__yearly_max_humidity.append(most_humid_tuple)
-
                         self.__yearly_max_temp.sort(key=lambda tup: tup[0])
                         self.__yearly_min_temp.sort(key=lambda tup: tup[0])
                         self.__yearly_max_humidity.sort(key=lambda tup: tup[0])
-                # print(file_name, "Read successful")
-                file_count += 1
-        # print("Total Files read:", file_count)
 
     def annual_report(self, year_str):
         for year in self.__yearly_max_temp:
@@ -156,20 +151,18 @@ class Weather:
         print(calendar.month_name[int(self.__month)], self.__year)
         for day in self.__specified_month_temp:
             print("\033[1;30;47m", "{:2}".format(day[0]), end=" ")
-            print("\033[1;34;47m", "+" * int(day[2]), end="")
-            print("\033[1;31;47m", "+" * (int(day[1]) - int(day[2])), end=" ")
+            print("\033[1;34;47m", "+" * int(day[2]), sep="", end="")
+            print("\033[1;31;47m", "+" * (int(day[1]) - int(day[2])), sep="", end="")
             print("\033[1;30;47m", day[2], "\bC -", day[1], "\bC")
         print("\n")
 
 
 def main():
     args = len(sys.argv)
-
     if args == 4:
         option = str(sys.argv[1])
         term = str(sys.argv[2]).split("/")
-        path = '/home/umair/PycharmProjects/weatherReporting/weatherdata'
-        # path = str(sys.argv[3])
+        path = str(sys.argv[3])
         if option == "-c" or option == "-b":
             weather = Weather(path, term[0], term[1])
         else:
@@ -185,41 +178,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-"""
-UPDATED TASK DETAILS:
-
-1. For a given year display the highest temperature and day, lowest temperature and day,
-    most humid day and humidity.
-
-weatherman.py -e 2002 /path/to/files
-Highest: 45C on June 23
-Lowest: 01C on December 22
-Humid: 95% on August 14
-
-2. For a given month display the average highest temperature, average lowest temperature,
-    average humidity.
-
-weatherman.py -a 2005/6 /path/to/files
-Highest Average: 39C
-Lowest Average: 18C
-Average Humidity: 71%
-
-3. For a given month draw two horizontal bar charts on the console for the
-    highest and lowest temperature on each day. Highest in red and lowest in blue.
-
-weatherman.py -c 2011/03 /path/to/files
-March 2011
-01 ++++++++++++++++++++++++ 25C
-01 +++++++++++ 11C
-02 +++++++++++++++++++++ 22C
-02 ++++++++ 08C
-
-4. BONUS TASK. For a given month draw one horizontal bar chart on the console for
-    the highest and lowest temperature on each day. Highest in red and lowest in blue.
-
-weatherman.py -b 2011/3 /path/to/files
-March 2011
-01 +++++++++++++++++++++++++++++++++++ 11C - 25C
-02 +++++++++++++++++++++++++++++ 08C - 22C
-"""
