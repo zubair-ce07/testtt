@@ -43,7 +43,7 @@ class Weather(object):
 
     @staticmethod
     def get_lowest(weather_records, column_name):
-        condition = [record for record in weather_records if getattr(record, column_name)]
+        condition = [record for record in weather_records if getattr(record, column_name) is not None]
         sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=False)
         if len(sorted_list) is 0:
             raise EmptyFileException
@@ -51,7 +51,7 @@ class Weather(object):
 
     @staticmethod
     def get_highest(weather_records, column_name):
-        condition = [record for record in weather_records if getattr(record, column_name)]
+        condition = [record for record in weather_records if getattr(record, column_name) is not None]
         sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=True)
         if len(sorted_list) is 0:
             raise EmptyFileException
@@ -62,7 +62,7 @@ class Weather(object):
         sum = 0
         count = 0
         for record in weather_records:
-            if getattr(record, column_name):
+            if getattr(record, column_name) is not None:
                 count += 1
                 sum += getattr(record, column_name)
         if count is 0:
