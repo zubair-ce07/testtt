@@ -249,7 +249,7 @@ def main():
         print("Given Data Files are empty for selected column")
         exit(1)
     except Exception:
-        print("Wrong year/month")
+        print("usage: weatherman.py [-h] (-a year/month path | -s year/month path | -c year/month path | -e year path)\nweatherman.py: error correct argument is required")
         exit(1)
 
 if __name__ == "__main__":
