@@ -224,10 +224,13 @@ def main():
             report_generator.generate_single_line_bar_chart()
     except FileNotFoundError:
         print("No Such File Exists!!")
+        exit(1)
     except EmptyFileException as e:
         print("Given Data Files are empty for selected column")
+        exit(1)
     except Exception :
         print("Wrong year/month")
+        exit(1)
 
 if __name__ == "__main__":
     main()
