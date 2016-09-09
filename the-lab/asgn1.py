@@ -6,8 +6,6 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
 ALL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 
@@ -33,9 +31,8 @@ class WeatherDataParser(object):
         if string:
             return int(string)
 
-    """ Reads the file row by row and records min/max Temperatures, Humidities and hottest days """
-
     def parse_extreme_weather_data(self):
+        """ Reads the file row by row and records min/max Temperatures, Humidities and hottest days """
         with open(self.file_path) as csvfile:
             reading_first_row = 1
             csvfile.seek(0)
@@ -98,6 +95,7 @@ class WeatherDataParser(object):
             self.year = year
 
     def parse_average_weather_data(self):
+        """ Reads the file row by row and records mean min/max Temperatures and humidity """
         with open(self.file_path) as csvfile:
             reading_first_row = 1
             csvfile.seek(0)
@@ -139,6 +137,7 @@ class WeatherDataParser(object):
             self.max_avg_humidity = max_avg_humidity
 
     def parse_daily_weather_data(self):
+        """ Reads the file row by row and returns the min and max temperatures day by day """
         __daily_weather_dictionary = []
 
         with open(self.file_path) as csvfile:
@@ -149,10 +148,12 @@ class WeatherDataParser(object):
             for row in reader:
                 if day < 32:
                     __daily_weather_dictionary.append({'max_temp': self.__to_int(row['Max TemperatureC']),
-                                                   'min_temp': self.__to_int(row['Min TemperatureC'])})
+                                                       'min_temp': self.__to_int(row['Min TemperatureC'])})
                     day += 1
 
         return __daily_weather_dictionary
+
+
 # <------------- END OF CLASS ---------------->
 
 
@@ -225,7 +226,7 @@ def generate_annual_report(parsed_data_list):
 
 
 def get_month(month_no):
-    # Return the name of the month
+    """Return the name of the month"""
     return ALL_MONTHS[month_no - 1]
 
 
@@ -247,16 +248,19 @@ def get_file_read_list(date_param):
 
 
 def print_average_monthly_weather_values(data_param, data_directory):
+    """ Prints the mean min/max temperatures and humidity """
     files_to_read = get_file_read_list(data_param)
     if len(files_to_read) == 1:
         __weather_data_parser = WeatherDataParser(format_file_path(data_directory, files_to_read[0]))
         __weather_data_parser.parse_average_weather_data()
-        print("Highest Average: " + str(__weather_data_parser.max_avg_temp) + "C")
-        print("Lowest Average: " + str(__weather_data_parser.min_avg_temp) + "C")
+        print("Highest Average Temperature : " + str(__weather_data_parser.max_avg_temp) + "C")
+        print("Lowest Average Temperature: " + str(__weather_data_parser.min_avg_temp) + "C")
         print("Highest Average Humidity: " + str(__weather_data_parser.max_avg_humidity) + "%")
 
 
 def print_monthly_weather_chart(data_param, data_directory):
+    """ For a given month draws two horizontal bar charts on the console for the highest and
+        lowest temperature on each day. Highest in red and lowest in blue """
     files_to_read = get_file_read_list(data_param)
     if len(files_to_read) == 1:
         __weather_data_parser = WeatherDataParser(format_file_path(data_directory, files_to_read[0]))
@@ -271,8 +275,9 @@ def print_monthly_weather_chart(data_param, data_directory):
             day += 1
 
 
-def create_bar_chart (daily_weather_data):
-    N = len (daily_weather_data)
+def create_bar_chart(daily_weather_data):
+    """ Stores the bar chart for min and max temperatures of each day in a PDF file """
+    N = len(daily_weather_data)
     max_temperatures = []
     min_temperatures = []
     days = []
@@ -309,6 +314,8 @@ def create_bar_chart (daily_weather_data):
 
 
 def print_monthly_weather_combined_chart(data_param, data_directory):
+    """ For a given month draw one horizontal bar chart on the console for the highest and
+        lowest temperature on each day. Highest in red and lowest in blue. """
     files_to_read = get_file_read_list(data_param)
     if len(files_to_read) == 1:
         __weather_data_parser = WeatherDataParser(format_file_path(data_directory, files_to_read[0]))
@@ -318,13 +325,16 @@ def print_monthly_weather_combined_chart(data_param, data_directory):
         for day_weather in daily_weather_data:
             __red_marker = EscapeSequence.RED + "+" + EscapeSequence.WHITE
             __blue_marker = EscapeSequence.BLUE + "+" + EscapeSequence.WHITE
-            print(str(day), __red_marker * day_weather['max_temp'], __blue_marker * day_weather['min_temp'], day_weather['max_temp'], '-', day_weather['min_temp'])
+            print(str(day), __red_marker * day_weather['max_temp'], __blue_marker * day_weather['min_temp'],
+                  day_weather['max_temp'], '-', day_weather['min_temp'])
             day += 1
 
         create_bar_chart(daily_weather_data)
 
 
 def print_extreme_weather_values(date_param, data_directory):
+    """For a given year display the highest temperature and day, lowest temperature and
+        day, most humid day and humidity."""
     files_to_read = get_file_read_list(date_param)
     __parsed_file_data_list = []
 
@@ -392,7 +402,8 @@ def main():
         print_monthly_weather_chart(args.c, data_folder_path)
 
     if args.cc:
-        print_monthly_weather_combined_chart (args.cc, data_folder_path)
+        print_monthly_weather_combined_chart(args.cc, data_folder_path)
+
 
 if __name__ == "__main__":
     main()
