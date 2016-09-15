@@ -18,29 +18,16 @@ class Weather(object):
 
     @staticmethod
     def row_to_weather(row):
-        report_date = Util.get_formatted_date(row.get("PKT") or row.get("PKST"))
         try:
-            max_temp_c = int(row.get("Max TemperatureC"))
-        except:
-            max_temp_c = None
-        try:
-            mean_temp_c = int(row.get("Mean TemperatureC"))
-        except:
-            mean_temp_c = None
-        try:
-            min_temp_c = int(row.get("Min TemperatureC"))
-        except:
-            min_temp_c = None
-        try:
-            max_humidity = int(row.get("Max Humidity"))
-        except:
-            max_humidity = None
-        try:
-            mean_humidity = int(row.get(" Mean Humidity"))
-        except:
-            mean_humidity = None
-        return Weather(report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity)
-
+            report_date = Util.get_formatted_date(row.get("PKT") or row.get("PKST"))
+            max_temp_c = int(row["Max TemperatureC"]) if row["Max TemperatureC"] else None
+            max_humidity = int(row["Max Humidity"]) if row["Max Humidity"] else None
+            min_temp_c = int(row["Min TemperatureC"]) if row["Min TemperatureC"] else None
+            mean_temp_c = int(row["Mean TemperatureC"]) if row["Mean TemperatureC"] else None
+            mean_humidity = int(row[" Mean Humidity"]) if row[" Mean Humidity"] else None
+            return Weather(report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity)
+        except Exception as e :
+            print(e)
     @staticmethod
     def get_lowest(weather_records, column_name):
         condition = [record for record in weather_records if getattr(record, column_name) is not None]
@@ -158,12 +145,12 @@ class ReportGenerator(object):
                 if max is None:
                     raise
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, max):
+                for temp in range(0, int(max)):
                     print("\033[91m+", end="")
                 print("\033[0m", max, "C")
                 min = record.min_temp_c
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, min):
+                for temp in range(0, int(min)):
                     print("\033[94m+", end="")
                 print("\033[0m", str(min) + "C")
             except:
@@ -181,9 +168,9 @@ class ReportGenerator(object):
                 if max is None or min is None:
                     raise
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, min):
+                for temp in range(0, int(min)):
                     print("\033[94m+", end="")
-                for temp in range(1, max):
+                for temp in range(1, int(max)):
                     print("\033[91m+", end="")
                 print("\033[0m", str(min) + "C-" + str(max) + "C")
             except:
@@ -210,6 +197,7 @@ class EmptyFileException(Exception):
 
 
 def main():
+
     parser = argparse.ArgumentParser(description='Weather Data Analyser')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-a', help='Averages', nargs=2)
@@ -239,8 +227,10 @@ def main():
     except EmptyFileException:
         print("Given Data Files are empty for selected column")
         exit(1)
-    except Exception:
-        print("usage: weatherman.py [-h] (-a year/month path | -s year/month path | -c year/month path | -e year path)\nweatherman.py: error correct argument is required")
+    except Exception as e:
+        print(e)
+        print("usage: weatherman.py [-h] (-a year/month path | -s year/month path | -c year/month path "
+              "| -e year path)\nweatherman.py: error correct argument is required")
         exit(1)
 
 if __name__ == "__main__":
