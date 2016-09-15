@@ -31,31 +31,30 @@ class SheegoSpider(CrawlSpider):
         item['skus'] = {}
         item['name'] = self.item_name(response)
         item['url_original'] = response.url
-        color_links = [response.urljoin(x) for x in
+        colour_links = [response.urljoin(x) for x in
                        response.xpath('//div[contains(@class,"moreinfo-color colors")]/ul/li/a/@href').extract()]
-        kal_body = self.generate_kal_body(response)
+        kal_body = self.generate_xml(response)
         request = Request(url='https://www.sheego.de/request/kal.php',
                           method='POST',
                           callback=self.parse_kal,
                           headers={'Content-Type' : 'application/xml'},
                           body=kal_body)
         request.meta['item'] = item
-        request.meta['url'] = color_links[0]
+        request.meta['url'] = colour_links[0]
         return request
 
-    def generate_kal_body(self, response):
+    def generate_xml(self, response):
         kal_data = self.get_text(response, '//script[contains(text(), "setKALAvailability" )]/text()')
         kal_data = re.search('String\(\'(\w+;\w+(;\w+;\w+)+)', kal_data).group(1).split(';')
         articles = ET.Element('Articles')
-        while kal_data:
+        for colour_code, size in zip(kal_data[0::2], kal_data[1::2]):
             article = ET.Element('Article')
             item_no = ET.Element('CompleteCatalogItemNo')
-            color_code = kal_data.pop(0)
-            item_no.text = color_code
+            item_no.text = colour_code
             item_size = ET.Element('SizeAlphaText')
-            item_size.text = kal_data.pop(0)
+            item_size.text = size
             item_promotion = ET.Element('Std_Promotion')
-            item_promotion.text = re.search('(\d{2}|[A-z])$', color_code).group(1)
+            item_promotion.text = re.search('(\d{2}|[A-z])$', colour_code).group(1)
             item_id = ET.Element('CustomerCompanyID')
             item_id.text = '0'
             article.extend([item_no, item_size, item_promotion, item_id])
@@ -74,33 +73,33 @@ class SheegoSpider(CrawlSpider):
         root = ET.fromstring(response.body.decode("utf-8"))
         articles_available = {}
         articles_unavailable = {}
-        if not root.findall('.//LocalError'):
-            availablities = root.findall('.//ArticleAvailability')
-            for availabity in availablities:
-                item_code = availabity.find('.//CompleteCatalogItemNo').text
-                articles_available[item_code] = []
-                articles_unavailable[item_code] = []
-            for availabity in availablities:
-                item_code = availabity.find('.//CompleteCatalogItemNo').text
-                if availabity.find('.//Stock').text == '1' or\
-                                availabity.find('.//DeliveryDesignation').text == '2' or\
-                                availabity.find('.//DeliveryDesignation').text == '0':
-                    articles_available[item_code].append(availabity.find('.//SizeAlphaText').text)
-                else:
-                    articles_unavailable[item_code].append(availabity.find('.//SizeAlphaText').text)
-            colour_codes = articles_available.keys()
-            sizes_in_stock = list(articles_available.values())
-            sizes_out_of_stock = list(articles_unavailable.values())
-            for colour_code in colour_codes:
-                promotion_id = re.search('(\d{2}|[A-z])$', colour_code).group(1)
-                splitted_url = url.split('-')
-                splitted_url[-1] = promotion_id + re.search('(\w.html)',url).group(1)
-                splitted_url[-2] = colour_code.rstrip(promotion_id)
-                colour_links.append('-'.join(splitted_url))
-            return self.get_next_colour(colour_links, sizes_in_stock, sizes_out_of_stock, item)
-        else:
+        if root.findall('.//LocalError'):
             item['skus'] = "out of stock"
             return item
+        availablities = root.findall('.//ArticleAvailability')
+        for availabity in availablities:
+            item_code = availabity.find('.//CompleteCatalogItemNo').text
+            articles_available[item_code] = []
+            articles_unavailable[item_code] = []
+        for availabity in availablities:
+            item_code = availabity.find('.//CompleteCatalogItemNo').text
+            if availabity.find('.//Stock').text == '1' or\
+                            availabity.find('.//DeliveryDesignation').text == '2' or\
+                            availabity.find('.//DeliveryDesignation').text == '0':
+                articles_available[item_code].append(availabity.find('.//SizeAlphaText').text)
+            else:
+                articles_unavailable[item_code].append(availabity.find('.//SizeAlphaText').text)
+        colour_codes = articles_available.keys()
+        sizes_in_stock = list(articles_available.values())
+        sizes_out_of_stock = list(articles_unavailable.values())
+        for colour_code in colour_codes:
+            promotion_id = re.search('(\d{2}|[A-z])$', colour_code).group(1)
+            splitted_url = url.split('-')
+            splitted_url[-1] = promotion_id + re.search('(\w.html)',url).group(1)
+            splitted_url[-2] = colour_code.rstrip(promotion_id)
+            colour_links.append('-'.join(splitted_url))
+        return self.get_next_colour(colour_links, sizes_in_stock, sizes_out_of_stock, item)
+
 
     def get_next_colour(self, colour_links, sizes_in_stock, sizes_out_of_stock, item):
         if not colour_links:
@@ -112,7 +111,6 @@ class SheegoSpider(CrawlSpider):
         request.meta['sizes_in_stock'] = sizes_in_stock
         request.meta['sizes_out_of_stock'] = sizes_out_of_stock
         return request
-
 
     def parse_colour(self, response):
         item = response.meta['item']
