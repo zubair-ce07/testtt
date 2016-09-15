@@ -3,7 +3,7 @@ import csv
 import argparse
 import fnmatch
 import os
-
+from functools import reduce
 
 class Weather(object):
     __date_format = "%Y-%m-%d"
@@ -18,16 +18,13 @@ class Weather(object):
 
     @staticmethod
     def row_to_weather(row):
-        try:
-            report_date = Util.get_formatted_date(row.get("PKT") or row.get("PKST"))
-            max_temp_c = int(row["Max TemperatureC"]) if row["Max TemperatureC"] else None
-            max_humidity = int(row["Max Humidity"]) if row["Max Humidity"] else None
-            min_temp_c = int(row["Min TemperatureC"]) if row["Min TemperatureC"] else None
-            mean_temp_c = int(row["Mean TemperatureC"]) if row["Mean TemperatureC"] else None
-            mean_humidity = int(row[" Mean Humidity"]) if row[" Mean Humidity"] else None
-            return Weather(report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity)
-        except Exception as e :
-            print(e)
+        report_date = Util.get_formatted_date(row.get("PKT") or row.get("PKST"))
+        max_temp_c = int(row["Max TemperatureC"]) if row["Max TemperatureC"] else None
+        max_humidity = int(row["Max Humidity"]) if row["Max Humidity"] else None
+        min_temp_c = int(row["Min TemperatureC"]) if row["Min TemperatureC"] else None
+        mean_temp_c = int(row["Mean TemperatureC"]) if row["Mean TemperatureC"] else None
+        mean_humidity = int(row[" Mean Humidity"]) if row[" Mean Humidity"] else None
+        return Weather(report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity)
     @staticmethod
     def get_lowest(weather_records, column_name):
         condition = [record for record in weather_records if getattr(record, column_name) is not None]
@@ -46,15 +43,10 @@ class Weather(object):
 
     @staticmethod
     def get_average(weather_records, column_name):
-        sum = 0
-        count = 0
-        for record in weather_records:
-            if getattr(record, column_name) is not None:
-                count += 1
-                sum += getattr(record, column_name)
-        if count is 0:
+        weather_records_filtered = [getattr(z, column_name) for z in weather_records if getattr(z, column_name) is not None]
+        if len(weather_records_filtered) == 0:
             return 0
-        return sum/count
+        return reduce(lambda x, y: x + y, weather_records_filtered)/len(weather_records_filtered)
 
 
 class WeatherParser(object):
