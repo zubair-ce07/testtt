@@ -5,6 +5,7 @@ import fnmatch
 import os
 from functools import reduce
 
+
 class Weather(object):
     __date_format = "%Y-%m-%d"
 
@@ -25,6 +26,7 @@ class Weather(object):
         mean_temp_c = int(row["Mean TemperatureC"]) if row["Mean TemperatureC"] else None
         mean_humidity = int(row[" Mean Humidity"]) if row[" Mean Humidity"] else None
         return Weather(report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity)
+
     @staticmethod
     def get_lowest(weather_records, column_name):
         condition = [record for record in weather_records if getattr(record, column_name) is not None]
@@ -137,12 +139,12 @@ class ReportGenerator(object):
                 if max is None:
                     raise
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, int(max)):
+                for temp in range(0, max):
                     print("\033[91m+", end="")
                 print("\033[0m", max, "C")
                 min = record.min_temp_c
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, int(min)):
+                for temp in range(0, min):
                     print("\033[94m+", end="")
                 print("\033[0m", str(min) + "C")
             except:
@@ -160,9 +162,9 @@ class ReportGenerator(object):
                 if max is None or min is None:
                     raise
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, int(min)):
+                for temp in range(0, min):
                     print("\033[94m+", end="")
-                for temp in range(1, int(max)):
+                for temp in range(1, max):
                     print("\033[91m+", end="")
                 print("\033[0m", str(min) + "C-" + str(max) + "C")
             except:
