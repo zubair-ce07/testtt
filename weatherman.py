@@ -7,8 +7,6 @@ from functools import reduce
 
 
 class Weather(object):
-    __date_format = "%Y-%m-%d"
-
     def __init__(self, report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity):
         self.report_date = report_date
         self.max_temp_c = max_temp_c
@@ -46,7 +44,7 @@ class Weather(object):
     @staticmethod
     def get_average(weather_records, column_name):
         weather_records_filtered = [getattr(z, column_name) for z in weather_records if getattr(z, column_name) is not None]
-        if len(weather_records_filtered) == 0:
+        if len(weather_records_filtered) is 0:
             return 0
         return reduce(lambda x, y: x + y, weather_records_filtered)/len(weather_records_filtered)
 
@@ -55,7 +53,7 @@ class WeatherParser(object):
     def __init__(self, path, year, month=0):
         self.file_names = []
         self.path = path
-        self.year = str(year)
+        self.year = year
         self.month = month
         self.parse_file_names()
 
@@ -68,7 +66,7 @@ class WeatherParser(object):
                     self.file_names.append(file)
         else:
             for file in os.listdir(os.path.basename(self.path)):
-                if fnmatch.fnmatch(file, "*{}_*.txt".format(str(self.year))):
+                if fnmatch.fnmatch(file, "*{}_*.txt".format(self.year)):
                     self.file_names.append(file)
 
     def get_rows(self):
@@ -108,71 +106,55 @@ class ReportGenerator(object):
         current = Weather.get_highest(self.weather_records, 'max_temp_c')
         month = current[0].strftime("%B")
         day = current[0].strftime("%d")
-        print("Highest: {}C on {} {}".format(str(current[1]), month, day))
+        print("Highest: {}C on {} {}".format(current[1], month, day))
         current = Weather.get_lowest(self.weather_records, 'min_temp_c')
         month = current[0].strftime("%B")
         day = current[0].strftime("%d")
-        print("Lowest: {}C on {} {}".format(str(current[1]), month, day))
+        print("Lowest: {}C on {} {}".format(current[1], month, day))
         current = Weather.get_highest(self.weather_records, "max_humidity")
         month = current[0].strftime("%B")
         day = current[0].strftime("%d")
-        print("Humid: {}% on {} {}".format(str(current[1]), month, day))
+        print("Humid: {}% on {} {}".format(current[1], month, day))
 
     def generate_average_condition_report(self):
         current = Weather.get_highest(self.weather_records, 'min_temp_c')
-        print("Highest Average: {}C".format(str(current[1])))
+        print("Highest Average: {}C".format(current[1]))
         current = Weather.get_lowest(self.weather_records, 'min_temp_c')
-        print("Lowest Average:  {}C".format(str(current[1])))
+        print("Lowest Average:  {}C".format(current[1]))
         current = Weather.get_average(self.weather_records, 'mean_humidity')
-        print("Average Humidity:  {}%".format(str(current)))
+        print("Average Humidity:  {:.2f}%".format(current))
 
     def generate_multi_line_bar_chart(self):
-        first_time = True
+        record = self.weather_records[0]
+        print(record.report_date.strftime("%B"), record.report_date.year)
         for record in self.weather_records:
-            try:
-                if first_time:
-                    first_time = False
-                    print(record.report_date.strftime("%B"), record.report_date.year)
-                if record.max_temp_c is None:
-                    raise
-                print(record.report_date.strftime("%d"), end="")
-                print("\033[91m+"*record.max_temp_c, end="")
-                print("\033[0m{}C".format(record.max_temp_c))
-                print(record.report_date.strftime("%d"), end="")
-                print("\033[94m+"*record.min_temp_c, end="")
-                print("\033[0m{}C".format(record.min_temp_c))
-            except:
-                pass
+            if record.max_temp_c is None:
+                continue
+            print(record.report_date.strftime("%d"), end="")
+            print("\033[91m+"*record.max_temp_c, "\033[0m{}C".format(record.max_temp_c))
+            print(record.report_date.strftime("%d"), end="")
+            print("\033[94m+"*record.min_temp_c, "\033[0m{}C".format(record.min_temp_c))
 
     def generate_single_line_bar_chart(self):
-        first_time = True
+        record = self.weather_records[0]
+        print(record.report_date.strftime("%B"), record.report_date.year)
         for record in self.weather_records:
-            try:
-                if first_time:
-                    first_time = False
-                    print(record.report_date.strftime("%B"), record.report_date.year)
-                if record.max_temp_c is None or record.min_temp_c is None:
-                    raise
-                print(record.report_date.strftime("%d"), end="")
-                print("\033[94m+"*record.min_temp_c, end="")
-                print("\033[91m+"*record.max_temp_c, end="")
-                print("\033[0m{}C-{}C".format(record.min_temp_c, record.max_temp_c))
-            except:
-                pass
+            if record.max_temp_c is None or record.min_temp_c is None:
+                continue
+            print(record.report_date.strftime("%d"), end="")
+            print("\033[94m+"*record.min_temp_c, end="")
+            print("\033[91m+"*record.max_temp_c, end="")
+            print("\033[0m{}C-{}C".format(record.min_temp_c, record.max_temp_c))
 
 
 class Util(object):
     @staticmethod
     def get_formatted_date(date_str=""):
-        date_format = "%Y-%m-%d"
-        if not date_str:
-            return datetime.today().date()
-        return datetime.strptime(date_str, date_format).date()
+        return datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else datetime.today().date()
 
     @staticmethod
     def get_month_name(month):
-        date_str = "2000-{}-01".format(str(month))
-        return Util.get_formatted_date(date_str).strftime("%b")
+        return Util.get_formatted_date("2000-{}-01".format(month)).strftime("%b")
 
 
 class EmptyFileException(Exception):
