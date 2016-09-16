@@ -2,7 +2,6 @@ import csv
 import argparse
 import fnmatch
 import os
-from functools import reduce
 import calendar
 
 
@@ -33,10 +32,10 @@ class Weather(object):
 
     @staticmethod
     def get_average(weather_records, column_name):
-        weather_records_filtered = [getattr(z, column_name) for z in weather_records if getattr(z, column_name) is not None]
-        if len(weather_records_filtered) is 0:
-            return 0
-        return reduce(lambda x, y: x + y, weather_records_filtered)/len(weather_records_filtered)
+        weather_records_filtered = [getattr(z, column_name)
+                                    for z in weather_records if getattr(z, column_name) is not None]
+        total = sum([x for x in weather_records_filtered])
+        return total/len(weather_records_filtered) if weather_records_filtered else None
 
 
 class WeatherParser(object):
@@ -111,14 +110,17 @@ class ReportGenerator(object):
         record = self.weather_records[0]
         print(calendar.month_name[record.month], record.year)
         for record in filter(lambda x: x.max_temp_c is not None, self.weather_records):
-            print("{}\033[91m".format(record.day), "+"*record.max_temp_c, "\033[0m{}C".format(record.max_temp_c), sep="")
-            print("{}\033[94m".format(record.day), "+"*record.min_temp_c, "\033[0m{}C".format(record.min_temp_c), sep="")
+            print("{}\033[91m".format(record.day), "+"*record.max_temp_c,
+                  "\033[0m{}C".format(record.max_temp_c), sep="")
+            print("{}\033[94m".format(record.day), "+"*record.min_temp_c,
+                  "\033[0m{}C".format(record.min_temp_c), sep="")
 
     def generate_single_line_bar_chart(self):
         record = self.weather_records[0]
         print(calendar.month_name[record.month], record.year)
         for record in filter(lambda x: x.max_temp_c is not None, self.weather_records):
-            print(record.day, "\033[94m+"*record.min_temp_c, "\033[91m+"*(record.max_temp_c-record.min_temp_c), sep="", end="")
+            print(record.day, "\033[94m+"*record.min_temp_c,
+                  "\033[91m+"*(record.max_temp_c-record.min_temp_c), sep="", end="")
             print("\033[0m{}C-{}C".format(record.min_temp_c, record.max_temp_c))
 
 
@@ -149,8 +151,7 @@ def main():
     except FileNotFoundError:
         print("No Such File Exists!!")
         exit(1)
-    except Exception as e:
-        print(e)
+    except:
         print("usage: weatherman.py [-h] (-a year/month path | -s year/month path | -c year/month path "
               "| -e year path)\nweatherman.py: error correct argument is required")
         exit(1)
