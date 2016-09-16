@@ -29,15 +29,9 @@ class Weather(object):
         return Weather(report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity)
 
     @staticmethod
-    def get_lowest(weather_records, column_name):
+    def get_extreme(weather_records, column_name, reverse_list):
         condition = [record for record in weather_records if getattr(record, column_name) is not None]
-        sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=False)
-        return sorted_list[0] if sorted_list else None
-
-    @staticmethod
-    def get_highest(weather_records, column_name):
-        condition = [record for record in weather_records if getattr(record, column_name) is not None]
-        sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=True)
+        sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=reverse_list)
         return sorted_list[0] if sorted_list else None
 
     @staticmethod
@@ -101,17 +95,17 @@ class ReportGenerator(object):
         self.weather_records = weather_parser.get_rows()
 
     def generate_extreme_condition_report(self):
-        current = Weather.get_highest(self.weather_records, 'max_temp_c')
+        current = Weather.get_extreme(self.weather_records, 'max_temp_c', True)
         print("Highest: {}C on {} {}".format(current.max_temp_c, calendar.month_name[current.month], current.day))
-        current = Weather.get_lowest(self.weather_records, 'min_temp_c')
+        current = Weather.get_extreme(self.weather_records, 'min_temp_c', False)
         print("Lowest: {}C on {} {}".format(current.min_temp_c, calendar.month_name[current.month], current.day))
-        current = Weather.get_highest(self.weather_records, "max_humidity")
+        current = Weather.get_extreme(self.weather_records, "max_humidity", True)
         print("Humid: {}% on {} {}".format(current.max_humidity, calendar.month_name[current.month], current.day))
 
     def generate_average_condition_report(self):
-        current = Weather.get_highest(self.weather_records, 'mean_temp_c')
+        current = Weather.get_extreme(self.weather_records, 'mean_temp_c', True)
         print("Highest Average: {}C".format(current.mean_temp_c))
-        current = Weather.get_lowest(self.weather_records, 'mean_temp_c')
+        current = Weather.get_extreme(self.weather_records, 'mean_temp_c', False)
         print("Lowest Average:  {}C".format(current.mean_temp_c))
         current = Weather.get_average(self.weather_records, 'mean_humidity')
         print("Average Humidity:  {:.2f}%".format(current))
@@ -119,19 +113,15 @@ class ReportGenerator(object):
     def generate_multi_line_bar_chart(self):
         record = self.weather_records[0]
         print(calendar.month_name[record.month], record.year)
-        for record in self.weather_records:
-            if record.max_temp_c is None:
-                continue
+        for record in filter(lambda x: x.max_temp_c is not None, self.weather_records):
             print("{}\033[91m".format(record.day), "+"*record.max_temp_c, "\033[0m{}C".format(record.max_temp_c), sep="")
             print("{}\033[94m".format(record.day), "+"*record.min_temp_c, "\033[0m{}C".format(record.min_temp_c), sep="")
 
     def generate_single_line_bar_chart(self):
         record = self.weather_records[0]
         print(calendar.month_name[record.month], record.year)
-        for record in self.weather_records:
-            if record.max_temp_c is None or record.min_temp_c is None:
-                continue
-            print(record.day, "\033[94m+"*record.min_temp_c, "\033[91m+"*record.max_temp_c, sep="", end="")
+        for record in filter(lambda x: x.max_temp_c is not None, self.weather_records):
+            print(record.day, "\033[94m+"*record.min_temp_c, "\033[91m+"*(record.max_temp_c-record.min_temp_c), sep="", end="")
             print("\033[0m{}C-{}C".format(record.min_temp_c, record.max_temp_c))
 
 
