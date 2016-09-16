@@ -1,14 +1,17 @@
-from datetime import datetime
 import csv
 import argparse
 import fnmatch
 import os
 from functools import reduce
+import calendar
 
 
 class Weather(object):
     def __init__(self, report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity):
-        self.report_date = report_date
+        parsed_date = report_date.split("-")
+        self.day = int(parsed_date[2])
+        self.month = int(parsed_date[1])
+        self.year = int(parsed_date[0])
         self.max_temp_c = max_temp_c
         self.mean_temp_c = mean_temp_c
         self.min_temp_c = min_temp_c
@@ -17,7 +20,7 @@ class Weather(object):
 
     @staticmethod
     def row_to_weather(row):
-        report_date = Util.get_formatted_date(row.get("PKT") or row.get("PKST"))
+        report_date = row.get("PKT") or row.get("PKST")
         max_temp_c = int(row["Max TemperatureC"]) if row["Max TemperatureC"] else None
         max_humidity = int(row["Max Humidity"]) if row["Max Humidity"] else None
         min_temp_c = int(row["Min TemperatureC"]) if row["Min TemperatureC"] else None
@@ -29,17 +32,13 @@ class Weather(object):
     def get_lowest(weather_records, column_name):
         condition = [record for record in weather_records if getattr(record, column_name) is not None]
         sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=False)
-        if len(sorted_list) is 0:
-            raise EmptyFileException
-        return sorted_list[0].report_date, getattr(sorted_list[0], column_name)
+        return sorted_list[0] if sorted_list else None
 
     @staticmethod
     def get_highest(weather_records, column_name):
         condition = [record for record in weather_records if getattr(record, column_name) is not None]
         sorted_list = sorted(condition, key=lambda record: getattr(record, column_name), reverse=True)
-        if len(sorted_list) is 0:
-            raise EmptyFileException
-        return sorted_list[0].report_date, getattr(sorted_list[0], column_name)
+        return sorted_list[0] if sorted_list else None
 
     @staticmethod
     def get_average(weather_records, column_name):
@@ -59,8 +58,7 @@ class WeatherParser(object):
 
     def parse_file_names(self):
         if self.month:
-            month = Util.get_month_name(self.month)
-            pattern = "*{}*{}.txt".format(self.year, month)
+            pattern = "*{}*{}.txt".format(self.year, calendar.month_abbr[self.month])
             for file in os.listdir(os.path.basename(self.path)):
                 if fnmatch.fnmatch(file, pattern):
                     self.file_names.append(file)
@@ -104,62 +102,37 @@ class ReportGenerator(object):
 
     def generate_extreme_condition_report(self):
         current = Weather.get_highest(self.weather_records, 'max_temp_c')
-        month = current[0].strftime("%B")
-        day = current[0].strftime("%d")
-        print("Highest: {}C on {} {}".format(current[1], month, day))
+        print("Highest: {}C on {} {}".format(current.max_temp_c, calendar.month_name[current.month], current.day))
         current = Weather.get_lowest(self.weather_records, 'min_temp_c')
-        month = current[0].strftime("%B")
-        day = current[0].strftime("%d")
-        print("Lowest: {}C on {} {}".format(current[1], month, day))
+        print("Lowest: {}C on {} {}".format(current.min_temp_c, calendar.month_name[current.month], current.day))
         current = Weather.get_highest(self.weather_records, "max_humidity")
-        month = current[0].strftime("%B")
-        day = current[0].strftime("%d")
-        print("Humid: {}% on {} {}".format(current[1], month, day))
+        print("Humid: {}% on {} {}".format(current.max_humidity, calendar.month_name[current.month], current.day))
 
     def generate_average_condition_report(self):
-        current = Weather.get_highest(self.weather_records, 'min_temp_c')
-        print("Highest Average: {}C".format(current[1]))
-        current = Weather.get_lowest(self.weather_records, 'min_temp_c')
-        print("Lowest Average:  {}C".format(current[1]))
+        current = Weather.get_highest(self.weather_records, 'mean_temp_c')
+        print("Highest Average: {}C".format(current.mean_temp_c))
+        current = Weather.get_lowest(self.weather_records, 'mean_temp_c')
+        print("Lowest Average:  {}C".format(current.mean_temp_c))
         current = Weather.get_average(self.weather_records, 'mean_humidity')
         print("Average Humidity:  {:.2f}%".format(current))
 
     def generate_multi_line_bar_chart(self):
         record = self.weather_records[0]
-        print(record.report_date.strftime("%B"), record.report_date.year)
+        print(calendar.month_name[record.month], record.year)
         for record in self.weather_records:
             if record.max_temp_c is None:
                 continue
-            print(record.report_date.strftime("%d"), end="")
-            print("\033[91m+"*record.max_temp_c, "\033[0m{}C".format(record.max_temp_c))
-            print(record.report_date.strftime("%d"), end="")
-            print("\033[94m+"*record.min_temp_c, "\033[0m{}C".format(record.min_temp_c))
+            print("{}\033[91m".format(record.day), "+"*record.max_temp_c, "\033[0m{}C".format(record.max_temp_c), sep="")
+            print("{}\033[94m".format(record.day), "+"*record.min_temp_c, "\033[0m{}C".format(record.min_temp_c), sep="")
 
     def generate_single_line_bar_chart(self):
         record = self.weather_records[0]
-        print(record.report_date.strftime("%B"), record.report_date.year)
+        print(calendar.month_name[record.month], record.year)
         for record in self.weather_records:
             if record.max_temp_c is None or record.min_temp_c is None:
                 continue
-            print(record.report_date.strftime("%d"), end="")
-            print("\033[94m+"*record.min_temp_c, end="")
-            print("\033[91m+"*record.max_temp_c, end="")
+            print(record.day, "\033[94m+"*record.min_temp_c, "\033[91m+"*record.max_temp_c, sep="", end="")
             print("\033[0m{}C-{}C".format(record.min_temp_c, record.max_temp_c))
-
-
-class Util(object):
-    @staticmethod
-    def get_formatted_date(date_str=""):
-        return datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else datetime.today().date()
-
-    @staticmethod
-    def get_month_name(month):
-        return Util.get_formatted_date("2000-{}-01".format(month)).strftime("%b")
-
-
-class EmptyFileException(Exception):
-    def __init___(self, error):
-        pass
 
 
 def main():
@@ -188,9 +161,6 @@ def main():
             report_generator.generate_single_line_bar_chart()
     except FileNotFoundError:
         print("No Such File Exists!!")
-        exit(1)
-    except EmptyFileException:
-        print("Given Data Files are empty for selected column")
         exit(1)
     except Exception as e:
         print(e)
