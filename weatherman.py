@@ -94,8 +94,6 @@ class WeatherParser(object):
     def get_next_row(reader):
         prev = None
         for row in reader:
-            if len(row) is 0:
-                continue
             if prev:
                 yield prev
             prev = row
@@ -135,18 +133,14 @@ class ReportGenerator(object):
                 if first_time:
                     first_time = False
                     print(record.report_date.strftime("%B"), record.report_date.year)
-                max = record.max_temp_c
-                if max is None:
+                if record.max_temp_c is None:
                     raise
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, max):
-                    print("\033[91m+", end="")
-                print("\033[0m", max, "C")
-                min = record.min_temp_c
+                print("\033[91m+"*record.max_temp_c, end="")
+                print("\033[0m{}C".format(record.max_temp_c))
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, min):
-                    print("\033[94m+", end="")
-                print("\033[0m", str(min) + "C")
+                print("\033[94m+"*record.min_temp_c, end="")
+                print("\033[0m{}C".format(record.min_temp_c))
             except:
                 pass
 
@@ -157,16 +151,12 @@ class ReportGenerator(object):
                 if first_time:
                     first_time = False
                     print(record.report_date.strftime("%B"), record.report_date.year)
-                max = record.max_temp_c
-                min = record.min_temp_c
-                if max is None or min is None:
+                if record.max_temp_c is None or record.min_temp_c is None:
                     raise
                 print(record.report_date.strftime("%d"), end="")
-                for temp in range(0, min):
-                    print("\033[94m+", end="")
-                for temp in range(1, max):
-                    print("\033[91m+", end="")
-                print("\033[0m", str(min) + "C-" + str(max) + "C")
+                print("\033[94m+"*record.min_temp_c, end="")
+                print("\033[91m+"*record.max_temp_c, end="")
+                print("\033[0m{}C-{}C".format(record.min_temp_c, record.max_temp_c))
             except:
                 pass
 
@@ -191,7 +181,6 @@ class EmptyFileException(Exception):
 
 
 def main():
-
     parser = argparse.ArgumentParser(description='Weather Data Analyser')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-a', help='Averages', nargs=2)
