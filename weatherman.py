@@ -8,10 +8,7 @@ import calendar
 
 class Weather(object):
     def __init__(self, report_date, max_temp_c, mean_temp_c, min_temp_c, max_humidity, mean_humidity):
-        parsed_date = report_date.split("-")
-        self.day = int(parsed_date[2])
-        self.month = int(parsed_date[1])
-        self.year = int(parsed_date[0])
+        self.year, self.month, self.day = map(int, report_date.split("-"))
         self.max_temp_c = max_temp_c
         self.mean_temp_c = mean_temp_c
         self.min_temp_c = min_temp_c
@@ -138,16 +135,16 @@ def main():
             report_generator = ReportGenerator(parsed.e[1], parsed.e[0])
             report_generator.generate_extreme_condition_report()
         elif parsed.a:
-            temp = parsed.a[0].split("/")
-            report_generator = ReportGenerator(parsed.a[1], temp[0], int(temp[1]))
+            year, month = map(int, parsed.a[0].split("/"))
+            report_generator = ReportGenerator(parsed.a[1], year, month)
             report_generator.generate_average_condition_report()
         elif parsed.c:
-            temp = parsed.c[0].split("/")
-            report_generator = ReportGenerator(parsed.c[1], temp[0], int(temp[1]))
+            year, month = map(int, parsed.c[0].split("/"))
+            report_generator = ReportGenerator(parsed.c[1], year, month)
             report_generator.generate_multi_line_bar_chart()
         elif parsed.s:
-            temp = parsed.s[0].split("/")
-            report_generator = ReportGenerator(parsed.s[1], temp[0], int(temp[1]))
+            year, month = map(int, parsed.s[0].split("/"))
+            report_generator = ReportGenerator(parsed.s[1], year, month)
             report_generator.generate_single_line_bar_chart()
     except FileNotFoundError:
         print("No Such File Exists!!")
