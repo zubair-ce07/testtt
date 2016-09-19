@@ -2,6 +2,14 @@ import os
 import csv
 import argparse
 import calendar
+import re
+
+
+def yearly_sort(value):
+    numbers = re.compile(r'(\d+)')
+    parts = numbers.split(value)
+    parts[1::2] = map(int, parts[1::2])
+    return parts
 
 
 def skip_last_line(it):
@@ -24,6 +32,7 @@ class Month:
         self.min_temp = 100
         self.max_humid = -1
         self.max_day = self.min_day = self.humid_day = 0
+        self.monthly_calculations()
 
     def monthly_calculations(self):
         max_sum = min_sum = humid_sum = days = 0
@@ -58,6 +67,7 @@ class Year:
         self.max_humid = -1
         self.max_day = self.min_day = self.humid_day = 0
         self.max_month = self.min_month = self.humid_month = 0
+        self.annual_calculations()
 
     def annual_calculations(self):
         for month in self.months:
@@ -87,7 +97,7 @@ class Weather:
 
     def get_file_names(self):
         for root, dirs, files in os.walk(self.path):
-            for file_name in files:
+            for file_name in sorted(files, key=yearly_sort):
                 self.file_names.append(os.path.join(root, file_name))
 
     def read_rows(self):
@@ -99,31 +109,30 @@ class Weather:
                     if not line["Min TemperatureC"] or \
                             not line["Max TemperatureC"] or \
                             not line["Max Humidity"]:
-                        continue  # Skip over Blanks
+                        continue
                     self.rows.append((str(line.get("PKT") or line.get("PKST")),
                                       int(line.get("Max TemperatureC")),
                                       int(line.get("Min TemperatureC")),
                                       int(line.get("Max Humidity"))))
 
     def populate_records(self):
-        months = days = []
-        prev_month = (str(self.rows[0]).split("-"))[1]
-        prev_year = (str(self.rows[0]).split("-"))[0]
+        months = []
+        days = []
+        date = str(self.rows[0]).split("-")
+        prev_month = date[1]
+        prev_year = date[0].lstrip("(\'")
         for row in self.rows:
             date = str(row[0]).split("-")
             curr_month = date[1]
             curr_year = date[0]
-            days.append((int(date[2]), row[1], row[2], row[3]))
             if prev_month != curr_month:
+                months.append(Month(date[0], int(prev_month), days))
                 prev_month = curr_month
-                months.append(Month(date[0], int(date[1]), days))
-                months[-1].monthly_calculations()
-                print("hello")
                 days = []
+            days.append((int(date[2]), row[1], row[2], row[3]))
             if prev_year != curr_year:
+                self.years.append(Year(months, prev_year))
                 prev_year = curr_year
-                self.years.append((Year(months, date[0])), )
-                self.years[-1].annual_calculations()
                 months = []
 
     def annual_report(self, year_str):
@@ -137,65 +146,68 @@ class Weather:
                       calendar.month_name[year.humid_month], year.humid_day)
                 break
 
-    def monthly_avg_report(self, year_str, month_str):
+    def find_month(self, year_str, month_str):
         for year in self.years:
             if year.year == year_str:
                 for month in year.months:
                     if month.month_num == int(month_str):
-                        print("Highest Average:", month.avg_temp_max, "\bC")
-                        print("Lowest Average:", month.avg_temp_min, "\bC")
-                        print("Average Humidity:", month.avg_humidity, "\b%")
-                        break
-                break
-'''
-    def month_chart_dual(self):
-        print(calendar.month_name[int(self.month)], self.year, end="")
-        for day in self.specified_month_temp:
+                        return month
+
+    def monthly_avg_report(self, year_str, month_str):
+        month = self.find_month(year_str, month_str)
+        print("Highest Average:", month.avg_temp_max, "\bC")
+        print("Lowest Average:", month.avg_temp_min, "\bC")
+        print("Average Humidity:", month.avg_humidity, "\b%")
+
+    def month_chart_dual(self, year_str, month_str):
+        month = self.find_month(year_str, month_str)
+        print(calendar.month_name[int(month.month_num)], month.year, end="")
+        for day in month.days_with_stats:
             print("\033[1;31;47m")
-            print(day[0], "+" * int(day[1]), day[1], "\bC", end="")
+            print(day[0], "+" * day[1], day[1], "\bC", end="")
             print("\033[1;34;47m")
-            print(day[0], "+" * int(day[2]), day[2], "\bC", end="")
+            print(day[0], "+" * day[2], day[2], "\bC", end="")
         print("\n")
 
-    def month_chart_bonus(self):
-        print(calendar.month_name[int(self.month)], self.year)
-        for day in self.specified_month_temp:
+    def month_chart_bonus(self, year_str, month_str):
+        month = self.find_month(year_str, month_str)
+        print(calendar.month_name[month.month_num], month.year)
+        for day in month.days_with_stats:
             print("\033[1;30;47m", "{:2}".format(day[0]), end=" ")
-            print("\033[1;34;47m", "+" * int(day[2]), sep="", end="")
-            print("\033[1;31;47m","+"*(int(day[1])-int(day[2])), sep="", end="")
+            print("\033[1;34;47m", "+" * day[2], sep="", end="")
+            print("\033[1;31;47m", "+" * (day[1] - day[2]), sep="", end="")
             print("\033[1;30;47m", day[2], "\bC -", day[1], "\bC")
         print("\n")
-'''
 
 
-def main():
+def cmd_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", help="Annual Report of Extreme Weather", nargs=2)
     parser.add_argument("-a", help="Monthly average", nargs=2)
     parser.add_argument("-c", help="Monthly Bar Chart", nargs=2)
     parser.add_argument("-b", help="Bonus Chart", nargs=2)
-    arg = parser.parse_args()
-    weather = Weather('/home/umair/weatherdata')
+    return parser.parse_args()
+
+
+def get_weather(path):
+    weather = Weather(path)
     weather.load_stuff()
+    return weather
+
+
+def main():
+    arg = cmd_parser()
     if arg.e:
-        weather.annual_report(arg.e[0])
-        '''
+        get_weather(arg.e[1]).annual_report(arg.e[0])
     elif arg.a:
-        weather.read_data(arg.a[1])
-        weather.process_data()
-        term = str(arg.a[0]).split("/")
-        weather.monthly_avg_report(term[0], term[1])
+        tok = str(arg.a[0]).split("/")
+        get_weather(arg.a[1]).monthly_avg_report(tok[0], tok[1])
     elif arg.c:
-        term = str(arg.c[0]).split("/")
-        weather.read_data(arg.c[1])
-        weather.process_data(term[0], term[1])
-        weather.month_chart_dual()
+        tok = str(arg.c[0]).split("/")
+        get_weather(arg.c[1]).month_chart_dual(tok[0], tok[1])
     elif arg.b:
-        term = str(arg.b[0]).split("/")
-        weather.read_data(arg.b[1])
-        weather.process_data(term[0], term[1])
-        weather.month_chart_bonus()
-    '''
+        tok = str(arg.b[0]).split("/")
+        get_weather(arg.b[1]).month_chart_bonus(tok[0], tok[1])
 
 if __name__ == '__main__':
     main()
