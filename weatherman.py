@@ -19,19 +19,26 @@ def skip_last_line(it):
         prev = item
 
 
-class Month:
+class WeatherStats:
+    def __init__(self, year):
+        self.year = year
+        self.max_temp = -273
+        self.min_temp = 100
+        self.max_humid = -1
+        self.max_day = 0
+        self.min_day = 0
+        self.humid_day = 0
+
+
+class Month(WeatherStats):
 
     def __init__(self, year, month_num, days_with_stats):
-        self.year = year
+        WeatherStats.__init__(self, year)
         self.month_num = month_num
         self.days_with_stats = days_with_stats
         self.avg_temp_max = -273
         self.avg_temp_min = 100
         self.avg_humidity = -1
-        self.max_temp = -273
-        self.min_temp = 100
-        self.max_humid = -1
-        self.max_day = self.min_day = self.humid_day = 0
         self.monthly_calculations()
 
     def monthly_calculations(self):
@@ -58,14 +65,10 @@ class Month:
             self.humid_day = day
 
 
-class Year:
+class Year(WeatherStats):
     def __init__(self, months, year):
+        WeatherStats.__init__(self, year)
         self.months = months
-        self.year = year
-        self.max_temp = -273
-        self.min_temp = 100
-        self.max_humid = -1
-        self.max_day = self.min_day = self.humid_day = 0
         self.max_month = self.min_month = self.humid_month = 0
         self.annual_calculations()
 
