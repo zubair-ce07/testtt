@@ -50,7 +50,7 @@ class GerryScrapper(CrawlSpider):
         query = dict(urlparse.parse_qsl(url_parts[4]))
         query.update(params)
         url_parts[4] = urlencode(query)
-        link = (urlparse.urlunparse(url_parts))
+        link = urlparse.urlunparse(url_parts)
 
         return link
 
@@ -58,8 +58,8 @@ class GerryScrapper(CrawlSpider):
         garment = response.meta['garment']
         color_map = response.meta['color_map']
         sku = {}
-        Product_variants = json.loads(response.text)
-        variants = Product_variants['variations']['variants']
+        product_variants = json.loads(response.text)
+        variants = product_variants['variations']['variants']
 
         for items in variants:
             size = self.get_size(items)
@@ -81,11 +81,11 @@ class GerryScrapper(CrawlSpider):
         return variants['attributes'].get('size', 'one_size')
 
     def get_color_map(self, response):
-        sel = response.xpath("//*[contains(@class,'color')]//a")
+        sel = response.css(".color a")
         color_map = {}
-        for item in sel:
-            color_code = item.xpath("./@data-value").extract()[0]
-            title = item.xpath("./@title").extract()[0]
+        for selector_path in sel:
+            color_code = selector_path.xpath("./@data-value").extract()[0]
+            title = selector_path.xpath("./@title").extract()[0]
             color_map[color_code] = title
 
         return color_map
@@ -104,3 +104,4 @@ class GerryScrapper(CrawlSpider):
 
     def product_price(self, response):
         return response.xpath("//*[contains(@class, 'productinfo')]//span[@itemprop='price']/text()").extract()[0]
+
