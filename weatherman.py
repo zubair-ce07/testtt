@@ -1,8 +1,12 @@
+import re
 import os
 import csv
-import argparse
 import calendar
-import re
+import argparse
+
+
+def date_split(value):
+    return str(value).split("-")
 
 
 def yearly_sort(value):
@@ -19,12 +23,23 @@ def skip_last_line(it):
         prev = item
 
 
-class WeatherStats:
+class WeatherRecord:
+    def __init__(self, max_temp=-273, min_temp=100, max_humid=-1):
+        self.max_temp = max_temp
+        self.min_temp = min_temp
+        self.max_humid = max_humid
+
+
+class Day(WeatherRecord):
+    def __init__(self, day, max_temp, min_temp, humidity):
+        WeatherRecord.__init__(self, max_temp, min_temp, humidity)
+        self.day = day
+
+
+class WeatherStats(WeatherRecord):
     def __init__(self, year):
+        WeatherRecord.__init__(self)
         self.year = year
-        self.max_temp = -273
-        self.min_temp = 100
-        self.max_humid = -1
         self.max_day = 0
         self.min_day = 0
         self.humid_day = 0
@@ -32,10 +47,10 @@ class WeatherStats:
 
 class Month(WeatherStats):
 
-    def __init__(self, year, month_num, days_with_stats):
+    def __init__(self, year, month_num, records):
         WeatherStats.__init__(self, year)
         self.month_num = month_num
-        self.days_with_stats = days_with_stats
+        self.records = records
         self.avg_temp_max = -273
         self.avg_temp_min = 100
         self.avg_humidity = -1
@@ -43,26 +58,24 @@ class Month(WeatherStats):
 
     def monthly_calculations(self):
         max_sum = min_sum = humid_sum = days = 0
-        for day in self.days_with_stats:
-            max_sum += day[1]
-            min_sum += day[2]
-            humid_sum += day[3]
+        for day in self.records:
+            max_sum += day.max_temp
+            min_sum += day.min_temp
+            humid_sum += day.max_humid
             days += 1
-            self.find_extremes(day[0], day[1], day[2], day[3])
+            self.find_extremes(day.day, day.max_temp,
+                               day.min_temp, day.max_humid)
         self.avg_temp_max = round(max_sum / days)
         self.avg_temp_min = round(min_sum / days)
         self.avg_humidity = round(humid_sum / days)
 
     def find_extremes(self, day, max_, min_, humid):
         if self.max_temp < max_:
-            self.max_temp = max_
-            self.max_day = day
+            self.max_temp, self.max_day = max_, day
         if self.min_temp > min_:
-            self.min_temp = min_
-            self.min_day = day
+            self.min_temp, self.min_day = min_, day
         if self.max_humid < humid:
-            self.max_humid = humid
-            self.humid_day = day
+            self.max_humid, self.humid_day = humid, day
 
 
 class Year(WeatherStats):
@@ -113,30 +126,24 @@ class Weather:
                             not line["Max TemperatureC"] or \
                             not line["Max Humidity"]:
                         continue
-                    self.rows.append((str(line.get("PKT") or line.get("PKST")),
-                                      int(line.get("Max TemperatureC")),
-                                      int(line.get("Min TemperatureC")),
-                                      int(line.get("Max Humidity"))))
+                    self.rows.append(Day(str(line.get("PKT") or
+                                             line.get("PKST")),
+                                         int(line.get("Max TemperatureC")),
+                                         int(line.get("Min TemperatureC")),
+                                         int(line.get("Max Humidity"))))
 
     def populate_records(self):
-        months = []
-        days = []
-        date = str(self.rows[0]).split("-")
-        prev_month = date[1]
-        prev_year = date[0].lstrip("(\'")
+        months, days = [], []
+        prev_year, prev_month, day = date_split(self.rows[0].day)
         for row in self.rows:
-            date = str(row[0]).split("-")
-            curr_month = date[1]
-            curr_year = date[0]
+            curr_year, curr_month, day = date_split(row.day)
             if prev_month != curr_month:
-                months.append(Month(date[0], int(prev_month), days))
-                prev_month = curr_month
-                days = []
-            days.append((int(date[2]), row[1], row[2], row[3]))
+                months.append(Month(curr_year, int(prev_month), days))
+                prev_month, days = curr_month, []
+            days.append(Day(int(day), row.max_temp, row.min_temp, row.max_humid))
             if prev_year != curr_year:
                 self.years.append(Year(months, prev_year))
-                prev_year = curr_year
-                months = []
+                prev_year, months = curr_year, []
 
     def annual_report(self, year_str):
         for year in self.years:
@@ -165,21 +172,22 @@ class Weather:
     def month_chart_dual(self, year_str, month_str):
         month = self.find_month(year_str, month_str)
         print(calendar.month_name[int(month.month_num)], month.year, end="")
-        for day in month.days_with_stats:
+        for day in month.records:
             print("\033[1;31;47m")
-            print(day[0], "+" * day[1], day[1], "\bC", end="")
+            print(day.day, "+" * day.max_temp, day.max_temp, "\bC", end="")
             print("\033[1;34;47m")
-            print(day[0], "+" * day[2], day[2], "\bC", end="")
+            print(day.day, "+" * day.min_temp, day.min_temp, "\bC", end="")
         print("\n")
 
     def month_chart_bonus(self, year_str, month_str):
         month = self.find_month(year_str, month_str)
         print(calendar.month_name[month.month_num], month.year)
-        for day in month.days_with_stats:
-            print("\033[1;30;47m", "{:2}".format(day[0]), end=" ")
-            print("\033[1;34;47m", "+" * day[2], sep="", end="")
-            print("\033[1;31;47m", "+" * (day[1] - day[2]), sep="", end="")
-            print("\033[1;30;47m", day[2], "\bC -", day[1], "\bC")
+        for day in month.records:
+            print("\033[1;30;47m", "{:2}".format(day.day), end=" ")
+            print("\033[1;34;47m", "+" * day.min_temp, sep="", end="")
+            print("\033[1;31;47m", "+" * (day.max_temp - day.min_temp),
+                  sep="", end="")
+            print("\033[1;30;47m", day.min_temp, "\bC -", day.max_temp, "\bC")
         print("\n")
 
 
