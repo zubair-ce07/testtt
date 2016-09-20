@@ -6,7 +6,7 @@ import argparse
 
 
 def date_split(value):
-    return str(value).split("-")
+    return map(int, str(value).split('-'))
 
 
 def yearly_sort(value):
@@ -138,16 +138,16 @@ class Weather:
         for row in self.rows:
             curr_year, curr_month, day = date_split(row.day)
             if prev_month != curr_month:
-                months.append(Month(curr_year, int(prev_month), days))
+                months.append(Month(curr_year, prev_month, days))
                 prev_month, days = curr_month, []
-            days.append(Day(int(day), row.max_temp, row.min_temp, row.max_humid))
+            days.append(Day(day, row.max_temp, row.min_temp, row.max_humid))
             if prev_year != curr_year:
                 self.years.append(Year(months, prev_year))
                 prev_year, months = curr_year, []
 
     def annual_report(self, year_str):
         for year in self.years:
-            if year.year == year_str:
+            if year.year == int(year_str):
                 print("Highest:", year.max_temp, "\bC on",
                       calendar.month_name[year.max_month], year.max_day)
                 print("Lowest:", year.min_temp, "\bC on",
@@ -158,7 +158,7 @@ class Weather:
 
     def find_month(self, year_str, month_str):
         for year in self.years:
-            if year.year == year_str:
+            if year.year == int(year_str):
                 for month in year.months:
                     if month.month_num == int(month_str):
                         return month
