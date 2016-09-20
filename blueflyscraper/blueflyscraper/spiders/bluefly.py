@@ -3,6 +3,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from urllib.parse import urljoin
 from scrapy import Request
+import json
 
 
 class BlueflySpider(CrawlSpider):
@@ -20,7 +21,6 @@ class BlueflySpider(CrawlSpider):
         for link in links:
             link.url = link.url.replace('/index', '?pageSize=96')
             link.url = 'http://www.bluefly.com/men?pageSize=96'
-            print(link.url)
         return links
 
     def parse_category(self, response):
@@ -28,11 +28,11 @@ class BlueflySpider(CrawlSpider):
             item_links = response.css('.mz-productlisting-title').xpath('@href').extract()
             for link in item_links:
                 temp = urljoin(response.url, link.strip())
-                yield Request(temp,callback=self.parse_blurefly_item)
+                yield Request(temp, callback=self.parse_blurefly_item)
             extracted_link = response.css('.mz-pagenumbers-next').xpath('@href').extract()
             for link in extracted_link:
                 temp = urljoin(response.url, link.strip())
-                yield Request(temp,callback=self.parse_category)
+                yield Request(temp, callback=self.parse_category)
 
     def parse_blurefly_item(self, response):
         item = BlueflyItem()
@@ -48,22 +48,22 @@ class BlueflySpider(CrawlSpider):
         item['gender'] = self.get_gender(response)
         arbitrary_item = ArbitraryItem()
         arbitrary_item['colour'] = self.get_colour(response)
-        arbitrary_item['price'] =self.get_price(response)
+        arbitrary_item['price'] = self.get_price(response)
         arbitrary_item['previous_prices'] = self.get_prev_prices(response)
         arbitrary_item['size'] = self.get_size(response)
         skus = SkusItem()
-        skus.__setitem__(self.get_numeric_size(response),arbitrary_item)
+        skus.__setitem__(self.get_numeric_size(response), arbitrary_item)
         item['skus'] = skus
         return item
 
     def get_price(self, response):
-        return response.css('div[itemprop="price"]::text').extract()[0]
+        return response.css('div[itemprop="price"]::text').extract()[0].strip()
 
     def get_size(self, response):
-        return response.css('.mz-productoptions-sizebox.selected-box::text').extract()
+        return response.css('.mz-productoptions-sizebox::text').extract()
 
     def get_prev_prices(self, response):
-        return response.css('.mz-price.is-crossedout::text').extract()[0]
+        return response.css(".mz-price.is-crossedout::text").extract()[1].strip()
 
     def get_colour(self, response):
         return response.css('.mz-productoptions-optionvalue::text').extract()[0]
@@ -73,7 +73,7 @@ class BlueflySpider(CrawlSpider):
         return url_pats[-1]
 
     def get_brand(self, response):
-        return response.css('.mz-productbrand >a::text').extract()
+        return response.css('.mz-productbrand >a::text').extract()[0]
 
     def get_description(self, response):
         return response.css('.mz-productdetail-description::text').extract()+self.get_details(response)
@@ -88,20 +88,24 @@ class BlueflySpider(CrawlSpider):
         return response.css('.mz-breadcrumb-link:not(.is-first)::text').extract()
 
     def get_merch_info(self, response):
-        return response.css('.mz-price-message::text').extract()[0]
+        merch_info = response.css('.mz-price-message::text').extract()
+        return merch_info[0] if merch_info else ""
 
     def get_image_urls(self, response):
         return response.css('.mz-productimages-thumbimage').xpath('@src').extract()
 
     def get_numeric_size(self, response):
-        return response.css('.mz-productoptions-sizebox.selected-box').xpath('@data-value').extract()[0]
+        return response.css('.mz-productoptions-sizebox').xpath('@data-value').extract()[0]
 
     def get_product_title(self, response):
-        return response.css('.mz-producttitle::text').extract()
+        temp = response.xpath('//script[@id="data-mz-preload-product"]/text()').extract()[0]
+        product = Payload(temp)
+        return product.content['productName']
 
     def get_gender(self, response):
         gender_val = response.css('.mz-breadcrumb-link:not(.is-first)::text').extract()[0]
         return gender_val if gender_val == "Men" or gender_val == "Women" or gender_val == "Kids" else "Undefined"
+
 
 class BlueflyItem(scrapy.Item):
     product_id = scrapy.Field()
@@ -116,12 +120,19 @@ class BlueflyItem(scrapy.Item):
     gender = scrapy.Field()
     skus = scrapy.Field()
 
+
 class SkusItem(scrapy.Item):
     def __setitem__(self, key, value):
         self._values[key] = value
+
 
 class ArbitraryItem(scrapy.Item):
     colour = scrapy.Field()
     price = scrapy.Field()
     previous_prices = scrapy.Field()
     size = scrapy.Field()
+
+
+class Payload(object):
+    def __init__(self, j):
+        self.__dict__ = json.loads(j)
