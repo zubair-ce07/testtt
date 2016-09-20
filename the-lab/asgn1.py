@@ -1,11 +1,10 @@
-from os import listdir
-from os.path import isfile, join
-import os
 import argparse
 import csv
-import numpy as np
-import matplotlib.pyplot as plt
 import datetime
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 ALL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -17,7 +16,7 @@ class EscapeSequence:
 
 
 class WeatherDataParser(object):
-    """	This weather_data_parser class reads a file, and stores the results """
+    """ This weather_data_parser class reads a file, and stores the results """
 
     def __init__(self, file_path):
         """ Class constructor that takes file path as an argument """
@@ -35,6 +34,7 @@ class WeatherDataParser(object):
             return True
         except ValueError:
             return False
+
     def parse_weather_data_file(self):
         """ Reads the file row by row and records mean min/max Temperatures and humidity """
         with open(self.file_path) as csvfile:
@@ -49,73 +49,58 @@ class WeatherDataParser(object):
                 if not self.is_date_valid(date):
                     continue
 
-                weather_attributes = {}
-                weather_attributes['min_temp'] = self.__to_int(row['Min TemperatureC'])
-                weather_attributes['max_temp'] = self.__to_int(row['Max TemperatureC'])
-                weather_attributes['max_humidity'] = self.__to_int(row['Max Humidity'])
-                weather_attributes['min_humidity'] = self.__to_int(row[' Min Humidity'])
-                weather_attributes['min_avg_temp'] = self.__to_int(row['Mean TemperatureC'])
-                weather_attributes['max_avg_temp'] = self.__to_int(row['Mean TemperatureC'])
-                weather_attributes['max_avg_humidity'] = self.__to_int(row[' Mean Humidity'])
+                weather_attributes = {
+                                  'min_temp': self.__to_int(row['Min TemperatureC']),
+                                  'max_temp': self.__to_int(row['Max TemperatureC']),
+                                  'max_humidity': self.__to_int(row['Max Humidity']),
+                                  'min_humidity': self.__to_int(row[' Min Humidity']),
+                                  'min_avg_temp': self.__to_int(row['Mean TemperatureC']),
+                                  'max_avg_temp': self.__to_int(row['Mean TemperatureC']),
+                                  'max_avg_humidity': self.__to_int(row[' Mean Humidity'])
+                }
 
                 monthly_weather_data[date] = weather_attributes
 
             return monthly_weather_data
 
-# <------------- END OF CLASS ---------------->
-
 
 class WeatherAnalyzer:
     @staticmethod
-    def get_monthly_max_by_attribute(monthly_weather_data, weather_attribute):
+    def get_monthly_extremum_by_attribute(monthly_weather_data, weather_attribute, extremum='maximum'):
+
+        reverse_sort_order = True if extremum.lower() == 'maximum' else False
+
         sorted_by_attribute = sorted(monthly_weather_data,
                                      key=lambda x: monthly_weather_data[x][weather_attribute] or -373,
-                                     reverse=True)
+                                     reverse=reverse_sort_order)
         return sorted_by_attribute[0], monthly_weather_data[sorted_by_attribute[0]][weather_attribute]
 
     @staticmethod
-    def get_monthly_min_by_attribute(monthly_weather_data, weather_attribute):
-        sorted_by_attribute = sorted(monthly_weather_data,
-                                     key=lambda x: monthly_weather_data[x][weather_attribute] or +373,
-                                     reverse=False)
-        return sorted_by_attribute[0], monthly_weather_data[sorted_by_attribute[0]][weather_attribute]
+    def get_yearly_extremum_by_attribute(yearly_weather_data, weather_attribute, extremum='maximum'):
 
-    @staticmethod
-    def get_yearly_min_by_attribute(yearly_weather_data, weather_attribute):
+        extremum_value = None
+        extremum_attribute_date = None
 
-        min_value = None
-        min_attribute_date = None
+        extremum_function = max if extremum == 'maximum' else extremum
 
         for monthly_weather_data in yearly_weather_data:
-            temp_month_min = WeatherAnalyzer.get_monthly_min_by_attribute (monthly_weather_data, weather_attribute)
+            monthly_extremum = WeatherAnalyzer.get_monthly_extremum_by_attribute(monthly_weather_data,
+                                                                               weather_attribute,
+                                                                               extremum=extremum)
             try:
-                min_value = min(temp_month_min[1], min_value)
+                extremum_value = extremum_function(monthly_extremum[1], extremum_value)
+                extremum_attribute_date = monthly_extremum[0] if extremum_function(monthly_extremum[1], extremum_value)\
+                                                                 == monthly_extremum[1]\
+                                                              else extremum_attribute_date
 
             except TypeError:
-                min_value = temp_month_min[1] if temp_month_min[1] is not None else None
+                if monthly_extremum[1] is not None:
+                    extremum_value = monthly_extremum[1]
+                    extremum_attribute_date = monthly_extremum [0]
+                else:
+                    extremum_value = None
 
-            min_attribute_date = temp_month_min[0] if min(temp_month_min[1], min_value) == temp_month_min[1] else min_attribute_date
-
-        return min_attribute_date, min_value
-
-
-    @staticmethod
-    def get_yearly_max_by_attribute(yearly_weather_data, weather_attribute):
-        max_value = None
-        max_attribute_date = None
-
-        for monthly_weather_data in yearly_weather_data:
-            temp_month_max = WeatherAnalyzer.get_monthly_max_by_attribute(monthly_weather_data, weather_attribute)
-            try:
-                max_value = max(temp_month_max[1], max_value)
-
-            except TypeError:
-                max_value = temp_month_max[1] if temp_month_max[1] is not None else None
-
-            max_attribute_date = temp_month_max[0] if min(temp_month_max[1], max_value) == temp_month_max[
-                1] else max_attribute_date
-
-        return max_attribute_date, max_value
+        return extremum_attribute_date, extremum_value
 
 
 def is_valid_integer(value):
@@ -146,7 +131,6 @@ def get_file_names_to_be_read(date_param):
             file_read_list.append(file_name)
 
     return file_read_list
-
 
 
 def create_bar_chart(daily_weather_data):
@@ -194,12 +178,12 @@ def print_average_monthly_weather_values(data_param, data_directory):
         weather_data_parser = WeatherDataParser(os.path.join(data_directory, files_to_read[0]))
         monthly_data = weather_data_parser.parse_weather_data_file()
 
-        max_avg =WeatherAnalyzer.get_monthly_max_by_attribute(monthly_data, 'max_avg_temp')
-        least_avg =WeatherAnalyzer.get_monthly_min_by_attribute(monthly_data, 'min_avg_temp')
-        max_humidity =  WeatherAnalyzer.get_monthly_min_by_attribute(monthly_data, 'max_avg_humidity')
-        print("Highest Average Temperature:", max_avg [1], "C")
-        print("Lowest Average Temperature:", least_avg [1], "C")
-        print("Highest Average Humidity:", max_humidity [1], "%")
+        max_avg = WeatherAnalyzer.get_monthly_extremum_by_attribute(monthly_data, 'max_avg_temp', extremum='maximum')
+        least_avg = WeatherAnalyzer.get_monthly_extremum_by_attribute(monthly_data, 'min_avg_temp', extremum='minimum')
+        max_humidity = WeatherAnalyzer.get_monthly_extremum_by_attribute(monthly_data, 'max_avg_humidity', extremum='minimum')
+        print("Highest Average Temperature:", max_avg[1], "C")
+        print("Lowest Average Temperature:", least_avg[1], "C")
+        print("Highest Average Humidity:", max_humidity[1], "%")
 
 
 def print_monthly_weather_chart(data_param, data_directory):
@@ -262,10 +246,10 @@ def print_extreme_weather_values(date_param, data_directory):
         parsed_monthly_data = weather_data_parser.parse_weather_data_file()
         parsed_file_data_list.append(parsed_monthly_data)
 
-    annual_max_temp = WeatherAnalyzer.get_yearly_max_by_attribute(parsed_file_data_list,'max_temp')
-    annual_min_temp = WeatherAnalyzer.get_yearly_min_by_attribute(parsed_file_data_list,'min_temp')
-    annual_max_humidity = WeatherAnalyzer.get_yearly_max_by_attribute(parsed_file_data_list,'max_humidity')
-    annual_min_humidity = WeatherAnalyzer.get_yearly_min_by_attribute(parsed_file_data_list,'min_humidity')
+    annual_max_temp = WeatherAnalyzer.get_yearly_extremum_by_attribute(parsed_file_data_list, 'max_temp', extremum='maximum')
+    annual_min_temp = WeatherAnalyzer.get_yearly_extremum_by_attribute(parsed_file_data_list, 'min_temp', extremum='minimum')
+    annual_max_humidity = WeatherAnalyzer.get_yearly_extremum_by_attribute(parsed_file_data_list, 'max_humidity', extremum='maximum')
+    annual_min_humidity = WeatherAnalyzer.get_yearly_extremum_by_attribute(parsed_file_data_list, 'min_humidity', extremum='minimum')
 
     print('Highest Temperature: ', annual_max_temp[1], 'C on ' + annual_max_temp[0].replace('-', '/'))
     print('Lowest Temperature: ', annual_min_temp[1], 'C on ' + annual_min_temp[0].replace('-', '/'))
@@ -277,7 +261,7 @@ def main():
     """ Main Function """
     # Read Command Line arguments and proceed if the arguments are valid.
 
-    parser = argparse.ArgumentParser(description='Weatherman')
+    parser = argparse.ArgumentParser(description='A utility for processing weather data of Lahore.')
 
     parser.add_argument('-e',
                         help='Sets the year for the annual report')
@@ -311,7 +295,6 @@ def main():
 
     if args.cc:
         print_monthly_weather_combined_chart(args.cc, data_folder_path)
-
 
 if __name__ == "__main__":
     main()
