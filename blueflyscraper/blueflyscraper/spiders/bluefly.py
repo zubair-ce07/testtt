@@ -9,8 +9,8 @@ class BlueflySpider(CrawlSpider):
     allowed_domains = ['bluefly.com']
     start_urls = ['http://www.bluefly.com/']
     rules = [Rule(LinkExtractor(allow=['/[A-Za-z]+\/index']), process_links='link_filtering', follow=True),
-             Rule(LinkExtractor(restrict_xpaths=('//a[@class="mz-productlisting-title"]')), callback='parse_blurefly_item'),
-             Rule(LinkExtractor(restrict_xpaths=('//a[@class="mz-pagenumbers-next"]')))]
+             Rule(LinkExtractor(restrict_xpaths='//a[@class="mz-productlisting-title"]'), callback='parse_blurefly_item'),
+             Rule(LinkExtractor(restrict_xpaths='//a[@class="mz-pagenumbers-next"]'))]
     custom_settings = {
         "DOWNLOAD_DELAY": 10
     }
@@ -84,4 +84,4 @@ class BlueflySpider(CrawlSpider):
 
     def parse_gender(self, response):
         gender_val = response.css('.mz-breadcrumb-link:not(.is-first)::text').extract()[0]
-        return gender_val if gender_val == "Men" or gender_val == "Women" or gender_val == "Kids" else "Undefined"
+        return gender_val if gender_val in["Men", "Women", "Kids"] else "Undefined"
