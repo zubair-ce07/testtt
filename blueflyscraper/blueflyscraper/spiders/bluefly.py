@@ -20,7 +20,6 @@ class BlueflySpider(CrawlSpider):
     def link_filtering(self, links):
         for link in links:
             link.url = link.url.replace('/index', '?pageSize=96')
-            link.url = 'http://www.bluefly.com/men?pageSize=96'
         return links
 
     def parse_category(self, response):
@@ -57,13 +56,13 @@ class BlueflySpider(CrawlSpider):
         return item
 
     def get_price(self, response):
-        return response.css('div[itemprop="price"]::text').extract()[0].strip()
+        return response.css('div.mz-price::text').extract()[0].strip()
 
     def get_size(self, response):
         return response.css('.mz-productoptions-sizebox::text').extract()
 
     def get_prev_prices(self, response):
-        return response.css(".mz-price.is-crossedout::text").extract()[1].strip()
+        return "".join(response.css(".mz-price.is-crossedout::text").extract()).strip()
 
     def get_colour(self, response):
         return response.css('.mz-productoptions-optionvalue::text').extract()[0]
