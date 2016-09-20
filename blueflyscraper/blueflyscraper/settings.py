@@ -14,12 +14,12 @@ BOT_NAME = 'blueflyscraper'
 SPIDER_MODULES = ['blueflyscraper.spiders']
 NEWSPIDER_MODULE = 'blueflyscraper.spiders'
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'blueflyscraper (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
+DOWNLOAD_DELAY = 10
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32

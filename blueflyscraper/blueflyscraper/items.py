@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# http://doc.scrapy.org/en/latest/topics/items.html
-
 import scrapy
 
 
@@ -23,11 +16,6 @@ class BlueflyItem(scrapy.Item):
 
 
 class SkuItem(scrapy.Item):
-    def __setitem__(self, key, value):
-        self._values[key] = value
-
-
-class ArbitraryItem(scrapy.Item):
     colour = scrapy.Field()
     price = scrapy.Field()
     previous_prices = scrapy.Field()

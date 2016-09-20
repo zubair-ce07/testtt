@@ -9,18 +9,16 @@ class BlueflySpider(CrawlSpider):
     allowed_domains = ['bluefly.com']
     start_urls = ['http://www.bluefly.com/']
     rules = [Rule(LinkExtractor(allow=['/[A-Za-z]+\/index']), process_links='link_filtering', follow=True),
-             Rule(LinkExtractor(restrict_xpaths='//a[@class="mz-productlisting-title"]'), callback='parse_blurefly_item'),
-             Rule(LinkExtractor(restrict_xpaths='//a[@class="mz-pagenumbers-next"]'))]
-    custom_settings = {
-        "DOWNLOAD_DELAY": 10
-    }
+             Rule(LinkExtractor(restrict_css='a.mz-productlisting-title'),
+                  callback='parse_bluefly_item', follow=True),
+             Rule(LinkExtractor(restrict_css='a.mz-pagenumbers-next'))]
 
     def link_filtering(self, links):
         for link in links:
             link.url = link.url.replace('/index', '?pageSize=96')
         return links
 
-    def parse_blurefly_item(self, response):
+    def parse_bluefly_item(self, response):
         item = BlueflyItem()
         item['brand'] = self.parse_brand(response)
         item['category'] = self.parse_category(response)
@@ -79,8 +77,8 @@ class BlueflySpider(CrawlSpider):
         return response.css('.mz-productimages-thumbimage::attr(src)').extract()
 
     def parse_product_title(self, response):
-        temp = "".join(response.css('.mz-breadcrumb-current::text').extract()).strip()
-        return temp.replace("{} ".format(self.parse_brand(response)), '')
+        product_title = "".join(response.css('.mz-breadcrumb-current::text').extract()).strip()
+        return product_title.replace("{} ".format(self.parse_brand(response)), '')
 
     def parse_gender(self, response):
         gender_val = response.css('.mz-breadcrumb-link:not(.is-first)::text').extract()[0]
