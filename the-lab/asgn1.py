@@ -280,9 +280,7 @@ def main():
     data_folder_path = args.data_dir
 
     if not os.path.isdir(data_folder_path):
-        print('Specified director does not exist')
-        print('Exiting')
-        exit()
+        exit('Specified directory does not exist')
 
     if args.e:
         print_extreme_weather_values(args.e, data_folder_path)
