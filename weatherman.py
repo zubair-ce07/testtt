@@ -174,9 +174,11 @@ class Weather:
         print(calendar.month_name[int(month.month_num)], month.year, end="")
         for day in month.records:
             print("\033[1;31;47m")
-            print(day.day, "+" * day.max_temp, day.max_temp, "\bC", end="")
+            print("{:2}".format(day.day), "+" * day.max_temp,
+                  "{}".format(day.max_temp), "\bC", end="")
             print("\033[1;34;47m")
-            print(day.day, "+" * day.min_temp, day.min_temp, "\bC", end="")
+            print("{:2}".format(day.day), "+" * day.min_temp,
+                  "{}".format(day.min_temp), "\bC", end="")
         print("\n")
 
     def month_chart_bonus(self, year_str, month_str):
@@ -187,7 +189,8 @@ class Weather:
             print("\033[1;34;47m", "+" * day.min_temp, sep="", end="")
             print("\033[1;31;47m", "+" * (day.max_temp - day.min_temp),
                   sep="", end="")
-            print("\033[1;30;47m", day.min_temp, "\bC -", day.max_temp, "\bC")
+            print("\033[1;30;47m", "{}".format(day.min_temp), "\bC -",
+                  "{}".format(day.max_temp), "\bC")
         print("\n")
 
 
@@ -211,14 +214,14 @@ def main():
     if arg.e:
         get_weather(arg.e[1]).annual_report(arg.e[0])
     elif arg.a:
-        tok = str(arg.a[0]).split("/")
-        get_weather(arg.a[1]).monthly_avg_report(tok[0], tok[1])
+        term = str(arg.a[0]).split("/")
+        get_weather(arg.a[1]).monthly_avg_report(term[0], term[1])
     elif arg.c:
-        tok = str(arg.c[0]).split("/")
-        get_weather(arg.c[1]).month_chart_dual(tok[0], tok[1])
+        term = str(arg.c[0]).split("/")
+        get_weather(arg.c[1]).month_chart_dual(term[0], term[1])
     elif arg.b:
-        tok = str(arg.b[0]).split("/")
-        get_weather(arg.b[1]).month_chart_bonus(tok[0], tok[1])
+        term = str(arg.b[0]).split("/")
+        get_weather(arg.b[1]).month_chart_bonus(term[0], term[1])
 
 if __name__ == '__main__':
     main()
