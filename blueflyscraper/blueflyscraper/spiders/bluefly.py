@@ -1,13 +1,15 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from ..items import BlueflyItem
+from itertools import product
 
 
 class BlueflySpider(CrawlSpider):
     name = "bluefly"
     allowed_domains = ['bluefly.com']
     start_urls = ['http://www.bluefly.com/']
-    rules = [Rule(LinkExtractor(allow=['/[A-Za-z]+\/index'], deny=['/beauty\/index']), process_links='link_filtering', follow=True),
+    rules = [Rule(LinkExtractor(allow=['/[A-Za-z]+\/index'], deny=['/beauty\/index']), process_links='link_filtering'
+                  , follow=True),
              Rule(LinkExtractor(restrict_css='.mz-productlisting-title'),
                   callback='parse_bluefly_item', follow=True),
              Rule(LinkExtractor(restrict_css='.mz-pagenumbers-next'))]
@@ -34,18 +36,30 @@ class BlueflySpider(CrawlSpider):
 
     def parse_skus(self, response):
         skus = {}
-        for size in self.parse_numeric_sizes(response):
-            skus[size] = self.parse_sku(response, size)
+        if self.out_of_stock(response):
+            skus['out_of_stock'] = True
+        else:
+            numeric_sizes = self.parse_numeric_sizes(response)
+            colours = self.parse_colour(response)
+            colours_size = len(colours)
+            for size, colour in product(numeric_sizes, colours):
+                skus[self.sku_key(size, colour, colours_size)] = self.parse_sku(response, size, colour)
         return skus
 
-    def parse_sku(self, response, numeric_size):
+    def sku_key(self, numeric_size, colour, colour_size):
+        return numeric_size if colour_size is 1 else "{}_{}".format(colour, numeric_size)
+
+    def out_of_stock(self, response):
+        return response.css(".waitlist")
+
+    def parse_sku(self, response, numeric_size, color):
         sku = {}
         size = self.parse_size(response, numeric_size)
         sku['size'] = size
         sku['price'] = self.parse_price(response)
         sku['currency'] = 'USD'
         sku['previous_prices'] = self.parse_prev_prices(response)
-        sku['colour'] = self.parse_colour(response)
+        sku['colour'] = color
         return sku
 
     def parse_numeric_sizes(self, response):
@@ -66,7 +80,7 @@ class BlueflySpider(CrawlSpider):
     def parse_colour(self, response):
         css1 = '.product-color-list > li > a::attr(title)'
         css2 = '.mz-productoptions-optionvalue::text'
-        return response.css(css1).extract() or response.css(css2).extract()[0]
+        return response.css(css1).extract() or [response.css(css2).extract()[0]]
 
     def parse_product_id(self, url):
         return url.split("/")[-1]
