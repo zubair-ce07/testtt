@@ -14,9 +14,3 @@ class BlueflyItem(scrapy.Item):
     gender = scrapy.Field()
     skus = scrapy.Field()
 
-
-class SkuItem(scrapy.Item):
-    colour = scrapy.Field()
-    price = scrapy.Field()
-    previous_prices = scrapy.Field()
-    size = scrapy.Field()

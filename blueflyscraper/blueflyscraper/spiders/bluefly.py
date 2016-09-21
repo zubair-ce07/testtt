@@ -1,7 +1,6 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from ..items import BlueflyItem
-from ..items import SkuItem
 
 
 class BlueflySpider(CrawlSpider):
@@ -9,9 +8,9 @@ class BlueflySpider(CrawlSpider):
     allowed_domains = ['bluefly.com']
     start_urls = ['http://www.bluefly.com/']
     rules = [Rule(LinkExtractor(allow=['/[A-Za-z]+\/index']), process_links='link_filtering', follow=True),
-             Rule(LinkExtractor(restrict_css='a.mz-productlisting-title'),
+             Rule(LinkExtractor(restrict_css='.mz-productlisting-title'),
                   callback='parse_bluefly_item', follow=True),
-             Rule(LinkExtractor(restrict_css='a.mz-pagenumbers-next'))]
+             Rule(LinkExtractor(restrict_css='.mz-pagenumbers-next'))]
 
     def link_filtering(self, links):
         for link in links:
@@ -30,32 +29,58 @@ class BlueflySpider(CrawlSpider):
         item['description'] = self.parse_description(response)
         item['care'] = self.parse_care(response)
         item['gender'] = self.parse_gender(response)
-        sku = SkuItem()
-        sku['colour'] = self.parse_colour(response)
-        sku['price'] = self.parse_price(response)
-        sku['previous_prices'] = self.parse_prev_prices(response)
-        sku['size'] = self.parse_size(response)
-        item['skus'] = sku
+        item['skus'] = self.parse_skus(response)
         return item
+
+    def parse_skus(self, response):
+        skus = {}
+        for size in self.parse_numeric_sizes(response):
+            skus[size] = self.parse_sku(response, size)
+        return skus
+
+    def parse_sku(self, response, numeric_size):
+        sku = {}
+        size = self.parse_size(response, numeric_size)
+        if size:
+            sku['size'] = size
+        sku['price'] = self.parse_price(response)
+        sku['currency'] = 'USD'
+        sku['previous_prices'] = self.parse_prev_prices(response)
+        sku['colour'] = self.parse_colour(response)
+        return sku
+
+    def parse_numeric_sizes(self, response):
+        sizes = response.css(".mz-productoptions-sizebox::attr(data-value)").extract()
+        if sizes:
+            for size in sizes:
+                yield size
+        else:
+            yield 'default'
 
     def parse_price(self, response):
         return response.css('div.mz-price::text').extract()[0].strip()
 
-    def parse_size(self, response):
-        return response.css('.mz-productoptions-sizebox::text').extract()
+    def parse_size(self, response, data_value):
+        size = response.css(".mz-productoptions-sizebox[data-value = '{}']::text".format(data_value))
+        return size.extract()[0] if size else ''
 
     def parse_prev_prices(self, response):
-        return "".join(response.css(".mz-price.is-crossedout::text").extract()).strip()
+        prev_prices = "".join(response.css(".mz-price.is-crossedout::text").extract())
+        return [prev_prices.replace('Retail:', '').strip()] if prev_prices else ''
 
     def parse_colour(self, response):
-        return response.css('.mz-productoptions-optionvalue::text').extract()[0]
+        colours = response.css('.product-color-list > li > a::attr(title)')
+        if colours:
+            return colours.extract()
+        else:
+            return response.css('.mz-productoptions-optionvalue::text').extract()[0]
 
     def parse_product_id(self, url):
         url_pats = url.split("/")
         return url_pats[-1]
 
     def parse_brand(self, response):
-        return response.css('.mz-productbrand >a::text').extract()[0]
+        return response.css('.mz-productbrand > a::text').extract()[0]
 
     def parse_description(self, response):
         return response.css('.mz-productdetail-description::text').extract() + self.parse_details(response)
