@@ -50,12 +50,8 @@ class BlueflySpider(CrawlSpider):
         return sku
 
     def parse_numeric_sizes(self, response):
-        sizes = response.css(".mz-productoptions-sizebox::attr(data-value)").extract()
-        if sizes:
-            for size in sizes:
-                yield size
-        else:
-            yield 'default'
+        css = ".mz-productoptions-sizebox::attr(data-value)"
+        return response.css(css).extract() or ['default']
 
     def parse_price(self, response):
         return response.css('div.mz-price::text').extract()[0].strip()
@@ -69,15 +65,12 @@ class BlueflySpider(CrawlSpider):
         return [prev_prices.replace('Retail:', '').strip()] if prev_prices else ''
 
     def parse_colour(self, response):
-        colours = response.css('.product-color-list > li > a::attr(title)')
-        if colours:
-            return colours.extract()
-        else:
-            return response.css('.mz-productoptions-optionvalue::text').extract()[0]
+        css1 = '.product-color-list > li > a::attr(title)'
+        css2 = '.mz-productoptions-optionvalue::text'
+        return response.css(css1).extract() or response.css(css2).extract()[0]
 
     def parse_product_id(self, url):
-        url_pats = url.split("/")
-        return url_pats[-1]
+        return url.split("/")[-1]
 
     def parse_brand(self, response):
         return response.css('.mz-productbrand > a::text').extract()[0]
@@ -103,7 +96,7 @@ class BlueflySpider(CrawlSpider):
 
     def parse_product_title(self, response):
         product_title = "".join(response.css('.mz-breadcrumb-current::text').extract()).strip()
-        return product_title.replace("{} ".format(self.parse_brand(response)), '')
+        return product_title.replace("{} ".format(self.parse_brand(response)), '', 1)
 
     def parse_gender(self, response):
         gender_val = response.css('.mz-breadcrumb-link:not(.is-first)::text').extract()[0]
