@@ -9,7 +9,7 @@ class BlueflyItem(scrapy.Item):
     brand = scrapy.Field()
     category = scrapy.Field()
     image_urls = scrapy.Field()
-    product_title = scrapy.Field()
+    name = scrapy.Field()
     care = scrapy.Field()
     gender = scrapy.Field()
     skus = scrapy.Field()

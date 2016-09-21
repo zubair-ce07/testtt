@@ -7,7 +7,7 @@ class BlueflySpider(CrawlSpider):
     name = "bluefly"
     allowed_domains = ['bluefly.com']
     start_urls = ['http://www.bluefly.com/']
-    rules = [Rule(LinkExtractor(allow=['/[A-Za-z]+\/index']), process_links='link_filtering', follow=True),
+    rules = [Rule(LinkExtractor(allow=['/[A-Za-z]+\/index'], deny=['/beauty\/index']), process_links='link_filtering', follow=True),
              Rule(LinkExtractor(restrict_css='.mz-productlisting-title'),
                   callback='parse_bluefly_item', follow=True),
              Rule(LinkExtractor(restrict_css='.mz-pagenumbers-next'))]
@@ -25,7 +25,7 @@ class BlueflySpider(CrawlSpider):
         item['url_original'] = response.url
         item['product_id'] = self.parse_product_id(response.url)
         item['image_urls'] = self.parse_image_urls(response)
-        item['product_title'] = self.parse_product_title(response)
+        item['name'] = self.parse_name(response)
         item['description'] = self.parse_description(response)
         item['care'] = self.parse_care(response)
         item['gender'] = self.parse_gender(response)
@@ -41,8 +41,7 @@ class BlueflySpider(CrawlSpider):
     def parse_sku(self, response, numeric_size):
         sku = {}
         size = self.parse_size(response, numeric_size)
-        if size:
-            sku['size'] = size
+        sku['size'] = size
         sku['price'] = self.parse_price(response)
         sku['currency'] = 'USD'
         sku['previous_prices'] = self.parse_prev_prices(response)
@@ -51,14 +50,14 @@ class BlueflySpider(CrawlSpider):
 
     def parse_numeric_sizes(self, response):
         css = ".mz-productoptions-sizebox::attr(data-value)"
-        return response.css(css).extract() or ['default']
+        return response.css(css).extract() or ['one_size']
 
     def parse_price(self, response):
         return response.css('div.mz-price::text').extract()[0].strip()
 
     def parse_size(self, response, data_value):
         size = response.css(".mz-productoptions-sizebox[data-value = '{}']::text".format(data_value))
-        return size.extract()[0] if size else ''
+        return size.extract()[0] if size else 'one_size'
 
     def parse_prev_prices(self, response):
         prev_prices = "".join(response.css(".mz-price.is-crossedout::text").extract())
@@ -89,15 +88,24 @@ class BlueflySpider(CrawlSpider):
 
     def parse_merch_info(self, response):
         merch_info = response.css('.mz-price-message::text').extract()
-        return merch_info[0] if merch_info else ""
+        return merch_info[0].strip() if merch_info else ""
 
     def parse_image_urls(self, response):
-        return response.css('.mz-productimages-thumbimage::attr(src)').extract()
+        return response.css('.mz-productimages-thumb::attr(data-zoom-image)').extract()
 
-    def parse_product_title(self, response):
-        product_title = "".join(response.css('.mz-breadcrumb-current::text').extract()).strip()
-        return product_title.replace("{} ".format(self.parse_brand(response)), '', 1)
+    def parse_name(self, response):
+        name = "".join(response.css('.mz-breadcrumb-current::text').extract()).strip()
+        return name.replace("{} ".format(self.parse_brand(response)), '', 1)
 
     def parse_gender(self, response):
-        gender_val = response.css('.mz-breadcrumb-link:not(.is-first)::text').extract()[0]
-        return gender_val if gender_val in["Men", "Women", "Kids"] else "Undefined"
+        gender = 'Undefined'
+        for category in self.parse_category(response):
+            if "Girls" in category:
+                gender = 'Girls'
+            elif "Boys" in category:
+                gender = "Boys"
+            elif "Men" in category:
+                gender = "Men"
+            elif "Women" in category:
+                gender = "Women"
+        return gender
