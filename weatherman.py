@@ -6,7 +6,7 @@ import argparse
 from collections import namedtuple
 
 red = "\033[1;31;47m"
-blu = "\033[1;34;47m"
+blue = "\033[1;34;47m"
 black = "\033[1;30;47m"
 
 min_col = "Min TemperatureC"
@@ -37,9 +37,9 @@ def skip_last_line(it):
         prev = item
 
 
-def get_files_sorted(path):
+def get_files_sorted(path_to_dir):
     file_names = []
-    for root, dirs, files in os.walk(path):
+    for root, dirs, files in os.walk(path_to_dir):
         for file_name in sorted(files, key=yearly_sort):
             file_names.append(os.path.join(root, file_name))
     return file_names
@@ -72,9 +72,11 @@ class Weather:
 
     def populate_records(self):
         months, days = [], []
-        prev_year, prev_month, prev_day = self.days[0].date
-        for d in self.days:
-            curr_year, curr_month, day = d.date
+        prev_year = self.days[0].date.y
+        prev_month = self.days[0].date.m
+        for day in self.days:
+            curr_year = day.date.y
+            curr_month = day.date.m
             if prev_month != curr_month:
                 self.add_month(days, curr_month)
                 months.append(self.months[-1])
@@ -82,7 +84,7 @@ class Weather:
                 if prev_year != curr_year:
                     self.add_year(months, curr_year)
                     prev_year, months = curr_year, []
-            days.append(d)
+            days.append(day)
 
     def add_month(self, days, month):
         max_sum = min_sum = humid_sum = 0
@@ -92,27 +94,28 @@ class Weather:
             min_sum += day.min_temp
             humid_sum += day.humidity
             days_in_month += 1
-        max_ = round(max_sum / days_in_month)
-        min_ = round(min_sum / days_in_month)
-        hum_ = round(humid_sum / days_in_month)
-        self.months.append(Month(month, days, max_, min_, hum_))
+        max_avg = round(max_sum / days_in_month)
+        min_avg = round(min_sum / days_in_month)
+        hum_avg = round(humid_sum / days_in_month)
+        self.months.append(Month(month, days, max_avg, min_avg, hum_avg))
 
     def add_year(self, months, year):
         max_t, min_t, humid = -273, 100, -1
-        max_d, min_d, hum_d = (), (), ()
+        max_day, min_day, hum_day = (), (), ()
         for month in months:
             for day in month.days:
                 if max_t < day.max_temp:
-                    max_t, max_d = day.max_temp, day
+                    max_t, max_day = day.max_temp, day
                 if min_t > day.min_temp:
-                    min_t, min_d = day.min_temp, day
+                    min_t, min_day = day.min_temp, day
                 if humid < day.humidity:
-                    humid, hum_d = day.humidity, day
-        self.years.append(Year(year, months, max_d, min_d, hum_d))
+                    humid, hum_day = day.humidity, day
+        self.years.append(Year(year, months, max_day, min_day, hum_day))
 
     def annual_report(self, year_str):
+        y = int(year_str)
         for year in self.years:
-            if year.year == int(year_str):
+            if year.year == y:
                 max_d = year.max_day
                 min_d = year.min_day
                 humid = year.humid_day
@@ -145,19 +148,19 @@ class Weather:
         for day in month.days:
             d, max_, min_ = day.date.d, day.max_temp, day.min_temp
             print(red, "{:2}".format(d), "+" * max_, "{}".format(max_), "\bC")
-            print(blu, "{:2}".format(d), "+" * min_, "{}".format(min_), "\bC")
+            print(blue, "{:2}".format(d), "+" * min_, "{}".format(min_), "\bC")
 
     def month_chart_bonus(self, year_str, month_str):
         month = self.find_month(year_str, month_str)
         for day in month.days:
             d, max_, min_ = day.date.d, day.max_temp, day.min_temp
             print(black, "{:2}".format(d), end=" ")
-            print(blu, "+" * min_, sep="", end="")
+            print(blue, "+" * min_, sep="", end="")
             print(red, "+" * (max_ - min_), sep="", end="")
             print(black, "{}".format(min_), "\bC -", "{}".format(max_), "\bC")
 
 
-def cmd_parser():
+def argument_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", help="Annual Report of Extremes", nargs=2)
     parser.add_argument("-a", help="Monthly average", nargs=2)
@@ -166,15 +169,15 @@ def cmd_parser():
     return parser.parse_args()
 
 
-def driver(path):
+def driver(path_to_dir):
     weather = Weather()
-    weather.read_rows(get_files_sorted(path))
+    weather.read_rows(get_files_sorted(path_to_dir))
     weather.populate_records()
     return weather
 
 
 def main():
-    arg = cmd_parser()
+    arg = argument_parser()
     if arg.e:
         driver(arg.e[1]).annual_report(arg.e[0])
     elif arg.a:
