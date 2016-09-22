@@ -6,6 +6,11 @@ import calendar
 import matplotlib.pyplot as plt
 import numpy
 import collections
+import operator
+
+WeatherData = collections.namedtuple('WeatherData',
+                                     'date min_temp max_temp max_humidity min_humidity \
+                                             min_avg_temp max_avg_temp max_avg_humidity ')
 
 
 class CursorColors:
@@ -17,9 +22,11 @@ class CursorColors:
 class WeatherDataReader(object):
     """ This weather_data_parser class reads a file, and stores the results """
 
-    def __init__(self, file_path):
+    def __init__(self, report_date, weather_data_dir):
         """ Class constructor that takes file path as an argument """
-        self.file_path = file_path
+        self.file_read_list = []
+        self.report_date = report_date
+        self.weather_data_dir = weather_data_dir
 
     @staticmethod
     def __to_int(string):
@@ -34,67 +41,59 @@ class WeatherDataReader(object):
         except ValueError:
             return False
 
-    @staticmethod
-    def get_file_read_list(date_param):
+    @property
+    def __update_file_read_list(self):
         """ Returns the list of all files which need to be read """
-        date_components = date_param.split('/')
+        date_components = self.report_date.split('/')
 
         file_name_prefix = 'lahore_weather_' + date_components[0]
-        file_read_list = []
-
+        self.file_read_list = []
         month_no_list = [int(date_components[1])] if len(date_components) > 1 else [month_no for month_no in
                                                                                     range(1, 13)]
         for month_no in month_no_list:
-            file_name = file_name_prefix + '_' + calendar.month_abbr[month_no] + '.txt'
-            file_read_list.append(file_name)
-
-        return file_read_list
+            file_name = os.path.join(self.weather_data_dir,
+                                     file_name_prefix + '_' + calendar.month_abbr[month_no] + '.txt')
+            self.file_read_list.append(file_name)
 
     @property
     def read_weather_data_file(self):
         """ Reads the file row by row and records mean min/max Temperatures and humidity """
-        with open(self.file_path) as csvfile:
-            next(csvfile)
-            reader = csv.DictReader(csvfile)
-            monthly_weather_data = []
-            is_reading_first_row = True
+        self.__update_file_read_list
+        weather_data = []
 
-            for row in reader:
-                if is_reading_first_row:
-                    date_key = 'PKT' if 'PKT' in row.keys() else 'PKST'
-                    is_reading_first_row = False
-                date_string = row[date_key]
+        for file_path in self.file_read_list:
+            with open(file_path) as csvfile:
+                next(csvfile)
+                reader = csv.DictReader(csvfile)
+                monthly_weather_data = []
+                date_key = 'PKT' if 'PKT' in reader.fieldnames else 'PKST'
 
-                if not self.is_date_valid(date_string):
-                    continue
-                weather_data_tuple = collections.namedtuple('weather_data_tuple',
-                                                            'date min_temp max_temp max_humidity min_humidity \
-                                                             min_avg_temp max_avg_temp max_avg_humidity ')
+                for row in reader:
+                    date_string = row[date_key]
 
-                weather_data = weather_data_tuple(date=date_string,
-                                                  min_temp=self.__to_int(row['Min TemperatureC']),
-                                                  max_temp=self.__to_int(row['Max TemperatureC']),
-                                                  max_humidity=self.__to_int(row['Max Humidity']),
-                                                  min_humidity=self.__to_int(row[' Min Humidity']),
-                                                  min_avg_temp=self.__to_int(row['Mean TemperatureC']),
-                                                  max_avg_temp=self.__to_int(row['Mean TemperatureC']),
-                                                  max_avg_humidity=self.__to_int(row[' Mean Humidity'])
-                                                  )
-                monthly_weather_data.append(weather_data)
-            return monthly_weather_data
+                    if not self.is_date_valid(date_string):
+                        continue
+
+                    weather_data_obj = WeatherData(date=date_string,
+                                                   min_temp=self.__to_int(row['Min TemperatureC']),
+                                                   max_temp=self.__to_int(row['Max TemperatureC']),
+                                                   max_humidity=self.__to_int(row['Max Humidity']),
+                                                   min_humidity=self.__to_int(row[' Min Humidity']),
+                                                   min_avg_temp=self.__to_int(row['Mean TemperatureC']),
+                                                   max_avg_temp=self.__to_int(row['Mean TemperatureC']),
+                                                   max_avg_humidity=self.__to_int(row[' Mean Humidity'])
+                                                   )
+                    monthly_weather_data.append(weather_data_obj)
+                weather_data = weather_data + monthly_weather_data
+        return weather_data
 
 
-class WeatherAnalyzer:
+class Charts:
     @staticmethod
-    def get_extremum(weather_data, attribute, extremum_function=max):
-        return extremum_function([data for data in weather_data if getattr(data, attribute)])
-
-
-class ChartPrinter:
-    @staticmethod
-    def print_bar_chart_cmd(weather_data_list):
+    def print_bar_chart_cmd(data_param, data_directory):
         """ For a given month draws two horizontal bar charts on the console for the highest and
             lowest temperature on each day. Highest in red and lowest in blue """
+        weather_data_list = WeatherReports.get_chart_data(data_param, data_directory)
         for weather_data in weather_data_list:
             if not weather_data.max_temp:
                 weather_data.max_temp = 0
@@ -105,9 +104,10 @@ class ChartPrinter:
             print(day, CursorColors.BLUE + '+' * weather_data.min_temp, weather_data.min_temp, CursorColors.WHITE)
 
     @staticmethod
-    def print_monthly_stackchart(weather_data_list):
+    def print_monthly_stackchart(data_param, data_directory):
         """ For a given month draw one horizontal bar chart on the console for the highest and
             lowest temperature on each day. Highest in red and lowest in blue. """
+        weather_data_list = WeatherReports.get_chart_data(data_param, data_directory)
 
         for weather_data in weather_data_list:
             if not weather_data.max_temp:
@@ -119,12 +119,10 @@ class ChartPrinter:
                   CursorColors.WHITE, weather_data.max_temp, '-', weather_data.min_temp)
 
     @staticmethod
-    def print_bar_chart_gui(weather_data_list):
+    def print_bar_chart_gui(data_param, data_directory):
         """ Stores the bar chart for min and max temperatures of each day in a PDF file """
-        total_days = len(weather_data_list)
-        max_temperatures = [k.max_temp if k.max_temp else 0 for k in weather_data_list]
-        min_temperatures = [k.min_temp if k.min_temp else 0 for k in weather_data_list]
-        days = [k.date for k in weather_data_list]
+        max_temperatures, min_temperatures, days = WeatherReports.get_gui_stack_chart(data_param, data_directory)
+        total_days = len(days)
         index = numpy.arange(total_days)  # the x locations for the groups
         width = 0.5  # the width of the bars
         figure, graph_axis = plt.subplots()
@@ -141,77 +139,69 @@ class ChartPrinter:
         plt.savefig("Graph.pdf")
 
 
-class WeatherDataParser:
+class WeatherReports:
+    @staticmethod
+    def get_extremum(weather_data, attribute, extremum_function=max):
+        r = extremum_function([data for data in weather_data if getattr(data, attribute)],
+                              key=operator.attrgetter(attribute))
+
+        return r
+
     @staticmethod
     def get_chart_data(data_param, data_directory):
-        files_to_read = WeatherDataReader.get_file_read_list(data_param)
-        weather_data_reader = WeatherDataReader(os.path.join(data_directory, files_to_read[0]))
+        weather_data_reader = WeatherDataReader(data_param, data_directory)
         return weather_data_reader.read_weather_data_file
 
     @staticmethod
+    def get_gui_stack_chart(data_param, data_directory):
+        weather_data_list = WeatherReports.get_chart_data(data_param, data_directory)
+        max_temperatures = [k.max_temp if k.max_temp else 0 for k in weather_data_list]
+        min_temperatures = [k.min_temp if k.min_temp else 0 for k in weather_data_list]
+        days = [k.date.split('-')[2] for k in weather_data_list]
+
+        return max_temperatures, min_temperatures, days
+
+    @staticmethod
     def get_monthly_averages(data_param, data_directory):
-        files_to_read = WeatherDataReader.get_file_read_list(data_param)
-        weather_data_reader = WeatherDataReader(os.path.join(data_directory, files_to_read[0]))
+        weather_data_reader = WeatherDataReader(data_param, data_directory)
         monthly_data = weather_data_reader.read_weather_data_file
 
-        monthly_averages_tuple = collections.namedtuple('monthly_averages_tuple', 'max_avg least_avg max_humidity')
-        monthly_averages = monthly_averages_tuple(max_avg=WeatherAnalyzer.get_extremum(monthly_data, 'max_avg_temp',
-                                                                                       extremum_function=max),
-                                                  least_avg=WeatherAnalyzer.get_extremum(monthly_data, 'min_avg_temp',
-                                                                                         extremum_function=min),
-                                                  max_humidity=WeatherAnalyzer.get_extremum(monthly_data,
-                                                                                            'max_avg_humidity',
-                                                                                            extremum_function=max)
-                                                  )
-        return monthly_averages
+        max_avg = WeatherReports.get_extremum(monthly_data, 'max_avg_temp', extremum_function=max)
+        least_avg = WeatherReports.get_extremum(monthly_data, 'min_avg_temp', extremum_function=min)
+        max_humidity = WeatherReports.get_extremum(monthly_data, 'max_avg_humidity', extremum_function=max)
+        return max_avg, least_avg, max_humidity
 
     @staticmethod
     def get_annual_extrema(data_param, data_directory):
-        files_to_read = WeatherDataReader.get_file_read_list(data_param)
-        weather_data = []
+        weather_data_reader = WeatherDataReader(data_param, data_directory)
+        weather_data = weather_data_reader.read_weather_data_file
+        max_temp = WeatherReports.get_extremum(weather_data, 'max_temp', extremum_function=max)
+        min_temp = WeatherReports.get_extremum(weather_data, 'min_temp', extremum_function=min)
+        max_humidity = WeatherReports.get_extremum(weather_data, 'max_humidity', extremum_function=max)
+        min_humidity = WeatherReports.get_extremum(weather_data, 'min_humidity', extremum_function=min)
 
-        for file_name in files_to_read:
-            weather_data_reader = WeatherDataReader(os.path.join(data_directory, file_name))
-            monthly_data = weather_data_reader.read_weather_data_file
-            weather_data = weather_data + monthly_data
-
-        annual_extrema_tuple = collections.namedtuple('annual_extrema_tuple',
-                                                      'max_temp min_temp max_humidity min_humidity')
-
-        annual_extrema = annual_extrema_tuple(
-            max_temp=WeatherAnalyzer.get_extremum(weather_data, 'max_temp',
-                                                  extremum_function=max),
-            min_temp=WeatherAnalyzer.get_extremum(weather_data, 'min_temp',
-                                                  extremum_function=min),
-            max_humidity=WeatherAnalyzer.get_extremum(weather_data, 'max_humidity',
-                                                      extremum_function=max),
-            min_humidity=WeatherAnalyzer.get_extremum(weather_data, 'min_humidity',
-                                                      extremum_function=min)
-        )
-
-        return annual_extrema
+        return max_temp, min_temp, max_humidity, min_humidity
 
 
 class ReportPrinter:
     @staticmethod
-    def print_monthly_averages(monthly_averages):
+    def print_monthly_averages(data_param, data_directory):
         """ Prints the mean min/max temperatures and humidity """
-        print("Highest Average Temperature:", monthly_averages.max_avg.max_avg_temp, "C")
-        print("Lowest Average Temperature:", monthly_averages.least_avg.min_avg_temp, "C")
-        print("Highest Average Humidity:", monthly_averages.max_humidity.max_avg_humidity, "%")
+        max_avg, least_avg, max_humidity = WeatherReports.get_monthly_averages(data_param, data_directory)
+        print("Highest Average Temperature:", max_avg.max_avg_temp, "C")
+        print("Lowest Average Temperature:", least_avg.min_avg_temp, "C")
+        print("Highest Average Humidity:", max_humidity.max_avg_humidity, "%")
 
     @staticmethod
-    def print_annual_extrema(annual_extrema):
+    def print_annual_extrema(data_param, data_directory):
         """For a given year display the highest temperature and day, lowest temperature and
             day, most humid day and humidity."""
-        print('Highest Temperature: ', annual_extrema.max_temp.max_temp,
-              'C on ' + annual_extrema.max_temp.date.replace('-', '/'))
-        print('Lowest Temperature: ', annual_extrema.min_temp.min_temp,
-              'C on ' + annual_extrema.min_temp.date.replace('-', '/'))
-        print('Most Humid: ', annual_extrema.max_humidity.max_humidity,
-              '% on ' + annual_extrema.max_humidity.date.replace('-', '/'))
-        print('Least Humid: ', annual_extrema.min_humidity.min_humidity,
-              '% on ' + annual_extrema.min_humidity.date.replace('-', '/'))
+        max_temp, min_temp, max_humidity, min_humidity = WeatherReports.get_annual_extrema(data_param, data_directory)
+
+        print('Highest Temperature: ', max_temp.max_temp, 'C on ' + max_temp.date.replace('-', '/'))
+        print('Lowest Temperature: ', min_temp.min_temp, 'C on ' + min_temp.date.replace('-', '/'))
+        print('Most Humid: ', max_humidity.max_humidity, '% on ' + max_humidity.date.replace('-', '/'))
+        print('Least Humid: ', min_humidity.min_humidity, '% on ' + min_humidity.date.replace('-', '/'))
 
 
 def main():
@@ -238,15 +228,15 @@ def main():
     if not os.path.isdir(data_folder_path):
         exit('Specified directory does not exist')
     if args.e:
-        ReportPrinter.print_annual_extrema(WeatherDataParser.get_annual_extrema(args.e, data_folder_path))
+        ReportPrinter.print_annual_extrema(args.e, data_folder_path)
     if args.a:
-        ReportPrinter.print_monthly_averages(WeatherDataParser.get_monthly_averages(args.a, data_folder_path))
+        ReportPrinter.print_monthly_averages(args.a, data_folder_path)
     if args.c:
-        ChartPrinter.print_bar_chart_cmd(WeatherDataParser.get_chart_data(args.c, data_folder_path))
+        Charts.print_bar_chart_cmd(args.c, data_folder_path)
     if args.s:
-        ChartPrinter.print_monthly_stackchart(WeatherDataParser.get_chart_data(args.s, data_folder_path))
+        Charts.print_monthly_stackchart(args.s, data_folder_path)
     if args.b:
-        ChartPrinter.print_bar_chart_gui(WeatherDataParser.get_chart_data(args.b, data_folder_path))
+        Charts.print_bar_chart_gui(args.b, data_folder_path)
 
 
 if __name__ == "__main__":
