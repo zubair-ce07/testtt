@@ -142,10 +142,8 @@ class Charts:
 class WeatherReports:
     @staticmethod
     def get_extremum(weather_data, attribute, extremum_function=max):
-        r = extremum_function([data for data in weather_data if getattr(data, attribute)],
+        return extremum_function([data for data in weather_data if getattr(data, attribute)],
                               key=operator.attrgetter(attribute))
-
-        return r
 
     @staticmethod
     def get_chart_data(data_param, data_directory):
