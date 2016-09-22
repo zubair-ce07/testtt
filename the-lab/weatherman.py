@@ -37,11 +37,12 @@ class WeatherDataParser(object):
     @staticmethod
     def get_file_read_list(date_param):
         """ Returns the list of all files which need to be read """
-        splited_date = date_param.split('/')
-        file_name_prefix = 'lahore_weather_' + splited_date[0]
+        date_components = date_param.split('/')
+
+        file_name_prefix = 'lahore_weather_' + date_components[0]
         file_read_list = []
-        if len(splited_date) > 1:
-            month_no_list = [int(splited_date[1])]
+        if len(date_components)>1:
+            month_no_list = [int(date_components[1])]
         else:
             month_no_list = [month_no for month_no in range(1, 13)]
         for month_no in month_no_list:
@@ -86,7 +87,7 @@ class WeatherDataParser(object):
 
 class WeatherAnalyzer:
     @staticmethod
-    def get_monthly_extremum_by_attribute(monthly_weather_data, weather_attribute, extremum_function=max):
+    def get_monthly_extremum(monthly_weather_data, weather_attribute, extremum_function=max):
         return extremum_function([data for data in monthly_weather_data if getattr(data, weather_attribute)])
 
 
@@ -157,10 +158,10 @@ class ReportPrinter:
         weather_data_parser = WeatherDataParser(os.path.join(data_directory, files_to_read[0]))
         monthly_data = weather_data_parser.parse_weather_data_file
 
-        max_avg = WeatherAnalyzer.get_monthly_extremum_by_attribute(monthly_data, 'max_avg_temp', extremum_function=max)
-        least_avg = WeatherAnalyzer.get_monthly_extremum_by_attribute(monthly_data, 'min_avg_temp',
+        max_avg = WeatherAnalyzer.get_monthly_extremum(monthly_data, 'max_avg_temp', extremum_function=max)
+        least_avg = WeatherAnalyzer.get_monthly_extremum(monthly_data, 'min_avg_temp',
                                                                       extremum_function=min)
-        max_humidity = WeatherAnalyzer.get_monthly_extremum_by_attribute(monthly_data, 'max_avg_humidity',
+        max_humidity = WeatherAnalyzer.get_monthly_extremum(monthly_data, 'max_avg_humidity',
                                                                          extremum_function=max)
         print("Highest Average Temperature:", max_avg.max_avg_temp, "C")
         print("Lowest Average Temperature:", least_avg.min_avg_temp, "C")
@@ -178,13 +179,13 @@ class ReportPrinter:
             parsed_monthly_data = weather_data_parser.parse_weather_data_file
             parsed_file_data_list = parsed_file_data_list + parsed_monthly_data
 
-        annual_max_temp = WeatherAnalyzer.get_monthly_extremum_by_attribute(parsed_file_data_list, 'max_temp',
+        annual_max_temp = WeatherAnalyzer.get_monthly_extremum(parsed_file_data_list, 'max_temp',
                                                                             extremum_function=max)
-        annual_min_temp = WeatherAnalyzer.get_monthly_extremum_by_attribute(parsed_file_data_list, 'min_temp',
+        annual_min_temp = WeatherAnalyzer.get_monthly_extremum(parsed_file_data_list, 'min_temp',
                                                                             extremum_function=min)
-        annual_max_humidity = WeatherAnalyzer.get_monthly_extremum_by_attribute(parsed_file_data_list, 'max_humidity',
+        annual_max_humidity = WeatherAnalyzer.get_monthly_extremum(parsed_file_data_list, 'max_humidity',
                                                                                 extremum_function=max)
-        annual_min_humidity = WeatherAnalyzer.get_monthly_extremum_by_attribute(parsed_file_data_list, 'min_humidity',
+        annual_min_humidity = WeatherAnalyzer.get_monthly_extremum(parsed_file_data_list, 'min_humidity',
                                                                                 extremum_function=min)
 
         print('Highest Temperature: ', annual_max_temp.max_temp, 'C on ' + annual_max_temp.date.replace('-', '/'))
