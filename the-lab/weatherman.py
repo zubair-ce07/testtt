@@ -90,10 +90,10 @@ class WeatherDataReader(object):
 
 class Charts:
     @staticmethod
-    def print_bar_chart_cmd(data_param, data_directory):
+    def print_bar_chart_cmd(report_date, data_directory):
         """ For a given month draws two horizontal bar charts on the console for the highest and
             lowest temperature on each day. Highest in red and lowest in blue """
-        weather_data_list = WeatherReports.get_chart_data(data_param, data_directory)
+        weather_data_list = WeatherReports.get_chart_data(report_date, data_directory)
         for weather_data in weather_data_list:
             if not weather_data.max_temp:
                 weather_data.max_temp = 0
@@ -104,10 +104,10 @@ class Charts:
             print(day, CursorColors.BLUE + '+' * weather_data.min_temp, weather_data.min_temp, CursorColors.WHITE)
 
     @staticmethod
-    def print_monthly_stackchart(data_param, data_directory):
+    def print_monthly_stackchart(report_date, data_directory):
         """ For a given month draw one horizontal bar chart on the console for the highest and
             lowest temperature on each day. Highest in red and lowest in blue. """
-        weather_data_list = WeatherReports.get_chart_data(data_param, data_directory)
+        weather_data_list = WeatherReports.get_chart_data(report_date, data_directory)
 
         for weather_data in weather_data_list:
             if not weather_data.max_temp:
@@ -119,9 +119,9 @@ class Charts:
                   CursorColors.WHITE, weather_data.max_temp, '-', weather_data.min_temp)
 
     @staticmethod
-    def print_bar_chart_gui(data_param, data_directory):
+    def print_bar_chart_gui(report_date, data_directory):
         """ Stores the bar chart for min and max temperatures of each day in a PDF file """
-        max_temperatures, min_temperatures, days = WeatherReports.get_gui_stack_chart(data_param, data_directory)
+        max_temperatures, min_temperatures, days = WeatherReports.get_gui_stack_chart(report_date, data_directory)
         total_days = len(days)
         index = numpy.arange(total_days)  # the x locations for the groups
         width = 0.5  # the width of the bars
@@ -146,13 +146,13 @@ class WeatherReports:
                               key=operator.attrgetter(attribute))
 
     @staticmethod
-    def get_chart_data(data_param, data_directory):
-        weather_data_reader = WeatherDataReader(data_param, data_directory)
+    def get_chart_data(report_date, data_directory):
+        weather_data_reader = WeatherDataReader(report_date, data_directory)
         return weather_data_reader.read_weather_data_file
 
     @staticmethod
-    def get_gui_stack_chart(data_param, data_directory):
-        weather_data_list = WeatherReports.get_chart_data(data_param, data_directory)
+    def get_gui_stack_chart(report_date, data_directory):
+        weather_data_list = WeatherReports.get_chart_data(report_date, data_directory)
         max_temperatures = [k.max_temp if k.max_temp else 0 for k in weather_data_list]
         min_temperatures = [k.min_temp if k.min_temp else 0 for k in weather_data_list]
         days = [k.date.split('-')[2] for k in weather_data_list]
@@ -160,8 +160,8 @@ class WeatherReports:
         return max_temperatures, min_temperatures, days
 
     @staticmethod
-    def get_monthly_averages(data_param, data_directory):
-        weather_data_reader = WeatherDataReader(data_param, data_directory)
+    def get_monthly_averages(report_date, data_directory):
+        weather_data_reader = WeatherDataReader(report_date, data_directory)
         monthly_data = weather_data_reader.read_weather_data_file
 
         max_avg = WeatherReports.get_extremum(monthly_data, 'max_avg_temp', extremum_function=max)
@@ -170,8 +170,8 @@ class WeatherReports:
         return max_avg, least_avg, max_humidity
 
     @staticmethod
-    def get_annual_extrema(data_param, data_directory):
-        weather_data_reader = WeatherDataReader(data_param, data_directory)
+    def get_annual_extrema(report_date, data_directory):
+        weather_data_reader = WeatherDataReader(report_date, data_directory)
         weather_data = weather_data_reader.read_weather_data_file
         max_temp = WeatherReports.get_extremum(weather_data, 'max_temp', extremum_function=max)
         min_temp = WeatherReports.get_extremum(weather_data, 'min_temp', extremum_function=min)
@@ -183,18 +183,18 @@ class WeatherReports:
 
 class ReportPrinter:
     @staticmethod
-    def print_monthly_averages(data_param, data_directory):
+    def print_monthly_averages(report_date, data_directory):
         """ Prints the mean min/max temperatures and humidity """
-        max_avg, least_avg, max_humidity = WeatherReports.get_monthly_averages(data_param, data_directory)
+        max_avg, least_avg, max_humidity = WeatherReports.get_monthly_averages(report_date, data_directory)
         print("Highest Average Temperature:", max_avg.max_avg_temp, "C")
         print("Lowest Average Temperature:", least_avg.min_avg_temp, "C")
         print("Highest Average Humidity:", max_humidity.max_avg_humidity, "%")
 
     @staticmethod
-    def print_annual_extrema(data_param, data_directory):
+    def print_annual_extrema(report_date, data_directory):
         """For a given year display the highest temperature and day, lowest temperature and
             day, most humid day and humidity."""
-        max_temp, min_temp, max_humidity, min_humidity = WeatherReports.get_annual_extrema(data_param, data_directory)
+        max_temp, min_temp, max_humidity, min_humidity = WeatherReports.get_annual_extrema(report_date, data_directory)
 
         print('Highest Temperature: ', max_temp.max_temp, 'C on ' + max_temp.date.replace('-', '/'))
         print('Lowest Temperature: ', min_temp.min_temp, 'C on ' + min_temp.date.replace('-', '/'))
