@@ -5,42 +5,28 @@ import calendar
 import argparse
 from collections import namedtuple
 
-red = "\033[1;31;47m"
-blue = "\033[1;34;47m"
-black = "\033[1;30;47m"
-
-min_col = "Min TemperatureC"
-max_col = "Max TemperatureC"
-hum_col = "Max Humidity"
-
 Date = namedtuple("Date", ["y", "m", "d"])
 Day = namedtuple("Day", ["date", "max_temp", "min_temp", "humidity"])
 Month = namedtuple("Month", ["month", "days", "max_avg", "min_avg", "hum_avg"])
 Year = namedtuple("Year", ["year", "months", "max_day", "min_day", "humid_day"])
 
 
-def date_split(value):
-    return map(int, str(value).split('-'))
-
-
-def yearly_sort(value):
-    numbers = re.compile(r'(\d+)')
-    parts = numbers.split(value)
-    parts[1::2] = map(int, parts[1::2])
-    return parts
-
-
-def skip_last_line(it):
-    prev = next(it)
-    for item in it:
-        yield prev
-        prev = item
+def skip_last_line(file_contents):
+    prev_line = next(file_contents)
+    for line in file_contents:
+        yield prev_line
+        prev_line = line
 
 
 def get_files_sorted(path_to_dir):
     file_names = []
+    year_pattern = re.compile(r'(\d+)')
+
+    def get_year_as_number(file_name_str):
+        return int(year_pattern.split(file_name_str)[1])
+
     for root, dirs, files in os.walk(path_to_dir):
-        for file_name in sorted(files, key=yearly_sort):
+        for file_name in sorted(files, key=get_year_as_number):
             file_names.append(os.path.join(root, file_name))
     return file_names
 
@@ -50,6 +36,9 @@ class Weather:
         self.days = []
         self.months = []
         self.years = []
+        self.red = "\033[1;31;47m"
+        self.blue = "\033[1;34;47m"
+        self.black = "\033[1;30;47m"
 
     def read_rows(self, files):
         for file_name in files:
@@ -57,15 +46,16 @@ class Weather:
                 next(file)
                 csv_file = csv.DictReader(file)
                 for line in skip_last_line(csv_file):
-                    if line[min_col] and line[max_col] and line[hum_col]:
+                    if line["Min TemperatureC"] and \
+                            line["Max TemperatureC"] and line["Max Humidity"]:
                         self.parse_rows(line)
 
     def parse_rows(self, line):
         date_line = line.get("PKT") or line.get("PKST")
-        y, m, d = date_split(date_line)
-        max_temp = int(line[max_col])
-        min_temp = int(line[min_col])
-        humidity = int(line[hum_col])
+        y, m, d = map(int, str(date_line).split('-'))
+        max_temp = int(line["Max TemperatureC"])
+        min_temp = int(line["Min TemperatureC"])
+        humidity = int(line["Max Humidity"])
         date = Date(y, m, d)
         day = Day(date, max_temp, min_temp, humidity)
         self.days.append(day)
@@ -147,22 +137,25 @@ class Weather:
         month = self.find_month(year_str, month_str)
         for day in month.days:
             d, max_, min_ = day.date.d, day.max_temp, day.min_temp
-            print(red, "{:2}".format(d), "+" * max_, "{}".format(max_), "\bC")
-            print(blue, "{:2}".format(d), "+" * min_, "{}".format(min_), "\bC")
+            print(self.red, "{:2}".format(d), "+" * max_,
+                  "{}".format(max_), "\bC")
+            print(self.blue, "{:2}".format(d), "+" * min_,
+                  "{}".format(min_), "\bC")
 
     def month_chart_bonus(self, year_str, month_str):
         month = self.find_month(year_str, month_str)
         for day in month.days:
             d, max_, min_ = day.date.d, day.max_temp, day.min_temp
-            print(black, "{:2}".format(d), end=" ")
-            print(blue, "+" * min_, sep="", end="")
-            print(red, "+" * (max_ - min_), sep="", end="")
-            print(black, "{}".format(min_), "\bC -", "{}".format(max_), "\bC")
+            print(self.black, "{:2}".format(d), end=" ")
+            print(self.blue, "+" * min_, sep="", end="")
+            print(self.red, "+" * (max_ - min_), sep="", end="")
+            print(self.black, "{}".format(min_), "\bC -",
+                  "{}".format(max_), "\bC")
 
 
 def argument_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", help="Annual Report of Extremes", nargs=2)
+    parser.add_argument("-e", help="Annual Report of Extremum", nargs=2)
     parser.add_argument("-a", help="Monthly average", nargs=2)
     parser.add_argument("-c", help="Monthly Bar Chart", nargs=2)
     parser.add_argument("-b", help="Bonus Chart", nargs=2)
@@ -190,6 +183,6 @@ def main():
         term = str(arg.b[0]).split("/")
         driver(arg.b[1]).month_chart_bonus(term[0], term[1])
 
+
 if __name__ == '__main__':
     main()
-
