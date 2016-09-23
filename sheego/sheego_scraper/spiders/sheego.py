@@ -30,7 +30,6 @@ class SheegoSpider(CrawlSpider):
         product['brand'] = self.product_brand(response)
         product['image_urls'] = self.product_image_urls(response)
         product['date'] = str(datetime.datetime.now())
-        product['care'] = self.product_care(response)
         product['lang'] = 'de'
         product['name'] = self.product_name(response)
         product['url'] = response.url
@@ -68,10 +67,6 @@ class SheegoSpider(CrawlSpider):
     def product_image_urls(self, response):
         return response.xpath('//div[@class="thumbs"]//a/@data-zoom-image').extract()
 
-    def product_care(self, response):
-        care = response.xpath('//div[@class="js-articledetails"]//dl[contains(@class,"articlequality")]//text()') \
-            .extract()
-        return filter(None, [characteristic.strip() for characteristic in care])
 
     def product_name(self, response):
         return response.xpath('//span[@itemprop="name"]//text()').extract_first().strip()
