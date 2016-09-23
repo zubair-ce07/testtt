@@ -137,12 +137,6 @@ class SheegoSpider(CrawlSpider):
                                                'available_stock': available_stock,
                                                'unavailable_stock': unavailable_stock})
 
-    def get_text(self, response, xpath):
-        return ' '.join(response.xpath(xpath).extract())
-
-
-    def sku_colour(self, response):
-        return ' '.join(response.xpath("//a[contains(@class,'color-item active js-ajax')]/@title").extract())
 
 
     def get_size_variant(self, response):
@@ -166,7 +160,7 @@ class SheegoSpider(CrawlSpider):
             size_variant = self.get_size_variant(response)
             if size_variant:
                 size = size + '_' + size_variant
-            colour = self.sku_colour(response)
+            colour = ' '.join(response.xpath("//a[contains(@class,'color-item active js-ajax')]/@title").extract())
             product['skus'][colour + '_' + size] = {'instock': False,
                                                     'currency': 'EUR',
                                                     'Colour': colour,
@@ -186,6 +180,15 @@ class SheegoSpider(CrawlSpider):
 
         return self.get_next_size_request(response, size_data,
                                           color_links, available_stock, unavailable_stock, product)
+
+    def getsizeform(self, aid, response):
+        sizeform = {}
+        sizeform['anid'] = aid
+        sizeform['artNr'] = re.search('\d+-(\d+)', response.url).group(1)
+        sizeform['varselid[0]'] = response.xpath('//input[contains(@name,"varselid[0]")]/@value').extract()[0]
+        if response.xpath('//div[contains(@id,"variants")]/div/select/option/text()').extract():
+            sizeform['varselid[1]'] = response.xpath('//input[contains(@name,"varselid[1]")]/@value').extract()[0]
+        return sizeform
 
     def get_next_size_request(self, response, size_data, color_links, available_stock, unavailable_stock, product):
         if not size_data:
@@ -241,19 +244,18 @@ class SheegoSpider(CrawlSpider):
             kal_availability.append(articles)
             return et.tostring(kal_availability).decode("utf-8")
 
-    def normalize_text(self, input_string):
-        return ''.join(input_string.split())
+
 
     def product_sku_common(self, response):
         skus = {}
-        size = self.normalize_text(
-            self.get_text(response, '//span[contains(@class,"at-dv-size")]/text()').strip('–').replace('–', ' '))
+        size = ' '.join(response.xpath('//span[contains(@class,"at-dv-size")]/text()').extract())
+        size_ = [''.join(item.strip('–').replace('–', ' ')).split() for item in size if not item.isspace()]
         color = response.xpath('//span[@class="at-dv-color"]/text()').extract_first().split(' ')[1]
         price = self.product_price(response)
         prev_price = self.product_prev_price(response)
         if prev_price:
             skus['previous_prices'] = prev_price
-        skus = {'color': color, 'currency': 'EUR', 'price': price, 'size': size, 'instock': True,
+        skus = {'color': color, 'currency': 'EUR', 'price': price, 'size': size_[0], 'instock': True,
                 'previous_price': prev_price}
 
         return skus
