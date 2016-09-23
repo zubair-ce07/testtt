@@ -24,6 +24,7 @@ class CursorColors(Enum):
 class WeatherDataReader(object):
     """ This weather_data_parser class reads a file,
         and stores the results """
+
     def __init__(self, report_date, weather_data_dir):
         """ Class constructor that takes file path as an argument """
         self.report_date = report_date
@@ -105,7 +106,7 @@ class Chart:
             for index, stack in enumerate(chart_bars):
                 chart += str(indices[y_axis]) + " " + color_array[index].value
                 chart += '+' * stack[int(y_axis) - 1]
-                chart += ' '+ str(stack[int(y_axis) - 1])
+                chart += ' ' + str(stack[int(y_axis) - 1])
                 chart += CursorColors.WHITE.value
                 chart += "\n"
 
@@ -131,24 +132,26 @@ class Chart:
         print(chart)
 
     @staticmethod
-    def show_gui_barchart(max_temperatures, min_temperatures, days):
+    def show_gui_barchart(chart_bars, days, legends, ytitle='untitled',
+                          char_title='untitled'):
         total_days = len(days)
 
         indices = numpy.array(list(range(total_days)), numpy.int32)
         width = 0.5  # the width of the bars
         figure, graph_axis = plt.subplots()
-        max_temperature_rect = graph_axis.bar(indices, max_temperatures, width,
-                                              color='r')
-        min_temperature_rect = graph_axis.bar(indices + width,
-                                              min_temperatures,
-                                              width, color='b')
+        bar_rect = []
+        legend_tuple = ()
+
+        for bar in chart_bars:
+            temp_rect = graph_axis.bar(indices, bar, width)
+            bar_rect.append(temp_rect)
+            legend_tuple = legend_tuple + (temp_rect,)
         # add some text for labels, title and axes ticks
-        graph_axis.set_ylabel('Temperature (C)')
-        graph_axis.set_title('Min/Max temperatures')
+        graph_axis.set_ylabel(ytitle)
+        graph_axis.set_title(char_title)
         graph_axis.set_xticks(indices + width)
         graph_axis.set_xticklabels(days)
-        graph_axis.legend((max_temperature_rect[0], min_temperature_rect[0]),
-                          ('Max', 'Min'))
+        graph_axis.legend(legend_tuple, legends)
         plt.savefig("Graph.pdf")
 
 
@@ -215,7 +218,9 @@ class WeatherReports:
     def monthly_bar_chart_gui(report_date, data_directory):
         chart_bars, indices = WeatherReports.__parse_to_chart_data(
             report_date, data_directory)
-        Chart.show_gui_barchart(chart_bars[0], chart_bars [1], indices)
+        Chart.show_gui_barchart(chart_bars, indices, ('Min', 'Max'),
+                                ytitle='Temperature(C)',
+                                char_title='Min Max Temperature Bar Chart')
 
     @staticmethod
     def monthly_averages(report_date, data_directory):
