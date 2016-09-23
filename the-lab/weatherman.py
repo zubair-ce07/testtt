@@ -46,9 +46,9 @@ class WeatherDataReader(object):
         date_components = self.report_date.split('/')
 
         file_name_prefix = 'lahore_weather_' + date_components[0]
-        month_no_list = [int(date_components[1])] if len(date_components) > 1 \
+        month_nos = [int(date_components[1])] if len(date_components) > 1 \
             else list(range(1, 13))
-        for month_no in month_no_list:
+        for month_no in month_nos:
             file_name = os.path.join(self.weather_data_dir,
                                      file_name_prefix + '_' +
                                      calendar.month_abbr[month_no] + '.txt')
@@ -57,10 +57,10 @@ class WeatherDataReader(object):
     def get_weather_data(self):
         """ Reads the file row by row and records mean min/max
         Temperatures and humidity """
-        file_read_list = self.__get_weather_files()
+        weather_files = self.__get_weather_files()
         weather_data = []
 
-        for file_path in file_read_list:
+        for file_path in weather_files:
             with open(file_path) as csvfile:
                 # Skipping the first blank line of the file
                 next(csvfile)
@@ -93,61 +93,78 @@ class WeatherDataReader(object):
         return weather_data
 
 
-class Charts:
+class ChartType(Enum):
+    STACK_CHART = 1
+    BAR_CHART = 2
+
+
+class Chart:
+    def __init__(self, indices):
+        self.__chart_stacks__ = []
+        self.__stack_colors__ = []
+        self.__indices__ = indices
+
+    def add_stack(self, stack, color=CursorColors.RED):
+        self.__chart_stacks__.append(stack)
+        self.__stack_colors__.append(color)
+
+    def show_chart(self):
+        # To be overridden in derived classes
+        pass
+
+
+class BarChart(Chart):
+    def show_chart(self):
+        """Overriding Base Chart Class method"""
+        for y_axis in range(len(self.__indices__)):
+            for index, stack in enumerate(self.__chart_stacks__):
+                print(self.__indices__[y_axis],
+                      self.__stack_colors__[index].value + '+' *
+                      stack[int(y_axis) - 1],
+                      stack[int(y_axis) - 1],
+                      CursorColors.WHITE.value)
+
+
+class StackChart(Chart):
+    def show_chart(self):
+        for y_axis in range(len(self.__indices__)):
+            print(self.__indices__[y_axis], end=" ")
+            for index, stack in enumerate(self.__chart_stacks__):
+                print(self.__stack_colors__[index].value + '+' *
+                      stack[int(y_axis) - 1],
+                      CursorColors.WHITE.value, end="")
+            for index, stack in enumerate(self.__chart_stacks__):
+                print(stack[int(y_axis) - 1], "- " if index != len(
+                      self.__chart_stacks__) - 1 else "", end="")
+            print("")
+
+
+class ReportPrinter:
     @staticmethod
-    def print_bar_chart_cmd(report_date, data_directory):
-        """ For a given month draws two horizontal bar charts on the console
-        for the highest and lowest temperature on each day. Highest in red
-        and lowest in blue """
-        weather_data = WeatherReports.get_chart_data(report_date,
-                                                     data_directory)
-        for weather_params in weather_data:
-            day = weather_params.date.split('-')[2]
-            print(day, CursorColors.RED.value + '+' * weather_params.max_temp,
-                  weather_params.max_temp, CursorColors.WHITE.value)
-            print(day, CursorColors.BLUE.value + '+' * weather_params.min_temp,
-                  weather_params.min_temp, CursorColors.WHITE.value)
+    def print_monthly_averages(report_date, data_directory):
+        """ Prints the mean min/max temperatures and humidity """
+        max_avg, least_avg, max_humidity = WeatherReports.monthly_averages(
+            report_date, data_directory)
+        print("Highest Average Temperature:", max_avg.max_avg_temp, "C")
+        print("Lowest Average Temperature:", least_avg.min_avg_temp, "C")
+        print("Highest Average Humidity:", max_humidity.max_avg_humidty, "%")
 
     @staticmethod
-    def print_monthly_stackchart(report_date, data_directory):
-        """ For a given month draw one horizontal bar chart on the console for
-        the highest and lowest temperature on each day. Highest in red and
-        lowest in blue. """
-        weather_data = WeatherReports.get_chart_data(report_date,
-                                                     data_directory)
-        for weather_params in weather_data:
-            print(weather_params.date.split('-')[2],
-                  CursorColors.RED.value + '+' * weather_params.max_temp,
-                  CursorColors.BLUE.value + '+' * weather_params.min_temp,
-                  CursorColors.WHITE.value, weather_params.max_temp, '-',
-                  weather_params.min_temp)
+    def print_annual_extrema(report_date, data_directory):
+        """For a given year display the highest temperature and day, lowest
+        temperature and day, most humid day and humidity."""
+        max_temp, min_temp, max_humidity, min_humidity = \
+            WeatherReports.annual_extrema(
+                report_date, data_directory)
 
-    @staticmethod
-    def print_bar_chart_gui(report_date, data_directory):
-        """ Stores the bar chart for min and max temperatures
-        of each day in a PDF file """
-        max_temperatures, min_temperatures, days = \
-            WeatherReports.monthly_stack_chart(report_date, data_directory)
-        total_days = len(days)
-
-        indices = numpy.array(list(range(total_days)), numpy.int32)
-        width = 0.5  # the width of the bars
-        figure, graph_axis = plt.subplots()
-        max_temperature_rect = graph_axis.bar(indices, max_temperatures, width,
-                                              color='r')
-        min_temperature_rect = graph_axis.bar(indices + width,
-                                              min_temperatures,
-                                              width, color='b')
-
-        # add some text for labels, title and axes ticks
-        graph_axis.set_ylabel('Temperature (C)')
-        graph_axis.set_title('Min/Max temperatures')
-        graph_axis.set_xticks(indices + width)
-        graph_axis.set_xticklabels(days)
-        graph_axis.legend((max_temperature_rect[0], min_temperature_rect[0]),
-                          ('Max', 'Min'))
-
-        plt.savefig("Graph.pdf")
+        print('Highest Temperature: ', max_temp.max_temp,
+              'C on ' + max_temp.date.replace('-', '/'))
+        print('Lowest Temperature: ', min_temp.min_temp,
+              'C on ' + min_temp.date.replace('-', '/'))
+        print('Most Humid: ', max_humidity.max_humidity,
+              '% on ' + max_humidity.date.replace('-', '/'))
+        print('Least Humid: ', min_humidity.min_humidity,
+              '% on ' + min_humidity.date.replace('-', '/'))
 
 
 class WeatherReports:
@@ -158,7 +175,7 @@ class WeatherReports:
             key=operator.attrgetter(attribute))
 
     @staticmethod
-    def get_chart_data(report_date, data_directory):
+    def __parse_to_chart_data(report_date, data_directory):
         weather_data_reader = WeatherDataReader(report_date, data_directory)
         weather_data = weather_data_reader.get_weather_data()
         for weather_params in weather_data:
@@ -167,22 +184,60 @@ class WeatherReports:
             if not weather_params.min_temp:
                 weather_params.min_temp = 0
 
-        return weather_data
+        max_temp_bar = [weather_param.max_temp for weather_param in
+                        weather_data]
+        min_temp_bar = [weather_param.min_temp for weather_param in
+                        weather_data]
+        indices = [k.date.split('-')[2] for k in weather_data]
+
+        return max_temp_bar, min_temp_bar, indices
+
+    @staticmethod
+    def monthly_bar_chart_cmd(report_date, data_directory):
+        max_temp_bar, min_temp_bar, indices = \
+            WeatherReports.__parse_to_chart_data(report_date, data_directory)
+        bar_chart = BarChart(indices)
+        bar_chart.add_stack(max_temp_bar, CursorColors.RED)
+        bar_chart.add_stack(min_temp_bar, CursorColors.BLUE)
+        bar_chart.show_chart()
 
     @staticmethod
     def monthly_stack_chart(report_date, data_directory):
-        weather_data_list = WeatherReports.get_chart_data(report_date,
-                                                          data_directory)
-        max_temperatures = [k.max_temp if k.max_temp else 0 for k in
-                            weather_data_list]
-        min_temperatures = [k.min_temp if k.min_temp else 0 for k in
-                            weather_data_list]
-        days = [k.date.split('-')[2] for k in weather_data_list]
-
-        return max_temperatures, min_temperatures, days
+        max_temp_bar, min_temp_bar, indices = \
+            WeatherReports.__parse_to_chart_data(report_date, data_directory)
+        bar_chart = StackChart(indices)
+        bar_chart.add_stack(max_temp_bar, CursorColors.RED)
+        bar_chart.add_stack(min_temp_bar, CursorColors.BLUE)
+        bar_chart.show_chart()
 
     @staticmethod
-    def get_monthly_averages(report_date, data_directory):
+    def monthly_bar_chart_gui(report_date, data_directory):
+        """ Stores the bar chart for min and max temperatures
+        of each day in a PDF file """
+        max_temperatures, min_temperatures, days = \
+            WeatherReports.__parse_to_chart_data(report_date, data_directory)
+
+        total_days = len(days)
+
+        indices = numpy.array(list(range(total_days)), numpy.int32)
+        width = 0.5  # the width of the bars
+        figure, graph_axis = plt.subplots()
+        max_temperature_rect = graph_axis.bar(indices, max_temperatures, width,
+                                              color='r')
+        min_temperature_rect = graph_axis.bar(indices + width,
+                                              min_temperatures,
+                                              width, color='b')
+        # add some text for labels, title and axes ticks
+        graph_axis.set_ylabel('Temperature (C)')
+        graph_axis.set_title('Min/Max temperatures')
+        graph_axis.set_xticks(indices + width)
+        graph_axis.set_xticklabels(days)
+        graph_axis.legend((max_temperature_rect[0], min_temperature_rect[0]),
+                          ('Max', 'Min'))
+        plt.savefig("Graph.pdf")
+
+    @staticmethod
+    def monthly_averages(report_date, data_directory):
         weather_data_reader = WeatherDataReader(report_date, data_directory)
         weather_data = weather_data_reader.get_weather_data()
 
@@ -196,7 +251,7 @@ class WeatherReports:
         return max_avg, least_avg, max_humidity
 
     @staticmethod
-    def get_annual_extrema(report_date, data_directory):
+    def annual_extrema(report_date, data_directory):
         weather_data_reader = WeatherDataReader(report_date, data_directory)
         weather_data = weather_data_reader.get_weather_data()
         max_temp = WeatherReports.__get_extremum(weather_data, 'max_temp',
@@ -211,34 +266,6 @@ class WeatherReports:
                                                      extremum_function=min)
 
         return max_temp, min_temp, max_humidity, min_humidity
-
-
-class ReportPrinter:
-    @staticmethod
-    def print_monthly_averages(report_date, data_directory):
-        """ Prints the mean min/max temperatures and humidity """
-        max_avg, least_avg, max_humidity = WeatherReports.get_monthly_averages(
-            report_date, data_directory)
-        print("Highest Average Temperature:", max_avg.max_avg_temp, "C")
-        print("Lowest Average Temperature:", least_avg.min_avg_temp, "C")
-        print("Highest Average Humidity:", max_humidity.max_avg_humidty, "%")
-
-    @staticmethod
-    def print_annual_extrema(report_date, data_directory):
-        """For a given year display the highest temperature and day, lowest
-        temperature and day, most humid day and humidity."""
-        max_temp, min_temp, max_humidity, min_humidity = \
-            WeatherReports.get_annual_extrema(
-                report_date, data_directory)
-
-        print('Highest Temperature: ', max_temp.max_temp,
-              'C on ' + max_temp.date.replace('-', '/'))
-        print('Lowest Temperature: ', min_temp.min_temp,
-              'C on ' + min_temp.date.replace('-', '/'))
-        print('Most Humid: ', max_humidity.max_humidity,
-              '% on ' + max_humidity.date.replace('-', '/'))
-        print('Least Humid: ', min_humidity.min_humidity,
-              '% on ' + min_humidity.date.replace('-', '/'))
 
 
 def main():
@@ -274,11 +301,11 @@ def main():
     if args.a:
         ReportPrinter.print_monthly_averages(args.a, data_directory_path)
     if args.c:
-        Charts.print_bar_chart_cmd(args.c, data_directory_path)
+        WeatherReports.monthly_bar_chart_cmd(args.c, data_directory_path)
     if args.s:
-        Charts.print_monthly_stackchart(args.s, data_directory_path)
+        WeatherReports.monthly_stack_chart(args.s, data_directory_path)
     if args.b:
-        Charts.print_bar_chart_gui(args.b, data_directory_path)
+        WeatherReports.monthly_bar_chart_gui(args.b, data_directory_path)
 
 
 if __name__ == "__main__":
