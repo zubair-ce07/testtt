@@ -21,6 +21,7 @@ NEWSPIDER_MODULE = 'sheegoscraper.spiders'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
+DOWNLOAD_DELAY = 10
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
 
