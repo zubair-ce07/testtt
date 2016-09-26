@@ -195,7 +195,8 @@ class SheegoSpiderCrawler(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css=
                            ['.mainnav__entry.js-mainnav-entry'
-                               , '.navigation.pl-side-box']
+                               , '.navigation.pl-side-box'
+                               , '.js-product-list-paging.paging .info']
                            )
              ),
         Rule(LinkExtractor(restrict_css=
