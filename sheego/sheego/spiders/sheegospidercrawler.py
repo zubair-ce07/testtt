@@ -55,21 +55,16 @@ def parse_description(response):
 
     detail = response.css(".js-articledetails.at-dv-itemDetails")
     item_property = detail.css(".l-outsp-bot-10::text").extract()
-    for item in item_property:
-        if item.strip():
-            startdesc.append(item)
-
+    startdesc = startdesc + item_property
     detail_table = detail.css(".tmpArticleDetailTable tr")
-    for detail in detail_table:
-        startdesc.append(' '.join(
-            [detail.css("span::text").extract()[0].strip(),
-             detail.css("td:nth-child(2)::text").extract()[0].strip()]))
-
+    startdesc = startdesc + list(map(lambda x: ' '.join([x.css("span::text").extract()[0].strip(),
+                                                         x.css("td:nth-child(2)::text").extract()[
+                                                             0].strip()]), detail_table))
     artical_no = detail.css(".dl-horizontal.articlenumber")
     startdesc.append(strip(artical_no.css("dt::text").extract()))
     startdesc.append(strip(artical_no.css("dd::text").extract()))
 
-    return startdesc
+    return list(filter(lambda x: x.strip(), startdesc))
 
 
 def parse_variant_urls(response):
@@ -95,11 +90,11 @@ def parse_variant_urls(response):
     urls = []
 
     for CCIN, sizes in articles_available.items():
-        CIN = CCIN[6:]
-        STDp = CCIN[:6]
-        for size in sizes:
-            url = '-'.join([pid_no, STDp, size, CIN])
-            urls.append(initial_url + '_' + url + '.html')
+        urls = urls + list(map(lambda size:
+                               initial_url
+                               + '_'
+                               + '-'.join([pid_no, CCIN[:6], size, CCIN[6:]]) + '.html'
+                               , sizes))
 
     return urls
 
@@ -131,7 +126,7 @@ def parse_price(response):
     if oldprice:
         price['previous_prices'] = oldprice
 
-    variant_key = color + '_' + variant + '_' + size
+    variant_key = '_'.join(list(filter(lambda value: value, [color, variant, size])))
     return variant_key, price
 
 
