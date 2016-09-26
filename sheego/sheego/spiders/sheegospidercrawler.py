@@ -21,6 +21,7 @@ category = 'category'
 skus = 'skus'
 care = 'care'
 gender = 'gender'
+out_of_stock = 'out_os_stock'
 
 
 def strip(obj):
@@ -28,10 +29,10 @@ def strip(obj):
 
 
 def parse_brand(response):
-    brand = response.css(".brand a::text").extract()
-    if not brand:
-        brand = response.css(".brand::text").extract()
-    return strip(brand[0])
+    brand_text = response.css(".brand a::text").extract()
+    if not brand_text:
+        brand_text = response.css(".brand::text").extract()
+    return strip(brand_text[0])
 
 
 def parse_pid(response):
@@ -52,19 +53,19 @@ def parse_image_urls(response):
 def parse_description(response):
     startdesc = response.css("[id=moreinfo-highlight] li::text").extract()
 
-    description = response.css(".js-articledetails.at-dv-itemDetails")
-    item_property = description.css(".l-outsp-bot-10::text").extract()
+    detail = response.css(".js-articledetails.at-dv-itemDetails")
+    item_property = detail.css(".l-outsp-bot-10::text").extract()
     for item in item_property:
-        if (item.strip()):
-            startdesc.append(item.strip())
+        if item.strip():
+            startdesc.append(item)
 
-    detail_table = description.css(".tmpArticleDetailTable tr")
+    detail_table = detail.css(".tmpArticleDetailTable tr")
     for detail in detail_table:
         startdesc.append(' '.join(
             [detail.css("span::text").extract()[0].strip(),
              detail.css("td:nth-child(2)::text").extract()[0].strip()]))
 
-    artical_no = description.css(".dl-horizontal.articlenumber")
+    artical_no = detail.css(".dl-horizontal.articlenumber")
     startdesc.append(strip(artical_no.css("dt::text").extract()))
     startdesc.append(strip(artical_no.css("dd::text").extract()))
 
@@ -75,29 +76,42 @@ def parse_variant_urls(response):
     meta_data = response.meta
     root = ET.fromstring(response.body.decode("utf-8"))
     articles_available = {}
+    '''need to ask why does it not work'''
+    # articles = list(filter(lambda x: x.find('.//ArticleAvailability'), root.findall('.//Article')))
+    # print('Article', ET.tostring(articles, encoding='utf8', method='xml'))
+
     for CCIN in set(map(lambda x: x.text, root.findall('.//CompleteCatalogItemNo'))):
         articles_available[CCIN] = []
 
     for article in root.findall('.//Article'):
-        articles_available[article.find('.//CompleteCatalogItemNo').text].append(
-            article.find('.//SizeAlphaText').text)
+        if not article.find('.//ArticleError') and article.find('.//DeliveryStatement').text != '0':
+            articles_available[article.find('.//CompleteCatalogItemNo').text].append(
+                article.find('.//SizeAlphaText').text)
+    articles_available = dict((k, v) for k, v in articles_available.items() if v)
+    # articles_available = dict(filter(lambda x: x.v, articles_available.items()))
     splits = meta_data[key_url_product].split("_", 1)
     initial_url = splits[0]
-    pid = splits[1].split('-')[0]
+    pid_no = splits[1].split('-')[0]
     urls = []
-    print(articles_available)
+
     for CCIN, sizes in articles_available.items():
         CIN = CCIN[6:]
         STDp = CCIN[:6]
         for size in sizes:
-            url = '-'.join([pid, STDp, size, CIN])
+            url = '-'.join([pid_no, STDp, size, CIN])
             urls.append(initial_url + '_' + url + '.html')
+
     return urls
 
 
 def process_kal_response(response):
     urls = parse_variant_urls(response)
-    yield request_for_variant(urls, response.meta[key_sheegoItem])
+    if not urls:
+        sheego_item = response.meta[key_sheegoItem]
+        sheego_item[skus][out_of_stock] = 'True'
+        yield sheego_item
+    else:
+        yield request_variant_detail(urls, response.meta[key_sheegoItem])
 
 
 def parse_price(response):
@@ -129,19 +143,23 @@ def parse_variant(response):
         set(response.meta[key_sheegoItem][image_urls] + parse_image_urls(response)))
 
     if response.meta[key_urls]:
-        yield request_for_variant(response.meta[key_urls],
-                                  response.meta[key_sheegoItem])
+        yield request_variant_detail(response.meta[key_urls],
+                                     response.meta[key_sheegoItem])
     else:
         yield response.meta[key_sheegoItem]
 
 
-def request_for_variant(urls, sheego_item):
+def request_variant_detail(urls, sheego_item):
     url = urls.pop()
 
-    meta_data_n = {key_url_product: url
-        , key_urls: urls
-        , key_sheegoItem: sheego_item}
+    meta_data_n = {key_url_product: url, key_urls: urls, key_sheegoItem: sheego_item}
     return Request(url, callback=parse_variant, meta=meta_data_n)
+
+
+def request_avalibilities(response, sheego_item):
+    return Request('https://www.sheego.de/request/kal.php', callback=process_kal_response,
+                   method='POST', body=get_kal_params(response),
+                   meta={key_url_product: response.url, key_sheegoItem: sheego_item})
 
 
 def get_kal_params(response):
@@ -167,7 +185,7 @@ def get_kal_params(response):
     return tostring(kal_param)
 
 
-class sheego_spider_crawler(CrawlSpider):
+class SheegoSpiderCrawler(CrawlSpider):
     name = "sheego_spider_crawler"
     allowed_domains = ['sheego.de']
     start_urls = [
@@ -186,21 +204,6 @@ class sheego_spider_crawler(CrawlSpider):
     )
 
     def parse_item(self, response):
-        # class sheego_spider_crawler(Spider):
-        #     name = "sheego_spider_crawler"
-        #     allowed_domains = ["sheego.de"]
-        #     start_urls = [
-        #         # "https://www.sheego.de/sheego-kettenguertel-silber_421459234-652033-94p.html",
-        #         # "https://www.sheego.de/sheego-trend-schmale-hose-schwarz_506378774-558545-Rp.html",
-        #         'https://www.sheego.de/sheego-casual-suesses-shirtkleid-schwarz_243191760-541756-85p.html',
-        #         # 'https://www.sheego.de/sheego-style-hose-grau_431500110-201657-94p.html',
-        #         # 'https://www.sheego.de/lascana-strings-3-stueck-mit-spitze-cotton-made-in-africa-schwarz_313408932-442882-Yp.html',
-        #         # 'https://www.sheego.de/tamaris-schnuerpumps-schwarz_526747825-516341-91p.html',
-        #         # 'https://www.sheego.de/nuance-buegel-bh-fuer-perfekte-kurven-bunt_234435751-496590-Yp.html',
-        #         # 'https://www.sheego.de/sheego-style-satinkleid-mit-spitze-grau_517798559-495573-91p.html'
-        #     ]
-        #
-        #     def parse(self, response):
         sheego_item = SheegoItem()
         sheego_item[url_original] = response.url
         sheego_item[pid] = parse_pid(response)
@@ -210,10 +213,5 @@ class sheego_spider_crawler(CrawlSpider):
         sheego_item[description] = parse_description(response)
         sheego_item[gender] = 'women'
         sheego_item[skus] = {}
-        print(" -------------------------------------- URL : ", response.url)
-        yield Request('https://www.sheego.de/request/kal.php'
-                      , callback=process_kal_response
-                      , method='POST'
-                      , body=get_kal_params(response)
-                      , meta={key_url_product: response.url,
-                              key_sheegoItem: sheego_item})
+
+        yield request_avalibilities(response, sheego_item)
