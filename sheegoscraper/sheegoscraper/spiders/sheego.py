@@ -13,14 +13,15 @@ class SheegoSpider(CrawlSpider):
     rules = [
         Rule(LinkExtractor(allow="sheego.de/", deny=["sheego.de/\?", "\?", "html"], restrict_css="#content"),
              follow=True),
-        Rule(LinkExtractor(restrict_css=".cj-active"), callback='parse_prodcut', follow=True),
+        Rule(LinkExtractor(restrict_css=".cj-active"), callback='parse_product', follow=True),
         Rule(LinkExtractor(allow="sheego.de/", deny=["sheego.de/\?", "\.html"],
                            restrict_css=".next.js-next.btn.btn-next"))
     ]
 
     def articles(self, response):
         articles = response.css("script:contains('articlesString')::text").extract()[0]
-        articles_filtered = re.findall("([0-9A-Z]{3,8})\;([0-9]+)", articles)
+        articles_filtered = re.findall("([0-9A-Z]{3,8})\;([0-9A-Za-z]{,4})", articles)
+        articles_filtered = [(key, '0') if not size else (key, size) for key, size in articles_filtered]
         return articles_filtered
 
     def create_xml(self, response):
@@ -82,7 +83,7 @@ class SheegoSpider(CrawlSpider):
         item = response.meta['item']
         urls = response.meta['urls']
         sku_key = urls.pop(0)['sku_key']
-        sku = {}
+        sku = dict()
         sku['color'] = self.color(response)
         sku['price'] = self.price(response)
         sku['previous_prices'] = self.prev_price(response)
@@ -98,7 +99,7 @@ class SheegoSpider(CrawlSpider):
         else:
             return item
 
-    def parse_prodcut(self, response):
+    def parse_product(self, response):
         item = SheegoItem()
         item['gender'] = 'Women'
         item['category'] = self.category(response)
@@ -130,8 +131,9 @@ class SheegoSpider(CrawlSpider):
     def description(self, response):
         descriptions = []
         for line in response.css(".at-dv-itemDetails > [itemprop='description'] *::text").extract():
-            if line.strip():
-                descriptions.append(line.strip())
+            line_stripped = line.strip()
+            if line_stripped:
+                descriptions.append(line_stripped)
         return descriptions
 
     def product_name(self, response):
@@ -141,7 +143,8 @@ class SheegoSpider(CrawlSpider):
         return re.findall("_([0-9A-Za-z]+)", response.url)[0]
 
     def size(self, response):
-        return response.css(".active::text").extract()[-1].replace('– ', '')
+        size = response.css(".active::text").extract()[-1].replace('– ', '').strip()
+        return size if size else "one_size"
 
     def color(self, response):
         return response.css(".at-dv-color::text").extract()[0].replace('— ', '')
