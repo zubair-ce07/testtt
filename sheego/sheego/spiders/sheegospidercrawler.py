@@ -29,9 +29,7 @@ def strip(obj):
 
 
 def parse_brand(response):
-    brand_text = response.css(".brand a::text").extract()
-    if not brand_text:
-        brand_text = response.css(".brand::text").extract()
+    brand_text = response.css(".brand a::text").extract() or response.css(".brand::text").extract()
     return strip(brand_text[0])
 
 
@@ -47,33 +45,32 @@ def parse_name(response):
 
 
 def parse_image_urls(response):
-    return response.css("[id=thumbslider] a::attr(data-zoom-image)").extract()
+    return response.css("#thumbslider a::attr(data-zoom-image)").extract()
 
 
 def parse_description(response):
-    startdesc = response.css("[id=moreinfo-highlight] li::text").extract()
+    small_description = response.css("#moreinfo-highlight li::text").extract()
+    detail_selector = response.css('.js-articledetails.at-dv-itemDetails')
+    detail_paragraph = detail_selector.css(".l-outsp-bot-10::text").extract()
+    detail_table = detail_selector.css(".tmpArticleDetailTable tr")
+    detail_table_data = list(map(lambda x: snap_detail_table_row(x), detail_table))
+    article_no = detail_selector.css(".dl-horizontal.articlenumber")
 
-    detail = response.css(".js-articledetails.at-dv-itemDetails")
-    item_property = detail.css(".l-outsp-bot-10::text").extract()
-    startdesc = startdesc + item_property
-    detail_table = detail.css(".tmpArticleDetailTable tr")
-    startdesc = startdesc + list(map(lambda x: ' '.join([x.css("span::text").extract()[0].strip(),
-                                                         x.css("td:nth-child(2)::text").extract()[
-                                                             0].strip()]), detail_table))
-    artical_no = detail.css(".dl-horizontal.articlenumber")
-    startdesc.append(strip(artical_no.css("dt::text").extract()))
-    startdesc.append(strip(artical_no.css("dd::text").extract()))
+    full_description = small_description + detail_paragraph + detail_table_data
+    full_description.append(strip(article_no.css("dt::text, dd::text").extract()))
 
-    return list(filter(lambda x: x.strip(), startdesc))
+    return list(filter(lambda x: x.strip(), full_description))
+
+
+def snap_detail_table_row(xcss):
+    return strip(xcss.css("span::text").extract()) + strip(
+        xcss.css("td:nth-child(2)::text").extract())
 
 
 def parse_variant_urls(response):
     meta_data = response.meta
     root = ET.fromstring(response.body.decode("utf-8"))
     articles_available = {}
-    '''need to ask why does it not work'''
-    # articles = list(filter(lambda x: x.find('.//ArticleAvailability'), root.findall('.//Article')))
-    # print('Article', ET.tostring(articles, encoding='utf8', method='xml'))
 
     for CCIN in set(map(lambda x: x.text, root.findall('.//CompleteCatalogItemNo'))):
         articles_available[CCIN] = []
@@ -82,20 +79,17 @@ def parse_variant_urls(response):
         if not article.find('.//ArticleError') and article.find('.//DeliveryStatement').text != '0':
             articles_available[article.find('.//CompleteCatalogItemNo').text].append(
                 article.find('.//SizeAlphaText').text)
-    articles_available = dict((k, v) for k, v in articles_available.items() if v)
+    articles_available = {k: v for k, v in articles_available.items() if v}
     # articles_available = dict(filter(lambda x: x.v, articles_available.items()))
     splits = meta_data[key_url_product].split("_", 1)
     initial_url = splits[0]
     pid_no = splits[1].split('-')[0]
     urls = []
-
+    url_format = '%s_%s-%s-%s-%s.html'
     for CCIN, sizes in articles_available.items():
         urls = urls + list(map(lambda size:
-                               initial_url
-                               + '_'
-                               + '-'.join([pid_no, CCIN[:6], size, CCIN[6:]]) + '.html'
+                               (url_format % (initial_url, pid_no, CCIN[:6], size, CCIN[6:]))
                                , sizes))
-
     return urls
 
 
@@ -154,7 +148,7 @@ def request_variant_detail(urls, sheego_item):
     return Request(url, callback=parse_variant, meta=meta_data_n)
 
 
-def request_avalibilities(response, sheego_item):
+def request_availabilities(response, sheego_item):
     return Request('https://www.sheego.de/request/kal.php', callback=process_kal_response,
                    method='POST', body=get_kal_params(response),
                    meta={key_url_product: response.url, key_sheegoItem: sheego_item})
@@ -213,4 +207,4 @@ class SheegoSpiderCrawler(CrawlSpider):
         sheego_item[gender] = 'women'
         sheego_item[skus] = {}
 
-        yield request_avalibilities(response, sheego_item)
+        yield request_availabilities(response, sheego_item)
