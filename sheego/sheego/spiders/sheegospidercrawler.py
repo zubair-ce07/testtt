@@ -163,7 +163,7 @@ def get_kal_params(response):
 
     CCINs = kal_data[0::2]
     SATs = kal_data[1::2]
-    stdPs = list(map(lambda x: x[-1], CCINs))
+    stdPs = list(map(lambda x: x[6:], CCINs))
 
     kal_param = Element('tns:KALAvailabilityRequest')
     kal_param.attrib = {'xmlns:tns': "http://www.schwab.de/KAL",
