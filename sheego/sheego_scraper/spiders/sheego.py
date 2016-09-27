@@ -12,13 +12,13 @@ class SheegoSpider(CrawlSpider):
     name = "sheego_spider"
     allowed_domains = ["sheego.de"]
     start_urls = [
-        'https://www.sheego.de/',
+        'https://www.sheego.de/sheego-casual-chino-stretch-hose-grau_250322895-244124-85p.html',
     ]
 
-    category_listing_x = ['//div[@id="mainnavigation"]', '//div[@id="sidebar"]', '//div[@class="info"]']
+    listing_x = ['//div[@id="mainnavigation"]', '//div[@id="sidebar"]', '//div[@class="info"]']
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=category_listing_x)),
+        Rule(LinkExtractor(restrict_xpaths=listing_x)),
         Rule(LinkExtractor(restrict_xpaths=['//div[contains(@class,"product__item")]']), callback='parse_product'))
 
     def parse_product(self, response):
@@ -35,12 +35,10 @@ class SheegoSpider(CrawlSpider):
         product['url'] = response.url
         product['gender'] = 'Women'
         product['skus'] = {}
-
         return self.check_outofstock_request(product, response)
 
-
     def product_retailer_sku(self, response):
-        return response.xpath('//input[@name="aid"]/@value').extract_first().split('-')[0]
+        return response.css("input[name=aid]::attr(value)")
 
     def product_description(self, response):
         short_description = self.product_short_description(response)
@@ -48,47 +46,46 @@ class SheegoSpider(CrawlSpider):
         return short_description + long_description
 
     def product_long_description(self, response):
-        description = response.xpath("//div[@itemprop = 'description']//text()").extract()
-        return self.remove_empty_enteries(description)
+        description =  response.css('div[itemprop=description]::text').extract()
+        return self.clean(description)
 
     def product_short_description(self, response):
-        description = response.xpath(
-            ".//*[contains(@class, 'productDetail')]/div[@class='highlight']//ul//li/text()").extract()
-        return self.remove_empty_enteries(description)
+        short_description_x = response.css('[class*=productDetail] > div.highlight ul li::text').extract()
+        description = response.xpath(short_description_x).extract()
+        return self.clean(description)
 
     def product_brand(self, response):
-        brand = response.xpath('//div[contains(@class, "productDetailBox")]//div[@class="brand"]//text()').extract()
-        return ''.join(brand).strip()
+        brand = response.css(".brand > a::text").extract() or response.css(".brand::text").extract()
+        return brand[0].strip()
 
     def product_image_urls(self, response):
-        return response.xpath('//div[@class="thumbs"]//a/@data-zoom-image').extract()
+        return response.css('div.thumbs a::attr(data-zoom-image)').extract()
 
     def product_name(self, response):
-        return response.xpath('//span[@itemprop="name"]//text()').extract_first().strip()
+        return response.css(".at-dv-itemName::text").extract()[0].strip()
 
     def product_price(self, response):
-        price = response.xpath('//span[contains(@class,"lastprice at-lastprice")]/text()').extract()
-        return self.remove_empty_enteries(price)
+        price = response.css('.at-lastprice::text').extract()
+        return self.clean(price)
 
     def product_prev_price(self, response):
-        prev_price = response.xpath('//sub[contains(@class,"at-wrongprice")]//text()').extract()
+        prev_price = response.css('sub[class*=at-wrongprice]::text').extract()
         return [repr(prev_price[0]).split('\\')[0]] if prev_price else None
 
     def product_category(self, response):
         return response.css('.breadcrumb a::text').extract()[1:]
 
     def check_outofstock_request(self, product, response):
-        oos = self.get_xml_response(response)
+        out_of_stock = self.get_xml_response(response)
         url = 'http://www.sheego.de/request/kal.php'
         headers = {"Content-Type": "application/xml; charset=UTF-8",
                    "Accept": "application/xml, text/xml, */*; q=0.  01",
                    "X-Requested-With": "XMLHttpRequest"}
-        product_url = response.url
-        return Request(url=url, method="POST", headers=headers, body=oos,
-                        meta={'product': product, 'url': product_url},
-                        callback=self.parse_outofstock)
+        return Request(url=url, method="POST", headers=headers, body=out_of_stock,
+                        meta={'product': product, 'url': response.url},
+                        callback=self.parse_out_of_stock)
 
-    def parse_outofstock(self, response):
+    def parse_out_of_stock(self, response):
         product = response.meta['product']
         url = response.meta['url']
         root = et.fromstring(response.body.decode("utf-8"))
@@ -134,13 +131,11 @@ class SheegoSpider(CrawlSpider):
                                                'unavailable_stock': unavailable_stock})
 
     def get_size_variant(self, response):
-        variant = ' '.join(response.xpath(
-           "//select[contains(@class,'variants js-variantSelector')]/option[@selected='selected']/text()").extract())
-        return variant
+        variant_x =  "//select[contains(@class,'variants js-variantSelector')]/option[@selected='selected']/text()"
+        return ' '.join(response.xpath(variant_x).extract())
 
     def get_article_id(self, response):
         return ' '.join(response.xpath('//input[contains(@name,"aid")]/@value').extract())
-
 
     def parse_color_details(self, response):
         product = response.meta['product']
@@ -169,18 +164,8 @@ class SheegoSpider(CrawlSpider):
             for size in sizes_available:
                 token_article_id[-2] = size.split('/')[0]
                 size_data.append('-'.join(token_article_id))
-
         return self.get_next_size_request(response, size_data,
                                           color_links, available_stock, unavailable_stock, product)
-
-    def getsizeform(self, aid, response):
-        sizeform = {}
-        sizeform['anid'] = aid
-        sizeform['artNr'] = re.search('\d+-(\d+)', response.url).group(1)
-        sizeform['varselid[0]'] = response.xpath('//input[contains(@name,"varselid[0]")]/@value').extract()[0]
-        if response.xpath('//div[contains(@id,"variants")]/div/select/option/text()').extract():
-            sizeform['varselid[1]'] = response.xpath('//input[contains(@name,"varselid[1]")]/@value').extract()[0]
-        return sizeform
 
     def get_next_size_request(self, response, size_data, color_links, available_stock, unavailable_stock, product):
         if not size_data:
@@ -214,7 +199,7 @@ class SheegoSpider(CrawlSpider):
 
     def product_sku_common(self, response):
         skus = {}
-        size = (response.xpath('//span[contains(@class,"at-dv-size")]/text()').extract()[0].strip('–').replace('–', ' '))
+        size = response.xpath('//span[contains(@class,"at-dv-size")]/text()').extract()[0].strip('–').replace('–', ' ')
         color = response.xpath('//span[@class="at-dv-color"]/text()').extract_first().split(' ')[1]
         price = self.product_price(response)
         prev_price = self.product_prev_price(response)
@@ -244,6 +229,6 @@ class SheegoSpider(CrawlSpider):
             kal_availability.append(articles)
             return et.tostring(kal_availability).decode("utf-8")
 
-    def remove_empty_enteries(self, item_list):
+    def clean(self, item_list):
         return [item.strip() for item in item_list if not item.isspace()]
 
