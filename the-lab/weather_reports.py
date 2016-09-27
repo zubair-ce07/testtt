@@ -6,12 +6,16 @@ from weather_data_reader import WeatherDataReader
 class WeatherReports:
     @staticmethod
     def __get_extremum(weather_data, attribute, extremum_function=max):
+        """ Finds the extremum value of an attribute in object list based on
+        the extremum_function passed to it. """
         return extremum_function(
             [data for data in weather_data if getattr(data, attribute)],
             key=operator.attrgetter(attribute))
 
     @staticmethod
     def __get_chart_data(report_date, data_directory):
+        """ Returns a list of list of maximum and minimum temperatures and
+        a list of indices"""
         weather_data_reader = WeatherDataReader(report_date, data_directory)
         weather_data = weather_data_reader.get_weather_data()
         for weather_params in weather_data:
@@ -29,27 +33,36 @@ class WeatherReports:
         return [max_temp_bar, min_temp_bar], indices
 
     @staticmethod
-    def monthly_horizontal_bar_chart(report_date, data_directory):
+    def monthly_console_bar_chart(report_date, data_directory):
+        """ Gets the data for a bar chart and passes it to the appropriate cmd
+        method of the Chart class """
         chart_bars, indices = WeatherReports.__get_chart_data(
             report_date, data_directory)
-        Chart.show_horizontal_barchart(chart_bars, indices)
+        Chart.console_barchart(chart_bars, indices)
 
     @staticmethod
-    def monthly_stack_chart(report_date, data_directory):
+    def monthly_console_stack_chart(report_date, data_directory):
+        """ Gets the data for a stack chart and passes it to the appropriate
+        method of the Chart class """
         chart_bars, indices = WeatherReports.__get_chart_data(
             report_date, data_directory)
-        Chart.show_stackchart(chart_bars, indices)
+        Chart.console_stackchart(chart_bars, indices)
 
     @staticmethod
-    def monthly_vertical_bar_chart(report_date, data_directory):
+    def monthly_gui_bar_chart(report_date, data_directory):
+        """ Gets the data for a bar chart and passes it to the appropriate gui
+        method of the Chart class """
         chart_bars, indices = WeatherReports.__get_chart_data(
             report_date, data_directory)
-        Chart.show_vertical_barchart(chart_bars, indices, ('Min', 'Max'),
-                                     ytitle='Temperature(C)',
-                                     char_title='Min Max Temperature Bar Chart')
+        Chart.gui_barchart(chart_bars, indices, ('Min', 'Max'),
+                           ytitle='Temperature(C)',
+                           char_title='Min Max Temperature Bar Chart')
 
     @staticmethod
     def monthly_averages(report_date, data_directory):
+        """ For a given month, gets the maximum and minimum average
+        temperatures and calls the appropriate function of the ReportPrinter
+        class """
         weather_data_reader = WeatherDataReader(report_date, data_directory)
         weather_data = weather_data_reader.get_weather_data()
 
@@ -64,6 +77,9 @@ class WeatherReports:
 
     @staticmethod
     def annual_extrema(report_date, data_directory):
+        """ For a given year, gets the maximum and minimum
+        temperatures/humidity and calls the appropriate function of the
+        ReportPrinter class """
         weather_data_reader = WeatherDataReader(report_date, data_directory)
         weather_data = weather_data_reader.get_weather_data()
         max_temp = WeatherReports.__get_extremum(weather_data, 'max_temp',

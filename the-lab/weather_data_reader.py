@@ -20,10 +20,12 @@ class WeatherDataReader(object):
         self.weather_data_dir = weather_data_dir
 
     def __to_int(self, string):
+        """ Converts string to int. """
         if string:
             return int(string)
 
     def is_date_valid(self, date_text):
+        """ Returns if the date_text is a valid date value """
         try:
             datetime.datetime.strptime(date_text, '%Y-%m-%d')
             return True
@@ -36,7 +38,7 @@ class WeatherDataReader(object):
 
         file_name_prefix = 'lahore_weather_' + date_components[0]
         months = [int(date_components[1])] if len(date_components) > 1 \
-            else list(range(1, 13))
+            else range(1, 13)
         for month_no in months:
             file_name = os.path.join(self.weather_data_dir,
                                      file_name_prefix + '_' +
