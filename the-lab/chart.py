@@ -8,7 +8,7 @@ class Chart:
     def console_barchart(chart_bars, indices, bar_colors=[]):
         """ Prints the bar-chart on the command line. """
         chart = ""
-        bar_colors = bar_colors if bar_colors else Chart.default_bar_colors
+        bar_colors = bar_colors or Chart.default_bar_colors
 
         for y_axis in range(len(indices)):
             for index, stack in enumerate(chart_bars):
@@ -26,7 +26,7 @@ class Chart:
     def console_stackchart(chart_bars, indices, bar_colors=[]):
         """ Prints the stack-chart on the command line. """
         chart = ""
-        bar_colors = Chart.default_bar_colors if bar_colors else bar_colors
+        bar_colors = bar_colors or Chart.default_bar_colors
 
         for y_axis in range(len(indices)):
             chart += indices[y_axis] + " "
