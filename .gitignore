@@ -54,6 +54,6 @@ docs/_build/
 target/
 
 # PyCharm
-gymboree-spider/.idea
-gymboree-spider/gymboree/__pycache__
+.idea
+
 
