@@ -12,7 +12,7 @@ class SheegoSpider(CrawlSpider):
     name = "sheego_spider"
     allowed_domains = ["sheego.de"]
     start_urls = [
-        'https://www.sheego.de/sheego-casual-chino-stretch-hose-grau_250322895-244124-85p.html',
+        'https://www.sheego.de/',
     ]
 
     listing_x = ['//div[@id="mainnavigation"]', '//div[@id="sidebar"]', '//div[@class="info"]']
