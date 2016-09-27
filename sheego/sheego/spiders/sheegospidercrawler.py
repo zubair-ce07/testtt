@@ -25,7 +25,7 @@ out_of_stock = 'out_os_stock'
 
 
 def strip(obj):
-    return ''.join(list(map(lambda x: x.strip(), ''.join(obj))))
+    return ''.join(list(map(lambda x: x.strip(), ' '.join(obj))))
 
 
 def parse_brand(response):
@@ -113,9 +113,12 @@ def parse_price(response):
     newprice = strip(response.css('.lastprice.at-lastprice::text').extract())
     oldprice = strip(response.css('.wrongprice.at-wrongprice.l-outsp-right-5::text').extract())
     color = strip(response.css('.color-item.active.js-ajax::attr(title)').extract())
-    variant = strip(response.css(
-        '.variants.js-variantSelector.js-moreinfo-variant.js-sh-dropdown option::text').extract())
-    size = strip(response.css('.js-sizeSelector.cover.js-moreinfo-size .active::text').extract())
+
+    variant_head = response.css('.js-variantSelector.size.clearfix .title')
+
+    variant = strip(variant_head.css(' div:contains("Variante") span::text').extract())[1:]
+    size = strip(variant_head.css(' div:contains("Grösse") span::text').extract())[1:]
+
     price = {
         'price': newprice,
         'color': color,
