@@ -12,7 +12,7 @@ class SheegoSpider(CrawlSpider):
     allowed_domains = ["sheego.de"]
     start_urls = ['https://www.sheego.de/']
     rules = [
-        Rule(LinkExtractor(allow="sheego.de/", deny=["sheego.de/\?","\?", "html"], restrict_css="#content"),
+        Rule(LinkExtractor(allow="sheego.de/", deny=["sheego.de/\?", "\?", "html"], restrict_css="#content"),
              follow=True),
         Rule(LinkExtractor(restrict_css=".product__item > div > div > .cj-active"),
              callback='parse_prodcut', follow=True),
@@ -47,97 +47,44 @@ class SheegoSpider(CrawlSpider):
                           headers={'Content-Type': 'application/xml'},
                           callback=self.parse_oos,
                           body=self.create_xml(response))
-        request.meta['size_codes'] = response.meta['size_codes']
         request.meta['item'] = response.meta['item']
-        request.meta['anid'] = response.meta['anid']
         return request
 
-    def parse_variants(self, response):
-        variants = response.meta['variants']
-        variant = variants.pop(0) if variants else ""
-        size_codes = {}
-        size_variants = product(self.parse_size_codes(response), [variant])
-        size_codes.update(dict(zip(self.parse_sizes(response), size_variants)))
-        size_codes.update(response.meta['size_codes'])
-        response.meta['size_codes'] = size_codes
-        if variants:
-            url = "https://www.sheego.de/index.php?cl=oxwarticledetails&anid={}&varselid%5B1%5D={}"
-            request = Request(url.format(response.meta['anid'][0], variants[0]), self.parse_variants)
-            request.meta['variants'] = variants
-            request.meta['item'] = response.meta['item']
-            request.meta['anid'] = response.meta['anid']
-            request.meta['size_codes'] = response.meta['size_codes']
-            return request
-        else:
-            return self.check_oos(response)
-
-    def parse_anid(self, response):
-        anids = []
-        for url in self.parse_color_urls(response):
-            anids.append(re.split("_([A-Za-z0-9-]*)", url)[1])
-        return anids
-
-    def parse_color_urls(self, response):
-        selected = response.css(".color-item[class*='active']::attr(href)").extract()
-        not_selected = response.css(".color-item:not([class*='active'])::attr(href)").extract()
-        return selected + not_selected
-
-    def get_variants(self, response):
-        selected = response.css(".js-variantSelector > option[selected]::attr(value)").extract()
-        not_selected = response.css(".js-variantSelector > option:not([selected])::attr(value)").extract()
-        return selected + not_selected
+    def parse_base_url(self, response):
+        item = response.meta['item']
+        return item['url_original'].split("_")[0] + "_" + item['product_id'] + "-{}-{}-{}.html"
 
     def parse_oos(self, response):
         item = response.meta['item']
         root = fromstring(response.body)
         urls = []
-        stock_keys = []
-        sizes = []
         skus = {}
+        base_url = self.parse_base_url(response)
         for article in root.findall('.//Article'):
             size = article.find(".//SizeAlphaText").text
             stock = article.find(".//Stock").text
             catalog_id = article.find(".//CompleteCatalogItemNo").text
-            stock_key = "{}_{}".format(catalog_id, size)
+            sku_key = "{}_{}".format(catalog_id, size)
             if stock is '1':
-                sizes.append(size)
-                url = self.parse_sku_url(response, sizes, catalog_id)
-                urls.append(url)
-                stock_keys.append(stock_key)
+                url = base_url.format(catalog_id[:6], size, catalog_id[6:])
+                urls.append({"url": url, "sku_key": sku_key})
             else:
-                skus[stock_key] = {}
-                skus[stock_key]['oos'] = True
+                skus[sku_key] = {}
+                skus[sku_key]['oos'] = True
         if urls:
-            request = Request(urls.pop(), callback=self.parse_sku)
-            request.meta['skus'] = skus
+            request = Request(urls[0]['url'], callback=self.parse_sku)
+            item['skus'] = skus
             request.meta['item'] = item
-            request.meta['stock_keys'] = stock_keys
             request.meta['urls'] = urls
             return request
         else:
             item['skus']['oos'] = True
             return item
 
-    def parse_sku_url(self, response, sizes, catalog_id):
-        size_codes = response.meta['size_codes']
-        anids = response.meta['anid']
-        url = "https://www.sheego.de/index.php?cl=oxwarticledetails&" \
-              "anid={}&artNr={}&varselid%5B0%5D={}&varselid%5B1%5D={}"
-        current_size = size_codes[sizes[-1]]
-        anid = sizes.count(sizes[-1]) - 1
-        varsel_id0 = ""
-        varsel_id1 = ""
-        if len(current_size) is 2:
-            varsel_id0, varsel_id1 = current_size
-        else:
-            varsel_id0 = current_size
-        return url.format(anids[anid], catalog_id, varsel_id0, varsel_id1)
-
     def parse_sku(self, response):
         item = response.meta['item']
         urls = response.meta['urls']
-        sku_keys = response.meta['stock_keys']
-        sku_key = sku_keys.pop()
+        sku_key = urls.pop(0)['sku_key']
         sku = {}
         sku['color'] = self.parse_color(response)
         sku['price'] = self.parse_price(response)
@@ -147,9 +94,8 @@ class SheegoSpider(CrawlSpider):
         sku['currency'] = 'EUR'
         item['skus'][sku_key] = sku
         if urls:
-            request = Request(urls.pop(), callback=self.parse_sku)
+            request = Request(urls[0]['url'], callback=self.parse_sku)
             request.meta['item'] = item
-            request.meta['stock_keys'] = sku_keys
             request.meta['urls'] = urls
             return request
         else:
@@ -166,11 +112,8 @@ class SheegoSpider(CrawlSpider):
         item['care'] = self.parse_care(response)
         item['description'] = self.parse_description(response)
         item['skus'] = {}
-        response.meta['anid'] = self.parse_anid(response)
         response.meta['item'] = item
-        response.meta['size_codes'] = {}
-        response.meta['variants'] = self.get_variants(response)
-        return self.parse_variants(response)
+        return self.check_oos(response)
 
     def parse_prev_price(self, response):
         prev_price = "".join(response.css(".at-wrongprice::text").extract())
@@ -201,20 +144,11 @@ class SheegoSpider(CrawlSpider):
     def parse_product_id(self, response):
         return re.findall("_([0-9A-Za-z]+)", response.url)[0]
 
-    def parse_size_codes(self, response):
-        return response.css(".js-sizeSelector > div > button::attr(data-selection-id)").extract()
-
     def parse_size(self, response):
-        data_id = re.findall("=([0-9A-Za-z]+)", response.url)[2]
-        return response.css(".at-dv-size::text".format(data_id)).extract()[-1].replace('– ', '')
-
-    def parse_sizes(self, response):
-        return response.css(".js-sizeSelector > div > button::attr(data-noa-size)").extract()
+        return response.css(".active::text").extract()[-1].replace('– ', '')
 
     def parse_color(self, response):
-        color_id = re.findall("=([0-9A-Za-z-]+)", response.url)[-1]
-        color = response.css(".js-variantSelector.color > .title > span::text".format(color_id))
-        return color.extract()[0].replace('— ', '')
+        return response.css(".at-dv-color::text").extract()[0].replace('— ', '')
 
     def parse_category(self, response):
         return response.css("meta[name*='z_breadcrumb']::attr(content)").extract()[0].split(">")[:-1]
