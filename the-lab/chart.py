@@ -5,14 +5,14 @@ class Chart:
     default_bar_colors = [color for color in CursorColors]
 
     @staticmethod
-    def console_barchart(chart_bars, indices, bar_color=[]):
+    def console_barchart(chart_bars, indices, bar_colors=[]):
         """ Prints the bar-chart on the command line. """
         chart = ""
-        bar_color = bar_color if bar_color else Chart.default_bar_colors
+        bar_colors = bar_colors if bar_colors else Chart.default_bar_colors
 
         for y_axis in range(len(indices)):
             for index, stack in enumerate(chart_bars):
-                chart += str(indices[y_axis]) + " " + bar_color[index].value
+                chart += str(indices[y_axis]) + " " + bar_colors[index].value
                 chart += '+' * stack[y_axis]
                 chart += ' ' + str(stack[y_axis])
                 chart += CursorColors.WHITE.value
@@ -26,8 +26,7 @@ class Chart:
     def console_stackchart(chart_bars, indices, bar_colors=[]):
         """ Prints the stack-chart on the command line. """
         chart = ""
-        bar_colors = Chart.default_bar_colors if len(bar_colors) == 0 \
-            else bar_colors
+        bar_colors = Chart.default_bar_colors if bar_colors else bar_colors
 
         for y_axis in range(len(indices)):
             chart += indices[y_axis] + " "
@@ -52,17 +51,17 @@ class Chart:
         width = 0.5  # the width of the bars
         figure, graph_axis = plt.subplots()
         bar_rect = []
-        legend_tuple = ()
+        bar_rects = ()
 
         for bar in chart_bars:
             temp_rect = graph_axis.bar(indices, bar, width)
             bar_rect.append(temp_rect)
-            legend_tuple = legend_tuple + (temp_rect,)
+            bar_rects = bar_rects + (temp_rect,)
         # add some text for labels, title and axes ticks
         graph_axis.set_ylabel(ytitle)
         graph_axis.set_title(char_title)
         graph_axis.set_xticks(indices + [width])
         graph_axis.set_xticklabels(x_axis_labels)
-        graph_axis.legend(legend_tuple, legends)
+        graph_axis.legend(bar_rects, legends)
         plt.savefig("Graph.pdf")
 
