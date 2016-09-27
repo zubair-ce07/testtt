@@ -2,7 +2,7 @@
 import scrapy
 
 
-class GymboreeItem(scrapy.Item):
+class GarmentItem(scrapy.Item):
     brand = scrapy.Field()
     category = scrapy.Field()
     currency = scrapy.Field()
@@ -18,12 +18,3 @@ class GymboreeItem(scrapy.Item):
     spider_name = scrapy.Field()
     trail = scrapy.Field()
     url = scrapy.Field()
-
-
-class Skus (scrapy.Item):
-    colour = scrapy.Field()
-    currency = scrapy.Field()
-    out_of_stock = scrapy.Field()
-    previous_price = scrapy.Field()
-    price = scrapy.Field()
-    size = scrapy.Field()
