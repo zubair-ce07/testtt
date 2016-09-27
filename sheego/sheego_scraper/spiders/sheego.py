@@ -3,7 +3,7 @@ from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 import scrapy
 from scrapy.spiders import CrawlSpider, Rule
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as article_element
 from sheego_scraper.items import SheegoScraperItem
 import re
 
@@ -11,9 +11,7 @@ import re
 class SheegoSpider(CrawlSpider):
     name = "sheego_spider"
     allowed_domains = ["sheego.de"]
-    start_urls = [
-        'https://www.sheego.de/',
-    ]
+    start_urls = ['https://www.sheego.de/', ]
 
     listing_x = ['//div[@id="mainnavigation"]', '//div[@id="sidebar"]', '//div[@class="info"]']
 
@@ -46,12 +44,12 @@ class SheegoSpider(CrawlSpider):
         return short_description + long_description
 
     def product_long_description(self, response):
-        description =  response.css('div[itemprop=description]::text').extract()
+        description = response.css('div[itemprop=description]::text').extract()
         return self.clean(description)
 
     def product_short_description(self, response):
-        short_description_x = response.css('[class*=productDetail] > div.highlight ul li::text').extract()
-        description = response.xpath(short_description_x).extract()
+        short_description_x = '[class*=productDetail] > div.highlight ul li::text'
+        description = response.css(short_description_x).extract()
         return self.clean(description)
 
     def product_brand(self, response):
@@ -82,13 +80,12 @@ class SheegoSpider(CrawlSpider):
                    "Accept": "application/xml, text/xml, */*; q=0.  01",
                    "X-Requested-With": "XMLHttpRequest"}
         return Request(url=url, method="POST", headers=headers, body=out_of_stock,
-                        meta={'product': product, 'url': response.url},
-                        callback=self.parse_out_of_stock)
+                       meta={'product': product, 'url': response.url}, callback=self.parse_out_of_stock)
 
     def parse_out_of_stock(self, response):
         product = response.meta['product']
         url = response.meta['url']
-        root = et.fromstring(response.body.decode("utf-8"))
+        root = article_element.fromstring(response.body.decode("utf-8"))
         article_in_stock = {}
         article_out_of_stock = {}
         if root.findall('.//LocalError'):
@@ -131,7 +128,7 @@ class SheegoSpider(CrawlSpider):
                                                'unavailable_stock': unavailable_stock})
 
     def get_size_variant(self, response):
-        variant_x =  "//select[contains(@class,'variants js-variantSelector')]/option[@selected='selected']/text()"
+        variant_x = "//select[contains(@class,'variants js-variantSelector')]/option[@selected='selected']/text()"
         return ' '.join(response.xpath(variant_x).extract())
 
     def get_article_id(self, response):
@@ -194,12 +191,33 @@ class SheegoSpider(CrawlSpider):
         color_links = response.meta['color_links']
         skus = self.product_sku_common(response)
         product['skus'][skus['color'] + '_' + skus['size']] = skus
-        return self.get_next_size_request(form_response, size_data,
-                                                  color_links, sizes_in_stock, sizes_out_of_stock, product)
+        return self.get_next_size_request(form_response, size_data, color_links,
+                                          sizes_in_stock, sizes_out_of_stock, product)
+
+    def get_xml_response(self, response):
+        stock_info = ' '.join(response.xpath('//script[contains(text(), "setKALAvailability" )]/text()').extract())
+        if stock_info:
+            stock_info = re.search('String\(\'(.+)\',\d', stock_info).group(1).split(';')
+            articles = article_element.Element('Articles')
+            for colour_code, size in zip(stock_info[0::2], stock_info[1::2]):
+                article = article_element.SubElement(articles, 'Article')
+                article_element.SubElement(article, 'CompleteCatalogItemNo').text = colour_code
+                article_element.SubElement(article, 'SizeAlphaText').text = size
+                article_element.SubElement(article, 'Std_Promotion').text = colour_code[6:]
+                article_element.SubElement(article, 'CustomerCompanyID').text = '0'
+            kal_availability = article_element.Element('tns:KALAvailabilityRequest',
+                                                       attrib={'xmlns:tns': "http://www.schwab.de/KAL",
+                                                               'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
+                                                               'xsi:schemaLocation':
+                                                                   "http://www.schwab.de/KAL "
+                                                                   "http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd"
+                                                                })
+            kal_availability.append(articles)
+            return article_element.tostring(kal_availability).decode("utf-8")
 
     def product_sku_common(self, response):
         skus = {}
-        size = response.xpath('//span[contains(@class,"at-dv-size")]/text()').extract()[0].strip('–').replace('–', ' ')
+        size = response.css('span[class*=at-dv-size]::text').extract()[0].strip('–').replace('–', ' ')
         color = response.xpath('//span[@class="at-dv-color"]/text()').extract_first().split(' ')[1]
         price = self.product_price(response)
         prev_price = self.product_prev_price(response)
@@ -209,26 +227,6 @@ class SheegoSpider(CrawlSpider):
                 'previous_price': prev_price}
         return skus
 
-    def get_xml_response(self, response):
-        stock_info = ' '.join(response.xpath('//script[contains(text(), "setKALAvailability" )]/text()').extract())
-        if stock_info:
-            stock_info = re.search('String\(\'(.+)\',\d', stock_info).group(1).split(';')
-            articles = et.Element('Articles')
-            for colour_code, size in zip(stock_info[0::2], stock_info[1::2]):
-                article = et.SubElement(articles, 'Article')
-                et.SubElement(article, 'CompleteCatalogItemNo').text = colour_code
-                et.SubElement(article, 'SizeAlphaText').text = size
-                et.SubElement(article, 'Std_Promotion').text = colour_code[6:]
-                et.SubElement(article, 'CustomerCompanyID').text = '0'
-            kal_availability = et.Element('tns:KALAvailabilityRequest',
-                                          attrib={'xmlns:tns': "http://www.schwab.de/KAL",
-                                                  'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
-                                                  'xsi:schemaLocation':
-                                                      "http://www.schwab.de/KAL "
-                                                      "http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd"})
-            kal_availability.append(articles)
-            return et.tostring(kal_availability).decode("utf-8")
-
     def clean(self, item_list):
         return [item.strip() for item in item_list if not item.isspace()]
-
+s
