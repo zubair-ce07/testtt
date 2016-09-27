@@ -56,7 +56,8 @@ target/
 # PyCharm
 .idea
 
-# Assignment Files
+# weatherman files
+__pycache__/
 weatherdata/
 manual.txt
-__pycache__/
+
