@@ -34,8 +34,7 @@ def parse_brand(response):
 
 
 def parse_pid(response):
-    splits = response.url.split("_", 1)
-    return splits[1].split('-')[0]
+    return re.search('_(\d+)', response.url).group(1)
 
 
 def parse_name(response):
