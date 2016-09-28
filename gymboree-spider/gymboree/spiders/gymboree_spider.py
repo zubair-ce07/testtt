@@ -98,7 +98,11 @@ class GymboreeSpider(CrawlSpider):
 
     def garment_price(self, response):
         """ Returns the price of the current garment """
-        return response.css("span#pdp-regular-price::text").extract_first()
+        sale_price = response.css("#pdp-sale-price> "
+                                  "span::text").extract_first()
+        regular_price = response.css(
+            "span#pdp-regular-price::text").extract_first()
+        return sale_price or regular_price
 
     def garment_retailer(self):
         """ Returns the retailer of the current garment """
@@ -116,8 +120,8 @@ class GymboreeSpider(CrawlSpider):
                 sku = {'colour': item_color['title'],
                        'currency': gymboree_sale_item['currency'],
                        'out_of_stock': not item_size['instock'],
-                       'previous_price': item_size['salePrice'],
-                       'price': item_color['listPrice'],
+                       'previous_price': item_color['listPrice'],
+                       'price': item_size['salePrice'],
                        'size': item_size['title']}
                 skus[item_size['id']] = sku
         return skus
