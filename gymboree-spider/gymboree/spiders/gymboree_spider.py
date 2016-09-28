@@ -15,7 +15,7 @@ class GymboreeSpider(CrawlSpider):
                           "li> a[foldertype=categoryLink]",
                           "a[class='next']"])),
         Rule(LinkExtractor(
-            restrict_css="div.garment-name> a"), callback='parse_sale_item'),
+            restrict_css="div.product-name> a"), callback='parse_sale_item'),
     )
 
     def parse_sale_item(self, response):
@@ -86,7 +86,7 @@ class GymboreeSpider(CrawlSpider):
                                     "text(), 'var dataobj')]").extract_first()
         garment_found = re.search('var dataobj = (.+?);\n', js_element)
         garment_info_json = garment_found.group(1)
-        return json.loads(garment_info_json)['garment']
+        return json.loads(garment_info_json)['product']
 
     def garment_image_url(self, garment_info):
         """ Returns the urls of all garment colors """
