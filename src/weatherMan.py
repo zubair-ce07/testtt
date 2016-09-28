@@ -8,199 +8,165 @@ class color:
     END = '\033[0m'
 
 
-class weathermantask:
-    def part1(year_arg, pathtofile_arg):
-        if 1996 <= int(year_arg) and 2011 >= int(year_arg):
-            count = 0
-            HighestTemp = 0
-            LowestTemp = 1000
-            HighestTempDay = 'none'
-            LowestTempDay = 'none'
-            MostHumidDay = 'none'
-            MHumidity = 0
+def get_month_name(self):
+    months = {'1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July',
+              '8': 'August', '9': 'September', '10': 'October', '11': 'November', '12': 'December'}
+    return months[self]
 
-            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-                      'November', 'December']
 
-            for m in months:
-                my_file = os.path.isfile(pathtofile_arg + '/lahore_weather_' + year_arg + '_' + m[:3] + '.txt')
-                if my_file:
-                    f = open(pathtofile_arg + '/lahore_weather_' + year_arg + '_' + m[:3] + '.txt', 'r+')
+def print_message(message_arguments):
+    if message_arguments['temp'] != message_arguments['temp_flag']:
+        yr, mn, dt = message_arguments['day'].split('-')
+        print(message_arguments['header_value'] + ": " + format(message_arguments['temp'], '02d') +
+              message_arguments['temp_sign'] + " on " + get_month_name(mn) + " " + dt)
+    else:
+        print(message_arguments['header_value'] + " Not Found")
 
-                    for line in f:
 
-                        list = line.split(',')
-                        if len(list) > 5 and list[0].startswith(year_arg):
-
-                            list[1] = int(list[1]) if list[1].strip() else 0
-                            list[3] = int(list[3]) if list[3].strip() else 1000
-                            list[7] = int(list[7]) if list[7].strip() else 0
-
-                            if list[1] > HighestTemp:
-                                HighestTemp = list[1]
-                                HighestTempDay = list[0]
-                            if list[3] < LowestTemp and list[3] != 1000:
-                                LowestTemp = list[3]
-                                LowestTempDay = list[0]
-                            if list[7] > MHumidity:
-                                MHumidity = list[7]
-                                MostHumidDay = list[0]
-
-                    f.close()
-                else:
-                    count += 1
-                    if count >= 12:
-                        print("invalid file path or file does not exist")
-
-            if HighestTemp != 0:
-                yr, mn, dt = HighestTempDay.split('-')
-                print("Highest: " + format(HighestTemp, '02d') + "C on " + months[int(mn) - 1] + " " + dt)
-            else:
-                print("Highest Temp Not Found")
-            if LowestTemp != 1000:
-                yr, mn, dt = LowestTempDay.split('-')
-                print("Lowest: " + format(LowestTemp, '02d') + "C on " + months[int(mn) - 1] + " " + dt)
-            else:
-                print("Lowest Temp Not Found")
-            if MHumidity != 0:
-                yr, mn, dt = MostHumidDay.split('-')
-                print("Humid: " + format(MHumidity, '02d') + "% on " + months[int(mn) - 1] + " " + dt)
-            else:
-                print("Highest Humidity Not Found")
+def part_one(file_arguments):
+    month_count = 0
+    highest_temp = 0
+    lowest_temp = 1000
+    most_humidity = 0
+    highest_temp_day = 'none'
+    lowest_temp_day = 'none'
+    most_humid_day = 'none'
+    for months in range(1, 12):
+        path_new = file_arguments['path_to_file'] + get_month_name(str(months))[:3] + '.txt'
+        if os.path.isfile(path_new):
+            f = open(path_new, 'r+')
+            for line in f:
+                weather_data = line.split(',')
+                if weather_data[0].startswith(file_arguments['year']):
+                    weather_data[1] = int(weather_data[1]) if weather_data[1].strip() else 0
+                    weather_data[3] = int(weather_data[3]) if weather_data[3].strip() else 1000
+                    weather_data[7] = int(weather_data[7]) if weather_data[7].strip() else 0
+                    if weather_data[1] > highest_temp:
+                        highest_temp = weather_data[1]
+                        highest_temp_day = weather_data[0]
+                    if weather_data[3] < lowest_temp and weather_data[3] != 1000:
+                        lowest_temp = weather_data[3]
+                        lowest_temp_day = weather_data[0]
+                    if weather_data[7] > most_humidity:
+                        most_humidity = weather_data[7]
+                        most_humid_day = weather_data[0]
+            f.close()
         else:
-            print('invalid year')
-
-    def part2(year_arg, pathtofile_arg):
-        year_arg = str(year_arg).replace("/", '_')
-        if 1996 <= int(year_arg[:4]) and 2011 >= int(year_arg[:4]):
-
-            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-                      'November', 'December']
-            mn = months[int(year_arg[5:]) - 1]
-            my_file = os.path.isfile(pathtofile_arg + '/lahore_weather_' + year_arg[:4] + '_' + mn[:3] + '.txt')
-
-            count = 0
-            ltcount = 0
-            htcount = 0
-            ltsum = 0
-            htsum = 0
-            hcount = 0
-            hsum = 0
-
-            if my_file:
-                f = open(pathtofile_arg + '/lahore_weather_' + year_arg[:4] + '_' + mn[:3] + '.txt', 'r+')
-
-                for line in f:
-                    list = line.split(',')
-                    if list[0].startswith(year_arg[:4]):
-                        if list[1] != '':
-                            htcount += 1
-                            htsum += int(list[1])
-
-                        if list[3] != '':
-                            ltcount += 1
-                            ltsum += int(list[3])
-
-                        if list[8] != '':
-                            hcount += 1
-                            hsum += int(list[8])
-
-                f.close()
-            else:
+            month_count += 1
+            if month_count >= 12:
                 print("invalid file path or file does not exist")
 
-            if htcount != 0:
-                print("Highest Average: " + str(round(htsum / htcount, 2)) + "C")
-            else:
-                print("Highest Average Not Found")
+    print_message({'temp': highest_temp, 'day': highest_temp_day, 'header_value': "Highest", 'temp_sign': "C",
+                   'temp_flag': 0})
+    print_message({'temp': lowest_temp, 'day': lowest_temp_day, 'header_value': "Lowest", 'temp_sign': "C",
+                   'temp_flag': 1000})
+    print_message({'temp': most_humidity, 'day': most_humid_day, 'header_value': "Humidity", 'temp_sign': "%",
+                   'temp_flag': 0})
+    return
 
-            if ltcount != 0:
-                print("Lowest Average: " + str(round(ltsum / ltcount, 2)) + "C")
-            else:
-                print("Lowest Average Not Found")
 
-            if hcount != 0:
-                print("Average Mean Humidity: " + str(round(hsum / hcount, 2)) + "%")
-            else:
-                print("Humidity Not Found")
+def part_two(file_arguments):
+    """this function will display highest, lowest avrg temprature and Average Mean Humidity"""
+    lowest_temp_count = 0
+    highest_temp_count = 0
+    lowest_temp_sum = 0
+    highest_temp_sum = 0
+    humidity_count = 0
+    humidity_sum = 0
 
-        else:
-            print('invalid year')
+    if os.path.isfile(file_arguments['path_to_file']):
+        f = open(file_arguments['path_to_file'], 'r+')
+        for line in f:
+            weather_data = line.split(',')
+            if weather_data[0].startswith(file_arguments['year']):
+                if weather_data[1] != '':
+                    highest_temp_count += 1
+                    highest_temp_sum += int(weather_data[1])
 
-    def part3(year_arg, pathtofile_arg):
-        year_arg = str(year_arg).replace("/", '_')
-        if 1996 <= int(year_arg[:4]) and 2011 >= int(year_arg[:4]):
+                if weather_data[3] != '':
+                    lowest_temp_count += 1
+                    lowest_temp_sum += int(weather_data[3])
 
-            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-                      'November', 'December']
-            mn = months[int(year_arg[5:]) - 1]
-            my_file = os.path.isfile(pathtofile_arg + '/lahore_weather_' + year_arg[:4] + '_' + mn[:3] + '.txt')
+                if weather_data[8] != '':
+                    humidity_count += 1
+                    humidity_sum += int(weather_data[8])
+        f.close()
+    else:
+        print('file not found')
 
-            print(mn + ' ' + year_arg[:4])
-            if my_file:
-                f = open(pathtofile_arg + '/lahore_weather_' + year_arg[:4] + '_' + mn[:3] + '.txt', 'r+')
-                count = 1
-                for line in f:
-                    list = line.split(',')
-                    if list[0].startswith(year_arg[:4]):
-                        maxTemp = 0 if list[1] == '' else int(list[1])
-                        print(color.PURPLE + format(count, '02d') + ' ' + color.RED + (
-                            '+' * abs(maxTemp)) + ' ' + color.PURPLE + ('0' if list[1] == '' else list[1]) + 'C')
-                        minTemp = 0 if list[3] == '' else int(list[3])
+    if highest_temp_count != 0:
+        print("Highest Average: " + str(round(highest_temp_sum / highest_temp_count, 2)) + "C")
+    else:
+        print("Highest Average Not Found")
 
-                        print(format(count, '02d') + ' ' + color.BLUE + ('+' * abs(minTemp)) + ' ' + color.PURPLE + (
-                            '0' if list[3] == '' else list[3]) + 'C')
-                        count += 1
+    if lowest_temp_count != 0:
+        print("Lowest Average: " + str(round(lowest_temp_sum / lowest_temp_count, 2)) + "C")
+    else:
+        print("Lowest Average Not Found")
 
-                f.close()
-                print(color.END)
+    if humidity_count != 0:
+        print("Average Mean Humidity: " + str(round(humidity_sum / humidity_count, 2)) + "%")
+    else:
+        print("Humidity Not Found")
 
-            else:
-                print("invalid file path or file does not exist")
 
-        else:
-            print('invalid year')
+def part_three(file_arguments):
+    if os.path.isfile(file_arguments['path_to_file']):
+        f = open(file_arguments['path_to_file'], 'r+')
+        day_count = 1
+        for line in f:
+            weather_data = line.split(',')
+            if weather_data[0].startswith(file_arguments['year']):
+                maxTemp = 0 if weather_data[1] == '' else int(weather_data[1])
+                print(color.PURPLE + format(day_count, '02d') + ' ' + color.RED + (
+                    '+' * abs(maxTemp)) + ' ' + color.PURPLE + (
+                      '0' if weather_data[1] == '' else weather_data[1]) + 'C')
+                minTemp = 0 if weather_data[3] == '' else int(weather_data[3])
 
-    def part4(year_arg, pathtofile_arg):
-        """
+                print(format(day_count, '02d') + ' ' + color.BLUE + ('+' * abs(minTemp)) + ' ' + color.PURPLE + (
+                    '0' if weather_data[3] == '' else weather_data[3]) + 'C')
+                day_count += 1
 
-        :param year_arg: for year and month to show data of
-        :param pathtofile_arg:  path of file containing weather data
-        """
-        year_arg = str(year_arg).replace("/", '_')
-        if 1996 <= int(year_arg[:4]) and 2011 >= int(year_arg[:4]):
-            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-                      'November', 'December']
-            mn = months[int(year_arg[5:]) - 1]
-            print(mn + ' ' + year_arg[:4])
-            my_file = os.path.isfile(pathtofile_arg + '/lahore_weather_' + year_arg[:4] + '_' + mn[:3] + '.txt')
+        f.close()
+        print(color.END)
 
-            if my_file:
-                f = open(pathtofile_arg + '/lahore_weather_' + year_arg[:4] + '_' + mn[:3] + '.txt', 'r+')
-                count = 1
-                for line in f:
-                    list = line.split(',')
-                    if list[0].startswith(year_arg[:4]):
-                        print(color.PURPLE + format(count, '02d') + ' ' + color.BLUE + (
-                            '+' * abs(0 if list[3] == '' else int(list[3]))) + color.RED + (
-                                  '+' * abs(0 if list[1] == '' else int(list[1]))) + ' ' + color.PURPLE + (
-                                  '0' if list[3] == '' else list[3]) + 'C - ' + (
-                              '0' if list[1] == '' else list[1]) + 'C')
-                        count += 1
-                f.close()
-                print(color.END)
+    else:
+        print("invalid file path or file does not exist")
 
-            else:
-                print("invalid file path or file does not exist")
 
-        else:
-            print('invalid year')
+def part_four(file_arguments):
+    if os.path.isfile(file_arguments['path_to_file']):
+        f = open(file_arguments['path_to_file'], 'r+')
+        count = 1
+        for line in f:
+            weather_data = line.split(',')
+            if weather_data[0].startswith(file_arguments['year']):
+                print(color.PURPLE + format(count, '02d') + ' ' + color.BLUE + (
+                    '+' * abs(0 if weather_data[3] == '' else int(weather_data[3]))) + color.RED + (
+                          '+' * abs(0 if weather_data[1] == '' else int(weather_data[1]))) + ' ' + color.PURPLE + (
+                          '0' if weather_data[3] == '' else weather_data[3]) + 'C - ' + (
+                          '0' if weather_data[1] == '' else weather_data[1]) + 'C')
+                count += 1
+        f.close()
+        print(color.END)
+
+    else:
+        print("invalid file path or file does not exist")
+
+
+# if 1996 <= int(year_arg) and 2011 >= int(year_arg):
+
 
 print('part 1, for year 2002')
-weathermantask.part1('2002', '/root/PycharmProjects/weatherman/weatherdata')
+part_one({"year": '2002', 'path_to_file': '/root/PycharmProjects/weatherman/weatherdata/lahore_weather_2002_'})
 print('\npart 2, for month 2002/6')
-weathermantask.part2('2002/6', '/root/PycharmProjects/weatherman/weatherdata')
+part_two({"year": '2002', 'path_to_file': '/root/PycharmProjects/weatherman/weatherdata/lahore_weather_2002_'
+                                          + get_month_name('6')[:3] + '.txt'})
 print('\npart 3, for month 2002/6')
-weathermantask.part3('2002/6', '/root/PycharmProjects/weatherman/weatherdata')
+print(get_month_name('6') + ' 2002')
+part_three({"year": '2002', 'path_to_file': '/root/PycharmProjects/weatherman/weatherdata/lahore_weather_2002_'
+                                            + get_month_name('6')[:3] + '.txt'})
 print('part 4, for month 2002/6')
-weathermantask.part4('2002/6', '/root/PycharmProjects/weatherman/weatherdata')
+print(get_month_name('6') + ' 2002')
+part_four({"year": '2002', 'path_to_file': '/root/PycharmProjects/weatherman/weatherdata/lahore_weather_2002_'
+                                           + get_month_name('6')[:3] + '.txt'})
