@@ -1,11 +1,11 @@
 import datetime
+import re
 import scrapy
 from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 import xml.etree.ElementTree as Article_Element
 from sheego_scraper.items import SheegoScraperItem
-import re
 
 
 class SheegoSpider(CrawlSpider):
@@ -33,7 +33,7 @@ class SheegoSpider(CrawlSpider):
         product['url'] = response.url
         product['gender'] = 'Women'
         product['skus'] = {}
-        return self.check_outofstock_request(product, response)
+        return self.check_out_of_stock_request(product, response)
 
     def product_retailer_sku(self, response):
         return response.css("input[name=aid]::attr(value)")
@@ -73,7 +73,7 @@ class SheegoSpider(CrawlSpider):
     def product_category(self, response):
         return response.css('.breadcrumb a::text').extract()[1:]
 
-    def check_outofstock_request(self, product, response):
+    def check_out_of_stock_request(self, product, response):
         out_of_stock = self.get_xml_response(response)
         url = 'http://www.sheego.de/request/kal.php'
         headers = {"Content-Type": "application/xml; charset=UTF-8",
