@@ -20,9 +20,9 @@ class SheegoSpider(CrawlSpider):
 
     def articles(self, response):
         articles = response.css("script:contains('articlesString')::text").extract()[0]
-        articles_filtered = re.findall("([0-9A-Z]{3,8})\;([0-9A-Za-z]{,4})", articles)
-        articles_filtered = [(key, '0') if not size else (key, size) for key, size in articles_filtered]
-        return articles_filtered
+        filtered_articles = re.findall("([0-9A-Z]{3,8})\;([0-9A-Za-z]{,4})", articles)
+        filtered_articles = [(key, '0') if not size else (key, size) for key, size in filtered_articles]
+        return filtered_articles
 
     def create_xml(self, response):
         root = Element('tns:KALAvailabilityRequest',
@@ -40,7 +40,7 @@ class SheegoSpider(CrawlSpider):
             SubElement(article, "CustomerCompanyID").text = '0'
         return tostring(root).decode("utf-8")
 
-    def request_kal(self, response):
+    def create_kal_request(self, response):
         request = Request(url='https://www.sheego.de/request/kal.php',
                           method='POST',
                           headers={'Content-Type': 'application/xml'},
@@ -83,7 +83,7 @@ class SheegoSpider(CrawlSpider):
         item = response.meta['item']
         urls = response.meta['urls']
         sku_key = urls.pop(0)['sku_key']
-        sku = dict()
+        sku = {}
         sku['color'] = self.color(response)
         sku['price'] = self.price(response)
         sku['previous_prices'] = self.prev_price(response)
@@ -111,7 +111,7 @@ class SheegoSpider(CrawlSpider):
         item['description'] = self.description(response)
         item['skus'] = {}
         response.meta['item'] = item
-        return self.request_kal(response)
+        return self.create_kal_request(response)
 
     def prev_price(self, response):
         prev_price = "".join(response.css(".at-wrongprice::text").extract())
