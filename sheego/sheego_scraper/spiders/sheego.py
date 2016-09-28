@@ -1,9 +1,9 @@
 import datetime
+import scrapy
 from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
-import scrapy
 from scrapy.spiders import CrawlSpider, Rule
-import xml.etree.ElementTree as article_element
+import xml.etree.ElementTree as Article_Element
 from sheego_scraper.items import SheegoScraperItem
 import re
 
@@ -85,23 +85,28 @@ class SheegoSpider(CrawlSpider):
     def parse_out_of_stock(self, response):
         product = response.meta['product']
         url = response.meta['url']
-        root = article_element.fromstring(response.body.decode("utf-8"))
+        root = Article_Element.fromstring(response.body.decode("utf-8"))
         article_in_stock = {}
         article_out_of_stock = {}
+
         if root.findall('.//LocalError'):
             product['out_of_stock'] = True
             return product
+
         all_articles = root.findall('.//ArticleAvailability')
+
         for article in all_articles:
             item_no = article.find('.//CompleteCatalogItemNo').text
             article_in_stock[item_no] = []
             article_out_of_stock[item_no] = []
+
         for article in all_articles:
             item_code = article.find('.//CompleteCatalogItemNo').text
             if article.find('.//Stock').text == '1':
                 article_in_stock[item_code].append(article.find('.//SizeAlphaText').text)
             else:
                 article_out_of_stock[item_code].append(article.find('.//SizeAlphaText').text)
+
         color_codes = article_in_stock.keys()
         available_stock = list(article_in_stock.values())
         unavailable_stock = list(article_out_of_stock.values())
@@ -112,7 +117,9 @@ class SheegoSpider(CrawlSpider):
         for color_code in color_codes:
             promotion_id = color_code[6:]
             url_tokens = url.split('-')
-            url_tokens[-1] = promotion_id + re.search('\w(.html)', url).group(1)
+            # these indexes are to make request-URLS for different
+            # colors of same product
+            url_tokens[-1] = promotion_id + re.findall('\w(.html)', url)[0]
             url_tokens[-2] = color_code[:6]
             color_request_urls.append('-'.join(url_tokens))
         return self.next_color_request(color_request_urls, available_stock,
@@ -140,6 +147,7 @@ class SheegoSpider(CrawlSpider):
         available_stock = response.meta['available_stock']
         unavailable_stock = response.meta['unavailable_stock']
         sizes_unavailable = unavailable_stock.pop(0)
+
         for size in sizes_unavailable:
             size_variant = self.get_size_variant(response)
             if size_variant:
@@ -151,7 +159,8 @@ class SheegoSpider(CrawlSpider):
                                                     'size': size,
                                                     'price': self.product_price(response),
                                                     'previous_price': self.product_prev_price(response)
-            }
+                                                    }
+
         sizes_available = available_stock.pop(0)
         product['image_urls'].extend(self.product_image_urls(response))
         size_data = []
@@ -170,8 +179,9 @@ class SheegoSpider(CrawlSpider):
         aid = size_data.pop()
         sizeform = {}
         sizeform['anid'] = aid
-        sizeform['artNr'] = re.search('\d+-(\d+)', response.url).group(1)
+        sizeform['artNr'] = re.findall('\d+-(\d+)', response.url)[0]
         sizeform['varselid[0]'] = response.xpath('//input[contains(@name,"varselid[0]")]/@value').extract()[0]
+
         if response.xpath('//div[contains(@id,"variants")]/div/select/option/text()').extract():
             sizeform['varselid[1]'] = response.xpath('//input[contains(@name,"varselid[1]")]/@value').extract()[0]
         return scrapy.FormRequest.from_response(response,
@@ -198,22 +208,23 @@ class SheegoSpider(CrawlSpider):
         stock_info = ' '.join(response.xpath('//script[contains(text(), "setKALAvailability" )]/text()').extract())
         if stock_info:
             stock_info = re.search('String\(\'(.+)\',\d', stock_info).group(1).split(';')
-            articles = article_element.Element('Articles')
+            articles = Article_Element.Element('Articles')
             for colour_code, size in zip(stock_info[0::2], stock_info[1::2]):
-                article = article_element.SubElement(articles, 'Article')
-                article_element.SubElement(article, 'CompleteCatalogItemNo').text = colour_code
-                article_element.SubElement(article, 'SizeAlphaText').text = size
-                article_element.SubElement(article, 'Std_Promotion').text = colour_code[6:]
-                article_element.SubElement(article, 'CustomerCompanyID').text = '0'
-            kal_availability = article_element.Element('tns:KALAvailabilityRequest',
+                article = Article_Element.SubElement(articles, 'Article')
+                Article_Element.SubElement(article, 'CompleteCatalogItemNo').text = colour_code
+                Article_Element.SubElement(article, 'SizeAlphaText').text = size
+                Article_Element.SubElement(article, 'Std_Promotion').text = colour_code[6:]
+                Article_Element.SubElement(article, 'CustomerCompanyID').text = '0'
+            kal_availability = Article_Element.Element('tns:KALAvailabilityRequest',
                                                        attrib={'xmlns:tns': "http://www.schwab.de/KAL",
                                                                'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
                                                                'xsi:schemaLocation':
                                                                    "http://www.schwab.de/KAL "
                                                                    "http://www.schwab.de/KAL/KALAvailabilityRequestSchema.xsd"
-                                                                })
+                                                               }
+                                                       )
             kal_availability.append(articles)
-            return article_element.tostring(kal_availability).decode("utf-8")
+            return Article_Element.tostring(kal_availability).decode("utf-8")
 
     def product_sku_common(self, response):
         skus = {}
@@ -229,4 +240,4 @@ class SheegoSpider(CrawlSpider):
 
     def clean(self, item_list):
         return [item.strip() for item in item_list if not item.isspace()]
-s
+
