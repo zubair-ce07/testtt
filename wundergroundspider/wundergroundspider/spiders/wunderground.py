@@ -10,8 +10,8 @@ class WundergroundSpider(scrapy.Spider):
     name = "wunderground"
     allowed_domains = ["wunderground.com"]
     start_urls = (
-        'https://www.wunderground.com/history/airport/OPLA/2016/09/28/DailyHistory.html?req_city=Lahore'
-        '&req_statename=Pakistan&reqdb.zip=00000&reqdb.magic=1&reqdb.wmo=41641',
+        'https://www.wunderground.com/history/wmo/41573/2016/9/28/DailyHistory.html?'
+        'req_city=Murree&req_state=&req_statename=Pakistan&reqdb.zip=00000&reqdb.magic=1&reqdb.wmo=41573',
     )
 
     def parse(self, response):
@@ -29,7 +29,7 @@ class WundergroundSpider(scrapy.Spider):
         item['month'] = calendar.month_abbr[int(month)]
         item['city'] = self.city(response)
         item['weather_rows'] = response.css("::text").extract()
-        if len(item['weather_rows']) > 1:
+        if  len([row for row in item['weather_rows'] if len(re.findall("([\d\-\w]+)", row.strip())) > 1]) > 1:
             return item
 
     def city(self, response):
