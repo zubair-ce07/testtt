@@ -1,62 +1,51 @@
 from asics_us.items import AsicsItem
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
+from scrapy.selector import Selector
 
 
 class AsicsUSCrawl(CrawlSpider):
     name = 'asics_us_crawl'
-    start_urls = ["http://www.asics.com/us/en-us/"]
-    rules = (
-        Rule(LinkExtractor(restrict_xpaths=(".//*[@id='main-menu']//ul"
-        	"[contains(@class,'childLeafNode')]//li[contains(@class,"
-        	"'yCmsComponent')]", ".//*[contains(@class,'nm center')]", ))),
-        Rule(LinkExtractor(restrict_xpaths=(".//*[contains(@class,"
-        	"'product-list')]/div/div", )), callback='parse_item'),
-    )
+    allowed_domains = ['asics.com']
+    start_urls = [
+        'http://www.asics.com/us/en-us/',
+    ]
+    rules = [
+        Rule(LinkExtractor(restrict_css=['#main-menu']),),
+        Rule(LinkExtractor(restrict_css=['#nextPageLink']),),
+        Rule(LinkExtractor(restrict_css='.product-list>div>div'), 
+            callback='parse_item', follow=True)
+    ]
     def parse_item(self, response):
-        article = AsicsItem()
-        article['spider_name'] = 'asics-us-crawl'
-        article['retailer'] = 'asics-us'
-        article['currency'] = 'USD'
-        article['market'] = 'US'
-        article['price'] = response.xpath(".//*[contains(@class,"
-        	"'price')]/span//text()").extract()[-1].strip()
-        article['category'] = response.xpath("//*[contains(@id, "
-        	"'breadcrumb')]/ul/li[not (@class='active')]/a[not"
-        	"(@href='/us/en-us/')]/span/text()").extract()
-        description = response.xpath(".//*[contains(@class,"
-        	"'tabInfoChildContent')]/text()").extract()
-        [x.strip for x in description]
-        article['description'] = description
-        article['url_original'] = response.url
-        article['brand'] = response.xpath(".//*[contains(@class,'singleProduct')]/meta[1]/@content").extract()[-1]
-        # article['img_urls'] = self.image_urls(response)
-        article['sku'] = self.get_sku(response)
-        article['name'] = response.xpath(".//*[contains(@class,'single-prod-title')]/text()").extract()[-1]
-        article['url'] = response.url
-        article['gender'] = article['category'][0]
-        yield article
+        print(response.url)
+        item = AsicsItem()
+        item['spider_name'] = 'asics-us-crawl'
+        item['retailer'] = 'asics-us'
+        item['currency'] = 'USD'
+        item['market'] = 'US'
+        #item['category'] = response.css('p.prod-classification-reference::text').extract()
+        item['retailer_sku'] = response.css('#right-column>p:nth-child(1)>span::text').extract()
+        item['price'] = response.css('p.price>span>meta:nth-child(2)::attr(content)').extract()
+        item['description'] = response.css('.tabInfoChildContent::text').extract()
+        item['url_original'] = response.url
+        item['brand'] = 'ASICS'
+        item['color'] = response.css('.single-prod-meta.sizes > span::text').extract()
+        item['image_urls'] = response.css('.rsNav.rsThumbs.rsThumbsVer > div > img ::attr(src').extract()
+        #item['date'] = "Not Set Yet"
+        item['skus'] = self.get_sku(response)
+        item['care'] = response.css('div.clickTabs > div:nth-child(3) > div.tabInfoChildContent > p:nth-child(2)::text').extract()
+        item['name'] = response.css('#right-column > h1::text').extract()
+        item['url'] = response.url
+        item['gender'] = response.css('li.bv-author-cdv.bv-last > span.bv-author-userinfo-value').extract()
+        item['industry'] = 'None'
+        #input("enter to next item...")
+        yield item
 
     def get_sku(self, response):
         sku = {}
-        selector = response.xpath(".//*[contains(@id, 'SelectSizeDropDown')]/li[@class='SizeOption inStock']")
-        for item in selector:
-            sku_details = {}
-            sku_details['currency'] = item.xpath("meta[3]/@content").extract()
-            sku_details['price'] = item.xpath("meta[4]/@content").extract()[0]
-            sku_details['size'] = item.xpath("a/text()").extract()[0].split()
-            sku_details['color'] = response.xpath(".//*[contains(@class,'border')]/text()").extract()[0].strip()
-            sku_details['previous price'] = response.xpath(".//*[contains(@class,'markdown')]/del/text()").extract()
-            sku_details['out_of_stock'] = 'false'
-            sku[item.xpath("meta[1]/@content").extract()[0]] = sku_details
+        sku['currency'] = 'USD'
+        sku['color'] = response.css('.single-prod-meta.sizes > span::text').extract()
+        sku['out_of_stock'] = 'false'
+        sku['price'] = response.css('p.price>span>meta:nth-child(2)::attr(content)').extract()
+        #sku['size'] = "Not set yet"
         return sku
-
-        '''
-    def image_urls(self, response):
-        selector = response.xpath(".//*[contains(@id,'product-image-0')]")
-        url1 = selector.xpath("./@data-big").extract()[0]
-        url2 = selector.xpath("./@data-rstmb").extract()[0]
-        src = selector.xpath("./@src").extract()[0]
-        return [url1, url2, src]
-        return [url2, src]
-		'''
