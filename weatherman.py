@@ -63,11 +63,11 @@ class WeatherMan:
               "C on " + year_month[month_of_highest-1] +
               " "+str(day_of_highest))
 
-        low_temp = 40            # random value just to compare mintemp
+        low_temp = high_temp    # random value just to compare mintemp
         low_temp_date = ""
         for temp in temp_record:
                 if temp.minTemperature != '':
-                    if int(temp.minTemperature) <= int(low_temp):
+                    if temp.minTemperature != '' and int(temp.minTemperature) <= int(low_temp):
                         low_temp = temp.minTemperature
                         low_temp_date = temp.date
         date_to_month = low_temp_date.split('-')
