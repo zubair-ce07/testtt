@@ -25,7 +25,7 @@ class WeatherMan:
 
     @staticmethod
     def yearly_report(temp_file_list):
-        temp_record = []
+        temp_records = []
         day_of_highest = ""
         month_of_highest = ""
         high_temp = 0
@@ -44,7 +44,7 @@ class WeatherMan:
                         if line_element[7] == '':  # in case reading not taken
                             line_element[7] = 0
                         # save 365 records in list
-                        temp_record.append(
+                        temp_records.append(
                             TemperatureReport(line_element[0],
                                               int(line_element[1]),
                                               line_element[3],
@@ -52,10 +52,10 @@ class WeatherMan:
                         )
 
                 high_temp_date = ""
-                for temp in temp_record:  # iterating through each object
-                    if temp.maxTemperature >= high_temp:
-                        high_temp = temp.maxTemperature
-                        high_temp_date = temp.date
+                for temp_record in temp_records:  # iterating through each object
+                    if temp_record.maxTemperature >= high_temp:
+                        high_temp = temp_record.maxTemperature
+                        high_temp_date = temp_record.date
                 date_to_month = high_temp_date.split('-')
                 month_of_highest = int(date_to_month[1])
                 day_of_highest = date_to_month[2]
@@ -65,11 +65,12 @@ class WeatherMan:
 
         low_temp = high_temp    # random value just to compare mintemp
         low_temp_date = ""
-        for temp in temp_record:
-                if temp.minTemperature != '':
-                    if temp.minTemperature != '' and int(temp.minTemperature) <= int(low_temp):
-                        low_temp = temp.minTemperature
-                        low_temp_date = temp.date
+        for temp_record in temp_records:
+                if temp_record.minTemperature != '':
+                    if temp_record.minTemperature != '' and \
+                       int(temp_record.minTemperature) <= int(low_temp):
+                        low_temp = temp_record.minTemperature
+                        low_temp_date = temp_record.date
         date_to_month = low_temp_date.split('-')
         month_of_lowest = int(date_to_month[1])
         day_of_lowest = date_to_month[2]
@@ -77,16 +78,16 @@ class WeatherMan:
               year_month[month_of_lowest - 1] + " " +
               str(day_of_lowest))
 
-        most_humidity = 0
+        max_humidity = 0
         most_humid_day = ""
-        for temp in temp_record:
-                    if int(temp.humidity) >= int(most_humidity):
-                        most_humidity = temp.humidity
-                        most_humid_day = temp.date
+        for temp_record in temp_records:
+                    if int(temp_record.humidity) >= int(max_humidity):
+                        max_humidity = temp_record.humidity
+                        most_humid_day = temp_record.date
         date_to_month = most_humid_day.split('-')
         month_of_humidity = int(date_to_month[1])
         day_of_humidity = date_to_month[2]
-        print("Humidity: " + str(most_humidity) +
+        print("Humidity: " + str(max_humidity) +
               "% on " + year_month[month_of_humidity - 1] +
               " " + str(day_of_humidity))
 
