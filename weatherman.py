@@ -2,19 +2,21 @@ import sys
 
 import os
 
+import csv
+
 # class to save record of whole year in object oriented way
 
 
 class TemperatureReport:
     date = ""
-    maxTemperature = 0
-    minTemperature = 0
+    max_temperature = 0
+    min_temperature = 0
     humidity = 0
 
     def __init__(self, date, max_temp, min_temp, humid):
         self.date = date
-        self.maxTemperature = max_temp
-        self.minTemperature = min_temp
+        self.max_temperature = max_temp
+        self.min_temperature = min_temp
         self.humidity = humid
 # class temperature report ends here
 
@@ -32,29 +34,33 @@ class WeatherMan:
         for temperature_file in temp_file_list:
             if os.path.isfile(filePathArg + "/" + temperature_file):
                 f = open(filePathArg + "/" + temperature_file, 'r')
-                f.readline()  # skipping 1st line containing empty space
-                f.readline()  # skipping header line
-                for line in f:
-                    if line.startswith("<!"):  # skip last line
-                        f.readline()
-                    else:
-                        line_element = line.split(',')  # split on ,
-                        if line_element[1] == '':  # in case reading not taken
-                            line_element[1] = 0
-                        if line_element[7] == '':  # in case reading not taken
-                            line_element[7] = 0
-                        # save 365 records in list
-                        temp_records.append(
-                            TemperatureReport(line_element[0],
-                                              int(line_element[1]),
-                                              line_element[3],
-                                              int(line_element[7]))
-                        )
-
+                try:
+                    with f as csvfile:
+                        next(csvfile)  # skip first empty line
+                        reader = csv.DictReader(
+                            filter(lambda row: row[0] != '<', csvfile)
+                                                )
+                        header = reader.fieldnames
+                        for row in reader:
+                            # reading not taken
+                            if row['Max TemperatureC'] == '':
+                                row['Max TemperatureC'] = 0
+                            # reading not taken
+                            if row['Max Humidity'] == '':
+                                row['Max Humidity'] = 0
+                            temp_records.append(
+                                TemperatureReport(row[header[0]],
+                                                  int(row['Max TemperatureC']),
+                                                  row['Min TemperatureC'],
+                                                  int(row["Max Humidity"]))
+                            )
+                finally:
+                    f.close()
                 high_temp_date = ""
-                for temp_record in temp_records:  # iterating through each object
-                    if temp_record.maxTemperature >= high_temp:
-                        high_temp = temp_record.maxTemperature
+                # iterating through each object
+                for temp_record in temp_records:
+                    if temp_record.max_temperature >= high_temp:
+                        high_temp = temp_record.max_temperature
                         high_temp_date = temp_record.date
                 date_to_month = high_temp_date.split('-')
                 month_of_highest = int(date_to_month[1])
@@ -66,10 +72,10 @@ class WeatherMan:
         low_temp = high_temp    # random value just to compare mintemp
         low_temp_date = ""
         for temp_record in temp_records:
-                if temp_record.minTemperature != '':
-                    if temp_record.minTemperature != '' and \
-                       int(temp_record.minTemperature) <= int(low_temp):
-                        low_temp = temp_record.minTemperature
+                if temp_record.min_temperature != '':
+                    if temp_record.min_temperature != '' and \
+                       int(temp_record.min_temperature) <= int(low_temp):
+                        low_temp = temp_record.min_temperature
                         low_temp_date = temp_record.date
         date_to_month = low_temp_date.split('-')
         month_of_lowest = int(date_to_month[1])
@@ -98,21 +104,23 @@ class WeatherMan:
             highest_average_array = []
             lowest_average_array = []
             average_mean_humidity = []
-            f.readline()
-            f.readline()
+            try:
+                with f as csvfile:
+                    next(csvfile)  # skip first empty line
+                    reader = csv.DictReader(
+                        filter(lambda row: row[0] != '<', csvfile)
+                    )
+                    header = reader.fieldnames
+                    for row in reader:
+                        if row['Max TemperatureC'] != '':
+                            highest_average_array.append(int(row[header[1]]))
+                        if row['Min TemperatureC'] != '':
+                            lowest_average_array.append(int(row[header[3]]))
+                        if row[' Mean Humidity'] != '':
+                            average_mean_humidity.append(int(row[header[8]]))
+            finally:
+                f.close()
 
-            for line in f:
-                if line.startswith("<!"):
-                    f.readline()
-                else:
-                    line_element = line.split(',')
-                    if line_element[1] != '':
-                        highest_average_array.append(int(line_element[1]))
-                    if line_element[3] != '':
-                        lowest_average_array.append(int(line_element[3]))
-                    if line_element[8] != '':
-                        average_mean_humidity.append(int(line_element[8]))
-            # calculating average
             highest_average = \
                 int(sum(highest_average_array) / len(highest_average_array))
             lowest_average = \
@@ -130,30 +138,42 @@ class WeatherMan:
     def chart_report(temp_filename):
         if os.path.isfile(filePathArg + "/" + temp_filename):
             f = open(filePathArg + "/" + temp_filename, 'r')
-            f.readline()
-            f.readline()
             day_counter = 1
-            for line in f:
-                red_text = ""
-                blue_text = ""
-                if line.startswith("<!"):
-                    f.readline()
-                else:
-                    line_element = line.split(',')  # reading not taken
-                    if line_element[1] != '':
-                        highest_temp = line_element[1]
-                        for i in range(0, int(highest_temp)):
-                            red_text += "+"
-                        red_color_bar = "\033[1;31m" + red_text + "\033[1;m"
-                        print(str(day_counter) + red_color_bar + highest_temp)
+            try:
+                with f as csvfile:
+                    next(csvfile)  # skip first empty line
+                    reader = csv.DictReader(
+                        filter(lambda row: row[0] != '<', csvfile)
+                    )
+                    header = reader.fieldnames
+                    for row in reader:
+                        red_text = ""
+                        blue_text = ""
+                        if row['Max TemperatureC'] != '':
+                            highest_temp = int(row['Max TemperatureC'])
+                            for i in range(0, int(highest_temp)):
+                                red_text += "+"
+                            red_color_bar = "\033[1;31m" + \
+                                            red_text +\
+                                            "\033[1;m"
+                            print(str(day_counter) +
+                                  red_color_bar +
+                                  str(highest_temp))
+                        if row['Min TemperatureC'] != '':
+                            lowest_temp = int(row['Min TemperatureC'])
+                            for i in range(0, int(lowest_temp)):
+                                blue_text += "+"
+                            blue_color_bar = "\033[1;34m" + \
+                                             blue_text +\
+                                             "\033[1;m"
+                            print(str(day_counter) +
+                                  blue_color_bar +
+                                  str(lowest_temp))
+                        day_counter += 1
 
-                    if line_element[3] != '':
-                        lowest_temp = line_element[3]
-                        for i in range(0, int(lowest_temp)):
-                            blue_text += "+"
-                        blue_color_bar = "\033[1;34m" + blue_text + "\033[1;m"
-                        print(str(day_counter) + blue_color_bar + lowest_temp)
-                    day_counter += 1
+            finally:
+                f.close()
+
             return
 
     @staticmethod
@@ -161,104 +181,88 @@ class WeatherMan:
         if os.path.isfile(filePathArg + "/" + temp_filename):
             f = open(filePathArg + "/" + temp_filename, 'r')
             highest_temp = ""
-            f.readline()
-            f.readline()
             red_color_bar = ""
             day_counter = 1
-            for line in f:
-                red_text = ""
-                blue_text = ""
-                if line.startswith("<!"):
-                    f.readline()
-                else:
-                    line_element = line.split(',')  # reading not taken
-                    if line_element[1] != '':
-                        highest_temp = line_element[1]
+            try:
+                with f as csvfile:
+                    next(csvfile)  # skip first empty line
+                    reader = csv.DictReader(
+                        filter(lambda row: row[0] != '<', csvfile)
+                    )
+                    header = reader.fieldnames
+                    for row in reader:
+                        red_text = ""
+                        blue_text = ""
+                        if row['Max TemperatureC'] != '':
+                            highest_temp = row['Max TemperatureC']
 
-                        for i in range(0, int(highest_temp)):
-                            red_text += "+"
-                        red_color_bar = "\033[1;31m" + red_text + "\033[1;m"
-                    if line_element[3] != '':
-                        lowest_temp = line_element[3]
-                        for i in range(0, int(lowest_temp)):
-                            blue_text += "+"
-                        blue_color_bar = "\033[1;34m" + blue_text + "\033[1;m"
-                        print(str(day_counter) +
-                              blue_color_bar +
-                              red_color_bar +
-                              lowest_temp + "-" +
-                              highest_temp)
-                    day_counter += 1
+                            for i in range(0, int(highest_temp)):
+                                red_text += "+"
+                            red_color_bar = "\033[1;31m" + \
+                                            red_text + "\033[1;m"
+                        if row['Min TemperatureC'] != '':
+                            lowest_temp = row['Min TemperatureC']
+                            for i in range(0, int(lowest_temp)):
+                                blue_text += "+"
+                            blue_color_bar = "\033[1;34m" + \
+                                             blue_text + "\033[1;m"
+                            print(str(day_counter) + blue_color_bar +
+                                  red_color_bar + lowest_temp + "-" +
+                                  highest_temp)
+                            day_counter += 1
 
-            return
+            finally:
+                    f.close()
 
-if len(sys.argv) < 4:
-    print ("Arguments are not valid")
+                    return
 
-    # more detail of error
-    if len(sys.argv) == 3:
-        print ("filename may be missing")
-        sys.exit()
-    else:
-        if len(sys.argv) == 2:
-            print ("date and filename missing")
+if __name__ == '__main__':
+    if len(sys.argv) < 4:
+        print ("Arguments are not valid")
+
+        # more detail of error
+        if len(sys.argv) == 3:
+            print ("filename may be missing")
             sys.exit()
         else:
-            if len(sys.argv) == 1:
-                print ("report type,date and filename missing")
+            if len(sys.argv) == 2:
+                print ("date and filename missing")
                 sys.exit()
-report_type = ""
-year = ""
-month = ""
-day = ""
-year_month = ["Jan", "Feb", "Mar", "Apr",
-              "May", "Jun", "Jul", "Aug",
-              "Sep", "Oct", "Nov", "Dec"
-              ]
-filePathArg = str(sys.argv[3])
-if len(sys.argv) == 1:  # in case user run program from ide
-    report_type = raw_input("Please enter flag value: ")  # manual input
-else:
+            else:
+                if len(sys.argv) == 1:
+                    print ("report type,date and filename missing")
+                    sys.exit()
+    report_type = ""
+    year = ""
+    month = ""
+    day = ""
+    year_month = ["Jan", "Feb", "Mar", "Apr",
+                  "May", "Jun", "Jul", "Aug",
+                  "Sep", "Oct", "Nov", "Dec"
+                  ]
+    filePathArg = str(sys.argv[3])
     report_type = str(sys.argv[1])  # value coming from cmd
 
-if report_type == "-e":
-    year = str(sys.argv[2])                          # calculating year
-    if len(sys.argv[2].split('/')) > 1:
-        print ("invalid arguments")
-        sys.exit()
-    if int(year) > 2011:
-        print("record not found for this year")
-        sys.exit()
-    if int(year) < 1996:
-        print("record not found for this year")
-        sys.exit()
-    file_list = []  # if year calculate from (12 files)list
-    for month in year_month:
-        file_prefix = "lahore_weather_" + year +\
-                    "_"+month+".txt"  # creating temperature_file name
-        file_list.append(file_prefix)
-    WeatherMan().yearly_report(file_list)    # passing files to function
-
-else:
-    if report_type == "-a":                      # monthly report
-        yearPlusMonth = str(sys.argv[2]).split('/')
-        if len(yearPlusMonth) < 2:
-            print("invalid month")
+    if report_type == "-e":
+        year = str(sys.argv[2])                          # calculating year
+        if len(sys.argv[2].split('/')) > 1:
+            print ("invalid arguments")
             sys.exit()
-        year = yearPlusMonth[0]
-        month = int(yearPlusMonth[1])
-        if month > 12:
-            print("invalid month")
+        if int(year) > 2011:
+            print("record not found for this year")
             sys.exit()
-        if month < 1:
-            print("invalid month")
+        if int(year) < 1996:
+            print("record not found for this year")
             sys.exit()
-        filename = "lahore_weather_" + year + "_" + \
-                   str(year_month[(month-1)]) + ".txt"
-        WeatherMan().monthly_report(filename)
+        file_list = []  # if year calculate from (12 files)list
+        for month in year_month:
+            file_prefix = "lahore_weather_" + year +\
+                        "_"+month+".txt"  # creating temperature_file name
+            file_list.append(file_prefix)
+        WeatherMan().yearly_report(file_list)    # passing files to function
 
     else:
-        if report_type == "-c":
+        if report_type == "-a":                      # monthly report
             yearPlusMonth = str(sys.argv[2]).split('/')
             if len(yearPlusMonth) < 2:
                 print("invalid month")
@@ -271,14 +275,12 @@ else:
             if month < 1:
                 print("invalid month")
                 sys.exit()
-            file_name = "lahore_weather_" +\
-                        year + "_" + \
-                        str(year_month[(month - 1)]) + \
-                        ".txt"
-            print(str(year_month[(month - 1)]) + " "+year)
-            WeatherMan().chart_report(file_name)
+            filename = "lahore_weather_" + year + "_" + \
+                       str(year_month[(month-1)]) + ".txt"
+            WeatherMan().monthly_report(filename)
+
         else:
-            if report_type == "-c4":
+            if report_type == "-c":
                 yearPlusMonth = str(sys.argv[2]).split('/')
                 if len(yearPlusMonth) < 2:
                     print("invalid month")
@@ -291,12 +293,32 @@ else:
                 if month < 1:
                     print("invalid month")
                     sys.exit()
-                filename = "lahore_weather_" + \
-                           year + "_" + \
-                           str(year_month[(month - 1)]) + \
-                           ".txt"
-                print(str(year_month[(month - 1)]) + " " + year)
-                WeatherMan().one_line_chart_report(filename)
+                file_name = "lahore_weather_" +\
+                            year + "_" + \
+                            str(year_month[(month - 1)]) + \
+                            ".txt"
+                print(str(year_month[(month - 1)]) + " "+year)
+                WeatherMan().chart_report(file_name)
             else:
-                print ("invalid arguments")
-                sys.exit()
+                if report_type == "-c4":
+                    yearPlusMonth = str(sys.argv[2]).split('/')
+                    if len(yearPlusMonth) < 2:
+                        print("invalid month")
+                        sys.exit()
+                    year = yearPlusMonth[0]
+                    month = int(yearPlusMonth[1])
+                    if month > 12:
+                        print("invalid month")
+                        sys.exit()
+                    if month < 1:
+                        print("invalid month")
+                        sys.exit()
+                    filename = "lahore_weather_" + \
+                               year + "_" + \
+                               str(year_month[(month - 1)]) + \
+                               ".txt"
+                    print(str(year_month[(month - 1)]) + " " + year)
+                    WeatherMan().one_line_chart_report(filename)
+                else:
+                    print ("invalid arguments")
+                    sys.exit()
