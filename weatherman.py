@@ -41,8 +41,6 @@ class WeatherMan:
                         line_element = line.split(',')  # split on ,
                         if line_element[1] == '':  # in case reading not taken
                             line_element[1] = 0
-                        # if line_element[3]=='': never use will change mintemp
-                        #    line_element[3]=0
                         if line_element[7] == '':  # in case reading not taken
                             line_element[7] = 0
                         # save 365 records in list
