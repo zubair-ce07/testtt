@@ -5,10 +5,10 @@ import os
 # class to save record of whole year in object oriented way
 
 
-class TempratureReport:
+class TemperatureReport:
     date = ""
-    maxTemprature = 0
-    minTemprature = 0
+    maxTemperature = 0
+    minTemperature = 0
     humidity = 0
 
     def __init__(self, date, max_temp, min_temp, humid):
@@ -20,98 +20,104 @@ class TempratureReport:
 
 
 class WeatherMan:
+    def __init__(self):
+        return
+
     @staticmethod
-    def yearly_report(filelist):
-        temprecord = []
-        for file in filelist:
-            if os.path.isfile(filePathArg + "/" + file):
-                f = open(filePathArg + "/" + file, 'r')  # opening file
-                line = f.readline()  # skiping 1st line containg empty space
-                line = f.readline()  # skipping header line
+    def yearly_report(temp_file_list):
+        temp_record = []
+        day_of_highest = ""
+        month_of_highest = ""
+        high_temp = 0
+        for temperature_file in temp_file_list:
+            if os.path.isfile(filePathArg + "/" + temperature_file):
+                f = open(filePathArg + "/" + temperature_file, 'r')
+                f.readline()  # skipping 1st line containing empty space
+                f.readline()  # skipping header line
                 for line in f:
                     if line.startswith("<!"):  # skip last line
-                        line = ""
+                        f.readline()
                     else:
-                        lineElement = line.split(',')  # split on ,
-                        if lineElement[1] == '':  # in case reading not taken
-                            lineElement[1] = 0
-                        # if lineElement[3]=='': never use will change mintemp
-                        #    lineElement[3]=0
-                        if lineElement[7] == '':  # in case reading not taken
-                            lineElement[7] = 0
+                        line_element = line.split(',')  # split on ,
+                        if line_element[1] == '':  # in case reading not taken
+                            line_element[1] = 0
+                        # if line_element[3]=='': never use will change mintemp
+                        #    line_element[3]=0
+                        if line_element[7] == '':  # in case reading not taken
+                            line_element[7] = 0
                         # save 365 records in list
-                        temprecord.append(
-                            TempratureReport(lineElement[0],
-                                             int(lineElement[1]),
-                                             lineElement[3],
-                                             int(lineElement[7]))
+                        temp_record.append(
+                            TemperatureReport(line_element[0],
+                                              int(line_element[1]),
+                                              line_element[3],
+                                              int(line_element[7]))
                         )
 
-                hightemp = 0
-                hightempdate = ""
-                for temp in temprecord:  # iterating through each object
-                    if (temp.maxTemperature >= hightemp):
-                        hightemp = temp.maxTemperature
-                        hightempdate = temp.date
-                datetomonth = hightempdate.split('-')
-                monthofHighest = int(datetomonth[1])
-                dayofHighest = datetomonth[2]
-        print("Highest: "+str(hightemp) +
-              "C on " + year_month[monthofHighest-1] + " "+str(dayofHighest))
+                high_temp_date = ""
+                for temp in temp_record:  # iterating through each object
+                    if temp.maxTemperature >= high_temp:
+                        high_temp = temp.maxTemperature
+                        high_temp_date = temp.date
+                date_to_month = high_temp_date.split('-')
+                month_of_highest = int(date_to_month[1])
+                day_of_highest = date_to_month[2]
+        print("Highest: "+str(high_temp) +
+              "C on " + year_month[month_of_highest-1] +
+              " "+str(day_of_highest))
 
-        lowtemp = 40            # random value just to compare mintemp
-        lowtempdate = ""
-        for temp in temprecord:
+        low_temp = 40            # random value just to compare mintemp
+        low_temp_date = ""
+        for temp in temp_record:
                 if temp.minTemperature != '':
-                    if (int(temp.minTemperature) <= int(lowtemp)):
-                        lowtemp = temp.minTemperature
-                        lowtempdate = temp.date
-        datetomonth = lowtempdate.split('-')
-        monthoflowest = int(datetomonth[1])
-        dayoflowest = datetomonth[2]
-        print("Lowest: " + str(lowtemp) + "C on " +
-              year_month[monthoflowest - 1] + " " +
-              str(dayoflowest))
+                    if int(temp.minTemperature) <= int(low_temp):
+                        low_temp = temp.minTemperature
+                        low_temp_date = temp.date
+        date_to_month = low_temp_date.split('-')
+        month_of_lowest = int(date_to_month[1])
+        day_of_lowest = date_to_month[2]
+        print("Lowest: " + str(low_temp) + "C on " +
+              year_month[month_of_lowest - 1] + " " +
+              str(day_of_lowest))
 
-        mosthumidity = 0
-        mostHumidDay = ""
-        for temp in temprecord:
-                    if int(temp.humidity) >= int(mosthumidity):
-                        mosthumidity = temp.humidity
-                        mostHumidDay = temp.date
-        datetomonth = mostHumidDay.split('-')
-        monthofhumidity = int(datetomonth[1])
-        dayofhumidity = datetomonth[2]
-        print("Humidity: " + str(mosthumidity) +
-              "% on " + year_month[monthofhumidity - 1] +
-              " " + str(dayofhumidity))
+        most_humidity = 0
+        most_humid_day = ""
+        for temp in temp_record:
+                    if int(temp.humidity) >= int(most_humidity):
+                        most_humidity = temp.humidity
+                        most_humid_day = temp.date
+        date_to_month = most_humid_day.split('-')
+        month_of_humidity = int(date_to_month[1])
+        day_of_humidity = date_to_month[2]
+        print("Humidity: " + str(most_humidity) +
+              "% on " + year_month[month_of_humidity - 1] +
+              " " + str(day_of_humidity))
 
-    def monthly_report(self, filename):
-        if (os.path.isfile(filePathArg + "/" + filename)):
-            f = open(filePathArg + "/" + filename, 'r')
-            highest_average_Array = []
-            lowest_average_Array = []
+    @staticmethod
+    def monthly_report(temp_filename):
+        if os.path.isfile(filePathArg + "/" + temp_filename):
+            f = open(filePathArg + "/" + temp_filename, 'r')
+            highest_average_array = []
+            lowest_average_array = []
             average_mean_humidity = []
-
-            line = f.readline()
-            line = f.readline()
+            f.readline()
+            f.readline()
 
             for line in f:
                 if line.startswith("<!"):
-                    line = ""
+                    f.readline()
                 else:
-                    lineElement = line.split(',')
-                    if lineElement[1] != '':
-                        highest_average_Array.append(int(lineElement[1]))
-                    if lineElement[3] != '':
-                        lowest_average_Array.append(int(lineElement[3]))
-                    if lineElement[8] != '':
-                        average_mean_humidity.append(int(lineElement[8]))
+                    line_element = line.split(',')
+                    if line_element[1] != '':
+                        highest_average_array.append(int(line_element[1]))
+                    if line_element[3] != '':
+                        lowest_average_array.append(int(line_element[3]))
+                    if line_element[8] != '':
+                        average_mean_humidity.append(int(line_element[8]))
             # calculating average
             highest_average = \
-                int(sum(highest_average_Array) / len(highest_average_Array))
+                int(sum(highest_average_array) / len(highest_average_array))
             lowest_average = \
-                int(sum(lowest_average_Array) / len(lowest_average_Array))
+                int(sum(lowest_average_array) / len(lowest_average_array))
             average_mean_humidity = \
                 int(sum(average_mean_humidity) / len(average_mean_humidity))
 
@@ -121,68 +127,69 @@ class WeatherMan:
             print ("Average Mean Humidity: " +
                    str(average_mean_humidity) + "%")
 
-    def chart_report(self, filename):
-        if (os.path.isfile(filePathArg + "/" + filename)):
-            f = open(filePathArg + "/" + filename, 'r')
-            line = f.readline()
-            line = f.readline()
-            bluetext = ""
-            redtext = ""
-            day = 1
+    @staticmethod
+    def chart_report(temp_filename):
+        if os.path.isfile(filePathArg + "/" + temp_filename):
+            f = open(filePathArg + "/" + temp_filename, 'r')
+            f.readline()
+            f.readline()
+            day_counter = 1
             for line in f:
-                redtext = ""
-                bluetext = ""
+                red_text = ""
+                blue_text = ""
                 if line.startswith("<!"):
-                    line = ""
+                    f.readline()
                 else:
-                    lineElement = line.split(',')  # reading not taken
-                    if lineElement[1] != '':
-                        highest_temp = lineElement[1]
+                    line_element = line.split(',')  # reading not taken
+                    if line_element[1] != '':
+                        highest_temp = line_element[1]
                         for i in range(0, int(highest_temp)):
-                            redtext += "+"
-                        red_color_bar = "\033[1;31m" + redtext + "\033[1;m"
-                        print(str(day) + red_color_bar + highest_temp)
+                            red_text += "+"
+                        red_color_bar = "\033[1;31m" + red_text + "\033[1;m"
+                        print(str(day_counter) + red_color_bar + highest_temp)
 
-                    if lineElement[3] != '':
-                        lowest_temp = lineElement[3]
+                    if line_element[3] != '':
+                        lowest_temp = line_element[3]
                         for i in range(0, int(lowest_temp)):
-                            bluetext += "+"
-                        blueColorBar = "\033[1;34m" + bluetext + "\033[1;m"
-                        print(str(day) + blueColorBar + lowest_temp)
-                    day += 1
+                            blue_text += "+"
+                        blue_color_bar = "\033[1;34m" + blue_text + "\033[1;m"
+                        print(str(day_counter) + blue_color_bar + lowest_temp)
+                    day_counter += 1
             return
 
-    def oneLine_chart_report(self, filename):
-        if (os.path.isfile(filePathArg + "/" + filename)):
-            f = open(filePathArg + "/" + filename, 'r')
+    @staticmethod
+    def one_line_chart_report(temp_filename):
+        if os.path.isfile(filePathArg + "/" + temp_filename):
+            f = open(filePathArg + "/" + temp_filename, 'r')
             highest_temp = ""
-            lowest_temp = ""
-            line = f.readline()
-            line = f.readline()
-            bluetext = ""
-            redtext = ""
-            day = 1
+            f.readline()
+            f.readline()
+            red_color_bar = ""
+            day_counter = 1
             for line in f:
-                redtext = ""
-                bluetext = ""
-                if (line.startswith("<!")):
-                    line = ""
+                red_text = ""
+                blue_text = ""
+                if line.startswith("<!"):
+                    f.readline()
                 else:
-                    lineElement = line.split(',')  # reading not taken
-                    if (lineElement[1] != ''):
-                        highest_temp = lineElement[1]
+                    line_element = line.split(',')  # reading not taken
+                    if line_element[1] != '':
+                        highest_temp = line_element[1]
 
                         for i in range(0, int(highest_temp)):
-                            redtext += "+"
-                        red_color_bar = "\033[1;31m" + redtext + "\033[1;m"
-                    if (lineElement[3] != ''):
-                        lowest_temp = lineElement[3]
+                            red_text += "+"
+                        red_color_bar = "\033[1;31m" + red_text + "\033[1;m"
+                    if line_element[3] != '':
+                        lowest_temp = line_element[3]
                         for i in range(0, int(lowest_temp)):
-                            bluetext += "+"
-                        blueColorBar = "\033[1;34m" + bluetext + "\033[1;m"
-                        print(str(day) + blueColorBar + red_color_bar +
-                              lowest_temp + "-" + highest_temp)
-                    day += 1
+                            blue_text += "+"
+                        blue_color_bar = "\033[1;34m" + blue_text + "\033[1;m"
+                        print(str(day_counter) +
+                              blue_color_bar +
+                              red_color_bar +
+                              lowest_temp + "-" +
+                              highest_temp)
+                    day_counter += 1
 
             return
 
@@ -213,7 +220,7 @@ filePathArg = str(sys.argv[3])
 if len(sys.argv) == 1:  # in case user run program from ide
     report_type = raw_input("Please enter flag value: ")  # manual input
 else:
-    report_type = str(sys.argv[1])  # value commoing from cmd
+    report_type = str(sys.argv[1])  # value coming from cmd
 
 if report_type == "-e":
     year = str(sys.argv[2])                          # calculating year
@@ -226,12 +233,12 @@ if report_type == "-e":
     if int(year) < 1996:
         print("record not found for this year")
         sys.exit()
-    filelist = []  # if year is givencalclate from (12 files)list
+    file_list = []  # if year calculate from (12 files)list
     for month in year_month:
-        fileprfix = "lahore_weather_" + year +\
-                    "_"+month+".txt"  # creating file name
-        filelist.append(fileprfix)
-    WeatherMan().yearly_report(filelist)    # passing list of files to function
+        file_prefix = "lahore_weather_" + year +\
+                    "_"+month+".txt"  # creating temperature_file name
+        file_list.append(file_prefix)
+    WeatherMan().yearly_report(file_list)    # passing files to function
 
 else:
     if report_type == "-a":                      # monthly report
@@ -265,12 +272,12 @@ else:
             if month < 1:
                 print("invalid month")
                 sys.exit()
-            filename = "lahore_weather_" +\
-                       year + "_" + \
-                       str(year_month[(month - 1)]) + \
-                       ".txt"
+            file_name = "lahore_weather_" +\
+                        year + "_" + \
+                        str(year_month[(month - 1)]) + \
+                        ".txt"
             print(str(year_month[(month - 1)]) + " "+year)
-            WeatherMan().chart_report(filename)
+            WeatherMan().chart_report(file_name)
         else:
             if report_type == "-c4":
                 yearPlusMonth = str(sys.argv[2]).split('/')
@@ -290,7 +297,7 @@ else:
                            str(year_month[(month - 1)]) + \
                            ".txt"
                 print(str(year_month[(month - 1)]) + " " + year)
-                WeatherMan().oneLine_chart_report(filename)
+                WeatherMan().one_line_chart_report(filename)
             else:
                 print ("invalid arguments")
                 sys.exit()
