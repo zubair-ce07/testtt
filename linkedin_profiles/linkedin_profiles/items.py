@@ -10,6 +10,7 @@ import scrapy
 
 class LinkedinProfilesItem(scrapy.Item):
     # define the fields for your item here like:
+    url = scrapy.Field()
     name = scrapy.Field()
     job_title = scrapy.Field()
     location = scrapy.Field()
@@ -20,4 +21,5 @@ class LinkedinProfilesItem(scrapy.Item):
     experience = scrapy.Field()
     languages = scrapy.Field()
     skills = scrapy.Field()
-    pass
+    profile_picture = scrapy.Field()
+

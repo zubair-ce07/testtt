@@ -55,7 +55,8 @@ DEFAULT_REQUEST_HEADERS = {
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
-    'linkedin_profiles.middlewares.ProxyMiddleware': 100
+    'linkedin_profiles.middlewares.ProxyMiddleware': 100,
+    'linkedin_profiles.middlewares.UserAgentMiddleware': 120
 }
 
 # Enable or disable extensions
@@ -69,6 +70,11 @@ DOWNLOADER_MIDDLEWARES = {
 #ITEM_PIPELINES = {
 #    'linkedin_profiles.pipelines.SomePipeline': 300,
 #}
+FEED_EXPORTERS = {
+'json': 'scrapy.exporters.JsonItemExporter',
+}
+FEED_FORMAT = 'json'
+FEED_URI = "linkedin_profiles%(time)s.json"
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -90,3 +96,4 @@ HTTPCACHE_EXPIRATION_SECS = 7*24*60*60
 HTTPCACHE_DIR = 'httpcache'
 HTTPCACHE_IGNORE_HTTP_CODES = [999]
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
