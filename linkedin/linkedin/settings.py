@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for linkedin_search project
+# Scrapy settings for linkedin project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,10 +9,10 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'linkedin_search'
+BOT_NAME = 'linkedin'
 
-SPIDER_MODULES = ['linkedin_search.spiders']
-NEWSPIDER_MODULE = 'linkedin_search.spiders'
+SPIDER_MODULES = ['linkedin.spiders']
+NEWSPIDER_MODULE = 'linkedin.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -47,14 +47,15 @@ DEFAULT_REQUEST_HEADERS = {
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'linkedin_search.middlewares.MyCustomSpiderMiddleware': 543,
+#    'linkedin.middlewares.MyCustomSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
-    'linkedin_search.middlewares.ProxyMiddleware': 100
+    'linkedin.middlewares.ProxyMiddleware': 100,
+    'linkedin.middlewares.UserAgentMiddleware': 120
 }
 
 # Enable or disable extensions
@@ -66,13 +67,13 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'linkedin_search.pipelines.SomePipeline': 300,
+#    'linkedin.pipelines.SomePipeline': 300,
 #}
 FEED_EXPORTERS = {
 'csv': 'scrapy.exporters.CsvItemExporter',
 }
 FEED_FORMAT = 'csv'
-FEED_URI = "output.csv"
+FEED_URI = "output%(time)s.csv"
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -92,5 +93,5 @@ FEED_URI = "output.csv"
 HTTPCACHE_ENABLED = True
 HTTPCACHE_EXPIRATION_SECS = 7*24*60*60
 HTTPCACHE_DIR = 'httpcache'
-HTTPCACHE_IGNORE_HTTP_CODES = [999]
+HTTPCACHE_IGNORE_HTTP_CODES = [999,400-600]
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
