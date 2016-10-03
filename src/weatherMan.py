@@ -158,6 +158,7 @@ if __name__ == "__main__":
                                                     whole_year_dates)
         show_highest_values(highest_temperature_value, highest_day, lowest_temperature_value, lowest_day,
                                 max_humidity_value,humidity_day)
+
     elif args.average_values:
         prepare_function_data(make_file_name(args.average_values[1], args.average_values[0]))
         highest_average, lowest_average, humidity_average = calculate_average_values(
