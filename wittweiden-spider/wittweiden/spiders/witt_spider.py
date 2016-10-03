@@ -93,25 +93,15 @@ class WittWeidenSpider(CrawlSpider):
 
         if skus_requests:
             sku_request = skus_requests.pop()
-
-            # url = "http://www.witt-weiden.de/ajax/product-detail" + endpoint + \
-            #       "?modelNumber=" + model_number
-            # if size:
-            #     url += '&size=' + size
-            # if article_number:
-            #     url += '&articleNumber=' + article_number
-            # return Request(url, callback=callback, meta=meta, headers={
-            #     'X-Requested-With': 'XMLHttpRequest'})
-
-
             return self.create_xhr_request(
                 '/buy-box.html',
                 model_number=model_number,
                 query_params={'modelNumber': model_number,
-                              'size': sku_request['size'] if 'size' in
-                                                             sku_request else None,
+                              'size': sku_request['size'] if
+                              'size' in sku_request else None,
                               'articleNumber': sku_request['articleNumber'] if
-                              'articleNumber' in sku_request else None},
+                              'articleNumber' in sku_request else None
+                              },
                 callback=self.parse_garment_sku,
                 meta={'item': garment_item,
                       'remaining_requests': skus_requests,
@@ -186,15 +176,6 @@ class WittWeidenSpider(CrawlSpider):
         return Request(url, callback=callback, meta=meta, headers={
             'X-Requested-With': 'XMLHttpRequest'})
 
-        # url = "http://www.witt-weiden.de/ajax/product-detail" + endpoint + \
-        #       "?modelNumber=" + model_number
-        # if size:
-        #     url += '&size=' + size
-        # if article_number:
-        #     url += '&articleNumber=' + article_number
-        # return Request(url, callback=callback, meta=meta, headers={
-        #     'X-Requested-With': 'XMLHttpRequest'})
-
     def garment_model_number(self, response):
         """ Returns model number of a garment """
         garment_detail_json = json.loads(response.css(
@@ -231,7 +212,6 @@ class WittWeidenSpider(CrawlSpider):
                                        "'Material')]/parent::tr/td/text()"
                                        ).extract_first(),
         }
-
         return description
 
     def garment_gender(self, garment_url):
