@@ -69,11 +69,6 @@ DOWNLOADER_MIDDLEWARES = {
 #ITEM_PIPELINES = {
 #    'linkedin.pipelines.SomePipeline': 300,
 #}
-FEED_EXPORTERS = {
-'csv': 'scrapy.exporters.CsvItemExporter',
-}
-FEED_FORMAT = 'csv'
-FEED_URI = "output%(time)s.csv"
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -95,3 +90,4 @@ HTTPCACHE_EXPIRATION_SECS = 7*24*60*60
 HTTPCACHE_DIR = 'httpcache'
 HTTPCACHE_IGNORE_HTTP_CODES = [999,400-600]
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+

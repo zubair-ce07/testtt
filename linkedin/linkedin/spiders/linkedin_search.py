@@ -8,6 +8,8 @@ import re
 class LinkedinSearchSpider(CrawlSpider):
     name = 'linkedin_search_spider'
     allowed_domains = ['www.linkedin.com']
+    custom_settings = {'FEED_EXPORTERS': {'csv': 'scrapy.exporters.CsvItemExporter',},
+                       'FEED_FORMAT': 'csv', 'FEED_URI': 'linkedin_urls%(time)s.csv'}
 
     rules = (
         Rule(LinkExtractor(
@@ -34,4 +36,5 @@ class LinkedinSearchSpider(CrawlSpider):
                 linkedin_profile_url['url'] = response.urljoin(link)
                 linkedin_profile_url['name'] = name
                 yield linkedin_profile_url
+
 
