@@ -14,8 +14,8 @@ class WittWeidenSpider(CrawlSpider):
     witt_base_url = 'http://www.witt-weiden.de/'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=["a.osecom-navbar__category-link",
-                                         "a.next"])),
+        Rule(LinkExtractor(restrict_css=[
+            "a.osecom-navbar__category-link", "a.next"])),
         Rule(LinkExtractor(restrict_css="article> div.image> a"),
              callback='parse_sale_item')
     )
@@ -71,11 +71,7 @@ class WittWeidenSpider(CrawlSpider):
 
         for article in garment_articles:
             for size in garment_sizes:
-                skus_requests.append({
-                    'articleNumber': article,
-                    'size': size
-                })
-
+                skus_requests.append({ 'articleNumber': article,'size': size})
         response.meta['item'] = garment_item
         response.meta['remaining_requests'] = skus_requests
         response.meta['skus'] = {}
@@ -274,10 +270,8 @@ class WittWeidenSpider(CrawlSpider):
         if garment_size != '-':
             return {'colour': garment_color,
                     'currency': 'Euros',
-                    'out_of_stock':
-                        garment_out_of_stock,
-                    'prices': self.garment_price(
-                        response),
+                    'out_of_stock': garment_out_of_stock,
+                    'prices': self.garment_price(response),
                     'size': garment_size}
 
     def garment_url_trail(self, url):
