@@ -1,7 +1,8 @@
-from scrapy.spiders import Spider, Rule
+from scrapy.spiders import Spider
 from scrapy.http import Request
 import csv
 from linkedin_profiles.items import LinkedinProfilesItem
+
 
 class LinkedinProfileSpider(Spider):
     name = 'linkedin_profile_spider'
@@ -123,7 +124,4 @@ class LinkedinProfileSpider(Spider):
 
     def clean(self, selector):
         return ' '.join(selector.extract())
-
-
-
 
