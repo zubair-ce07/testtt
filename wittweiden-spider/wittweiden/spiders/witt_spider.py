@@ -1,4 +1,4 @@
-from urllib.parse import urlparse, urlencode, urljoin
+from urllib.parse import urlparse, urlencode, urljoin, urlunparse
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
@@ -30,7 +30,7 @@ class WittWeidenSpider(CrawlSpider):
         garment_item['gender'] = self.garment_gender(garment_item['url'])
         garment_item['description'] = self.garment_description(response)
         yield self.create_xhr_request(
-            "/article-header.html", callback=self.parse_garment_header,
+            "article-header.html", callback=self.parse_garment_header,
             query_params={'modelNumber': garment_model_number},
             meta={'model_number': garment_model_number, 'item': garment_item})
 
@@ -45,7 +45,7 @@ class WittWeidenSpider(CrawlSpider):
         garment_item['spider_name'] = self.name
         garment_item['brand'] = 'Witt Weiden'
         yield self.create_xhr_request(
-            "/buy-box.html", callback=self.parse_garment_price_box,
+            "buy-box.html", callback=self.parse_garment_price_box,
             query_params={'modelNumber': model_number},
             meta={'model_number': model_number, 'item': garment_item})
 
@@ -91,7 +91,7 @@ class WittWeidenSpider(CrawlSpider):
         if skus_requests:
             sku_request = skus_requests.pop()
             return self.create_xhr_request(
-                '/buy-box.html', callback=self.parse_garment_sku,
+                'buy-box.html', callback=self.parse_garment_sku,
                 query_params={
                     'modelNumber': model_number,
                     'size': sku_request['size'] if 'size' in sku_request
@@ -104,7 +104,7 @@ class WittWeidenSpider(CrawlSpider):
         else:
             garment_item['skus'] = skus
             return self.create_xhr_request(
-                "/color-images.html",
+                "color-images.html",
                 query_params={'modelNumber': model_number},
                 callback=self.parse_garment_color_images,
                 meta={'item': garment_item, 'model_number': model_number})
@@ -116,7 +116,7 @@ class WittWeidenSpider(CrawlSpider):
         garment_item = response.meta['item']
         garment_item['image_urls'] = self.garment_image_urls(response)
         yield self.create_xhr_request(
-            "/inspection-images.html",
+            "inspection-images.html",
             query_params={'modelNumber': model_number},
             callback=self.parse_garment_backview_images,
             meta={'model_number': model_number, 'item': garment_item})
@@ -128,7 +128,7 @@ class WittWeidenSpider(CrawlSpider):
         garment_item = response.meta['item']
         garment_item['image_urls'].extend(self.garment_image_urls(response))
         yield self.create_xhr_request(
-            "/description-table.html",
+            "description-table.html",
             query_params={'modelNumber': model_number},
             callback=self.parse_garment_details,
             meta={'model_number': model_number, 'item': garment_item})
@@ -161,8 +161,10 @@ class WittWeidenSpider(CrawlSpider):
     def create_xhr_request(self, endpoint, callback=None, meta={},
                            query_params={}):
         """ Returns a new XHR request"""
-        url = "http://www.witt-weiden.de/ajax/product-detail" + \
-              endpoint + '?' + urlencode(query_params)
+        url = urlunparse(('http', 'www.witt-weiden.de',
+                   urljoin('/ajax/product-detail/', endpoint), '',
+                   urlencode(query_params), ''))
+
         return Request(url, callback=callback, meta=meta, headers={
             'X-Requested-With': 'XMLHttpRequest'})
 
@@ -225,4 +227,4 @@ class WittWeidenSpider(CrawlSpider):
     def garment_url_trail(self, url):
         """ Returns the navigation trail of the current garment """
         parsed_url = urlparse(url)
-        return [parsed_url.netloc, parsed_url.path]
+        return [parsed_url.netloc, url]
