@@ -16,7 +16,7 @@ class VeromodaScrapper(CrawlSpider):
         ]
 
     def get_item_links(self, response):
-        links = response.xpath("a.product-tile__name__link::attr(href)").extract()
+        links = response.css("a.product-tile__name__link::attr(href)").extract()
         for item in links:
             product_url = ''.join(["http://www.veromoda.com", item])
             yield Request(product_url, callback=self.parse_product)
