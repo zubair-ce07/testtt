@@ -53,7 +53,7 @@ class WittWeidenSpider(CrawlSpider):
         """For a given item url response, populates the available
         garment information and creates succeeding request"""
         garment_item = response.meta['item']
-        garment_item['currency'] = self.garment_currency()
+        garment_item['currency'] = 'EUR'
         garment_sizes = self.garment_sizes(response)
         garment_articles = self.garment_articles(response)
         skus_requests = []
@@ -176,10 +176,6 @@ class WittWeidenSpider(CrawlSpider):
         """ Returns the name of the current garment """
         return response.css('header> h1::text').extract_first()
 
-    def garment_currency(self):
-        """ Returns the currency being used """
-        return "Euro"
-
     def garment_description(self, response):
         description = response.css('#description-text> p::text').extract()
         description.extend(response.css('#description-text> p font'
@@ -217,12 +213,12 @@ class WittWeidenSpider(CrawlSpider):
 
     def garment_sku(self, response):
         """ Returns a SKU of the current garment """
-        garment_out_of_stock = True if response.css(
-            "#submitButton.disabled").extract_first() else False
+        garment_out_of_stock = True if response.css("#submitButton.disabled")\
+            .extract_first() else False
         garment_color = response.css("input#color::attr(value)").extract_first()
         garment_size = response.css("input#size::attr(value)").extract_first()
         if garment_size != '-':
-            return {'colour': garment_color, 'currency': 'Euros',
+            return {'colour': garment_color, 'currency': 'EUR',
                     'out_of_stock': garment_out_of_stock, 'size': garment_size,
                     'prices': self.garment_price(response)}
 
