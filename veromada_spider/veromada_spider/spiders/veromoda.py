@@ -56,7 +56,7 @@ class VeromodaScrapper(CrawlSpider):
     def garment_next_color_sku(self, response):
         garment = response.meta["garment"]
         color_urls = response.meta["color_urls"]
-        lengths = response.css('ul.swatch.colorpattern li > a')
+        lengths = response.css('ul.swatch.length li > a')
 
         if not lengths:
             garment['skus'].update(self.product_skus(response))
