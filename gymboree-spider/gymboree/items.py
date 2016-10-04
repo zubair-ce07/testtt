@@ -5,6 +5,7 @@ import scrapy
 class GarmentItem(scrapy.Item):
     brand = scrapy.Field()
     category = scrapy.Field()
+    care = scrapy.Field()
     currency = scrapy.Field()
     description = scrapy.Field()
     gender = scrapy.Field()
