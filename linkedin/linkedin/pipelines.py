@@ -1,3 +1,4 @@
+from linkedin.items import LinkedinProfilesItem
 # -*- coding: utf-8 -*-
 
 # Define your item pipelines here
@@ -8,4 +9,6 @@
 
 class LinkedinProfilesPipeline(object):
     def process_item(self, item, spider):
+        if isinstance(item, LinkedinProfilesItem):
+            return LinkedinProfilesItem((key, value) for key, value in item.items() if value)
         return item

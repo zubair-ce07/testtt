@@ -27,4 +27,6 @@ class LinkedinProfilesItem(scrapy.Item):
     languages = scrapy.Field()
     skills = scrapy.Field()
     profile_picture = scrapy.Field()
-
+    certifications = scrapy.Field()
+    volunteering = scrapy.Field()
+    publications = scrapy.Field()
