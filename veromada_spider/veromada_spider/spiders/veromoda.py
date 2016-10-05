@@ -11,17 +11,12 @@ class VeromodaScrapper(CrawlSpider):
     start_urls = ["http://www.veromoda.com/gb/en/"]
 
     rules = [
-        Rule(LinkExtractor(restrict_css='li.category-navigation__item > section > ul > li'),
-             callback='get_item_links')
-        ]
+        Rule(LinkExtractor(restrict_css='li.category-navigation__item > section > ul > li'),),
+        Rule(LinkExtractor(restrict_css='.product-tile__name'),
+             callback='parse_product')
+    ]
 
-    def get_item_links(self, response):
-        links = response.css("a.product-tile__name__link::attr(href)").extract()
-        for item in links:
-            product_url = ''.join(["http://www.veromoda.com", item])
-            yield Request(product_url, callback=self.parse_product)
-
-    def parse_product(self, response):
+    def parse(self, response):
         garment = VeromadaSpiderItem()
         garment['spider_name'] = self.name
         garment['currency'] = 'GBP',
@@ -43,20 +38,20 @@ class VeromodaScrapper(CrawlSpider):
     def next_color_requests(self, color_urls, garment):
         if color_urls:
             link = color_urls.pop()
-            yield scrapy.Request(url=link, callback=self.garment_next_color_sku, method='GET',
+            yield scrapy.Request(url=link, callback=self.parse_next_color_sku, method='GET',
                                  headers={"Accept": "text/html, */*; q=0.01",
-                                           "Accept-Encoding": "gzip, deflate, sdch",
-                                           "X-Requested-With": "XMLHttpRequest"
-                                          },
+                                          "Accept-Encoding": "gzip, deflate, sdch",
+                                          "X-Requested-With": "XMLHttpRequest"
+                                        },
                                  meta={'garment': garment, 'color_urls': color_urls}
-                                 )
+            )
         else:
             yield garment
 
-    def garment_next_color_sku(self, response):
+    def parse_next_color_sku(self, response):
         garment = response.meta["garment"]
         color_urls = response.meta["color_urls"]
-        lengths = response.css('ul.swatch.length li > a')
+        lengths = response.css('ul.swatch.length li > a').extract()
 
         if not lengths:
             garment['skus'].update(self.product_skus(response))
@@ -65,23 +60,21 @@ class VeromodaScrapper(CrawlSpider):
             garment['image_urls'].append(self.garment_image_urls(response))
             selectable_sizes_x = 'ul.swatch.size li[class*=item--selectable] > a::attr(data-href)'
             selectable_sizes_urls = response.css(selectable_sizes_x).extract()
-            selectable_sizes_request_urls = []
-            for item in selectable_sizes_urls:
-                selectable_sizes_request_urls.append(''.join([item, '&Quantity=1&format=ajax']))
+            selectable_sizes_request_urls = [url + '&Quantity=1&format=ajax' for url in selectable_sizes_urls]
             return self.size_request(selectable_sizes_request_urls, garment, color_urls)
 
-    def size_request(self, selectable_sizes_requests, garment, color_urls):
-        if selectable_sizes_requests:
-            link = selectable_sizes_requests.pop()
+    def size_request(self, selectable_sizes_request_urls, garment, color_urls):
+        if selectable_sizes_request_urls:
+            link = selectable_sizes_request_urls.pop()
             return scrapy.Request(link, method='GET',
                                   headers={"Accept": "text/html, */*; q=0.01",
                                            "Accept-Encoding": "gzip, deflate, sdch",
                                            "X-RequestedWith": "XMLHttpRequest"
-                                           },
+                                  },
                                   callback=self.garment_size_detailed_sku,
-                                  meta={'garment': garment, 'selectable_size_requests': selectable_sizes_requests,
+                                  meta={'garment': garment, 'selectable_size_requests': selectable_sizes_request_urls,
                                         'color_urls': color_urls}
-                                  )
+            )
         else:
             return self.next_color_requests(color_urls, garment)
 
@@ -96,55 +89,55 @@ class VeromodaScrapper(CrawlSpider):
         unselectable_lengths = self.clean(response.css(unselectable_lengths_css).extract())
         selectable_lengths = self.clean(response.css(selectable_lengths_css).extract())
         sku_elements = self.get_static_sku_elements(response)
+        lengths = selectable_lengths + unselectable_lengths
 
-        for length in selectable_lengths:
+        for length in lengths:
             if color:
-                sku_details = sku_elements.copy()
-                sku_details['size'] = selected_size.strip()
-                sku_details['out_of_stock'] = False
-                sku_details['color'] = color
-                sku_details['length'] = length
-                sku_key = color + '_' + selected_size.strip() + '_' + length
-                garment['skus'][sku_key] = sku_details
-
-        for length in unselectable_lengths:
-            if color:
-                sku_details = sku_elements.copy()
-                sku_details['size'] = selected_size.strip()
-                sku_details['out_of_stock'] = True
-                sku_details['color'] = color
-                sku_details['length'] = length
-                sku_key = color + '_' + selected_size.strip() + '_' + length
-                garment['skus'][sku_key] = sku_details
+                if length in selectable_lengths:
+                    sku_details = sku_elements.copy()
+                    sku_details['size'] = selected_size.strip()
+                    sku_details['out_of_stock'] = False
+                    sku_details['color'] = color
+                    sku_details['length'] = length
+                    sku_key = color + '_' + selected_size.strip() + '_' + length
+                    garment['skus'][sku_key] = sku_details
+                else:
+                    sku_details = sku_elements.copy()
+                    sku_details['size'] = selected_size.strip()
+                    sku_details['out_of_stock'] = True
+                    sku_details['color'] = color
+                    sku_details['length'] = length
+                    sku_key = color + '_' + selected_size.strip() + '_' + length
+                    garment['skus'][sku_key] = sku_details
 
         return self.size_request(selectable_size_requests, garment, color_urls)
 
     def product_skus(self, response):
         product_skus = {}
         color = response.css('p.color-combination::text').extract_first()
-        unselectable_sizes = response.css(
-            'ul.swatch.size li[class*=unselectable] > a::text').extract()
-        selectable_sizes = response.css(
-            'ul.swatch.size li[class*=item--selectable] > a::text').extract()
+        unselectable_sizes = response.css('ul.swatch.size li[class*=unselectable] > a::text').extract()
+        selectable_sizes = response.css('ul.swatch.size li[class*=item--selectable] > a::text').extract()
         sku_elements = self.get_static_sku_elements(response)
+        sizes = selectable_sizes + unselectable_sizes
 
-        for size in selectable_sizes:
-            if color:
-                sku_details = sku_elements
-                sku_details['size'] = size.strip()
-                sku_details['color'] = color
-                sku_details['out_of_stock'] = False
-                sku_key = color + '_' + size.strip()
-                product_skus[sku_key] = sku_details
-
-        for size in unselectable_sizes:
-            if color:
-                sku_details = sku_elements
-                sku_details['size'] = size.strip()
-                sku_details['color'] = color
-                sku_details['out_of_stock'] = True
-                sku_key = color + '_' + size.strip()
-                product_skus[sku_key] = sku_details
+        if not color:
+            pass
+        else:
+            for size in sizes:
+                if size in selectable_sizes:
+                    sku_details = sku_elements
+                    sku_details['size'] = size.strip()
+                    sku_details['color'] = color
+                    sku_details['out_of_stock'] = False
+                    sku_key = color + '_' + sku_details['size']
+                    product_skus[sku_key] = sku_details
+                else:
+                    sku_details = sku_elements
+                    sku_details['size'] = size.strip()
+                    sku_details['color'] = color
+                    sku_details['out_of_stock'] = True
+                    sku_key = color + '_' + sku_details['size']
+                    product_skus[sku_key] = sku_details
 
         return product_skus
 
@@ -169,20 +162,14 @@ class VeromodaScrapper(CrawlSpider):
         return response.css('div[class=breadcrumb] a::attr(title)').extract()
 
     def clean(self, item_list):
-        return [item.strip() for item in item_list if
-                not item.isspace()]
+        return [item.strip() for item in item_list if not item.isspace()]
 
     def get_color_urls(self, response):
-        colors_x = response.css("ul.swatch.colorpattern li > a::attr(data-href)").extract()
-        color_urls = []
-        for item in colors_x:
-            item += '&Quantity=1&format=ajax'
-            color_urls.append(item)
-        color_urls.append(''.join([response.url, '&Quantity=1&format=ajax']))
-        return color_urls
+        colours_css = response.css("ul.swatch.colorpattern li > a::attr(data-href)").extract()
+        colour_urls = [url + '&Quantity=1&format=ajax' for url in colours_css]
+        colour_urls.append(''.join([response.url, '&Quantity=1&format=ajax']))
+        return colour_urls
 
     def get_static_sku_elements(self, response):
-        sku_details = {}
-        sku_details['price'] = self.garment_price(response)
-        sku_details['currency'] = 'GBP'
-        return sku_details
+        return {'price': self.garment_price(response), 'currency': 'GBP'}
+
