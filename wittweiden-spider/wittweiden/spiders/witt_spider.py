@@ -87,7 +87,6 @@ class WittWeidenSpider(CrawlSpider):
         if sku:
             skus[sku_key] = sku
         skus_requests = response.meta['remaining_requests']
-
         if skus_requests:
             sku_request = skus_requests.pop()
             return self.create_xhr_request(
@@ -164,7 +163,6 @@ class WittWeidenSpider(CrawlSpider):
         url = urlunparse(('http', 'www.witt-weiden.de',
                    urljoin('/ajax/product-detail/', endpoint), '',
                    urlencode(query_params), ''))
-
         return Request(url, callback=callback, meta=meta, headers={
             'X-Requested-With': 'XMLHttpRequest'})
 
