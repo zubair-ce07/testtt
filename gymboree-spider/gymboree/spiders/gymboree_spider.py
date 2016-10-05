@@ -44,9 +44,9 @@ class GymboreeSpider(CrawlSpider):
     def garment_care(self, response):
         return response.css('#pdp-product-details-more>li::text').extract()
 
-    def garment_name(self, garment):
+    def garment_name(self, garment_meta):
         """ Returns the name of the current garment """
-        return garment['name']
+        return garment_meta['name']
 
     def garment_currency(self, response):
         """ Returns the currency being used """
@@ -56,14 +56,15 @@ class GymboreeSpider(CrawlSpider):
         """ Returns the description of the current garment """
         care_filters = ['spot clean', 'machine wash']
         care_instructions = []
+        garment_info = []
         description = response.css("ul[itemprop=description] li::text").extract()
-        for index, description_line in enumerate(description):
-            for care_filter in care_filters:
-                if care_filter in description_line.lower():
-                    care_instructions.append(description_line)
-                    del description[index]
-                    continue
-        return (care_instructions,description)
+        for description_line in description:
+            if any(c_filter in description_line.lower() for c_filter in
+                   care_filters):
+                care_instructions.append(description_line)
+            else:
+                garment_info.append(description_line)
+        return care_instructions, garment_info
 
     def garment_gender(self, response):
         """ Returns the gender of the intended garment user """
@@ -87,9 +88,9 @@ class GymboreeSpider(CrawlSpider):
         garment_info_json = garment_search_result.group(1)
         return json.loads(garment_info_json)['product']
 
-    def garment_image_urls(self, garment_info):
+    def garment_image_urls(self, garment_meta):
         """ Returns the urls of all garment colors """
-        return [color_variant['image'] for color_variant in garment_info['color']]
+        return [color_variant['image'] for color_variant in garment_meta['color']]
 
     def garment_price(self, response):
         """ Returns the price of the current garment """
@@ -103,10 +104,10 @@ class GymboreeSpider(CrawlSpider):
         """ Returns the retailer SKU of the current garment """
         return response.css("span[itemprop=mpn]::text").extract_first()
 
-    def garment_skus(self, garment, currency):
+    def garment_skus(self, garment_meta, currency):
         """ Returns a list of all SKU of the current garment """
         skus = {}
-        for color_variant in garment['color']:
+        for color_variant in garment_meta['color']:
             for size_variant in color_variant['sizes']:
                 sku = {'colour': color_variant['title'],
                        'currency': currency,
