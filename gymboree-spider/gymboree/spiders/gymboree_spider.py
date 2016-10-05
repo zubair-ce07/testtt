@@ -56,15 +56,15 @@ class GymboreeSpider(CrawlSpider):
         """ Returns the description of the current garment """
         care_filters = ['spot clean', 'machine wash']
         care_instructions = []
-        garment_info = []
+        garment_description = []
         description = response.css("ul[itemprop=description] li::text").extract()
         for description_line in description:
-            if any(c_filter in description_line.lower() for c_filter in
-                   care_filters):
+            desc_lower = description_line.lower()
+            if any(c_filter in desc_lower for c_filter in care_filters):
                 care_instructions.append(description_line)
             else:
-                garment_info.append(description_line)
-        return care_instructions, garment_info
+                garment_description.append(description_line)
+        return care_instructions, garment_description
 
     def garment_gender(self, response):
         """ Returns the gender of the intended garment user """
