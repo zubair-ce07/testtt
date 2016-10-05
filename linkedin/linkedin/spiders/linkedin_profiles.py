@@ -108,7 +108,21 @@ class LinkedinProfileSpider(Spider):
         return certifications
 
     def profile_volunteering(self, response):
-        return response.css('#volunteering div ::text').extract()
+        volunteering = []
+        opportunities_selectors = response.css('#volunteering>div')
+        for opportunities_selector in opportunities_selectors:
+            opportunities_details = {}
+            opportunities_details[self.get_text(opportunities_selector.css('div>h4::text'))] = opportunities_selector.css('ul ::text').extract()
+            volunteering.append(opportunities_details)
+        volunteering_selectors = response.css('#volunteering .position')
+        for volunteering_selector in volunteering_selectors:
+            volunteering_details = {}
+            volunteering_details['title'] = self.get_text(volunteering_selector.css('.item-title ::text'))
+            volunteering_details['organisation'] = self.get_text(volunteering_selector.css('.item-subtitle ::text'))
+            volunteering_details['time_span'] = self.get_text(volunteering_selector.css('.date-range ::text'))
+            volunteering.append(dict((key, value) for key, value in volunteering_details.items() if value))
+        return volunteering
+
 
     def profile_publications(self, response):
         publications = []
@@ -122,7 +136,6 @@ class LinkedinProfileSpider(Spider):
             publlication_details['date'] = self.get_text(publication_selector.css('.date-range ::text'))
             publications.append(dict((key, value) for key, value in publlication_details.items() if value))
         return publications
-
 
     def profile_languages(self, response):
         languages = []
@@ -158,3 +171,4 @@ class LinkedinProfileSpider(Spider):
             response.request.meta['retries'] = retries
             response.request.dont_filter = True
             return response.request
+
