@@ -3,6 +3,7 @@ import calendar
 import csv
 import glob
 import os
+from operator import attrgetter
 
 
 class Color:
@@ -12,75 +13,74 @@ class Color:
     END = '\033[0m'
 
 
-def show_highest_values(highest_temperature_value, highest_temperature_day, lowest_temperature_value, lowest_day,
-                        max_humidity_value, humidity_day):
-    yr, mn, dt =highest_temperature_day.split('-')
-    highest_day =  calendar.month_name[int(mn)] + " " + dt
-    print("Highest: %dC on %s" % (highest_temperature_value, highest_day))
-    yr, mn, dt = lowest_day.split('-')
-    lowest_day = calendar.month_name[int(mn)] + " " + dt
-    print("Lowest: %dC on %s" % (lowest_temperature_value, lowest_day))
-    yr, mn, dt = humidity_day.split('-')
-    humidity_day = calendar.month_name[int(mn)] + " " + dt
-    print("Humidity: %d%% on %s" % (max_humidity_value, humidity_day))
+class WeatherManData:
+    def __init__(self, pkt, max_temperature, min_temperature, max_humidity, average_humididty):
+        self.pkt = pkt
+        self.max_temperature = int(max_temperature) if max_temperature else 0
+        self.min_temperature = int(min_temperature) if min_temperature else 0
+        self.max_humidity = int(max_humidity) if max_humidity else 0
+        self.average_humididty = int(average_humididty) if average_humididty else 0
+
+    def weather_date(self):
+        year, month, day = self.pkt.split('-')
+        return calendar.month_name[int(month)] + " " + day
 
 
-def calculate_highest_values(highest_temperatures_list, lowest_temperatures_list, most_humidity_list,
-                             temperature_date_list):
-    highest_temperature_value = max(highest_temperatures_list)
-    highest_day = temperature_date_list[highest_temperatures_list.index(max(highest_temperatures_list))]
-    lowest_temperature_value = min(lowest_temperatures_list)
-    lowest_day = temperature_date_list[lowest_temperatures_list.index(min(lowest_temperatures_list))]
-    max_humidity_value = max(most_humidity_list)
-    humidity_day = temperature_date_list[most_humidity_list.index(max(most_humidity_list))]
-    return \
-        highest_temperature_value, highest_day, lowest_temperature_value, lowest_day, max_humidity_value, humidity_day
+def prepare_function_data(path_to_file):
+    for weather_row in read_and_filter_csv(path_to_file, is_comment, is_whitespace):
+        new_data = WeatherManData(weather_row['PKT'], weather_row['Max TemperatureC'], weather_row["Min TemperatureC"],
+                                  weather_row['Max Humidity'], weather_row[' Mean Humidity'])
+        weather_data.append(new_data)
 
 
-def show_average_values(highest_average, lowest_average, humidity_average):
-    print("Highest Average: %dC" %(highest_average))
-    print("Lowest Average: %dC" %(lowest_average))
-    print("Average Mean Humidity: %d%%" %(humidity_average))
+def calculate_highest_value(weather_data_list):
+    return max(weather_data_list, key=attrgetter('max_temperature')), \
+           min(weather_data_list, key=attrgetter('min_temperature')), \
+           max(weather_data_list, key=attrgetter('max_humidity'))
 
 
-def calculate_average_values(highest_temperatures_list, lowest_temperatures_list_, average_humidity_list):
-    highest_temperature_value = round(sum(highest_temperatures_list) / len(highest_temperatures_list), 2)
-    lowest_temperature_value = round(sum(lowest_temperatures_list_) / len(lowest_temperatures_list_), 2)
-    average_humidity_value = round(sum(average_humidity_list) / len(average_humidity_list), 2)
+def show_highest_values(highest_temperature_obj, lowest_temperature_obj, max_humidity_obj):
+    print("Highest: %dC on %s" % (highest_temperature_obj.max_temperature, highest_temperature_obj.weather_date()))
+    print("Lowest: %dC on %s" % (lowest_temperature_obj.min_temperature, lowest_temperature_obj.weather_date()))
+    print("Humidity: %d%% on %s" % (max_humidity_obj.max_humidity, highest_temperature_obj.weather_date()))
+
+
+def calculate_average_value(weather_data_list):
+    length_of_list = len(weather_data_list)
+    highest_temperature_value = round(sum(obj.max_temperature for obj in weather_data_list)
+                                      / length_of_list, 2)
+    lowest_temperature_value = round(sum(obj.min_temperature for obj in weather_data_list)
+                                     / length_of_list, 2)
+    average_humidity_value = round(sum(obj.average_humididty for obj in weather_data_list)
+                                   / length_of_list, 2)
     return highest_temperature_value, lowest_temperature_value, average_humidity_value
 
 
-def show_bar_charts(highest_temps, lowest_temps, header_line):
+def show_average_values(highest_average, lowest_average, humidity_average):
+    print("Highest Average: %dC" % highest_average)
+    print("Lowest Average: %dC" % lowest_average)
+    print("Average Mean Humidity: %d%%" % humidity_average)
+
+
+def show_bar_chart(weather_data_list, header_line):
     """this function will print bar-charts of given data lists"""
 
     print(header_line)
-    for i in range(len(highest_temps)):
+    for i, data in enumerate(weather_data_list):
         print(
-            Color.PURPLE + format(i + 1, '02d') + ' ' + Color.RED + ('+' * abs(highest_temps[i])) + ' ' + Color.PURPLE
-            + str(highest_temps[i]) + 'C')
+            Color.PURPLE + format(i + 1, '02d') + ' ' + Color.RED + (
+                '+' * abs(data.max_temperature)) + ' ' + Color.PURPLE
+            + str(data.max_temperature) + 'C')
         print(
-            Color.PURPLE + format(i + 1, '02d') + ' ' + Color.BLUE + ('+' * abs(lowest_temps[i])) + ' ' + Color.PURPLE
-            + str(lowest_temps[i]) + 'C')
+            Color.PURPLE + format(i + 1, '02d') + ' ' + Color.BLUE + (
+                '+' * abs(data.min_temperature)) + ' ' + Color.PURPLE
+            + str(data.min_temperature) + 'C')
 
     print(Color.END + header_line)
-    for i in range(len(highest_temps)):
-        print(Color.PURPLE + format(i + 1, '02d') + ' ' + Color.BLUE + (
-            '+' * abs(lowest_temps[i])) + Color.RED + (
-                  '+' * abs(highest_temps[i])) + ' ' + Color.PURPLE + str(lowest_temps[i]) + 'C - ' +
-              str(highest_temps[i]) + 'C')
-
-
-def add_temperatures(lowest, highest, humidity):
-    lowest_temperatures.append(int(lowest) if lowest else 0)
-    highest_temperatures.append(int(highest) if highest else 0)
-    average_humidity.append(int(humidity) if humidity else 0)
-
-
-def add_temperatures_year(lowest, highest, humidity, pkt):
-    lowest_temperatures.append(int(lowest) if lowest else 1000)
-    highest_temperatures.append(int(highest) if highest else 0)
-    max_humidity.append(int(humidity) if humidity else 0)
-    whole_year_dates.append(pkt)
+    for j, data in enumerate(weather_data_list):
+        print(Color.PURPLE + format(j + 1, '02d') + ' ' + Color.BLUE + ('+' * abs(data.min_temperature))
+              + Color.RED + ('+' * abs(data.max_temperature)) + ' ' + Color.PURPLE +
+              str(data.min_temperature) + 'C - ' + str(data.max_temperature) + 'C')
 
 
 def is_comment(line):
@@ -104,21 +104,9 @@ def read_and_filter_csv(csv_path, *filters):
         return [data_row for data_row in reader]
 
 
-def prepare_function_data(path_to_file):
-    for weather_row in read_and_filter_csv(path_to_file, is_comment, is_whitespace):
-        add_temperatures(weather_row["Min TemperatureC"], weather_row['Max TemperatureC'],
-                         weather_row[' Mean Humidity'])
-
-
-def prepare_function_data_year(path_to_file):
-    for weather_row in read_and_filter_csv(path_to_file, is_comment, is_whitespace):
-        add_temperatures_year(weather_row["Min TemperatureC"], weather_row['Max TemperatureC'],
-                              weather_row['Max Humidity'], weather_row['PKT'])
-
-
 def make_file_name(path_to_file, year_argument):
     year, month = year_argument.split('/')
-    for file in glob.glob(path_to_file+"/*" + year + "_" + calendar.month_name[int(month)][:3] + "*"):
+    for file in glob.glob(path_to_file + "/*" + year + "_" + calendar.month_name[int(month)][:3] + "*"):
         return os.path.join(path_to_file, file)
 
 
@@ -129,12 +117,7 @@ def date_for_charts(year_argument):
 
 if __name__ == "__main__":
 
-    lowest_temperatures = []
-    highest_temperatures = []
-    average_humidity = []
-    max_humidity = []
-    whole_year_dates = []
-    highest_values = ''
+    weather_data = []
     parser = argparse.ArgumentParser(description="File Arguments")
     parser.add_argument("-e", nargs=2, action="store",
                         dest="highest_values",
@@ -150,21 +133,16 @@ if __name__ == "__main__":
     if args.highest_values:
         path_argument = args.highest_values[1]
         year_argument = args.highest_values[0]
-        for file in glob.glob(path_argument+"/*" + year_argument + "*"):
+        for file in glob.glob(path_argument + "/*" + year_argument + "*"):
             full_file_path = os.path.join(path_argument, file)
-            prepare_function_data_year(full_file_path)
-        highest_temperature_value, highest_day, lowest_temperature_value, lowest_day, max_humidity_value,\
-            humidity_day = calculate_highest_values(highest_temperatures, lowest_temperatures, max_humidity,
-                                                    whole_year_dates)
-        show_highest_values(highest_temperature_value, highest_day, lowest_temperature_value, lowest_day,
-                                max_humidity_value,humidity_day)
-
+            prepare_function_data(full_file_path)
+        max_temp_obj, min_temp_obj, max_humidity_obj = calculate_highest_value(weather_data)
+        show_highest_values(max_temp_obj, min_temp_obj, max_humidity_obj)
     elif args.average_values:
         prepare_function_data(make_file_name(args.average_values[1], args.average_values[0]))
-        highest_average, lowest_average, humidity_average = calculate_average_values(
-            highest_temperatures, lowest_temperatures, average_humidity)
-        show_average_values(highest_average,lowest_average,humidity_average)
+        highest_average, lowest_average, humidity_average = calculate_average_value(weather_data)
+        show_average_values(highest_average, lowest_average, humidity_average)
     elif args.charts_values:
         prepare_function_data(make_file_name(args.charts_values[1], args.charts_values[0]))
         barcharts_header = date_for_charts(args.charts_values[0])
-        show_bar_charts(highest_temperatures, lowest_temperatures, barcharts_header)
+        show_bar_chart(weather_data, barcharts_header)
