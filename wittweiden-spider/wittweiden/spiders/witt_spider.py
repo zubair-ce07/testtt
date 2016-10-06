@@ -13,8 +13,7 @@ import json
 class WittWeidenSpider(CrawlSpider):
     name = 'witt_weiden_spider'
     allowed_domains = ['witt-weiden.de']
-    # start_urls = ['http://www.witt-weiden.de/']
-    start_urls = ['http://www.witt-weiden.de/herren-shirts']
+    start_urls = ['http://www.witt-weiden.de/']
     witt_base_url = 'http://www.witt-weiden.de/'
     rules = (
         Rule(LinkExtractor(restrict_css=["a.osecom-navbar__category-link",
@@ -59,20 +58,20 @@ class WittWeidenSpider(CrawlSpider):
         garment_item = response.meta['item']
         garment_item['currency'] = 'EUR'
         garment_sizes = self.garment_sizes(response)
-        garment_articles = self.garment_articles(response)
+        color_variants = self.garment_color_variants(response)
         skus_requests = [dict(zip(['articleNumber', 'size'], prod)) for prod
-                         in itertools.product(garment_articles, garment_sizes)]
+                         in itertools.product(color_variants, garment_sizes)]
         if not skus_requests:
-            if not garment_articles:
+            if not color_variants:
                 skus_requests = [{'size': size} for size in garment_sizes]
             if not garment_sizes:
-                skus_requests = [{'articleNumber': article} for article in
-                                 garment_articles]
+                skus_requests = [{'articleNumber': color} for color in
+                                 color_variants]
 
         response.meta['item'] = garment_item
         response.meta['remaining_requests'] = skus_requests
         response.meta['skus'] = {}
-        response.meta['garment_articles'] = garment_articles
+        response.meta['garment_articles'] = color_variants
         response.meta['image_urls'] = []
 
         yield self.parse_garment_sku(response)
@@ -81,11 +80,11 @@ class WittWeidenSpider(CrawlSpider):
         """For a given item url response, populates the available
         garment information and creates succeeding request"""
 
-        article_number = self.get_query_value(response.url, 'articleNumber')
+        color_variant = self.get_query_value(response.url, 'articleNumber')
         article_size = self.get_query_value(response.url, 'size')
         model_number = response.meta['model_number']
         sku_key = model_number
-        sku_key += article_number if article_number else ''
+        sku_key += color_variant if color_variant else ''
         sku_key += article_size if article_size else ''
         garment_item = response.meta['item']
         skus = response.meta['skus']
@@ -100,13 +99,13 @@ class WittWeidenSpider(CrawlSpider):
                 query_params={
                     'modelNumber': model_number,
                     'size': article_size,
-                    'articleNumber': article_number
+                    'articleNumber': color_variant
                 },
                 callback=self.parse_garment_backview_images,
                 meta={'item': garment_item, 'model_number': model_number,
                       'remaining_requests': skus_requests, 'skus': skus,
                       'next_req_size': sku_request.get('size'),
-                      'next_req_article_no': sku_request.get(
+                      'next_req_color': sku_request.get(
                           'articleNumber'),
                       'image_urls': response.meta['image_urls']})
         else:
@@ -133,7 +132,7 @@ class WittWeidenSpider(CrawlSpider):
             query_params={
                 'modelNumber': model_number,
                 'size': response.meta['next_req_size'],
-                'articleNumber': response.meta['next_req_article_no']
+                'articleNumber': response.meta['next_req_color']
             },
             meta={'item': garment_item, 'model_number': model_number,
                   'remaining_requests': skus_requests, 'skus': skus,
@@ -172,7 +171,7 @@ class WittWeidenSpider(CrawlSpider):
         if search_obj:
             return search_obj.group()
 
-    def garment_articles(self, response):
+    def garment_color_variants(self, response):
         garment_color_urls = response.css(
             "#color-control-group ul a::attr(href)").extract()
         return [self.garment_attr_value(color_url, 'articleNumber') for
