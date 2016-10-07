@@ -6,12 +6,12 @@ from scrapy.linkextractors import LinkExtractor
 from wittweiden.items import GarmentItem
 import re
 import json
+import copy
 
 
 class WittWeidenSpider(CrawlSpider):
     name = 'witt_weiden_spider'
     allowed_domains = ['witt-weiden.de']
-    # start_urls = ['http://www.witt-weiden.de/']
     start_urls = ['http://www.witt-weiden.de/herren-shirts']
     witt_base_url = 'http://www.witt-weiden.de/'
     rules = (
@@ -71,13 +71,11 @@ class WittWeidenSpider(CrawlSpider):
         garment_item = response.meta['item']
         garment_item['care'] = self.garment_care(response)
         model_number = response.meta['model_number']
-
         yield self.xhr_request(
             "http://www.witt-weiden.de/ajax/product-detail/buy-box.html",
             callback=self.parse_garment_price_box,
             query_params={'modelNumber': model_number},
             meta={'model_number': model_number, 'item': garment_item})
-
 
     def parse_garment_price_box(self, response):
         """For a given item url response, populates the available
@@ -85,17 +83,15 @@ class WittWeidenSpider(CrawlSpider):
         garment_item = response.meta['item']
         garment_item['currency'] = 'EUR'
         skus_requests = self.sku_requests(response)
-
         response.meta['item'] = garment_item
-        response.meta['remaining_requests'] = skus_requests
+        response.meta['remaining_sku_requests'] = skus_requests
+        response.meta['remaining_img_requests'] = copy.deepcopy(skus_requests)
         response.meta['skus'] = {}
-
         yield self.parse_garment_sku(response)
 
     def parse_garment_sku(self, response):
         """For a given item url response, populates the available
         garment information and creates succeeding request"""
-
         color_variant = self.get_query_value(response.url, 'articleNumber')
         article_size = self.get_query_value(response.url, 'size')
         model_number = response.meta['model_number']
@@ -107,30 +103,18 @@ class WittWeidenSpider(CrawlSpider):
         sku = self.garment_sku(response)
         if sku:
             skus[sku_key] = sku
-        return self.xhr_request(
-            "http://www.witt-weiden.de/ajax/product-detail/inspection-images.html",
-            query_params={
-                'modelNumber': model_number,
-                'size': article_size,
-                'articleNumber': color_variant
-            },
-            callback=self.parse_garment_backview_images,
-            meta={'item': garment_item, 'model_number': model_number,
-                  'remaining_requests': response.meta['remaining_requests'],
-                  'skus': skus})
+        return self.next_sku_request(response,
+                                     meta={'item': garment_item, 'skus': skus,
+                                           'model_number': model_number})
 
-    def parse_garment_backview_images(self, response):
-        """For a given item url response, populates the available
-        garment information and creates succeeding request"""
-        model_number = response.meta['model_number']
-        garment_item = response.meta['item']
-        image_urls = garment_item['image_urls']
-        image_urls = image_urls | set(self.garment_image_urls(response))
-        skus = response.meta['skus']
-        skus_requests = response.meta['remaining_requests']
-        if skus_requests:
-            sku_request = skus_requests.pop()
-            yield self.xhr_request(
+    def next_sku_request(self, response, meta={}):
+        model_number = meta['model_number']
+        remaining_requests = response.meta['remaining_sku_requests']
+        if remaining_requests:
+            sku_request = remaining_requests.pop()
+            meta['remaining_sku_requests'] = remaining_requests
+            meta['remaining_img_requests'] = response.meta['remaining_img_requests']
+            return self.xhr_request(
                 'http://www.witt-weiden.de/ajax/product-detail/buy-box.html',
                 callback=self.parse_garment_sku,
                 query_params={
@@ -138,11 +122,35 @@ class WittWeidenSpider(CrawlSpider):
                     'size': sku_request.get('size'),
                     'articleNumber': sku_request.get('articleNumber')
                 },
-                meta={'item': garment_item, 'model_number': model_number,
-                      'remaining_requests': skus_requests, 'skus': skus})
+                meta=meta)
         else:
-            garment_item['skus'] = skus
-            yield garment_item
+            meta['item']['skus'] = meta['skus']
+            return self.next_img_request(response, meta=meta)
+
+    def next_img_request(self, response, meta={}):
+        model_number = meta['model_number']
+        remaining_requests = response.meta['remaining_img_requests']
+        if remaining_requests:
+            sku_request = remaining_requests.pop()
+            meta['remaining_img_requests'] = remaining_requests
+            return self.xhr_request(
+                "http://www.witt-weiden.de/ajax/product-detail/inspection-images.html",
+                callback=self.parse_garment_inspection_images,
+                query_params={
+                    'modelNumber': model_number,
+                    'size': sku_request.get('size'),
+                    'articleNumber': sku_request.get('articleNumber')},
+                meta=meta)
+        else:
+            return response.meta['item']
+
+    def parse_garment_inspection_images(self, response):
+        """For a given item url response, populates the available
+        garment information and creates succeeding request"""
+        garment_item = response.meta['item']
+        garment_item['image_urls'] |= set(self.garment_image_urls(response))
+        response.meta['item'] = garment_item
+        yield self.next_img_request(response, meta=response.meta)
 
     def sku_requests(self, response):
         garment_sizes = self.garment_sizes(response)
@@ -180,13 +188,15 @@ class WittWeidenSpider(CrawlSpider):
         return [self.garment_attr_value(size_url, '#size') for
                 size_url in garment_color_urls if size_url != '#']
 
-    def xhr_request(self, endpoint, callback=None, meta={},
-                    query_params={}):
+    def xhr_request(self, endpoint, **kwargs):
         """ Returns a new XHR request"""
-        filtered_query_params = {k: v for (k, v) in query_params.items() if v}
+        filtered_query_params = {k: v for (k, v) in kwargs[
+            'query_params'].items()
+                                 if v}
         return FormRequest(url=endpoint,
                            formdata=filtered_query_params,
-                           callback=callback, method='GET', meta=meta,
+                           callback=kwargs['callback'], method='GET',
+                           meta=kwargs['meta'],
                            headers={'X-Requested-With': 'XMLHttpRequest'})
 
     def garment_model_number(self, response):
