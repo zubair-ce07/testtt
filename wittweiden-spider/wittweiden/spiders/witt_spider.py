@@ -48,6 +48,18 @@ class WittWeidenSpider(CrawlSpider):
         garment_item['spider_name'] = self.name
         garment_item['brand'] = 'Witt Weiden'
         yield self.xhr_request(
+            "http://www.witt-weiden.de/ajax/product-detail/main-image.html",
+            query_params={'modelNumber': model_number},
+            callback=self.parse_garment_default_image,
+            meta={'item': garment_item, 'model_number': model_number})
+
+    def parse_garment_default_image(self, response):
+        """For a given item url response, populates the available
+        garment information and creates succeeding request"""
+        model_number = response.meta['model_number']
+        garment_item = response.meta['item']
+        garment_item['image_urls'] = set(self.garment_default_image(response))
+        yield self.xhr_request(
             "http://www.witt-weiden.de/ajax/product-detail/color-images.html",
             query_params={'modelNumber': model_number},
             callback=self.parse_garment_color_images,
@@ -58,7 +70,7 @@ class WittWeidenSpider(CrawlSpider):
         garment information and creates succeeding request"""
         model_number = response.meta['model_number']
         garment_item = response.meta['item']
-        garment_item['image_urls'] = set(self.garment_image_urls(response))
+        garment_item['image_urls'] |= set(self.garment_image_urls(response))
         yield self.xhr_request(
             "http://www.witt-weiden.de/ajax/product-detail/description-table.html",
             query_params={'modelNumber': model_number},
@@ -204,6 +216,10 @@ class WittWeidenSpider(CrawlSpider):
         garment_detail_json = json.loads(response.css(
             'section#product-detail::attr(data-product)').extract_first())
         return garment_detail_json['modelNumber']
+
+    def garment_default_image(self, response):
+        """ Returns the default zoomed image of the current garment """
+        return response.css('#desktopZoom img::attr(src)').extract()
 
     def garment_name(self, response):
         """ Returns the name of the current garment """
