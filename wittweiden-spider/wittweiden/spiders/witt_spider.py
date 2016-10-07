@@ -12,7 +12,7 @@ import copy
 class WittWeidenSpider(CrawlSpider):
     name = 'witt_weiden_spider'
     allowed_domains = ['witt-weiden.de']
-    start_urls = ['http://www.witt-weiden.de/herren-shirts']
+    start_urls = ['http://www.witt-weiden.de']
     witt_base_url = 'http://www.witt-weiden.de/'
     rules = (
         Rule(LinkExtractor(restrict_css=["a.osecom-navbar__category-link",
