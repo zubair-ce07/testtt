@@ -1,4 +1,4 @@
-from urllib.parse import urlparse, urljoin, parse_qs, urlsplit
+from urllib.parse import urlparse, urljoin, parse_qs, urlsplit, urlencode
 import itertools
 from scrapy import FormRequest
 from scrapy.spiders import CrawlSpider, Rule
@@ -231,8 +231,8 @@ class WittWeidenSpider(CrawlSpider):
 
     def garment_image_urls(self, response):
         """ Returns the urls of all garment colors """
-        return [urljoin(self.witt_base_url, img_url) for img_url in
-                response.css("a img::attr(src)").extract()]
+        return [urljoin(self.witt_base_url, img_url).replace('4.jpg', '9.jpg')
+                for img_url in response.css("a img::attr(src)").extract()]
 
     def garment_price(self, response):
         """ Returns the price of the current garment """
