@@ -1,6 +1,6 @@
 from urllib.parse import urlparse, urljoin, parse_qs, urlsplit, urlencode
 import itertools
-from scrapy import FormRequest
+from scrapy import FormRequest, Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from wittweiden.items import GarmentItem
@@ -12,22 +12,28 @@ import copy
 class WittWeidenSpider(CrawlSpider):
     name = 'witt_weiden_spider'
     allowed_domains = ['witt-weiden.de']
-    start_urls = ['http://www.witt-weiden.de/herren-shirts']
+    start_urls = ['http://www.witt-weiden.de']
     witt_base_url = 'http://www.witt-weiden.de/'
     rules = (
         Rule(LinkExtractor(restrict_css=["a.osecom-navbar__category-link",
-                                         "a.next"])),
-        Rule(LinkExtractor(restrict_css="article> div.image> a"),
-             callback='parse_item')
-    )
+                                         "a.next"]),
+             callback="parse_item_grid"),)
+
+    def parse_item_grid(self, response):
+        garment_item = GarmentItem()
+        garment_item['trail'] = [self.witt_base_url]
+        garment_item['trail'].append(response.url)
+        for url in response.css('article> div.image> a::attr(href)').extract():
+            yield Request(url, meta={'item': copy.deepcopy(garment_item)},
+                          callback=self.parse_item)
 
     def parse_item(self, response):
         """For a given item url response, populates the available
         garment information and creates succeeding request"""
-        garment_item = GarmentItem()
+        garment_item = response.meta['item']
         garment_model_number = self.garment_model_number(response)
         garment_item['url'] = response.url
-        garment_item['trail'] = self.garment_url_trail(garment_item['url'])
+        garment_item['trail'].append(response.url)
         garment_item['retailer_sku'] = garment_model_number
         garment_item['gender'] = self.garment_gender(garment_item['url'])
         garment_item['description'] = self.garment_description(response)
@@ -70,7 +76,7 @@ class WittWeidenSpider(CrawlSpider):
         garment information and creates succeeding request"""
         model_number = response.meta['model_number']
         garment_item = response.meta['item']
-        garment_item['image_urls'] |= set(self.garment_image_urls(response))
+        garment_item['image_urls'].update(self.garment_image_urls(response))
         yield self.xhr_request(
             "http://www.witt-weiden.de/ajax/product-detail/description-table.html",
             query_params={'modelNumber': model_number},
@@ -115,17 +121,18 @@ class WittWeidenSpider(CrawlSpider):
         sku = self.garment_sku(response)
         if sku:
             skus[sku_key] = sku
-        return self.next_sku_request(response,
-                                     meta={'item': garment_item, 'skus': skus,
-                                           'model_number': model_number})
+        updated_meta = response.meta
+        updated_meta['item'] = garment_item
+        updated_meta['skus'] = skus
+        updated_meta['model_number'] = model_number
+        return self.next_sku_request(meta=updated_meta)
 
-    def next_sku_request(self, response, meta={}):
+    def next_sku_request(self, meta={}):
         model_number = meta['model_number']
-        remaining_requests = response.meta['remaining_sku_requests']
+        remaining_requests = meta['remaining_sku_requests']
         if remaining_requests:
             sku_request = remaining_requests.pop()
             meta['remaining_sku_requests'] = remaining_requests
-            meta['remaining_img_requests'] = response.meta['remaining_img_requests']
             return self.xhr_request(
                 'http://www.witt-weiden.de/ajax/product-detail/buy-box.html',
                 callback=self.parse_garment_sku,
@@ -137,32 +144,35 @@ class WittWeidenSpider(CrawlSpider):
                 meta=meta)
         else:
             meta['item']['skus'] = meta['skus']
-            return self.next_img_request(response, meta=meta)
+            return self.next_img_request(meta=meta)
 
-    def next_img_request(self, response, meta={}):
+    def next_img_request(self, meta={}):
         model_number = meta['model_number']
-        remaining_requests = response.meta['remaining_img_requests']
+        remaining_requests = meta['remaining_img_requests']
         if remaining_requests:
-            sku_request = remaining_requests.pop()
+            img_requests = remaining_requests.pop()
             meta['remaining_img_requests'] = remaining_requests
             return self.xhr_request(
                 "http://www.witt-weiden.de/ajax/product-detail/inspection-images.html",
                 callback=self.parse_garment_inspection_images,
                 query_params={
                     'modelNumber': model_number,
-                    'size': sku_request.get('size'),
-                    'articleNumber': sku_request.get('articleNumber')},
+                    'size': img_requests.get('size'),
+                    'articleNumber': img_requests.get('articleNumber')},
                 meta=meta)
         else:
-            return response.meta['item']
+            meta['item']['image_urls'] = list(meta['item']['image_urls'])
+            return meta['item']
 
     def parse_garment_inspection_images(self, response):
         """For a given item url response, populates the available
         garment information and creates succeeding request"""
         garment_item = response.meta['item']
-        garment_item['image_urls'] |= set(self.garment_image_urls(response))
+        garment_item['image_urls'].update(self.garment_image_urls(response))
         response.meta['item'] = garment_item
-        yield self.next_img_request(response, meta=response.meta)
+        updated_meta = response.meta
+        updated_meta['item'] = garment_item
+        yield self.next_img_request(meta=response.meta)
 
     def sku_requests(self, response):
         garment_sizes = self.garment_sizes(response)
@@ -183,7 +193,7 @@ class WittWeidenSpider(CrawlSpider):
         return query_value[0] if query_value else None
 
     def garment_attr_value(self, url, attr):
-        search_result = re.search(r'' + attr + '=?([0-9a-zA-Z]*)', url)
+        search_result = re.search(r'%s=?([0-9A-z]*)' % attr, url)
         if search_result:
             return search_result.group(1)
 
@@ -200,12 +210,12 @@ class WittWeidenSpider(CrawlSpider):
         return [self.garment_attr_value(size_url, '#size') for
                 size_url in garment_color_urls if size_url != '#']
 
-    def xhr_request(self, endpoint, **kwargs):
+    def xhr_request(self, url, **kwargs):
         """ Returns a new XHR request"""
         filtered_query_params = {k: v for (k, v) in kwargs[
             'query_params'].items()
                                  if v}
-        return FormRequest(url=endpoint,
+        return FormRequest(url=url,
                            formdata=filtered_query_params,
                            callback=kwargs['callback'], method='GET',
                            meta=kwargs['meta'],
@@ -219,9 +229,8 @@ class WittWeidenSpider(CrawlSpider):
 
     def garment_default_image(self, response):
         """ Returns the default zoomed image of the current garment """
-        return [urljoin(self.witt_base_url, response.css('#desktopZoom '
-                                                         'img::attr('
-                                      'src)').extract_first())]
+        return [response.urljoin(response.css('#desktopZoom ''img::attr(src)').
+                                 extract_first().replace('5.jpg', '9.jpg'))]
 
     def garment_name(self, response):
         """ Returns the name of the current garment """
@@ -249,7 +258,7 @@ class WittWeidenSpider(CrawlSpider):
 
     def garment_image_urls(self, response):
         """ Returns the urls of all garment colors """
-        return [urljoin(self.witt_base_url, img_url).replace('4.jpg', '9.jpg')
+        return [response.urljoin(img_url).replace('4.jpg', '9.jpg')
                 for img_url in response.css("a img::attr(src)").extract()]
 
     def garment_price(self, response):
@@ -272,8 +281,3 @@ class WittWeidenSpider(CrawlSpider):
             return {'colour': garment_color, 'currency': 'EUR',
                     'out_of_stock': garment_out_of_stock, 'size': garment_size,
                     'prices': self.garment_price(response)}
-
-    def garment_url_trail(self, url):
-        """ Returns the navigation trail of the current garment """
-        parsed_url = urlparse(url)
-        return [parsed_url.netloc, url]
