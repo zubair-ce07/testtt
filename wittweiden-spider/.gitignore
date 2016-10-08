@@ -61,4 +61,4 @@ target/
 .scrapy
 
 # Scrapped Data
-witt-weiden-data/
+wittweiden/output
