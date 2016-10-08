@@ -12,7 +12,7 @@ import copy
 class WittWeidenSpider(CrawlSpider):
     name = 'witt_weiden_spider'
     allowed_domains = ['witt-weiden.de']
-    start_urls = ['http://www.witt-weiden.de']
+    start_urls = ['http://www.witt-weiden.de/herren-shirts']
     witt_base_url = 'http://www.witt-weiden.de/'
     rules = (
         Rule(LinkExtractor(restrict_css=["a.osecom-navbar__category-link",
@@ -219,7 +219,9 @@ class WittWeidenSpider(CrawlSpider):
 
     def garment_default_image(self, response):
         """ Returns the default zoomed image of the current garment """
-        return response.css('#desktopZoom img::attr(src)').extract()
+        return [urljoin(self.witt_base_url, response.css('#desktopZoom '
+                                                         'img::attr('
+                                      'src)').extract_first())]
 
     def garment_name(self, response):
         """ Returns the name of the current garment """
