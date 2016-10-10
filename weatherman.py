@@ -17,6 +17,7 @@ class WeatherMan:
         value_to_be_printed = ["Highest : ", "Lowest : ", "Max Humidity : "]
         units = ["C", "C", "%"]
         calculated_value = 0
+        
         for iteration, header_value in enumerate(column_to_be_calculated):
             calculated_date = ""
             daily_date_record = \
