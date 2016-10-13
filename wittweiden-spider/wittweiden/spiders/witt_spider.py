@@ -235,7 +235,8 @@ class WittWeidenSpider(CrawlSpider):
         """ Returns the urls of all garment colors """
         return [response.urljoin(img_url).replace('4.jpg', '9.jpg')
                 for img_url in response.css("#desktopZoom img::attr(src),"
-                                            "a img::attr(src)").extract()]
+                                            "div.row a img::attr("
+                                            "src)").extract()]
 
     def garment_price(self, response):
         """ Returns the price of the current garment """
