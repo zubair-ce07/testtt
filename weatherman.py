@@ -47,20 +47,20 @@ class WeatherMan:
 
         daily_max_temperature_record = \
             [x['Max TemperatureC'] for x in temperature_records]
-        temperature_date_dictionary = \
+        temperature_and_date = \
             dict(zip(daily_date_record, daily_max_temperature_record))
-        temperature_date_dictionary = \
-            WeatherMan().clean_blank_in_dictionary(temperature_date_dictionary)
+        temperature_and_date = \
+            WeatherMan().clean_blank_in_dictionary(temperature_and_date)
         max_temperature_record =\
-            WeatherMan().find_maximum_in_dictionary(temperature_date_dictionary)
+            WeatherMan().find_maximum_in_dictionary(temperature_and_date)
 
         daily_min_temp_record = [x['Min TemperatureC'] for x in temperature_records]
-        min_temperature_date_dictionary = \
+        minimum_temperature_records = \
             dict(zip(daily_date_record, daily_min_temp_record))
-        min_temperature_date_dictionary = \
-            WeatherMan().clean_blank_in_dictionary(min_temperature_date_dictionary)
+        minimum_temperature_records = \
+            WeatherMan().clean_blank_in_dictionary(minimum_temperature_records)
         min_temperature_record = \
-            WeatherMan().find_minimum_in_dictionary(min_temperature_date_dictionary)
+            WeatherMan().find_minimum_in_dictionary(minimum_temperature_records)
 
         humidity_record = [x['Max Humidity'] for x in temperature_records]
         humidity_date_dictionary = \
