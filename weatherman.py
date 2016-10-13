@@ -14,7 +14,8 @@ class WeatherMan:
     @staticmethod
     def clean_blank_in_dictionary(records_dictionary):
         records_dictionary = \
-            dict((k, v) for k, v in records_dictionary.iteritems() if v)
+            dict((k, v)
+                 for k, v in records_dictionary.iteritems() if v)
         return records_dictionary
 
     @staticmethod
@@ -41,7 +42,8 @@ class WeatherMan:
 
     @staticmethod
     def calculate_annual_report(temperature_records):
-        daily_date_record = [x['PKT'] for x in temperature_records]
+        daily_date_record = \
+            [x['PKT'] for x in temperature_records]
 
         daily_max_temperature_record = \
             [x['Max TemperatureC'] for x in temperature_records]
