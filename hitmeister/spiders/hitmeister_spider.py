@@ -1,10 +1,11 @@
 from urllib.parse import urljoin
+
 from scrapy import Request
-from scrapy.selector import HtmlXPathSelector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+
 from hitmeister.items import HitmeisterProduct
-import logging
+
 
 class HitmeisterSpider(CrawlSpider):
     name = "hitmeister_spider"
@@ -14,19 +15,18 @@ class HitmeisterSpider(CrawlSpider):
         'https://www.hitmeister.de/accessoires/',
         'https://www.hitmeister.de/kleidung/',
     ]
-    listings_xpaths =['//div[@data-name="CategoryTree"]//ul/li',
-                      '//div[@data-name="CategoryTree"]//ul/li[@class="level-2 "]',
-                      ]
+    listings_xpaths = ['//div[@data-name="CategoryTree"]//ul/li',
+                       '//div[@data-name="CategoryTree"]//ul/li[@class="level-2 "]',
+                       ]
     rules = (
         Rule(LinkExtractor(restrict_xpaths=listings_xpaths), follow=True, callback='parse_hitmeister_page'),
         Rule(LinkExtractor(restrict_xpaths=['//ul[@class="pagination list -inline"]/li[last()]']),
-                 callback='parse_hitmeister_page'),
+             callback='parse_hitmeister_page'),
         Rule(LinkExtractor(restrict_xpaths=['//div[@class ="col-md-9"]//a[contains(@href, "/product")]']),
              callback='parse_hitmeister_products')
     )
 
     def parse_hitmeister_page(self, response):
-
         url = self.next_page(response)
         if url:
             page_url = urljoin('https://www.hitmeister.de', url[0])
@@ -34,8 +34,6 @@ class HitmeisterSpider(CrawlSpider):
 
     def next_page(self, response):
         return response.xpath('//ul[@class="pagination list -inline"]/li[last()]').extract()
-
-
 
     def parse_hitmeister_products(self, response):
         hitmeister_product = HitmeisterProduct()
