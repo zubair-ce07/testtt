@@ -236,8 +236,8 @@ class WeatherMan:
             for line in file_reader:
                 temperature_records.append(line)
 
-        for i in temperature_records:
-            i["PKT"] = WeatherMan.parse_date(str(i["PKT"]))
+        for record in temperature_records:
+            record["PKT"] = WeatherMan.parse_date(str(record["PKT"]))
         return temperature_records
 
     @staticmethod
