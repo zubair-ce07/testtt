@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urljoin
 
 from scrapy import Request
@@ -9,7 +10,7 @@ from hitmeister.items import HitmeisterProduct
 
 class HitmeisterSpider(CrawlSpider):
     name = "hitmeister_spider"
-    allowed_domains = ['hitmeister.de']
+    allowed_domains = ['hitmeister.de', ]
     start_urls = [
         'https://www.hitmeister.de/schuhe/',
         'https://www.hitmeister.de/accessoires/',
@@ -20,20 +21,34 @@ class HitmeisterSpider(CrawlSpider):
                        ]
     rules = (
         Rule(LinkExtractor(restrict_xpaths=listings_xpaths), follow=True, callback='parse_hitmeister_page'),
-        Rule(LinkExtractor(restrict_xpaths=['//ul[@class="pagination list -inline"]/li[last()]']),
+        Rule(LinkExtractor(allow=[r'/category/\d+/p\d+'], restrict_xpaths=['//form[@id="refinement_top_form"]', ]),
              callback='parse_hitmeister_page'),
         Rule(LinkExtractor(restrict_xpaths=['//div[@class ="col-md-9"]//a[contains(@href, "/product")]']),
              callback='parse_hitmeister_products')
     )
 
     def parse_hitmeister_page(self, response):
+        logging.warning(response.url)
         url = self.next_page(response)
         if url:
-            page_url = urljoin('https://www.hitmeister.de', url[0])
+            page_url = urljoin('https://www.hitmeister.de', url)
             yield Request(url=page_url)
 
     def next_page(self, response):
-        return response.xpath('//ul[@class="pagination list -inline"]/li[last()]').extract()
+        url = response.xpath('//link[@rel="canonical"]/@href').extract_first()
+        if '/category' in url:
+            # find page number increment and return with new page
+            url_part = url.split('/')
+            page_number = url_part[-2][1:]
+            page_number = int(page_number)
+            page_number += 1
+            url_part[-2] = 'p' + str(page_number)
+            return '/category/' + url_part[-3] + '/' + url_part[-2]
+        else:
+            # find category url and go to second page
+            url = response.xpath('//form[@id="refinement_top_form"]/@action').extract_first()
+            url = urljoin(url, 'p2/')
+            return url
 
     def parse_hitmeister_products(self, response):
         hitmeister_product = HitmeisterProduct()
