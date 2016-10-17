@@ -14,7 +14,7 @@ class Mixin(object):
     ]
 
 
-class GymboreeParseSpider(BaseParseSpider, Mixin):
+class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     UNWANTED_TOKENS = {'toy', 'toys'}
@@ -127,7 +127,7 @@ class GymboreeParseSpider(BaseParseSpider, Mixin):
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
-    parse_spider = GymboreeParseSpider()
+    parse_spider = SchuhcenterParseSpider()
     listings_c = ['div.flyoutholder article.main_categories ul a',
                   'div.pagenav.pull-right a.next']
     products_c = 'section.productlist div.over-links>a'
