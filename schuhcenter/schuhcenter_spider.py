@@ -72,14 +72,14 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         yield garment
 
     def product_id(self, response):
-        return response.css('div.prod_block div.visible-lg>p::text').extract_first(
+        return response.css('div.visible-lg>p::text').extract_first(
         ).split('.:')[1]
 
     def product_title(self, response):
         return response.css('h1[itemprop=name]::text').extract_first()
 
     def product_description(self, response):
-        return response.css('div.prod_block div ul label::text').extract()
+        return response.css('div.visible-lg li>label::text').extract()
 
     def product_category(self, response):
         return response.css('[itemprop=title]::text').extract()
@@ -120,15 +120,15 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     def image_urls(self, response):
         # Replace 87x87 image size with 380x340 for a full size image
         return [img.replace('87_87', '380_340') for img in response.css(
-            'div.detailsInfo div.otherPictures img::attr(src)').extract()]
+            'div.otherPictures img::attr(src)').extract()]
 
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = SchuhcenterParseSpider()
     listings_c = ['div.flyoutholder article.main_categories ul a',
-                  'div.pagenav.pull-right a.next']
-    products_c = 'section.productlist div.over-links>a'
+                  'a.next']
+    products_c = 'div.over-links>a'
     rules = (
         Rule(LinkExtractor(restrict_css=listings_c), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_c), callback='parse_item'),
