@@ -7,7 +7,8 @@ from scrapy import Request
 
 class Mixin(object):
     market = 'DE'
-    retailer = 'schuhcenter'
+    retailer = 'schuhcenter-de'
+    lang = 'de'
     allowed_domains = ['www.schuhcenter.de']
     start_urls = [
         'http://www.schuhcenter.de/'
@@ -16,54 +17,56 @@ class Mixin(object):
 
 class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-
     price_x = "//span[@class='price']//text()|//span[" \
               "@class='oldPrice']//text()"
-
-    GENDER_MAP = [('herren', 'boys'), ('damen', 'girls'), ]
+    GENDER_MAP = [('herren', 'boys'), ('damen', 'girls'), ('mädchen', 'girls')]
 
     def parse(self, response):
-        if '/error_general' in response.url:
+        if response.status != 200:
             return
-        product_components = self.product_title(response)
-        product_brand, product_name = product_components[0], product_components[1]
-        if not product_name:
+        product_title = self.product_title(response)
+        if not product_title:
             self.logger.info('Not a product page %s' % response.url)
             return
+        title_components = product_title.split('-')
+        product_brand, product_name = title_components[0], title_components[1]
         categories = self.product_category(response)
+        description = self.product_description(response)
         tokens = tokenize(categories)
+        tokens |= tokenize(description)
         common = {
-            'brand': self.retailer,
             'category': self.product_category(response),
             'care': '',
-            'description': self.product_description(response),
+            'description': description,
             'gender': self.product_gender(tokens),
             'name': product_name,
             'brand': product_brand,
             'market': self.market
         }
-        currency_path = 'div.prod_block meta[itemprop=priceCurrency]::attr(' \
-                        'content)'
-        response.meta['currency'] = response.css(currency_path).extract_first()
+        currency_css = '[itemprop=priceCurrency]::attr(content)'
+        response.meta['currency'] = response.css(currency_css).extract_first()
         response.meta['common'] = common
-        response.meta['remaining_clr_req'] = response.css('div.col_sel li>'
+        response.meta['requests_queue'] = response.css('div.col_sel li>'
                                                 'a::attr(href)').extract()
         return self.parse_color_variant(response)
 
     def parse_color_variant(self, response):
         product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
-        self.boilerplate_minimal(garment, response)
-        garment.update(response.meta['common'])
-        garment['image_urls'] = self.image_urls(response)
-        skus = self.skus(response, product_id)
-        if skus:
-            garment['skus'] = skus
-        else:
-            garment['out_of_stock'] = True
-        if response.meta['remaining_clr_req']:
+        if garment:
+            # Update this info only if the current garment has not been
+            # parsed already.
+            self.boilerplate_minimal(garment, response)
+            garment.update(response.meta['common'])
+            garment['image_urls'] = self.image_urls(response)
+            skus = self.skus(response, product_id)
+            if skus:
+                garment['skus'] = skus
+            else:
+                garment['out_of_stock'] = True
+        if response.meta['requests_queue']:
             # Request for the remaining colors of the product
-            next_req = response.meta['remaining_clr_req'].pop()
+            next_req = response.meta['requests_queue'].pop()
             yield Request(next_req, meta=response.meta,
                           callback=self.parse_color_variant)
         yield garment
@@ -73,15 +76,13 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         ).split('.:')[1]
 
     def product_title(self, response):
-        return response.css('h1.visible-lg[itemprop]::text')\
-            .extract_first().split('-')
+        return response.css('h1[itemprop=name]::text').extract_first()
 
     def product_description(self, response):
-        return response.css('div.prod_block div.visible-lg ul '
-                       'label::text').extract()
+        return response.css('div.prod_block div ul label::text').extract()
 
     def product_category(self, response):
-        return response.css('.detail_bread2>li>a>font::text').extract()
+        return response.css('[itemprop=title]::text').extract()
 
     def product_gender(self, tokens):
         for token, gender in self.GENDER_MAP:
@@ -90,13 +91,16 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return 'unisex-kids'
 
     def product_color(self, product_title):
-        title_components = product_title.split('-')
+        # Color is last string in the product title. either it succeeds a -
+        # or a space char
+        tokens = product_title.split(' ')
+        title_components = tokens[len(tokens)-1].split('-')
         return title_components[len(title_components)-1]
 
     def skus(self, response, product_id):
         skus = {}
         common = {
-            'colour': self.product_color(response.meta['common']['name']),
+            'colour': self.product_color(self.product_title(response)),
             'currency': response.meta['currency'],
         }
         for size_var in response.css('div.size_info li>a'):
