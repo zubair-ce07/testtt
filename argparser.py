@@ -65,7 +65,7 @@ class ArgParser(argparse.ArgumentParser):
            # Remove duplicate months overhead
            months = set(args.c)
            for month in args.c:
-               self.avgs.append(self.parse_month(month))
+               self.charts.append(self.parse_month(month))
 
     def parse_month(self, month):
         date = month.split("/")
