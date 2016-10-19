@@ -13,41 +13,22 @@ class Mixin(object):
     start_urls = [
         'http://www.schuhcenter.de/'
     ]
+    GENDER_MAP = [('herren', 'boys'), ('damen', 'girls'), ('mädchen', 'girls')]
 
 
 class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     price_x = "//span[contains(@itemprop, 'price')]//text()|//span[" \
               "@class='oldPrice']//text()"
-    GENDER_MAP = [('herren', 'boys'), ('damen', 'girls'), ('mädchen', 'girls')]
 
     def parse(self, response):
-        if response.status != 200:
-            return
-        product_title = self.product_title(response)
-        if not product_title:
-            self.logger.info('Not a product page %s' % response.url)
-            return
         product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
         if not garment:
-            # Ignore the product if it has already been parsed before.
             return
-        categories = self.product_category(response)
-        description = self.product_description(response)
-        tokens = tokenize(categories)
-        tokens |= tokenize(description)
-        self.boilerplate_minimal(garment, response)
-        garment.update({
-            'category': self.product_category(response),
-            'care': '',
-            'description': description,
-            'gender': self.product_gender(tokens),
-            'name': self.product_name(response),
-            'brand': self.brand(product_title),
-            'market': self.market,
-            'image_urls': self.image_urls(response)
-        })
+        self.boilerplate_normal(garment, response, response)
+        garment['gender'] = self.product_gender(garment['category'], garment['description'])
+        garment['image_urls'] = self.image_urls(response)
         response.meta['currency'] = self.currency(response)
         skus = self.skus(response, product_id)
         if skus:
@@ -56,9 +37,11 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
             garment['out_of_stock'] = True
         return [garment] + self.color_requests(response)
 
-    def brand(self, product_title):
-        # Product name will be the written before first - character occurance
-        # in the product name
+    def product_care(self, response):
+        return ''
+
+    def product_brand(self, response):
+        product_title = self.product_title(response)
         return product_title.split('-')[0]
 
     def currency(self, response):
@@ -82,15 +65,15 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     def product_category(self, response):
         return response.css('[itemprop=title]::text').extract()
 
-    def product_gender(self, tokens):
+    def product_gender(self, categories, description):
+        tokens = tokenize(categories)
+        tokens |= tokenize(description)
         for token, gender in self.GENDER_MAP:
             if token in tokens:
                 return gender
         return 'unisex-kids'
 
     def product_color(self, product_title):
-        # Color is last string in the product title. either it succeeds a -
-        # or a space char
         tokens = product_title.split(' ')
         title_components = tokens[len(tokens)-1].split('-')
         return title_components[len(title_components)-1]
@@ -110,18 +93,16 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
             if previous_price:
                 sku['previous_prices'] = previous_price
             if size_var.css('.no_stock'):
-                # If no_stock class has been applied on the size then it
-                # means that the give size is not available
                 sku['out_of_stock'] = True
         return skus
 
     def image_urls(self, response):
-        # Replace 87x87 image size with 380x340 for a full size image
         return [img.replace('87_87', '380_340') for img in response.css(
             'div.otherPictures img::attr(src)').extract()]
 
     def product_name(self, response):
-        return response.css('title::text').extract_first()
+        prod_title = self.product_title(response).split('-')
+        return ''.join(prod_title[1:len(prod_title)-1])
 
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
