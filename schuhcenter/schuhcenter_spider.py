@@ -17,7 +17,7 @@ class Mixin(object):
 
 class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    price_x = "//span[@class='price']//text()|//span[" \
+    price_x = "//span[contains(@itemprop, 'price')]//text()|//span[" \
               "@class='oldPrice']//text()"
     GENDER_MAP = [('herren', 'boys'), ('damen', 'girls'), ('mädchen', 'girls')]
 
@@ -28,48 +28,46 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         if not product_title:
             self.logger.info('Not a product page %s' % response.url)
             return
-        title_components = product_title.split('-')
-        product_brand, product_name = title_components[0], title_components[1]
+        product_id = self.product_id(response)
+        garment = self.new_unique_garment(product_id)
+        if not garment:
+            # Ignore the product if it has already been parsed before.
+            return
         categories = self.product_category(response)
         description = self.product_description(response)
         tokens = tokenize(categories)
         tokens |= tokenize(description)
-        common = {
+        self.boilerplate_minimal(garment, response)
+        garment.update({
             'category': self.product_category(response),
             'care': '',
             'description': description,
             'gender': self.product_gender(tokens),
-            'name': product_name,
-            'brand': product_brand,
-            'market': self.market
-        }
-        currency_css = '[itemprop=priceCurrency]::attr(content)'
-        response.meta['currency'] = response.css(currency_css).extract_first()
-        response.meta['common'] = common
-        response.meta['requests_queue'] = response.css('div.col_sel li>'
-                                                'a::attr(href)').extract()
-        return self.parse_color_variant(response)
+            'name': self.product_name(response),
+            'brand': self.brand(product_title),
+            'market': self.market,
+            'image_urls': self.image_urls(response)
+        })
+        response.meta['currency'] = self.currency(response)
+        skus = self.skus(response, product_id)
+        if skus:
+            garment['skus'] = skus
+        else:
+            garment['out_of_stock'] = True
+        return [garment] + self.color_requests(response)
 
-    def parse_color_variant(self, response):
-        product_id = self.product_id(response)
-        garment = self.new_unique_garment(product_id)
-        if garment:
-            # Update this info only if the current garment has not been
-            # parsed already.
-            self.boilerplate_minimal(garment, response)
-            garment.update(response.meta['common'])
-            garment['image_urls'] = self.image_urls(response)
-            skus = self.skus(response, product_id)
-            if skus:
-                garment['skus'] = skus
-            else:
-                garment['out_of_stock'] = True
-        if response.meta['requests_queue']:
-            # Request for the remaining colors of the product
-            next_req = response.meta['requests_queue'].pop()
-            yield Request(next_req, meta=response.meta,
-                          callback=self.parse_color_variant)
-        yield garment
+    def brand(self, product_title):
+        # Product name will be the written before first - character occurance
+        # in the product name
+        return product_title.split('-')[0]
+
+    def currency(self, response):
+        currency_css = '[itemprop=priceCurrency]::attr(content)'
+        return response.css(currency_css).extract_first()
+
+    def color_requests(self, response):
+        request_urls = response.css('div.col_sel li>a::attr(href)').extract()
+        return [Request(url, callback=self.parse) for url in request_urls]
 
     def product_id(self, response):
         return response.css('div.visible-lg>p::text').extract_first(
@@ -121,6 +119,9 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         # Replace 87x87 image size with 380x340 for a full size image
         return [img.replace('87_87', '380_340') for img in response.css(
             'div.otherPictures img::attr(src)').extract()]
+
+    def product_name(self, response):
+        return response.css('title::text').extract_first()
 
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
