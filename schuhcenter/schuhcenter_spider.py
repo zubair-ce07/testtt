@@ -26,19 +26,20 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         garment = self.new_unique_garment(product_id)
         if not garment:
             return
+
         self.boilerplate_normal(garment, response, response)
-        garment['gender'] = self.product_gender(garment['category'], garment['description'])
+        garment['gender'] = self.product_gender(garment)
         garment['image_urls'] = self.image_urls(response)
         response.meta['currency'] = self.currency(response)
-        skus = self.skus(response, product_id)
-        if skus:
-            garment['skus'] = skus
-        else:
+        garment['skus'] = self.skus(response)
+
+        if not garment['skus']:
             garment['out_of_stock'] = True
+
         return [garment] + self.color_requests(response)
 
     def product_care(self, response):
-        return ''
+        return []
 
     def product_brand(self, response):
         product_title = self.product_title(response)
@@ -53,8 +54,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return [Request(url, callback=self.parse) for url in request_urls]
 
     def product_id(self, response):
-        return response.css('div.visible-lg>p::text').extract_first(
-        ).split('.:')[1]
+        return response.css('div.visible-lg>p::text').extract_first().split('.:')[1]
 
     def product_title(self, response):
         return response.css('h1[itemprop=name]::text').extract_first()
@@ -65,35 +65,36 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     def product_category(self, response):
         return response.css('[itemprop=title]::text').extract()
 
-    def product_gender(self, categories, description):
-        tokens = tokenize(categories)
-        tokens |= tokenize(description)
+    def product_gender(self, garment):
+        tokens = tokenize(garment['category'] + garment['description'])
         for token, gender in self.GENDER_MAP:
             if token in tokens:
                 return gender
         return 'unisex-kids'
 
-    def product_color(self, product_title):
-        tokens = product_title.split(' ')
-        title_components = tokens[len(tokens)-1].split('-')
-        return title_components[len(title_components)-1]
+    def product_color(self, response):
+        # product color is present after right most '-' character
+        prod_title = self.product_title(response).split('-')
+        return ''.join(prod_title[-1])
 
-    def skus(self, response, product_id):
+    def skus(self, response):
         skus = {}
         common = {
-            'colour': self.product_color(self.product_title(response)),
+            'colour': self.product_color(response),
             'currency': response.meta['currency'],
         }
         for size_var in response.css('div.size_info li>a'):
             size_id = size_var.css('::attr(data-selection-id)').extract_first()
-            skus[str(product_id+size_id)] = sku = common.copy()
+            skus[common['colour']+'_'+size_id] = sku = common.copy()
             sku['size'] = size_var.css('span::text').extract_first().strip()
             previous_price, price, currency = self.product_pricing(response)
             sku['price'] = price
+
             if previous_price:
                 sku['previous_prices'] = previous_price
             if size_var.css('.no_stock'):
                 sku['out_of_stock'] = True
+
         return skus
 
     def image_urls(self, response):
@@ -101,16 +102,18 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
             'div.otherPictures img::attr(src)').extract()]
 
     def product_name(self, response):
+        # product name is present between left-most and right-most '-' of
+        # the product title
         prod_title = self.product_title(response).split('-')
-        return ''.join(prod_title[1:len(prod_title)-1])
+        return ''.join(prod_title[1:-1])
 
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = SchuhcenterParseSpider()
-    listings_c = ['div.flyoutholder article.main_categories ul a',
+    listings_c = ['.flyoutholder .main_categories ul',
                   'a.next']
-    products_c = 'div.over-links>a'
+    products_c = '.over-links'
     rules = (
         Rule(LinkExtractor(restrict_css=listings_c), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_c), callback='parse_item'),
