@@ -1,12 +1,7 @@
-import legend as leg
 from colors import Colors as col
+import constants as const
 
 from os import listdir
-
-
-# This is an ordered list please do not change order of elements
-MONTHS=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', \
-        'Nov', 'Dec']
 
 
 class ReportGenerator:
@@ -36,17 +31,17 @@ class ReportGenerator:
                 for line in content[1:]:
                     data_points = line.split(',')
 
-                    data = data_points[leg.HI_TEMP]
+                    data = data_points[const.HI_TEMP]
                     if data != "" and int(data) > hi:
                         hi = int(data)
                         hi_day = self.get_day(data_points[0])
 
-                    data = data_points[leg.LO_TEMP]
+                    data = data_points[const.LO_TEMP]
                     if data != "" and (lo == -274 or int(lo) < lo):
                         lo = int(data)
                         lo_day = self.get_day(data_points[0])
 
-                    data = data_points[leg.HUMID]
+                    data = data_points[const.HUMID]
                     if data != "" and (humidity < 0 or int(data) > humidity):
                         humidity = int(data)
                         humid_day = self.get_day(data_points[0])
@@ -58,7 +53,7 @@ class ReportGenerator:
 
     def get_day(self, date):
         date = date.split("-")
-        month = MONTHS[int(date[1]) - 1]
+        month = const.MONTHS[int(date[1]) - 1]
         return month + " " + date[2]
 
     def get_monthly_avgs(self, month):
@@ -75,9 +70,9 @@ class ReportGenerator:
 
             # Initialize datapoints
             data_points = content[1].split(',')
-            avg_hi_temp = data_points[leg.HI_TEMP]
-            avg_lo_temp = data_points[leg.LO_TEMP]
-            avg_humidity = data_points[leg.HUMID]
+            avg_hi_temp = data_points[const.HI_TEMP]
+            avg_lo_temp = data_points[const.LO_TEMP]
+            avg_humidity = data_points[const.HUMID]
             hi_count = 1
             lo_count = 1
             humid_count = 1
@@ -87,7 +82,7 @@ class ReportGenerator:
 
                 # Update moving average for Hi
                 # temperate data points
-                data = data_points[leg.HI_TEMP]
+                data = data_points[const.HI_TEMP]
                 if data != "":
                     data = int(data)
                     hi_count = hi_count + 1
@@ -96,7 +91,7 @@ class ReportGenerator:
 
                 # Updat moving average for Lo
                 # temperature data points
-                data = data_points[leg.LO_TEMP]
+                data = data_points[const.LO_TEMP]
                 if data != "":
                     data = int(data)
                     lo_count = lo_count + 1
@@ -105,7 +100,7 @@ class ReportGenerator:
 
                 # Updat moving average for
                 # Humidity data points
-                data = data_points[leg.HUMID]
+                data = data_points[const.HUMID]
                 if data != "":
                     data = int(data)
                     humid_count = humid_count + 1
@@ -130,10 +125,10 @@ class ReportGenerator:
             
             for line in content[1:]:
                 data_points = line.split(',')
-                date = data_points[leg.DATE]
+                date = data_points[const.DATE]
                 day = date.split('-')[2]
-                hi_temp = data_points[leg.HI_TEMP]
-                lo_temp = data_points[leg.LO_TEMP]
+                hi_temp = data_points[const.HI_TEMP]
+                lo_temp = data_points[const.LO_TEMP]
 
                 hi_bar = col.RED + ""
                 lo_bar = col.BLUE + ""

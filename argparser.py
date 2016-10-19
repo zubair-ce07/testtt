@@ -1,10 +1,8 @@
+import constants as const
+import common as wc
+
 import argparse
 import sys
-
-
-# This is an ordered list please do not change order of elements
-MONTHS=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', \
-        'Nov', 'Dec']
 
 
 class ArgParser(argparse.ArgumentParser):
@@ -38,63 +36,34 @@ class ArgParser(argparse.ArgumentParser):
     def process_args(self):
        args = self.parse_args()
 
-       if len(sys.argv) == 2 and args.dir_path:
-           self.print_help()
-           sys.exit(1)
-       elif len(sys.argv) < 2:
+       if len(sys.argv) < 2 or (len(sys.argv) == 2 and args.dir_path):
            self.print_help()
            sys.exit(1)
 
        if args.dir_path:
-           self.path = args.dir_path.strip("/\\")
+           # TODO(shahbaz): Windows use forward
+           # slash for for path definitions which 
+           # is not supported here
+           self.path = args.dir_path.strip("/")
 
        if args.e:
-           # Remove duplicate years overhead
+           # Remove duplicate input years
+           # to avoid overhead
            years = set(args.e)
            for year in years:
-               self.validate_year(year)
+               wc.validate_year(year)
                self.exts.append(year)
 
        if args.a:
-           # Remove duplicate months overhead
+           # Remove duplicate input months
+           # to avoid overhead
            months = set(args.a)
            for month in months:
-               self.avgs.append(self.parse_month(month))
+               self.avgs.append(wc.parse_month(month))
 
        if args.c:
-           # Remove duplicate months overhead
+           # Remove duplicate input months
+           # to avoid overhead
            months = set(args.c)
            for month in args.c:
-               self.charts.append(self.parse_month(month))
-
-    def parse_month(self, month):
-        date = month.split("/")
-        if len(date) != 2:
-            raise Exception("(%s) Invalid month format. Please follow: YYYY/MM" % month)
-
-        self.validate_year(date[0])
-        month  = self.validate_month(date[1])
-        return date[0] + '_' + MONTHS[month-1]
-        
-
-    def validate_year(self, year):
-        try:
-            year = int(year)
-        except:
-            raise
-
-        if year < 0:
-            raise Exception("Year cannot be negative value")
-
-        return year
-
-    def validate_month(self, month):
-        try:
-            month = int(month)
-        except:
-            raise
-
-        if month < 1 or month > 12:
-            raise Exception("(%d) Month out of valid range: [1, 12]" % month)
-
-        return month
+               self.charts.append(wc.parse_month(month))
