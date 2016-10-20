@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
-from skuscraper.spiders.base import BaseParseSpider, BaseCrawlSpider, tokenize
+from skuscraper.spiders.base import BaseParseSpider, BaseCrawlSpider, tokenize, clean
 from scrapy import Request
 
 
@@ -38,29 +38,31 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return [garment] + self.color_requests(response)
 
     def product_care(self, response):
-        return []
+        return [x for x in self.raw_description(response) if self.care_criteria_simplified(x)]
+
+    def product_description(self, response):
+        return [x for x in self.raw_description(response) if not self.care_criteria_simplified(x)]
 
     def product_brand(self, response):
-        product_title = self.product_title(response)
-        return product_title.split('-')[0]
+        raw_name = self.raw_name(response)
+        return raw_name.split('-')[0]
 
     def currency(self, response):
-        currency_css = '[itemprop=priceCurrency]::attr(content)'
-        return response.css(currency_css).extract_first()
+        css = '[itemprop=priceCurrency]::attr(content)'
+        return response.css(css).extract_first()
 
     def color_requests(self, response):
         request_urls = response.css('.col_sel a::attr(href)').extract()
         return [Request(url, callback=self.parse) for url in request_urls]
 
     def product_id(self, response):
-        return response.css('.visible-lg>p'
-                            '::text').extract_first().split('.:')[1]
+        return response.css('.visible-lg > p ::text').extract_first().split('.:')[1]
 
-    def product_title(self, response):
+    def raw_name(self, response):
         return response.css('h1[itemprop=name]::text').extract_first()
 
-    def product_description(self, response):
-        return response.css('div.visible-lg li>label::text').extract()
+    def raw_description(self, response):
+        return response.css('.visible-lg li > label::text').extract()
 
     def product_category(self, response):
         return response.css('[itemprop=title]::text').extract()
@@ -73,9 +75,8 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return 'unisex-kids'
 
     def product_color(self, response):
-        # product color is present after right most '-' character
-        title = self.product_title(response).split('-')
-        return ''.join(title[-1])
+        raw_name = self.raw_name(response).split('-')
+        return raw_name[-1]
 
     def skus(self, response):
         skus = {}
@@ -83,12 +84,10 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
             'colour': self.product_color(response),
             'currency': self.currency(response),
         }
-        for size_var in response.css('div.size_info li>a'):
+        for size_var in response.css('.size_info li > a'):
             sku = common.copy()
-            previous_price, price, currency = self.product_pricing(response)
-            sku['price'] = price
-            sku['size'] = size_var.css('span::text').extract_first().strip()
-
+            previous_price, sku['price'], _ = self.product_pricing(response)
+            sku['size'] = clean(size_var.css('span::text'))[0]
             if previous_price:
                 sku['previous_prices'] = [previous_price]
             if size_var.css('.no_stock'):
@@ -101,23 +100,19 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, response):
         css = '.otherPictures img::attr(src)'
-        return [i.replace('87_87', '380_340') for i in response.css(
-            css).extract()]
+        return [i.replace('87_87', '380_340') for i in response.css(css).extract()]
 
     def product_name(self, response):
-        # product name is present between left-most and right-most '-' of
-        # the product title
-        prod_title = self.product_title(response).split('-')
-        return ''.join(prod_title[1:-1])
+        raw_name = self.raw_name(response).split('-')
+        return ''.join(raw_name[1:-1])
 
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = SchuhcenterParseSpider()
-    listings_c = ['.flyoutholder .main_categories ul',
-                  'a.next']
-    products_c = '.over-links'
+    listings_css = ['.flyoutholder .main_categories ul', '.next']
+    products_css = '.over-links'
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_c), callback='parse'),
-        Rule(LinkExtractor(restrict_css=products_c), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
