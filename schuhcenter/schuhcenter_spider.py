@@ -25,6 +25,10 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     price_x = "//span[contains(@itemprop, 'price')]//text()|//span[" \
               "@class='oldPrice']//text()"
 
+    care_materials = [
+        'obermaterial'
+    ]
+
     def parse(self, response):
         product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
@@ -43,7 +47,8 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return [garment] + self.color_requests(response)
 
     def raw_description(self, response):
-        return response.css('.visible-lg li > label::text').extract()
+        return response.css('.visible-lg li > label::text,'
+                            '[itemprop="description"] li ::text').extract()
 
     def product_care(self, response):
         return [x for x in self.raw_description(response) if self.care_criteria_simplified(x)]
@@ -56,7 +61,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
     def product_brand(self, response):
         raw_name = self.raw_name(response)
-        return raw_name.split('-')[0]
+        return clean(raw_name.split('-'))[0]
 
     def currency(self, response):
         css = '[itemprop=priceCurrency]::attr(content)'
@@ -70,7 +75,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return response.css('.visible-lg > p ::text').extract_first().split('.:')[1]
 
     def product_category(self, response):
-        return response.css('[itemprop=title]::text').extract()
+        return response.css('[itemprop=title]::text').extract()[1:]
 
     def product_gender(self, garment):
         soup = tokenize(garment['category'] + garment['description'])
@@ -82,7 +87,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
     def product_color(self, response):
         raw_name = self.raw_name(response).split('-')
-        return raw_name[-1]
+        return clean(raw_name)[-1]
 
     def skus(self, response):
         skus = {}
@@ -100,7 +105,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
             if size_var.css('.no_stock'):
                 sku['out_of_stock'] = True
-                
+
             size_id = size_var.css('::attr(data-selection-id)').extract_first()
             skus[common['colour'] + '_' + size_id] = sku
 
@@ -108,11 +113,12 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, response):
         css = '.otherPictures img::attr(src)'
-        return [i.replace('87_87', '380_340') for i in response.css(css).extract()]
+        return [i.replace('87_87', '1000_1000') for i in response.css(
+            css).extract()]
 
     def product_name(self, response):
         raw_name = self.raw_name(response).split('-')
-        return ''.join(raw_name[1:-1])
+        return clean(''.join(raw_name))[1:-1]
 
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
