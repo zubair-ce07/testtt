@@ -47,11 +47,11 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return [garment] + self.color_requests(response)
 
     def raw_description(self, response):
-        return response.css('.visible-lg li > label::text,'
-                            '[itemprop="description"] li ::text').extract()
+        return clean(response.css('.visible-lg li > label::text,[itemprop="description"] li ::text').extract())
 
     def product_care(self, response):
-        return [x for x in self.raw_description(response) if self.care_criteria_simplified(x)]
+        return [x for x in self.raw_description(response) if \
+                self.care_criteria_simplified(x)]
 
     def product_description(self, response):
         return [x for x in self.raw_description(response) if not self.care_criteria_simplified(x)]
@@ -65,22 +65,21 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
     def currency(self, response):
         css = '[itemprop=priceCurrency]::attr(content)'
-        return response.css(css).extract_first()
+        return clean(response.css(css).extract_first())
 
     def color_requests(self, response):
         request_urls = response.css('.col_sel a::attr(href)').extract()
         return [Request(url, callback=self.parse) for url in request_urls]
 
     def product_id(self, response):
-        return response.css('.visible-lg > p ::text').extract_first().split('.:')[1]
+        return clean(response.css('.visible-lg > p ::text').extract_first().split('.:'))[1]
 
     def product_category(self, response):
-        return response.css('[itemprop=title]::text').extract()[1:]
+        return clean(response.css('[itemprop=title]::text').extract())[1:]
 
     def product_gender(self, garment):
         soup = tokenize(garment['category'] + garment['description'])
         for token, gender in self.GENDER_MAP:
-
             if token in soup:
                 return gender
         return 'unisex-kids'
@@ -118,7 +117,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
     def product_name(self, response):
         raw_name = self.raw_name(response).split('-')
-        return clean(''.join(raw_name))[1:-1]
+        return clean(''.join(raw_name[1:-1]))
 
 
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
