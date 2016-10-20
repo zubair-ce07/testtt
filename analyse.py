@@ -33,26 +33,25 @@ def convert(records):
 
 def get_fieldnames_datatype(all_records):
     target_values = []
-    target_values.sort()
     for single_record in all_records:
         for field_name in single_record.keys():
             if isinstance(single_record[field_name], dict):
                 target_values.append([field_name, type(single_record[field_name]).__name__])
                 target_values += (
-                    iterate_nested_dictionary(single_record[field_name], single_record[field_name].keys(), field_name))
+                    analyse_nested_structure(single_record[field_name], single_record[field_name].keys(), field_name))
             elif isinstance(single_record[field_name], list):
                 target_values.append([field_name, type(single_record[field_name]).__name__])
                 for nested_list_elements in single_record[field_name]:
                     if isinstance(nested_list_elements, dict):
-                        target_values += iterate_nested_dictionary(single_record[field_name],
-                                                                   single_record[field_name].keys(), field_name)
+                        target_values += analyse_nested_structure(single_record[field_name],
+                                                                single_record[field_name].keys(), field_name)
             else:
                 target_values.append([field_name, type(field_name).__name__])
     filtered_list = list(eliminate_duplicate(target_values))
     return filtered_list
 
 
-def iterate_nested_dictionary(single_record, field_names, fieldname_prefix):
+def analyse_nested_structure(single_record, field_names, fieldname_prefix):
     result_values = []
     for value in field_names:
         if value in single_record.keys():
@@ -62,10 +61,9 @@ def iterate_nested_dictionary(single_record, field_names, fieldname_prefix):
                 for key_value in sub_record.keys():
                     leaf_node_name_prefix = fieldname_prefix + "." + value + "." + key_value
                     result_values.append([leaf_node_name_prefix, type(sub_record[key_value]).__name__])
-                    nested_result = (iterate_nested_dictionary(sub_record,
-                                                               key_value,
-                                                               fieldname_prefix + "." +
-                                                               value))
+                    nested_result = (analyse_nested_structure(sub_record, key_value,
+                                                            fieldname_prefix + "." +
+                                                            value))
                     result_values += nested_result
     return result_values
 
@@ -103,7 +101,7 @@ def print_fill_rates(all_fill_rates):
 
 
 def iterate_nested_record(records, key_value):
-    if (key_value in records.keys()):
+    if key_value in records.keys():
         if not records[key_value]:
             return "empty_fields"
         else:
@@ -127,37 +125,6 @@ def iterate_nested_record(records, key_value):
         return False
 
 
-def analyse_complex_record(all_records, fieldnames_datatype):
-    result_structure = {}
-    for field_name in fieldnames_datatype:
-        field_name = field_name.split(".")[-1]
-        results = []
-        for record in all_records:
-            if field_name in record.keys():
-                sub_class = record[field_name]
-                if isinstance(sub_class, str) or isinstance(sub_class, bool):
-                    results.append(sub_class)
-                elif isinstance(sub_class, list):
-                    results += sub_class
-                elif isinstance(sub_class, dict):
-                    results += sub_class.keys()
-                else:
-                    return
-        json_summary = get_unique_values(results)
-        result_structure[field_name] = json_summary
-    return result_structure
-
-
-def get_unique_values(items):
-    results = {}
-    for item in items:
-        if item not in results:
-            results[item] = 1
-        else:
-            results[item] += 1
-    return results
-
-
 def sort_records(reocrds_list):
     if isinstance(reocrds_list, dict):
         reocrds_list = [(k, v) for v, k in sorted(
@@ -167,26 +134,40 @@ def sort_records(reocrds_list):
     return reocrds_list
 
 
-def search_in_nested_records(json_obj, key_value):
-    if key_value in json_obj.keys():
-        return json_obj[key_value]
-    stack = json_obj.items()
-    while stack:
-        k, v = stack.pop()
-        if isinstance(v, list) or isinstance(v, dict):
-            stack.extend(v.items())
-        else:
-            if k == key_value:
-                return v
+def print_field_fillrate(fill_rates, field_name):
+    for field, data_type, fillrate in fill_rates:
+        if field == field_name:
+            print(field_name + " " + data_type + " Fill rate: " + str(fillrate) + " %")
 
 
-def print_field_fillrate(fill_rates,field_name):
-    for field,data_type,fillrate in fill_rates:
-        if(field==field_name):
-            print(field_name + " " + data_type +
-                  " Fill rate: " + str(fillrate) +
-                  " %"
-                  )
+def get_field_counts(input_values, all_records):
+    sub_record = []
+    for record in all_records:
+        key_found = True
+        input_fields = input_values.split(".")
+        for field_name in input_fields:
+            if isinstance(record, dict):
+                if field_name in record.keys():
+                    record = record[field_name]
+                else:
+                    key_found = False
+            else:
+                record = None
+        if key_found == True:
+            if isinstance(record, str) or isinstance(record, bool):
+                sub_record.insert(0, record)
+            elif isinstance(record, list):
+                sub_record += record
+            elif isinstance(record, dict):
+                sub_record += record.keys()
+    sub_record = dict((x, sub_record.count(x)) for x in set(sub_record))
+    return sort_records(sub_record)
+
+
+def print_field_counter(all_field_counter):
+    for field_count in all_field_counter:
+        print field_count
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -200,12 +181,8 @@ if __name__ == '__main__':
     total_length = len(all_records)
     print ("Number of rows are :" + str(total_length))
     if argument.field_argument:
-        field_names = [x[0] for x in fieldnames_datatype_records]
-        field_counter_result = analyse_complex_record(all_records, field_names)
-        result = search_in_nested_records(field_counter_result, argument.field_argument)
-        print_field_fillrate(fill_rates,argument.field_argument)
-        sorted_result = sort_records(result)
-        print (sorted_result)
-
+        print_field_fillrate(fill_rates, argument.field_argument)
+        field_counter = get_field_counts(argument.field_argument, all_records)
+        print_field_counter(field_counter)
     else:
         print_fill_rates(fill_rates)
