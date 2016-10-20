@@ -47,7 +47,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
         return [garment] + self.color_requests(response)
 
     def raw_description(self, response):
-        return clean(response.css('.visible-lg li > label::text,[itemprop="description"] li ::text').extract())
+        return clean(response.css('.visible-lg li > label::text,[itemprop="description"] li ::text'))
 
     def product_care(self, response):
         return [x for x in self.raw_description(response) if \
@@ -65,17 +65,18 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
     def currency(self, response):
         css = '[itemprop=priceCurrency]::attr(content)'
-        return clean(response.css(css).extract_first())
+        return clean(response.css(css))[0]
 
     def color_requests(self, response):
         request_urls = response.css('.col_sel a::attr(href)').extract()
         return [Request(url, callback=self.parse) for url in request_urls]
 
     def product_id(self, response):
-        return clean(response.css('.visible-lg > p ::text').extract_first().split('.:'))[1]
+        return clean(response.css('.visible-lg > p '
+                                  '::text').extract_first().split('.:'))[1]
 
     def product_category(self, response):
-        return clean(response.css('[itemprop=title]::text').extract())[1:]
+        return clean(response.css('[itemprop=title]::text'))[1:]
 
     def product_gender(self, garment):
         soup = tokenize(garment['category'] + garment['description'])
