@@ -13,7 +13,11 @@ class Mixin(object):
     start_urls = [
         'http://www.schuhcenter.de/'
     ]
-    GENDER_MAP = [('herren', 'boys'), ('damen', 'girls'), ('mädchen', 'girls')]
+    GENDER_MAP = [
+        ('herren', 'boys'),
+        ('damen', 'girls'),
+        ('mädchen', 'girls')
+    ]
 
 
 class SchuhcenterParseSpider(BaseParseSpider, Mixin):
@@ -24,6 +28,7 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     def parse(self, response):
         product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
+
         if not garment:
             return
 
@@ -37,11 +42,17 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 
         return [garment] + self.color_requests(response)
 
+    def raw_description(self, response):
+        return response.css('.visible-lg li > label::text').extract()
+
     def product_care(self, response):
         return [x for x in self.raw_description(response) if self.care_criteria_simplified(x)]
 
     def product_description(self, response):
         return [x for x in self.raw_description(response) if not self.care_criteria_simplified(x)]
+
+    def raw_name(self, response):
+        return response.css('h1[itemprop=name]::text').extract_first()
 
     def product_brand(self, response):
         raw_name = self.raw_name(response)
@@ -58,19 +69,14 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
     def product_id(self, response):
         return response.css('.visible-lg > p ::text').extract_first().split('.:')[1]
 
-    def raw_name(self, response):
-        return response.css('h1[itemprop=name]::text').extract_first()
-
-    def raw_description(self, response):
-        return response.css('.visible-lg li > label::text').extract()
-
     def product_category(self, response):
         return response.css('[itemprop=title]::text').extract()
 
     def product_gender(self, garment):
-        tokens = tokenize(garment['category'] + garment['description'])
+        soup = tokenize(garment['category'] + garment['description'])
         for token, gender in self.GENDER_MAP:
-            if token in tokens:
+
+            if token in soup:
                 return gender
         return 'unisex-kids'
 
@@ -88,11 +94,13 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
             sku = common.copy()
             previous_price, sku['price'], _ = self.product_pricing(response)
             sku['size'] = clean(size_var.css('span::text'))[0]
+
             if previous_price:
                 sku['previous_prices'] = [previous_price]
+
             if size_var.css('.no_stock'):
                 sku['out_of_stock'] = True
-
+                
             size_id = size_var.css('::attr(data-selection-id)').extract_first()
             skus[common['colour'] + '_' + size_id] = sku
 
@@ -110,7 +118,10 @@ class SchuhcenterParseSpider(BaseParseSpider, Mixin):
 class SchuhcenterCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = SchuhcenterParseSpider()
-    listings_css = ['.flyoutholder .main_categories ul', '.next']
+    listings_css = [
+        '.flyoutholder .main_categories ul',
+        '.next'
+    ]
     products_css = '.over-links'
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
