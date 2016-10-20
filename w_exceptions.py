@@ -24,13 +24,13 @@ class WeatherException(Exception):
         return self.msg
 
 
-class InvalidMonthFormat(WeatherExpetion):
-    message = "(%month) Invalid month format. Please follow: YYYY/MM"
+class InvalidMonthFormat(WeatherException):
+    message = "(%(month)s) Invalid month format. Please follow: YYYY/MM"
 
 
 class InvalidMonthRange(WeatherException):
-    message = "(%month) Month out of valid range: [1, 12]"
+    message = "(%(month)s) Month out of valid range: [1, 12]"
 
 
 class InvalidYearInput(WeatherException):
-    message = "(%year) Invalid year input."
+    message = "(%(year)d) Invalid year input."

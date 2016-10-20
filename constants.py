@@ -6,12 +6,12 @@
 
 # This is an ordered list please do not change
 # order of elements
-MONTHS=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', \
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 # Key legend for data files
 # contains the column index for
-# each data point in the data 
+# each data point in the data
 # set
 HI_TEMP = 1
 LO_TEMP = 3

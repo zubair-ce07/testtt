@@ -14,7 +14,7 @@ class ArgParser(argparse.ArgumentParser):
 
     def __init__(self):
         super(ArgParser, self).__init__(description="A utility to process"
-                                            " weather data")
+                                        " weather data")
 
         self.add_argument("dir_path", nargs="?", default="",
                           metavar="DIRECTORY PATH", help="Directory path for "
@@ -42,7 +42,7 @@ class ArgParser(argparse.ArgumentParser):
 
        if args.dir_path:
            # TODO(shahbaz): Windows use forward
-           # slash for for path definitions which 
+           # slash for for path definitions which
            # is not supported here
            self.path = args.dir_path.strip("/")
 
