@@ -1,6 +1,7 @@
 from colors import Colors as col
 import common as wc
 import constants as const
+import csv 
 
 from os import listdir
 
@@ -10,6 +11,13 @@ class ReportGenerator:
     def __init__(self, path, **kwargs):
         self.path = path
         self.data_files = set(listdir(path))
+
+        self.hi = -274
+        self.hi_day = ""
+        self.lo = -274
+        self.lo_day = ""
+        self.humidity = -1
+        self.humid_day = ""
 
     def get_yearly_extremes_bulk(self, years):
         for year in years:
@@ -24,95 +32,72 @@ class ReportGenerator:
             self.draw_charts(month)
 
     def get_yearly_extremes(self, year):
-
-        hi = -274
-        hi_day = ""
-
-        lo = -274
-        lo_day = ""
-
-        humidity = -1
-        humid_day = ""
-
         for file_name in self.data_files:
             if year in file_name:
                 file_path = self.path + "/" + file_name
-                content = open(file_path).readlines()
-                for line in content[1:]:
-                    data_points = line.split(',')
+                f = open(file_path)
+                content = cvs.DictReader(f) 
+                for line in content:
+                    self.process_exctremes(line)
 
-                    data = data_points[const.HI_TEMP]
-                    if data != "" and int(data) > hi:
-                        hi = int(data)
-                        hi_day = wc.get_day(data_points[0])
+    def process_extremes(self, data_points):
+        data = data_points[const.HI_TEMP]
+        if data != "" and int(data) > self.hi:
+            self.hi = int(data)
+            self.hi_day = wc.get_day(data_points[0])
 
-                    data = data_points[const.LO_TEMP]
-                    if data != "" and (lo == -274 or int(lo) < lo):
-                        lo = int(data)
-                        lo_day = wc.get_day(data_points[0])
+        data = data_points[const.LO_TEMP]
+        if data != "" and (lo == -274 or int(data) < self.lo):
+            self.lo = int(data)
+            self.lo_day = wc.get_day(data_points[0])
 
-                    data = data_points[const.HUMID]
-                    if data != "" and (humidity < 0 or int(data) > humidity):
-                        humidity = int(data)
-                        humid_day = wc.get_day(data_points[0])
+        data = data_points[const.HI_HUMID]
+        if data != "" and (self.humidity < 0 or int(data)
+                           > self.humidity):
+            self.humidity = int(data)
+            self.humid_day = wc.get_day(data_points[0])
 
-        print "Highest: " + str(hi) + "C on " + hi_day
-        print "Lowest: " + str(lo) + "C on " + lo_day
-        print "Humidity: " + str(humidity) + "% on " + humid_day
+    def print_extremes(self):
+        print "Highest: " + str(self.hi) + "C on " + self.hi_day
+        print "Lowest: " + str(self.lo) + "C on " + self.lo_day
+        print "Humidity: " + str(self.humidity) + "% on " + self.humid_day
 
     def get_monthly_avgs(self, month):
         file_name = "Murree_weather_%s.txt" % month
 
         if file_name in self.data_files:
             file_path = self.path + "/" + file_name
-            content = open(file_path).readlines()
+            f = open(file_path)
+            content = cvs.DictReader(f)
 
             if len(content) < 2:
                 raise Exception("No data points recorded for the month (%s)"
                                 % month)
 
-            # Initialize datapoints
-            data_points = content[1].split(',')
-            avg_hi_temp = int(data_points[const.HI_TEMP])
-            avg_lo_temp = int(data_points[const.LO_TEMP])
-            avg_humidity = int(data_points[const.HUMID])
-            hi_count = 1
-            lo_count = 1
-            humid_count = 1
+            self.process_monthly_avgs(content)
 
-            for line in content[2:]:
-                data_points = line.split(',')
+    def process_monthly_avgs(self, content):
+        hi_temps = []
+        lo_temps = []
+        avg_humids = []
 
-                # Update moving average for Hi
-                # temperate data points
-                data = data_points[const.HI_TEMP]
-                if data != "":
-                    data = int(data)
-                    hi_count = hi_count + 1
-                    avg_hi_temp = avg_hi_temp + \
-                        (data - avg_hi_temp)/hi_count
+        for line in content:
+            data = data_points[const.HI_TEMP]
+            if data != "":
+                hi_temps.append(int(data))
 
-                # Updat moving average for Lo
-                # temperature data points
-                data = data_points[const.LO_TEMP]
-                if data != "":
-                    data = int(data)
-                    lo_count = lo_count + 1
-                    avg_lo_temp = avg_lo_temp + \
-                        (data - avg_lo_temp)/lo_count
+            data = data_points[const.LO_TEMP]
+            if data != "":
+                lo_temps.append(int(data))
 
-                # Updat moving average for
-                # Humidity data points
-                data = data_points[const.HUMID]
-                if data != "":
-                    data = int(data)
-                    humid_count = humid_count + 1
-                    avg_humidity = avg_humidity + \
-                        (data - avg_humidity)/humid_count
+            data = data_points[const.HUMID]
+            if data != "":
+                avg_humids.append(int(data))
 
+    def print_monthly_avgs(self, avg_hi_temp, avg_lo_temp, avg_humid)
             print "Highest Averaeg: " + str(avg_hi_temp) + "C"
             print "Lowest Average: " + str(avg_lo_temp) + "C"
-            print "Average Mean Humidity: " + str(avg_humidity) + "%"
+            print "Average Mean Humidity: " + str(avg_humid) + "%"
 
     def draw_charts(self, month):
 

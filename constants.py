@@ -13,7 +13,7 @@ MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 # contains the column index for
 # each data point in the data
 # set
-HI_TEMP = 1
-LO_TEMP = 3
-HUMID = 7
-DATE = 0
+HI_TEMP = "Max TemperatureC"
+LO_TEMP = "Min TemperatureC"
+HI_HUMID = "Max Humidity"
+DATE = "PKT"
