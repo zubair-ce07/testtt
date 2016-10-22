@@ -1,15 +1,18 @@
 import constants as const
+from datetime import datetime
 import w_exceptions as exc
 
 
+
 def parse_month(month):
-    date = month.split("/")
-    if len(date) != 2:
+    try:
+        date = datetime.strptime(month, "%Y/%m")
+    except:    
         raise exc.InvalidMonthFormat(month=month)
 
-    validate_year(date[0])
-    month = validate_month(date[1])
-    return date[0] + '_' + const.MONTHS[month-1]
+    validate_year(date.year)
+    month = validate_month(date.month)
+    return date.strftime("%Y_%b")
 
 
 def validate_year(year):
@@ -36,7 +39,10 @@ def validate_month(month):
     return month
 
 
-def get_day(date):
-    date = date.split("-")
-    month = const.MONTHS[int(date[1]) - 1]
-    return month + " " + date[2]
+def get_month_day(data):
+    try:
+        date = datetime.strptime(data[const.DATE], const.DATE_FORMAT)
+    except:
+        date = datetime.strptime(data[const.DATE_ALT], const.DATE_FORMAT)
+
+    return date.strftime("%B %d")

@@ -2,6 +2,7 @@ from colors import Colors as col
 import common as wc
 import constants as const
 import csv 
+from datetime import datetime
 
 from os import listdir
 
@@ -36,26 +37,27 @@ class ReportGenerator:
             if year in file_name:
                 file_path = self.path + "/" + file_name
                 f = open(file_path)
-                content = cvs.DictReader(f) 
+                content = csv.DictReader(f) 
                 for line in content:
-                    self.process_exctremes(line)
+                    self.process_extremes(line)
+        self.print_extremes()
 
     def process_extremes(self, data_points):
         data = data_points[const.HI_TEMP]
         if data != "" and int(data) > self.hi:
             self.hi = int(data)
-            self.hi_day = wc.get_day(data_points[0])
+            self.hi_day = wc.get_month_day(data_points)
 
         data = data_points[const.LO_TEMP]
-        if data != "" and (lo == -274 or int(data) < self.lo):
+        if data != "" and (self.lo == -274 or int(data) < self.lo):
             self.lo = int(data)
-            self.lo_day = wc.get_day(data_points[0])
+            self.lo_day = wc.get_month_day(data_points)
 
         data = data_points[const.HI_HUMID]
         if data != "" and (self.humidity < 0 or int(data)
                            > self.humidity):
             self.humidity = int(data)
-            self.humid_day = wc.get_day(data_points[0])
+            self.humid_day = wc.get_month_day(data_points)
 
     def print_extremes(self):
         print "Highest: " + str(self.hi) + "C on " + self.hi_day
@@ -68,53 +70,50 @@ class ReportGenerator:
         if file_name in self.data_files:
             file_path = self.path + "/" + file_name
             f = open(file_path)
-            content = cvs.DictReader(f)
+            content = csv.DictReader(f)
 
-            if len(content) < 2:
-                raise Exception("No data points recorded for the month (%s)"
-                                % month)
-
-            self.process_monthly_avgs(content)
+            hi, lo, humid = self.process_monthly_avgs(content)
+            self.print_monthly_avgs(hi, lo, humid)
 
     def process_monthly_avgs(self, content):
         hi_temps = []
         lo_temps = []
         avg_humids = []
 
-        for line in content:
-            data = data_points[const.HI_TEMP]
+        for row in content:
+            data = row[const.HI_TEMP]
             if data != "":
                 hi_temps.append(int(data))
 
-            data = data_points[const.LO_TEMP]
+            data = row[const.LO_TEMP]
             if data != "":
                 lo_temps.append(int(data))
 
-            data = data_points[const.HUMID]
+            data = row[const.HI_HUMID]
             if data != "":
                 avg_humids.append(int(data))
 
-    def print_monthly_avgs(self, avg_hi_temp, avg_lo_temp, avg_humid)
+        hi_temp_avg = sum(hi_temps)/len(hi_temps)
+        lo_temp_avg = sum(lo_temps)/len(lo_temps)
+        avg_humid = sum(avg_humids)/len(avg_humids)
+        return (hi_temp_avg, lo_temp_avg, avg_humid)
+
+    def print_monthly_avgs(self, avg_hi_temp, avg_lo_temp, avg_humid):
             print "Highest Averaeg: " + str(avg_hi_temp) + "C"
             print "Lowest Average: " + str(avg_lo_temp) + "C"
             print "Average Mean Humidity: " + str(avg_humid) + "%"
 
     def draw_charts(self, month):
-
         file_name = "Murree_weather_%s.txt" % month
 
         if file_name in self.data_files:
             file_path = self.path + "/" + file_name
-            content = open(file_path).readlines()
+            f = open(file_path).readlines()
+            content = csv.DictReader(f)
 
-            if len(content) < 2:
-                raise Exception("No data points recorded for the month (%s)"
-                                % month)
-
-            for line in content[1:]:
-                data_points = line.split(',')
-                date = data_points[const.DATE]
-                day = date.split('-')[2]
+            for data_points in content:
+                date = datetime.strptime(data_points[const.DATE],
+                                         const.DATE_FORMAT)
                 hi_temp = data_points[const.HI_TEMP]
                 lo_temp = data_points[const.LO_TEMP]
 
@@ -132,5 +131,5 @@ class ReportGenerator:
                 lo_bar = lo_bar + col.ENDC
                 hi_bar = hi_bar + col.ENDC
 
-                print day + " " + lo_bar + hi_bar + " " + lo_temp + " - " \
-                    + hi_temp
+                print str(date.day) + " " + lo_bar + hi_bar + " " + lo_temp + \
+                      " - " + hi_temp
