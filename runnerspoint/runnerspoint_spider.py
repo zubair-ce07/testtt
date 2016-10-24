@@ -21,7 +21,7 @@ class Mixin(object):
     care_materials = [
         'obermaterial'
     ]
-    
+
 
 class RunnersPointParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
@@ -51,7 +51,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
         }
         meta['previous_price'], meta['price'], _ = self.product_pricing(response)
         garment['meta'] = meta
-        return self.next_request_or_garment(garment) + self.color_requests(response)
+        return self.next_request_or_garment(garment, drop_meta=False) + self.color_requests(response)
 
     def product_info(self, response):
         script_elements = response.xpath("//script[contains(text(), '// tracking function exists')]").extract()
@@ -127,6 +127,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
                 url = add_or_replace_parameter(url, 'wid', '1600')
                 url = add_or_replace_parameter(url, 'hei', '900')
                 image_urls += [url]
+            response.meta['garment']['image_urls'] = image_urls
 
         return self.next_request_or_garment(response.meta['garment'])
 
