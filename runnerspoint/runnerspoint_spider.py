@@ -14,6 +14,7 @@ import json
 class Mixin(object):
     market = 'DE'
     retailer = 'runnerspoint-de'
+    brand = 'Runners Point'
     lang = 'de'
     allowed_domains = ['www.runnerspoint.de', 'runnerspoint.scene7.com']
     start_urls = ['https://www.runnerspoint.de/de/damen/',
@@ -35,7 +36,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
         self.boilerplate(garment, response, response)
         product_info = self.product_info(response)
         print 'Prod info', product_info
-        garment['brand'] = self.product_brand(product_info)
+        garment['brand'] = self.product_brand()
         garment['gender'] = self.product_gender(product_info)
         garment['category'] = self.product_category(product_info)
         garment['name'] = self.product_name(response, product_info)
@@ -81,8 +82,8 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
         return [x for x in self.raw_description(response) if not self.care_criteria_simplified(x)] + \
                self.additional_description(response)
 
-    def product_brand(self, garment):
-        return garment['brand']
+    def product_brand(self):
+        return self.brand
 
     def currency(self, response):
         return clean(response.css('[itemprop=priceCurrency]::attr(content)'))[0]
@@ -101,7 +102,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
 
     def product_name(self, response, garment):
         return clean(response.css(
-            '.fl-product-details--headline ::text').extract_first().strip(self.product_brand(garment)))
+            '.fl-product-details--headline ::text').extract_first().strip(garment['brand']))
 
     def image_set_request(self, product_id):
         url = urljoin('https://runnerspoint.scene7.com/is/image/rpe/', product_id)
