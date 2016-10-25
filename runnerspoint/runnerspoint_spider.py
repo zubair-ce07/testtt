@@ -14,6 +14,7 @@ import json
 class Mixin(object):
     market = 'DE'
     retailer = 'runnerspoint-de'
+    brand = 'Runners Point'
     lang = 'de'
     allowed_domains = ['www.runnerspoint.de', 'runnerspoint.scene7.com']
     start_urls = ['https://www.runnerspoint.de/de/damen/',
@@ -33,6 +34,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate(garment, response, response)
+
         raw_product = self.raw_product(response)
         garment['brand'] = self.product_brand()
         garment['gender'] = self.product_gender(raw_product)
