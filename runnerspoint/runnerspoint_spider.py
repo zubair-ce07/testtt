@@ -33,56 +33,51 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate(garment, response, response)
-        product_info = self.product_info(response)
-        print 'Prod info', product_info
-        garment['brand'] = self.product_brand(product_info)
-        garment['gender'] = self.product_gender(product_info)
-        garment['category'] = self.product_category(product_info)
-        garment['name'] = self.product_name(response, product_info)
+        raw_product = self.raw_product(response)
+        garment['brand'] = self.product_brand()
+        garment['gender'] = self.product_gender(raw_product)
+        garment['category'] = self.product_category(raw_product)
+        garment['name'] = self.product_name(response, raw_product)
         garment['description'] = self.product_description(response)
         garment['care'] = self.product_care(response)
-        meta = {
-            'color': self.product_color(product_info),
+        garment_meta = {
+            'color': self.product_color(raw_product),
             'currency': self.currency(response),
             'requests_queue': [
-                self.image_set_request(product_id),
+                self.images_request(product_id),
                 self.size_request(response)
             ]
         }
-        meta['previous_price'], meta['price'], _ = self.product_pricing(response)
-        garment['meta'] = meta
+        garment_meta['previous_price'], garment_meta['price'], _ = self.product_pricing(response)
+        garment['meta'] = garment_meta
         return self.next_request_or_garment(garment, drop_meta=False) + self.color_requests(response)
 
-    def product_info(self, response):
+    def raw_product(self, response):
         script_elements = response.xpath("//script[contains(text(), '// tracking function exists')]").extract()
         for script in script_elements:
             garment_search_result = re.search('_st\(\'addTagProperties\',(.+?)\);', script)
             if garment_search_result:
-                return json.loads(
-                    garment_search_result.group(1).replace('\'', '"'))
+                return json.loads(garment_search_result.group(1).replace('\'', '"'))
 
     def raw_description(self, response):
         return clean(response.css('[itemprop="description"] ::text'))
 
-    def additional_description(self, response):
-        description = []
+    def product_care(self, response):
+        return [x for x in self.raw_description(response) if self.care_criteria_simplified(x)]
+
+    def product_description(self, response):
+        description = [x for x in self.raw_description(response) if not self.care_criteria_simplified(x)]
         for desc in response.css('.fl-product-details--description--attributes-label'):
             field = desc.css(' b ::text').extract_first()
             val = desc.css(' p ::text').extract_first()
             if not val:
                 val = desc.xpath('following::*//*[contains(@class, "item__selected")]//text()').extract_first()
             description += [field + val]
+
         return description
 
-    def product_care(self, response):
-        return [x for x in self.raw_description(response) if self.care_criteria_simplified(x)]
-
-    def product_description(self, response):
-        return [x for x in self.raw_description(response) if not self.care_criteria_simplified(x)] + \
-               self.additional_description(response)
-
-    def product_brand(self, garment):
-        return garment['brand']
+    def product_brand(self):
+        return 'Runners Point'
 
     def currency(self, response):
         return clean(response.css('[itemprop=priceCurrency]::attr(content)'))[0]
@@ -90,22 +85,22 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
     def product_id(self, response):
         return clean(response.css('.fl-rating ::attr(data-ratings-externalid)'))[0]
 
-    def product_category(self, garment):
-        return clean(garment['category'].split('/'))
+    def product_category(self, raw_product):
+        return clean(raw_product['category'].split('/'))
 
-    def product_gender(self, garment):
-        return garment['gender']
+    def product_gender(self, raw_product):
+        return raw_product['gender']
 
-    def product_color(self, product):
-        return ''.join([c for c in product['variant'] if c.isalpha()])
+    def product_color(self, raw_product):
+        return ''.join([c for c in raw_product['variant'] if c.isalpha()])
 
-    def product_name(self, response, garment):
+    def product_name(self, response, raw_product):
         return clean(response.css(
-            '.fl-product-details--headline ::text').extract_first().strip(self.product_brand(garment)))
+            '.fl-product-details--headline ::text').extract_first().strip(raw_product['brand']))
 
-    def image_set_request(self, product_id):
+    def images_request(self, product_id):
         url = urljoin('https://runnerspoint.scene7.com/is/image/rpe/', product_id)
-        return Request(add_or_replace_parameter(url, 'req', 'set,json'), callback=self.parse_image_urls)
+        return Request(add_or_replace_parameter(url, 'req', 'set,json'), callback=self.parse_images)
 
     def color_requests(self, response):
         request_urls = response.css('[data-color-selection-item]:not([class*=active]) ::attr(href)').extract()
@@ -113,30 +108,39 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
 
     def size_request(self, response):
         url = response.css(
-            '[data-lazyloading-success-handler="productVariationSelectionInitElement"]::attr("data-request")') \
+            '#add-to-cart-form ::attr("data-request")') \
             .extract_first()
         return Request(url, callback=self.parse_skus)
 
-    def parse_image_urls(self, response):
+    def parse_images(self, response):
         image_search_res = re.search('s7jsonResponse\((.+?),\"\"\);',response.text)
         if image_search_res:
-            image_set = json.loads(image_search_res.group(1).replace('\'', '"'))
-            image_urls = []
-            for img in image_set['set']['item']:
-                url = urljoin('https://runnerspoint.scene7.com/is/image/', img['i']['n'])
-                url = add_or_replace_parameter(url, 'wid', '1600')
-                url = add_or_replace_parameter(url, 'hei', '900')
-                image_urls += [url]
-            response.meta['garment']['image_urls'] = image_urls
+            raw_images = json.loads(image_search_res.group(1).replace('\'', '"'))
+            response.meta['garment']['image_urls'] = self.image_urls(raw_images)
 
         return self.next_request_or_garment(response.meta['garment'])
 
+    def image_urls(self, raw_images):
+        image_urls = []
+        for img in raw_images['set']['item']:
+            if not ('i' in img or 'n' in img['i']):
+                continue
+            url = urljoin('https://runnerspoint.scene7.com/is/image/', img['i']['n'])
+            url = add_or_replace_parameter(url, 'wid', '1600')
+            url = add_or_replace_parameter(url, 'hei', '900')
+            image_urls += [url]
+        return image_urls
+
     def parse_skus(self, response):
+        raw_skus = json.loads(response.text)
+        content_selector = Selector(text=raw_skus['content'])
+        response.meta['garment']['skus'] = self.skus(content_selector, response.meta['garment']['meta'])
+
+        return self.next_request_or_garment(response.meta['garment'])
+
+    def skus(self, selector, garment_meta):
         skus = {}
-        js = json.loads(response.text)
-        garment_meta = response.meta['garment']['meta']
-        content_selector = Selector(text=js['content'])
-        for size_var in content_selector.css('.fl-product-size button'):
+        for size_var in selector.css('.fl-product-size button'):
             sku = {
                 'colour': garment_meta['color'],
                 'price': garment_meta['price'],
@@ -150,8 +154,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
                 sku['out_of_stock'] = True
             skus[garment_meta['color'] + '_' + sku['size'].replace(' ', '_')] = sku
 
-        response.meta['garment']['skus'] = skus
-        return self.next_request_or_garment(response.meta['garment'])
+        return skus
 
 
 class RunnersPointCrawlSpider(BaseCrawlSpider, Mixin):
@@ -177,7 +180,7 @@ class RunnersPointCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_pages'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_paging'),
     )
 
     def total_products(self, response):
@@ -189,9 +192,9 @@ class RunnersPointCrawlSpider(BaseCrawlSpider, Mixin):
 
     def pagination_url(self, response):
         return response.css(
-            '[data-ajaxcontent="productpagebutton"] .fl-btn__default::attr(data-ajaxcontent-url)').extract_first()
+            '[data-ajaxcontent="productpagebutton"] ::attr(data-ajaxcontent-url)').extract_first()
 
-    def parse_pages(self, response):
+    def parse_paging(self, response):
         total_products = self.total_products(response)
         if not total_products or total_products < self.products_per_page:
             return
@@ -201,10 +204,10 @@ class RunnersPointCrawlSpider(BaseCrawlSpider, Mixin):
         for page_num in range(1, total_pages):
             yield Request(
                 add_or_replace_parameter(url, 'PageNumber', page_num),
-                self.parse_product_links, meta={'trail': self.add_trail(response)})
+                self.parse_products, meta={'trail': self.add_trail(response)})
 
-    def parse_product_links(self, response):
+    def parse_products(self, response):
         js = json.loads(response.text)
         content_selector = Selector(text=js['content'])
-        for product in content_selector.xpath("//div[contains(@class,'fl-product-tile--container')]//@href").extract():
+        for product in content_selector.css(".fl-product-tile--container ::attr(href)").extract():
             yield Request(product, callback=self.parse_item, meta={'trail': self.add_trail(response)})
