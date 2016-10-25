@@ -9,6 +9,7 @@
 # set
 HI_TEMP = "Max TemperatureC"
 LO_TEMP = "Min TemperatureC"
+AVG_HUMID = " Mean Humidity"
 HI_HUMID = "Max Humidity"
 DATE = "PKT"
 DATE_ALT = "PKST"

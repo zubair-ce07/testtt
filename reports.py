@@ -5,6 +5,7 @@ import csv
 from datetime import datetime
 
 from os import listdir
+from os import path
 
 
 class ReportGenerator:
@@ -13,95 +14,119 @@ class ReportGenerator:
         self.path = path
         self.data_files = set(listdir(path))
 
-        self.hi = -274
-        self.hi_day = ""
-        self.lo = -274
-        self.lo_day = ""
-        self.humidity = -1
-        self.humid_day = ""
+        self.max_temp = -274
+        self.max_temp_day = ""
+        self.min_temp = -274
+        self.min_temp_day = ""
+        self.max_humidity = -1
+        self.max_humid_day = ""
 
-    def get_yearly_extremes_bulk(self, years):
+    def yearly_extremes_bulk(self, years):
         for year in years:
-            self.get_yearly_extremes(year)
+            self.yearly_extremes(year)
 
-    def get_monthly_avgs_bulk(self, months):
+    def monthly_avgs_bulk(self, months):
         for month in months:
-            self.get_monthly_avgs(month)
+            self.monthly_avgs(month)
 
     def draw_charts_bulk(self, months):
         for month in months:
             self.draw_charts(month)
 
-    def get_yearly_extremes(self, year):
+    def yearly_extremes(self, year):
         for file_name in self.data_files:
             if year in file_name:
-                file_path = self.path + "/" + file_name
-                f = open(file_path)
-                content = csv.DictReader(f) 
-                for line in content:
-                    self.process_extremes(line)
+                file_path = path.join(self.path, file_name)
+                with open(file_path) as f:
+                    content = csv.DictReader(f) 
+                    for row in content:
+                        self.update_extremes(row)
         self.print_extremes()
 
-    def process_extremes(self, data_points):
-        data = data_points[const.HI_TEMP]
-        if data != "" and int(data) > self.hi:
-            self.hi = int(data)
-            self.hi_day = wc.get_month_day(data_points)
+    def update_extremes(self, row):
+        max_temp, min_temp, max_humidity, _ = self.get_data(row)
 
-        data = data_points[const.LO_TEMP]
-        if data != "" and (self.lo == -274 or int(data) < self.lo):
-            self.lo = int(data)
-            self.lo_day = wc.get_month_day(data_points)
+        if max_temp and max_temp > self.max_temp:
+            self.max_temp = max_temp
+            self.max_temp_day = wc.get_month_day(row)
 
-        data = data_points[const.HI_HUMID]
-        if data != "" and (self.humidity < 0 or int(data)
-                           > self.humidity):
-            self.humidity = int(data)
-            self.humid_day = wc.get_month_day(data_points)
+        if min_temp and (self.min_temp == -274 or min_temp < self.min_temp):
+            self.min_temp = min_temp
+            self.min_temp_day = wc.get_month_day(row)
+
+        if max_humidity and (self.max_humidity < 0 or max_humidity
+                           > self.max_humidity):
+            self.max_humidity = max_humidity
+            self.max_humid_day = wc.get_month_day(row)
 
     def print_extremes(self):
-        print "Highest: " + str(self.hi) + "C on " + self.hi_day
-        print "Lowest: " + str(self.lo) + "C on " + self.lo_day
-        print "Humidity: " + str(self.humidity) + "% on " + self.humid_day
+        print "Highest: " + str(self.max_temp) \
+              + "C on " + self.max_temp_day
+        print "Lowest: " + str(self.min_temp) + "C on " \
+              + self.min_temp_day
+        print "Humidity: " + str(self.max_humidity) + "% on " \
+              + self.max_humid_day
 
-    def get_monthly_avgs(self, month):
-        file_name = "Murree_weather_%s.txt" % month
-
-        if file_name in self.data_files:
-            file_path = self.path + "/" + file_name
-            f = open(file_path)
-            content = csv.DictReader(f)
-
-            hi, lo, humid = self.process_monthly_avgs(content)
-            self.print_monthly_avgs(hi, lo, humid)
-
-    def process_monthly_avgs(self, content):
-        hi_temps = []
-        lo_temps = []
+    def monthly_avgs(self, month):
+        max_temps = []
+        min_temps = []
         avg_humids = []
 
-        for row in content:
-            data = row[const.HI_TEMP]
-            if data != "":
-                hi_temps.append(int(data))
+        for file_name in self.data_files:
+            if month in file_name:
+                file_path = path.join(self.path, file_name)
+                with open(file_path) as f:
+                    content = csv.DictReader(f)
 
-            data = row[const.LO_TEMP]
-            if data != "":
-                lo_temps.append(int(data))
+                    for row in content:
+                        max_temp, min_temp, _, avg_humidity \
+                            = self.get_data(row)
 
-            data = row[const.HI_HUMID]
-            if data != "":
-                avg_humids.append(int(data))
+                        if max_temp:
+                            max_temps.append(max_temp)
 
-        hi_temp_avg = sum(hi_temps)/len(hi_temps)
-        lo_temp_avg = sum(lo_temps)/len(lo_temps)
+                        if min_temp:
+                            min_temps.append(min_temp)
+
+                        if avg_humidity:
+                            avg_humids.append(avg_humidity)
+
+        avg_max_temp, avg_min_temp, avg_humidity = self.get_monthly_avgs(
+                                                       max_temps,
+                                                       min_temps,
+                                                       avg_humids)
+        self.print_monthly_avgs(avg_max_temp, avg_min_temp, avg_humidity)
+
+    def get_data(self, row):
+        max_temp, min_temp, max_humidity, avg_humidity = (row[const.HI_TEMP],
+                                                          row[const.LO_TEMP],
+                                                          row[const.HI_HUMID],
+                                                          row[const.AVG_HUMID])
+        if max_temp:
+            max_temp = int(max_temp)
+
+        if min_temp:
+            min_temp = int(min_temp)
+
+        if max_humidity:
+            max_humidity = int(max_humidity)
+
+        if avg_humidity:
+            avg_humidity = int(avg_humidity)
+
+        return (max_temp, min_temp, max_humidity, avg_humidity)
+
+    def get_monthly_avgs(self, max_temps, min_temps, avg_humids):
+        max_temp_avg = sum(max_temps)/len(max_temps)
+        min_temp_avg = sum(min_temps)/len(min_temps)
         avg_humid = sum(avg_humids)/len(avg_humids)
-        return (hi_temp_avg, lo_temp_avg, avg_humid)
 
-    def print_monthly_avgs(self, avg_hi_temp, avg_lo_temp, avg_humid):
-            print "Highest Averaeg: " + str(avg_hi_temp) + "C"
-            print "Lowest Average: " + str(avg_lo_temp) + "C"
-            print "Average Mean Humidity: " + str(avg_humid) + "%"
+        return (max_temp_avg, min_temp_avg, avg_humid)
+
+    def print_monthly_avgs(self, avg_max_temp, avg_min_temp, avg_humid):
+        print "Highest Averaeg: " + str(avg_max_temp) + "C"
+        print "Lowest Average: " + str(avg_min_temp) + "C"
+        print "Average Mean Humidity: " + str(avg_humid) + "%"
 
     def draw_charts(self, month):
         file_name = "Murree_weather_%s.txt" % month

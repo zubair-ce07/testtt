@@ -7,6 +7,6 @@ if __name__ == "__main__":
     path, exts, avgs, charts = parser.get_args()
 
     rep_gen = ReportGenerator(path)
-    rep_gen.get_yearly_extremes_bulk(exts)
-    rep_gen.get_monthly_avgs_bulk(avgs)
+    rep_gen.yearly_extremes_bulk(exts)
+    rep_gen.monthly_avgs_bulk(avgs)
     rep_gen.draw_charts_bulk(charts)
