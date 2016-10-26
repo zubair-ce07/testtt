@@ -3,7 +3,7 @@
 # the lab repo contains weather files for Murree.
 # Write an application that generates the following reports.
 
-# 3. For a given month draw two horizontal bar charts on the console
+# 5. BONUS TASK. For a given month draw one horizontal bar chart on the console
 # for the highest and lowest temperature on each day.
 # Highest in red and lowest in blue.
 
@@ -38,9 +38,15 @@ for index, line in enumerate(f, start=1):
     columns = line.split(",")
     highest_temperature = int(columns[1]) if columns[1] != "" else None
     lowest_temperature = int(columns[3]) if columns[3] != "" else None
-    print("\033[95m{}\033[0m \033[91m{}\033[0m \033[95m{}C\033[0m"
-          .format(++index, "+" * highest_temperature, highest_temperature))
-    print("\033[95m{}\033[0m \033[94m{}\033[0m \033[95m{}C\033[0m"
-          .format(++index, "+" * lowest_temperature, lowest_temperature))
+    if highest_temperature is not None:
+        print("\033[95m{}\033[0m \033[91m{}\033[0m \033[95m{}C\033[0m"
+              .format(++index, "+" * highest_temperature, highest_temperature))
+    else:
+        print("\033[95m{}\033[0m \033[91mDon't have any data to show on\033[0m \033[95m{}".format(index, columns[0]))
+    if lowest_temperature is not None:
+        print("\033[95m{}\033[0m \033[94m{}\033[0m \033[95m{}C\033[0m"
+              .format(++index, "+" * lowest_temperature, lowest_temperature))
+    else:
+        print("\033[95m{}\033[0m \033[94mDon't have any data to show on\033[0m \033[95m{}".format(index, columns[0]))
 
 f.close()
