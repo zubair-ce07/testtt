@@ -22,14 +22,16 @@ class Mixin(object):
         'https://www.runnerspoint.de/de/damen/',
         'https://www.runnerspoint.de/de/herren/'
     ]
+    gender_map = (
+        ('herren', 'men'),
+        ('damen', 'women'),
+        ('kinder', 'unisex-kids'),
+    )
 
 
 class RunnersPointParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     price_x = "//*[@itemprop='price']/@content|//*[@class='fl-price--old--value']//text()"
-    care_materials = [
-        'obermaterial'
-    ]
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -40,7 +42,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
 
         raw_product = self.raw_product(response)
         garment['brand'] = self.product_brand(raw_product)
-        garment['gender'] = self.product_gender(raw_product)
+        garment['gender'] = self.product_gender(raw_product, garment)
         garment['category'] = self.product_category(raw_product)
         garment['name'] = self.product_name(response, raw_product)
         garment['description'] = self.product_description(response)
@@ -100,8 +102,18 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
     def product_category(self, raw_product):
         return clean(raw_product['category'].split('/'))
 
-    def product_gender(self, raw_product):
-        return raw_product['gender']
+    def product_gender(self, raw_product, garment):
+        if raw_product['gender'].lower() != 'unisex':
+            return raw_product['gender']
+
+        soup = garment['url_original'].lower()
+        if garment['trail']:
+            soup = soup.join([t[1] for t in garment['trail']]).lower()
+        for gender_string, gender in self.gender_map:
+            if gender_string in soup:
+                return gender
+
+        return 'unisex-adults'
 
     def product_color(self, raw_product):
         return ''.join([c for c in raw_product['variant'] if c.isalpha()])
@@ -122,7 +134,7 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
         css = '[data-color-selection-item]:not([class*=active]) ::attr(href)'
         request_urls = response.css(css).extract()
 
-        return [Request(url, callback='parse_item') for url in request_urls]
+        return [Request(url, callback=self.parse) for url in request_urls]
 
     def size_request(self, response):
         css = '#add-to-cart-form ::attr("data-request")'
@@ -139,18 +151,23 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
     def image_urls(self, response):
         raw_urls = re.findall('s7jsonResponse\((.+?),\"\"\);', response.text)[0]
         raw_urls = json.loads(raw_urls.replace('\'', '"'))
-
         image_urls = []
-        prefix = 'https://runnerspoint.scene7.com/is/image/'
-        for img in raw_urls['set']['item']:
-            if not ('i' in img or 'n' in img['i']):
-                continue
-            url = urljoin(prefix, img['i']['n'])
-            url = add_or_replace_parameter(url, 'wid', '1600')
-            url = add_or_replace_parameter(url, 'hei', '900')
-            image_urls += [url]
+
+        if isinstance(raw_urls['set']['item'], dict):
+            return self.full_size_image(raw_urls['set']['item']['i']['n'])
+
+        for img_url in raw_urls['set']['item']:
+            image_urls += self.full_size_image(img_url['s']['n'])
 
         return image_urls
+
+    def full_size_image(self, image_url):
+        prefix = 'https://runnerspoint.scene7.com/is/image/'
+        url = urljoin(prefix, image_url)
+        url = add_or_replace_parameter(url, 'wid', '1600')
+        url = add_or_replace_parameter(url, 'hei', '900')
+
+        return [url]
 
     def parse_skus(self, response):
         garment = response.meta['garment']
@@ -205,13 +222,14 @@ class RunnersPointCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
-        Rule(LinkExtractor(restrict_css=listings_css), callback='parse_paging'),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback='parse_paging'),
     )
 
     def total_products(self, response):
         css = '.fl-product-list--header--title-count ::text'
         articles_count = str(response.css(css).extract_first())
         articles_search_res = re.search(r'\d+', articles_count)
+
         if articles_search_res:
             return int(articles_search_res.group())
 
@@ -220,12 +238,14 @@ class RunnersPointCrawlSpider(BaseCrawlSpider, Mixin):
         return response.css(css).extract_first()
 
     def parse_paging(self, response):
-        total_products = self.total_products(response)
-        if not total_products or total_products < self.products_per_page:
+        css = '[data-ajaxcontent="productpagebutton"] .fl-btn--inner'
+        if not response.css(css):
             return
 
-        total_pages = math.ceil(total_products / self.products_per_page)
+        total_products = self.total_products(response)
+        total_pages = math.ceil(total_products / self.products_per_page) + 1
         url = self.pagination_url(response)
+
         for page_num in range(1, total_pages):
             yield Request(
                 add_or_replace_parameter(url, 'PageNumber', page_num),
