@@ -56,13 +56,13 @@ class RunnersPointParseSpider(BaseParseSpider, Mixin):
         garment_meta['previous_price'], garment_meta['price'], _ = self.product_pricing(response)
         garment['meta'] = garment_meta
 
-        return self.next_request_or_garment(garment, drop_meta=False) + self.color_requests(response)
+        return self.next_request_or_garment(garment) + self.color_requests(response)
 
     def raw_product(self, response):
         xpath = "//script[contains(text(), '// tracking function exists')]"
         script_elements = response.xpath(xpath).extract()
+        regex = '_st\(\'addTagProperties\',(.+?)\);'
         for script in script_elements:
-            regex = '_st\(\'addTagProperties\',(.+?)\);'
             raw_products = re.findall(regex, script)
             if raw_products:
                 return json.loads(raw_products[0].replace('\'', '"'))
