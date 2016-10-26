@@ -16,7 +16,6 @@ from skuscraper.spiders.base import BaseParseSpider, BaseCrawlSpider, clean
 class Mixin(object):
     market = 'DE'
     retailer = 'runnerspoint-de'
-    brand = 'Runners Point'
     lang = 'de'
     allowed_domains = ['www.runnerspoint.de', 'runnerspoint.scene7.com']
     start_urls = [
