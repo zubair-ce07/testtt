@@ -96,8 +96,8 @@ class CubusParseSpider(BaseParseSpider):
     def product_description(self, raw_product):
         if 'ShortDescription' in raw_product:
             return [x for x in raw_product['ShortDescription'] if not self.care_criteria_simplified(x)]
-        else:
-            return []
+
+        return []
 
     def product_care(self, raw_product):
         care = []
@@ -122,10 +122,10 @@ class CubusParseSpider(BaseParseSpider):
             sku['size'] = clean(raw_sku['Size'])
             sku['currency'] = CurrencyParser.currency(raw_garment['OfferedPrice']['Currency'])
             sku['price'] = CurrencyParser.lowest_price(str(raw_garment['OfferedPrice']['Price']))
-            prev_price = CurrencyParser.lowest_price(str(raw_garment['ListPrice']['Price']))
+            previous_price = CurrencyParser.lowest_price(str(raw_garment['ListPrice']['Price']))
 
-            if sku['price'] != prev_price:
-                sku['previous_prices'] = [prev_price]
+            if sku['price'] != previous_price:
+                sku['previous_prices'] = [previous_price]
 
             if raw_sku['Quantity'] < 1:
                 sku['out_of_stock'] = True
@@ -186,19 +186,19 @@ class CubusCrawlSpider(BaseCrawlSpider):
 
         return request
 
-class CubusParseSpiderSV(CubusParseSpider, MixinSV):
+class CubusSVParseSpider(CubusParseSpider, MixinSV):
     name = MixinSV.retailer + '-parse'
 
 
-class CubusCrawlSpiderSV(CubusCrawlSpider, MixinSV):
+class CubusSVCrawlSpider(CubusCrawlSpider, MixinSV):
     name = MixinSV.retailer + '-crawl'
-    parse_spider = CubusParseSpiderSV()
+    parse_spider = CubusSVParseSpider()
 
 
-class CubusParseSpiderNO(CubusParseSpider, MixinNO):
+class CubusNOParseSpider(CubusParseSpider, MixinNO):
     name = MixinNO.retailer + '-parse'
 
 
-class CubusCrawlSpiderNO(CubusCrawlSpider, MixinNO):
+class CubusNOCrawlSpider(CubusCrawlSpider, MixinNO):
     name = MixinNO.retailer + '-crawl'
-    parse_spider = CubusParseSpiderNO()
+    parse_spider = CubusNOParseSpider()
