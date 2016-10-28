@@ -1,8 +1,8 @@
-from c_spider import CSpider
+from p_spider import PSpider
 
 def main():
     domain = "https://arbisoft.com/"
-    spider = CSpider(domain)
+    spider = PSpider(domain)
     spider.start()
 
     print(spider.size)
