@@ -1,8 +1,9 @@
 import asyncio
 from parsel import Selector
 from queue import Queue
+from multiprocessing import Manager
 import aiohttp
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
 class PSpider:
@@ -16,7 +17,8 @@ class PSpider:
 
 
     def start(self):
-        self.urls_q = Queue()
+        manager = Manager()
+        self.urls_q = manager.Queue()
         self.urls_q.put_nowait(self.domain)
         self.crawl()
 
