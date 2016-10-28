@@ -16,8 +16,8 @@ class Mixin(object):
     global_resource_prefix = 'https://cubus.com'
 
 
-class MixinSV(Mixin):
-    retailer = Mixin.retailer + '-sv'
+class MixinSE(Mixin):
+    retailer = Mixin.retailer + '-se'
     market = 'SE'
     lang = 'sv'
     url_prefix = 'https://cubus.com/sv/'
@@ -94,16 +94,15 @@ class CubusParseSpider(BaseParseSpider):
         return [urljoin(self.global_resource_prefix, url['ZoomImage']) for url in raw_product['MediaCollection']]
 
     def product_description(self, raw_product):
-        if 'ShortDescription' in raw_product:
-            return [x for x in raw_product['ShortDescription'] if not self.care_criteria_simplified(x)]
-
+        if 'ShortDescription' in raw_product and not self.care_criteria_simplified(raw_product['ShortDescription']):
+            return clean([raw_product['ShortDescription']])
         return []
 
     def product_care(self, raw_product):
         care = []
 
-        if 'ShortDescription' in raw_product:
-            care = [x for x in raw_product['ShortDescription'] if self.care_criteria_simplified(x)]
+        if 'ShortDescription' in raw_product and self.care_criteria_simplified(raw_product['ShortDescription']):
+            care += [clean(raw_product['ShortDescription'])]
 
         for raw_care in raw_product['ProductCare']:
             care += [clean(raw_care + ':' + raw_product['ProductCare'][raw_care])]
@@ -186,13 +185,14 @@ class CubusCrawlSpider(BaseCrawlSpider):
 
         return request
 
-class CubusSVParseSpider(CubusParseSpider, MixinSV):
-    name = MixinSV.retailer + '-parse'
+
+class CubusSEParseSpider(CubusParseSpider, MixinSE):
+    name = MixinSE.retailer + '-parse'
 
 
-class CubusSVCrawlSpider(CubusCrawlSpider, MixinSV):
-    name = MixinSV.retailer + '-crawl'
-    parse_spider = CubusSVParseSpider()
+class CubusSECrawlSpider(CubusCrawlSpider, MixinSE):
+    name = MixinSE.retailer + '-crawl'
+    parse_spider = CubusSEParseSpider()
 
 
 class CubusNOParseSpider(CubusParseSpider, MixinNO):
