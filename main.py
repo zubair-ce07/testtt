@@ -3,7 +3,7 @@ from p_spider import PSpider
 def main():
     domain = "https://arbisoft.com/"
     spider = PSpider(domain)
-    spider.start()
+    spider.crawl()
 
     print(spider.size)
 
