@@ -121,6 +121,7 @@ def print_stats_avg_month():
 def get_month_and_year(date):
     return (date.split("/")[1], date.split("/")[0])
 
+
 def create_filename_string(date):
     """ 
             Input date format is converted into weatherdata specific filname
@@ -138,6 +139,7 @@ def create_filename_string(date):
     file_name = "Murree_weather_" + year + "_" + \
         get_month_string(int(month))[:3] + ".txt"
     return file_name
+
 
 def print_histogram(highest_temp_list, lowest_temp_list, month, year):
     """ 
@@ -162,6 +164,7 @@ def print_histogram(highest_temp_list, lowest_temp_list, month, year):
         print(str(day + 1) + " ", end="")
         print("+" * temp[1] + " " + str(temp[1]) + "C", end="")
     print("")
+
 
 def process_file_for_minmax_stats(file_name):
     """	
@@ -228,6 +231,7 @@ def compute_incrementally_stats_minmax_month(data_set, temp_stats, humidity_stat
                         file_columns["PKT"]]
         i = i + 1
 
+
 def process_file_avg_month(file_name):
     """
             Process a weather data file for average max and min for temperature 
@@ -250,6 +254,7 @@ def process_file_avg_month(file_name):
         print_stats_avg_month()
     except IOError as e:
         print("No files found with this year")
+
 
 def compute_stats_avg_month(data_set, temp_stats, humidity_stats, file_name):
     """
@@ -292,6 +297,7 @@ def compute_stats_avg_month(data_set, temp_stats, humidity_stats, file_name):
     temp_stats["mean_min_temp"] = mean(min_temp_list)
     humidity_stats["mean_humidity"] = mean(humidity_list)
 
+
 def process_file_for_minmax_month_histogram(file_name, month, year):
     """
             Process a weather data file for  printing a histogram of
@@ -314,6 +320,7 @@ def process_file_for_minmax_month_histogram(file_name, month, year):
             compute_stats_minmax_month(data_set, month, year)
     except IOError as e:
         print("No files found with this year")
+
 
 def compute_stats_minmax_month(data_set, month, year):
     """ 
@@ -348,6 +355,7 @@ def compute_stats_minmax_month(data_set, month, year):
 
     print_histogram(highest_temp_list, lowest_temp_list, month, year)
 
+
 def generate_report_minmax_stats_for_year(path, year_to_search):
     """	
             Generate report that prints out stats like 
@@ -366,8 +374,10 @@ def generate_report_minmax_stats_for_year(path, year_to_search):
 
     for file in data_files_list:
         if(file[-12:-8] == year_to_search):
-            process_file_for_minmax_stats(file)
+            file_path = path + "/" + file
+            process_file_for_minmax_stats(file_path)
     print_stats()
+
 
 def generate_report_avg_minmax_stats_for_month(path, to_search):
     """	
@@ -382,9 +392,11 @@ def generate_report_avg_minmax_stats_for_month(path, to_search):
     """
 
     data_files_list = os.listdir(path)
-
     file_name = create_filename_string(to_search)
-    process_file_avg_month(file_name)
+    file_path = path + "/" + file_name
+
+    process_file_avg_month(file_path)
+
 
 def generate_report_minmax_histogram_for_month(path, to_search):
     """	
@@ -403,7 +415,10 @@ def generate_report_minmax_histogram_for_month(path, to_search):
     month, year = get_month_and_year(to_search)
     file_name = create_filename_string(to_search)
 
-    process_file_for_minmax_month_histogram(file_name, month, year)
+    file_path = path + "/" + file_name
+
+    process_file_for_minmax_month_histogram(file_path, month, year)
+
 
 def sanitize_directory(directory_path):
     """	
@@ -421,6 +436,7 @@ def sanitize_directory(directory_path):
     except Exception as e:
         print("Input contains invalid directory, no such directory path found")
         sys.exit(0)
+
 
 def sanitize_command_flags(command_flags):
     """	
@@ -440,6 +456,7 @@ def sanitize_command_flags(command_flags):
                 raise Exception
     except Exception as e:
         print_invalid_flags_error()
+
 
 def sanitize_input_format(arguments_list):
     """	
@@ -476,6 +493,11 @@ def sanitize_input_format(arguments_list):
         sanitize_directory(directory_path)
         sanitize_command_flags(command_flags)
 
+
+def sanitize_command_string(cmd_string):
+    pass
+
+
 def print_input_format_error():
     """	
             Prints error message for incorrect format 
@@ -489,6 +511,7 @@ def print_input_format_error():
     print("weatherman.py path/to/weatherdata command_flag year|month")
     sys.exit(0)
 
+
 def print_invalid_flags_error():
     """	
             Prints error message for invalid flags choice 
@@ -501,6 +524,7 @@ def print_invalid_flags_error():
 
     print("Incorrect flags entered, choice available are -e,-a,-c")
     sys.exit(0)
+
 
 def main():
     """	
