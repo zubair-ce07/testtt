@@ -25,7 +25,6 @@ class PSpider:
         futures = []
         with ProcessPoolExecutor() as pool:
             while True:
-                pass
                 url = self.urls_q.get()
                 if url not in self.visited:
                     self.visited.add(url)
