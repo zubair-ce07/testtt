@@ -1,6 +1,6 @@
 import os
 import sys
-import curses
+import re
 import colorama
 from colorama import Fore, Back, Style
 from statistics import mean
@@ -494,8 +494,63 @@ def sanitize_input_format(arguments_list):
         sanitize_command_flags(command_flags)
 
 
-def sanitize_command_string(cmd_string):
-    pass
+def sanitize_command_string_year_and_month(cmd_string):
+    """	
+      Validates a command string for any format issues
+      Inputs:
+              cmd_string : command string format eg 2009/03
+      Output:
+              Nothing is returned, use helper function. 
+    """
+
+    cmd_string_len = len(cmd_string.split("/"))
+    if(cmd_string_len != 2):
+        print_command_format_error()
+        sys.exit(0)
+
+    cmd_regex = re.compile(r'(\d{4})/(\d+)')
+    matching_object_year_month = cmd_regex.search(cmd_string)
+
+    if(matching_object_year_month is None):
+        print_command_format_error()
+        sys.exit(0)
+
+    day = int(matching_object_year_month.group(2))
+    if(day < 1 or day > 12):
+        print_command_format_error()
+        sys.exit(0)
+
+    year = int(matching_object_year_month.group(1))
+    if(year < 0000 or year > 2016):
+        print_command_format_error()
+        sys.exit(0)
+
+
+def sanitize_command_string_year(cmd_string):
+    """	
+      Validates a command string for any format issues
+      Inputs:
+              cmd_string : command string format eg 2009
+      Output:
+              Returning year extracted from command_string
+    """
+
+    cmd_regex = re.compile(r'(\d\d\d\d)')
+    matching_object_year = cmd_regex.search(cmd_string)
+
+    if(matching_object_year is None):
+        print("Invalid format for command string, eg 2010")
+        sys.exit(0)
+
+    year = int(matching_object_year.group(1))
+    if(year < 0 or year > 2016):
+    	print("Invalid format for command string, eg 2010")
+    	sys.exit(0)
+        
+    return year
+
+def print_command_format_error():
+    print("Invalid format for command string, eg 2010/7")
 
 
 def print_input_format_error():
@@ -548,13 +603,13 @@ def main():
         cmd_string = arguments_list[i + 1]
 
         if(cmd_flag == '-e'):
-            # sanitize_command_string(cmd_string)
-            generate_report_minmax_stats_for_year(path, cmd_string)
+            year = sanitize_command_string_year(cmd_string)
+            generate_report_minmax_stats_for_year(path, str(year))
         elif(cmd_flag == "-a"):
-            # sanitize_command_string(cmd_string)
+            sanitize_command_string_year_and_month(cmd_string)
             generate_report_avg_minmax_stats_for_month(path, cmd_string)
         elif(cmd_flag == "-c"):
-            # sanitize_command_string(cmd_string)
+            sanitize_command_string_year_and_month(cmd_string)
             generate_report_minmax_histogram_for_month(path, cmd_string)
         i = i + 2
 main()
