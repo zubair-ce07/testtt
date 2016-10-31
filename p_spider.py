@@ -24,7 +24,7 @@ class PSpider:
     def crawl(self):
         futures = []
         with ProcessPoolExecutor() as pool:
-            while True:
+            while len(self.visited()) < self.max_urls:
                 url = self.urls_q.get()
                 if url not in self.visited:
                     self.visited.add(url)
