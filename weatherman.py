@@ -253,7 +253,7 @@ def process_file_avg_month(file_name):
                 data_set, temp_stats, humidity_stats, file_name)
         print_stats_avg_month()
     except IOError as e:
-        print("No files found with this year")
+        print("No files found with this month and year")
 
 
 def compute_stats_avg_month(data_set, temp_stats, humidity_stats, file_name):
@@ -319,7 +319,7 @@ def process_file_for_minmax_month_histogram(file_name, month, year):
                 data_set.append(line)
             compute_stats_minmax_month(data_set, month, year)
     except IOError as e:
-        print("No files found with this year")
+        print("No files found with this month and year")
 
 
 def compute_stats_minmax_month(data_set, month, year):
@@ -496,11 +496,11 @@ def sanitize_input_format(arguments_list):
 
 def sanitize_command_string_year_and_month(cmd_string):
     """	
-      Validates a command string for any format issues
-      Inputs:
-              cmd_string : command string format eg 2009/03
-      Output:
-              Nothing is returned, use helper function. 
+			Validates a command string for any format issues
+			Inputs:
+			      cmd_string : command string format eg 2009/03
+			Output:
+			      Nothing is returned, use helper function. 
     """
 
     cmd_string_len = len(cmd_string.split("/"))
@@ -528,11 +528,11 @@ def sanitize_command_string_year_and_month(cmd_string):
 
 def sanitize_command_string_year(cmd_string):
     """	
-      Validates a command string for any format issues
-      Inputs:
-              cmd_string : command string format eg 2009
-      Output:
-              Returning year extracted from command_string
+			Validates a command string for any format issues
+			Inputs:
+			      cmd_string : command string format eg 2009
+			Output:
+			      Returning year extracted from command_string
     """
 
     cmd_regex = re.compile(r'(\d\d\d\d)')
