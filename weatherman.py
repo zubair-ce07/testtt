@@ -44,12 +44,12 @@ humidity_stats = {
 
 def prettify_date(date):
     """ 
-            Make the date more human friendly
+	    Make the date more human friendly
 
-            Inputs: 
-                    date: Date given in format 2003-3-03
-            Output: 
-                    Returns a human friendly string format eg "March 03"
+	    Inputs: 
+	            date: Date given in format 2003-3-03
+	    Output: 
+	            Returns a human friendly string format eg "March 03"
     """
 
     date = date.split("-")
@@ -61,12 +61,12 @@ def prettify_date(date):
 
 def get_month_string(m):
     """ 
-            Compute a string representation of a numeric month
+        Compute a string representation of a numeric month
 
-            Inputs: 
-                    m: month given in number
-            Output: 
-                    returns its corresponding string representation
+        Inputs: 
+                m: month given in number
+        Output: 
+                returns its corresponding string representation
     """
 
     months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -77,13 +77,13 @@ def get_month_string(m):
 
 def print_stats():
     """ 
-            Prints humidity,highest and lowest temperature for 
-            a year.
+        Prints humidity,highest and lowest temperature for 
+        a year.
 
-            Inputs: 
-                    None
-            Output: 
-                    Prints temperature and humidity stats in a format
+        Inputs: 
+                None
+        Output: 
+                Prints temperature and humidity stats in a format
     """
 
     print("-----------------Final Result--------------------------")
@@ -100,13 +100,13 @@ def print_stats():
 
 def print_stats_avg_month():
     """ 
-            Prints average humidity,highest and lowest temperature for
-            a month.
+        Prints average humidity,highest and lowest temperature for
+        a month.
 
-            Inputs: 
-                    None
-            Output: 
-                    Prints temperature and humidity stats in a format
+        Inputs: 
+                None
+        Output: 
+                Prints temperature and humidity stats in a format
     """
 
     print("-----------------Final Result--------------------------")
@@ -124,13 +124,13 @@ def get_month_and_year(date):
 
 def create_filename_string(date):
     """ 
-            Input date format is converted into weatherdata specific filname
-            format. 
+        Input date format is converted into weatherdata specific filname
+        format. 
 
-            Inputs: 
-                    date: Date specified in format 2006/3
-            Output: 
-                    Return format is weatherdata compliant "Murree_weather_2006_Mar.txt"
+        Inputs: 
+                date: Date specified in format 2006/3
+        Output: 
+                Return format is weatherdata compliant "Murree_weather_2006_Mar.txt"
     """
 
     year = date.split("/")[0]
@@ -143,14 +143,14 @@ def create_filename_string(date):
 
 def print_histogram(highest_temp_list, lowest_temp_list, month, year):
     """ 
-            Creates a histogram for a specified month in different colors 
+        Creates a histogram for a specified month in different colors 
 
-            Inputs:
-                    highest_temp_list: List of highest temperatures for a month
-                    lowest_temp_list: List of lowest temperatures for a month
-                    year: for this year eg 2010
-            Output:
-                    Prints a histogram.
+        Inputs:
+                highest_temp_list: List of highest temperatures for a month
+                lowest_temp_list: List of lowest temperatures for a month
+                year: for this year eg 2010
+        Output:
+                Prints a histogram.
     """
 
     print(get_month_string(int(month)) + " " + year)
@@ -168,14 +168,14 @@ def print_histogram(highest_temp_list, lowest_temp_list, month, year):
 
 def process_file_for_minmax_stats(file_name):
     """	
-            Process a weather data file for max and min for temperature 
-            and humidity 
+        Process a weather data file for max and min for temperature 
+        and humidity 
 
-            Inputs:
-                    file_name: filename of the weather date file to process
-            Output:
-                    Nothing is returned, uses other helper functions to incrementally
-                    find min and max stats
+        Inputs:
+                file_name: filename of the weather date file to process
+        Output:
+                Nothing is returned, uses other helper functions to incrementally
+                find min and max stats
     """
 
     try:
@@ -191,19 +191,19 @@ def process_file_for_minmax_stats(file_name):
 
 def compute_incrementally_stats_minmax_month(data_set, temp_stats, humidity_stats, file_name):
     """
-            Computes stats of max temp, min temp and min humidity for a month 
-            identified by file name, the result is incrementally updated in corresponding 
-            dictionaries temp_stats, humidity_stats
+        Computes stats of max temp, min temp and min humidity for a month 
+        identified by file name, the result is incrementally updated in corresponding 
+        dictionaries temp_stats, humidity_stats
 
-            Inputs:
-                    data_set: all the data of a month
-                    temp_stats: dictionary recording stats for temperature
-                    humidity_stats: dictionary recording stats for humidity
-                    file_name: weather data file name used
-            Output:
-                    Nothing is returned, incrementally
-                    find min and max stats and use dictionary for record
-                    saving.
+        Inputs:
+                data_set: all the data of a month
+                temp_stats: dictionary recording stats for temperature
+                humidity_stats: dictionary recording stats for humidity
+                file_name: weather data file name used
+        Output:
+                Nothing is returned, incrementally
+                find min and max stats and use dictionary for record
+                saving.
     """
 
     i = 0
@@ -234,14 +234,14 @@ def compute_incrementally_stats_minmax_month(data_set, temp_stats, humidity_stat
 
 def process_file_avg_month(file_name):
     """
-            Process a weather data file for average max and min for temperature 
-            and humidity 
+        Process a weather data file for average max and min for temperature 
+        and humidity 
 
-            Inputs:
-                    file_name: filename of the weather date file to process
-            Output:
-                    Nothing is returned, uses other helper functions to 
-                    find min and max stats
+        Inputs:
+                file_name: filename of the weather date file to process
+        Output:
+                Nothing is returned, uses other helper functions to 
+                find min and max stats
     """
 
     try:
@@ -258,17 +258,17 @@ def process_file_avg_month(file_name):
 
 def compute_stats_avg_month(data_set, temp_stats, humidity_stats, file_name):
     """
-            Computes stats of average of max,min temp and humidity for a month 
-            identified by file name
+        Computes stats of average of max,min temp and humidity for a month 
+        identified by file name
 
-            Inputs:
-                    data_set: all the data of a month
-                    temp_stats: dictionary recording stats for temperature
-                    humidity_stats: dictionary recording stats for humidity
-                    file_name: weather data file name used
-            Output:
-                    Nothing is returned, find mean and use dictionary for record
-                    saving.
+        Inputs:
+                data_set: all the data of a month
+                temp_stats: dictionary recording stats for temperature
+                humidity_stats: dictionary recording stats for humidity
+                file_name: weather data file name used
+        Output:
+                Nothing is returned, find mean and use dictionary for record
+                saving.
     """
 
     humidity_list = []
@@ -300,16 +300,16 @@ def compute_stats_avg_month(data_set, temp_stats, humidity_stats, file_name):
 
 def process_file_for_minmax_month_histogram(file_name, month, year):
     """
-            Process a weather data file for  printing a histogram of
-            max and min temperatures.
+        Process a weather data file for  printing a histogram of
+        max and min temperatures.
 
-            Inputs:
-                    file_name: filename of the weather date file to process
-                    month: month
-                    year: year 
-            Output:
-                    Nothing is returned, uses other helper functions to 
-                    find min and max stats
+        Inputs:
+                file_name: filename of the weather date file to process
+                month: month
+                year: year 
+        Output:
+                Nothing is returned, uses other helper functions to 
+                find min and max stats
     """
 
     try:
@@ -324,15 +324,15 @@ def process_file_for_minmax_month_histogram(file_name, month, year):
 
 def compute_stats_minmax_month(data_set, month, year):
     """ 
-            Computes  max,min temperatures for a month 
-            identified by file name
+        Computes  max,min temperatures for a month 
+        identified by file name
 
-            Inputs:
-                    data_set: all the data of a month
-                    month: month
-                    year: year
-            Output:
-                    Nothing is returned, use helper function 
+        Inputs:
+                data_set: all the data of a month
+                month: month
+                year: year
+        Output:
+                Nothing is returned, use helper function 
     """
 
     highest_temp_list = []
@@ -358,15 +358,15 @@ def compute_stats_minmax_month(data_set, month, year):
 
 def generate_report_minmax_stats_for_year(path, year_to_search):
     """	
-            Generate report that prints out stats like 
-            min, max temperature and date for a year. It 
-            process data incrementally.
+        Generate report that prints out stats like 
+        min, max temperature and date for a year. It 
+        process data incrementally.
 
-            Inputs:
-                    path: weather data files location
-                    year_to_search: year to search for the stats
-            Output:
-                    Nothing is returned, use helper function 
+        Inputs:
+                path: weather data files location
+                year_to_search: year to search for the stats
+        Output:
+                Nothing is returned, use helper function 
     """
 
     data_files_list = os.listdir(path)
@@ -381,14 +381,14 @@ def generate_report_minmax_stats_for_year(path, year_to_search):
 
 def generate_report_avg_minmax_stats_for_month(path, to_search):
     """	
-            Generate report showing avg of min,max and humidity  
-            for a year/month specified.
+        Generate report showing avg of min,max and humidity  
+        for a year/month specified.
 
-            Inputs:
-                    path: weather data files location
-                    to_search: search string eg 2009/3
-            Output:
-                    Nothing is returned, use helper function 
+        Inputs:
+                path: weather data files location
+                to_search: search string eg 2009/3
+        Output:
+                Nothing is returned, use helper function 
     """
 
     data_files_list = os.listdir(path)
@@ -400,14 +400,14 @@ def generate_report_avg_minmax_stats_for_month(path, to_search):
 
 def generate_report_minmax_histogram_for_month(path, to_search):
     """	
-            Generate report that prints out a histogram of a 
-            min and max temperature  for a year/month specified
+        Generate report that prints out a histogram of a 
+        min and max temperature  for a year/month specified
 
-            Inputs:
-                    path: weather data files location
-                    to_search: search string eg 2009/3
-            Output:
-                    Nothing is returned, use helper function 
+        Inputs:
+                path: weather data files location
+                to_search: search string eg 2009/3
+        Output:
+                Nothing is returned, use helper function 
     """
 
     data_files_list = os.listdir(".")
@@ -422,13 +422,13 @@ def generate_report_minmax_histogram_for_month(path, to_search):
 
 def sanitize_directory(directory_path):
     """	
-            Checks if directory sent to the script through command line 
-            arguments is valid .
+        Checks if directory sent to the script through command line 
+        arguments is valid .
 
-            Inputs:
-                    directory_path: weather data files location
-            Output:
-                    Nothing is returned, use helper function 
+        Inputs:
+                directory_path: weather data files location
+        Output:
+                Nothing is returned, use helper function 
     """
 
     try:
@@ -440,13 +440,13 @@ def sanitize_directory(directory_path):
 
 def sanitize_command_flags(command_flags):
     """	
-            Checks if commands flags sent to the script are valid 
+        Checks if commands flags sent to the script are valid 
 
-            Inputs:
-                    command_flags: command flags list eg ['-a',-e]
-            Output:
-                    Nothing is returned, use helper function to
-                    check their validity.
+        Inputs:
+                command_flags: command flags list eg ['-a',-e]
+        Output:
+                Nothing is returned, use helper function to
+                check their validity.
     """
 
     commands = ['-e', '-a', '-c']
@@ -460,13 +460,13 @@ def sanitize_command_flags(command_flags):
 
 def sanitize_input_format(arguments_list):
     """	
-            Check the command line arguments passed 
-            to script are valid 
-            Inputs:
-                    arguments_list: command line argument eg "sys.argv"
-            Output:
-                    Nothing is returned, use helper function to
-                    check their validity.
+        Check the command line arguments passed 
+        to script are valid 
+        Inputs:
+                arguments_list: command line argument eg "sys.argv"
+        Output:
+                Nothing is returned, use helper function to
+                check their validity.
     """
 
     arg_len = len(arguments_list)
@@ -496,11 +496,11 @@ def sanitize_input_format(arguments_list):
 
 def sanitize_command_string_year_and_month(cmd_string):
     """	
-			Validates a command string for any format issues
-			Inputs:
-			      cmd_string : command string format eg 2009/03
-			Output:
-			      Nothing is returned, use helper function. 
+		Validates a command string for any format issues
+		Inputs:
+		      cmd_string : command string format eg 2009/03
+		Output:
+		      Nothing is returned, use helper function. 
     """
 
     cmd_string_len = len(cmd_string.split("/"))
@@ -528,11 +528,11 @@ def sanitize_command_string_year_and_month(cmd_string):
 
 def sanitize_command_string_year(cmd_string):
     """	
-			Validates a command string for any format issues
-			Inputs:
-			      cmd_string : command string format eg 2009
-			Output:
-			      Returning year extracted from command_string
+		Validates a command string for any format issues
+		Inputs:
+		      cmd_string : command string format eg 2009
+		Output:
+		      Returning year extracted from command_string
     """
 
     cmd_regex = re.compile(r'(\d\d\d\d)')
@@ -555,11 +555,11 @@ def print_command_format_error():
 
 def print_input_format_error():
     """	
-            Prints error message for incorrect format 
-            Inputs:
-                    None
-            Output:
-                    Nothing is returned, use helper function. 
+        Prints error message for incorrect format 
+        Inputs:
+                None
+        Output:
+                Nothing is returned, use helper function. 
     """
 
     print("Script arguments missing, please check the input")
@@ -569,12 +569,12 @@ def print_input_format_error():
 
 def print_invalid_flags_error():
     """	
-            Prints error message for invalid flags choice 
+        Prints error message for invalid flags choice 
 
-            Inputs:
-                    None
-            Output:
-                    Nothing is returned, use helper function. 
+        Inputs:
+                None
+        Output:
+                Nothing is returned, use helper function. 
     """
 
     print("Incorrect flags entered, choice available are -e,-a,-c")
@@ -583,12 +583,12 @@ def print_invalid_flags_error():
 
 def main():
     """	
-            Entry point for script 
+        Entry point for script 
 
-            Inputs:
-                    None
-            Output:
-                    Nothing is returned, use helper function. 
+        Inputs:
+                None
+        Output:
+                Nothing is returned, use helper function. 
     """
 
     sanitize_input_format(sys.argv)
