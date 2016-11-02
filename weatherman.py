@@ -111,23 +111,24 @@ class WeatherMan:
 
         for d in month_data:
             current += 1
-            print("\033[95m{} \033[91m{} \033[95m{}C".format(current, "+" * d["Max TemperatureC"],
-                                                             d["Max TemperatureC"])) if d[
-                "Max TemperatureC"] else print("No Data!")
-            print("\033[95m{} \033[94m{} \033[95m{}C".format(current, "+" * d["Min TemperatureC"],
-                                                             d["Min TemperatureC"])) if d[
-                "Min TemperatureC"] else print("No Data!")
+            print("\033[95m{} \033[91m{} \033[95m{}C"
+                  .format(current, "+" * d["Max TemperatureC"],
+                          d["Max TemperatureC"])) if d["Max TemperatureC"] else print("No Data!")
+            print("\033[95m{} \033[94m{} \033[95m{}C"
+                  .format(current, "+" * d["Min TemperatureC"],
+                          d["Min TemperatureC"])) if d["Min TemperatureC"] else print("No Data!")
 
     def month_report_single_line(self, year, month, current=0):
         month_data = self.get_month_data(year, month)
 
         for d in month_data:
             current += 1
-            print("\033[95m{} \033[94m{}\033[91m{} \033[95m{}C - {}C".format(current, "+" * d["Min TemperatureC"],
-                                                                             "+" * d["Max TemperatureC"],
-                                                                             d["Min TemperatureC"],
-                                                                             d["Max TemperatureC"])) if \
-                d["Max TemperatureC"] and d["Min TemperatureC"] else print("No Data!")
+            print("\033[95m{} \033[94m{}\033[91m{} \033[95m{}C - {}C"
+                  .format(current, "+" * d["Min TemperatureC"],
+                          "+" * d["Max TemperatureC"],
+                          d["Min TemperatureC"],
+                          d["Max TemperatureC"])) if d["Max TemperatureC"] and d["Min TemperatureC"] else print(
+                "No Data!")
 
 
 def arguments():
