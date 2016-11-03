@@ -1,0 +1,13 @@
+class Constants:
+    PKT = "PKT"
+    MAX_TEMPERATURE = "Max TemperatureC"
+    MEAN_TEMPERATURE = "Mean TemperatureC"
+    MIN_TEMPERATURE = "Min TemperatureC"
+    MAX_HUMIDITY = "Max Humidity"
+    MEAN_HUMIDITY = "Mean Humidity"
+    MIN_HUMIDITY = "Min Humidity"
+    HIGHEST = "highest"
+    LOWEST = "lowest"
+    HUMIDITY = "humidity"
+    VALUE = "value"
+    DATE = "date"
