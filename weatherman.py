@@ -7,7 +7,6 @@ from enum import Enum
 
 
 class Months(Enum):
-    # Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec = range(1,12)[0:11]
     Jan = 1
     Feb = 2
     Mar = 3
@@ -23,129 +22,140 @@ class Months(Enum):
 
 
 def open_file(path, filename):
-    list_buffer_dict=[]
+    buffer = []
     with open(path + filename, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            list_buffer_dict.append(row)
+            buffer.append(row)
 
-    return list_buffer_dict
+    return buffer
 
 
-def get_yearmonth_split(option):
-    option_list = option.split("/")
-    year = int(option_list[0])
-    month = int(option_list[1])
+def get_yearmonth_split(options):
+    options_separate = options.split("/")
+    year = int(options_separate[0])
+    month = int(options_separate[1])
 
     return year, month
 
 
 def yearly_report(path, year):
-    wildcard_start = "Murree_weather_"+str(year)+'_'
-    data_present = 0
+    wildcard_start = "Murree_weather_{0}_".format(str(year))
     year_buffer = []
     for file in os.listdir(path):
         if file.startswith(wildcard_start):
-            data_present = 1
             file_buffer = open_file(path, file)
             year_buffer.append(file_buffer)
 
-    if data_present == 0:
-        print("Data Not Available")
+    if not year_buffer:
+        print("Data Not Available\n")
         return
 
-    max_temp = [-1, -1, -1]
-    min_temp = [-1, -1, 9999]
-    max_humidity = [-1, -1, -1]
+    max_temp = {'Month': -1, 'Day': -1, 'Value': -1}
+    min_temp = {'Month': -1, 'Day': -1, 'Value': 9999}
+    max_humidity = {'Month': -1, 'Day': -1, 'Value': -1}
     for i in range(0, len(year_buffer)):
         if year_buffer[i]:
             for j in range(0, len(year_buffer[i])):
-                temp_max = (year_buffer[i][j]['Max TemperatureC'])
-                temp_min = (year_buffer[i][j]['Min TemperatureC'])
-                humidity_max = (year_buffer[i][j]['Max Humidity'])
-                today = str.split(year_buffer[i][j]['PKT'], '-')
+                current_max_temp = (year_buffer[i][j]['Max TemperatureC'])
+                current_min_temp = (year_buffer[i][j]['Min TemperatureC'])
+                current_max_humidity = (year_buffer[i][j]['Max Humidity'])
+                today_separate = str.split(year_buffer[i][j]['PKT'], '-')
+                today = {'Year': int(today_separate[0]), 'Month': int(today_separate[1]), 'Day': int(today_separate[2])}
 
-                if temp_max:
-                    if int(temp_max) > max_temp[2]:
-                        max_temp = [int(today[1]), int(today[2]), int(temp_max)]
-                if temp_min:
-                    if int(temp_min) < min_temp[2]:
-                        min_temp = [int(today[1]), int(today[2]), int(temp_min)]
-                if humidity_max:
-                    if int(humidity_max) > max_humidity[2]:
-                        max_humidity = [int(today[1]), int(today[2]), int(humidity_max)]
+                if current_max_temp:
+                    if int(current_max_temp) > max_temp['Value']:
+                        max_temp['Month'], max_temp['Day'], max_temp['Value'] = today['Month'],\
+                                                                                today['Day'],\
+                                                                                int(current_max_temp)
+                if current_min_temp:
+                    if int(current_min_temp) < min_temp['Value']:
+                        min_temp['Month'], min_temp['Day'], min_temp['Value'] = today['Month'],\
+                                                                                today['Day'],\
+                                                                                int(current_min_temp)
+                if current_max_humidity:
+                    if int(current_max_humidity) > max_humidity['Value']:
+                        max_humidity['Month'], max_humidity['Day'], max_humidity['Value'] = today['Month'], \
+                                                                                            today['Day'],\
+                                                                                            int(current_max_humidity)
 
-    print("Highest: %sC on %s %s" % (max_temp[2], Months(max_temp[0]).name, max_temp[1]))
-    print("Lowest: %sC on %s %s" % (min_temp[2], Months(min_temp[0]).name, min_temp[1]))
-    print("Humidity: %s%% on %s %s" % (max_humidity[2], Months(max_humidity[0]).name, max_humidity[1]))
+    print("Highest: {0}C on {1} {2}".format(max_temp['Value'], Months(max_temp['Month']).name, max_temp['Day']))
+    print("Lowest: {0}C on {1} {2}".format(min_temp['Value'], Months(min_temp['Month']).name, min_temp['Day']))
+    print("Humidity: {0}% on {1} {2}\n".format(max_humidity['Value'], Months(max_humidity['Month']).name,
+                                               max_humidity['Day']))
 
-    print()
     return
 
 
 def monthly_report(path, year, month):
-    if month > 12 or month < 1:
-        print("Invalid Month Entry")
+    if not 1 <= month <= 12:
+        print("Invalid Month Entry for Monthly Report\n")
         return
 
-    max_temp_list = []
-    min_temp_list = []
-    mean_humidity_list = []
+    max_temp = []
+    min_temp = []
+    mean_humidity = []
 
-    filename = "Murree_weather_"+str(year)+'_'+str(Months(month).name)+".txt"
+    filename = "Murree_weather_{0}_{1}.txt".format(str(year), str(Months(month).name))
     if os.path.isfile(path+filename):
         month_buffer = open_file(path, filename)
         for j in range(0, len(month_buffer)):
-            temp_max = (month_buffer[j]['Max TemperatureC'])
-            temp_min = (month_buffer[j]['Min TemperatureC'])
-            humidity_mean = (month_buffer[j][' Mean Humidity'])
+            current_max_temp = (month_buffer[j]['Max TemperatureC'])
+            current_min_temp = (month_buffer[j]['Min TemperatureC'])
+            current_mean_humidity = (month_buffer[j][' Mean Humidity'])
 
-            if temp_max:
-                max_temp_list.append(int(temp_max))
-            if temp_min:
-                min_temp_list.append(int(temp_min))
-            if humidity_mean:
-                mean_humidity_list.append(int(humidity_mean))
+            if current_max_temp:
+                max_temp.append(int(current_max_temp))
+            if current_min_temp:
+                min_temp.append(int(current_min_temp))
+            if current_mean_humidity:
+                mean_humidity.append(int(current_mean_humidity))
 
-        avg_max_temp = sum(max_temp_list)//len(max_temp_list)
-        avg_min_temp = sum(min_temp_list)//len(min_temp_list)
-        avg_mean_humidity = sum(mean_humidity_list)//len(mean_humidity_list)
+        avg_max_temp = sum(max_temp)//len(max_temp)
+        avg_min_temp = sum(min_temp)//len(min_temp)
+        avg_mean_humidity = sum(mean_humidity)//len(mean_humidity)
 
-        print("Highest Average: ", avg_max_temp)
-        print("Lowest Average: ", avg_min_temp)
-        print("Average Mean Humidity: %d%%" % avg_mean_humidity)
+        print("Highest Average: {0}C".format(avg_max_temp))
+        print("Lowest Average: {0}C".format(avg_min_temp))
+        print("Average Mean Humidity: {0}%\n".format(avg_mean_humidity))
     else:
-        print("Data Not Available")
+        print("Data Not Available\n")
 
-    print()
     return
 
 
 def daily_report(path, year, month):
-    if month > 12 or month < 1:
-        print("Invalid Month Entry")
+    if not 1 <= month <= 12:
+        print("Invalid Month Entry for Daily report\n")
         return
 
-    filename = "Murree_weather_" + str(year) + '_' + str(Months(month).name) + ".txt"
+    filename = "Murree_weather_{0}_{1}.txt".format(str(year), str(Months(month).name))
     if os.path.isfile(path + filename):
         month_buffer = open_file(path, filename)
         print(str(Months(month).name), year)
         for j in range(0, len(month_buffer)):
-            temp_max = (month_buffer[j]['Max TemperatureC'])
-            temp_min = (month_buffer[j]['Min TemperatureC'])
-            today = str.split(month_buffer[j]['PKT'], '-')
-            if temp_max:
-                barmax = "+"*int(temp_max)
-            if temp_min:
-                barmin = '+'*int(temp_min)
-            if temp_min and temp_max:
-                barmax = "+"*int(temp_max)
-                barmin = '+'*int(temp_min)
-                print("%s \033[1;31;48m%s\033[0m\033[1;34;48m%s\033[0m %sC-%sC" % (today[2], barmin, barmax, temp_min, temp_max))
-    else:
-        print("Data Not Available")
+            current_max_temp = (month_buffer[j]['Max TemperatureC'])
+            current_min_temp = (month_buffer[j]['Min TemperatureC'])
+            today_separate = str.split(month_buffer[j]['PKT'], '-')
+            today = {'Year': int(today_separate[0]), 'Month': int(today_separate[1]), 'Day': int(today_separate[2])}
+            if current_min_temp and current_max_temp:
+                bar_max = "+"*int(current_max_temp)
+                bar_min = '+'*int(current_min_temp)
+                print("{0} \033[1;31;48m{1}\033[0m\033[1;34;48m{2}\033[0m {3}C-{4}C".format(today['Day'],
+                                                                                            bar_min,
+                                                                                            bar_max,
+                                                                                            current_min_temp,
+                                                                                            current_max_temp))
+            elif current_max_temp:
+                bar_max = "+"*int(current_max_temp)
+                print("{0} \033[1;34;48m{1}\033[0m {2}C".format(today['Day'], bar_max, current_max_temp))
+            elif current_min_temp:
+                bar_min = '+'*int(current_min_temp)
+                print("{0} \033[1;31;48m{1}\033[0m {2}C".format(today['Day'], bar_min, current_min_temp))
 
-    print()
+    else:
+        print("Data Not Available\n")
+
     return
 
 
@@ -175,4 +185,3 @@ def main():
 if __name__ == "__main__":
     os.system('clear')
     main()
-
