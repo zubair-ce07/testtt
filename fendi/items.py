@@ -14,4 +14,4 @@ class FendiItem(Item):
     image_urls = Field()
     currency = Field()
     market = Field()
-    sks = Field()
+    skus = Field()

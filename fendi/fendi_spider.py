@@ -18,13 +18,12 @@ class FendiSpider(CrawlSpider):
     def parse_item(self, response):
         item = FendiItem()
 
-        sks = {}
-        for o in response.css("#js_prod_size option.soldout"):
-            sks[o.css("::attr(value)").extract_first()] = {
+        skus = {}
+        for option in response.css("#js_prod_size option.soldout"):
+            skus[option.css("::attr(value)").extract_first()] = {
                 "currency": "GBP",
                 "price": response.css(".fd-pp-info-wrp .upgradable::text").extract_first()[1:],
-                "color": "Black",
-                "size": o.css("::text").extract_first()
+                "size": option.css("::text").extract_first()
             }
 
         item["original_url"] = response.url,
@@ -40,6 +39,6 @@ class FendiSpider(CrawlSpider):
         item["image_urls"] = response.css(".fd-pp-thumbnails ul li a::attr(href)").extract(),
         item["currency"] = "GBP",
         item["market"] = "K",
-        item["sks"] = sks
+        item["skus"] = skus
 
         yield item
