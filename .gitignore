@@ -47,6 +47,8 @@ coverage.xml
 # Django stuff:
 *.log
 
+weatherfiles
+
 # Sphinx documentation
 docs/_build/
 
