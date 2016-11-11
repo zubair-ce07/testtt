@@ -1,3 +1,4 @@
+import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from orsay.items import OrsayItem
@@ -15,7 +16,7 @@ class OrsaySpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=".product-image"), callback="parse_item")
     )
 
-    def parse_item(self, response):
+    def parse(self, response):
         item = OrsayItem()
 
         care = response.css(".product-care img::attr(src)").extract()
@@ -24,16 +25,6 @@ class OrsaySpider(CrawlSpider):
         currency = "EUR"
         price = response.css(".price::text").extract_first().split()[0]
         color = response.css(".product-colors li.active a img::attr(title)").extract_first()
-
-        skus = {}
-        for size in response.css(".sizebox-wrapper ul li"):
-            skus[size.css("::attr(data-optionid)").extract_first()] = {
-                "currency": currency,
-                "price": price,
-                "size": size.css("::text").extract_first().strip(),
-                "out_of_stock": True if size.css(".mz-tooltip::text").extract_first() == "nicht verfügbar" else False,
-                "color": color
-            }
 
         item["spider_name"] = "orsay-de-crawl"
         item["url"] = response.url
@@ -50,8 +41,40 @@ class OrsaySpider(CrawlSpider):
         item["color"] = color
         item["image_urls"] = response.css(".product-image-gallery-thumbs img::attr(src)").extract()
         item["care"] = care
-        item["skus"] = skus
+        item["skus"] = self.get_skus(response, currency, price, color)
 
-        request =
+        colors_urls = response.css(".product-colors li:not(.active) a::attr(href)").extract()
 
-        yield item
+        return self.request_colors(item, colors_urls)
+
+    def request_colors(self, item, colors_urls):
+        if colors_urls:
+            single_url = colors_urls.pop()
+            request = scrapy.Request(single_url, callback=self.parse_colors,
+                                     meta={"item": item, "colors_urls": colors_urls})
+            return request
+        return item
+
+    def parse_colors(self, response):
+        item = response.meta["item"]
+        colors_urls = response.meta["colors_urls"]
+
+        item["skus"].update(
+            self.get_skus(response, item._values["currency"], item._values["price"], item._values["color"]))
+
+        return self.request_colors(item, colors_urls)
+
+    @staticmethod
+    def get_skus(response, currency, price, color):
+        skus = {}
+
+        for size in response.css(".sizebox-wrapper ul li"):
+            item_size = size.css("::text").extract_first().strip()
+            skus[response.css("input#sku::attr(value)").extract_first() + "_" + item_size] = {
+                "currency": currency,
+                "price": price,
+                "size": item_size,
+                "out_of_stock": True if size.css(".mz-tooltip::text").extract_first() == "nicht verfügbar" else False,
+                "color": color
+            }
+        return skus
