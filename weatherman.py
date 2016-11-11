@@ -49,7 +49,7 @@ if __name__ == '__main__':
         year, month = map(lambda x: int(x), s.split('/'))
 
         all_data = w_parser.get_data()
-        target_data = list(filter(lambda d: d.date.month == month and d.date.year == year, all_data))
+        target_data = list(filter(matches_month(month,year), all_data))
         max_temp = [x.max_temp for x in target_data]
         avg_highest = sum(max_temp) / len(max_temp)
         print('Highest Average: %sC' % avg_highest)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     if args.c:
         year, month = map(lambda x: int(x), args.c.split('/'))
         all_data = w_parser.get_data()
-        target_data = list(filter(lambda d: d.date.month == month and d.date.year == year, all_data))
+        target_data = list(filter(matches_month(month, year), all_data))
         print('%s %d' % (month_abbr(args.c), year))
 
         red = '\033[91m'

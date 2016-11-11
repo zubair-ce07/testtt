@@ -40,6 +40,15 @@ def get_files(directory):
     return glob.glob(directory)
 
 
+def matches_month(m,y):
+    def test(data):
+        _y = data.date.year
+        _m = data.date.month
+        return all([_y == y, _m == m])
+
+    return test
+    
+
 def map_to_weather_obj(line):
     values = line.split(',')
 
