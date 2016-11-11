@@ -16,7 +16,7 @@ class OrsaySpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=".product-image"), callback="parse_item")
     )
 
-    def parse(self, response):
+    def parse_item(self, response):
         item = OrsayItem()
 
         care = response.css(".product-care img::attr(src)").extract()
