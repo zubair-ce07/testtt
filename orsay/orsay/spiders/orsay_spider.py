@@ -8,11 +8,12 @@ class OrsaySpider(CrawlSpider):
     name = "orsay"
     allowed_domains = ["orsay.com"]
     start_urls = [
-        "http://www.orsay.com/de-de/"
+        # "http://www.orsay.com/de-de/"
+        "http://www.orsay.com/de-de/collection/t-shirts.html"
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css="#nav")),
+        Rule(LinkExtractor(restrict_css=["#nav", ".pagination"])),
         Rule(LinkExtractor(restrict_css=".product-image"), callback="parse_item")
     )
 
