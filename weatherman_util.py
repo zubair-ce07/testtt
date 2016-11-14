@@ -40,22 +40,11 @@ def get_files(directory):
     return glob.glob(directory)
 
 
-def matches_month(m,y):
+def matches_month(month,year):
     def test(data):
-        _y = data.date.year
-        _m = data.date.month
-        return all([_y == y, _m == m])
+        _year = data.date.year
+        _month = data.date.month
+        return all([_year == year, _month == month])
 
     return test
     
-
-def map_to_weather_obj(line):
-    values = line.split(',')
-
-    return WeatherData(date=values[WeatherDataParser.DATE],
-                       max_temp=values[WeatherDataParser.MAX_TEMPERATURE],
-                       mean_temp=values[WeatherDataParser.MEAN_TEMPERATURE],
-                       min_temp=values[WeatherDataParser.MIN_TEMPERATURE],
-                       max_humidity=values[WeatherDataParser.MAX_HUMIDITY],
-                       mean_humidity=values[WeatherDataParser.MEAN_HUMIDITY],
-                       min_humidity=values[WeatherDataParser.MIN_HUMIDITY])
