@@ -20,12 +20,12 @@ class WeatherData(object):
         self.min_humidity = float(min_humidity) if min_humidity else 0
         
     def __repr__(self):
-        return 'Date=%s,Max Temperature=%s,' \
-               'Mean_Temperature=%s,' \
-               'Min_Temperature=%s,' \
-               'Max_Humidity=%s,' \
-               'Mean_Humidity=%s,' \
-               'Min_Humidity=%s'.format(self.date,
+        return 'Date={0},Max Temperature=%s,' \
+               'Mean_Temperature={1},' \
+               'Min_Temperature={2},' \
+               'Max_Humidity={3},' \
+               'Mean_Humidity={4},' \
+               'Min_Humidity={5}'.format(self.date,
                                         self.max_temp,
                                         self.mean_temp,
                                         self.min_temp,

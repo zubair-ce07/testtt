@@ -26,12 +26,8 @@ class WeatherDataParser(object):
 
 
 def map_to_weather_obj(row):
-    date = None
-    try:
-        date = row['PKT']
-    except KeyError:
-        date = row['PKST']
-
+    date = row.get('PKT') or row.get('PKST')
+    
     return WeatherData(date=date,
                        max_temp=row['Max TemperatureC'],
                        mean_temp=row['Mean TemperatureC'],
