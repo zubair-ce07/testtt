@@ -76,12 +76,12 @@ def average_temp_and_humid_stats(year, month, folder_path):
     print_weather_stats("Average Mean Humidity", avg_humidity, "%")
 
 def display_horizontal_chart(date, value, color):
-    bar = ["+"] * int(value)
+    bar = ["+"] * abs(int(value))
     print("%s %s%s%s %sC" % (format_date(date, "%Y-%m-%d", "%d"), color, "".join(bar), Fore.RESET, int(value)))
 
 def display_single_horizontal_chart(date, red, blue):
-    blue_bar = ["+"] * int(blue)
-    red_bar = ["+"] * int(red)
+    blue_bar = ["+"] * abs(int(blue))
+    red_bar = ["+"] * abs(int(red))
 
     print("%s %s%s%s%s%s %sC - %sC" % (format_date(date, "%Y-%m-%d", "%d"), Fore.BLUE, "".join(blue_bar), Fore.RED,
                                        "".join(red_bar), Fore.RESET, int(blue), int(red)))
