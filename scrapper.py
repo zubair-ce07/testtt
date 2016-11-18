@@ -3,7 +3,7 @@ from parsel import Selector
 from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
 from time import sleep
-import pdb
+from collections import namedtuple
 
 
 def filter_invalid_urls(urls):
@@ -11,62 +11,74 @@ def filter_invalid_urls(urls):
     return urls
 
 
-def hit_target_link(url, download_delay, hit_number):
-    sleep(download_delay)
+def fix_url_path(url, origin):
+    if url.startswith("//"):
+        url = "http:" + url
+    if url.startswith("/"):
+        url = origin + url
+
+    return url
+
+
+def hit_target_link(url, results_collections, config):
+    sleep(config.download_delay)
+
+    print("Hit #: %s | %s" % (results_collections.number_of_hits, url))
     response = requests.get(url)
-    # print("Hit: %s" % (url))
-    return response.text, len(response.content), hit_number
+
+    results_collections.responses_collection.append(response)
+
+    return response, results_collections, config
 
 
-def recursively_extract_html(urls, origin, hits_limit, page_lengths, thread_pool, thread_collector,
-                             download_delay, total_hits):
-    if urls and total_hits < hits_limit:
-        print("Hits: %s" % total_hits)
+def future_task_finished(future):
+    response, results_collections, config = future.result()
+    parser = Selector(text=response.text)
+    page_links = parser.xpath("//a/@href").extract()
+    urls_collection = filter_invalid_urls(page_links)
 
-        target_link = urls.pop(0)
+    recursively_extract_html(urls_collection, config.origin, results_collections, config)
+    print("FINISHED......")
 
-        if target_link.startswith("//"):
-            target_link = "http:" + target_link
-        if target_link.startswith("/"):
-            target_link = origin + target_link
 
-        future_task = thread_pool.submit(hit_target_link, target_link, download_delay, total_hits)
+def recursively_extract_html(urls_collection, origin, results_collections, config):
+    for target_link in urls_collection:
+        if results_collections.number_of_hits >= config.hits_limit:
+            break
 
-        thread_collector.append(future_task)
-        total_hits += 1
+        target_link = fix_url_path(target_link, origin)
 
-        for future in concurrent.futures.as_completed(thread_collector):
-
-            response_html, content_size, hit_number = future.result()
-
-            print("Hit#: %s" % hit_number)
-            page_lengths.append(content_size)
-
-            parser = Selector(response_html)
-
-            page_links = parser.xpath("//a/@href").extract()
-            urls += filter_invalid_urls(page_links)
-
-            recursively_extract_html(urls, origin, hits_limit, page_lengths, thread_pool, thread_collector,
-                                     download_delay, total_hits)
+        future_task = config.thread_pool.submit(hit_target_link, target_link, results_collections, config)
+        future_task.add_done_callback(future_task_finished)
+        results_collections.number_of_hits += 1
 
 
 def main():
     origin = "http://sfbay.craigslist.org"
     url = "http://sfbay.craigslist.org/search/eby/jjj"
 
-    hits_limit = 3
-    max_number_of_concurrent_requests = 2
-    download_delay = 2
+    config = namedtuple('Config', "max_number_of_concurrent_requests thread_pool hits_limit download_delay origin")
+    config.download_delay = 2
+    config.max_number_of_concurrent_requests = 2
+    config.hits_limit = 5
+    config.thread_pool = ThreadPoolExecutor(max_workers=config.max_number_of_concurrent_requests)
+    config.origin = origin
 
-    page_lengths = []
-    thread_collector = []
-    thread_pool = ThreadPoolExecutor(max_workers=max_number_of_concurrent_requests)
+    results_collections = namedtuple("Results", "responses_collection number_of_hits futures_collection processed_urls")
+    results_collections.responses_collection = []
+    results_collections.futures_collection = []
+    results_collections.processed_urls = []
+    results_collections.number_of_hits = 0
 
-    recursively_extract_html([url], origin, hits_limit, page_lengths, thread_pool, thread_collector, download_delay, 0)
+    urls_collection = [url]
+
+    recursively_extract_html(urls_collection, origin, results_collections, config)
+
+    print("YYYYYYYYYYYp")
 
     # print("Total Requests: %s\nTotal Data Bytes: %s\nAverage Page Size: %s" % (len(page_lengths),sum(page_lengths),
     #                                                                            sum(page_lengths) / len(page_lengths)))
+
 
 if __name__ == '__main__':
     main()
