@@ -23,7 +23,7 @@ def fix_url_path(url, origin):
 def hit_target_link(url, results_collections, config):
     sleep(config.download_delay)
 
-    print("Hit #: %s | %s" % (results_collections.number_of_hits, url))
+    print("Hit : %s" % url)
     response = requests.get(url)
 
     results_collections.responses_collection.append(response)
@@ -49,8 +49,10 @@ def recursively_extract_html(urls_collection, origin, results_collections, confi
         target_link = fix_url_path(target_link, origin)
 
         future_task = config.thread_pool.submit(hit_target_link, target_link, results_collections, config)
-        future_task.add_done_callback(future_task_finished)
+
         results_collections.number_of_hits += 1
+        # future_task.add_done_callback(future_task_finished)
+        results_collections.futures_collection.append(future_task)
 
 
 def main():
@@ -73,11 +75,22 @@ def main():
     urls_collection = [url]
 
     recursively_extract_html(urls_collection, origin, results_collections, config)
+    for future in concurrent.futures.as_completed(results_collections.futures_collection):
+        response, results_collections, config = future.result()
+        parser = Selector(text=response.text)
+        page_links = parser.xpath("//a/@href").extract()
+        urls_collection = filter_invalid_urls(page_links)
 
-    print("YYYYYYYYYYYp")
+        recursively_extract_html(urls_collection, config.origin, results_collections, config)
 
-    # print("Total Requests: %s\nTotal Data Bytes: %s\nAverage Page Size: %s" % (len(page_lengths),sum(page_lengths),
-    #                                                                            sum(page_lengths) / len(page_lengths)))
+    while len(results_collections.responses_collection) < config.hits_limit:
+        sleep(config.hits_limit)
+
+    total_requests = len(results_collections.responses_collection)
+    content_size_collection = sum([len(response.content) for response in results_collections.responses_collection])
+
+    print("Total Requests: %s\nTotal Data Bytes: %s\nAverage Page Size: %s" %
+          (total_requests, content_size_collection, content_size_collection / total_requests))
 
 
 if __name__ == '__main__':
