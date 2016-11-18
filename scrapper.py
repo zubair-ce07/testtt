@@ -11,15 +11,18 @@ def filter_invalid_urls(urls):
     return urls
 
 
-def hit_target_link(url, download_delay=0):
+def hit_target_link(url, download_delay, hit_number):
     sleep(download_delay)
     response = requests.get(url)
-    return response.text, len(response.content)
+    # print("Hit: %s" % (url))
+    return response.text, len(response.content), hit_number
 
 
 def recursively_extract_html(urls, origin, hits_limit, page_lengths, thread_pool, thread_collector,
-                             download_delay, total_hits=0):
+                             download_delay, total_hits):
     if urls and total_hits < hits_limit:
+        print("Hits: %s" % total_hits)
+
         target_link = urls.pop(0)
 
         if target_link.startswith("//"):
@@ -27,14 +30,16 @@ def recursively_extract_html(urls, origin, hits_limit, page_lengths, thread_pool
         if target_link.startswith("/"):
             target_link = origin + target_link
 
-        future_task = thread_pool.submit(hit_target_link(target_link, download_delay))
+        future_task = thread_pool.submit(hit_target_link, target_link, download_delay, total_hits)
 
         thread_collector.append(future_task)
         total_hits += 1
-        print("Total Hits: %s | %s" % (total_hits, target_link))
 
         for future in concurrent.futures.as_completed(thread_collector):
-            response_html, content_size = future.result()
+
+            response_html, content_size, hit_number = future.result()
+
+            print("Hit#: %s" % hit_number)
             page_lengths.append(content_size)
 
             parser = Selector(response_html)
@@ -50,15 +55,15 @@ def main():
     origin = "http://sfbay.craigslist.org"
     url = "http://sfbay.craigslist.org/search/eby/jjj"
 
-    hits_limit = 100
-    max_number_of_concurrent_requests = 5
+    hits_limit = 3
+    max_number_of_concurrent_requests = 2
     download_delay = 2
 
     page_lengths = []
     thread_collector = []
-    thread_pool = ThreadPoolExecutor(max_number_of_concurrent_requests)
+    thread_pool = ThreadPoolExecutor(max_workers=max_number_of_concurrent_requests)
 
-    recursively_extract_html([url], origin, hits_limit, page_lengths, thread_pool, thread_collector, download_delay)
+    recursively_extract_html([url], origin, hits_limit, page_lengths, thread_pool, thread_collector, download_delay, 0)
 
     # print("Total Requests: %s\nTotal Data Bytes: %s\nAverage Page Size: %s" % (len(page_lengths),sum(page_lengths),
     #                                                                            sum(page_lengths) / len(page_lengths)))
