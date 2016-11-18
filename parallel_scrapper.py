@@ -27,7 +27,6 @@ def hit_target_link(url, results_collections, config):
     response = requests.get(url)
 
     results_collections.responses_collection.append(response)
-
     return response, results_collections, config
 
 
@@ -38,7 +37,6 @@ def future_task_finished(future):
     urls_collection = filter_invalid_urls(page_links)
 
     recursively_extract_html(urls_collection, config.origin, results_collections, config)
-    print("FINISHED......")
 
 
 def recursively_extract_html(urls_collection, origin, results_collections, config):
@@ -47,7 +45,6 @@ def recursively_extract_html(urls_collection, origin, results_collections, confi
             break
 
         target_link = fix_url_path(target_link, origin)
-
         future_task = config.thread_pool.submit(hit_target_link, target_link, results_collections, config)
 
         results_collections.number_of_hits += 1
