@@ -7,7 +7,7 @@ from collections import namedtuple
 
 
 def filter_invalid_urls(urls):
-    urls = [url for url in urls if len(url) > 5 or "/" not in url]
+    urls = [url for url in urls if len(url) > 5 or "/" in url]
     return urls
 
 
