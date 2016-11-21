@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
 from time import sleep
 from collections import namedtuple
+import argparse
 
 
 def filter_invalid_urls(urls):
@@ -69,13 +70,17 @@ def main():
     origin = "http://sfbay.craigslist.org"
     url = "http://sfbay.craigslist.org/search/eby/jjj"
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-dd')
+    parser.add_argument('-cr')
+    parser.add_argument('-mu')
+
+    args = parser.parse_args()
+
     config = namedtuple('Config', "max_number_of_concurrent_requests thread_pool hits_limit download_delay origin")
-    print("Enter time delay in seconds: ")
-    config.download_delay = int(input())
-    print("Number of concurrent requests: ")
-    config.max_number_of_concurrent_requests = int(input())
-    print("Enter maximum number of urls to visit: ")
-    config.hits_limit = int(input())
+    config.download_delay = int(args.dd)
+    config.max_number_of_concurrent_requests = int(args.cr)
+    config.hits_limit = int(args.mu)
     config.thread_pool = ThreadPoolExecutor(max_workers=config.max_number_of_concurrent_requests)
     config.origin = origin
 

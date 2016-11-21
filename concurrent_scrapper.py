@@ -3,6 +3,7 @@ from collections import namedtuple
 from aiohttp import ClientSession
 import asyncio
 import requests
+import argparse
 
 
 def filter_invalid_urls(urls):
@@ -76,11 +77,16 @@ def main():
     origin = "http://sfbay.craigslist.org"
     url = "http://sfbay.craigslist.org/search/eby/jjj"
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-dd')
+    parser.add_argument('-cr')
+    parser.add_argument('-mu')
+
+    args = parser.parse_args()
+
     config = namedtuple('Config', "max_number_of_concurrent_requests thread_pool hits_limit download_delay origin")
-    print("Enter time delay in seconds: ")
-    config.download_delay = int(input())
-    print("Enter maximum number of urls to visit: ")
-    config.hits_limit = int(input())
+    config.download_delay = int(args.dd)
+    config.hits_limit = int(args.mu)
 
     results_collections = namedtuple("Results", "responses_collection number_of_hits event_loop processed_urls")
     results_collections.responses_collection = []
