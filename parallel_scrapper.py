@@ -7,7 +7,7 @@ from collections import namedtuple
 
 
 def filter_invalid_urls(urls):
-    urls = [url for url in urls if len(url) > 5 or "/" in url]
+    urls = [url for url in urls if len(url) > 5 and "/" in url]
     return urls
 
 
@@ -70,9 +70,12 @@ def main():
     url = "http://sfbay.craigslist.org/search/eby/jjj"
 
     config = namedtuple('Config', "max_number_of_concurrent_requests thread_pool hits_limit download_delay origin")
-    config.download_delay = 2
-    config.max_number_of_concurrent_requests = 3
-    config.hits_limit = 25
+    print("Enter time delay in seconds: ")
+    config.download_delay = int(input())
+    print("Number of concurrent requests: ")
+    config.max_number_of_concurrent_requests = int(input())
+    print("Enter maximum number of urls to visit: ")
+    config.hits_limit = int(input())
     config.thread_pool = ThreadPoolExecutor(max_workers=config.max_number_of_concurrent_requests)
     config.origin = origin
 

@@ -6,7 +6,7 @@ import requests
 
 
 def filter_invalid_urls(urls):
-    urls = [url for url in urls if len(url) > 5 or "/" in url]
+    urls = [url for url in urls if len(url) > 5 and "/" in url]
     return urls
 
 
@@ -77,8 +77,10 @@ def main():
     url = "http://sfbay.craigslist.org/search/eby/jjj"
 
     config = namedtuple('Config', "max_number_of_concurrent_requests thread_pool hits_limit download_delay origin")
-    config.download_delay = 2
-    config.hits_limit = 15
+    print("Enter time delay in seconds: ")
+    config.download_delay = int(input())
+    print("Enter maximum number of urls to visit: ")
+    config.hits_limit = int(input())
 
     results_collections = namedtuple("Results", "responses_collection number_of_hits event_loop processed_urls")
     results_collections.responses_collection = []
