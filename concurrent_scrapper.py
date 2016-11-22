@@ -34,7 +34,7 @@ async def hit_target_link(url, config):
         try:
             async with session.get(url) as response:
                 response = await response.read()
-        except ValueError:
+        except:
             response = None
 
     return response
@@ -79,7 +79,6 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-dd')
-    parser.add_argument('-cr')
     parser.add_argument('-mu')
 
     args = parser.parse_args()

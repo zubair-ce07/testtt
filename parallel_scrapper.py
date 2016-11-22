@@ -97,9 +97,7 @@ def main():
     for future in concurrent.futures.as_completed(results_collections.futures_collection):
         response, results_collections, config = future.result()
         if response:
-            parser = Selector(text=response.text)
-            page_links = parser.xpath("//a/@href").extract()
-            urls_collection = filter_invalid_urls(page_links)
+            urls_collection = extract_anchor_tags_link(response.text)
 
             recursively_extract_html(urls_collection, config.origin, results_collections, config)
 
