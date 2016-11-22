@@ -27,19 +27,20 @@ class ConcurrentCrawler:
                 if self.url_limit > len(self.visited) \
                 else None
             selected = self.queue[:allowed] if allowed else None
-            selected = selected[:self.max_workers]
-            tasks = [asyncio.ensure_future(self.visit(url)) for url in selected]
+            if selected:
+                selected = selected[:self.max_workers]
+                tasks = [asyncio.ensure_future(self.visit(url)) for url in selected]
+    
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(asyncio.gather(*tasks))
 
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(asyncio.gather(*tasks))
+                results = [task.result() for task in tasks]
+                for result in results:
+                    self.byte_count += result.get('bytes')
+                    self.queue.extend(result.get('links'))
 
-            results = [task.result() for task in tasks]
-            for result in results:
-                self.byte_count += result.get('bytes')
-                self.queue.extend(result.get('links'))
-
-            self.visited.extend(self.queue[:len(selected)])
-            self.queue = self.queue[len(tasks):]  # Update the queue
+                self.visited.extend(self.queue[:len(selected)])
+                self.queue = self.queue[len(tasks):]  # Update the queue
 
     async def visit(self, url):
         await asyncio.sleep(self.download_delay)
