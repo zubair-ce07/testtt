@@ -138,17 +138,12 @@ class DrykornDeSpider(scrapy.Spider):
         return infos
 
     def get_product_categories(self, document):
-        categories = document.xpath(
-            '//div[@id="header-nav"]//ol[@class="nav-primary"]//li[contains(@class, "active parent")]'
-            '/a[1]//span[1]//text()'
-        ).extract()
+        categories = document.css('div#header-nav ol.nav-primary li.active.parent > a span').xpath('text()').extract()
 
         return categories
 
     def get_product_description(self, document):
-        description = document.xpath(
-            '//div[contains(@class, "product-additionals")]//div[@class="info-block"]//ul[1]//li//text()'
-        ).extract()
+        description = document.css('div.product-additionals div.info-block ul li::text').extract()
 
         return description
 
