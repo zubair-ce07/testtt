@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from drykorn.items import DrykornItem
+from scrapy.contrib.linkextractors import LinkExtractor
 from parsel import Selector
 import requests
 from scrapy import Request
@@ -17,13 +18,14 @@ class DrykornDeSpider(scrapy.Spider):
     start_urls = ['https://www.drykorn.com/de-de/herren/kleidung/hosen/chino.html']
 
     def parse(self, response):
-        product_links = response.xpath(
-            '//div[@class="category-products"]//ul[contains(@class, "products-grid")]//li'
-            '//a[@class="product-image"]//@href'
-        ).extract()
+
+        product_links = LinkExtractor(
+            restrict_css='div.category-products ul.products-grid li div.plist-item-image a.product-image',
+            unique=True
+        ).extract_links(response)
 
         for link in product_links:
-            request = Request(link, callback=self.extract_product_details)
+            request = Request(link.url, callback=self.extract_product_details)
             request.meta["siblings_processing"] = False
             request.meta["siblings"] = []
             yield request
@@ -99,12 +101,14 @@ class DrykornDeSpider(scrapy.Spider):
         return request
 
     def get_links_for_other_palettes(self, document):
+        color_links = []
+
         if document.meta["siblings_processing"]:
             color_links = document.meta["siblings"]
         else:
-            color_links = document.xpath(
-                '//div[contains(@class, "product-shop")]//div[contains(@class, "color-content")]//@href'
-            ).extract()
+            extracted_links = LinkExtractor(restrict_css='div.product-shop div.color-content').extract_links(document)
+            for link in extracted_links:
+                color_links.append(link.url)
 
         return color_links
 
@@ -138,7 +142,7 @@ class DrykornDeSpider(scrapy.Spider):
         return infos
 
     def get_product_categories(self, document):
-        categories = document.css('div#header-nav ol.nav-primary li.active.parent > a span').xpath('text()').extract()
+        categories = document.css('div#header-nav ol.nav-primary li.active.parent > a span::text').extract()
 
         return categories
 
@@ -148,17 +152,11 @@ class DrykornDeSpider(scrapy.Spider):
         return description
 
     def get_product_route_trace(self, document):
-        breadcrumb = document.xpath('//div[contains(@class, "main-container")]//div[@class="breadcrumbs"]//ul//li//a')
-
         required_route = []
 
-        home = (breadcrumb[0].xpath("span/text()").extract_first(), breadcrumb[0].xpath("@href").extract_first())
-        required_route += home
-
-        if len(breadcrumb) > 1:
-            category = (breadcrumb[-1].xpath("span/text()").extract_first(),
-                        breadcrumb[-1].xpath("@href").extract_first())
-            required_route += category
+        breadcrumb = LinkExtractor(restrict_css='div.main-container div.breadcrumbs ul li').extract_links(document)
+        for link in breadcrumb:
+            required_route.append((link.text.strip(), link.url))
 
         return required_route
 
