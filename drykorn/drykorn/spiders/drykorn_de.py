@@ -15,10 +15,15 @@ import pdb
 class DrykornDeSpider(scrapy.Spider):
     name = "drykorn_de"
     allowed_domains = ["drykorn.com"]
-    start_urls = ['https://www.drykorn.com/de-de/herren/kleidung/hosen/chino.html']
+    start_urls = ['https://www.drykorn.com/de-de']
 
     def parse(self, response):
+        category_links = LinkExtractor(restrict_css='div#header-nav li.level2 a.level2').extract_links(response)
+        for link in category_links:
+            request = Request(link.url, callback=self.parse_category_page)
+            yield request
 
+    def parse_category_page(self, response):
         product_links = LinkExtractor(
             restrict_css='div.category-products ul.products-grid li div.plist-item-image a.product-image',
             unique=True
@@ -187,6 +192,10 @@ class DrykornDeSpider(scrapy.Spider):
             '//div[contains(@class, "sticky-object")]//div[@class="price-info"]//span[@class="price"]//text()'
         ).extract_first()
 
+        if not price_tag:
+            price_line = document.css('div.cart-totals-wrapper p#total-price::text').extract_first()
+            price_tag = " ".join(price_line.split(':')[-1].split())
+
         price_and_currency = namedtuple("Price", "amount currency")
         price_and_currency.amount, price_and_currency.currency = price_tag.split()
 
@@ -197,6 +206,11 @@ class DrykornDeSpider(scrapy.Spider):
 
         return True if stock_status.lower() == "available" else False
 
+    def get_product_color_from_material_info(self, document):
+        color = document.css('div.product-infos div.data-table div.color::text').extract_first()
+
+        return color.strip().capitalize()
+
     def get_product_color_from_page_title(self, document):
         title = document.xpath('//title//text()').extract_first()
         color = re.search("\d{4,}(.*)\|", title).group(1)
@@ -206,7 +220,7 @@ class DrykornDeSpider(scrapy.Spider):
     def get_product_skus(self, document):
         skus = {}
 
-        color = self.get_product_color_from_page_title(document)
+        color = self.get_product_color_from_material_info(document)
         sizes_option = document.xpath(
             '//div[@class="sticky-object"]//div[@id="product-options-wrapper"]//select//option'
         )
