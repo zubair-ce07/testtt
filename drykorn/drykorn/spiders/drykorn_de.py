@@ -105,95 +105,74 @@ class DrykornDeSpider(scrapy.Spider):
 
         return request
 
-    def get_links_for_other_palettes(self, document):
+    def get_links_for_other_palettes(self, response):
         color_links = []
 
-        if document.meta["siblings_processing"]:
-            color_links = document.meta["siblings"]
+        if response.meta["siblings_processing"]:
+            color_links = response.meta["siblings"]
         else:
-            extracted_links = LinkExtractor(restrict_css='div.product-shop div.color-content').extract_links(document)
+            extracted_links = LinkExtractor(restrict_css='div.product-shop div.color-content').extract_links(response)
             for link in extracted_links:
                 color_links.append(link.url)
 
         return color_links
 
-    def collect_info_for_other_colors(self, document):
-        color_links = document.xpath(
-            '//div[contains(@class, "product-shop")]//div[contains(@class, "color-content")]//@href'
-        ).extract()
-
-        info = namedtuple("Info", "skus image_urls have_multiple_colors")
-        info.skus = {}
-        info.image_urls = []
-        info.have_multiple_colors = False
-
-        for link in color_links:
-            response = requests.get(link)
-            document = Selector(text=response.text)
-
-            info.skus.update(self.get_product_skus(document))
-            info.image_urls += self.get_product_image_urls(document)
-
-            info.have_multiple_colors = True
-
-        return info
-
-    def get_material_info_of_product(self, document):
-        infos = document.xpath(
+    def get_material_info_of_product(self, response):
+        infos = response.xpath(
             '//div[contains(@class, "product-additionals")]//div[@id="product-attribute-specs-table"]//div//text()'
         ).extract()
 
         infos = [info.strip() for info in infos if info.strip()]
         return infos
 
-    def get_product_categories(self, document):
-        categories = document.css('div#header-nav ol.nav-primary li.active.parent > a span::text').extract()
+    def get_product_categories(self, response):
+        categories = response.css('div#header-nav ol.nav-primary li.active.parent > a span::text').extract()
 
         return categories
 
-    def get_product_description(self, document):
-        description = document.css('div.product-additionals div.info-block ul li::text').extract()
+    def get_product_description(self, response):
+        description = response.css('div.product-additionals div.info-block ul li::text').extract()
 
         return description
 
-    def get_product_route_trace(self, document):
+    def get_product_route_trace(self, response):
         required_route = []
 
-        breadcrumb = LinkExtractor(restrict_css='div.main-container div.breadcrumbs ul li').extract_links(document)
+        breadcrumb = LinkExtractor(restrict_css='div.main-container div.breadcrumbs ul li').extract_links(response)
         for link in breadcrumb:
             required_route.append((link.text.strip(), link.url))
 
         return required_route
 
-    def get_product_image_urls(self, document):
-        image_urls = document.xpath(
-            '//div[@class="product-view"]//div[@class="product-image-gallery"]//ul//li//img//@src'
+    def get_product_image_urls(self, response):
+        image_urls = response.xpath(
+            '//div[@class="product-view"]//div[@class="product-image-gallery"]//ul//li//img//@data-zoom-image'
         ).extract()
 
         return image_urls
 
-    def get_material_number_of_product(self, document):
-        material_number = document.xpath(
+    def get_material_number_of_product(self, response):
+        material_number = response.xpath(
             '//div[contains(@class, "product-additionals")]//div[contains(@class, "material-wrapper")]'
             '//div[@class="data material"]//text()'
         ).extract_first()
 
         return material_number.strip()
 
-    def get_product_name(self, document):
-        name = document.xpath(
+    def get_product_name(self, response):
+        name = response.xpath(
             '//div[contains(@class, "sticky-object")]//div[@class="product-name"]//h1//text()'
         ).extract_first()
 
         return name.strip()
 
-    def get_product_price_and_currency(self, document):
-        price_tag = document.xpath(
+    def get_product_price_and_currency(self, response):
+        price_tag = response.xpath(
             '//div[contains(@class, "sticky-object")]//div[@class="price-info"]//span[@class="price"]//text()'
         ).extract_first()
 
         if not price_tag:
-            price_line = document.css('div.cart-totals-wrapper p#total-price::text').extract_first()
+            price_line = response.css('div.cart-totals-wrapper p#total-price::text').extract_first()
             price_tag = " ".join(price_line.split(':')[-1].split())
 
         price_and_currency = namedtuple("Price", "amount currency")
@@ -204,24 +183,24 @@ class DrykornDeSpider(scrapy.Spider):
     def check_if_product_in_stock(self, size_option):
         stock_status = size_option.xpath("@class").extract_first()
 
-        return True if stock_status.lower() == "available" else False
+        return stock_status.lower() == "available"
 
-    def get_product_color_from_material_info(self, document):
-        color = document.css('div.product-infos div.data-table div.color::text').extract_first()
+    def get_product_color_from_material_info(self, response):
+        color = response.css('div.product-infos div.data-table div.color::text').extract_first()
 
         return color.strip().capitalize()
 
-    def get_product_color_from_page_title(self, document):
-        title = document.xpath('//title//text()').extract_first()
+    def get_product_color_from_page_title(self, response):
+        title = response.xpath('//title//text()').extract_first()
         color = re.search("\d{4,}(.*)\|", title).group(1)
 
         return color.strip().capitalize()
 
-    def get_product_skus(self, document):
+    def get_product_skus(self, response):
         skus = {}
 
-        color = self.get_product_color_from_material_info(document)
-        sizes_option = document.xpath(
+        color = self.get_product_color_from_material_info(response)
+        sizes_option = response.xpath(
             '//div[@class="sticky-object"]//div[@id="product-options-wrapper"]//select//option'
         )
 
@@ -237,7 +216,7 @@ class DrykornDeSpider(scrapy.Spider):
             data[key]["size"] = size_label
             data[key]["color"] = color
 
-            price_info = self.get_product_price_and_currency(document)
+            price_info = self.get_product_price_and_currency(response)
             data[key]["price"], data[key]["currency"] = price_info.amount, price_info.currency
 
             skus.update(data)
