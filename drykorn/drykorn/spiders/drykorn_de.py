@@ -17,61 +17,61 @@ class DrykornDeSpider(scrapy.Spider):
     start_urls = ['https://www.drykorn.com/de-de/herren/kleidung/hosen/chino.html']
 
     def parse(self, response):
-        document = Selector(text=response.body.decode("UTF-8"))
-
-        product_links = document.xpath(
+        product_links = response.xpath(
             '//div[@class="category-products"]//ul[contains(@class, "products-grid")]//li'
             '//a[@class="product-image"]//@href'
         ).extract()
 
         for link in product_links:
             request = Request(link, callback=self.extract_product_details)
-            request.meta["is_first_sibling"] = True
-
+            request.meta["siblings_processing"] = False
+            request.meta["siblings"] = []
             yield request
 
     def extract_product_details(self, response):
-        document = Selector(text=response.body.decode("UTF-8"))
 
         product = DrykornItem()
 
-        product["skus"] = self.get_product_skus(document)
+        product["skus"] = self.get_product_skus(response)
         product["date"] = self.get_unix_current_timestamp()
         product["lang"] = "de"
 
-        price_tag = self.get_product_price_and_currency(document)
+        price_tag = self.get_product_price_and_currency(response)
         product["price"] = price_tag.amount
 
-        product["name"] = self.get_product_name(document)
+        product["name"] = self.get_product_name(response)
         product["industry"] = ""
         product["crawl_id"] = "drykorn-de-%s-%s-awrx" % (self.get_current_date(), self.get_unix_current_timestamp())
-        product["image_urls"] = self.get_product_image_urls(document)
+        product["image_urls"] = self.get_product_image_urls(response)
         product["product_hash"] = ""
         product["gender"] = "men"
-        product["retailer_sku"] = self.get_material_number_of_product(document)
+        product["retailer_sku"] = self.get_material_number_of_product(response)
         product["market"] = "DE"
         product["url_original"] = response.url
-        product["trail"] = self.get_product_route_trace(document)
-        product["category"] = self.get_product_categories(document)
+        product["trail"] = self.get_product_route_trace(response)
+        product["category"] = self.get_product_categories(response)
         product["uuid"] = None
-        product["description"] = self.get_product_description(document)
+        product["description"] = self.get_product_description(response)
         product["brand"] = "Drykorn"
         product["url"] = response.url
         product["spider_name"] = self.name
         product["currency"] = price_tag.currency
         product["crawl_start_time"] = self.get_utc_current_timestamp()
         product["retailer"] = "drykorn de"
-        product["care"] = self.get_material_info_of_product(document)
+        product["care"] = self.get_material_info_of_product(response)
 
-        # if response.meta["is_first_sibling"]:
-        #     self.collect_info_for_other_pallets(document)
+        if response.meta["siblings_processing"]:
+            sibling_product = response.meta["product"]
+            product = self.merge_sibling_palettes_details(product, sibling_product)
 
-        palette_info = self.collect_info_for_other_colors(document)
-        if palette_info.have_multiple_colors:
-            product["skus"].update(palette_info.skus)
-            product["image_urls"] += palette_info.image_urls
+        entity_to_yield = product
+        other_palettes_links = self.get_links_for_other_palettes(response)
 
-        return product
+        if other_palettes_links:
+            yield self.initiate_request_for_sibling_palettes(product, other_palettes_links)
+            entity_to_yield = None
+
+        yield entity_to_yield
 
     def get_unix_current_timestamp(self):
          return int(time.time())
@@ -83,20 +83,30 @@ class DrykornDeSpider(scrapy.Spider):
     def get_utc_current_timestamp(self):
         return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
 
-    def collect_info_for_other_pallets(self, document):
-        color_links = document.xpath(
-            '//div[contains(@class, "product-shop")]//div[contains(@class, "color-content")]//@href'
-        ).extract()
+    def merge_sibling_palettes_details(self, product, sibling):
+        product["skus"].update(sibling["skus"])
+        product["image_urls"] += sibling["image_urls"]
 
-        pallets_requests = []
+        return product
 
-        for link in color_links:
-            request = Request(link, callback=self.extract_product_details)
-            request.meta["is_first_sibling"] = False
+    def initiate_request_for_sibling_palettes(self, product, siblings_palettes):
+        request = Request(siblings_palettes.pop(), callback=self.extract_product_details)
+        request.meta["product"] = product
 
-            pallets_requests.append(request)
+        request.meta["siblings"] = siblings_palettes
+        request.meta["siblings_processing"] = True
 
-        return pallets_requests
+        return request
+
+    def get_links_for_other_palettes(self, document):
+        if document.meta["siblings_processing"]:
+            color_links = document.meta["siblings"]
+        else:
+            color_links = document.xpath(
+                '//div[contains(@class, "product-shop")]//div[contains(@class, "color-content")]//@href'
+            ).extract()
+
+        return color_links
 
     def collect_info_for_other_colors(self, document):
         color_links = document.xpath(
@@ -148,12 +158,12 @@ class DrykornDeSpider(scrapy.Spider):
         required_route = []
 
         home = (breadcrumb[0].xpath("span/text()").extract_first(), breadcrumb[0].xpath("@href").extract_first())
-        required_route.append(home)
+        required_route += home
 
         if len(breadcrumb) > 1:
             category = (breadcrumb[-1].xpath("span/text()").extract_first(),
                         breadcrumb[-1].xpath("@href").extract_first())
-            required_route.append(category)
+            required_route += category
 
         return required_route
 
