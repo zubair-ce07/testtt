@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import scrapy
 from drykorn.items import DrykornItem
 from scrapy.contrib.linkextractors import LinkExtractor
-from parsel import Selector
-import requests
 from scrapy import Request
+from scrapy.spider import Rule
+from scrapy.spider import CrawlSpider
 import re
 from collections import namedtuple
 import time
@@ -12,28 +11,29 @@ from datetime import datetime
 import pdb
 
 
-class DrykornDeSpider(scrapy.Spider):
+class DrykornDeSpider(CrawlSpider):
     name = "drykorn_de"
     allowed_domains = ["drykorn.com"]
     start_urls = ['https://www.drykorn.com/de-de']
 
-    def parse(self, response):
-        category_links = LinkExtractor(restrict_css='div#header-nav li.level2 a.level2').extract_links(response)
-        for link in category_links:
-            request = Request(link.url, callback=self.parse_category_page)
-            yield request
+    rules = (
+        Rule(
+            LinkExtractor(
+                restrict_css='ul.products-grid li div.plist-item-image a.product-image',
+                allow=(),
+            ),
+            callback='extract_product_details',
+            follow=True,
+        ),
 
-    def parse_category_page(self, response):
-        product_links = LinkExtractor(
-            restrict_css='div.category-products ul.products-grid li div.plist-item-image a.product-image',
-            unique=True
-        ).extract_links(response)
-
-        for link in product_links:
-            request = Request(link.url, callback=self.extract_product_details)
-            request.meta["siblings_processing"] = False
-            request.meta["siblings"] = []
-            yield request
+        Rule(
+            LinkExtractor(
+                restrict_css='div#header-nav li.level2 a.level2',
+                allow=(),
+            ),
+            follow=True,
+        ),
+    )
 
     def extract_product_details(self, response):
 
@@ -67,7 +67,7 @@ class DrykornDeSpider(scrapy.Spider):
         product["retailer"] = "drykorn de"
         product["care"] = self.get_material_info_of_product(response)
 
-        if response.meta["siblings_processing"]:
+        if "siblings_processing" in response.meta:
             sibling_product = response.meta["product"]
             product = self.merge_sibling_palettes_details(product, sibling_product)
 
@@ -108,7 +108,7 @@ class DrykornDeSpider(scrapy.Spider):
     def get_links_for_other_palettes(self, response):
         color_links = []
 
-        if response.meta["siblings_processing"]:
+        if "siblings_processing" in response.meta:
             color_links = response.meta["siblings"]
         else:
             extracted_links = LinkExtractor(restrict_css='div.product-shop div.color-content').extract_links(response)
