@@ -28,6 +28,9 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, response, response)
+        merch_info = self.product_merch(response)
+        if merch_info:
+            garment['merch_info'] = merch_info
 
         garment['skus'] = {}
         garment['image_urls'] = []
@@ -45,7 +48,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
 
-        sku_common = response.meta['sku_common']
+        sku_common = self.product_pricing_common(response)
 
         colour = self.sku_colour(response)
         sku_common['colour'] = colour
@@ -65,10 +68,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         css = '.variation-color .emptyswatch a::attr(href)'
         colour_links = clean(response.css(css))
 
-        meta = {}
-        meta['sku_common'] = self.product_pricing_common(response)
-
-        return [Request(link, callback=self.parse_colour, meta=meta) for link in colour_links]
+        return [Request(link, callback=self.parse_colour) for link in colour_links]
 
     def product_id(self, url):
         return re.findall('-(\d+).html', url)[0]
@@ -85,7 +85,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))[0]
 
     def product_category(self, response):
-        css = '.breadcrumb span::text'
+        css = '.breadcrumb a span::text'
         return clean(response.css(css))
 
     def product_description(self, response):
@@ -93,7 +93,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def product_care(self, response):
-        css = '.pdpForm .laundry-care span::attr(title)'
+        css = '.pdpForm .laundry-care span::attr(title), .pdpForm .material::text'
         return clean(response.css(css))
 
     def sku_sizes(self, response):
@@ -103,6 +103,10 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
     def sku_colour(self, response):
         xpath = '//div[contains(@class, "variation-color")]//a[child::img[@class="selected"]]//@title'
         return clean(response.xpath(xpath))[0]
+
+    def product_merch(self, response):
+        css = '.product-image-container .flag .tag::text'
+        return clean(response.css(css))
 
 
 class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
