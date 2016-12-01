@@ -89,7 +89,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
     def product_name(self, response):
         css = '#product-content .product-name::text'
-        return clean(response.css(css))
+        return clean(response.css(css))[0]
 
     def product_category(self, response):
         css = '.breadcrumb li a span::text'
@@ -108,8 +108,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def sku_colour(self, response):
-        xpath = '//div[contains(@class, "variation-color")]//li[@class="emptyswatch "]' \
-                '//a[child::img[@class="selected"]]//@title'
+        xpath = '//div[contains(@class, "variation-color")]//a[child::img[@class="selected"]]//@title'
         return clean(response.xpath(xpath))[0]
 
 
