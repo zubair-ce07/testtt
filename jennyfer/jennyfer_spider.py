@@ -40,7 +40,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
     def parse_new_colour_info(self, response):
         garment = response.meta['garment']
 
-        self.add_new_images(garment, response)
+        garment['image_urls'] += self.image_urls(response)
         self.add_skus(garment, response)
 
         return self.next_request_or_garment(garment)
@@ -61,9 +61,6 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
             sku['colour'] = colour
             sku['size'] = size
             garment['skus'][colour + '_' + size] = sku
-
-    def add_new_images(self, garment, response):
-        garment['image_urls'] += self.image_urls(response)
 
     def colour_requests(self, response):
         xpath = '//div[contains(@class, "variation-color")]//li[@class="emptyswatch "]//a//@href'
