@@ -38,15 +38,15 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
-    def parse_new_colour_info(self, response):
+    def parse_colour(self, response):
         garment = response.meta['garment']
 
         garment['image_urls'] += self.image_urls(response)
-        self.add_skus(garment, response)
+        garment['skus'].update(self.skus(response))
 
         return self.next_request_or_garment(garment)
 
-    def add_skus(self, garment, response):
+    def skus(self, response):
 
         sku_common = {'price': response.meta['price'],
                       'currency': response.meta['currency']}
@@ -57,11 +57,15 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         colour = self.sku_colour(response)
         size_variations = self.sku_sizes(response)
 
+        skus = {}
         for size in size_variations:
             sku = sku_common.copy()
             sku['colour'] = colour
             sku['size'] = size
-            garment['skus'][colour + '_' + size] = sku
+
+            skus.update({colour + '_' + size: sku})
+
+        return skus
 
     def colour_requests(self, response):
         css = '.variation-color .emptyswatch a::attr(href)'
@@ -70,7 +74,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         meta = {}
         meta['previous_prices'], meta['price'], meta['currency'] = self.product_pricing(response)
 
-        return [Request(link, callback=self.parse_new_colour_info, meta=meta) for link in colour_links]
+        return [Request(link, callback=self.parse_colour, meta=meta) for link in colour_links]
 
     def product_id(self, response):
         ids_array = re.findall('tc_vars\["product_id"\]\s*=\s*"(.*?)\";', response.body.decode("utf-8"))
