@@ -5,7 +5,6 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 from .base import BaseParseSpider, BaseCrawlSpider, Garment, clean
-import pdb
 
 
 class Mixin(object):
@@ -23,7 +22,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
     PRICE_X = '//div[@class="pdp-top"]//span[contains(@class, "price")]//text()'
 
     def parse(self, response):
-        pid = self.product_id(response)
+        pid = self.product_id(response.url)
         garment = self.new_unique_garment(pid)
         if not garment:
             return
@@ -47,13 +46,15 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
 
         sku_common = response.meta['sku_common']
+
         colour = self.sku_colour(response)
+        sku_common['colour'] = colour
+
         size_variations = self.sku_sizes(response)
 
         skus = {}
         for size in size_variations:
             sku = sku_common.copy()
-            sku['colour'] = colour
             sku['size'] = size
 
             skus[colour + '_' + size] = sku
@@ -69,8 +70,8 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
         return [Request(link, callback=self.parse_colour, meta=meta) for link in colour_links]
 
-    def product_id(self, response):
-        ids_array = re.findall('tc_vars\["product_id"\]\s*=\s*"(.*?)\";', response.body.decode("utf-8"))
+    def product_id(self, url):
+        ids_array = re.findall('-(\d+).html', url)
         return ids_array[0]
 
     def image_urls(self, response):
