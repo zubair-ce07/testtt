@@ -53,8 +53,8 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         if response.meta['previous_prices']:
             sku_common['previous_prices'] = [response.meta['previous_prices']]
 
-        colour = self.product_colour(response)
-        size_variations = self.available_sizes(response)
+        colour = self.sku_colour(response)
+        size_variations = self.sku_sizes(response)
 
         for size in size_variations:
             sku = sku_common.copy()
@@ -98,12 +98,12 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         css = '.pdpForm .laundry-care span::attr(title)'
         return clean(response.css(css))
 
-    def available_sizes(self, response):
+    def sku_sizes(self, response):
         xpath = '//div[contains(@class, "variation-size")]//li[@class="emptyswatch "]' \
                 '//div[not(contains(@class, "unselected"))]//text()'
         return clean(response.xpath(xpath))
 
-    def product_colour(self, response):
+    def sku_colour(self, response):
         xpath = '//div[contains(@class, "variation-color")]//li[@class="emptyswatch "]' \
                 '//a[child::img[@class="selected"]]//@title'
         return clean(response.xpath(xpath))[0]
