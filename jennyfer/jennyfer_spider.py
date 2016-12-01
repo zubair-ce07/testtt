@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 
 from scrapy.http import Request
@@ -16,15 +15,13 @@ class Mixin(object):
     allowed_domains = ['www.jennyfer.com']
     start_urls = ['http://www.jennyfer.com/']
     gender = 'women'
-    brand = 'Jennyfer'
 
 
 class JennyferParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    price_x = '//div[@class="pdp-top"]//span[contains(@class, "price")]//text()'
+    PRICE_X = '//div[@class="pdp-top"]//span[contains(@class, "price")]//text()'
 
     def parse(self, response):
-
         pid = self.product_id(response)
         garment = self.new_unique_garment(pid)
         if not garment:
@@ -52,7 +49,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
                       'currency': response.meta['currency']}
 
         if response.meta['previous_prices']:
-            sku_common['previous_prices'] = [response.meta['previous_prices']]
+            sku_common['previous_prices'] = response.meta['previous_prices']
 
         colour = self.sku_colour(response)
         size_variations = self.sku_sizes(response)
@@ -71,8 +68,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         css = '.variation-color .emptyswatch a::attr(href)'
         colour_links = clean(response.css(css))
 
-        meta = {}
-        meta['previous_prices'], meta['price'], meta['currency'] = self.product_pricing(response)
+        meta = self.product_pricing_common(response)
 
         return [Request(link, callback=self.parse_colour, meta=meta) for link in colour_links]
 
@@ -85,7 +81,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return [image for image in clean(response.css(css))]
 
     def product_brand(self, category):
-        return self.brand
+        return 'Jennyfer'
 
     def product_name(self, response):
         css = '#product-content .product-name::text'
