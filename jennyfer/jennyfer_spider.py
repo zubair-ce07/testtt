@@ -85,7 +85,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))[0]
 
     def product_category(self, response):
-        css = '.breadcrumb li a span::text'
+        css = '.breadcrumb span::text'
         return clean(response.css(css))
 
     def product_description(self, response):
@@ -112,12 +112,12 @@ class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
     allow_r = [
         '/vetements/',
         '/accessoires/',
-        '/style-guide/',
+        '/style-guide/'
     ]
 
     listings_css = [
         '.level-2 a',
-        'div.pagination a.arrow-page',
+        '.pagination .arrow-page'
     ]
 
     products_css = [
@@ -125,6 +125,6 @@ class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item', ),
-        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r), ),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r)),
     )
