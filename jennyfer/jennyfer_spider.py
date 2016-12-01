@@ -120,19 +120,15 @@ class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     listings_css = [
-        '.level-2 a'
+        '.level-2 a',
+        'div.pagination a.arrow-page',
     ]
 
     products_css = [
         '#search-result-items .product-wrapper > a'
     ]
 
-    pagination_css = [
-        'div.pagination a.arrow-page'
-    ]
-
     rules = (
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item', ),
-        Rule(LinkExtractor(restrict_css=pagination_css), ),
         Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r), ),
     )
