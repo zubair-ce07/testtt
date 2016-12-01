@@ -24,6 +24,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
     price_x = '//div[@class="pdp-top"]//span[contains(@class, "price")]//text()'
 
     def parse(self, response):
+
         pid = self.product_id(response)
         garment = self.new_unique_garment(pid)
         if not garment:
@@ -132,7 +133,7 @@ class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item', follow=True, ),
-        Rule(LinkExtractor(restrict_css=pagination_css), callback='parse_pagination', follow=True, ),
-        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r), callback='parse_pagination', follow=True, ),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item', ),
+        Rule(LinkExtractor(restrict_css=pagination_css), ),
+        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r), ),
     )
