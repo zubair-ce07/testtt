@@ -64,8 +64,8 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
             garment['skus'][colour + '_' + size] = sku
 
     def colour_requests(self, response):
-        xpath = '//div[contains(@class, "variation-color")]//li[@class="emptyswatch "]//a//@href'
-        colour_links = clean(response.xpath(xpath))
+        css = '.variation-color .emptyswatch a::attr(href)'
+        colour_links = clean(response.css(css))
 
         meta = {}
         meta['previous_prices'], meta['price'], meta['currency'] = self.product_pricing(response)
@@ -77,19 +77,19 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return (ids_array and ids_array[0]) or ""
 
     def image_urls(self, response):
-        xpath = "//div[@class='product-image-container']//div[@class='product-primary-image']//a/@href"
-        return [image for image in clean(response.xpath(xpath))]
+        css = '.product-image-container .product-primary-image a::attr(href)'
+        return [image for image in clean(response.css(css))]
 
     def product_brand(self, category):
         return self.brand
 
     def product_name(self, response):
-        xpath = '//div[@id="product-content"]//h1[@class="product-name"]//text()'
-        return clean(response.xpath(xpath))[0]
+        css = '#product-content .product-name::text'
+        return clean(response.css(css))
 
     def product_category(self, response):
-        xpath = '//ol[@class="breadcrumb"]//li//a//span//text()'
-        return clean(response.xpath(xpath))
+        css = '.breadcrumb li a span::text'
+        return clean(response.css(css))
 
     def product_description(self, response):
         css = '.pdpForm div[itemprop="description"]::text'
@@ -100,9 +100,8 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def sku_sizes(self, response):
-        xpath = '//div[contains(@class, "variation-size")]//li[@class="emptyswatch "]' \
-                '//div[not(contains(@class, "unselected"))]//text()'
-        return clean(response.xpath(xpath))
+        css = '.variation-size .emptyswatch div:not(.unselected)::text'
+        return clean(response.css(css))
 
     def sku_colour(self, response):
         xpath = '//div[contains(@class, "variation-color")]//li[@class="emptyswatch "]' \
