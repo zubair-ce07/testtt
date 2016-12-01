@@ -30,7 +30,6 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, response, response)
-        garment['gender'] = self.gender
 
         garment['skus'] = {}
         garment['image_urls'] = []
