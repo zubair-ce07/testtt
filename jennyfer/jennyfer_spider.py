@@ -5,6 +5,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 from .base import BaseParseSpider, BaseCrawlSpider, Garment, clean
+import pdb
 
 
 class Mixin(object):
@@ -45,12 +46,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
 
-        sku_common = {'price': response.meta['price'],
-                      'currency': response.meta['currency']}
-
-        if response.meta['previous_prices']:
-            sku_common['previous_prices'] = response.meta['previous_prices']
-
+        sku_common = response.meta['sku_common']
         colour = self.sku_colour(response)
         size_variations = self.sku_sizes(response)
 
@@ -60,7 +56,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
             sku['colour'] = colour
             sku['size'] = size
 
-            skus.update({colour + '_' + size: sku})
+            skus[colour + '_' + size] = sku
 
         return skus
 
@@ -68,13 +64,14 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         css = '.variation-color .emptyswatch a::attr(href)'
         colour_links = clean(response.css(css))
 
-        meta = self.product_pricing_common(response)
+        meta = {}
+        meta['sku_common'] = self.product_pricing_common(response)
 
         return [Request(link, callback=self.parse_colour, meta=meta) for link in colour_links]
 
     def product_id(self, response):
         ids_array = re.findall('tc_vars\["product_id"\]\s*=\s*"(.*?)\";', response.body.decode("utf-8"))
-        return (ids_array and ids_array[0]) or ""
+        return ids_array[0]
 
     def image_urls(self, response):
         css = '.product-image-container .product-primary-image a::attr(href)'
