@@ -49,7 +49,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         sku_common = self.product_pricing_common(response)
 
         xpath = '//div[contains(@class, "variation-color")]//a[child::img[@class="selected"]]//@title'
-        sku_common['colour'] = clean(response.xpath(xpath))[0]
+        sku_common['colour'] = colour = clean(response.xpath(xpath))[0]
 
         skus = {}
         css = '.variation-size .outer'
@@ -57,11 +57,11 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         for s_s in sizes_s:
             sku = sku_common.copy()
             size = clean(s_s.xpath('text()'))[0]
-            sku['size'] = self.one_size if size == 'TU' else size
+            sku['size'] = size = self.one_size if size == 'TU' else size
 
             if s_s.css(".unselected"):
                 sku['out_of_stock'] = True
-            skus[sku['colour'] + '_' + sku['size']] = sku
+            skus[colour + '_' + size] = sku
 
         return skus
 
