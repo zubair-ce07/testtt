@@ -98,8 +98,8 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def merch_info(self, response):
-        css = '.product-image-container .flag .tag::text'
-        return clean(response.css(css))
+        css = '.product-image-container .flag .tag'
+        return [" ".join(clean(tag.xpath('text()'))) for tag in response.css(css)][-1:]
 
 
 class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
