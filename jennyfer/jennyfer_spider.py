@@ -52,14 +52,15 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         sku_common['colour'] = clean(response.xpath(xpath))[0]
 
         skus = {}
-        css = '.variation-size .emptyswatch div'
+        css = '.variation-size .outer'
         sizes_s = response.css(css)
         for s_s in sizes_s:
             sku = sku_common.copy()
             size = clean(s_s.xpath('text()'))[0]
             sku['size'] = self.one_size if size == 'TU' else size
 
-            sku['out_of_stock'] = True if s_s.css(".unselected") else False
+            if s_s.css(".unselected"):
+                sku['out_of_stock'] = True
             skus[sku['colour'] + '_' + sku['size']] = sku
 
         return skus
