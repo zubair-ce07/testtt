@@ -46,20 +46,24 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def skus(self, response):
-
         sku_common = self.product_pricing_common(response)
 
-        colour = self.sku_colour(response)
-        sku_common['colour'] = colour
+        xpath = '//div[contains(@class, "variation-color")]//a[child::img[@class="selected"]]//@title'
+        sku_common['colour'] = clean(response.xpath(xpath))[0]
 
         skus = {}
-        size_variations = self.sku_sizes(response)
-        for size_data in size_variations:
+        css = '.variation-size .emptyswatch div'
+        size_options = response.css(css)
+        for size in size_options:
             sku = sku_common.copy()
-            sku['size'] = size_data['size']
-            sku['out_of_stock'] = size_data['out_of_stock']
 
-            skus[colour + '_' + size_data['size']] = sku
+            size_text = clean(size.xpath('text()'))[0]
+            out_of_stock_text = clean(size.xpath('@class'))[0]
+
+            sku['size'] = self.one_size if size_text == 'TU' else size_text
+            sku['out_of_stock'] = True if 'unselected' in out_of_stock_text else False
+
+            skus[sku['colour'] + '_' + sku['size']] = sku
 
         return skus
 
@@ -95,26 +99,6 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         css = '.pdpForm .laundry-care span::attr(title), .pdpForm .material::text'
         return clean(response.css(css))
 
-    def sku_sizes(self, response):
-        sizes = []
-        css = '.variation-size .emptyswatch div'
-        size_options = response.css(css)
-
-        for size in size_options:
-            data = {}
-            size_text = clean(size.xpath('text()'))[0]
-            out_of_stock_text = clean(size.xpath('@class'))[0]
-
-            data['size'] = self.one_size if size_text == 'TU' else size_text
-            data['out_of_stock'] = True if 'unselected' in out_of_stock_text else False
-            sizes.append(data)
-
-        return sizes
-
-    def sku_colour(self, response):
-        xpath = '//div[contains(@class, "variation-color")]//a[child::img[@class="selected"]]//@title'
-        return clean(response.xpath(xpath))[0]
-
     def merch_info(self, response):
         css = '.product-image-container .flag .tag::text'
         return clean(response.css(css))
@@ -140,6 +124,6 @@ class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r)),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r), callback='parse'),
     )
