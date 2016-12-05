@@ -5,7 +5,6 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 from .base import BaseParseSpider, BaseCrawlSpider, CurrencyParser, clean
-from titlecase import titlecase
 
 
 class Mixin(object):
@@ -42,6 +41,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
         garment['image_urls'] += self.image_urls(response)
         garment['skus'].update(self.skus(response))
+        garment['merch_info'] = self.merch_info(response)
 
         return self.next_request_or_garment(garment)
 
@@ -98,6 +98,10 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
     def product_care(self, response):
         css = '#compositionandupkeep span::text'
+        return clean(response.css(css))
+
+    def merch_info(self, response):
+        css = '.reassurance span::text'
         return clean(response.css(css))
 
 
