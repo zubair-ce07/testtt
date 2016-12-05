@@ -18,7 +18,7 @@ class Mixin(object):
     gender = 'men'
 
 
-class JennyferParseSpider(BaseParseSpider, Mixin):
+class JulesParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     PRICE_X = '//div[@id="product-content"]//span[@itemprop="price"]//text()'
 
@@ -29,6 +29,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, response, response)
+        garment['merch_info'] = self.merch_info(response)
 
         garment['skus'] = {}
         garment['image_urls'] = []
@@ -41,15 +42,12 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
         garment['image_urls'] += self.image_urls(response)
         garment['skus'].update(self.skus(response))
-        garment['merch_info'] = self.merch_info(response)
 
         return self.next_request_or_garment(garment)
 
     def skus(self, response):
-
         sku_common = self.product_pricing_common(response)
-        css = '#product-content .priceDecimal::text'
-        sku_common['currency'] = CurrencyParser.currency(clean(response.css(css))[-1])
+        sku_common['currency'] = clean(response.css('meta[itemprop="priceCurrency"]::attr(content)')[0])
 
         css = '.swatches-color .selected span::text'
         sku_common['colour'] = colour = clean(response.css(css))[0]
@@ -105,9 +103,9 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
 
-class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
+class JulesCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
-    parse_spider = JennyferParseSpider()
+    parse_spider = JulesParseSpider()
 
     allow_r = [
         '/hauts/',
@@ -118,12 +116,12 @@ class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     listings_css = [
-        '.ul-level-2 li.li-level-3 a',
+        '.ul-level-2',
         'div.pagination li a'
     ]
 
     products_css = [
-        '#search-result-items .product-image a.thumb-link'
+        '.product-image .thumb-link'
     ]
 
     rules = (
