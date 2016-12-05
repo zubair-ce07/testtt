@@ -86,7 +86,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
     def product_name(self, response):
         css = '.product-name .name::text'
-        return titlecase(clean(response.css(css))[0])
+        return re.sub(' La Gentle Factory$', '', clean(response.css(css))[0])
 
     def product_category(self, response):
         css = '.breadcrumb a span::text'
