@@ -104,8 +104,7 @@ class JulesParseSpider(BaseParseSpider, Mixin):
 
     def merch_info(self, response):
         mi = clean(response.css('.isActionMarketing-icon'))
-        if mi:
-            return ['-30% SUR LE 2EME ARTICLE* / -50% SUR LE 3EME ARTICLE*']
+        return ['-30% SUR LE 2EME ARTICLE* / -50% SUR LE 3EME ARTICLE*'] if mi else []
 
 
 class JulesCrawlSpider(BaseCrawlSpider, Mixin):
