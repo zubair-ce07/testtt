@@ -49,9 +49,9 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         sku_common = self.product_pricing_common(response)
         sku_common['currency'] = clean(response.css('meta[itemprop="priceCurrency"]::attr(content)')[0])
 
-        s_c = clean(response.css('.swatches-color .selected span::text'))
-        if s_c:
-            sku_common['colour'] = colour = s_c[0]
+        colour = clean(response.css('.swatches-color .selected span::text'))
+        if colour:
+            sku_common['colour'] = colour = colour[0]
 
         skus = {}
         css = '.attribute-size li'
@@ -63,7 +63,7 @@ class JulesParseSpider(BaseParseSpider, Mixin):
 
             if s_s.css(".disabled"):
                 sku['out_of_stock'] = True
-            if s_c:
+            if colour:
                 skus[colour + '_' + size] = sku
             else:
                 skus[size] = sku
@@ -100,12 +100,12 @@ class JulesParseSpider(BaseParseSpider, Mixin):
 
     def product_care(self, response):
         css = '#compositionandupkeep span::text'
-        return clean(response.css(css)) + [c for c in self.product_description(response) if '%' in c]
+        return clean(response.css(css)) + [c for c in self.product_description(response) if self.care_criteria(c)]
 
     def merch_info(self, response):
-        mi = clean(response.css('.product-flags img::attr(src)'))
-        if mi and mi[0].endswith('124378.png'):
-            return '-30% SUR LE 2EME ARTICLE* / -50% SUR LE 3EME ARTICLE*'
+        mi = clean(response.css('.isActionMarketing-icon'))
+        if mi:
+            return ['-30% SUR LE 2EME ARTICLE* / -50% SUR LE 3EME ARTICLE*']
 
 
 class JulesCrawlSpider(BaseCrawlSpider, Mixin):
@@ -116,8 +116,12 @@ class JulesCrawlSpider(BaseCrawlSpider, Mixin):
         '/hauts/',
         '/bas/',
         '/accessoires/',
-        '/accessoires-5/',
         '/accessoires-6/',
+    ]
+
+    deny_r = [
+        '/accessoires-divers',
+        '/accessoires-5',
     ]
 
     listings_css = [
@@ -131,5 +135,5 @@ class JulesCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
-        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r, deny=deny_r), callback='parse'),
     )
