@@ -31,8 +31,8 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response, response)
         garment['merch_info'] = self.merch_info(response)
 
-        garment['skus'] = {}
-        garment['image_urls'] = []
+        garment['skus'] = self.skus(response)
+        garment['image_urls'] = self.image_urls(response)
         garment['meta'] = {'requests_queue': self.colour_requests(response)}
 
         return self.next_request_or_garment(garment)
@@ -49,8 +49,9 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         sku_common = self.product_pricing_common(response)
         sku_common['currency'] = clean(response.css('meta[itemprop="priceCurrency"]::attr(content)')[0])
 
-        css = '.swatches-color .selected span::text'
-        sku_common['colour'] = colour = clean(response.css(css))[0]
+        s_c = clean(response.css('.swatches-color .selected span::text'))
+        if s_c:
+            sku_common['colour'] = colour = s_c[0]
 
         skus = {}
         css = '.attribute-size li'
@@ -62,12 +63,15 @@ class JulesParseSpider(BaseParseSpider, Mixin):
 
             if s_s.css(".disabled"):
                 sku['out_of_stock'] = True
-            skus[colour + '_' + size] = sku
+            if s_c:
+                skus[colour + '_' + size] = sku
+            else:
+                skus[size] = sku
 
         return skus
 
     def colour_requests(self, response):
-        css = '.swatches-color a::attr(href)'
+        css = '.swatches-color li:not(.selected) a::attr(href)'
         colour_links = clean(response.css(css))
 
         return [Request(link, callback=self.parse_colour) for link in colour_links]
@@ -76,7 +80,7 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         return re.findall('-(\d+).html', url)[0]
 
     def image_urls(self, response):
-        css = '.product-image-link a::attr(href)'
+        css = '.product-image-link::attr(href)'
         return clean(response.css(css))
 
     def product_brand(self, category):
@@ -96,11 +100,12 @@ class JulesParseSpider(BaseParseSpider, Mixin):
 
     def product_care(self, response):
         css = '#compositionandupkeep span::text'
-        return clean(response.css(css))
+        return clean(response.css(css)) + [c for c in self.product_description(response) if '%' in c]
 
     def merch_info(self, response):
-        css = '.reassurance span::text'
-        return clean(response.css(css))
+        mi = clean(response.css('.product-flags img::attr(src)'))
+        if mi and mi[0].endswith('124378.png'):
+            return '-30% SUR LE 2EME ARTICLE* / -50% SUR LE 3EME ARTICLE*'
 
 
 class JulesCrawlSpider(BaseCrawlSpider, Mixin):
