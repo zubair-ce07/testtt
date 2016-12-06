@@ -100,7 +100,7 @@ class JulesParseSpider(BaseParseSpider, Mixin):
 
     def product_care(self, response):
         css = '#compositionandupkeep span::text'
-        return [c for c in clean(response.css(css)) + self.raw_description(response) if self.care_criteria(c)]
+        return clean(response.css(css)) + [c for c in self.raw_description(response) if self.care_criteria(c)]
 
     def merch_info(self, response):
         mi = clean(response.css('.isActionMarketing-icon'))
