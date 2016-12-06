@@ -93,12 +93,12 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css)[1:])
 
     def product_description(self, response):
-        css = '.product-desc-long::text'
-        return clean(response.css(css))
+        desc = " ".join(clean(response.css('.product-desc-long::text')))
+        return [c for c in desc.split('.') if not self.care_criteria(c)]
 
     def product_care(self, response):
-        css = '#compositionandupkeep span::text'
-        return clean(response.css(css)) + [c for c in self.product_description(response) if self.care_criteria(c)]
+        css = '#compositionandupkeep span::text, .product-desc-long::text'
+        return [c for c in clean(response.css(css)) if self.care_criteria(c)]
 
     def merch_info(self, response):
         mi = clean(response.css('.isActionMarketing-icon'))
