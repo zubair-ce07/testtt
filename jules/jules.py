@@ -93,8 +93,10 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css)[1:])
 
     def product_description(self, response):
-        desc = " ".join(clean(response.css('.product-desc-long::text')))
-        return [c for c in desc.split('.') if not self.care_criteria(c)]
+        return [c for c in self.raw_description(response) if not self.care_criteria(c)]
+
+    def raw_description(self, response):
+        return " ".join(clean(response.css('.product-desc-long::text'))).split('. ')
 
     def product_care(self, response):
         css = '#compositionandupkeep span::text, .product-desc-long::text'
