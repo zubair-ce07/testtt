@@ -10,7 +10,6 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean
 class Mixin(object):
     lang = 'fr'
     market = 'FR'
-    currency = 'EUR'
     retailer = 'jules-fr'
     allowed_domains = ['www.jules.com']
     start_urls = ['http://www.jules.com/fr/l/collection']
@@ -76,7 +75,7 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         return [Request(link, callback=self.parse_colour) for link in colour_links]
 
     def product_id(self, url):
-        return re.findall('-(\d+).html', url)[0]
+        return re.findall('-(\d+)\.html', url)[0]
 
     def image_urls(self, response):
         css = '.product-image-link::attr(href)'
@@ -87,7 +86,7 @@ class JulesParseSpider(BaseParseSpider, Mixin):
 
     def product_name(self, response):
         name = clean(response.css('.product-name .name::text'))
-        return re.sub(' La Gentle Factory$', '', (name and name[0]) or '')
+        return re.sub(' La Gentle Factory$', '', name[0] if name else '')
 
     def product_category(self, response):
         css = '.breadcrumb a span::text'
