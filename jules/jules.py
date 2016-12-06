@@ -4,7 +4,7 @@ from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
-from .base import BaseParseSpider, BaseCrawlSpider, CurrencyParser, clean
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
 class Mixin(object):
@@ -12,9 +12,8 @@ class Mixin(object):
     market = 'FR'
     currency = 'EUR'
     retailer = 'jules-fr'
-    base_url = "http://www.jules.com"
     allowed_domains = ['www.jules.com']
-    start_urls = ['http://www.jules.com/fr/index']
+    start_urls = ['http://www.jules.com/fr/l/collection']
     gender = 'men'
 
 
@@ -87,8 +86,8 @@ class JulesParseSpider(BaseParseSpider, Mixin):
         return 'Jules, The Gentle Factory'
 
     def product_name(self, response):
-        css = '.product-name .name::text'
-        return re.sub(' La Gentle Factory$', '', clean(response.css(css))[0])
+        name = clean(response.css('.product-name .name::text'))
+        return re.sub(' La Gentle Factory$', '', (name and name[0]) or '')
 
     def product_category(self, response):
         css = '.breadcrumb a span::text'
@@ -111,21 +110,14 @@ class JulesCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = JulesParseSpider()
 
-    allow_r = [
-        '/hauts/',
-        '/bas/',
-        '/accessoires/',
-        '/accessoires-6/',
-    ]
-
     deny_r = [
-        '/accessoires-divers',
-        '/accessoires-5',
+        'smartphone',
+        'chargeur',
+        'parapluie'
     ]
 
     listings_css = [
-        '.ul-level-2',
-        'div.pagination li a'
+        '.pagination .page-next'
     ]
 
     products_css = [
@@ -133,6 +125,6 @@ class JulesCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
-        Rule(LinkExtractor(restrict_css=listings_css, allow=allow_r, deny=deny_r), callback='parse'),
+        Rule(LinkExtractor(restrict_css=products_css, deny=deny_r), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
     )
