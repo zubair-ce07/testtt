@@ -87,11 +87,14 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
         return [image['url-xxl'] for image in data['product'].get('images')]
 
     def product_brand(self, response):
-        return titlecase(re.findall('"product_brand":\s+"(.*?)",', response.body.decode('UTF-8'))[0])
+        return titlecase(re.findall('"product_brand":\s+"(.*?)",', self.raw_data(response))[0])
 
     def product_name(self, response):
-        name = titlecase(re.findall('"product_name":\s+"(.*?)",', response.body.decode('UTF-8'))[0])
+        name = titlecase(re.findall('"product_name":\s+"(.*?)",', self.raw_data(response))[0])
         return re.sub('^{0} '.format(self.product_brand(response)), '', name).strip()
+
+    def raw_data(self, response):
+        return clean(response.css('body .tag_track::text'))[0]
 
     def product_category(self, response):
         css = '#breadcrumb a::text, #breadcrumb span::text'
