@@ -33,7 +33,7 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
         ("kinder", "unisex-kids"),
     ]
 
-    unwanted_description = [
+    UNWANTED_DESCRIPTION = [
         'produktdetails',
         'weiterlesen',
         '{'
@@ -56,14 +56,6 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
 
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
-        garment['meta'] = {'requests_queue': self.colour_requests(response)}
-
-        return self.next_request_or_garment(garment)
-
-    def parse_colour(self, response):
-        garment = response.meta['garment']
-        garment['skus'].update(self.skus(response))
-        garment['image_urls'] += self.image_urls(response)
 
         return self.next_request_or_garment(garment)
 
@@ -83,12 +75,6 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
             skus[colour + '_' + size] = sku
 
         return skus
-
-    def colour_requests(self, response):
-        css = '.color-selection li:not(.selected) a::attr(href)'
-        colour_links = clean(response.css(css))
-
-        return [Request(link, callback=self.parse_colour) for link in colour_links]
 
     def product_id(self, url):
         return re.findall('-sku(\d+)\.html', url)[0]
@@ -116,7 +102,7 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
         return [d for d in raw_desc if self.description_criteria(d)]
 
     def description_criteria(self, desc):
-        return not (self.care_criteria(desc) or any(dw in desc.lower() for dw in self.unwanted_description))
+        return not (self.care_criteria(desc) or any(dw in desc.lower() for dw in self.UNWANTED_DESCRIPTION))
 
     def product_care(self, response):
         raw_desc = self.raw_description(response)
