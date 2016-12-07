@@ -33,6 +33,17 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
         ("kinder", "unisex-kids"),
     ]
 
+    unwanted_description = [
+        'produktdetails',
+        'weiterlesen',
+        '{'
+    ]
+
+    CARE_COLUMNS = [
+        'Obermaterial:', 'Futter:', 'Decksohle:',
+        'Laufsohle:'
+    ]
+
     def parse(self, response):
         pid = self.product_id(response.url)
         garment = self.new_unique_garment(pid)
@@ -41,7 +52,7 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response, response)
         garment['merch_info'] = self.merch_info(response)
-        garment['gender'] = self.product_gender(garment, response)
+        garment['gender'] = self.product_gender(garment)
 
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
@@ -87,10 +98,10 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
         return [image['url-xxl'] for image in data['product'].get('images')]
 
     def product_brand(self, response):
-        return titlecase(re.findall('"product_brand":\s+"(.*?)",', self.raw_data(response))[0])
+        return titlecase(re.findall('_brand":\s+"(.*?)",', self.raw_data(response))[0])
 
     def product_name(self, response):
-        name = titlecase(re.findall('"product_name":\s+"(.*?)",', self.raw_data(response))[0])
+        name = titlecase(re.findall('_name":\s+"(.*?)",', self.raw_data(response))[0])
         return re.sub('^{0} '.format(self.product_brand(response)), '', name).strip()
 
     def raw_data(self, response):
@@ -101,27 +112,35 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css)[1:])
 
     def product_description(self, response):
-        css = '#prodDetails *::text'
-        return clean(response.css(css))
+        raw_desc = self.raw_description(response)
+        return [d for d in raw_desc if self.description_criteria(d)]
+
+    def description_criteria(self, desc):
+        return not (self.care_criteria(desc) or any(dw in desc.lower() for dw in self.unwanted_description))
 
     def product_care(self, response):
-        return []
+        raw_desc = self.raw_description(response)
+        return [d for d in raw_desc if self.care_criteria(d)]
+
+    def care_criteria(self, care):
+        return super(MirapodoParseSpider, self).care_criteria(care) or any(cc in care for cc in self.CARE_COLUMNS)
+
+    def raw_description(self, response):
+        desc = re.findall('>(.*?)<', clean(response.css('#details_success, .details')[0]))
+        return [re.sub('^-', '', d).strip() for d in desc if d.strip()]
 
     def merch_info(self, response):
         css = '.productdetailFlags span::text'
         return clean(response.css(css))
 
-    def product_gender(self, garment, response):
-        gender_soup = " ".join(garment['category'] + [self.request_referer(response)]).lower()
+    def product_gender(self, garment):
+        gender_soup = " ".join(garment['category'] + [t[1] for t in garment['trail'] or []]).lower()
 
         for gender_str, gender in self.GENDER_MAP:
             if gender_str in gender_soup:
                 return gender
 
         return "unisex-adults"
-
-    def request_referer(self, response):
-        return str(response.request.headers.get('Referer', ''), 'UTF-8')
 
 
 class MirapodoCrawlSpider(BaseCrawlSpider, Mixin):
