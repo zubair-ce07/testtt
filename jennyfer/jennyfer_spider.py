@@ -72,8 +72,8 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
         return [Request(link, callback=self.parse_colour) for link in colour_links]
 
     def product_id(self, response):
-        data = clean(response.css('#primary script::text')[0])
-        return re.findall('product_ref_id"\]\s+=\s+"(.*?)";', data)[0]
+        raw_id = clean(response.css('#primary script::text')[0])
+        return re.findall('product_ref_id"\]\s+=\s+"(.*?)";', raw_id)[0]
 
     def image_urls(self, response):
         css = '.product-image-container .product-primary-image a::attr(href)'
