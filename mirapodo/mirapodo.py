@@ -57,7 +57,13 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
-        return self.next_request_or_garment(garment)
+        return garment if response.meta.get('child', False) else [garment] + self.colour_requests(response)
+
+    def colour_requests(self, response):
+        css = '.color-selection li:not(.selected) a::attr(href)'
+        colour_links = clean(response.css(css))
+
+        return [Request(link, callback=self.parse, meta={'child': True}) for link in colour_links]
 
     def skus(self, response):
         skus = {}
@@ -81,7 +87,7 @@ class MirapodoParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, response):
         data = json.loads(clean(response.css('#productData::text'))[0])
-        return [image['url-xxl'] for image in data['product'].get('images')]
+        return [image['url-xxl'] for image in data['product'].get('images', [])]
 
     def product_brand(self, response):
         return titlecase(re.findall('_brand":\s+"(.*?)",', self.raw_data(response))[0])
