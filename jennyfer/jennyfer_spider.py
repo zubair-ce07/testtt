@@ -23,7 +23,7 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
     PRICE_X = '//div[@class="pdp-top"]//span[contains(@class, "price")]//text()'
 
     def parse(self, response):
-        pid = self.product_id(response.url)
+        pid = self.product_id(response)
         garment = self.new_unique_garment(pid)
         if not garment:
             return
@@ -71,8 +71,11 @@ class JennyferParseSpider(BaseParseSpider, Mixin):
 
         return [Request(link, callback=self.parse_colour) for link in colour_links]
 
-    def product_id(self, url):
-        return re.findall('-(\d+).html', url)[0]
+    def product_id(self, response):
+        return re.findall('product_ref_id"\]\s+=\s+"(.*?)";', self.raw_data(response))[0]
+
+    def raw_data(self, response):
+        return clean(response.css('#primary script::text')[0])
 
     def image_urls(self, response):
         css = '.product-image-container .product-primary-image a::attr(href)'
@@ -113,7 +116,7 @@ class JennyferCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     listings_css = [
-        '.level-2 a',
+        '.level-2',
         '.pagination .arrow-page'
     ]
 
