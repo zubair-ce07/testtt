@@ -1,5 +1,4 @@
 import re
-import scrapy
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.contrib.linkextractors import LinkExtractor
 from sugarshape.items import SugarshapeItem
@@ -17,6 +16,8 @@ class SugarShapeSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=['#SusGridProductTitle', '#SusCategoryGridImage']), callback='parse_items')
     )
 
+    CURRENCY = "EUR"
+
     def parse_items(self, response):
         garment = SugarshapeItem()
         garment['retailer'] = 'sugarshape'
@@ -29,51 +30,16 @@ class SugarShapeSpider(CrawlSpider):
         garment['category'] = response.css('#breadCrumb a:last-child::text').extract_first()
         garment['url'] = response.url
         garment['industry'] = None
-        garment['currency'] = 'EUR'
+        garment['currency'] = self.CURRENCY
         garment['image_urls'] = response.css('a[id ^="morePics"]::attr(href)').extract()
         garment['spider_name'] = self.name
         garment['price'] = self.product_price(response)
         garment['url_original'] = response.url
-        care = self.product_care(response)
-        garment['care'] = care
-        garment['skus'] = {}
+        garment['care'] = self.product_care(response)
+        garment['skus'] = self.get_skus(response)
         garment['retailer_sku'] = self.retailer_sku(response)
-        related_urls = response.css('.SusColorBox > a::attr(href)').extract()
 
-        return self.follow_related_pages(garment, related_urls)
-
-    def follow_related_pages(self, item, related_urls):
-        if related_urls:
-            url = related_urls.pop()
-            return scrapy.Request(url,
-                                  callback=self.parse_related_page,
-                                  meta={'item': item,
-                                        'related_urls': related_urls,
-                                        }
-                                  )
-        return item
-
-    def parse_related_page(self, response):
-        item = response.meta['item']
-        related_urls = response.meta['related_urls']
-
-        price = self.product_price(response)
-        currency = 'EUR'
-        color = self.product_color(response)
-        sizes = self.product_sizes(response)
-
-        skus = map(lambda size: {
-            'price': price,
-            'currency': currency,
-            'color': color,
-            'size': size
-        }, sizes)
-
-        for sku in skus:
-            item['skus'].update({
-                color + '_' + sku['size']: sku
-            })
-        return self.follow_related_pages(item, related_urls)
+        return garment
 
     def product_color(self, response):
         description_lines = self.product_description(response)
@@ -112,3 +78,14 @@ class SugarShapeSpider(CrawlSpider):
         regex = re.compile(pattern)
         retailer_sku = [m.group(1) for s in scripts for m in [regex.search(s)] if m][0]
         return retailer_sku
+
+    def get_skus(self, response):
+        sizes = self.product_sizes(response)
+        price = self.product_price(response)
+        color = self.product_color(response)
+        return map(lambda size: {
+            'price': price,
+            'currency': self.CURRENCY,
+            'color': color,
+            'size': size
+        }, sizes)
