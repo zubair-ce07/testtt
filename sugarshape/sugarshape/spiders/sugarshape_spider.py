@@ -37,6 +37,7 @@ class SugarShapeSpider(CrawlSpider):
         care = self.product_care(response)
         garment['care'] = care
         garment['skus'] = {}
+        garment['retailer_sku'] = self.retailer_sku(response)
         related_urls = response.css('.SusColorBox > a::attr(href)').extract()
 
         return self.follow_related_pages(garment, related_urls)
@@ -104,3 +105,10 @@ class SugarShapeSpider(CrawlSpider):
 
     def product_sizes(self, response):
         return response.css('a.variantSelector::text').extract()
+
+    def retailer_sku(self, response):
+        scripts = response.css('script::text').extract()
+        pattern = '_shopgate.item_number = "(\d+)"'
+        regex = re.compile(pattern)
+        retailer_sku = [m.group(1) for s in scripts for m in [regex.search(s)] if m][0]
+        return retailer_sku
