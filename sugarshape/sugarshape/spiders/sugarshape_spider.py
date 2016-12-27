@@ -18,29 +18,28 @@ class SugarShapeSpider(CrawlSpider):
     )
 
     def parse_items(self, response):
-        self.log(response.url)
-        item = SugarshapeItem()
-        item['retailer'] = 'sugarshape'
-        item['market'] = 'DE'
-        item['lang'] = 'de'
-        item['gender'] = 'women'
-        item['name'] = response.css('#productTitle span::text').extract_first()
-        item['brand'] = 'Sugar Shape'
-        item['description'] = '\n'.join(response.css('#description p::text').extract())
-        item['category'] = response.css('#breadCrumb a:last-child::text').extract_first()
-        item['url'] = response.url
-        item['industry'] = None
-        item['currency'] = 'EUR'
-        item['image_urls'] = response.css('a[id ^="morePics"]::attr(href)').extract()
-        item['spider_name'] = self.name
-        item['price'] = self.product_price(response)
-        item['url_original'] = response.url
+        garment = SugarshapeItem()
+        garment['retailer'] = 'sugarshape'
+        garment['market'] = 'DE'
+        garment['lang'] = 'de'
+        garment['gender'] = 'women'
+        garment['name'] = response.css('#productTitle span::text').extract_first()
+        garment['brand'] = 'Sugar Shape'
+        garment['description'] = response.css('#description p::text').extract()
+        garment['category'] = response.css('#breadCrumb a:last-child::text').extract_first()
+        garment['url'] = response.url
+        garment['industry'] = None
+        garment['currency'] = 'EUR'
+        garment['image_urls'] = response.css('a[id ^="morePics"]::attr(href)').extract()
+        garment['spider_name'] = self.name
+        garment['price'] = self.product_price(response)
+        garment['url_original'] = response.url
         care = self.product_care(response)
-        item['care'] = care
-        item['skus'] = {}
+        garment['care'] = care
+        garment['skus'] = {}
         related_urls = response.css('.SusColorBox > a::attr(href)').extract()
 
-        return self.follow_related_pages(item, related_urls)
+        return self.follow_related_pages(garment, related_urls)
 
     def follow_related_pages(self, item, related_urls):
         if related_urls:
@@ -61,7 +60,6 @@ class SugarShapeSpider(CrawlSpider):
         currency = 'EUR'
         color = self.product_color(response)
         sizes = self.product_sizes(response)
-        self.log(sizes)
 
         skus = map(lambda size: {
             'price': price,
@@ -96,16 +94,13 @@ class SugarShapeSpider(CrawlSpider):
 
         return None
 
-    @staticmethod
-    def product_description(response):
+    def product_description(self, response):
         return response.css('div#description > p::text').extract()
 
-    @staticmethod
-    def product_price(response):
+    def product_price(self, response):
         price = response.css('#productPrice div:nth-child(1)::text').extract_first()
         price = ''.join(price.strip().split(' ')[0].split(','))
         return price
 
-    @staticmethod
-    def product_sizes(response):
+    def product_sizes(self, response):
         return response.css('a.variantSelector::text').extract()
