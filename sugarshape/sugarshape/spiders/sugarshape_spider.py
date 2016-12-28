@@ -41,29 +41,25 @@ class SugarShapeSpider(CrawlSpider):
 
     def product_color(self, response):
         color_pattern = 'Farbe:?[\s]*([\S]+)'
-        colors = response.css("div#description p:contains('Farbe:')").re(color_pattern)
-        return colors[0]
+        return response.css("div#description p:contains('Farbe:')").re_first(color_pattern)
 
     def product_care(self, response):
         description_lines = self.product_description(response)
-        matches = filter(lambda line: line.strip().startswith('Material'), description_lines)
-        return matches[0]
+        return filter(lambda line: line.strip().startswith('Material'), description_lines)
 
     def product_description(self, response):
         return response.css('div#description > p::text').extract()
 
     def product_price(self, response):
         price = response.css('#productPrice div:nth-child(1)::text').extract_first()
-        price = ''.join(price.strip().split(' ')[0].split(','))
-        return price
+        return ''.join(price.strip().split(' ')[0].split(','))
 
     def product_sizes(self, response):
         return response.css('a.variantSelector::text').extract()
 
     def retailer_sku(self, response):
         id_pattern = "prodId(?:[\s]*)?=(?:[\s]*)?'(.*)'"
-        ids = response.css("script:contains('var prodId')").re(id_pattern)
-        return ids[0]
+        return response.css("script:contains('var prodId')").re_first(id_pattern)
 
     def get_skus(self, response):
         sizes = self.product_sizes(response)
@@ -88,5 +84,4 @@ class SugarShapeSpider(CrawlSpider):
 
     def product_currency(self, response):
         currency_pattern = "currency:(?:\s*)'([A-Za-z]*)'"
-        currencies = response.css("script:contains('currency:')").re(currency_pattern)
-        return currencies[0]
+        return response.css("script:contains('currency:')").re_first(currency_pattern)
