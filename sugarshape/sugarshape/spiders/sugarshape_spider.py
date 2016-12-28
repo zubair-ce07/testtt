@@ -16,8 +16,6 @@ class SugarShapeSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=['#SusGridProductTitle', '#SusCategoryGridImage']), callback='parse_items')
     )
 
-    CURRENCY = "EUR"
-
     def parse_items(self, response):
         garment = SugarshapeItem()
         garment['retailer'] = 'sugarshape'
@@ -26,11 +24,11 @@ class SugarShapeSpider(CrawlSpider):
         garment['gender'] = 'women'
         garment['name'] = response.css('#productTitle span::text').extract_first()
         garment['brand'] = 'Sugar Shape'
-        garment['description'] = response.css('#description p::text').extract()
-        garment['category'] = response.css('#breadCrumb a:last-child::text').extract_first()
+        garment['description'] = self.product_description(response)
+        garment['category'] = response.css('#breadCrumb a:last-child::text').extract()
         garment['url'] = response.url
         garment['industry'] = None
-        garment['currency'] = self.CURRENCY
+        garment['currency'] = self.product_currency(response)
         garment['image_urls'] = response.css('a[id ^="morePics"]::attr(href)').extract()
         garment['spider_name'] = self.name
         garment['price'] = self.product_price(response)
@@ -42,24 +40,14 @@ class SugarShapeSpider(CrawlSpider):
         return garment
 
     def product_color(self, response):
-        description_lines = self.product_description(response)
-        color_pattern = '^farbe: (.*)'
-        matches = filter(lambda line: re.match(color_pattern, line.strip().lower()), description_lines)
-        if matches:
-            color = re.match(color_pattern, matches[0].strip().lower()).group(1).strip()
-            return color
-
-        return None
+        color_pattern = 'Farbe:[\s]*([\S]+)'
+        colors = response.xpath("//div[@id='description']//p[contains(text(),'Farbe:')]").re(color_pattern)
+        return colors[0] if colors else None
 
     def product_care(self, response):
         description_lines = self.product_description(response)
-        care_pattern = '^Material: (.*)'
-        matches = filter(lambda line: re.match(care_pattern, line.strip()), description_lines)
-        if matches:
-            care = re.match(care_pattern, matches[0].strip()).group(1)
-            return care
-
-        return None
+        matches = filter(lambda line: line.strip().startswith('Material'), description_lines)
+        return matches[0] if matches else None
 
     def product_description(self, response):
         return response.css('div#description > p::text').extract()
@@ -73,19 +61,31 @@ class SugarShapeSpider(CrawlSpider):
         return response.css('a.variantSelector::text').extract()
 
     def retailer_sku(self, response):
-        scripts = response.css('script::text').extract()
-        pattern = '_shopgate.item_number = "(\d+)"'
-        regex = re.compile(pattern)
-        retailer_sku = [m.group(1) for s in scripts for m in [regex.search(s)] if m][0]
-        return retailer_sku
+        id_pattern = "prodId(?:[\s]*)?=(?:[\s]*)?'(.*)'"
+        ids = response.xpath("//script[contains(.,'var prodId')]").re(id_pattern)
+        return ids[0] if ids else None
 
     def get_skus(self, response):
         sizes = self.product_sizes(response)
         price = self.product_price(response)
         color = self.product_color(response)
-        return map(lambda size: {
+        self.log("color found? {0} ".format(color is not None))
+        currency = self.product_currency(response)
+
+        skus = { (color+'_'+size) : {
             'price': price,
-            'currency': self.CURRENCY,
-            'color': color,
+            'currency': currency,
+             'colour': color,
             'size': size
-        }, sizes)
+        } for size in sizes if color is not None}
+
+        for sku in skus.values():
+            if(sku['colour'] is None):
+                del sku['colour']
+
+        return skus
+
+    def product_currency(self, response):
+        currency_pattern = "currency:(?:\s*)'([A-Za-z]*)'"
+        currencies = response.xpath("//script[contains(.,'currency:')]").re(currency_pattern)
+        return currencies[0] if currencies else None
