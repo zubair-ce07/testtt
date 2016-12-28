@@ -40,14 +40,14 @@ class SugarShapeSpider(CrawlSpider):
         return garment
 
     def product_color(self, response):
-        color_pattern = 'Farbe:[\s]*([\S]+)'
-        colors = response.xpath("//div[@id='description']//p[contains(text(),'Farbe:')]").re(color_pattern)
-        return colors[0] if colors else None
+        color_pattern = 'Farbe:?[\s]*([\S]+)'
+        colors = response.css("div#description p:contains('Farbe:')").re(color_pattern)
+        return colors[0]
 
     def product_care(self, response):
         description_lines = self.product_description(response)
         matches = filter(lambda line: line.strip().startswith('Material'), description_lines)
-        return matches[0] if matches else None
+        return matches[0]
 
     def product_description(self, response):
         return response.css('div#description > p::text').extract()
@@ -62,30 +62,31 @@ class SugarShapeSpider(CrawlSpider):
 
     def retailer_sku(self, response):
         id_pattern = "prodId(?:[\s]*)?=(?:[\s]*)?'(.*)'"
-        ids = response.xpath("//script[contains(.,'var prodId')]").re(id_pattern)
-        return ids[0] if ids else None
+        ids = response.css("script:contains('var prodId')").re(id_pattern)
+        return ids[0]
 
     def get_skus(self, response):
         sizes = self.product_sizes(response)
         price = self.product_price(response)
         color = self.product_color(response)
-        self.log("color found? {0} ".format(color is not None))
         currency = self.product_currency(response)
 
-        skus = { (color+'_'+size) : {
-            'price': price,
-            'currency': currency,
-             'colour': color,
-            'size': size
-        } for size in sizes if color is not None}
+        skus = {}
+        for size in sizes:
+            sku = {
+                'price': price,
+                'currency': currency,
+                'size': size,
+            }
+            if color:
+                sku['color'] = color
 
-        for sku in skus.values():
-            if(sku['colour'] is None):
-                del sku['colour']
+            sku_id = color + '_' + size if color else size
+            skus[sku_id] = sku
 
         return skus
 
     def product_currency(self, response):
         currency_pattern = "currency:(?:\s*)'([A-Za-z]*)'"
-        currencies = response.xpath("//script[contains(.,'currency:')]").re(currency_pattern)
-        return currencies[0] if currencies else None
+        currencies = response.css("script:contains('currency:')").re(currency_pattern)
+        return currencies[0]
