@@ -51,8 +51,7 @@ class SugarShapeSpider(CrawlSpider):
         return response.css('div#description > p::text').extract()
 
     def product_price(self, response):
-        price = response.css('#productPrice div:nth-child(1)::text').extract_first()
-        return ''.join(price.strip().split(' ')[0].split(','))
+        return int(response.css('#productPrice div:nth-child(1)::text').re_first('([\d,]+)').replace(',',''))
 
     def product_sizes(self, response):
         return response.css('a.variantSelector::text').extract()
