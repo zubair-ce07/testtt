@@ -1,6 +1,6 @@
 import re
 from scrapy.spiders.crawl import CrawlSpider, Rule
-from scrapy.contrib.linkextractors import LinkExtractor
+from scrapy.linkextractors import LinkExtractor
 from sugarshape.items import SugarshapeItem
 
 
@@ -40,7 +40,7 @@ class SugarShapeSpider(CrawlSpider):
         return garment
 
     def product_color(self, response):
-        color_pattern = 'Farbe:?[\s]*([\S]+)'
+        color_pattern = 'Farbe:?[\s]*([^<]+)'
         return response.css("div#description p:contains('Farbe:')").re_first(color_pattern)
 
     def product_care(self, response):

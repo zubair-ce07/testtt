@@ -13,8 +13,6 @@ BOT_NAME = 'sugarshape'
 
 SPIDER_MODULES = ['sugarshape.spiders']
 NEWSPIDER_MODULE = 'sugarshape.spiders'
-
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'sugarshape (+http://www.yourdomain.com)'
 
