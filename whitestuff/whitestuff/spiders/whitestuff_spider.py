@@ -1,25 +1,26 @@
 import json
 import re
+import urllib
+
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http.request import Request
 from whitestuff.items import WhitestuffItem
-from urllib.parse import urlencode
+from urllib import urlencode
 
 
-class Spider(CrawlSpider):
-    name = "whitestuff2"
+class WhitestuffSpider(CrawlSpider):
+    name = "whitestuff"
     allowed_domains = ["whitestuff.com", 'fsm.attraqt.com']
     start_urls = [
         "http://whitestuff.com/",
     ]
 
     rules = (
-        Rule(LinkExtractor(allow=()), callback='parse_items'),
-
+        Rule(LinkExtractor(restrict_css=['#holder_UPPERNAVIGATION', 'div.leftNAVIGATION']), callback='follow'),
     )
 
-    def parse_items(self, response):
+    def follow(self, response):
         ajax_params = self.parse_ajax_params(response)
 
         if ajax_params['config_page'] == 'category listing':
@@ -36,9 +37,14 @@ class Spider(CrawlSpider):
 
     def parse_category_listing(self, response):
         product_links = response.css('ul[id*=prodListing] > li > span[id*=link]::text').extract()
-        links = [Request(url='http://www.whitestuff.com' + link, callback=self.parse_item) for link in product_links]
-        for link in links:
-            yield link
+        for link in product_links:
+            yield Request(url='http://www.whitestuff.com' + link, callback=self.follow)
+        pagination_links = response.css('div[class*=list-control-bar] a::attr(href)').extract()
+        pagination_links = [urllib.unquote(link) for link in pagination_links]
+        pagination_links = [re.sub(r'[\\\"]','',link) for link in pagination_links]
+        pagination_links = ['http://www.whitestuff.com' + link for link in pagination_links]
+        for link in pagination_links:
+            yield Request(url = link, callback=self.follow)
 
     def parse_ajax_params(self, response):
         params = {}
@@ -76,7 +82,6 @@ class Spider(CrawlSpider):
         item['care'] = self.product_care(response)
         item['skus'] = self.get_skus(response)
         item['retailer_sku'] = self.retailer_sku(response)
-
         return item
 
     def product_gender(self, response):
@@ -125,7 +130,7 @@ class Spider(CrawlSpider):
     def product_images(self, response):
         script_elem = response.css('script:contains("var params")::text')
         script_text = re.sub('[\s]', ' ', script_elem.extract_first())
-        json_obj = re.search(r'var imgItems = (\{[\s\d\w_:#\.\/\-,"]*\})\s*\/\/REM', script_text).group(1)
+        json_obj = re.search(r'var imgItems = (\{[^\}]*\})\s*\/\/REM', script_text).group(1)
         image_prefix = re.search(r'\'large_img\'\),\s*\"prefix\":\"([\w.:\/-]*)\"', script_text).group(1)
         json_obj = json.loads(json_obj)
         image_names = []
