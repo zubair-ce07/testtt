@@ -112,7 +112,7 @@ class WhitestuffSpider(CrawlSpider):
     def get_skus(self, response):
         script = response.css('script:contains("var variants")::text').extract_first()
         script = re.sub(r'[\s]', ' ', script)
-        variants = re.search(r'var variants = (\{.+\})\s*var img', script).group(1)
+        variants = re.findall(r'var variants = (\{.+\})\s*var img', script).pop()
         variants = json.loads(variants)
         currency = self.product_currency(response)
         skus = {}
@@ -132,12 +132,12 @@ class WhitestuffSpider(CrawlSpider):
     def product_images(self, response):
         script_elem = response.css('script:contains("var params")::text')
         script_text = re.sub('[\s]', ' ', script_elem.extract_first())
-        json_obj = re.search(r'var imgItems = (\{[^\}]*\})\s*\/\/REM', script_text).group(1)
-        image_prefix = re.search(r'\'large_img\'\),\s*\"prefix\":\"([\w.:\/-]*)\"', script_text).group(1)
+        json_obj = re.findall(r'var imgItems = (\{[^\}]*\})\s*\/\/REM', script_text).pop()
+        image_prefix = re.findall(r'\'large_img\'\),\s*\"prefix\":\"([\w.:\/-]*)\"', script_text).pop()
         json_obj = json.loads(json_obj)
         image_names = []
         for key in json_obj:
-            image_names += json_obj[key].rstrip('#').lstrip('#').split('#')
+            image_names += json_obj[key].strip('#').split('#')
 
         return [image_prefix + name for name in image_names]
 
