@@ -2,6 +2,7 @@ import json
 import re
 import urllib
 
+from scrapy import Selector
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.http.request import Request
@@ -36,15 +37,16 @@ class WhitestuffSpider(CrawlSpider):
         yield Request(url=url, callback=self.parse_category_listing)
 
     def parse_category_listing(self, response):
-        product_links = response.css('ul[id*=prodListing] > li > span[id*=link]::text').extract()
+        encoded = re.search('LM.buildZone\((.*)\);', response.text).group(1)
+        json_obj = json.loads(encoded)
+        html = json_obj['html']
+        selector = Selector(text=html)
+        product_links = selector.css('ul[id*=prodListing] > li > span[id*=link]::text').extract()
         for link in product_links:
             yield Request(url='http://www.whitestuff.com' + link, callback=self.follow)
         pagination_links = response.css('div[class*=list-control-bar] a::attr(href)').extract()
-        pagination_links = [urllib.unquote(link) for link in pagination_links]
-        pagination_links = [re.sub(r'[\\\"]','',link) for link in pagination_links]
-        pagination_links = ['http://www.whitestuff.com' + link for link in pagination_links]
         for link in pagination_links:
-            yield Request(url = link, callback=self.follow)
+            yield Request(url = 'http://www.whitestuff.com' + link, callback=self.follow)
 
     def parse_ajax_params(self, response):
         params = {}
