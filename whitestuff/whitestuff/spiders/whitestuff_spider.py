@@ -18,35 +18,36 @@ class WhitestuffSpider(CrawlSpider):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['#holder_UPPERNAVIGATION', 'div.leftNAVIGATION']), callback='follow'),
+        Rule(LinkExtractor(restrict_css=['#holder_UPPERNAVIGATION', 'div.leftNAVIGATION']),
+             callback='parse_item_or_fetch_list'),
     )
 
-    def follow(self, response):
+    def parse_item_or_fetch_list(self, response):
         ajax_params = self.parse_ajax_params(response)
 
         if ajax_params['config_page'] == 'category listing':
-            return self.process_category_listing(ajax_params)
+            return self.fetch_category_listing(ajax_params)
 
         if ajax_params['config_page'] == 'product detail':
-            return self.parse_item(response)
+            return self.parse_item(response, ajax_params)
 
-    def process_category_listing(self, params):
+    def fetch_category_listing(self, params):
         params['zone0'] = 'category'
         url = 'http://fsm.attraqt.com/zones-js.aspx?'
         url += urlencode(params)
         yield Request(url=url, callback=self.parse_category_listing)
 
     def parse_category_listing(self, response):
-        encoded = re.search('LM.buildZone\((.*)\);', response.text).group(1)
-        json_obj = json.loads(encoded)
+        json_raw = re.findall('LM.buildZone\((.*)\);', response.text).pop()
+        json_obj = json.loads(json_raw)
         html = json_obj['html']
         selector = Selector(text=html)
         product_links = selector.css('ul[id*=prodListing] > li > span[id*=link]::text').extract()
         for link in product_links:
-            yield Request(url='http://www.whitestuff.com' + link, callback=self.follow)
+            yield Request(url='http://www.whitestuff.com' + link, callback=self.parse_item_or_fetch_list)
         pagination_links = response.css('div[class*=list-control-bar] a::attr(href)').extract()
         for link in pagination_links:
-            yield Request(url = 'http://www.whitestuff.com' + link, callback=self.follow)
+            yield Request(url = 'http://www.whitestuff.com' + link, callback=self.parse_item_or_fetch_list)
 
     def parse_ajax_params(self, response):
         params = {}
@@ -62,9 +63,11 @@ class WhitestuffSpider(CrawlSpider):
             '.*/zones/(.*).js')
         params['sku'] = script.re_first(r'LM.Sku\s*=\s*\'([^\']*)\';?')
         params['pageurl'] = response.url
+        is_sale = script.re_first(r'LM.config\("isSale",\s*"(.*)"\)')
+        params['is_sale'] = int(is_sale) if is_sale else None
         return params
 
-    def parse_item(self, response):
+    def parse_item(self, response, ajax_params):
         item = WhitestuffItem()
         item['retailer'] = 'whitestuff'
         item['market'] = 'UK'
@@ -79,7 +82,7 @@ class WhitestuffSpider(CrawlSpider):
         item['currency'] = self.product_currency(response)
         item['image_urls'] = self.product_images(response)
         item['spider_name'] = self.name
-        item['price'] = self.product_price(response)
+        item['price'] = self.product_price(response, ajax_params)
         item['url_original'] = response.url
         item['care'] = self.product_care(response)
         item['skus'] = self.get_skus(response)
@@ -97,10 +100,16 @@ class WhitestuffSpider(CrawlSpider):
         return response.css('meta[property="product:price:currency"]::attr(content)') \
             .extract_first()
 
-    def product_price(self, response):
-        return int(response
-                   .css('meta[property="product:price:amount"]::attr(content)')
-                   .extract_first().replace('.', ''))
+    def product_price(self, response, ajax_params):
+        is_sale = ajax_params['is_sale']
+        if is_sale:
+            return int(response
+                       .css('meta[property="og:price:standard_amount"]::attr(content)')
+                       .extract_first().replace('.', ''))
+        else:
+            return int(response
+                        .css('meta[property="product:price:amount"]::attr(content)')
+                        .extract_first().replace('.', ''))
 
     def product_care(self, response):
         return response.css('div.content > div:first-child::text') \
