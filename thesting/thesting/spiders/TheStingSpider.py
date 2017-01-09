@@ -9,8 +9,18 @@ from thesting.items import TheStingItem
 class ProductLinkExtractor(LinkExtractor):
     def extract_links(self, response):
         script = response.css('div.listings > script')
-        links = script.re('\"urlProductDetailPage\":\s*\"(.*)\"')
-        return [Link(url='http://www.thesting.com/' + link) for link in links]
+        product_urls = script.re('\"urlProductDetailPage\":\s*\"(.*)\"')
+        product_links = [Link(url='http://www.thesting.com/' + link) for link in product_urls]
+        return product_links
+
+class PaginationLinksExractor(LinkExtractor):
+    def extract_links(self, response):
+        totalOfPages = int(response.css('input#totalOfPages::attr(value)').extract_first())
+        current_page = int(response.css('input#currentPage::attr(value)').extract_first())
+        base_url = response.css('input#baseRequestURI::attr(value)').extract_first()
+        pagination_links = [Link(url='http://www.thesting.com/en{0}?page={1}'.format(base_url, page))
+                            for page in range(1, totalOfPages + 1) if page is not current_page]
+        return pagination_links
 
 
 class TheStingSpider(CrawlSpider):
@@ -24,36 +34,36 @@ class TheStingSpider(CrawlSpider):
     ]
 
     rules = [
-        Rule(LinkExtractor(restrict_css=('.topnav-container', 'ul.pages'), ), callback='parse_list'),
+        Rule(LinkExtractor(restrict_css=('.topnav-container'), ), callback='parse_list'),
     ]
 
     def parse_list(self, response):
-        gender = response.css('script:contains("pageAffinity")') \
-            .re_first('\"pageAffinity\": \"(.+)\"')
-
         for link in ProductLinkExtractor().extract_links(response):
-            yield Request(url=link.url, callback=self.parse_item, meta={'gender': gender})
+            yield Request(url=link.url, callback=self.parse_item)
+
+        for link in PaginationLinksExractor().extract_links(response):
+            yield Request(url=link.url, callback=self.parse_list)
 
     def parse_item(self, response):
         script = response.css('div#overlay-mask + script')
-        item = TheStingItem()
-        item['retailer_sku'] = script.re_first('(?<="genericCode":)\s*\"(.*)\"')
-        item['url'] = response.url
-        item['name'] = script.re_first('(?<="productName":)\s*\"(.*)\"')
-        item['category'] = script.re('(?<="productCategory":)\s*\"(.*)\"')
-        item['brand'] = script.re_first('(?<="brandName":)\s\"(.*)\"')
-        item['description'] = response.css('meta[name="description"]::attr(content)').extract_first()
-        item['currency'] = self.product_currency(script)
-        item['gender'] = self.product_gender(response)
-        item['image_urls'] = self.get_image_urls(response)
-        item['spider_name'] = self.name
-        item['retailer'] = 'thesting'
-        item['price'] = self.product_price(response)
-        item['url_original'] = response.url
-        item['care'] = self.product_care(response)
+        garment = TheStingItem()
+        garment['retailer_sku'] = script.re_first('(?<="genericCode":)\s*\"(.*)\"')
+        garment['url'] = response.url
+        garment['name'] = script.re_first('(?<="productName":)\s*\"(.*)\"')
+        garment['category'] = script.re('(?<="productCategory":)\s*\"(.*)\"')
+        garment['brand'] = script.re_first('(?<="brandName":)\s\"(.*)\"')
+        garment['description'] = response.css('meta[name="description"]::attr(content)').extract_first()
+        garment['currency'] = self.product_currency(script)
+        garment['gender'] = self.product_gender(response)
+        garment['image_urls'] = self.get_image_urls(response)
+        garment['spider_name'] = self.name
+        garment['retailer'] = 'thesting'
+        garment['price'] = self.product_price(response)
+        garment['url_original'] = response.url
+        garment['care'] = self.product_care(response)
         color_info = self.get_color_info(response)
-        item['skus'] = {}
-        return self.get_skus(item, color_info)
+        garment['skus'] = {}
+        return self.get_skus(garment, color_info)
 
     def get_image_urls(self, response):
         script = response.css('div#overlay-mask + script')
@@ -80,14 +90,21 @@ class TheStingSpider(CrawlSpider):
         color = response.meta['color_name']
         price = self.product_price(response)
         currency = self.product_currency(script)
-        sizes = self.product_sizes(response)
-        for size in sizes:
+
+        available_sizes = self.available_product_sizes(response)
+        for size in available_sizes:
             variant_code = size[0]
             item['skus'][variant_code] = {
                 'color': color,
                 'size': size[1],
                 'price': price,
                 'currency': currency,
+            }
+
+        out_of_stock = self.out_of_stock_variants(response)
+        for variant in out_of_stock:
+            item['skus'][variant] = {
+                'out_of_stock': True
             }
 
         return self.get_skus(item, color_info)
@@ -124,7 +141,7 @@ class TheStingSpider(CrawlSpider):
         elif affinity.lower() == 'female':
             return 'women'
 
-    def product_sizes(self, response):
+    def available_product_sizes(self, response):
         script_elem = response.css('div#overlay-mask + script::text')
         available_sizes_raw = script_elem.re_first('(?<="availableSizes":)\s*(\[[^\]]*\])')
         available_sizes_json = json.loads(available_sizes_raw)
