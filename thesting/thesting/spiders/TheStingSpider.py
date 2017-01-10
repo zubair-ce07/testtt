@@ -15,13 +15,13 @@ class ProductLinkExtractor(LinkExtractor):
 
 class PaginationLinksExractor(LinkExtractor):
     def extract_links(self, response):
-        totalOfPages = response.css('input#totalOfPages::attr(value)').extract_first()
-        if totalOfPages:
-            totalOfPages = int(totalOfPages)
+        total_pages = response.css('input#totalOfPages::attr(value)').extract_first()
+        if total_pages:
+            total_pages = int(total_pages)
             current_page = int(response.css('input#currentPage::attr(value)').extract_first())
             base_url = response.css('input#baseRequestURI::attr(value)').extract_first()
             pagination_links = [Link(url='http://www.thesting.com/en{0}?page={1}'.format(base_url, page))
-                                for page in range(1, totalOfPages + 1) if page is not current_page]
+                                for page in range(1, total_pages + 1) if page is not current_page]
             return pagination_links
 
 
@@ -117,8 +117,8 @@ class TheStingSpider(CrawlSpider):
         script_elem = response.css('div#overlay-mask + script::text')
         all_colors_raw = script_elem.re_first('(?<="allColors":)\s*(\[[^\]]*\])')
         all_colors_json = json.loads(all_colors_raw)
-        return [(color_obj['name'], color_obj['productPageColorUrl'])
-                for color_obj in all_colors_json]
+        return [(color['name'], color['productPageColorUrl'])
+                for color in all_colors_json]
 
     def product_price(self, response):
 
