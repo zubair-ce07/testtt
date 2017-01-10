@@ -10,7 +10,7 @@ class ProductLinkExtractor(LinkExtractor):
     def extract_links(self, response):
         script = response.css('div.listings > script')
         product_urls = script.re('\"urlProductDetailPage\":\s*\"(.*)\"')
-        product_links = [Link(url='http://www.thesting.com/' + link) for link in product_urls]
+        product_links = [Link(url=response.urljoin(link)) for link in product_urls]
         return product_links
 
 class PaginationLinksExractor(LinkExtractor):
