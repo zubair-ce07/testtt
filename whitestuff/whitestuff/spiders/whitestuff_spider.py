@@ -29,7 +29,8 @@ class WhitestuffSpider(CrawlSpider):
             return self.fetch_category_listing(ajax_params)
 
         if ajax_params['config_page'] == 'product detail':
-            return self.parse_item(response, ajax_params)
+            is_sale = ajax_params['is_sale']
+            return self.parse_item(response, is_sale)
 
     def fetch_category_listing(self, params):
         params['zone0'] = 'category'
@@ -67,7 +68,7 @@ class WhitestuffSpider(CrawlSpider):
         params['is_sale'] = int(is_sale) if is_sale else None
         return params
 
-    def parse_item(self, response, ajax_params):
+    def parse_item(self, response, is_sale):
         item = WhitestuffItem()
         item['retailer'] = 'whitestuff'
         item['market'] = 'UK'
@@ -82,7 +83,9 @@ class WhitestuffSpider(CrawlSpider):
         item['currency'] = self.product_currency(response)
         item['image_urls'] = self.product_images(response)
         item['spider_name'] = self.name
-        item['price'] = self.product_price(response, ajax_params)
+        item['price'] = self.product_price(response)
+        if is_sale:
+            item['previous_price'] = self.product_old_price(response)
         item['url_original'] = response.url
         item['care'] = self.product_care(response)
         item['skus'] = self.get_skus(response)
@@ -100,16 +103,15 @@ class WhitestuffSpider(CrawlSpider):
         return response.css('meta[property="product:price:currency"]::attr(content)') \
             .extract_first()
 
-    def product_price(self, response, ajax_params):
-        is_sale = ajax_params['is_sale']
-        if is_sale:
-            return int(response
-                       .css('meta[property="og:price:standard_amount"]::attr(content)')
-                       .extract_first().replace('.', ''))
-        else:
-            return int(response
-                        .css('meta[property="product:price:amount"]::attr(content)')
-                        .extract_first().replace('.', ''))
+    def product_price(self, response):
+        return int(response
+                    .css('meta[property="product:price:amount"]::attr(content)')
+                    .extract_first().replace('.', ''))
+
+    def product_old_price(self, response):
+        return int(response
+                   .css('meta[property="og:price:standard_amount"]::attr(content)')
+                   .extract_first().replace('.', ''))
 
     def product_care(self, response):
         return response.css('div.content > div:first-child::text') \
@@ -131,6 +133,9 @@ class WhitestuffSpider(CrawlSpider):
             sku['size'] = variants[variant]['option2']
             sku['price'] = int(variants[variant]['line_price'].replace('.', ''))
             sku['currency'] = currency
+            sell = variants[variant]['sell']
+            if not sell:
+                sku['out_of_stock'] = True
 
             skus[variants[variant]['sku']] = sku
         return skus
@@ -141,7 +146,7 @@ class WhitestuffSpider(CrawlSpider):
     def product_images(self, response):
         script_elem = response.css('script:contains("var params")::text')
         script_text = re.sub('[\s]', ' ', script_elem.extract_first())
-        json_obj = re.findall(r'var imgItems = (\{[^\}]*\})\s*\/\/REM', script_text).pop()
+        json_obj = re.findall(r'var imgItems = (\{[^\}]*\})', script_text).pop()
         image_prefix = re.findall(r'\'large_img\'\),\s*\"prefix\":\"([\w.:\/-]*)\"', script_text).pop()
         json_obj = json.loads(json_obj)
         image_names = []
