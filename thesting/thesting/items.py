@@ -30,5 +30,6 @@ class TheStingItem(scrapy.Item):
     crawl_id = scrapy.Field()
     retailer = scrapy.Field()
     price = scrapy.Field()
+    previous_price = scrapy.Field()
     url_original = scrapy.Field()
     uuid = scrapy.Field()
