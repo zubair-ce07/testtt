@@ -29,8 +29,7 @@ class WhitestuffSpider(CrawlSpider):
             return self.fetch_category_listing(ajax_params)
 
         if ajax_params['config_page'] == 'product detail':
-            is_sale = ajax_params['is_sale']
-            return self.parse_item(response, is_sale)
+            return self.parse_item(response)
 
     def fetch_category_listing(self, params):
         params['zone0'] = 'category'
@@ -45,7 +44,7 @@ class WhitestuffSpider(CrawlSpider):
         selector = Selector(text=html)
         product_links = selector.css('ul[id*=prodListing] > li > span[id*=link]::text').extract()
         for link in product_links:
-            yield Request(url='http://www.whitestuff.com' + link, callback=self.parse_item_or_fetch_list)
+            yield Request(url='http://www.whitestuff.com' + link, callback=self.parse_item)
         pagination_links = response.css('div[class*=list-control-bar] a::attr(href)').extract()
         for link in pagination_links:
             yield Request(url = 'http://www.whitestuff.com' + link, callback=self.parse_item_or_fetch_list)
@@ -68,7 +67,7 @@ class WhitestuffSpider(CrawlSpider):
         params['is_sale'] = int(is_sale) if is_sale else None
         return params
 
-    def parse_item(self, response, is_sale):
+    def parse_item(self, response):
         item = WhitestuffItem()
         item['retailer'] = 'whitestuff'
         item['market'] = 'UK'
@@ -84,6 +83,7 @@ class WhitestuffSpider(CrawlSpider):
         item['image_urls'] = self.product_images(response)
         item['spider_name'] = self.name
         item['price'] = self.product_price(response)
+        is_sale = self.parse_ajax_params(response)['is_sale']
         if is_sale:
             item['previous_price'] = self.product_old_price(response)
         item['url_original'] = response.url
@@ -118,7 +118,11 @@ class WhitestuffSpider(CrawlSpider):
             .re_first('^Care:[\s]*(.*)$')
 
     def product_color(self, response):
-        return response.css('meta[itemprop="color"]::attr(content)').re_first('.+')
+        colors = response.css('meta[itemprop="color"]::attr(content)')
+        for color in colors:
+            if len(color) > 0:
+                return color
+
 
     def get_skus(self, response):
         script = response.css('script:contains("var variants")::text').extract_first()
@@ -147,7 +151,7 @@ class WhitestuffSpider(CrawlSpider):
         script_elem = response.css('script:contains("var params")::text')
         script_text = re.sub('[\s]', ' ', script_elem.extract_first())
         json_obj = re.findall(r'var imgItems = (\{[^\}]*\})', script_text).pop()
-        image_prefix = re.findall(r'\'large_img\'\),\s*\"prefix\":\"([\w.:\/-]*)\"', script_text).pop()
+        image_prefix = re.findall(r'\'large_img\'\),\s*\"prefix\":\"([^\"]*)\"', script_text).pop()
         json_obj = json.loads(json_obj)
         image_names = []
         for key in json_obj:
