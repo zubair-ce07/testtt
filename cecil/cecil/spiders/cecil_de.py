@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+
+import time
 from __builtin__ import unicode
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -21,20 +23,22 @@ class CecilSpider(CrawlSpider):
     def parse_item(self, response):
         garment = CecilItem()
         garment['name'] = self.product_name(response)
-        garment['category'] = self.product_category(response)
         garment['brand'] = 'Cecil'
+        garment['category'] = self.product_category(response)
         garment['retailer'] = 'cecil-de'
+        garment['price'] = self.product_price(response)
         garment['currency'] = self.product_currency(response)
         garment['gender'] = 'women'
-        garment['care'] = self.product_care(response)
+        garment['image_urls'] = self.product_images(response)
         garment['description'] = self.product_description(response)
+        garment['care'] = self.product_care(response)
         garment['industry'] = None
         garment['market'] = 'DE'
         garment['url'] = response.url
         garment['url_original'] = response.url
         garment['retailer_sku'] = self.product_retailer_sku(response)
         garment['skus'] = self.product_skus(response)
-        garment['date'] = None
+        garment['date'] = int(time.time())
         return garment
 
     def product_name(self, response):
@@ -83,7 +87,20 @@ class CecilSpider(CrawlSpider):
         return skus
 
     def sku_price(self, price):
+        self.log(type(price))
         if type(price) == unicode:
-            return price.split()[0].replace('.','')
-        elif type(price) == float:
+            return price.split()[0].replace(',','').replace('.','')
+        if type(price) == float:
             return str(price).replace('.','')
+        if type(price) == int:
+            return price
+
+    def product_price(self, response):
+        json_text = response.css('script[type="application/ld+json"]::text').extract_first()
+        product_json = json.loads(json_text)
+        return product_json['offers']['price'].replace('.','')
+
+    def product_images(self, response):
+        script = response.css('script:contains("aZoom")')
+        url_pattern = re.compile('aZoom\[\d+\].*?\"(.*)\"', re.MULTILINE)
+        return response.css('script:contains("aZoom")').re(url_pattern)
