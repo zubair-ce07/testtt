@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import re
-import scrapy
+from __builtin__ import unicode
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from cecil.items import CecilItem
@@ -52,12 +52,13 @@ class CecilSpider(CrawlSpider):
         return re.sub('(<[^>]+>)|(<\/\w+>)','',last_li)
 
     def product_description(self, response):
-        return response.css('meta[name="description"]::attr(content)').extract_first()
+        short_desc = response.css('meta[name="description"]::attr(content)').extract_first()
+        long_desc = response.css('div.produkt-infos div#cbr-details-info').extract_first()
+        long_desc = re.sub('(<[^>]+>)|(<\/\w+>)','',long_desc)
+        return short_desc + '\r\n' + long_desc
 
     def product_retailer_sku(self, response):
-        article_data = response.css('input[name="frArticleData"]::attr(value)').extract_first()
-        article_data_json = json.loads(article_data)
-        return article_data_json['sArtNum']
+        return response.css('script:contains("ScarabQueue.push")').re_first("push\(\['view',\s*'(.+)'")
 
     def product_color(self, response):
         return response.css('ul.farbe > li.active span.tool-tip > span::text').extract_first()
@@ -66,21 +67,23 @@ class CecilSpider(CrawlSpider):
         skus = {}
         script = response.css('script:contains("var attr")')
         if script:
-            json_raw = re.search('(?<=eval\(\()(\{.*\})(?=\)\))', script.extract_first()).group(0)
-            sizes_json = json.loads(json_raw)
-            color = self.product_color(response)
-            currency = self.product_currency(response)
-            for size in sizes_json:
-                skus[ color + '_'+ size ] = {
-                    'size': size,
-                    'price': self.sku_price(sizes_json[size]['price']),
-                    'currency': currency,
-                    'colour': color
-                }
+            match_json = re.search('(?<=eval\(\()(\{.*\})(?=\)\))', script.extract_first())
+            if match_json: # If JSON object containing size information exists
+                json_raw = match_json.group(0)
+                sizes_json = json.loads(json_raw)
+                color = self.product_color(response)
+                currency = self.product_currency(response)
+                for size in sizes_json:
+                    skus[ color + '_'+ size ] = {
+                        'size': size,
+                        'price': self.sku_price(sizes_json[size]['price']),
+                        'currency': currency,
+                        'colour': color
+                    }
         return skus
 
     def sku_price(self, price):
-        if type(price) == str:
+        if type(price) == unicode:
             return re.sub('(\d+),(\d+)', '\\1\\2', price)
         elif type(price) == float:
             return str(price).replace('.','')
