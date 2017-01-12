@@ -84,6 +84,6 @@ class CecilSpider(CrawlSpider):
 
     def sku_price(self, price):
         if type(price) == unicode:
-            return re.sub('(\d+),(\d+)', '\\1\\2', price)
+            return price.split()[0].replace('.','')
         elif type(price) == float:
             return str(price).replace('.','')
