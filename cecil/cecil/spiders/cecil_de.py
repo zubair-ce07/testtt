@@ -4,6 +4,7 @@ import re
 
 import time
 from __builtin__ import unicode
+from scrapy.http.request import Request
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from cecil.items import CecilItem
@@ -14,9 +15,20 @@ class CecilSpider(CrawlSpider):
     allowed_domains = ["cecil.de"]
     start_urls = ['http://cecil.de/']
 
+    def process_pagination_link(link):
+        match = re.search('ecs_jump\((\d+)\)', link)
+        if match:
+            page = match.group(1)
+            return '?page='+page+'&ajax=1'
     rules = [
         Rule(LinkExtractor(restrict_css=['.mainnavigation', '#sidenavigation'])),
-        Rule(LinkExtractor(restrict_css='li.produkt-bild'), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css='li.produkt-bild'),
+             callback='parse_item'),
+        Rule(LinkExtractor(restrict_css='.produkte-pagination',
+                           attrs='onclick',
+                           process_value=process_pagination_link,
+                           ),
+             callback='parse_ajax_page')
     ]
 
     def parse_item(self, response):
@@ -26,6 +38,8 @@ class CecilSpider(CrawlSpider):
         garment['category'] = self.product_category(response)
         garment['retailer'] = 'cecil-de'
         garment['price'] = self.product_price(response)
+        if self.is_sale(response):
+            garment['previous_price'] = self.previous_price(response)
         garment['currency'] = self.product_currency(response)
         garment['gender'] = 'women'
         garment['image_urls'] = self.product_images(response)
@@ -39,6 +53,12 @@ class CecilSpider(CrawlSpider):
         garment['skus'] = self.product_skus(response)
         garment['date'] = int(time.time())
         return garment
+
+    def parse_ajax_page(self, response):
+        product_link_extractor = LinkExtractor(restrict_css='li.produkt-bild')
+        product_links = product_link_extractor.extract_links(response)
+        for link in product_links:
+            yield Request(url=link.url, callback=self.parse_item)
 
     def product_name(self, response):
         return response.css('dd.second > h1::text').extract_first()
@@ -64,7 +84,17 @@ class CecilSpider(CrawlSpider):
         return response.css('script:contains("ScarabQueue.push")').re_first("push\(\['view',\s*'(.+)'")
 
     def product_color(self, response):
-        return response.css('ul.farbe > li.active span.tool-tip > span::text').extract_first()
+        color = response.css('ul.farbe > li.active span.tool-tip > span::text').extract_first()
+        if color:
+            color = color.replace(' ','_')
+            return color
+        else:
+            # Extract color from URL
+            url = response.url
+            url = url.split('/')[-1].split('.')[0]
+            product_name = self.product_name(response).strip().replace(' ','-')
+            if product_name in url:
+                return url.replace(product_name,'').lstrip('-').replace('-','_')
 
     def product_skus(self, response):
         skus = {}
@@ -155,3 +185,10 @@ class CecilSpider(CrawlSpider):
         script = response.css('script:contains("aZoom")')
         url_pattern = re.compile('aZoom\[\d+\].*?\"(.*)\"', re.MULTILINE)
         return response.css('script:contains("aZoom")').re(url_pattern)
+
+    def is_sale(self, response):
+        return not not response.css('span.linethrough').extract()
+
+    def previous_price(self, response):
+        return response.css('span.linethrough::text')\
+            .re_first('(\d+,\d+)').replace(',','')

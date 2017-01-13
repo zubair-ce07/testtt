@@ -14,6 +14,7 @@ class CecilItem(scrapy.Item):
    retailer = scrapy.Field()
    url = scrapy.Field()
    price = scrapy.Field()
+   previous_price = scrapy.Field()
    image_urls = scrapy.Field()
    uuid = scrapy.Field()
    trail = scrapy.Field()
