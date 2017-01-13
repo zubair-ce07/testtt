@@ -15,8 +15,7 @@ class CecilSpider(CrawlSpider):
     start_urls = ['http://cecil.de/']
 
     rules = [
-        Rule(LinkExtractor(restrict_css='.mainnavigation')),
-        Rule(LinkExtractor(restrict_css='#sidenavigation')),
+        Rule(LinkExtractor(restrict_css=['.mainnavigation', '#sidenavigation'])),
         Rule(LinkExtractor(restrict_css='li.produkt-bild'), callback='parse_item'),
     ]
 
@@ -53,12 +52,12 @@ class CecilSpider(CrawlSpider):
 
     def product_care(self, response):
         last_li = response.css('#cbr-details-info li:last-child').extract_first()
-        return re.sub('(<[^>]+>)|(<\/\w+>)','',last_li)
+        return re.sub('(<[^>]+>)|(<\/\w+>)', '', last_li)
 
     def product_description(self, response):
         short_desc = response.css('meta[name="description"]::attr(content)').extract_first()
         long_desc = response.css('div.produkt-infos div#cbr-details-info').extract_first()
-        long_desc = re.sub('(<[^>]+>)|(<\/\w+>)','',long_desc)
+        long_desc = re.sub('(<[^>]+>)|(<\/\w+>)', '', long_desc)
         return short_desc + '\r\n' + long_desc
 
     def product_retailer_sku(self, response):
@@ -69,36 +68,88 @@ class CecilSpider(CrawlSpider):
 
     def product_skus(self, response):
         skus = {}
-        script = response.css('script:contains("var attr")')
-        if script:
-            match_json = re.search('(?<=eval\(\()(\{.*\})(?=\)\))', script.extract_first())
-            if match_json: # If JSON object containing size information exists
-                json_raw = match_json.group(0)
-                sizes_json = json.loads(json_raw)
-                color = self.product_color(response)
-                currency = self.product_currency(response)
-                for size in sizes_json:
-                    skus[ color + '_'+ size ] = {
-                        'size': size,
-                        'price': self.sku_price(sizes_json[size]['price']),
-                        'currency': currency,
-                        'colour': color
-                    }
+        product_price = self.product_price(response)
+        color = self.product_color(response)
+        currency = self.product_currency(response)
+        available_sizes = self.product_available_sizes(response)
+        out_of_stock = self.out_of_stock_sizes(response)
+        sizes = available_sizes if available_sizes else []
+        sizes += out_of_stock if out_of_stock else []
+
+        if sizes:
+            size_details = self.product_size_details(response)
+            for size in sizes:
+                price = size_details[size]['price'] \
+                    if size in size_details else product_price
+                sku = {
+                    'size': size,
+                    'price': self.format_sku_price(price),
+                    'colour': color,
+                    'currency': currency
+                }
+                if size in out_of_stock:
+                    sku.update({'out_of_stock': True})
+
+                skus[color + '_' + size] = sku
+
         return skus
 
-    def sku_price(self, price):
-        self.log(type(price))
+    def product_available_sizes(self, response):
+        script = response.css('script:contains("var attr")')
+        sizes = script.re_first('sizes = new Array([^;]*)')
+        if sizes:
+            sizes= re.sub('\(|\)|\'', '', sizes).split(',')
+            return sizes
+        return None
+
+    def product_size_details(self, response):
+        script = response.css('script:contains("var attr")')
+        if script:
+            match_json = re.search('(?<=eval\(\()(\{.*\})(?=\)\))',
+                                   script.extract_first())
+            if match_json:
+                raw = match_json.group(0)
+                sizes_json = json.loads(raw)
+                return sizes_json
+        return {}
+
+    def out_of_stock_sizes(self, response):
+        script = response.css('script:contains("var attr")')
+        # Out of stock SKUs (if applicable)
+        values_0 = script.re_first('values\[0\] = new Array([^;]*)')
+        values_1 = script.re_first('values\[1\] = new Array([^;]*)')
+        out_of_stock = []
+        if values_0 and values_1:
+            values_0 = re.sub('\(|\)|\'', '', values_0).split(',')
+            values_1 = re.sub('\(|\)|\'', '', values_1).split(',')
+            all_sizes = [size_0 + '_' + size_1
+                         for size_0 in values_0
+                         for size_1 in values_1]
+            available_sizes = script.re_first('sizes = new Array([^;]*)')
+            available_sizes = re.sub('\(|\)|\'', '',
+                                     available_sizes).split(',')
+            out_of_stock = list(set(all_sizes) - set(available_sizes))
+        elif values_0:
+            values_0 = re.sub('\(|\)|\'', '', values_0).split(',')
+            # Compare values_0 and sizes
+            available_sizes = script.re_first('sizes = new Array([^;]*)')
+            available_sizes = re.sub('\(|\)|\'', '',
+                                     available_sizes).split(',')
+            out_of_stock = list(set(values_0) - set(available_sizes))
+        return out_of_stock
+
+    def format_sku_price(self, price):
         if type(price) == unicode:
-            return price.split()[0].replace(',','').replace('.','')
+            return price.split()[0].replace(',', '').replace('.', '')
         if type(price) == float:
-            return str(price).replace('.','')
+            return str(price).replace('.', '')
         if type(price) == int:
             return price
 
     def product_price(self, response):
         json_text = response.css('script[type="application/ld+json"]::text').extract_first()
         product_json = json.loads(json_text)
-        return product_json['offers']['price'].replace('.','')
+        return product_json['offers']['price'].replace('.', '')
 
     def product_images(self, response):
         script = response.css('script:contains("aZoom")')
