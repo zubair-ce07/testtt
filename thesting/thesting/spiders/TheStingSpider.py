@@ -52,53 +52,52 @@ class TheStingSpider(CrawlSpider):
 
     def parse_item(self, response):
         garment = TheStingItem()
-        garment['retailer_sku'] = self.product_retailer_sku(response)
+        product_data = self.parse_product_data(response)
+        garment['retailer_sku'] = self.product_retailer_sku(product_data)
         garment['url'] = response.url
-        garment['name'] = self.product_name(response)
-        garment['category'] = self.product_category(response)
-        garment['brand'] = self.product_brand_name(response)
-        garment['description'] = self.product_description(response)
-        garment['currency'] = self.product_currency(response)
+        garment['name'] = self.product_name(product_data)
+        garment['category'] = self.product_category(product_data)
+        garment['brand'] = self.product_brand_name(product_data)
+        garment['description'] = self.product_description(product_data)
+        garment['currency'] = self.product_currency(product_data)
         garment['gender'] = self.product_gender(response)
-        garment['image_urls'] = self.get_image_urls(response)
+        garment['image_urls'] = self.image_urls(product_data)
         garment['spider_name'] = self.name
         garment['retailer'] = 'thesting'
-        garment['price'] = self.product_price(response)
-        is_sale = self.is_sale(response)
+        garment['price'] = self.product_price(product_data)
+        is_sale = self.is_sale(product_data)
         if is_sale:
-            garment['previous_price'] = self.product_old_price(response)
+            garment['previous_price'] = self.product_old_price(product_data)
         garment['url_original'] = response.url
-        garment['care'] = self.product_care(response)
+        garment['care'] = self.product_care(product_data)
         garment['skus'] = {}
-        color_info = self.get_color_info(response)
-        return self.get_skus(garment, color_info)
+        all_colors = self.get_all_colors(product_data)
+        return self.get_skus(garment, all_colors)
 
-    def get_image_urls(self, response):
-        script = response.css('div#overlay-mask + script')
-        pattern = re.compile('listImages":\s*(\[.*?\])', re.DOTALL)
-        str_json = script.re_first(pattern)
-        array = json.loads(str_json)
-        return [obj['urlPresetZoom'] for obj in array]
+    def image_urls(self, product_data):
+        return [image.get('urlPresetZoom')
+                for image in product_data.get('listImages')]
 
-    def get_skus(self, item, color_info):
-        if color_info:
-            name, url = color_info.pop()
+    def get_skus(self, item, colors):
+        if colors:
+            name, url = colors.pop()
             return Request(url='http://www.thesting.com/' + url,
                            callback=self.parse_color_sku,
                            meta={
                                'item': item,
                                'color_name': name,
-                               'color_info': color_info,
+                               'colors': colors,
                            })
         return item
 
     def parse_color_sku(self, response):
+        product_data = self.parse_product_data(response)
         item = response.meta['item']
-        color_info = response.meta['color_info']
+        colors = response.meta['colors']
         color = response.meta['color_name']
-        price = self.product_price(response)
-        currency = self.product_currency(response)
-        sizes = self.product_sizes(response)
+        price = self.product_price(product_data)
+        currency = self.product_currency(product_data)
+        sizes = self.product_sizes(product_data)
         for size in sizes:
             variant_code = size['variantCode']
             item['skus'][variant_code] = {
@@ -109,64 +108,65 @@ class TheStingSpider(CrawlSpider):
             }
             if not size['available']:
                 item['skus'][variant_code].update({'out_of_stock': True})
-        return self.get_skus(item, color_info)
+        return self.get_skus(item, colors)
 
-    def get_color_info(self, response):
-        script_elem = response.css('div#overlay-mask + script')
-        all_colors_raw = script_elem.re_first('"allColors":\s*(\[[^\]]*\])')
-        all_colors_json = json.loads(all_colors_raw)
+    def get_all_colors(self, product_data):
+        all_colors = product_data['allColors']
         return [(color['name'], color['productPageColorUrl'])
-                for color in all_colors_json]
+                for color in all_colors]
 
-    def product_price(self, response):
-        script = response.css('script:contains("saleStatus")')
-        return int(script.re_first('"price":[\s"]*([\d\.]*)').replace('.', ''))
+    def product_price(self, product_data):
+        price = product_data.get('productPriceData') \
+            .get('productPrice') \
+            .get('price')
+        return str(price).replace('.', '')
 
-    def product_old_price(self, response):
-        script = response.css('script:contains("saleStatus")')
-        return int(script.re_first('"fromPrice":[\s"]*([\d\.]*)').replace('.', ''))
+    def product_old_price(self, product_data):
+        price = product_data.get('productPriceData') \
+            .get('fromPrice') \
+            .get('price')
+        return str(price).replace('.', '')
 
-    def product_currency(self, response):
-        script = response.css('div#overlay-mask + script')
-        return script.re_first(r'"currency":[\s"]*([^:ascii:])')
+    def product_currency(self, product_data):
+        return product_data.get('productPriceData')\
+            .get('productPrice')\
+            .get('currency')
 
-    def product_care(self, response):
-        script = response.css('div#overlay-mask + script')
-        care_raw = script.re_first(r'"productFabrics":\s*(\[[^\]]*\])')
-        care_json = json.loads(care_raw)
-        return [care['value'] for care in care_json]
+    def product_care(self, product_data):
+        fabrics = product_data['productFabrics']
+        return [fabric['value'] for fabric in fabrics]
 
     def product_gender(self, response):
         script = response.css('script:contains("pageAffinity")')
         affinity = script.re_first(r'"pageAffinity": "(.*)"').lower()
         return ('women', 'men')[affinity == 'male']
 
-    def product_sizes(self, response):
-        script_elem = response.css('div#overlay-mask + script')
-        sizes_raw = script_elem.re_first(r'"availableSizes":\s*(\[[^\]]*\])')
-        sizes_json = json.loads(sizes_raw)
-        return sizes_json
+    def product_sizes(self, product_data):
+        return product_data.get('availableSizes')
 
-    def is_sale(self, response):
-        return int(response.css('script:contains("saleStatus")')
-                   .re_first(r'"saleStatus": (\d+)'))
+    def is_sale(self, product_data):
+        return product_data.get('productPriceData').get('fromPrice')
 
-    def product_description(self, response):
+    def product_description(self, product_data):
+        return product_data.get('productDescription')
+
+    def product_brand_name(self, product_data):
+        return product_data.get('brandName')
+
+    def product_category(self, product_data):
+        return product_data.get('productCategory')
+
+    def product_name(self, product_data):
+        return product_data.get('productName')
+
+    def product_retailer_sku(self, product_data):
+        return product_data.get('genericCode')
+
+    def parse_product_data(self, response):
         script = response.css('div#overlay-mask + script')
-        return response.css('meta[name="description"]::attr(content)').extract_first()
-
-    def product_brand_name(self, response):
-        script = response.css('div#overlay-mask + script')
-        return script.re_first(r'"brandName":\s\"(.*)\"')
-
-    def product_category(self, response):
-        script = response.css('div#overlay-mask + script')
-        return script.re(r'"productCategory":\s*\"(.*)\"')
-
-    def product_name(self, response):
-        script = response.css('div#overlay-mask + script')
-        return script.re_first(r'"productName":\s*\"(.*)\"')
-
-    def product_retailer_sku(self, response):
-        script = response.css('div#overlay-mask + script')
-        return script.re_first(r'"genericCode":\s*\"(.*)\"')
+        pattern = re.compile('productDataJson = (\{.*);\s*\<\/', re.DOTALL)
+        raw_json = script.re_first(pattern)
+        raw_json = raw_json.replace('\'', '"')  # Replace single quote with double quotes
+                                                # otherwise json parsing breaks
+        product_data = json.loads(raw_json)
+        return product_data.get('productData')
