@@ -16,9 +16,9 @@ class CecilSpider(CrawlSpider):
     start_urls = ['http://cecil.de/']
 
     def process_pagination_link(link):
-        match = re.search('ecs_jump\((\d+)\)', link)
-        if match:
-            page = match.group(1)
+        results = re.findall('ecs_jump\((\d+)\)', link)
+        if results:
+            page = results.pop()
             return '?page='+page+'&ajax=1'
 
     rules = [
@@ -29,7 +29,7 @@ class CecilSpider(CrawlSpider):
                            attrs='onclick',
                            process_value=process_pagination_link,
                            ),
-             callback='parse_ajax_page')
+             callback='parse')
     ]
 
     def parse_item(self, response):
@@ -55,12 +55,6 @@ class CecilSpider(CrawlSpider):
         garment['date'] = int(time.time())
         return garment
 
-    def parse_ajax_response(self, response):
-        product_link_extractor = LinkExtractor(restrict_css='li.produkt-bild')
-        product_links = product_link_extractor.extract_links(response)
-        for link in product_links:
-            yield Request(url=link.url, callback=self.parse_item)
-
     def product_name(self, response):
         return response.css('dd.second > h1::text').extract_first()
 
@@ -72,8 +66,12 @@ class CecilSpider(CrawlSpider):
         return response.css('script[type="application/ld+json"]').re_first(currency_pattern)
 
     def product_care(self, response):
+        care = []
         last_li = response.css('#cbr-details-info li:last-child').extract_first()
-        return re.sub('(<[^>]+>)|(<\/\w+>)', '', last_li)
+        material = [re.sub('(<[^>]+>)|(<\/\w+>)', '', last_li)]
+        care_instructions = response.css('p.care_instruction_text > span::text').extract()
+        care.extend(material + care_instructions)
+        return care
 
     def product_description(self, response):
         short_desc = response.css('meta[name="description"]::attr(content)').extract_first()
@@ -189,7 +187,7 @@ class CecilSpider(CrawlSpider):
         return response.css('script:contains("aZoom")').re(url_pattern)
 
     def is_sale(self, response):
-        return response.css('span.linethrough').extract() != []
+        return response.css('span.linethrough')
 
     def previous_price(self, response):
         return response.css('span.linethrough::text')\
