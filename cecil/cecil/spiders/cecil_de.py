@@ -20,6 +20,7 @@ class CecilSpider(CrawlSpider):
         if match:
             page = match.group(1)
             return '?page='+page+'&ajax=1'
+
     rules = [
         Rule(LinkExtractor(restrict_css=['.mainnavigation', '#sidenavigation'])),
         Rule(LinkExtractor(restrict_css='li.produkt-bild'),
@@ -54,7 +55,7 @@ class CecilSpider(CrawlSpider):
         garment['date'] = int(time.time())
         return garment
 
-    def parse_ajax_page(self, response):
+    def parse_ajax_response(self, response):
         product_link_extractor = LinkExtractor(restrict_css='li.produkt-bild')
         product_links = product_link_extractor.extract_links(response)
         for link in product_links:
@@ -149,21 +150,22 @@ class CecilSpider(CrawlSpider):
         values_0 = script.re_first('values\[0\] = new Array([^;]*)')
         values_1 = script.re_first('values\[1\] = new Array([^;]*)')
         out_of_stock = []
+        pattern = re.compile('\(|\)|\'')
         if values_0 and values_1:
-            values_0 = re.sub('\(|\)|\'', '', values_0).split(',')
-            values_1 = re.sub('\(|\)|\'', '', values_1).split(',')
+            values_0 = pattern.sub('', values_0).split(',')
+            values_1 = pattern.sub('', values_1).split(',')
             all_sizes = [size_0 + '_' + size_1
                          for size_0 in values_0
                          for size_1 in values_1]
             available_sizes = script.re_first('sizes = new Array([^;]*)')
-            available_sizes = re.sub('\(|\)|\'', '',
+            available_sizes = pattern.sub('',
                                      available_sizes).split(',')
             out_of_stock = list(set(all_sizes) - set(available_sizes))
         elif values_0:
-            values_0 = re.sub('\(|\)|\'', '', values_0).split(',')
+            values_0 = pattern.sub('', values_0).split(',')
             # Compare values_0 and sizes
             available_sizes = script.re_first('sizes = new Array([^;]*)')
-            available_sizes = re.sub('\(|\)|\'', '',
+            available_sizes = pattern.sub('',
                                      available_sizes).split(',')
             out_of_stock = list(set(values_0) - set(available_sizes))
         return out_of_stock
@@ -187,7 +189,7 @@ class CecilSpider(CrawlSpider):
         return response.css('script:contains("aZoom")').re(url_pattern)
 
     def is_sale(self, response):
-        return not not response.css('span.linethrough').extract()
+        return response.css('span.linethrough').extract() != []
 
     def previous_price(self, response):
         return response.css('span.linethrough::text')\
