@@ -160,7 +160,10 @@ class WhitestuffSpider(CrawlSpider):
         return [image_prefix + name for name in image_names]
 
     def product_name(self, response):
-        return response.css('meta[itemprop="name"]::attr(content)').re_first('.+')
+        names = response.css('meta[itemprop="name"]::attr(content)').extract()
+        for name in names:
+            if len(name) > 0:
+                return name
 
     def product_category(self, response):
         return response.css('div#crumb > span:last-child meta[itemprop="title"]::attr(content)') \
