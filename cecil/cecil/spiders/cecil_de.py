@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 import json
 import re
 
 import time
-from __builtin__ import unicode
 from scrapy.http.request import Request
 from scrapy.spiders.crawl import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -134,10 +132,10 @@ class CecilSpider(CrawlSpider):
     def product_size_details(self, response):
         script = response.css('script:contains("var attr")')
         if script:
-            match_json = re.search('(?<=eval\(\()(\{.*\})(?=\)\))',
+            results = re.findall('(?<=eval\(\()(\{.*\})(?=\)\))',
                                    script.extract_first())
-            if match_json:
-                raw = match_json.group(0)
+            if results:
+                raw = results.pop()
                 sizes_json = json.loads(raw)
                 return sizes_json
         return {}
@@ -169,12 +167,7 @@ class CecilSpider(CrawlSpider):
         return out_of_stock
 
     def format_sku_price(self, price):
-        if type(price) == unicode:
-            return price.split()[0].replace(',', '').replace('.', '')
-        if type(price) == float:
-            return str(price).replace('.', '')
-        if type(price) == int:
-            return price
+        return str(price).split()[0].replace('.','').replace(',','')
 
     def product_price(self, response):
         json_text = response.css('script[type="application/ld+json"]::text').extract_first()
