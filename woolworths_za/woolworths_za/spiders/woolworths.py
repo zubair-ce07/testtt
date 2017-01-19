@@ -16,8 +16,10 @@ class WoolworthsSpider(CrawlSpider):
     product_filter = ['/Gifts',
                       '/Beauty',
                       '/Homeware',
+                      '/Household',
                       '/Food',
                       '/Essentials',
+                      '/Today-s-Deal'
                      ]
     rules = [
         Rule(LinkExtractor(restrict_css=[
@@ -33,16 +35,16 @@ class WoolworthsSpider(CrawlSpider):
     def parse_item(self, response):
         garment = WoolworthsItem()
         garment['name'] = self.product_name(response)
-        garment['brand'] = 'Cecil'
+        garment['brand'] = self.product_brand(response)
         garment['category'] = self.product_category(response)
-        garment['retailer'] = 'cecil-de'
+        garment['retailer'] = 'woolworths'
         garment['price'] = self.product_price(response)
         garment['currency'] = self.product_currency(response)
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.product_images(response)
         garment['description'] = self.product_description(response)
         garment['industry'] = None
-        garment['market'] = 'DE'
+        garment['market'] = 'ZA'
         garment['url'] = response.url
         garment['url_original'] = response.url
         garment['retailer_sku'] = self.product_retailer_sku(response)
@@ -58,6 +60,10 @@ class WoolworthsSpider(CrawlSpider):
         selector = 'meta[itemprop="name"]::attr(content)'
         return response.css(selector).extract_first()
 
+    def product_brand(self, response):
+        selector = 'meta[itemprop="brand"]::attr(content)'
+        return response.css(selector).extract_first()
+
     def product_category(self, response):
         selector = 'li.breadcrumb__crumb a::text'
         return response.css(selector).extract()
@@ -68,7 +74,7 @@ class WoolworthsSpider(CrawlSpider):
 
     def product_description(self, response):
         selector = 'meta[itemprop="description"]::attr(content)'
-        return response.css(selector).extract_first()
+        return response.css(selector).extract()
 
     def product_retailer_sku(self, response):
         selector = 'meta[itemprop="productId"]::attr(content)'
@@ -79,18 +85,27 @@ class WoolworthsSpider(CrawlSpider):
         return response.css(selector).extract_first().strip()
 
     def get_sku_checklist(self, response):
-        colors_elem = response.css('img.colour-swatch')
-        sizes_elem = response.css('a.product-size')
-        colors = list(map(lambda elem: {'title': elem.css('::attr(title)').extract_first(),
-                                        'id': re.findall('changeMainProductColour\((\d+)',
-                                                         elem.css('::attr(onclick)')
-                                                         .extract_first())[0]
-                                        }, colors_elem))
+        color_elems = response.css('img.colour-swatch')
+        size_elems = response.css('a.product-size')
+        colors = []
+        for elem in color_elems:
+            onclick = elem.css('::attr(onclick)').extract_first()
+            colors += [
+                {
+                    'title': elem.css('::attr(title)').extract_first(),
+                    'id'   : re.findall('changeMainProductColour\((\d+)', onclick)[0]
+                }
+            ]
+        sizes = []
+        for elem in size_elems:
+            onclick = elem.css('::attr(onclick)').extract_first()
+            sizes += [
+                {
+                    'title': elem.css('::text').extract_first(),
+                    'id'   : re.findall('changeMainProductSize\(\d+,(\d+)', onclick)[0]
+                }
+            ]
 
-        sizes = list(map(lambda elem: {'title': elem.css('::text').extract_first(),
-                                       'id': re.findall('changeMainProductSize\(\d+,(\d+)',
-                                                        elem.css('::attr(onclick)').extract_first())[0]
-                                       }, sizes_elem))
         return [(color, size) for color in colors for size in sizes]
 
     def get_skus(self, garment, checklist):
@@ -140,15 +155,19 @@ class WoolworthsSpider(CrawlSpider):
 
     def product_images(self, response):
         selector = 'a[data-gallery-full-size]::attr(data-gallery-full-size)'
-        links = response.css(selector).extract()
-        return list(map(lambda link: 'http://'+link.lstrip('/'), links))
+        links = []
+        for link in response.css(selector).extract():
+            links += [ 'http://' + link.lstrip('/') ]
+        return links
 
     def is_sale(self, response):
         return response.css('span.price--discounted')
 
     def product_care(self, response):
         desc = self.product_description(response)
-        return re.findall('\d+%.*$', desc)
+        pattern = re.compile('\d+%.*$', re.MULTILINE)
+        for line in desc:
+            return re.findall(pattern, line)
 
     def product_gender(self, response):
         patterns = [
