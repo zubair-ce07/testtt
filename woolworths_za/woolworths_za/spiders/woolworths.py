@@ -51,9 +51,8 @@ class WoolworthsSpider(CrawlSpider):
         garment['care'] = self.product_care(response)
         garment['date'] = int(time.time())
         garment['skus'] = {}
-        garment['images'] = []
+        garment['images'] = self.get_images(response)
         skus = self.get_skus(response)
-        images = self.get_images(response)
         return self.fetch_skus(garment, skus)
 
     def product_name(self, response):
