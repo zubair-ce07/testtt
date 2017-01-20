@@ -34,4 +34,4 @@ class WoolworthsItem(scrapy.Item):
     category = scrapy.Field()
     crawl_start_time = scrapy.Field()
     lang = scrapy.Field()
-    images = scrapy.Field()
+    requests = scrapy.Field()
