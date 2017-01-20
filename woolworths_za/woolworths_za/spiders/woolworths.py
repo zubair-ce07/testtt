@@ -10,7 +10,7 @@ from woolworths_za.items import WoolworthsItem
 class WoolworthsSpider(CrawlSpider):
     name = "woolworths"
     allowed_domains = ["woolworths.co.za"]
-    start_urls = ['http://www.woolworths.co.za/']
+    start_urls = ['http://www.woolworths.co.za/store/cat/Men/Clothing/_/N-1z13s3l']
     product_filter = ['/Gifts',
                       '/Beauty',
                       '/Homeware',
@@ -18,7 +18,7 @@ class WoolworthsSpider(CrawlSpider):
                       '/Food',
                       '/Essentials',
                       '/Today-s-Deal'
-                     ]
+                      ]
     rules = [
         Rule(LinkExtractor(restrict_css=[
             'div.horizontal-menu-container',
@@ -51,8 +51,10 @@ class WoolworthsSpider(CrawlSpider):
         garment['care'] = self.product_care(response)
         garment['date'] = int(time.time())
         garment['skus'] = {}
-        checklist = self.get_sku_checklist(response)
-        return self.fetch_skus(garment, checklist)
+        garment['images'] = []
+        skus = self.get_skus(response)
+        images = self.get_images(response)
+        return self.fetch_skus(garment, skus)
 
     def product_name(self, response):
         selector = 'meta[itemprop="name"]::attr(content)'
@@ -82,57 +84,72 @@ class WoolworthsSpider(CrawlSpider):
         selector = 'meta[itemprop="color"]::attr(content)'
         return response.css(selector).extract_first().strip()
 
-    def get_sku_checklist(self, response):
+    def get_product_colors(self, response):
         color_elems = response.css('img.colour-swatch')
-        size_elems = response.css('a.product-size')
         colors = []
+        pattern = re.compile('changeMainProductColour\((\d+)')
         for elem in color_elems:
             onclick = elem.css('::attr(onclick)').extract_first()
             colors += [
                 {
-                    'title': elem.css('::attr(title)').extract_first(),
-                    'id'   : re.findall('changeMainProductColour\((\d+)', onclick)[0]
+                    'title': elem.css('::attr(title)')
+                        .extract_first()
+                        .strip(),
+                    'id': re.findall(pattern, onclick)[0]
                 }
             ]
-        sizes = []
-        for elem in size_elems:
-            onclick = elem.css('::attr(onclick)').extract_first()
-            sizes += [
-                {
-                    'title': elem.css('::text').extract_first(),
-                    'id'   : re.findall('changeMainProductSize\(\d+,(\d+)', onclick)[0]
-                }
-            ]
+        return colors
 
+    def get_product_sizes(self, response):
+        size_elems = response.css('a.product-size')
+        sizes = []
+        pattern = re.compile('changeMainProductSize\(\d+,(\d+)')
+        selector = '::attr(onclick)'
+        for elem in size_elems:
+            onclick = elem.css(selector).extract_first()
+            title = elem.css('::text').extract_first().replace(' ', '_')
+            id = re.findall(pattern, onclick)[0]
+            sizes += [{'title': title, 'id': id}]
+        return sizes
+
+    def get_skus(self, response):
+        colors = self.get_product_colors(response)
+        sizes = self.get_product_sizes(response)
         return [(color, size) for color in colors for size in sizes]
 
-    def get_skus(self, garment, checklist):
-        color, size = checklist.pop()
-        price_url = 'http://www.woolworths.co.za/store/fragments/product-common/ww/price.jsp'
-        return FormRequest(url=price_url,
-                           formdata={'productItemId': garment['retailer_sku'],
-                                     'colourSKUId': color['id'],
-                                     'sizeSKUId': size['id'],
-                                     },
-                           callback=self.parse_price,
-                           meta={'garment': garment,
-                                 'checklist': checklist,
-                                 'color': color,
-                                 'size': size,
-                                 }
-                           )
+    def get_images(self, response):
+        colors = self.get_product_colors(response)
+        return [color['id'] for color in colors]
 
-    def parse_price(self, response):
-        checklist = response.meta['checklist']
+    def parse_sku_price(self, response):
         garment = response.meta['garment']
-        self.make_sku(response)
-        return self.fetch_skus(garment, checklist)
+        skus = response.meta['skus']
+        id, sku = self.make_sku(response).popitem()
+        garment_skus = garment['skus']
+        garment_skus[id] = sku
+        if skus:
+            return self.fetch_skus(garment, skus)
 
-    def fetch_skus(self, garment, checklist):
-        if checklist:
-            return self.get_skus(garment, checklist)
-        else:
-            return garment
+        images = garment['images']
+        if images:
+            return self.fetch_images(garment, images)
+
+        return garment
+
+    def fetch_skus(self, garment, skus):
+        if skus:
+            color, size = skus.pop()
+            price_url = 'http://www.woolworths.co.za/store/fragments/product-common/ww/price.jsp'
+            meta = {'garment': garment,
+                    'skus': skus,
+                    'color': color,
+                    'size': size,
+                    }
+            formdata = {'productItemId': garment['retailer_sku'],
+                        'colourSKUId': color['id'],
+                        'sizeSKUId': size['id'],
+                        }
+            yield FormRequest(url=price_url, formdata=formdata, callback=self.parse_sku_price, meta=meta)
 
     def price_from_ajax(self, response):
         price_css = 'span.price::text'
@@ -144,26 +161,57 @@ class WoolworthsSpider(CrawlSpider):
         size = response.meta['size']
         price = self.price_from_ajax(response)
         currency = garment['currency']
-        skus = garment['skus']
         sku_id = color['title'].replace(' ', '_') + '_' + size['title']
-        skus[sku_id] = {
-            'color': color['title'],
-            'size': size['title'],
-            'price': price,
-            'currency': currency,
-        }
+        sku = {
+                'color': color['title'],
+                'size': size['title'],
+                'price': price,
+                'currency': currency,
+            }
+        prev_price = garment.fields.get('previous_price')
+        if prev_price:
+            sku.update({'previous_price':prev_price})
+        return {sku_id: sku}
 
     def product_price(self, response):
         selector = 'meta[itemprop="price"]::attr(content)'
-        return int(response.css(selector).extract_first().replace('.',''))
+        return int(response.css(selector).extract_first().replace('.', ''))
 
     def product_old_price(self, response):
         selector = 'span.price--original::text'
-        return int(response.css(selector).re_first('[\d|\.]+').replace('.',''))
+        return int(response.css(selector).re_first('[\d|\.]+').replace('.', ''))
 
     def product_images(self, response):
         selector = 'a[data-gallery-full-size]::attr(data-gallery-full-size)'
-        return ['http://' + link.lstrip('/') for link in response.css(selector).extract()]
+        return ['http://' + link.lstrip('/')
+                for link in response.css(selector).extract()]
+
+    def fetch_images(self, garment):
+        images = garment['images']
+        color_id = images.pop()
+        product_id = garment['retailer_sku']
+        image_url = 'http://www.woolworths.co.za/store/fragments/product-common/ww/image-shots.jsp'
+        meta = {
+            'garment': garment,
+        }
+        formdata = {
+            'colourSKUId': color_id,
+            'productId': product_id,
+        }
+        return FormRequest(url=image_url, formdata=formdata, callback=self.parse_image, meta=meta)
+
+    def parse_image(self, response):
+        garment = response.meta['garment']
+        images = garment['images']
+        urls = self.ajax_extract_images(response)
+        garment['image_urls'].extend(urls)
+        if images:
+            return self.fetch_images(garment)
+        return garment
+
+    def ajax_extract_images(self, response):
+        urls = response.css('div.pdp__image img::attr(src)').extract()
+        return ['http://' + url.lstrip('/') for url in urls]
 
     def is_sale(self, response):
         return response.css('span.price--discounted')
@@ -171,8 +219,7 @@ class WoolworthsSpider(CrawlSpider):
     def product_care(self, response):
         desc = self.product_description(response)
         pattern = re.compile('\d+%.*$', re.MULTILINE)
-        for line in desc:
-            return re.findall(pattern, line)
+        return re.findall(pattern, desc[0])
 
     def product_gender(self, response):
         patterns = [
