@@ -203,7 +203,9 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
         result = json.loads(response.text)
         if result['status'] == 'success':
             page_segment = result['message']
-            return super(GapCrawlSpider, self).parse(Response(url=response.url, body=str.encode(page_segment)))
+            ajax_response = Response(url=response.url,
+                                     body=str.encode(page_segment))
+            return super(GapCrawlSpider, self).parse(ajax_response)
     
     def ajax_requests(self, response):
         all_cat_css = '#allCategoryId::attr(value)'
@@ -251,10 +253,13 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
                                   callback=self.parse_ajax_response)
                 
     def request_from_ids(self, response):
-        category_ids = response.css('#product_list_184 .clear::attr(currentcategoryid)')
+        categories_css = '#product_list_184 .clear::attr(currentcategoryid)'
+        category_ids = response.css(categories_css)
         if category_ids:
             for category in category_ids:
                 category_id = category.extract()
-                ids = response.css('::attr(allproductids' + category_id + ')').extract_first().rstrip(',')
+                css = '::attr(allproductids' + category_id + ')'
+                ids = response.css(css).extract_first().rstrip(',')
                 for id in ids:
-                    yield Request(url=response.urljoin('/category/' + category_id + '/product/' + id + '.html'))
+                    url_segment = '/category/' + category_id + '/product/' + id + '.html'
+                    yield Request(url=response.urljoin(url_segment))
