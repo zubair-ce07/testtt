@@ -59,10 +59,12 @@ class GapParseSpider(BaseParseSpider, Mixin):
 
     def parse_merch_info(self, response):
         merch_info = json.loads(response.text)
-        garment = response.meta['garment']
-        sku_id = garment['retailer_sku']
-        info = merch_info[sku_id]
-        garment['merch_info'] = [i['label'] for i in info]
+        if merch_info:
+            garment = response.meta['garment']
+            sku_id = garment['retailer_sku']
+            info = merch_info.get(sku_id)
+            if info:
+                garment['merch_info'] = [i['label'] for i in info]
         return self.next_request_or_garment(garment)
 
     def stock_request(self, garment):
@@ -180,15 +182,79 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = GapParseSpider()
 
-    listings_css = [
-        '#navs',
-        '.sidebar',
-    ]
-    products_css = [
-        '.categoryProductItem'
-    ]
-
+    product_css = ['.categoryProductItem']
+    listing_css = ['.sidebar']
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css)),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_listing'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css='#navs')),
     )
+
+    def parse_listing(self, response):        
+        for request in self.ajax_requests(response):
+            yield request
+        
+        for request in self.requests_from_ids(response): 
+            yield request
+
+        return super(GapCrawlSpider, self).parse(response)
+
+    def parse_ajax_response(self, response):
+        result = json.loads(response.text)
+        if result['status'] == 'success':
+            page_segment = result['message']
+            return super(GapCrawlSpider, self).parse(Response(url=response.url, body=str.encode(page_segment)))
+    
+    def ajax_requests(self, response):
+        all_cat_css = '#allCategoryId::attr(value)'
+        all_category_ids = response.css(all_cat_css).extract_first()
+        last_cat_css = '#product_list_184 .clear'
+        last_category_clear = response.css(last_cat_css)[-1]
+        last_cat_id_css = '::attr(currentcategoryid)'
+        last_category_id = last_category_clear.css(last_cat_id_css).extract_first()
+        if last_category_id:
+            all_prod_id_css = '::attr(allproductids' + last_category_id + ')'
+            all_product_ids = last_category_clear.css(all_prod_id_css).extract_first() \
+                .rstrip(',').split(',')
+            curr_displayed_css = '::attr(currentcategorydisplaynum' + last_category_id + ')'
+            current_displayed = int(last_category_clear.css(curr_displayed_css).extract_first())
+            last_cat_items_css = '::attr(currentcategorytotalnum)'
+            last_category_total_items = int(last_category_clear.css(last_cat_items_css).extract_first())
+            curr_page_css = '::attr(currentpage)'
+            current_page = last_category_clear.css(curr_page_css).extract_first()
+            categories_displayed = ''
+            last_category_display_num = 0
+            product_ids = ''
+            clear_css = '#product_list_184 .clear'
+            clear_elems = response.css(clear_css)
+            cat_id_css = '::attr(currentcategoryid)'
+            curr_cat_disp_css = '::attr(currentcategorydisplaynum' + last_category_id + ')'
+            for elem in clear_elems:
+                if elem.css(cat_id_css):
+                    categories_displayed += elem.css(cat_id_css).extract_first() + ','
+                if elem.css(curr_cat_disp_css):
+                    last_category_display_num += int(elem.css(curr_cat_disp_css).extract_first())
+                    product_ids += elem.css(all_prod_id_css).extract_first()
+            if current_displayed < last_category_total_items:
+                # Send ajax request for more items
+                formdata = {
+                    'allCategoryId': all_category_ids,
+                    'currentPage': current_page,
+                    'haveDisplayAllCategoryId': categories_displayed,
+                    'lastCategoryDisplayNum': str(last_category_display_num),
+                    'lastCategoryId': last_category_id,
+                    'lastCategoryTotalNum': str(last_category_total_items),
+                    'productIds': product_ids,
+                }
+                catalog_url = '/catalog/category/getCategoryProduct'
+                yield FormRequest(url=response.urljoin(catalog_url), formdata=formdata,
+                                  callback=self.parse_ajax_response)
+                
+    def request_from_ids(self, response):
+        category_ids = response.css('#product_list_184 .clear::attr(currentcategoryid)')
+        if category_ids:
+            for category in category_ids:
+                category_id = category.extract()
+                ids = response.css('::attr(allproductids' + category_id + ')').extract_first().rstrip(',')
+                for id in ids:
+                    yield Request(url=response.urljoin('/category/' + category_id + '/product/' + id + '.html'))
