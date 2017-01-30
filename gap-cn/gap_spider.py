@@ -10,7 +10,7 @@ from skuscraper.spiders.base import BaseParseSpider, BaseCrawlSpider, clean
 
 class Mixin:
     retailer = 'gap-cn'
-    lang = 'CN'
+    lang = 'cn'
     market = 'CN'
     allowed_domains = ['gap.cn']
     start_urls = ['http://www.gap.cn/category/25.html']
@@ -110,7 +110,7 @@ class GapParseSpider(BaseParseSpider, Mixin):
                 }
                 if not (size['final_price'] == size['price']):
                     prev_price = self.format_price(size['price'])
-                    sku.update({'previous_price': prev_price})
+                    sku.update({'previous_prices': [prev_price]})
 
                 skus[skuid] = sku
 
@@ -208,44 +208,41 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
             return super(GapCrawlSpider, self).parse(ajax_response)
     
     def ajax_requests(self, response):
-        all_cat_css = '#allCategoryId::attr(value)'
-        all_category_ids = response.css(all_cat_css).extract_first()
-        last_cat_css = '#product_list_184 .clear'
-        last_category_clear = response.css(last_cat_css)[-1]
-        last_cat_id_css = '::attr(currentcategoryid)'
-        last_category_id = last_category_clear.css(last_cat_id_css).extract_first()
-        if last_category_id:
-            all_prod_id_css = '::attr(allproductids' + last_category_id + ')'
-            all_product_ids = last_category_clear.css(all_prod_id_css).extract_first() \
-                .rstrip(',').split(',')
-            curr_displayed_css = '::attr(currentcategorydisplaynum' + last_category_id + ')'
-            current_displayed = int(last_category_clear.css(curr_displayed_css).extract_first())
-            last_cat_items_css = '::attr(currentcategorytotalnum)'
-            last_category_total_items = int(last_category_clear.css(last_cat_items_css).extract_first())
-            curr_page_css = '::attr(currentpage)'
-            current_page = last_category_clear.css(curr_page_css).extract_first()
+        category_css = '#product_list_184 .clear'
+        last_category = response.css(category_css)[-1]
+        id_css = '::attr(currentcategoryid)'
+        category_id = last_category.css(id_css).extract_first()
+        if category_id:
+            displayed_css = '::attr(currentcategorydisplaynum{}'.format(category_id)
+            displayed = int(last_category.css(displayed_css).extract_first())
+            total_items_css = '::attr(currentcategorytotalnum)'
+            total_items = int(last_category.css(total_items_css).extract_first())
+            current_page = last_category.css('::attr(currentpage)').extract_first()
             categories_displayed = ''
             last_category_display_num = 0
             product_ids = ''
             clear_css = '#product_list_184 .clear'
             clear_elems = response.css(clear_css)
-            cat_id_css = '::attr(currentcategoryid)'
-            curr_cat_disp_css = '::attr(currentcategorydisplaynum' + last_category_id + ')'
+            all_pid_css = '::attr(allproductids{})'.format(category_id)
             for elem in clear_elems:
-                if elem.css(cat_id_css):
-                    categories_displayed += elem.css(cat_id_css).extract_first() + ','
-                if elem.css(curr_cat_disp_css):
-                    last_category_display_num += int(elem.css(curr_cat_disp_css).extract_first())
-                    product_ids += elem.css(all_prod_id_css).extract_first()
-            if current_displayed < last_category_total_items:
+                if elem.css(id_css):
+                    categories_displayed += elem.css(id_css).extract_first() + ','
+                if elem.css(displayed_css):
+                    displayed = int(elem.css(displayed_css).extract_first())
+                    last_category_display_num += displayed
+                    product_ids += elem.css(all_pid_css).extract_first()
+
+            if displayed < total_items:
                 # Send ajax request for more items
+                all_ids_css = '#allCategoryId::attr(value)'
+                all_category_ids = response.css(all_ids_css).extract_first()
                 formdata = {
                     'allCategoryId': all_category_ids,
                     'currentPage': current_page,
                     'haveDisplayAllCategoryId': categories_displayed,
                     'lastCategoryDisplayNum': str(last_category_display_num),
-                    'lastCategoryId': last_category_id,
-                    'lastCategoryTotalNum': str(last_category_total_items),
+                    'lastCategoryId': category_id,
+                    'lastCategoryTotalNum': str(total_items),
                     'productIds': product_ids,
                 }
                 catalog_url = '/catalog/category/getCategoryProduct'
@@ -260,6 +257,6 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
                 category_id = category.extract()
                 css = '::attr(allproductids' + category_id + ')'
                 ids = response.css(css).extract_first().rstrip(',')
-                for id in ids:
-                    url_segment = '/category/' + category_id + '/product/' + id + '.html'
+                for pid in ids:
+                    url_segment = '/category/' + category_id + '/product/' + pid + '.html'
                     yield Request(url=response.urljoin(url_segment))
