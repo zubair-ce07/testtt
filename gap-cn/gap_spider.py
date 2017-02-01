@@ -213,7 +213,7 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
         id_css = '::attr(currentcategoryid)'
         category_id = last_category.css(id_css).extract_first()
         if category_id:
-            displayed_css = '::attr(currentcategorydisplaynum{}'.format(category_id)
+            displayed_css = '::attr(currentcategorydisplaynum{})'.format(category_id)
             displayed = int(last_category.css(displayed_css).extract_first())
             total_items_css = '::attr(currentcategorytotalnum)'
             total_items = int(last_category.css(total_items_css).extract_first())
