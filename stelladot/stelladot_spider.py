@@ -25,20 +25,19 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
             return
         self.boilerplate(garment, response)
         garment['name'] = product['name']
-        garment['brand'] = 'Stella & Dot, Covet by Stella & Dot'
+        garment['brand'] = self.product_brand(garment)
         garment['image_urls'] = self.product_images(product)
-        price = float(product['price'])
-        if product.get('special_price'):
-            special_price = float(product['special_price'])
-            garment['price'] = CurrencyParser.float_conversion(special_price)
-            garment['previous_prices'] = [CurrencyParser.float_conversion(price)]
-        else:
-            garment['price'] = CurrencyParser.float_conversion(price)
+        prev_price, price = self.product_price(product)
+        garment['price'] = price
+        if prev_price:
+            garment['previous_prices'] = [prev_price]
         garment['currency'] = 'USD'
         garment['gender'] = self.product_gender(product)
         garment['description'] = self.product_description(product)
-        garment['category'] = self.product_category(product,response)
-        garment['out_of_stock'] = product['is_in_stock'] is not '1'
+        garment['category'] = self.product_category(product, response)
+        garment['care'] = self.product_care(product)
+        garment['out_of_stock'] = self.out_of_stock(product)
+        garment['skus'] = self.product_skus(product)
         garment['url'] = product['url']
         return garment
 
@@ -59,13 +58,54 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
         return re.sub('<[^>]+>','',description)
 
     def product_id(self, product):
-        return product['entity_id']
+        return int(product['entity_id'])
 
     def product_brand(self, product):
-        return 'Stella & Dot, Covet by Stella & Dot'
+        url = product['url']
+        return 'Covet by Stella & Dot' \
+            if 'covet' in url else 'Stella & Dot'
 
     def product_name(self, product):
         return product['name']
+
+    def product_skus(self, product):
+        entity_id = product['entity_id']
+        sku = {
+            'currency': 'USD',
+            'out_of_stock': self.out_of_stock(product),
+        }
+        attributes = product.get('product_attributes')
+        if attributes and attributes.get(entity_id):
+            attributes = attributes[entity_id]
+            sku.update({'color': attributes['color']})
+            sku.update({'size': attributes['size']})
+
+        prev_price, price = self.product_price(product)
+        sku.update({'price': price})
+        if prev_price:
+            sku.update({'previous_prices': [prev_price]})
+
+        return {product['sku']: sku}
+
+    def out_of_stock(self, product):
+        return product['is_in_stock'] is not '1'
+
+    def product_price(self, product):
+        price = float(product['price'])  # old price
+        if product.get('special_price'):
+            special_price = float(product['special_price']) # discount price - current
+            prev_price = CurrencyParser.float_conversion(special_price)
+            current_price = CurrencyParser.float_conversion(price)
+            return prev_price, current_price
+
+        current_price = CurrencyParser.float_conversion(price)
+        return None, current_price
+
+    def product_care(self, product):
+        desc = self.product_description(product)
+        if 'Care Instructions:' in desc:
+            return [desc[desc.index('Care Instructions:'):]]
+        return []
 
 class StellaDotUsCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
