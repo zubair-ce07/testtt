@@ -18,6 +18,8 @@ class Mixin:
 
 class GapParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
+    catalog_url = '/catalog/category/getCategoryProduct'
+
     gender_map = [
         ('女装', 'women'),
         ('孕妇装', 'women'),
@@ -181,7 +183,7 @@ class GapParseSpider(BaseParseSpider, Mixin):
 class GapCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = GapParseSpider()
-
+    catalog_url = '/catalog/category/getCategoryProduct'
     product_css = ['.categoryProductItem']
     listing_css = ['.sidebar']
     rules = (
@@ -208,34 +210,45 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
             return super(GapCrawlSpider, self).parse(ajax_response)
     
     def ajax_requests(self, response):
-        category_css = '#product_list_184 .clear'
-        last_category = response.css(category_css)[-1]
-        id_css = '::attr(currentcategoryid)'
-        category_id = last_category.css(id_css).extract_first()
+        last_category_meta = response.css('#product_list_184 .clear')[-1]  # element containing info about the category
+                                                                           # rendered at the bottom of the list
+        category_id_css = '::attr(currentcategoryid)'
+        category_id = last_category_meta.css(category_id_css).extract_first()
         if category_id:
-            displayed_css = '::attr(currentcategorydisplaynum{})'.format(category_id)
-            displayed = int(last_category.css(displayed_css).extract_first())
-            total_items_css = '::attr(currentcategorytotalnum)'
-            total_items = int(last_category.css(total_items_css).extract_first())
-            current_page = last_category.css('::attr(currentpage)').extract_first()
+            displayed_css = '::attr(currentcategorydisplaynum{})'.format(category_id)  # Number of items displayed so far
+            total_items_css = '::attr(currentcategorytotalnum)'  # Total items in the category
+            total_items = int(last_category_meta.css(total_items_css).extract_first())
+            current_page = last_category_meta.css('::attr(currentpage)').extract_first()
             categories_displayed = ''
             last_category_display_num = 0
             product_ids = ''
-            clear_css = '#product_list_184 .clear'
-            clear_elems = response.css(clear_css)
-            all_pid_css = '::attr(allproductids{})'.format(category_id)
-            for elem in clear_elems:
-                if elem.css(id_css):
-                    categories_displayed += elem.css(id_css).extract_first() + ','
+            meta_elems = response.css('#product_list_184 .clear')
+            all_products_css = '::attr(allproductids{})'.format(category_id)
+            '''
+            The page consists of different div elements for different category of products, and
+            at the end of every div element there is a .clear element
+            which has attributes that give us information of total number of items in the category,
+            items displayed so far, etc
+            e.g. <div class=clear currentcategorydisplaynum=60 currentcategorytotalnum=109>
+            '''
+            for elem in meta_elems: # meta_elems are div.clear with useful attributes to decide whether we need
+                                    # to fetch more products that are not visible on the page
+                if elem.css(category_id_css):
+                    categories_displayed += elem.css(category_id_css).extract_first() + ','
                 if elem.css(displayed_css):
                     displayed = int(elem.css(displayed_css).extract_first())
                     last_category_display_num += displayed
-                    product_ids += elem.css(all_pid_css).extract_first()
+                    product_ids += elem.css(all_products_css).extract_first()
 
-            if displayed < total_items:
-                # Send ajax request for more items
-                all_ids_css = '#allCategoryId::attr(value)'
-                all_category_ids = response.css(all_ids_css).extract_first()
+            '''
+            last_displayed is the number of items displayed in very last div of .product_list_184 element
+            which is visible when we manually scroll to the bottom of the page and then script on page decides
+            if more items are to be lazily loaded
+            '''
+            last_displayed = int(last_category_meta.css(displayed_css).extract_first())
+            if last_displayed < total_items: # There are some items left that are not shown on the page
+                # Send POST request to request remaining items
+                all_category_ids = response.css('#allCategoryId::attr(value)').extract_first()
                 formdata = {
                     'allCategoryId': all_category_ids,
                     'currentPage': current_page,
@@ -245,18 +258,17 @@ class GapCrawlSpider(BaseCrawlSpider, Mixin):
                     'lastCategoryTotalNum': str(total_items),
                     'productIds': product_ids,
                 }
-                catalog_url = '/catalog/category/getCategoryProduct'
-                yield FormRequest(url=response.urljoin(catalog_url), formdata=formdata,
+                yield FormRequest(url=response.urljoin(self.catalog_url), formdata=formdata,
                                   callback=self.parse_ajax_response)
                 
-    def request_from_ids(self, response):
-        categories_css = '#product_list_184 .clear::attr(currentcategoryid)'
-        category_ids = response.css(categories_css)
+    def requests_from_ids(self, response):
+        categories_ids_css = '#product_list_184 .clear::attr(currentcategoryid)'
+        category_ids = response.css(categories_ids_css)
         if category_ids:
             for category in category_ids:
                 category_id = category.extract()
-                css = '::attr(allproductids' + category_id + ')'
-                ids = response.css(css).extract_first().rstrip(',')
-                for pid in ids:
-                    url_segment = '/category/' + category_id + '/product/' + pid + '.html'
+                product_ids_css = '::attr(allproductids{})'.format(category_id)
+                product_ids = response.css(product_ids_css).extract_first().rstrip(',')
+                for pid in product_ids:
+                    url_segment = '/category/{}/product/{}.html'.format(category_id, pid)
                     yield Request(url=response.urljoin(url_segment))
