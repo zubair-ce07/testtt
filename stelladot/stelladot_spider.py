@@ -1,7 +1,7 @@
 import json
 import re
 from scrapy.http.request import Request
-from skuscraper.spiders.base import CurrencyParser, BaseParseSpider
+from skuscraper.spiders.base import CurrencyParser, BaseParseSpider, BaseCrawlSpider
 
 
 class Mixin:
@@ -14,16 +14,10 @@ class Mixin:
     lang = 'en'
 
 
-class StelladotUsSpider(BaseParseSpider, Mixin):
+class StelladotUsParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    def parse(self, response):
-        categories = json.loads(response.text)
-        for c_id in categories:
-            category = categories[c_id]
-            products = category['products']
-            yield from [self.product_request(p,c_id) for p in products if products]
 
-    def parse_item(self, response):
+    def parse(self, response):
         product = json.loads(response.text)
         product_id = self.product_id(product)
         garment = self.new_unique_garment(product_id)
@@ -47,11 +41,6 @@ class StelladotUsSpider(BaseParseSpider, Mixin):
         garment['out_of_stock'] = product['is_in_stock'] is not '1'
         garment['url'] = product['url']
         return garment
-
-    def product_request(self, product_id, category_id):
-        url = self.product_info_url.format(product_id)
-        meta = {'category_id': category_id}
-        return Request(url=url, meta=meta, callback=self.parse_item)
 
     def product_category(self, product, response):
         category_id = response.request.meta.get('category_id')
@@ -78,3 +67,17 @@ class StelladotUsSpider(BaseParseSpider, Mixin):
     def product_name(self, product):
         return product['name']
 
+class StellaDotUsCrawlSpider(BaseCrawlSpider, Mixin):
+    name = Mixin.retailer + '-crawl'
+    parse_spider = StelladotUsParseSpider()
+    def parse(self, response):
+        categories = json.loads(response.text)
+        for c_id in categories:
+            category = categories[c_id]
+            products = category['products']
+            yield from [self.product_request(p,c_id) for p in products if products]
+
+    def product_request(self, product_id, category_id):
+        url = self.product_info_url.format(product_id)
+        meta = {'category_id': category_id}
+        return Request(url=url, meta=meta, callback=self.parse_item)
