@@ -100,10 +100,3 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
             if product['sellable']:
                 url = product['variantsIncludingMaster'][0]['permalink_path']
                 yield Request(url=self.base_url+url, callback=self.parse_item)
-
-
-if __name__ == '__main__':
-    from scrapy import cmdline
-    cmdline.execute('scrapy parse --spider chloeandisabel-us-parse https://www.chloeandisabel.com/products/BE003/liquid-lipstick-set-1'.split())
-
-
