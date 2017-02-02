@@ -20,6 +20,8 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
         product = json.loads(response.text)
         product_id = self.product_id(product)
         garment = self.new_unique_garment(product_id)
+        if not garment:
+            return
         if product['is_salable'] is not '1':
             return
         self.boilerplate(garment, response)
