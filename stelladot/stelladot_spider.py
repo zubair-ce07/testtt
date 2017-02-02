@@ -11,7 +11,6 @@ class Mixin:
     start_urls = [categories_url]
     retailer = 'stelladot-us'
     market = 'US'
-    lang = 'en'
 
 
 class StelladotUsParseSpider(BaseParseSpider, Mixin):
@@ -27,17 +26,12 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
         garment['name'] = product['name']
         garment['brand'] = self.product_brand(garment)
         garment['image_urls'] = self.product_images(product)
-        prev_price, price = self.product_price(product)
-        garment['price'] = price
-        if prev_price:
-            garment['previous_prices'] = [prev_price]
-        garment['currency'] = 'USD'
         garment['gender'] = self.product_gender(product)
         garment['description'] = self.product_description(product)
         garment['category'] = self.product_category(product, response)
         garment['care'] = self.product_care(product)
         garment['out_of_stock'] = self.out_of_stock(product)
-        garment['skus'] = self.product_skus(product)
+        garment['skus'] = self.skus(product)
         garment['url'] = product['url']
         return garment
 
@@ -51,14 +45,14 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
         return 'girls' if 'girl' in product['url'] else 'women'
 
     def product_images(self, product):
-        return [ image['url'] for image in product['media_gallery']['images'] ]
+        return [image['url'] for image in product['media_gallery']['images']]
 
     def product_description(self, product):
         description = product['description']
-        return re.sub('<[^>]+>','',description)
+        return re.sub('<[^>]+>', '', description)
 
     def product_id(self, product):
-        return int(product['entity_id'])
+        return product['entity_id']
 
     def product_brand(self, product):
         url = product['url']
@@ -68,7 +62,7 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
     def product_name(self, product):
         return product['name']
 
-    def product_skus(self, product):
+    def skus(self, product):
         entity_id = product['entity_id']
         sku = {
             'currency': 'USD',
@@ -80,7 +74,7 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
             sku.update({'color': attributes['color']})
             sku.update({'size': attributes['size']})
 
-        prev_price, price = self.product_price(product)
+        prev_price, price = self.product_pricing(product)
         sku.update({'price': price})
         if prev_price:
             sku.update({'previous_prices': [prev_price]})
@@ -90,10 +84,10 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
     def out_of_stock(self, product):
         return product['is_in_stock'] is not '1'
 
-    def product_price(self, product):
+    def product_pricing(self, product):
         price = float(product['price'])  # old price
         if product.get('special_price'):
-            special_price = float(product['special_price']) # discount price - current
+            special_price = float(product['special_price'])  # discount price - current
             prev_price = CurrencyParser.float_conversion(special_price)
             current_price = CurrencyParser.float_conversion(price)
             return prev_price, current_price
@@ -107,15 +101,17 @@ class StelladotUsParseSpider(BaseParseSpider, Mixin):
             return [desc[desc.index('Care Instructions:'):]]
         return []
 
+
 class StellaDotUsCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = StelladotUsParseSpider()
+
     def parse(self, response):
         categories = json.loads(response.text)
         for c_id in categories:
             category = categories[c_id]
             products = category['products']
-            yield from [self.product_request(p,c_id) for p in products if products]
+            yield from [self.product_request(p, c_id) for p in products if products]
 
     def product_request(self, product_id, category_id):
         url = self.product_info_url.format(product_id)
