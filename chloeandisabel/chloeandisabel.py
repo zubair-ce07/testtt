@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 import re
 from scrapy.http.request import Request
@@ -11,7 +10,7 @@ class Mixin:
     start_urls = ['https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz']
     market = 'US'
     retailer = 'chloeandisabel-us'
-    base_url = 'http://www.chloeandisabel.com'
+    base_url = 'https://www.chloeandisabel.com'
 
 class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
@@ -23,17 +22,18 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate(garment, response)
-        garment['name'] = product['name']
-        product_selected = product['variant_selected']
+        product_master = self.product_master(product)
+        garment['name'] = product_master['name']
         garment['brand'] = 'chloeandisabel'
-        garment['image_urls'] = product_selected['image_urls']
+        garment['image_urls'] = product_master['image_urls']
         garment['gender'] = 'women'
-        garment['description'] = self.product_description(product_selected)
-        garment['category'] = product['category']
+        garment['description'] = self.product_description(product_master)
+        garment['category'] = product_master['category']
         garment['care'] = self.product_care(product)
-        garment['out_of_stock'] = product_selected['in_stock'] is False
+        if product_master['in_stock'] is False:
+            garment['out_of_stock'] = True
         garment['skus'] = self.skus(product)
-        garment['url'] = product_selected['url']
+        garment['url'] = self.product_url(product_master)
 
         return garment
 
@@ -43,12 +43,18 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
             prev_price, price = self.variant_pricing(variant)
             sku = {
                 'color': self.variant_color(variant),
-                'size': 'N/A',
+                'size': self.one_size,
                 'price': price,
                 'currency': variant['localCurrency']['code'],
             }
+
             if prev_price:
                 sku.update({'previous_prices': [prev_price]})
+
+            if variant['option_values']:
+                option = variant['option_values'][0]
+                if option['option_type']['presentation'] == 'Size':
+                    sku.update({'size': option['presentation']})
 
             if variant['in_stock'] is False:
                 sku.update({'out_of_stock': True})
@@ -86,6 +92,10 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         json_text = script_elem.replace('initializeCandiReactApp(', '')
         json_text = '[{}]'.format(json_text[:-3])
         return json.loads(json_text)[1]['product']
+
+    def product_master(self, product):
+        variants = product["variantsIncludingMaster"]
+        return [v for v in variants if v['is_master']].pop()
 
     def product_url(self, product):
         return self.base_url + product['url']
