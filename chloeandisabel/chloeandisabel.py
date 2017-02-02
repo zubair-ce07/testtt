@@ -11,6 +11,7 @@ class Mixin:
     start_urls = ['https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz']
     market = 'US'
     retailer = 'chloeandisabel-us'
+    base_url = 'http://www.chloeandisabel.com'
 
 class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
@@ -86,11 +87,12 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         json_text = '[{}]'.format(json_text[:-3])
         return json.loads(json_text)[1]['product']
 
+    def product_url(self, product):
+        return self.base_url + product['url']
 
 class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = ChloeAndIsabelParseSpider()
-    base_url = 'http://www.chloeandisabel.com'
 
     def parse(self, response):
         json_text = response.text.replace('chloe_isabel_app.loadProducts(', '')
