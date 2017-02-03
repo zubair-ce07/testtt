@@ -9,7 +9,6 @@ class Mixin:
     start_urls = ['https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz']
     market = 'US'
     retailer = 'chloeandisabel-us'
-    base_url = 'https://www.chloeandisabel.com'
 
 class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
@@ -32,7 +31,6 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         if not product_master['in_stock']:
             garment['out_of_stock'] = True
         garment['skus'] = self.skus(product)
-        garment['url'] = self.product_url(product_master)
         return garment
 
     def skus(self, product):
@@ -97,12 +95,11 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         variants = product["variantsIncludingMaster"]
         return [v for v in variants if v['is_master']].pop()
 
-    def product_url(self, product):
-        return self.base_url + product['url']
 
 class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = ChloeAndIsabelParseSpider()
+    base_url = 'https://www.chloeandisabel.com'
 
     def parse(self, response):
         json_text = response.text.replace('chloe_isabel_app.loadProducts(', '')
