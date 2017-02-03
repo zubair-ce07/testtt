@@ -21,51 +21,163 @@ class Bcolors:
     UNDERLINE = '\033[4m'
 
 
-def max_value():
-    value = None
-    date_str = None
-
-    def update_value(t, date):
-        nonlocal value, date_str
-        if value is None or t > value:
-            value = t
-            date_str = date
-
-    def get_value():
-        return value, date_str
-
-    return update_value, get_value
+def compare(a, b):
+    if a > b:
+        return True
+    elif a < b:
+        return False
+    else:
+        return None
 
 
-def min_value():
-    value = None
-    date_str = None
+def open_file(dir_path, file_name):
+    file_path = os_path.join(dir_path, file_name)
 
-    def update_value(t, date):
-        nonlocal value, date_str
-        if value is None or t < value:
-            value = t
-            date_str = date
-
-    def get_value():
-        return value, date_str
-
-    return update_value, get_value
+    try:
+        f = open(file_path, 'r')
+    except FileNotFoundError:
+        error_msg = 'file not available: {}'.format(file_path)
+        return False, error_msg
+    else:
+        return True, f
 
 
-def mean_value():
-    value = 0
-    count = 0
+def print_yearly_report(results, months):
+    value = results['max_temp_value']
+    date = results['max_temp_date']
+    print('Highest: {:.2f}C on {}'.format(value, get_day_name(date, months)))
 
-    def update_value(t):
-        nonlocal value, count
-        value += t
-        count += 1
+    value = results['min_temp_value']
+    date = results['min_temp_date']
+    print('Lowest: {:.2f}C on {}'.format(value, get_day_name(date, months)))
 
-    def get_value():
-        return value / count
+    value = results['max_humidity_value']
+    date = results['max_humidity_date']
+    print('Humidity: {:.2f}% on {}'.format(value, get_day_name(date, months)))
 
-    return update_value, get_value
+
+def calculate_yearly_report(line, indexes, results):
+    d = line[indexes['date_index']]
+    max_t = line[indexes['max_temp_index']]
+    min_t = line[indexes['min_temp_index']]
+    max_h = line[indexes['max_humidity_index']]
+
+    if max_t:
+        if results['max_temp_value'] is None or \
+                compare(int(max_t), results['max_temp_value']):
+            results['max_temp_value'] = int(max_t)
+            results['max_temp_date'] = d
+    if min_t:
+        if results['min_temp_value'] is None or \
+                compare(results['min_temp_value'], int(min_t)):
+            results['min_temp_value'] = int(min_t)
+            results['min_temp_date'] = d
+    if max_h:
+        if results['max_humidity_value'] is None or \
+                compare(int(max_h), results['max_humidity_value']):
+            results['max_humidity_value'] = int(max_h)
+            results['max_humidity_date'] = d
+
+
+def generate_yearly_report(dir_path, query_str, static_values):
+    file_columns = static_values['file_columns']
+    months = static_values['months']
+
+    file_list = generate_file_names(query_str, static_values)
+
+    indexes = {
+        'date_index': file_columns.index('date'),
+        'max_temp_index': file_columns.index('max_temperature'),
+        'min_temp_index': file_columns.index('min_temperature'),
+        'max_humidity_index': file_columns.index('max_humidity')
+    }
+
+    results = {
+        'max_temp_value': None,
+        'max_temp_date': None,
+        'min_temp_value': None,
+        'min_temp_date': None,
+        'max_humidity_value': None,
+        'max_humidity_date': None
+    }
+
+    for file_name in file_list:
+        code, value = open_file(dir_path, file_name)
+        if code:
+            f = value
+        else:
+            continue
+
+        reader = csv.reader(f)
+        next(reader)
+
+        for line in reader:
+            calculate_yearly_report(line, indexes, results)
+
+        f.close()
+
+    print_yearly_report(results, months)
+
+
+def print_monthly_report(results):
+    avg_highest = results['max_temp_sum'] / results['max_temp_count']
+    avg_lowest = results['min_temp_sum'] / results['min_temp_count']
+    avg_mean_humidity = results['mean_humidity_sum'] / results['mean_humidity_count']
+
+    print('Highest Average: {:.2f}C'.format(avg_highest))
+    print('Lowest Average: {:.2f}C'.format(avg_lowest))
+    print('Average Mean Humidity: {:.2f}%'.format(avg_mean_humidity))
+
+
+def calculate_monthly_report(line, indexes, results):
+    max_t = line[indexes['max_temp_index']]
+    min_t = line[indexes['min_temp_index']]
+    mean_h = line[indexes['mean_humidity_index']]
+
+    if max_t:
+        results['max_temp_sum'] += int(max_t)
+        results['max_temp_count'] += 1
+    if min_t:
+        results['min_temp_sum'] += int(min_t)
+        results['min_temp_count'] += 1
+    if mean_h:
+        results['mean_humidity_sum'] += int(mean_h)
+        results['mean_humidity_count'] += 1
+
+
+def generate_monthly_report(dir_path, query_str, static_values):
+    file_columns = static_values['file_columns']
+
+    file_name = generate_file_names(query_str, static_values)[0]
+    code, value = open_file(dir_path, file_name)
+    if code:
+        f = value
+    else:
+        print(value)
+        return
+
+    indexes = {
+        'max_temp_index': file_columns.index('max_temperature'),
+        'min_temp_index': file_columns.index('min_temperature'),
+        'mean_humidity_index': file_columns.index('mean_humidity')
+    }
+
+    results = {
+        'max_temp_sum': 0,
+        'max_temp_count': 0,
+        'min_temp_sum': 0,
+        'min_temp_count': 0,
+        'mean_humidity_sum': 0,
+        'mean_humidity_count': 0
+    }
+
+    reader = csv.reader(f)
+    next(reader)
+    for line in reader:
+        calculate_monthly_report(line, indexes, results)
+
+    f.close()
+    print_monthly_report(results)
 
 
 def generate_file_names(query_str, static_values):
@@ -99,100 +211,6 @@ def get_day_name(date, months):
     month = int(lst[1]) - 1
     day = lst[2]
     return '{} {}'.format(months[month], day)
-
-
-def yearly_report(dir_path, query_str, static_values):
-    file_columns = static_values['file_columns']
-    months = static_values['months']
-
-    file_list = generate_file_names(query_str, static_values)
-
-    update_max_temp, get_max_temp = max_value()
-    update_min_temp, get_min_temp = min_value()
-    update_max_humidity, get_max_humidity = max_value()
-
-    date_index = file_columns.index('date')
-    max_temp_index = file_columns.index('max_temperature')
-    min_temp_index = file_columns.index('min_temperature')
-    max_humidity_index = file_columns.index('max_humidity')
-
-    for file_name in file_list:
-        file_path = os_path.join(dir_path, file_name)
-        try:
-            f = open(file_path, 'r')
-        except FileNotFoundError:
-            continue
-
-        reader = csv.reader(f)
-        next(reader)
-
-        for line in reader:
-            d = line[date_index]
-            max_t = line[max_temp_index]
-            min_t = line[min_temp_index]
-            max_h = line[max_humidity_index]
-
-            if max_t:
-                update_max_temp(int(max_t), d)
-            if min_t:
-                update_min_temp(int(min_t), d)
-            if max_h:
-                update_max_humidity(int(max_h), d)
-
-        f.close()
-
-    value, date = get_max_temp()
-    print('Highest: {:.2f}C on {}'.format(value, get_day_name(date, months)))
-
-    value, date = get_min_temp()
-    print('Lowest: {:.2f}C on {}'.format(value, get_day_name(date, months)))
-
-    value, date = get_max_humidity()
-    print('Humidity: {:.2f}% on {}'.format(value, get_day_name(date, months)))
-
-
-def monthly_report(dir_path, query_str, static_values):
-    file_columns = static_values['file_columns']
-
-    file_name = generate_file_names(query_str, static_values)[0]
-    file_path = os_path.join(dir_path, file_name)
-
-    try:
-        f = open(file_path, 'r')
-    except FileNotFoundError:
-        print('file not available: %s' % file_path)
-        return
-
-    reader = csv.reader(f)
-    next(reader)
-
-    update_avg_max_temp, get_avg_max_temp = mean_value()
-    update_avg_min_temp, get_avg_min_temp = mean_value()
-    update_avg_mean_humidity, get_avg_mean_humidity = mean_value()
-
-    # date_index = file_columns.index('date')
-    max_temp_index = file_columns.index('max_temperature')
-    min_temp_index = file_columns.index('min_temperature')
-    mean_humidity_index = file_columns.index('mean_humidity')
-
-    for line in reader:
-        # d = line[date_index]
-        max_t = line[max_temp_index]
-        min_t = line[min_temp_index]
-        mean_h = line[mean_humidity_index]
-
-        if max_t:
-            update_avg_max_temp(int(max_t))
-        if min_t:
-            update_avg_min_temp(int(min_t))
-        if mean_h:
-            update_avg_mean_humidity(int(mean_h))
-
-    f.close()
-
-    print('Highest Average: {:.2f}C'.format(get_avg_max_temp()))
-    print('Lowest Average: {:.2f}C'.format(get_avg_min_temp()))
-    print('Average Mean Humidity: {:.2f}%'.format(get_avg_mean_humidity()))
 
 
 def draw_chart(value, color):
@@ -232,12 +250,11 @@ def monthly_bar_chart(dir_path, query_str, chart_type, static_values):
     months = static_values['months']
 
     file_name = generate_file_names(query_str, static_values)[0]
-    file_path = os_path.join(dir_path, file_name)
-
-    try:
-        f = open(file_path, 'r')
-    except FileNotFoundError:
-        print('file not available: %s' % file_path)
+    code, value = open_file(dir_path, file_name)
+    if code:
+        f = value
+    else:
+        print(value)
         return
 
     reader = csv.reader(f)
@@ -268,9 +285,9 @@ def monthly_bar_chart(dir_path, query_str, chart_type, static_values):
 
 def generate_report(dir_path, key, value, static_values):
     if key == 'e':
-        yearly_report(dir_path, value, static_values)
+        generate_yearly_report(dir_path, value, static_values)
     elif key == 'a':
-        monthly_report(dir_path, value, static_values)
+        generate_monthly_report(dir_path, value, static_values)
     elif key == 'c':
         monthly_bar_chart(dir_path, value, 'double', static_values)
     elif key == 'c1':
