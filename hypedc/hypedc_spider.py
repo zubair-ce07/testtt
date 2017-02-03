@@ -29,21 +29,27 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         return garment
 
     def image_urls(self, response):
-        return response.css('ul.slides img::attr(data-src)').extract()
+        css = 'ul.slides img::attr(data-src)'
+        return response.css(css).extract()
 
     def skus(self, response):
         skus = {}
         categories = self.product_category(response)
-        footwear_categories = ['Men\'s Footwear', 'Women\'s Footwear', 'Kid\'s Footwear']
+        footwear_categories = ['Men\'s Footwear',
+                               'Women\'s Footwear',
+                               'Kid\'s Footwear'
+                               ]
 
         if any(c in footwear_categories for c in categories):
-            size_selector_elems = response.css('ul#size-selector-desktop-tabs li')
+            selector_css = 'ul#size-selector-desktop-tabs li'
+            size_selector_elems = response.css(selector_css)
             europe_label = [e for e in size_selector_elems
-                            if e.css('a::text').extract_first() == 'Europe' ]
+                            if e.css('a::text').extract_first() == 'Europe']
             if europe_label:
                 europe_label = europe_label.pop()
                 group_i = europe_label.css('::attr(data-sizegroup)').extract_first()
-                size_elems = response.css('#size-selector-tab-desktop-{} li'.format(group_i))
+                elems_css = '#size-selector-tab-desktop-{} li'.format(group_i)
+                size_elems = response.css(elems_css)
                 for elem in size_elems:
                     size = elem.css('a::text').extract_first()
                     value = elem.css('::attr(data-attributevalueid)').extract_first()
@@ -74,23 +80,27 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         if out_of_stock:
             sku.update({'out_of_stock': True})
         return {
-            '{}_{}'.format(size, value) : sku
+            '{}_{}'.format(size, value): sku
         }
 
 
     def product_id(self, response):
-        return response.css('meta[property=og\:upc]::attr(content)').extract_first()
+        id_css = 'meta[property=og\:upc]::attr(content)'
+        return response.css(id_css).extract_first()
 
     def product_brand(self, response):
-        return response.css('.product-manufacturer::text').extract_first()
+        brand_css = '.product-manufacturer::text'
+        return response.css(brand_css).extract_first()
 
     def product_name(self, response):
-        title = response.css('meta[property=og\:title]::attr(content)').extract_first()
+        title_css = 'meta[property=og\:title]::attr(content)'
+        title = response.css(title_css).extract_first()
         brand = self.product_brand(response)
-        return title.replace(brand,'')
+        return title.replace(brand, '')
 
     def product_description(self, response):
-        return self.text_from_html(response.css('div[itemprop=description]').extract_first())
+        desc_raw = response.css('div[itemprop=description]')
+        return self.text_from_html(desc_raw).extract_first()
 
     def product_care(self, response):
         desc = self.product_description(response)
@@ -101,7 +111,8 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         return care
 
     def product_category(self, response):
-        return response.css('li[class^=category] > a::attr(title)').extract()
+        cat_css = 'li[class^=category] > a::attr(title)'
+        return response.css(cat_css).extract()
 
     def product_gender(self, response):
         categories = self.product_category(response)
@@ -114,20 +125,24 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         return None
 
     def out_of_stock(self, response):
-        return response.css('meta[property=og\:availability]::attr(content)').extract_first() != 'instock'
+        css = 'meta[property=og\:availability]::attr(content)'
+        return response.css(css).extract_first() != 'instock'
 
     def product_currency(self, response):
-        return response.css('meta[property=og\:currency]::attr(content)').extract_first()
+        css = 'meta[property=og\:currency]::attr(content)'
+        return response.css(css).extract_first()
 
     def product_pricing(self, response):
-        script = response.css('script:contains(Product\.OptionsPrice)::text').extract_first()
-        script = script.replace('var optionsPrice = new Product.OptionsPrice(','')
+        script_css = 'script:contains(Product\.OptionsPrice)::text'
+        script = response.css(script_css).extract_first()
+        find = 'var optionsPrice = new Product.OptionsPrice('
+        script = script.replace(find, '')
         json_text = script[:-3]
         product = json.loads(json_text)
         price = CurrencyParser.float_conversion(product['productPrice'])
         if product['productOldPrice']:
-            oldPrice = CurrencyParser.float_conversion(product['productOldPrice'])
-            return oldPrice, price
+            old_price = CurrencyParser.float_conversion(product['productOldPrice'])
+            return old_price, price
         return None, price
 
     def product_color(self, response):
@@ -151,6 +166,3 @@ class HypeDcCrawlSpider(BaseCrawlSpider, Mixin):
     rules = (Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
              Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'))
 
-if __name__ == '__main__':
-    from scrapy import cmdline
-    cmdline.execute('scrapy parse --spider hypedc-us-parse https://www.hypedc.com/rocco-tan-perf-232260.html'.split())
