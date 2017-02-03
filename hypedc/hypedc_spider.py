@@ -12,6 +12,7 @@ class Mixin:
     market = 'US'
     retailer = 'hypedc-us'
 
+
 class HypeDcParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
@@ -43,26 +44,26 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         if any(c in footwear_categories for c in categories):
             selector_css = 'ul#size-selector-desktop-tabs li'
             size_selector_elems = response.css(selector_css)
-            europe_label = [e for e in size_selector_elems
+            labels = [e for e in size_selector_elems
                             if e.css('a::text').extract_first() == 'Europe']
-            if europe_label:
-                europe_label = europe_label.pop()
+            if labels:
+                europe_label = labels.pop()
                 group_i = europe_label.css('::attr(data-sizegroup)').extract_first()
                 elems_css = '#size-selector-tab-desktop-{} li'.format(group_i)
                 size_elems = response.css(elems_css)
-                for elem in size_elems:
-                    size = elem.css('a::text').extract_first()
-                    value = elem.css('::attr(data-attributevalueid)').extract_first()
-                    out_of_stock = elem.css('::attr(data-stock)').extract_first() == 'out'
-                    skus.update(self.sku(response, size, value, out_of_stock))
+                skus.update(self.sku_from_size_elems(response, size_elems))
         else:
             size_elems = response.css('div[id^=size-selector-tab-desktop] li')
-            for elem in size_elems:
-                size = elem.css('a::text').extract_first()
-                value = elem.css('::attr(data-attributevalueid)').extract_first()
-                out_of_stock = elem.css('::attr(data-stock)').extract_first() == 'out'
-                skus.update(self.sku(response, size, value, out_of_stock))
+            skus.update(self.sku_from_size_elems(response, size_elems))
+        return skus
 
+    def skus_from_size_elems(self, response, size_elems):
+        skus = {}
+        for elem in size_elems:
+            size = elem.css('a::text').extract_first()
+            value = elem.css('::attr(data-attributevalueid)').extract_first()
+            out_of_stock = elem.css('::attr(data-stock)').extract_first() == 'out'
+            skus.update(self.sku(response, size, value, out_of_stock))
         return skus
 
     def sku(self, response, size, value, out_of_stock):
@@ -83,7 +84,6 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
             '{}_{}'.format(size, value): sku
         }
 
-
     def product_id(self, response):
         id_css = 'meta[property=og\:upc]::attr(content)'
         return response.css(id_css).extract_first()
@@ -99,8 +99,8 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         return title.replace(brand, '')
 
     def product_description(self, response):
-        desc_raw = response.css('div[itemprop=description]')
-        return self.text_from_html(desc_raw).extract_first()
+        desc_raw = response.css('div[itemprop=description]').extract_first()
+        return self.text_from_html(desc_raw)
 
     def product_care(self, response):
         desc = self.product_description(response)
@@ -142,12 +142,12 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         price = CurrencyParser.float_conversion(product['productPrice'])
         if product['productOldPrice']:
             old_price = CurrencyParser.float_conversion(product['productOldPrice'])
-            return old_price, price
+            if old_price != price:
+                return old_price, price
         return None, price
 
     def product_color(self, response):
         return response.css('.product-colour::text').extract_first()
-
 
 
 class HypeDcCrawlSpider(BaseCrawlSpider, Mixin):
