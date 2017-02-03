@@ -5,7 +5,6 @@ from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider
 
 
 class Mixin:
-    name = "chloeandisabel"
     allowed_domains = ["www.chloeandisabel.com"]
     start_urls = ['https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz']
     market = 'US'
