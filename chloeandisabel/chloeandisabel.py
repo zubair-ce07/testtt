@@ -32,6 +32,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         if not product_master['in_stock']:
             garment['out_of_stock'] = True
         garment['skus'] = self.skus(product)
+        garment['url'] = self.product_url(product_master)
         return garment
 
     def skus(self, product):
