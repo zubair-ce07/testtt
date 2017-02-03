@@ -15,7 +15,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     def parse(self, response):
-        product = self.parse_product(response)
+        product = self.raw_product(response)
         product_id = product['sku']
         garment = self.new_unique_garment(product_id)
         if not garment:
@@ -27,13 +27,11 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = product_master['image_urls']
         garment['gender'] = 'women'
         garment['description'] = self.product_description(product_master)
-        garment['category'] = product_master['category']
+        garment['category'] = list(product_master['category'])
         garment['care'] = self.product_care(product)
-        if product_master['in_stock'] is False:
+        if not product_master['in_stock']:
             garment['out_of_stock'] = True
         garment['skus'] = self.skus(product)
-        garment['url'] = self.product_url(product_master)
-
         return garment
 
     def skus(self, product):
@@ -79,14 +77,16 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return care
 
     def variant_pricing(self, variant):
+        price = CurrencyParser.float_conversion(variant['localPrice'])
         if variant['sale_price']:
-            return int(variant['localPrice']*100), int(variant['sale_price']*100)
-        return None, int(variant['localPrice'] * 100)
+            sale_price = CurrencyParser.float_conversion(variant['sale_price'])
+            return price, sale_price
+        return None, price
 
     def product_description(self, product):
         return re.sub('<[^>]+>', '', product['description'])
 
-    def parse_product(self, response):
+    def raw_product(self, response):
         script_elem = response.css('script:contains(initializeCandiReactApp)::text').extract_first()
         json_text = script_elem.replace('initializeCandiReactApp(', '')
         json_text = '[{}]'.format(json_text[:-3])
