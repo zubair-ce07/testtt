@@ -26,8 +26,8 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = product_master['image_urls']
         garment['gender'] = 'women'
         garment['description'] = self.product_description(product_master)
-        garment['category'] = list(product_master['category'])
-        garment['care'] = self.product_care(product)
+        garment['category'] = [product_master['category']]
+        garment['care'] = self.product_care(product_master)
         if not product_master['in_stock']:
             garment['out_of_stock'] = True
         garment['skus'] = self.skus(product)
@@ -36,31 +36,32 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     def skus(self, product):
         skus = {}
         for variant in product['variantsIncludingMaster']:
-            prev_price, price = self.variant_pricing(variant)
-            sku = {
-                'color': self.variant_color(variant),
-                'size': self.one_size,
-                'price': price,
-                'currency': variant['localCurrency']['code'],
-            }
+            if not variant['is_master']:
+                prev_price, price = self.variant_pricing(variant)
+                sku = {
+                    'color': self.variant_color(variant),
+                    'price': price,
+                    'currency': variant['localCurrency']['code'],
+                    'size': self.one_size,
+                }
 
-            if prev_price:
-                sku.update({'previous_prices': [prev_price]})
+                if prev_price:
+                    sku.update({'previous_prices': [prev_price]})
 
-            if variant['option_values']:
-                option = variant['option_values'][0]
-                if option['option_type']['presentation'] == 'Size':
-                    sku.update({'size': option['presentation']})
+                if variant['option_values']:
+                    option = variant['option_values'][0]
+                    if option['option_type']['presentation'] == 'Size':
+                        sku.update({'size': option['presentation']})
 
-            if variant['in_stock'] is False:
-                sku.update({'out_of_stock': True})
-            skus[variant['sku']] = sku
+                if not variant['in_stock']:
+                    sku.update({'out_of_stock': True})
+                skus[variant['sku']] = sku
 
         return skus
 
     def variant_color(self, variant):
         description = [variant['description']]
-        props = [p['value'] for p in variant['displayable_properties']]
+        props = self.product_properties(variant)
         for x in description + props:
             color = self.detect_colour(x)
             if color:
@@ -69,10 +70,9 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
 
     def product_care(self, product):
         care = []
-        for v in product['variantsIncludingMaster']:
-            for p in v['displayable_properties']:
-                if self.care_criteria(p['value']):
-                    care.append(p['value'])
+        for p in self.product_properties(product):
+            if self.care_criteria(p):
+                care.append(p)
         return care
 
     def variant_pricing(self, variant):
@@ -83,7 +83,12 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return None, price
 
     def product_description(self, product):
-        return re.sub('<[^>]+>', '', product['description'])
+        desc = re.sub('<[^>]+>', '', product['description'])
+        desc += '\n'.join(p for p in self.product_properties(product))
+        return desc
+
+    def product_properties(self, product):
+        return [p['value'] for p in product['displayable_properties']]
 
     def raw_product(self, response):
         script_elem = response.css('script:contains(initializeCandiReactApp)::text').extract_first()
