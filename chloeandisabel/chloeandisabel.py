@@ -5,10 +5,11 @@ from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider
 
 
 class Mixin:
-    allowed_domains = ["www.chloeandisabel.com"]
-    start_urls = ['https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz']
+    allowed_domains = ['www.chloeandisabel.com', 'cloudfront.net']
+    start_urls = ['https://www.chloeandisabel.com/shop/']
     market = 'US'
     retailer = 'chloeandisabel-us'
+
 
 class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
@@ -24,40 +25,51 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['name'] = product_master['name']
         garment['brand'] = 'chloeandisabel'
         garment['image_urls'] = product_master['image_urls']
-        garment['gender'] = 'women'
+        # garment['gender'] = response.request.meta['gender']
         garment['description'] = self.product_description(product_master)
-        garment['category'] = [product_master['category']]
+        garment['category'] = response.request.meta.get('categories')
         garment['care'] = self.product_care(product_master)
         if not product_master['in_stock']:
             garment['out_of_stock'] = True
         garment['skus'] = self.skus(product)
+        if product['promotion_messages']:
+            garment['merch_info'] = product['promotion_messages']
+        # garment['url'] = self.product_url(product_master)
+
         return garment
 
     def skus(self, product):
         skus = {}
-        for variant in product['variantsIncludingMaster']:
-            if not variant['is_master']:
-                prev_price, price = self.variant_pricing(variant)
-                sku = {
-                    'color': self.variant_color(variant),
-                    'price': price,
-                    'currency': variant['localCurrency']['code'],
-                    'size': self.one_size,
-                }
-
-                if prev_price:
-                    sku.update({'previous_prices': [prev_price]})
-
-                if variant['option_values']:
-                    option = variant['option_values'][0]
-                    if option['option_type']['presentation'] == 'Size':
-                        sku.update({'size': option['presentation']})
-
-                if not variant['in_stock']:
-                    sku.update({'out_of_stock': True})
-                skus[variant['sku']] = sku
-
+        if product['availableVariants']:
+            variants = [variant for variant in product['variantsIncludingMaster']
+                        if not variant['is_master']]
+            for variant in variants:
+                skus.update(self.variant_sku(variant))
+        else:
+            variant = product['variantsIncludingMaster'][0]
+            skus.update(self.variant_sku(variant))
         return skus
+
+    def variant_sku(self, variant):
+        prev_price, price = self.variant_pricing(variant)
+        sku = {
+            'color': self.variant_color(variant),
+            'price': price,
+            'currency': variant['localCurrency']['code'],
+            'size': self.one_size,
+        }
+
+        if prev_price:
+            sku.update({'previous_prices': [prev_price]})
+
+        if variant['option_values']:
+            option = variant['option_values'][0]
+            if option['option_type']['presentation'] == 'Size':
+                sku.update({'size': option['presentation']})
+
+        if not variant['in_stock']:
+            sku.update({'out_of_stock': True})
+        return {variant['sku']: sku}
 
     def variant_color(self, variant):
         description = [variant['description']]
@@ -91,7 +103,8 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return [p['value'] for p in product['displayable_properties']]
 
     def raw_product(self, response):
-        script_elem = response.css('script:contains(initializeCandiReactApp)::text').extract_first()
+        script_css = 'script:contains(initializeCandiReactApp)::text'
+        script_elem = response.css(script_css).extract_first()
         json_text = script_elem.replace('initializeCandiReactApp(', '')
         json_text = '[{}]'.format(json_text[:-3])
         return json.loads(json_text)[1]['product']
@@ -105,12 +118,32 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = ChloeAndIsabelParseSpider()
     base_url = 'https://www.chloeandisabel.com'
+    products_url = 'https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz'
 
     def parse(self, response):
+        script_css = 'script:contains(initializeCandiReactApp)::text'
+        script = response.css(script_css).extract_first()
+        json_text = '[{}]'.format(script.replace('initializeCandiReactApp(', '')[:-3])
+        init_json = json.loads(json_text)
+        taxons = init_json[0]['taxons']
+        slugs = [{u['slug']: u['name'] for u in t['children']} for t in taxons]
+        self.collection_slugs = reduce(lambda t, u: t.update(u) or t, slugs)
+        return Request(url=self.products_url, callback=self.parse_json)
+
+    def parse_json(self, response):
         json_text = response.text.replace('chloe_isabel_app.loadProducts(', '')
         json_text = json_text[:-2]
         products = json.loads(json_text)
         for product in products:
             if product['sellable']:
                 url = product['variantsIncludingMaster'][0]['permalink_path']
-                yield Request(url=self.base_url+url, callback=self.parse_item)
+                meta = {}
+                slugs = [slug['name'] for slug in product['collection_slugs']]
+                meta['categories'] = [self.collection_slugs[slug] for slug in slugs
+                                      if self.collection_slugs.get(slug)]
+                if 'mens-shop' in slugs:
+                    meta['gender'] = 'men'
+                else:
+                    meta['gender'] = 'women'
+                yield Request(url=self.base_url+url, meta=meta, callback=self.parse_item)
+
