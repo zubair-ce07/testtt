@@ -9,8 +9,8 @@ from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyPa
 class Mixin:
     allowed_domains = ["www.hypedc.com"]
     start_urls = ['http://www.hypedc.com/mens/']
-    market = 'US'
-    retailer = 'hypedc-us'
+    market = 'AU'
+    retailer = 'hypedc-au'
 
 
 class HypeDcParseSpider(BaseParseSpider, Mixin):
@@ -25,7 +25,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
-        if self.out_of_stock(response):
+        if self.out_of_stock(response) or not garment['skus']:
             garment['out_of_stock'] = True
         return garment
 
@@ -36,28 +36,31 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
         categories = self.product_category(response)
+        if self.is_footwear_category(categories):
+            selector_css = 'ul#size-selector-desktop-tabs li'
+            size_selector_elems = response.css(selector_css)
+            europe_label = [e for e in size_selector_elems
+                            if e.css('a::text').extract_first() in ['Europe', 'EU', 'European']]
+            if europe_label:
+                label = europe_label.pop()
+                group_i = label.css('::attr(data-sizegroup)').extract_first()
+                elems_css = '#size-selector-tab-desktop-{} li'.format(group_i)
+                size_elems = response.css(elems_css)
+                skus.update(self.sku_from_size_elems(response, size_elems))
+                return skus
+
+        size_elems = response.css('div[id^=size-selector-tab-desktop] li')
+        skus.update(self.sku_from_size_elems(response, size_elems))
+        return skus
+
+    def is_footwear_category(self, categories):
         footwear_categories = ['Men\'s Footwear',
                                'Women\'s Footwear',
                                'Kid\'s Footwear'
                                ]
+        return any(c in footwear_categories for c in categories)
 
-        if any(c in footwear_categories for c in categories):
-            selector_css = 'ul#size-selector-desktop-tabs li'
-            size_selector_elems = response.css(selector_css)
-            labels = [e for e in size_selector_elems
-                            if e.css('a::text').extract_first() == 'Europe']
-            if labels:
-                europe_label = labels.pop()
-                group_i = europe_label.css('::attr(data-sizegroup)').extract_first()
-                elems_css = '#size-selector-tab-desktop-{} li'.format(group_i)
-                size_elems = response.css(elems_css)
-                skus.update(self.sku_from_size_elems(response, size_elems))
-        else:
-            size_elems = response.css('div[id^=size-selector-tab-desktop] li')
-            skus.update(self.sku_from_size_elems(response, size_elems))
-        return skus
-
-    def skus_from_size_elems(self, response, size_elems):
+    def sku_from_size_elems(self, response, size_elems):
         skus = {}
         for elem in size_elems:
             size = elem.css('a::text').extract_first()
@@ -117,16 +120,22 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
     def product_gender(self, response):
         categories = self.product_category(response)
         gender_map = [('Mens', 'men'),
+                      ('Men\'s Sale', 'men'),
                       ('Womens', 'women'),
-                      ('Kids', 'unisex-children')]
+                      ('Women\'s Sale', 'women'),
+                      ('Kids', 'unisex-children'),
+                      ('Kid\'s Sale', 'unisex-children')]
         for label, gender in gender_map:
             if label in categories:
                 return gender
         return None
 
     def out_of_stock(self, response):
-        css = 'meta[property=og\:availability]::attr(content)'
-        return response.css(css).extract_first() != 'instock'
+        availability_css = 'meta[property=og\:availability]::attr(content)'
+        availability =  response.css(availability_css).extract_first()
+        sold_out_css = 'button.btn-soldout'
+        sold_out = response.css(sold_out_css)
+        return sold_out or availability != 'instock'
 
     def product_currency(self, response):
         css = 'meta[property=og\:currency]::attr(content)'
