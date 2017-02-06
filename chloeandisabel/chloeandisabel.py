@@ -1,7 +1,7 @@
 import json
 import re
 from scrapy.http.request import Request
-from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider
+from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser
 
 
 class Mixin:
@@ -131,19 +131,25 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
         return Request(url=self.products_url, callback=self.parse_json)
 
     def parse_json(self, response):
-        json_text = response.text.replace('chloe_isabel_app.loadProducts(', '')
-        json_text = json_text[:-2]
-        products = json.loads(json_text)
+        products = self.get_products(response)
         for product in products:
             if product['sellable']:
                 url = product['variantsIncludingMaster'][0]['permalink_path']
                 meta = {}
-                slugs = [slug['name'] for slug in product['collection_slugs']]
-                meta['categories'] = [self.collection_slugs[slug] for slug in slugs
-                                      if self.collection_slugs.get(slug)]
-                if 'mens-shop' in slugs:
-                    meta['gender'] = 'men'
-                else:
-                    meta['gender'] = 'women'
-                yield Request(url=self.base_url+url, meta=meta, callback=self.parse_item)
+                meta['categories'] = self.product_categories(product)
+                meta['gender'] = self.product_gender(product)
+                yield Request(url=self.base_url + url, meta=meta, callback=self.parse_item)
 
+    def get_products(self, response):
+        json_text = response.text.replace('chloe_isabel_app.loadProducts(', '')
+        json_text = json_text[:-2]
+        return json.loads(json_text)
+
+    def product_categories(self, product):
+        slugs = [slug['name'] for slug in product['collection_slugs']]
+        return [self.collection_slugs[slug] for slug in slugs
+                if self.collection_slugs.get(slug)]
+
+    def product_gender(self, product):
+        categories = self.product_categories(product)
+        return 'men' if 'Men\'s Shop' in categories else 'women'
