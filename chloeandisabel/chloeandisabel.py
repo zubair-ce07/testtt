@@ -26,7 +26,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['name'] = product_master['name']
         garment['brand'] = 'chloeandisabel'
         garment['image_urls'] = product_master['image_urls']
-        # garment['gender'] = response.request.meta['gender']
+        garment['gender'] = response.request.meta['gender']
         garment['description'] = self.product_description(product_master)
         garment['category'] = response.request.meta.get('categories')
         garment['care'] = self.product_care(product_master)
@@ -35,8 +35,6 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = self.skus(product)
         if product['promotion_messages']:
             garment['merch_info'] = product['promotion_messages']
-        # garment['url'] = self.product_url(product_master)
-
         return garment
 
     def skus(self, product):
