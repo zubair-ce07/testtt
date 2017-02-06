@@ -2,6 +2,7 @@ import json
 import re
 from scrapy.http.request import Request
 from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser
+from functools import reduce
 
 
 class Mixin:
