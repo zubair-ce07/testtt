@@ -131,6 +131,11 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_json(self, response):
         products = self.get_products(response)
+        for request in self.product_requests(products):
+            request.meta['trail'] = self.add_trail(response)
+            yield request
+
+    def product_requests(self, products):
         for product in products:
             if product['sellable']:
                 url = product['variantsIncludingMaster'][0]['permalink_path']
@@ -152,3 +157,4 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
     def product_gender(self, product):
         categories = self.product_categories(product)
         return 'men' if 'Men\'s Shop' in categories else 'women'
+
