@@ -21,25 +21,8 @@ class Bcolors:
     UNDERLINE = '\033[4m'
 
 
-def compare(a, b):
-    if a > b:
-        return True
-    elif a < b:
-        return False
-    else:
-        return None
-
-
-def open_file(dir_path, file_name):
-    file_path = os_path.join(dir_path, file_name)
-
-    try:
-        f = open(file_path, 'r')
-    except FileNotFoundError:
-        error_msg = 'file not available: {}'.format(file_path)
-        return False, error_msg
-    else:
-        return True, f
+def compare_numbers(a, b):
+    return a - b
 
 
 def print_yearly_report(results, months):
@@ -56,41 +39,36 @@ def print_yearly_report(results, months):
     print('Humidity: {:.2f}% on {}'.format(value, get_day_name(date, months)))
 
 
-def calculate_yearly_report(line, indexes, results):
-    d = line[indexes['date_index']]
-    max_t = line[indexes['max_temp_index']]
-    min_t = line[indexes['min_temp_index']]
-    max_h = line[indexes['max_humidity_index']]
+def calculate_yearly_report(line, results):
+    d = line['date']
+    max_temperature = line['max_temperature']
+    min_temperature = line['min_temperature']
+    max_humidity = line['max_humidity']
 
-    if max_t:
+    if max_temperature:
+        max_temperature = int(max_temperature)
         if results['max_temp_value'] is None or \
-                compare(int(max_t), results['max_temp_value']):
-            results['max_temp_value'] = int(max_t)
+                compare_numbers(max_temperature, results['max_temp_value']) > 0:
+            results['max_temp_value'] = max_temperature
             results['max_temp_date'] = d
-    if min_t:
+    if min_temperature:
+        min_temperature = int(min_temperature)
         if results['min_temp_value'] is None or \
-                compare(results['min_temp_value'], int(min_t)):
-            results['min_temp_value'] = int(min_t)
+                compare_numbers(results['min_temp_value'], min_temperature) > 0:
+            results['min_temp_value'] = min_temperature
             results['min_temp_date'] = d
-    if max_h:
+    if max_humidity:
+        max_humidity = int(max_humidity)
         if results['max_humidity_value'] is None or \
-                compare(int(max_h), results['max_humidity_value']):
-            results['max_humidity_value'] = int(max_h)
+                compare_numbers(max_humidity, results['max_humidity_value']) > 0:
+            results['max_humidity_value'] = max_humidity
             results['max_humidity_date'] = d
 
 
 def generate_yearly_report(dir_path, query_str, static_values):
     file_columns = static_values['file_columns']
     months = static_values['months']
-
     file_list = generate_file_names(query_str, static_values)
-
-    indexes = {
-        'date_index': file_columns.index('date'),
-        'max_temp_index': file_columns.index('max_temperature'),
-        'min_temp_index': file_columns.index('min_temperature'),
-        'max_humidity_index': file_columns.index('max_humidity')
-    }
 
     results = {
         'max_temp_value': None,
@@ -102,17 +80,18 @@ def generate_yearly_report(dir_path, query_str, static_values):
     }
 
     for file_name in file_list:
-        code, value = open_file(dir_path, file_name)
-        if code:
-            f = value
-        else:
+        file_path = os_path.join(dir_path, file_name)
+
+        try:
+            f = open(file_path, 'r')
+        except FileNotFoundError:
             continue
 
-        reader = csv.reader(f)
+        reader = csv.DictReader(f, fieldnames=file_columns)
         next(reader)
 
         for line in reader:
-            calculate_yearly_report(line, indexes, results)
+            calculate_yearly_report(line, results)
 
         f.close()
 
@@ -129,19 +108,19 @@ def print_monthly_report(results):
     print('Average Mean Humidity: {:.2f}%'.format(avg_mean_humidity))
 
 
-def calculate_monthly_report(line, indexes, results):
-    max_t = line[indexes['max_temp_index']]
-    min_t = line[indexes['min_temp_index']]
-    mean_h = line[indexes['mean_humidity_index']]
+def calculate_monthly_report(line, results):
+    max_temperature = line['max_temperature']
+    min_temperature = line['min_temperature']
+    mean_humidity = line['mean_humidity']
 
-    if max_t:
-        results['max_temp_sum'] += int(max_t)
+    if max_temperature:
+        results['max_temp_sum'] += int(max_temperature)
         results['max_temp_count'] += 1
-    if min_t:
-        results['min_temp_sum'] += int(min_t)
+    if min_temperature:
+        results['min_temp_sum'] += int(min_temperature)
         results['min_temp_count'] += 1
-    if mean_h:
-        results['mean_humidity_sum'] += int(mean_h)
+    if mean_humidity:
+        results['mean_humidity_sum'] += int(mean_humidity)
         results['mean_humidity_count'] += 1
 
 
@@ -149,18 +128,14 @@ def generate_monthly_report(dir_path, query_str, static_values):
     file_columns = static_values['file_columns']
 
     file_name = generate_file_names(query_str, static_values)[0]
-    code, value = open_file(dir_path, file_name)
-    if code:
-        f = value
-    else:
-        print(value)
-        return
+    file_path = os_path.join(dir_path, file_name)
 
-    indexes = {
-        'max_temp_index': file_columns.index('max_temperature'),
-        'min_temp_index': file_columns.index('min_temperature'),
-        'mean_humidity_index': file_columns.index('mean_humidity')
-    }
+    try:
+        f = open(file_path, 'r')
+    except FileNotFoundError:
+        error_msg = 'file not available: {}'.format(file_path)
+        print(error_msg)
+        return
 
     results = {
         'max_temp_sum': 0,
@@ -171,10 +146,10 @@ def generate_monthly_report(dir_path, query_str, static_values):
         'mean_humidity_count': 0
     }
 
-    reader = csv.reader(f)
+    reader = csv.DictReader(f, fieldnames=file_columns)
     next(reader)
     for line in reader:
-        calculate_monthly_report(line, indexes, results)
+        calculate_monthly_report(line, results)
 
     f.close()
     print_monthly_report(results)
@@ -250,28 +225,26 @@ def monthly_bar_chart(dir_path, query_str, chart_type, static_values):
     months = static_values['months']
 
     file_name = generate_file_names(query_str, static_values)[0]
-    code, value = open_file(dir_path, file_name)
-    if code:
-        f = value
-    else:
-        print(value)
+    file_path = os_path.join(dir_path, file_name)
+
+    try:
+        f = open(file_path, 'r')
+    except FileNotFoundError:
+        error_msg = 'file not available: {}'.format(file_path)
+        print(error_msg)
         return
 
-    reader = csv.reader(f)
+    reader = csv.DictReader(f, fieldnames=file_columns)
     next(reader)
-
-    date_index = file_columns.index('date')
-    max_temp_index = file_columns.index('max_temperature')
-    min_temp_index = file_columns.index('min_temperature')
 
     lst = query_str.split('/')
     m = int(lst[1])-1
     print('{} {}'.format(months[m], lst[0]))
 
     for line in reader:
-        d = line[date_index]
-        max_t = line[max_temp_index]
-        min_t = line[min_temp_index]
+        d = line['date']
+        max_t = line['max_temperature']
+        min_t = line['min_temperature']
 
         day_no = '{0:02d}'.format(int(d.split('-')[2]))
 
@@ -296,30 +269,16 @@ def generate_report(dir_path, key, value, static_values):
 
 def check_valid_year(year):
     try:
-        year = int(year)
+        datetime.strptime(year, '%Y')
     except ValueError:
-        sys_exit('invalid year: %s' % year)
-    else:
-        if year > datetime.now().year or year < 1970:
-            sys_exit('out of range year: %s' % year)
-
-
-def check_valid_month(month):
-    try:
-        month = int(month)
-    except ValueError:
-        sys_exit('invalid month: %s' % month)
-    else:
-        if month < 1 or month > 12:
-            sys_exit('out of range month: %s' % month)
+        sys_exit('Invalid or out of range year(usage: yyyy): %s' % year)
 
 
 def valid_year_month(text):
-    lst = text.split('/')
-    if len(lst) < 2:
-        sys_exit('invalid switch value: %s' % str(text))
-    check_valid_year(lst[0])
-    check_valid_month(lst[1])
+    try:
+        datetime.strptime(text, '%Y/%m')
+    except ValueError:
+        sys_exit('Invalid of out of range year/month(usage: yyyy/mm): %s' % text)
 
 
 def argument_order(args):
