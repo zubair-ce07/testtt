@@ -26,15 +26,13 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['name'] = product_master['name']
         garment['brand'] = 'chloeandisabel'
         garment['image_urls'] = product_master['image_urls']
-        garment['gender'] = response.request.meta['gender']
         garment['description'] = self.product_description(product_master)
-        garment['category'] = response.request.meta.get('categories')
         garment['care'] = self.product_care(product_master)
         if not product_master['in_stock']:
             garment['out_of_stock'] = True
         garment['skus'] = self.skus(product)
         if product['promotion_messages']:
-            garment['merch_info'] = product['promotion_messages']
+            garment['merch_info'] = self.merch_info(product)
         return garment
 
     def skus(self, product):
@@ -42,11 +40,27 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         if product['availableVariants']:
             variants = [variant for variant in product['variantsIncludingMaster']
                         if not variant['is_master']]
-            for variant in variants:
-                skus.update(self.variant_sku(variant))
         else:
-            variant = product['variantsIncludingMaster'][0]
-            skus.update(self.variant_sku(variant))
+            variants = [product['variantsIncludingMaster'][0]]
+        for variant in variants:
+            prev_price, price = self.variant_pricing(variant)
+            sku = {
+                'color': self.variant_color(variant),
+                'price': price,
+                'currency': variant['localCurrency']['code'],
+                'size': self.one_size,
+            }
+            if prev_price:
+                sku['previous_prices'] = [prev_price]
+
+            if variant['option_values']:
+                option = variant['option_values'][0]
+                if option['option_type']['presentation'] == 'Size':
+                    sku['size'] = option['presentation']
+
+            if not variant['in_stock']:
+                sku['out_of_stock'] = True
+            skus[variant['sku']] = sku
         return skus
 
     def variant_sku(self, variant):
@@ -64,10 +78,10 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         if variant['option_values']:
             option = variant['option_values'][0]
             if option['option_type']['presentation'] == 'Size':
-                sku.update({'size': option['presentation']})
+                sku['size'] = option['presentation']
 
         if not variant['in_stock']:
-            sku.update({'out_of_stock': True})
+            sku['out_of_stock'] = True
         return {variant['sku']: sku}
 
     def variant_color(self, variant):
@@ -80,11 +94,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return None
 
     def product_care(self, product):
-        care = []
-        for p in self.product_properties(product):
-            if self.care_criteria(p):
-                care.append(p)
-        return care
+        return [d for d in self.raw_description(product) if self.care_criteria(d)]
 
     def variant_pricing(self, variant):
         price = CurrencyParser.float_conversion(variant['localPrice'])
@@ -94,8 +104,11 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return None, price
 
     def product_description(self, product):
-        desc = re.sub('<[^>]+>', '', product['description'])
-        desc += '\n'.join(p for p in self.product_properties(product))
+        return [d for d in self.raw_description(product) if not self.care_criteria(d)]
+
+    def raw_description(self, product):
+        desc = self.text_from_html(product['description'])
+        desc += [p for p in self.product_properties(product)]
         return desc
 
     def product_properties(self, product):
@@ -112,6 +125,9 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         variants = product["variantsIncludingMaster"]
         return [v for v in variants if v['is_master']].pop()
 
+    def merch_info(self, product):
+        return product['promotion_messages']
+
 
 class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
@@ -123,30 +139,27 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
         script_css = 'script:contains(initializeCandiReactApp)::text'
         script = response.css(script_css).extract_first()
         json_text = '[{}]'.format(script.replace('initializeCandiReactApp(', '')[:-3])
-        init_json = json.loads(json_text)
-        taxons = init_json[0]['taxons']
+        app_json = json.loads(json_text)
+        taxons = app_json[0]['taxons']
         slugs = [{u['slug']: u['name'] for u in t['children']} for t in taxons]
         self.collection_slugs = reduce(lambda t, u: t.update(u) or t, slugs)
         return Request(url=self.products_url, callback=self.parse_json)
 
     def parse_json(self, response):
         products = self.get_products(response)
-        for request in self.product_requests(products):
-            request.meta['trail'] = self.add_trail(response)
-            yield request
-
-    def product_requests(self, products):
         for product in products:
             if product['sellable']:
                 url = product['variantsIncludingMaster'][0]['permalink_path']
-                meta = {}
-                meta['categories'] = self.product_categories(product)
-                meta['gender'] = self.product_gender(product)
+                meta = {
+                    'category': self.product_categories(product),
+                    'gender': self.product_gender(product),
+                    'trail': self.add_trail(response),
+                }
                 yield Request(url=self.base_url + url, meta=meta, callback=self.parse_item)
 
     def get_products(self, response):
-        json_text = response.text.replace('chloe_isabel_app.loadProducts(', '')
-        json_text = json_text[:-2]
+        json_re = 'chloe_isabel_app.loadProducts\((.*)\);'
+        json_text = re.findall(json_re, response.text)[0]
         return json.loads(json_text)
 
     def product_categories(self, product):
@@ -156,5 +169,5 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
 
     def product_gender(self, product):
         categories = self.product_categories(product)
-        return 'men' if 'Men\'s Shop' in categories else 'women'
+        return 'men' if "Men's Shop" in categories else 'women'
 
