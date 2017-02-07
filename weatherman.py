@@ -39,37 +39,7 @@ def print_yearly_report(results, months):
     print('Humidity: {:.2f}% on {}'.format(value, get_day_name(date, months)))
 
 
-def calculate_yearly_report(line, results):
-    d = line['date']
-    max_temperature = line['max_temperature']
-    min_temperature = line['min_temperature']
-    max_humidity = line['max_humidity']
-
-    if max_temperature:
-        max_temperature = int(max_temperature)
-        if results['max_temp_value'] is None or \
-                compare_numbers(max_temperature, results['max_temp_value']) > 0:
-            results['max_temp_value'] = max_temperature
-            results['max_temp_date'] = d
-    if min_temperature:
-        min_temperature = int(min_temperature)
-        if results['min_temp_value'] is None or \
-                compare_numbers(results['min_temp_value'], min_temperature) > 0:
-            results['min_temp_value'] = min_temperature
-            results['min_temp_date'] = d
-    if max_humidity:
-        max_humidity = int(max_humidity)
-        if results['max_humidity_value'] is None or \
-                compare_numbers(max_humidity, results['max_humidity_value']) > 0:
-            results['max_humidity_value'] = max_humidity
-            results['max_humidity_date'] = d
-
-
-def generate_yearly_report(dir_path, query_str, static_values):
-    file_columns = static_values['file_columns']
-    months = static_values['months']
-    file_list = generate_file_names(query_str, static_values)
-
+def calculate_yearly_report(files_data):
     results = {
         'max_temp_value': None,
         'max_temp_date': None,
@@ -79,6 +49,41 @@ def generate_yearly_report(dir_path, query_str, static_values):
         'max_humidity_date': None
     }
 
+    for data in files_data:
+        for row in data:
+            d = row['date']
+            max_temperature = row['max_temperature']
+            min_temperature = row['min_temperature']
+            max_humidity = row['max_humidity']
+
+            if max_temperature:
+                max_temperature = int(max_temperature)
+                if results['max_temp_value'] is None or \
+                        compare_numbers(max_temperature, results['max_temp_value']) > 0:
+                    results['max_temp_value'] = max_temperature
+                    results['max_temp_date'] = d
+            if min_temperature:
+                min_temperature = int(min_temperature)
+                if results['min_temp_value'] is None or \
+                        compare_numbers(results['min_temp_value'], min_temperature) > 0:
+                    results['min_temp_value'] = min_temperature
+                    results['min_temp_date'] = d
+            if max_humidity:
+                max_humidity = int(max_humidity)
+                if results['max_humidity_value'] is None or \
+                        compare_numbers(max_humidity, results['max_humidity_value']) > 0:
+                    results['max_humidity_value'] = max_humidity
+                    results['max_humidity_date'] = d
+
+    return results
+
+
+def generate_yearly_report(dir_path, query_str, static_values):
+    file_columns = static_values['file_columns']
+    months = static_values['months']
+    file_list = generate_file_names(query_str, static_values)
+
+    files_data = []
     for file_name in file_list:
         file_path = os_path.join(dir_path, file_name)
 
@@ -90,11 +95,14 @@ def generate_yearly_report(dir_path, query_str, static_values):
         reader = csv.DictReader(f, fieldnames=file_columns)
         next(reader)
 
+        file_data_rows = []
         for line in reader:
-            calculate_yearly_report(line, results)
+            file_data_rows.append(line)
 
         f.close()
+        files_data.append(file_data_rows)
 
+    results = calculate_yearly_report(files_data)
     print_yearly_report(results, months)
 
 
@@ -108,20 +116,32 @@ def print_monthly_report(results):
     print('Average Mean Humidity: {:.2f}%'.format(avg_mean_humidity))
 
 
-def calculate_monthly_report(line, results):
-    max_temperature = line['max_temperature']
-    min_temperature = line['min_temperature']
-    mean_humidity = line['mean_humidity']
+def calculate_monthly_report(data_rows):
+    results = {
+        'max_temp_sum': 0,
+        'max_temp_count': 0,
+        'min_temp_sum': 0,
+        'min_temp_count': 0,
+        'mean_humidity_sum': 0,
+        'mean_humidity_count': 0
+    }
 
-    if max_temperature:
-        results['max_temp_sum'] += int(max_temperature)
-        results['max_temp_count'] += 1
-    if min_temperature:
-        results['min_temp_sum'] += int(min_temperature)
-        results['min_temp_count'] += 1
-    if mean_humidity:
-        results['mean_humidity_sum'] += int(mean_humidity)
-        results['mean_humidity_count'] += 1
+    for row in data_rows:
+        max_temperature = row['max_temperature']
+        min_temperature = row['min_temperature']
+        mean_humidity = row['mean_humidity']
+
+        if max_temperature:
+            results['max_temp_sum'] += int(max_temperature)
+            results['max_temp_count'] += 1
+        if min_temperature:
+            results['min_temp_sum'] += int(min_temperature)
+            results['min_temp_count'] += 1
+        if mean_humidity:
+            results['mean_humidity_sum'] += int(mean_humidity)
+            results['mean_humidity_count'] += 1
+
+    return results
 
 
 def generate_monthly_report(dir_path, query_str, static_values):
@@ -137,21 +157,14 @@ def generate_monthly_report(dir_path, query_str, static_values):
         print(error_msg)
         return
 
-    results = {
-        'max_temp_sum': 0,
-        'max_temp_count': 0,
-        'min_temp_sum': 0,
-        'min_temp_count': 0,
-        'mean_humidity_sum': 0,
-        'mean_humidity_count': 0
-    }
-
+    file_data_rows = []
     reader = csv.DictReader(f, fieldnames=file_columns)
     next(reader)
     for line in reader:
-        calculate_monthly_report(line, results)
-
+        file_data_rows.append(line)
     f.close()
+
+    results = calculate_monthly_report(file_data_rows)
     print_monthly_report(results)
 
 
@@ -220,6 +233,20 @@ def one_row_chart(day_no, max_t, min_t):
         print(' {}C - {}C'.format(int(min_t), int(max_t)))
 
 
+def print_monthly_bar_chart(data_rows, chart_type):
+    for row in data_rows:
+        date = row['date']
+        max_temperature = row['max_temperature']
+        min_temperature = row['min_temperature']
+
+        day_no = '{0:02d}'.format(int(date.split('-')[2]))
+
+        if chart_type == 'double':
+            two_row_chart(day_no, max_temperature, min_temperature)
+        elif chart_type == 'single':
+            one_row_chart(day_no, max_temperature, min_temperature)
+
+
 def monthly_bar_chart(dir_path, query_str, chart_type, static_values):
     file_columns = static_values['file_columns']
     months = static_values['months']
@@ -241,19 +268,12 @@ def monthly_bar_chart(dir_path, query_str, chart_type, static_values):
     m = int(lst[1])-1
     print('{} {}'.format(months[m], lst[0]))
 
+    file_data_rows = []
     for line in reader:
-        d = line['date']
-        max_t = line['max_temperature']
-        min_t = line['min_temperature']
-
-        day_no = '{0:02d}'.format(int(d.split('-')[2]))
-
-        if chart_type == 'double':
-            two_row_chart(day_no, max_t, min_t)
-        elif chart_type == 'single':
-            one_row_chart(day_no, max_t, min_t)
+        file_data_rows.append(line)
 
     f.close()
+    print_monthly_bar_chart(file_data_rows, chart_type)
 
 
 def generate_report(dir_path, key, value, static_values):
