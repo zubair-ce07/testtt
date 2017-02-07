@@ -5,6 +5,7 @@ in text files
 
 import csv
 import argparse
+from functools import reduce
 from datetime import datetime
 from os import path as os_path
 from sys import argv as sys_argv, exit as sys_exit
@@ -49,31 +50,35 @@ def calculate_yearly_report(files_data):
         'max_humidity_date': None
     }
 
-    for data in files_data:
-        for row in data:
-            d = row['date']
-            max_temperature = row['max_temperature']
-            min_temperature = row['min_temperature']
-            max_humidity = row['max_humidity']
+    def computation(result, row):
+        date = row['date']
+        max_temperature = row['max_temperature']
+        min_temperature = row['min_temperature']
+        max_humidity = row['max_humidity']
 
-            if max_temperature:
-                max_temperature = int(max_temperature)
-                if results['max_temp_value'] is None or \
-                        compare_numbers(max_temperature, results['max_temp_value']) > 0:
-                    results['max_temp_value'] = max_temperature
-                    results['max_temp_date'] = d
-            if min_temperature:
-                min_temperature = int(min_temperature)
-                if results['min_temp_value'] is None or \
-                        compare_numbers(results['min_temp_value'], min_temperature) > 0:
-                    results['min_temp_value'] = min_temperature
-                    results['min_temp_date'] = d
-            if max_humidity:
-                max_humidity = int(max_humidity)
-                if results['max_humidity_value'] is None or \
-                        compare_numbers(max_humidity, results['max_humidity_value']) > 0:
-                    results['max_humidity_value'] = max_humidity
-                    results['max_humidity_date'] = d
+        if max_temperature:
+            max_temperature = int(max_temperature)
+            if result['max_temp_value'] is None or \
+                    compare_numbers(max_temperature, result['max_temp_value']) > 0:
+                result['max_temp_value'] = max_temperature
+                result['max_temp_date'] = date
+        if min_temperature:
+            min_temperature = int(min_temperature)
+            if result['min_temp_value'] is None or \
+                    compare_numbers(result['min_temp_value'], min_temperature) > 0:
+                result['min_temp_value'] = min_temperature
+                result['min_temp_date'] = date
+        if max_humidity:
+            max_humidity = int(max_humidity)
+            if result['max_humidity_value'] is None or \
+                    compare_numbers(max_humidity, result['max_humidity_value']) > 0:
+                result['max_humidity_value'] = max_humidity
+                result['max_humidity_date'] = date
+
+        return result
+
+    for data in files_data:
+        results = reduce(computation, data, results)
 
     return results
 
@@ -117,7 +122,7 @@ def print_monthly_report(results):
 
 
 def calculate_monthly_report(data_rows):
-    results = {
+    initial_values = {
         'max_temp_sum': 0,
         'max_temp_count': 0,
         'min_temp_sum': 0,
@@ -126,22 +131,24 @@ def calculate_monthly_report(data_rows):
         'mean_humidity_count': 0
     }
 
-    for row in data_rows:
+    def computation(result, row):
         max_temperature = row['max_temperature']
         min_temperature = row['min_temperature']
         mean_humidity = row['mean_humidity']
 
         if max_temperature:
-            results['max_temp_sum'] += int(max_temperature)
-            results['max_temp_count'] += 1
+            result['max_temp_sum'] += int(max_temperature)
+            result['max_temp_count'] += 1
         if min_temperature:
-            results['min_temp_sum'] += int(min_temperature)
-            results['min_temp_count'] += 1
+            result['min_temp_sum'] += int(min_temperature)
+            result['min_temp_count'] += 1
         if mean_humidity:
-            results['mean_humidity_sum'] += int(mean_humidity)
-            results['mean_humidity_count'] += 1
+            result['mean_humidity_sum'] += int(mean_humidity)
+            result['mean_humidity_count'] += 1
 
-    return results
+        return result
+
+    return reduce(computation, data_rows, initial_values)
 
 
 def generate_monthly_report(dir_path, query_str, static_values):
