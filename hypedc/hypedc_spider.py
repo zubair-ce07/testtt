@@ -3,7 +3,7 @@ import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
-from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser
+from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser, clean
 
 
 class Mixin:
@@ -48,42 +48,43 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
             group_i = label.css('::attr(data-sizegroup)').extract_first()
             size_css = '#size-selector-tab-desktop-{} li'.format(group_i)
 
-        size_elems = response.css(size_css)
+        size_s = response.css(size_css)
         prev_price, price = self.product_pricing(response)
         currency = self.product_currency(response)
         color = self.product_color(response)
-        for elem in size_elems:
-            size = elem.css('a::text').extract_first()
-            value = elem.css('::attr(data-attributevalueid)').extract_first()
-            out_of_stock = elem.css('::attr(data-stock)').extract_first() == 'out'
-            sku = {
-                'size': size,
-                'color': color,
-                'price': price,
-                'currency': currency,
-            }
-            if prev_price:
-                sku['previous_prices'] = [prev_price]
-            if out_of_stock:
-                sku['out_of_stock'] = True
-            sku_id = '{}_{}'.format(size, value)
-            skus[sku_id] = sku
+        common_sku = {}
+        common_sku['color'] = color
+        common_sku['price'] = price
+        common_sku['currency'] = currency
+        if prev_price:
+            common_sku['previous_prices'] = [prev_price]
+        for s_s in size_s:
+            size = s_s.css('a::text').extract_first()
+            if size:
+                size_value = s_s.css('::attr(data-attributevalueid)').extract_first()
+                out_of_stock = s_s.css('::attr(data-stock)').extract_first() == 'out'
+                sku = common_sku.copy()
+                sku['size'] = size
+                if out_of_stock:
+                    sku['out_of_stock'] = True
+                sku_id = '{}_{}'.format(size, size_value)
+                skus[sku_id] = sku
         return skus
 
     def product_id(self, response):
         id_css = "meta[property='og:upc']::attr(content)"
-        return response.css(id_css).extract_first()
+        return clean(response.css(id_css))[0]
 
     def product_brand(self, response):
         brand_css = '.product-manufacturer::text'
-        return response.css(brand_css).extract_first()
+        return clean(response.css(brand_css))[0]
 
     def product_name(self, response):
         title_css = "meta[property='og:title']::attr(content)"
         title = response.css(title_css).extract_first()
         brand = self.product_brand(response)
         name = title.replace(brand, '')
-        return re.sub(' +', '', name)
+        return re.sub('{}\s*'.format(brand), '', name)
 
     def product_description(self, response):
         return [d for d in self.raw_description(response) if not self.care_criteria(d)]
@@ -109,8 +110,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
     def out_of_stock(self, response):
         availability_css = "meta[property='og:availability']::attr(content)"
         availability = response.css(availability_css).extract_first()
-        sold_out_css = 'button.btn-soldout'
-        sold_out = response.css(sold_out_css)
+        sold_out = response.css('button.btn-soldout')
         return sold_out or availability != 'instock'
 
     def product_currency(self, response):
