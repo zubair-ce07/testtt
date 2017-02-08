@@ -1,4 +1,5 @@
 import json
+from functools import reduce
 import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -51,12 +52,10 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
 
         size_s = response.css(size_css)
         prev_price, price = self.pricing(response)
-        currency = self.product_currency(response)
-        color = self.product_color(response)
         common_sku = {}
-        common_sku['colour'] = color
+        common_sku['colour'] = self.product_color(response)
         common_sku['price'] = price
-        common_sku['currency'] = currency
+        common_sku['currency'] = self.product_currency(response)
         if prev_price:
             common_sku['previous_prices'] = [prev_price]
         for s_s in size_s:
@@ -88,8 +87,10 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         return [d for d in self.raw_description(response) if not self.care_criteria(d)]
 
     def raw_description(self, response):
-        desc_raw = response.css('div[itemprop=description]').extract_first()
-        return self.text_from_html(desc_raw)
+        desc = response.css('div[itemprop=description]').extract_first()
+        desc = self.text_from_html(desc)
+        desc = reduce(lambda t, u: t + u.split('.') or t, desc, [])
+        return clean(desc)
 
     def product_care(self, response):
         return [d for d in self.raw_description(response) if self.care_criteria(d)]
