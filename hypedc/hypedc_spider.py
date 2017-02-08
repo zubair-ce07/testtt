@@ -80,11 +80,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(brand_css))[0]
 
     def product_name(self, response):
-        title_css = "meta[property='og:title']::attr(content)"
-        title = response.css(title_css).extract_first()
-        brand = self.product_brand(response)
-        name = title.replace(brand, '')
-        return re.sub('{}\s*'.format(brand), '', name)
+        return clean(response.css('h1.product-name::text'))[0]
 
     def product_description(self, response):
         return [d for d in self.raw_description(response) if not self.care_criteria(d)]
