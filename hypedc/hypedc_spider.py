@@ -50,7 +50,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
             size_css = '#size-selector-tab-desktop-{} li'.format(group_i)
 
         size_s = response.css(size_css)
-        prev_price, price = self.product_pricing(response)
+        prev_price, price = self.pricing(response)
         currency = self.product_currency(response)
         color = self.product_color(response)
         common_sku = {}
@@ -61,15 +61,16 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
             common_sku['previous_prices'] = [prev_price]
         for s_s in size_s:
             size = s_s.css('a::text').extract_first()
-            if size:
-                size_value = s_s.css('::attr(data-attributevalueid)').extract_first()
-                out_of_stock = s_s.css('::attr(data-stock)').extract_first() == 'out'
-                sku = common_sku.copy()
-                sku['size'] = size
-                if out_of_stock:
-                    sku['out_of_stock'] = True
-                sku_id = '{}_{}'.format(size, size_value)
-                skus[sku_id] = sku
+            if not size:
+                continue
+            size_value = s_s.css('::attr(data-attributevalueid)').extract_first()
+            out_of_stock = s_s.css('::attr(data-stock)').extract_first() == 'out'
+            sku = common_sku.copy()
+            sku['size'] = size
+            if out_of_stock:
+                sku['out_of_stock'] = True
+            sku_id = '{}_{}'.format(size, size_value)
+            skus[sku_id] = sku
         return skus
 
     def product_id(self, response):
@@ -99,9 +100,9 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, response):
         categories = ','.join(self.product_category(response))
-        for label, gender in self.gender_map:
+        for label, raw_gender in self.gender_map:
             if label in categories:
-                return gender
+                return raw_gender
         return 'unisex-adults'
 
     def out_of_stock(self, response):
@@ -114,7 +115,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         css = "meta[property='og:currency']::attr(content)"
         return response.css(css).extract_first()
 
-    def product_pricing(self, response):
+    def pricing(self, response):
         script_css = "script:contains('Product.OptionsPrice')::text"
         json_re = 'new Product.OptionsPrice\((.*)\);'
         json_text = response.css(script_css).re_first(json_re)
