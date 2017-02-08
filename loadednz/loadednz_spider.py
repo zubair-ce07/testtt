@@ -52,7 +52,7 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
             sizes = [self.one_size]
         skus = {}
         common_sku = {
-            'color': color,
+            'colour': color,
             'price': price,
             'currency': currency,
         }
