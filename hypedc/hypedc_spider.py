@@ -30,6 +30,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = self.skus(response)
         if self.out_of_stock(response) or not garment['skus']:
             garment['out_of_stock'] = True
+        garment['merch_info'] = self.merch_info(response)
         return garment
 
     def image_urls(self, response):
@@ -53,7 +54,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         currency = self.product_currency(response)
         color = self.product_color(response)
         common_sku = {}
-        common_sku['color'] = color
+        common_sku['colour'] = color
         common_sku['price'] = price
         common_sku['currency'] = currency
         if prev_price:
@@ -126,6 +127,10 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
 
     def product_color(self, response):
         return response.css('.product-colour::text').extract_first()
+
+    def merch_info(self, response):
+        merch_info_css = '#product_addtocart_form .label-tag-exclusive::text'
+        return clean(response.css(merch_info_css))[0]
 
 
 class HypeDcCrawlSpider(BaseCrawlSpider, Mixin):
