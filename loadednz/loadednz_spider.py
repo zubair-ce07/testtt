@@ -6,6 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from skuscraper.spiders.base import clean
 from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser
+from skuscraper.spiders.base import SORTED_COLOURS
 
 
 class Mixin:
@@ -96,8 +97,12 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
     def product_color(self, response):
         color = response.css('p.colour::text').extract_first()
         if not color:
-            return self.detect_colour(self.product_name(response))
-        return color
+            name = self.product_name(response)
+            colors = [match.group(0) for match in
+                      [re.search('({})'.format(color), name)
+                       for color in SORTED_COLOURS]
+                      if match]
+            return ','.join(colors) if colors else color
 
     def out_of_stock(self, response):
         return not response.css("form[action='/add-to-cart']")
