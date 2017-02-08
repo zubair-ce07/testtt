@@ -89,7 +89,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
     def raw_description(self, response):
         desc = response.css('div[itemprop=description]').extract_first()
         desc = self.text_from_html(desc)
-        desc = sum((d.split('.') for d in desc), [])
+        desc = sum((d.split('. ') for d in desc), [])
         return clean(desc)
 
     def product_care(self, response):
