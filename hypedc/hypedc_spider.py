@@ -105,7 +105,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         for label, gender in self.gender_map:
             if label in categories:
                 return gender
-        return None
+        return 'unisex-adults'
 
     def out_of_stock(self, response):
         availability_css = "meta[property='og:availability']::attr(content)"
@@ -147,3 +147,4 @@ class HypeDcCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
              Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'))
+
