@@ -27,9 +27,15 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
-        garment['skus'] = self.skus(response)
-        if not garment['skus']:
+        if self.out_of_stock(response):
             garment['out_of_stock'] = True
+            prev_price, price, currency = self.product_pricing(response)
+            currency = self._CURRENCY_REMAP.get((self.market, currency), currency)
+            garment['price'] = price
+            garment['currency'] = currency
+            if prev_price:
+                garment['previous_prices'] = [prev_price]
+        garment['skus'] = self.skus(response)
         return garment
 
     def image_urls(self, response):
@@ -38,7 +44,7 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         sizes = clean(response.css('select[name=size] > option::attr(value)'))
         prev_price, price, currency = self.product_pricing(response)
-        currency = 'NZD'
+        currency = self._CURRENCY_REMAP.get((self.market, currency), currency)
         color = self.product_color(response)
         out_of_stock = self.out_of_stock(response)
         if not sizes:
@@ -60,20 +66,11 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
             skus[sku_id] = sku
         return skus
 
-    def product_pricing(self, response):
-        prev_price, price, currency = super(LoadedNzParseSpider, self).product_pricing(response)
-        original_price_css = 'p.price > span.original::text'
-        original = clean(response.css(original_price_css))
-        if original:
-            price_string = original[0]
-            currency, prev_price = CurrencyParser.currency_and_price(price_string)
-        return (prev_price, price, currency) if prev_price != price else (None, price, currency)
-
     def product_id(self, response):
-        return response.css('input[name=sku]::attr(value)').extract_first()
+        return response.url.split('/')[-1]
 
     def product_brand(self, response):
-        return response.request.meta.get('brand')
+        return clean(response.css('p.brand::text'))[0]
 
     def product_name(self, response):
         name = clean(response.css('p.style::text'))[0]
@@ -127,28 +124,13 @@ class LoadedNzCrawlSpider(BaseCrawlSpider, Mixin):
         categories = clean(response.css('select[name=category] > option::attr(value)'))
         brands = clean(response.css('select[name=brand] > option::attr(value)'))
         genders = clean(response.css('select[name=gender] > option::attr(value)').extract())
-        for request in self.search_requests(categories, brands, genders):
-            request.meta['trail'] = self.add_trail(response)
-            yield request
-
-    def search_requests(self, categories, brands, genders):
         tree = itertools.product(categories, brands, genders)
         for category, brand, gender in tree:
             meta = {
                 'category': [category],
-                'brand': brand,
-                'gender': gender,
+                'gender': gender[:-1],
+                'trail': self.add_trail(response),
             }
             url = '{}/{},{},{}'.format(self.base_url, brand, category, gender)
-            yield Request(url=url, meta=meta, callback=self.parse_search_result)
+            yield Request(url=url, meta=meta, callback=super(LoadedNzCrawlSpider,self).parse)
 
-    def parse_search_result(self, response):
-        requests = super(LoadedNzCrawlSpider, self).parse(response)
-        for request in requests:
-            request.meta['brand'] = response.meta.get('brand')
-            yield request
-
-if __name__ == '__main__':
-    from scrapy import cmdline
-    cmdline.execute(('scrapy parse --spider loaded-nz-parse http://www.loadednz.com/products/jansport/jansport-x-i-love-ugly-iron-sight/JSOAT75R0ZQ_CHAGRY').split())
-    # cmdline.execute('scrapy crawl loaded-nz-crawl'.split())
