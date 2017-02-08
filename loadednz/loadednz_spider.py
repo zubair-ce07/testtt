@@ -48,8 +48,6 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
         currency = self._CURRENCY_REMAP.get((self.market, currency), currency)
         color = self.product_color(response)
         out_of_stock = self.out_of_stock(response)
-        if not sizes:
-            sizes = [self.one_size]
         skus = {}
         common_sku = {
             'colour': color,
@@ -60,7 +58,7 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
             common_sku['previous_prices'] = [prev_price]
         if out_of_stock:
             common_sku['out_of_stock'] = True
-        for size in sizes:
+        for size in sizes or [self.one_size]:
             sku = common_sku.copy()
             sku['size'] = size
             sku_id = '{}_{}'.format(color, size).replace(' ', '_')
@@ -76,11 +74,12 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
     def product_name(self, response):
         name = clean(response.css('p.style::text'))[0]
         brand = self.product_brand(response)
-        p = re.compile('{}\s*'.format(brand), re.IGNORECASE)
-        return re.sub(p, '', name)
+        p = re.compile('{}\s*'.format(brand), re.I)
+        name = re.sub(p, '', name)
+        return re.sub('\s+', ' ', name)
 
     def raw_description(self, response):
-        return clean(response.css('div.alt > div > div::text'))
+        return clean(response.css('.image-grid + div.alt > div > div::text'))
 
     def product_description(self, response):
         return [d for d in self.raw_description(response) if not self.care_criteria(d)]
@@ -102,7 +101,7 @@ class LoadedNzParseSpider(BaseParseSpider, Mixin):
                       [re.search('({})'.format(color), name)
                        for color in SORTED_COLOURS]
                       if match]
-            return ','.join(colors) if colors else color
+            return '/'.join(colors) if colors else color
 
     def out_of_stock(self, response):
         return not response.css("form[action='/add-to-cart']")
@@ -133,9 +132,10 @@ class LoadedNzCrawlSpider(BaseCrawlSpider, Mixin):
         for category, brand, gender in tree:
             meta = {
                 'category': [category],
-                'gender': gender[:-1],
                 'trail': self.add_trail(response),
             }
             url = '{}/{},{},{}'.format(self.base_url, brand, category, gender)
-            yield Request(url=url, meta=meta, callback=super(LoadedNzCrawlSpider,self).parse)
+            callbacks = [('mens','parse_and_add_men'),
+                         ('womens', 'parse_and_add_women')]
+            yield Request(url=url, meta=meta, callback=callbacks.get(gender))
 
