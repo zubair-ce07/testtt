@@ -131,7 +131,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
 
     def merch_info(self, response):
         merch_info_css = '#product_addtocart_form .label-tag-exclusive::text'
-        return clean(response.css(merch_info_css))[0]
+        return response.css(merch_info_css).extract_first()
 
 
 class HypeDcCrawlSpider(BaseCrawlSpider, Mixin):
