@@ -42,7 +42,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
         size_selector_elems = response.css(selector_css)
         europe_label = [e for e in size_selector_elems
                         if e.css('a::text').extract_first() in ['Europe', 'EU', 'European']]
-        size_css = 'div[id^=size-selector-tab-desktop] li'
+        size_css = 'div#size-selector-tab-desktop-0 li'
         if europe_label:
             label = europe_label.pop()
             group_i = label.css('::attr(data-sizegroup)').extract_first()
