@@ -24,7 +24,7 @@ class TerminalColors:
     UNDERLINE = '\033[4m'
 
 
-class ReadCSVFile:
+class CSVFile:
     def __init__(self, file_name, file_dir='', field_names=None, skip_first_line=True):
         self.file_path = os_path.join(file_dir, file_name)
         self.file_data = []
@@ -34,79 +34,144 @@ class ReadCSVFile:
             raise FileNotFoundError('No such file: {}'.format(self.file_path))
 
     def read_file(self):
-        f = open(self.file_path, 'r')
-        reader = csv.DictReader(f, fieldnames=self.field_names)
+        with open(self.file_path, 'r') as f:
+            reader = csv.DictReader(f, fieldnames=self.field_names)
 
-        if self.skip_first_line:
-            next(reader)
+            if self.skip_first_line:
+                next(reader)
 
-        for line in reader:
-            self.file_data.append(line)
-        f.close()
+            for line in reader:
+                self.file_data.append(line)
 
         return self.file_data
+
+
+class FileDataStorage:
+    def __init__(self):
+        self.data_storage = {}
+        self.__generate_key = lambda file_name: os_path.splitext(file_name)[0]
+
+    def add_file_data(self, file_name, file_data):
+        key = self.__generate_key(file_name)
+        self.data_storage[key] = file_data
+
+    def get_file_data(self, file_name):
+        key = self.__generate_key(file_name)
+        if key in self.data_storage:
+            return self.data_storage[key]
+
+        return None
+
+
+class YearlyReport:
+    def __init__(self):
+        self.max_temp_value = None
+        self.max_temp_date = None
+        self.min_temp_value = None
+        self.min_temp_date = None
+        self.max_humidity_value = None
+        self.max_humidity_date = None
+
+    def compute(self, files_data):
+        for file_data in files_data:
+            for row in file_data:
+                self.update_stats(row)
+
+    def update_stats(self, row):
+        date = row['date']
+        max_temperature = row['max_temperature']
+        min_temperature = row['min_temperature']
+        max_humidity = row['max_humidity']
+
+        if max_temperature:
+            max_temperature = int(max_temperature)
+            if self.max_temp_value is None or \
+                    compare_numbers(max_temperature, self.max_temp_value) > 0:
+                self.max_temp_value = max_temperature
+                self.max_temp_date = date
+        if min_temperature:
+            min_temperature = int(min_temperature)
+            if self.min_temp_value is None or \
+                    compare_numbers(self.min_temp_value, min_temperature) > 0:
+                self.min_temp_value = min_temperature
+                self.min_temp_date = date
+        if max_humidity:
+            max_humidity = int(max_humidity)
+            if self.max_humidity_value is None or \
+                    compare_numbers(max_humidity, self.max_humidity_value) > 0:
+                self.max_humidity_value = max_humidity
+                self.max_humidity_date = date
+
+    def print_report(self):
+        date_formatter = create_date_str_from_str('%Y-%m-%d', '%B %d')
+
+        value = self.max_temp_value
+        date_str = self.max_temp_date
+        print('Highest: {:.2f}C on {}'.format(value, date_formatter(date_str)))
+
+        value = self.min_temp_value
+        date_str = self.min_temp_date
+        print('Lowest: {:.2f}C on {}'.format(value, date_formatter(date_str)))
+
+        value = self.max_humidity_value
+        date_str = self.max_humidity_date
+        print('Humidity: {:.2f}% on {}'.format(value, date_formatter(date_str)))
+
+
+class MonthlyReport:
+    def __init__(self):
+        self.max_temp_sum = 0
+        self.max_temp_count = 0
+        self.min_temp_sum = 0
+        self.min_temp_count = 0
+        self.mean_humidity_sum = 0
+        self.mean_humidity_count = 0
+
+    def compute(self, file_data):
+        for row in file_data:
+            self.update_stats(row)
+
+    def update_stats(self, row):
+        max_temperature = row['max_temperature']
+        min_temperature = row['min_temperature']
+        mean_humidity = row['mean_humidity']
+
+        if max_temperature:
+            self.max_temp_sum += int(max_temperature)
+            self.max_temp_count += 1
+        if min_temperature:
+            self.min_temp_sum += int(min_temperature)
+            self.min_temp_count += 1
+        if mean_humidity:
+            self.mean_humidity_sum += int(mean_humidity)
+            self.mean_humidity_count += 1
+
+    def print_report(self):
+        avg_highest = self.max_temp_sum / self.max_temp_count
+        avg_lowest = self.min_temp_sum / self.min_temp_count
+        avg_mean_humidity = self.mean_humidity_sum / self.mean_humidity_count
+
+        print('Highest Average: {:.2f}C'.format(avg_highest))
+        print('Lowest Average: {:.2f}C'.format(avg_lowest))
+        print('Average Mean Humidity: {:.2f}%'.format(avg_mean_humidity))
+
+
+def get_and_cache_file_data(file_data_storage, dir_path, file_name, file_columns):
+    file_data = file_data_storage.get_file_data(file_name)
+    if not file_data:
+        csv_file = CSVFile(file_name, dir_path, file_columns)
+        file_data = csv_file.read_file()
+        file_data_storage.add_file_data(file_name, file_data)
+
+    return file_data
 
 
 def compare_numbers(a, b):
     return a - b
 
 
-def print_yearly_report(results, months):
-    value = results['max_temp_value']
-    date = results['max_temp_date']
-    print('Highest: {:.2f}C on {}'.format(value, get_day_name(date, months)))
-
-    value = results['min_temp_value']
-    date = results['min_temp_date']
-    print('Lowest: {:.2f}C on {}'.format(value, get_day_name(date, months)))
-
-    value = results['max_humidity_value']
-    date = results['max_humidity_date']
-    print('Humidity: {:.2f}% on {}'.format(value, get_day_name(date, months)))
-
-
-def yearly_computation(result, row):
-    date = row['date']
-    max_temperature = row['max_temperature']
-    min_temperature = row['min_temperature']
-    max_humidity = row['max_humidity']
-
-    if max_temperature:
-        max_temperature = int(max_temperature)
-        if result['max_temp_value'] is None or \
-                compare_numbers(max_temperature, result['max_temp_value']) > 0:
-            result['max_temp_value'] = max_temperature
-            result['max_temp_date'] = date
-    if min_temperature:
-        min_temperature = int(min_temperature)
-        if result['min_temp_value'] is None or \
-                compare_numbers(result['min_temp_value'], min_temperature) > 0:
-            result['min_temp_value'] = min_temperature
-            result['min_temp_date'] = date
-    if max_humidity:
-        max_humidity = int(max_humidity)
-        if result['max_humidity_value'] is None or \
-                compare_numbers(max_humidity, result['max_humidity_value']) > 0:
-            result['max_humidity_value'] = max_humidity
-            result['max_humidity_date'] = date
-
-    return result
-
-
-def calculate_yearly_report(files_data):
-    results = {
-        'max_temp_value': None,
-        'max_temp_date': None,
-        'min_temp_value': None,
-        'min_temp_date': None,
-        'max_humidity_value': None,
-        'max_humidity_date': None
-    }
-
-    for data in files_data:
-        results = reduce(yearly_computation, data, results)
-
-    return results
+def remove_file_extension(file_name):
+    return os_path.splitext(file_name)[0]
 
 
 def categorise_location_files_of_year(year):
@@ -121,9 +186,8 @@ def categorise_location_files_of_year(year):
     return categorise_location_files
 
 
-def generate_yearly_report(dir_path, year, static_values):
+def generate_yearly_report(file_data_storage, dir_path, year, static_values):
     file_columns = static_values['file_columns']
-    months = static_values['months']
     file_names = select_file_names(year, static_values)
     categorise_location_files = categorise_location_files_of_year(year)
     location_files = reduce(categorise_location_files, file_names, {})
@@ -134,75 +198,35 @@ def generate_yearly_report(dir_path, year, static_values):
         file_list = location_files[location]
         for file_name in file_list:
             try:
-                csv_file = ReadCSVFile(file_name, dir_path, file_columns)
-                file_data = csv_file.read_file()
+                file_data = get_and_cache_file_data(file_data_storage, dir_path, file_name, file_columns)
             except (FileNotFoundError, IOError):
                 continue
+            else:
+                files_data.append(file_data)
 
-            files_data.append(file_data)
-
-        results = calculate_yearly_report(files_data)
-        print_yearly_report(results, months)
-
-
-def print_monthly_report(results):
-    avg_highest = results['max_temp_sum'] / results['max_temp_count']
-    avg_lowest = results['min_temp_sum'] / results['min_temp_count']
-    avg_mean_humidity = results['mean_humidity_sum'] / results['mean_humidity_count']
-
-    print('Highest Average: {:.2f}C'.format(avg_highest))
-    print('Lowest Average: {:.2f}C'.format(avg_lowest))
-    print('Average Mean Humidity: {:.2f}%'.format(avg_mean_humidity))
+        report = YearlyReport()
+        report.compute(files_data)
+        report.print_report()
 
 
-def monthly_computation(result, row):
-    max_temperature = row['max_temperature']
-    min_temperature = row['min_temperature']
-    mean_humidity = row['mean_humidity']
-
-    if max_temperature:
-        result['max_temp_sum'] += int(max_temperature)
-        result['max_temp_count'] += 1
-    if min_temperature:
-        result['min_temp_sum'] += int(min_temperature)
-        result['min_temp_count'] += 1
-    if mean_humidity:
-        result['mean_humidity_sum'] += int(mean_humidity)
-        result['mean_humidity_count'] += 1
-
-    return result
-
-
-def calculate_monthly_report(data_rows):
-    initial_values = {
-        'max_temp_sum': 0,
-        'max_temp_count': 0,
-        'min_temp_sum': 0,
-        'min_temp_count': 0,
-        'mean_humidity_sum': 0,
-        'mean_humidity_count': 0
-    }
-
-    return reduce(monthly_computation, data_rows, initial_values)
-
-
-def generate_monthly_report(dir_path, query_str, static_values):
+def generate_monthly_report(file_data_storage, dir_path, query_str, static_values):
     file_columns = static_values['file_columns']
     file_names = select_file_names(query_str, static_values)
     if not file_names:
         sys_exit('Data files not available for: %s' % query_str)
 
     for file_name in file_names:
-        print(os_path.splitext(file_name)[0])
+        print(remove_file_extension(file_name))
+
         try:
-            csv_file = ReadCSVFile(file_name, dir_path, file_columns)
-            file_data = csv_file.read_file()
+            file_data = get_and_cache_file_data(file_data_storage, dir_path, file_name, file_columns)
         except (FileNotFoundError, IOError) as e:
             print(str(e))
             return
 
-        results = calculate_monthly_report(file_data)
-        print_monthly_report(results)
+        report = MonthlyReport()
+        report.compute(file_data)
+        report.print_report()
 
 
 def select_file_names(query_str, static_values):
@@ -224,14 +248,24 @@ def select_file_names(query_str, static_values):
     return list(filter(r.match, file_names))
 
 
-def get_day_name(date, months):
-    if not date:
-        return ''
+def create_date(date_str, date_format):
+    try:
+        date = datetime.strptime(date_str, date_format)
+    except TypeError:
+        return None
+    else:
+        return date
 
-    lst = date.split('-')
-    month = int(lst[1]) - 1
-    day = lst[2]
-    return '{} {}'.format(months[month], day)
+
+def create_date_str_from_str(current_format, desired_format):
+    def converter(date_str):
+        date = create_date(date_str, current_format)
+        if not date:
+            return ''
+        else:
+            return date.strftime(desired_format)
+
+    return converter
 
 
 def draw_chart(value, color):
@@ -268,11 +302,12 @@ def one_row_chart(day_no, max_t, min_t):
 
 def print_monthly_bar_chart(data_rows, chart_type):
     for row in data_rows:
-        date = row['date']
+        date_str = row['date']
         max_temperature = row['max_temperature']
         min_temperature = row['min_temperature']
 
-        day_no = '{0:02d}'.format(int(date.split('-')[2]))
+        date_formatter = create_date_str_from_str('%Y-%m-%d', '%d')
+        day_no = '{0:02d}'.format(int(date_formatter(date_str)))
 
         if chart_type == 'double':
             two_row_chart(day_no, max_temperature, min_temperature)
@@ -280,7 +315,7 @@ def print_monthly_bar_chart(data_rows, chart_type):
             one_row_chart(day_no, max_temperature, min_temperature)
 
 
-def monthly_bar_chart(dir_path, query_str, chart_type, static_values):
+def monthly_bar_chart(file_data_storage, dir_path, query_str, chart_type, static_values):
     file_columns = static_values['file_columns']
     file_names = select_file_names(query_str, static_values)
     if not file_names:
@@ -289,8 +324,7 @@ def monthly_bar_chart(dir_path, query_str, chart_type, static_values):
     for file_name in file_names:
         print(os_path.splitext(file_name)[0])
         try:
-            csv_file = ReadCSVFile(file_name, dir_path, file_columns)
-            file_data = csv_file.read_file()
+            file_data = get_and_cache_file_data(file_data_storage, dir_path, file_name, file_columns)
         except (FileNotFoundError, IOError) as e:
             print(str(e))
             continue
@@ -310,15 +344,15 @@ def get_files_in_dir(dir_path):
         return list(filter(check_is_file, files))
 
 
-def generate_report(dir_path, key, value, static_values):
+def generate_report(file_data_storage, dir_path, key, value, static_values):
     if key == 'e':
-        generate_yearly_report(dir_path, value, static_values)
+        generate_yearly_report(file_data_storage, dir_path, value, static_values)
     elif key == 'a':
-        generate_monthly_report(dir_path, value, static_values)
+        generate_monthly_report(file_data_storage, dir_path, value, static_values)
     elif key == 'c':
-        monthly_bar_chart(dir_path, value, 'double', static_values)
+        monthly_bar_chart(file_data_storage, dir_path, value, 'double', static_values)
     elif key == 'c1':
-        monthly_bar_chart(dir_path, value, 'single', static_values)
+        monthly_bar_chart(file_data_storage, dir_path, value, 'single', static_values)
 
 
 def valid_text(text, pattern, error_msg):
@@ -382,6 +416,7 @@ def main():
         ]
 
     }
+    file_data_storage = FileDataStorage()
 
     args = parse_arguments(static_values['usage_msg'])
     args = vars(args)
@@ -397,7 +432,7 @@ def main():
 
     arg_order = argument_order(sys_argv[2:])
     for arg in arg_order:
-        generate_report(files_directory, arg, args[arg], static_values)
+        generate_report(file_data_storage, files_directory, arg, args[arg], static_values)
 
 
 if __name__ == '__main__':
