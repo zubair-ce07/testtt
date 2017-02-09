@@ -18,7 +18,7 @@ class HypeDcParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     gender_map = [('Women', 'women'),
                   ('Men', 'men'),
-                  ('Kids', 'unisex-children')]
+                  ('Kids', 'unisex-kids')]
 
     def parse(self, response):
         product_id = self.product_id(response)
