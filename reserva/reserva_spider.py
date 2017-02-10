@@ -196,3 +196,4 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
         if raw_json['nextPage'] is 'true':
             url = response.urljoin(raw_json['pageUrl'])
             return Request(url=url, callback=self.parse_pagination)
+
