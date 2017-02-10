@@ -46,7 +46,8 @@ class KickzParseSpider(BaseParseSpider, Mixin):
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
-        garment = self.new_unique_garment(self.product_id(hxs))
+        pid = self.product_id(hxs)
+        garment = self.new_unique_garment(pid)
         if garment is None:
             return
 
@@ -61,8 +62,8 @@ class KickzParseSpider(BaseParseSpider, Mixin):
         garment['brand'] = self.product_brand(garment)
         garment['care'] = self.product_care(hxs)
         garment['gender'] = self.product_gender((self.product_name(hxs)).lower()) or response.meta.get('gender')
-        if hxs.select("//span[@class='priceOfftxt'][starts-with(text(),'Leider ausverkauft')]"):
-            garment['out_of_stock'] = 'True'
+        if self.out_of_stock(hxs):
+            return self.out_of_stock_garment(response, pid)
         else:
             garment['skus'] = self.skus(response)
         garment['image_urls'] = []
@@ -73,8 +74,8 @@ class KickzParseSpider(BaseParseSpider, Mixin):
         garment = response.meta['garment']
         hxs = HtmlXPathSelector(response)
         garment['meta']['requests_queue'] += self.image_urls(hxs)
-        if hxs.select("//span[@class='priceOfftxt'][starts-with(text(),'Leider ausverkauft')]"):
-            garment['out_of_stock'] = 'True'
+        if self.out_of_stock(hxs):
+            garment['skus'].update({self.product_id(hxs): {'out_of_stock': True}})
         else:
             garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
@@ -88,6 +89,9 @@ class KickzParseSpider(BaseParseSpider, Mixin):
                 garment['meta']['requests_queue'].pop()
 
         return self.next_request_or_garment(garment)
+
+    def out_of_stock(self, hxs):
+        return bool(hxs.select("//span[@class='priceOfftxt'][starts-with(text(),'Leider ausverkauft')]"))
 
     def image_urls(self, hxs):
         image_urls = clean(hxs.select("//ul[@id='thumblist']//img[not(@style='display: none;')]/@data-zoom-img"))
