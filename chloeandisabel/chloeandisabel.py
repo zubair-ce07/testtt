@@ -10,7 +10,6 @@ class Mixin:
     start_urls = ['https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz']
     market = 'US'
     retailer = 'chloeandisabel-us'
-    collection_slugs = {}
 
 class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
@@ -44,12 +43,8 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         if len(variants) > 1:
             variants = [v for v in variants if not v['is_master']]
         for variant in variants:
-            sku = {}
-            pricing = self.variant_pricing_common(variant)
-            sku['price'], sku['currency'] = pricing['price'], pricing['currency']
+            sku = self.variant_pricing_common(variant)
             sku['color'] = self.variant_color(variant)
-            if pricing.get('previous_prices'):
-                sku['previous_prices'] = pricing['previous_prices']
             size = self.variant_size(variant)
             sku['size'] = size if size else self.one_size
             if self.out_of_stock(variant):
@@ -58,20 +53,13 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def variant_color(self, variant):
-        description = [variant['description']]
-        props = [d['value'] for d in variant['displayable_properties']]
-        for d in description + props:
-            color = self.detect_colour(d)
-            if color:
-                return color
-        return None
+        return [self.detect_colour(d) for d in self.raw_description(variant)]
 
     def variant_size(self, variant):
         if variant['option_values']:
             value = variant['option_values'][0]
             if value['option_type']['presentation'] == 'Size':
                 return value['presentation']
-        return None
 
     def product_care(self, product):
         return [d for d in self.raw_description(product['master']) if self.care_criteria(d)]
@@ -102,10 +90,6 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         product['master'] = [v for v in variants if v['is_master']].pop()
         return product
 
-    def product_master(self, product):
-        variants = product["variantsIncludingMaster"]
-        return [v for v in variants if v['is_master']].pop()
-
     def merch_info(self, product):
         return product['promotion_messages'] if product.get('promotion_messages') else []
 
@@ -124,8 +108,6 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
         products = json.loads(raw_json)
         for product in products:
             url = product['variantsIncludingMaster'][0]['permalink_path']
-            meta = {
-                'trail': self.add_trail(response),
-            }
+            meta = {'trail': self.add_trail(response)}
             yield Request(url=self.base_url + url, meta=meta, callback=self.parse_item)
 
