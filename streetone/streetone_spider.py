@@ -1,8 +1,6 @@
 import re
 import json
-import time
-from scrapy.http.request import Request
-from scrapy.spiders.crawl import CrawlSpider, Rule
+from scrapy.spiders.crawl import Rule
 from scrapy.linkextractors import LinkExtractor
 from skuscraper.spiders.base import BaseParseSpider, BaseCrawlSpider, CurrencyParser, clean
 
@@ -13,12 +11,14 @@ class Mixin:
     retailer = 'street-one-de'
     market = 'DE'
     lang = 'de'
+    gender = 'women'
     start_urls = ['http://street-one.de/']
 
 
 class StreetOneParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    image_url_re = re.compile('aZoom\[\d+\].*?\"(.*)\"', re.MULTILINE)
+    image_url_re = re.compile('aZoom\[\d+\].*?\"(.*)\"', re.M)
+    list_pattern_re = re.compile('\(|\)|\'')
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -26,44 +26,45 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate_normal(garment, response)
-        product = self.raw_product(response)
-        garment['gender'] = 'women'
-        garment['brand'] = 'Street One'
+        raw_product = self.raw_product(response)
         garment['image_urls'] = self.product_images(response)
-        garment['skus'] = self.skus(response, product)
+        if self.out_of_stock(raw_product):
+            garment['out_of_stock'] = True
+            prev_price, garment['price'], garment['currency'] = self.product_pricing(response, raw_product)
+            if prev_price:
+                garment['previous_prices'] = [prev_price]
+        else:
+            garment['skus'] = self.skus(response, raw_product)
         return garment
 
     def raw_product(self, response):
-        json_raw = clean(response.css('script[type="application/ld+json"]::text'))[0]
-        return json.loads(json_raw)
+        script_re = 'script[type="application/ld+json"]::text'
+        raw_script = clean(response.css(script_re))[0]
+        return json.loads(raw_script)
+
+    def product_brand(self, response):
+        return 'Street One'
 
     def product_name(self, response):
         return clean(response.css('dd.second > h1::text'))[0]
 
     def product_category(self, response):
-        category_css = 'ul.trail-line li:not(li:first-child) a::text'
-        return clean(response.css(category_css))
-
-    def product_currency(self, product):
-        return product['offers']['priceCurrency']
+        category_css = '#trail li:not(li:first-child) a'
+        return clean(response.css(category_css).xpath('text()'))
 
     def product_care(self, response):
-        detail_css = '#cbr-details-info li:last-child'
-        material = self.text_from_html(clean(response.css(detail_css))[0])
         care_css = 'p.care_instruction_text > span::text'
         care_instructions = clean(response.css(care_css))
-        return material + care_instructions + [d for d in self.description_raw(response)
-                                               if self.care_criteria(d)]
+        return care_instructions + [d for d in self.raw_description(response)
+                                    if self.care_criteria(d)]
 
     def product_description(self, response):
-        desc = self.description_raw(response)
+        desc = self.raw_description(response)
         return [d for d in desc if not self.care_criteria(d)]
 
-    def description_raw(self, response):
-        short_desc = clean(response.css('meta[name="description"]::attr(content)'))
-        long_desc = clean(response.css('div.produkt-infos div#cbr-details-info'))[0]
-        long_desc = self.text_from_html(long_desc)
-        return short_desc.extend(long_desc) or short_desc
+    def raw_description(self, response):
+        css = 'meta[name="description"]::attr(content), #cbr-details-info *::text'
+        return clean(response.css(css))
 
     def product_id(self, response):
         id_css = 'script:contains("ScarabQueue.push")'
@@ -81,33 +82,42 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         if name in url:
             return url.replace(name, '').lstrip('-').replace('-', '_')
 
+    def product_pricing(self, response, product):
+        price = CurrencyParser.conversion(product['offers']['price'])
+        prev_price_css = 'span.linethrough::text'
+        prev_price = response.css(prev_price_css).re_first('(\d+,\d+)')
+        if prev_price:
+            prev_price = CurrencyParser.conversion(response.css(prev_price_css).re_first('(\d+,\d+)'))
+        currency = product['offers']['priceCurrency']
+        return prev_price, price, currency
+
     def skus(self, response, product):
         skus = {}
-        price = self.product_price(product)
-        color = self.product_color(response)
-        currency = self.product_currency(product)
-        available_sizes = self.available_sizes(response)
-        out_of_stock = self.out_of_stock_sizes(response)
-        sizes = available_sizes if available_sizes else []
-        sizes += out_of_stock if out_of_stock else []
-        if not sizes:
-            return
-        size_details = self.size_details(response)
+        variants = self.all_sizes(response) or self.one_size
+        available = self.available_sizes(response) or []
+        if not variants:
+            return {}
+        size_info = self.variant_info(response)
         sku_common = {}
-        sku_common['colour'] = color
-        sku_common['currency'] = currency
-        for size in sizes:
-            price = size_details[size]['price'] if size in size_details else price
+        prev_price, sku_common['price'], sku_common['currency'] = self.product_pricing(response, product)
+        sku_common['colour'] = self.product_color(response)
+        for size in variants:
             sku = sku_common.copy()
             sku['size'] = size
-            sku['price'] = CurrencyParser.lowest_price(price)
-            if size in out_of_stock:
+            if size in available:
+                price = size_info[size]['price']
+                if isinstance(price, str):
+                    sku['price'] = CurrencyParser.lowest_price(price)
+                else:
+                    sku['price'] = CurrencyParser.float_conversion(price)
+            if prev_price:
+                sku['previous_prices'] = [prev_price]
+            if size not in available:
                 sku['out_of_stock'] = True
-            skus[color + '_' + size] = sku
-
+            skus[sku['colour'] + '_' + size] = sku
         return skus
 
-    def size_details(self, response):
+    def variant_info(self, response):
         details = {}
         script = response.css('script:contains("var attr")')
         if not script:
@@ -122,38 +132,20 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         script = response.css('script:contains("var attr")')
         sizes = script.re_first('sizes = new Array([^;]*)')
         if sizes:
-            sizes= re.sub('\(|\)|\'', '', sizes).split(',')
+            sizes = self.to_list(sizes)
             return sizes
         return None
 
-    def out_of_stock_sizes(self, response):
+    def all_sizes(self, response):
         script = response.css('script:contains("var attr")')
-        values_0 = script.re_first('values\[0\] = new Array([^;]*)')
-        values_1 = script.re_first('values\[1\] = new Array([^;]*)')
-        out_of_stock = []
-        pattern = re.compile('\(|\)|\'')
-        if values_0 and values_1:
-            values_0 = pattern.sub('', values_0).split(',')
-            values_1 = pattern.sub('', values_1).split(',')
-            all_sizes = [size_0 + '_' + size_1
-                         for size_0 in values_0
-                         for size_1 in values_1]
-            available_sizes = script.re_first('sizes = new Array([^;]*)')
-            available_sizes = pattern.sub('', available_sizes).split(',')
-            out_of_stock = list(set(all_sizes) - set(available_sizes))
-        elif values_0:
-            values_0 = pattern.sub('', values_0).split(',')
-            available_sizes = script.re_first('sizes = new Array([^;]*)')
-            available_sizes = pattern.sub('',
-                                     available_sizes).split(',')
-            out_of_stock = list(set(values_0) - set(available_sizes))
-        return out_of_stock
+        widths = self.to_list(script.re_first('values\[0\] = new Array([^;]*)'))
+        lengths = self.to_list(script.re_first('values\[1\] = new Array([^;]*)'))
+        if widths and lengths:
+            return ['{}_{}'.format(w, l) for w in widths for l in lengths]
+        return [w for w in widths]
 
-    def format_sku_price(self, price):
-        return str(price).split()[0].replace('.','').replace(',','')
-
-    def product_price(self, product):
-        return CurrencyParser.conversion(product['offers']['price'])
+    def to_list(self, s):
+        return self.list_pattern_re.sub('', s).split(',') if s else []
 
     def product_images(self, response):
         return response.css('script:contains("aZoom")').re(self.image_url_re)
@@ -161,9 +153,8 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
     def is_sale(self, response):
         return response.css('span.linethrough')
 
-    def previous_price(self, response):
-        prev_price = response.css('span.linethrough::text').re_first('(\d+,\d+)')
-        return CurrencyParser.conversion(prev_price)
+    def out_of_stock(self, product):
+        return False
 
 
 class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
@@ -172,7 +163,7 @@ class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
     listing_css = ['.mainnavigation', '#sidenavigation']
     product_css = ['li.produkt-bild']
 
-    def process_pagination_link(link):
+    def parse_pagination(link):
         results = re.findall('ecs_jump\((\d+)\)', link)
         if results:
             page = results.pop()
@@ -182,6 +173,5 @@ class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=listing_css)),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
         Rule(LinkExtractor(restrict_css='.produkte-pagination', attrs='onclick',
-                           process_value=process_pagination_link), callback='parse')
+                           process_value=parse_pagination), callback='parse')
     ]
-
