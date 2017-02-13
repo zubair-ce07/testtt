@@ -3,14 +3,14 @@ This Module is used to calculate weather reports from data provided
 in text files
 """
 
+import re
+import os
+import sys
 import csv
 import argparse
 from pathlib import Path
 from itertools import chain
 from datetime import datetime
-from re import compile as re_compile
-from os import path as os_path, listdir as os_listdir
-from sys import argv as sys_argv, exit as sys_exit
 
 
 class TerminalColors:
@@ -25,14 +25,14 @@ class WeatherReadings:
 
     @staticmethod
     def generate_file_key(file_name):
-        return os_path.splitext(file_name)[0]
+        return os.path.splitext(file_name)[0]
 
     def read_file(self, file_name, file_dir='', field_names=None, skip_first_line=True):
         month_readings_key = self.generate_file_key(file_name)
         if month_readings_key in self.all_weather_readings:
             return self.all_weather_readings[month_readings_key]
 
-        file_path = os_path.join(file_dir, file_name)
+        file_path = os.path.join(file_dir, file_name)
         if not Path(file_path).is_file():
             raise FileNotFoundError('No such file: {}'.format(file_path))
 
@@ -174,7 +174,7 @@ def get_file_names_to_read(switches, args, available_files):
         else:
             continue
 
-        r = re_compile(regex)
+        r = re.compile(regex)
         switch_wise_file_names[s] =\
             [file_name for file_name in available_files if r.match(file_name)]
     return switch_wise_file_names
@@ -182,12 +182,12 @@ def get_file_names_to_read(switches, args, available_files):
 
 def get_file_names_in_dir(dir_path):
     def check_is_file(file_name):
-        return os_path.isfile(os_path.join(dir_path, file_name))
+        return os.path.isfile(os.path.join(dir_path, file_name))
 
     try:
-        files = os_listdir(dir_path)
+        files = os.listdir(dir_path)
     except FileNotFoundError:
-        sys_exit('No such directory: %s' % dir_path)
+        sys.exit('No such directory: %s' % dir_path)
     else:
         return [file_name for file_name in files if check_is_file(file_name)]
 
@@ -223,7 +223,7 @@ def parse_arguments():
     args = vars(parser.parse_args())
 
     if len([x for x in args.values() if x]) < 2:
-        sys_exit('usage: ' + usage_msg)
+        sys.exit('usage: ' + usage_msg)
     return args
 
 
@@ -239,7 +239,7 @@ def main():
     args = parse_arguments()
     dir_path = args['directory_path']
     file_names_in_dir = get_file_names_in_dir(dir_path)
-    switch_order = list(map(lambda x: x.lstrip('-'), sys_argv[2::2]))
+    switch_order = list(map(lambda x: x.lstrip('-'), sys.argv[2::2]))
     switch_wise_file_names = get_file_names_to_read(switch_order, args, file_names_in_dir)
     weather_readings = read_files(switch_wise_file_names, dir_path, file_columns)
     generate_reports(switch_order, switch_wise_file_names, weather_readings)
