@@ -7,7 +7,7 @@ from functools import reduce
 
 class Mixin:
     allowed_domains = ['www.chloeandisabel.com', 'cloudfront.net']
-    start_urls = ['https://www.chloeandisabel.com/shop/']
+    start_urls = ['https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz']
     market = 'US'
     retailer = 'chloeandisabel-us'
     collection_slugs = {}
@@ -24,7 +24,8 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         self.boilerplate(garment, response)
         garment['name'] = product['master']['name']
         garment['brand'] = 'chloeandisabel'
-        garment['category'] = self.product_category(product)
+        garment['category'] = [product['category']]
+        garment['gender'] = self.product_gender(product)
         garment['image_urls'] = product['master']['image_urls']
         garment['description'] = self.product_description(product)
         garment['care'] = self.product_care(product)
@@ -34,21 +35,21 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['merch_info'] = self.merch_info(product)
         return garment
 
-    def product_category(self, product):
-        return self.collection_slugs[product['category']]
+    def product_gender(self, product):
+        return 'men' if 'men' in product['category'].lower() else 'women'
 
     def skus(self, product):
         skus = {}
-        variants = [product['master']]
-        if product['availableVariants']:
-            variants = [variant for variant in product['variantsIncludingMaster']
-                        if not variant['is_master']]
+        variants = product['variantsIncludingMaster']
+        if len(variants) > 1:
+            variants = [v for v in variants if not v['is_master']]
         for variant in variants:
             sku = {}
-            prev_price, sku['price'], sku['currency'] = self.sku_pricing(variant)
+            pricing = self.variant_pricing_common(variant)
+            sku['price'], sku['currency'] = pricing['price'], pricing['currency']
             sku['color'] = self.variant_color(variant)
-            if prev_price:
-                sku['previous_prices'] = [prev_price]
+            if pricing.get('previous_prices'):
+                sku['previous_prices'] = pricing['previous_prices']
             size = self.variant_size(variant)
             sku['size'] = size if size else self.one_size
             if self.out_of_stock(variant):
@@ -59,8 +60,8 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     def variant_color(self, variant):
         description = [variant['description']]
         props = [d['value'] for d in variant['displayable_properties']]
-        for x in description + props:
-            color = self.detect_colour(x)
+        for d in description + props:
+            color = self.detect_colour(d)
             if color:
                 return color
         return None
@@ -75,13 +76,13 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     def product_care(self, product):
         return [d for d in self.raw_description(product['master']) if self.care_criteria(d)]
 
-    def sku_pricing(self, variant):
-        price = CurrencyParser.float_conversion(variant['localPrice'])
-        currency = variant['localCurrency']['code']
+    def variant_pricing_common(self, variant):
+        pricing = {}
+        pricing['price'] = CurrencyParser.float_conversion(variant['localPrice'])
+        pricing['currency'] = variant['localCurrency']['code']
         if variant['sale_price']:
-            sale_price = CurrencyParser.float_conversion(variant['sale_price'])
-            return price, sale_price, currency
-        return None, price, currency
+            pricing['previous_prices'] = CurrencyParser.float_conversion(variant['sale_price'])
+        return pricing
 
     def product_description(self, product):
         return [d for d in self.raw_description(product['master']) if not self.care_criteria(d)]
@@ -116,37 +117,15 @@ class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = ChloeAndIsabelParseSpider()
     base_url = 'https://www.chloeandisabel.com'
-    products_url = 'https://d2wsknpdpvwfd3.cloudfront.net/products/us/customer.json.gz'
 
     def parse(self, response):
-        script_css = 'script:contains(initializeCandiReactApp)::text'
-        script = response.css(script_css).extract_first()
-        json_text = '[{}]'.format(script.replace('initializeCandiReactApp(', '')[:-3])
-        app_json = json.loads(json_text)
-        taxons = app_json[0]['taxons']
-        slugs = [{u['slug']: u['name'] for u in t['children']} for t in taxons]
-        Mixin.collection_slugs = reduce(lambda t, u: t.update(u) or t, slugs)
-        return Request(url=self.products_url, callback=self.parse_json)
-
-    def parse_json(self, response):
         json_re = 'chloe_isabel_app.loadProducts\((.*)\);'
         raw_json = re.findall(json_re, response.text)[0]
         products = json.loads(raw_json)
         for product in products:
-            if product['sellable']:
-                url = product['variantsIncludingMaster'][0]['permalink_path']
-                meta = {
-                    'gender': self.product_gender(product),
-                    'trail': self.add_trail(response),
-                }
-                yield Request(url=self.base_url + url, meta=meta, callback=self.parse_item)
-
-    def product_categories(self, product):
-        slugs = [slug['name'] for slug in product['collection_slugs']]
-        return [self.collection_slugs[slug] for slug in slugs
-                if self.collection_slugs.get(slug)]
-
-    def product_gender(self, product):
-        categories = self.product_categories(product)
-        return 'men' if "Men's Shop" in categories else 'women'
+            url = product['variantsIncludingMaster'][0]['permalink_path']
+            meta = {
+                'trail': self.add_trail(response),
+            }
+            yield Request(url=self.base_url + url, meta=meta, callback=self.parse_item)
 
