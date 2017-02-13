@@ -24,11 +24,11 @@ class WeatherReadings:
         self.all_weather_readings = {}
 
     @staticmethod
-    def generate_file_key(file_name):
+    def get_file_name_without_extension(file_name):
         return os.path.splitext(file_name)[0]
 
     def read_file(self, file_name, file_dir='', field_names=None, skip_first_line=True):
-        month_readings_key = self.generate_file_key(file_name)
+        month_readings_key = self.get_file_name_without_extension(file_name)
         if month_readings_key in self.all_weather_readings:
             return self.all_weather_readings[month_readings_key]
 
@@ -48,10 +48,8 @@ class WeatherReadings:
         return month_readings
 
     def get_month_readings(self, file_name):
-        month_readings_key = self.generate_file_key(file_name)
-        if month_readings_key in self.all_weather_readings:
-            return self.all_weather_readings[month_readings_key]
-        return None
+        month_readings_key = self.get_file_name_without_extension(file_name)
+        return self.all_weather_readings.get(month_readings_key)
 
 
 def apply_func(func, key_column, readings):
@@ -59,25 +57,26 @@ def apply_func(func, key_column, readings):
 
 
 def calculate_average(key_column, readings):
-    map_iter = map(lambda row: int(row[key_column]), [row for row in readings if row[key_column]])
-    reading_points = list(map_iter)
+    reading_points = [int(row[key_column]) for row in readings if row[key_column]]
     return sum(reading_points) / len(reading_points)
 
 
 def yearly_report(file_names, weather_readings):
     from_format, to_format = '%Y-%m-%d', '%B %d'
-    months_readings = map(lambda file_name: weather_readings.get_month_readings(file_name), file_names)
+    months_readings = [weather_readings.get_month_readings(file_name) for file_name in file_names]
     full_year_readings = list(chain(*months_readings))
 
     max_temp_row = apply_func(max, 'max_temperature', full_year_readings)
     min_temp_row = apply_func(min, 'min_temperature', full_year_readings)
     max_humid_row = apply_func(max, 'max_humidity', full_year_readings)
-    map_iter = map(lambda date: create_date_str(
-        date, from_format, to_format), [max_temp_row['date'], min_temp_row['date'], max_humid_row['date']])
 
-    print('Highest: {:.2f}C on {}'.format(int(max_temp_row['max_temperature']), next(map_iter)))
-    print('Lowest: {:.2f}C on {}'.format(int(min_temp_row['min_temperature']), next(map_iter)))
-    print('Humidity: {:.2f}% on {}'.format(int(max_humid_row['max_humidity']), next(map_iter)))
+    date_strs = [create_date_str(date_str, from_format, to_format)
+                 for date_str in [max_temp_row['date'], min_temp_row['date'], max_humid_row['date']]]
+    date_iter = iter(date_strs)
+
+    print('Highest: {:.2f}C on {}'.format(int(max_temp_row['max_temperature']), next(date_iter)))
+    print('Lowest: {:.2f}C on {}'.format(int(min_temp_row['min_temperature']), next(date_iter)))
+    print('Humidity: {:.2f}% on {}'.format(int(max_humid_row['max_humidity']), next(date_iter)))
 
 
 def monthly_report(file_name, weather_readings):
@@ -158,9 +157,8 @@ def create_date_str(date_str, current_format, target_format):
 def read_files(switch_wise_file_names, files_dir, field_names):
     weather_readings = WeatherReadings()
     for switch in switch_wise_file_names:
-        map_iter = map(lambda file_name: weather_readings.read_file(
-            file_name, files_dir, field_names), switch_wise_file_names[switch])
-        list(map_iter)
+        [weather_readings.read_file(file_name, files_dir, field_names)
+         for file_name in switch_wise_file_names[switch]]
     return weather_readings
 
 
@@ -239,7 +237,7 @@ def main():
     args = parse_arguments()
     dir_path = args['directory_path']
     file_names_in_dir = get_file_names_in_dir(dir_path)
-    switch_order = list(map(lambda x: x.lstrip('-'), sys.argv[2::2]))
+    switch_order = [arg.lstrip('-') for arg in sys.argv[2::2]]
     switch_wise_file_names = get_file_names_to_read(switch_order, args, file_names_in_dir)
     weather_readings = read_files(switch_wise_file_names, dir_path, file_columns)
     generate_reports(switch_order, switch_wise_file_names, weather_readings)
