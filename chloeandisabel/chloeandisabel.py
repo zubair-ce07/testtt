@@ -22,7 +22,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
             return
         self.boilerplate(garment, response)
         garment['name'] = product['master']['name']
-        garment['brand'] = 'chloeandisabel'
+        garment['brand'] = 'Jen Atkin X Chloe + Isabel'
         garment['category'] = [product['category']]
         garment['gender'] = self.product_gender(product)
         garment['image_urls'] = product['master']['image_urls']
