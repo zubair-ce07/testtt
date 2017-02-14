@@ -1,8 +1,9 @@
 import json
+
 import re
 from scrapy.http.request import Request
-from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser
-from functools import reduce
+
+from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser, clean
 
 
 class Mixin:
@@ -22,7 +23,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
             return
         self.boilerplate(garment, response)
         garment['name'] = product['master']['name']
-        garment['brand'] = 'Jen Atkin X Chloe + Isabel'
+        garment['brand'] = self.product_brand(product)
         garment['category'] = [product['category']]
         garment['gender'] = self.product_gender(product)
         garment['image_urls'] = product['master']['image_urls']
@@ -74,6 +75,11 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
 
     def product_description(self, product):
         return [d for d in self.raw_description(product['master']) if not self.care_criteria(d)]
+
+    def product_brand(self, product):
+        if any(('Jen Atkin X Chloe + Isabel' in d) for d in self.product_description(product)):
+            return 'Jen Atkin X Chloe + Isabel'
+        return 'chloeandisabel'
 
     def raw_description(self, product):
         desc = self.text_from_html(product['description'])
