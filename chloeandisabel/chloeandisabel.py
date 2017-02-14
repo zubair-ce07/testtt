@@ -12,6 +12,7 @@ class Mixin:
     market = 'US'
     retailer = 'chloeandisabel-us'
 
+
 class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
@@ -39,7 +40,11 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return 'men' if 'men' in product['category'].lower() else 'women'
 
     def product_images(self, product):
-        return sum([v['image_urls'] for v in product['variantsIncludingMaster']], [])
+        if product['availableOptions']:
+            if product['availableOptions'][0]['presentation'] == 'Size':
+                variants = [v for v in product['variantsIncludingMaster'] if not v['is_master']]
+                return variants[0]['image_urls_2x'] if variants else product['master']['image_urls']
+        return sum([v['image_urls_2x'] for v in product['variantsIncludingMaster']], [])
 
     def skus(self, product):
         skus = {}
@@ -58,7 +63,8 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def variant_color(self, variant):
-        return '/'.join(clean([self.detect_colour(d) for d in self.raw_description(variant)]))
+        properties = [p for p in [d['value'] for d in variant['displayable_properties']]]
+        return '/'.join(clean([self.detect_colour(d) for d in sum([e.split() for e in properties], [])]))
 
     def product_care(self, product):
         return [d for d in self.raw_description(product['master']) if self.care_criteria(d) or '%' in d]
@@ -77,7 +83,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
     def product_brand(self, product):
         if any(('Jen Atkin X Chloe + Isabel' in d) for d in self.product_description(product)):
             return 'Jen Atkin X Chloe + Isabel'
-        return 'chloeandisabel'
+        return 'Chloe + Isabel'
 
     def raw_description(self, product):
         desc = self.text_from_html(product['description'])
