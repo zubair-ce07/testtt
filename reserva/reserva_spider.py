@@ -1,13 +1,12 @@
 import json
+
 import re
 from scrapy.http.request import Request
 from scrapy.http.request.form import FormRequest
-from scrapy.http.response import Response
 from scrapy.http.response.html import HtmlResponse
 from scrapy.linkextractors import LinkExtractor
-from scrapy.selector.unified import Selector
 from scrapy.spiders import Rule
-from scrapy.spiders.crawl import CrawlSpider
+
 from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser, clean
 
 
@@ -44,7 +43,7 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         garment['category'] = self.product_category(response)
         if self.out_of_stock(product):
             garment['out_of_stock'] = True
-            prev_price, price, currency = self.pricing(product)
+            prev_price, price, currency = self.product_pricing(product)
             garment['price'] = price
             garment['currency'] = currency
             if prev_price:
@@ -65,8 +64,8 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         garment['skus'][sku_id].update({'price': price, 'currency': currency})
         return self.next_request_or_garment(garment)
 
-    def image_urls(self, hxs):
-        return clean(hxs.css('.slider_image img::attr(src)'))
+    def image_urls(self, response):
+        return clean(response.css('.slider_image img::attr(src)'))
 
     def skus(self, response):
         skus = {}
@@ -81,8 +80,7 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
             sku_id = params[1]
             sku = sku_common.copy()
             sku['size'] = size
-            out_of_stock = params[2] is 'false'
-            if out_of_stock:
+            if params[2] is 'false':
                 sku['out_of_stock'] = True
             skus[sku_id] = sku
         return skus
@@ -100,57 +98,49 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
     def product_id(self, raw_product):
         return raw_product['id']
 
-    def raw_product(self, hxs):
+    def raw_product(self, response):
         script_css = "script:contains('dataLayer.push({\"Product')::text"
-        product_json = hxs.css(script_css).re_first(self.product_re)
+        product_json = response.css(script_css).re_first(self.product_re)
         return json.loads(product_json)['Product']
 
-    def product_brand(self, hxs, product):
-        return hxs.meta['brand'] if hxs.meta.get('brand') else product['brand']
+    def product_brand(self, response, product):
+        return response.meta['brand'] if response.meta.get('brand') else product['brand']
 
-    def product_name(self, hxs):
-        return clean(hxs.css('h1.name::text'))[0]
+    def product_name(self, response):
+        return clean(response.css('h1.name::text'))[0]
 
-    def product_description(self, hxs, product):
-        return [d for d in self.raw_description(hxs, product)
+    def product_description(self, response, product):
+        return [d for d in self.raw_description(response, product)
                 if not self.care_criteria(d)]
 
-    def raw_description(self, hxs, product):
-        desc_css = "meta[property='og:description']::attr(content)"
-        desc = clean(hxs.css(desc_css))
-        desc = sum((d.split('. ') for d in desc), [])
-        desc += [product['description']]
+    def raw_description(self, response, product):
+        desc = clean(response.css("meta[property='og:description']::attr(content)"))
+        desc = sum((d.split('. ') for d in desc), []) + [product['description']]
         return desc
 
-    def product_care(self, hxs, product):
-        return [d for d in self.raw_description(hxs, product)
-                if self.care_criteria(d)]
+    def product_care(self, response, product):
+        return [d for d in self.raw_description(response, product) if self.care_criteria(d)]
 
-    def product_category(self, hxs):
-        categories = clean(hxs.xpath("//div[contains(@class,'breadcrumb')]//text()"))
-        if 'HOME' in categories:
-            categories.remove('HOME')
-        return categories
+    def product_category(self, response):
+        return clean(response.css(".breadcrumb li:not(li:first-child) *::text"))
 
-    def product_gender(self, hxs):
-        categories = self.product_category(hxs)
+    def product_gender(self, response):
+        categories = self.product_category(response)
         for label, raw_gender in self.gender_map:
             if label in categories:
                 return raw_gender
-        return 'unisex-adults'
 
     def out_of_stock(self, product):
         return product['availability'] is not '1'
 
-    def pricing(self, product):
+    def product_pricing(self, product):
         sale_price = CurrencyParser.conversion(product['salePrice'])
         price = CurrencyParser.conversion(product['listPrice'])
         currency = product['currency']
-        return (sale_price, price, currency) if sale_price != price \
-            else (None, price, currency)
+        return (sale_price, price, currency) if sale_price != price else (None, price, currency)
 
-    def product_color(self, hxs):
-        return clean(hxs.css('#productSelectColor li.active img::attr(alt)'))[0]
+    def product_color(self, response):
+        return clean(response.css('#productSelectColor li.active img::attr(alt)'))[0]
 
 
 class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
@@ -165,7 +155,7 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
              )
 
     def parse_brand_listing(self, response):
-        brand = clean(hxs.css('meta[name=name]::attr(content)'))[0]
+        brand = clean(response.css('meta[name=name]::attr(content)'))[0]
         for request in self.parse_listing(response):
             request.meta['brand'] = brand
             yield request
@@ -183,9 +173,8 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
             yield pagination_request
 
     def parse_pagination(self, response):
-        json_data = response.text
-        raw_json = json.loads(json_data)
-        content = raw_json['content']
+        json_response = json.loads(response.text)
+        content = json_response['content']
         html = self.unescape(content)
         html_response = HtmlResponse(body=html.encode(), url=response.url, request=response.request)
         for request in self.parse(html_response):
@@ -193,7 +182,7 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
                 request.meta['brand'] = response.meta['brand']
             yield request
 
-        if raw_json['nextPage'] is 'true':
-            url = response.urljoin(raw_json['pageUrl'])
+        if json_response['nextPage'] is 'true':
+            url = response.urljoin(json_response['pageUrl'])
             return Request(url=url, callback=self.parse_pagination)
 
