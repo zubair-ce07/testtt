@@ -53,7 +53,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def variant_color(self, variant):
-        return [self.detect_colour(d) for d in self.raw_description(variant)]
+        return '/'.join(clean([self.detect_colour(d) for d in self.raw_description(variant)]))
 
     def variant_size(self, variant):
         if variant['option_values']:
@@ -91,7 +91,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return product
 
     def merch_info(self, product):
-        return product['promotion_messages'] if product.get('promotion_messages') else []
+        return product.get('promotion_messages', [])
 
     def out_of_stock(self, product):
         return not product['in_stock']
