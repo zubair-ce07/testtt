@@ -8,9 +8,8 @@ from skuscraper.spiders.base import BaseParseSpider, BaseCrawlSpider, CurrencyPa
 
 
 class Mixin:
-    name = "street-one-de"
     allowed_domains = ["street-one.de"]
-    retailer = 'street-one-de'
+    retailer = 'streetone-de'
     market = 'DE'
     lang = 'de'
     gender = 'women'
@@ -80,8 +79,8 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         return color[0] if color else self.color_from_url(response)
 
     def color_from_url(self, response):
-        url = response.url
-        url = url.split('/')[-1].split('.')[0]
+        # http://www.street-one.de/All-Styles/Pullover-Strickjacken/Pullover/Rundhalspullover/Pulli-mit-Struktur-Felicitas-off-white.html
+        url = response.url.split('/')[-1].split('.')[0]
         name = self.product_name(response).strip().replace(' ', '-')
         if name in url:
             return url.replace(name, '').lstrip('-')
@@ -139,9 +138,6 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
     def product_images(self, response):
         return response.css('script:contains("aZoom")').re(self.image_url_re)
 
-    def is_sale(self, response):
-        return response.css('span.linethrough')
-
     def out_of_stock(self, product):
         return 'InStock' not in product['offers']['availability']
 
@@ -151,6 +147,7 @@ class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = StreetOneParseSpider()
     listing_css = ['.mainnavigation', '#sidenavigation']
     product_css = ['li.produkt-bild']
+    pagination_css = ['.produkte-pagination']
 
     def parse_pagination(link):
         results = re.findall('ecs_jump\((\d+)\)', link)
@@ -161,7 +158,7 @@ class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
     rules = [
         Rule(LinkExtractor(restrict_css=listing_css)),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
-        Rule(LinkExtractor(restrict_css='.produkte-pagination', attrs='onclick',
+        Rule(LinkExtractor(restrict_css=pagination_css, attrs='onclick',
                            process_value=parse_pagination), callback='parse')
     ]
 
