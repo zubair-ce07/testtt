@@ -1,7 +1,9 @@
-import re
 import json
-from scrapy.spiders.crawl import Rule
+
+import re
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders.crawl import Rule
+
 from skuscraper.spiders.base import BaseParseSpider, BaseCrawlSpider, CurrencyParser, clean
 
 
@@ -26,15 +28,17 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate_normal(garment, response)
-        raw_product = self.raw_product(response)
+        product = self.raw_product(response)
         garment['image_urls'] = self.product_images(response)
-        if self.out_of_stock(raw_product):
+        if self.out_of_stock(product):
             garment['out_of_stock'] = True
-            prev_price, garment['price'], garment['currency'] = self.product_pricing(response, raw_product)
-            if prev_price:
-                garment['previous_prices'] = [prev_price]
+            pricing = self.product_pricing_common(response, product)
+            garment['price'] = pricing['price']
+            garment['currency'] = pricing['currency']
+            if pricing.get('previous_prices'):
+                garment['previous_prices'] = pricing['previous_prices']
         else:
-            garment['skus'] = self.skus(response, raw_product)
+            garment['skus'] = self.skus(response, product)
         return garment
 
     def raw_product(self, response):
@@ -49,8 +53,8 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('dd.second > h1::text'))[0]
 
     def product_category(self, response):
-        category_css = '#trail li:not(li:first-child) a'
-        return clean(response.css(category_css).xpath('text()'))
+        category_css = '#trail li:not(li:first-child) a *::text'
+        return clean(response.css(category_css))
 
     def product_care(self, response):
         care_css = 'p.care_instruction_text > span::text'
@@ -73,68 +77,53 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
     def product_color(self, response):
         color_css = 'ul.farbe > li.active span.tool-tip > span::text'
         color = clean(response.css(color_css))
-        return color[0].replace(' ', '_') if color else self.color_from_url(response)
+        return color[0] if color else self.color_from_url(response)
 
     def color_from_url(self, response):
         url = response.url
         url = url.split('/')[-1].split('.')[0]
         name = self.product_name(response).strip().replace(' ', '-')
         if name in url:
-            return url.replace(name, '').lstrip('-').replace('-', '_')
+            return url.replace(name, '').lstrip('-')
 
-    def product_pricing(self, response, product):
-        price = CurrencyParser.conversion(product['offers']['price'])
-        prev_price_css = 'span.linethrough::text'
-        prev_price = response.css(prev_price_css).re_first('(\d+,\d+)')
+    def product_pricing_common(self, response, product):
+        pricing = {}
+        pricing['price'] = CurrencyParser.conversion(product['offers']['price'])
+        prev_price = response.css('span.linethrough::text')
         if prev_price:
-            prev_price = CurrencyParser.conversion(response.css(prev_price_css).re_first('(\d+,\d+)'))
-        currency = product['offers']['priceCurrency']
-        return prev_price, price, currency
+            pricing['previous_prices'] = CurrencyParser.lowest_price(clean(prev_price)[0])
+        pricing['currency'] = product['offers']['priceCurrency']
+        return pricing
 
     def skus(self, response, product):
         skus = {}
         variants = self.all_sizes(response) or self.one_size
-        available = self.available_sizes(response) or []
-        if not variants:
-            return {}
+        available = self.available_sizes(response)
         size_info = self.variant_info(response)
-        sku_common = {}
-        prev_price, sku_common['price'], sku_common['currency'] = self.product_pricing(response, product)
+        sku_common = self.product_pricing_common(response, product)
         sku_common['colour'] = self.product_color(response)
         for size in variants:
             sku = sku_common.copy()
             sku['size'] = size
-            if size in available:
-                price = size_info[size]['price']
-                if isinstance(price, str):
-                    sku['price'] = CurrencyParser.lowest_price(price)
-                else:
-                    sku['price'] = CurrencyParser.float_conversion(price)
-            if prev_price:
-                sku['previous_prices'] = [prev_price]
+            price = size_info.get(size, sku)['price']
+            if isinstance(price, str):
+                sku['price'] = CurrencyParser.lowest_price(price)
+            else:
+                sku['price'] = CurrencyParser.float_conversion(price)
             if size not in available:
                 sku['out_of_stock'] = True
-            skus[sku['colour'] + '_' + size] = sku
+            sku_id = '{}_{}'.format(sku['colour'].replace(' ','/'), size)
+            skus[sku_id] = sku
         return skus
 
     def variant_info(self, response):
-        details = {}
-        script = response.css('script:contains("var attr")')
-        if not script:
-            return details
-        results = re.findall('eval\(\((\{.*\})\)\)', clean(script)[0])
-        if not results:
-            return {}
-        raw = results.pop()
-        return json.loads(raw)
+        script = clean(response.css('script:contains("var attr")'))
+        results = re.findall('eval\(\((\{.*\})\)\)', script[0] if script else '')
+        return json.loads(results[0]) if results else {}
 
     def available_sizes(self, response):
         script = response.css('script:contains("var attr")')
-        sizes = script.re_first('sizes = new Array([^;]*)')
-        if sizes:
-            sizes = self.to_list(sizes)
-            return sizes
-        return None
+        return self.to_list(script.re_first('sizes = new Array([^;]*)'))
 
     def all_sizes(self, response):
         script = response.css('script:contains("var attr")')
@@ -154,7 +143,7 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         return response.css('span.linethrough')
 
     def out_of_stock(self, product):
-        return False
+        return 'InStock' not in product['offers']['availability']
 
 
 class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
@@ -175,3 +164,4 @@ class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css='.produkte-pagination', attrs='onclick',
                            process_value=parse_pagination), callback='parse')
     ]
+
