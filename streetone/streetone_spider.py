@@ -31,11 +31,7 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = self.product_images(response)
         if self.out_of_stock(product):
             garment['out_of_stock'] = True
-            pricing = self.product_pricing_common(response, product)
-            garment['price'] = pricing['price']
-            garment['currency'] = pricing['currency']
-            if pricing.get('previous_prices'):
-                garment['previous_prices'] = pricing['previous_prices']
+            garment.update(self.product_pricing_common(response, product))
         else:
             garment['skus'] = self.skus(response, product)
         return garment
