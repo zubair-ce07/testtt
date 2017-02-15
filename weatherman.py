@@ -8,8 +8,6 @@ import os
 import sys
 import csv
 import argparse
-from pathlib import Path
-from itertools import chain
 from datetime import datetime
 
 
