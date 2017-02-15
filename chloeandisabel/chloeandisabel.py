@@ -32,6 +32,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         garment['care'] = self.product_care(product)
         if self.out_of_stock(product):
             garment['out_of_stock'] = True
+            garment.update(self.variant_pricing_common(product['master']))
         garment['skus'] = self.skus(product)
         garment['merch_info'] = self.merch_info(product)
         return garment
@@ -55,7 +56,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
             sku = self.variant_pricing_common(variant)
             color = self.variant_color(variant)
             if color:
-                sku['color'] = color
+                sku['colour'] = color
             sku['size'] = variant['option_values'][0]['presentation'] if variant['option_values'] else self.one_size
             if not variant['in_stock']:
                 sku['out_of_stock'] = True
@@ -74,7 +75,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         pricing['price'] = CurrencyParser.float_conversion(variant['localPrice'])
         pricing['currency'] = variant['localCurrency']['code']
         if variant['sale_price']:
-            pricing['previous_prices'] = CurrencyParser.float_conversion(variant['sale_price'])
+            pricing['previous_prices'] = [CurrencyParser.float_conversion(variant['sale_price'])]
         return pricing
 
     def product_description(self, product):
@@ -105,7 +106,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
 
     def out_of_stock(self, product):
         variants = [v for v in product['variantsIncludingMaster'] if not v['is_master']]
-        return not variants[0]['in_stock'] if variants else not product['master']['in_stock']
+        return not any(v['in_stock'] for v in variants) if variants else not product['master']['in_stock']
 
 
 class ChloeAndIsabelCrawlSpider(BaseCrawlSpider, Mixin):
