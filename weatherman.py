@@ -26,6 +26,7 @@ class WeatherReading:
         self.min_temperature = kwargs.get('min_temperature')
         self.max_humidity = kwargs.get('max_humidity')
         self.mean_humidity = kwargs.get('mean_humidity')
+        self.city_name = kwargs.get('city_name')
 
 
 class WeatherReader:
@@ -38,9 +39,13 @@ class WeatherReader:
         'max_guest_speed', 'precipitation', 'cloud_cover', 'events', 'wind_dir'
     ]
 
-    @staticmethod
-    def create_reading(row):
+    def __init__(self, file_name, file_dir=''):
+        self.city_name = file_name.split('_')[0]
+        self.file_path = os.path.join(file_dir, file_name)
+
+    def __parse_row(self, row):
         kwargs = {
+            'city_name': self.city_name,
             'reading_date': datetime.strptime(row.get('date'), '%Y-%m-%d')
         }
         integer_columns = [
@@ -52,21 +57,13 @@ class WeatherReader:
 
         return WeatherReading(kwargs)
 
-    def read_file(self, file_name, file_dir='', skip_first_line=True):
-        month_readings = []
-        file_path = os.path.join(file_dir, file_name)
-        with open(file_path, 'r') as f:
+    def read(self, skip_first_line=True):
+        with open(self.file_path, 'r') as f:
             reader = csv.DictReader(f, fieldnames=WeatherReader.file_columns)
             if skip_first_line:
                 next(reader)
             for row in reader:
-                month_readings.append(self.create_reading(row))
-
-        return month_readings
-
-
-def remove_file_extension(file_name):
-    return os.path.splitext(file_name)[0]
+                yield self.__parse_row(row)
 
 
 def apply_func(func, key_column, readings):
@@ -80,32 +77,36 @@ def calculate_average(key_column, readings):
     return sum(reading_points) / len(reading_points)
 
 
-def yearly_report(file_names, weather_readings):
+def yearly_report(weather_readings):
     to_format = '%B %d'
-    months_readings = [weather_readings[remove_file_extension(file_name)] for file_name in file_names]
-    full_year_readings = list(chain(*months_readings))
+    for city in weather_readings:
+        print('City: {}'.format(city))
+        readings = weather_readings[city]
 
-    max_temp_row = apply_func(max, 'max_temperature', full_year_readings)
-    min_temp_row = apply_func(min, 'min_temperature', full_year_readings)
-    max_humid_row = apply_func(max, 'max_humidity', full_year_readings)
+        max_temp_row = apply_func(max, 'max_temperature', readings)
+        min_temp_row = apply_func(min, 'min_temperature', readings)
+        max_humid_row = apply_func(max, 'max_humidity', readings)
+        date_strs = [date.strftime(to_format) for date in [
+            max_temp_row.reading_date, min_temp_row.reading_date, max_humid_row.reading_date]]
+        date_iter = iter(date_strs)
 
-    date_strs = [date.strftime(to_format) for date in [
-        max_temp_row.reading_date, min_temp_row.reading_date, max_humid_row.reading_date]]
-    date_iter = iter(date_strs)
-
-    print('Highest: {:.2f}C on {}'.format(int(max_temp_row.max_temperature), next(date_iter)))
-    print('Lowest: {:.2f}C on {}'.format(int(min_temp_row.min_temperature), next(date_iter)))
-    print('Humidity: {:.2f}% on {}'.format(int(max_humid_row.max_humidity), next(date_iter)))
+        print('Highest: {:.2f}C on {}'.format(int(max_temp_row.max_temperature), next(date_iter)))
+        print('Lowest: {:.2f}C on {}'.format(int(min_temp_row.min_temperature), next(date_iter)))
+        print('Humidity: {:.2f}% on {}'.format(int(max_humid_row.max_humidity), next(date_iter)))
 
 
-def monthly_report(file_name, weather_readings):
-    avg_highest = calculate_average('max_temperature', weather_readings[remove_file_extension(file_name)])
-    avg_lowest = calculate_average('min_temperature', weather_readings[remove_file_extension(file_name)])
-    avg_mean_humidity = calculate_average('mean_humidity', weather_readings[remove_file_extension(file_name)])
+def monthly_report(weather_readings):
+    for city in weather_readings:
+        print('City: {}'.format(city))
+        readings = weather_readings[city]
 
-    print('Highest Average: {:.2f}C'.format(avg_highest))
-    print('Lowest Average: {:.2f}C'.format(avg_lowest))
-    print('Average Mean Humidity: {:.2f}%'.format(avg_mean_humidity))
+        avg_highest = calculate_average('max_temperature', readings)
+        avg_lowest = calculate_average('min_temperature', readings)
+        avg_mean_humidity = calculate_average('mean_humidity', readings)
+
+        print('Highest Average: {:.2f}C'.format(avg_highest))
+        print('Lowest Average: {:.2f}C'.format(avg_lowest))
+        print('Average Mean Humidity: {:.2f}%'.format(avg_mean_humidity))
 
 
 def print_symbol(symbol, value, color):
@@ -133,75 +134,75 @@ def one_row_chart(day_no, max_t, min_t):
         print(' {}C - {}C'.format(min_t, max_t))
 
 
-def monthly_bar_chart(file_name, weather_readings, chart_type):
-    month_readings = weather_readings[remove_file_extension(file_name)]
-    for day_reading in month_readings:
-        max_temperature, min_temperature = day_reading.max_temperature, day_reading.min_temperature
-        day_no = '{0:02d}'.format(int(day_reading.reading_date.strftime('%d')))
+def monthly_bar_chart(weather_readings, chart_type):
+    for city in weather_readings:
+        print('City: {}'.format(city))
+        readings = weather_readings[city]
 
-        if chart_type == 'double':
-            two_row_chart(day_no, max_temperature, min_temperature)
-        elif chart_type == 'single':
-            one_row_chart(day_no, max_temperature, min_temperature)
+        for reading in readings:
+            max_temperature, min_temperature = reading.max_temperature, reading.min_temperature
+            day_no = '{0:02d}'.format(int(reading.reading_date.strftime('%d')))
+
+            if chart_type == 'double':
+                two_row_chart(day_no, max_temperature, min_temperature)
+            elif chart_type == 'single':
+                one_row_chart(day_no, max_temperature, min_temperature)
 
 
-def generate_reports(switch_order, switch_wise_file_names, weather_readings):
+def generate_reports(switch_order, args, weather_readings):
+    def match_date(date1, date2, str_format):
+        return date1.strftime(str_format) == date2.strftime(str_format)
+
+    cities = {reading.city_name for reading in weather_readings}
+    date_formats = {
+        'e': '%Y',
+        'a': '%Y-%m',
+        'c': '%Y-%m',
+        'c1': '%Y-%m',
+    }
+
     for switch in switch_order:
-        file_names = switch_wise_file_names[switch]
-        if not file_names:
-            print('Files not available for option -%s' % switch)
+        readings = [reading for reading in weather_readings
+                    if match_date(args.get(switch), reading.reading_date, date_formats.get(switch))]
+        if not readings:
+            print('Weather readings not available for option -%s' % switch)
             continue
 
+        city_readings = {}
+        for city in cities:
+            city_readings[city] = [reading for reading in readings if reading.city_name == city]
+
         if switch == 'e':
-            yearly_report(file_names, weather_readings)
+            yearly_report(city_readings)
         elif switch == 'a':
-            monthly_report(file_names[0], weather_readings)
+            monthly_report(city_readings)
         elif switch == 'c':
-            monthly_bar_chart(file_names[0], weather_readings, 'double')
+            monthly_bar_chart(city_readings, 'double')
         elif switch == 'c1':
-            monthly_bar_chart(file_names[0], weather_readings, 'single')
+            monthly_bar_chart(city_readings, 'single')
 
 
-def read_files(switch_wise_file_names, files_dir):
-    file_names = set()
-    all_weather_readings = {}
-    weather_reader = WeatherReader()
-    for switch in switch_wise_file_names:
-        file_names.update(switch_wise_file_names[switch])
-
-    file_names = list(file_names)
+def read_files(file_names, files_dir):
+    all_weather_readings = []
     for file_name in file_names:
-        all_weather_readings[remove_file_extension(file_name)] = weather_reader.read_file(file_name, files_dir)
+        weather_reader = WeatherReader(file_name, files_dir)
+        for reading in weather_reader.read():
+            all_weather_readings.append(reading)
 
     return all_weather_readings
 
 
-def get_file_names_to_read(switches, args, available_files):
-    switch_wise_file_names = {}
-    for s in switches:
-        if s == 'e':
-            regex = r'\w+' + args[s].strftime('%Y')
-        elif s in ['a', 'c', 'c1']:
-            regex = r'\w+' + args[s].strftime('%Y_%b')
-        else:
-            continue
-
-        r = re.compile(regex)
-        switch_wise_file_names[s] =\
-            [file_name for file_name in available_files if r.match(file_name)]
-    return switch_wise_file_names
-
-
 def get_file_names_in_dir(dir_path):
-    def check_is_file(file_name):
-        return os.path.isfile(os.path.join(dir_path, file_name))
+    def check_is_file(file_name, r):
+        return os.path.isfile(os.path.join(dir_path, file_name)) and r.match(file_name)
 
     try:
         files = os.listdir(dir_path)
     except FileNotFoundError:
         sys.exit('No such directory: %s' % dir_path)
     else:
-        return [file_name for file_name in files if check_is_file(file_name)]
+        regex = re.compile(r'\w+')
+        return [file_name for file_name in files if check_is_file(file_name, regex)]
 
 
 def valid_date(text, pattern, error_msg):
@@ -242,11 +243,10 @@ def parse_arguments():
 def main():
     args = parse_arguments()
     files_dir = args['files_directory']
-    file_names_in_dir = get_file_names_in_dir(files_dir)
+    file_names = get_file_names_in_dir(files_dir)
     switch_order = [arg.lstrip('-') for arg in sys.argv[2::2]]
-    switch_wise_file_names = get_file_names_to_read(switch_order, args, file_names_in_dir)
-    weather_readings = read_files(switch_wise_file_names, files_dir)
-    generate_reports(switch_order, switch_wise_file_names, weather_readings)
+    weather_readings = read_files(file_names, files_dir)
+    generate_reports(switch_order, args, weather_readings)
 
 
 if __name__ == '__main__':
