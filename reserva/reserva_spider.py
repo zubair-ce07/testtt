@@ -24,7 +24,7 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
                   ('MENINO', 'boys'),
                   ('MENINA', 'girls'),
                   ('INFANTIL', 'unisex-kids')]
-    sku_request_url = 'https://www.usereserva.com/usereserva/components/ProductDetails/fragments/product_price.jsp?productId={}&skuId={}'
+    sku_url_t = 'https://www.usereserva.com/usereserva/components/ProductDetails/fragments/product_price.jsp?productId={}&skuId={}'
     product_re = re.compile("dataLayer.push\((.*)\);\s*dataLayer", re.S)
 
     def parse(self, response):
@@ -43,17 +43,11 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         garment['category'] = self.product_category(response)
         if self.out_of_stock(product):
             garment['out_of_stock'] = True
-            prev_price, price, currency = self.product_pricing(product)
-            garment['price'] = price
-            garment['currency'] = currency
-            if prev_price:
-                garment['previous_prices'] = [prev_price]
+            garment.update(self.product_pricing(response))
 
         garment['skus'] = self.skus(response)
         requests_queue = self.price_requests(garment)
-        garment['meta'] = {
-            'requests_queue': requests_queue
-        }
+        garment['meta'] = {'requests_queue': requests_queue}
         return self.next_request_or_garment(garment)
 
     def parse_sku_price(self, response):
@@ -70,17 +64,16 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
         sku_common = {'colour': self.product_color(response)}
-        s_s = response.css('#productSelectSize a')
-        params_re = "updateProductPrice\('(\d+)',\s*'(\d+)',\s*'(\w+)',"
-        for s_e in s_s:
-            size = clean(s_e.xpath('text()'))[0]
-            params = s_e.css('::attr(onclick)').re(params_re)
+        size_s = response.css('#productSelectSize a')
+        params_re = "updateProductPrice\('\d+',\s*'(\d+)',\s*'(\w+)',"
+        for s_s in size_s:
+            params = s_s.css('::attr(onclick)').re(params_re)
             if not params:
                 continue
-            sku_id = params[1]
+            sku_id, in_stock = params
             sku = sku_common.copy()
-            sku['size'] = size
-            if params[2] is 'false':
+            sku['size'] = clean(s_s.xpath('text()'))[0]
+            if not in_stock:
                 sku['out_of_stock'] = True
             skus[sku_id] = sku
         return skus
@@ -89,8 +82,8 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         requests = []
         for sku in garment['skus']:
             product_id = garment['retailer_sku']
-            request_url = self.sku_request_url.format(product_id, sku)
-            meta = {'garment': garment, 'sku_id': sku}
+            request_url = self.sku_url_t.format(product_id, sku)
+            meta = {'sku_id': sku}
             formdata = {'productId': product_id, 'skuId': sku}
             requests.append(FormRequest(url=request_url, formdata=formdata, meta=meta, callback=self.parse_sku_price))
         return requests
@@ -104,7 +97,7 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         return json.loads(product_json)['Product']
 
     def product_brand(self, response, product):
-        return response.meta['brand'] if response.meta.get('brand') else product['brand']
+        return response.meta.get('brand') or product['brand']
 
     def product_name(self, response):
         return clean(response.css('h1.name::text'))[0]
@@ -122,22 +115,26 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         return [d for d in self.raw_description(response, product) if self.care_criteria(d)]
 
     def product_category(self, response):
-        return clean(response.css(".breadcrumb li:not(li:first-child) *::text"))
+        return clean(response.css(".breadcrumb li ::text"))[1:]
 
     def product_gender(self, response):
         categories = self.product_category(response)
         for label, raw_gender in self.gender_map:
             if label in categories:
                 return raw_gender
+        return 'unisex-adults'
 
     def out_of_stock(self, product):
         return product['availability'] is not '1'
 
     def product_pricing(self, product):
+        pricing = {}
+        pricing['price'] = CurrencyParser.conversion(product['listPrice'])
         sale_price = CurrencyParser.conversion(product['salePrice'])
-        price = CurrencyParser.conversion(product['listPrice'])
-        currency = product['currency']
-        return (sale_price, price, currency) if sale_price != price else (None, price, currency)
+        if sale_price:
+            pricing['previous_prices'] = [sale_price]
+        pricing['currency'] = product['currency']
+        return pricing
 
     def product_color(self, response):
         return clean(response.css('#productSelectColor li.active img::attr(alt)'))[0]
@@ -165,7 +162,7 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
             yield request
         see_more = response.css('.wrap.gallery > a')
         if not see_more:
-            return None
+            return
         on_click = see_more.css('::attr(onclick)')
         url = on_click.re_first("common.initScroll\(this,\s*'(.*)'\);")
         pagination_request = Request(url=response.urljoin(url), callback=self.parse_pagination)
@@ -179,7 +176,7 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
         html_response = HtmlResponse(body=html.encode(), url=response.url, request=response.request)
         for request in self.parse(html_response):
             if response.meta.get('brand'):
-                request.meta['brand'] = response.meta['brand']
+                request.meta = {'brand': response.meta.get('brand')}
             yield request
 
         if json_response['nextPage'] is 'true':
