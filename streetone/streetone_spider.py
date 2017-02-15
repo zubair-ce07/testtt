@@ -107,7 +107,7 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
                 sku['price'] = CurrencyParser.float_conversion(price)
             if size not in available:
                 sku['out_of_stock'] = True
-            sku_id = '{}_{}'.format(sku['colour'].replace(' ','/'), size)
+            sku_id = '{}_{}'.format(sku['colour'].replace(' ', '/'), size)
             skus[sku_id] = sku
         return skus
 
@@ -126,7 +126,7 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         lengths = self.to_list(script.re_first('values\[1\] = new Array([^;]*)'))
         if widths and lengths:
             return ['{}_{}'.format(w, l) for w in widths for l in lengths]
-        return [w for w in widths]
+        return widths
 
     def to_list(self, s):
         return self.list_pattern_re.sub('', s).split(',') if s else []
@@ -138,18 +138,19 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         return 'InStock' not in product['offers']['availability']
 
 
+def process_pagination(link):
+    results = re.findall('ecs_jump\((\d+)\)', link)
+    if results:
+        page = results.pop()
+        return '?page=' + page + '&ajax=1'
+
+
 class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = StreetOneParseSpider()
     listing_css = ['.mainnavigation', '#sidenavigation']
     product_css = ['li.produkt-bild']
     pagination_css = ['.produkte-pagination']
-
-    def parse_pagination(link):
-        results = re.findall('ecs_jump\((\d+)\)', link)
-        if results:
-            page = results.pop()
-            return '?page='+page+'&ajax=1'
 
     rules = [
         Rule(LinkExtractor(restrict_css=listing_css)),
