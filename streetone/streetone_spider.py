@@ -156,6 +156,6 @@ class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=listing_css)),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
         Rule(LinkExtractor(restrict_css=pagination_css, attrs='onclick',
-                           process_value=parse_pagination), callback='parse')
+                           process_value=process_pagination), callback='parse')
     ]
 
