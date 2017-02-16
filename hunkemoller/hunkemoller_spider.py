@@ -177,12 +177,3 @@ class CrawlSpiderAT(MixinAT, CrawlSpider):
     parse_spider = ParseSpiderAT()
     rules = make_rules('/at_at')
 
-
-if __name__ == '__main__':
-    from scrapy import cmdline
-    # cmdline.execute('scrapy parse --spider hunkemoller-de-crawl -c parse_listing https://www.hunkemoller.de/de_de/kollektionen/alle-kollektionen.html'.split())
-    cmdline.execute(
-        # 'scrapy crawl hunkemoller-de-crawl'.split())
-        # 'scrapy parse --spider hunkemoller-de-parse https://www.hunkemoller.de/de_de/9-triangel-bikinitop-native-american-schwarz-115570.html'.split())
-        # 'scrapy parse --spider hunkemoller-de-parse https://www.hunkemoller.de/de_de/9-string-natasha-schwarz-115228.html'.split())
-    'scrapy parse --spider hunkemoller-de-parse https://www.hunkemoller.de/de_de/9-lange-sweatpants-blau-114854.html'.split())
