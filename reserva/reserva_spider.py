@@ -12,7 +12,7 @@ from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyPa
 
 class Mixin:
     allowed_domains = ["www.usereserva.com"]
-    start_urls = ['http://www.usereserva.com/usereserva/c/masculino/marcas']
+    start_urls = ['http://www.usereserva.com/']
     market = 'BR'
     retailer = 'reserva-br'
     lang = 'pt'
@@ -173,7 +173,7 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
         html_response = HtmlResponse(body=html.encode(), url=response.url, request=response.request)
         for request in self.parse(html_response):
             if response.meta.get('brand'):
-                request.meta = {'brand': response.meta.get('brand')}
+                request.meta['brand'] = response.meta['brand']
             yield request
 
         if json_response['nextPage'] is 'true':
