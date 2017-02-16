@@ -130,9 +130,8 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
     def product_pricing(self, product):
         pricing = {}
         pricing['price'] = CurrencyParser.conversion(product['listPrice'])
-        sale_price = CurrencyParser.conversion(product['salePrice'])
-        if sale_price:
-            pricing['previous_prices'] = [sale_price]
+        if product.get('salePrice'):
+            pricing['previous_prices'] = [CurrencyParser.conversion(product['salePrice'])]
         pricing['currency'] = product['currency']
         return pricing
 
@@ -145,9 +144,9 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = ReservaParseSpider()
     listing_css = [".menu"]
     product_css = ["#product_box"]
-    deny_css = ['/cartao-presente', '/faca-voce']
+    deny_r = ['/cartao-presente', '/faca-voce']
     rules = (Rule(LinkExtractor(allow='/marcas'), callback='parse_brand_listing'),
-             Rule(LinkExtractor(restrict_css=listing_css, deny=deny_css), callback='parse_listing'),
+             Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse_listing'),
              Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
              )
 
@@ -160,14 +159,12 @@ class ReservaCrawlSpider(BaseCrawlSpider, Mixin):
     def parse_listing(self, response):
         for request in self.parse(response):
             yield request
-        see_more = response.css('.wrap.gallery > a')
-        if not see_more:
+        pagination = response.css('.wrap.gallery > a')
+        if not pagination:
             return
-        on_click = see_more.css('::attr(onclick)')
+        on_click = pagination.css('::attr(onclick)')
         url = on_click.re_first("common.initScroll\(this,\s*'(.*)'\);")
-        pagination_request = Request(url=response.urljoin(url), callback=self.parse_pagination)
-        if pagination_request:
-            yield pagination_request
+        yield Request(url=response.urljoin(url), callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         json_response = json.loads(response.text)
