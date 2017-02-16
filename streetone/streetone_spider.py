@@ -103,7 +103,7 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
             price = size_info.get(size, sku)['price']
             if isinstance(price, str):
                 sku['price'] = CurrencyParser.lowest_price(price)
-            else:
+            elif isinstance(price, float):
                 sku['price'] = CurrencyParser.float_conversion(price)
             if size not in available:
                 sku['out_of_stock'] = True
