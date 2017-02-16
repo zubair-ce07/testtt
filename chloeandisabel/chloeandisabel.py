@@ -38,7 +38,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         return garment
 
     def product_gender(self, product):
-        return 'men' if 'men' in product['category'].lower() else 'women'
+        return "men" if product['category'].lower() == "mens-shop" else 'women'
 
     def product_images(self, product):
         if product['availableOptions']:
