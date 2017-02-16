@@ -86,7 +86,7 @@ class StreetOneParseSpider(BaseParseSpider, Mixin):
         pricing['price'] = CurrencyParser.conversion(product['offers']['price'])
         prev_price = response.css('span.linethrough::text')
         if prev_price:
-            pricing['previous_prices'] = CurrencyParser.lowest_price(clean(prev_price)[0])
+            pricing['previous_prices'] = [CurrencyParser.lowest_price(clean(prev_price)[0])]
         pricing['currency'] = product['offers']['priceCurrency']
         return pricing
 
@@ -153,7 +153,7 @@ class StreetOneCrawlSpider(BaseCrawlSpider, Mixin):
     pagination_css = ['.produkte-pagination']
 
     rules = [
-        Rule(LinkExtractor(restrict_css=listing_css)),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
         Rule(LinkExtractor(restrict_css=pagination_css, attrs='onclick',
                            process_value=process_pagination), callback='parse')
