@@ -24,7 +24,7 @@ class WeatherReading:
         self.min_temperature = kwargs.get('min_temperature')
         self.max_humidity = kwargs.get('max_humidity')
         self.mean_humidity = kwargs.get('mean_humidity')
-        self.city_name = kwargs.get('city_name')
+        self.city = kwargs.get('city')
 
 
 class WeatherReader:
@@ -38,12 +38,12 @@ class WeatherReader:
     ]
 
     def __init__(self, file_name, file_dir=''):
-        self.city_name = file_name.split('_')[0]
+        self.city = file_name.split('_')[0]
         self.file_path = os.path.join(file_dir, file_name)
 
     def __parse_row(self, row):
         kwargs = {
-            'city_name': self.city_name,
+            'city': self.city,
             'reading_date': datetime.strptime(row.get('date'), '%Y-%m-%d')
         }
         integer_columns = [
@@ -151,7 +151,7 @@ def generate_reports(switch_order, args, weather_readings):
     def match_date(date1, date2, str_format):
         return date1.strftime(str_format) == date2.strftime(str_format)
 
-    cities = {reading.city_name for reading in weather_readings}
+    cities = {reading.city for reading in weather_readings}
     date_formats = {
         'e': '%Y',
         'a': '%Y-%m',
@@ -168,7 +168,7 @@ def generate_reports(switch_order, args, weather_readings):
 
         city_readings = {}
         for city in cities:
-            city_readings[city] = [reading for reading in readings if reading.city_name == city]
+            city_readings[city] = [reading for reading in readings if reading.city == city]
 
         if switch == 'e':
             yearly_report(city_readings)
@@ -181,13 +181,13 @@ def generate_reports(switch_order, args, weather_readings):
 
 
 def read_files(file_names, files_dir):
-    all_weather_readings = []
+    weather_readings = []
     for file_name in file_names:
         weather_reader = WeatherReader(file_name, files_dir)
         for reading in weather_reader.read():
-            all_weather_readings.append(reading)
+            weather_readings.append(reading)
 
-    return all_weather_readings
+    return weather_readings
 
 
 def get_file_names_in_dir(dir_path):
