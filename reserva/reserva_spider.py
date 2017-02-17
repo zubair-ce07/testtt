@@ -6,6 +6,7 @@ from scrapy.http.request.form import FormRequest
 from scrapy.http.response.html import HtmlResponse
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from w3lib.url import add_or_replace_parameter
 
 from skuscraper.spiders.base import BaseCrawlSpider, BaseParseSpider, CurrencyParser, clean
 
@@ -26,10 +27,11 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
                   ('INFANTIL', 'unisex-kids')]
     sku_url_t = 'https://www.usereserva.com/usereserva/components/ProductDetails/fragments/product_price.jsp?productId={}&skuId={}'
     product_re = re.compile("dataLayer.push\((.*)\);\s*dataLayer", re.S)
+    color_re = re.compile("updateProductSize\('\d+','(\d+)'")
 
     def parse(self, response):
         product = self.raw_product(response)
-        product_id = self.product_id(product)
+        product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
         if not garment:
             return
@@ -44,9 +46,9 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         if self.out_of_stock(product):
             garment['out_of_stock'] = True
             garment.update(self.product_pricing(response))
-
-        garment['skus'] = self.skus(response)
-        requests_queue = self.price_requests(garment)
+        skus = self.skus(response)
+        requests_queue = self.price_requests(product_id, skus) + self.color_sku_requests(response)
+        garment['skus'] = skus
         garment['meta'] = {'requests_queue': requests_queue}
         return self.next_request_or_garment(garment)
 
@@ -56,6 +58,13 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
         currency = clean(response.css('meta[itemprop=priceCurrency]::attr(content)'))[0]
         price = CurrencyParser.lowest_price(clean(response.css('span[itemprop=price]::text'))[0])
         garment['skus'][sku_id].update({'price': price, 'currency': currency})
+        return self.next_request_or_garment(garment)
+
+    def parse_color_skus(self, response):
+        garment = response.meta['garment']
+        skus = self.skus(response)
+        garment['skus'].update(skus)
+        garment['meta']['requests_queue'] += self.price_requests(garment['retailer_sku'], skus)
         return self.next_request_or_garment(garment)
 
     def image_urls(self, response):
@@ -78,18 +87,27 @@ class ReservaParseSpider(BaseParseSpider, Mixin):
             skus[sku_id] = sku
         return skus
 
-    def price_requests(self, garment):
+    def price_requests(self, product_id, skus):
         requests = []
-        for sku in garment['skus']:
-            product_id = garment['retailer_sku']
+        for sku in skus:
             request_url = self.sku_url_t.format(product_id, sku)
             meta = {'sku_id': sku}
             formdata = {'productId': product_id, 'skuId': sku}
             requests.append(FormRequest(url=request_url, formdata=formdata, meta=meta, callback=self.parse_sku_price))
         return requests
 
-    def product_id(self, raw_product):
-        return raw_product['id']
+    def color_sku_requests(self, response):
+        requests = []
+        color_s = response.css('#productSelectColor li')
+        for c_s in color_s:
+            color_id = c_s.css('::attr(onclick)').re_first(self.color_re)
+            url = add_or_replace_parameter(response.url, 'prodc', color_id)
+            if url != response.url:
+                requests.append(Request(url=url, callback=self.parse_color_skus))
+        return requests
+
+    def product_id(self, response):
+        return clean(response.css('#productProductId::attr(value)'))[0]
 
     def raw_product(self, response):
         script_css = "script:contains('dataLayer.push({\"Product')::text"
