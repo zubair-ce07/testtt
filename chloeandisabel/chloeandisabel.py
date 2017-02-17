@@ -57,13 +57,25 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
             color = self.variant_color(variant)
             if color:
                 sku['colour'] = color
-            sku['size'] = variant['option_values'][0]['presentation'] if variant['option_values'] else self.one_size
+            sku['size'] = self.variant_size(variant)
             if not variant['in_stock']:
                 sku['out_of_stock'] = True
             skus[variant['sku']] = sku
         return skus
 
+    def variant_size(self, variant):
+        option_values = variant.get('option_values')
+        if variant.get('option_values'):
+            presentation = option_values[0]['option_type']['presentation'].strip()
+            if presentation == 'Size' or presentation == 'Choose Your Initial':
+                return option_values[0]['presentation']
+        return self.one_size
+
     def variant_color(self, variant):
+        option_values = variant.get('option_values')
+        if option_values and option_values[0]['option_type']['presentation'] == 'Color':
+            return option_values[0]['presentation']
+
         properties = [p for p in [d['value'] for d in variant['displayable_properties']]]
         return '/'.join(clean([self.detect_colour(d) for d in sum([e.split() for e in properties], [])]))
 
@@ -75,7 +87,7 @@ class ChloeAndIsabelParseSpider(BaseParseSpider, Mixin):
         pricing['price'] = CurrencyParser.float_conversion(variant['localPrice'])
         pricing['currency'] = variant['localCurrency']['code']
         if variant['sale_price']:
-            pricing['previous_prices'] = [CurrencyParser.float_conversion(variant['sale_price'])]
+            pricing['previous_prices'] = [CurrencyParser.conversion(variant['sale_price'])]
         return pricing
 
     def product_description(self, product):
