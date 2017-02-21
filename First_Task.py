@@ -40,7 +40,6 @@ def user_input_for_year():
         Output:
                 returns the year
     """
-    #global flag_month
     year =  input ("Please Enter the year :")
     return year
 
