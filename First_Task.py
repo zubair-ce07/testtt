@@ -1,7 +1,6 @@
 import csv
 import glob
 from datetime import date
-flag_month = False
 
 temp_matrix = {
                 'PKT':[],
