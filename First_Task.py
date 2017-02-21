@@ -9,11 +9,10 @@ temp_matrix = {
                 'Min TemperatureC':[],
                 'Max Humidity':[],
                 'Mean Humidity':[]
-
                 }
+
 def simplify_dates(temp_date):
     temp_date=temp_date.split('-')
-
     for x in temp_date:
         year = int(temp_date[0])
         month = int(temp_date[1])
@@ -29,14 +28,9 @@ def main():
     m = user_input_for_month()
     file_path = make_the_files_paths(m,y)
     file_reading_directory(file_path)
-    #make_the_files_paths()
-    #file_reading_directory(path)
-
     find_the_max_min_temp()
-
     if m != '':
         histogram_charts_for_month()
-    #histogram_charts_for_month()
 
 def user_input_for_year():
     """
@@ -50,7 +44,6 @@ def user_input_for_year():
     year =  input ("Please Enter the year :")
     return year
 
-
 def user_input_for_month():
     """
         Take the user input and for the month
@@ -58,12 +51,8 @@ def user_input_for_month():
         Output:
                 returns the month
     """
-
-
     month = raw_input("Please Enter the Month :")
-
     return month
-
 
 def make_the_files_paths(month , year):
     """
@@ -74,20 +63,12 @@ def make_the_files_paths(month , year):
         Output:
                 returns the path dict for further process
     """
-    #global flag_month
     path_list = []
     if not month :
          path_list.extend(glob.glob("/home/yasir/Task_Programs/weatherfiles/Murree_weather_%s_*.txt" %year))
-
-         #flag_month = False
     else:
          path_list.extend(glob.glob("/home/yasir/Task_Programs/weatherfiles/Murree_weather_%s_%s.txt" %(year,month[:3])))
-
-         #flag_month = True
-
     return path_list
-
-# File Reading from directory
 
 def file_reading_directory(path_name):
     """
@@ -99,7 +80,6 @@ def file_reading_directory(path_name):
         Output:
                 append the data in global dict.
     """
-
     for path in path_name:
         with open(path, 'rb') as csvfile:
             reader = csv.DictReader(csvfile)
@@ -109,7 +89,6 @@ def file_reading_directory(path_name):
                 temp_matrix['Min TemperatureC'].append(row['Min TemperatureC'])
                 temp_matrix['Max Humidity'].append(row['Max Humidity'])
                 temp_matrix['Mean Humidity'].append(row[' Mean Humidity'])
-
 
 def find_the_max_min_temp():
 
@@ -122,7 +101,6 @@ def find_the_max_min_temp():
     print '1. Given year display the highest temperature and day,\n' \
           'lowest temperature and day, most humid day and humidity.'
     print '<--------------------------------------------------------->'
-
     mean_hum_list =[]
     max_hum_date = []
     min_date_list =[]
@@ -172,9 +150,6 @@ def find_the_max_min_temp():
     print 'Lowest Average :%s C'%(sum(min_temp_list)/len(min_temp_list))
     print 'Average Mean Humidity :%s C' %(sum(mean_hum_list)/len(mean_hum_list))
 
-
-    #print max_data_list
-
 def histogram_charts_for_month():
 
     """
@@ -189,27 +164,21 @@ def histogram_charts_for_month():
     max_date_list =[]
     max_temp_list = []
     min_temp_list = []
-
     for mx_index,mx_data in enumerate(zip(temp_matrix['Max TemperatureC'],temp_matrix['PKT'])):
         if temp_matrix['Max TemperatureC'][mx_index] != '':
             max_temp_list.append(int(mx_data[0]))
             max_date_list.append(temp_matrix['PKT'][mx_index])
-
     for min_index,min_data in enumerate(zip(temp_matrix['Min TemperatureC'],temp_matrix['PKT'])) :
         if temp_matrix['Min TemperatureC'][min_index] != '':
             min_temp_list.append(int(min_data[0]))
             min_date_list.append(temp_matrix['PKT'][min_index])
-
-
     for max_d,min_d,max_v,min_v in (zip(max_date_list,min_date_list,max_temp_list,min_temp_list)):
         print max_d,'+ '*max_v,'%sC'%max_v,'\n',min_d,'- '*min_v,'%sC'%min_v
     print '<----------------------------------------------------------------->'
     print '5. BONUS TASK. For a given month draw one horizontal bar chart on the console for \n' \
           'the highest and lowest temperature on each day. Highest in red and lowest in blue.'
-
     for t_date,max_v,min_v in (zip(max_date_list,max_temp_list,min_temp_list)):
         print t_date,'- '*min_v,'+ '*max_v,'%sC--%sC'%(max_v,min_v)
-
 
 if __name__ == '__main__':
     main()
