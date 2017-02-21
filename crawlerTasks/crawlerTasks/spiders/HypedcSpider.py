@@ -2,7 +2,7 @@ from itertools import product
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from crawler1.items import HypedcProduct
+from crawlerTasks.items import HypedcProduct
 
 
 class HypedcSpider(CrawlSpider):
