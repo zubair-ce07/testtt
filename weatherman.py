@@ -124,47 +124,53 @@ def FetchArguments():
 
     return (args)
 
-def IterateDirectory(criteria):     #criteria = commandline argument passed e.g. year
+def IterateDirectory():
 
     data = []
     for each in os.listdir(args.FilePath):
-        if criteria in each:
-            with open(os.path.join(args.FilePath,each)) as csvfile:
-                reader = csv.DictReader(csvfile)
-                for each in reader:
-                    data.append(each)
-
-    return data #data contains a list of dictionaries where each dict represent one row of csv file of matching criteria
+        with open(os.path.join(args.FilePath,each)) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                data.append(row)
+    return data #data contains a list of dictionaries built from all the files
 
 def YearMonConcat(year_month):  #for making string of format: "YEAR_MONTH ABRVIATION" for searching string in file name
-    year = year_month.strftime('%Y')
-    month = year_month.strftime('%m')
-    return (year + '_' + calendar.month_abbr[int(month)])
+    return("{year}-{month}".format(year = year_month.strftime('%Y'), month = int(year_month.strftime('%m'))))
+
+def BuildReportData(criteria,data_list):  #criteria = commandline argument passed e.g. year
+    data = []
+    for row in data_list:
+        if 'PKST' in row:
+            row['PKT'] = row.pop('PKST')
+        if criteria in row['PKT']:
+            data.append(row)
+    return data
 
 def BuildReport(args):
 
     reports_list = []
+    data_list = IterateDirectory()
     if (args.e is not None):
-        data_list = IterateDirectory(args.e)
-        rep = YearlyReport(data_list)
+        data = BuildReportData(args.e,data_list)
+        rep = YearlyReport(data)
         reports_list.append(rep)
 
     if (args.a is not None):
         year_month = YearMonConcat(args.a)
-        data_list = IterateDirectory(year_month)
-        rep = MonthlyReport(data_list)
+        data = BuildReportData(year_month,data_list)
+        rep = MonthlyReport(data)
         reports_list.append(rep)
 
     if (args.c is not None):
         year_month = YearMonConcat(args.c)
-        data_list = IterateDirectory(year_month)
-        rep = MonthlyBarChartReport(data_list)
+        data = BuildReportData(year_month,data_list)
+        rep = MonthlyBarChartReport(data)
         reports_list.append(rep)
 
     if (args.s is not None):
         year_month = YearMonConcat(args.s)
-        data_list = IterateDirectory(year_month)
-        rep = SingleLineMonthlyReport(data_list)
+        data = BuildReportData(year_month,data_list)
+        rep = SingleLineMonthlyReport(data)
         reports_list.append(rep)
 
     for obj in reports_list:
