@@ -28,8 +28,7 @@ class HypedcSpider(CrawlSpider):
         item['category'] = response.css('section ul.breadcrumb li[class^="category"] a::attr(title)').extract()
         item['care'] = form.css('div.product-description[itemprop=description] ul li::text').extract()
         item['gender'] = item['category'][0]
-        item['image_urls'] = parent.css(
-            'div#main-image.flexslider ul.slides li:not(li.clone) noscript img::attr(src)').extract()
+        item['image_urls'] = parent.css('div#main-image li:not(li.clone) img::attr(data-src)').extract()
         item['description'] = form.css('div.product-description[itemprop=description]::text').extract_first()
 
         price_container = form.css('div.product-price-container')
@@ -42,8 +41,8 @@ class HypedcSpider(CrawlSpider):
         return item
 
     def __get_available_colours(self, response, form):
-        current_colour = form.css('h3.product-colour::text').extract()
-        other_colours = response.css('section div#carousel-colours h5.product-name::text').extract()
+        current_colour = form.css('.product-colour::text').extract()
+        other_colours = response.css('div#carousel-colours .product-name::text').extract()
         return other_colours + current_colour
 
     def __get_available_sizes(self, parent):
