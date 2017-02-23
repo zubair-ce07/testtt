@@ -7,52 +7,61 @@ from termcolor import colored
 
 
 class WeatherReport:
-    reports = []
+    weather_records = []
     max_temperatures = []
     min_temperatures = []
-    highest = 0
-    lowest = 0
-    humidity = 0
 
-    highest_temp_date = None
-    lowest_temp_date = None
+    max_temperature = 0
+    min_temperature = 0
+    max_humidity = 0
+
+    max_temperature_date = None
+    min_temperature_date = None
     max_humidity_date = None
 
     def __init__(self, reports):
-        self.reports = reports
+        self.weather_records = reports
 
     # creates a dictionary with key=date and value = Max temperature
     def set_max_temperatures(self):
         self.max_temperatures = {x['PKT']: int(x['Max TemperatureC']) for x in
-                                 self.reports if x['Max TemperatureC']}
+                                 self.weather_records if x['Max TemperatureC']}
 
     # creates a dictionary with key=date and value = Min temperature
     def set_min_temperatures(self):
         self.min_temperatures = {x['PKT']: int(x['Min TemperatureC']) for x in
-                                 self.reports if x['Min TemperatureC']}
+                                 self.weather_records if x['Min TemperatureC']}
 
 
 class MonthlyReport(WeatherReport):
+
+    max_avg_temperature = 0
+    min_avg_temperature = 0
+    mean_humidity_avg = 0
+
     def __init__(self, reports):
         WeatherReport.__init__(self, reports)
 
     # calculating averages of highest temp, lowest temp and mean humidity
     def calculate_statistics(self):
+
         self.set_max_temperatures()
         self.set_min_temperatures()
-        self.highest = sum([i for i in self.max_temperatures.values()])/len(
-                            self.max_temperatures)
-        self.lowest = sum([i for i in self.min_temperatures.values()])/len(
-                            self.min_temperatures)
-        mean_humidity = [int(x[' Mean Humidity']) for x in self.reports
+
+        self.max_avg_temperature = sum([i for i in self.max_temperatures.
+                                       values()])/len(self.max_temperatures)
+        self.min_avg_temperature = sum([i for i in self.min_temperatures.
+                                       values()])/len(self.min_temperatures)
+
+        mean_humidity = [int(x[' Mean Humidity']) for x in self.weather_records
                          if x[' Mean Humidity']]
-        self.humidity = sum(i for i in mean_humidity)/len(mean_humidity)
+        self.mean_humidity_avg = sum(i for i in mean_humidity)/len(mean_humidity)
 
     def display_report(self):
         print("Monthly Report:")
-        print("Highest Average: {0}{1}".format(self.highest, "C"))
-        print("Lowest Average: {0}{1}".format(self.lowest, "C"))
-        print("Average Mean Humidity: {0}{1}".format(self.humidity, "%"))
+        print("Highest Average: {0}{1}".format(self.max_avg_temperature, "C"))
+        print("Lowest Average: {0}{1}".format(self.min_avg_temperature, "C"))
+        print("Average Mean Humidity: {0}{1}".format(self.mean_humidity_avg, "%"))
 
 
 # for returning string of format: "MONTH_NAME DAY" for report displaying
@@ -73,24 +82,26 @@ class YearlyReport(WeatherReport):
         self.set_max_temperatures()
         self.set_min_temperatures()
 
-        self.highest_temp_date = max(self.max_temperatures,
-                                     key=self.max_temperatures.get)
-        self.highest = self.max_temperatures[self.highest_temp_date]
-        self.lowest_temp_date = min(self.min_temperatures,
-                                    key=self.min_temperatures.get)
-        self.lowest = self.min_temperatures[self.lowest_temp_date]
+        self.max_temperature_date = max(self.max_temperatures,
+                                        key=self.max_temperatures.get)
+        self.max_temperature = self.max_temperatures[self.max_temperature_date]
+
+        self.min_temperature_date = min(self.min_temperatures,
+                                        key=self.min_temperatures.get)
+        self.min_temperature = self.min_temperatures[self.min_temperature_date]
+
         max_humidity = {x['PKT']: int(x['Max Humidity']) for x in
-                        self.reports if x['Max Humidity']}
+                        self.weather_records if x['Max Humidity']}
         self.max_humidity_date = max(max_humidity, key=max_humidity.get)
-        self.humidity = max_humidity[self.max_humidity_date]
+        self.max_humidity = max_humidity[self.max_humidity_date]
 
     def display_report(self):
         print("Yearly Report:")
-        print("Highest: {0}{1} on {2}".format(self.highest, 'C',
-              month_day_concat(self.highest_temp_date)))
-        print("Lowest: {0}{1} on {2}".format(self.lowest, 'C',
-              month_day_concat(self.lowest_temp_date)))
-        print("Humidity: {0}{1} on {2}".format(self.humidity, '%',
+        print("Highest: {0}{1} on {2}".format(self.max_temperature, 'C',
+              month_day_concat(self.max_temperature_date)))
+        print("Lowest: {0}{1} on {2}".format(self.min_temperature, 'C',
+              month_day_concat(self.min_temperature_date)))
+        print("Humidity: {0}{1} on {2}".format(self.max_humidity, '%',
               month_day_concat(self.max_humidity_date)))
 
 
@@ -101,22 +112,23 @@ class MonthlyBarChartReport(WeatherReport):
     def calculate_statistics(self):
         # creating list of tuples with tuple values: day, max and min temp
         reports = []
-        for report in self.reports:
+        for report in self.weather_records:
             if report['Max TemperatureC']:
+
                 day = datetime.strptime(report['PKT'], '%Y-%m-%d').day
                 max_temperature = int(report['Max TemperatureC'])
                 min_temperature = int(report['Min TemperatureC'])
                 weather_reading = (day, max_temperature, min_temperature)
                 reports.append(weather_reading)
 
-        self.reports = reports
+        self.weather_records = reports
 
     def display_report(self):
         print("Monthly Two line Bar chart Report:")
-        for day, max_temperature, min_temperature in self.reports:
+        for day, max_temperature, min_temperature in self.weather_records:
             print(day, end='')
             print_bar('red', max_temperature)
-            print("{0}{1}{2}{3}".format(max_temperature, 'C', '\n', day),end='')
+            print("{0}{1}{2}{3}".format(max_temperature, 'C', '\n', day), end='')
             print_bar('blue', min_temperature)
             print("{0}{1}".format(min_temperature, 'C'))
 
@@ -127,11 +139,11 @@ class SingleLineMonthlyReport(MonthlyBarChartReport):
 
     def display_report(self):
         print("Monthly Single Line Bar chart Report:")
-        for day, max_temperature, min_temperature in self.reports:
+        for day, max_temperature, min_temperature in self.weather_records:
             print(day, end='')
             print_bar('blue', max_temperature)
             print_bar('red', min_temperature)
-            print("{0}{1}-{2}{1}".format(max_temperature, "C", min_temperature))
+            print("{0}{1}-{2}{1}".format(min_temperature, "C", max_temperature))
 
 
 def print_bar(colour, temperature):
@@ -210,7 +222,7 @@ def build_report():
         reports.append(report)
 
     for report in reports:
-        if report.reports:
+        if report.weather_records:
             report.calculate_statistics()
             report.display_report()
             print('\n')
