@@ -1,169 +1,155 @@
 import argparse
 import calendar
 from termcolor import colored
+import csv
 
-filename = "/lahore_weather_[year]_[month].txt"
 months = calendar.month_name
 
-def display_highest_lowest(args):
-    if (not args):
+
+def read_file(file_path, year, month, data_fields):
+    filename = "{}/lahore_weather_{}_{}.txt".format(file_path, year, month[:3])
+
+    with open(filename) as csvFile:
+        return list(csv.DictReader(csvFile, fieldnames=data_fields))[1:]
+
+
+def display_highest_lowest(params):
+    if not params:
         return
 
-    highest_temp = None
-    lowest_temp = None
-    highest_humidity = None
-    highest_day = None
-    highest_month = None
-    lowest_day = None
-    lowest_month = None
-    humidity_day = None
-    humidity_month = None
+    highest_data = {'highest_temp': None, 'highest_day': None, 'highest_month': None}
+    lowest_data = {'lowest_temp': None, 'lowest_day': None, 'lowest_month': None}
+    humidity_data = {'highest_humidity': None, 'humidity_day': None, 'humidity_month': None}
+
+    data_fields = ['PKT', 'Max TemperatureC',  'Min TemperatureC',  'Max Humidity']
 
     for month in months[1:]:
-        cur_filename = args[1] + filename.replace('[year]', args[0])
-        cur_filename = cur_filename.replace('[month]', month[:3])
-        try:
-            file = open(cur_filename, "r")
-        except IOError:
-            #print('No file found!')
-            continue
+        file_data = read_file(params[1], params[0], month, data_fields)
+        for row in file_data:
+            date = row[data_fields[0]].split('-')
 
-        lines = file.readlines()
-        for line in lines[2:]:
-            day_data = line.split(',')
-            date = day_data[0].split('-')
+            if(row[data_fields[1]] and (not highest_data['highest_temp']
+                                        or highest_data['highest_temp'] < int(row[data_fields[1]]))):
+                highest_data['highest_temp'] = int(row[data_fields[1]])
+                highest_data['highest_day'] = date[2]
+                highest_data['highest_month'] = month
 
-            if(1<len(day_data) and day_data[1]
-                                and (not highest_temp or highest_temp < int(day_data[1])) ):
+            if(row[data_fields[2]] and (not lowest_data['lowest_temp']
+                                        or lowest_data['lowest_temp'] > int(row[data_fields[2]]))):
 
-                highest_temp = int(day_data[1])
-                highest_day = date[2]
-                highest_month = month
+                lowest_data['lowest_temp'] = int(row[data_fields[2]])
+                lowest_data['lowest_day'] = date[2]
+                lowest_data['lowest_month'] = month
 
-            if(3<len(day_data) and day_data[3]
-                                and (not lowest_temp or lowest_temp > int(day_data[3])) ):
+            if(row[data_fields[3]] and (not humidity_data['highest_humidity']
+                                        or humidity_data['highest_humidity'] < int(row[data_fields[3]]))):
+                humidity_data['highest_humidity'] = int(row[data_fields[3]])
+                humidity_data['humidity_day'] = date[2]
+                humidity_data['humidity_month'] = month
 
-                lowest_temp = int(day_data[3])
-                lowest_day = date[2]
-                lowest_month = month
+    print('Highest: {}C on {} {} \nLowest: {}C on {} {} \nHumid: {}C on {} {}'.format(
+        str(highest_data['highest_temp']), highest_data['highest_month'], highest_data['highest_day'],
+        str(lowest_data['lowest_temp']), lowest_data['lowest_month'], lowest_data['lowest_day'],
+        str(humidity_data['highest_humidity']), humidity_data['humidity_month'], humidity_data['humidity_day']))
 
-            if(7<len(day_data) and day_data[7]
-                                and (not highest_humidity or highest_humidity < int(day_data[7])) ):
 
-                highest_humidity = int(day_data[7])
-                humidity_day = date[2]
-                humidity_month = month
-
-    print ('Highest: '+str(highest_temp)+ 'C'+' on '+highest_month+ ' '+highest_day
-    + '\nLowest: '+str(lowest_temp)+'C' ' on '+lowest_month+' '+lowest_day
-    + '\nHumid: '+str(highest_humidity)+'%'+' on '+humidity_month+' '+humidity_day)
-
-def display_average(args):
-    if (not args):
+def display_average(params):
+    if not params:
         return
 
     highest_temp = None
     lowest_temp = None
     highest_humidity = None
 
-    date = args[0].split('/')
+    data_fields = ['PKT', 'Mean TemperatureC', 'Mean Humidity']
 
-    cur_filename = args[1] + filename.replace('[year]', date[0])
-    cur_filename = cur_filename.replace('[month]', months[int(date[1])][:3])
-    try:
-        file = open(cur_filename, "r")
-    except IOError:
-        print('No file found!')
+    date = params[0].split('/')
+
+    file_data = read_file(params[1], date[0], months[int(date[1])], data_fields)
+    for row in file_data:
+        if (row[data_fields[1]] and (not highest_temp
+                                     or highest_temp < int(row[data_fields[1]]))):
+            highest_temp = int(row[data_fields[1]])
+
+        if (row[data_fields[1]] and (not lowest_temp
+                                     or lowest_temp > int(row[data_fields[1]]))):
+            lowest_temp = int(row[data_fields[1]])
+
+        if (row[data_fields[2]] and (not highest_humidity
+                                     or highest_humidity < int(row[data_fields[2]]))):
+            highest_humidity = int(row[data_fields[2]])
+
+    print('Highest Average: {}C \nLowest Average: {}C \nAverage Humidity: {}%'.format(
+        str(highest_temp), str(lowest_temp), str(highest_humidity)))
+
+
+def display_bar_charts(params):
+    if not params:
         return
 
-    lines = file.readlines()
-    for line in lines[2:]:
-        day_data = line.split(',')
-        if (2 < len(day_data) and day_data[2]
-                                and (not highest_temp or highest_temp < int(day_data[2])) ):
-            highest_temp = int(day_data[2])
+    data_fields = ['PKT', 'Max TemperatureC', 'Min TemperatureC']
 
-        if (2 < len(day_data) and day_data[2]
-                                and (not lowest_temp or lowest_temp > int(day_data[2])) ):
-            lowest_temp = int(day_data[2])
+    date = params[0].split('/')
+    print('{} {}'.format(months[int(date[1])], date[0]))
 
-        if (8 < len(day_data) and day_data[8]
-                                and (not highest_humidity or highest_humidity < int(day_data[8])) ):
-            highest_humidity = int(day_data[8])
+    file_data = read_file(params[1], date[0], months[int(date[1])], data_fields)
 
-    print('Highest Average: ' + str(highest_temp) + 'C'
-        + '\nLowest Average: ' + str(lowest_temp) + 'C'
-        +'\nAverage Humidity: ' + str(highest_humidity) + '%')
+    for row in file_data:
+        cur_date = row[data_fields[0]].split('-')
 
-def display_barCharts(args):
-    if(not args):
-        return
+        if row[data_fields[1]]:
+            highest_temp = int(row[data_fields[1]])
 
-    date = args[0].split('/')
-    print(months[int(date[1])] + ' ' + date[0])
-
-    cur_filename = args[1] + filename.replace('[year]', date[0])
-    cur_filename = cur_filename.replace('[month]', months[int(date[1])][:3])
-    try:
-        file = open(cur_filename, "r")
-    except IOError:
-        print('No file found!')
-        return
-
-    lines = file.readlines()
-    for line in lines[2:]:
-        day_data = line.split(',')
-        cur_date = day_data[0].split('-')
-
-        if (1 < len(day_data) and day_data[1]):
-            highest_temp = int(day_data[1])
-
-            print(cur_date[2] + ' ', end='')
+            print('{} '.format(cur_date[2]), end='')
 
             for index in range(highest_temp):
                 print(colored('+', 'red'), end='')
-            print(' ' + str(highest_temp) + 'C')
+            print(' {}C'.format(str(highest_temp)))
 
-        if (3 < len(day_data) and day_data[3]):
-            lowest_temp = int(day_data[3])
+        if row[data_fields[2]]:
+            lowest_temp = int(row[data_fields[2]])
 
-            print(cur_date[2] + ' ', end='')
+            print('{} '.format(cur_date[2]), end='')
 
             for index in range(lowest_temp):
                 print(colored('+', 'blue'), end='')
-            print(' ' + str(lowest_temp) + 'C')
+            print(' {}C'.format(str(lowest_temp)))
 
     print('\n')
 
-    for line in lines[2:]:
-        day_data = line.split(',')
-
+    for row in file_data:
         highest_temp = None
         lowest_temp = None
-        if (3 < len(day_data) and day_data[3]):
-            lowest_temp = int(day_data[3])
+        if row[data_fields[2]]:
+            lowest_temp = int(row[data_fields[2]])
 
-            print(day_data[0].split('-')[2] + ' ', end='')
+            print('{} '.format(row[data_fields[0]].split('-')[2]), end='')
 
             for index in range(lowest_temp):
                 print(colored('+', 'blue'), end='')
 
-        if(1<len(day_data) and day_data[1]):
-            highest_temp = int(day_data[1])
+        if row[data_fields[1]]:
+            highest_temp = int(row[data_fields[1]])
 
             for index in range(highest_temp):
                 print(colored('+', 'red'), end='')
 
-        if (lowest_temp and highest_temp):
-            print(' ' + str(lowest_temp) + 'C' +'-'+ str(highest_temp) + 'C')
+        if lowest_temp and highest_temp:
+            print(' {}C-{}C'.format(str(lowest_temp), str(highest_temp)))
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-e', nargs=2)
-parser.add_argument('-a', nargs=2)
-parser.add_argument('-c', nargs=2)
-args = parser.parse_args()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', nargs=2)
+    parser.add_argument('-a', nargs=2)
+    parser.add_argument('-c', nargs=2)
+    args = parser.parse_args()
 
-display_highest_lowest(args.e)
-display_average(args.a)
-display_barCharts(args.c)
+    display_highest_lowest(args.e)
+    display_average(args.a)
+    display_bar_charts(args.c)
+
+
+if __name__ == "__main__":
+    main()
+
