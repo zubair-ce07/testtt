@@ -7,46 +7,46 @@ from termcolor import colored
 
 
 class WeatherReport:
-    data = []
-    max_list = []
-    min_list = []
+    reports = []
+    max_temperatures = []
+    min_temperatures = []
     highest = 0
     lowest = 0
     humidity = 0
 
     highest_temp_date = None
     lowest_temp_date = None
-    humidity_temp_date = None
+    max_humidity_date = None
 
-    def __init__(self, data_lst):
-        self.data = data_lst
+    def __init__(self, reports):
+        self.reports = reports
 
     # creates a dictionary with key=date and value = Max temperature
-    def set_max_list(self):
-        self.max_list = {x['PKT']: int(x['Max TemperatureC']) for x in
-                         self.data if x['Max TemperatureC'] not in (None, '')}
+    def set_max_temperatures(self):
+        self.max_temperatures = {x['PKT']: int(x['Max TemperatureC']) for x in
+                                 self.reports if x['Max TemperatureC']}
 
     # creates a dictionary with key=date and value = Min temperature
-    def set_min_list(self):
-        self.min_list = {x['PKT']: int(x['Min TemperatureC']) for x in
-                         self.data if x['Min TemperatureC'] not in (None, '')}
+    def set_min_temperatures(self):
+        self.min_temperatures = {x['PKT']: int(x['Min TemperatureC']) for x in
+                                 self.reports if x['Min TemperatureC']}
 
 
 class MonthlyReport(WeatherReport):
-    def __init__(self, data_lst):
-        WeatherReport.__init__(self, data_lst)
+    def __init__(self, reports):
+        WeatherReport.__init__(self, reports)
 
     # calculating averages of highest temp, lowest temp and mean humidity
     def calculate_statistics(self):
-        self.set_max_list()
-        self.set_min_list()
-        self.highest = sum([i for i in self.max_list.values()])/len(
-                            self.max_list)
-        self.lowest = sum([i for i in self.min_list.values()])/len(
-                            self.min_list)
-        mean_hum_list = [int(x[' Mean Humidity']) for x in self.data
-                         if x[' Mean Humidity'] not in (None, '')]
-        self.humidity = sum(i for i in mean_hum_list)/len(mean_hum_list)
+        self.set_max_temperatures()
+        self.set_min_temperatures()
+        self.highest = sum([i for i in self.max_temperatures.values()])/len(
+                            self.max_temperatures)
+        self.lowest = sum([i for i in self.min_temperatures.values()])/len(
+                            self.min_temperatures)
+        mean_humidity = [int(x[' Mean Humidity']) for x in self.reports
+                         if x[' Mean Humidity']]
+        self.humidity = sum(i for i in mean_humidity)/len(mean_humidity)
 
     def display_report(self):
         print("Monthly Report:")
@@ -56,80 +56,87 @@ class MonthlyReport(WeatherReport):
 
 
 # for returning string of format: "MONTH_NAME DAY" for report displaying
-def month_day(temp_date):
-    month = calendar.month_name[datetime.strptime(temp_date, '%Y-%m-%d').month]
-    day = str(datetime.strptime(temp_date, '%Y-%m-%d').day)
-    return month+" " + day
+def month_day_concat(temperature_date):
+    month = calendar.month_name[datetime.strptime(temperature_date,
+                                                  '%Y-%m-%d').month]
+    day = str(datetime.strptime(temperature_date, '%Y-%m-%d').day)
+    return month + " " + day
 
 
 class YearlyReport(WeatherReport):
-    def __init__(self, data_lst):
-        WeatherReport.__init__(self, data_lst)
+    def __init__(self, reports):
+        WeatherReport.__init__(self, reports)
 
-    # calculating the highest temp, lowest temp and highest humidity of the
-    # year along with their respective dates
+    # calculating the highest temperature, lowest temperature and highest
+    # humidity of the year along with their respective dates
     def calculate_statistics(self):
-        self.set_max_list()
-        self.set_min_list()
+        self.set_max_temperatures()
+        self.set_min_temperatures()
 
-        self.highest_temp_date = max(self.max_list, key=self.max_list.get)
-        self.highest = self.max_list[self.highest_temp_date]
-
-        self.lowest_temp_date = min(self.min_list, key=self.min_list.get)
-        self.lowest = self.min_list[self.lowest_temp_date]
-
-        max_hum_list = {x['PKT']: int(x['Max Humidity']) for x in self.data
-                        if x['Max Humidity'] not in (None, '')}
-        self.humidity_temp_date = max(max_hum_list, key=max_hum_list.get)
-        self.humidity = max_hum_list[self.humidity_temp_date]
+        self.highest_temp_date = max(self.max_temperatures,
+                                     key=self.max_temperatures.get)
+        self.highest = self.max_temperatures[self.highest_temp_date]
+        self.lowest_temp_date = min(self.min_temperatures,
+                                    key=self.min_temperatures.get)
+        self.lowest = self.min_temperatures[self.lowest_temp_date]
+        max_humidity = {x['PKT']: int(x['Max Humidity']) for x in
+                        self.reports if x['Max Humidity']}
+        self.max_humidity_date = max(max_humidity, key=max_humidity.get)
+        self.humidity = max_humidity[self.max_humidity_date]
 
     def display_report(self):
         print("Yearly Report:")
-        print("Highest: {0}{1} on {2}".format(self.highest, 'C', month_day(
-            self.highest_temp_date)))
-        print("Lowest: {0}{1} on {2}".format(self.lowest, 'C', month_day(
-            self.lowest_temp_date)))
-        print("Humidity: {0}{1} on {2}".format(self.humidity, 'C', month_day(
-            self.humidity_temp_date)))
+        print("Highest: {0}{1} on {2}".format(self.highest, 'C',
+              month_day_concat(self.highest_temp_date)))
+        print("Lowest: {0}{1} on {2}".format(self.lowest, 'C',
+              month_day_concat(self.lowest_temp_date)))
+        print("Humidity: {0}{1} on {2}".format(self.humidity, '%',
+              month_day_concat(self.max_humidity_date)))
 
 
 class MonthlyBarChartReport(WeatherReport):
-    def __init__(self, data_lst):
-        WeatherReport.__init__(self, data_lst)
+    def __init__(self, reports):
+        WeatherReport.__init__(self, reports)
 
     def calculate_statistics(self):
-        # creating dict with key=date, values=Max temperature, Min temperature
-        self.data = {datetime.strptime(x['PKT'], '%Y-%m-%d').day:
-                     (int(x['Max TemperatureC']),
-                     int(x['Min TemperatureC'])) for x in self.data
-                     if x['Max TemperatureC'] not in (None, '')}
+        # creating list of tuples with tuple values: day, max and min temp
+        reports = []
+        for report in self.reports:
+            if report['Max TemperatureC']:
+                day = datetime.strptime(report['PKT'], '%Y-%m-%d').day
+                max_temperature = int(report['Max TemperatureC'])
+                min_temperature = int(report['Min TemperatureC'])
+                weather_reading = (day, max_temperature, min_temperature)
+                reports.append(weather_reading)
+
+        self.reports = reports
 
     def display_report(self):
         print("Monthly Two line Bar chart Report:")
-        for day, temp in self.data.items():
+        for day, max_temperature, min_temperature in self.reports:
             print(day, end='')
-            for i in range(0, temp[0]):
-                print(colored('+', 'red'), end='')
-            print("{0}{1}{2}{day_}".format(temp[0], 'C', '\n', day_=day),
-                  end='')
-            for i in range(0, temp[1]):
-                print(colored('+', 'blue'), end='')
-            print("{0}{1}".format(temp[1], 'C'))
+            print_bar('red', max_temperature)
+            print("{0}{1}{2}{3}".format(max_temperature, 'C', '\n', day),end='')
+            print_bar('blue', min_temperature)
+            print("{0}{1}".format(min_temperature, 'C'))
 
 
 class SingleLineMonthlyReport(MonthlyBarChartReport):
-    def __init__(self, data_lst):
-        MonthlyBarChartReport.__init__(self, data_lst)
+    def __init__(self, reports):
+        MonthlyBarChartReport.__init__(self, reports)
 
     def display_report(self):
-        print("Monthly Single Line  Bar chart Report:")
-        for day, temp in self.data.items():
+        print("Monthly Single Line Bar chart Report:")
+        for day, max_temperature, min_temperature in self.reports:
             print(day, end='')
-            for i in range(0, temp[1]):
-                print(colored('+', 'blue'), end='')
-            for i in range(0, temp[0]):
-                print(colored('+', 'red'), end='')
-            print("{0}{1}-{2}{1}".format(temp[1], "C", temp[0]))
+            print_bar('blue', max_temperature)
+            print_bar('red', min_temperature)
+            print("{0}{1}-{2}{1}".format(max_temperature, "C", min_temperature))
+
+
+def print_bar(colour, temperature):
+    for i in range(0, abs(temperature)):
+        print(colored('+', colour), end='')
 
 
 def fetch_arguments():
@@ -150,13 +157,13 @@ def fetch_arguments():
 
 
 def iterate_directory():
-    data = []
-    for each in os.listdir(args.FilePath):
-        with open(os.path.join(args.FilePath, each)) as csv_file:
-            reader = csv.DictReader(csv_file)
-            for row in reader:
-                data.append(row)
-    return data  # contains a list of dictionaries built from all the files
+    reports = []
+    for file in os.listdir(args.FilePath):
+        with open(os.path.join(args.FilePath, file)) as csv_file:
+            weather_readings = csv.DictReader(csv_file)
+            for reading in weather_readings:
+                reports.append(reading)
+    return reports  # contains a list of dictionaries built from all the files
 
 
 # concat string in format:"YEAR_MONTH ABRV" for searching string in filename
@@ -166,47 +173,50 @@ def year_mon_concat(year_month):
 
 
 # criteria = commandline argument passed e.g. year
-def build_report_data(criteria, data_list):
-    data = []
-    for row in data_list:
-        if 'PKST' in row:  # for consistency
-            row['PKT'] = row.pop('PKST')
-        if criteria in row['PKT']:
-            data.append(row)
-    return data
+def build_report_records(criteria, weather_readings):
+    reports = []
+    for reading in weather_readings:
+        reading['PKT'] = reading.get('PKT') or reading.get('PKST')
+        if criteria in reading['PKT']:
+            reports.append(reading)
+    return reports
 
 
-def build_report(args_):
-    reports_list = []
-    data_list = iterate_directory()
-    if args_.e is not None:
-        data = build_report_data(args_.e, data_list)
-        rep = YearlyReport(data)
-        reports_list.append(rep)
+def build_report():
+    reports = []
+    weather_readings = iterate_directory()
 
-    if args_.a is not None:
-        year_month = year_mon_concat(args_.a)
-        data = build_report_data(year_month, data_list)
-        rep = MonthlyReport(data)
-        reports_list.append(rep)
+    if args.e is not None:
+        report_records = build_report_records(args.e, weather_readings)
+        report = YearlyReport(report_records)
+        reports.append(report)
 
-    if args_.c is not None:
-        year_month = year_mon_concat(args_.c)
-        data = build_report_data(year_month, data_list)
-        rep = MonthlyBarChartReport(data)
-        reports_list.append(rep)
+    if args.a is not None:
+        year_month = year_mon_concat(args.a)
+        report_records = build_report_records(year_month, weather_readings)
+        report = MonthlyReport(report_records)
+        reports.append(report)
 
-    if args_.s is not None:
-        year_month = year_mon_concat(args_.s)
-        data = build_report_data(year_month, data_list)
-        rep = SingleLineMonthlyReport(data)
-        reports_list.append(rep)
+    if args.c is not None:
+        year_month = year_mon_concat(args.c)
+        report_records = build_report_records(year_month, weather_readings)
+        report = MonthlyBarChartReport(report_records)
+        reports.append(report)
 
-    for obj in reports_list:
-        obj.calculate_statistics()
-        obj.display_report()
-        print('\n')
+    if args.s is not None:
+        year_month = year_mon_concat(args.s)
+        report_records = build_report_records(year_month, weather_readings)
+        report = SingleLineMonthlyReport(report_records)
+        reports.append(report)
+
+    for report in reports:
+        if report.reports:
+            report.calculate_statistics()
+            report.display_report()
+            print('\n')
+        else:
+            print("No data found for the specified year.")
 
 if __name__ == '__main__':
     args = fetch_arguments()
-    build_report(args)
+    build_report()
