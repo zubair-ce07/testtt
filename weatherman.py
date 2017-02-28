@@ -4,6 +4,7 @@ import argparse
 from datetime import datetime
 import csv
 from termcolor import colored
+import re
 
 
 class WeatherReport:
@@ -32,9 +33,9 @@ class MonthlyReport(WeatherReport):
         records_length = len(self.weather_records)
 
         for record in self.weather_records:
-            sum_max_temperature += int(record['Max TemperatureC'])
-            sum_min_temperature += int(record['Min TemperatureC'])
-            sum_mean_humidity += int(record[' Mean Humidity'])
+            sum_max_temperature += record['Max TemperatureC']
+            sum_min_temperature += record['Min TemperatureC']
+            sum_mean_humidity += record[' Mean Humidity']
 
         self.max_avg_temperature = int(sum_max_temperature/records_length)
         self.min_avg_temperature = int(sum_min_temperature/records_length)
@@ -62,20 +63,17 @@ class YearlyReport(WeatherReport):
 
     def calculate_statistics(self):
 
-        weather_record = max(self.weather_records,
-                             key=lambda x: int(x['Max TemperatureC']))
-        self.max_temperature = int(weather_record['Max TemperatureC'])
-        self.max_temperature_date = weather_record['PKT']
+        record = max(self.weather_records, key=lambda x: x['Max TemperatureC'])
+        self.max_temperature = record['Max TemperatureC']
+        self.max_temperature_date = record['PKT']
 
-        weather_record = min(self.weather_records,
-                             key=lambda x: int(x['Min TemperatureC']))
-        self.min_temperature = int(weather_record['Min TemperatureC'])
-        self.min_temperature_date = weather_record['PKT']
+        record = min(self.weather_records, key=lambda x: x['Min TemperatureC'])
+        self.min_temperature = record['Min TemperatureC']
+        self.min_temperature_date = record['PKT']
 
-        weather_record = max(self.weather_records,
-                             key=lambda x: int(x['Max Humidity']))
-        self.max_humidity = int(weather_record['Max Humidity'])
-        self.max_humidity_date = weather_record['PKT']
+        record = max(self.weather_records, key=lambda x: x['Max Humidity'])
+        self.max_humidity = record['Max Humidity']
+        self.max_humidity_date = record['PKT']
 
     def display_report(self):
         print(self.report_name)
@@ -96,8 +94,8 @@ class MonthlyBarChartReport(WeatherReport):
         report_records = []
         for record in self.weather_records:
             day = datetime.strptime(record['PKT'], '%Y-%m-%d').day
-            max_temperature = int(record['Max TemperatureC'])
-            min_temperature = int(record['Min TemperatureC'])
+            max_temperature = record['Max TemperatureC']
+            min_temperature = record['Min TemperatureC']
             weather_reading = (day, max_temperature, min_temperature)
             report_records.append(weather_reading)
 
@@ -158,10 +156,21 @@ def fetch_arguments():
 
 def read_weather_files():
     weather_readings = []
+    report_parameters = ['PKT', 'Max TemperatureC', 'Min TemperatureC',
+                         ' Mean Humidity', 'Max Humidity']
 
     for file in os.listdir(args.FilePath):
         with open(os.path.join(args.FilePath, file)) as csv_file:
-            weather_readings += csv.DictReader(csv_file)
+
+            for reading in csv.DictReader(csv_file):
+                record = dict()
+                record['PKT'] = reading.get('PKT') or reading.get('PKST')
+
+                for param in report_parameters[1:]:
+                    record[param] = int(reading[param]) if reading[param] else ''
+
+                if reading['Max TemperatureC']:
+                    weather_readings.append(record)
 
     return weather_readings
 
@@ -175,13 +184,10 @@ def concat_year_month(year_month):
 # criteria = commandline argument passed e.g. year
 def build_report_records(criteria, weather_readings):
     report_records = []
-    report_parameters = ['PKT', 'Max TemperatureC', 'Min TemperatureC',
-                         ' Mean Humidity', 'Max Humidity']
     for reading in weather_readings:
-        reading['PKT'] = reading.get('PKT') or reading.get('PKST')
-        if criteria in reading['PKT'] and reading['Max TemperatureC']:
-            r = {i: reading[i] for i in report_parameters}
-            report_records.append(r)
+        if re.findall('\\b'+criteria+'\\b', reading['PKT']):
+            report_records.append(reading)
+
     return report_records
 
 
