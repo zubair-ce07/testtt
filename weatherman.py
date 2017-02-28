@@ -4,7 +4,6 @@ import argparse
 from datetime import datetime
 import csv
 from termcolor import colored
-import re
 
 
 class WeatherReport:
@@ -156,17 +155,16 @@ def fetch_arguments():
 
 def read_weather_files():
     weather_readings = []
-    report_parameters = ['PKT', 'Max TemperatureC', 'Min TemperatureC',
+    report_parameters = ['Max TemperatureC', 'Min TemperatureC',
                          ' Mean Humidity', 'Max Humidity']
 
     for file in os.listdir(args.FilePath):
         with open(os.path.join(args.FilePath, file)) as csv_file:
 
             for reading in csv.DictReader(csv_file):
-                record = dict()
-                record['PKT'] = reading.get('PKT') or reading.get('PKST')
+                record = {'PKT': reading.get('PKT') or reading.get('PKST')}
 
-                for param in report_parameters[1:]:
+                for param in report_parameters:
                     record[param] = int(reading[param]) if reading[param] else ''
 
                 if reading['Max TemperatureC']:
@@ -177,15 +175,15 @@ def read_weather_files():
 
 # concat string in format:"YEAR_MONTH ABRV" for searching string in filename
 def concat_year_month(year_month):
-    return "{year}-{month}".format(year=year_month.strftime('%Y'),
-                                   month=int(year_month.strftime('%m')))
+    return "{year}-{month}-".format(year=year_month.strftime('%Y'),
+                                    month=int(year_month.strftime('%m')))
 
 
 # criteria = commandline argument passed e.g. year
 def build_report_records(criteria, weather_readings):
     report_records = []
     for reading in weather_readings:
-        if re.findall('\\b'+criteria+'\\b', reading['PKT']):
+        if criteria in reading['PKT']:
             report_records.append(reading)
 
     return report_records
