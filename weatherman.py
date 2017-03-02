@@ -1,305 +1,218 @@
-# -----------------  Importing sys for Reading Command Line Argument  ----------------------
-import sys
-
-# -----------------  Importing os.path for checking is file exist  ----------------------
-import os.path
-
-# -----------------  Importing string for using string functions  ----------------------
-import string
-
-# -----------------  Importing re for using Regular Expression to Validate Command Line Arguments  ----------------------
+import argparse
+import calendar
+import csv
 import re
-
-# -----------------  Dictionary For Months for creating File Name  ----------------------
-Months = {
-	"Jan" : 1,
-	"Feb" : 2,
-	"Mar" : 3,
-	"Apr" : 4,
-	"May" : 5,
-	"Jun" : 6,
-	"Jul" : 7,
-	"Aug" : 8,
-	"Sep" : 9,
-	"Oct" : 10,
-	"Nov" : 11,
-	"Dec" : 12
-}
-
-# -----------------  Dictionary For Months for Displaying Full Name  ----------------------
-Complete_Month_Name = {
-	"1" : "January",
-	"2" : "February",
-	"3" : "March",
-	"4" : "April",
-	"5" : "May",
-	"6" : "June",
-	"7" : "July",
-	"8" : "August",
-	"9" : "September",
-	"10" : "October",
-	"11" : "November",
-	"12" : "December"
-}
-
-# -----------------  Dictionary For Data (Files Data)  ----------------------
-Data_dict = {
-	"PKT" : 0,
-	"Max_TemperatureC" : 1,
-	"Mean_TemperatureC" : 2,
-	"Min_TemperatureC" : 3,
-	"Dew_PointC" : 4,
-	"MeanDew_PointC" : 5,
-	"Min_DewpointC" : 6,
-	"Max_Humidity" : 7,
-	"Mean_Humidity" : 8,
-	"Min_Humidity" : 9,
-	"Max_Sea_Level_PressurehPa" : 10,
-	"Mean_Sea_Level_PressurehPa" : 11,
-	"Min_Sea_Level_PressurehPa" : 12,
-	"Max_VisibilityKm" : 13,
-	"Mean_VisibilityKm" : 14,
-	"Min_VisibilitykM" : 15,
-	"Max_Wind_SpeedKmh" : 16,
-	"Mean_Wind_SpeedKmh" : 17,
-	"Max_Gust_SpeedKmh" : 18,
-	"PrecipitationCm" : 19,
-	"CloudCover" : 20,
-	"Events" : 21,
-	"WindDirDegrees" : 22,
-}
-
-# -----------------  Todo: Need discussion with Omair Bhai  ----------------------
-# -----------------  Function for converting string to Integer if string is empty then return 0  ----------------------
-def convert_string_to_int(s):
-	s = s.strip()
-	return int(s) if s else 0
+from dateutil import parser
+from os import listdir
+from termcolor import colored
 
 
-# -----------------  Function for converting string list to Integer list so that math function can work on lists  ----------------------
-def ConvertStringList_to_int(strlist):
-	retlist = []
-	for s in strlist:
-		retlist.append(convert_string_to_int(s))
-	return retlist
+class WeatherMan:
+    def __init__(self):
+        self.months = calendar.month_name
 
-# -----------------  Function for return month name(file name format) from Months dictionary  ----------------------
-def getmonth_by_value(val):
-	for key, value in Months.iteritems():
-		if value == val:
-			return key
+        self.pkt = 'PKT'
+        self.max_temperature_c = 'Max TemperatureC'
+        self.min_temperature_c = 'Min TemperatureC'
+        self.max_humidity = 'Max Humidity'
+        self.mean_humidity = 'Mean Humidity'
 
-# -----------------  Function for reading a single file  ----------------------
-def read_singlefile(file_name, path):
-	date = file_name.split('/')
-	file_name = "lahore_weather_" + date[0] + "_" + str(getmonth_by_value(int(date[1]))) + ".txt"
-	full = path + file_name
-	
-	if not os.path.isfile(full):
-		sys.exit(full + " No such file is present in given path")
-	with open(full, "r") as f:
-		data = f.readlines()
-	del data[0]
-	del data[0]
-	del data[len(data)-1]
-	
-	list_of_details = [[] for i in range(len(Data_dict))]
-	
-	for line in data:
-		words = line.split(',')
-		
-		for temp in xrange(0, len(Data_dict)):
-			list_of_details[temp].append(words[temp])
-	
-	return list_of_details
+        self.red_color = 'red'
+        self.blue_color = 'blue'
 
-# -----------------  Task-1  ----------------------
-def task_1(year, path):
+        self.data_fields = ['PKT', 'Max TemperatureC', 'Mean TemperatureC', 'Min TemperatureC', 'Dew PointC',
+                            'MeanDew PointC', 'Min DewpointC', 'Max Humidity', 'Mean Humidity', 'Min Humidity',
+                            'Max Sea Level PressurehPa', 'Mean Sea Level PressurehPa', 'Min Sea Level PressurehPa',
+                            'Max VisibilityKm', 'Mean VisibilityKm', 'Min VisibilitykM', 'Max Wind SpeedKm/h',
+                            'Mean Wind SpeedKm/h', 'Max Gust SpeedKm/h', 'PrecipitationCm', 'CloudCover',
+                            'Events', 'WindDirDegrees'
+                            ]
 
-	highest_temperature = 0
-	highest_temperature_day_month = 0
-	highest_temperature_day = 0
-	lowest_temperature = 100
-	lowest_temperature_day_month = 0
-	lowest_temperature_day = 0
-	most_humidity = 0
-	most_humid_day_month = 0
-	most_humid_day = 0
+    # Function for converting string to Integer if string is empty then return 0
+    @staticmethod
+    def convert_string_to_int(text):
+        text = text.strip()
+        return int(text) if text else 0
 
-	tmp_highest_temperature = 0
-	tmp_lowest_temperature = 0
-	tmp_most_humidity = 0
+    def read_single_file(self, file_path):
+        with open(file_path) as csvFile:
+            dict_reader = csv.DictReader(csvFile, self.data_fields)  # Read File as List of Dictionaries
+            next(dict_reader)  # Skip Header
+            file_details = list(dict_reader)
+            file_details.pop()  # Skip Footer
+            return file_details
 
-	for temp in xrange(1, len(Months)+1):
-		file_name = year + "/" + str(temp)
-		
-		
-		list_of_details = read_singlefile(file_name, path)
-		
-		Max_TemperatureC = list_of_details[Data_dict.get("Max_TemperatureC")]
-		Min_TemperatureC = list_of_details[Data_dict.get("Min_TemperatureC")]
-		Max_Humidity = list_of_details[Data_dict.get("Max_Humidity")]
-		
-		Max_TemperatureC = ConvertStringList_to_int(Max_TemperatureC)
-		Min_TemperatureC = ConvertStringList_to_int(Min_TemperatureC)
-		Max_Humidity = ConvertStringList_to_int(Max_Humidity)
-		
-		
-		tmp_highest_temperature = max(Max_TemperatureC)
-		tmp_lowest_temperature = min(Min_TemperatureC)
-		tmp_most_humidity = max(Max_Humidity)
-		
-		if tmp_highest_temperature > highest_temperature:
-			highest_temperature = tmp_highest_temperature
-			highest_temperature_day_month = temp
-			highest_temperature_day = Max_TemperatureC.index(tmp_highest_temperature)+1
-			
-		
-		if tmp_lowest_temperature < lowest_temperature:
-			lowest_temperature = tmp_lowest_temperature
-			lowest_temperature_day_month = temp
-			lowest_temperature_day = Min_TemperatureC.index(tmp_lowest_temperature)+1
-			
-			
-		if tmp_most_humidity > most_humidity:
-			most_humidity = tmp_most_humidity
-			most_humid_day_month = temp
-			most_humid_day = Max_Humidity.index(tmp_most_humidity)+1
-		
-	
-	print("Highest: " + str(highest_temperature) + "C on " + Complete_Month_Name.get(str(highest_temperature_day_month)) + " " + str(highest_temperature_day))
-	print("Lowest: " + str(lowest_temperature) + "C on " + Complete_Month_Name.get(str(lowest_temperature_day_month)) + " " + str(lowest_temperature_day))
-	print("Humid: " + str(most_humidity) + "% on " + Complete_Month_Name.get(str(most_humid_day_month)) + " " + str(most_humid_day))
-	
-	
-# -----------------  Task-2  ----------------------
-def task_2(file_name, path):
+    def find_and_read_file(self, year, month, path):
+        month = self.months[month]
+        files = []
+        # Find all files that matches the given pattern
+        for f in listdir(path):
+            if re.match(r'(?=.*{year})(?=.*{month}).*\.txt$'.format(year=year,
+                                                                    month=month[:3]), f):
+                files.append(f)
 
-	list_of_details = read_singlefile(file_name, path)
-		
-	Max_TemperatureC = list_of_details[Data_dict.get("Max_TemperatureC")]
-	Min_TemperatureC = list_of_details[Data_dict.get("Min_TemperatureC")]
-	Mean_Humidity = list_of_details[Data_dict.get("Mean_Humidity")]
+        file_detail = []
 
-	Max_TemperatureC = ConvertStringList_to_int(Max_TemperatureC)
-	Min_TemperatureC = ConvertStringList_to_int(Min_TemperatureC)
-	Mean_Humidity = ConvertStringList_to_int(Mean_Humidity)
+        # Read all files that matches the above pattern
+        for temp in range(len(files)):
+            file_name = path + files.pop()
+            file_detail.extend(self.read_single_file(file_name))
 
-	print ("Highest Average: " + str(sum(Max_TemperatureC)/len(Max_TemperatureC)) + "C")
-	print ("Lowest Average: " + str(sum(Min_TemperatureC)/len(Min_TemperatureC)) + "C")
-	print ("Average Humidity: " + str(sum(Mean_Humidity)/len(Mean_Humidity)) + "%")
+        return file_detail
 
-# -----------------  Function for creating bar graph according to given parameters  ----------------------
-def create_bar_graph(temp_list, colortype, count):
-	ptr = ""
-	if colortype == 1:
-		ptr +=	"\033[1;31m"
-	else:
-		ptr += "\033[1;34m"
-	lop = convert_string_to_int(temp_list[count])
-	for temp in xrange(0, lop):
-		ptr += "+"
-	ptr += "\033[1;m"
-	return ptr
+    # Method to Display highest temperature and day, lowest temperature and day, most humid day and humidity.
+    def highest_lowest_humid(self, year, path):
+        highest_temperature = 0
+        highest_temperature_day_month = 0
+        highest_temperature_day = 0
+        lowest_temperature = 100
+        lowest_temperature_day_month = 0
+        lowest_temperature_day = 0
+        most_humidity = 0
+        most_humid_day_month = 0
+        most_humid_day = 0
 
-# -----------------  Task-3  ----------------------
-def task_3(file_name, path):
-	
-	list_of_details = read_singlefile(file_name, path)
-	
-	PKT = list_of_details[Data_dict.get("PKT")]	
-	Max_TemperatureC = list_of_details[Data_dict.get("Max_TemperatureC")]
-	Min_TemperatureC = list_of_details[Data_dict.get("Min_TemperatureC")]
-	
-	
-	count = 0
-	for date in PKT:
-		ptr = ""
-		day = date.split('-')
-		month = convert_string_to_int(day[2])
-		if month < 10:
-			month = "0" + str(month)
-		else:
-			month = day[2]
-		ptr += month + " "
-		ptr += 	create_bar_graph(Max_TemperatureC,1,count)
-		ptr += " "
-		ptr += Max_TemperatureC[count]
-		ptr += "C"
-		print (ptr)
+        # Find all files that matches the given pattern
+        files = [f for f in listdir(path) if re.match(r'(?=.*{year}).*\.txt$'.format(year=year), f)]
 
-		ptr = ""
-		ptr += month + " "
-		ptr += 	create_bar_graph(Min_TemperatureC,2,count)
-		ptr += " "
-		ptr += Min_TemperatureC[count]
-		ptr += "C"
-		print (ptr)
-		count = count + 1
+        for temp in range(len(files)):
+            file_name = path + files.pop()
+            file_detail = self.read_single_file(file_name)
 
-# -----------------  Task-4  ----------------------
-def task_4(file_name, path):
-	
-	list_of_details = read_singlefile(file_name, path)
-		
-	PKT = list_of_details[Data_dict.get("PKT")]
-	Max_TemperatureC = list_of_details[Data_dict.get("Max_TemperatureC")]
-	Min_TemperatureC = list_of_details[Data_dict.get("Min_TemperatureC")]
-	
-	count = 0
-	for date in PKT:
-		ptr = ""
-		day = date.split('-')
-		month = convert_string_to_int(day[2])
-		if month < 10:
-			month = "0" + str(month)
-		else:
-			month = day[2]
-		ptr += month + " "
-		ptr += 	create_bar_graph(Min_TemperatureC,2,count)		
-		ptr += 	create_bar_graph(Max_TemperatureC,1,count)
-		ptr += " " + Min_TemperatureC[count] + "C - " + Max_TemperatureC[count] + "C"
-				
-		print (ptr)
-		count = count + 1
+            for single_day in file_detail:
+                pkt = parser.parse(single_day[self.pkt])
+                tmp_highest_temperature = WeatherMan.convert_string_to_int(single_day[self.max_temperature_c])
+                tmp_lowest_temperature = WeatherMan.convert_string_to_int(single_day[self.min_temperature_c])
+                tmp_most_humidity = WeatherMan.convert_string_to_int(single_day[self.max_humidity])
+
+                # Finding Highest Max Temperature
+                if tmp_highest_temperature > highest_temperature:
+                    highest_temperature = tmp_highest_temperature
+                    highest_temperature_day_month = pkt.month
+                    highest_temperature_day = pkt.day
+
+                # Finding Lowest Min Temperature
+                if tmp_lowest_temperature < lowest_temperature:
+                    lowest_temperature = tmp_lowest_temperature
+                    lowest_temperature_day_month = pkt.month
+                    lowest_temperature_day = pkt.day
+
+                # Finding Highest Max Humidity
+                if tmp_most_humidity > most_humidity:
+                    most_humidity = tmp_most_humidity
+                    most_humid_day_month = pkt.month
+                    most_humid_day = pkt.day
+
+        print 'Highest: {temp}C on {month} {day}'.format(temp=highest_temperature,
+                                                         month=self.months[highest_temperature_day_month],
+                                                         day=highest_temperature_day)
+        print 'Lowest: {temp}C on {month} {day}'.format(temp=lowest_temperature,
+                                                        month=self.months[lowest_temperature_day_month],
+                                                        day=lowest_temperature_day)
+        print "Humid: {humidity}% on {month} {day}".format(humidity=most_humidity,
+                                                           month=self.months[most_humid_day_month],
+                                                           day=most_humid_day)
+
+    # Method to display the average highest temperature, average lowest temperature, average humidity.
+    def average_highest_lowest_humid(self, year, month, path):
+        file_detail = self.find_and_read_file(year, month, path)
+
+        # Finding Sum of all Max Temperature for finding average
+        sum_max_temperature_c = sum(WeatherMan.convert_string_to_int
+                                    (single_day[self.max_temperature_c]) for single_day in file_detail)
+
+        # Finding Sum of all min Temperature for finding average
+        sum_min_temperature_c = sum(WeatherMan.convert_string_to_int
+                                    (single_day[self.min_temperature_c]) for single_day in file_detail)
+
+        # Finding Sum of all mean Humidity for finding average
+        sum_mean_humidity = sum(WeatherMan.convert_string_to_int
+                                (single_day[self.mean_humidity]) for single_day in file_detail)
+
+        avg_max_temperature_c = sum_max_temperature_c / len(file_detail)
+        avg_min_temperature_c = sum_min_temperature_c / len(file_detail)
+        avg_mean_humidity = sum_mean_humidity / len(file_detail)
+
+        print 'Highest Average: {avg_max_temperature_c}C'.format(avg_max_temperature_c=avg_max_temperature_c)
+        print 'Lowest Average: {avg_min_temperature_c}C'.format(avg_min_temperature_c=avg_min_temperature_c)
+        print 'Average Humidity: {avg_mean_humidity}%'.format(avg_mean_humidity=avg_mean_humidity)
+
+    @staticmethod
+    def colored_print(temperature, color):
+        bar_graph = ""
+        for index in range(int(temperature)):
+            bar_graph += colored('+', color)
+        return bar_graph
+
+    @staticmethod
+    def display_bar_graph(current_day, temperature, color):
+        bar_graph = ""
+        bar_graph += str(current_day) + " "
+        bar_graph += WeatherMan.colored_print(temperature, color)
+        bar_graph += " " + str(temperature) + "C"
+        print bar_graph
+
+    def display_double_graph_per_day(self, current_day, highest_temperature, lowest_temperature):
+        WeatherMan.display_bar_graph(current_day, highest_temperature, self.red_color)
+        WeatherMan.display_bar_graph(current_day, lowest_temperature, self.blue_color)
+
+    def display_single_graph_per_day(self, current_day, highest_temperature, lowest_temperature):
+        bar_graph = ""
+        bar_graph += str(current_day) + " "
+        bar_graph += WeatherMan.colored_print(lowest_temperature, self.blue_color)
+        bar_graph += WeatherMan.colored_print(highest_temperature, self.red_color)
+        bar_graph += " " + str(lowest_temperature) + "C - " + str(highest_temperature) + "C"
+        print bar_graph
+
+    # Method to draw horizontal bar chart on the console for the highest and lowest temperature on each day
+    def display_bar_graph_by_month(self, year, month, path, is_bonus_task):
+
+        file_detail = self.find_and_read_file(year, month, path)
+
+        for single_day in file_detail:
+            current_date = parser.parse(single_day[self.pkt])
+            highest_temperature = WeatherMan.convert_string_to_int(single_day[self.max_temperature_c])
+            lowest_temperature = WeatherMan.convert_string_to_int(single_day[self.min_temperature_c])
+            if is_bonus_task:
+                self.display_single_graph_per_day(current_date.day, highest_temperature, lowest_temperature)
+            else:
+                self.display_double_graph_per_day(current_date.day, highest_temperature, lowest_temperature)
 
 
-# -----------------  Function to validate the Command Line Arguments  -----------------
-def validate(option, detail):
-	regex_for_option_a = r"^\d{4}$"
-	regex_for_other_options = r"^\d{4}/\d{1,2}$"
+def main():
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('-e', nargs=2, dest='highest_lowest_humid')
+    arg_parser.add_argument('-a', nargs=2, dest='avg_highest_lowest_temp_humidity')
+    arg_parser.add_argument('-c', nargs=2, dest='separate_bar_chart')
+    arg_parser.add_argument('-b', nargs=2, dest='joint_bar_chart')
+    args = arg_parser.parse_args()
 
-	if option == '-e':
-		if re.match(regex_for_option_a , detail, re.M|re.I):
-			return True
-		else:
-			return False
-	else:
-		if re.match(regex_for_other_options , detail, re.M|re.I):
-			return True
-		else:
-			return False
-	
-	      	
+    weatherman = WeatherMan()
 
-# -----------------  Reading Command Line Arguments and calling appropriate function according to given function ----------------------
+    try:
+        if args.highest_lowest_humid:
+            path = args.highest_lowest_humid.pop()
+            date = parser.parse(args.highest_lowest_humid.pop())
+            weatherman.highest_lowest_humid(date.year, path)
 
-if len(sys.argv) < 4:
-	sys.exit("Please provide full arguments")
+        elif args.avg_highest_lowest_temp_humidity:
+            path = args.avg_highest_lowest_temp_humidity.pop()
+            date = parser.parse(args.avg_highest_lowest_temp_humidity.pop())
+            weatherman.average_highest_lowest_humid(date.year, date.month, path)
 
-o = sys.argv[1]
+        elif args.separate_bar_chart:
+            path = args.separate_bar_chart.pop()
+            date = parser.parse(args.separate_bar_chart.pop())
+            weatherman.display_bar_graph_by_month(date.year, date.month, path, False)
 
-if not validate(o, sys.argv[2]):
-	sys.exit("Given arguments are not correct")
-	
-if o == '-e':
-	task_1(sys.argv[2], sys.argv[3])
-elif o == '-a':
-        task_2(sys.argv[2], sys.argv[3])
-elif o == '-c':
-	task_3(sys.argv[2], sys.argv[3])
-elif o == '-b':
-	task_4(sys.argv[2], sys.argv[3])
-else:
-	print("No Option Match the Requirements")
+        elif args.joint_bar_chart:
+            path = args.joint_bar_chart.pop()
+            date = parser.parse(args.joint_bar_chart.pop())
+            weatherman.display_bar_graph_by_month(date.year, date.month, path, True)
 
+    except OSError:
+        print("Given arguments are not correct.")
+
+
+if __name__ == "__main__":
+    main()
