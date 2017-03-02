@@ -1,11 +1,11 @@
 from bok_choy.page_object import PageObject
+from utils import EMAIL, PASSWORD, AUTH_PASSWORD, AUTH_USER
 
 class StudioHomepage(PageObject):
 	"""
 	Studio Home Page
 	"""
-
-	url = 'https://studio.stage.edx.org/'
+	url = 'https://' + AUTH_USER + ':' + AUTH_PASSWORD + '@studio.stage.edx.org/'
 
 	def is_browser_on_page(self):
 		return 'Welcome' in self.browser.title
@@ -28,17 +28,17 @@ class SignInPage(PageObject):
 	def is_browser_on_page(self):
 		return 'Sign In | edX Studio' in self.browser.title
 
-	def enter_login_email(self,email):
+	def enter_login_email(self, EMAIL):
 		"""
 		fill email field with user's email
 		"""
-		self.q(css='input#email').fill(email)
+		self.q(css='input#email').fill(EMAIL)
 
-	def enter_login_password(self,password):
+	def enter_login_password(self, PASSWORD):
 		"""
 		fill email field with user's email
 		"""
-		self.q(css='input#password').fill(password)
+		self.q(css='input#password').fill(PASSWORD)
 
 	def click_sign_in_button(self):
 		"""
@@ -54,3 +54,28 @@ class SignInPage(PageObject):
 		self.enter_login_email(email)
 		self.enter_login_password(password)
 		self.click_sign_in_button()
+
+
+class Dashboard(PageObject):
+
+	url = None
+
+
+	def is_browser_on_page(self):
+		return 'Studio Home | edX Studio' in self.browser.title
+
+	def open_course(self):
+		"""
+		opens a specific course
+		"""
+
+		self.q(css="li[data-course-key='course-v1:ColumbiaX+AP123+2017_T2']").click()
+		Course_page(self.browser).wait_for_page()
+
+
+class Course_page(PageObject):
+
+	url = None
+
+	def is_browser_on_page(self):
+		return 'Course Outline' in self.browser.title
