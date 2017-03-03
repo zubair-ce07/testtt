@@ -70,12 +70,46 @@ class Dashboard(PageObject):
 		"""
 
 		self.q(css="li[data-course-key='course-v1:ColumbiaX+AP123+2017_T2']").click()
-		Course_page(self.browser).wait_for_page()
+		CoursePage(self.browser).wait_for_page()
 
 
-class Course_page(PageObject):
+class CoursePage(PageObject):
 
 	url = None
 
 	def is_browser_on_page(self):
 		return 'Course Outline' in self.browser.title
+
+	def go_to_pages(self):
+		"""
+		This function redirects to the Pages page of the course
+		:return:none
+		"""
+
+		self.wait_for_ajax()
+		content_button = self.q(css="li.nav-item.nav-course-courseware")
+		content_button.click()
+
+		page_option = self.q(css="li.nav-item.nav-course-courseware-pages")
+		page_option.click()
+
+		PagesPage(self.browser).wait_for_page()
+
+
+class PagesPage(PageObject):
+
+	url = None
+
+	def is_browser_on_page(self):
+		return 'Pages' in self.browser.title
+
+	def add_new_page(self):
+		"""
+		This function adds a new page to the course
+		:return: none
+		"""
+
+		new_page_button = self.q(css="a.button.new-button.new-tab")
+		new_page_button.click()
+		self.wait_for_ajax()
+
