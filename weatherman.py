@@ -107,8 +107,8 @@ class MonthlyBarChartReport(WeatherReport):
 
 
 class SingleLineMonthlyReport(MonthlyBarChartReport):
-    def __init__(self, records):
-        super().__init__(records)
+    def __init__(self, readings):
+        super().__init__(readings)
 
     def display_report(self):
         print(self.report_name)
