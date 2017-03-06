@@ -7,22 +7,19 @@ from termcolor import colored
 
 
 class WeatherReport:
-    report_name = None
-    weather_records = []
 
-    def __init__(self, records, name):
-        self.weather_records = records
+    def __init__(self, readings, name):
+        self.weather_records = readings
         self.report_name = name
 
 
 class MonthlyReport(WeatherReport):
 
-    max_avg_temperature = 0
-    min_avg_temperature = 0
-    avg_mean_humidity = 0
-
-    def __init__(self, records):
-        WeatherReport.__init__(self, records, "Monthly Report ")
+    def __init__(self, readings):
+        super().__init__(readings, "Monthly Report ")
+        self.max_avg_temperature = 0
+        self.min_avg_temperature = 0
+        self.avg_mean_humidity = 0
 
     # calculating averages of highest temp, lowest temp and mean humidity
     def calculate_statistics(self):
@@ -49,30 +46,29 @@ class MonthlyReport(WeatherReport):
 
 class YearlyReport(WeatherReport):
 
-    max_temperature = 0
-    min_temperature = 0
-    max_humidity = 0
+    def __init__(self, readings):
+        super().__init__(readings, "Yearly Report ")
+        self.max_temperature = 0
+        self.min_temperature = 0
+        self.max_humidity = 0
 
-    max_temperature_date = None
-    min_temperature_date = None
-    max_humidity_date = None
-
-    def __init__(self, records):
-        WeatherReport.__init__(self, records, "Yearly Report ")
+        self.max_temperature_date = None
+        self.min_temperature_date = None
+        self.max_humidity_date = None
 
     def calculate_statistics(self):
 
-        record = max(self.weather_records, key=lambda x: x['Max TemperatureC'])
-        self.max_temperature = record['Max TemperatureC']
-        self.max_temperature_date = record['PKT']
+        reading = max(self.weather_records, key=lambda x: x['Max TemperatureC'])
+        self.max_temperature = reading['Max TemperatureC']
+        self.max_temperature_date = reading['PKT']
 
-        record = min(self.weather_records, key=lambda x: x['Min TemperatureC'])
-        self.min_temperature = record['Min TemperatureC']
-        self.min_temperature_date = record['PKT']
+        reading = min(self.weather_records, key=lambda x: x['Min TemperatureC'])
+        self.min_temperature = reading['Min TemperatureC']
+        self.min_temperature_date = reading['PKT']
 
-        record = max(self.weather_records, key=lambda x: x['Max Humidity'])
-        self.max_humidity = record['Max Humidity']
-        self.max_humidity_date = record['PKT']
+        reading = max(self.weather_records, key=lambda x: x['Max Humidity'])
+        self.max_humidity = reading['Max Humidity']
+        self.max_humidity_date = reading['PKT']
 
     def display_report(self):
         print(self.report_name)
@@ -86,7 +82,7 @@ class YearlyReport(WeatherReport):
 
 class MonthlyBarChartReport(WeatherReport):
     def __init__(self, records):
-        WeatherReport.__init__(self, records, "Monthly Bar Chart Report ")
+        super().__init__(records, "Monthly Bar Chart Report ")
 
     def calculate_statistics(self):
         # creating list of tuples with tuple values: day, max and min temp
@@ -112,7 +108,7 @@ class MonthlyBarChartReport(WeatherReport):
 
 class SingleLineMonthlyReport(MonthlyBarChartReport):
     def __init__(self, records):
-        MonthlyBarChartReport.__init__(self, records)
+        super().__init__(records)
 
     def display_report(self):
         print(self.report_name)
@@ -161,13 +157,13 @@ def read_weather_files():
     for file in os.listdir(args.FilePath):
         with open(os.path.join(args.FilePath, file)) as csv_file:
 
-            for reading in csv.DictReader(csv_file):
-                record = {'PKT': reading.get('PKT') or reading.get('PKST')}
+            for row in csv.DictReader(csv_file):
+                record = {'PKT': row.get('PKT') or row.get('PKST')}
 
                 for param in report_parameters:
-                    record[param] = int(reading[param]) if reading[param] else ''
+                    record[param] = int(row[param]) if row[param] else ''
 
-                if reading['Max TemperatureC']:
+                if row['Max TemperatureC']:
                     weather_readings.append(record)
 
     return weather_readings
@@ -181,42 +177,42 @@ def concat_year_month(year_month):
 
 # criteria = commandline argument passed e.g. year
 def build_report_records(criteria, weather_readings):
-    report_records = []
+    weather_records = []
     for reading in weather_readings:
         if criteria in reading['PKT']:
-            report_records.append(reading)
+            weather_records.append(reading)
 
-    return report_records
+    return weather_records
 
 
 def build_report():
-    reports = []
+    weather_reports = []
     weather_readings = read_weather_files()
 
-    if args.e is not None:
-        report_records = build_report_records(args.e, weather_readings)
-        report = YearlyReport(report_records)
-        reports.append(report)
+    if args.e:
+        weather_records = build_report_records(args.e, weather_readings)
+        report = YearlyReport(weather_records)
+        weather_reports.append(report)
 
-    if args.a is not None:
+    if args.a:
         year_month = concat_year_month(args.a)
-        report_records = build_report_records(year_month, weather_readings)
-        report = MonthlyReport(report_records)
-        reports.append(report)
+        weather_records = build_report_records(year_month, weather_readings)
+        report = MonthlyReport(weather_records)
+        weather_reports.append(report)
 
-    if args.c is not None:
+    if args.c:
         year_month = concat_year_month(args.c)
-        report_records = build_report_records(year_month, weather_readings)
-        report = MonthlyBarChartReport(report_records)
-        reports.append(report)
+        weather_records = build_report_records(year_month, weather_readings)
+        report = MonthlyBarChartReport(weather_records)
+        weather_reports.append(report)
 
-    if args.s is not None:
+    if args.s:
         year_month = concat_year_month(args.s)
-        report_records = build_report_records(year_month, weather_readings)
-        report = SingleLineMonthlyReport(report_records)
-        reports.append(report)
+        weather_records = build_report_records(year_month, weather_readings)
+        report = SingleLineMonthlyReport(weather_records)
+        weather_reports.append(report)
 
-    for report in reports:
+    for report in weather_reports:
         if report.weather_records:
             report.calculate_statistics()
             report.display_report()
