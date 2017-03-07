@@ -1,156 +1,122 @@
 import sys
-import getopt
+import argparse
 import csv
 import calendar
 import glob
+import operator
+import os
+import re
+
+
+class Weather:
+    """weather object to store a days weather"""
+
+    def __init__(self, date, month, year, max_temp, min_temp, max_humidity, mean_humidity):
+        self.Date = date
+        self.Month = month
+        self.Year = year
+        self.Max_Temp = max_temp
+        self.Min_Temp = min_temp
+        self.Max_Humidity = max_humidity
+        self.Mean_Humidity = mean_humidity
+
+
+weather_records = []
+
+# dividing date into separate values of day month and year
+def dividing_date(date):
+    date = date.split("-")
+    return date[2], calendar.month_abbr[int(date[1])], date[0]
 
 
 # reading the files needed for the user requirement and maintaining a record
-
-def read_files(argument):
-
-    if len(argument) == 4:
-        data_list = []
-        for name in glob.glob('weatherfiles/weatherfiles/Murree_weather_' + argument + '*.txt'):
-            with open(name) as csv_file:
-                reader = csv.DictReader(csv_file)
-                for row in reader:
-                    if 'PKST' in row.keys():
-                        row['PKT'] = row['PKST']
-                        del row['PKST']
-                    data_list.append(row)
-
-
-    elif len(argument) > 5:
-        date_details = argument.split("/")
-        temporary = calendar.month_abbr[int(date_details[1])]
-
-        data_list = []
-        with open('weatherfiles/weatherfiles/Murree_weather_' + date_details[0] + '_' + temporary + '.txt') as csv_file:
+def read_files(file_path):
+    files = glob.glob(file_path)
+    for file in files:
+        with open(file) as csv_file:
             reader = csv.DictReader(csv_file)
             for row in reader:
                 if 'PKST' in row.keys():
                     row['PKT'] = row['PKST']
                     del row['PKST']
-                data_list.append(row)
+                day, month, year = dividing_date(row['PKT'])
 
-    return data_list
+                # catering for empty values
+                if row['Min TemperatureC'] == "":
+                    row['Min TemperatureC'] = "0.000001"
+                if row['Max TemperatureC'] == "":
+                    row['Max TemperatureC'] = "0.000001"
+                if row['Max Humidity'] == "":
+                    row['Max Humidity'] = "0.000001"
+                if row[' Mean Humidity'] == "":
+                    row[' Mean Humidity'] = "0.000001"
 
-# extracting the required fields e.g temperature and humidity from the records.
+                weather_records.append(
+                    Weather(int(day), month, int(year), float(row['Max TemperatureC']), float(row['Min TemperatureC']),
+                            float(row['Max Humidity']), float(row[' Mean Humidity'])))
 
-def extracting_required_fields(data):
-
-    max_temp_seq = [x['Max TemperatureC'] for x in data]
-    min_temp_seq = [x['Min TemperatureC'] for x in data]
-    max_hum_seq = [x['Max Humidity'] for x in data]
-    mean_humid_seq = [x[' Mean Humidity'] for x in data]
-    day = [x['PKT'] for x in data]
-
-    # ensuring all non numerical values are ignored
-
-    max_temp_seq = [x for x in max_temp_seq if (x.isdigit())]
-    min_temp_seq = [x for x in min_temp_seq if (x.isdigit())]
-    mean_humid_seq = [x for x in mean_humid_seq if (x.isdigit())]
-    max_hum_seq = [x for x in max_hum_seq if (x.isdigit())]
-
-    # converting strings to inr for math operations
-
-    max_temp_seq = list(map(int, max_temp_seq))
-    min_temp_seq = list(map(int, min_temp_seq))
-    mean_humid_seq = list(map(int, mean_humid_seq))
-    max_hum_seq = list(map(int, max_hum_seq))
-
-    # returning tuples
-
-    return max_temp_seq, min_temp_seq, max_hum_seq, mean_humid_seq, day
-
-# dividing date into separate values of day month and year
-
-def dividing_date(date):
-
-    date = date.split("-")
-    day = date[2]
-    year = date[0]
-    month = calendar.month_abbr[int(date[1])]
-
-    return day, month, year
+    return weather_records
 
 
 # calculating yearly summary of max temp, min temp and max humidiity
+def year_info(year):
+    year_records = []
+    for record in weather_records:
+        if record.Year == year:
+            year_records.append(record)
 
-def year_info(arg):
-
-    # reading files needed
-    data_list = read_files(arg)
-
-    # extratcing information required
-    max_temp_seq, min_temp_seq, max_hum_seq, mean_humid_seq, day = extracting_required_fields(data_list)
-
-    # getting the result and converting to string for printing
-    max_temp = str(max(max_temp_seq))
-    min_temp = str(min(min_temp_seq))
-    max_humid = str(max(max_hum_seq))
-
-    #  initiailizing so that no exception is thrown in case if statement never goes true
-    max_temp_date = "no date"
-    max_humid_date = "no date"
-    min_temp_date = "no date"
-
-    # retrieving date for a max, min temp and max humid day
-    for row in data_list:
-        if row['Max TemperatureC'] == max_temp:
-            max_temp_date = row['PKT']
-        if row['Max Humidity'] == max_humid:
-            max_humid_date = row['PKT']
-        if row['Min TemperatureC'] == min_temp:
-            min_temp_date = row['PKT']
-
-    # dividing date and printing as required
-    day, month, year = dividing_date(max_temp_date)
-    print("Highest : " + max_temp + "C on " + month + " " + day)
-
-    day, month, year = dividing_date(min_temp_date)
-    print("Lowest : " + min_temp + "C on " + month + " " + day)
-
-    day, month, year = dividing_date(max_humid_date)
-    print("Humidity : " + max_humid + "% on " + month + " " + day)
-
-    print("")
-    print("")
-
-
-def month_info(arg):
-
-    # reading files needed
-    data_list = read_files(arg)
-
-    # extratcing information required
-    max_temp_seq, min_temp_seq, max_hum_seq, mean_humid_seq, day = extracting_required_fields(data_list)
-
-    # calculating averages
-    ave_max_temp = int(sum(max_temp_seq) / len(max_temp_seq))
-    ave_min_temp = int(sum(min_temp_seq) / len(min_temp_seq))
-    ave_mean_humid = int(sum(mean_humid_seq) / len(mean_humid_seq))
+    # calculating min max mean
+    max_temp_day = max(year_records, key=operator.attrgetter('Max_Temp'))
+    max_humid_day = max(year_records, key=operator.attrgetter('Max_Humidity'))
+    min_temp_day = min(year_records, key=operator.attrgetter('Min_Temp'))
 
     # printing as required
-    print("Highest Temperature Average : " + str(ave_max_temp) + "C")
-    print("Lowest Temperature Average : " + str(ave_min_temp) + "C")
-    print("Average Mean humidity : " + str(ave_mean_humid) + "%")
+    print("Highest : " + str(int(max_temp_day.Max_Temp)) + "C on " + str(max_temp_day.Month) + " " + str(max_temp_day.Date))
+
+    print("Lowest : " + str(int(min_temp_day.Min_Temp)) + "C on " + str(min_temp_day.Month) + " " + str(min_temp_day.Date))
+
+    print("Humidity : " + str(int(max_humid_day.Max_Humidity)) + "C on " + str(max_humid_day.Month) + " " + str(max_humid_day.Date))
 
     print("")
+
+
+# calculating monthly summary
+def month_info(month, year):
+
+    month_records = []
+    zero_added_in_min_temp = 0
+    zero_added_in_max_temp = 0
+    zero_added_in_mean_humid = 0
+
+    for record in weather_records:
+        if record.Year == year and record.Month == month:
+            if record.Min_Temp == 0.000001:
+                zero_added_in_min_temp += 1
+            if record.Max_Temp == 0.000001:
+                zero_added_in_max_temp += 1
+            if record.Mean_Humidity == 0.000001:
+                zero_added_in_mean_humid += 1
+            month_records.append(record)
+
+    # calculating averages
+    max_temp_day = sum(record.Max_Temp for record in month_records) / (len(month_records) - zero_added_in_max_temp)
+    mean_humid_day = sum(record.Mean_Humidity for record in month_records) / (len(month_records) - zero_added_in_mean_humid)
+    min_temp_day = sum(record.Min_Temp for record in month_records) / (len(month_records) - zero_added_in_min_temp)
+
+    # printing as required
+    print("Highest Temperature Average : " + str(int(max_temp_day)) + "C")
+    print("Lowest Temperature Average : " + str(int(min_temp_day)) + "C")
+    print("Average Mean humidity : " + str(int(mean_humid_day)) + "%")
     print("")
 
 
-def month_graph(arg):
+# displaying monthly graph
+def month_graph(month, year):
 
-    # reading files needed
-    data_list = read_files(arg)
-
-    # extratcing information required
-    max_temp_seq, min_temp_seq, max_hum_seq, mean_humid_seq, day = extracting_required_fields(data_list)
-
-    # extracting the day from the date for the whle list
-    day = [d.rpartition('-')[2] for d in day]
+    month_records = []
+    for record in weather_records:
+        if record.Year == year and record.Month == month:
+            month_records.append(record)
 
     i = 0
     # string to be printed
@@ -162,38 +128,63 @@ def month_graph(arg):
     grey = '\033[37m'
 
     # printing bar for each day in the month
-    for d in day:
-        print(d + " " + blue + symbol_str * min_temp_seq[i] + red + symbol_str * (
-            max_temp_seq[i] - min_temp_seq[i]) + grey + "  " + str(min_temp_seq[i]) + "-" + str(max_temp_seq[i]) + "C")
-        i += 1
-    print("")
+    for d in month_records:
+        if d.Min_Temp == 0 and d.Max_Temp == 0:
+            print("no record found")
+        else:
+            print(str(d.Date) + " " + blue + symbol_str * int(d.Min_Temp) + red + symbol_str * (
+                int(d.Max_Temp) - int(d.Min_Temp)) + grey + "  " +
+                  str(int(d.Min_Temp)) + "-" + str(int(d.Max_Temp)) + "C")
     print("")
 
 
 def main(argv):
 
-    # for testing
-    # year_info("2008")
-    # month_graph("2008/7")
-    # month_info("2008/7")
+    # regex to check input
+    regex = r"(\d{4})/(\d{1,2})"
 
-    try:
-        # ensuring that each option is followed by a parameter
-        options, args = getopt.getopt(argv, "e:a:c:")
-    except getopt.GetoptError:
-        print('error please follow this format test.py -i <inputfile> -o <outputfile>')
-        sys.exit(2)
-    try:
-        # loop for each partition
-        for opt, arg in options:
-            if opt == '-e':
-                year_info(arg)
-            elif opt == '-a':
-                month_info(arg)
-            elif opt == '-c':
-                month_graph(arg)
-    except:
-        print('please ensure that the input format is correct')
+    # creating and parsing arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("Directory", help="Path to record Directory e.g weatherfiles/weatherfiles/")
+    parser.add_argument("-e", "--yearInfo", action='append',
+                        help="give the year you want the record of e.g. 2008", type=int)
+    parser.add_argument("-a", "--monthInfo", action='append',
+                        help="give the month and year you want record of e.g. 2008/4")
+    parser.add_argument("-c", "--monthGraph", action='append',
+                        help="give the month and year you want graph of e.g. 2008/4")
+    args = parser.parse_args()
+
+
+    if args.Directory:
+        if os.path.isdir(args.Directory):
+            file_path = args.Directory + "*.txt"
+            read_files(file_path)
+        else:
+            print("Illegal Path")
+
+    if args.yearInfo is not None:
+        for x in args.yearInfo:
+            if 1900 > x > 3000:
+                print("please enter a viable year")
+            else:
+                year_info(x)
+
+    if args.monthInfo is not None:
+        for x in args.monthInfo:
+            match = re.match(regex, x)
+            if match is not None:
+                month_info(calendar.month_abbr[int(match.group(2))], int(match.group(1)))
+            else:
+                print ("please enter correct month format")
+
+    if args.monthGraph is not None:
+        for x in args.monthGraph:
+            match = re.match(regex, x)
+            if match is not None:
+                month_graph(calendar.month_abbr[int(match.group(2))], int(match.group(1)))
+            else:
+                print("please enter correct month format")
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
