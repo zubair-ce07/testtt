@@ -152,9 +152,11 @@ class PagesPage(PageObject):
 		This function hides a visible page of a course
 		:return: none
 		"""
-		hide_button = self.q(css="span.icon.fa.fa-eye[aria-hidden='true']")
+		hide_button = self.q(css="input.toggle-checkbox")
 		hide_button.click()
+
 		self.wait_for_ajax()
+
 
 class LMSPage(PageObject):
 	"""
