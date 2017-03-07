@@ -1,5 +1,5 @@
 from bok_choy.page_object import PageObject
-from utils import EMAIL, PASSWORD, AUTH_PASSWORD, AUTH_USER
+from utils import EMAIL, PASSWORD, AUTH_PASSWORD, AUTH_USER, PAGE_NAME, COURSE_KEY
 
 class StudioHomepage(PageObject):
 	"""
@@ -47,7 +47,7 @@ class SignInPage(PageObject):
 		self.q(css='button.action.action-primary').click()
 		Dashboard(self.browser).wait_for_page()
 
-	def login(self,email,password):
+	def login(self, email, password):
 		"""
 		login a user
 		"""
@@ -57,6 +57,9 @@ class SignInPage(PageObject):
 
 
 class Dashboard(PageObject):
+	"""
+	Dashboard Page
+	"""
 
 	url = None
 
@@ -74,7 +77,9 @@ class Dashboard(PageObject):
 
 
 class CoursePage(PageObject):
-
+	"""
+	Page of a particular course
+	"""
 	url = None
 
 	def is_browser_on_page(self):
@@ -97,6 +102,9 @@ class CoursePage(PageObject):
 
 
 class PagesPage(PageObject):
+	"""
+	This page adds pages to the course
+	"""
 
 	url = None
 
@@ -110,6 +118,114 @@ class PagesPage(PageObject):
 		"""
 
 		new_page_button = self.q(css="a.button.new-button.new-tab")
-		new_page_button.click()
+		new_page_button[0].click()
 		self.wait_for_ajax()
+
+	def edit_page(self, PAGE_NAME):
+		"""
+		This function edits the page name
+		:return: none
+		"""
+
+		edit_button = self.q(css="a.edit-button.action-button")
+		edit_button_index = len(edit_button)-1
+		edit_button[edit_button_index].click()
+		self.wait_for_ajax()
+
+		settings_button = self.q(css="a.settings-button")
+		settings_button.click()
+		self.wait_for_ajax()
+
+		name_field = self.q(css="input.input.setting-input")
+		name_field.fill(PAGE_NAME)
+
+		save_button = self.q(css="a.button.action-primary.action-save")
+		save_button.click()
+		self.wait_for_ajax()
+
+		view_live_button = self.q(css="a.button.view-button.view-live-button")
+		view_live_button.click()
+		LMSPage(self.browser).wait_for_page()
+
+	def hide_page(self):
+		"""
+		This function hides a visible page of a course
+		:return: none
+		"""
+		hide_button = self.q(css="span.icon.fa.fa-eye[aria-hidden='true']")
+		hide_button.click()
+		self.wait_for_ajax()
+
+class LMSPage(PageObject):
+	"""
+	Live LMS Page
+	"""
+
+	#url = 'https://' + AUTH_USER + ':' + AUTH_PASSWORD + '@courses.stage.edx.org/'
+	url = None
+
+	def is_browser_on_page(self):
+		return "edX" in self.browser.title
+
+	def sign_in(self):
+		"""
+		CLick on the sign in button and go to the next page
+		"""
+
+		sign_in_button = self.q(css='a.btn[href="https://courses.stage.edx.org/login"]')
+		self.wait_for_element_visibility('a.btn[href="https://courses.stage.edx.org/login"]',
+										 'Sign in button is visible')
+
+		sign_in_button[0].click()
+		LMSSignInPage(self.browser).wait_for_page()
+
+
+	def is_page_present(self, PAGE_NAME):
+		"""
+		This function checks if the page is on the live LMS or not
+		:param PAGE_NAME:
+		:return:boolean
+		"""
+		self.wait_for_ajax()
+		page_tabs = self.q(css="li.tab > a[href^='/courses']")
+
+		return page_tabs
+
+
+class LMSSignInPage(PageObject):
+	"""
+	LMS Sign In page
+	"""
+
+	url = None
+
+	def is_browser_on_page(self):
+		return "Sign In or Register | edX" in self.browser.title
+
+	def enter_login_email(self, EMAIL):
+		"""
+		fill email field with user's email
+		"""
+		self.q(css='input#login-email').fill(EMAIL)
+
+	def enter_login_password(self, PASSWORD):
+		"""
+		fill email field with user's email
+		"""
+		self.q(css='input#login-password').fill(PASSWORD)
+
+	def click_sign_in_button(self):
+		"""
+		click the sign in button
+		"""
+		self.q(css='button.action.action-primary').click()
+		Dashboard(self.browser).wait_for_page()
+
+	def login(self, email, password):
+		"""
+		login a user
+		"""
+		self.enter_login_email(email)
+		self.enter_login_password(password)
+		self.click_sign_in_button()
 
