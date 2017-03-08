@@ -27,3 +27,19 @@ class HypedcProduct(scrapy.Item):
     image_urls = scrapy.Field()
     description = scrapy.Field()
     skus = scrapy.Field()
+
+
+class GenericProduct(scrapy.Item):
+    url = scrapy.Field()
+    product_id = scrapy.Field()
+    name = scrapy.Field()
+    brand = scrapy.Field()
+    market = scrapy.Field()
+    merch_info = scrapy.Field()
+    category = scrapy.Field()
+    care = scrapy.Field()
+    gender = scrapy.Field()
+    image_urls = scrapy.Field()
+    description = scrapy.Field()
+    skus = scrapy.Field()
+
