@@ -155,14 +155,14 @@ def main(argv):
         else:
             print("Invalid Path")
 
-    if args.year_info is not None:
+    if args.year_info:
         for y in args.year_info:
             if 1900 > y > 3000:
                 print("please enter a viable year")
             else:
                 year_info(weather_records, y)
 
-    if args.month_info is not None:
+    if args.month_info:
         for x in args.month_info:
             match = re.match(regex, x)
             if match is not None:
@@ -180,4 +180,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv)
