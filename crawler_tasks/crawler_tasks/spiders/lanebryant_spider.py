@@ -16,8 +16,8 @@ class LanebryantSpider(Spider):
     start_urls = ['http://www.lanebryant.com/']
 
     base_url = 'http://www.lanebryant.com'
-    pagination_url_t = 'http://www.lanebryant.com/lanebryant/plp/includes/plp-filters.jsp?N={}&No={}'
     product_skus_url = 'http://www.lanebryant.com/lanebryant/baseAjaxServlet?pageId=PDP_getProductSKU'
+    pagination_url_t = 'http://www.lanebryant.com/lanebryant/plp/includes/plp-filters.jsp?N={}&No={}'
     product_imgs_url_t = 'http://lanebryant.scene7.com/is/image/lanebryantProdATG/{}?req=set,json'
     product_category_url_t = 'http://www.lanebryant.com/lanebryant/baseAjaxServlet?pageId=UserState'\
                              '&Action=Header.userState&userState_id=pId%3D{}&fetchFavorites=false'
@@ -34,7 +34,7 @@ class LanebryantSpider(Spider):
         products_html = HtmlResponse(url='', body=json_response['product_grid']['html_content']
                                      .encode('ascii', 'ignore'))
 
-        product_links = products_html.css('a.mar-prd-item-image-container::attr(href)').extract()
+        product_links = products_html.css('.mar-prd-item-image-container::attr(href)').extract()
         for link in product_links:
             yield Request(url='{}{}'.format(self.base_url, link), callback=self.parse_product)
 
@@ -47,8 +47,8 @@ class LanebryantSpider(Spider):
         yield Request(next_url, callback=self.parse_product_list)
 
     def parse_product(self, response):
-        desc = response.css('div#tab1 p::text').extract()
-        desc1 = response.css('div#tab1 li::text').extract()
+        desc1 = response.css('div#tab1 p::text').extract()
+        desc2 = response.css('div#tab1 li::text').extract()
 
         product = GenericProduct()
         product['brand'] = ''
@@ -56,7 +56,7 @@ class LanebryantSpider(Spider):
         product['merch_info'] = ''
         product['gender'] = 'Women'
         product['url'] = response.url
-        product['description'] = desc + desc1
+        product['description'] = desc1 + desc2
         product['care'] = response.css('div#tab2::text').extract()
 
         formdata = {
@@ -64,7 +64,7 @@ class LanebryantSpider(Spider):
             'Action': 'PDP.getProduct'
         }
         yield FormRequest(
-            self.product_skus_url, method='POST', formdata=formdata,
+            self.product_skus_url, formdata=formdata,
             callback=self.parse_product_skus, meta={'product': product}
         )
 
@@ -108,7 +108,8 @@ class LanebryantSpider(Spider):
     def parse_product_img_urls(self, response):
         img_server_url = response.meta['other']['img_server_url']
         product = response.meta['product']
-        img_items = json.loads(re.search('{.*}', response.text).group())['set']['item']
+        raw_images = re.search('{.*}', response.text).group()
+        img_items = json.loads(raw_images)['set']['item']
 
         image_urls = []
         if isinstance(img_items, dict):
@@ -118,10 +119,11 @@ class LanebryantSpider(Spider):
                 image_urls.append(img_server_url + item['i']['n'])
 
         product['image_urls'] = image_urls
-        yield Request(self.product_category_url_t.format(product['product_id']),
-                      callback=self.parse_product_category, meta={'product': product})
+        url = self.product_category_url_t.format(product['product_id'])
+        yield Request(url, callback=self.parse_product_category, meta={'product': product})
 
     def parse_product_category(self, response):
         product = response.meta['product']
-        product['category'] = [item['displayName'] for item in json.loads(response.text)['breadCrumbData']]
+        breadcrumb = json.loads(response.text)['breadCrumbData']
+        product['category'] = [item['displayName'] for item in breadcrumb]
         return product
