@@ -130,7 +130,7 @@ def month_graph(weather_records, month, year):
     print("")
 
 
-def main(argv):
+def main():
 
 
     # regex to check input
@@ -180,4 +180,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
