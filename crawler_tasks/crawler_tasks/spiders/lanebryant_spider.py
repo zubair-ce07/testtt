@@ -47,8 +47,8 @@ class LanebryantSpider(Spider):
         yield Request(next_url, callback=self.parse_product_list)
 
     def parse_product(self, response):
-        desc1 = response.css('div#tab1 p::text').extract()
-        desc2 = response.css('div#tab1 li::text').extract()
+        desc1 = response.css('#tab1 p::text').extract()
+        desc2 = response.css('#tab1 li::text').extract()
 
         product = GenericProduct()
         product['brand'] = ''
@@ -57,7 +57,7 @@ class LanebryantSpider(Spider):
         product['gender'] = 'Women'
         product['url'] = response.url
         product['description'] = desc1 + desc2
-        product['care'] = response.css('div#tab2::text').extract()
+        product['care'] = response.css('#tab2::text').extract()
 
         formdata = {
             'id': re.search('prd-(\d+)', response.url).group(1),
