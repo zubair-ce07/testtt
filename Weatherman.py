@@ -135,6 +135,7 @@ def main():
 
     # regex to check input
     regex = r"(\d{4})/(\d{1,2})"
+    regex_year = r"(\d{4})"
 
     # creating and parsing arguments
     parser = argparse.ArgumentParser()
@@ -157,10 +158,12 @@ def main():
 
     if args.year_info:
         for y in args.year_info:
-            if 1900 > y > 3000:
-                print("please enter a viable year")
-            else:
+            match = re.match(regex_year, str(y))
+            if match:
                 year_info(weather_records, y)
+            else:
+                print("please enter a viable year")
+
 
     if args.month_info:
         for x in args.month_info:
