@@ -165,15 +165,15 @@ def main():
     if args.month_info:
         for x in args.month_info:
             match = re.match(regex, x)
-            if match is not None:
+            if match:
                 month_info(weather_records, calendar.month_abbr[int(match.group(2))], int(match.group(1)))
             else:
                 print ("please enter correct month format e.g. 2008/4")
 
-    if args.month_graph is not None:
+    if args.month_graph:
         for x in args.month_graph:
             match = re.match(regex, x)
-            if match is not None:
+            if match:
                 month_graph(weather_records, calendar.month_abbr[int(match.group(2))], int(match.group(1)))
             else:
                 print("please enter correct month format e.g. 2008/4")
