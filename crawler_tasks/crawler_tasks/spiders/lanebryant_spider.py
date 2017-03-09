@@ -31,8 +31,8 @@ class LanebryantSpider(Spider):
 
     def parse_product_list(self, response):
         json_response = json.loads(response.text)
-        products_html = HtmlResponse(url='', body=json_response['product_grid']['html_content']
-                                     .encode('ascii', 'ignore'))
+        products_html = HtmlResponse(
+            url='', body=json_response['product_grid']['html_content'].encode())
 
         product_links = products_html.css('.mar-prd-item-image-container::attr(href)').extract()
         for link in product_links:
