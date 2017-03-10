@@ -1,8 +1,8 @@
+import json
+import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from kith.items import KithItem
-import json
-import re
 
 
 class KithSpider(CrawlSpider):
@@ -12,9 +12,12 @@ class KithSpider(CrawlSpider):
 
     rules = (
 
-        Rule(LinkExtractor(allow=('/collections/.*/products/',),
-                           restrict_css=("div.product-card.-content-overlay",)),
-             callback='parse_item', follow=True),
+        Rule(
+            LinkExtractor(allow=('/collections/.*/products/',),
+                          restrict_css=(".-content-overlay",)),
+            callback='parse_item', follow=True
+            ),
+
         Rule(LinkExtractor(allow=('/collections/',)), follow=True),
     )
 
@@ -25,8 +28,9 @@ class KithSpider(CrawlSpider):
         product['brand'] = self.product_brand(response)
         product['category'] = self.product_category(response)
 
-        self.product_description_and_care(response, product)
-
+        description, care = self.product_description_and_care(response, product)
+        product['description'] = description
+        product['care'] = care
         product['image_urls'] = self.image_urls(response)
         product['industry'] = ''
         product['market'] = 'US'
@@ -50,30 +54,28 @@ class KithSpider(CrawlSpider):
         return response.css('h1.product-header-title span::text').extract()
 
     def product_category(self, response):
-        return response.css('.breadcrumb.text-center a[href^="/c"]::text').extract()
+        return response.css('.breadcrumb a[href^="/c"]::text').extract()
 
     def product_description_and_care(self, response, product):
         parent_class = response.css('.product-single-details-rte')
-        product['description'] = parent_class.css('p::text').extract()[:-2]
-        product['care'] = parent_class.css('p:last-child::text').extract()
+        description = parent_class.css('p::text').extract()[:-2]
+        care = parent_class.css('p:last-child::text').extract()
+
+        return description, care
 
     def image_urls(self, response):
-        image_urls = response.xpath("//meta[@property='og:image:secure_url']"
-                                    "/@content").extract()
+        xpath = "//meta[@property='og:image:secure_url']/@content"
+        image_urls = response.xpath(xpath).extract()
         return [url.replace('_grande', "") for url in image_urls]
 
     def gender(self, script):
-        if "wmns" in script:
-            return "women"
-        else:
-            return "men"
+        return "women" if "wmns" in script else "men"
 
     def retailer_sku(self, response):
-        return response.css('input#product_id::attr(value)').extract_first()
+        return response.css('#product_id::attr(value)').extract_first()
 
     def skus(self, script, response):
         variants = json.loads(script)
-
         skus = {}
 
         for variant in variants:
@@ -86,8 +88,7 @@ class KithSpider(CrawlSpider):
                 sku['previous_prices'] = [variant['compare_at_price']]
 
             sku['size'] = variant['title']
-            sku['colour'] = response.css('.product-single-header-upper .product-'
-                                         'header-title.-variant::text').extract_first().strip()
+            sku['colour'] = response.css('.-variant::text').extract_first().strip()
             skus[variant['id']] = sku
 
         return skus
