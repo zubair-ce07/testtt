@@ -28,7 +28,7 @@ class KithSpider(CrawlSpider):
         product['brand'] = self.product_brand(response)
         product['category'] = self.product_category(response)
 
-        description, care = self.product_description_and_care(response, product)
+        description, care = self.product_description_and_care(response)
         product['description'] = description
         product['care'] = care
         product['image_urls'] = self.image_urls(response)
@@ -56,7 +56,7 @@ class KithSpider(CrawlSpider):
     def product_category(self, response):
         return response.css('.breadcrumb a[href^="/c"]::text').extract()
 
-    def product_description_and_care(self, response, product):
+    def product_description_and_care(self, response):
         parent_class = response.css('.product-single-details-rte')
         description = parent_class.css('p::text').extract()[:-2]
         care = parent_class.css('p:last-child::text').extract()
@@ -64,9 +64,9 @@ class KithSpider(CrawlSpider):
         return description, care
 
     def image_urls(self, response):
-        xpath = "//meta[@property='og:image:secure_url']/@content"
-        image_urls = response.xpath(xpath).extract()
-        return [url.replace('_grande', "") for url in image_urls]
+        css = '.js-super-slider-photo-img::attr(src)'
+        image_urls = response.css(css).extract()
+        return ["http:"+url.replace('.progressive', "") for url in image_urls]
 
     def gender(self, script):
         return "women" if "wmns" in script else "men"
@@ -82,7 +82,7 @@ class KithSpider(CrawlSpider):
             sku = {}
             sku['price'] = variant['price']
             sku['currency'] = 'USD'
-            sku['out_of_stock'] = variant['available']
+            sku['out_of_stock'] = not variant['available']
 
             if variant['compare_at_price']:
                 sku['previous_prices'] = [variant['compare_at_price']]
