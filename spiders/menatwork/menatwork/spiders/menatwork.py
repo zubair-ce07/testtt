@@ -18,7 +18,7 @@ class MenatworkSpider(CrawlSpider):
 
     )
 
-    processed_pids = set()
+    seen_ids = set()
 
     def parse_product(self, response):
 
@@ -31,10 +31,9 @@ class MenatworkSpider(CrawlSpider):
         product['brand'] = self.product_brand(response)
         product['category'] = self.product_category(response)
 
-        description_and_care = self.product_description_and_care(response)
-        product['description'] = [description_and_care[0]]
-        product['care'] = [description_and_care[1] if
-                           len(description_and_care) > 1 else None]
+        description, care = self.product_description_and_care(response)
+        product['description'] = description
+        product['care'] = care
 
         product['image_urls'] = self.image_urls(response)
         product['gender'] = self.gender(response)
@@ -42,50 +41,56 @@ class MenatworkSpider(CrawlSpider):
         product['market'] = 'Netherlands'
         product['merch_info'] = []
         product['retailer'] = 'menatwork-nl'
-
         product['name'] = product['category'][0]
         product['retailer_sku'] = self.product_id(response)
 
-        product_start_url = self.product_start_link(response)
+        product_url = self.product_url(response)
 
-        yield scrapy.Request(product_start_url, callback=self.parse_variants,
+        yield scrapy.Request(product_url, callback=self.parse_variants,
                              meta={'product': product})
 
     def parse_variants(self, response):
-        variants = self.variant_sizes_and_availability(response)
-        skus = self.get_skus(response, variants)
+        available_sizes = self.variant_sizes_and_availability(response)
+        skus = self.get_skus(response, available_sizes)
         response.meta['product']['skus'] = skus
 
-        hrefs = response.css(".swatches.color > li[class='selectable'] > a::attr('href')")
-        colour_priority = len(hrefs)
-
-        if not hrefs:
+        variants = response.css(".swatches.color > li[class='selectable'] "
+                                "> a::attr('href')")
+        requests = []
+        if not variants:
             yield response.meta['product']
+            return
 
-        for href in hrefs:
-            request = scrapy.Request(href.extract(), callback=self.parse_colours,
-                                     priority=colour_priority)
+        for variant in variants:
+            request = scrapy.Request(variant.extract(), callback=self.parse_colours)
             request.meta['product'] = response.meta['product']
-            colour_priority -= 1
-            request.meta['request'] = colour_priority
-            yield request
+            requests.append(request)
+
+        request = requests.pop()
+        request.meta['pending_requests'] = requests
+        yield request
 
     def parse_colours(self, response):
         variants = self.variant_sizes_and_availability(response)
         skus = self.get_skus(response,  variants)
         response.meta['product']['skus'].update(skus)
+        requests = response.meta['pending_requests']
 
-        if response.meta['request'] == 0:
-            return response.meta['product']
+        if requests:
+            request = requests.pop()
+            request.meta['pending_requests'] = requests
+            yield request
+        else:
+            yield response.meta['product']
 
-    def product_start_link(self, response):
+    def product_url(self, response):
         return response.css('.variation-select option::attr(value)').extract_first()
 
     def processed_products(self, product_id):
-        if product_id in self.processed_pids:
+        if product_id in self.seen_ids:
             return True
         else:
-            self.processed_pids.add(product_id)
+            self.seen_ids.add(product_id)
             return False
 
     def product_id(self, response):
@@ -98,9 +103,12 @@ class MenatworkSpider(CrawlSpider):
         return response.css('h1.product-name::text').extract()
 
     def product_description_and_care(self, response):
-        parent_class = response.css('div#tab1::text').extract_first().strip()
+        description_and_care = response.css('div#tab1::text').extract_first().strip()
         care = r"De stof(.*)\."
-        return re.split(care, parent_class)
+
+        description = re.split(care, description_and_care)[0]
+        care = re.findall(care, description_and_care)
+        return description, care
 
     def image_urls(self, response):
         image_urls = response.css('.productthumbnail::attr(src)').extract()
@@ -114,16 +122,11 @@ class MenatworkSpider(CrawlSpider):
 
     def variant_sizes_and_availability(self, response):
         sizes = response.css('.variation-select option::text').extract()
-        variants = []
-
-        for i in range(1, len(sizes)):
-            availability = True if 'uitverkocht' in sizes[i] else False
-            variants.append((sizes[i].strip(), availability))
-        return variants
+        return [(size.strip(), 'uitverkocht' in size) for size in sizes[1:]]
 
     def construct_sku(self, response):
         sku = {}
-        sku['currency'] = response.css('.price::text').extract_first()[:3]
+        sku['currency'] = response.css('.price::text').re(r'[A-Z]*')[0]
         sku['colour'] = response.css('.selected-value::text').extract_first()
 
         parent_class = response.css('.product-price')
@@ -136,11 +139,13 @@ class MenatworkSpider(CrawlSpider):
 
     def get_skus(self, response, variants):
         skus = {}
-        sku = self.construct_sku(response)
+        product_id = self.product_id(response)
+
         for size, available in variants:
+            sku = self.construct_sku(response)
             sku['out_of_stock'] = available
             sku['size'] = size
-            product_id = response.css('span::attr(data-masterid)').extract_first()
-            skus[self.construct_sku_id(product_id, size, sku['colour'])] = sku
+            sku_id = self.construct_sku_id(product_id, size, sku['colour'])
+            skus[sku_id] = sku
 
         return skus
