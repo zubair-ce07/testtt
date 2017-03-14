@@ -1,13 +1,14 @@
+import asyncio
+import argparse
+import functools
+import multiprocessing
+import concurrent.futures
+from time import sleep
+from multiprocessing.managers import BaseManager
+
 import aiohttp
 import requests
-import asyncio
-import concurrent.futures
-import multiprocessing
-import functools
-import argparse
-from time import sleep
 from parsel import Selector
-from multiprocessing.managers import BaseManager
 
 
 class CustomManager(BaseManager):
@@ -19,7 +20,8 @@ class StatsCollector:
         self.requests_made = 0
         self.bytes_downloaded = 0
 
-    def get_requests_count(self):
+    @property
+    def requests_count(self):
         return self.requests_made
 
     def update_stats(self, response_size_in_bytes):
@@ -110,7 +112,7 @@ def worker_process(waiting_urls, download_delay, crawled_url_count, total_reques
 
         stats_lock.acquire()
         stats_collector.update_stats(len(r.content))
-        print('crawled count: {}'.format(stats_collector.get_requests_count()))
+        print('crawled count: {}'.format(stats_collector._getvalue().requests_count))
         stats_lock.release()
 
         sleep(download_delay)
