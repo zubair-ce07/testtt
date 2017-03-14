@@ -2,15 +2,45 @@ import csv
 import glob
 from datetime import date
 import argparse
+import sys
+
+def main():
+    #Main function to handle all the other function
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dir", help="record the directory path for data fetching eg weather/weatherfiles"
+                        )
+    parser.add_argument("-y", help="display a required temperature for a year",
+                        type=str)
+    parser.add_argument("-m", help="display a required temperature for a month",
+                        type=str)
+    parser.add_argument("-d", help="display a required histogram for a month",
+                        type=str)
+    args = parser.parse_args()
+    final_record_dict = main_record_dict()
+    file_path = make_the_files_paths(args.m, args.y,sys.argv[1])
+    file_reading_directory(file_path,final_record_dict)
+
+    if args.y:
+        find_the_max_min_temp_for_year(final_record_dict)
+    elif args.m:
+        find_the_average_temp_for_month(final_record_dict)
+    elif args.d:
+        file_path = make_the_files_paths(args.d, args.y,sys.argv[1])
+        file_reading_directory(file_path,final_record_dict)
+        histogram_charts_for_month(final_record_dict)
 
 
-temp_matrix = {
-    'PKT': [],
-    'Max TemperatureC': [],
-    'Min TemperatureC': [],
-    'Max Humidity': [],
-    'Mean Humidity': []
-}
+def main_record_dict():
+    temp_matrix = {
+        'PKT': [],
+        'Max TemperatureC': [],
+        'Min TemperatureC': [],
+        'Max Humidity': [],
+        'Mean Humidity': []
+                    }
+
+    return temp_matrix
 
 
 def simplify_dates(temp_date):
@@ -22,31 +52,7 @@ def simplify_dates(temp_date):
     return date(day=day, month=month, year=year).strftime('%A %d %B %Y')
 
 
-def main():
-    #Main function to handle all the other function
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-y", help="display a required temperature for a year",
-                        type=str)
-    parser.add_argument("-m", help="display a required temperature for a month",
-                        type=str)
-    parser.add_argument("-d", help="display a required histogram for a month",
-                        type=str)
-    args = parser.parse_args()
-    file_path = make_the_files_paths(args.m, args.y)
-    file_reading_directory(file_path)
-
-    if args.y:
-        find_the_max_min_temp_for_year()
-    elif args.m:
-        find_the_average_temp_for_month()
-    elif args.d:
-        file_path = make_the_files_paths(args.d, args.y)
-        file_reading_directory(file_path)
-        histogram_charts_for_month()
-
-
-def make_the_files_paths(month, year):
+def make_the_files_paths(month, year,directory):
     """
         Make the file path for the local directory
 
@@ -58,16 +64,16 @@ def make_the_files_paths(month, year):
     month_list = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     path_list = []
 
-    if not month or month is None:
-        path_list.extend(glob.glob("/home/yasir/Task_Programs/weatherfiles/Murree_weather_%s_*.txt" % year))
+    if not month:
+        path_list.extend(glob.glob("{}/Murree_weather_{}_*.txt".format(directory, year)))
     else:
         mon = month.split('/')
         path_list.extend(glob.glob(
-            "/home/yasir/Task_Programs/weatherfiles/Murree_weather_%s_%s.txt" % (mon[0], month_list[int(mon[1])])))
+            "{}/Murree_weather_{}_{}.txt" .format(directory,mon[0], month_list[int(mon[1])])))
     return path_list
 
 
-def file_reading_directory(path_name):
+def file_reading_directory(path_name,temperature_dictionary):
     """
         Get data from  weather files for max , min and humidity
 
@@ -81,14 +87,14 @@ def file_reading_directory(path_name):
         with open(path, 'rb') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                temp_matrix['PKT'].append(row['PKT'])
-                temp_matrix['Max TemperatureC'].append(row['Max TemperatureC'])
-                temp_matrix['Min TemperatureC'].append(row['Min TemperatureC'])
-                temp_matrix['Max Humidity'].append(row['Max Humidity'])
-                temp_matrix['Mean Humidity'].append(row[' Mean Humidity'])
+                temperature_dictionary['PKT'].append(row['PKT'])
+                temperature_dictionary['Max TemperatureC'].append(row['Max TemperatureC'])
+                temperature_dictionary['Min TemperatureC'].append(row['Min TemperatureC'])
+                temperature_dictionary['Max Humidity'].append(row['Max Humidity'])
+                temperature_dictionary['Mean Humidity'].append(row[' Mean Humidity'])
 
 
-def find_the_max_min_temp_for_year():
+def find_the_max_min_temp_for_year(max_min_temperature):
     #Calculate the highest and lowest temperature with date of the day
 
     max_hum_date = []
@@ -98,20 +104,20 @@ def find_the_max_min_temp_for_year():
     min_temp_list = []
     max_hum_list = []
 
-    for mx_index, mx_data in enumerate(zip(temp_matrix['Max TemperatureC'], temp_matrix['PKT'])):
-        if temp_matrix['Max TemperatureC'][mx_index] != '':
+    for mx_index, mx_data in enumerate(zip(max_min_temperature['Max TemperatureC'], max_min_temperature['PKT'])):
+        if max_min_temperature['Max TemperatureC'][mx_index]:
             max_temp_list.append(int(mx_data[0]))
-            max_date_list.append(temp_matrix['PKT'][mx_index])
+            max_date_list.append(max_min_temperature['PKT'][mx_index])
 
-    for min_index, min_data in enumerate(zip(temp_matrix['Min TemperatureC'], temp_matrix['PKT'])):
-        if temp_matrix['Min TemperatureC'][min_index] != '':
+    for min_index, min_data in enumerate(zip(max_min_temperature['Min TemperatureC'], max_min_temperature['PKT'])):
+        if max_min_temperature['Min TemperatureC'][min_index]:
             min_temp_list.append(int(min_data[0]))
-            min_date_list.append(temp_matrix['PKT'][min_index])
+            min_date_list.append(max_min_temperature['PKT'][min_index])
 
-    for max_index, mx_data in enumerate(zip(temp_matrix['Max Humidity'], temp_matrix['PKT'])):
-        if temp_matrix['Max Humidity'][max_index] != '':
+    for max_index, mx_data in enumerate(zip(max_min_temperature['Max Humidity'], max_min_temperature['PKT'])):
+        if max_min_temperature['Max Humidity'][max_index]:
             max_hum_list.append(int(mx_data[0]))
-            max_hum_date.append(temp_matrix['PKT'][max_index])
+            max_hum_date.append(max_min_temperature['PKT'][max_index])
 
     max_temperature = max(max_temp_list)
     min_temperature = min(min_temp_list)
@@ -125,41 +131,41 @@ def find_the_max_min_temp_for_year():
           'lowest temperature and day, most humid day and humidity.'
     print '<--------------------------------------------------------->'
 
-    print 'Highest: %sC On %s' % (max_temperature, simplify_dates(max_temp_date))
-    print 'Lowest :%sC On %s' % (min_temperature, simplify_dates(min_temp_date))
-    print 'Highest :%sC On %s' % (max_humidity, simplify_dates(mx_hum_date))
+    print 'Highest: {}C On {}' .format(max_temperature, simplify_dates(max_temp_date))
+    print 'Lowest :{}C On {}' .format(min_temperature, simplify_dates(min_temp_date))
+    print 'Highest :{}% On {}' .format(max_humidity, simplify_dates(mx_hum_date))
 
 
-def find_the_average_temp_for_month():
+def find_the_average_temp_for_month(average_temp):
     #Calculate the average highest,lowest and mean humid temperature
 
     mean_hum_list = []
     max_temp_list = []
     min_temp_list = []
 
-    for mx_index, mx_data in enumerate(zip(temp_matrix['Max TemperatureC'], temp_matrix['PKT'])):
-        if temp_matrix['Max TemperatureC'][mx_index] != '':
+    for mx_index, mx_data in enumerate(zip(average_temp['Max TemperatureC'], average_temp['PKT'])):
+        if average_temp['Max TemperatureC'][mx_index]:
             max_temp_list.append(int(mx_data[0]))
 
-    for min_index, min_data in enumerate(zip(temp_matrix['Min TemperatureC'], temp_matrix['PKT'])):
-        if temp_matrix['Min TemperatureC'][min_index] != '':
+    for min_index, min_data in enumerate(zip(average_temp['Min TemperatureC'], average_temp['PKT'])):
+        if average_temp['Min TemperatureC'][min_index]:
             min_temp_list.append(int(min_data[0]))
 
-    for mean_index, mean_data in enumerate(zip(temp_matrix['Mean Humidity'], temp_matrix['PKT'])):
-        if temp_matrix['Mean Humidity'][mean_index] != '':
+    for mean_index, mean_data in enumerate(zip(average_temp['Mean Humidity'], average_temp['PKT'])):
+        if average_temp['Mean Humidity'][mean_index]:
             mean_hum_list.append(int(mean_data[0]))
 
-    print '2. Given month display the average highest temperatur,\n' \
+    print '2. Given month display the average highest temperature,\n' \
           'average lowest temperature, average mean humidity.'
 
     print '<----------------------------------------------------->'
 
-    print 'Highest Average :%s C' % (sum(max_temp_list) / len(max_temp_list))
-    print 'Lowest Average :%s C' % (sum(min_temp_list) / len(min_temp_list))
-    print 'Average Mean Humidity :%s C' % (sum(mean_hum_list) / len(mean_hum_list))
+    print 'Highest Average : {} C' .format(sum(max_temp_list) / len(max_temp_list))
+    print 'Lowest Average : {} C' .format(sum(min_temp_list) / len(min_temp_list))
+    print 'Average Mean Humidity :{} C'.format(sum(mean_hum_list) / len(mean_hum_list))
 
 
-def histogram_charts_for_month():
+def histogram_charts_for_month(histogram_chart):
     #Make the histogram for the highest and lowest temperature
 
     print '<-------------------------------------------------------------->'
@@ -171,26 +177,27 @@ def histogram_charts_for_month():
     max_temp_list = []
     min_temp_list = []
 
-    for mx_index, mx_data in enumerate(zip(temp_matrix['Max TemperatureC'], temp_matrix['PKT'])):
-        if temp_matrix['Max TemperatureC'][mx_index] != '':
+    for mx_index, mx_data in enumerate(zip(histogram_chart['Max TemperatureC'], histogram_chart['PKT'])):
+        if histogram_chart['Max TemperatureC'][mx_index]:
             max_temp_list.append(int(mx_data[0]))
-            max_date_list.append(temp_matrix['PKT'][mx_index])
+            max_date_list.append(histogram_chart['PKT'][mx_index])
 
-    for min_index, min_data in enumerate(zip(temp_matrix['Min TemperatureC'], temp_matrix['PKT'])):
-        if temp_matrix['Min TemperatureC'][min_index] != '':
+    for min_index, min_data in enumerate(zip(histogram_chart['Min TemperatureC'], histogram_chart['PKT'])):
+        if histogram_chart['Min TemperatureC'][min_index]:
             min_temp_list.append(int(min_data[0]))
-            min_date_list.append(temp_matrix['PKT'][min_index])
+            min_date_list.append(histogram_chart['PKT'][min_index])
 
-    for max_d, min_d, max_v, min_v in (zip(max_date_list, min_date_list, max_temp_list, min_temp_list)):
-        print max_d, '+ ' * max_v, '%sC' % max_v, '\n', min_d, '- ' * min_v, '%sC' % min_v
+    for max_date, min_date, max_value, min_value in (zip(max_date_list, min_date_list, max_temp_list, min_temp_list)):
+        print max_date ,'+ '* max_value,'{}'.format(max_value),'\n',min_date,'- ' *min_value,'{}'.format(min_value)
+
 
     print '<----------------------------------------------------------------->'
 
     print '5. BONUS TASK. For a given month draw one horizontal bar chart on the console for \n' \
           'the highest and lowest temperature on each day. Highest in red and lowest in blue.'
 
-    for t_date, max_v, min_v in (zip(max_date_list, max_temp_list, min_temp_list)):
-        print t_date, '- ' * min_v, '+ ' * max_v, '%sC--%sC' % (max_v, min_v)
+    for temp_date, max_value, min_value in (zip(max_date_list, max_temp_list, min_temp_list)):
+        print temp_date, '- ' * min_value, '+ ' * max_value, '{}C--{}C' .format(max_value, min_value)
 
 
 if __name__ == '__main__':
