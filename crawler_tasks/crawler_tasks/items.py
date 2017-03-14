@@ -14,6 +14,19 @@ class Crawler1Item(scrapy.Item):
     pass
 
 
+class KidvaiPost(scrapy.Item):
+    url = scrapy.Field()
+    name_id = scrapy.Field()
+    title = scrapy.Field()
+    body_text = scrapy.Field()
+    labels = scrapy.Field()
+    posted_by = scrapy.Field()
+    posted_time = scrapy.Field()
+    comments = scrapy.Field()
+    file_urls = scrapy.Field()
+    files = scrapy.Field()
+
+
 class HypedcProduct(scrapy.Item):
     url = scrapy.Field()
     product_id = scrapy.Field()
