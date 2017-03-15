@@ -1,5 +1,7 @@
 import re
-from scrapy.spiders import CrawlSpider
+from scrapy.linkextractors import LinkExtractor
+from urllib.parse import urlparse
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy import Request
 from menatwork.items import MenatworkItem
 
@@ -7,24 +9,31 @@ from menatwork.items import MenatworkItem
 class MenatworkSpider(CrawlSpider):
     name = 'menatwork'
     allowed_domains = ['menatwork.nl']
+    start_urls = ['http://menatwork.nl/']
+
+    rules = (
+
+        Rule(LinkExtractor(restrict_css=('.search-result-content',)),
+             callback='parse_product', follow=True),
+
+        Rule(LinkExtractor(allow=(r'/nl_NL/dames/$', r'/nl_NL/heren/$')),
+             callback='parse_all_products', follow=True),
+
+    )
+
     seen_ids = set()
 
-    def start_requests(self):
-        start_urls = ['http://menatwork.nl/nl_NL/dames/',
-                      'http://menatwork.nl/nl_NL/heren/']
+    def parse_all_products(self, response):
+        xpath = '//link[@rel="next"]/@href'
+        base_url = response.xpath(xpath).extract_first()
+        items = response.css('.results-hits-amount::text').extract_first()
+        total_items = int(items.replace('.', '').strip()) if items else 0
 
-        for url in start_urls:
-            yield Request(url, callback=self.total_products_url)
-
-    def total_products_url(self, response):
-        total_items = self.total_items(response).replace('.', '').strip()
-        start_url = response.url + '?sz=' + total_items
-        yield Request(start_url, callback=self.parse_products)
-
-    def parse_products(self, response):
-        urls = response.css('.thumb-link::attr(href)').extract()
-        for url in urls:
-            yield Request(url, callback=self.parse_product)
+        for i in range(24, total_items, 12):
+            previous_query = urlparse(base_url).query
+            next_query = "{0}{1}".format('sz=', i)
+            next_url = base_url.replace(previous_query, next_query)
+            yield Request(response.urljoin(next_url))
 
     def parse_product(self, response):
         product_id = self.product_id(response)
@@ -62,36 +71,30 @@ class MenatworkSpider(CrawlSpider):
         variants = response.css(".swatches.color > li[class='selectable'] "
                                 "> a::attr('href')")
         requests = []
-        if not variants:
-            yield response.meta['product']
-            return
 
         for variant in variants:
             request = Request(variant.extract(), callback=self.parse_colours)
             request.meta['product'] = response.meta['product']
             requests.append(request)
 
-        yield self.variant_request(requests)
+        return self.variant_request(requests, response)
 
     def parse_colours(self, response):
         variants = self.variant_sizes_and_availability(response)
         skus = self.skus(response,  variants)
         response.meta['product']['skus'].update(skus)
-        response.meta['product']['image_urls'].append(self.image_urls(response))
+        response.meta['product']['image_urls'] += self.image_urls(response)
         requests = response.meta['pending_requests']
 
+        return self.variant_request(requests, response)
+
+    def variant_request(self, requests, response):
         if requests:
-            yield self.variant_request(requests)
+            request = requests.pop()
+            request.meta['pending_requests'] = requests
+            return request
         else:
-            yield response.meta['product']
-
-    def variant_request(self, requests):
-        request = requests.pop()
-        request.meta['pending_requests'] = requests
-        return request
-
-    def total_items(self, response):
-        return response.css('.results-hits-amount::text').extract_first()
+            return response.meta['product']
 
     def product_url(self, response):
         url = response.css('.variation-select option::attr(value)').extract_first()
@@ -110,7 +113,7 @@ class MenatworkSpider(CrawlSpider):
         return response.css('#productData::attr(data-brand)').extract_first()
 
     def product_name(self, response):
-        return response.css('h1.product-name::text').extract()
+        return response.css('h1.product-name::text').extract_first()
 
     def product_category(self, response):
         return response.css('.breadcrumb-element:nth-child(4)::text').extract()
@@ -119,7 +122,7 @@ class MenatworkSpider(CrawlSpider):
         description_and_care = response.css('div#tab1::text').extract_first().strip()
         care = r"De stof(.*)\."
 
-        description = re.split(care, description_and_care)[0]
+        description = [re.split(care, description_and_care)[0]]
         care = re.findall(care, description_and_care)
         return description, care
 
@@ -138,7 +141,10 @@ class MenatworkSpider(CrawlSpider):
 
     def common_sku(self, response):
         sku = {}
-        sku['currency'] = response.css('.price::text').re(r'[A-Z]*')[0]
+        price = response.css('.price::text')
+        sku['currency'] = price.re(r'[A-Z]*')[0]
+        sku['price'] = float(price.re(r'\d+\.*\d+')[0])
+
         sku['colour'] = response.css('.selected-value::text').extract_first()
 
         parent_class = response.css('.product-price')
@@ -146,15 +152,15 @@ class MenatworkSpider(CrawlSpider):
         if parent_class.css('.price-standard::text').extract():
             sku['previous_prices'] = parent_class.css('.price-standard::text').extract()
 
-        sku['price'] = parent_class.css('.price-sales::text').extract_first()
         return sku
 
     def skus(self, response, variants):
         skus = {}
         product_id = self.product_id(response)
+        common_sku = self.common_sku(response)
 
         for size, availability in variants:
-            sku = self.common_sku(response)
+            sku = common_sku.copy()
             sku['out_of_stock'] = availability
             sku['size'] = size
             sku_id = "{0}_{1}_{2}".format(product_id, sku['colour'], size)
