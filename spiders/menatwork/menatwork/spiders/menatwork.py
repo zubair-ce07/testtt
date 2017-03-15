@@ -1,5 +1,6 @@
 import re
-import w3lib.url as url
+from w3lib.url import add_or_replace_parameter
+from w3lib.url import url_query_cleaner
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy import Request
@@ -26,7 +27,7 @@ class MenatworkSpider(CrawlSpider):
 
     def process_links(self, links):
         for link in links:
-            link.url = link.url.split('dwvar')[0]
+            link.url = url_query_cleaner(link.url, ['.html'])
 
         return links
 
@@ -35,7 +36,7 @@ class MenatworkSpider(CrawlSpider):
         total_items = int(items.replace('.', '').strip())
 
         for i in range(24, total_items, 12):
-            next_url = url.add_or_replace_parameter(response.url, "sz", i)
+            next_url = add_or_replace_parameter(response.url, "sz", i)
             yield Request(response.urljoin(next_url))
 
     def parse_product(self, response):
@@ -62,9 +63,9 @@ class MenatworkSpider(CrawlSpider):
         product['retailer_sku'] = product_id
 
         response.meta['product'] = product
-        return self.parse_variants(response)
+        return self.variants(response)
 
-    def parse_variants(self, response):
+    def variants(self, response):
         available_sizes = self.variant_sizes_and_availability(response)
         skus = self.skus(response, available_sizes)
         response.meta['product']['skus'] = skus
@@ -143,7 +144,7 @@ class MenatworkSpider(CrawlSpider):
         sku['currency'] = price.re(r'[A-Z]*')[0]
         sku['price'] = float(price.re(r'\d+\.*\d+')[0])
 
-        parent_class = response.css('.product-price')
+        parent_class = response.css('.product-content')
         previous_prices = parent_class.css('.price-standard::text')
         if previous_prices.extract():
             sku['previous_prices'] = [float(price.re(r'\d+\.*\d+')[0]) for price
