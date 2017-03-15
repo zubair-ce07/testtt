@@ -1,6 +1,6 @@
 import re
+import w3lib.url as url
 from scrapy.linkextractors import LinkExtractor
-from urllib.parse import urlparse
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy import Request
 from menatwork.items import MenatworkItem
@@ -14,25 +14,28 @@ class MenatworkSpider(CrawlSpider):
     rules = (
 
         Rule(LinkExtractor(restrict_css=('.search-result-content',)),
-             callback='parse_product', follow=True),
+             callback='parse_product', process_links='process_links'),
 
-        Rule(LinkExtractor(allow=(r'/nl_NL/dames/$', r'/nl_NL/heren/$')),
-             callback='parse_all_products', follow=True),
+        Rule(LinkExtractor(allow=(r'/nl_NL/dames/$', r'/nl_NL/heren/$'),
+                           restrict_css='.teaser__block--half'),
+             callback='parse_pagination'),
 
     )
 
     seen_ids = set()
 
-    def parse_all_products(self, response):
-        xpath = '//link[@rel="next"]/@href'
-        base_url = response.xpath(xpath).extract_first()
+    def process_links(self, links):
+        for link in links:
+            link.url = link.url.split('dwvar')[0]
+
+        return links
+
+    def parse_pagination(self, response):
         items = response.css('.results-hits-amount::text').extract_first()
-        total_items = int(items.replace('.', '').strip()) if items else 0
+        total_items = int(items.replace('.', '').strip())
 
         for i in range(24, total_items, 12):
-            previous_query = urlparse(base_url).query
-            next_query = "{0}{1}".format('sz=', i)
-            next_url = base_url.replace(previous_query, next_query)
+            next_url = url.add_or_replace_parameter(response.url, "sz", i)
             yield Request(response.urljoin(next_url))
 
     def parse_product(self, response):
@@ -56,12 +59,10 @@ class MenatworkSpider(CrawlSpider):
         product['merch_info'] = []
         product['retailer'] = 'menatwork-nl'
         product['name'] = self.product_name(response)
-        product['retailer_sku'] = self.product_id(response)
+        product['retailer_sku'] = product_id
 
-        product_url = self.product_url(response)
-
-        yield Request(product_url, callback=self.parse_variants,
-                      meta={'product': product})
+        response.meta['product'] = product
+        return self.parse_variants(response)
 
     def parse_variants(self, response):
         available_sizes = self.variant_sizes_and_availability(response)
@@ -93,8 +94,7 @@ class MenatworkSpider(CrawlSpider):
             request = requests.pop()
             request.meta['pending_requests'] = requests
             return request
-        else:
-            return response.meta['product']
+        return response.meta['product']
 
     def product_url(self, response):
         url = response.css('.variation-select option::attr(value)').extract_first()
@@ -141,29 +141,29 @@ class MenatworkSpider(CrawlSpider):
 
     def common_sku(self, response):
         sku = {}
+        sku['colour'] = response.css('.selected-value::text').extract_first()
+
         price = response.css('.price::text')
         sku['currency'] = price.re(r'[A-Z]*')[0]
         sku['price'] = float(price.re(r'\d+\.*\d+')[0])
 
-        sku['colour'] = response.css('.selected-value::text').extract_first()
-
         parent_class = response.css('.product-price')
-
-        if parent_class.css('.price-standard::text').extract():
-            sku['previous_prices'] = parent_class.css('.price-standard::text').extract()
+        previous_prices = parent_class.css('.price-standard::text')
+        if previous_prices.extract():
+            sku['previous_prices'] = [float(price.re(r'\d+\.*\d+')[0]) for price
+                                      in previous_prices]
 
         return sku
 
     def skus(self, response, variants):
         skus = {}
-        product_id = self.product_id(response)
         common_sku = self.common_sku(response)
 
         for size, availability in variants:
             sku = common_sku.copy()
             sku['out_of_stock'] = availability
             sku['size'] = size
-            sku_id = "{0}_{1}_{2}".format(product_id, sku['colour'], size)
+            sku_id = "{0}_{1}".format(sku['colour'], size)
             skus[sku_id] = sku
 
         return skus
