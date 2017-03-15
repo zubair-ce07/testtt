@@ -96,10 +96,6 @@ class MenatworkSpider(CrawlSpider):
             return request
         return response.meta['product']
 
-    def product_url(self, response):
-        url = response.css('.variation-select option::attr(value)').extract_first()
-        return response.urljoin(url)
-
     def processed_products(self, product_id):
         if product_id in self.seen_ids:
             return True
