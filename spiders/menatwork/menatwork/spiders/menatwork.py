@@ -59,23 +59,23 @@ class MenatworkSpider(CrawlSpider):
 
         response.meta['product'] = product
         response.meta['product']['skus'] = {}
-        return self.variant_requests(response)
+        return self.colour_requests(response)
 
-    def variant_requests(self, response):
+    def colour_requests(self, response):
         self.variants(response)
-        variants = response.css(".swatches.color > li[class='selectable'] "
+        colours = response.css(".swatches.color > li[class='selectable'] "
                                 "> a::attr('href')")
         requests = []
 
-        for variant in variants:
-            request = Request(variant.extract(), callback=self.parse_colours)
+        for colour in colours:
+            request = Request(colour.extract(), callback=self.parse_colours)
             request.meta['product'] = response.meta['product']
             requests.append(request)
 
-        return self.variant_request(requests, response)
+        return self.colour_request_or_product(requests, response)
 
     def variants(self, response):
-        available_sizes = self.variant_sizes_and_availability(response)
+        available_sizes = self.available_variant_sizes(response)
         skus = self.skus(response, available_sizes)
         response.meta['product']['skus'].update(skus)
 
@@ -84,9 +84,9 @@ class MenatworkSpider(CrawlSpider):
         response.meta['product']['image_urls'] += self.image_urls(response)
         requests = response.meta['pending_requests']
 
-        return self.variant_request(requests, response)
+        return self.colour_request_or_product(requests, response)
 
-    def variant_request(self, requests, response):
+    def colour_request_or_product(self, requests, response):
         if requests:
             request = requests.pop()
             request.meta['pending_requests'] = requests
@@ -126,7 +126,7 @@ class MenatworkSpider(CrawlSpider):
     def gender(self, response):
         return response.css('.breadcrumb-element::text').extract_first()
 
-    def variant_sizes_and_availability(self, response):
+    def available_variant_sizes(self, response):
         sizes = response.css('.variation-select option::text').extract()
         sizes = sizes[1:] if sizes[0] == 'Kies Maat' else sizes
 
