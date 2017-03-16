@@ -14,8 +14,9 @@ class MenatworkSpider(CrawlSpider):
 
     rules = (
 
-        Rule(LinkExtractor(restrict_css=('.search-result-content',)),
-             callback='parse_product', process_links='process_links'),
+        Rule(LinkExtractor(restrict_css=('.search-result-content',),
+                           process_value=url_query_cleaner),
+             callback='parse_product',),
 
         Rule(LinkExtractor(allow=(r'/nl_NL/dames/$', r'/nl_NL/heren/$'),
                            restrict_css='.teaser__block--half'),
@@ -25,19 +26,13 @@ class MenatworkSpider(CrawlSpider):
 
     seen_ids = set()
 
-    def process_links(self, links):
-        for link in links:
-            link.url = url_query_cleaner(link.url, ['.html'])
-
-        return links
-
     def parse_pagination(self, response):
         items = response.css('.results-hits-amount::text').extract_first()
         total_items = int(items.replace('.', '').strip())
 
         for i in range(24, total_items, 12):
             next_url = add_or_replace_parameter(response.url, "sz", i)
-            yield Request(response.urljoin(next_url))
+            yield Request(next_url)
 
     def parse_product(self, response):
         product_id = self.product_id(response)
@@ -63,13 +58,11 @@ class MenatworkSpider(CrawlSpider):
         product['retailer_sku'] = product_id
 
         response.meta['product'] = product
-        return self.variants(response)
+        response.meta['product']['skus'] = {}
+        return self.variant_requests(response)
 
-    def variants(self, response):
-        available_sizes = self.variant_sizes_and_availability(response)
-        skus = self.skus(response, available_sizes)
-        response.meta['product']['skus'] = skus
-
+    def variant_requests(self, response):
+        self.variants(response)
         variants = response.css(".swatches.color > li[class='selectable'] "
                                 "> a::attr('href')")
         requests = []
@@ -81,10 +74,13 @@ class MenatworkSpider(CrawlSpider):
 
         return self.variant_request(requests, response)
 
-    def parse_colours(self, response):
-        variants = self.variant_sizes_and_availability(response)
-        skus = self.skus(response,  variants)
+    def variants(self, response):
+        available_sizes = self.variant_sizes_and_availability(response)
+        skus = self.skus(response, available_sizes)
         response.meta['product']['skus'].update(skus)
+
+    def parse_colours(self, response):
+        self.variants(response)
         response.meta['product']['image_urls'] += self.image_urls(response)
         requests = response.meta['pending_requests']
 
@@ -125,7 +121,7 @@ class MenatworkSpider(CrawlSpider):
 
     def image_urls(self, response):
         image_urls = response.css('.productthumbnail::attr(src)').extract()
-        return [url.replace('small', 'large') for url in image_urls]
+        return [url.replace('small', 'hi-res') for url in image_urls]
 
     def gender(self, response):
         return response.css('.breadcrumb-element::text').extract_first()
