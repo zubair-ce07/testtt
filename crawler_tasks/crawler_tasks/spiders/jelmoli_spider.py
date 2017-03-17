@@ -13,9 +13,14 @@ class JelmoliSpider(CrawlSpider):
     start_urls = [
         'https://www.jelmoli-shop.ch/'
     ]
+    not_allow_keywords = [
+        'marken', 'elektronik', 'spielzeug', 'sportbedarf',
+        'fitnessgeraete', 'aktionen', 'werkzeuge', 'sale'
+    ]
     rules = (
-        Rule(LinkExtractor(restrict_css=('.rendered-data', '[class^="sh"]')),
-             process_links='filter_urls', callback='parse_category_url', follow=True),
+        Rule(LinkExtractor(
+            restrict_css=('.rendered-data', '[class^="sh"]'), deny=not_allow_keywords),
+            callback='parse_category_url', follow=True),
     )
 
     words_regex = re.compile('\w+')
@@ -24,41 +29,29 @@ class JelmoliSpider(CrawlSpider):
     product_page_url_t = 'https://www.jelmoli-shop.ch/p/{}/{}'
     product_skus_url_t = 'https://www.jelmoli-shop.ch/INTERSHOP/rest/WFS/EmpirieCom-JelmoliCH-Site/-;' \
         'loc=de_CH;cur=CHF/inventories/{}/master'
-    not_allow_keywords = [
-        'marken', 'elektronik', 'spielzeug', 'sportbedarf',
-        'fitnessgeraete', 'aktionen', 'werkzeuge', 'sale'
-    ]
-
-    def filter_urls(self, links):
-        return [
-            link for link in links
-            if not any(
-                keyword in link.url
-                for keyword in self.not_allow_keywords)
-        ]
 
     def parse_category_url(self, response):
         raw_json = response.css('.product-listing-json::text').extract_first()
         if not raw_json:
             return
 
-        pre_known = {}
+        pre_known_product_values = {}
         url = response.url
 
         if 'herren' in url:
-            pre_known['gender'] = 'men'
+            pre_known_product_values['gender'] = 'men'
         elif 'damen' in url:
-            pre_known['gender'] = 'women'
+            pre_known_product_values['gender'] = 'women'
         elif 'kinder' in url:
-            pre_known['gender'] = 'kids'
+            pre_known_product_values['gender'] = 'kids'
         elif any(keyword in url for keyword in ['bettwaesche', 'wohnen']):
-            pre_known['industry'] = 'homeware'
+            pre_known_product_values['industry'] = 'homeware'
 
-        return self.parse_category(raw_json, pre_known)
+        return self.parse_category(raw_json, pre_known_product_values)
 
-    def parse_category(self, raw_json, pre_known):
+    def parse_category(self, raw_json, pre_known_product_values):
         meta = {
-            'pre_known_product_values': pre_known
+            'pre_known_product_values': pre_known_product_values
         }
         request = Request(self.base_url, meta=meta)
         response = TextResponse(url='', body=raw_json.encode(), request=request)
