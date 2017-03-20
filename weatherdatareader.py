@@ -5,12 +5,8 @@ from dataoperations import DataOperations
 
 
 class WeatherDataReader:
-
-    def __init__(self):
-        pass
-
     @staticmethod
-    def read_single_file(file_path):
+    def __read_file(file_path):
         with open(file_path, 'r') as weather_record_file:
             next(weather_record_file)  # Skipping Empty Line
             # Read File as List of Dictionaries
@@ -22,21 +18,22 @@ class WeatherDataReader:
             return DataOperations.data_type_conversion(weather_records)
 
     @staticmethod
-    def find_files(path, year, month):
+    def __files(path, year, month):
         files = glob.glob('{path}/*{year}*{month}*.txt'.format(
             path=path, year=year, month=month))
 
         return files
 
     @staticmethod
-    def read_file(path, year, month):
-        month = calendar.month_name[month][:3]
+    def read_files(path, year, month):
+        if not month == '':
+            month = calendar.month_name[month][:3]
 
-        files = WeatherDataReader.find_files(path, year, month)
+        files = WeatherDataReader.__files(path, year, month)
 
         weather_records = []
         # Find all files that matches the given pattern
         for file_name in files:
-            weather_records.extend(WeatherDataReader.read_single_file(file_name))
+            weather_records.extend(WeatherDataReader.__read_file(file_name))
 
         return weather_records

@@ -1,11 +1,8 @@
 
 
 class TextReports:
-    def __init__(self):
-        pass
-
     @staticmethod
-    def display_yearly_report(highest_temperature, lowest_temperature, max_humidity):
+    def yearly_report(highest_temperature, lowest_temperature, max_humidity):
         print 'Highest: {temp}C on {month} {day}'.format(
             temp=highest_temperature['key'], month=highest_temperature['month'],
             day=highest_temperature['day'])
@@ -17,7 +14,7 @@ class TextReports:
             day=max_humidity['day'])
 
     @staticmethod
-    def display_monthly_report(
+    def monthly_report(
             avg_max_temperature, avg_min_temperature, avg_mean_humidity):
         print 'Highest Average: {avg_max_temperature}C'.format(
             avg_max_temperature=avg_max_temperature)

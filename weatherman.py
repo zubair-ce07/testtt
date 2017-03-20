@@ -7,61 +7,63 @@ from chartreports import ChartReports
 
 
 class WeatherMan:
-    def __init__(self):
-        pass
-
-    PKT = 'PKT'
-    MAX_TEMPERATURE = 'Max TemperatureC'
-    MIN_TEMPERATURE = 'Min TemperatureC'
-    MAX_HUMIDITY = 'Max Humidity'
-    MEAN_HUMIDITY = ' Mean Humidity'
+    __PKT = 'PKT'
+    __MAX_TEMPERATURE = 'Max TemperatureC'
+    __MIN_TEMPERATURE = 'Min TemperatureC'
+    __MAX_HUMIDITY = 'Max Humidity'
+    __MEAN_HUMIDITY = ' Mean Humidity'
 
     # Method to Display highest temperature and day, lowest temperature and day
     # And most humid day and humidity.
     @staticmethod
     def yearly_text_report(path, year):
 
-        highest_temperature = {'key': 0, 'month': 0, 'day': 0}
-        lowest_temperature = {'key': 100, 'month': 0, 'day': 0}
-        most_humidity = {'key': 0, 'month': 0, 'day': 0}
+        weather_records = WeatherDataReader.read_files(path, year, '')
 
-        files = WeatherDataReader.find_files(path, year, '')
+        highest_temperature = DataOperations.find_max(
+            weather_records, WeatherMan.__MAX_TEMPERATURE)
 
-        for file_name in files:
-            weather_records = WeatherDataReader.read_single_file(file_name)
+        lowest_temperature = DataOperations.find_min(
+            weather_records, WeatherMan.__MIN_TEMPERATURE)
 
-            highest_temperature = DataOperations.find_max(
-                highest_temperature, weather_records, WeatherMan.MAX_TEMPERATURE)
+        most_humidity = DataOperations.find_max(
+            weather_records, WeatherMan.__MAX_HUMIDITY)
 
-            lowest_temperature = DataOperations.find_min(
-                lowest_temperature, weather_records, WeatherMan.MIN_TEMPERATURE)
-
-            most_humidity = DataOperations.find_max(
-                most_humidity, weather_records, WeatherMan.MAX_HUMIDITY)
-
-        TextReports.display_yearly_report(
+        TextReports.yearly_report(
             highest_temperature, lowest_temperature, most_humidity)
 
     # Method to display the average highest temperature
     # And average lowest temperature, average humidity.
-    def monthly_text_report(self, path, year, month):
-        file_detail = WeatherDataReader.read_file(path, year, month)
+    @staticmethod
+    def monthly_text_report(path, year, month):
+        file_detail = WeatherDataReader.read_files(path, year, month)
 
-        avg_max_temperature = DataOperations.calculate_average(
-            file_detail, self.MAX_TEMPERATURE)
-        avg_min_temperature = DataOperations.calculate_average(
-            file_detail, self.MIN_TEMPERATURE)
-        avg_mean_humidity = DataOperations.calculate_average(
-            file_detail, self.MEAN_HUMIDITY)
+        avg_max_temperature = DataOperations.average(
+            file_detail, WeatherMan.__MAX_TEMPERATURE)
+        avg_min_temperature = DataOperations.average(
+            file_detail, WeatherMan.__MIN_TEMPERATURE)
+        avg_mean_humidity = DataOperations.average(
+            file_detail, WeatherMan.__MEAN_HUMIDITY)
 
-        TextReports.display_monthly_report(
+        TextReports.monthly_report(
             avg_max_temperature, avg_min_temperature, avg_mean_humidity)
 
+    # Method to draw horizontal bar chart on the console for the highest
+    #  And lowest temperature on each day
     @staticmethod
     def monthly_chart_report(path, year, month, is_bonus_task):
 
-        weather_records = WeatherDataReader.read_file(path, year, month)
-        ChartReports.display_monthly_report(weather_records, is_bonus_task)
+        weather_records = WeatherDataReader.read_files(path, year, month)
+        for single_day in weather_records:
+            current_date = single_day[WeatherMan.__PKT]
+            highest_temperature = single_day[WeatherMan.__MAX_TEMPERATURE]
+            lowest_temperature = single_day[WeatherMan.__MIN_TEMPERATURE]
+            if is_bonus_task:
+                ChartReports.daily_stacked_bar_chart(
+                    current_date.day, highest_temperature, lowest_temperature)
+            else:
+                ChartReports.daily_bar_chart(
+                    current_date.day, highest_temperature, lowest_temperature)
 
 
 def main():
@@ -82,21 +84,19 @@ def main():
     arg_parser.add_argument('path', type=str, help='path to files')
     args = arg_parser.parse_args()
 
-    weatherman = WeatherMan()
-
     path = args.path
     date = parser.parse(args.date)
 
     if args.yearly_report:
         WeatherMan.yearly_text_report(path, date.year)
     elif args.monthly_report:
-        weatherman.monthly_text_report(path, date.year, date.month)
+        WeatherMan.monthly_text_report(path, date.year, date.month)
 
     elif args.bar_chart:
-        weatherman.monthly_chart_report(path, date.year, date.month, False)
+        WeatherMan.monthly_chart_report(path, date.year, date.month, False)
 
     elif args.stacked_bar_chart:
-        weatherman.monthly_chart_report(path, date.year, date.month, True)
+        WeatherMan.monthly_chart_report(path, date.year, date.month, True)
 
 
 if __name__ == "__main__":
