@@ -103,6 +103,25 @@ class JelmoliSpider(CrawlSpider):
             url = self.product_page_url_t.format(name, item['masterSku'])
             yield Request(url, meta=meta, callback=self.parse_product)
 
+    def parse_product(self, response):
+        meta = response.meta
+        product = JelmoliProduct()
+        product['merch_info'] = []
+        product['market'] = ''
+        product['product_id'] = meta['product_id']
+        product['name'] = meta['name']
+        product['brand'] = meta['brand']
+        product['description'] = meta['description']
+        product['url'] = response.url
+        product['category'] = response.css('.nav-breadcrumb a::text').extract()
+        product['care'] = self.parse_product_care(response)
+        product.update(response.meta.get('pre_known_product_values', {}))
+        product['image_urls'] = self.parse_image_urls(response)
+
+        meta['product'] = product
+        url = self.product_skus_url_t.format(meta['product_id'])
+        yield Request(url, meta=meta, callback=self.parse_skus)
+
     def parse_product_care(self, response):
         desc1_selector = response.css('[itemprop="description"]')
         if not desc1_selector:
@@ -124,25 +143,6 @@ class JelmoliSpider(CrawlSpider):
             return [re.sub('baur_format_.', 'formatz', url) for url in image_urls]
         else:
             return [main_image_url]
-
-    def parse_product(self, response):
-        meta = response.meta
-        product = JelmoliProduct()
-        product['merch_info'] = []
-        product['market'] = ''
-        product['product_id'] = meta['product_id']
-        product['name'] = meta['name']
-        product['brand'] = meta['brand']
-        product['description'] = meta['description']
-        product['url'] = response.url
-        product['category'] = response.css('.nav-breadcrumb a::text').extract()
-        product['care'] = self.parse_product_care(response)
-        product.update(response.meta.get('pre_known_product_values', {}))
-        product['image_urls'] = self.parse_image_urls(response)
-
-        meta['product'] = product
-        url = self.product_skus_url_t.format(meta['product_id'])
-        yield Request(url, meta=meta, callback=self.parse_skus)
 
     def parse_skus(self, response):
         skus = {}
