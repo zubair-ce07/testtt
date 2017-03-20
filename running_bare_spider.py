@@ -1,42 +1,54 @@
 import scrapy
 from scrapy.loader import ItemLoader
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 from RunningBare.items import RunningBareItem
 import urllib.parse as urlparse
 
 
-class RunningBareSpider(scrapy.Spider):
+class RunningBareSpider(CrawlSpider):
 
     name = "running_bare_spider"
 
     start_urls = [
         "http://www.runningbare.com.au/"
     ]
+    rules = [
+        Rule(LinkExtractor(restrict_xpaths="//div[@id='slidemenu']"),
+             process_links='process_category_links', follow=True),
 
-    def parse(self, response):
-        hrefs = response.xpath("//div[@id='slidemenu']//a/@href").extract()
-        for href in hrefs:
-            url = urlparse.urljoin(self.start_urls[0], href)
-            yield scrapy.Request(url, callback=self.parse_page)
+        Rule(LinkExtractor(restrict_xpaths="//div[contains(@class,'productName')]/a"),
+             process_links='process_item_details_links',
+             process_request='process_item_details_request',
+             callback="parse_item_details")
+    ]
+
+    def append_base_url(self, url):
+        return urlparse.urljoin(self.start_urls[0], url)
+
+    def process_category_links(self, links):
+        for link in links:
+            link.url = self.append_base_url(link.url)
+            link.url = self.get_complete_item_list_url(link.url)
+            yield link
+
+    def process_item_details_links(self, links):
+        for link in links:
+            link.url = self.append_base_url(link.url)
+            yield link
 
     @staticmethod
-    def get_view_all_page_url(category_url):
+    def process_item_details_request(item_details_request):
+        item_details_request.meta["original_url"] = item_details_request.url
+        return item_details_request
+
+    @staticmethod
+    def get_complete_item_list_url(category_url):
         url_parts = list(urlparse.urlparse(category_url))
         query = dict(urlparse.parse_qsl(url_parts[4]))
         query.update({'page': -1})  # passing page = -1 to get all the items
         url_parts[4] = urlparse.urlencode(query)
         return urlparse.urlunparse(url_parts)
-
-    def parse_page(self, response):
-        if response.xpath("//div[contains(@class,'productContent')]").extract():
-            view_all_page_url = self.get_view_all_page_url(response.url)
-            if view_all_page_url:
-                return scrapy.Request(view_all_page_url, callback=self.parse_complete_item_list)
-
-    def parse_complete_item_list(self, response):
-        item_hrefs = response.xpath("//div[contains(@class,'productName')]/a/@href").extract()
-        for href in item_hrefs:
-            url = urlparse.urljoin(self.start_urls[0], href)  # join base url
-            yield scrapy.Request(url, meta={"original_url": url}, callback=self.parse_item_details)
 
     def parse_item_details(self, item_details_response):
         item_loader = ItemLoader(item=RunningBareItem(), response=item_details_response)
@@ -69,7 +81,8 @@ class RunningBareSpider(scrapy.Spider):
     @staticmethod
     def populate_currency(item_loader):
         item_loader.add_xpath("currency",
-                              "normalize-space(//button[contains(@class,'currencyselectorButton')]/text())")
+                              "normalize-space(//div[@class='row top']"
+                              "//button[contains(@class,'currencyselectorButton')]/text())")
 
     @staticmethod
     def populate_description(item_loader):
@@ -153,17 +166,14 @@ class RunningBareSpider(scrapy.Spider):
             size=size)).extract()
         return is_out_of_stock
 
-    def make_color_details_request(self, item_loader, color_urls):
+    def make_next_color_request(self, item_loader, color_urls):
         if not color_urls:
             return
 
-        url = color_urls.pop()
-        sku_sizes_request = scrapy.Request(url, callback=self.populate_skus_with_sizes)
-        sku_sizes_request.meta["item_loader"] = item_loader
-        sku_sizes_request.meta["color_urls"] = color_urls
-        return sku_sizes_request
+        return scrapy.Request(color_urls.pop(), callback=self.populate_skus_of_next_color,
+                              meta={'item_loader': item_loader, 'color_urls': color_urls})
 
-    def get_sku_with_sizes(self, response, item_loader):
+    def append_skus(self, response, item_loader):
         skus = item_loader.get_output_value("skus")
         if not skus:
             skus = {}
@@ -175,36 +185,32 @@ class RunningBareSpider(scrapy.Spider):
         sizes = response.xpath("//div[contains(@class,'selectsize')]/@title").extract()
         for size in sizes:
             sku = "{color}_{size}".format(color=color, size=size)
+            skus[sku] = {"color": color, "currency": currency, "price": price, "size": size}
             if self.is_size_out_of_stock(response, size):
-                skus[sku] = {"color": color, "currency": currency, "price": price, "size": size,
-                             "out_of_stock": True}
-            else:
-                skus[sku] = {"color": color, "currency": currency, "price": price, "size": size}
+                skus[sku]["out_of_stock"] = True
 
         return skus
 
-    def populate_skus_with_sizes(self, response):
-        item_loader = response.meta["item_loader"]
-        item_loader.add_value("skus", self.get_sku_with_sizes(response, response.meta["item_loader"]))
-        color_urls = response.meta["color_urls"]
-
-        sku_sizes_request = self.make_color_details_request(item_loader, color_urls)
-        if sku_sizes_request:
-            return sku_sizes_request
+    def request_skus_of_next_color(self, item_loader, color_urls):
+        next_color_request = self.make_next_color_request(item_loader, color_urls)
+        if next_color_request:
+            return next_color_request
         else:
             return item_loader.load_item()
 
-    def populate_skus(self, item_loader, response):
-        item_loader.add_value("skus", self.get_sku_with_sizes(response, item_loader))
+    def populate_skus_of_next_color(self, response):
+        item_loader = response.meta["item_loader"]
+        item_loader.add_value("skus", self.append_skus(response, item_loader))
+        color_urls = response.meta["color_urls"]
 
+        return self.request_skus_of_next_color(item_loader, color_urls)
+
+    def populate_skus(self, item_loader, response):
+        item_loader.add_value("skus", self.append_skus(response, item_loader))
         colors = self.get_unselected_colors_from_response(response)
         color_urls = self.get_color_urls(colors, response.url)
 
-        sku_sizes_request = self.make_color_details_request(item_loader, color_urls)
-        if sku_sizes_request:
-            return sku_sizes_request
-        else:
-            return item_loader.load_item()
+        return self.request_skus_of_next_color(item_loader, color_urls)
 
     def populate_spider_name(self, item_loader):
         item_loader.add_value("spider_name", self.name)
