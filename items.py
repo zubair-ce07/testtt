@@ -30,7 +30,9 @@ class Job(scrapy.Item):
     external_id = scrapy.Field(
         output_processor=TakeFirst()
     )
-    image_urls = scrapy.Field()
+    image_urls = scrapy.Field(
+        output_processor=TakeFirst()
+    )
     job_types = scrapy.Field(
         input_processor=MapCompose(str.strip)
     )
@@ -41,7 +43,9 @@ class Job(scrapy.Item):
     location = scrapy.Field(
         output_processor=TakeFirst()
     )
-    logo_urls = scrapy.Field()
+    logo_urls = scrapy.Field(
+        output_processor=TakeFirst()
+    )
     provider = scrapy.Field(
         output_processor=TakeFirst()
     )

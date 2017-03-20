@@ -1,6 +1,6 @@
 import scrapy
 from scrapy.loader import ItemLoader
-from Assignment2.items import Job
+from Dice.items import Job
 from datetime import datetime
 import re
 import urllib.parse as urlparse
@@ -25,25 +25,28 @@ class DiceSpider(scrapy.Spider):
         for job_details_url in job_details_urls:
             yield scrapy.Request(job_details_url, callback=self.parse_job_details)
 
-        self.request_next_page(response)
+        yield self.request_next_page(response)
 
-    def request_next_page(self, response):
-        url = response.url
-
-        start_page_match = re.search("startPage=(\d+)", response.url)
+    @staticmethod
+    def get_next_page_url(current_url):
+        start_page_match = re.search("startPage=(\d+)", current_url)
         if start_page_match:
             current_page_no = int(start_page_match.group(1))
             start_page_param = {'startPage': current_page_no + 1}
 
-            url_parts = list(urlparse.urlparse(url))
+            url_parts = list(urlparse.urlparse(current_url))
             query = dict(urlparse.parse_qsl(url_parts[4]))
             query.update(start_page_param)
             url_parts[4] = urlencode(query)
 
             next_page_url = urlparse.urlunparse(url_parts)
+            print(next_page_url)
+            return next_page_url
 
-            if next_page_url is not None:
-                yield scrapy.Request(next_page_url, callback=self.parse)
+    def request_next_page(self, response):
+        next_page_url = self.get_next_page_url(response.url)
+        if next_page_url:
+            return scrapy.Request(next_page_url, callback=self.parse)
 
     def parse_job_details(self, job_details_response):
         job_loader = ItemLoader(item=Job(), response=job_details_response)
@@ -94,7 +97,6 @@ class DiceSpider(scrapy.Spider):
     @staticmethod
     def populate_image_urls(job_loader):
         job_loader.add_xpath("image_urls",
-                             "//div[contains(concat(' ', @class, ' '),' job-banner ')]"
                              "//div[contains(@class,'bl-block')]/img/@src")
 
     @staticmethod
@@ -113,12 +115,7 @@ class DiceSpider(scrapy.Spider):
     @staticmethod
     def populate_logo_urls(job_loader):
         job_loader.add_xpath("logo_urls",
-                             "//div[contains(concat(' ', @class, ' '),' job-banner ')]"
-                             "//div[contains(@class,'brcs-logo')]//img/@src")
-
-        job_loader.add_xpath("logo_urls",
-                             "//div[contains(concat(' ', @class, ' '),' company-header-info ')]"
-                             "//img[contains(@class,'h-logo')]/@src")
+                             "//div[contains(@class,'brcs-logo')]//img/@src | //img[contains(@class,'h-logo')]/@src")
 
     @staticmethod
     def populate_provider(job_loader):
