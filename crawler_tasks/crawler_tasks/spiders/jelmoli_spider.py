@@ -3,7 +3,7 @@ import json
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from scrapy.http import Request, TextResponse
+from scrapy.http import Request, FormRequest, TextResponse
 from crawler_tasks.items import JelmoliProduct
 
 
@@ -13,13 +13,13 @@ class JelmoliSpider(CrawlSpider):
     start_urls = [
         'https://www.jelmoli-shop.ch/'
     ]
-    not_allow_keywords = [
+    unwanted_categories = [
         'marken', 'elektronik', 'spielzeug', 'sportbedarf',
         'fitnessgeraete', 'aktionen', 'werkzeuge', 'sale'
     ]
     rules = (
         Rule(LinkExtractor(
-            restrict_css=('.rendered-data', '[class^="sh"]'), deny=not_allow_keywords),
+            restrict_css=('.rendered-data', '[class^="sh"]'), deny=unwanted_categories),
             callback='parse_category_url', follow=True),
     )
 
@@ -57,10 +57,10 @@ class JelmoliSpider(CrawlSpider):
         response = TextResponse(url='', body=raw_json.encode(), request=request)
         yield next(self.parse_product_listing(response))
 
-        result = json.loads(raw_json)['result']
-        category_id = result['category']['current']['id']
-        product_count = result['count']
-        per_request_count = len(result['styles'])
+        category_detail = json.loads(raw_json)['result']
+        category_id = category_detail['category']['current']['id']
+        product_count = category_detail['count']
+        per_request_count = len(category_detail['styles'])
         requested_count = per_request_count
         payload = {
             'category': category_id,
@@ -72,12 +72,13 @@ class JelmoliSpider(CrawlSpider):
             payload['start'] = requested_count
             payload['count'] = per_request_count
             requested_count += per_request_count
-            yield Request(self.pagination_url, body=json.dumps(payload), meta=meta,
-                          method='POST', callback=self.parse_product_listing)
+            yield FormRequest(
+                self.pagination_url, body=json.dumps(payload), meta=meta,
+                callback=self.parse_product_listing)
 
     def parse_product_listing(self, response):
-        json_response = json.loads(response.text)
-        items = json_response.get('searchresult', json_response)['result']['styles']
+        product_listing = json.loads(response.text)
+        items = product_listing.get('searchresult', product_listing)['result']['styles']
         pre_known_product_values = response.meta.get('pre_known_product_values', {})
 
         for item in items:
@@ -93,6 +94,7 @@ class JelmoliSpider(CrawlSpider):
                 'description': item['description'],
                 'currency': item['price']['currency'],
                 'price': item['price']['value'],
+                'previous_price': item.get('oldPrice', {}).get('value', ''),
                 'pre_known_product_values': pre_known_product_values
             }
 
@@ -115,6 +117,14 @@ class JelmoliSpider(CrawlSpider):
                 return [desc1]
         return []
 
+    def parse_image_urls(self, response):
+        image_urls = response.css('.image-gallery-item img::attr("data-lazysrc")').extract()
+        main_image_url = response.css('.zoom-image::attr("data-zoom-uri")').extract_first()
+        if image_urls:
+            return [re.sub('baur_format_.', 'formatz', url) for url in image_urls]
+        else:
+            return [main_image_url]
+
     def parse_product(self, response):
         meta = response.meta
         product = JelmoliProduct()
@@ -128,13 +138,7 @@ class JelmoliSpider(CrawlSpider):
         product['category'] = response.css('.nav-breadcrumb a::text').extract()
         product['care'] = self.parse_product_care(response)
         product.update(response.meta.get('pre_known_product_values', {}))
-
-        image_urls = response.css('.image-gallery-item img::attr("data-lazysrc")').extract()
-        main_image_url = response.css('.zoom-image::attr("data-zoom-uri")').extract_first()
-        if image_urls:
-            product['image_urls'] = [re.sub('baur_format_.', 'formatz', url) for url in image_urls]
-        else:
-            product['image_urls'] = [main_image_url]
+        product['image_urls'] = self.parse_image_urls(response)
 
         meta['product'] = product
         url = self.product_skus_url_t.format(meta['product_id'])
@@ -142,17 +146,16 @@ class JelmoliSpider(CrawlSpider):
 
     def parse_skus(self, response):
         skus = {}
-        currency = response.meta['currency']
-        price = response.meta['price']
-        json_response = json.loads(response.text)
-        for item in json_response['variants']:
+        product_variants = json.loads(response.text)
+        for item in product_variants['variants']:
             axis_data = item['axisData']
             try:
                 skus[item['sku']] = {
                     'colour': axis_data[0]['value'],
                     'size': axis_data[1]['value'],
-                    'currency': currency,
-                    'price': price
+                    'currency': response.meta['currency'],
+                    'price': response.meta['price'],
+                    'previous_price': response.meta['previous_price']
                 }
             except IndexError:
                 pass
