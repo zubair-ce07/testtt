@@ -17,15 +17,12 @@ class WeatherMan:
     # And most humid day and humidity.
     @staticmethod
     def yearly_text_report(path, year):
-
         weather_records = WeatherDataReader.read_files(path, year, '')
 
         highest_temperature = DataOperations.find_max(
             weather_records, WeatherMan.__MAX_TEMPERATURE)
-
         lowest_temperature = DataOperations.find_min(
             weather_records, WeatherMan.__MIN_TEMPERATURE)
-
         most_humidity = DataOperations.find_max(
             weather_records, WeatherMan.__MAX_HUMIDITY)
 
@@ -91,10 +88,8 @@ def main():
         WeatherMan.yearly_text_report(path, date.year)
     elif args.monthly_report:
         WeatherMan.monthly_text_report(path, date.year, date.month)
-
     elif args.bar_chart:
         WeatherMan.monthly_chart_report(path, date.year, date.month, False)
-
     elif args.stacked_bar_chart:
         WeatherMan.monthly_chart_report(path, date.year, date.month, True)
 

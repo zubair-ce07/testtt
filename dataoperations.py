@@ -36,10 +36,7 @@ class DataOperations:
 
     @staticmethod
     def find_max(weather_records, key):
-        max_record = weather_records[max(xrange(
-            len(weather_records)),
-            key=lambda day: weather_records[day][key])]
-
+        max_record = max(weather_records, key=lambda day: day[key])
         return {
             'key': max_record[key],
             'month': calendar.month_name[max_record[DataOperations.__PKT].month],
@@ -48,10 +45,7 @@ class DataOperations:
 
     @staticmethod
     def find_min(weather_records, key):
-        min_record = weather_records[min(xrange(
-            len(weather_records)),
-            key=lambda day: weather_records[day][key])]
-
+        min_record = min(weather_records, key=lambda day: day[key])
         return {
             'key': min_record[key],
             'month': calendar.month_name[min_record[DataOperations.__PKT].month],
