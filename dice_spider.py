@@ -40,7 +40,6 @@ class DiceSpider(scrapy.Spider):
             url_parts[4] = urlencode(query)
 
             next_page_url = urlparse.urlunparse(url_parts)
-            print(next_page_url)
             return next_page_url
 
     def request_next_page(self, response):
