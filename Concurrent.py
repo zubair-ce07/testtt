@@ -2,10 +2,10 @@ import requests
 from parsel import Selector
 import argparse
 import asyncio
+from urllib.parse import urljoin
 
 
 async def retrieve_bytes(link, timeout_delay):
-
     await asyncio.sleep(timeout_delay)
     try:
         html = requests.get(link, timeout=15).text
@@ -15,9 +15,8 @@ async def retrieve_bytes(link, timeout_delay):
 
 
 def clean_url_list(links, max_urls, url):
-
     for link in links:
-        if link is None or len(link) <= 1:
+        if not link or len(link) <= 1:
             links.remove(link)
     links = list(set(links))
 
@@ -26,20 +25,18 @@ def clean_url_list(links, max_urls, url):
 
     for ids, link in enumerate(links):
         if not link.startswith('http'):
-            links[ids] = url+link
+            links[ids] = urljoin(url, link)
 
     return links
 
 
 def retrieve_urls(url):
-
     html = requests.get(url, timeout=15).text
     selector = Selector(text=html)
     return selector.css('a::attr(href)').extract()
 
 
 def start_loop(links, thread_count, timeout_delay):
-
     loop = asyncio.get_event_loop()
     tasks = []
     results = []
@@ -47,12 +44,12 @@ def start_loop(links, thread_count, timeout_delay):
     if len(links) > thread_count:
         for link in links:
             tasks.append(asyncio.ensure_future(retrieve_bytes(link, timeout_delay)))
-            if iter % thread_count == 0:
-                temp = loop.run_until_complete(asyncio.wait(tasks))
-                results = results + list(temp[0])
+            if iter % thread_count:
+                temp_results_list = loop.run_until_complete(asyncio.wait(tasks))
+                results = results + list(temp_results_list[0])
                 tasks.clear()
             iter += 1
-        if len(tasks) != 0:
+        if len(tasks):
             temp_results_list = loop.run_until_complete(asyncio.wait(tasks))
             results = results + list(temp_results_list[0])
     else:
@@ -76,7 +73,6 @@ def display(links, total_bytes):
 
 
 def argument_check(args):
-
     if not args.threads:
         args.threads = 1
     elif args.threads <= 0:
@@ -99,7 +95,6 @@ def argument_check(args):
 
 
 def arguments():
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--threads",
                         help="number of concurrent requests", type=int)
@@ -111,7 +106,6 @@ def arguments():
 
 
 def main():
-
     args = arguments()
     threads, timeout, max_url = argument_check(args)
     url = 'https://arbisoft.com'
