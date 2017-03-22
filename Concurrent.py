@@ -5,36 +5,34 @@ import asyncio
 
 
 async def retrieve_bytes(link, timeout_delay):
-    url = 'https://arbisoft.com'
+
     await asyncio.sleep(timeout_delay)
     try:
-        if link[0:4] == "http":
-            html = requests.get(link, timeout=15).text
-
-        else:
-            html = requests.get(url + link, timeout=15).text
-
-        # print(len(html))
+        html = requests.get(link, timeout=15).text
         return len(html)
     except:
         return 0
 
 
-def clean_url_list(links, max_urls):
+def clean_url_list(links, max_urls, url):
+
     for link in links:
-
-        if len(link) <= 1 or len(link) is None:
+        if link is None or len(link) <= 1:
             links.remove(link)
-
     links = list(set(links))
 
     if max_urls < len(links):
         links = links[0:max_urls]
 
+    for ids, link in enumerate(links):
+        if not link.startswith('http'):
+            links[ids] = url+link
+
     return links
 
 
 def retrieve_urls(url):
+
     html = requests.get(url, timeout=15).text
     selector = Selector(text=html)
     return selector.css('a::attr(href)').extract()
@@ -47,7 +45,6 @@ def start_loop(links, thread_count, timeout_delay):
     results = []
     iter = 1
     if len(links) > thread_count:
-
         for link in links:
             tasks.append(asyncio.ensure_future(retrieve_bytes(link, timeout_delay)))
             if iter % thread_count == 0:
@@ -55,10 +52,9 @@ def start_loop(links, thread_count, timeout_delay):
                 results = results + list(temp[0])
                 tasks.clear()
             iter += 1
-
         if len(tasks) != 0:
-            temp = loop.run_until_complete(asyncio.wait(tasks))
-            results = results + list(temp[0])
+            temp_results_list = loop.run_until_complete(asyncio.wait(tasks))
+            results = results + list(temp_results_list[0])
     else:
         for link in links:
             tasks.append(asyncio.ensure_future(retrieve_bytes(link, timeout_delay)))
@@ -72,37 +68,14 @@ def start_loop(links, thread_count, timeout_delay):
 
     return total_bytes
 
-    # total_bytes = 0
-    # connection_error = 0;
-    # pool = ProcessPoolExecutor(thread_count)
-    # futures = []
-    # for link in links:
-    #     futures.append(pool.submit(retrieve_bytes, link, timeout_delay))
-    #
-    # for future in as_completed(futures):
-    #     if future.result == 0:
-    #         connection_error += 1
-    #     total_bytes += future.result()
-    #
-    # return total_bytes, connection_error
-
 
 def display(links, total_bytes):
-    print("Total Downloaded bytes : " + str(total_bytes))
-    print("Total requests : " + str(len(links)))
-    print("Average Page size : " + str(total_bytes/(len(links))))
+    print("Total Downloaded bytes : {0:.0f}".format(total_bytes))
+    print("Total requests : {0:.0f}".format(len(links)))
+    print("Average Page size : {0:.0f}".format(total_bytes/(len(links))))
 
 
-def main():
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--threads",
-                        help="number of concurrent requests", type=int)
-    parser.add_argument("-o", "--timeout",
-                        help="time out delay value to visit", type=int)
-    parser.add_argument("-m", "--max_url",
-                        help="max number of urls to visit", type=int)
-    args = parser.parse_args()
+def argument_check(args):
 
     if not args.threads:
         args.threads = 1
@@ -122,10 +95,29 @@ def main():
         print("Please provide a positive number of max_url")
         exit()
 
+    return args.threads, args.timeout, args.max_url
+
+
+def arguments():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--threads",
+                        help="number of concurrent requests", type=int)
+    parser.add_argument("-o", "--timeout",
+                        help="time out delay value to visit", type=int)
+    parser.add_argument("-m", "--max_url",
+                        help="max number of urls to visit", type=int)
+    return parser.parse_args()
+
+
+def main():
+
+    args = arguments()
+    threads, timeout, max_url = argument_check(args)
     url = 'https://arbisoft.com'
     links = retrieve_urls(url)
-    links = clean_url_list(links, args.max_url)
-    total_bytes = start_loop(links, args.threads, args.timeout)
+    links = clean_url_list(links, max_url, url)
+    total_bytes = start_loop(links, threads, timeout)
     display(links, total_bytes)
 
 

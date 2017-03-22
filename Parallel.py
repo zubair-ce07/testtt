@@ -6,46 +6,46 @@ import time
 
 
 def retrieve_bytes(link, timeout_delay):
-    url = 'https://arbisoft.com'
+
     time.sleep(timeout_delay)
     try:
-        if link[0:4] == "http":
-            html = requests.get(link, timeout=15).text
-
-        else:
-            html = requests.get(url + link, timeout=15).text
-
-        # print(len(html))
+        html = requests.get(link, timeout=15).text
         return len(html)
     except:
         return 0
 
 
-def clean_url_list(links, max_urls):
+def clean_url_list(links, max_urls, url):
+
     for link in links:
-
-        if len(link) <= 1 or len(link) is None:
+        if link is None or len(link) <= 1:
             links.remove(link)
-
     links = list(set(links))
 
     if max_urls < len(links):
         links = links[0:max_urls]
 
+    for ids, link in enumerate(links):
+        if not link.startswith('http'):
+            links[ids] = url+link
+
     return links
 
 
 def retrieve_urls(url):
+
     html = requests.get(url, timeout=15).text
     selector = Selector(text=html)
     return selector.css('a::attr(href)').extract()
 
 
 def create_processes(links, thread_count, timeout_delay):
+
     total_bytes = 0
     connection_error = 0;
     pool = ProcessPoolExecutor(thread_count)
     futures = []
+
     for link in links:
         futures.append(pool.submit(retrieve_bytes, link, timeout_delay))
 
@@ -58,21 +58,13 @@ def create_processes(links, thread_count, timeout_delay):
 
 
 def display(links, total_bytes, connection_error):
-    print("Total Downloaded bytes : " + str(total_bytes))
-    print("Total requests : " + str(len(links)))
-    print("Average Page size : " + str(total_bytes/(len(links)-connection_error)))
+
+    print("Total Downloaded bytes : {0:.0f}".format(total_bytes))
+    print("Total requests : {0:.0f}".format(len(links)))
+    print("Average Page size : {0:.0f}".format(total_bytes/(len(links)-connection_error)))
 
 
-def main():
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--threads",
-                        help="number of concurrent requests", type=int)
-    parser.add_argument("-o", "--timeout",
-                        help="time out delay value to visit", type=int)
-    parser.add_argument("-m", "--max_url",
-                        help="max number of urls to visit", type=int)
-    args = parser.parse_args()
+def argument_check(args):
 
     if not args.threads:
         args.threads = 1
@@ -92,10 +84,29 @@ def main():
         print("Please provide a positive number of max_url")
         exit()
 
+    return args.threads, args.timeout, args.max_url
+
+
+def arguments():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--threads",
+                        help="number of concurrent requests", type=int)
+    parser.add_argument("-o", "--timeout",
+                        help="time out delay value to visit", type=int)
+    parser.add_argument("-m", "--max_url",
+                        help="max number of urls to visit", type=int)
+    return parser.parse_args()
+
+
+def main():
+
+    args = arguments()
+    threads, timeout, max_url = argument_check(args)
     url = 'https://arbisoft.com'
     links = retrieve_urls(url)
-    links = clean_url_list(links, args.max_url)
-    total_bytes, connection_error = create_processes(links, args.threads, args.timeout)
+    links = clean_url_list(links, max_url, url)
+    total_bytes, connection_error = create_processes(links, threads, timeout)
     display(links, total_bytes, connection_error)
 
 
