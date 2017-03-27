@@ -62,7 +62,7 @@ class BoohooSpider(Spider):
         if not response.meta.get('follow_pagination_urls', True):
             return
 
-        next_page_urls = html_selector.css('#pagnTop .pagnnum a::attr(href)').extract()
+        next_page_urls = html_selector.css('#pagnTop .pagnnum ::attr(href)').extract()
         for url in next_page_urls:
             page_url = self.base_url + url
             category_tree = url.split('?')[0].lstrip('/')
@@ -118,7 +118,7 @@ class BoohooSpider(Spider):
         return []
 
     def parse_image_urls(self, response):
-        image_urls = response.css('.product-image-thumbs .thumbnail img::attr(src)').extract()
+        image_urls = response.css('.product-image-thumbs .thumbnail ::attr(src)').extract()
         return [url.split('?')[0] for url in image_urls]
 
     def parse_skus(self, response):
