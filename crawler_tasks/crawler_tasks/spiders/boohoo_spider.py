@@ -53,7 +53,7 @@ class BoohooSpider(Spider):
         meta = {
             'pre_known_product_values': pre_known_product_values
         }
-        yield Request(url, callback=self.parse_category, meta=meta)
+        return Request(url, callback=self.parse_category, meta=meta)
 
     def parse_category(self, response):
         html_selector = self.response_html_selector(response)
