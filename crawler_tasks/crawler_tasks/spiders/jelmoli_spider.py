@@ -120,7 +120,7 @@ class JelmoliSpider(CrawlSpider):
 
         meta['product'] = product
         url = self.product_skus_url_t.format(meta['product_id'])
-        yield Request(url, meta=meta, callback=self.parse_skus)
+        return Request(url, meta=meta, callback=self.parse_skus)
 
     def parse_product_care(self, response):
         desc1_selector = response.css('[itemprop="description"]')
