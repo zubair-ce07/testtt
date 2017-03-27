@@ -33,7 +33,7 @@ class BoohooSpider(Spider):
         links = LinkExtractor(
             restrict_css=('#nav',), deny=('sale',)).extract_links(response)
         for link in links:
-            yield next(self.parse_category_url(link.url))
+            yield self.parse_category_url(link.url)
 
     def parse_category_url(self, category_url):
         pre_known_product_values = {}
@@ -57,7 +57,9 @@ class BoohooSpider(Spider):
 
     def parse_category(self, response):
         html_selector = self.response_html_selector(response)
-        yield next(self.parse_category_products(html_selector, response.meta))
+        for product_request in self.parse_category_products(
+                html_selector, response.meta):
+            yield product_request
 
         if not response.meta.get('follow_pagination_urls', True):
             return
@@ -79,11 +81,14 @@ class BoohooSpider(Spider):
         return Selector(text=unescaped_html, type='html')
 
     def parse_category_products(self, html_selector, meta):
+        product_requests = []
         products_html = html_selector.css('.prod')
         for item in products_html:
             product_url = item.css('.prod-name ::attr(href)').extract_first()
             complete_url = self.base_url + product_url
-            yield Request(complete_url, callback=self.parse_product, meta=meta)
+            product_requests.append(
+                Request(complete_url, callback=self.parse_product, meta=meta))
+        return product_requests
 
     def parse_product(self, response):
         boohoo_product = GenericProduct()
@@ -122,8 +127,14 @@ class BoohooSpider(Spider):
         return [url.split('?')[0] for url in image_urls]
 
     def parse_skus(self, response):
-        price, currency = response.css('.special-price .price::text')[0].re('\S+')
-        prev_price = response.css('.old-price .price::text')[0].re('\S+')[0]
+        special_price = response.css('.special-price .price::text')
+        if special_price:
+            price, currency = special_price[0].re('\S+')
+            prev_price = response.css('.old-price .price::text')[0].re('\S+')[0]
+        else:
+            price, currency = response.css('.regular-price .price::text')[0].re('\S+')
+            prev_price = ''
+
         sizes = response.css(
             '#configurable_swatch_international_size a::attr(title)').extract()
         colors = response.css('#configurable_swatch_color a::attr(name)').extract()
