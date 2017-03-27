@@ -55,7 +55,8 @@ class JelmoliSpider(CrawlSpider):
         }
         request = Request(self.base_url, meta=meta)
         response = TextResponse(url='', body=raw_json.encode(), request=request)
-        yield next(self.parse_product_listing(response))
+        for product_request in self.parse_product_listing(response):
+            yield product_request
 
         category_detail = json.loads(raw_json)['result']
         category_id = category_detail['category']['current']['id']
@@ -81,6 +82,7 @@ class JelmoliSpider(CrawlSpider):
         items = product_listing.get('searchresult', product_listing)['result']['styles']
         pre_known_product_values = response.meta.get('pre_known_product_values', {})
 
+        product_requests = []
         for item in items:
             try:
                 name_without_brand = item['name'].split(' ', 1)[1]
@@ -101,7 +103,9 @@ class JelmoliSpider(CrawlSpider):
             words = self.words_regex.findall(item['name'])
             name = '-'.join([word.lower() for word in words])
             url = self.product_page_url_t.format(name, item['masterSku'])
-            yield Request(url, meta=meta, callback=self.parse_product)
+            product_requests.append(
+                Request(url, meta=meta, callback=self.parse_product))
+        return product_requests
 
     def parse_product(self, response):
         meta = response.meta
