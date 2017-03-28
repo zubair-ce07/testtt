@@ -5,19 +5,33 @@ from urllib.parse import urljoin
 from scrapy.spiders import Rule
 from scrapy import Request, FormRequest
 from skuscraper.parsers.jsparser import JSParser
-from .base import BaseParseSpider, BaseCrawlSpider, clean
+from .base import BaseParseSpider, CurrencyParser, BaseCrawlSpider, clean
 
 
 class Mixin:
-    retailer = 'cubus-sv'
+    retailer = 'cubus'
+    allowed_domains = ['cubus.com']
+    pfx = 'https://cubus.com/'
+    start_url = ''
+
+
+class MixinSV(Mixin):
+    retailer = Mixin.retailer + '-sv'
     market = 'SE'
     lang = 'sv'
-    allowed_domains = ['cubus.com']
-    start_urls = ['https://cubus.com/sv']
+    start_urls = [Mixin.pfx + 'sv/']
+    Mixin.start_url = start_urls[0]
 
 
-class CubusParseSpider(Mixin, BaseParseSpider):
-    name = Mixin.retailer + '-parse'
+class MixinNO(Mixin):
+    retailer = Mixin.retailer + '-no'
+    market = 'NO'
+    lang = 'no'
+    start_urls = [Mixin.pfx + 'no/']
+    Mixin.start_url = start_urls[0]
+
+
+class CubusParseSpider(BaseParseSpider):
 
     def parse(self, response):
         product = response.meta['product']
@@ -47,14 +61,17 @@ class CubusParseSpider(Mixin, BaseParseSpider):
         garment['skus'] = skus
         return garment
 
-    def formatted_price(self, price):
-        return float(clean(price.split(':')[0]))
+    def currency(self, response):
+        pattern = re.compile(r"currency(.*?);")
+        currency_string = response.xpath("//script[contains(.,'siteObject."
+                                         "currency')]/text()").re(pattern)[0]
+        return CurrencyParser.currency(currency_string)
 
     def skus(self, response, product):
         skus = {}
-        previous_price = self.formatted_price(product['FormattedListPrice'])
-        price = self.formatted_price(product['FormattedOfferedPrice'])
-        currency = 'SEK'
+        previous_price = CurrencyParser.prices(product['FormattedListPrice'])
+        price = CurrencyParser.prices(product['FormattedOfferedPrice'])[0]
+        currency = self.currency(response)
         common_sku = self.common_sku(price, previous_price,
                                      product['VariantColor']['Label'], currency)
 
@@ -110,27 +127,24 @@ class CubusParseSpider(Mixin, BaseParseSpider):
         return skus
 
 
-class CubusCrawlSpider(Mixin, BaseCrawlSpider):
-    name = Mixin.retailer + '-crawl'
-    parse_spider = CubusParseSpider()
+class CubusCrawlSpider(BaseCrawlSpider, Mixin):
 
-    listings = ['.sidebar-nav:first-child']
-    listing_url = 'https://cubus.com/sv/api/product/post'
-    products = ['.product-list-wrap']
+    categories = ['.sidebar-nav:first-child']
+    listing_url = urljoin(Mixin.start_url, 'api/product/post')
+    listings = ['.site-navigation-links']
 
     rules = (
 
-        Rule(LinkExtractor(restrict_css=listings, allow='/Kollektion/'),
+        Rule(LinkExtractor(restrict_css=categories, allow=('/Kollektion/', '/Kolleksjon/')),
              callback='parse_pagination', follow=True),
-        Rule(LinkExtractor(allow=('/sv/Dam/', '/sv/Herr/', '/sv/Barn/',
-                                  '/sv/Baby/')), follow=True),
+        Rule(LinkExtractor(restrict_css=listings), follow=True),
 
     )
 
     def product_requests(self, products, first_page):
         requests = []
         for product in products:
-            url = urljoin(Mixin.start_urls[0], product['Url'])
+            url = urljoin(Mixin.start_url, product['Url'])
             request = Request(url, meta={'product': product, 'first_page': first_page},
                               callback=self.parse_item, priority=1)
             requests.append(request)
@@ -157,8 +171,8 @@ class CubusCrawlSpider(Mixin, BaseCrawlSpider):
     def next_page_request(self, response):
         request = FormRequest(self.listing_url,
                               formdata={
-                                  'Language': 'sv',
-                                  'MarketId': '8WS',
+                                  'Language': response.meta['language'],
+                                  'MarketId': response.meta['market'],
                                   'CatalogNode': response.meta['catalog_node'],
                                   'Page': str(response.meta['next_page']),
                                   'ProductSearchPageId': response.meta['page_id'],
@@ -168,12 +182,21 @@ class CubusCrawlSpider(Mixin, BaseCrawlSpider):
                               },
                               meta={'next_page': response.meta['next_page'],
                                     'catalog_node': response.meta['catalog_node'],
-                                    'page_id': response.meta['page_id']},
+                                    'page_id': response.meta['page_id'],
+                                    'language': response.meta['language'],
+                                    'market': response.meta['market']},
                               dont_filter=True,
                               callback=self.parse_next_page
                               )
         request.meta['next_page'] += 1
         return request
+
+    def langauge_and_market(self, response):
+        pattern = re.compile(r"siteObject.init\((.*?)\)")
+        script = response.xpath("//script[contains(.,'siteObject.init')]"
+                                "/text()").re(pattern)[0].replace('"','')
+        lang_and_market = script.split(',')
+        return lang_and_market[0], lang_and_market[1]
 
     def parse_pagination(self, response):
         if not self.catalog_node(response):
@@ -184,14 +207,35 @@ class CubusCrawlSpider(Mixin, BaseCrawlSpider):
         response.meta['catalog_node'] = self.catalog_node(response)[0]
         response.meta['next_page'] = 1
         response.meta['page_id'] = self.page_id(response)
+        response.meta['language'], response.meta['market'] = self.langauge_and_market(response)
         yield self.next_page_request(response)
 
     def parse_next_page(self, response):
         page = json.loads(response.text)
         products = page['Products']
         requests = self.product_requests(products, False)
+
         for request in requests:
             yield request
 
         if page['HaveMoreItems']:
             yield self.next_page_request(response)
+
+
+class CubusSVParseSpider(CubusParseSpider, MixinSV):
+    name = MixinSV.retailer + '-parse'
+
+
+class CubusSVCrawlSpider(CubusCrawlSpider, MixinSV):
+    name = MixinSV.retailer + '-crawl'
+    parse_spider = CubusSVParseSpider()
+
+
+class CubusNOParseSpider(CubusParseSpider, MixinNO):
+    name = MixinNO.retailer + '-parse'
+
+
+class CubusNOCrawlSpider(CubusCrawlSpider, MixinNO):
+    name = MixinNO.retailer + '-crawl'
+    parse_spider = CubusNOParseSpider()
+
