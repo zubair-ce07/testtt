@@ -12,15 +12,13 @@ class Mixin:
     retailer = 'cubus'
     allowed_domains = ['cubus.com']
     pfx = 'https://cubus.com/'
-    start_url = ''
 
 
 class MixinSV(Mixin):
-    retailer = Mixin.retailer + '-sv'
+    retailer = Mixin.retailer + '-se'
     market = 'SE'
     lang = 'sv'
     start_urls = [Mixin.pfx + 'sv/']
-    Mixin.start_url = start_urls[0]
 
 
 class MixinNO(Mixin):
@@ -28,7 +26,6 @@ class MixinNO(Mixin):
     market = 'NO'
     lang = 'no'
     start_urls = [Mixin.pfx + 'no/']
-    Mixin.start_url = start_urls[0]
 
 
 class CubusParseSpider(BaseParseSpider):
@@ -49,16 +46,9 @@ class CubusParseSpider(BaseParseSpider):
         garment['care'] = self.product_care(response)
         garment['gender'] = self.gender(response)
         garment['merch_info'] = clean(product['DiscountMessages'])
+        garment['skus'] = self.skus(response, product)
+        garment['category'] = response.meta['category']
 
-        if response.meta['first_page']:
-            skus = self.first_page_skus(product)
-            category = self.first_page_product_category(product)
-        else:
-            skus = self.skus(response, product)
-            category = self.product_category(response)
-
-        garment['category'] = category
-        garment['skus'] = skus
         return garment
 
     def currency(self, response):
@@ -67,33 +57,6 @@ class CubusParseSpider(BaseParseSpider):
                                          "currency')]/text()").re(pattern)[0]
         return CurrencyParser.currency(currency_string)
 
-    def skus(self, response, product):
-        skus = {}
-        previous_price = CurrencyParser.prices(product['FormattedListPrice'])
-        price = CurrencyParser.prices(product['FormattedOfferedPrice'])[0]
-        currency = self.currency(response)
-        common_sku = self.common_sku(price, previous_price,
-                                     product['VariantColor']['Label'], currency)
-
-        variants = response.css('.size-picker>li .size-button')
-
-        for variant in variants:
-            sku = common_sku.copy()
-            quantity = int(variant.css('::attr(data-amount-in-stock)').extract_first())
-            sku['out_of_stock'] = True if quantity < 1 else False
-            sku_id = variant.css('::attr(data-sku-id)').extract_first()
-            sku['size'] = variant.css('::text').extract_first().strip()
-            skus[sku_id] = sku
-
-        return skus
-
-    def product_category(self, response):
-        return response.css('.back-to a::text').extract()
-
-    def first_page_product_category(self, product):
-        category = [product['SeoCategoryName']]
-        return category if category else [product['ProductDepartment']]
-
     def product_care(self, response):
         return response.css('.wash-symbols img::attr(title)').extract()
 
@@ -101,58 +64,68 @@ class CubusParseSpider(BaseParseSpider):
         return response.css('.site-sub-navigation-active a::text').extract_first()
 
     def image_urls(self, product, response):
-        return [urljoin(response.url, image['Url']) for image in product['ProductImages']]
+        return [response.urljoin(img['Url']) for img in product['ProductImages']]
 
-    def common_sku(self, price, prev_price, colour, currency):
+    def common_sku(self, response, product):
         sku = {}
-        sku['price'] = price
+        sku['price'] =CurrencyParser.prices(product['FormattedOfferedPrice'])[0]
+        prev_price = CurrencyParser.prices(product['FormattedListPrice'])
         if prev_price != sku['price']:
             sku['previous_prices'] = prev_price
-        sku['colour'] = colour
-        sku['currency'] = currency
+        sku['colour'] = product['VariantColor']['Label']
+        sku['currency'] = self.currency(response)
 
         return sku
 
-    def first_page_skus(self, product):
+    def skus(self, response, product):
         skus = {}
-        common_sku = self.common_sku(product['OfferedPrice']['Price'],
-                                     [product['ListPrice']['Price']],
-                                     product['VariantColor']['Label'],
-                                     product['OfferedPrice']['Currency'])
-        for sku in product['Skus']:
-            variant = common_sku.copy()
-            variant['out_of_stock'] = True if sku['Quantity'] == 0 else False
-            variant['size'] = sku['Size']
-            skus[sku['Id']] = variant
+        common_sku = self.common_sku(response, product)
+        variants = response.css('.size-picker>li .size-button')
+
+        for variant in variants:
+            sku = common_sku.copy()
+            quantity = int(variant.css('::attr(data-amount-in-stock)').extract_first())
+            sku['out_of_stock'] = quantity < 1
+            sku_id = variant.css('::attr(data-sku-id)').extract_first()
+            sku['size'] = variant.css('::text').extract_first().strip()
+            skus[sku_id] = sku
+
         return skus
 
 
 class CubusCrawlSpider(BaseCrawlSpider, Mixin):
 
     categories = ['.sidebar-nav:first-child']
-    listing_url = urljoin(Mixin.start_url, 'api/product/post')
     listings = ['.site-navigation-links']
+
+    allowed_urls = [
+        '/Kollektion/',
+        '/Kolleksjon/'
+    ]
+
+    denied_urls = [
+        '/vis-alle/',
+        '/visa-alla/'
+    ]
 
     rules = (
 
-        Rule(LinkExtractor(restrict_css=categories, allow=('/Kollektion/', '/Kolleksjon/')),
+        Rule(LinkExtractor(restrict_css=categories, allow=allowed_urls, deny=denied_urls),
              callback='parse_pagination', follow=True),
         Rule(LinkExtractor(restrict_css=listings), follow=True),
 
     )
 
-    def product_requests(self, products, first_page):
+    def product_requests(self, products, response):
         requests = []
+        category = response.css('.url-wrap.current a::text').extract_first()
         for product in products:
-            url = urljoin(Mixin.start_url, product['Url'])
-            request = Request(url, meta={'product': product, 'first_page': first_page},
+            url = urljoin(self.start_urls[0], product['Url'])
+            request = Request(url, meta={'product': product, 'category': [category]},
                               callback=self.parse_item, priority=1)
             requests.append(request)
-        return requests
 
-    def page_id(self, response):
-        url = response.css('.site-language-selector-list a::attr(href)').extract_first()
-        return url.split('=')[1]
+        return requests
 
     def product_script(self, response):
         return response.xpath("//script[contains(.,'currentCatalogNode=')]/text()")
@@ -166,10 +139,11 @@ class CubusCrawlSpider(BaseCrawlSpider, Mixin):
         items = "var product = " + self.product_script(response).re(pattern)[0]
 
         products = JSParser(items)
-        return self.product_requests(products['product'], True)
+        return self.product_requests(products['product'], response)
 
     def next_page_request(self, response):
-        request = FormRequest(self.listing_url,
+        listing_url = urljoin(self.start_urls[0], 'api/product/post')
+        request = FormRequest(listing_url,
                               formdata={
                                   'Language': response.meta['language'],
                                   'MarketId': response.meta['market'],
@@ -180,42 +154,37 @@ class CubusCrawlSpider(BaseCrawlSpider, Mixin):
                               headers={
                                   'Accept': '*/*',
                               },
-                              meta={'next_page': response.meta['next_page'],
-                                    'catalog_node': response.meta['catalog_node'],
-                                    'page_id': response.meta['page_id'],
-                                    'language': response.meta['language'],
-                                    'market': response.meta['market']},
+                              meta=response.meta.copy(),
                               dont_filter=True,
                               callback=self.parse_next_page
                               )
         request.meta['next_page'] += 1
         return request
 
-    def langauge_and_market(self, response):
-        pattern = re.compile(r"siteObject.init\((.*?)\)")
-        script = response.xpath("//script[contains(.,'siteObject.init')]"
-                                "/text()").re(pattern)[0].replace('"','')
-        lang_and_market = script.split(',')
-        return lang_and_market[0], lang_and_market[1]
-
     def parse_pagination(self, response):
+
         if not self.catalog_node(response):
             return
-        requests = self.first_page_products(response)
-        for request in requests:
+        for request in self.first_page_products(response):
             yield request
+
+        url = response.css('.site-language-selector-list a::attr(href)').extract_first()
+        pattern = re.compile(r"siteObject.init\((.*?)\)")
+        script = response.xpath("//script[contains(.,'siteObject.init')]"
+                                "/text()").re(pattern)[0].replace('"', '')
+
         response.meta['catalog_node'] = self.catalog_node(response)[0]
         response.meta['next_page'] = 1
-        response.meta['page_id'] = self.page_id(response)
-        response.meta['language'], response.meta['market'] = self.langauge_and_market(response)
+        response.meta['page_id'] = url.split('=')[1]
+        response.meta['language'], response.meta['market'] = script.split(',')
+
         yield self.next_page_request(response)
 
     def parse_next_page(self, response):
         page = json.loads(response.text)
         products = page['Products']
-        requests = self.product_requests(products, False)
 
-        for request in requests:
+        for request in self.product_requests(products, response):
             yield request
 
         if page['HaveMoreItems']:
