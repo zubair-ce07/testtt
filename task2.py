@@ -69,7 +69,7 @@ async def process_request(url, active_urls, waiting_urls, stats_collector):
 
 
 async def crawl_concurrently(website_url, concurrent_requests, download_delay,
-                             total_requests, stats_collector, **other):
+                             total_requests, stats_collector):
     active_urls = asyncio.Queue(maxsize=concurrent_requests)
     waiting_urls = asyncio.Queue()
     waiting_urls.put_nowait(website_url)
@@ -89,13 +89,10 @@ async def crawl_concurrently(website_url, concurrent_requests, download_delay,
     await asyncio.gather(*tasks)
 
 
-def worker_process(waiting_urls, download_delay, crawled_url_count, total_requests,
-                   stats_collector, counter_lock, stats_lock):
+def worker_process(waiting_urls, download_delay, total_requests,
+                   crawled_url_count, stats_collector):
     while True:
-        counter_lock.acquire()
         crawled_url_count.value += 1
-        counter_lock.release()
-
         if crawled_url_count.value > total_requests:
             return
 
@@ -110,18 +107,13 @@ def worker_process(waiting_urls, download_delay, crawled_url_count, total_reques
             for url in urls:
                 waiting_urls.put(url)
 
-        stats_lock.acquire()
         stats_collector.update_stats(len(r.content))
         print('crawled count: {}'.format(stats_collector._getvalue().requests_count))
-        stats_lock.release()
-
         sleep(download_delay)
 
 
 def crawl_in_parallel(website_url, concurrent_requests, download_delay,
-                      total_requests, stats_collector, manager, **other):
-    counter_lock = manager.Lock()
-    stats_lock = manager.Lock()
+                      total_requests, stats_collector, manager):
     crawled_url_count = manager.Value('i', 0)
     waiting_urls = manager.Queue()
     waiting_urls.put_nowait(website_url)
@@ -131,8 +123,8 @@ def crawl_in_parallel(website_url, concurrent_requests, download_delay,
         for _ in range(concurrent_requests):
             executor.submit(
                 worker_process,
-                waiting_urls, download_delay, crawled_url_count, total_requests,
-                stats_collector, counter_lock, stats_lock
+                waiting_urls, download_delay, total_requests,
+                crawled_url_count, stats_collector,
             )
 
 
@@ -158,19 +150,20 @@ def main():
     parser.add_argument('--total_requests', '-tr', default=50, help='total number of requests allowed',
                         type=functools.partial(check_positive_number, int, 'invalid positive integer'))
     args = vars(parser.parse_args())
-    args['manager'] = multiprocessing.Manager()
+    crawl_mode = args.pop('crawl_mode')
 
-    if args['crawl_mode'] == 'concurrent':
+    if crawl_mode == 'concurrent':
         args['stats_collector'] = StatsCollector()
         event_loop = asyncio.get_event_loop()
         event_loop.run_until_complete(crawl_concurrently(**args))
         event_loop.close()
 
-    elif args['crawl_mode'] == 'parallel':
+    elif crawl_mode == 'parallel':
         CustomManager.register('StatsCollector', StatsCollector)
         custom_manager = CustomManager()
         custom_manager.start()
         args['stats_collector'] = custom_manager.StatsCollector()
+        args['manager'] = multiprocessing.Manager()
         crawl_in_parallel(**args)
 
     args['stats_collector'].print_stats()
