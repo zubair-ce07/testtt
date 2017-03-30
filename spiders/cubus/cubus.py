@@ -57,14 +57,20 @@ class CubusParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_minimal(garment, response)
         garment['image_urls'] = self.image_urls(product, response)
         garment['name'] = product['Name']
-        garment['description'] = [product.get('ShortDescription')]
-        garment['brand'] = product['ProductBrand']
+        garment['description'] = self.product_description(response, product)
+        garment['brand'] = 'Cubus'
         garment['care'] = self.product_care(response)
         garment['gender'] = self.product_gender(response)
         garment['merch_info'] = clean(product['DiscountMessages'])
         garment['skus'] = self.skus(response, product)
 
         return garment
+
+    def product_description(self, response, product):
+        product_desc = product.get('ShortDescription')
+        description = response.css('.custom-variables li::text').extract()
+        description += [product_desc] if product_desc is not None else []
+        return description
 
     def currency(self, response):
         pattern = re.compile(r"currency(.*?);")
@@ -73,7 +79,8 @@ class CubusParseSpider(BaseParseSpider, Mixin):
         return CurrencyParser.currency(currency_string)
 
     def product_care(self, response):
-        return response.css('.wash-symbols img::attr(title)').extract()
+        care = response.css('.product-composition::text').extract()
+        return care + response.css('.wash-symbols img::attr(title)').extract()
 
     def product_gender(self, response):
         return self.detect_gender(response.meta['gender_url'], self.gender_map)
@@ -85,8 +92,9 @@ class CubusParseSpider(BaseParseSpider, Mixin):
         sku = {}
         sku['price'] =CurrencyParser.prices(product['FormattedOfferedPrice'])[0]
         prev_price = CurrencyParser.prices(product['FormattedListPrice'])
-        if prev_price != sku['price']:
-            sku['previous_prices'] = prev_price
+        previous_price = list(set(prev_price) - {sku['price']})
+        if previous_price:
+            sku['previous_prices'] = previous_price
         sku['colour'] = product['VariantColor']['Label']
         sku['currency'] = self.currency(response)
 
@@ -136,7 +144,6 @@ class CubusCrawlSpider(BaseCrawlSpider):
         if not self.catalog_node(response):
             return
 
-        response.meta['category'] = response.css('.url-wrap.current a::text').extract_first()
         response.meta['gender_url'] = response.url
         for request in self.first_page_products(response):
             yield request
@@ -167,9 +174,11 @@ class CubusCrawlSpider(BaseCrawlSpider):
         requests = []
         for product in products:
             url = response.urljoin(product['Url'])
+            trail = self.add_trail(response)
             request = Request(url, meta={'product': product,
-                                         'category': response.meta['category'],
-                                         'gender_url': response.meta['gender_url']},
+                                         'category': trail[0][0],
+                                         'gender_url': response.meta['gender_url'],
+                                         'trail': trail},
                               callback=self.parse_item, priority=1)
             requests.append(request)
 
@@ -226,4 +235,3 @@ class CubusNOParseSpider(CubusParseSpider, MixinNO):
 class CubusNOCrawlSpider(CubusCrawlSpider, MixinNO):
     name = MixinNO.retailer + '-crawl'
     parse_spider = CubusNOParseSpider()
-
