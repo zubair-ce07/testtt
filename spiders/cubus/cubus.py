@@ -83,7 +83,7 @@ class CubusParseSpider(BaseParseSpider, Mixin):
         return care + response.css('.wash-symbols img::attr(title)').extract()
 
     def product_gender(self, response):
-        return self.detect_gender(response.meta['gender_url'], self.gender_map)
+        return self.detect_gender(response.meta['trail'][0][1], self.gender_map)
 
     def image_urls(self, product, response):
         return [response.urljoin(img['Url']) for img in product['ProductImages']]
@@ -144,7 +144,7 @@ class CubusCrawlSpider(BaseCrawlSpider):
         if not self.catalog_node(response):
             return
 
-        response.meta['gender_url'] = response.url
+        response.meta['trail'] = self.add_trail(response)
         for request in self.first_page_products(response):
             yield request
 
@@ -172,14 +172,15 @@ class CubusCrawlSpider(BaseCrawlSpider):
 
     def product_requests(self, products, response):
         requests = []
+        meta = {}
+        meta['trail'] = self.add_trail(response)
+        meta['category'] = meta['trail'][0][0]
+
         for product in products:
             url = response.urljoin(product['Url'])
-            trail = self.add_trail(response)
-            request = Request(url, meta={'product': product,
-                                         'category': trail[0][0],
-                                         'gender_url': response.meta['gender_url'],
-                                         'trail': trail},
+            request = Request(url, meta=meta.copy(),
                               callback=self.parse_item, priority=1)
+            request.meta['product'] = product
             requests.append(request)
 
         return requests
