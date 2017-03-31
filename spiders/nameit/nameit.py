@@ -124,8 +124,7 @@ class NameitParseSpider(BaseParseSpider, Mixin):
         return requests
 
     def product_gender(self, response):
-        gender = self.detect_gender(response.meta['trail'][0][1], self.gender_map)
-        return gender
+        return self.detect_gender(response.meta['trail'][0][1], self.gender_map)
 
     def common_sku(self, response):
         item = response.meta['item'][0]['ecommerce']
