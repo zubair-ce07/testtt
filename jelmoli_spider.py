@@ -24,8 +24,6 @@ class JelmoliSpider(CrawlSpider):
               'küche',
               'elektronik']
 
-    genders = {'Damen': 'women', 'Herren': 'men', 'Kinder': 'unisex-kids'}
-
     rules = [
         Rule(LinkExtractor(restrict_css=".link-product", deny=deny_r),
              callback="parse_product_details"),
@@ -35,6 +33,9 @@ class JelmoliSpider(CrawlSpider):
 
         Rule(LinkExtractor(restrict_css="#nav-main-list", deny=deny_r)),
     ]
+
+    image_url_t = "https://images.jelmoli-shop.ch/asset/mmo/formatz/{image_name}"
+    genders = {'Damen': 'women', 'Herren': 'men', 'Kinder': 'unisex-kids'}
 
     @staticmethod
     def get_subcategory_pagination_url(category_url, page):
@@ -54,17 +55,20 @@ class JelmoliSpider(CrawlSpider):
         product["care"] = self.get_care(product_details_json)
         product["category"] = self.get_category(response)
         product["description"] = self.get_description(product_details_json)
-        product["gender"] = self.get_gender(response)
-        product["image_urls"] = self.get_image_urls(product_details_json)
         product["industry"] = self.get_industry(response)
+        product["image_urls"] = self.get_image_urls(product_details_json)
         product["market"] = "CH"
         product["name"] = self.get_name(product_details_json)
         product["lang"] = self.get_lang(response)
         product["retailer"] = "jelmoli-ch"
         product["retailer_sku"] = self.get_retailer_sku(product_details_json)
         product["skus"] = self.get_skus(product_details_json)
-        product["url"] = self.get_url(response)
-        yield product
+        product["url"] = response.url
+
+        if not product["industry"]:
+            product["gender"] = self.get_gender(product["category"])
+
+        print(product)
 
     @staticmethod
     def get_product_json(response):
@@ -107,11 +111,7 @@ class JelmoliSpider(CrawlSpider):
 
         return description
 
-    def get_gender(self, response):
-        if self.get_industry(response):
-            return
-
-        categories = self.get_category(response)
+    def get_gender(self, categories):
         for category in categories:
             if category in self.genders:
                 return self.genders[category]
@@ -123,11 +123,9 @@ class JelmoliSpider(CrawlSpider):
         if any(category in ['Wohnen', 'Baumarket'] for category in categories):
             return 'homeware'
 
-    @staticmethod
-    def get_image_urls(product_json):
-        image_url = "https://images.jelmoli-shop.ch/asset/mmo/formatz/{image_name}"
+    def get_image_urls(self, product_json):
         product_images = product_json["galleryImages"]
-        return [image_url.format(image_name=image["image"]) for image in product_images]
+        return [self.image_url_t.format(image_name=image["image"]) for image in product_images]
 
     @staticmethod
     def get_lang(response):
@@ -153,7 +151,3 @@ class JelmoliSpider(CrawlSpider):
                          "price": sku_details["currentPrice"]["value"],
                          "size": sku_details["size"]}
         return skus
-
-    @staticmethod
-    def get_url(response):
-        return response.url
