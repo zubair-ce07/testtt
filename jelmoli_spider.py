@@ -1,145 +1,148 @@
-# -*- coding: utf-8 -*-
-import scrapy
-from scrapy.selector import Selector
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
-from JelmoliShop.items import JelmoliItem
-
-import urllib.parse as urlparse
 import json
+
+from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
+from scrapy.selector import Selector
+from scrapy.spiders import CrawlSpider, Rule
+from w3lib.url import add_or_replace_parameter
+
+from JelmoliShop.items import JelmoliItem
 
 
 class JelmoliSpider(CrawlSpider):
     name = "jelmoli_spider"
     allowed_domains = ["jelmoli-shop.ch"]
-    start_urls = ["https://www.jelmoli-shop.ch"]
-    deny_expressions = ['geräte', 'multimedia', 'ausrüstung', 'werkzeug', 'maschinen', 'heizen', 'klima', 'spielzeug',
-                        'küche', 'elektronik']
+    start_urls = ["https://www.jelmoli-shop.ch/"]
+    deny_r = ['geräte',
+              'multimedia',
+              'ausrüstung',
+              'werkzeug',
+              'maschinen',
+              'heizen',
+              'klima',
+              'spielzeug',
+              'küche',
+              'elektronik']
+
+    genders = {'Damen': 'women', 'Herren': 'men', 'Kinder': 'unisex-kids'}
 
     rules = [
-        Rule(LinkExtractor(restrict_xpaths="//a[@class='link-product']", deny=deny_expressions),
+        Rule(LinkExtractor(restrict_css=".link-product", deny=deny_r),
              callback="parse_product_details"),
 
-        Rule(LinkExtractor(restrict_xpaths="//div[@class='nav-content']//a", deny=deny_expressions),
+        Rule(LinkExtractor(restrict_css=".nav-content", deny=deny_r),
              callback="parse_subcategory_details"),
 
-        Rule(LinkExtractor(restrict_xpaths="//div[@id='nav-main-list']//a", deny=deny_expressions)),
+        Rule(LinkExtractor(restrict_css="#nav-main-list", deny=deny_r)),
     ]
 
     @staticmethod
     def get_subcategory_pagination_url(category_url, page):
-        url_parts = list(urlparse.urlparse(category_url))
-        query = dict(urlparse.parse_qsl(url_parts[4]))
-        query.update({'Page': page})
-        url_parts[4] = urlparse.urlencode(query)
-        return urlparse.urlunparse(url_parts)
+        return add_or_replace_parameter(category_url, "Page", page)
 
-    def parse_subcategory_details(self, product_subcategory_response):
-        number_of_pages = product_subcategory_response.xpath("(//div/@data-page)[last()]").extract_first() or '1'
-        for page in range(int(number_of_pages)):
-            subcategory_pagination_url = self.get_subcategory_pagination_url(product_subcategory_response.url,
-                                                                             "P{page_no}".format(page_no=page))
-            yield scrapy.Request(url=subcategory_pagination_url, dont_filter=True)
+    def parse_subcategory_details(self, response):
+        total_pages = response.xpath("(//div/@data-page)[last()]").extract_first(default='1')
+        for page in range(int(total_pages)):
+            subcategory_pagination_url = self.get_subcategory_pagination_url(response.url, "P{}".format(page))
+            yield Request(url=subcategory_pagination_url, dont_filter=True)
 
-    def parse_product_details(self, product_response):
-        product_details = product_response.xpath("//script[@class='data-product-detail']/text()").extract_first()
-        product_details_json = json.loads(product_details)
+    def parse_product_details(self, response):
+        product_details_json = self.get_product_json(response)
 
         product = JelmoliItem()
-
-        product["brand"] = self.get_brand_from_json(product_details_json)
-        product["care"] = self.get_care_from_json(product_details_json)
-        product["category"] = self.get_category_from_response(product_response)
-        product["description"] = self.get_description_from_json(product_details_json)
-        product["gender"] = self.get_gender_from_response(product_response)
-        product["image_urls"] = self.get_image_urls_from_json(product_details_json)
-        product["industry"] = self.get_industry_from_response(product_response)
-        product["market"] = self.get_market()
-        product["name"] = self.get_name_from_json(product_details_json)
-        product["lang"] = self.get_lang_from_response(product_response)
-        product["retailer"] = self.get_retailer()
-        product["retailer_sku"] = self.get_retailer_sku_from_json(product_details_json)
-        product["skus"] = self.get_skus_from_json(product_details_json)
-        product["url"] = self.get_url_from_response(product_response)
-
+        product["brand"] = self.get_brand(product_details_json)
+        product["care"] = self.get_care(product_details_json)
+        product["category"] = self.get_category(response)
+        product["description"] = self.get_description(product_details_json)
+        product["gender"] = self.get_gender(response)
+        product["image_urls"] = self.get_image_urls(product_details_json)
+        product["industry"] = self.get_industry(response)
+        product["market"] = "CH"
+        product["name"] = self.get_name(product_details_json)
+        product["lang"] = self.get_lang(response)
+        product["retailer"] = "jelmoli-ch"
+        product["retailer_sku"] = self.get_retailer_sku(product_details_json)
+        product["skus"] = self.get_skus(product_details_json)
+        product["url"] = self.get_url(response)
         yield product
 
     @staticmethod
-    def get_brand_from_json(product_json):
+    def get_product_json(response):
+        xpath = "//script[@class='data-product-detail']/text()"
+        product_details = response.xpath(xpath).extract_first()
+        return json.loads(product_details)
+
+    @staticmethod
+    def get_brand(product_json):
         product_variations = product_json["variations"]
-        for sku in product_variations.keys():
+        if product_variations:
+            sku = next(iter(product_variations))
             return product_variations[sku]["manufacturerName"]
 
     @staticmethod
-    def get_care_from_json(product_json):
-        care = [Selector(text=product_json["tags"]["T0"]).xpath("//text()").extract_first()]
+    def get_care(product_json):
+        sel = Selector(text=product_json["tags"]["T0"])
+        care = [sel.css("::text").extract_first()]
 
         product_details = Selector(text=product_json["tags"]["T2"])
-        care.extend(product_details.xpath("//td//text()[contains(.,'Materialzusammensetzung')]"
-                                          "//ancestor::td//following-sibling::td//text()"
-                                          "| //td//text()[contains(.,'Applikationen')]"
-                                          "//ancestor::td//following-sibling::td//text()").extract())
-
+        if product_details:
+            xpath = "//td[contains(.,'Materialzusammensetzung') or " \
+                    "contains(., 'Applikationen')]//following-sibling::td//text()"
+            care.extend(product_details.xpath(xpath).extract())
         return care
 
     @staticmethod
-    def get_category_from_response(product_response):
-        return product_response.xpath("//li[contains(@typeof,'Breadcrumb')]//text()[normalize-space()]").extract()
+    def get_category(response):
+        xpath = "//li[contains(@typeof,'Breadcrumb')]//text()[normalize-space()]"
+        return response.xpath(xpath).extract()
 
     @staticmethod
-    def get_description_from_json(product_json):
-        description = Selector(text=product_json["tags"]["T0"]).xpath("//text()").extract()
+    def get_description(product_json):
+        sel = Selector(text=product_json["tags"]["T0"])
+        description = sel.css("::text").extract()
 
         product_details = Selector(text=product_json["tags"]["T2"])
-        description.extend(product_details.xpath("//td//following-sibling::td//text()").extract())
+        if product_details:
+            description.extend(product_details.xpath("//td//following-sibling::td//text()").extract())
 
         return description
 
-    def get_gender_from_response(self, product_response):
-        if self.get_industry_from_response(product_response):
+    def get_gender(self, response):
+        if self.get_industry(response):
             return
 
-        categories = self.get_category_from_response(product_response)
-        genders = {'Damen': 'women', 'Herren': 'men', 'Kinder': 'unisex-kids'}
+        categories = self.get_category(response)
         for category in categories:
-            if category in genders:
-                return genders.get(category)
+            if category in self.genders:
+                return self.genders[category]
 
         return 'unisex-adult'
 
-    def get_industry_from_response(self, product_response):
-        categories = self.get_category_from_response(product_response)
+    def get_industry(self, response):
+        categories = self.get_category(response)
         if any(category in ['Wohnen', 'Baumarket'] for category in categories):
             return 'homeware'
 
     @staticmethod
-    def get_image_urls_from_json(product_json):
+    def get_image_urls(product_json):
         image_url = "https://images.jelmoli-shop.ch/asset/mmo/formatz/{image_name}"
         product_images = product_json["galleryImages"]
         return [image_url.format(image_name=image["image"]) for image in product_images]
 
     @staticmethod
-    def get_lang_from_response(product_response):
-        return product_response.xpath("//html/@lang").extract_first()
+    def get_lang(response):
+        return response.xpath("//html/@lang").extract_first()
 
     @staticmethod
-    def get_name_from_json(product_json):
+    def get_name(product_json):
         return product_json["nameWithoutManufacturer"]
 
     @staticmethod
-    def get_market():
-        return "CH"
-
-    @staticmethod
-    def get_retailer():
-        return "jelmoli-ch"
-
-    @staticmethod
-    def get_retailer_sku_from_json(product_json):
+    def get_retailer_sku(product_json):
         return product_json["sku"]
 
     @staticmethod
-    def get_skus_from_json(product_json):
+    def get_skus(product_json):
         skus = {}
         product_variations = product_json["variations"]
         product_skus = product_variations.keys()
@@ -152,5 +155,5 @@ class JelmoliSpider(CrawlSpider):
         return skus
 
     @staticmethod
-    def get_url_from_response(product_response):
-        return product_response.url
+    def get_url(response):
+        return response.url
