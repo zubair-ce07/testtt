@@ -17,6 +17,7 @@ class Mixin:
 class MixinSE(Mixin):
     retailer = Mixin.retailer + '-se'
     market = 'SE'
+    market_id = '8WS'
     lang = 'sv'
     start_urls = [Mixin.pfx + 'sv/']
 
@@ -32,6 +33,7 @@ class MixinSE(Mixin):
 class MixinNO(Mixin):
     retailer = Mixin.retailer + '-no'
     market = 'NO'
+    market_id = '8WN'
     lang = 'no'
     start_urls = [Mixin.pfx + 'no/']
 
@@ -62,9 +64,16 @@ class CubusParseSpider(BaseParseSpider, Mixin):
         garment['care'] = self.product_care(response)
         garment['gender'] = self.product_gender(response)
         garment['merch_info'] = clean(product['DiscountMessages'])
+        garment['category'] = self.product_category(response)
         garment['skus'] = self.skus(response, product)
 
         return garment
+
+    def product_category(self, response):
+        categories = set()
+        for category, url in response.meta['trail']:
+            categories.add(category)
+        return list(categories)
 
     def product_description(self, response, product):
         product_desc = product.get('ShortDescription')
@@ -83,18 +92,19 @@ class CubusParseSpider(BaseParseSpider, Mixin):
         return care + response.css('.wash-symbols img::attr(title)').extract()
 
     def product_gender(self, response):
-        return self.detect_gender(response.meta['trail'][0][1], self.gender_map)
+        if response.meta['trail']:
+            return self.detect_gender(response.meta['trail'][0][1], self.gender_map)
+        return 'unisex-adults'
 
     def image_urls(self, product, response):
         return [response.urljoin(img['Url']) for img in product['ProductImages']]
 
     def common_sku(self, response, product):
         sku = {}
-        sku['price'] =CurrencyParser.prices(product['FormattedOfferedPrice'])[0]
+        sku['price'] = CurrencyParser.prices(product['FormattedOfferedPrice'])[0]
         prev_price = CurrencyParser.prices(product['FormattedListPrice'])
-        previous_price = list(set(prev_price) - {sku['price']})
-        if previous_price:
-            sku['previous_prices'] = previous_price
+        if prev_price[0] != sku['price']:
+            sku['previous_prices'] = prev_price
         sku['colour'] = product['VariantColor']['Label']
         sku['currency'] = self.currency(response)
 
@@ -149,16 +159,13 @@ class CubusCrawlSpider(BaseCrawlSpider):
             yield request
 
         url = response.css('.site-language-selector-list a::attr(href)').extract_first()
-        pattern = re.compile(r"siteObject.init\((.*?)\)")
-        xpath = "//script[contains(.,'siteObject.init')]/text()"
-        script = response.xpath(xpath).re(pattern)[0].replace('"', '')
 
-        response.meta['catalog_node'] = self.catalog_node(response)[0]
+        catalog = self.catalog_node(response)[0]
         response.meta['next_page'] = 1
-        response.meta['page_id'] = url.split('=')[1]
-        response.meta['language'], response.meta['market'] = script.split(',')
+        pid = url.split('=')[1]
 
-        yield self.next_page_request(response)
+        yield self.next_page_request(response, catalog_node=catalog, page_id=pid,
+                                     lang=self.lang, market=self.market_id)
 
     def parse_next_page(self, response):
         page = json.loads(response.text)
@@ -174,12 +181,10 @@ class CubusCrawlSpider(BaseCrawlSpider):
         requests = []
         meta = {}
         meta['trail'] = self.add_trail(response)
-        meta['category'] = meta['trail'][0][0]
 
         for product in products:
             url = response.urljoin(product['Url'])
-            request = Request(url, meta=meta.copy(),
-                              callback=self.parse_item, priority=1)
+            request = Request(url, meta=meta.copy(), callback=self.parse_item)
             request.meta['product'] = product
             requests.append(request)
 
@@ -199,15 +204,21 @@ class CubusCrawlSpider(BaseCrawlSpider):
     def product_script(self, response):
         return response.xpath("//script[contains(.,'currentCatalogNode=')]/text()")
 
-    def next_page_request(self, response):
+    def next_page_request(self, response, catalog_node='', page_id='', lang='', market=''):
         listing_url = urljoin(self.start_urls[0], 'api/product/post')
+
+        if response.request.body:
+            fields = response.request.body.decode("ascii")
+            form = dict(d.split('=') for d in fields.split('&'))
+
         request = FormRequest(listing_url,
                               formdata={
-                                  'Language': response.meta['language'],
-                                  'MarketId': response.meta['market'],
-                                  'CatalogNode': response.meta['catalog_node'],
+                                  'Language': lang or form['Language'],
+                                  'MarketId': market or form['MarketId'],
+                                  'CatalogNode': catalog_node or form['CatalogNode'],
                                   'Page': str(response.meta['next_page']),
-                                  'ProductSearchPageId': response.meta['page_id'],
+                                  'ProductSearchPageId': page_id or
+                                                         form['ProductSearchPageId'],
                               },
                               headers={
                                   'Accept': '*/*',
