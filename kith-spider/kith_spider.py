@@ -3,14 +3,15 @@ import scrapy
 from kith.items import KithItem
 
 
+
 class ShoppingCartSpider(scrapy.Spider):
     name = "shoping"
     start_urls = ['https://kith.com']
 
     def parse(self, response):
-        urls = response.xpath("//li[@class='ksplash-header-upper-item']/a/@href").extract()
+        urls = response.css('.ksplash-header-upper-items>li>a::attr(href)').extract()
         for url in urls:
-            absolute_urls =  response.urljoin(url)
+            absolute_urls = response.urljoin(url)
             yield scrapy.Request(url=absolute_urls, callback=self.main_categories_links)
 
     def main_categories_links(self, response):
@@ -23,7 +24,7 @@ class ShoppingCartSpider(scrapy.Spider):
                 absolute_cat_urls = 'https://kith.com{}'.format(cat_url)
                 yield scrapy.Request(url=absolute_cat_urls, callback=self.products_main_page)
         else:
-            kid_cat_url = response.xpath("//ul/li[@class='main-nav-list-item'][2]/a/@href").extract()
+            kid_cat_url = response.css("li.main-nav-list-item:nth-child(2)>a::attr(href)").extract()
             for kid_url in kid_cat_url:
                 absolute_kid_urls = 'https://kith.com{}'.format(kid_url)
                 yield scrapy.Request(url=absolute_kid_urls, callback=self.products_main_page)
@@ -40,13 +41,13 @@ class ShoppingCartSpider(scrapy.Spider):
         #collects the final details of product
 
         item = KithItem()
-        item['name'] = response.xpath("//h1[@class='product-header-title']/span/text()").extract()
-        item['colour'] = response.xpath("//span[@class='product-header-title -variant']/text()").extract()[0].strip()
-        item['price'] = response.xpath("//span[@id='ProductPrice']/text()").extract()[0].strip()
-        item['detail'] = response.xpath("//div[@class='product-single-details-rte rte mb0']/p/text()").extract()
-        sku_id = response.xpath("//p[contains(text(),'Style')]/text()").extract()
+        item['name'] = response.css("h1 span::text").extract()
+        item['colour'] = response.css(".product-header-title.-variant::text").extract()[0].strip()
+        item['price'] = response.css("#ProductPrice::text").extract()[0].strip()
+        item['detail'] = response.css(".product-single-details-rte.rte.mb0>p::text").extract()
+        sku_id = response.css(".product-single-details-rte.rte.mb0>p:nth-child(8)::text").extract()
         item['sku_id'] = [d.split(":")[-1] for d in sku_id]
-        item['image_link'] = response.xpath("//img[@class='js-super-slider-photo-img super-slider-photo-img']/@src").extract()
+        item['image_link'] = response.css(".full-width::attr(src)").extract()
         yield item
 
 
