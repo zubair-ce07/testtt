@@ -105,7 +105,7 @@ def print_extreme_weather(date):
 def print_average_weather(date):
     """Prints average highest, lowest and mean humidity of date given in YYYY/MM format """
     # Check if date is in proper format (YYYY/MM)
-    if len(date) < 6 and date.find(r'/') != 4:
+    if len(date) < 6 or date.find(r'/') != 4:
         abort_unexpectedly('Invalid date format. Use YYYY/MM')
     # Extract month and year
     month = int(date.split(r'/')[1])
@@ -155,7 +155,7 @@ def print_average_weather(date):
 def print_weather_chart(date):
     """Prints weather charts for given date in YYYY/MM format"""
     # Check if date is in proper format (YYYY/MM)
-    if len(date) < 6 and date.find(r'/') != 4:
+    if len(date) < 6 or date.find(r'/') != 4:
         abort_unexpectedly('Invalid date format. Use YYYY/MM')
     # Extract month and year
     month = int(date.split(r'/')[1])
