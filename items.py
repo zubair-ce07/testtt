@@ -138,3 +138,20 @@ class SheegoItem(scrapy.Item):
     url_original = scrapy.Field(
         output_processor=TakeFirst()
     )
+
+
+class JelmoliItem(scrapy.Item):
+    brand = scrapy.Field()
+    care = scrapy.Field()
+    category = scrapy.Field()
+    description = scrapy.Field()
+    gender = scrapy.Field()
+    image_urls = scrapy.Field()
+    industry = scrapy.Field()
+    market = scrapy.Field()
+    name = scrapy.Field()
+    lang = scrapy.Field()
+    retailer = scrapy.Field()
+    retailer_sku = scrapy.Field()
+    skus = scrapy.Field()
+    url = scrapy.Field()
