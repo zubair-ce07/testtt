@@ -103,10 +103,15 @@ class NobisCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = NobisParseSpider()
 
     listing_css = [
-        'li[collection-item]'
+        'li[collection-item]',
+        'li[products-item]'
+    ]
+    deny_r = [
+        'gift-card',
+        'sizing-guide'
     ]
     rules = [
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_categories')
+        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse_categories')
     ]
 
     def parse_categories(self, response):
