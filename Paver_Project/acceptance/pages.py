@@ -10,7 +10,7 @@ class StudioHomepage(PageObject):
 	url = 'https://' + AUTH_USER + ':' + AUTH_PASSWORD + '@studio.stage.edx.org/'
 
 	def is_browser_on_page(self):
-		return 'Welcome' in self.browser.title
+		return self.q(css='a.action.action-signin').visible
 
 	def sign_in(self):
 		"""
@@ -28,7 +28,7 @@ class SignInPage(PageObject):
 	url = None
 
 	def is_browser_on_page(self):
-		return 'Sign In | edX Studio' in self.browser.title
+		return self.q(css='button.action.action-primary').visible
 
 	def enter_login_email(self, EMAIL):
 		"""
@@ -67,7 +67,7 @@ class Dashboard(PageObject):
 
 
 	def is_browser_on_page(self):
-		return 'Studio Home | edX Studio' in self.browser.title
+		return self.q(css='li.courses-tab').visible
 
 	def open_course(self):
 		"""
@@ -82,10 +82,11 @@ class CoursePage(PageObject):
 	"""
 	Page of a particular course
 	"""
+
 	url = None
 
 	def is_browser_on_page(self):
-		return 'Course Outline' in self.browser.title
+		return self.q(css='h1.page-header').visible
 
 	def go_to_pages(self):
 		"""
@@ -111,7 +112,7 @@ class PagesPage(PageObject):
 	url = None
 
 	def is_browser_on_page(self):
-		return 'Pages' in self.browser.title
+		return self.q(css='a.button.new-button.new-tab').visible
 
 	def add_new_page(self):
 		"""
@@ -130,8 +131,7 @@ class PagesPage(PageObject):
 		"""
 
 		edit_button = self.q(css="a.edit-button.action-button")
-		edit_button_index = len(edit_button)-1
-		edit_button[edit_button_index].click()
+		edit_button[-1].click()
 		self.wait_for_ajax()
 
 		settings_button = self.q(css="a.settings-button")
@@ -165,7 +165,6 @@ class LMSPage(PageObject):
 	Live LMS Page
 	"""
 
-	#url = 'https://' + AUTH_USER + ':' + AUTH_PASSWORD + '@courses.stage.edx.org/'
 	url = None
 
 	def is_browser_on_page(self):
