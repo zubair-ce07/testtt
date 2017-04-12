@@ -118,12 +118,9 @@ class BenettonParseSpider(BaseParseSpider, Mixin):
         money_string = [m.replace(' ', '') for m in money_string]
         return money_string
 
-    def product_pricing_new(self, response):
-        return self.extract_prices(response, self.price_x, post_process=self.post_process)
-
     def skus(self, response):
         skus = {}
-        previous_price, price, currency = self.product_pricing_new(response)
+        previous_price, price, currency = self.product_pricing_new(response, post_process=self.post_process)
         color = response.css('p.attribute_color::text').re(self.color_re)[0]
         sizes = response.xpath('//div[contains(@class,"simple_swatch")]/span/text()').extract()
 
@@ -136,7 +133,7 @@ class BenettonParseSpider(BaseParseSpider, Mixin):
             }
 
             if previous_price:
-                sku['previous_prices'] = [previous_price]
+                sku['previous_prices'] = previous_price
 
             skus[color + '_' + size] = sku
 
@@ -163,28 +160,25 @@ class BenettonCrawlSpider(BaseCrawlSpider, Mixin):
     ]
     rules = [
         Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse_category'),
-        Rule(LinkExtractor(restrict_css=products_css, deny=deny_r), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     ]
 
     def parse_category(self, response):
-        for req in super(BenettonCrawlSpider, self).parse(response):
+        for req in self.parse(response):
             yield req
 
-        return self.get_pagination_request(response)
+        return self.parse_pagination(response)
 
-    def get_pagination_request(self, response):
+    def parse_pagination(self, response):
         products_count_sel = response.css('.toolbar script::text')
         if products_count_sel:
             total_products = int(products_count_sel.re('.*totalProducts[=\s]*(\d+)')[0])
             current_products = int(products_count_sel.re('.*currentProducts[=\s]*(\d+)')[0])
 
             if current_products != total_products:
-                next_page_url = self.get_next_page_url(response)
+                current_page = int(url_query_parameter(response.url, 'p', '1'))
+                next_page_url = add_or_replace_parameter(response.url, 'p', current_page+1)
                 return Request(url=next_page_url, callback=self.parse_category)
-
-    def get_next_page_url(self, response):
-        current_page = int(url_query_parameter(response.url, 'p', '1'))
-        return add_or_replace_parameter(response.url, 'p', current_page+1)
 
 
 class BenettonITParseSpider(BenettonParseSpider, MixinIT):
