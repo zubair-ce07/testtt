@@ -114,13 +114,13 @@ class BenettonParseSpider(BaseParseSpider, Mixin):
         garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
-    def post_process(self, money_string):
+    def remove_spaces(self, money_string):
         money_string = [m.replace(' ', '') for m in money_string]
         return money_string
 
     def skus(self, response):
         skus = {}
-        previous_price, price, currency = self.product_pricing_new(response, post_process=self.post_process)
+        previous_price, price, currency = self.product_pricing_new(response, post_process=self.remove_spaces)
         color = response.css('p.attribute_color::text').re(self.color_re)[0]
         sizes = response.xpath('//div[contains(@class,"simple_swatch")]/span/text()').extract()
 
@@ -159,17 +159,17 @@ class BenettonCrawlSpider(BaseCrawlSpider, Mixin):
         'identita'
     ]
     rules = [
-        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse_category'),
+        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse_pagination'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     ]
 
-    def parse_category(self, response):
+    def parse_pagination(self, response):
         for req in self.parse(response):
             yield req
 
-        return self.parse_pagination(response)
+        return self.get_pagination_request(response)
 
-    def parse_pagination(self, response):
+    def get_pagination_request(self, response):
         products_count_sel = response.css('.toolbar script::text')
         if products_count_sel:
             total_products = int(products_count_sel.re('.*totalProducts[=\s]*(\d+)')[0])
@@ -177,8 +177,8 @@ class BenettonCrawlSpider(BaseCrawlSpider, Mixin):
 
             if current_products != total_products:
                 current_page = int(url_query_parameter(response.url, 'p', '1'))
-                next_page_url = add_or_replace_parameter(response.url, 'p', current_page+1)
-                return Request(url=next_page_url, callback=self.parse_category)
+                next_page_url = add_or_replace_parameter(response.url, 'p', current_page + 1)
+                return Request(url=next_page_url, callback=self.parse_pagination)
 
 
 class BenettonITParseSpider(BenettonParseSpider, MixinIT):
