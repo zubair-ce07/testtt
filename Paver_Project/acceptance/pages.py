@@ -46,7 +46,6 @@ class SignInPage(PageObject):
 		click the sign in button
 		"""
 		self.q(css='button.action.action-primary').click()
-		Dashboard(self.browser).wait_for_page()
 
 	def login(self, email, password):
 		"""
@@ -141,9 +140,6 @@ class PagesPage(PageObject):
 		save_button.click()
 		self.wait_for_ajax()
 
-		view_live_button = self.q(css="a.button.view-button.view-live-button")
-		view_live_button.click()
-
 	def hide_page(self):
 		"""
 		This function hides a visible page of a course
@@ -153,6 +149,15 @@ class PagesPage(PageObject):
 		hide_button.click()
 
 		self.wait_for_ajax()
+
+	def click_view_live_button(self):
+		"""
+		This function clicks the VIEW LIVE button on the Pages page to view changes on the LMS site
+		:return: none
+		"""
+
+		view_live_button = self.q(css="a.button.view-button.view-live-button")
+		view_live_button.click()
 
 
 class LMSPage(PageObject):
@@ -215,7 +220,6 @@ class LMSSignInPage(PageObject):
 		click the sign in button
 		"""
 		self.q(css='button.action.action-primary').click()
-		Dashboard(self.browser).wait_for_page()
 
 	def login(self, email, password):
 		"""

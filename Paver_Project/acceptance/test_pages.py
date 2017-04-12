@@ -28,8 +28,11 @@ class TestStudio(WebAppTest):
         #Login to studio page
         self.studio_homepage.visit()
         self.studio_homepage.sign_in()
-        self.sign_in_page.login(EMAIL, PASSWORD)
         self.sign_in_page.wait_for_page()
+        self.sign_in_page.login(EMAIL, PASSWORD)
+        self.dashboard.wait_for_page()
+
+        #Go to pages page in a course
         self.dashboard.open_course()
         self.course_page.wait_for_page()
         self.course_page.go_to_pages()
@@ -43,6 +46,7 @@ class TestStudio(WebAppTest):
 
         self.pages_page.add_new_page()
         self.pages_page.edit_page(PAGE_NAME)
+        self.pages_page.click_view_live_button()
         tab_list = self.lms_page.is_page_present(PAGE_NAME).text
 
         self.assertIn(PAGE_NAME, tab_list)
