@@ -96,11 +96,10 @@ class BenettonParseSpider(BaseParseSpider, Mixin):
         return self.take_first(clean(response.xpath(xpath)))
 
     def product_description(self, response):
-        xpath = '//p[@class="description"]//text() | //span[@class="composition"]//text()'
-        return clean(response.xpath(xpath))
+        return clean(response.css('p.description::text'))
 
     def product_care(self, response):
-        return clean(response.xpath('//div[@id="product-care"]//text()'))
+        return clean(response.css('div#product-care ::text , span.composition ::text'))
 
     def product_category(self, response):
         return response.css('span[itemprop=title]::text').extract()[1:]
@@ -119,12 +118,12 @@ class BenettonParseSpider(BaseParseSpider, Mixin):
         money_string = [m.replace(' ', '') for m in money_string]
         return money_string
 
-    def product_pricing(self, response):
+    def product_pricing_new(self, response):
         return self.extract_prices(response, self.price_x, post_process=self.post_process)
 
     def skus(self, response):
         skus = {}
-        previous_price, price, currency = self.product_pricing(response)
+        previous_price, price, currency = self.product_pricing_new(response)
         color = response.css('p.attribute_color::text').re(self.color_re)[0]
         sizes = response.xpath('//div[contains(@class,"simple_swatch")]/span/text()').extract()
 
@@ -158,17 +157,18 @@ class BenettonCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = BenettonParseSpider()
 
     listing_css = 'ul#nav'
+    products_css = 'a.abs-link-item'
     deny_r = [
         'identita'
     ]
     rules = [
-        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse_category')
+        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_r), callback='parse_category'),
+        Rule(LinkExtractor(restrict_css=products_css, deny=deny_r), callback='parse_item'),
     ]
 
     def parse_category(self, response):
-        product_urls = response.css('a.abs-link-item::attr(href)').extract()
-        for url in product_urls:
-            yield Request(url=url, callback=self.parse_spider.parse)
+        for req in super(BenettonCrawlSpider, self).parse(response):
+            yield req
 
         return self.get_pagination_request(response)
 
