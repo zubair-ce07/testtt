@@ -25,17 +25,15 @@ class TestStudio(WebAppTest):
         self.lms_page = LMSPage(self.browser)
         self.lms_signinpage = LMSSignInPage(self.browser)
 
-        #Login to LMS page
-        """self.lms_page.visit()
-        self.lms_page.sign_in()
-        self.lms_signinpage.login()"""
-
         #Login to studio page
         self.studio_homepage.visit()
         self.studio_homepage.sign_in()
         self.sign_in_page.login(EMAIL, PASSWORD)
+        self.sign_in_page.wait_for_page()
         self.dashboard.open_course()
+        self.course_page.wait_for_page()
         self.course_page.go_to_pages()
+        self.pages_page.wait_for_page()
 
     def test_addpage(self):
         """

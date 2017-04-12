@@ -17,7 +17,6 @@ class StudioHomepage(PageObject):
 		CLick on the sign in button and go to the next page
 		"""
 		self.q(css='a.action.action-signin').click()
-		SignInPage(self.browser).wait_for_page()
 
 
 class SignInPage(PageObject):
@@ -75,7 +74,6 @@ class Dashboard(PageObject):
 		"""
 
 		self.q(css="li[data-course-key='course-v1:ColumbiaX+AP123+2017_T2']").click()
-		CoursePage(self.browser).wait_for_page()
 
 
 class CoursePage(PageObject):
@@ -100,8 +98,6 @@ class CoursePage(PageObject):
 
 		page_option = self.q(css="li.nav-item.nav-course-courseware-pages")
 		page_option.click()
-
-		PagesPage(self.browser).wait_for_page()
 
 
 class PagesPage(PageObject):
@@ -147,7 +143,6 @@ class PagesPage(PageObject):
 
 		view_live_button = self.q(css="a.button.view-button.view-live-button")
 		view_live_button.click()
-		LMSPage(self.browser).wait_for_page()
 
 	def hide_page(self):
 		"""
@@ -180,8 +175,6 @@ class LMSPage(PageObject):
 										 'Sign in button is visible')
 
 		sign_in_button[0].click()
-		LMSSignInPage(self.browser).wait_for_page()
-
 
 	def is_page_present(self, PAGE_NAME):
 		"""
@@ -231,4 +224,3 @@ class LMSSignInPage(PageObject):
 		self.enter_login_email(email)
 		self.enter_login_password(password)
 		self.click_sign_in_button()
-
