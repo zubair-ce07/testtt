@@ -1,3 +1,4 @@
+import json
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.loader.processors import TakeFirst
@@ -99,7 +100,7 @@ class BenettonParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('p.description::text'))
 
     def product_care(self, response):
-        return clean(response.css('div#product-care ::text , span.composition ::text'))
+        return clean(response.css('span.composition ::text'))
 
     def product_category(self, response):
         return response.css('span[itemprop=title]::text').extract()[1:]
@@ -118,24 +119,34 @@ class BenettonParseSpider(BaseParseSpider, Mixin):
         money_string = [m.replace(' ', '') for m in money_string]
         return money_string
 
+    def raw_variants(self, response):
+        xpath = '//script[contains(text(),"options_mappings")]/text()'
+        variants_text = response.xpath(xpath).re('.*=(.*);')[0]
+        raw_variants = json.loads(variants_text)
+        return raw_variants[next(iter(raw_variants))]
+
     def skus(self, response):
         skus = {}
         previous_price, price, currency = self.product_pricing_new(response, post_process=self.remove_spaces)
         color = response.css('p.attribute_color::text').re(self.color_re)[0]
-        sizes = response.xpath('//div[contains(@class,"simple_swatch")]/span/text()').extract()
 
-        for size in sizes:
+        variants = self.raw_variants(response)
+        for variant_id in variants.keys():
+            variant = variants[variant_id]
             sku = {
                 'price': price,
                 'currency': currency,
-                'size': size,
+                'size': variant['label'],
                 'colour': color
             }
 
             if previous_price:
                 sku['previous_prices'] = previous_price
 
-            skus[color + '_' + size] = sku
+            if variant['is_in_stock'] == 0:
+                sku['out_of_stock'] = True
+
+            skus[variant['sku']] = sku
 
         return skus
 
