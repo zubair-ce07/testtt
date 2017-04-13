@@ -58,6 +58,14 @@ class StudioCourseOutlineTest(WebAppTest):
         to Schedule and Details page, and that the Help link for
         'Learn more about content visibility settings' is working.
         """
+        link_text='Learn more about content visibility settings'
+
+        # First verify the Help link
+        expected_href = 'https://edx.readthedocs.io/projects/' \
+                        'edx-partner-course-staff/en/latest/' \
+                        'developing_course/controlling_content_visibility.html'
+
+        self.verify_helplink(expected_href, link_text)
 
         # If the help page is still up (see LT-53), then close it.
         if self.browser.current_url.startswith('https://edx.readthedocs.io'):
@@ -73,7 +81,39 @@ class StudioCourseOutlineTest(WebAppTest):
         # This wait_for_page will also assert that we are on the correct page.
         self.schedule_page.wait_for_page()
 
-    def test_verify_helplinks(self):
+    def test_verify_helplink_course_outline(self):
+        """
+        Verifies that the Help link for
+        'Learn more about the course outline' is working.
+        :return:
+        """
+
+        # First verify the Help link
+        expected_href = 'https://edx.readthedocs.io/projects/' \
+                        'edx-partner-course-staff/en/latest/' \
+                        'developing_course/course_outline.html'
+
+        link_text = 'Learn more about the course outline'
+
+        self.verify_helplink(expected_href, link_text)
+
+    def test_verify_helplink_grading_policy(self):
+        """
+        Verifies that the Help link for
+        'Learn more about grading policy settings' is working.
+        :return:
+        """
+
+        # First verify the Help link
+        expected_href = 'https://edx.readthedocs.io/projects/' \
+                        'edx-partner-course-staff/en/latest/' \
+                        'grading/index.html'
+
+        link_text = 'Learn more about grading policy settings'
+
+        self.verify_helplink(expected_href, link_text)
+
+    def test_verify_helplink_content_visibility(self):
         """
         Verifies that the Help link for
         'Learn more about content visibility settings' is working.
@@ -85,11 +125,22 @@ class StudioCourseOutlineTest(WebAppTest):
                         'edx-partner-course-staff/en/latest/' \
                         'developing_course/controlling_content_visibility.html'
 
+        link_text = 'Learn more about content visibility settings'
+
+        self.verify_helplink(expected_href, link_text)
+
+    def verify_helplink(self, link_url, link_text):
+        """
+        This function verifies the side bar link text and url
+        :param link_url:
+        :param link_text:
+        :return:
+        """
         # Assert that help link is correct.
         assert_side_bar_help_link(
             test=self,
             page=self.studio_course_outline,
-            href=expected_href,
-            help_text='Learn more about content visibility settings',
+            href=link_url,
+            help_text=link_text,
             as_list_item=False
         )
