@@ -12,9 +12,20 @@ from crawler_tasks.items import PhiluCourse
 class PhiluSpider(Spider):
     name = 'philu'
     allowed_domains = [
-        'app.novoed.com', 'cloudfront.net',
+        'novoed.com', 'cloudfront.net',
         'philanthropyuniversity.novoed.com'
     ]
+    custom_settings = {
+        'ITEM_PIPELINES': {
+            'crawler_tasks.pipelines.PhiluItemPipeline': 1,
+            'crawler_tasks.pipelines.PhiluFilePipeline': 2,
+        },
+        'FILES_STORE': 'philu_files',
+        'HTTPCACHE_ENABLED': True,
+        'HTTPCACHE_DIR': 'httpcache',
+        'HTTPCACHE_STORAGE': 'scrapy.extensions.httpcache.FilesystemCacheStorage',
+        'RETRY_TIMES': 0
+    }
 
     def new_course_module(self):
         return {
@@ -82,6 +93,8 @@ class PhiluSpider(Spider):
 
     def parse_course(self, response):
         course = PhiluCourse()
+        course['lectures'] = []
+        course['assignments'] = []
         course['url'] = response.url
         course['course_title'] = response.css(
             '.program-breadcrumbs a:not([href])::text'
@@ -92,22 +105,25 @@ class PhiluSpider(Spider):
         ).extract_first()
         selector = Selector(text=raw_text, type='html')
 
-        course['course_image'] = selector.css('::attr(src)').extract_first()
         course['course_welcome_text'] = self.strip_text_items(
             selector.css('::text').extract()
         )
 
-        course['lectures'] = []
-        course['assignments'] = []
-
-        request_queue = []
-        request_queue += [self.request_lectures_section(response)]
-        request_queue += [self.request_assignments_section(response)]
-        request_queue += [self.request_course_announcements(response)]
-
+        course_img_url = selector.css('::attr(src)').extract_first()
+        request_queue = [
+            Request(course_img_url, callback=self.redirected_course_img_url),
+            self.request_lectures_section(response),
+            self.request_assignments_section(response),
+            self.request_course_announcements(response)
+        ]
         course['meta'] = {
             'request_queue': request_queue
         }
+        return self.next_request_or_course(course)
+
+    def redirected_course_img_url(self, response):
+        course = response.meta['course']
+        course['course_image'] = response.url
         return self.next_request_or_course(course)
 
     def request_lectures_section(self, response):
@@ -159,6 +175,54 @@ class PhiluSpider(Spider):
 
         course = response.meta['course']
         course['lectures'].append(module)
+
+        module_index = course['lectures'].index(module)
+        course['meta']['request_queue'] +=\
+            self.module_transcript_requests(module, module_index)
+
+        image_url = module.get('module_image')
+        if image_url:
+            meta = {
+                'module_index': module_index
+            }
+            course['meta']['request_queue'] += [
+                Request(image_url, meta=meta, callback=self.redirected_module_img_url)
+            ]
+
+        return self.next_request_or_course(course)
+
+    def redirected_module_img_url(self, response):
+        course = response.meta['course']
+        module_index = response.meta['module_index']
+        course['lectures'][module_index]['module_image'] = response.url
+        return self.next_request_or_course(course)
+
+    def module_transcript_requests(self, module, module_index):
+        transcript_requests = []
+        for unit_index, unit in enumerate(module['units']):
+            for video_index, video in enumerate(unit['unit_video']):
+                url = video['transcript']
+                meta = {
+                    'module_index': module_index,
+                    'unit_index': unit_index,
+                    'video_index': video_index,
+                }
+                transcript_requests.append(
+                    Request(url, meta=meta, callback=self.redirected_module_transcript_url)
+                )
+
+        return transcript_requests
+
+    def redirected_module_transcript_url(self, response):
+        course = response.meta['course']
+        module_index = response.meta['module_index']
+        unit_index = response.meta['unit_index']
+        video_index = response.meta['video_index']
+
+        units = course['lectures'][module_index]['units']
+        video = units[unit_index]['unit_video'][video_index]
+        video['transcript'] = response.url
+
         return self.next_request_or_course(course)
 
     def module_title(self, response, selector):
@@ -199,7 +263,7 @@ class PhiluSpider(Spider):
 
         module['units'].append(unit)
         return module
-    
+
     def node_is_toc_title(self, node, module):
         if node.css('[class="muted"]'):
             module['toc_title'] = node.css('::text').extract()

@@ -82,4 +82,6 @@ class PhiluCourse(scrapy.Item):
     assignments = scrapy.Field()
     instructor_msg_title = scrapy.Field()
     instructor_msg_content = scrapy.Field()
+    file_urls = scrapy.Field()
+    files = scrapy.Field()
     meta = scrapy.Field()

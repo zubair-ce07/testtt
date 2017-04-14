@@ -9,6 +9,12 @@ class KidvaiSpider(CrawlSpider):
     name = 'kidvai'
     allowed_domains = ['kidvai.blogspot.com', 'blogger.com']
     start_urls = ['http://kidvai.blogspot.com/']
+    custom_settings = {
+        'ITEM_PIPELINES': {
+            'scrapy.pipelines.files.FilesPipeline': 1,
+        },
+        'FILES_STORE': 'kidvai_images'
+    }
     rules = (
         Rule(LinkExtractor(allow=('archive\.html',)), callback='parse_blog_page'),
     )
