@@ -81,7 +81,7 @@ class PhiluSpider(Spider):
             yield Request(url, meta=response.meta, callback=self.parse_course)
 
     def parse_course(self, response):
-        course = dict()
+        course = PhiluCourse()
         course['url'] = response.url
         course['course_title'] = response.css(
             '.program-breadcrumbs a:not([href])::text'
@@ -103,7 +103,7 @@ class PhiluSpider(Spider):
         request_queue = []
         request_queue += [self.request_lectures_section(response)]
         request_queue += [self.request_assignments_section(response)]
-        # request_queue += [self.request_course_announcements(response)]
+        request_queue += [self.request_course_announcements(response)]
 
         course['meta'] = {
             'request_queue': request_queue
@@ -289,18 +289,15 @@ class PhiluSpider(Spider):
         return self.next_request_or_course(course)
 
     def parse_instructor_message(self, response):
-        # url = 'https://app.novoed.com/my_account.json'
-        # meta = {
-        #     'announcement_url': response.urljoin('announcements')
-        # }
-        # yield Request(url, meta=meta, callback=self.request_course_announcements)
         result = json.loads(response.text)['result'][0]
-        instructor_msg_title = result['title']
-
         sel = Selector(text=result['description'], type='html')
         texts = sel.css('::text').extract()
-        instructor_msg_content = self.strip_text_items(texts)
-        return
+
+        course = response.meta['course']
+        course['instructor_msg_title'] = result['title']
+        course['instructor_msg_content'] = self.strip_text_items(texts)
+
+        return self.next_request_or_course(course)
 
     def next_request_or_course(self, course):
         request_queue = course['meta']['request_queue']
