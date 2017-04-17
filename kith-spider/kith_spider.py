@@ -1,13 +1,11 @@
-
 import scrapy
+import json
+import re
 from kith.items import KithItem
-
-
 
 class ShoppingCartSpider(scrapy.Spider):
     name = "shoping"
     start_urls = ['https://kith.com']
-
     def parse(self, response):
         urls = response.css('.ksplash-header-upper-items>li>a::attr(href)').extract()
         for url in urls:
@@ -38,17 +36,30 @@ class ShoppingCartSpider(scrapy.Spider):
             yield scrapy.Request(url=absolute_products_link, callback=self.final_products_details)
 
     def final_products_details(self, response):
-        #collects the final details of product
-
+        #final products detail
         item = KithItem()
-        item['name'] = response.css("h1 span::text").extract()
-        item['colour'] = response.css(".product-header-title.-variant::text").extract()[0].strip()
-        item['price'] = response.css("#ProductPrice::text").extract()[0].strip()
-        item['detail'] = response.css(".product-single-details-rte.rte.mb0>p::text").extract()
-        sku_id = response.css(".product-single-details-rte.rte.mb0>p:nth-child(8)::text").extract()
-        item['sku_id'] = [d.split(":")[-1] for d in sku_id]
         item['image_link'] = response.css(".full-width::attr(src)").extract()
+        prod_detail_dict = response.xpath(".//script[contains(., 'var meta')]/text()").re('var\s*meta\s*=\s*([^;]+)')[0]
+        loads_prod_data = json.loads(prod_detail_dict)
+        new_dict = {}
+        for x in loads_prod_data['product']['variants']:
+            new_dict[x['sku']]={
+                            'id'   :x['id'],
+                            'name' :x['name'],
+                            'price':x['price'],
+                            'size' :x['public_title']
+                                }
+        item['skus'] = new_dict
         yield item
+
+
+
+
+
+
+
+
+
 
 
 
