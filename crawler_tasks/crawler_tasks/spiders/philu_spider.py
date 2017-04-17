@@ -24,7 +24,7 @@ class PhiluSpider(Spider):
         'HTTPCACHE_ENABLED': True,
         'HTTPCACHE_DIR': 'httpcache',
         'HTTPCACHE_STORAGE': 'scrapy.extensions.httpcache.FilesystemCacheStorage',
-        'RETRY_TIMES': 0
+        'RETRY_TIMES': 1
     }
 
     def new_course_module(self):
@@ -58,7 +58,8 @@ class PhiluSpider(Spider):
     def start_requests(self):
         url = 'https://app.novoed.com/my_account.json'
         meta = {
-            'handle_httpstatus_list': [401]
+            'handle_httpstatus_list': [401],
+            'dont_cache': True
         }
         return [Request(url, callback=self.sign_in_request, meta=meta)]
 
@@ -74,6 +75,7 @@ class PhiluSpider(Spider):
         headers = {
             'Content-Type': 'application/json;charset=utf-8',
             'X-XSRF-TOKEN': self.csrf_token(response),
+            'dont_cache': True
         }
         return Request(
             url, callback=self.request_home_page, method='POST',
@@ -170,8 +172,7 @@ class PhiluSpider(Spider):
             '[class=muted], [class="title-video-text"],'
             ':not(h2):not([class="muted"]):not([href^="#step"])::text'
         )
-        module = self.parse_html_nodes(nodes, selector)
-        module['module_title'] = self.module_title(response, selector)
+        module = self.parse_html_nodes(nodes, selector, response)
 
         course = response.meta['course']
         course['lectures'].append(module)
@@ -186,7 +187,10 @@ class PhiluSpider(Spider):
                 'module_index': module_index
             }
             course['meta']['request_queue'] += [
-                Request(image_url, meta=meta, callback=self.redirected_module_img_url)
+                # a course will not be scrapped if its module
+                # image gets filtered by duplicate request filter.
+                Request(image_url, meta=meta, dont_filter=True,
+                        callback=self.redirected_module_img_url)
             ]
 
         return self.next_request_or_course(course)
@@ -231,11 +235,12 @@ class PhiluSpider(Spider):
             return response.css('h2::text').extract_first()
         return title
 
-    def parse_html_nodes(self, nodes, selector):
+    def parse_html_nodes(self, nodes, selector, response):
         module = self.new_course_module()
+        module['module_title'] = self.module_title(response, selector)
+
         unit = None
         module_desc_complete = False
-
         for node in nodes:
             text = node.extract().strip()
             if not text or re.match('\$\(', text):
@@ -256,12 +261,15 @@ class PhiluSpider(Spider):
                 module_desc_complete = True
 
             elif not module_desc_complete:
-                module['module_description'].append(text)            
+                module['module_description'].append(text)
 
             else:
                 unit['unit_content'].append(text)
 
-        module['units'].append(unit)
+        # append last unit to module, if any
+        if unit:
+            module['units'].append(unit)
+
         return module
 
     def node_is_toc_title(self, node, module):
@@ -279,6 +287,9 @@ class PhiluSpider(Spider):
     def node_is_an_image(self, node, module, unit, module_desc_complete):
         if node.css('img[src]'):
             image_url = node.css('::attr(src)').extract_first()
+            if 'ajax-loader' in image_url:
+                return True
+
             if not module_desc_complete:
                 module['module_image'] = image_url
             elif not node.css('[class="lecture-video-thumb"]'):
