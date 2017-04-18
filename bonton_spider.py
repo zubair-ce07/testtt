@@ -4,6 +4,8 @@ import re
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from w3lib.url import add_or_replace_parameter
+from w3lib.url import url_query_cleaner
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, reset_cookies
 
@@ -38,7 +40,7 @@ class BontonParseSpider(BaseParseSpider, Mixin):
             return
 
         if self.out_of_stock(response):
-            return self.out_of_stock_garment(response, self.product_id(response))
+            return self.out_of_stock_item(response, response, self.product_id(response))
 
         self.boilerplate_normal(garment, response)
 
@@ -49,14 +51,34 @@ class BontonParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = self.skus(response)
 
         garment['image_urls'] = self.image_urls(response)
-        garment['meta'] = {'requests_queue': self.image_requests(response), 'request_attempt': 1}
+        garment['meta'] = {'requests_queue': self.image_requests(response)}
+        return self.next_request_or_garment(garment)
 
-        return self.next_request_or_garment(garment, drop_meta=False)
-
-    def parse_image_urls(self, response):
+    def parse_images(self, response):
         garment = response.meta['garment']
-        image_urls = []
+        image_urls = garment.get('image_urls', [])
+        raw_images = self.raw_images(response)
 
+        for image in raw_images:
+            height = image['dy']
+            width = image['dx']
+            image = image.get('s')
+            if image:
+                image_url = self.image_url(response, image['n'], height, width)
+                if image_url not in image_urls:
+                    image_urls.append(image_url)
+
+        garment['image_urls'] = image_urls
+
+        return self.next_request_or_garment(garment)
+
+    def image_url(self, response, image_path, height, width):
+        image_url = re.sub('BonTon/', '', image_path)
+        image_url = add_or_replace_parameter(image_url, 'wid', width)
+        image_url = add_or_replace_parameter(image_url, 'hei', height)
+        return response.urljoin(image_url)
+
+    def raw_images(self, response):
         images_text = re.search(r'(\{"set":.*\})', response.text)
         raw_images = json.loads(images_text.groups()[0])
         images = raw_images['set']['item']
@@ -64,19 +86,7 @@ class BontonParseSpider(BaseParseSpider, Mixin):
         if type(images) is dict:
             images = [images]
 
-        for image in images:
-            image = image.get('s')
-            if image:
-                image_url = re.sub('BonTon/', '', image['n'])
-                image_urls.append(response.urljoin(image_url))
-
-        if image_urls:
-            if garment['meta'].pop('request_attempt', 0):
-                garment['image_urls'] = image_urls
-            else:
-                garment['image_urls'].extend(image_urls)
-
-        return self.next_request_or_garment(garment)
+        return images
 
     def image_requests(self, response):
         image_requests = []
@@ -84,19 +94,20 @@ class BontonParseSpider(BaseParseSpider, Mixin):
 
         colors = response.css('[data-swatchName=Color]::attr(data-scene7path)').extract()
         for color in colors:
-            images_url = self.images_url_t.format(path=image_path, color=color)
-            image_requests.append(Request(url=images_url, callback=self.parse_image_urls))
+            image_requests.append(self.image_request(image_path, color))
 
         if not colors:
-            images_url = self.images_url_t.format(path=image_path, color=self.product_id(response) + '_' + 'nocolor')
-            image_requests.append(Request(url=images_url, callback=self.parse_image_urls))
+            color = self.product_id(response) + '_' + 'nocolor'
+            image_requests.append(self.image_request(image_path, color))
 
         return image_requests
 
+    def image_request(self, image_path,  color):
+        images_url = self.images_url_t.format(path=image_path, color=color)
+        return Request(url=images_url, callback=self.parse_images)
+
     def out_of_stock(self, response):
-        if not clean(response.css(self.price_css)):
-            return True
-        return False
+        return not clean(response.css(self.price_css))
 
     def product_id(self, response):
         return response.css('[itemprop="sku"]::text').extract()[0]
@@ -119,17 +130,17 @@ class BontonParseSpider(BaseParseSpider, Mixin):
 
     def product_description(self, response):
         description = self.raw_description(response)
-        return [rd for rd in description if not self.care_criteria_simplified(rd)]
+        return [d for d in description if not self.care_criteria_simplified(d)]
 
     def product_care(self, response):
         description = self.raw_description(response)
-        return [rd for rd in description if self.care_criteria_simplified(rd)]
+        return [c for c in description if self.care_criteria_simplified(c)]
 
     def image_urls(self, response):
         image_urls = []
         raw_skus = self.raw_skus(response)
         for raw_sku in raw_skus:
-            image = raw_sku.get('ItemImage')
+            image = url_query_cleaner(raw_sku.get('ItemImage'))
             if image and image not in image_urls:
                 image_urls.append(image)
         return image_urls
@@ -141,46 +152,44 @@ class BontonParseSpider(BaseParseSpider, Mixin):
         raw_skus = self.raw_skus(response)
         common = {'currency': 'USD'}
 
+        if not colors:
+            colors = [None]
+
         for size in sizes:
             common['size'] = size
             size_id = self.sku_attribute_id(response, size)
-            if colors:
-                for color in colors:
-                    sku = common.copy()
-                    previous_price, price = self.sku_pricing(response, raw_skus, size_id, color)
-                    sku['price'] = price
-                    sku['colour'] = color
-
-                    if previous_price:
-                        sku['previous_prices'] = previous_price
-
-                    if self.is_in_stock(response, raw_skus, size_id, color):
-                        skus[color + '_' + str(size_id)] = sku
-            else:
+            for color in colors:
                 sku = common.copy()
-                previous_price, price = self.sku_pricing(response, raw_skus, size_id)
-                sku['price'] = price
+                sku_id = size
+                sku_pricing = self.sku_pricing(response, raw_skus, size_id, color)
+                if not sku_pricing:
+                    continue
 
+                previous_price, price = sku_pricing
+                sku['price'] = price
                 if previous_price:
                     sku['previous_prices'] = previous_price
 
-                if not size_id or all([size_id and self.is_in_stock(response, raw_skus, size_id)]):
-                    skus[size] = sku
+                if color:
+                    sku_id = color + '_' + str(size_id)
+                    sku['colour'] = color
+
+                skus[sku_id] = sku
 
         return skus
 
     def sku_pricing(self, response, raw_skus, size_id, color=None):
         color_id = self.sku_attribute_id(response, color)
+
+        if not size_id:
+            return self.sku_prices(raw_skus[0])
+
         for raw_sku in raw_skus:
             sku_size = raw_sku['Attributes'].get('Size_{}'.format(size_id))
             if sku_size:
-                if color_id:
-                    if raw_sku['Attributes'].get('Color_{}'.format(color_id)):
-                        return self.sku_prices(raw_sku)
-                else:
-                    return self.sku_prices(raw_sku)
-
-        return self.sku_prices(raw_skus[0])
+                if color_id and not raw_sku['Attributes'].get('Color_{}'.format(color_id)):
+                    continue
+                return self.sku_prices(raw_sku)
 
     def sku_prices(self, raw_sku):
         previous_prices = list({raw_sku["minListPrice_USD"], raw_sku["maxListPrice_USD"]})
@@ -195,17 +204,6 @@ class BontonParseSpider(BaseParseSpider, Mixin):
         css = '#entitledItem_{}::text'.format(self.product_composite_id(response))
         skus_text = response.css(css).extract()[0]
         return json.loads(skus_text)
-
-    def is_in_stock(self, response, raw_skus, size_id, color=None):
-        color_id = self.sku_attribute_id(response, color)
-        for raw_sku in raw_skus:
-            sku_size = raw_sku['Attributes'].get('Size_{}'.format(size_id))
-            if sku_size:
-                if color_id:
-                    if raw_sku['Attributes'].get('Color_{}'.format(color_id)):
-                        return True
-                else:
-                    return True
 
     def product_gender(self, garment):
         soup = ' '.join(garment['category'] + [garment['name'], garment['url_original']]).lower()
@@ -242,7 +240,7 @@ class BenettonCrawlSpider(BaseCrawlSpider, Mixin):
         'baby-baby-gear',
         'baby-baby-gifts-essentials',
         'baby-nursery-furniture-accessories',
-        'baby-kids/toys-games-toys',
+        'toys-games-toys',
         'toys-games-playroom-storage-accessories',
     ]
     rules = [
