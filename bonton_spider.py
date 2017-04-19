@@ -16,7 +16,6 @@ class Mixin:
     allowed_domains = ['www.bonton.com', 's7d4.scene7.com']
     start_urls = ['https://www.bonton.com/']
     images_url_t = '{path}{color}_IMAGESET?req=set%2Cjson%2CUTF-8&handler=s7sdkJSONResponse'
-    brand_list = []
     homeware_categories = ['home', 'bed-bath']
     gender_map = [
         ('women', 'women'),
@@ -64,19 +63,29 @@ class BontonParseSpider(BaseParseSpider, Mixin):
             width = image['dx']
             image = image.get('s')
             if image:
-                image_url = self.image_url(response, image['n'], height, width)
-                if image_url not in image_urls:
-                    image_urls.append(image_url)
+                image_url = self.image_url(response, image['n'])
+                self.remove_duplicate_image_url(image_url, image_urls)
+                image_urls.append(self.add_image_params(image_url, height, width))
 
         garment['image_urls'] = image_urls
 
         return self.next_request_or_garment(garment)
 
-    def image_url(self, response, image_path, height, width):
-        image_url = re.sub('BonTon/', '', image_path)
+    def image_url(self, response, image):
+        image_url = response.urljoin(image)
+        return re.sub('BonTon/', '', image_url, 1)
+
+    def add_image_params(self, image_url, height, width):
         image_url = add_or_replace_parameter(image_url, 'wid', width)
-        image_url = add_or_replace_parameter(image_url, 'hei', height)
-        return response.urljoin(image_url)
+        return add_or_replace_parameter(image_url, 'hei', height)
+
+    def remove_duplicate_image_url(self, image_url, image_urls):
+        if image_url in image_urls:
+            image_urls.remove(image_url)
+
+        colorless_image_url = re.sub('_nocolor', '', image_url, 1)
+        if colorless_image_url in image_urls:
+            image_urls.remove(colorless_image_url)
 
     def raw_images(self, response):
         images_text = re.search(r'(\{"set":.*\})', response.text)
@@ -192,8 +201,8 @@ class BontonParseSpider(BaseParseSpider, Mixin):
                 return self.sku_prices(raw_sku)
 
     def sku_prices(self, raw_sku):
-        previous_prices = list({raw_sku["minListPrice_USD"], raw_sku["maxListPrice_USD"]})
-        current_price = raw_sku["maxPrice_USD"]
+        previous_prices = list({int(float(raw_sku["minListPrice_USD"])), int(float(raw_sku["maxListPrice_USD"]))})
+        current_price = int(float(raw_sku["maxPrice_USD"]))
         return previous_prices if current_price not in previous_prices else [], current_price
 
     def sku_attribute_id(self, response, attribute):
@@ -250,7 +259,7 @@ class BenettonCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse_brands(self, response):
         brands = clean(response.css('.alpha-list a::text'))
-        self.brand_list += sorted(brands, key=len, reverse=True)
+        yield {'brands': sorted(brands, key=len, reverse=True)}
         yield reset_cookies(Request(self.start_urls[0]))
 
     def start_requests(self):
