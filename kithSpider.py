@@ -1,25 +1,20 @@
 import scrapy
 from item import Product
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
-class KithSpider(scrapy.Spider):
-    name = "kithSpider"
 
-    def start_requests(self):
-        urls = ['https://kith.com/pages/women', 'https://kith.com/']
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+class KithSpider(CrawlSpider):
+    name = 'KithSpider'
+    allowed_domains = ['kith.com']
+    start_urls = ['https://www.kith.com', 'https://kith.com/pages/women']
 
-    def parse(self, response):
-        data = response.css('li.main-nav-list-item').css('ul')[3]
+    rules=(
 
-        for links in data.css('a::attr(href)').extract():
-                yield scrapy.Request(response.urljoin(links), callback=self.parse_brand)
+        Rule(LinkExtractor(restrict_css='li.main-nav-list-item')),
 
-    def parse_brand(self, response):
-        data = response.css('a.product-card-image-wrapper::attr(href)').extract()
-
-        for links in data:
-            yield scrapy.Request(response.urljoin(links), callback=self.parse_product)
+        Rule(LinkExtractor(restrict_css='a.product-card-image-wrapper'), callback='parse_product'),
+    )
 
     def parse_product(self, response):
 
