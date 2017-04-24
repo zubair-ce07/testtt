@@ -41,7 +41,7 @@ class AmazonUkSpider(Spider):
     ]
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 4,
+        'DOWNLOAD_DELAY': 0,
         'CONCURRENT_REQUESTS': 12
     }
 
@@ -61,9 +61,9 @@ class AmazonUkSpider(Spider):
 
         for url in urls:
             complete_url = response.urljoin(url)
-            yield Request(
-                complete_url, headers=self.default_headers,
-                callback=self.traverse_sub_categories
+            yield self.reset_cookies(
+                Request(complete_url, headers=self.default_headers,
+                        callback=self.traverse_sub_categories)
             )
             # TODO: remove break
             # break
@@ -92,10 +92,12 @@ class AmazonUkSpider(Spider):
         sub_category_requests = []
         for url in sub_category_urls:
             complete_url = response.urljoin(url)
-            sub_category_requests.append(Request(
-                complete_url, headers=self.default_headers,
-                callback=self.traverse_sub_categories
-            ))
+            sub_category_requests.append(
+                self.reset_cookies(
+                    Request(complete_url, headers=self.default_headers,
+                            callback=self.traverse_sub_categories)
+                )
+            )
             # TODO: remove break
             # break
 
@@ -104,11 +106,14 @@ class AmazonUkSpider(Spider):
     def parse_product_listing(self, response):
         items = response.css('[id^="result_"]')
         for item in items:
-            url = item.css('::attr(href)').extract_first()
+            url = item.css(
+                ':not([href*="bestseller"])::attr(href)'
+            ).extract_first()
+
             complete_url = response.urljoin(url)
-            yield Request(
-                complete_url, headers=self.default_headers,
-                callback=self.parse_product
+            yield self.reset_cookies(
+                Request(complete_url, headers=self.default_headers,
+                        callback=self.parse_product)
             )
             # TODO: remove return
             # return
@@ -119,9 +124,9 @@ class AmazonUkSpider(Spider):
             return None
 
         pagination_url = response.urljoin(pagination_url)
-        return Request(
-            pagination_url, headers=self.default_headers,
-            callback=self.parse_product_listing
+        return self.reset_cookies(
+            Request(pagination_url, headers=self.default_headers,
+                    callback=self.parse_product_listing)
         )
 
     def parse_product(self, response):
@@ -130,16 +135,14 @@ class AmazonUkSpider(Spider):
         product['product_id'] = ''
         product['market'] = 'UK'
         product['url'] = response.url
-        product['name'] = response.css('#productTitle::text').extract_first().strip()
         product['description'] = self.strip_text_items(
             response.css('#productDescription ::text').extract()
         )
         product['care'] = self.strip_text_items(
             response.css('#feature-bullets ::text').extract()
         )
-        product['category'] = self.strip_text_items(
-            response.css('#showing-breadcrumbs_div a::text').extract()
-        )
+        product['name'] = self.product_name(response)
+        product['category'] = self.product_category(response)
         product['brand'] = self.brand_name(response)
         product['gender'] = self.product_gender(product['category'])
         product['image_urls'] = self.image_urls(response)
@@ -148,6 +151,24 @@ class AmazonUkSpider(Spider):
 
     def strip_text_items(self, items):
         return [item.strip() for item in items if item.strip()]
+
+    def product_name(self, response):
+        name = response.css('#productTitle::text').extract_first()
+        if not name:
+            name = self.strip_text_items(
+                response.css('#btAsinTitle ::text').extract()
+            )[0]
+
+        return name.strip()
+
+    def product_category(self, response):
+        texts = response.css('#showing-breadcrumbs_div a::text').extract()
+        if texts:
+            return self.strip_text_items(texts)
+
+        return self.strip_text_items(
+            response.css('#wayfinding-breadcrumbs_feature_div a::text').extract()
+        )
 
     def brand_name(self, response):
         brand = response.css('#brand ::text').extract_first()
@@ -165,20 +186,33 @@ class AmazonUkSpider(Spider):
         return ''
 
     def image_urls(self, response):
-        raw_text = response.css('script')\
-            .re('data\["colorImages"\] =(.*);')
+        raw_text = self.raw_image_urls(response)
         if not raw_text:
             return []
 
         urls = []
-        images = json.loads(raw_text[0])
+        images = json.loads(raw_text)
         for color, color_images in images.items():
             for image_set in color_images:
-                urls.append(
-                    image_set.get('hiRes', image_set.get('large'))
-                )
+                img_url = image_set.get('hiRes')
+                if not img_url:
+                    img_url = image_set.get('large')
+                urls.append(img_url)
 
         return urls
+
+    def raw_image_urls(self, response):
+        regexes = [
+            'data\["colorImages"\] =(.*);',
+            "colorImages': (.*),\s+'",
+            'var colorImages = (.*);'
+        ]
+        for regex in regexes:
+            raw_text = response.css('script').re(regex)
+            if raw_text and 'http' in raw_text[0]:
+                return raw_text[0].replace("\'initial\'", '"initial"')
+
+        return None
 
     def parse_sku_variations(self, response, product):
         sku_variations = response.css('script')\
@@ -220,8 +254,8 @@ class AmazonUkSpider(Spider):
         sku_id = response.css('script')\
             .re('currentAsin" : "(\w+)"')[0]
         current_sku = self.product_price(response)
-        current_sku['size'] = sku_variations[sku_id].get('size_name')
-        current_sku['colour'] = sku_variations[sku_id].get('color_name')
+        current_sku['size'] = sku_variations[sku_id].get('size_name', '')
+        current_sku['colour'] = sku_variations[sku_id].get('color_name', '')
 
         return sku_id, current_sku
 
@@ -241,8 +275,10 @@ class AmazonUkSpider(Spider):
                 'sku_id': sku_id
             }
             sku_requests.append(
-                Request(sku_url, headers=self.default_headers,
-                        meta=meta, callback=self.parse_sku)
+                self.reset_cookies(
+                    Request(sku_url, headers=self.default_headers,
+                            meta=meta, callback=self.parse_sku)
+                )
             )
             #TODO: remove break
             # break
@@ -273,8 +309,8 @@ class AmazonUkSpider(Spider):
 
         selector = self.sku_response_selector(response)
         sku = self.product_price(selector)
-        sku['size'] = sku_variations[sku_id].get('size_name')
-        sku['colour'] = sku_variations[sku_id].get('color_name')
+        sku['size'] = sku_variations[sku_id].get('size_name', '')
+        sku['colour'] = sku_variations[sku_id].get('color_name', '')
 
         product['skus'][sku_id] = sku
         return self.next_request_or_product(product)
@@ -329,3 +365,8 @@ class AmazonUkSpider(Spider):
 
         del product['meta']
         return product
+
+    def reset_cookies(self, request):
+        request.meta['dont_merge_cookies'] = True
+        request.cookies = {}
+        return request
