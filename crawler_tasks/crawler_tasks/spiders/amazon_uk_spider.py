@@ -39,34 +39,40 @@ class AmazonUkSpider(Spider):
         'https://www.amazon.co.uk/sunglasses-accessories-oakley'
         '/b/ref=nav_shopall_sa_sunglasses?ie=UTF8&node=362410011'
     ]
-
     custom_settings = {
-        'DOWNLOAD_DELAY': 0,
-        'CONCURRENT_REQUESTS': 12
-    }
-
-    default_headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                      '(KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36'
+        'CONCURRENT_REQUESTS': 4,
+        'AUTOTHROTTLE_ENABLED': True,
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+            'crawler_tasks.middlewares.RotateUserAgentMiddleware': 400,
+            'crawler_tasks.middlewares.RotateHttpProxyMiddleware': 550,
+        }
     }
 
     genders_types = [
         'women', 'men', 'girls', 'boys'
     ]
+    product_sku_request_priority = 1
+    product_listing_request_priority = 2
 
     def parse(self, response):
         urls = self.sub_category_urls(response)
         if not urls:
             urls = self.left_navigation_urls(response)
 
+        sub_category_requests = []
         for url in urls:
             complete_url = response.urljoin(url)
-            yield self.reset_cookies(
-                Request(complete_url, headers=self.default_headers,
-                        callback=self.traverse_sub_categories)
+            r = Request(
+                complete_url,
+                callback=self.traverse_sub_categories,
+                priority=self.product_listing_request_priority
             )
-            # TODO: remove break
-            # break
+            sub_category_requests.append(
+                self.reset_cookies(r)
+            )
+
+        return sub_category_requests
 
     def sub_category_urls(self, response):
         sub_category_section = response.css('[class="categoryRefinementsSection"]')
@@ -92,42 +98,53 @@ class AmazonUkSpider(Spider):
         sub_category_requests = []
         for url in sub_category_urls:
             complete_url = response.urljoin(url)
-            sub_category_requests.append(
-                self.reset_cookies(
-                    Request(complete_url, headers=self.default_headers,
-                            callback=self.traverse_sub_categories)
-                )
+            r = Request(
+                complete_url,
+                callback=self.traverse_sub_categories,
+                priority=self.product_listing_request_priority
             )
-            # TODO: remove break
-            # break
+            sub_category_requests.append(
+                self.reset_cookies(r)
+            )
 
         return sub_category_requests
 
     def parse_product_listing(self, response):
+        product_requests = []
         items = response.css('[id^="result_"]')
         for item in items:
             url = item.css(
                 ':not([href*="bestseller"])::attr(href)'
             ).extract_first()
-
             complete_url = response.urljoin(url)
-            yield self.reset_cookies(
-                Request(complete_url, headers=self.default_headers,
-                        callback=self.parse_product)
-            )
-            # TODO: remove return
-            # return
 
+            r = Request(
+                complete_url,
+                callback=self.parse_product
+            )
+            product_requests.append(
+                self.reset_cookies(r)
+            )
+
+        pagination_request = self.pagination_link_request(response)
+        if pagination_request:
+            product_requests.append(pagination_request)
+
+        return product_requests
+
+    def pagination_link_request(self, response):
         pagination_url =\
             response.css('[id="pagnNextLink"]::attr(href)').extract_first()
         if not pagination_url:
             return None
 
         pagination_url = response.urljoin(pagination_url)
-        return self.reset_cookies(
-            Request(pagination_url, headers=self.default_headers,
-                    callback=self.parse_product_listing)
+        r = Request(
+            pagination_url,
+            callback=self.parse_product_listing,
+            priority=self.product_listing_request_priority
         )
+        return self.reset_cookies(r)
 
     def parse_product(self, response):
         product = GenericProduct()
@@ -135,6 +152,7 @@ class AmazonUkSpider(Spider):
         product['product_id'] = ''
         product['market'] = 'UK'
         product['url'] = response.url
+
         product['description'] = self.strip_text_items(
             response.css('#productDescription ::text').extract()
         )
@@ -274,14 +292,10 @@ class AmazonUkSpider(Spider):
             meta = {
                 'sku_id': sku_id
             }
+            r = Request(sku_url, meta=meta, callback=self.parse_sku)
             sku_requests.append(
-                self.reset_cookies(
-                    Request(sku_url, headers=self.default_headers,
-                            meta=meta, callback=self.parse_sku)
-                )
+                self.reset_cookies(r)
             )
-            #TODO: remove break
-            # break
 
         return sku_requests
 
@@ -317,8 +331,13 @@ class AmazonUkSpider(Spider):
 
     def sku_response_selector(self, response):
         raw_text = response.body.decode()
-        price_div = re.search('price_feature_div":"(.*)}', raw_text).group()
-        unescaped_text = codecs.escape_decode(price_div.encode())[0]
+        price_div = re.search('price_feature_div":"(.*)}', raw_text)
+        if not price_div:
+            return Selector(text='')
+
+        unescaped_text = codecs.escape_decode(
+            price_div.group().encode()
+        )[0]
         return Selector(text=unescaped_text)
 
     def product_price(self, selector):
@@ -360,7 +379,7 @@ class AmazonUkSpider(Spider):
         if request_queue:
             request = request_queue.pop()
             request.meta['product'] = product
-            request.priority = 1
+            request.priority = self.product_sku_request_priority
             return request
 
         del product['meta']
