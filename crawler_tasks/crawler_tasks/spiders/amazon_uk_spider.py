@@ -45,7 +45,6 @@ class AmazonUkSpider(Spider):
         'DOWNLOADER_MIDDLEWARES': {
             'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
             'crawler_tasks.middlewares.RotateUserAgentMiddleware': 400,
-            'crawler_tasks.middlewares.RotateHttpProxyMiddleware': 550,
         }
     }
 
@@ -53,12 +52,18 @@ class AmazonUkSpider(Spider):
         'women', 'men', 'girls', 'boys'
     ]
     product_sku_request_priority = 1
-    product_listing_request_priority = 2
+
+    # set product_listing_request_priority = 2
+    # if all the categories and product listings
+    # should be traversed before hitting product urls.
+    product_listing_request_priority = 0
 
     def parse(self, response):
         urls = self.sub_category_urls(response)
         if not urls:
-            urls = self.left_navigation_urls(response)
+            urls = response.css(
+                '.left_nav :not([href*="gp/redirect.html"])::attr(href)'
+            ).extract()
 
         sub_category_requests = []
         for url in urls:
@@ -75,20 +80,9 @@ class AmazonUkSpider(Spider):
         return sub_category_requests
 
     def sub_category_urls(self, response):
-        sub_category_section = response.css('[class="categoryRefinementsSection"]')
-        if sub_category_section:
-            return sub_category_section.css('li:not([class]) ::attr(href)').extract()
-
-        return []
-
-    def left_navigation_urls(self, response):
-        left_navigations = response.css('.left_nav')
-        for nav_section in left_navigations:
-            nav_urls = nav_section.css('::attr(href)').extract()
-            if nav_urls and '/s/ref=amb_link' in nav_urls[0]:
-                return nav_urls
-
-        return []
+        return response.css(
+            '[href*="nr_n"]:not([href*="sign-in-redirect"])::attr(href)'
+        ).extract()
 
     def traverse_sub_categories(self, response):
         sub_category_urls = self.sub_category_urls(response)
@@ -147,6 +141,9 @@ class AmazonUkSpider(Spider):
         return self.reset_cookies(r)
 
     def parse_product(self, response):
+        if response.css('#captchacharacters'):
+            return response.request.replace(dont_filter=True)
+
         product = GenericProduct()
         product['merch_info'] = []
         product['product_id'] = ''

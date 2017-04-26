@@ -94,16 +94,3 @@ class RotateUserAgentMiddleware(UserAgentMiddleware):
     def process_request(self, request, spider):
         user_agent = random.choice(self.available_user_agents)
         request.headers.setdefault('User-Agent', user_agent)
-
-
-class RotateHttpProxyMiddleware(object):
-    available_proxies = [
-        'https://185.39.194.3:3128',
-        'https://128.199.170.32:3128',
-        'https://51.255.89.185:3128',
-        'https://128.199.229.21:3128',
-        'https://68.128.212.240:8080'
-    ]
-
-    def process_request(self, request, spider):
-        request.meta['proxy'] = random.choice(self.available_proxies)
