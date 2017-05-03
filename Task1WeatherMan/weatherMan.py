@@ -28,11 +28,8 @@ args = parser.parse_args(None)
 
 if __name__ == '__main__':
     if args.task1 is not None:
-        print ("args.task1 ", args.task1)
         execute_task1(args.task1)
     if args.task2 is not None:
-        print ("args.task2 ", args.task2)
         execute_task2(args.task2)
     if args.task3 is not None:
-        print ("args.task3 ", args.task3)
         execute_task3(args.task3)
