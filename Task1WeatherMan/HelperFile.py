@@ -9,7 +9,7 @@ WEATHER_FOLDER_NAME = "weatherfiles/"
 
 
 def does_weather_file_exist(file_name):
-    file_path = "weatherfiles/" + file_name
+    file_path = WEATHER_FOLDER_NAME + file_name
     weather_file = Path(file_path)
     return weather_file.is_file()
 

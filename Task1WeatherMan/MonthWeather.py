@@ -1,16 +1,17 @@
 from dailyweathermodel import DailyWeatherModel
 import csv
+import helperfile
 
 
 class MonthWeatherModel:
     def __init__(self, file_name):  # this class reads data from one file
         self.day_weather_info_array = []
-        file_path = "weatherfiles/" + file_name
+        file_path = helperfile.WEATHER_FOLDER_NAME + file_name
         with open(file_path, 'r') as f:
-            reader = csv.reader(f)
-            next(reader, None)
-            for row in reader:
-                current_day_weather = DailyWeatherModel(row)
+            reader = csv.DictReader(f, delimiter=',')
+            for line in reader:
+                current_day_weather = DailyWeatherModel(line.get("PKT"), line.get("Max TemperatureC"), line.get("Min TemperatureC"),
+                                                        line.get("Max Humidity"), line.get("Mean Humidity"))
                 self.day_weather_info_array.append(current_day_weather)
 
     def print_highest_lowest_chart(self):
