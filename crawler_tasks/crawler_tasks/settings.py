@@ -64,10 +64,10 @@ DOWNLOAD_DELAY = 3
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-   'scrapy.pipelines.files.FilesPipeline': 1,
-}
-FILES_STORE = 'kidvai_images'
+# ITEM_PIPELINES = {
+#    'scrapy.pipelines.files.FilesPipeline': 1,
+# }
+# FILES_STORE = 'kidvai_images'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

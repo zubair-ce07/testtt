@@ -71,3 +71,17 @@ class JelmoliProduct(scrapy.Item):
     description = scrapy.Field()
     skus = scrapy.Field()
     industry = scrapy.Field()
+
+
+class PhiluCourse(scrapy.Item):
+    url = scrapy.Field()
+    course_title = scrapy.Field()
+    course_image = scrapy.Field()
+    course_welcome_text = scrapy.Field()
+    lectures = scrapy.Field()
+    assignments = scrapy.Field()
+    instructor_msg_title = scrapy.Field()
+    instructor_msg_content = scrapy.Field()
+    file_urls = scrapy.Field()
+    files = scrapy.Field()
+    meta = scrapy.Field()
