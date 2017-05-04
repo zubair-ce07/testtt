@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuite name="nosetests" tests="2" errors="2" failures="0" skip="0"><testcase classname="Paver_Project.acceptance.test_pages.TestStudio" name="test_addpage" time="12.544"><error type="selenium.common.exceptions.WebDriverException" message='Message: Error: Permission denied to access property "document"&#10;&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;bok_choy.browser: INFO: Using local browser: firefox [Default is firefox]&#10;bok_choy.browser: INFO: Using default firefox profile&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------'><![CDATA[  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/unittest/case.py", line 322, in run
+    self.setUp()
+  File "/Users/aishasajid/Workspace/venv_new/Paver_Project/acceptance/test_pages.py", line 34, in setUp
+    self.studio_homepage.visit()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/page_object.py", line 310, in visit
+    return self.wait_for_page()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/page_object.py", line 405, in wait_for_page
+    timeout=timeout
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/promise.py", line 101, in fulfill
+    is_fulfilled, result = self._check_fulfilled()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/promise.py", line 127, in _check_fulfilled
+    is_fulfilled, result = self._check_func()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/promise.py", line 182, in <lambda>
+    full_check_func = lambda: (check_func(), None)
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/page_object.py", line 400, in _is_document_ready
+    "return document.readyState=='complete'")
+  File "/Library/Python/2.7/site-packages/selenium-3.0.2-py2.7.egg/selenium/webdriver/remote/webdriver.py", line 465, in execute_script
+    'args': converted_args})['value']
+  File "/Library/Python/2.7/site-packages/selenium-3.0.2-py2.7.egg/selenium/webdriver/remote/webdriver.py", line 236, in execute
+    self.error_handler.check_response(response)
+  File "/Library/Python/2.7/site-packages/selenium-3.0.2-py2.7.egg/selenium/webdriver/remote/errorhandler.py", line 192, in check_response
+    raise exception_class(message, screen, stacktrace)
+'Message: Error: Permission denied to access property "document"\n\n-------------------- >> begin captured logging << --------------------\nbok_choy.browser: INFO: Using local browser: firefox [Default is firefox]\nbok_choy.browser: INFO: Using default firefox profile\n--------------------- >> end captured logging << ---------------------']]></error></testcase><testcase classname="Paver_Project.acceptance.test_pages.TestStudio" name="test_hidepage" time="9.197"><error type="selenium.common.exceptions.WebDriverException" message='Message: Error: Permission denied to access property "document"&#10;&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;bok_choy.browser: INFO: Using local browser: firefox [Default is firefox]&#10;bok_choy.browser: INFO: Using default firefox profile&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------'><![CDATA[  File "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/unittest/case.py", line 322, in run
+    self.setUp()
+  File "/Users/aishasajid/Workspace/venv_new/Paver_Project/acceptance/test_pages.py", line 34, in setUp
+    self.studio_homepage.visit()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/page_object.py", line 310, in visit
+    return self.wait_for_page()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/page_object.py", line 405, in wait_for_page
+    timeout=timeout
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/promise.py", line 101, in fulfill
+    is_fulfilled, result = self._check_fulfilled()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/promise.py", line 127, in _check_fulfilled
+    is_fulfilled, result = self._check_func()
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/promise.py", line 182, in <lambda>
+    full_check_func = lambda: (check_func(), None)
+  File "/Users/aishasajid/Workspace/venv_new/lib/python2.7/site-packages/bok_choy/page_object.py", line 400, in _is_document_ready
+    "return document.readyState=='complete'")
+  File "/Library/Python/2.7/site-packages/selenium-3.0.2-py2.7.egg/selenium/webdriver/remote/webdriver.py", line 465, in execute_script
+    'args': converted_args})['value']
+  File "/Library/Python/2.7/site-packages/selenium-3.0.2-py2.7.egg/selenium/webdriver/remote/webdriver.py", line 236, in execute
+    self.error_handler.check_response(response)
+  File "/Library/Python/2.7/site-packages/selenium-3.0.2-py2.7.egg/selenium/webdriver/remote/errorhandler.py", line 192, in check_response
+    raise exception_class(message, screen, stacktrace)
+'Message: Error: Permission denied to access property "document"\n\n-------------------- >> begin captured logging << --------------------\nbok_choy.browser: INFO: Using local browser: firefox [Default is firefox]\nbok_choy.browser: INFO: Using default firefox profile\n--------------------- >> end captured logging << ---------------------']]></error></testcase></testsuite>
