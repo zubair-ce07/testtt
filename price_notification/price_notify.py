@@ -2,6 +2,7 @@ import re
 import json
 from datetime import date, timedelta
 import json
+import textwrap
 import requests
 from lxml import html
 from peewee import *
@@ -29,7 +30,7 @@ class ItemSelector:
     site = ''
 
     def clean_name(self, name):
-        return name
+        return name.strip()
 
     def clean_price(self, price):
         return price
@@ -135,13 +136,21 @@ class DBHelper:
     def get_price_changes(self):
         yest_items = self.get_items(date.today() - timedelta(1))
         today_items = self.get_items(date.today())
-
-        items = []
-        for item_key, item in yest_items.items():
-            item2 = today_items.get(item_key)
+        ids = []
+        for item_key, item in today_items.items():
+            item2 = yest_items.get(item_key)
             if item2 and item['price'] != item2['price']:
-                item['old_price'] = item2['price']
-                items += [item]
+                item['new_price'] = item2['price']
+                ids += [item['item_id']]
+
+        items = {}
+        for item in today_items.values():
+            item_id = item['item_id']
+            if item_id not in ids:
+                continue
+            if item_id not in items:
+                items[item_id] = []
+            items[item_id] += [item]
 
         return items
 
@@ -164,40 +173,53 @@ def crawl(db_helper):
                 db_helper.add_item(item)
 
 
-def print_items(items):
+def print_items(items, price_change=False):
     for item in items:
-        raw_text = 'item id: ' + item['item_id']
-        raw_text += '\n\tsite name: ' + item['site_name']
-        raw_text += '\n\titem name: ' + item['name']
-        raw_text += '\n\tprice: ' + item['price']
-        raw_text += '\n\turl: ' + item['url']
-        if item.get('old_price'):
-            raw_text += '\n\tprevious_price: ' + item['pold_price']
+        raw_text = item['name'].ljust(40)
+        raw_text += '\t' + item['site_name']
+        raw_text += '\t\t' + item['price']
+        if price_change:
+            raw_text += '\t\t' + item.get('new_price', item['price'])
 
         print(raw_text)
+
+
+def print_report(items, price_change=False):
+    heading = 'Item name\t\t\t\t\tVendor\t\tprice'
+    if price_change:
+        heading += '\t\tOld price'
+
+    print(heading)
+    if not price_change:
+        print_items(items)
+        return
+
+    for item in items.values():
+        print_items(item, price_change)
+        print('--------------------------------------------------------------------------------')
 
 
 def generate_reports(db_helper):
     items = db_helper.get_additions()
     if items:
-        print("\nNew items added today:")
-        print_items(items)
+        print("\nNew items added today:\n")
+        print_report(items)
     else:
-        print ("\n No new additions")
+        print ("\nNo new additions")
 
     items = db_helper.get_deletions()
     if items:
         print("\nItems deleted today:")
-        print_items(items)
+        print_report(items)
     else:
-        print ("\n No deletions today")
+        print ("\nNo deletions today")
 
     items = db_helper.get_price_changes()
     if items:
         print("\nPrice changed for these items today:")
-        print_items(items)
+        print_report(items, price_change=True)
     else:
-        print ("\n No price changes")
+        print ("\nNo price changes")
 
 
 def main():
@@ -208,3 +230,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
