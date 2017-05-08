@@ -50,7 +50,7 @@ class LipsyItemSelector(ItemSelector):
 class AldoItemSelector(ItemSelector):
     price_xpath = '//*[@property="product:price:amount"]/@content'
     currency_xpath = '//*[@property="product:price:currency"]/@content'
-    name_xpath = '//*[contains(@class,"product-title")]/span/text()'
+    name_xpath = '//meta[@name="description"]/@content'
 
     def clean_price(self, price):
         return re.findall('([\d\.]+)', price)[0]
@@ -194,7 +194,12 @@ def print_report(items, price_change=False):
     if price_change:
         heading += '\t\tOld price'
 
+    print('===============================================================================')
     print(heading)
+<<<<<<< HEAD
+=======
+    print('===============================================================================')
+>>>>>>> a39618f88a8ae11a131054806287efb3ab4a9aaa
 
     for item in items.values():
         print_items(item, price_change)
