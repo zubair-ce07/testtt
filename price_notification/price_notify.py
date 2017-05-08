@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import re
 import json
 from datetime import date, timedelta
@@ -115,23 +117,23 @@ class DBHelper:
         yest_items = self.get_items(date.today() - timedelta(1))
         today_items = self.get_items(date.today())
 
-        items = []
+        ids = []
         for item_key, item in today_items.items():
             if item_key not in yest_items:
-                items += [item]
+                ids += [item['item_id']]
 
-        return items
+        return self.group_items(today_items, ids)
 
     def get_deletions(self):
         yest_items = self.get_items(date.today() - timedelta(1))
         today_items = self.get_items(date.today())
 
-        items = []
+        ids = []
         for item_key, item in yest_items.items():
             if item_key not in today_items:
-                items += [item]
+                ids += [item['item_id']]
 
-        return items
+        return self.group_items(yest_items, ids)
 
     def get_price_changes(self):
         yest_items = self.get_items(date.today() - timedelta(1))
@@ -140,11 +142,14 @@ class DBHelper:
         for item_key, item in today_items.items():
             item2 = yest_items.get(item_key)
             if item2 and item['price'] != item2['price']:
-                item['new_price'] = item2['price']
+                item['old_price'] = item2['price']
                 ids += [item['item_id']]
 
+        return self.group_items(today_items, ids)
+
+    def group_items(self, raw_items, ids):
         items = {}
-        for item in today_items.values():
+        for item in raw_items.values():
             item_id = item['item_id']
             if item_id not in ids:
                 continue
@@ -165,7 +170,7 @@ def crawl(db_helper):
         for product in products:
             id = product['id']
             for item in product['items']:
-                print("Looking data for: ", item['url'])
+                print("Fetching price from: ", item['url'])
                 site_name = item['site_name']
                 item_selector = lispy_item_selector if site_name == 'lipsy' else aldo_item_selector
                 parser.fetch(item['url'])
@@ -179,7 +184,7 @@ def print_items(items, price_change=False):
         raw_text += '\t' + item['site_name']
         raw_text += '\t\t' + item['price']
         if price_change:
-            raw_text += '\t\t' + item.get('new_price', item['price'])
+            raw_text += '\t\t' + item.get('old_price', item['price'])
 
         print(raw_text)
 
@@ -189,10 +194,9 @@ def print_report(items, price_change=False):
     if price_change:
         heading += '\t\tOld price'
 
+    print('===============================================================================')
     print(heading)
-    if not price_change:
-        print_items(items)
-        return
+    print('===============================================================================')
 
     for item in items.values():
         print_items(item, price_change)
