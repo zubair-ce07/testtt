@@ -196,10 +196,8 @@ def print_report(items, price_change=False):
 
     print('===============================================================================')
     print(heading)
-<<<<<<< HEAD
-=======
     print('===============================================================================')
->>>>>>> a39618f88a8ae11a131054806287efb3ab4a9aaa
+
 
     for item in items.values():
         print_items(item, price_change)
