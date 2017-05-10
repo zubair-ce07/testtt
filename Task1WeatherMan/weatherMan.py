@@ -33,7 +33,7 @@ def parse_year_input(input_arg):
     print("No data is available for " + input_arg)
 
 
-def check_str(input_arg):
+def check_folder(input_arg):
 
     if os.path.isdir(input_arg):
         utils.WEATHER_FOLDER_NAME = input_arg
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Description of program')
     parser.add_argument('path',
                         help='path to weather files folder',
-                        type=check_str)
+                        type=check_folder)
     parser.add_argument('-e', '--task1',
                         help='use for task 1',
                         type=parse_year_input)
