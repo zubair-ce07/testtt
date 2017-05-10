@@ -1,47 +1,71 @@
 import argparse
+import os
+from datetime import datetime
 
-import helperfile
 import task1
 import task2
 import task3
+import utils
 
 
-# task1
-def execute_task1(input_string):
-    names_of_files = helperfile.get_file_names_for_year(input_string)
-    if names_of_files:
-        task1.highest_lowest_temperature_and_humidity(input_string)
+def valid_date(input_arg, date_format):
+    try:
+        date = datetime.strptime(input_arg, date_format)
+        return date
+    except ValueError:
+        exception_msg = "Invalid input format, please try again"
+        raise argparse.ArgumentTypeError(exception_msg)
+
+
+def parse_month_input(input_arg):
+    date = valid_date(input_arg, "%Y/%m")
+    file_name = utils.get_file_name(date)
+    if file_name:
+        return file_name, date
+    print("No data is available for " + input_arg)
+
+
+def parse_year_input(input_arg):
+    date = valid_date(input_arg, "%Y")
+    year_files = utils.get_year_files(date.year)
+    if len(year_files):
+        return year_files
+    print("No data is available for " + input_arg)
+
+
+def check_str(input_arg):
+
+    if os.path.isdir(input_arg):
+        utils.WEATHER_FOLDER_NAME = input_arg
     else:
-        print("Data for year", input_string, "is not available")
-        return
-
-
-# task2
-def execute_task2(input_string):
-    file_name = helperfile.validate_year_month_input(input_string)
-    if file_name:
-        task2.print_highest_and_lowest_average_for_month(file_name)
-
-
-# task3
-def execute_task3(input_string):
-    file_name = helperfile.validate_year_month_input(input_string)
-    if file_name:
-        components = helperfile.get_date_components(input_string)
-        task3.print_highest_lowest_temperatures(file_name, components)
-
+        exception_msg = "No folder exists at path : " + input_arg
+        raise argparse.ArgumentTypeError(exception_msg)
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Description of your program')
-    parser.add_argument('-e', '--task1', help='use this for task 1')
-    parser.add_argument('-a', '--task2', help='use this for task 2')
-    parser.add_argument('-c', '--task3', help='use this for task 3')
-    args = parser.parse_args(None)
+    parser = argparse.ArgumentParser(description='Description of program')
+    parser.add_argument('path',
+                        help='path to weather files folder',
+                        type=check_str)
+    parser.add_argument('-e', '--task1',
+                        help='use for task 1',
+                        type=parse_year_input)
+    parser.add_argument('-a', '--task2',
+                        help='use for task 2',
+                        type=parse_month_input)
+    parser.add_argument('-c', '--task3',
+                        help='use for task 3',
+                        type=parse_month_input)
 
-    if args.task1 is not None:
-        execute_task1(args.task1)
-    if args.task2 is not None:
-        execute_task2(args.task2)
-    if args.task3 is not None:
-        execute_task3(args.task3)
+    args = parser.parse_args()
+
+    if args.path:
+        print("args.path ", args.path)
+        utils.WEATHER_FOLDER_NAME = args.path
+        print("utils.WEATHER_FOLDER_NAME ", utils.WEATHER_FOLDER_NAME)
+    if args.task1:
+        task1.execute_task1(args.task1)
+    if args.task2:
+        task2.execute_task2(args.task2[0])
+    if args.task3:
+        task3.execute_task3(args.task3[0], args.task3[1])

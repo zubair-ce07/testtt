@@ -1,8 +1,16 @@
+from termcolor import colored
+
 from monthweather import MonthWeatherModel
 
 
-def print_highest_lowest_temperatures(file_name, components):
+def execute_task3(file_name, components):
     month_model = MonthWeatherModel(file_name)
     print("\n")
-    print(str(components.strftime("%B")), str(components.strftime("%Y")))
-    month_model.print_highest_lowest_chart()
+
+    print(str(components.strftime("%B %Y")))
+
+    for curr_day in month_model.daily_weather_info:
+        print(str(curr_day.date.day), colored('+', 'red') * curr_day.max_temperature,
+              str(curr_day.max_temperature) + 'C')
+        print(str(curr_day.date.day), colored('+', 'blue') * curr_day.min_temperature,
+              str(curr_day.min_temperature) + 'C')
