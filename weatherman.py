@@ -12,31 +12,37 @@ def parsing_arguments():
     return parser.parse_args()
 
 
-def print_daily_temperature(high, low, date):
+def format_text(text, flag):
+    if not text:
+        return ''
     colors = {'red': '0;31;20', 'blue': '0;34;20'}
+    stringformat = '\x1b[{}m{}\x1b[0m'
+    if flag:
+        return stringformat.format(colors['red'], text)
+    else:
+        return stringformat.format(colors['blue'], text)
+
+
+def print_daily_temperature(high, low, date):
     input_text_high = ''
     input_text_low = ''
     for i in range(0, high, 1):
         input_text_high += '+'
     for i in range(0, low, 1):
         input_text_low += '+'
-    input_text_high = '\x1b[%sm %s \x1b[0m' % (colors['red'], input_text_high)
-    input_text_low = '\x1b[%sm %s \x1b[0m' % (colors['blue'], input_text_low)
-    print(date + input_text_high + str(high) + 'C')
-    print(date + input_text_low + str(low) + 'C')
+    print(date + ' ' + format_text(input_text_high, True) + ' ' + str(high) + 'C')
+    print(date + ' ' + format_text(input_text_low, False) + ' ' + str(low) + 'C')
 
 
 def print_daily_temperature_bonus(high, low, date):
-    colors = {'red': '0;31;20', 'blue': '0;34;20'}
     input_text_high = ''
     input_text_low = ''
     for i in range(0, high, 1):
         input_text_high += '+'
     for i in range(0, low, 1):
         input_text_low += '+'
-    input_text_high = '\x1b[%sm%s\x1b[0m' % (colors['red'], input_text_high)
-    input_text_low = '\x1b[%sm%s\x1b[0m' % (colors['blue'], input_text_low)
-    print(date + ' ' + input_text_low + input_text_high + ' ' + str(low) + 'C - ' + str(high) + 'C')
+    print(date + ' ' + format_text(input_text_low, False) + format_text(input_text_high, True)
+          + ' ' + str(low) + 'C - ' + str(high) + 'C')
 
 
 def parsing_monthly_input(path, input_year_month):
@@ -45,22 +51,20 @@ def parsing_monthly_input(path, input_year_month):
               11: 'Nov', 12: 'Dec'}
     if '/' in input_year_month:
         year_month = input_year_month.split('/')
-        if year_month[0].__len__() == 4:
+        if len(year_month[0]) == 4:
             for file_name in os.listdir(path):
                 if months[int(year_month[1])] in file_name and year_month[0] in file_name:
                     return file_name
-    return None
 
 
 def parsing_yearly_input(path, year):
-    if year.__len__() == 4:
+    if len(year) == 4:
         file_names = []
         for file_name in os.listdir(path):
             if year in file_name:
                 file_names.append(file_name)
-        if file_names.__len__() > 0:
+        if file_names:
             return file_names
-    return None
 
 
 def parse_date(date):
@@ -73,80 +77,77 @@ def parse_date(date):
 
 def display_average(args):
     filename = parsing_monthly_input(args.path, args.average)
-    if filename:
-        data_sum = [0, 0, 0, 0, 0, 0]
-        with open(args.path + '/' + filename, 'rt') as sourcefile:
-            reader = csv.DictReader(sourcefile)
-            fieldnames = reader.fieldnames
-            for row in reader:
-                if row[fieldnames[1]]:
-                    data_sum[0] += int(row[fieldnames[1]])
-                    data_sum[1] += 1
-                if row[fieldnames[3]]:
-                    data_sum[2] += int(row[fieldnames[3]])
-                    data_sum[3] += 1
-                if row[fieldnames[8]]:
-                    data_sum[4] += int(row[fieldnames[8]])
-                    data_sum[5] += 1
-        print ("Highest Average: " + str(round(data_sum[0] / data_sum[1])) + 'C')
-        print ("Lowest Average: " + str(round(data_sum[2] / data_sum[3])) + 'C')
-        print ("Average Mean Humidity: " + str(round(data_sum[4] / data_sum[5])) + '%')
-    else:
+    if not filename:
         print ('Invalid -a input')
+        return
+    data_sum = [0, 0, 0, 0, 0, 0]
+    with open(args.path + '/' + filename, 'rt') as sourcefile:
+        reader = csv.DictReader(sourcefile)
+        for row in reader:
+            if row.get('Max TemperatureC'):
+                data_sum[0] += int(row.get('Max TemperatureC'))
+                data_sum[1] += 1
+            if row.get('Min TemperatureC'):
+                data_sum[2] += int(row.get('Min TemperatureC'))
+                data_sum[3] += 1
+            if row.get(' Mean Humidity'):
+                data_sum[4] += int(row.get(' Mean Humidity'))
+                data_sum[5] += 1
+    print ("Highest Average: " + str(round(data_sum[0] / data_sum[1])) + 'C')
+    print ("Lowest Average: " + str(round(data_sum[2] / data_sum[3])) + 'C')
+    print ("Average Mean Humidity: " + str(round(data_sum[4] / data_sum[5])) + '%')
 
 
 def display_extremes(args):
     files = parsing_yearly_input(args.path, args.extremes)
-    if files:
-        max_temp = {'date': None, 'temperature': None}
-        min_temp = {'date': None, 'temperature': None}
-        max_humid = {'date': None, 'percentage': None}
-        for filename in files:
-            with open(args.path + '/' + filename, 'rt') as sourcefile:
-                reader = csv.DictReader(sourcefile)
-                fieldnames = reader.fieldnames
-                for row in reader:
-                    if not max_temp['date']:
-                        max_temp['date'] = row[fieldnames[0]]
-                        min_temp['date'] = row[fieldnames[0]]
-                        max_humid['date'] = row[fieldnames[0]]
-                        max_temp['temperature'] = row[fieldnames[1]]
-                        min_temp['temperature'] = row[fieldnames[3]]
-                        max_humid['percentage'] = row[fieldnames[7]]
-                    else:
-                        if row[fieldnames[1]]:
-                            if int(max_temp['temperature']) < int(row[fieldnames[1]]):
-                                max_temp['temperature'] = row[fieldnames[1]]
-                                max_temp['date'] = row[fieldnames[0]]
-                        if row[fieldnames[3]]:
-                            if int(min_temp['temperature']) > int(row[fieldnames[3]]):
-                                min_temp['temperature'] = row[fieldnames[3]]
-                                min_temp['date'] = row[fieldnames[0]]
-                        if row[fieldnames[7]]:
-                            if int(max_humid['percentage']) < int(row[fieldnames[7]]):
-                                max_humid['percentage'] = row[fieldnames[7]]
-                                max_humid['date'] = row[fieldnames[0]]
-        print ("Highest: " + max_temp['temperature'] + 'C on ' + parse_date(max_temp['date']))
-        print ("Lowest: " + min_temp['temperature'] + 'C on ' + parse_date(min_temp['date']))
-        print ("Humidity: " + max_humid['percentage'] + '% on ' + parse_date(max_humid['date']))
-    else:
+    if not files:
         print ('Invalid -e input')
+        return
+    max_temp = {'date': None, 'temperature': None}
+    min_temp = {'date': None, 'temperature': None}
+    max_humid = {'date': None, 'percentage': None}
+    for filename in files:
+        with open(args.path + '/' + filename, 'rt') as sourcefile:
+            reader = csv.DictReader(sourcefile)
+            for row in reader:
+                if not max_temp['date']:
+                    max_temp['date'] = row.get('PKT') or row.get('PKST')
+                    min_temp['date'] = row.get('PKT') or row.get('PKST')
+                    max_humid['date'] = row.get('PKT') or row.get('PKST')
+                    max_temp['temperature'] = row.get('Max TemperatureC')
+                    min_temp['temperature'] = row.get('Min TemperatureC')
+                    max_humid['percentage'] = row.get('Max Humidity')
+                else:
+                    if row.get('Max TemperatureC'):
+                        if int(max_temp['temperature']) < int(row.get('Max TemperatureC')):
+                            max_temp['temperature'] = row.get('Max TemperatureC')
+                            max_temp['date'] = row.get('PKT') or row.get('PKST')
+                    if row.get('Min TemperatureC'):
+                        if int(min_temp['temperature']) > int(row.get('Min TemperatureC')):
+                            min_temp['temperature'] = row.get('Min TemperatureC')
+                            min_temp['date'] = row.get('PKT') or row.get('PKST')
+                    if row.get('Max Humidity'):
+                        if int(max_humid['percentage']) < int(row.get('Max Humidity')):
+                            max_humid['percentage'] = row.get('Max Humidity')
+                            max_humid['date'] = row.get('PKT') or row.get('PKST')
+    print ("Highest: " + max_temp['temperature'] + 'C on ' + parse_date(max_temp['date']))
+    print ("Lowest: " + min_temp['temperature'] + 'C on ' + parse_date(min_temp['date']))
+    print ("Humidity: " + max_humid['percentage'] + '% on ' + parse_date(max_humid['date']))
 
 
 def display_charts(args):
     filename = parsing_monthly_input(args.path, args.charts)
-    if filename:
-        with open(args.path + '/' + filename, 'rt') as sourcefile:
-            reader = csv.DictReader(sourcefile)
-            fieldnames = reader.fieldnames
-            for row in reader:
-                if row[fieldnames[1]] and row[fieldnames[3]]:
-                    print_daily_temperature(int(row[fieldnames[1]]), int(row[fieldnames[3]]),
-                                            row[fieldnames[0]].split('-')[2])
-                    print_daily_temperature_bonus(int(row[fieldnames[1]]), int(row[fieldnames[3]]),
-                                                  row[fieldnames[0]].split('-')[2])
-    else:
+    if not filename:
         print ('Invalid -c input')
+        return
+    with open(args.path + '/' + filename, 'rt') as sourcefile:
+        reader = csv.DictReader(sourcefile)
+        for row in reader:
+            if row.get('Max TemperatureC') and row.get('Min TemperatureC'):
+                print_daily_temperature(int(row.get('Max TemperatureC')), int(row.get('Min TemperatureC')),
+                                        (row.get('PKT') or row.get('PKST')).split('-')[2])
+                print_daily_temperature_bonus(int(row.get('Max TemperatureC')), int(row.get('Min TemperatureC')),
+                                              (row.get('PKT') or row.get('PKST')).split('-')[2])
 
 
 if __name__ == '__main__':
