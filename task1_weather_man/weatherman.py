@@ -34,7 +34,6 @@ def parse_year_input(input_arg):
 
 
 def check_folder(input_arg):
-
     if os.path.isdir(input_arg):
         utils.WEATHER_FILES_PATH = input_arg
     else:

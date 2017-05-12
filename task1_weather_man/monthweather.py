@@ -14,7 +14,7 @@ class MonthWeatherModel:
     def populate_model(self, file_name):
         file_path = os.path.join(utils.WEATHER_FILES_PATH, file_name)
         with open(file_path, 'r') as f:
-            reader = csv.DictReader(f, delimiter=',')
+            reader = csv.DictReader(f)
             for line in reader:
                 current_day_weather = DailyWeatherModel(datetime.strptime(line.get("PKT"), "%Y-%m-%d"),
                                                         int(line.get("Max TemperatureC") or 0),
@@ -22,4 +22,3 @@ class MonthWeatherModel:
                                                         int(line.get("Max Humidity") or 0),
                                                         int(line.get(" Mean Humidity") or 0))
                 self.daily_weather_info.append(current_day_weather)
-        f.close()
