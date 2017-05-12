@@ -36,7 +36,7 @@ def parse_year_input(input_arg):
 def check_folder(input_arg):
 
     if os.path.isdir(input_arg):
-        utils.WEATHER_FOLDER_NAME = input_arg
+        utils.WEATHER_FILES_PATH = input_arg
     else:
         exception_msg = "No folder exists at path : " + input_arg
         raise argparse.ArgumentTypeError(exception_msg)
@@ -59,10 +59,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.path:
-        print("args.path ", args.path)
-        utils.WEATHER_FOLDER_NAME = args.path
-        print("utils.WEATHER_FOLDER_NAME ", utils.WEATHER_FOLDER_NAME)
     if args.task1:
         task1.execute_task1(args.task1)
     if args.task2:

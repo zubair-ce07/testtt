@@ -1,4 +1,5 @@
 import csv
+import os
 from datetime import datetime
 
 import utils
@@ -11,7 +12,7 @@ class MonthWeatherModel:
         self.populate_model(file_name)
 
     def populate_model(self, file_name):
-        file_path = utils.WEATHER_FOLDER_NAME + file_name
+        file_path = os.path.join(utils.WEATHER_FILES_PATH, file_name)
         with open(file_path, 'r') as f:
             reader = csv.DictReader(f, delimiter=',')
             for line in reader:
