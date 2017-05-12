@@ -12,12 +12,12 @@ def parsing_arguments():
     return parser.parse_args()
 
 
-def format_text(text, flag):
+def format_text(text, color_flag):
     if not text:
         return ''
     colors = {'red': '0;31;20', 'blue': '0;34;20'}
     stringformat = '\x1b[{}m{}\x1b[0m'
-    if flag:
+    if color_flag:
         return stringformat.format(colors['red'], text)
     else:
         return stringformat.format(colors['blue'], text)
@@ -30,8 +30,8 @@ def print_daily_temperature(high, low, date):
         input_text_high += '+'
     for i in range(0, low, 1):
         input_text_low += '+'
-    print(date + ' ' + format_text(input_text_high, True) + ' ' + str(high) + 'C')
-    print(date + ' ' + format_text(input_text_low, False) + ' ' + str(low) + 'C')
+    print ('{0} {1} {2}C'.format(date, format_text(input_text_high, True), str(high)))
+    print ('{0} {1} {2}C'.format(date, format_text(input_text_low, False), str(low)))
 
 
 def print_daily_temperature_bonus(high, low, date):
@@ -41,8 +41,8 @@ def print_daily_temperature_bonus(high, low, date):
         input_text_high += '+'
     for i in range(0, low, 1):
         input_text_low += '+'
-    print(date + ' ' + format_text(input_text_low, False) + format_text(input_text_high, True)
-          + ' ' + str(low) + 'C - ' + str(high) + 'C')
+    print ('{0} {1}{2} {3}C - {4}C'.format(date, format_text(input_text_low, False),
+                                           format_text(input_text_high, True), str(low), str(high)))
 
 
 def parsing_monthly_input(path, input_year_month):
@@ -63,8 +63,7 @@ def parsing_yearly_input(path, year):
         for file_name in os.listdir(path):
             if year in file_name:
                 file_names.append(file_name)
-        if file_names:
-            return file_names
+        return file_names
 
 
 def parse_date(date):
@@ -93,9 +92,9 @@ def display_average(args):
             if row.get(' Mean Humidity'):
                 data_sum[4] += int(row.get(' Mean Humidity'))
                 data_sum[5] += 1
-    print ("Highest Average: " + str(round(data_sum[0] / data_sum[1])) + 'C')
-    print ("Lowest Average: " + str(round(data_sum[2] / data_sum[3])) + 'C')
-    print ("Average Mean Humidity: " + str(round(data_sum[4] / data_sum[5])) + '%')
+    print ('Highest Average: {0}C'.format(str(round(data_sum[0] / data_sum[1]))))
+    print ('Lowest Average: {0}C'.format(str(round(data_sum[2] / data_sum[3]))))
+    print ('Average Mean Humidity: {0}%'.format(str(round(data_sum[4] / data_sum[5]))))
 
 
 def display_extremes(args):
@@ -130,9 +129,10 @@ def display_extremes(args):
                         if int(max_humid['percentage']) < int(row.get('Max Humidity')):
                             max_humid['percentage'] = row.get('Max Humidity')
                             max_humid['date'] = row.get('PKT') or row.get('PKST')
-    print ("Highest: " + max_temp['temperature'] + 'C on ' + parse_date(max_temp['date']))
-    print ("Lowest: " + min_temp['temperature'] + 'C on ' + parse_date(min_temp['date']))
-    print ("Humidity: " + max_humid['percentage'] + '% on ' + parse_date(max_humid['date']))
+
+    print ('Highest: {0}C on {1}'.format(max_temp['temperature'], parse_date(max_temp['date'])))
+    print ('Lowest: {0}C on {1}'.format(min_temp['temperature'], parse_date(min_temp['date'])))
+    print ('Humidity: {0}% on {1}'.format(max_humid['percentage'], parse_date(max_humid['date'])))
 
 
 def display_charts(args):
