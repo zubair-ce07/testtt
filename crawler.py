@@ -2,31 +2,38 @@ from parsel import Selector
 import requests
 import asyncio
 
-THREAD_NUM = 7
+THREAD_NUM = 38
 DOWNLOAD_DELAY = 0.05
 INPUT_URL = 'http://stackabuse.com/python-async-await-tutorial/'
 
 
-async def call_url(threadid, urls, delay):
+def sanitize_url(url, input_url):
+    if input_url.endswith('/') and url.startswith('/'):
+        url = url[-1:]
+    if not input_url.endswith('/') and not url.startswith('/'):
+        input_url += '/'
+    return input_url + url
+
+
+async def call_url(urls, delay):
     """ :argument urls: list of urls to crawl
         :argument delay: download delay specified by the user.
         :returns list containing total data size and total number of urls 
                  processed    
     """
 
-    print('threadID: {}, {}, URLS: {}'.format(threadid, len(urls), urls))
+    print('{} URLS: {}'.format(len(urls), urls))
     data_size, urls_processed = 0, 0
     for url in urls:
         try:
-            url = url if 'http' in url else INPUT_URL+url
+            url = sanitize_url(url, INPUT_URL)
             response = await get_data_from_url(url, delay)
             data = response.content
             data_size += len(data)
             urls_processed += 1
         except:
-            print("url: "+ url)
-    print('Thread Completed: {}'.format(threadid))
-    return [threadid, data_size, urls_processed]
+            print("Url processing failed at: "+ url)
+    return [data_size, urls_processed]
 
 
 async def get_data_from_url(url, delay):
@@ -39,13 +46,15 @@ def main():
     raw_html = response.content
     sel = Selector(text=raw_html.decode('unicode-escape'))
     raw_urls = sel.xpath('.//a/@href').extract()
-    print(len(raw_urls))
     urls = [[] for i in range(THREAD_NUM)]
     url_iter = 0
+    if THREAD_NUM > len(raw_urls):
+        print('Fatal Error: Threads more than urls')
+        return
     for i in range(len(raw_urls)):
         urls[url_iter].append(raw_urls[i])
         url_iter = 0 if url_iter == (THREAD_NUM - 1) else url_iter + 1
-    futures = [call_url(i, urls[i], DOWNLOAD_DELAY) for i in range(THREAD_NUM)]
+    futures = [call_url(urls[i], DOWNLOAD_DELAY) for i in range(THREAD_NUM)]
 
     loop = asyncio.get_event_loop()
     x = loop.run_until_complete(asyncio.wait(futures))
