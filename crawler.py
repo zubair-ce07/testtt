@@ -45,7 +45,7 @@ def main():
     for i in range(len(raw_urls)):
         urls[url_iter].append(raw_urls[i])
         url_iter = 0 if url_iter == (THREAD_NUM - 1) else url_iter + 1
-    futures = [call_url(i ,urls[i], DOWNLOAD_DELAY) for i in range(THREAD_NUM)]
+    futures = [call_url(i, urls[i], DOWNLOAD_DELAY) for i in range(THREAD_NUM)]
 
     loop = asyncio.get_event_loop()
     x = loop.run_until_complete(asyncio.wait(futures))
