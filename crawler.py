@@ -76,12 +76,13 @@ def main(args):
     download_delay = float(args.download_delay)
     sel = Selector(text=raw_html.decode('unicode-escape'))
     raw_urls = sel.xpath('.//a/@href').extract()
-    max_limit = args.max if args.max else len(raw_urls)
+    max_limit = int(args.max) if args.max else len(raw_urls)
     max_limit = len(raw_urls) if max_limit > len(raw_urls) else max_limit
     urls = [[] for i in range(max_threads)]
     url_iter = 0
     if max_threads > max_limit:
-        print('Fatal Error: Threads more than urls/max_limit')
+        print('Fatal Error: Threads more than urls/max_limit Please ensure '
+              'thread_limit must be less than max_limit')
         return
     for i in range(max_limit):
         urls[url_iter].append(raw_urls[i])
@@ -93,8 +94,8 @@ def main(args):
     for e in x[0]:
         data_sum[0] += e.result()[0]
         data_sum[1] += e.result()[1]
-    print('Total Bytes: {} Total Urls Processed: {} Average URL Size: {}'.format(data_sum[0],
-                                                                                 data_sum[1], data_sum[0]/data_sum[1]))
+    print('Total Bytes: {} Total Urls Processed: {} Average URL Size: {}'
+          .format(data_sum[0], data_sum[1], round(data_sum[0]/data_sum[1])))
 
 if __name__ == '__main__':
     main(parsing_arguments())
