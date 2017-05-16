@@ -1,7 +1,10 @@
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ALL_COMPLETED
+from concurrent.futures import wait
 import argparse
 from parsel import Selector
 import requests
-import asyncio
+import time
 
 
 def parsing_arguments():
@@ -15,7 +18,7 @@ def parsing_arguments():
 
 def sanitize_url(url, input_url):
     """
-    :param url: the provided url to sanitize
+    :param url: the provided url to sanitize  
     :param input_url: the input url provided by the user
     :return: returns the url if it's an external link and concatenated url if it is internal  
     """
@@ -29,18 +32,18 @@ def sanitize_url(url, input_url):
     return input_url + url
 
 
-async def call_url(urls, delay, input_url):
-    """
+def call_url(urls, delay, input_url):
+    """ 
         :param delay: download delay specified by the user.
         :param input_url: The input URL provided by user
         :param urls: list of urls to crawl
-        :returns list containing total data size and total number of urls
-                 processed
+        :returns list containing total data size and total number of urls 
+                 processed    
     """
     data_size, urls_processed = 0, 0
     for url in urls:
         url = sanitize_url(url, input_url)
-        response = await get_data_from_url(url, delay)
+        response = get_data_from_url(url, delay)
         if response:
             data = response.content
             data_size += len(data)
@@ -50,19 +53,19 @@ async def call_url(urls, delay, input_url):
     return [data_size, urls_processed]
 
 
-async def get_data_from_url(url, delay):
+def get_data_from_url(url, delay):
     """
     :param url: url specified from which data is to be fetched
-    :param delay: delay which it waits before making the request
+    :param delay: delay which it waits before making the request 
     :return: returns the response from the url
     """
-    await asyncio.sleep(delay)
+    time.sleep(delay)
     return requests.get(url)
 
 
 def host_name_retrieval(url):
     """
-    :param url: the input url from which hostname is to be extracted
+    :param url: the input url from which hostname is to be extracted 
     :return: returns the hostname of this url
     """
     elements = url.split('/')
@@ -92,9 +95,9 @@ def main(args):
     for i in range(max_limit):
         urls[url_iter].append(raw_urls[i])
         url_iter = 0 if url_iter == (max_threads - 1) else url_iter + 1
-    co_routines = [call_url(urls[i], download_delay, args.URL) for i in range(max_threads)]
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(asyncio.wait(co_routines))
+    with ProcessPoolExecutor(max_workers=max_threads) as executor:
+        futures = dict((executor.submit(call_url, urls[k], download_delay, args.URL), k) for k in range(max_threads))
+        result = wait(futures, timeout=None, return_when=ALL_COMPLETED)
     data_sum = [0, 0]
     for e in result[0]:
         data_sum[0] += e.result()[0]
@@ -105,4 +108,8 @@ def main(args):
 
 if __name__ == '__main__':
     main(parsing_arguments())
+
+
+
+
 
