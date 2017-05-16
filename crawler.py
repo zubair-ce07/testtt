@@ -1,10 +1,16 @@
+import argparse
 from parsel import Selector
 import requests
 import asyncio
 
-THREAD_NUM = 15
-DOWNLOAD_DELAY = 0.05
-INPUT_URL = 'http://stackabuse.com/python-async-await-tutorial/'
+
+def parsing_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("URL", help="The input URL")
+    parser.add_argument("download_delay", help="download_delay that each worker will respect when making the requests")
+    parser.add_argument("thread_num", help="number of concurrent requests that can be made")
+    parser.add_argument("-m", "--max", action="store")
+    return parser.parse_args()
 
 
 def sanitize_url(url, input_url):
@@ -45,6 +51,11 @@ async def call_url(urls, delay, input_url):
 
 
 async def get_data_from_url(url, delay):
+    """
+    :param url: url specified from which data is to be fetched
+    :param delay: delay which it waits before making the request 
+    :return: returns the response from the url
+    """
     await asyncio.sleep(delay)
     return requests.get(url)
 
@@ -58,22 +69,24 @@ def host_name_retrieval(url):
     return '{0}/{1}/{2}/'.format(elements[0], elements[1], elements[2])
 
 
-def main():
-    response = requests.get(INPUT_URL)
+def main(args):
+    response = requests.get(args.URL)
     raw_html = response.content
+    max_threads = int(args.thread_num)
+    download_delay = float(args.download_delay)
     sel = Selector(text=raw_html.decode('unicode-escape'))
     raw_urls = sel.xpath('.//a/@href').extract()
-    # print(kpl for kpl in raw_urls)
-    print(len(raw_urls))
-    urls = [[] for i in range(THREAD_NUM)]
+    max_limit = args.max if args.max else len(raw_urls)
+    max_limit = len(raw_urls) if max_limit > len(raw_urls) else max_limit
+    urls = [[] for i in range(max_threads)]
     url_iter = 0
-    if THREAD_NUM > len(raw_urls):
-        print('Fatal Error: Threads more than urls')
+    if max_threads > max_limit:
+        print('Fatal Error: Threads more than urls/max_limit')
         return
-    for i in range(len(raw_urls)):
+    for i in range(max_limit):
         urls[url_iter].append(raw_urls[i])
-        url_iter = 0 if url_iter == (THREAD_NUM - 1) else url_iter + 1
-    co_routines = [call_url(urls[i], DOWNLOAD_DELAY, INPUT_URL) for i in range(THREAD_NUM)]
+        url_iter = 0 if url_iter == (max_threads - 1) else url_iter + 1
+    co_routines = [call_url(urls[i], download_delay, args.URL) for i in range(max_threads)]
     loop = asyncio.get_event_loop()
     x = loop.run_until_complete(asyncio.wait(co_routines))
     data_sum = [0, 0]
@@ -84,5 +97,5 @@ def main():
                                                                                  data_sum[1], data_sum[0]/data_sum[1]))
 
 if __name__ == '__main__':
-    main()
+    main(parsing_arguments())
 
