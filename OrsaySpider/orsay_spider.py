@@ -106,14 +106,10 @@ class OrsaySpider(CrawlSpider):
         return response.css('div.price-box span.price::text').extract_first().strip()
 
     def get_sizes(self, response):
-        unavailable_sizes = []
-        for un_size in response.css('div.sizebox-wrapper > ul > li.size-box.size-unavailable::text').extract():
-            un_size = un_size.strip()
-            if un_size:
-                unavailable_sizes.append(un_size)
         sizes = []
-        for size in response.css('div.sizebox-wrapper > ul > li::text').extract():
-            size = size.strip()
-            if size:
-                sizes.append('Unavailable-{}'.format(size) if size in unavailable_sizes else size)
+        for size in response.css('div.sizebox-wrapper > ul > li'):
+            size_keyword = ""
+            if 'size-unavailable' in size.css('::attr(class)').extract_first():
+                size_keyword += "Unavailable-"
+            sizes.append('{0}{1}'.format(size_keyword, size.css('::text').extract_first().strip()))
         return sizes
