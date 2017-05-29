@@ -11,16 +11,16 @@ from parsel import Selector
 
 parse_url = 'https://www.pakwheels.com/used-cars/search/-/mk_toyota/md_corolla/ct_lahore/'
 
+default_concurrency = 99999
+default_concurent_requests = 10
+default_download_delay = 0.001
+
 
 def get_all_urls(url_link):
-    fetched_html = requests.get(url_link, timeout=20)
+    fetched_html = requests.get(url_link)
     sel = Selector(text=fetched_html.text)
-    urls = sel.css('div.col-md-9.grid-style a::attr(href)')
-
-    complete_urls = []
-    for url in urls:
-        url = urljoin(url_link, url.extract())
-        complete_urls.append(url)
+    partial_urls = sel.css('div.col-md-9.grid-style a::attr(href)')
+    complete_urls = [urljoin(url_link, url.extract()) for url in partial_urls]
     return complete_urls
 
 
@@ -31,18 +31,15 @@ async def fetch_child_urls(urls):
         time.sleep(download_delay)
         try:
             r = await aiohttp.request('get', url, connector=connector)
-            r.timeout = 5.0
         except Exception as e:
             print('bad link %s: %s' % (url, e))
         else:
-            total_bytes = total_bytes + len(await r.text())
-
+            total_bytes += len(await r.text())
     connector.close()
-
     return total_bytes
 
 
-def check_negative_inputs(num1, num2, num3):
+def validate_args(num1, num2, num3):
     if (num1 and num1 < 0) or (num2 and num2 < 0) or (num3 and num3 < 0):
         # only verifies a negative input if present
         return True
@@ -65,24 +62,22 @@ if __name__ == '__main__':
                         type=int)
 
     args = parser.parse_args()
-    if check_negative_inputs(args.concurrent_requests, args.download_delay, args.maxurls):
+    if validate_args(args.concurrent_requests, args.download_delay, args.maxurls):
         # exit script if any value is negative, as all input should either is none or non-negative
         print("Please provide positive inputs")
         sys.exit()
 
-    # assigning input values or default values
-    workers = args.concurrent_requests or 10
-    download_delay = args.download_delay or 0.001
-    max_urls = args.maxurls or 99999
+    workers = args.concurrent_requests or default_concurent_requests
+    download_delay = args.download_delay or default_download_delay
+    max_urls = args.maxurls or default_concurrency
 
     urls = get_all_urls(parse_url)
     if len(urls) > max_urls:
-        # limiting the number of urls to be crawled
         urls = urls[0:max_urls]
 
     total_bytes_downloaded = asyncio.get_event_loop().run_until_complete(fetch_child_urls(urls))
 
     print("total_bytes: ", total_bytes_downloaded)
-    print("total requests: ", len(urls)+1)
-    print("average size per page: ", round(total_bytes_downloaded/(len(urls)+1), 0))
+    print("total requests: ", len(urls))
+    print("average size per page: ", round(total_bytes_downloaded/(len(urls)), 0))
 
