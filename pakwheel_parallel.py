@@ -37,7 +37,7 @@ def fetch_child_urls(urls):
     fetched_bytes = 0
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
         for bytes_length in executor.map(fetch_url_data, urls):
-            fetched_bytes = fetched_bytes + bytes_length
+            fetched_bytes += bytes_length
 
     return fetched_bytes
 
