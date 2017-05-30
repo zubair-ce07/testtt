@@ -42,16 +42,13 @@ def fetch_child_urls(urls):
     return fetched_bytes
 
 
-def validate_args(num1, num2, num3):
-    if (num1 and num1 < 0) or (num2 and num2 < 0) or (num3 and num3 < 0):
-        # only verifies a negative input if present
-        return True
-    else:
-        return False
+def validate_args(concurrent_requests, download_delay, maxurls):
+    return (concurrent_requests and concurrent_requests >= 0) \
+           or (download_delay and download_delay >= 0) \
+           or (maxurls and maxurls >= 0)
 
 
-if __name__ == '__main__':
-
+def parse_arguments():
     parser = argparse.ArgumentParser(description='Parallel downloading program')
 
     parser.add_argument('-n', '--concurrent_requests',
@@ -63,11 +60,20 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--maxurls',
                         help='number of maxurls',
                         type=int)
+    return parser.parse_args()
 
-    args = parser.parse_args()
-    if validate_args(args.concurrent_requests, args.download_delay, args.maxurls):
-        # exit script if any value is negative, as all input should either is none or non-negative
-        print ("Please provide positive inputs")
+
+def display_report(downloaded_bytes, num_urls):
+    print("total_bytes: ", downloaded_bytes)
+    print("total requests: ", num_urls)
+    print("average size per page: ", round(downloaded_bytes / num_urls, 0))
+
+
+if __name__ == '__main__':
+
+    args = parse_arguments()
+    if validate_args(args.concurrent_requests, args.download_delay, args.maxurls) is False:
+        print("Please provide positive inputs")
         sys.exit()
 
     workers = args.concurrent_requests or default_concurent_requests
@@ -78,9 +84,5 @@ if __name__ == '__main__':
     if len(urls) > max_urls:
         urls = urls[0:max_urls]
 
-    total_bytes = fetch_child_urls(urls)
-
-    print("total bytes: ", total_bytes)
-    print("total requests: ", len(urls))
-    print("average size per page: ", round(total_bytes/(len(urls)), 0))
-
+    total_bytes_downloaded = fetch_child_urls(urls)
+    display_report(total_bytes_downloaded, len(urls))
