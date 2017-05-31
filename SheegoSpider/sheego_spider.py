@@ -22,9 +22,8 @@ class SheegoSpider(CrawlSpider):
                   ]
 
     rules = (
-        Rule(LinkExtractor(allow=(), restrict_css=('a.cj-mainnav__entry-title',)), follow=True),
-        Rule(LinkExtractor(allow=(), restrict_css=('a.mainnav__link',)), follow=True),
-        Rule(LinkExtractor(allow=(), restrict_css=('a.js-next.at-pl-page-navi-next',)), follow=True),
+        Rule(LinkExtractor(allow=(), restrict_css=(['a.cj-mainnav__entry-title', 'a.mainnav__link',
+                                                    'a.js-next.at-pl-page-navi-next'])), follow=True),
         Rule(LinkExtractor(allow=(), restrict_css=('a.product__top.js-productlink.text-link--inherit',)),
              callback="parse_items"),
     )
