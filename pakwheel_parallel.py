@@ -42,9 +42,7 @@ def fetch_child_urls(urls_to_fetch):
 
 
 def validate_args(concurrent_requests, download_delay, max_urls):
-    return (concurrent_requests >= 0) \
-            and (download_delay >= 0) \
-            and (max_urls >= 0)
+    return concurrent_requests >= 0 and download_delay >= 0 and max_urls >= 0
 
 
 def parse_arguments():
@@ -80,11 +78,10 @@ if __name__ == '__main__':
 
     workers = args.concurrent_requests
     download_delay = args.download_delay
-    max_urls = args.max_urls
 
     urls = get_all_urls(parse_url)
-    if len(urls) > max_urls:
-        urls = urls[0:max_urls]
+    if len(urls) > args.max_urls:
+        urls = urls[0:args.max_urls]
 
     total_bytes_downloaded = fetch_child_urls(urls)
     display_report(total_bytes_downloaded, len(urls))
