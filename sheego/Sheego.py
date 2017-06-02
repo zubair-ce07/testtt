@@ -55,7 +55,7 @@ class SheegoSpider(CrawlSpider):
         request.meta['version_id'] = version_id
         request.meta['params'] = params
 
-        yield re
+        yield request
 
     def parse_color(self, response):
         version_id = response.meta['version_id']
