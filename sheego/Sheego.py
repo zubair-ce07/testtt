@@ -46,14 +46,14 @@ class SheegoSpider(CrawlSpider):
 
         url_color = create_url(params)
 
-        re = scrapy.Request(url=url_color, callback=self.parse_color, dont_filter=True)
+        request = scrapy.Request(url=url_color, callback=self.parse_color, dont_filter=True)
 
         product = Product(sku=sku, brand=brand, detail_points=detail_points, gender=gender, name=name, url=url,
                           image_urls=image_urls, skus=skus, care=care)
 
-        re.meta['product'] = product
-        re.meta['version_id'] = version_id
-        re.meta['params'] = params
+        request.meta['product'] = product
+        request.meta['version_id'] = version_id
+        request.meta['params'] = params
 
         yield re
 
