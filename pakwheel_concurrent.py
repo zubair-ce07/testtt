@@ -78,8 +78,7 @@ if __name__ == '__main__':
     download_delay = args.download_delay
 
     urls = get_all_urls(parse_url)
-    if len(urls) > args.max_urls:
-        urls = urls[0:args.max_urls]
+    urls = urls[0:args.max_urls]
 
     total_bytes_downloaded = asyncio.get_event_loop().run_until_complete(fetch_child_urls(urls))
     display_report(total_bytes_downloaded, len(urls))
