@@ -1,31 +1,37 @@
 from item import Product
-from scrapy.spiders import CrawlSpider
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 import scrapy
 import urllib
 
 
 class MotelSpider(CrawlSpider):
     name = 'Motelspider'
+
     domain = 'https://www.motelrocks.com/'
 
-    def start_requests(self):
-        urls = ['http://www.motelrocks.com/categories/CLOTHING/', 'http://www.motelrocks.com/categories/SWIMWEAR/']
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse_pages)
+    start_urls = ['https://www.motelrocks.com/']
+
+    rules = (
+        Rule(LinkExtractor(restrict_css='li.has-dropdown > a'), callback='parse_pages'),
+    )
 
     def parse_pages(self, response):
-        links = response.css('div.xProductImage').css('a::attr(href)').extract()
-        params = {"invocation": "page", "page": str(response.css('div.pageitem::attr(pagenum)')[-1].extract())}
-        next_page = create_url(params)
+        product_links = response.css('div.xProductImage').css('a::attr(href)').extract()
+        total_pages = int(response.css('div.pageitem::attr(pagenum)')[-2].extract())
+        params = {"invocation": "page"}
+        post_url = 'http://www.motelrocks.com/categories_ajax.php'
 
-        if str(response.css('div.pageitem::text')[-1].extract()) == 'Next':
-            yield scrapy.Request(next_page, callback=self.parse_pages, meta=response.meta, dont_filter=True)
+        i = 0
+        while i < total_pages:
+            params["page"] = str(i)
+            yield scrapy.Request(post_url, method='POST', callback=self.parse_pages, body=urllib.urlencode(params))
+            i += 1
 
-        for link in links:
-            yield scrapy.Request(link, callback=self.parse)
+        for link in product_links:
+            yield scrapy.Request(link, callback=self.parse_product)
 
-    def parse(self, response):
-
+    def parse_product(self, response):
         gender = "women"
         name_color = get_name_color(response)
         name = name_color[0]
@@ -33,19 +39,19 @@ class MotelSpider(CrawlSpider):
         color = name_color[1]
         url = response.url
         image_urls = get_image_urls(response)
-        details = get_details(response)
+        description = get_details(response)
         sku = get_sku(response)
         skus = build_skus(response, sku, color)
 
         product = Product(sku=sku, name=name, brand=brand, gender=gender, url=url, image_urls=image_urls, skus=skus,
-                          details=details)
+                          description=description)
 
         return product
 
 
 def create_url(params):
     url_params = urllib.urlencode(params)
-    return 'http://www.motelrocks.com/categories/CLOTHING?' + url_params
+    return 'http://www.motelrocks.com/categories_ajax.php'
 
 
 def build_skus(response, sku, color):
@@ -56,7 +62,8 @@ def build_skus(response, sku, color):
     skus = {}
     itera = 0
     for size in sizes:
-        skus[sku+"_"+color+"_"+size] = {"price": price, "color": color, "size": size, "availability": availability[itera]}
+        skus['{}_{}_{}'.format(sku, color, size)] = {"price": price, "color": color, "size": size,
+                                                     "availability": availability[itera]}
         itera += 1
 
     return skus
@@ -71,7 +78,10 @@ def get_sizes(response):
 
 
 def get_price(response):
-    return response.css('div.xProductPriceRating').css('strong::text').extract_first()
+    price = response.css('div.xProductPriceRating').css('strong::text').extract_first()
+    if price is not u"":
+        price = response.css('div.xProductPriceRating>strong').css('span::text').extract_first()
+    return price
 
 
 def get_sku(response):
