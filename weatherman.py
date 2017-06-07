@@ -1,33 +1,64 @@
+#!/usr/bin/python3
+from time import monotonic
+
 __author__ = 'ruhaib'
 
 import os
 import pandas
 import calendar
 import datetime
-import sys
+#import sys
+import argparse
 from termcolor import colored
 import math
 
-mode = sys.argv[1]
-year = sys.argv[2]
-pathToFiles = sys.argv[3]
 
 
-if(mode == "-e"):
+def year_range(string):
 
-    if not (os.path.isdir(pathToFiles)):
-        print("path to directory does not exist")
-        quit()
 
-    df = pandas.DataFrame(os.listdir(pathToFiles))
+
+    if (string.find('/') == -1):
+
+        year_passed = int(string)
+
+        if( year_passed > 2011 or year_passed < 1996):
+            msg = '%r year passed is out of range' % string
+            raise argparse.ArgumentTypeError(msg)
+
+        return year_passed
+
+    else:
+
+        msg = '%r only year is required the input is incorrect' % string
+        raise argparse.ArgumentTypeError(msg)
+
+def year_month_validity(string):
+
+    if(string.count('/') != 1):
+        msg = '%r incorrect month and year passed' % string
+        raise argparse.ArgumentTypeError(msg)
+
+    year_passed = int(string.split("/")[0])
+    month_passed = int(string.split("/")[1])
+
+    if( year_passed > 2011 or year_passed < 1996):
+        msg = "%r year passed is out of range" % string
+        raise argparse.ArgumentTypeError(msg)
+
+    if( month_passed > 12 or month_passed < 1):
+        msg = "%r month, passed is out of range" % string
+        raise argparse.ArgumentTypeError(msg)
+
+    return string
+
+
+
+def show_task1_requirements(weather_data, year, pathToFiles):
 
     y = int(year)
 
-    if( y > 2011 or y < 1996):
-        print("year passed is incorrect")
-        quit()
-
-    tempDF = df[df[0].str.contains("lahore_weather_"+str(year))]
+    files_names_of_year = weather_data[weather_data[0].str.contains("lahore_weather_"+str(year))]
 
 
     maxTemp = -100000
@@ -41,27 +72,27 @@ if(mode == "-e"):
     humidMonth = 'jan'
 
 
-    for index,row in tempDF.iterrows():
+    for index,row in files_names_of_year.iterrows():
 
-        data = pandas.read_csv(pathToFiles+"/"+row[0], header=0)
+        data_of_month = pandas.read_csv(pathToFiles+"/"+row[0], header=0)
 
-        if(data['Max TemperatureC'].max() > maxTemp):
-            tempMaxTemperature = data.loc[data['Max TemperatureC'] == data['Max TemperatureC'].max()]
-            maxTemp = data['Max TemperatureC'].max()
+        if(data_of_month['Max TemperatureC'].max() > maxTemp):
+            tempMaxTemperature = data_of_month.loc[data_of_month['Max TemperatureC'] == data_of_month['Max TemperatureC'].max()]
+            maxTemp = data_of_month['Max TemperatureC'].max()
             date = datetime.datetime.strptime(tempMaxTemperature[tempMaxTemperature.columns[0]].iloc[0], "%Y-%m-%d")
             maxDate = date.day
             maxMonth = calendar.month_name[date.month]
 
-        if(data['Min TemperatureC'].min() < minTemp):
-            minTemp = data['Min TemperatureC'].min()
-            tempMaxTemperature = data.loc[data['Min TemperatureC'] == data['Min TemperatureC'].min()]
+        if(data_of_month['Min TemperatureC'].min() < minTemp):
+            minTemp = data_of_month['Min TemperatureC'].min()
+            tempMaxTemperature = data_of_month.loc[data_of_month['Min TemperatureC'] == data_of_month['Min TemperatureC'].min()]
             date = datetime.datetime.strptime(tempMaxTemperature[tempMaxTemperature.columns[0]].iloc[0], "%Y-%m-%d")
             minDate = date.day
             minMonth = calendar.month_name[date.month]
 
-        if(data['Max Humidity'].max() > humid):
-            humid = data['Max Humidity'].max()
-            tempMaxTemperature = data.loc[data['Max Humidity'] == data['Max Humidity'].max()]
+        if(data_of_month['Max Humidity'].max() > humid):
+            humid = data_of_month['Max Humidity'].max()
+            tempMaxTemperature = data_of_month.loc[data_of_month['Max Humidity'] == data_of_month['Max Humidity'].max()]
             date = datetime.datetime.strptime(tempMaxTemperature[tempMaxTemperature.columns[0]].iloc[0], "%Y-%m-%d")
             humidDate = date.day
             humidMonth = calendar.month_name[date.month]
@@ -71,22 +102,15 @@ if(mode == "-e"):
     print("Lowest: %dC on %s %d" % (minTemp, minMonth, minDate))
     print("Humid: %d%% on %s %d" % (humid, humidMonth, humidDate))
 
-elif (mode == "-a"):
 
-    if not (os.path.isdir(pathToFiles)):
-        print("path to directory does not exist")
-        quit()
+def show_task2_requirements(weather_data, date, pathToFiles):
 
-    df = pandas.DataFrame(os.listdir(pathToFiles))
-    y = int(year.split("/")[0])
+    y = int(date.split("/")[0])
 
-    if( y > 2011 | y < 1996):
-        print("year passed is incorrect")
-        quit()
 
     #extracting path of the file required
-    tempDF = df[df[0].str.contains("lahore_weather_"+str(y))]
-    abbr = calendar.month_abbr[int(year.split("/")[1])]
+    tempDF = weather_data[weather_data[0].str.contains("lahore_weather_"+str(y))]
+    abbr = calendar.month_abbr[int(date.split("/")[1])]
     monthFile = pathToFiles+"/"+tempDF[tempDF[0].str.contains("lahore_weather_"+str(y)+"_"+abbr)][0].iloc[0]
 
 
@@ -105,24 +129,17 @@ elif (mode == "-a"):
     print("Lowest Average: %dC" % minTemp)
     print("Average Humidity: %d%%" % humid)
 
-elif (mode == "-c"):
 
-    if not (os.path.isdir(pathToFiles)):
-        print("path to directory does not exist")
-        quit()
+def show_task3_graphs(weather_data, date, pathToFiles):
 
-    df = pandas.DataFrame(os.listdir(pathToFiles))
-    y = int(year.split("/")[0])
+    y = int(date.split("/")[0])
 
-    if( y > 2011 | y < 1996):
-        print("year passed is incorrect")
-        quit()
 
     #extracting path of the file required
-    tempDF = df[df[0].str.contains("lahore_weather_"+str(y))]
-    abbr = calendar.month_name[int(year.split("/")[1])]
+    tempDF = weather_data[weather_data[0].str.contains("lahore_weather_"+str(y))]
+    abbr = calendar.month_name[int(date.split("/")[1])]
     print("%s %d" % (abbr,y))
-    abbr = calendar.month_abbr[int(year.split("/")[1])]
+    abbr = calendar.month_abbr[int(date.split("/")[1])]
     monthFile = pathToFiles+"/"+tempDF[tempDF[0].str.contains("lahore_weather_"+str(y)+"_"+abbr)][0].iloc[0]
 
     data = pandas.read_csv(monthFile, header=0)
@@ -147,6 +164,52 @@ elif (mode == "-c"):
 
             days+=1
             print("%dC - %dC"%(row[3],row[1]))
-else:
 
-    print("%s is not a valid parameter" % mode)
+
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description='WeatherMan data extraction.')
+
+    parser.add_argument(
+        '-e',type=year_range,
+        help='(usage: -e yyyy) to see maximum temperature, minimum temperature and humidity')
+
+    parser.add_argument(
+        '-a',type=year_month_validity,
+        help='(usage: -a yyyy/mm) to see average maximum, average minimum temperature and mean humidity of the month')
+
+    parser.add_argument(
+        '-c', type=year_month_validity,
+        help='(usage: -c yyyy/mm) to see horizontal bar chart of highest and lowest temperature on each day')
+
+    parser.add_argument('path',
+                        help='path to the files having weather data')
+
+
+    args = parser.parse_args()
+
+    if not (os.path.isdir(args.path)):
+        print("path to directory does not exist")
+        quit()
+
+
+    weather_data = pandas.DataFrame(os.listdir(args.path))
+
+
+    if args.e:
+
+        show_task1_requirements(weather_data, args.e, args.path)
+
+    if args.a:
+
+        show_task2_requirements(weather_data, args.a, args.path)
+
+    if args.c:
+
+        show_task3_graphs(weather_data, args.c, args.path)
+
+
+if __name__ == "__main__":
+    main()
