@@ -204,7 +204,7 @@ def main():
         quit()
 
     weather_data = WeatherData(args)
-
+    
     if args.e:
 
         weather_data.show_task1_requirements()
