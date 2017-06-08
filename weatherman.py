@@ -3,9 +3,9 @@ import sys
 import os
 from termcolor import colored, cprint
 
-labels = ['-e', '-a', '-c', '-b']
-Year_Range = [1996, 2011]
-Months = {
+LABELS = ['-e', '-a', '-c', '-b']
+YEAR_RANGE = [1996, 2011]
+MONTHS = {
 'Jan':'January',
  'Feb': 'February',
  'Mar':'March',
@@ -19,7 +19,7 @@ Months = {
  'Nov':'November',
  'Dec':'December'
   }
-Num_to_month = {
+NUM_TO_MONTH = {
 '1':'Jan',
 '2':'Feb',
 '3':'Mar',
@@ -44,24 +44,25 @@ class ExtremeWeatherReport(object):
         self.humidity_val = -999
         self.humidity_day = 'none'
 
+
 def display_extreme_report(myreport):
     print('Highest: ' + str(myreport.highest_temp_val) + 'C on '
-        + myreport.highest_temp_day)
+          + myreport.highest_temp_day)
     print('Lowest: ' + str(myreport.lowest_temp_val) + 'C on '
-        + myreport.lowest_temp_day)
+          + myreport.lowest_temp_day)
     print('Humid: ' + str(myreport.humidity_val) + '% on '
-        + myreport.humidity_day)
+          + myreport.humidity_day)
 
 
-def make_extreme_report(files_list,filepath):
+def make_extreme_report(files_list, filepath):
     myreport = ExtremeWeatherReport()
     count = 0
     for temp_file in files_list:
-        data_file = open(filepath + '/' + temp_file,'r')
+        data_file = open(filepath + '/' + temp_file, 'r')
 
         temp_a = temp_file.split('_')
         month_name = temp_a[3][0:3]
-        month_name = Months[month_name]
+        month_name = MONTHS[month_name]
 
         lines  = data_file.readlines()
         for x in lines:
@@ -84,11 +85,12 @@ def make_extreme_report(files_list,filepath):
         count = 0
     return myreport
 
-def extreme_weathers(year,filepath):
+
+def extreme_weathers(year, filepath):
     if len(year) != 4:
         print('invalid year')
         exit()
-    elif int(year) not in list(range(Year_Range[0], Year_Range[1] + 1)):
+    elif int(year) not in list(range(YEAR_RANGE[0], YEAR_RANGE[1] + 1)):
         print('invalid year')
         exit()
 
@@ -100,11 +102,13 @@ def extreme_weathers(year,filepath):
     myreport = make_extreme_report(list_required_files,filepath)
     display_extreme_report(myreport)
 
+
 class AverageWeatherReport(object):
     def __init__(self):
         self.avg_highest_temp = []
         self.avg_lowest_temp = []
         self.avg_humidity = []
+
 
 def display_average_report(myreport):
     print('Highest Average: ' + str(myreport.avg_highest_temp) + 'C')
@@ -112,11 +116,14 @@ def display_average_report(myreport):
     print('Average Humidity: ' + str(myreport.avg_humidity) + '%')
 
 
+def compute_average(vals):
+    return reduce(lambda x, y: x + y, vals) / len(vals)
+
 
 def make_average_report(filename, filepath):
     myreport = AverageWeatherReport()
     count = 0
-    data_file = open(filepath + '/' + filename,'r')
+    data_file = open(filepath + '/' + filename, 'r')
     lines  = data_file.readlines()
     for x in lines:
         elements  = x.split(',')
@@ -131,23 +138,18 @@ def make_average_report(filename, filepath):
             maxhumid = elements[7]
             if maxhumid != '':
                 myreport.avg_humidity.append(int(maxhumid))
-    vals = myreport.avg_highest_temp
-    myreport.avg_highest_temp = reduce(lambda x, y: x + y, vals) / len(vals)
 
-    vals = myreport.avg_lowest_temp
-    myreport.avg_lowest_temp = reduce(lambda x, y: x + y, vals) / len(vals)
-
-    vals = myreport.avg_humidity
-    myreport.avg_humidity = reduce(lambda x, y: x + y, vals) / len(vals)
+    myreport.avg_highest_temp = compute_average(myreport.avg_highest_temp)
+    myreport.avg_lowest_temp = compute_average(myreport.avg_lowest_temp)
+    myreport.avg_humidity = compute_average(myreport.avg_humidity)
     return myreport
 
 
-
-def check_year_month(year,month):
+def check_year_month(year, month):
     if len(year) != 4:
         print('invalid year format')
         exit()
-    elif int(year) not in list(range(Year_Range[0], Year_Range[1] + 1)):
+    elif int(year) not in list(range(YEAR_RANGE[0], YEAR_RANGE[1] + 1)):
         print('invalid year')
         exit()
     elif len(month) > 2:
@@ -159,14 +161,15 @@ def check_year_month(year,month):
         print('invalid month')
         exit()
 
-def average_weathers(year_month,filepath):
+
+def average_weathers(year_month, filepath):
     temp_list = year_month.split('/')
     year = temp_list[0]
     month = temp_list[1]
     check_year_month(year,month)
     if len(month) == 2 and int(month) < 10:
         month = month[1:]
-    english_month = Num_to_month[month]
+    english_month = NUM_TO_MONTH[month]
 
     list_all_files = os.listdir(filepath)
     list_required_files = []
@@ -178,16 +181,17 @@ def average_weathers(year_month,filepath):
     if not list_required_files:
         print('Data for this month is not available')
         exit()
-    myreport = make_average_report(list_required_files[0],filepath)
+    myreport = make_average_report(list_required_files[0], filepath)
     display_average_report(myreport)
 
 
 class WeatherChartReport(object):
     def __init__(self):
         self.year = 0
-        self.month = "none"
+        self.month = 'none'
         self.highest_temp = []
         self.lowest_temp = []
+
 
 def display_chart(myreport):
     print(myreport.month + ' ' + str(myreport.year))
@@ -196,13 +200,19 @@ def display_chart(myreport):
     while num < days:
         x = myreport.highest_temp[num]
         temp_max = ''
-        for v in range(0,x):
-            temp_max = temp_max + '+'
+        if x != 'no data':
+            for v in range(0,x):
+                temp_max = temp_max + '+'
+        else:
+            temp_max = '--'
 
         y = myreport.lowest_temp[num]
         temp_min = ''
-        for v in range(0,y):
-            temp_min = temp_min + '+'
+        if y != 'no data':
+            for v in range(0,y):
+                temp_min = temp_min + '+'
+        else:
+            temp_min = '--'
 
         t1 = colored(temp_max, 'red')
         t2 = colored(temp_min, 'blue')
@@ -213,17 +223,23 @@ def display_chart(myreport):
         else:
             date = str(date)
 
-        if temp_max == '':
+        if x < 10:
+            x = '0' + str(x)
+        if y < 10:
+            y = '0' + str(y)
+
+        if temp_max == '--':
             x = 'Data not available'
             print(date + ' ' + x)
         else:
             print(date + ' ' + t1 + ' ' + str(x) + 'C')
 
-        if temp_min == '':
+        if temp_min == '--':
             y = 'Data not available'
             print(date + ' ' + y)
         else:
             print(date + ' ' + t2 + ' ' + str(y) + 'C')
+
 
 def display_bonus_chart(myreport):
     print(myreport.month + ' ' + str(myreport.year))
@@ -232,13 +248,19 @@ def display_bonus_chart(myreport):
     while num < days:
         x = myreport.highest_temp[num]
         temp_max = ''
-        for v in range(0,x):
-            temp_max = temp_max + '+'
+        if x != 'no data':
+            for v in range(0,x):
+                temp_max = temp_max + '+'
+        else:
+            temp_max = '--'
 
         y = myreport.lowest_temp[num]
         temp_min = ''
-        for v in range(0,y):
-            temp_min = temp_min + '+'
+        if y != 'no data':
+            for v in range(0,y):
+                temp_min = temp_min + '+'
+        else:
+            temp_min = '--'
 
         t1 = colored(temp_max, 'red')
         t2 = colored(temp_min, 'blue')
@@ -249,26 +271,30 @@ def display_bonus_chart(myreport):
         else:
             date = str(date)
 
+        if x < 10:
+            x = '0' + str(x)
+        if y < 10:
+            y = '0' + str(y)
+
         x = str(x) + 'C'
         y = str(y) + 'C'
 
-        if temp_max == '':
+        if temp_max == '--':
             x = 'Data not available'
-        if temp_min == '':
+        if temp_min == '--':
             y = 'Data not available'
 
-        print(date + ' ' + t2 + t1 + ' ' + y + ' - ' + x )
-
+        print(date + ' ' + t2 + t1 + ' ' + y + ' - ' + x)
 
 
 def make_chart_report(filename, filepath, year):
     myreport = WeatherChartReport()
     count = 0
-    data_file = open(filepath + '/' + filename,'r')
+    data_file = open(filepath + '/' + filename, 'r')
 
     temp_a = filename.split('_')
     month_name = temp_a[3][0:3]
-    month_name = Months[month_name]
+    month_name = MONTHS[month_name]
 
     myreport.year = year
     myreport.month = month_name
@@ -282,13 +308,14 @@ def make_chart_report(filename, filepath, year):
             if maxtemp != '':
                 myreport.highest_temp.append(int(maxtemp))
             else:
-                myreport.highest_temp.append(0)
+                myreport.highest_temp.append('no data')
             mintemp = elements[3]
             if mintemp != '':
                 myreport.lowest_temp.append(int(mintemp))
             else:
-                myreport.lowest_temp.append(0)
+                myreport.lowest_temp.append('no data')
     return myreport
+
 
 def weather_charts(year_month, filepath, report_label):
     temp_list = year_month.split('/')
@@ -297,7 +324,7 @@ def weather_charts(year_month, filepath, report_label):
     check_year_month(year,month)
     if len(month) == 2 and int(month) < 10:
         month = month[1:]
-    english_month = Num_to_month[month]
+    english_month = NUM_TO_MONTH[month]
 
     list_all_files = os.listdir(filepath)
     list_required_files = []
@@ -309,16 +336,24 @@ def weather_charts(year_month, filepath, report_label):
     if not list_required_files:
         print('Data for this month is not available')
         exit()
-    myreport = make_chart_report(list_required_files[0],filepath, year)
+    myreport = make_chart_report(list_required_files[0], filepath, year)
     if report_label == '-c':
         display_chart(myreport)
     elif report_label == '-b':
         display_bonus_chart(myreport)
 
+
+def check_filepath_exists(filepath):
+    if not os.path.exists(filepath):
+        print('Filepath does not exist')
+        exit()
+
+
 def check_report_type(report_label):
-    if report_label not in labels:
+    if report_label not in LABELS:
         print('invalid report label')
         exit()
+
 
 def check_args(list_args):
     if len(list_args) != 4:
@@ -327,23 +362,23 @@ def check_args(list_args):
 
 
 def main():
-
     list_args = sys.argv
     check_args(list_args)
 
     report_label = list_args[1]
     year_month = list_args[2]
-    file_path = list_args[3]  #check file path??
+    file_path = list_args[3]
 
     check_report_type(report_label)
+    check_filepath_exists(file_path)
 
     if report_label == '-e':
-        extreme_weathers(year_month,file_path)
+        extreme_weathers(year_month, file_path)
     elif report_label == '-a':
-        average_weathers(year_month,file_path)
+        average_weathers(year_month, file_path)
     elif report_label == '-c' or report_label == '-b':
         weather_charts(year_month, file_path, report_label)
 
 
-
-main()
+if __name__ == '__main__':
+    main()
