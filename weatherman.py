@@ -4,7 +4,7 @@ import datetime
 import statistics as stat
 import termcolor
 
-# global degreeC = "u'\u2103'"
+
 def main():
     valid_flags = ['-e', '-a', '-c']
     year = 0
@@ -24,7 +24,8 @@ def main():
                      f.endswith('.txt')]
         for flag in flags:
             if flag not in valid_flags:
-                print('Invalid flag. Choose a valid flag from:'+print_flags(valid_flags))
+                print('Invalid flag. Choose a valid flag from:'+
+                      print_flags(valid_flags))
                 sys.exit(1)
         if len(flags) > len(dates):
             print('Error: Extra flag found in the input arguments.')
@@ -44,11 +45,13 @@ def main():
                         print('\''+dates[i]+'\' is not a valid date')
                         sys.exit(1)
                     if not is_valid_year(year):
-                        print('Error: Enter a date value between 2004 and 2016.')
+                        print('''Error: Enter a date value between 
+                                2004 and 2016.''')
                         sys.exit(1)
                 elif flag == '-a' or flag == '-c':
                     if '/' not in dates[i]:
-                        print('Error: Invalid date format for \''+flag+'\' flag.')
+                        print('Error: Invalid date format for \''+
+                              flag+'\' flag.')
                         sys.exit(1)
                     else:
                         date_ = dates[i].split('/')
@@ -59,11 +62,10 @@ def main():
                         except ValueError:
                             print('\'' + dates[i] + '\' is not a valid date')
                             sys.exit(1)
-                        if not (is_valid_year(year) and is_valid_month(month)):
+                        if not (is_valid_year(year) and
+                                is_valid_month(month)):
                             print('Error: Date not supported: '+dates[i])
-
                 relevant_files = find_files(year, month_alpha, all_files)
-                # print(flag, year, month_alpha, 'Length: ', len(relevant_files))
                 parse_files_copy(flag, relevant_files, file_path)
 
 
@@ -72,6 +74,7 @@ def parse_files_copy(flag, files, path):
     min_temp = {}
     max_humid = {}
     mean_humid = {}
+    header_len = 0
     for file in files:
         in_file = open(path + '/' + file, 'r')
         lines = in_file.readlines()
@@ -94,7 +97,6 @@ def parse_files_copy(flag, files, path):
                     if flag == '-a':
                         max_temp[int(line_literals[i_max_t])] = ''
                         min_temp[int(line_literals[i_min_t])] = ''
-                        # if flag == '-a':
                         mean_humid[int(line_literals[i_max_h])] = ''
                     else:
                         max_temp[date] = int(line_literals[i_max_t])
@@ -107,9 +109,12 @@ def parse_files_copy(flag, files, path):
         max_temp_keys = list(max_temp.keys())
         min_temp_keys = list(min_temp.keys())
         mean_humid_keys = list(mean_humid.keys())
-        print('\nHighest Average:', str(round(stat.mean(max_temp_keys)))+u'\u2103')
-        print('Lowest Average:', str(round(stat.mean(min_temp_keys)))+u'\u2103')
-        print('Average Mean Humidity:', str(round(stat.mean(mean_humid_keys))) + '%\n')
+        print('\nHighest Average:', str(round(stat.mean(max_temp_keys)))+
+              u'\u2103')
+        print('Lowest Average:', str(round(stat.mean(min_temp_keys)))+
+              u'\u2103')
+        print('Average Mean Humidity:',
+              str(round(stat.mean(mean_humid_keys)))+'%\n')
     elif flag == '-e':
         date, temp = return_val(max_temp, 'max')
         print('\nHighest:', str(temp)+u'\u2103', 'on', return_date(date))
@@ -119,9 +124,8 @@ def parse_files_copy(flag, files, path):
         print('Humidity:', str(humid) + '%', 'on', return_date(date)+'\n')
     elif flag == '-c':
         sorted_keys = sort_keys(max_temp)
-        print_chart(max_temp, min_temp, sorted_keys)
-        print_chart_special(max_temp, min_temp, sorted_keys)
-    # print(u'\u2103')
+        print_chart(max_temp, min_temp, sorted_keys, 'ordinary')
+        print_chart(max_temp, min_temp, sorted_keys, 'special')
     return
 
 
@@ -129,47 +133,31 @@ def get_month(month):
     return datetime.date(1900, int(month), 1).strftime('%B')
 
 
-def print_chart_special(max_bank, min_bank, sorted_keys):
+def print_chart(max_bank, min_bank, sorted_keys, version):
     print('\n')
     sorted_dates = []
+    split_key = []
     for key in sorted_keys:
         split_key = key.split('-')
-        # print(get_month(split_key[1]), split_key[0])
         sorted_dates.append(split_key[2])
     print(get_month(split_key[1]), split_key[0])
     for i in range(0, len(sorted_dates)):
         date = str(sorted_dates[i])
-        if len(date) == 1:
-            date = '0' + date
-        max_temp = max_bank[sorted_keys[i]]
-        min_temp = min_bank[sorted_keys[i]]
-        line_plus = '+' * max_temp
-        line_minus = '-' * min_temp
-        print(date, termcolor.colored(line_minus, 'blue')+termcolor.colored(line_plus, 'red'),
-              str(min_temp)+u'\u2103'+' - '+str(max_temp)+u'\u2103')
-
-
-def print_chart(max_bank, min_bank, sorted_keys):
-    print('\n')
-    sorted_dates = []
-    for key in sorted_keys:
-        split_key = key.split('-')
-        # print(get_month(split_key[1]), split_key[0])
-        sorted_dates.append(split_key[2])
-    # print(sorted_dates)
-    print(get_month(split_key[1]), split_key[0])
-    for i in range(0, len(sorted_dates)):
-
-        date = str(sorted_dates[i])
-
         if len(date) == 1:
             date = '0'+date
         max_temp = max_bank[sorted_keys[i]]
         min_temp = min_bank[sorted_keys[i]]
         line_plus = '+' * max_temp
-        line_minus = '-' * min_temp
-        print(date, termcolor.colored(line_plus+' ', 'red'), str(max_temp)+u'\u2103')
-        print(date, termcolor.colored(line_minus+' ', 'blue'), str(min_temp)+u'\u2103')
+        line_minus = '+' * min_temp
+        if version == 'ordinary':
+            print(date, termcolor.colored(line_plus+' ', 'red'), str(max_temp) +
+                  u'\u2103')
+            print(date, termcolor.colored(line_minus+' ', 'blue'), str(min_temp) +
+                  u'\u2103')
+        elif version == 'special':
+            print(date, termcolor.colored(line_minus, 'blue') +
+                  termcolor.colored(line_plus, 'red'),
+                  str(min_temp) + u'\u2103' + '  - ' + str(max_temp) + u'\u2103')
 
 
 def sort_keys(bank):
@@ -185,6 +173,7 @@ def sort_keys(bank):
 
 
 def return_val(bank, version):
+    val = 0
     if version == 'max':
         val = max(bank.values())
     elif version == 'min':
