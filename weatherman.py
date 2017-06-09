@@ -1,8 +1,10 @@
 import os
 import sys
 import datetime
+import statistics as stat
+import termcolor
 
-
+# global degreeC = "u'\u2103'"
 def main():
     valid_flags = ['-e', '-a', '-c']
     year = 0
@@ -36,6 +38,7 @@ def main():
                 if flag == '-e':
                     try:
                         year = int(dates[i])
+                        month = 0
                         month_alpha = ''
                     except ValueError:
                         print('\''+dates[i]+'\' is not a valid date')
@@ -52,7 +55,7 @@ def main():
                         try:
                             year = int(date_[0])
                             month = int(date_[1])
-                            month_alpha = datetime.date(1900, month, 1).strftime('%B')
+                            month_alpha = get_month(month)
                         except ValueError:
                             print('\'' + dates[i] + '\' is not a valid date')
                             sys.exit(1)
@@ -60,48 +63,141 @@ def main():
                             print('Error: Date not supported: '+dates[i])
 
                 relevant_files = find_files(year, month_alpha, all_files)
-                print(flag, year, month_alpha, 'Length: ', len(relevant_files))
-                parse_files(flag, year, month_alpha, relevant_files, file_path)
+                # print(flag, year, month_alpha, 'Length: ', len(relevant_files))
+                parse_files_copy(flag, relevant_files, file_path)
 
 
-def parse_files(flag, year, month, files, path):
+def parse_files_copy(flag, files, path):
     max_temp = {}
     min_temp = {}
     max_humid = {}
-    # helper = []
-    if flag == '-e':
-        for file in files:
-            in_file = open(path+'/'+file, 'r')
-            lines = in_file.readlines()
-            # print(lines)
-            count = 1
-            for line in lines:
-                line_literals = line.split(',')
-                if count == 1:
-                    header_len = len(line_literals)
-                    i_max_t = line_literals.index('Max TemperatureC')
-                    i_min_t = line_literals.index('Min TemperatureC')
+    mean_humid = {}
+    for file in files:
+        in_file = open(path + '/' + file, 'r')
+        lines = in_file.readlines()
+        count = 1
+        for line in lines:
+            line_literals = line.split(',')
+            if count == 1:
+                header_len = len(line_literals)
+                i_max_t = line_literals.index('Max TemperatureC')
+                i_min_t = line_literals.index('Min TemperatureC')
+                if flag == '-e':
                     i_max_h = line_literals.index('Max Humidity')
+                elif flag == '-a':
+                    i_max_h = line_literals.index(' Mean Humidity')
+            else:
+                if not len(line_literals) == header_len:
+                    print('Some anomalous values on line', count)
                 else:
-                    if not len(line_literals) == header_len:
-                        print('Some anomalous values on line', count)
-                        # i_max_temp = line
+                    date = line_literals[0]
+                    if flag == '-a':
+                        max_temp[int(line_literals[i_max_t])] = ''
+                        min_temp[int(line_literals[i_min_t])] = ''
+                        # if flag == '-a':
+                        mean_humid[int(line_literals[i_max_h])] = ''
                     else:
-                        date = line_literals[0]
                         max_temp[date] = int(line_literals[i_max_t])
                         min_temp[date] = int(line_literals[i_min_t])
-                        max_humid[date] = int(line_literals[i_max_h])
-                count += 1
-        val = max(max_temp.values())
-        # print(max_temp.values())
-        # print(val)
-        for key, value in max_temp.items():
-            if val == value:
-                print(key)
-    # elif flag == '-a'
-    # print(type(files))
-    # for
+                        if flag == '-e':
+                            max_humid[date] = int(line_literals[i_max_h])
+            count += 1
+
+    if flag == '-a':
+        max_temp_keys = list(max_temp.keys())
+        min_temp_keys = list(min_temp.keys())
+        mean_humid_keys = list(mean_humid.keys())
+        print('\nHighest Average:', str(round(stat.mean(max_temp_keys)))+u'\u2103')
+        print('Lowest Average:', str(round(stat.mean(min_temp_keys)))+u'\u2103')
+        print('Average Mean Humidity:', str(round(stat.mean(mean_humid_keys))) + '%\n')
+    elif flag == '-e':
+        date, temp = return_val(max_temp, 'max')
+        print('\nHighest:', str(temp)+u'\u2103', 'on', return_date(date))
+        date, temp = return_val(min_temp, 'min')
+        print('Lowest:', str(temp) + u'\u2103', 'on', return_date(date))
+        date, humid = return_val(max_humid, 'max')
+        print('Humidity:', str(humid) + '%', 'on', return_date(date)+'\n')
+    elif flag == '-c':
+        sorted_keys = sort_keys(max_temp)
+        print_chart(max_temp, min_temp, sorted_keys)
+        print_chart_special(max_temp, min_temp, sorted_keys)
+    # print(u'\u2103')
     return
+
+
+def get_month(month):
+    return datetime.date(1900, int(month), 1).strftime('%B')
+
+
+def print_chart_special(max_bank, min_bank, sorted_keys):
+    print('\n')
+    sorted_dates = []
+    for key in sorted_keys:
+        split_key = key.split('-')
+        # print(get_month(split_key[1]), split_key[0])
+        sorted_dates.append(split_key[2])
+    print(get_month(split_key[1]), split_key[0])
+    for i in range(0, len(sorted_dates)):
+        date = str(sorted_dates[i])
+        if len(date) == 1:
+            date = '0' + date
+        max_temp = max_bank[sorted_keys[i]]
+        min_temp = min_bank[sorted_keys[i]]
+        line_plus = '+' * max_temp
+        line_minus = '-' * min_temp
+        print(date, termcolor.colored(line_minus, 'blue')+termcolor.colored(line_plus, 'red'),
+              str(min_temp)+u'\u2103'+' - '+str(max_temp)+u'\u2103')
+
+
+def print_chart(max_bank, min_bank, sorted_keys):
+    print('\n')
+    sorted_dates = []
+    for key in sorted_keys:
+        split_key = key.split('-')
+        # print(get_month(split_key[1]), split_key[0])
+        sorted_dates.append(split_key[2])
+    # print(sorted_dates)
+    print(get_month(split_key[1]), split_key[0])
+    for i in range(0, len(sorted_dates)):
+
+        date = str(sorted_dates[i])
+
+        if len(date) == 1:
+            date = '0'+date
+        max_temp = max_bank[sorted_keys[i]]
+        min_temp = min_bank[sorted_keys[i]]
+        line_plus = '+' * max_temp
+        line_minus = '-' * min_temp
+        print(date, termcolor.colored(line_plus+' ', 'red'), str(max_temp)+u'\u2103')
+        print(date, termcolor.colored(line_minus+' ', 'blue'), str(min_temp)+u'\u2103')
+
+
+def sort_keys(bank):
+    keys = list(bank.keys())
+    sorted_keys = []
+    for key in keys:
+        split_key = key.split('-')
+        sorted_keys.append(int(split_key[2]))
+    sorted_keys.sort()
+    sorted_keys = [split_key[0]+'-'+split_key[1]+'-'+str(k)
+                   for k in sorted_keys]
+    return sorted_keys
+
+
+def return_val(bank, version):
+    if version == 'max':
+        val = max(bank.values())
+    elif version == 'min':
+        val = min(bank.values())
+    for key, value in bank.items():
+        if val == value:
+            return key, val
+
+
+def return_date(date):
+    date = date.split('-')
+    month_alpha = get_month(date[1])
+    return month_alpha+' '+date[2]
 
 
 def find_files(year, month, files):
@@ -136,7 +232,6 @@ def is_valid_month(month):
         return True
     return False
 
-# dir_path = os.path.dirname(os.path.realpath(__file__))
-# print(dir_path)
+
 if __name__ == '__main__':
     main()
