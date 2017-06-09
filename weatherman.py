@@ -61,10 +61,45 @@ def main():
 
                 relevant_files = find_files(year, month_alpha, all_files)
                 print(flag, year, month_alpha, 'Length: ', len(relevant_files))
-                parse_files(flag, year, month_alpha, relevant_files)
+                parse_files(flag, year, month_alpha, relevant_files, file_path)
 
 
-def parse_files(flag, year, month, files):
+def parse_files(flag, year, month, files, path):
+    max_temp = {}
+    min_temp = {}
+    max_humid = {}
+    # helper = []
+    if flag == '-e':
+        for file in files:
+            in_file = open(path+'/'+file, 'r')
+            lines = in_file.readlines()
+            # print(lines)
+            count = 1
+            for line in lines:
+                line_literals = line.split(',')
+                if count == 1:
+                    header_len = len(line_literals)
+                    i_max_t = line_literals.index('Max TemperatureC')
+                    i_min_t = line_literals.index('Min TemperatureC')
+                    i_max_h = line_literals.index('Max Humidity')
+                else:
+                    if not len(line_literals) == header_len:
+                        print('Some anomalous values on line', count)
+                        # i_max_temp = line
+                    else:
+                        date = line_literals[0]
+                        max_temp[date] = int(line_literals[i_max_t])
+                        min_temp[date] = int(line_literals[i_min_t])
+                        max_humid[date] = int(line_literals[i_max_h])
+                count += 1
+        val = max(max_temp.values())
+        # print(max_temp.values())
+        # print(val)
+        for key, value in max_temp.items():
+            if val == value:
+                print(key)
+    # elif flag == '-a'
+    # print(type(files))
     # for
     return
 
