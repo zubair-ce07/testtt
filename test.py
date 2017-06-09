@@ -1,18 +1,6 @@
-import operator
-
-class User(object):
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
-
-
-
-a=User('hammad', 20)
-b=User('aslam', 30)
-c=User('arshad', 25)
-d=User('shamsheer', 30)
-
-dic={'key1':a, 'key2':b, 'key3':c ,'key4':d}
-
-user=max(dic.values(), key=operator.attrgetter('age'))
-print(user.name)
+from colorama import Fore, Back, Style
+print(Fore.RED + 'some red text')
+print(Back.GREEN + 'and with a green background')
+print(Style.DIM + 'and in dim text')
+print(Style.RESET_ALL)
+print('back to normal now')
