@@ -11,16 +11,13 @@ class KithSpider(CrawlSpider):
     name = "kith"
     allowed_domains = ["kith.com"]
     start_urls = ["https://kith.com"]
+    color_regex = re.compile(r"-.*?-")
+    meta_var_regex = re.compile(r"var meta = ({.*?});", re.MULTILINE | re.DOTALL)
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['#MainNav'])),
+        Rule(LinkExtractor(restrict_css=['#MainNav a, span.next a'])),
         Rule(LinkExtractor(restrict_css=['.product-card-info']), callback="parse_item"),
     )
-
-    def __init__(self, *a, **kw):
-        super(KithSpider, self).__init__(*a, **kw)
-        self.color_regex = re.compile(r"-.*?-")
-        self.meta_var_regex = re.compile(r"var meta = ({.*?});", re.MULTILINE | re.DOTALL)
 
     def parse_item(self, response):
         item = KithProductItem()
@@ -36,17 +33,17 @@ class KithSpider(CrawlSpider):
         return item
 
     def parse_brand(self, response):
-        return (response.css('h1.product-header-title > span:nth-child(1)::text').extract())[0]
+        return (response.css('[itemprop=name] span:first-child ::text').extract())[0]
 
     def parse_name(self, response):
-        return (response.css('h1.product-header-title > span:last-child::text').extract())[0]
+        return (response.css('[itemprop=name] span:last-child ::text').extract())[0]
 
     def parse_image_urls(self, response):
         return response.css('.js-super-slider-photo-img.super-slider-photo-img::attr(src)').extract()
 
     def parse_description(self, response):
-        css_selector = '.product-single-details-rte.rte.mb0 p::text, .product-single-details-rte.rte.mb0 li::text'
-        return response.css(css_selector).extract()
+        css_selector = '.rte ::text'
+        return self.clean_object(response.css(css_selector).extract())
 
     def parse_retailer_sku(self, product_info):
         return product_info['id']
@@ -67,6 +64,10 @@ class KithSpider(CrawlSpider):
         return formated_skus
 
     def get_product_info(self, response):
-        meta = response.xpath('//script/text()').re(self.meta_var_regex)
-        meta = json.loads(meta[0].encode('utf-8'))
-        return meta['product']
+        skus_info_var = response.xpath('//script[contains(text(),\'var meta\')]').re(self.meta_var_regex)
+        skus_info_var = json.loads(skus_info_var[0].encode('utf-8'))
+        return skus_info_var['product']
+
+    def clean_object(self, object):
+        clean_obj = [x.strip('\t\n ') for x in object]
+        return [x for x in clean_obj if x != u'']
