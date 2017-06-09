@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
 import os
-import pandas
+import argparse
 import calendar
 import datetime
-import argparse
-from termcolor import colored
 import math
+import pandas
+
+from termcolor import colored
+
 
 __author__ = 'ruhaib'
 
 
 class WeatherData:
     'Class to extract weather data from the desired path'
-    def __init__(self, arguments):
-        self.arguments = arguments
-        self.file_names_in_path = pandas.DataFrame(os.listdir(arguments.path))
+
+    def __init__(self, data):
+        self.data = data
+
+    def show_task1_results(self, data_dict):
+        print("Highest: %dC on %s %d" %
+              (data_dict['max'][0], data_dict['max'][1], data_dict['max'][2]))
+        print("Lowest: %dC on %s %d" %
+              (data_dict['min'][0], data_dict['min'][1], data_dict['min'][2]))
+        print("Humid: %d%% on %s %d" %
+              (data_dict['humid'][0], data_dict['humid'][0], data_dict['humid'][0]))
 
     def show_task1_requirements(self):
-
-        files_names_of_year = self.file_names_in_path[
-            self.file_names_in_path[0].str.contains("lahore_weather_"+str(self.arguments.e))]
 
         max_temp = -100000
         max_date = 0
@@ -31,115 +38,114 @@ class WeatherData:
         humid_date = 100000
         humid_month = 'jan'
 
-        for index, row in files_names_of_year.iterrows():
+        for data_of_month in self.data:
+            if data_of_month['Max TemperatureC'].max() > max_temp:
 
-            data_of_month = pandas.read_csv(self.arguments.path+"/"+row[0], header=0)
-
-            if(data_of_month['Max TemperatureC'].max() > max_temp):
-                temp_max_temperature = data_of_month.loc[
-                    data_of_month['Max TemperatureC'] == data_of_month['Max TemperatureC'].max()]
                 max_temp = data_of_month['Max TemperatureC'].max()
-                date = datetime.datetime.strptime(
-                    temp_max_temperature[temp_max_temperature.columns[0]].iloc[0], "%Y-%m-%d")
+
+                temp_max_temperature = data_of_month.loc[
+                    data_of_month['Max TemperatureC'] == max_temp]
+
+                if 'PKT' in temp_max_temperature.columns:
+
+                    date = datetime.datetime.strptime(
+                        temp_max_temperature['PKT'].iloc[0], "%Y-%m-%d")
+                else:
+                    date = datetime.datetime.strptime(
+                        temp_max_temperature['PKST'].iloc[0], "%Y-%m-%d")
+
                 max_date = date.day
                 max_month = calendar.month_name[date.month]
 
-            if(data_of_month['Min TemperatureC'].min() < min_temp):
+            if data_of_month['Min TemperatureC'].min() < min_temp:
                 min_temp = data_of_month['Min TemperatureC'].min()
+
                 temp_max_temperature = data_of_month.loc[
-                    data_of_month['Min TemperatureC'] == data_of_month['Min TemperatureC'].min()]
-                date = datetime.datetime.strptime(
-                    temp_max_temperature[temp_max_temperature.columns[0]].iloc[0], "%Y-%m-%d")
+                    data_of_month['Min TemperatureC'] == min_temp]
+
+                if 'PKT' in temp_max_temperature.columns:
+                    date = datetime.datetime.strptime(
+                        temp_max_temperature.PKT.iloc[0], "%Y-%m-%d")
+                else:
+                    date = datetime.datetime.strptime(
+                        temp_max_temperature.PKST.iloc[0], "%Y-%m-%d")
+
                 min_date = date.day
                 min_month = calendar.month_name[date.month]
 
-            if(data_of_month['Max Humidity'].max() > humid):
+            if data_of_month['Max Humidity'].max() > humid:
                 humid = data_of_month['Max Humidity'].max()
+
                 temp_max_temperature = data_of_month.loc[
-                    data_of_month['Max Humidity'] == data_of_month['Max Humidity'].max()]
-                date = datetime.datetime.strptime(
-                    temp_max_temperature[temp_max_temperature.columns[0]].iloc[0], "%Y-%m-%d")
+                    data_of_month['Max Humidity'] == humid]
+
+                if 'PKT' in temp_max_temperature.columns:
+                    date = datetime.datetime.strptime(
+                        temp_max_temperature.PKT.iloc[0], "%Y-%m-%d")
+                else:
+                    date = datetime.datetime.strptime(
+                        temp_max_temperature.PKST.iloc[0], "%Y-%m-%d")
+
                 humid_date = date.day
                 humid_month = calendar.month_name[date.month]
+        max_temperature_data = [max_temp, max_month, max_date]
+        min_temperature_data = [min_temp, min_month, min_date]
+        humid_data = [humid, humid_month, humid_date]
+        data_dict = {'max': max_temperature_data, 'min': min_temperature_data,
+                     'humid': humid_data}
 
-        print("Highest: %dC on %s %d" % (max_temp, max_month, max_date))
-        print("Lowest: %dC on %s %d" % (min_temp, min_month, min_date))
-        print("Humid: %d%% on %s %d" % (humid, humid_month, humid_date))
+        self.show_task1_results(data_dict)
+
+    def show_task2_results(self, task2_data):
+        print("Highest Average: %dC" % task2_data['max_temp'])
+        print("Lowest Average: %dC" % task2_data['min_temp'])
+        print("Average Humidity: %d%%" % task2_data['humid'])
 
     def show_task2_requirements(self):
+        for month_data in self.data:
 
-        date = self.arguments.a
-        y = int(date.split("/")[0])
+            # extracting average highest temperature
+            max_temp = month_data[month_data.columns[2]].max()
 
-        # extracting path of the file required
-        temp_data_frame = self.file_names_in_path[self.file_names_in_path[0].str.contains(
-            "lahore_weather_"+str(y))]
+            # extracting average lowest temperature
+            min_temp = month_data[month_data.columns[2]].min()
 
-        abbr = calendar.month_abbr[int(date.split("/")[1])]
+            # extracting average humidity
+            humid = month_data[month_data.columns[8]].sum(
+            ) / month_data[month_data.columns[8]].count()
 
-        month_file_filename = self.arguments.path+"/" + temp_data_frame[
-            temp_data_frame[0].str.contains("lahore_weather_" + str(y) +
-                                            "_" + abbr)][0].iloc[0]
+            task2_data = {'max_temp': max_temp,
+                          'min_temp': min_temp, 'humid': humid}
+            self.show_task2_results(task2_data)
 
-        month_data = pandas.read_csv(month_file_filename, header=0)
+    def show_task3_one_day_graph(self, day_data_row):
+        print(day_data_row[0].split("-")[2], end="")
+        print(' ', end="")
+        text = ""
 
-        # extracting average highest temperature
-        max_temp = month_data[month_data.columns[2]].max()
+        for iteration in range(0, int(day_data_row[3])):
+            text += colored('+', "blue")
+            print(text, end='')
 
-        # extracting average lowest temperature
-        min_temp = month_data[month_data.columns[2]].min()
+        text = ""
 
-        # extracting average humidity
-        humid = month_data[month_data.columns[8]].sum()/month_data[month_data.columns[8]].count()
+        for iteration in range(0, int(day_data_row[1])):
+            text += colored('+', "red")
+            print(text, end='')
 
-        print("Highest Average: %dC" % max_temp)
-        print("Lowest Average: %dC" % min_temp)
-        print("Average Humidity: %d%%" % humid)
+        print("%dC - %dC" % (day_data_row[3], day_data_row[1]))
 
     def show_task3_graphs(self):
+        for month_data in self.data:
+            for index, row in month_data.iterrows():
 
-        date = self.arguments.c
-        y = int(date.split("/")[0])
-
-        # extracting path of the file required
-        temp_data_frame = self.file_names_in_path[self.file_names_in_path[0].str.contains(
-            "lahore_weather_"+str(y))]
-
-        abbr = calendar.month_name[int(date.split("/")[1])]
-
-        print("%s %d" % (abbr, y))
-
-        abbr = calendar.month_abbr[int(date.split("/")[1])]
-
-        month_file_name = self.arguments.path+"/"+temp_data_frame[
-            temp_data_frame[0].str.contains(
-                "lahore_weather_"+str(y)+"_"+abbr)][0].iloc[0]
-
-        month_data = pandas.read_csv(month_file_name, header=0)
-
-        for index, row in month_data.iterrows():
-
-            if (not (math.isnan(row[3]))) and (not (math.isnan(row[1]))):
-                print(row[0].split("-")[2], end=" ")
-                print(' ', end=" ")
-                text = ""
-
-                for i in range(0, int(row[3])):
-                    text += colored('+', "blue")
-                    print(text, end=' ')
-
-                text = ""
-
-                for i in range(0, int(row[1])):
-                    text += colored('+', "red")
-                    print(text, end=' ')
-
-                print("%dC - %dC" % (row[3], row[1]))
+                if not math.isnan(row[3]) and not math.isnan(row[1]):
+                    self.show_task3_one_day_graph(row)
 
 
 def year_range(string):
 
-    if (string.find('/') == -1):
+    if string.find('/') == -1:
 
         year_passed = int(string)
 
@@ -157,22 +163,58 @@ def year_range(string):
 
 def year_month_validity(string):
 
-    if(string.count('/') != 1):
+    if string.count('/') != 1:
         msg = '%r incorrect month and year passed' % string
         raise argparse.ArgumentTypeError(msg)
 
-    year_passed = int(string.split("/")[0])
-    month_passed = int(string.split("/")[1])
+    date = datetime.datetime.strptime(
+        string, "%Y/%m")
 
-    if(year_passed > 2011 or year_passed < 1996):
+    if date.year > 2011 or date.year < 1996:
         msg = "%r year passed is out of range" % string
         raise argparse.ArgumentTypeError(msg)
 
-    if(month_passed > 12 or month_passed < 1):
+    if date.month > 12 or date.month < 1:
         msg = "%r month, passed is out of range" % string
         raise argparse.ArgumentTypeError(msg)
 
     return string
+
+
+def get_month_file_path(date, directory, file_names_in_path):
+    file_names_of_year = file_names_in_path[file_names_in_path[0].str.contains(
+        "lahore_weather_" + str(date.year))]
+
+    month_abbr = calendar.month_abbr[int(date.month)]
+
+    month_file_path = directory + "/" + file_names_of_year[
+        file_names_of_year[0].str.contains("lahore_weather_" + str(date.year) +
+                                           "_" + month_abbr)].iloc[0, 0]
+    return month_file_path
+
+
+def get_required_files_data(year, directory):
+
+    file_names_in_directory = pandas.DataFrame(os.listdir(directory))
+    if len(str(year)) == 4:
+
+        files_names_of_year = file_names_in_directory[
+            file_names_in_directory[0].str.contains("lahore_weather_" + str(year))]
+
+        list_of_data_of_year = []
+
+        for index, row in files_names_of_year.iterrows():
+            data_of_month = pandas.read_csv(directory + "/" + row[0], header=0)
+            list_of_data_of_year.append(data_of_month)
+
+        return list_of_data_of_year
+    else:
+        date = datetime.datetime.strptime(year, "%Y/%m")
+        file_path_of_month = get_month_file_path(
+            date, directory, file_names_in_directory)
+        data_of_month = pandas.read_csv(file_path_of_month, header=0)
+        list_single_month = [data_of_month]
+        return list_single_month
 
 
 def main():
@@ -199,22 +241,25 @@ def main():
 
     args = parser.parse_args()
 
-    if not (os.path.isdir(args.path)):
+    if not os.path.isdir(args.path):
         print("path to directory does not exist")
         quit()
 
-    weather_data = WeatherData(args)
-    
     if args.e:
+
+        total_data = get_required_files_data(args.e, args.path)
+        weather_data = WeatherData(total_data)
 
         weather_data.show_task1_requirements()
 
     if args.a:
-
+        total_data = get_required_files_data(args.a, args.path)
+        weather_data = WeatherData(total_data)
         weather_data.show_task2_requirements()
 
     if args.c:
-
+        total_data = get_required_files_data(args.c, args.path)
+        weather_data = WeatherData(total_data)
         weather_data.show_task3_graphs()
 
 
