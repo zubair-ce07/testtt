@@ -85,6 +85,8 @@ class WeatherReport(object):
             self._atype_weather_report()
         elif type_ == '-c':
             self._ctype_weather_report()
+        elif type_ == '-p':
+            self._ptype_weather_report()
 
     def _etype_weather_report(self):
         self._calculate_highest_temperature()
@@ -95,6 +97,31 @@ class WeatherReport(object):
         self._calculate_average_highest_temperature()
         self._calculate_average_lowest_temperature()
         self._calculate_average_mean_humidity()
+
+    def _ctype_weather_report(self):
+        print('{:%B %Y}'.format(datetime.strptime(self.weather_data_all_day[0].date, '%Y-%m-%d')))
+        for a_day_weather in self.weather_data_all_day:
+            if a_day_weather.max_temperature_c != -273:
+                print(Fore.RED + '{:%d} {bar} {temperature}C'.format(datetime.strptime(
+                    a_day_weather.date, '%Y-%m-%d'),
+                    bar='+' * abs(a_day_weather.max_temperature_c),
+                    temperature=a_day_weather.max_temperature_c))
+            if a_day_weather.min_temperature_c != -273:
+                print(Fore.BLUE + '{:%d} {bar} {temperature}c'.format(
+                    datetime.strptime(a_day_weather.date, '%Y-%m-%d'),
+                    bar='+' * abs(a_day_weather.min_temperature_c),
+                    temperature=a_day_weather.min_temperature_c))
+        print(Style.RESET_ALL)
+
+    def _ptype_weather_report(self):
+        print('{:%B %Y}'.format(datetime.strptime(self.weather_data_all_day[0].date, '%Y-%m-%d')))
+        for a_day_weather in self.weather_data_all_day:
+            if a_day_weather.max_temperature_c != -273 and a_day_weather.min_temperature_c != -273:
+                bar = '+' * (abs(a_day_weather.max_temperature_c) + abs(a_day_weather.min_temperature_c))
+                print('{:%d} {bar}'.format(datetime.strptime(a_day_weather.date, '%Y-%m-%d'), bar=bar), end='')
+                print(Fore.BLUE + ' {tempe_low}C '.format(tempe_low=a_day_weather.min_temperature_c), end='')
+                print(Fore.RED + ' - {temp_high}C'.format(temp_high=a_day_weather.max_temperature_c))
+                print(Style.RESET_ALL)
 
     def _calculate_highest_temperature(self):
         self.highest_temperature_day = max(self.weather_data_all_day,
@@ -149,21 +176,6 @@ class WeatherReport(object):
                 record_count += 1
         self.average_mean_humidity = sum_humidity / record_count
         print('Average Mean Humidity: {:.0f}%'.format(self.average_mean_humidity))
-
-    def _ctype_weather_report(self):
-        print('{:%B %Y}'.format(datetime.strptime(self.weather_data_all_day[0].date, '%Y-%m-%d')))
-        for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.max_temperature_c != -273:
-                print(Fore.RED + '{:%d} {bar} {temperature}C'.format(datetime.strptime(
-                    a_day_weather.date, '%Y-%m-%d'),
-                    bar='+' * abs(a_day_weather.max_temperature_c),
-                    temperature=a_day_weather.max_temperature_c))
-            if a_day_weather.min_temperature_c != -273:
-                print(Fore.BLUE + '{:%d} {bar} {temperature}c'.format(
-                    datetime.strptime(a_day_weather.date, '%Y-%m-%d'),
-                    bar='+' * abs(a_day_weather.min_temperature_c),
-                    temperature=a_day_weather.min_temperature_c))
-        print(Style.RESET_ALL)
 
 
 def main():
