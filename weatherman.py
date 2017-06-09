@@ -45,8 +45,9 @@ def main():
                         print('\''+dates[i]+'\' is not a valid date')
                         sys.exit(1)
                     if not is_valid_year(year, all_files):
-                        print('''Error: Enter a date value between 
-                                2004 and 2016.''')
+                        max_year, min_year = get_year_range(all_files)
+                        print('Error: Enter a date value between ' + 
+                                str(min_year) + ' and ' + str(max_year))
                         sys.exit(1)
                 elif flag == '-a' or flag == '-c':
                     if '/' not in dates[i]:
@@ -62,14 +63,17 @@ def main():
                         except ValueError:
                             print('\'' + dates[i] + '\' is not a valid date')
                             sys.exit(1)
+                        max_year, min_year = get_year_range(all_files)
                         if not (is_valid_year(year, all_files) and
-                                is_valid_month(month)):
+                                is_valid_month(year, month, 
+                                min_year, all_files)):
                             print('Error: Date not supported: '+dates[i])
+                            sys.exit(1)
                 relevant_files = find_files(year, month_alpha, all_files)
-                parse_files_copy(flag, relevant_files, file_path)
+                parse_files(flag, relevant_files, file_path)
 
 
-def parse_files_copy(flag, files, path):
+def parse_files(flag, files, path):
     max_temp = {}
     min_temp = {}
     max_humid = {}
@@ -87,25 +91,38 @@ def parse_files_copy(flag, files, path):
                 i_max_t = line_literals.index('Max TemperatureC')
                 i_min_t = line_literals.index('Min TemperatureC')
                 if flag == '-e':
-                    i_max_h = line_literals.index('Max Humidity')
+                    humidity = ''
+                    for word in line_literals:
+                        if 'Mean Humidity' in word:
+                            humidity = word
+                    i_max_h = line_literals.index(humidity)
                 elif flag == '-a':
-                    i_max_h = line_literals.index(' Mean Humidity')
+                    humidity = ''
+                    for word in line_literals:
+                        if 'Mean Humidity' in word:
+                            humidity = word
+                    i_max_h = line_literals.index(humidity)
             else:
                 if not len(line_literals) == header_len:
                     print('Some anomalous values on line', count)
                 else:
                     date = line_literals[0]
                     if flag == '-a':
-                        max_temp[int(line_literals[i_max_t])] = ''
-                        min_temp[int(line_literals[i_min_t])] = ''
-                        mean_humid[int(line_literals[i_max_h])] = ''
+                        if line_literals[i_max_t]:
+                            max_temp[int(line_literals[i_max_t])] = ''
+                        if line_literals[i_min_t]:
+                            min_temp[int(line_literals[i_min_t])] = ''
+                        if line_literals[i_max_h]:
+                            mean_humid[int(line_literals[i_max_h])] = ''
                     else:
-                        max_temp[date] = int(line_literals[i_max_t])
-                        min_temp[date] = int(line_literals[i_min_t])
+                        if line_literals[i_max_t]:
+                            max_temp[date] = int(line_literals[i_max_t])
+                        if line_literals[i_min_t]:
+                            min_temp[date] = int(line_literals[i_min_t])
                         if flag == '-e':
-                            max_humid[date] = int(line_literals[i_max_h])
+                            if line_literals[i_max_h]:
+                                max_humid[date] = int(line_literals[i_max_h])
             count += 1
-
     if flag == '-a':
         max_temp_keys = list(max_temp.keys())
         min_temp_keys = list(min_temp.keys())
@@ -151,14 +168,15 @@ def print_chart(max_bank, min_bank, sorted_keys, version):
         line_plus = '+' * max_temp
         line_minus = '+' * min_temp
         if version == 'ordinary':
-            print(date, termcolor.colored(line_plus+' ', 'red'), str(max_temp) +
-                  u'\u2103')
-            print(date, termcolor.colored(line_minus+' ', 'blue'), str(min_temp) +
-                  u'\u2103')
+            print(date, termcolor.colored(line_plus+' ', 'red'), 
+                str(max_temp) + u'\u2103')
+            print(date, termcolor.colored(line_minus+' ', 'blue'), 
+                str(min_temp) + u'\u2103')
         elif version == 'special':
             print(date, termcolor.colored(line_minus, 'blue') +
                   termcolor.colored(line_plus, 'red'),
-                  str(min_temp) + u'\u2103' + '  - ' + str(max_temp) + u'\u2103')
+                  str(min_temp) + u'\u2103' + '  - ' + str(max_temp) 
+                  + u'\u2103')
 
 
 def sort_keys(bank):
@@ -217,7 +235,7 @@ def is_int(num):
         return False
 
 
-def is_valid_year(year, files):
+def get_year_range(files):
     all_years = []
     for file in files:
         split_file = file.split('_')
@@ -227,14 +245,29 @@ def is_valid_year(year, files):
     all_years.sort()
     max_year = all_years[-1]
     min_year = all_years[0]
+    return max_year, min_year
+
+
+def is_valid_year(year, files):
+    max_year, min_year = get_year_range(files)
     if year >= min_year and year <= max_year:
         return True
     return False
 
 
-def is_valid_month(month):
+def files_present(files, month, year):
+    all_months = []
+    month_alpha = get_month(month)
+    for file in files:
+        split_file = file.split('_')
+        if(split_file[2] == str(year)):
+            if month_alpha[:3] == split_file[3][:3]:
+                return True
+
+
+def is_valid_month(year, month, min_year, files):
     if month >= 1 and month <= 12:
-        return True
+        return files_present(files, month, year)
     return False
 
 
