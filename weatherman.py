@@ -44,7 +44,7 @@ def main():
                     except ValueError:
                         print('\''+dates[i]+'\' is not a valid date')
                         sys.exit(1)
-                    if not is_valid_year(year):
+                    if not is_valid_year(year, all_files):
                         print('''Error: Enter a date value between 
                                 2004 and 2016.''')
                         sys.exit(1)
@@ -62,7 +62,7 @@ def main():
                         except ValueError:
                             print('\'' + dates[i] + '\' is not a valid date')
                             sys.exit(1)
-                        if not (is_valid_year(year) and
+                        if not (is_valid_year(year, all_files) and
                                 is_valid_month(month)):
                             print('Error: Date not supported: '+dates[i])
                 relevant_files = find_files(year, month_alpha, all_files)
@@ -78,6 +78,7 @@ def parse_files_copy(flag, files, path):
     for file in files:
         in_file = open(path + '/' + file, 'r')
         lines = in_file.readlines()
+        in_file.close()
         count = 1
         for line in lines:
             line_literals = line.split(',')
@@ -208,10 +209,25 @@ def print_flags(valid_flags):
     return f
 
 
-def is_valid_year(year):
-    MAX_YEAR = 2016
-    MIN_YEAR = 2004
-    if year >= MIN_YEAR and year <= MAX_YEAR:
+def is_int(num):
+    try:
+        int(num)
+        return True
+    except ValueError:
+        return False
+
+
+def is_valid_year(year, files):
+    all_years = []
+    for file in files:
+        split_file = file.split('_')
+        for word in split_file:
+            if is_int(word):
+                all_years.append(int(word))
+    all_years.sort()
+    max_year = all_years[-1]
+    min_year = all_years[0]
+    if year >= min_year and year <= max_year:
         return True
     return False
 
