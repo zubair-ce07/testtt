@@ -24,7 +24,7 @@ def main():
                      f.endswith('.txt')]
         for flag in flags:
             if flag not in valid_flags:
-                print('Invalid flag. Choose a valid flag from:'+
+                print('Invalid flag. Choose a valid flag from:' +
                       print_flags(valid_flags))
                 sys.exit(1)
         if len(flags) > len(dates):
@@ -42,17 +42,17 @@ def main():
                         month = 0
                         month_alpha = ''
                     except ValueError:
-                        print('\''+dates[i]+'\' is not a valid date')
+                        print('\'' + dates[i] + '\' is not a valid date')
                         sys.exit(1)
                     if not is_valid_year(year, all_files):
                         max_year, min_year = get_year_range(all_files)
-                        print('Error: Enter a date value between ' + 
-                                str(min_year) + ' and ' + str(max_year))
+                        print('Error: Enter a date value between ' +
+                              str(min_year) + ' and ' + str(max_year))
                         sys.exit(1)
                 elif flag == '-a' or flag == '-c':
                     if '/' not in dates[i]:
-                        print('Error: Invalid date format for \''+
-                              flag+'\' flag.')
+                        print('Error: Invalid date format for \'' +
+                              flag + '\' flag.')
                         sys.exit(1)
                     else:
                         date_ = dates[i].split('/')
@@ -65,9 +65,9 @@ def main():
                             sys.exit(1)
                         max_year, min_year = get_year_range(all_files)
                         if not (is_valid_year(year, all_files) and
-                                is_valid_month(year, month, 
+                                is_valid_month(year, month,
                                 min_year, all_files)):
-                            print('Error: Date not supported: '+dates[i])
+                            print('Error: Date not supported: ' + dates[i])
                             sys.exit(1)
                 relevant_files = find_files(year, month_alpha, all_files)
                 parse_files(flag, relevant_files, file_path)
@@ -119,27 +119,26 @@ def parse_files(flag, files, path):
                             max_temp[date] = int(line_literals[i_max_t])
                         if line_literals[i_min_t]:
                             min_temp[date] = int(line_literals[i_min_t])
-                        if flag == '-e':
-                            if line_literals[i_max_h]:
-                                max_humid[date] = int(line_literals[i_max_h])
+                        if flag == '-e' and line_literals[i_max_h]:
+                            max_humid[date] = int(line_literals[i_max_h])
             count += 1
     if flag == '-a':
         max_temp_keys = list(max_temp.keys())
         min_temp_keys = list(min_temp.keys())
         mean_humid_keys = list(mean_humid.keys())
-        print('\nHighest Average:', str(round(stat.mean(max_temp_keys)))+
+        print('\nHighest Average:', str(round(stat.mean(max_temp_keys))) +
               u'\u2103')
-        print('Lowest Average:', str(round(stat.mean(min_temp_keys)))+
+        print('Lowest Average:', str(round(stat.mean(min_temp_keys))) +
               u'\u2103')
         print('Average Mean Humidity:',
-              str(round(stat.mean(mean_humid_keys)))+'%\n')
+              str(round(stat.mean(mean_humid_keys))) + '%\n')
     elif flag == '-e':
         date, temp = return_val(max_temp, 'max')
-        print('\nHighest:', str(temp)+u'\u2103', 'on', return_date(date))
+        print('\nHighest:', str(temp) + u'\u2103', 'on', return_date(date))
         date, temp = return_val(min_temp, 'min')
         print('Lowest:', str(temp) + u'\u2103', 'on', return_date(date))
         date, humid = return_val(max_humid, 'max')
-        print('Humidity:', str(humid) + '%', 'on', return_date(date)+'\n')
+        print('Humidity:', str(humid) + '%', 'on', return_date(date) + '\n')
     elif flag == '-c':
         sorted_keys = sort_keys(max_temp)
         print_chart(max_temp, min_temp, sorted_keys, 'ordinary')
@@ -162,20 +161,20 @@ def print_chart(max_bank, min_bank, sorted_keys, version):
     for i in range(0, len(sorted_dates)):
         date = str(sorted_dates[i])
         if len(date) == 1:
-            date = '0'+date
+            date = '0' + date
         max_temp = max_bank[sorted_keys[i]]
         min_temp = min_bank[sorted_keys[i]]
         line_plus = '+' * max_temp
         line_minus = '+' * min_temp
         if version == 'ordinary':
-            print(date, termcolor.colored(line_plus+' ', 'red'), 
-                str(max_temp) + u'\u2103')
-            print(date, termcolor.colored(line_minus+' ', 'blue'), 
-                str(min_temp) + u'\u2103')
+            print(date, termcolor.colored(line_plus + ' ', 'red'),
+                  str(max_temp) + u'\u2103')
+            print(date, termcolor.colored(line_minus + ' ', 'blue'),
+                  str(min_temp) + u'\u2103')
         elif version == 'special':
             print(date, termcolor.colored(line_minus, 'blue') +
                   termcolor.colored(line_plus, 'red'),
-                  str(min_temp) + u'\u2103' + '  - ' + str(max_temp) 
+                  str(min_temp) + u'\u2103' + '  - ' + str(max_temp)
                   + u'\u2103')
 
 
@@ -186,7 +185,7 @@ def sort_keys(bank):
         split_key = key.split('-')
         sorted_keys.append(int(split_key[2]))
     sorted_keys.sort()
-    sorted_keys = [split_key[0]+'-'+split_key[1]+'-'+str(k)
+    sorted_keys = [split_key[0] + '-' + split_key[1] + '-' + str(k)
                    for k in sorted_keys]
     return sorted_keys
 
@@ -204,8 +203,7 @@ def return_val(bank, version):
 
 def return_date(date):
     date = date.split('-')
-    month_alpha = get_month(date[1])
-    return month_alpha+' '+date[2]
+    return get_month(date[1]) + ' ' + date[2]
 
 
 def find_files(year, month, files):
@@ -214,9 +212,8 @@ def find_files(year, month, files):
         if str(year) in file:
             if not month:
                 relevant_files.append(file)
-            else:
-                if month[:3] in file:
-                    relevant_files.append(file)
+            elif month[:3] in file:
+                relevant_files.append(file)
     return relevant_files
 
 
@@ -250,23 +247,23 @@ def get_year_range(files):
 
 def is_valid_year(year, files):
     max_year, min_year = get_year_range(files)
-    if year >= min_year and year <= max_year:
+    if min_year <= year <= max_year:
         return True
     return False
 
 
 def files_present(files, month, year):
-    all_months = []
     month_alpha = get_month(month)
     for file in files:
         split_file = file.split('_')
-        if(split_file[2] == str(year)):
-            if month_alpha[:3] == split_file[3][:3]:
-                return True
+        if split_file[2] == str(year) and \
+           month_alpha[:3] == split_file[3][:3]:
+            return True
+    return False
 
 
 def is_valid_month(year, month, min_year, files):
-    if month >= 1 and month <= 12:
+    if 1 <= month <= 12:
         return files_present(files, month, year)
     return False
 
