@@ -59,17 +59,7 @@ class WeatherReport(object):
                 a_day_weather = Weather(weather_fields_lines[line_number])
                 self.weather_data_all_day.append(a_day_weather)
 
-    def generate_weather_report(self, flag):
-        if flag == '-e':
-            self._print_etype_weather_report()
-        elif flag == '-a':
-            self._print_atype_weather_report()
-        elif flag == '-c':
-            self._print_ctype_weather_report()
-        elif flag == '-p':
-            self._print_ptype_weather_report()
-
-    def _print_etype_weather_report(self):
+    def print_extreme_weather_report(self):
         highest_temperature_day = self._get_highest_temperature_day()
         lowest_temperature_day = self._get_lowest_temperature_day()
         highest_humidity_day = self._get_highest_humidity_day()
@@ -84,7 +74,7 @@ class WeatherReport(object):
                                                    highest_humidity_day.date,
                                                    ))
 
-    def _print_atype_weather_report(self):
+    def print_average_weather_report(self):
         average_highest_temperature = self._calculate_average_highest_temperature()
         average_lowest_temperature = self._calculate_average_lowest_temperature()
         average_mean_humidity = self._calculate_average_mean_humidity()
@@ -93,7 +83,7 @@ class WeatherReport(object):
         print('Lowest Average: {:.0f}%'.format(average_lowest_temperature))
         print('Average Mean Humidity: {:.0f}%'.format(average_mean_humidity))
 
-    def _print_ctype_weather_report(self):
+    def print_weather_report_chart_1(self):
         print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
         for a_day_weather in self.weather_data_all_day:
             if not a_day_weather.max_temperature_c == Weather.invalid_field_value:
@@ -108,7 +98,7 @@ class WeatherReport(object):
                     temperature=a_day_weather.min_temperature_c))
         print(Style.RESET_ALL)
 
-    def _print_ptype_weather_report(self):
+    def print_weather_report_chart_2(self):
         print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
         for a_day_weather in self.weather_data_all_day:
             if not (a_day_weather.max_temperature_c == Weather.invalid_field_value
@@ -165,6 +155,17 @@ class WeatherReport(object):
         return average_mean_humidity
 
 
+def generate_weather_report(weather_report, flag):
+    if flag == '-e':
+        weather_report.print_extreme_weather_report()
+    elif flag == '-a':
+        weather_report.print_average_weather_report()
+    elif flag == '-c':
+        weather_report.print_weather_report_chart_1()
+    elif flag == '-p':
+        weather_report.print_weather_report_chart_2()
+
+
 def main():
     path_to_weather_files = sys.argv[1]
     for arg_number in range(2, len(sys.argv), 2):
@@ -176,8 +177,8 @@ def main():
         else:
             months = list(range(1, 13))  # no month is given , so we include all 12
 
-        areport = WeatherReport(path_to_weather_files, year, months)
-        areport.generate_weather_report(flag=sys.argv[arg_number])
+        weather_report = WeatherReport(path_to_weather_files, year, months)
+        generate_weather_report(weather_report, flag=sys.argv[arg_number])
 
 
 if __name__ == '__main__':
