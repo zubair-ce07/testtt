@@ -10,24 +10,57 @@ from termcolor import colored
 __author__ = 'fakhar'
 
 
-def check_args(args):
+def check_arg(args):
+    '''check if arguments are in valid format'''
+    if len(args) < 4:
+        print('Minium Required arguments not provided\n'
+              + 'usage: script-name.py path/to/files-dir flag date\n'
+              + 'flag: -e for Yearly extreme Weather Report, -a for Average Monthly report'
+              + 'or -c for Monthly Bar Graph'
+              + 'date: Enter in either YYYY or YYYY/MM format')
+        sys.exit()
+    elif not os.path.exists(args[1]):
+        print('The provided directory doesn\'t exist')
+        sys.exit()
+    else:
+        file_path = args[1]
+        for i in range(2, len(args), 2):
+            if args[i] not in ['-a', '-c', '-e']:
+                print('Please select a label from [-a, -c, -e]')
+                sys.exit()
+            else:
+                if int(args[i + 1][:4]) not in range(1900, 2017):
+                    print('Please enter correct year')
+                    sys.exit()
+                if args[i] == '-e':
+                    if len(args[i + 1]) > 4 or len(args[i + 1]) < 2:
+                        print('Please input year in the YYYY / YYY / YY format')
+                        sys.exit()
+                elif len(args[i + 1]) > 5:
+                    if int(args[i + 1][5:]) not in range(1, 12):
+                        print('Please enter a valid month')
+                        sys.exit()
+                else:
+                    print('Please enter date in YYYY/MM format')
+                    sys.exit()
+            generate_report(args[i:i + 2], file_path)
+
+
+def generate_report(args, file_path):
     '''Checks the kind of report to be generated'''
 
-    file_path = args[1]
+    year = args[1][0:4]
 
-    for i in range(2, len(args), 2):
-        year = args[i + 1][0:4]
+    if args[0] == '-e':
+        extreme_weather(file_path, year)
+    elif args[0] == '-a' or '-c':
+        if int(args[1][5]) == 0:
+            month = int(args[1][6])
+        else:
+            month = int(args[1][5:])
 
-        if args[i] == '-e':
-            extreme_weather(file_path, year)
-        elif args[i] == '-a' or '-c':
-            if int(args[i + 1][5]) == 0:
-                month = int(args[i + 1][6])
-            else:
-                month = int(args[i + 1][5:])
-
-            month = calendar.month_abbr[month]
-            prereq(month, year, file_path, args[i])
+        month = calendar.month_abbr[month]
+        prereq(month, year, file_path, args[0])
 
 
 def extreme_weather(file_path, year):
@@ -38,6 +71,10 @@ def extreme_weather(file_path, year):
     for file in file_names:
         if year in file:
             year_list.append(file)
+
+    if not year_list:
+        print('Data for entered year is not available')
+        sys.exit()
 
     for file in year_list:
         with open(file_path + '/' + file) as csvfile:
@@ -71,11 +108,17 @@ def extreme_weather(file_path, year):
 def prereq(month, year, path, arg):
     '''prerequisites for -a and -c'''
     file_name = os.listdir(path)
+    req_file = ''
     for file in file_name:
         if year in file:
             if month in file:
                 req_file = file
-
+            else:
+                print('Data for the provided month is not available')
+                sys.exit()
+    if not req_file:
+        print('Data for provided year is not available')
+        sys.exit()
     high_temp_list, low_temp_list, mean_humid_list = [], [], []
 
     with open(path + '/' + req_file) as csvfile:
@@ -166,8 +209,8 @@ def weather_graph(high_temp_list, low_temp_list):
 
 def main():
     '''generate weather reports'''
-    check_args(sys.argv)
+    check_arg(sys.argv)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
