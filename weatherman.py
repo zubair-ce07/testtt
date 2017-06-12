@@ -13,7 +13,7 @@ from colorama import Fore, Style
 
 class Weather(object):
 
-    invalid_field_value=-273
+    invalid_field_value = -273
 
     def __init__(self, weather_fields_line):
         self.date = None
