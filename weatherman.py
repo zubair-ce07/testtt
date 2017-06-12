@@ -12,8 +12,11 @@ from colorama import Fore, Style
 
 
 class Weather(object):
+
+    invalid_field_value=-273
+
     def __init__(self, weather_fields_line):
-        self.date = ''
+        self.date = None
         self.max_temperature_c = 0
         self.mean_temperature_c = 0
         self.min_temperature_c = 0
@@ -24,31 +27,19 @@ class Weather(object):
 
     def _parse_weather_fields_line(self, weather_fields_line):
         weather_fields = weather_fields_line.split(',')
-        self.date = weather_fields[0]
+        self.date = datetime.strptime(weather_fields[0], '%Y-%m-%d')
+        self.max_temperature_c = self.convert_str_to_int(weather_fields[1])
+        self.mean_temperature_c = self.convert_str_to_int(weather_fields[2])
+        self.min_temperature_c = self.convert_str_to_int(weather_fields[3])
+        self.max_humidity = self.convert_str_to_int(weather_fields[7])
+        self.mean_humidity = self.convert_str_to_int(weather_fields[8])
+        self.min_humidity = self.convert_str_to_int(weather_fields[9])
+
+    def convert_str_to_int(self, number):
         try:
-            self.max_temperature_c = int(weather_fields[1])
+            return int(number)
         except ValueError:
-            self.max_temperature_c = -273  # no data found
-        try:
-            self.mean_temperature_c = int(weather_fields[2])
-        except ValueError:
-            self.mean_temperature_c = -273
-        try:
-            self.min_temperature_c = int(weather_fields[3])
-        except ValueError:
-            self.min_temperature_c = -273
-        try:
-            self.max_humidity = int(weather_fields[7])
-        except ValueError:
-            self.max_humidity = -1
-        try:
-            self.mean_humidity = int(weather_fields[8])
-        except ValueError:
-            self.mean_humidity = -1
-        try:
-            self.min_humidity = int(weather_fields[9])
-        except ValueError:
-            self.min_humidity = -1
+            return self.invalid_field_value
 
 
 class WeatherReport(object):
@@ -99,26 +90,27 @@ class WeatherReport(object):
         self._calculate_average_mean_humidity()
 
     def _ctype_weather_report(self):
-        print('{:%B %Y}'.format(datetime.strptime(self.weather_data_all_day[0].date, '%Y-%m-%d')))
+        print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
         for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.max_temperature_c != -273:
-                print(Fore.RED + '{:%d} {bar} {temperature}C'.format(datetime.strptime(
-                    a_day_weather.date, '%Y-%m-%d'),
+            if not a_day_weather.max_temperature_c == Weather.invalid_field_value:
+                print(Fore.RED + '{:%d} {bar} {temperature}C'.format(
+                    a_day_weather.date,
                     bar='+' * abs(a_day_weather.max_temperature_c),
                     temperature=a_day_weather.max_temperature_c))
-            if a_day_weather.min_temperature_c != -273:
+            if not a_day_weather.min_temperature_c == Weather.invalid_field_value:
                 print(Fore.BLUE + '{:%d} {bar} {temperature}c'.format(
-                    datetime.strptime(a_day_weather.date, '%Y-%m-%d'),
+                    a_day_weather.date,
                     bar='+' * abs(a_day_weather.min_temperature_c),
                     temperature=a_day_weather.min_temperature_c))
         print(Style.RESET_ALL)
 
     def _ptype_weather_report(self):
-        print('{:%B %Y}'.format(datetime.strptime(self.weather_data_all_day[0].date, '%Y-%m-%d')))
+        print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
         for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.max_temperature_c != -273 and a_day_weather.min_temperature_c != -273:
+            if not (a_day_weather.max_temperature_c == Weather.invalid_field_value
+                    or a_day_weather.min_temperature_c == Weather.invalid_field_value):
                 bar = '+' * (abs(a_day_weather.max_temperature_c) + abs(a_day_weather.min_temperature_c))
-                print('{:%d} {bar}'.format(datetime.strptime(a_day_weather.date, '%Y-%m-%d'), bar=bar), end='')
+                print('{:%d} {bar}'.format(a_day_weather.date, bar=bar), end='')
                 print(Fore.BLUE + ' {tempe_low}C '.format(tempe_low=a_day_weather.min_temperature_c), end='')
                 print(Fore.RED + ' - {temp_high}C'.format(temp_high=a_day_weather.max_temperature_c))
                 print(Style.RESET_ALL)
@@ -127,31 +119,28 @@ class WeatherReport(object):
         self.highest_temperature_day = max(self.weather_data_all_day,
                                            key=operator.attrgetter('max_temperature_c'))
         print('Highest: {:0>2d}C on {:%B %d}'.format(self.highest_temperature_day.max_temperature_c,
-                                                     datetime.strptime(self.highest_temperature_day.date,
-                                                                       '%Y-%m-%d'),
+                                                     self.highest_temperature_day.date,
                                                      ))
 
     def _calculate_lowest_temperature(self):
         self.lowest_temperature_day = min(self.weather_data_all_day,
                                           key=operator.attrgetter('min_temperature_c'))
         print('Lowest: {:0>2d}C on {:%B %d}'.format(self.lowest_temperature_day.min_temperature_c,
-                                                    datetime.strptime(self.lowest_temperature_day.date,
-                                                                      '%Y-%m-%d'),
+                                                    self.lowest_temperature_day.date,
                                                     ))
 
     def _calculate_highest_humidity(self):
         self.highest_humidity_day = max(self.weather_data_all_day,
                                         key=operator.attrgetter('max_humidity'))
         print('Humidity: {:d}% on {:%B %d}'.format(self.highest_humidity_day.max_humidity,
-                                                   datetime.strptime(self.highest_humidity_day.date,
-                                                                     '%Y-%m-%d'),
+                                                   self.highest_humidity_day.date,
                                                    ))
 
     def _calculate_average_highest_temperature(self):
         sum_temperature = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.max_temperature_c != -273:
+            if not a_day_weather.max_temperature_c == Weather.invalid_field_value:
                 sum_temperature += a_day_weather.max_temperature_c
                 record_count += 1
         self.average_highest_temperature = sum_temperature / record_count
@@ -161,7 +150,7 @@ class WeatherReport(object):
         sum_temperature = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.min_temperature_c != -273:
+            if not a_day_weather.min_temperature_c == Weather.invalid_field_value:
                 sum_temperature += a_day_weather.min_temperature_c
                 record_count += 1
         self.average_lowest_temperature = sum_temperature / record_count
@@ -171,7 +160,7 @@ class WeatherReport(object):
         sum_humidity = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.mean_humidity != -1:
+            if not a_day_weather.mean_humidity == Weather.invalid_field_value:
                 sum_humidity += a_day_weather.mean_humidity
                 record_count += 1
         self.average_mean_humidity = sum_humidity / record_count
@@ -192,4 +181,5 @@ def main():
                       year, months)
 
 
-main()
+if __name__ == '__main__':
+    main()
