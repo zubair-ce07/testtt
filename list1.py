@@ -27,7 +27,6 @@ def match_ends(words):
     for word in words:
         if len(word) >= 2 and word[0] == word[-1]:
             count += 1
-
     return count
 
 
@@ -48,7 +47,6 @@ def front_x(words):
             rest.append(word)
     x_list.sort()
     rest.sort()
-
     return x_list + rest
 
 
@@ -84,8 +82,7 @@ def main():
     test(match_ends(['', 'x', 'xy', 'xyx', 'xx']), 2)
     test(match_ends(['aaa', 'be', 'abc', 'hello']), 1)
 
-    print
-    print('front_x')
+    print('\nfront_x')
     test(front_x(['bbb', 'ccc', 'axx', 'xzz', 'xaa']),
          ['xaa', 'xzz', 'axx', 'bbb', 'ccc'])
     test(front_x(['ccc', 'bbb', 'aaa', 'xcc', 'xaa']),
@@ -93,8 +90,7 @@ def main():
     test(front_x(['mix', 'xyz', 'apple', 'xanadu', 'aardvark']),
          ['xanadu', 'xyz', 'aardvark', 'apple', 'mix'])
 
-    print
-    print('sort_last')
+    print('\nsort_last')
     test(sort_last([(1, 3), (3, 2), (2, 1)]),
          [(2, 1), (3, 2), (1, 3)])
     test(sort_last([(2, 3), (1, 2), (3, 1)]),

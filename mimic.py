@@ -51,14 +51,14 @@ def mimic_dict(filename):
     all_lines = in_file.read()
     in_file.close()
     words = all_lines.split()
-    mimicked_dict = {}
-    mimicked_dict[' '] = [words[0]]
+    mimicked = {}
+    mimicked[' '] = [words[0]]
     for i in range(0, len(words)-1):
-        if words[i] in mimicked_dict:
-            mimicked_dict[words[i]].append(words[i+1])
+        if words[i] in mimicked:
+            mimicked[words[i]].append(words[i+1])
         else:
-            mimicked_dict[words[i]] = [words[i+1]]
-    return mimicked_dict
+            mimicked[words[i]] = [words[i+1]]
+    return mimicked
 
 
 def print_formatted(in_str, line_break):
@@ -78,6 +78,7 @@ def print_formatted(in_str, line_break):
             all_words.append('\n')
 
     out_str = ''.join(all_words)
+    out_str = out_str[:-2]+'.'
     print('\n'+out_str)
 
 
@@ -96,12 +97,7 @@ def print_mimic(mimic_d, word):
             value_list = mimic_d[cur_word]
 
         out_str += random.choice(value_list)
-
-        if i == ITERATIONS-1:
-            out_str += '.'
-        else:
-            out_str += ' '
-
+        out_str += ' '
     print_formatted(out_str, CUTOFF)
 
 

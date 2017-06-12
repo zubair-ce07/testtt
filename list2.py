@@ -27,32 +27,17 @@ def remove_adjacent(nums):
 # Ideally, the solution should work in "linear" time, making a single
 # pass of both lists.
 def linear_merge(list1, list2):
-    if list1 is None and list2 is None:
-        return list1
-    elif list1 is None:
-        return sorted(list2)
-    elif list2 is None:
-        return sorted(list1)
-    else:
-        list1.sort()
-        list2.sort()
-        i_list1 = 0
-        i_list2 = 0
-        merged_list = []
-        while i_list1<len(list1) and i_list2<len(list2):
-            if list1[i_list1] < list2[i_list2]:
-                merged_list.append(list1[i_list1])
-                i_list1 += 1
-            else:
-                merged_list.append(list2[i_list2])
-                i_list2 += 1
-        if i_list1 == len(list1):
-            for i in range(i_list2, len(list2)):
-                merged_list.append(list2[i])
-        elif i_list2 == len(list2):
-            for i in range(i_list1, len(list1)):
-                merged_list.append(list1[i])
-        return merged_list
+    merged_list = []
+    list1.sort()
+    list2.sort()
+    while len(list1) and len(list2):
+        if list1[0] < list2[0]:
+            merged_list.append(list1.pop(0))
+        else:
+            merged_list.append(list2.pop(0))
+    merged_list += list1
+    merged_list += list2
+    return merged_list
 
 # Note: the solution above is kind of cute, but unforunately list.pop(0)
 # is not constant time with the standard python list implementation, so
@@ -80,8 +65,7 @@ def main():
     test(remove_adjacent([2, 2, 3, 3, 3]), [2, 3])
     test(remove_adjacent([]), [])
 
-    print
-    print ('linear_merge')
+    print ('\nlinear_merge')
     test(linear_merge(['aa', 'xx', 'zz'], ['bb', 'cc']),
              ['aa', 'bb', 'cc', 'xx', 'zz'])
     test(linear_merge(['aa', 'xx'], ['bb', 'cc', 'zz']),

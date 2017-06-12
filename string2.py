@@ -41,10 +41,7 @@ def not_bad(s):
         bad_index = s.find('bad')
         if bad_index > not_index:
             return s[:not_index]+'good'+s[bad_index+len('bad'):]
-        else:
-            return s
-    else:
-        return s
+    return s
 
 
 # F. front_back
@@ -92,15 +89,13 @@ def main():
     test(verbing('swiming'), 'swimingly')
     test(verbing('do'), 'do')
 
-    print
-    print ('not_bad')
+    print ('\nnot_bad')
     test(not_bad('This movie is not so bad'), 'This movie is good')
     test(not_bad('This dinner is not that bad!'), 'This dinner is good!')
     test(not_bad('This tea is not hot'), 'This tea is not hot')
     test(not_bad("It's bad yet not"), "It's bad yet not")
 
-    print
-    print ('front_back')
+    print ('\nfront_back')
     test(front_back('abcd', 'xy'), 'abxcdy')
     test(front_back('abcde', 'xyz'), 'abcxydez')
     test(front_back('Kitten', 'Donut'), 'KitDontenut')
