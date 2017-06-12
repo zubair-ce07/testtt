@@ -3,6 +3,7 @@
 is a program to populate different statictics and graphs about weather
 history.
 """
+
 import calendar
 import operator
 import sys
@@ -11,34 +12,36 @@ from datetime import datetime
 from colorama import Fore, Style
 
 
-class Weather(object):
-    invalid_field_value = -273
+class WeatherRecord(object):
+    def __init__(self, date, max_temperature_c, mean_temperature_c,
+                 min_temperature_c, max_humidity, mean_humidity, min_humidity):
+        self.date = date
+        self.max_temperature_c = max_temperature_c
+        self.mean_temperature_c = mean_temperature_c
+        self.min_temperature_c = min_temperature_c
+        self.max_humidity = max_humidity
+        self.mean_humidity = mean_humidity
+        self.min_humidity = min_humidity
 
-    def __init__(self, weather_fields_line):
-        self.date = None
-        self.max_temperature_c = 0
-        self.mean_temperature_c = 0
-        self.min_temperature_c = 0
-        self.max_humidity = 0
-        self.mean_humidity = 0
-        self.min_humidity = 0
-        self._parse_weather_fields_line(weather_fields_line)
-
-    def _parse_weather_fields_line(self, weather_fields_line):
+    @classmethod
+    def parse_weather_fields_line(cls, weather_fields_line):
         weather_fields = weather_fields_line.split(',')
-        self.date = datetime.strptime(weather_fields[0], '%Y-%m-%d')
-        self.max_temperature_c = self.convert_str_to_int(weather_fields[1])
-        self.mean_temperature_c = self.convert_str_to_int(weather_fields[2])
-        self.min_temperature_c = self.convert_str_to_int(weather_fields[3])
-        self.max_humidity = self.convert_str_to_int(weather_fields[7])
-        self.mean_humidity = self.convert_str_to_int(weather_fields[8])
-        self.min_humidity = self.convert_str_to_int(weather_fields[9])
+        weather_record = cls(date=datetime.strptime(weather_fields[0], '%Y-%m-%d'),
+                             max_temperature_c=cls.convert_str_to_int(weather_fields[1]),
+                             mean_temperature_c=cls.convert_str_to_int(weather_fields[2]),
+                             min_temperature_c=cls.convert_str_to_int(weather_fields[3]),
+                             max_humidity=cls.convert_str_to_int(weather_fields[7]),
+                             mean_humidity=cls.convert_str_to_int(weather_fields[8]),
+                             min_humidity=cls.convert_str_to_int(weather_fields[9]),
+                             )
+        return weather_record
 
-    def convert_str_to_int(self, number):
+    @staticmethod
+    def convert_str_to_int(number):
         try:
             return int(number)
         except ValueError:
-            return self.invalid_field_value
+            pass
 
 
 class WeatherReport(object):
@@ -56,7 +59,7 @@ class WeatherReport(object):
             weather_file_in = open(weather_file_path, 'r')
             weather_fields_lines = weather_file_in.readlines()
             for line_number in range(1, len(weather_fields_lines)):
-                a_day_weather = Weather(weather_fields_lines[line_number])
+                a_day_weather = WeatherRecord.parse_weather_fields_line(weather_fields_lines[line_number])
                 self.weather_data_all_day.append(a_day_weather)
 
     def print_extreme_weather_report(self):
@@ -86,12 +89,12 @@ class WeatherReport(object):
     def print_weather_report_chart_1(self):
         print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
         for a_day_weather in self.weather_data_all_day:
-            if not a_day_weather.max_temperature_c == Weather.invalid_field_value:
+            if a_day_weather.max_temperature_c:
                 print(Fore.RED + '{:%d} {bar} {temperature}C'.format(
                     a_day_weather.date,
                     bar='+' * abs(a_day_weather.max_temperature_c),
                     temperature=a_day_weather.max_temperature_c))
-            if not a_day_weather.min_temperature_c == Weather.invalid_field_value:
+            if a_day_weather.min_temperature_c:
                 print(Fore.BLUE + '{:%d} {bar} {temperature}c'.format(
                     a_day_weather.date,
                     bar='+' * abs(a_day_weather.min_temperature_c),
@@ -101,8 +104,7 @@ class WeatherReport(object):
     def print_weather_report_chart_2(self):
         print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
         for a_day_weather in self.weather_data_all_day:
-            if not (a_day_weather.max_temperature_c == Weather.invalid_field_value
-                    or a_day_weather.min_temperature_c == Weather.invalid_field_value):
+            if a_day_weather.max_temperature_c and a_day_weather.min_temperature_c:
                 bar = '+' * (abs(a_day_weather.max_temperature_c) + abs(a_day_weather.min_temperature_c))
                 print('{:%d} {bar}'.format(a_day_weather.date, bar=bar), end='')
                 print(Fore.BLUE + ' {tempe_low}C '.format(tempe_low=a_day_weather.min_temperature_c), end='')
@@ -128,7 +130,7 @@ class WeatherReport(object):
         sum_temperature = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_day:
-            if not a_day_weather.max_temperature_c == Weather.invalid_field_value:
+            if a_day_weather.max_temperature_c:
                 sum_temperature += a_day_weather.max_temperature_c
                 record_count += 1
         average_highest_temperature = sum_temperature / record_count
@@ -138,7 +140,7 @@ class WeatherReport(object):
         sum_temperature = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_day:
-            if not a_day_weather.min_temperature_c == Weather.invalid_field_value:
+            if a_day_weather.min_temperature_c:
                 sum_temperature += a_day_weather.min_temperature_c
                 record_count += 1
         average_lowest_temperature = sum_temperature / record_count
@@ -148,7 +150,7 @@ class WeatherReport(object):
         sum_humidity = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_day:
-            if not a_day_weather.mean_humidity == Weather.invalid_field_value:
+            if a_day_weather.mean_humidity:
                 sum_humidity += a_day_weather.mean_humidity
                 record_count += 1
         average_mean_humidity = sum_humidity / record_count
