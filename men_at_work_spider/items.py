@@ -7,3 +7,4 @@ class MenAtWorkItem(scrapy.Item):
     url = scrapy.Field()
     skus = scrapy.Field()
     description = scrapy.Field()
+
