@@ -159,11 +159,16 @@ def get_weather_record_form_files(path_to_weather_files, year, months=list(range
         weather_file_path = ('{dir}/Murree_weather_{year}_{month}.txt'.format(dir=path_to_weather_files,
                                                                               year=year,
                                                                               month=calendar.month_abbr[month]))
-        with open(weather_file_path, 'r') as weather_file_in:
-            weather_file_in.readline()  # neglecting first line
-            for weather_record_line in weather_file_in:
-                a_day_weather = WeatherRecord.parse_weather_fields_line(weather_record_line)
-                weather_records.append(a_day_weather)
+
+        try:
+            with open(weather_file_path, 'r') as (weather_file_in):
+                weather_file_in.readline()  # neglecting first line
+                for weather_record_line in weather_file_in:
+                    a_day_weather = WeatherRecord.parse_weather_fields_line(weather_record_line)
+                    weather_records.append(a_day_weather)
+        except FileNotFoundError:
+            print("source is not corrector. Use -h option for help", file=sys.stderr)
+            sys.exit(1)
 
     return weather_records
 
