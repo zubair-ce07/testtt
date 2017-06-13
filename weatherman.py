@@ -145,7 +145,7 @@ def year_range(string):
     try:
         year_passed = datetime.datetime.strptime(string, "%Y")
 
-        if year_passed.year > 2011 or year_passed.year < 1996:
+        if not datetime.datetime(1996, 12, 1) <= year_passed <= datetime.datetime(2011, 12, 9):
             msg = '%r year passed is out of range' % string
             raise argparse.ArgumentTypeError(msg)
 
