@@ -125,7 +125,7 @@ class WeatherReport(object):
         sum_temperature = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_days:
-            if a_day_weather.max_temperature_c:
+            if a_day_weather.max_temperature_c is not None:
                 sum_temperature += a_day_weather.max_temperature_c
                 record_count += 1
         average_highest_temperature = sum_temperature / record_count
@@ -135,7 +135,7 @@ class WeatherReport(object):
         sum_temperature = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_days:
-            if a_day_weather.min_temperature_c:
+            if a_day_weather.min_temperature_c is not None:
                 sum_temperature += a_day_weather.min_temperature_c
                 record_count += 1
         average_lowest_temperature = sum_temperature / record_count
@@ -145,7 +145,7 @@ class WeatherReport(object):
         sum_humidity = 0
         record_count = 0
         for a_day_weather in self.weather_data_all_days:
-            if a_day_weather.mean_humidity:
+            if a_day_weather.mean_humidity is not None:
                 sum_humidity += a_day_weather.mean_humidity
                 record_count += 1
         average_mean_humidity = sum_humidity / record_count
@@ -211,12 +211,12 @@ def main():
                         help='Display average weather report for given month(format: YYYY/MM)')
     parser.add_argument('-c', '--chart', type=valid_month,
                         help='Display char weather report for given month(format: YYYY/MM)')
-    parser.add_argument('-m', '--mergedchart', type=valid_month,
+    parser.add_argument('-m', '--merged_chart', type=valid_month,
                         help='Display merged char weather report for given month(format: YYYY/MM)')
 
     args = parser.parse_args()
 
-    if not any((args.extreme, args.average, args.chart, args.mergedchart)):
+    if not any((args.extreme, args.average, args.chart, args.merged_chart)):
         print("Give at least one argument or use -h option for help", file=sys.stderr)
         sys.exit(1)
 
@@ -235,8 +235,8 @@ def main():
         weather_report = WeatherReport(weather_records)
         weather_report.print_weather_report_chart_1()
 
-    if args.mergedchart:
-        weather_records = get_weather_record_form_files(args.source, args.chart.year, [args.chart.month])
+    if args.merged_chart:
+        weather_records = get_weather_record_form_files(args.source, args.merged_chart.year, [args.merged_chart.month])
         weather_report = WeatherReport(weather_records)
         weather_report.print_weather_report_chart_2()
 
