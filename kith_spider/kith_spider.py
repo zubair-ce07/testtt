@@ -70,4 +70,4 @@ class KithSpider(CrawlSpider):
 
     def clean_object(self, object):
         clean_obj = [x.strip('\t\n ') for x in object]
-        return [x for x in clean_obj if x != u'']
+        return [x for x in clean_obj if x]
