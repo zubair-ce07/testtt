@@ -6,71 +6,54 @@ import termcolor
 
 
 def main():
-    valid_flags = ['-e', '-a', '-c']
-    year = 0
-    month_alpha = ''
     if len(sys.argv) < 4:
         print('usage: weatherman.py /path/to/files-dir flag date')
         sys.exit(1)
-    elif not sys.argv[1].startswith('/'):
+    elif not is_correct_path(sys.argv[1]):  # sys.argv[1].startswith('/'):
         print('Error: Use absolute path for directory containing files.')
         sys.exit(1)
-    else:
-        flags = sys.argv[2::2]
-        dates = sys.argv[3::2]
-        file_path = sys.argv[1]
-        all_files = [f for f in os.listdir(file_path) if
-                     os.path.isfile(os.path.join(file_path, f)) and
-                     f.endswith('.txt')]
-        for flag in flags:
-            if flag not in valid_flags:
-                print('Invalid flag. Choose a valid flag from:' +
-                      print_flags(valid_flags))
+    valid_flags = ['-e', '-a', '-c']
+    flags = sys.argv[2::2]
+    dates = sys.argv[3::2]
+    file_path = sys.argv[1]
+    if not (correct_flags(flags, valid_flags) and
+            equal_flags_and_dates(flags, dates)):
+        sys.exit(1)
+    all_files = [f for f in os.listdir(file_path) if
+                 os.path.isfile(os.path.join(file_path, f)) and
+                 f.endswith('.txt')]
+    for tuple_ in zip(flags, dates):
+        flag = tuple_[0]
+        date = tuple_[1]
+        if flag == '-e':
+            year = to_int(date)
+            if year is None:
+                print('\'' + date + '\' is not a valid date')
                 sys.exit(1)
-        if len(flags) > len(dates):
-            print('Error: Extra flag found in the input arguments.')
-            sys.exit(1)
-        elif len(flags) < len(dates):
-            print('Error: Extra date found in the input arguments.')
-            sys.exit(1)
-        else:
-            for i in range(0, len(flags)):
-                flag = flags[i]
-                if flag == '-e':
-                    try:
-                        year = int(dates[i])
-                        month = 0
-                        month_alpha = ''
-                    except ValueError:
-                        print('\'' + dates[i] + '\' is not a valid date')
-                        sys.exit(1)
-                    if not is_valid_year(year, all_files):
-                        max_year, min_year = get_year_range(all_files)
-                        print('Error: Enter a date value between ' +
-                              str(min_year) + ' and ' + str(max_year))
-                        sys.exit(1)
-                elif flag == '-a' or flag == '-c':
-                    if '/' not in dates[i]:
-                        print('Error: Invalid date format for \'' +
-                              flag + '\' flag.')
-                        sys.exit(1)
-                    else:
-                        date_ = dates[i].split('/')
-                        try:
-                            year = int(date_[0])
-                            month = int(date_[1])
-                            month_alpha = get_month(month)
-                        except ValueError:
-                            print('\'' + dates[i] + '\' is not a valid date')
-                            sys.exit(1)
-                        max_year, min_year = get_year_range(all_files)
-                        if not (is_valid_year(year, all_files) and
-                                is_valid_month(year, month,
-                                min_year, all_files)):
-                            print('Error: Date not supported: ' + dates[i])
-                            sys.exit(1)
-                relevant_files = find_files(year, month_alpha, all_files)
-                parse_files(flag, relevant_files, file_path)
+            month = 0
+            month_alpha = ''
+            if not is_valid_year(year, all_files):
+                max_year, min_year = get_year_range(all_files)
+                print('Error: Enter a date value between ' +
+                      str(min_year) + ' and ' + str(max_year))
+                sys.exit(1)
+        else:  # flag == '-a' or flag == '-c':
+            if '/' not in date:
+                print('Error: Invalid date format for \'' +
+                      flag + '\' flag.')
+                sys.exit(1)
+            split_date = date.split('/')
+            year = to_int(split_date[0])
+            month = to_int(split_date[1])
+            if year is None or month is None:
+                print('\'' + date + '\' is not a valid date')
+                sys.exit(1)
+            month_alpha = get_month(month)
+            if not date_supported(all_files, year, month):
+                print('Error: Date not supported: ' + date)
+                sys.exit(1)
+        relevant_files = find_files(year, month_alpha, all_files)
+        parse_files(flag, relevant_files, file_path)
 
 
 def parse_files(flag, files, path):
@@ -80,6 +63,8 @@ def parse_files(flag, files, path):
     mean_humid = {}
     header_len = 0
     for file in files:
+        # with open(file) as csvfile:
+        #     reader = csv.DictReader(csvfile)
         in_file = open(path + '/' + file, 'r')
         lines = in_file.readlines()
         in_file.close()
@@ -144,6 +129,37 @@ def parse_files(flag, files, path):
         print_chart(max_temp, min_temp, sorted_keys, 'ordinary')
         print_chart(max_temp, min_temp, sorted_keys, 'special')
     return
+
+
+def date_supported(all_files, year, month):
+    max_year, min_year = get_year_range(all_files)
+    if (is_valid_year(year, all_files) and
+        is_valid_month(year, month, min_year, all_files)):
+        return True
+    return False
+
+
+def correct_flags(flags, valid_flags):
+    for flag in flags:
+        if flag not in valid_flags:
+            print('Invalid flag. Choose a valid flag from:' +
+                  print_flags(valid_flags))
+            return False
+    return True
+
+
+def equal_flags_and_dates(flags, dates):
+    if len(flags) > len(dates):
+        print('Error: Extra flag found in the input arguments.')
+        return False
+    elif len(flags) < len(dates):
+        print('Error: Extra date found in the input arguments.')
+        return False
+    return True
+
+
+def is_correct_path(path):
+    return path.startswith('/')
 
 
 def get_month(month):
@@ -224,12 +240,19 @@ def print_flags(valid_flags):
     return f
 
 
-def is_int(num):
+def to_int(date):
     try:
-        int(num)
-        return True
+        return int(date)
     except ValueError:
-        return False
+        return None
+
+
+# def is_int(num):
+#     try:
+#         int(num)
+#         return True
+#     except ValueError:
+#         return False
 
 
 def get_year_range(files):
@@ -237,7 +260,7 @@ def get_year_range(files):
     for file in files:
         split_file = file.split('_')
         for word in split_file:
-            if is_int(word):
+            if to_int(word) is not None:
                 all_years.append(int(word))
     all_years.sort()
     max_year = all_years[-1]
@@ -257,7 +280,7 @@ def files_present(files, month, year):
     for file in files:
         split_file = file.split('_')
         if split_file[2] == str(year) and \
-           month_alpha[:3] == split_file[3][:3]:
+                        month_alpha[:3] == split_file[3][:3]:
             return True
     return False
 
