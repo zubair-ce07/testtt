@@ -4,6 +4,7 @@ is a program to populate different statictics and graphs about weather
 history.
 """
 
+import argparse
 import calendar
 import operator
 import sys
@@ -45,22 +46,8 @@ class WeatherRecord(object):
 
 
 class WeatherReport(object):
-    def __init__(self, path_to_weather_files, year, months):
-        self.weather_data_all_day = []
-
-        self._get_and_store_weather_data_form_files(path_to_weather_files, year, months)
-
-    def _get_and_store_weather_data_form_files(self, path_to_weather_files, year, months):
-        for month in months:
-            weather_file_path = (path_to_weather_files
-                                 + '/Murree_weather_'
-                                 + year + '_'
-                                 + calendar.month_abbr[month] + '.txt')
-            weather_file_in = open(weather_file_path, 'r')
-            weather_fields_lines = weather_file_in.readlines()
-            for line_number in range(1, len(weather_fields_lines)):
-                a_day_weather = WeatherRecord.parse_weather_fields_line(weather_fields_lines[line_number])
-                self.weather_data_all_day.append(a_day_weather)
+    def __init__(self, weather_data_all_days):
+        self.weather_data_all_days = weather_data_all_days
 
     def print_extreme_weather_report(self):
         highest_temperature_day = self._get_highest_temperature_day()
@@ -86,50 +73,58 @@ class WeatherReport(object):
         print('Lowest Average: {:.0f}%'.format(average_lowest_temperature))
         print('Average Mean Humidity: {:.0f}%'.format(average_mean_humidity))
 
+    @staticmethod
+    def get_bar_for_chart(number):
+        if number > 0:
+            return '+' * number
+        else:
+            return '-' * abs(number)
+
     def print_weather_report_chart_1(self):
-        print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
-        for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.max_temperature_c:
+        print('{:%B %Y}'.format(self.weather_data_all_days[0].date))
+        for a_day_weather in self.weather_data_all_days:
+            if a_day_weather.max_temperature_c is not None:
                 print(Fore.RED + '{:%d} {bar} {temperature}C'.format(
                     a_day_weather.date,
-                    bar='+' * abs(a_day_weather.max_temperature_c),
+                    bar=self.get_bar_for_chart(a_day_weather.max_temperature_c),
                     temperature=a_day_weather.max_temperature_c))
-            if a_day_weather.min_temperature_c:
+            if a_day_weather.min_temperature_c is not None:
                 print(Fore.BLUE + '{:%d} {bar} {temperature}c'.format(
                     a_day_weather.date,
-                    bar='+' * abs(a_day_weather.min_temperature_c),
+                    bar=self.get_bar_for_chart(a_day_weather.min_temperature_c),
                     temperature=a_day_weather.min_temperature_c))
         print(Style.RESET_ALL)
 
     def print_weather_report_chart_2(self):
-        print('{:%B %Y}'.format(self.weather_data_all_day[0].date))
-        for a_day_weather in self.weather_data_all_day:
-            if a_day_weather.max_temperature_c and a_day_weather.min_temperature_c:
-                bar = '+' * (abs(a_day_weather.max_temperature_c) + abs(a_day_weather.min_temperature_c))
+        print('{:%B %Y}'.format(self.weather_data_all_days[0].date))
+        for a_day_weather in self.weather_data_all_days:
+            if a_day_weather.max_temperature_c is not None and a_day_weather.min_temperature_c is not None:
+                bar = self.get_bar_for_chart(abs(a_day_weather.max_temperature_c)
+                                             + abs(a_day_weather.min_temperature_c))
                 print('{:%d} {bar}'.format(a_day_weather.date, bar=bar), end='')
                 print(Fore.BLUE + ' {tempe_low}C '.format(tempe_low=a_day_weather.min_temperature_c), end='')
                 print(Fore.RED + ' - {temp_high}C'.format(temp_high=a_day_weather.max_temperature_c))
                 print(Style.RESET_ALL)
 
     def _get_highest_temperature_day(self):
-        highest_temperature_day = max(self.weather_data_all_day,
+        highest_temperature_day = max(self.weather_data_all_days,
                                       key=operator.attrgetter('max_temperature_c'))
         return highest_temperature_day
 
     def _get_lowest_temperature_day(self):
-        lowest_temperature_day = min(self.weather_data_all_day,
+        lowest_temperature_day = min(self.weather_data_all_days,
                                      key=operator.attrgetter('min_temperature_c'))
         return lowest_temperature_day
 
     def _get_highest_humidity_day(self):
-        highest_humidity_day = max(self.weather_data_all_day,
+        highest_humidity_day = max(self.weather_data_all_days,
                                    key=operator.attrgetter('max_humidity'))
         return highest_humidity_day
 
     def _calculate_average_highest_temperature(self):
         sum_temperature = 0
         record_count = 0
-        for a_day_weather in self.weather_data_all_day:
+        for a_day_weather in self.weather_data_all_days:
             if a_day_weather.max_temperature_c:
                 sum_temperature += a_day_weather.max_temperature_c
                 record_count += 1
@@ -139,7 +134,7 @@ class WeatherReport(object):
     def _calculate_average_lowest_temperature(self):
         sum_temperature = 0
         record_count = 0
-        for a_day_weather in self.weather_data_all_day:
+        for a_day_weather in self.weather_data_all_days:
             if a_day_weather.min_temperature_c:
                 sum_temperature += a_day_weather.min_temperature_c
                 record_count += 1
@@ -149,7 +144,7 @@ class WeatherReport(object):
     def _calculate_average_mean_humidity(self):
         sum_humidity = 0
         record_count = 0
-        for a_day_weather in self.weather_data_all_day:
+        for a_day_weather in self.weather_data_all_days:
             if a_day_weather.mean_humidity:
                 sum_humidity += a_day_weather.mean_humidity
                 record_count += 1
@@ -157,30 +152,88 @@ class WeatherReport(object):
         return average_mean_humidity
 
 
-def generate_weather_report(weather_report, flag):
-    if flag == '-e':
-        weather_report.print_extreme_weather_report()
-    elif flag == '-a':
-        weather_report.print_average_weather_report()
-    elif flag == '-c':
-        weather_report.print_weather_report_chart_1()
-    elif flag == '-p':
-        weather_report.print_weather_report_chart_2()
+def get_weather_record_form_files(path_to_weather_files, year, months=list(range(1, 13))):
+    weather_records = []
+
+    for month in months:
+        weather_file_path = ('{dir}/Murree_weather_{year}_{month}.txt'.format(dir=path_to_weather_files,
+                                                                              year=year,
+                                                                              month=calendar.month_abbr[month]))
+        with open(weather_file_path, 'r') as weather_file_in:
+            weather_file_in.readline()  # neglecting first line
+            for weather_record_line in weather_file_in:
+                a_day_weather = WeatherRecord.parse_weather_fields_line(weather_record_line)
+                weather_records.append(a_day_weather)
+
+    return weather_records
+
+
+def is_valid_year_range(year):
+    return 2004 <= year <= 2015
+
+
+def valid_year(year):
+    try:
+        date = datetime.strptime(year, "%Y")
+        if is_valid_year_range(date.year):
+            return date
+        msg = "use a valid year range"
+        raise argparse.ArgumentTypeError(msg)
+    except ValueError:
+        msg = "Not a valid year: '{0}' (try format: YYYY).".format(year)
+        raise argparse.ArgumentTypeError(msg)
+
+
+def valid_month(month):
+    try:
+        date = datetime.strptime(month, "%Y/%m")
+        if is_valid_year_range(date.year):
+            return date
+        msg = "use a valid year"
+        raise argparse.ArgumentTypeError(msg)
+    except ValueError:
+        msg = "Not a valid date: '{0}' (try format: YYYY/MM).".format(month)
+        raise argparse.ArgumentTypeError(msg)
 
 
 def main():
-    path_to_weather_files = sys.argv[1]
-    for arg_number in range(2, len(sys.argv), 2):
-        year_month = sys.argv[arg_number + 1].split('/')
-        year = year_month[0]
-        months = []
-        if len(year_month) == 2:
-            months.append(int(year_month[1]))
-        else:
-            months = list(range(1, 13))  # no month is given , so we include all 12
+    parser = argparse.ArgumentParser()
 
-        weather_report = WeatherReport(path_to_weather_files, year, months)
-        generate_weather_report(weather_report, flag=sys.argv[arg_number])
+    parser.add_argument('source', help='Path to weather data files')
+    parser.add_argument('-e', '--extreme', type=valid_year,
+                        help='Display extreme weather report for given year(format: YYYY)')
+    parser.add_argument('-a', '--average', type=valid_month,
+                        help='Display average weather report for given month(format: YYYY/MM)')
+    parser.add_argument('-c', '--chart', type=valid_month,
+                        help='Display char weather report for given month(format: YYYY/MM)')
+    parser.add_argument('-m', '--mergedchart', type=valid_month,
+                        help='Display merged char weather report for given month(format: YYYY/MM)')
+
+    args = parser.parse_args()
+
+    if not any((args.extreme, args.average, args.chart, args.mergedchart)):
+        print("Give at least one argument or use -h option for help", file=sys.stderr)
+        sys.exit(1)
+
+    if args.extreme:
+        weather_records = get_weather_record_form_files(args.source, year=args.extreme.year)
+        weather_report = WeatherReport(weather_records)
+        weather_report.print_extreme_weather_report()
+
+    if args.average:
+        weather_records = get_weather_record_form_files(args.source, args.average.year, [args.average.month])
+        weather_report = WeatherReport(weather_records)
+        weather_report.print_average_weather_report()
+
+    if args.chart:
+        weather_records = get_weather_record_form_files(args.source, args.chart.year, [args.chart.month])
+        weather_report = WeatherReport(weather_records)
+        weather_report.print_weather_report_chart_1()
+
+    if args.mergedchart:
+        weather_records = get_weather_record_form_files(args.source, args.chart.year, [args.chart.month])
+        weather_report = WeatherReport(weather_records)
+        weather_report.print_weather_report_chart_2()
 
 
 if __name__ == '__main__':
