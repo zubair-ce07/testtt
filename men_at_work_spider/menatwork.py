@@ -1,5 +1,3 @@
-# from urllib import urlencode
-from urllib.parse import urlencode
 import urllib
 
 from scrapy.http import Request
@@ -28,29 +26,28 @@ class MenAtWorkSpider(CrawlSpider):
         item['image_urls'] = self.get_image_urls(response)
         item['description'] = self.get_description(response)
 
-        skus = self.get_skus(response)
+        item['skus'] = self.get_skus(response)
         color_urls = response.css('.swatches.color>li:not(.selected)>a ::attr(href)').extract()
         if color_urls:
-            return self.get_color_request(color_urls, skus, item)
+            return self.get_color_request(color_urls, item)
         else:
-            item['skus'] = skus
             return item
 
     def parse_colors(self, response):
         color_urls = response.meta['color_urls']
         item = response.meta['item']
-        skus = response.meta['skus']
         selected_color_skus = self.get_skus(response)
-        skus.extend(selected_color_skus)
+        item['skus'].extend(selected_color_skus)
         if color_urls:
-            return self.get_color_request(color_urls, skus, item)
+            return self.get_color_request(color_urls, item)
         else:
-            item['skus'] = skus
             return item
 
-    def get_color_request(self, color_urls, skus, item):
-        return Request(color_urls.pop(0), callback=self.parse_colors,
-                meta={'color_urls': color_urls, 'item': item, 'skus': skus})
+    def get_color_request(self, color_urls, item):
+        return Request(color_urls.pop(0),
+                       callback=self.parse_colors,
+                       meta={'color_urls': color_urls,
+                             'item': item})
 
     def get_brand(self, response):
         return urllib.parse.unquote(response.css('div#productData ::attr(data-brand)').extract_first())
@@ -62,12 +59,8 @@ class MenAtWorkSpider(CrawlSpider):
         return response.css('.thumbnail-link ::attr(href)').extract()
 
     def get_description(self, response):
-        desc = []
-        desc_tab1 = self.clean_object(response.css('div#tab1::text').extract())
-        desc_tab2 = self.clean_object(response.css('div#tab2::text').extract())
-        desc_tab3 = self.clean_object(response.css('div.product-main-attributes span ::text').extract())
-        desc_tab4 = self.clean_object(response.css('ul.list-usp_pdp li ::text').extract())
-        desc = desc_tab1 + desc_tab2 + desc_tab3 + desc_tab4
+        desc_css = 'div#tab1::text, div#tab2::text, div.product-main-attributes span ::text, ul.list-usp_pdp li ::text'
+        desc = self.clean_object(response.css(desc_css).extract())
         return desc
 
     def get_skus(self, response):
@@ -84,7 +77,7 @@ class MenAtWorkSpider(CrawlSpider):
                 "size": size,
                 "colour": selected_color,
             }
-            if len(sale_price):
+            if sale_price:
                 sku['price'] = sale_price
                 sku['previous_prices'] = [price]
             else:
@@ -92,7 +85,6 @@ class MenAtWorkSpider(CrawlSpider):
             skus.append(sku)
         return skus
 
-    def clean_object(self, object):
-        clean_obj = [x.strip('\t\n ') for x in object]
-        return [x for x in clean_obj if x != u'']
-
+    def clean_object(self, obj):
+        clean_obj = [x.strip('\t\n ') for x in obj]
+        return [x for x in clean_obj if x]
