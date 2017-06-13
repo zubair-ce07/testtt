@@ -1,19 +1,38 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
-from .base import BaseParseSpider, BaseCrawlSpider
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
-class Mixin:
-    retailer = 'Moose-us'
+class MixinUS:
+    retailer = 'moose-us'
     market = 'US'
-    lang = 'Eng'
     allowed_domains = ['mooseknucklescanada.com']
     start_urls = ['http://www.mooseknucklescanada.com/us/']
 
 
-class MooseParseSpider(BaseParseSpider, Mixin):
+class MixinUK:
+    retailer = 'moose-uk'
+    market = 'UK'
+    allowed_domains = ['mooseknucklescanada.com']
+    start_urls = ['http://www.mooseknucklescanada.com/uk/']
 
-    name = Mixin.retailer + '-parse'
+
+class MixinCan:
+    retailer = 'moose-can'
+    market = 'CAN'
+    allowed_domains = ['mooseknucklescanada.com']
+    start_urls = ['http://www.mooseknucklescanada.com']
+
+
+class MixinEU:
+    retailer = 'moose-eu'
+    market = 'EU'
+    allowed_domains = ['mooseknucklescanada.com']
+    start_urls = ['http://www.mooseknucklescanada.com/eu/']
+
+
+class MooseParseSpider(BaseParseSpider):
+
     price_css = 'div[itemprop=offers]'
 
     def parse(self, response):
@@ -25,12 +44,8 @@ class MooseParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
 
-        garment['brand'] = 'Moose'
-        garment['name'] = self.product_name(response)
-        garment['description'], garment['care'] = \
-            self.extract_care_from_description(response, self.product_details(response))
-
-        garment['url'] = response.url
+        # adding description from next tab
+        garment['description'].append(self.product_description_next_tab(response))
         garment['image_urls'] = self.product_image_urls(response)
         garment['skus'] = self.product_sku(response, sku_id)
         garment['gender'] = self.product_gender(response)
@@ -41,53 +56,43 @@ class MooseParseSpider(BaseParseSpider, Mixin):
     def product_care(self, response):
         return None
 
-    def extract_care_from_description(self,response, description):
-        care = []
-        for line in description:
-            if self.care_criteria_simplified(line):
-                care.append(line)
-        description = [x for x in description if x not in care]
-        description.append(self.product_description(response))
-        return description, care
-
-
     def product_id(self, response):
-        return self.sanitize(response.css('meta[itemprop=sku]::attr(content)').extract_first())
+        return clean(response.css('meta[itemprop=sku]::attr(content)').extract_first())
 
     def product_name(self, response):
-        return self.sanitize(response.css('meta[itemprop=name]::attr(content)').extract_first())
-
-    def product_details(self, response):
-        return self.sanitize(response.css('div.std').css('ul>li::text').extract()[1:])
-
-    def product_image_urls(self, response):
-        return self.sanitize(response.css('div.cust-view').css('a::attr(href)').extract())
+        return clean(response.css('meta[itemprop=name]::attr(content)').extract_first())
 
     def product_description(self, response):
-        return self.sanitize(response.css('div.std>p::text').extract()[1:])
+        return clean(response.css('div.std').css('ul>li::text').extract()[1:])
+
+    def product_image_urls(self, response):
+        return clean(response.css('div.cust-view').css('a::attr(href)').extract())
+
+    def product_description_next_tab(self, response):
+        return clean(response.css('div.std>p::text').extract()[1:])
 
     def product_price(self, response):
-        return self.sanitize(response.css('meta[itemprop=price]::attr(content)').extract_first())
+        return clean(response.css('meta[itemprop=price]::attr(content)').extract_first())
 
     def product_currency(self, response):
-        return self.sanitize(response.css('meta[itemprop=priceCurrency]::attr(content)').extract_first())
+        return clean(response.css('meta[itemprop=priceCurrency]::attr(content)').extract_first())
 
     def product_color_and_size(self, response):
         size_and_color = []
-        data = self.sanitize(response.css('div[id=product-options-wrapper]>script').extract_first())
+        data = clean(response.css('div[id=product-options-wrapper]>script').extract_first())
         data = data.split('"label":"')
         for i in data:
             i = i.split('","')
             size_and_color.append(i[0])
 
         break_point = size_and_color.index('Size')
-        return self.sanitize(size_and_color[2:break_point]), self.sanitize(size_and_color[break_point+1:])
+        return clean(size_and_color[2:break_point]), clean(size_and_color[break_point+1:])
 
     def product_sku(self, response, sku):
         colors, sizes = self.product_color_and_size(response)
         price = self.product_pricing_new(response)
         availability = self.product_availability(response)
-        skus={}
+        skus = {}
 
         for color in colors:
             for size in sizes:
@@ -97,20 +102,53 @@ class MooseParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_availability(self, response):
-        return self.sanitize(response.css('p.availability>span::text').extract_first())
+        return clean(response.css('p.availability>span::text').extract_first())
 
     def product_gender(self, response):
-        return self.sanitize(response.css('tbody>tr>td::text').extract_first())
+        return clean(response.css('tbody>tr>td::text').extract_first())
 
 
-class MooseCrawlSpider(BaseCrawlSpider, Mixin):
-    name = Mixin.retailer + '-crawl'
-    parse_spider = MooseParseSpider()
+class MooseCrawlSpider(BaseCrawlSpider):
 
     category_css = "ul.level0>li"
     page_css = "div.pages"
     product_css = "a.product-image"
 
-    rules = (Rule(LinkExtractor(restrict_css=category_css), callback='parse'),
-             Rule(LinkExtractor(restrict_css=page_css), callback='parse'),
+    rules = (Rule(LinkExtractor(restrict_css=[category_css, page_css]), callback='parse'),
              Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'))
+
+
+class MooseUSParseSpider(MooseParseSpider, MixinUS):
+    name = MixinUS.retailer + '-parse'
+
+
+class MooseUSCrawlSpider(MooseCrawlSpider, MixinUS):
+    name = MixinUS.retailer + '-crawl'
+    parse_spider = MooseUSParseSpider()
+
+
+class MooseUKParseSpider(MooseParseSpider, MixinUK):
+    name = MixinUK.retailer + '-parse'
+
+
+class MooseUKCrawlSpider(MooseCrawlSpider, MixinUK):
+    name = MixinUK.retailer + '-crawl'
+    parse_spider = MooseUKParseSpider()
+
+
+class MooseCANParseSpider(MooseParseSpider, MixinCan):
+    name = MixinCan.retailer + '-parse'
+
+
+class MooseCANCrawlSpider(MooseCrawlSpider, MixinCan):
+    name = MixinCan.retailer + '-crawl'
+    parse_spider = MooseCANParseSpider()
+
+
+class MooseEUParseSpider(MooseParseSpider, MixinEU):
+    name = MixinEU.retailer + '-parse'
+
+
+class MooseEUCrawlSpider(MooseCrawlSpider, MixinEU):
+    name = MixinEU.retailer + '-crawl'
+    parse_spider = MooseEUParseSpider()
