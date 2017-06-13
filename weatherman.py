@@ -1,3 +1,4 @@
+import csv
 import os
 import sys
 import datetime
@@ -9,8 +10,8 @@ def main():
     if len(sys.argv) < 4:
         print('usage: weatherman.py /path/to/files-dir flag date')
         sys.exit(1)
-    elif not is_correct_path(sys.argv[1]):  # sys.argv[1].startswith('/'):
-        print('Error: Use absolute path for directory containing files.')
+    elif not os.path.exists(sys.argv[1]):
+        print('Error: Incorrect folder path')
         sys.exit(1)
     valid_flags = ['-e', '-a', '-c']
     flags = sys.argv[2::2]
@@ -26,8 +27,8 @@ def main():
         flag = tuple_[0]
         date = tuple_[1]
         if flag == '-e':
-            year = to_int(date)
-            if year is None:
+            year = to_int(date, None)
+            if not year:
                 print('\'' + date + '\' is not a valid date')
                 sys.exit(1)
             month = 0
@@ -37,14 +38,14 @@ def main():
                 print('Error: Enter a date value between ' +
                       str(min_year) + ' and ' + str(max_year))
                 sys.exit(1)
-        else:  # flag == '-a' or flag == '-c':
+        else:
             if '/' not in date:
                 print('Error: Invalid date format for \'' +
                       flag + '\' flag.')
                 sys.exit(1)
             split_date = date.split('/')
-            year = to_int(split_date[0])
-            month = to_int(split_date[1])
+            year = to_int(split_date[0], None)
+            month = to_int(split_date[1], None)
             if year is None or month is None:
                 print('\'' + date + '\' is not a valid date')
                 sys.exit(1)
@@ -61,52 +62,27 @@ def parse_files(flag, files, path):
     min_temp = {}
     max_humid = {}
     mean_humid = {}
-    header_len = 0
     for file in files:
-        # with open(file) as csvfile:
-        #     reader = csv.DictReader(csvfile)
-        in_file = open(path + '/' + file, 'r')
-        lines = in_file.readlines()
-        in_file.close()
-        count = 1
-        for line in lines:
-            line_literals = line.split(',')
-            if count == 1:
-                header_len = len(line_literals)
-                i_max_t = line_literals.index('Max TemperatureC')
-                i_min_t = line_literals.index('Min TemperatureC')
-                if flag == '-e':
-                    humidity = ''
-                    for word in line_literals:
-                        if 'Mean Humidity' in word:
-                            humidity = word
-                    i_max_h = line_literals.index(humidity)
-                elif flag == '-a':
-                    humidity = ''
-                    for word in line_literals:
-                        if 'Mean Humidity' in word:
-                            humidity = word
-                    i_max_h = line_literals.index(humidity)
-            else:
-                if not len(line_literals) == header_len:
-                    print('Some anomalous values on line', count)
+        with open(path + '/' + file, 'r') as csv_file:
+            reader = csv.DictReader(csv_file)
+            for row in reader:
+                if flag == '-a':
+                    valid_key = row[get_valid_key(row, 'Max TemperatureC')]
+                    populate(max_temp, flag, valid_key, '')
+                    valid_key = row[get_valid_key(row, 'Min TemperatureC')]
+                    populate(min_temp, flag, valid_key, '')
+                    valid_key = row[get_valid_key(row, 'Mean Humidity')]
+                    populate(mean_humid, flag, valid_key, '')
                 else:
-                    date = line_literals[0]
-                    if flag == '-a':
-                        if line_literals[i_max_t]:
-                            max_temp[int(line_literals[i_max_t])] = ''
-                        if line_literals[i_min_t]:
-                            min_temp[int(line_literals[i_min_t])] = ''
-                        if line_literals[i_max_h]:
-                            mean_humid[int(line_literals[i_max_h])] = ''
-                    else:
-                        if line_literals[i_max_t]:
-                            max_temp[date] = int(line_literals[i_max_t])
-                        if line_literals[i_min_t]:
-                            min_temp[date] = int(line_literals[i_min_t])
-                        if flag == '-e' and line_literals[i_max_h]:
-                            max_humid[date] = int(line_literals[i_max_h])
-            count += 1
+                    valid_key = row[get_valid_key(row, 'PKT')]
+                    valid_value = row[get_valid_key(row, 'Max TemperatureC')]
+                    populate(max_temp, flag, valid_key, valid_value)
+                    valid_value = row[get_valid_key(row, 'Min TemperatureC')]
+                    populate(min_temp, flag, valid_key, valid_value)
+                    if flag == '-e':
+                        valid_value = row[get_valid_key(row, 'Max Humidity')]
+                        populate(max_humid, flag,
+                                 valid_key, valid_value)
     if flag == '-a':
         max_temp_keys = list(max_temp.keys())
         min_temp_keys = list(min_temp.keys())
@@ -131,10 +107,33 @@ def parse_files(flag, files, path):
     return
 
 
+def to_int(date, version):
+    try:
+        return int(date)
+    except ValueError:
+        return version
+
+
+def get_valid_key(inp_dict, key):
+    try:
+        inp_dict[key]
+        return key
+    except KeyError:
+        inp_dict[' ' + key]
+        return ' ' + key
+
+
+def populate(inp_dict, flag, key, value):
+    if key:
+        if flag == '-a':
+            inp_dict[to_int(key, 0)] = value
+        else:
+            inp_dict[key] = to_int(value, 0)
+
+
 def date_supported(all_files, year, month):
-    max_year, min_year = get_year_range(all_files)
     if (is_valid_year(year, all_files) and
-        is_valid_month(year, month, min_year, all_files)):
+            is_valid_month(year, month, all_files)):
         return True
     return False
 
@@ -156,10 +155,6 @@ def equal_flags_and_dates(flags, dates):
         print('Error: Extra date found in the input arguments.')
         return False
     return True
-
-
-def is_correct_path(path):
-    return path.startswith('/')
 
 
 def get_month(month):
@@ -240,27 +235,12 @@ def print_flags(valid_flags):
     return f
 
 
-def to_int(date):
-    try:
-        return int(date)
-    except ValueError:
-        return None
-
-
-# def is_int(num):
-#     try:
-#         int(num)
-#         return True
-#     except ValueError:
-#         return False
-
-
 def get_year_range(files):
     all_years = []
     for file in files:
         split_file = file.split('_')
         for word in split_file:
-            if to_int(word) is not None:
+            if to_int(word, None) is not None:
                 all_years.append(int(word))
     all_years.sort()
     max_year = all_years[-1]
@@ -275,19 +255,19 @@ def is_valid_year(year, files):
     return False
 
 
-def files_present(files, month, year):
+def files_for_date(files, month, year):
     month_alpha = get_month(month)
     for file in files:
         split_file = file.split('_')
-        if split_file[2] == str(year) and \
-                        month_alpha[:3] == split_file[3][:3]:
+        if (split_file[2] == str(year) and
+            month_alpha[:3] == split_file[3][:3]):
             return True
     return False
 
 
-def is_valid_month(year, month, min_year, files):
+def is_valid_month(year, month, files):
     if 1 <= month <= 12:
-        return files_present(files, month, year)
+        return files_for_date(files, month, year)
     return False
 
 
