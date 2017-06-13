@@ -33,8 +33,10 @@ class Crawler:
         for relative_url in selector.xpath('//a/@href').extract():
             if len(self.extracted_urls) == self.max_urls_to_visit:
                 break
+
             if relative_url.startswith('/'):
                 relative_url = relative_url[1:]
+
             if 'http' not in relative_url:
                 absolute_url = parse.urljoin(self.base_url, relative_url)
                 if self.is_absolute_url(absolute_url) and absolute_url not in self.visited_urls:
@@ -68,6 +70,7 @@ class AsyncCrawler(Crawler):
                                                                           requests_count))
             if len(self.visited_urls) == self.max_urls_to_visit:
                 break
+
             if requests_count:
                 for _ in range(requests_count):
                     await self.schedule_new_request(requesting_url_index)
@@ -77,6 +80,7 @@ class AsyncCrawler(Crawler):
             else:
                 print('wait for proceeding previous requests\n')
                 await asyncio.sleep(self.download_delay)
+
         while active_task_count > 1:
             print('{} tasks are pending. Wait to complete these tasks\n'.format(active_task_count))
             await asyncio.sleep(self.download_delay)
@@ -114,9 +118,10 @@ class ParallelCrawler(Crawler):
             active_request_count.put(self.extracted_urls[requesting_url_index])
             self.visited_urls.append(self.extracted_urls[requesting_url_index])
             requesting_url_index += 1
+
         with ThreadPoolExecutor(max_workers=self.concurrent_requests_count) as executor:
             request_count = 1
-            while active_request_count.empty() is False:
+            while not active_request_count.empty():
                 url = active_request_count.get()
                 request_count += 1
                 self.active_requests.append(executor.submit(self.crawling, url, request_count))
@@ -143,27 +148,23 @@ def get_arguments():
                         help='Specify number of concurrent requests')
     parser.add_argument('-m', '--max_urls_to_visit', type=validate_int_value,
                         help='Specify the maximum number of urls should be visited')
-    args = parser.parse_args()
-    if not args.crawling_approach:
-        args.crawling_approach = 'c'
-    if not args.url:
-        args.url = 'https://www.tutorialspoint.com/'
-    if not args.concurrent_request_count:
-        args.concurrent_request_count = 5
-    if not args.download_delay:
-        args.download_delay = 1
-    if not args.max_urls_to_visit:
-        args.max_urls_to_visit = 20
-    return args
+    arguments = parser.parse_args()
+    if not arguments.crawling_approach:
+        arguments.crawling_approach = 'c'
+    if not arguments.url:
+        arguments.url = 'https://www.tutorialspoint.com/'
+    if not arguments.concurrent_request_count:
+        arguments.concurrent_request_count = 5
+    if not arguments.download_delay:
+        arguments.download_delay = 0
+    if not arguments.max_urls_to_visit:
+        arguments.max_urls_to_visit = 20
+    return arguments
 
 
-def validate_crawling_approach(craw_approach):
-    if len(craw_approach) == 1:
-        if 'c' in craw_approach or 'p' in craw_approach:
-            return craw_approach
-        else:
-            raise argparse.ArgumentTypeError(
-                'Please enter c for concurrent crawling or p for parallel crawling')
+def validate_crawling_approach(crawling_approach):
+    if len(crawling_approach) == 1 and ('c' in crawling_approach or 'p' in crawling_approach):
+        return crawling_approach
     else:
         raise argparse.ArgumentTypeError(
             'Please enter c for concurrent crawling or p for parallel crawling')
