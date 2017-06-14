@@ -24,6 +24,7 @@ class MatrixReader(object):
                                        if reader.fieldnames.index(column) in self._columns])
         return result_set
 
+
     def list_files(self):
         ls = []
         files = os.listdir(self._dir)
@@ -37,8 +38,3 @@ class MatrixReader(object):
                 if fnmatch.fnmatch(file, pattern):
                     ls.append(file)
         return ls
-
-
-
-m = MatrixReader('./weatherfiles',['2005','2006'], [0,1])
-print(m.retrieve())
