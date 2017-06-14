@@ -2,11 +2,10 @@
 '''generate weather reports from CSV files'''
 import csv
 import sys
-import datetime
 import calendar
 import os
 from termcolor import colored
-#from weather import CSV
+# from weather import CSV
 
 __author__ = 'fakhar'
 
@@ -15,23 +14,23 @@ from record import Record
 
 class CSV:
     '''creates a single CSV for all the required files'''
-    #record_list = []
+    # record_list = []
 
     def __init__(self, file_path, year, month):
         file_names = os.listdir(file_path)
         year_list = []
         self.record_list = []
 
-        for file in file_names:
-            if year in file:
-                if month != 0:
-                    if month in file:
-                        year_list.append(file)
+        for file_name in file_names:
+            if year in file_name:
+                if month:
+                    if month in file_name:
+                        year_list.append(file_name)
                 else:
-                    year_list.append(file)
+                    year_list.append(file_name)
         # print(year_list)
-        for file in year_list:
-            with open(file_path + '/' + file) as csvfile:
+        for file_name in year_list:
+            with open(file_path + '/' + file_name) as csvfile:
                 filereader = csv.DictReader(csvfile)
                 for row in filereader:
                     new_record = Record(
@@ -73,7 +72,7 @@ def check_arg(args):
                 else:
                     print('Please enter date in YYYY/MM format')
                     sys.exit()
-            
+
             generate_report(args[i:i + 2], file_path)
 
 
@@ -104,18 +103,15 @@ def extreme_weather(csvfile):
     min_temp = min(csvfile.record_list, key=lambda x: x.min_temp)
     max_humid = max(csvfile.record_list, key=lambda x: x.max_humidity)
 
-    print('Highest: ' + str(max_temp.max_temp).zfill(2) +
-          'C on ' + calendar.month_name[max_temp.date.month]
-          + ' ' + str(max_temp.date.day).zfill(2))
+    print('Highest: {:02d}C on {} {:02d}'.format(
+        max_temp.max_temp, calendar.month_name[max_temp.date.month], max_temp.date.day))
 
-    print('Lowest: ' + str(min_temp.min_temp).zfill(2) +
-          'C on ' + calendar.month_name[min_temp.date.month]
-          + ' ' + str(min_temp.date.day).zfill(2))
+    print('Lowest: {:02d}C on {} {:02d}'.format(
+        min_temp.min_temp, calendar.month_name[min_temp.date.month], min_temp.date.day))
 
-    print('Humidity: ' + str(max_humid.max_humidity).zfill(2) +
-          '% on ' + calendar.month_name[max_humid.date.month]
-          + ' ' + str(max_humid.date.day).zfill(2))
-    print()
+    print('Humidity: {:02d}% on {} {:02d}'.format(
+        max_humid.max_humidity, calendar.month_name[max_humid.date.month],
+        max_humid.date.day), end='\n\n')
 
 
 def month_average(csvfile):
@@ -123,38 +119,40 @@ def month_average(csvfile):
 
     avg_high_temp = [n.max_temp for n in csvfile.record_list]
     avg_high_temp = [n for n in avg_high_temp if n != -273]
-
-    print('Highest Average: ' + str(sum(avg_high_temp) // len(avg_high_temp)) + 'C')
+    print('Highest Average: {:02d}C'.format(
+        sum(avg_high_temp) // len(avg_high_temp)))
 
     avg_low_temp = [n.min_temp for n in csvfile.record_list]
     avg_low_temp = [n for n in avg_low_temp if n != 273]
-    print('Lowest Average: ' + str(sum(avg_low_temp) // len(avg_low_temp)) + 'C')
+    print('Lowest Average: {:02d}C'.format(
+        sum(avg_low_temp) // len(avg_low_temp)))
 
     avg_mean_humid = [n.mean_humidity for n in csvfile.record_list]
     avg_mean_humid = [n for n in avg_mean_humid if n != -1]
-    print('Average Mean Humidity: ' + str(sum(avg_mean_humid) // len(avg_mean_humid)) + '%')
-    print()
+    print('Average Mean Humidity: {:02d}%'.format(
+        sum(avg_mean_humid) // len(avg_mean_humid)), end='\n\n')
 
 
 def weather_graph(csvfile):
     '''create monthly graphs'''
-    print(calendar.month_name[csvfile.record_list[0].date.month], csvfile.record_list[0].date.year)
-    #print(len(csvfile.record_list))
+    print(calendar.month_name[csvfile.record_list[0].date.month],
+          csvfile.record_list[0].date.year)
+    # print(len(csvfile.record_list))
     for i in csvfile.record_list:
         if i.max_temp != -273:
-            #print(end='')
-            print(str(i.date.day).zfill(2), end=' ')
-            print(colored('+', 'red') * i.max_temp + str(i.max_temp) + 'C')
-            print(str(i.date.day).zfill(2), end=' ')
-            print(colored('+', 'blue') * i.min_temp + str(i.min_temp) + 'C')
+            print('{:02d} '.format(i.date.day) + colored('+', 'red') * i.max_temp
+                  + '{:02d}C\n{:02d} '.format(i.max_temp, i.date.day) +
+                  colored('+', 'blue') * i.min_temp
+                  + '{:02d}C'.format(i.min_temp))
     print()
-    print(calendar.month_name[csvfile.record_list[0].date.month], csvfile.record_list[0].date.year)
+    print(calendar.month_name[csvfile.record_list[0].date.month],
+          csvfile.record_list[0].date.year)
     for i in csvfile.record_list:
         if i.max_temp != -273:
-            print(end='')
-            print(str(i.date.day).zfill(2), end=' ')
-            print(colored('+', 'blue') * i.min_temp + colored('+', 'red')
-                  * i.max_temp + ' ' + str(i.min_temp) + 'C - ' + str(i.max_temp) + 'C')
+            # print(end='')
+            print('{:02d} '.format(i.date.day) + colored('+', 'blue') * i.min_temp
+                  + colored('+', 'red') * i.max_temp
+                  + '{:02d}C - {:02d}C'.format(i.min_temp, i.max_temp))
     print()
 
 
