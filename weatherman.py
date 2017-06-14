@@ -5,11 +5,11 @@ import argparse
 from termcolor import colored
 
 
-class Month:
+class MonthlyRecord:
     def __init__(self):
-        self.max_temp = 0
-        self.min_temp = 0
-        self.max_humid = 0
+        self.max_temp = float("-inf")
+        self.min_temp = float("inf")
+        self.max_humid = float("-inf")
         self.avg_max_temp = 0
         self.avg_min_temp = 0
         self.avg_mean_humid = 0
@@ -17,33 +17,40 @@ class Month:
         self.min_temp_date = ''
         self.max_humid_date = ''
 
-    def read_data_from_file(self, file_dir):
-        max_temp_days = {}
-        min_temp_days = {}
-        max_humid_days = {}
-        mean_humid_days = []
+    def read_record(self, file_dir):
+        sum_max_temp = 0
+        sum_min_temp = 0
+        sum_mean_humid = 0
+        len_max_temp = 0
+        len_min_temp = 0
+        len_mean_humid = 0
         with open(file_dir, "rU") as csv_file:
             weather_file = csv.DictReader(csv_file)
             for row in weather_file:
                 if row["Max TemperatureC"]:
-                    max_temp_days[row["PKT"]] = int(row["Max TemperatureC"])
+                    if int(row["Max TemperatureC"]) > self.max_temp:
+                        self.max_temp = int(row["Max TemperatureC"])
+                        self.max_temp_date = row["PKT"] if row["PKT"] else row["PKST"]
+                    sum_max_temp += int(row["Max TemperatureC"])
+                    len_max_temp += 1
                 if row["Min TemperatureC"]:
-                    min_temp_days[row["PKT"]] = int(row["Min TemperatureC"])
-                if row["Max Humidity"]:
-                    max_humid_days[row["PKT"]] = int(row["Max Humidity"])
+                    if int(row["Min TemperatureC"]) < self.min_temp:
+                        self.min_temp = int(row["Min TemperatureC"])
+                        self.min_temp_date = row["PKT"] if row["PKT"] else row["PKST"]
+                    sum_min_temp += int(row["Min TemperatureC"])
+                    len_min_temp += 1
+                if row["Max Humidity"] and int(row["Max Humidity"]) > self.max_humid:
+                    self.max_humid = int(row["Max Humidity"])
+                    self.max_humid_date = row["PKT"] if row["PKT"] else row["PKST"]
                 if row[" Mean Humidity"]:
-                    mean_humid_days.append(int(row[" Mean Humidity"]))
-        self.max_temp_date = max(max_temp_days, key=max_temp_days.get)
-        self.max_temp = max_temp_days[self.max_temp_date]
-        self.min_temp_date = min(min_temp_days, key=min_temp_days.get)
-        self.min_temp = min_temp_days[self.min_temp_date]
-        self.max_humid_date = max(max_humid_days, key=max_humid_days.get)
-        self.max_humid = max_humid_days[self.max_humid_date]
-        self.avg_max_temp = round(sum(max_temp_days.values()) / (len(max_temp_days)))
-        self.avg_min_temp = round(sum(min_temp_days.values()) / (len(min_temp_days)))
-        self.avg_mean_humid = round(sum(mean_humid_days) / (len(mean_humid_days)))
+                    sum_mean_humid += int(row[" Mean Humidity"])
+                    len_mean_humid += 1
 
-    def calculate_year_month_weather_results(
+        self.avg_max_temp = round(sum_max_temp / len_max_temp)
+        self.avg_min_temp = round(sum_min_temp / len_min_temp)
+        self.avg_mean_humid = round(sum_mean_humid / len_mean_humid)
+
+    def calculate_month_weather_results(
             self, input_directory,
             input_year_month):
         year = input_year_month.split('/')[0]
@@ -51,7 +58,7 @@ class Month:
         short_month_name = calendar.month_name[int(month)][:3]
         file_name = "Murree_weather_" + year + "_" + short_month_name + ".txt"
         file_path = os.path.join(input_directory, file_name)
-        self.read_data_from_file(file_path)
+        self.read_record(file_path)
         self.print_year_month_results()
 
     def print_year_month_results(self):
@@ -60,31 +67,34 @@ class Month:
         print("Average Mean Humidity:", str(self.avg_mean_humid) + '%')
 
 
-class Year:
+class YearRecord:
     def calculate_annual_weather_results(self, input_directory, input_year):
-        max_temp_months = {}
-        min_temp_months = {}
-        max_humid_months = {}
-        month = Month()
+        max_temp_date = ''
+        max_temp_year = float('-inf')
+        min_temp_date = ''
+        min_temp_year = float('inf')
+        max_humid_date = ''
+        max_humid_year = float('-inf')
         files = os.listdir(input_directory)
         for file in files:
             if input_year not in file:
                 continue
             file_path = os.path.join(input_directory, file)
-            month.read_data_from_file(file_path)
-            max_temp_months[month.max_temp_date] = month.max_temp
-            min_temp_months[month.min_temp_date] = month.min_temp
-            max_humid_months[month.max_humid_date] = month.max_humid
+            month = MonthlyRecord()
+            month.read_record(file_path)
+            if month.max_temp > max_temp_year:
+                max_temp_year = month.max_temp
+                max_temp_date = month.max_temp_date
+            if month.min_temp < min_temp_year:
+                min_temp_year = month.min_temp
+                min_temp_date = month.min_temp_date
+            if month.max_humid > max_humid_year:
+                max_humid_year = month.max_humid
+                max_humid_date = month.max_humid_date
 
-        max_temp_date = max(max_temp_months, key=max_temp_months.get)
-        max_temp = max_temp_months[max_temp_date]
-        min_temp_date = min(min_temp_months, key=min_temp_months.get)
-        min_temp = min_temp_months[min_temp_date]
-        max_humid_date = max(max_humid_months, key=max_humid_months.get)
-        max_humid = max_humid_months[max_humid_date]
         self.print_annual_results(
-            max_temp, min_temp,
-            max_humid, max_temp_date,
+            max_temp_year, min_temp_year,
+            max_humid_year, max_temp_date,
             min_temp_date, max_humid_date)
 
     def print_annual_results(
@@ -184,8 +194,8 @@ class WeatherGraphs:
 
 
 def main():
-    year = Year()
-    month = Month()
+    year = YearRecord()
+    month = MonthlyRecord()
     graphs = WeatherGraphs()
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", type=str, help="files directory")
@@ -198,7 +208,7 @@ def main():
     if args.year:
         year.calculate_annual_weather_results(args.directory, args.year)
     if args.year_month:
-        month.calculate_year_month_weather_results(args.directory, args.year_month)
+        month.calculate_month_weather_results(args.directory, args.year_month)
     if args.year_month_graph:
         graphs.display_therm_graph(args.directory, args.year_month_graph)
     if args.year_month_graph_bonus:
