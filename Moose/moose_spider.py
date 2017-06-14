@@ -77,7 +77,10 @@ class MooseParseSpider(BaseParseSpider):
 
         script_json = self.magento_product_data(response)
         colors_dict = script_json['attributes']['141']['options']
-        sizes_dict = script_json['attributes']['142']['options']
+        if '142' in script_json.get('attributes', {}):
+            sizes_dict = script_json['attributes']['142']['options']
+        else:
+            sizes_dict = script_json['attributes']['143']['options']
         for color in colors_dict:
             colors.append(color['label'])
             color_codes.append(color['products'])
