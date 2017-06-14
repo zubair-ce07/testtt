@@ -5,11 +5,9 @@ import sys
 import calendar
 import os
 from termcolor import colored
-# from weather import CSV
+from record import Record
 
 __author__ = 'fakhar'
-
-from record import Record
 
 
 class CSV:
