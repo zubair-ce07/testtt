@@ -12,6 +12,7 @@ def get_pattern(year, month = None):
         pattern = calendar.month_abbr[month]
     return '*' + str(year) + '_' + pattern + '*'
 
+
 def mean(l):
     return sum(map(int, l)) / len(l)
 
@@ -54,7 +55,8 @@ def print_bonus(result_set):
     for record in result_set:
         print (record[0].split('-')[2] + ' ' + G + int(record[2]) * '+' + R +
                int(record[1])*'+' + W + ' ' + record[2] + 'C - ' + record[1])
-        #print (record[0].split('-')[2] + ' ' + R + int(record[1]) * '+' + W + ' ' + record[2] + 'C')
+
+
 def get_columns(dir, file, columns):
     result_set = []
     with open(os.path.join(dir, file)) as csvfile:
@@ -89,6 +91,7 @@ def process_month(dir, year, month):
 
     result_set = filter_data(result_set)
     return map(mean, zip(*result_set))
+
 
 def process_chart(dir, year, month):
     result_set = []
