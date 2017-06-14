@@ -45,6 +45,9 @@ class MooseParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
+        availability = clean(response.css('p.availability>span::text'))[0]
+        if availability != 'In stock':
+            garment['out_of_stock'] = True
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
         garment['gender'] = self.detect_gender(self.product_gender(response))
@@ -69,47 +72,16 @@ class MooseParseSpider(BaseParseSpider):
     def image_urls(self, response):
         return clean(response.css('div.cust-view a::attr(href)'))
 
-    def product_color_and_size(self, response):
-        colors = []
-        sizes = []
-        color_codes = []
-        size_codes = []
-
-        script_json = self.magento_product_data(response)
-        colors_dict = script_json['attributes']['141']['options']
-        if '142' in script_json.get('attributes', {}):
-            sizes_dict = script_json['attributes']['142']['options']
-        else:
-            sizes_dict = script_json['attributes']['143']['options']
-        for color in colors_dict:
-            colors.append(color['label'])
-            color_codes.append(color['products'])
-        for size in sizes_dict:
-            sizes.append(size['label'])
-            size_codes.append(size['products'])
-        return self.create_sku_keys(colors, sizes, color_codes, size_codes)
-
-    def create_sku_keys(self, colors, sizes, color_codes, size_codes):
-        sku_keys = []
-        itera = 0
-        for color in colors:
-            next = 0
-            for size in sizes:
-                if not set(color_codes[itera]).isdisjoint(size_codes[next]):
-                    sku_keys.append(color+"_"+size)
-                next += 1
-        return sku_keys
-
     def skus(self, response):
-        sku_keys = self.product_color_and_size(response)
+        script_json = self.magento_product_data(response)
+        script_json = self.magento_product_map(script_json)
         price = self.product_pricing_new(response)
         skus = {}
-        availability = self.product_availability(response)
 
-        for keys in sku_keys:
-            color_size = keys.split('_')
-            skus[keys] = {"color": color_size[0], "size": color_size[1], "price": price[1], "currency": price[2],
-                          "out_of_stock": availability}
+        for keys, value in script_json.items():
+            color = value[0]['label']
+            size = value[1]['label']
+            skus[color + "_" + size] = {"color": color, "size": size, "price": price[1], "currency": price[2]}
 
         return skus
 
