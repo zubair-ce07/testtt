@@ -24,7 +24,7 @@ class MonthlyRecord:
         len_max_temp = 0
         len_min_temp = 0
         len_mean_humid = 0
-        with open(file_dir, "rU") as csv_file:
+        with open(file_dir, "r") as csv_file:
             weather_file = csv.DictReader(csv_file)
             for row in weather_file:
                 if row["Max TemperatureC"]:
@@ -68,13 +68,19 @@ class MonthlyRecord:
 
 
 class YearRecord:
+    def __init__(self):
+        self.max_temp_year = float('-inf')
+        self.min_temp_year = float('inf')
+        self.max_humid_year = float('-inf')
+        self.max_temp_date = ''
+        self.min_temp_date = ''
+        self.max_humid_date = ''
+
     def calculate_annual_weather_results(self, input_directory, input_year):
-        max_temp_date = ''
-        max_temp_year = float('-inf')
-        min_temp_date = ''
-        min_temp_year = float('inf')
-        max_humid_date = ''
-        max_humid_year = float('-inf')
+        self.read_records(input_directory, input_year)
+        self.print_annual_results()
+
+    def read_records(self, input_directory, input_year):
         files = os.listdir(input_directory)
         for file in files:
             if input_year not in file:
@@ -82,37 +88,28 @@ class YearRecord:
             file_path = os.path.join(input_directory, file)
             month = MonthlyRecord()
             month.read_record(file_path)
-            if month.max_temp > max_temp_year:
-                max_temp_year = month.max_temp
-                max_temp_date = month.max_temp_date
-            if month.min_temp < min_temp_year:
-                min_temp_year = month.min_temp
-                min_temp_date = month.min_temp_date
-            if month.max_humid > max_humid_year:
-                max_humid_year = month.max_humid
-                max_humid_date = month.max_humid_date
+            if month.max_temp > self.max_temp_year:
+                self.max_temp_year = month.max_temp
+                self.max_temp_date = month.max_temp_date
+            if month.min_temp < self.min_temp_year:
+                self.min_temp_year = month.min_temp
+                self.min_temp_date = month.min_temp_date
+            if month.max_humid > self.max_humid_year:
+                self.max_humid_year = month.max_humid
+                self.max_humid_date = month.max_humid_date
 
-        self.print_annual_results(
-            max_temp_year, min_temp_year,
-            max_humid_year, max_temp_date,
-            min_temp_date, max_humid_date)
+    def print_annual_results(self):
+        month = self.max_temp_date.split('-')[1]
+        day = self.max_temp_date.split('-')[2]
+        print('Highest:', str(self.max_temp_year) + 'C', 'on', calendar.month_name[int(month)], day)
 
-    def print_annual_results(
-            self, max_temp, min_temp,
-            max_humid, max_temp_date,
-            min_temp_date, max_humid_date):
+        month = self.min_temp_date.split('-')[1]
+        day = self.min_temp_date.split('-')[2]
+        print('Lowest:', str(self.min_temp_year) + 'C', 'on', calendar.month_name[int(month)], day)
 
-        month = max_temp_date.split('-')[1]
-        day = max_temp_date.split('-')[2]
-        print('Highest:', str(max_temp) + 'C', 'on', calendar.month_name[int(month)], day)
-
-        month = min_temp_date.split('-')[1]
-        day = min_temp_date.split('-')[2]
-        print('Lowest:', str(min_temp) + 'C', 'on', calendar.month_name[int(month)], day)
-
-        month = max_humid_date.split('-')[1]
-        day = max_humid_date.split('-')[2]
-        print('Humidity:', str(max_humid) + '%', 'on', calendar.month_name[int(month)], day)
+        month = self.max_humid_date.split('-')[1]
+        day = self.max_humid_date.split('-')[2]
+        print('Humidity:', str(self.max_humid_year) + '%', 'on', calendar.month_name[int(month)], day)
 
 
 class WeatherGraphs:
@@ -121,7 +118,7 @@ class WeatherGraphs:
     def display_therm_graph(self, input_directory, input_year_month):
         file_path = self.get_file_path(input_directory, input_year_month)
         self.print_year_month(input_year_month)
-        with open(file_path, "rU") as csv_file:
+        with open(file_path, "r") as csv_file:
             weather_file = csv.DictReader(csv_file)
             for row in weather_file:
                 if row["Max TemperatureC"]:
@@ -148,7 +145,7 @@ class WeatherGraphs:
     def display_therm_graph_bonus(self, input_directory, input_year_month):
         file_path = self.get_file_path(input_directory, input_year_month)
         self.print_year_month(input_year_month)
-        with open(file_path, "rU") as csv_file:
+        with open(file_path, "r") as csv_file:
             weather_file = csv.DictReader(csv_file)
             for row in weather_file:
                 main_temp_bar = ''
