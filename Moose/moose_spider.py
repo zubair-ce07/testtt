@@ -65,7 +65,7 @@ class MooseParseSpider(BaseParseSpider):
         return clean(response.css('meta[itemprop=name]::attr(content)'))[0]
 
     def product_description(self, response):
-        first_tab = clean(response.xpath('//div[@class="std"]//ul//li//text()'))
+        first_tab = clean(response.css('div.std ul li ::text'))
         second_tab = clean(response.css('div.std p::text'))[1:]
         return first_tab+second_tab
 
@@ -81,7 +81,7 @@ class MooseParseSpider(BaseParseSpider):
         for keys, value in script_json.items():
             color = value[0]['label']
             size = value[1]['label']
-            skus[color + "_" + size] = {"color": color, "size": size, "price": price['price'], "currency": price['currency']}
+            skus[keys] = {"color": color, "size": size, "price": price['price'], "currency": price['currency']}
 
         return skus
 
