@@ -65,8 +65,8 @@ class MooseParseSpider(BaseParseSpider):
         return clean(response.css('meta[itemprop=name]::attr(content)'))[0]
 
     def product_description(self, response):
-        first_tab = clean(response.css('div.std ul>li::text'))[1:]
-        second_tab = clean(response.css('div.std>p::text'))[1:]
+        first_tab = clean(response.xpath('//div[@class="std"]//ul//li//text()'))
+        second_tab = clean(response.css('div.std p::text'))[1:]
         return first_tab+second_tab
 
     def image_urls(self, response):
@@ -75,22 +75,15 @@ class MooseParseSpider(BaseParseSpider):
     def skus(self, response):
         script_json = self.magento_product_data(response)
         script_json = self.magento_product_map(script_json)
-        price = self.product_pricing_new(response)
+        price = self.product_pricing_common_new(response)
         skus = {}
 
         for keys, value in script_json.items():
             color = value[0]['label']
             size = value[1]['label']
-            skus[color + "_" + size] = {"color": color, "size": size, "price": price[1], "currency": price[2]}
+            skus[color + "_" + size] = {"color": color, "size": size, "price": price['price'], "currency": price['currency']}
 
         return skus
-
-    def product_availability(self, response):
-        availability = clean(response.css('p.availability>span::text'))[0]
-        flag = False
-        if availability != 'In stock':
-            flag = True
-        return flag
 
     def product_gender(self, response):
         return clean(response.css('tbody>tr>td::text'))[0]
