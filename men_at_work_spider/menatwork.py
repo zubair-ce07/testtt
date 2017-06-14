@@ -13,8 +13,7 @@ class MenAtWorkSpider(CrawlSpider):
     start_urls = ["https://www.menatwork.nl"]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['a.headerlist__link'])),
-        Rule(LinkExtractor(restrict_css=['[rel="next"]'], tags=['link'])),
+        Rule(LinkExtractor(restrict_css=['a.headerlist__link', '[rel="next"]'], tags=['a', 'link'])),
         Rule(LinkExtractor(restrict_css='.thumb-link'), callback='parse_item'),
     )
 
