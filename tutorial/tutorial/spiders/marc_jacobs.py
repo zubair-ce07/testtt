@@ -13,13 +13,13 @@ class MarcSpider(scrapy.Spider):
         new_arrivals = response.xpath(
             '//li[@class="mobile-hidden"]/a/@href').extract_first()
         for url in new_arrivals:
-        yield response.follow(url, self.url_parse)
+            yield response.follow(url, self.url_parse)
 
     def url_parse(self, response):
         product_pages = response.xpath(
             '//a[@class="product-page-link"]/@href').extract_first()
         for product in product_pages:
-        yield response.follow(product, self.product_page_parse)
+            yield response.follow(product, self.product_page_parse)
 
     def get_colors_elements(self, response):
         urls = response.xpath('//a[@class="swatchanchor"]//@href').extract()
