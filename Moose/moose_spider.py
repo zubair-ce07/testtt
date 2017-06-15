@@ -59,16 +59,10 @@ class MooseParseSpider(BaseParseSpider):
         return []
 
     def product_id(self, response):
-        prod_id = clean(response.css('meta[itemprop=sku]::attr(content)'))
-        if not prod_id:
-            return clean(response.css('input[name=product]::attr(value)'))
-        return prod_id
+        return clean(response.css('meta[itemprop=sku]::attr(content), input[name=product]::attr(value)'))
 
     def product_name(self, response):
-        prod_name = clean(response.css('meta[itemprop=name]::attr(content)'))
-        if not prod_name:
-            return clean(response.css('.product-name h1::text'))[0]
-        return prod_name[0]
+        return clean(response.css('meta[itemprop=name]::attr(content), .product-name h1::text'))[0]
 
     def product_description(self, response):
         first_tab = clean(response.css('div.std ul li ::text'))
