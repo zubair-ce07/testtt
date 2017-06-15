@@ -29,7 +29,7 @@ class HypeDC(scrapy.Spider):
             'Price': response.css('div.price-div meta::attr(content)').extract_first(),
             'Description': response.css('div.product-description::text').extract_first().strip(),
             'Breadcrumb': response.css('ul.breadcrumb li a span::text').extract(),
-            'Img-Src': response.css('div.slider-inner div.unveil-container noscript img::attr(src)').extract_first(),
+            'Img-Src': response.css('div.slider-inner div.unveil-container noscript img::attr(src)').extract(),
             'URL': response.url,
             'Available Sizes': response.css('div#size-selector-tab-desktop-0 > ul li:not(.inactive) a::text').extract(),
         }
