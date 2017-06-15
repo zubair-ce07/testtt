@@ -1,13 +1,13 @@
 import argparse
 import asyncio
 import threading
+import time
 from asyncio.tasks import FIRST_COMPLETED
 from concurrent.futures.thread import ThreadPoolExecutor
 from urllib import parse
 
 import aiohttp
 import requests
-import time
 from parsel import Selector
 
 
@@ -47,15 +47,15 @@ class Crawler:
 
 
 class AsyncCrawler(Crawler):
-    async def crawling(self, url, request_count):
-        print('request {}'.format(request_count))
+    async def crawling(self, url):
         async with aiohttp.request('Get', url) as response:
             response = await response.text()
             self.count_downloaded_bytes(response)
             self.extract_urls_from_response(response)
 
     async def ensure_concurrency(self):
-        await self.crawling(self.base_url, 1)
+        print('request {}'.format(1))
+        await self.crawling(self.base_url)
         completed_request_count = 1
         while True:
             active_task_count = len([task for task in self.active_requests if not task.done()])
@@ -67,6 +67,8 @@ class AsyncCrawler(Crawler):
 
             if new_requests_count:
                 for _ in range(new_requests_count):
+                    await asyncio.sleep(self.download_delay)
+                    print('request {}'.format(completed_request_count+1))
                     await self.schedule_new_request(completed_request_count)
                     completed_request_count += 1
                 await asyncio.wait(self.active_requests, return_when=FIRST_COMPLETED)
@@ -84,8 +86,7 @@ class AsyncCrawler(Crawler):
         if completed_request_count < len(self.extracted_urls):
             url = self.extracted_urls[completed_request_count]
             self.visited_urls.append(url)
-            task = asyncio.ensure_future(self.crawling(url, completed_request_count + 1))
-            await asyncio.sleep(self.download_delay)
+            task = asyncio.ensure_future(self.crawling(url))
             self.active_requests.append(task)
 
     def start(self):
@@ -95,18 +96,20 @@ class AsyncCrawler(Crawler):
 
 
 class ParallelCrawler(Crawler):
+    def __init__(self, base_url, delay, concurrent_requests, max_urls):
+        super().__init__(base_url, delay, concurrent_requests, max_urls)
+        self.lock = threading.Lock()
+
     def crawling(self, url, request_count=1):
         active_task_count = len([task for task in self.active_requests if task.running()])
         print('request {}, active requests {}'.format(request_count, active_task_count))
-        lock.acquire()
+        self.lock.acquire()
         response = requests.get(url).text
         self.count_downloaded_bytes(response)
         self.extract_urls_from_response(response)
-        lock.release()
+        self.lock.release()
 
     def ensure_parallelism(self):
-        # It ensures number of parallel request by collecting specified number of urls and pass these
-        # urls to ThreadPoolExecutor for crawling
         with ThreadPoolExecutor(max_workers=self.concurrent_requests_count) as executor:
             completed_request_count = 1
             while completed_request_count < self.max_urls_to_visit:
@@ -116,7 +119,6 @@ class ParallelCrawler(Crawler):
                     completed_request_count += 1
                     self.active_requests.append(executor.submit(self.crawling, url, completed_request_count))
                     time.sleep(self.download_delay)
-                    executor.map(self.active_requests)
                 else:
                     time.sleep(self.download_delay)
 
@@ -127,9 +129,8 @@ class ParallelCrawler(Crawler):
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--choices', type=validate_crawling_approach,
-                        default='c',
-                        help='Enter c for concurrent crawling or p for parallel crawling')
+    parser.add_argument('-c', '--choice', choices=['c', 'p'], type=validate_crawling_approach,
+                        default='c', help='Choose between Concurrent or Parallel')
     parser.add_argument('-u', '--url', type=validate_url,
                         default='https://www.tutorialspoint.com/', help='Enter any website url')
     parser.add_argument('-d', '--download_delay', type=float,
@@ -143,12 +144,11 @@ def get_arguments():
     return arguments
 
 
-def validate_crawling_approach(choices):
-    if len(choices) == 1 and ('c' in choices or 'p' in choices):
-        return choices
+def validate_crawling_approach(choice):
+    if len(choice) == 1 and ('c' in choice or 'p' in choice):
+        return choice
     else:
-        raise argparse.ArgumentTypeError(
-            'Please enter c for concurrent crawling or p for parallel crawling')
+        raise argparse.ArgumentTypeError('Please Choose between Concurrent or Parallel')
 
 
 def validate_url(url):
@@ -160,13 +160,12 @@ def validate_url(url):
 
 if __name__ == '__main__':
     args = get_arguments()
-    if 'c' in args.choices:
+    if 'c' in args.choice:
         async_crawler = AsyncCrawler(
             args.url, args.download_delay, args.concurrent_request_count, args.max_urls_to_visit)
         async_crawler.start()
         async_crawler.show_performance('Asynchronous')
     else:
-        lock = threading.Lock()
         parallel_crawler = ParallelCrawler(
             args.url, args.download_delay, args.concurrent_request_count, args.max_urls_to_visit)
         parallel_crawler.start()
