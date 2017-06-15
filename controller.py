@@ -1,38 +1,67 @@
 from matrixreader import MatrixReader
+from printer import CPrinter
 
 class Controller(object):
 
     _column_indexes = [0, 1, 3, 7]
-    _year = None
-    _month = None
-    _chart = None
-    _single_chart = None
+    c_printer = CPrinter()
 
-    def __init__(self, dir, yearly='', monthly='', chart=False, single_line=False):
-        self._year = yearly
-        self._month = monthly
-        self._chart = chart
-        self._single_chart = single_line
-        self.martix = MatrixReader(dir, [].extend(yearly) + [].extend(monthly), self._column_indexes).retrieve()
-        self.martix = self.filter_data()
+    def __init__(self, args):
+        self.paras = args
+        self.year = None
+        self.month = None
+        self.year_month = None
+        self.bonus = None
+        self.fixtures = []
+        if args.c != '':
+            self.fixtures.append(args.c)
+            self.year_month = True
+        if args.a != '':
+            self.fixtures.append(args.a)
+            self.month = True
+        if args.e != '':
+            self.fixtures.append(args.e)
+            self.year = True
+        if args.b != '':
+            self.fixtures.append(args.b)
+            self.bonus = True
 
+        self.martix = MatrixReader(args.dir, self.fixtures, self._column_indexes).retrieve()
+        self.martix = self.__filter_data()
 
     def calculate(self):
-        if self._month == '':
-            print(self.yearly())
+        if self.year:
+            self.c_printer.yprint(self.__yearly())
+        if self.month:
+            self.c_printer.mprint(self.__monthly())
+        if self.year_month:
+            self.c_printer.cprint(self.__year_monthly())
+        if self.bonus:
+            self.c_printer.csprint(self.__year_monthly())
 
-    def filter_data(self):
+    def mean(self, l):
+        return sum(map(int, l)) / len(l)
+
+
+    def __filter_data(self):
         return [row for row in self.martix if '' not in row]
 
 
-    def yearly(self):
+    def __yearly(self):
         return max(self.martix, key=lambda item: int(item[1])), \
                min(self.martix, key=lambda item: int(item[2])), \
                max(self.martix, key=lambda item: int(item[3]))
 
-    def monthly(self):
-        pass
+    def __monthly(self):
+        records = []
+        for record in self.martix:
+            records.append(record[1:])
+        return map(self.mean, zip(*records))
 
-
-c = Controller('./weatherfiles', '2005')
-c.calculate()
+    def __year_monthly(self):
+        if self.paras.c != '':
+            year, month = self.paras.c.split('/')
+        else:
+            year, month = self.paras.b.split('/')
+        records = [record for record in self.martix if year + '-' + month in record[0]]
+        return records

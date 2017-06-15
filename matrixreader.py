@@ -33,8 +33,9 @@ class MatrixReader(object):
             pattern = self.STAR + fix + self.STAR
             if not fix.isdigit():
                 year, month = fix.split('/')
-                pattern = self.STAR + year + '_' + calendar.month_abbr(month) + self.STAR
+                pattern = self.STAR + year + '_' + calendar.month_abbr[int(month)] + self.STAR
             for file in files:
                 if fnmatch.fnmatch(file, pattern):
-                    ls.append(file)
+                    if file not in ls:
+                        ls.append(file)
         return ls
