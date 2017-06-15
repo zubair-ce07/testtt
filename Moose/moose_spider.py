@@ -35,12 +35,12 @@ class MixinEU:
 
 class MooseParseSpider(BaseParseSpider):
 
-    price_css = 'div[itemprop=offers]'
+    price_css = '.price-box'
 
     def parse(self, response):
 
         sku_id = self.product_id(response)
-        garment = self.new_unique_garment(sku_id)
+        garment = self.new_unique_garment(sku_id[0])
         if not garment:
             return
 
@@ -59,10 +59,16 @@ class MooseParseSpider(BaseParseSpider):
         return []
 
     def product_id(self, response):
-        return clean(response.css('meta[itemprop=sku]::attr(content)'))[0]
+        prod_id = clean(response.css('meta[itemprop=sku]::attr(content)'))
+        if not prod_id:
+            return clean(response.css('input[name=product]::attr(value)'))
+        return prod_id
 
     def product_name(self, response):
-        return clean(response.css('meta[itemprop=name]::attr(content)'))[0]
+        prod_name = clean(response.css('meta[itemprop=name]::attr(content)'))
+        if not prod_name:
+            return clean(response.css('.product-name h1::text'))[0]
+        return prod_name[0]
 
     def product_description(self, response):
         first_tab = clean(response.css('div.std ul li ::text'))
