@@ -3,48 +3,48 @@ from scrapy.spiders import Rule
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
-class MixinUK:
-    retailer = 'liujo-uk'
+class Mixin:
+    retailer = 'liujo'
+    allowed_domains = ['liujo.com']
+    gender = 'women'
+    kids = ['kids', 'bambino', 'enfant', 'bebe']
+    size = ['Size', "Gr\u00f6\u00dfe", 'Taglia', 'Taille']
+    color = ['Color', 'Colore', 'Couleur']
+
+
+class MixinUK(Mixin):
+    retailer = Mixin.retailer+'-uk'
     market = 'UK'
-    allowed_domains = ['liujo.com']
     start_urls = ['http://www.liujo.com/gb']
-    gender = 'Women'
 
 
-class MixinIT:
-    retailer = 'liujo-it'
+class MixinIT(Mixin):
+    retailer = Mixin.retailer + '-it'
     market = 'IT'
-    lang = 'italian'
-    allowed_domains = ['liujo.com']
+    lang = 'it'
     start_urls = ['http://www.liujo.com/it']
-    gender = 'Women'
 
 
-class MixinDE:
-    retailer = 'liujo-de'
+class MixinDE(Mixin):
+    retailer = Mixin.retailer + '-de'
     market = 'DE'
-    lang = 'german'
-    allowed_domains = ['liujo.com']
+    lang = 'de'
     start_urls = ['http://www.liujo.com/de']
-    gender = 'Women'
 
 
-class MixinFR:
-    retailer = 'liujo-fr'
+class MixinFR(Mixin):
+    retailer = Mixin.retailer + '-fr'
     market = 'FR'
-    lang = 'french'
-    allowed_domains = ['liujo.com']
+    lang = 'fr'
     start_urls = ['http://www.liujo.com/fr']
-    gender = 'Women'
+    kids = 'enfant'
 
 
-class MixinES:
-    retailer = 'liujo-es'
+class MixinES(Mixin):
+    retailer = Mixin.retailer + '-es'
     market = 'ES'
-    lang = 'spanish'
-    allowed_domains = ['liujo.com']
+    lang = 'es'
     start_urls = ['http://www.liujo.com/es']
-    gender = 'Women'
 
 
 class LiujoParseSpider(BaseParseSpider):
@@ -59,11 +59,8 @@ class LiujoParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        # garment['description'], garment['care'] = self.retrieve_care(garment['description'])
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response, sku_id[0])
-        garment['gender'] = "Women"
-
         if self.gender_check(garment['trail']):
             garment['gender'] = 'unisex-kids'
 
@@ -71,8 +68,7 @@ class LiujoParseSpider(BaseParseSpider):
 
     def gender_check(self, trail):
         soup = " ".join([t for _, t in trail or []]).lower()
-        return any(child in soup for child in ['kids', 'enfant', 'bambina', 'bebe'])
-        # return 'kids' in soup
+        return any(child in soup for child in Mixin.kids)
 
     def retrieve_care(self, details):
         care = []
@@ -118,10 +114,10 @@ class LiujoParseSpider(BaseParseSpider):
         for keys, value in script_json.items():
             sku = common_sku.copy()
             for val in value:
-                if val['name'] in ['Color', 'Colore', 'Couleur']:
-                    if val['label'] not in ["", 'Color', 'Colore', 'Couleur']:
+                if val['name'] in Mixin.color:
+                    if val['label'] not in [""]+Mixin.color:
                         sku['colour'] = val['label']
-                if val['name'] in ['Size', "Gr\u00f6\u00dfe", 'Taglia', 'Taille']:
+                if val['name'] in Mixin.size:
                     sku['size'] = val['label']
             skus[keys] = sku
         return skus
