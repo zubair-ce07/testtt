@@ -115,7 +115,7 @@ class LiujoParseSpider(BaseParseSpider):
             sku = common_sku.copy()
             for val in value:
                 if val['name'] in self.color:
-                    if not val['label'] or val['label'] not in self.color:
+                    if val['label'] and val['label'] not in self.color:
                         sku['colour'] = val['label']
                 if val['name'] in self.size:
                     sku['size'] = val['label']
