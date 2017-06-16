@@ -24,37 +24,38 @@ class WeatherData:
               (
                   analyzed_data_of_year['max']['temperature'],
                   analyzed_data_of_year['max']['month'],
-                  analyzed_data_of_year['max']['date']))
+                  analyzed_data_of_year['max']['day']))
 
         print('Lowest: %dC on %s %d' %
               (
                   analyzed_data_of_year['min']['temperature'],
                   analyzed_data_of_year['min']['month'],
-                  analyzed_data_of_year['min']['date']))
+                  analyzed_data_of_year['min']['day']))
 
         print('Humid: %d%% on %s %d' %
               (
                   analyzed_data_of_year['humid']['humidity'],
                   analyzed_data_of_year['humid']['month'],
-                  analyzed_data_of_year['humid']['date']))
+                  analyzed_data_of_year['humid']['day']))
 
     def max_temperature_data_of_year(self):
-        max_temperature_month = max(
-            self.weather_data, key=lambda x: x['Max TemperatureC'].max())
 
-        max_temp = max_temperature_month['Max TemperatureC'].max()
-        max_temperature_month = max_temperature_month.loc[max_temperature_month[
-            'Max TemperatureC'] == max_temp]
+        max_temperature_month = max(self.weather_data, key=lambda x:
+                                    x['Max TemperatureC'].max())
+
+        max_temperature_day_data = max_temperature_month.ix[
+            max_temperature_month['Max TemperatureC'].idxmax()]
+
+        max_temp = max_temperature_day_data['Max TemperatureC']
 
         date = datetime.datetime.strptime(
-            max_temperature_month['PKT'].iloc[0] or max_temperature_month['PKST'].iloc[0], '%Y-%m-%d')
-
-        max_date = date.day
+            max_temperature_day_data['PKT'] or max_temperature_day_data['PKST'], '%Y-%m-%d')
+        max_day = date.day
         max_month = calendar.month_name[date.month]
         return {
             'temperature': max_temp,
             'month': max_month,
-            'date': max_date
+            'day': max_day
         }
 
     def min_temperature_data_of_year(self):
@@ -62,18 +63,18 @@ class WeatherData:
             self.weather_data, key=lambda x: x['Min TemperatureC'].min())
         min_temp = min_temperature_month['Min TemperatureC'].min()
 
-        min_temperature_month = min_temperature_month.loc[
-            min_temperature_month['Min TemperatureC'] == min_temp]
+        min_temperature_day_data = min_temperature_month.ix[
+            min_temperature_month['Min TemperatureC'].idxmin()]
 
         date = datetime.datetime.strptime(
-            min_temperature_month['PKT'].iloc[0] or min_temperature_month['PKST'].iloc[0], '%Y-%m-%d')
+            min_temperature_day_data['PKT'] or min_temperature_day_data['PKST'], '%Y-%m-%d')
 
-        min_date = date.day
+        min_day = date.day
         min_month = calendar.month_name[date.month]
         return {
             'temperature': min_temp,
             'month': min_month,
-            'date': min_date
+            'day': min_day
         }
 
     def max_humidity_data_of_year(self):
@@ -81,18 +82,18 @@ class WeatherData:
             self.weather_data, key=lambda x: x['Max Humidity'].max())
 
         humid = max_humidity_month['Max Humidity'].max()
-        max_humidity_month = max_humidity_month.loc[
-            max_humidity_month['Max Humidity'] == humid]
+        max_humidity_day_data = max_humidity_month.ix[
+            max_humidity_month['Max Humidity'].idxmax()]
 
         date = datetime.datetime.strptime(
-            max_humidity_month['PKT'].iloc[0] or max_humidity_month['PKST'].iloc[0], '%Y-%m-%d')
+            max_humidity_day_data['PKT'] or max_humidity_day_data['PKST'], '%Y-%m-%d')
 
-        humid_date = date.day
+        humid_day = date.day
         humid_month = calendar.month_name[date.month]
         return {
             'humidity': humid,
             'month': humid_month,
-            'date': humid_date
+            'day': humid_day
         }
 
     def analyze_year_data(self):
@@ -134,100 +135,95 @@ class WeatherData:
 
         date = (one_day_data['PKT'] or one_day_data['PKST'])
         date = datetime.datetime.strptime(date, "%Y-%m-%d")
-        print(str(date.day), end='')
-        print(' ', end='')
-        text = ''
 
-        text += colored('+', 'blue')
-        print(text * int(one_day_data['Min TemperatureC']), end='')
+        text = str(date.day)
+        text += ' '
+        text += colored('+' * int(one_day_data['Min TemperatureC']), 'blue')
+        text += colored('+' * int(one_day_data['Max TemperatureC']), 'red')
+        text += ' {}C - {}C'.format(
+            one_day_data['Min TemperatureC'],
+            one_day_data['Max TemperatureC'])
+        print(text)
 
-        text = ''
-
-        text += colored('+', 'red')
-        print(text * int(one_day_data['Max TemperatureC']), end='')
-
-        print(' %dC - %dC' %
-              (one_day_data['Min TemperatureC'], one_day_data['Max TemperatureC']))
-
-    def display_temperature_chart_of_given_month_of_year(self):
+    def display_temperature_chart_of_given_month(self):
         for month_data in self.weather_data:
             for index, row in month_data.iterrows():
-                if not math.isnan(row['Max TemperatureC']) and not math.isnan(row['Min TemperatureC']):
+                if not math.isnan(row['Max TemperatureC']) and not math.isnan(
+                        row['Min TemperatureC']):
                     self.display_one_day_horizontal_bar_graph(row)
 
 
-def year_range(string):
-    try:
-        year_passed = datetime.datetime.strptime(string, '%Y')
+class Validation:
 
-        if not datetime.datetime(1996, 12, 1) <= year_passed <= datetime.datetime(2011, 12, 9):
-            msg = '%r year passed is out of range' % string
+    def verify_date(self, date):
+
+        if date.count('/') == 1:
+            pattern_to_match = "%Y/%m"
+        else:
+            pattern_to_match = "%Y"
+        try:
+            year_passed = datetime.datetime.strptime(date, pattern_to_match)
+            return year_passed.year
+        except ValueError:
+            msg = '%r The input is incorrect' % date
             raise argparse.ArgumentTypeError(msg)
-
-        return year_passed.year
-    except ValueError:
-
-        msg = '%r The input is incorrect' % string
-        raise argparse.ArgumentTypeError(msg)
+        return date
 
 
-def year_month_validity(string):
+class Filer:
+    def dataframe_from_file(self, filename):
+        return pandas.read_csv(filename, header=0)
 
-    try:
-        date = datetime.datetime.strptime(
-            string, '%Y/%m')
-        if not datetime.datetime(1996, 12, 1) <= date <= datetime.datetime(2011, 12, 9):
-            msg = '%r year or month passed is out of range' % string
-            raise argparse.ArgumentTypeError(msg)
-    except ValueError:
-        msg = '%r incorrect month and year passed' % string
-        raise argparse.ArgumentTypeError(msg)
-
-    return string
+    def make_month_file_name(self, directory, date):
+        month_abbreviated_name = calendar.month_abbr[int(date.month)]
+        return '{}/lahore_weather_{}_{}.txt'.format(
+            directory, date.year, month_abbreviated_name)
 
 
-def get_required_files_data_for_given_year(year, directory):
+class ExtractData:
 
-    data_of_given_year = []
+    def __init__(self, date):
+        if str(date).count('/') == 1:
+            self.date = datetime.datetime.strptime(date, "%Y/%m")
+        else:
+            self.date = datetime.datetime.strptime(str(date), "%Y")
+        self.file_reader = Filer()
 
-    for filename in glob.glob(directory + '/lahore_weather_' + str(year) + '*.txt'):
-        data_of_month = pandas.read_csv(filename, header=0)
-        data_of_given_year.append(data_of_month)
+    def data_for_given_year(self, directory):
 
-    return data_of_given_year
+        year_data = []
+        for filename in glob.glob(directory + '/lahore_weather_' + str(self.date.year) + '*.txt'):
+            month_data = self.file_reader.dataframe_from_file(filename)
+            year_data.append(month_data)
+        return year_data
 
+    def data_for_given_month(self, directory):
 
-def get_required_files_data_for_given_month(year_and_month, directory):
-    date = datetime.datetime.strptime(year_and_month, '%Y/%m')
+        filename = self.file_reader.make_month_file_name(directory, self.date)
 
-    month_abbreviated_name = calendar.month_abbr[int(date.month)]
+        data_of_month = self.file_reader.dataframe_from_file(filename)
 
-    filename = '{}/lahore_weather_{}_{}.txt'.format(
-        directory, date.year, month_abbreviated_name)
-
-    data_of_month = pandas.read_csv(filename, header=0)
-
-    single_month_data = [data_of_month]
-    return single_month_data
+        return [data_of_month]
 
 
 def main():
 
+    date_type = Validation()
     parser = argparse.ArgumentParser(description='WeatherMan data analysis.')
 
     parser.add_argument(
-        '-e', dest='weatherman_year_data_analysis', type=year_range,
-        help='(usage: -e yyyy) to see maximum temperature,'
+        '-e', '--year', dest='given_year', type=date_type.verify_date,
+        metavar='', help='(usage: -e yyyy) to see maximum temperature,'
         ' minimum temperature and humidity')
 
     parser.add_argument(
-        '-a', dest='weatherman_month_of_year_data_analysis', type=year_month_validity,
-        help='(usage: -a yyyy/mm) to see average maximum, average minimum'
+        '-a', '--month', dest='given_month_for_analysis', type=date_type.verify_date,
+        metavar='', help='(usage: -a yyyy/mm) to see average maximum, average minimum'
         ' temperature and mean humidity of the month')
 
     parser.add_argument(
-        '-c', dest='weatherman_temperature_chart_of_given_month_of_year', type=year_month_validity,
-        help='(usage: -c yyyy/mm) to see horizontal bar chart'
+        '-c', '--charts', type=date_type.verify_date, dest='given_month_for_charts',
+        metavar='', help='(usage: -c yyyy/mm) to see horizontal bar chart'
         ' of highest and lowest temperature on each day')
 
     parser.add_argument('path_to_files',
@@ -238,26 +234,26 @@ def main():
     if not os.path.isdir(args.path_to_files):
         print('path to directory does not exist')
         exit(1)
+    date = args.given_year or args.given_month_for_analysis or args.given_month_for_charts
+    data_reader = ExtractData(date)
 
-    if args.weatherman_year_data_analysis:
+    if args.given_year:
+        total_data = data_reader.data_for_given_year(
+            args.path_to_files)
 
-        total_data = get_required_files_data_for_given_year(
-            args.weatherman_year_data_analysis, args.path_to_files)
         weather_data = WeatherData(total_data)
-
         weather_data.analyze_year_data()
 
-    if args.weatherman_month_of_year_data_analysis:
-        total_data = get_required_files_data_for_given_month(
-            args.weatherman_month_of_year_data_analysis, args.path_to_files)
+    else:
+        total_data = data_reader.data_for_given_month(
+            args.path_to_files)
         weather_data = WeatherData(total_data)
-        weather_data.analyze_month_data()
 
-    if args.weatherman_temperature_chart_of_given_month_of_year:
-        total_data = get_required_files_data_for_given_month(
-            args.weatherman_temperature_chart_of_given_month_of_year, args.path_to_files)
-        weather_data = WeatherData(total_data)
-        weather_data.display_temperature_chart_of_given_month_of_year()
+        if args.given_month_for_analysis:
+            weather_data.analyze_month_data()
+
+        if args.given_month_for_charts:
+            weather_data.display_temperature_chart_of_given_month()
 
 
 if __name__ == '__main__':
