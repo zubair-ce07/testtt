@@ -12,16 +12,14 @@ class MarcSpider(scrapy.Spider):
     def parse(self, response):
         categories_page_links = response.xpath(
             '//li[@class="mobile-hidden"]/a/@href').extract()
-        print(categories_page_links)
         for url in categories_page_links:
             yield response.follow(url, self.single_category_url_parse)
 
     def single_category_url_parse(self, response):
         links_to_product_pages = response.xpath(
-            '//a[@class="product-page-link"]/@href').extract_first()
-        print(links_to_product_pages)
-        # for product_link in links_to_product_pages:
-        yield response.follow(links_to_product_pages, self.product_page_parse)
+            '//a[@class="product-page-link"]/@href').extract()
+        for product_link in links_to_product_pages:
+            yield response.follow(product_link, self.product_page_parse)
 
     def get_color_names_and_urls_of_single_product(self, response):
         urls = response.xpath('//a[@class="swatchanchor"]//@href').extract()
