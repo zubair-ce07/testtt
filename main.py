@@ -1,5 +1,5 @@
 import argparse
-from controller import Controller
+from weatheranalyzer import WeatherReporter
 
 
 if __name__ == '__main__':
@@ -11,5 +11,5 @@ if __name__ == '__main__':
     parser.add_argument("-b", help="Processing Sinle-line Chart Year/MonthNumber", default='')
     args = parser.parse_args()
 
-    controller = Controller(args)
-    controller.calculate()
+    reporting = WeatherReporter()
+    reporting.start(args)
