@@ -131,26 +131,38 @@ class WeatherData:
                                    'avg_humid': avg_humid}
             self.show_month_analysis_data(month_analysis_data)
 
-    def display_one_day_horizontal_bar_graph(self, one_day_data):
+    def display_one_day_horizontal_bar_graph(self, one_day_data, is_bars=False):
 
         date = (one_day_data['PKT'] or one_day_data['PKST'])
         date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
         text = str(date.day)
         text += ' '
-        text += colored('+' * int(one_day_data['Min TemperatureC']), 'blue')
-        text += colored('+' * int(one_day_data['Max TemperatureC']), 'red')
-        text += ' {}C - {}C'.format(
-            one_day_data['Min TemperatureC'],
-            one_day_data['Max TemperatureC'])
-        print(text)
 
-    def display_temperature_chart_of_given_month(self):
+        text += colored('+' * int(one_day_data['Min TemperatureC']), 'blue')
+
+        if is_bars:
+            text += ' {}C'.format(one_day_data['Min TemperatureC'])
+            print(text)
+            text = str(date.day)
+
+        text += colored('+' * int(one_day_data['Max TemperatureC']), 'red')
+        if is_bars:
+            text += ' {}C'.format(one_day_data['Max TemperatureC'])
+            print(text)
+        else:
+            text += ' {}C - {}C'.format(
+                one_day_data['Min TemperatureC'],
+                one_day_data['Max TemperatureC'])
+            print(text)
+
+    def display_temperature_chart_of_given_month(self, is_bars=False):
         for month_data in self.weather_data:
             for index, row in month_data.iterrows():
                 if not math.isnan(row['Max TemperatureC']) and not math.isnan(
                         row['Min TemperatureC']):
-                    self.display_one_day_horizontal_bar_graph(row)
+
+                    self.display_one_day_horizontal_bar_graph(row, is_bars)
 
 
 class Validation:
@@ -222,7 +234,12 @@ def main():
         ' temperature and mean humidity of the month')
 
     parser.add_argument(
-        '-c', '--charts', type=date_type.verify_date, dest='given_month_for_charts',
+        '-c', '--bars', type=date_type.verify_date, dest='given_month_for_bars',
+        metavar='', help='(usage: -c yyyy/mm) to see horizontal bar chart'
+        ' of highest and lowest temperature on each day')
+
+    parser.add_argument(
+        '-s', '--charts', type=date_type.verify_date, dest='given_month_for_charts',
         metavar='', help='(usage: -c yyyy/mm) to see horizontal bar chart'
         ' of highest and lowest temperature on each day')
 
@@ -234,7 +251,7 @@ def main():
     if not os.path.isdir(args.path_to_files):
         print('path to directory does not exist')
         exit(1)
-    date = args.given_year or args.given_month_for_analysis or args.given_month_for_charts
+    date = args.given_year or args.given_month_for_analysis or args.given_month_for_charts or args.given_month_for_bars
     data_reader = ExtractData(date)
 
     if args.given_year:
@@ -254,6 +271,9 @@ def main():
 
         if args.given_month_for_charts:
             weather_data.display_temperature_chart_of_given_month()
+
+        if args.given_month_for_bars:
+            weather_data.display_temperature_chart_of_given_month(True)
 
 
 if __name__ == '__main__':
