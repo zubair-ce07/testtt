@@ -34,13 +34,11 @@ class WeatherData:
 
         print('Humid: %d%% on %s %d' %
               (
-                  analyzed_data_of_year['humid']['temperature'],
+                  analyzed_data_of_year['humid']['humidity'],
                   analyzed_data_of_year['humid']['month'],
                   analyzed_data_of_year['humid']['date']))
 
     def max_temperature_data_of_year(self):
-        # max_temperature_month = reduce(lambda x, y: x if(
-        #     x['Max TemperatureC'].max() > y['Max TemperatureC'].max()) else y, self.weather_data)
         max_temperature_month = max(
             self.weather_data, key=lambda x: x['Max TemperatureC'].max())
 
@@ -60,8 +58,6 @@ class WeatherData:
         }
 
     def min_temperature_data_of_year(self):
-        # min_temperature_month = reduce(lambda x, y: x if(
-        #     x['Min TemperatureC'].min() < y['Min TemperatureC'].min()) else y, self.weather_data)
         min_temperature_month = min(
             self.weather_data, key=lambda x: x['Min TemperatureC'].min())
         min_temp = min_temperature_month['Min TemperatureC'].min()
@@ -81,8 +77,6 @@ class WeatherData:
         }
 
     def max_humidity_data_of_year(self):
-        # max_humidity_month = reduce(lambda x, y: x if(
-        #     x['Max Humidity'].max() > y['Max Humidity'].max()) else y, self.weather_data)
         max_humidity_month = max(
             self.weather_data, key=lambda x: x['Max Humidity'].max())
 
@@ -107,10 +101,11 @@ class WeatherData:
         min_temperature_data = self.min_temperature_data_of_year()
         humid_data = self.max_humidity_data_of_year()
 
-        processed_year_data = {'max': max_temperature_data, 'min': min_temperature_data,
+        processed_year_data = {'max': max_temperature_data,
+                               'min': min_temperature_data,
                                'humid': humid_data}
 
-        self.show_task1_results(processed_year_data)
+        self.display_analyzed_year_data(processed_year_data)
 
     def show_month_analysis_data(self, analyzed_data_of_month):
         print('Highest Average: %dC' % analyzed_data_of_month['avg_max_temp'])
@@ -127,8 +122,8 @@ class WeatherData:
             avg_min_temp = month_data['Mean TemperatureC'].min()
 
             # extracting average humidity
-            avg_humid = month_data['Mean Humidity'].sum(
-            ) / month_data['Mean Humidity'].count()
+            avg_humid = month_data[' Mean Humidity'].sum(
+            ) / month_data[' Mean Humidity'].count()
 
             month_analysis_data = {'avg_max_temp': avg_max_temp,
                                    'avg_min_temp': avg_min_temp,
@@ -179,7 +174,6 @@ def year_range(string):
 def year_month_validity(string):
 
     try:
-
         date = datetime.datetime.strptime(
             string, '%Y/%m')
         if not datetime.datetime(1996, 12, 1) <= date <= datetime.datetime(2011, 12, 9):
