@@ -23,11 +23,12 @@ class MarcSpider(scrapy.Spider):
 
     def get_color_names_and_urls_of_single_product(self, response):
         urls = response.xpath('//a[@class="swatchanchor"]//@href').extract()
-        names = response.xpath('//a[@class="swatchanchor"]//text()').extract()
+        color_names = response.xpath(
+            '//a[@class="swatchanchor"]//text()').extract()
 
         elements = {
             'urls': urls,
-            'color_names': names,
+            'color_names': color_names,
         }
         return elements
 
@@ -73,7 +74,7 @@ class MarcSpider(scrapy.Spider):
         else:
             yield product_sku
 
-    def get_size_elements(self, response):
+    def get_available_sizes_and_urls(self, response):
         options = response.xpath(
             '//select[@id="va-size"]//option[@value!=""]//text()').extract()
         size_options = list(map(str.strip, options))
@@ -86,7 +87,8 @@ class MarcSpider(scrapy.Spider):
         }
 
     def color_of_product_page_parse(self, response):
-        size_elements_of_this_color = self.get_size_elements(response)
+        size_elements_of_this_color = self.get_available_sizes_and_urls(
+            response)
         product_sku = response.meta['product_sku']
 
         path_to_images = response.xpath(
