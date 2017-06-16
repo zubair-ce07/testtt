@@ -6,22 +6,24 @@ class MarcSpider(scrapy.Spider):
     name = "marc"
 
     start_urls = [
-        'http://marcjacobs.com/',
+        'https://www.marcjacobs.com',
     ]
 
     def parse(self, response):
-        new_arrivals = response.xpath(
-            '//li[@class="mobile-hidden"]/a/@href').extract_first()
-        for url in new_arrivals:
-            yield response.follow(url, self.url_parse)
+        categories_page_links = response.xpath(
+            '//li[@class="mobile-hidden"]/a/@href').extract()
+        print(categories_page_links)
+        for url in categories_page_links:
+            yield response.follow(url, self.single_category_url_parse)
 
-    def url_parse(self, response):
-        product_pages = response.xpath(
+    def single_category_url_parse(self, response):
+        links_to_product_pages = response.xpath(
             '//a[@class="product-page-link"]/@href').extract_first()
-        for product in product_pages:
-            yield response.follow(product, self.product_page_parse)
+        print(links_to_product_pages)
+        # for product_link in links_to_product_pages:
+        yield response.follow(links_to_product_pages, self.product_page_parse)
 
-    def get_colors_elements(self, response):
+    def get_color_names_and_urls_of_single_product(self, response):
         urls = response.xpath('//a[@class="swatchanchor"]//@href').extract()
         names = response.xpath('//a[@class="swatchanchor"]//text()').extract()
 
@@ -38,7 +40,8 @@ class MarcSpider(scrapy.Spider):
             '(//ul[@class="breadcrumb pdp"])/li[last()]/a/text()').extract_first()
         images = []
         skus = []
-        colors_elements = self.get_colors_elements(response)
+        colors_elements = self.get_color_names_and_urls_of_single_product(
+            response)
         url = colors_elements['urls'].pop(0)
         color_name = colors_elements['color_names'].pop(0)
         yield response.follow(url + '&Quantity=1&format=ajax',
@@ -53,15 +56,6 @@ class MarcSpider(scrapy.Spider):
                                   'colors_elements': colors_elements,
                                   'product_sku': None
                               })
-        #     skus.extend(color_skus_and_images['skus_of_this_color'])
-        #     images.extend(color_skus_and_images['images_of_this_color'])
-        # yield{
-        #     "name": name,
-        #     "category": category,
-        #     "source_url": response.url,
-        #     "images": images,
-        #     "skus": skus
-        # }
 
     def images_parse(self, response):
         print("||||||||||||||||||||||||||||||||",
@@ -80,16 +74,6 @@ class MarcSpider(scrapy.Spider):
             })
         else:
             yield product_sku
-        # name = response.meta['name']
-        # category = response.meta['category']
-        # source = response.meta['source']
-        # yield {
-        #     'name': name,
-        #     'category': category,
-        #     'source_url': source,
-        #     'images': item-list
-        #
-        # }
 
     def get_size_elements(self, response):
         options = response.xpath(
@@ -106,7 +90,7 @@ class MarcSpider(scrapy.Spider):
     def color_of_product_page_parse(self, response):
         size_elements_of_this_color = self.get_size_elements(response)
         product_sku = response.meta['product_sku']
-        # color = response.meta['color_name']
+
         path_to_images = response.xpath(
             '//div[@class="product-images"]/@data-images').extract_first()
         response.meta['images'].append(path_to_images)
@@ -120,15 +104,6 @@ class MarcSpider(scrapy.Spider):
                                   'prev_meta': response.meta,
                                   'product_sku': product_sku
                               })
-        # sku = {
-        #     'color': color,
-        #     "size": size_elements_of_this_color['size_options'][index],
-        #     "price": price_availablitiy['price'],
-        #     "availability": price_availablitiy['availability']
-        # }
-        # skus_of_this_color.append(sku)
-
-        # return {'skus_of_this_color': skus_of_this_color, 'images_of_this_color': item_list}
 
     def size_of_color_of_product_page_parse(self, response):
 
@@ -163,10 +138,7 @@ class MarcSpider(scrapy.Spider):
                 'images': []
             }
         response.meta['product_sku']['skus'].append(size_color_sku)
-        # path_to_images = response.xpath(
-        #     '//div[@class="product-images"]/@data-images').extract_first()
-        # item_list = response.follow(path_to_images, self.images_parse)
-        #
+
         colors_elements = response.meta['prev_meta']['colors_elements']
         size_elements_of_this_color = response.meta['size_elements_of_this_color']
         if size_elements_of_this_color['urls']:
