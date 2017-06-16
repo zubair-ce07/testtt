@@ -79,8 +79,11 @@ class MooseParseSpider(BaseParseSpider):
         skus = {}
 
         for keys, value in script_json.items():
-            color = value[0]['label']
-            size = value[1]['label']
+            for val in value:
+                if val['name'] in ['Color', 'Colour']:
+                    color = val['label']
+                if val['name'] == 'Size':
+                    size = val['label']
             skus[keys] = {"color": color, "size": size, "price": price['price'], "currency": price['currency']}
 
         return skus
