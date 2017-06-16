@@ -7,9 +7,9 @@ class Mixin:
     retailer = 'liujo'
     allowed_domains = ['liujo.com']
     gender = 'women'
-    kids = ['kids', 'bambino', 'enfant', 'bebe']
-    size = ['Size', "Gr\u00f6\u00dfe", 'Taglia', 'Taille']
-    color = ['Color', 'Colore', 'Couleur']
+    kids = ['kids']
+    size = ['Size']
+    color = ['Color']
 
 
 class MixinUK(Mixin):
@@ -23,6 +23,9 @@ class MixinIT(Mixin):
     market = 'IT'
     lang = 'it'
     start_urls = ['http://www.liujo.com/it']
+    kids = Mixin.kids + ['bambino']
+    size = Mixin.size + ['Taglia']
+    color = Mixin.color + ['colore']
 
 
 class MixinDE(Mixin):
@@ -30,6 +33,8 @@ class MixinDE(Mixin):
     market = 'DE'
     lang = 'de'
     start_urls = ['http://www.liujo.com/de']
+    size = Mixin.size + ["Gr\u00f6\u00dfe"]
+
 
 
 class MixinFR(Mixin):
@@ -37,7 +42,9 @@ class MixinFR(Mixin):
     market = 'FR'
     lang = 'fr'
     start_urls = ['http://www.liujo.com/fr']
-    kids = 'enfant'
+    kids = Mixin.kids + ['enfant']
+    size = Mixin.size + ["Taille"]
+    color = Mixin.color + ['Couleur']
 
 
 class MixinES(Mixin):
@@ -45,6 +52,7 @@ class MixinES(Mixin):
     market = 'ES'
     lang = 'es'
     start_urls = ['http://www.liujo.com/es']
+    kids = Mixin.kids + ['bebe']
 
 
 class LiujoParseSpider(BaseParseSpider):
@@ -69,14 +77,6 @@ class LiujoParseSpider(BaseParseSpider):
     def gender_check(self, trail):
         soup = " ".join([t for _, t in trail or []]).lower()
         return any(child in soup for child in Mixin.kids)
-
-    def retrieve_care(self, details):
-        care = []
-        for detail in details:
-            if self.care_criteria(detail):
-                care.append(detail)
-        details = list(set(details) ^ set(care))
-        return details, care
 
     def product_id(self, response):
         return clean(response.css('.product-ids::text'))
@@ -114,10 +114,10 @@ class LiujoParseSpider(BaseParseSpider):
         for keys, value in script_json.items():
             sku = common_sku.copy()
             for val in value:
-                if val['name'] in Mixin.color:
-                    if val['label'] not in [""]+Mixin.color:
+                if val['name'] in self.color:
+                    if not val['label'] or val['label'] not in self.color:
                         sku['colour'] = val['label']
-                if val['name'] in Mixin.size:
+                if val['name'] in self.size:
                     sku['size'] = val['label']
             skus[keys] = sku
         return skus
