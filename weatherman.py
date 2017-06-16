@@ -7,7 +7,6 @@ import math
 import glob
 import pandas
 
-from functools import reduce
 from termcolor import colored
 
 
@@ -20,130 +19,151 @@ class WeatherData:
     def __init__(self, weather_data):
         self.weather_data = weather_data
 
-    def show_task1_results(self, task1_data_to_display):
-        print("Highest: %dC on %s %d" %
-              (task1_data_to_display['max'][0], task1_data_to_display['max'][1], task1_data_to_display['max'][2]))
-        print("Lowest: %dC on %s %d" %
-              (task1_data_to_display['min'][0], task1_data_to_display['min'][1], task1_data_to_display['min'][2]))
-        print("Humid: %d%% on %s %d" %
-              (task1_data_to_display['humid'][0], task1_data_to_display['humid'][1], task1_data_to_display['humid'][2]))
+    def display_analyzed_year_data(self, analyzed_data_of_year):
+        print('Highest: %dC on %s %d' %
+              (
+                  analyzed_data_of_year['max']['temperature'],
+                  analyzed_data_of_year['max']['month'],
+                  analyzed_data_of_year['max']['date']))
 
-    def task1_max_temperature_data_extraction(self):
-        max_temperature_month = reduce(lambda x, y: x if(
-            x['Max TemperatureC'].max() > y['Max TemperatureC'].max()) else y, self.weather_data)
+        print('Lowest: %dC on %s %d' %
+              (
+                  analyzed_data_of_year['min']['temperature'],
+                  analyzed_data_of_year['min']['month'],
+                  analyzed_data_of_year['min']['date']))
+
+        print('Humid: %d%% on %s %d' %
+              (
+                  analyzed_data_of_year['humid']['temperature'],
+                  analyzed_data_of_year['humid']['month'],
+                  analyzed_data_of_year['humid']['date']))
+
+    def max_temperature_data_of_year(self):
+        # max_temperature_month = reduce(lambda x, y: x if(
+        #     x['Max TemperatureC'].max() > y['Max TemperatureC'].max()) else y, self.weather_data)
+        max_temperature_month = max(
+            self.weather_data, key=lambda x: x['Max TemperatureC'].max())
 
         max_temp = max_temperature_month['Max TemperatureC'].max()
         max_temperature_month = max_temperature_month.loc[max_temperature_month[
             'Max TemperatureC'] == max_temp]
 
-        if 'PKT' in max_temperature_month.columns:
-            date = datetime.datetime.strptime(
-                max_temperature_month['PKT'].iloc[0], "%Y-%m-%d")
-        else:
-            date = datetime.datetime.strptime(
-                max_temperature_month['PKST'].iloc[0], "%Y-%m-%d")
+        date = datetime.datetime.strptime(
+            max_temperature_month['PKT'].iloc[0] or max_temperature_month['PKST'].iloc[0], '%Y-%m-%d')
+
         max_date = date.day
         max_month = calendar.month_name[date.month]
-        return [max_temp, max_month, max_date]
+        return {
+            'temperature': max_temp,
+            'month': max_month,
+            'date': max_date
+        }
 
-    def task1_min_temperature_data_extraction(self):
-        min_temperature_month = reduce(lambda x, y: x if(
-            x['Min TemperatureC'].min() < y['Min TemperatureC'].min()) else y, self.weather_data)
-
+    def min_temperature_data_of_year(self):
+        # min_temperature_month = reduce(lambda x, y: x if(
+        #     x['Min TemperatureC'].min() < y['Min TemperatureC'].min()) else y, self.weather_data)
+        min_temperature_month = min(
+            self.weather_data, key=lambda x: x['Min TemperatureC'].min())
         min_temp = min_temperature_month['Min TemperatureC'].min()
 
         min_temperature_month = min_temperature_month.loc[
             min_temperature_month['Min TemperatureC'] == min_temp]
 
-        if 'PKT' in min_temperature_month.columns:
-            date = datetime.datetime.strptime(
-                min_temperature_month.PKT.iloc[0], "%Y-%m-%d")
-        else:
-            date = datetime.datetime.strptime(
-                min_temperature_month.PKST.iloc[0], "%Y-%m-%d")
+        date = datetime.datetime.strptime(
+            min_temperature_month['PKT'].iloc[0] or min_temperature_month['PKST'].iloc[0], '%Y-%m-%d')
 
         min_date = date.day
         min_month = calendar.month_name[date.month]
-        return [min_temp, min_month, min_date]
+        return {
+            'temperature': min_temp,
+            'month': min_month,
+            'date': min_date
+        }
 
-    def task1_humidity_data_extraction(self):
-        max_humidity_month = reduce(lambda x, y: x if(
-            x['Max Humidity'].max() > y['Max Humidity'].max()) else y, self.weather_data)
+    def max_humidity_data_of_year(self):
+        # max_humidity_month = reduce(lambda x, y: x if(
+        #     x['Max Humidity'].max() > y['Max Humidity'].max()) else y, self.weather_data)
+        max_humidity_month = max(
+            self.weather_data, key=lambda x: x['Max Humidity'].max())
 
         humid = max_humidity_month['Max Humidity'].max()
         max_humidity_month = max_humidity_month.loc[
             max_humidity_month['Max Humidity'] == humid]
 
-        if 'PKT' in max_humidity_month.columns:
-            date = datetime.datetime.strptime(
-                max_humidity_month.PKT.iloc[0], "%Y-%m-%d")
-        else:
-            date = datetime.datetime.strptime(
-                max_humidity_month.PKST.iloc[0], "%Y-%m-%d")
+        date = datetime.datetime.strptime(
+            max_humidity_month['PKT'].iloc[0] or max_humidity_month['PKST'].iloc[0], '%Y-%m-%d')
 
         humid_date = date.day
         humid_month = calendar.month_name[date.month]
-        return [humid, humid_month, humid_date]
+        return {
+            'humidity': humid,
+            'month': humid_month,
+            'date': humid_date
+        }
 
-    def show_task1_requirements(self):
+    def analyze_year_data(self):
 
-        max_temperature_data = self.task1_max_temperature_data_extraction()
-        min_temperature_data = self.task1_min_temperature_data_extraction()
-        humid_data = self.task1_humidity_data_extraction()
+        max_temperature_data = self.max_temperature_data_of_year()
+        min_temperature_data = self.min_temperature_data_of_year()
+        humid_data = self.max_humidity_data_of_year()
 
         processed_year_data = {'max': max_temperature_data, 'min': min_temperature_data,
                                'humid': humid_data}
 
         self.show_task1_results(processed_year_data)
 
-    def show_task2_results(self, task2_data):
-        print("Highest Average: %dC" % task2_data['max_temp'])
-        print("Lowest Average: %dC" % task2_data['min_temp'])
-        print("Average Humidity: %d%%" % task2_data['humid'])
+    def show_month_analysis_data(self, analyzed_data_of_month):
+        print('Highest Average: %dC' % analyzed_data_of_month['avg_max_temp'])
+        print('Lowest Average: %dC' % analyzed_data_of_month['avg_min_temp'])
+        print('Average Humidity: %d%%' % analyzed_data_of_month['avg_humid'])
 
-    def show_task2_requirements(self):
+    def analyze_month_data(self):
         for month_data in self.weather_data:
 
             # extracting average highest temperature
-            max_temp = month_data[month_data.columns[2]].max()
+            avg_max_temp = month_data['Mean TemperatureC'].max()
 
             # extracting average lowest temperature
-            min_temp = month_data[month_data.columns[2]].min()
+            avg_min_temp = month_data['Mean TemperatureC'].min()
 
             # extracting average humidity
-            humid = month_data[month_data.columns[8]].sum(
-            ) / month_data[month_data.columns[8]].count()
+            avg_humid = month_data['Mean Humidity'].sum(
+            ) / month_data['Mean Humidity'].count()
 
-            task2_data = {'max_temp': max_temp,
-                          'min_temp': min_temp, 'humid': humid}
-            self.show_task2_results(task2_data)
+            month_analysis_data = {'avg_max_temp': avg_max_temp,
+                                   'avg_min_temp': avg_min_temp,
+                                   'avg_humid': avg_humid}
+            self.show_month_analysis_data(month_analysis_data)
 
-    def show_task3_one_day_graph(self, day_data_row):
-        print(day_data_row[0].split("-")[2], end="")
-        print(' ', end="")
-        text = ""
+    def display_one_day_horizontal_bar_graph(self, one_day_data):
 
-        text += colored('+', "blue")
-        print(text * int(day_data_row[3]), end='')
+        date = (one_day_data['PKT'] or one_day_data['PKST'])
+        date = datetime.datetime.strptime(date, "%Y-%m-%d")
+        print(str(date.day), end='')
+        print(' ', end='')
+        text = ''
 
-        text = ""
+        text += colored('+', 'blue')
+        print(text * int(one_day_data['Min TemperatureC']), end='')
 
-        text += colored('+', "red")
-        print(text * int(day_data_row[1]), end='')
+        text = ''
 
-        print("%dC - %dC" % (day_data_row[3], day_data_row[1]))
+        text += colored('+', 'red')
+        print(text * int(one_day_data['Max TemperatureC']), end='')
 
-    def show_task3_graphs(self):
+        print(' %dC - %dC' %
+              (one_day_data['Min TemperatureC'], one_day_data['Max TemperatureC']))
+
+    def display_temperature_chart_of_given_month_of_year(self):
         for month_data in self.weather_data:
             for index, row in month_data.iterrows():
-
-                if not math.isnan(row[3]) and not math.isnan(row[1]):
-                    self.show_task3_one_day_graph(row)
+                if not math.isnan(row['Max TemperatureC']) and not math.isnan(row['Min TemperatureC']):
+                    self.display_one_day_horizontal_bar_graph(row)
 
 
 def year_range(string):
     try:
-        year_passed = datetime.datetime.strptime(string, "%Y")
+        year_passed = datetime.datetime.strptime(string, '%Y')
 
         if not datetime.datetime(1996, 12, 1) <= year_passed <= datetime.datetime(2011, 12, 9):
             msg = '%r year passed is out of range' % string
@@ -161,9 +181,9 @@ def year_month_validity(string):
     try:
 
         date = datetime.datetime.strptime(
-            string, "%Y/%m")
+            string, '%Y/%m')
         if not datetime.datetime(1996, 12, 1) <= date <= datetime.datetime(2011, 12, 9):
-            msg = "%r year or month passed is out of range" % string
+            msg = '%r year or month passed is out of range' % string
             raise argparse.ArgumentTypeError(msg)
     except ValueError:
         msg = '%r incorrect month and year passed' % string
@@ -172,7 +192,7 @@ def year_month_validity(string):
     return string
 
 
-def get_required_files_data_for_task_1(year, directory):
+def get_required_files_data_for_given_year(year, directory):
 
     data_of_given_year = []
 
@@ -184,7 +204,7 @@ def get_required_files_data_for_task_1(year, directory):
 
 
 def get_required_files_data_for_given_month(year_and_month, directory):
-    date = datetime.datetime.strptime(year_and_month, "%Y/%m")
+    date = datetime.datetime.strptime(year_and_month, '%Y/%m')
 
     month_abbreviated_name = calendar.month_abbr[int(date.month)]
 
@@ -199,22 +219,22 @@ def get_required_files_data_for_given_month(year_and_month, directory):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='WeatherMan data extraction.')
+    parser = argparse.ArgumentParser(description='WeatherMan data analysis.')
 
     parser.add_argument(
-        '-e', dest='weatherman_task_1', type=year_range,
+        '-e', dest='weatherman_year_data_analysis', type=year_range,
         help='(usage: -e yyyy) to see maximum temperature,'
-             ' minimum temperature and humidity')
+        ' minimum temperature and humidity')
 
     parser.add_argument(
-        '-a', dest='weatherman_task_2', type=year_month_validity,
+        '-a', dest='weatherman_month_of_year_data_analysis', type=year_month_validity,
         help='(usage: -a yyyy/mm) to see average maximum, average minimum'
-             ' temperature and mean humidity of the month')
+        ' temperature and mean humidity of the month')
 
     parser.add_argument(
-        '-c', dest='weatherman_task_bonus', type=year_month_validity,
+        '-c', dest='weatherman_temperature_chart_of_given_month_of_year', type=year_month_validity,
         help='(usage: -c yyyy/mm) to see horizontal bar chart'
-             ' of highest and lowest temperature on each day')
+        ' of highest and lowest temperature on each day')
 
     parser.add_argument('path_to_files',
                         help='path to the files having weather data')
@@ -222,29 +242,29 @@ def main():
     args = parser.parse_args()
 
     if not os.path.isdir(args.path_to_files):
-        print("path to directory does not exist")
-        quit()
+        print('path to directory does not exist')
+        exit(1)
 
-    if args.weatherman_task_1:
+    if args.weatherman_year_data_analysis:
 
-        total_data = get_required_files_data_for_task_1(
-            args.weatherman_task_1, args.path_to_files)
+        total_data = get_required_files_data_for_given_year(
+            args.weatherman_year_data_analysis, args.path_to_files)
         weather_data = WeatherData(total_data)
 
-        weather_data.show_task1_requirements()
+        weather_data.analyze_year_data()
 
-    if args.weatherman_task_2:
+    if args.weatherman_month_of_year_data_analysis:
         total_data = get_required_files_data_for_given_month(
-            args.weatherman_task_2, args.path_to_files)
+            args.weatherman_month_of_year_data_analysis, args.path_to_files)
         weather_data = WeatherData(total_data)
-        weather_data.show_task2_requirements()
+        weather_data.analyze_month_data()
 
-    if args.weatherman_task_bonus:
+    if args.weatherman_temperature_chart_of_given_month_of_year:
         total_data = get_required_files_data_for_given_month(
-            args.weatherman_task_bonus, args.path_to_files)
+            args.weatherman_temperature_chart_of_given_month_of_year, args.path_to_files)
         weather_data = WeatherData(total_data)
-        weather_data.show_task3_graphs()
+        weather_data.display_temperature_chart_of_given_month_of_year()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
