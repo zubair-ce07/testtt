@@ -4,6 +4,7 @@ import csv
 import sys
 import calendar
 import os
+import argparse
 from termcolor import colored
 from record import Record
 
@@ -12,13 +13,28 @@ __author__ = 'fakhar'
 
 class CSV:
     '''creates a single CSV for all the required files'''
-    # record_list = []
 
-    def __init__(self, file_path, year, month):
-        file_names = os.listdir(file_path)
+    def __init__(self, file_path, year, month=None):
+
+        try:
+            file_names = os.listdir(file_path)
+        except:
+            raise FileNotFoundError('The directory doesn\'t exist')
         year_list = []
         self.record_list = []
-
+        try:
+            type(int(year))
+        except:
+            raise ValueError('Enter year in YYYY format')
+        if month:
+            try:
+                month = int(month)
+            except:
+                raise ValueError('Enter month in MM format')
+            if month in range(1, len(calendar.month_name)):
+                month = calendar.month_abbr[month]
+            else:
+                raise ValueError('Month number not valid')
         for file_name in file_names:
             if year in file_name:
                 if month:
@@ -26,7 +42,8 @@ class CSV:
                         year_list.append(file_name)
                 else:
                     year_list.append(file_name)
-        # print(year_list)
+        if not year_list:
+            raise ValueError('Data not available')
         for file_name in year_list:
             with open(file_path + '/' + file_name) as csvfile:
                 filereader = csv.DictReader(csvfile)
@@ -37,61 +54,30 @@ class CSV:
                     self.record_list.append(new_record)
 
 
-def check_arg(args):
+def check_args():
     '''check if arguments are in valid format'''
-    if len(args) < 4:
-        print('Minium Required arguments not provided\n'
-              + 'usage: script-name.py path/to/files-dir flag date\n'
-              + 'flag: -e for Yearly extreme Weather Report, -a for Average Monthly report'
-              + 'or -c for Monthly Bar Graph'
-              + 'date: Enter in either YYYY or YYYY/MM format')
-        sys.exit()
-    elif not os.path.exists(args[1]):
-        print('The provided directory doesn\'t exist')
-        sys.exit()
-    else:
-        file_path = args[1]
-        for i in range(2, len(args), 2):
-            if args[i] not in ['-a', '-c', '-e']:
-                print('Please select a label from [-a, -c, -e]')
-                sys.exit()
-            else:
-                if int(args[i + 1][:4]) not in range(2004, 2017):
-                    print('Please enter correct year')
-                    sys.exit()
-                if args[i] == '-e':
-                    if len(args[i + 1]) > 4 or len(args[i + 1]) < 2:
-                        print('Please input year in the YYYY / YYY / YY format')
-                        sys.exit()
-                elif len(args[i + 1]) > 5:
-                    if int(args[i + 1][5:]) not in range(1, 12):
-                        print('Please enter a valid month')
-                        sys.exit()
-                else:
-                    print('Please enter date in YYYY/MM format')
-                    sys.exit()
-
-            generate_report(args[i:i + 2], file_path)
-
-
-def generate_report(args, file_path):
-    '''Checks the kind of report to be generated'''
-    year = args[1][0:4]
-
-    if args[0] == '-e':
-        extreme_weather(CSV(file_path, year, 0))
-
-    elif args[0] == '-a' or '-c':
-        if int(args[1][5]) == 0:
-            month = int(args[1][6])
-        else:
-            month = int(args[1][5:])
-
-        month = calendar.month_abbr[month]
-        if args[0] == '-a':
-            month_average(CSV(file_path, year, month))
-        else:
-            weather_graph(CSV(file_path, year, month))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', nargs='*',
+                        help='Extreme Weather Report, use -e YYYY YYYY....')
+    parser.add_argument('-a', nargs='*',
+                        help='Average Monthly Weather Report, use -a YYYY/MM YYYY/MM....')
+    parser.add_argument('-c', nargs='*',
+                        help='Average Monthly Weather Report, use -a YYYY/MM YYYY/MM....')
+    parser.add_argument('file_path',
+                        help='Directory to data, use relative path like dir/to/files')
+    args = parser.parse_args()
+    if args.e:
+        for year in args.e:
+            extreme_weather(CSV(args.file_path, year))
+    if args.a:
+        for year_month in args.a:
+            month_average(CSV(args.file_path, year_month.split(
+                '/')[0], year_month.split('/')[1]))
+    if args.c:
+        for year_month in args.c:
+            weather_graph(
+                CSV(args.file_path, year_month.split(
+                    '/')[0], year_month.split('/')[1]))
 
 
 def extreme_weather(csvfile):
@@ -114,7 +100,6 @@ def extreme_weather(csvfile):
 
 def month_average(csvfile):
     '''generate monthly averages'''
-
     avg_high_temp = [n.max_temp for n in csvfile.record_list]
     avg_high_temp = [n for n in avg_high_temp if n != -273]
     print('Highest Average: {:02d}C'.format(
@@ -135,28 +120,26 @@ def weather_graph(csvfile):
     '''create monthly graphs'''
     print(calendar.month_name[csvfile.record_list[0].date.month],
           csvfile.record_list[0].date.year)
-    # print(len(csvfile.record_list))
     for i in csvfile.record_list:
         if i.max_temp != -273:
-            print('{:02d} '.format(i.date.day) + colored('+', 'red') * i.max_temp
-                  + '{:02d}C\n{:02d} '.format(i.max_temp, i.date.day) +
+            print('{:02d} '.format(i.date.day) + colored('+', 'red') * i.max_temp 
+                  + ' {:02d}C\n{:02d} '.format(i.max_temp, i.date.day) +
                   colored('+', 'blue') * i.min_temp
-                  + '{:02d}C'.format(i.min_temp))
+                  + ' {:02d}C'.format(i.min_temp))
     print()
     print(calendar.month_name[csvfile.record_list[0].date.month],
           csvfile.record_list[0].date.year)
     for i in csvfile.record_list:
         if i.max_temp != -273:
-            # print(end='')
             print('{:02d} '.format(i.date.day) + colored('+', 'blue') * i.min_temp
                   + colored('+', 'red') * i.max_temp
-                  + '{:02d}C - {:02d}C'.format(i.min_temp, i.max_temp))
+                  + ' {:02d}C - {:02d}C'.format(i.min_temp, i.max_temp))
     print()
 
 
 def main():
     '''generate weather reports'''
-    check_arg(sys.argv)
+    check_args()
 
 
 if __name__ == '__main__':
