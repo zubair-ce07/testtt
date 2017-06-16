@@ -70,7 +70,15 @@ class MooseParseSpider(BaseParseSpider):
         return first_tab+second_tab
 
     def image_urls(self, response):
-        return clean(response.css('div.cust-view a::attr(href)'))
+        images = clean(response.css('.product-img-box script::text').extract())[-1]
+        images = images.split("=")[-1]
+        images = json.loads(images)
+        img = []
+        for image, value in images.items():
+            img.append(value['image'])
+
+        zoom_image = clean(response.css('.zoom-image::attr(href)'))
+        return list(set(zoom_image + clean(response.css('div.cust-view a::attr(href)')) + img))
 
     def skus(self, response):
         script_json = self.magento_product_data(response)
@@ -82,7 +90,7 @@ class MooseParseSpider(BaseParseSpider):
             for val in value:
                 if val['name'] in ['Color', 'Colour']:
                     color = val['label']
-                if val['name'] == 'Size':
+                if val['name'] in ['Size', 'Kids Size']:
                     size = val['label']
             skus[keys] = {"color": color, "size": size, "price": price['price'], "currency": price['currency']}
 
