@@ -128,10 +128,11 @@ class LiujoParseSpider(BaseParseSpider):
 
 class LiujoCrawlSpider(BaseCrawlSpider):
 
-    category_css = "#site-menu a[target=_self]"
-    page_css = "liujo-paginator a"
+    listings_css = ["#site-menu a[target=_self]",
+                 "liujo-paginator a"]
+
     product_css = ".product-name a"
-    rules = (Rule(LinkExtractor(restrict_css=[category_css, page_css]), callback='parse'),
+    rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
              Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'))
 
 
