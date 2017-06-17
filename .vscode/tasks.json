@@ -1,0 +1,9 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the .json format
+    "version": "0.1.0",
+    "command": "python3",
+    "isShellCommand": true,
+    "args": ["${file}","-s","2000/9","/home/ruhaib/Downloads/weatherdata/weatherdata"],
+    "showOutput": "always"
+}
