@@ -1,8 +1,8 @@
 import json
-import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from .base import BaseParseSpider, BaseCrawlSpider, clean
+from collections import OrderedDict
 
 
 class MixinUS:
@@ -48,6 +48,9 @@ class MooseParseSpider(BaseParseSpider):
         availability = clean(response.css('p.availability>span::text'))[0]
         if availability != 'In stock':
             garment['out_of_stock'] = True
+
+        if garment['name'] == "MOOSE PARTY PACK":
+            print()
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
         garment['gender'] = self.detect_gender(self.product_gender(response))
@@ -70,7 +73,16 @@ class MooseParseSpider(BaseParseSpider):
         return first_tab+second_tab
 
     def image_urls(self, response):
-        return clean(response.css('div.cust-view a::attr(href)'))
+        images = clean(response.css('.product-img-box script::text').extract())[-1]
+        images = images.split("=")[-1]
+        images = json.loads(images)
+        img = []
+        if images:
+            for image, value in images.items():
+                img.append(value['image'])
+
+        zoom_image = clean(response.css('.zoom-image::attr(href)'))
+        return list(OrderedDict.fromkeys(zoom_image + clean(response.css('div.cust-view a::attr(href)')) + img))
 
     def skus(self, response):
         script_json = self.magento_product_data(response)
@@ -79,8 +91,11 @@ class MooseParseSpider(BaseParseSpider):
         skus = {}
 
         for keys, value in script_json.items():
-            color = value[0]['label']
-            size = value[1]['label']
+            for val in value:
+                if val['name'] in ['Color', 'Colour']:
+                    color = val['label']
+                if val['name'] in ['Size', 'Kids Size']:
+                    size = val['label']
             skus[keys] = {"color": color, "size": size, "price": price['price'], "currency": price['currency']}
 
         return skus
