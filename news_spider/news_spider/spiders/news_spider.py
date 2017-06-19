@@ -8,6 +8,7 @@ class NewsSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
+
         for news_id in response.css("tr.athing::attr(id)").extract():
             news_selector='tr#{id} a.storylink::text'.format(id=news_id)
             score_selector='span#score_{id}::text'.format(id=news_id)
