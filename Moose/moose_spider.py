@@ -1,5 +1,4 @@
 import json
-import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from .base import BaseParseSpider, BaseCrawlSpider, clean
@@ -48,6 +47,9 @@ class MooseParseSpider(BaseParseSpider):
         availability = clean(response.css('p.availability>span::text'))[0]
         if availability != 'In stock':
             garment['out_of_stock'] = True
+
+        if garment['name'] == "MOOSE PARTY PACK":
+            print()
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
         garment['gender'] = self.detect_gender(self.product_gender(response))
@@ -74,13 +76,15 @@ class MooseParseSpider(BaseParseSpider):
         images = images.split("=")[-1]
         images = json.loads(images)
         img = []
-        for image, value in images.items():
-            img.append(value['image'])
+        if images:
+            for image, value in images.items():
+                img.append(value['image'])
 
         zoom_image = clean(response.css('.zoom-image::attr(href)'))
         return list(set(zoom_image + clean(response.css('div.cust-view a::attr(href)')) + img))
 
     def skus(self, response):
+        u = response.url
         script_json = self.magento_product_data(response)
         script_json = self.magento_product_map(script_json)
         price = self.product_pricing_common_new(response)
