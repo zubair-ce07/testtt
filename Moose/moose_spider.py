@@ -2,6 +2,7 @@ import json
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from .base import BaseParseSpider, BaseCrawlSpider, clean
+from collections import OrderedDict
 
 
 class MixinUS:
@@ -81,7 +82,7 @@ class MooseParseSpider(BaseParseSpider):
                 img.append(value['image'])
 
         zoom_image = clean(response.css('.zoom-image::attr(href)'))
-        return list(set(zoom_image + clean(response.css('div.cust-view a::attr(href)')) + img))
+        return list(OrderedDict.fromkeys(zoom_image + clean(response.css('div.cust-view a::attr(href)')) + img))
 
     def skus(self, response):
         script_json = self.magento_product_data(response)
