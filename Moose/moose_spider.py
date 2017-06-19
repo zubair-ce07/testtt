@@ -84,7 +84,6 @@ class MooseParseSpider(BaseParseSpider):
         return list(set(zoom_image + clean(response.css('div.cust-view a::attr(href)')) + img))
 
     def skus(self, response):
-        u = response.url
         script_json = self.magento_product_data(response)
         script_json = self.magento_product_map(script_json)
         price = self.product_pricing_common_new(response)
