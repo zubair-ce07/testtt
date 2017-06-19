@@ -105,7 +105,8 @@ class MarcJacobsSpider(scrapy.Spider):
                               meta={
                                   'product': single_product,
                                   'top_color_name': top_color_name,
-                                  'remaining_colors_elements': remaining_colors_elements,
+                                  'remaining_colors_elements':
+                                              remaining_colors_elements,
                                   'image_sources': [],
                               })
 
@@ -160,7 +161,8 @@ class MarcJacobsSpider(scrapy.Spider):
                               self.parse_color_size_product_page,
                               meta={
                                     'size': next_color_size,
-                                    'size_elements_of_this_color' : size_elements_of_this_color,
+                                    'size_elements_of_this_color':
+                                              size_elements_of_this_color,
                                     'prev_meta': response.meta,
                               }, )
 
@@ -206,7 +208,8 @@ class MarcJacobsSpider(scrapy.Spider):
 
         response.meta['prev_meta']['product'].append(size_color_sku)
 
-        remaining_colors_elements = response.meta['prev_meta']['remaining_colors_elements']
+        remaining_colors_elements = response.meta[
+            'prev_meta']['remaining_colors_elements']
         size_elements_of_this_color = response.meta[
                                                 'size_elements_of_this_color']
         if size_elements_of_this_color['color_size_product_urls']:
@@ -214,13 +217,15 @@ class MarcJacobsSpider(scrapy.Spider):
             next_size_url, next_size = self.get_next_size_and_its_link(
                                             size_elements_of_this_color)
 
-            yield response.follow(next_size_url + '&Quantity=1&format=ajax',
-                                  self.parse_color_size_product_page,
-                                  meta={
-                                      'size': next_size,
-                                      'size_elements_of_this_color': size_elements_of_this_color,
-                                      'prev_meta': response.meta['prev_meta'],
-                                      })
+            yield response.follow(
+                next_size_url + '&Quantity=1&format=ajax',
+                self.parse_color_size_product_page,
+                meta={
+                      'size': next_size,
+                      'size_elements_of_this_color':
+                                size_elements_of_this_color,
+                      'prev_meta': response.meta['prev_meta'],
+                    })
 
         elif remaining_colors_elements['remaining_color_urls']:
 
@@ -237,7 +242,8 @@ class MarcJacobsSpider(scrapy.Spider):
                                       'product': response.meta[
                                           'prev_meta'][
                                               'product'],
-                                      'remaining_colors_elements': remaining_colors_elements
+                                      'remaining_colors_elements':
+                                          remaining_colors_elements
                                   })
         else:
 
