@@ -30,8 +30,7 @@ class WeatherFilesReader(object):
                 with open(os.path.join(self.dir, weather_file)) as csvfile:
                     reader = csv.DictReader(csvfile)
                     for row in reader:
-                        if (row['Max TemperatureC'] or row['Min TemperatureC']
-                                or row['Max Humidity']):
+                        if row['Max TemperatureC'] or row['Min TemperatureC'] or row['Max Humidity']:
                             records[row['PKT']] = {'max_temp': row['Max TemperatureC'],
                                                    'min_temp': row['Min TemperatureC'],
                                                    'max_humid': row['Max Humidity']}
