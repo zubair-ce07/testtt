@@ -1,5 +1,6 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+import copy
 
 
 class KithSpider(CrawlSpider):
@@ -76,12 +77,10 @@ class KithSpider(CrawlSpider):
         price_css = 'span.product-header-title -price::attr(content)'
         price = response.css(price_css).extract_first()
 
+        details = {"colour": color, "currency": currency, "price": price}
         for product_id, size in zip(product_ids, sizes):
             skus[product_id] = {}
-            skus[product_id]["colour"] = color
-            skus[product_id]["currency"] = currency
-            skus[product_id]["price"] = price
+            skus[product_id] = copy.deepcopy(details)
             skus[product_id]["size"] = size.strip()
         return skus
-
 
