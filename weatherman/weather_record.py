@@ -146,7 +146,7 @@ class WeatherRecord:
     def get_extreme_weather(self):
         max_temp, min_temp, max_humidity = -273, 50, 0
         max_temp_day, min_temp_day, max_humid_day = None, None, None
-        # import pdb; pdb.set_trace()
+
         weather = max(self.past_weather_data, key=lambda x: int(x.max_temp))
         max_temp_day = weather.month_name[weather.month] + " " + weather.day
         max_temp = weather.max_temp
