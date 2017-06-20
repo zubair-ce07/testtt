@@ -85,7 +85,6 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = self.skus(garment['skus'], json_data, currency)
         garment['image_urls'] = garment['image_urls'] + self.image_urls(json_data['mediaSets'])
 
-        # garment['meta'] = {'requests_queue': self.get_request(garment, json_data['id'], color_skus, currency)}
         return self.next_request_or_garment(garment)
 
     def product_description(self, product):
