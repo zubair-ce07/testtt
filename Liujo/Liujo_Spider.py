@@ -1,6 +1,8 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from .base import BaseParseSpider, BaseCrawlSpider, clean
+from collections import OrderedDict
+import re
 
 
 class Mixin:
@@ -56,7 +58,7 @@ class MixinES(Mixin):
 
 
 class LiujoParseSpider(BaseParseSpider):
-    price_css = '.price-box'
+    price_css = '.price::text'
 
     def parse(self, response):
 
@@ -69,6 +71,7 @@ class LiujoParseSpider(BaseParseSpider):
 
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response, sku_id[0])
+        garment['brand'] = 'Liujo'
         if self.gender_check(garment['trail']):
             garment['gender'] = 'unisex-kids'
 
@@ -85,19 +88,19 @@ class LiujoParseSpider(BaseParseSpider):
         return clean(response.css('.product-name>h1::text'))
 
     def product_description(self, response):
-        description = clean(response.css('meta[name=description]::attr(content)'))
-        return description + [rd for rd in self.raw_description(response) if not self.care_criteria(rd)]
+        return [rd for rd in self.raw_description(response) if not self.care_criteria(rd)]
 
     def product_care(self, response):
         return [rd for rd in self.raw_description(response) if self.care_criteria(rd)]
 
     def raw_description(self, response):
-        description_tab = clean(response.css('meta[name=description]::attr(content)'))
+        description_tab = clean(response.css('meta[property="og:description"]::attr(content)'))
+        description_tab = re.findall(r'(.*)You might', description_tab[0])
         details_tab = clean(response.css('.details-content ::text'))
-        return description_tab+details_tab
+        return details_tab + description_tab
 
     def image_urls(self, response):
-        return clean(response.css('.small-preview a::attr(href)'))
+        return list(OrderedDict.fromkeys(clean(response.css('.small-preview a::attr(href)'))))
 
     def skus(self, response, sku_id):
         skus = {}
