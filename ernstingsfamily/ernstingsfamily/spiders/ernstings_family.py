@@ -1,41 +1,21 @@
 import scrapy
-from scrapy.spiders import Rule
-
+from scrapy.spiders import Rule, CrawlSpider
+from scrapy.utils.response import open_in_browser
 from ernstingsfamily.items import Product, StoreKeepingUnits
 from scrapy.linkextractors import LinkExtractor
 
-class ErnstingsFamilySpider(scrapy.Spider):
+class ErnstingsFamilySpider(CrawlSpider):
     name = 'ernstings_family'
-    allowed_domains = ['www.ernstings-family.de']
-    start_urls = ['http://www.ernstings-family.de']
+    allowed_domains = ['ernstings-family.de']
+    start_urls = ['http://www.ernstings-family.de/']
 
-    rules = [
-        Rule(
-            LinkExtractor(
-                restrict_xpaths=".//ul[@id='navi_main']",
-                canonicalize=True,
-                unique=True
-            ),
-            follow=True,
-            callback="parse"
-        )
-    ]
+    rules = (
+        Rule(LinkExtractor(restrict_xpaths=".//ul[@id='navi_main']/li/a",)),
+        Rule(LinkExtractor(restrict_xpaths=".//li[contains(@id,'catList')]//a" )),
+        Rule(LinkExtractor(restrict_xpaths="..//div[@class='product_basic_content']/a"),
+             callback='get_complete_details_of_single_product')
+    )
 
-    def parse(self, response):
-        for page in response.xpath(".//ul[@id='navi_main']/li/a"):
-            url = page.xpath("./@href").extract_first()
-            #for l in response.xpath('//@href').extract():
-            #yield {'u': l}
-            yield scrapy.Request(url, callback=self.get_urls_of_given_category)
-
-    def get_urls_of_given_category(self, response):
-        for item_page in response.xpath(".//li[contains(@id,'catList')]//a/@href").extract():
-            yield scrapy.Request(item_page, callback=self.parse_products)
-
-    def parse_products(self, response):
-        for product in response.xpath('.//li[@class="list_product"]'):
-            url = response.urljoin(product.xpath('.//div[@class=\'product_basic_content\']/a//@href').extract_first())
-            yield scrapy.Request(url, callback=self.get_complete_details_of_single_product)
 
     def get_complete_details_of_single_product(self, response):
         product_item = Product()
