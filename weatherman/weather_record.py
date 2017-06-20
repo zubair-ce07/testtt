@@ -1,5 +1,4 @@
 import os
-# from functools import reduce
 from termcolor import colored
 from weather import Weather
 
