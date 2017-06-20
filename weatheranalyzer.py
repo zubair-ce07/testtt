@@ -10,7 +10,6 @@ class WeatherReporter(object):
 
     def __init__(self):
         self.weather_file_reader = WeatherFilesReader()
-        self.report_printer = WeatherReportPrinter()
         self.years_to_fetch = []
 
     def populate_years_to_fetch(self, user_inputs):
@@ -29,23 +28,19 @@ class WeatherReporter(object):
         self.weather_file_reader.read_by_years(self.years_to_fetch)
         if user_inputs.e:
             report = self.records_by_year(user_inputs.e)
-            self.report_printer.highest_temp(report['max_temp'])
-            self.report_printer.lowest_temp(report['min_temp'])
-            self.report_printer.highest_humid(report['max_humid'])
-        if user_inputs.a is not '/':
+            WeatherReportPrinter.print_yearly_report(report)
+        if user_inputs.a != '/':
             year, month = user_inputs.a.split('/')
             report = self.records_by_month(year, month)
-            self.report_printer.mean_highest_temp(report['avg_max_temp'])
-            self.report_printer.mean_lowest_temp(report['avg_min_temp'])
-            self.report_printer.mean_highest_humid(report['avg_max_humid'])
-        if user_inputs.c is not '/':
+            WeatherReportPrinter.print_monthly_report(report)
+        if user_inputs.c != '/':
             year, month = user_inputs.c.split('/')
             records = self.weather_file_reader.read_by_month(year, month)
-            self.report_printer.display_chart(records)
-        if user_inputs.b is not '/':
+            WeatherReportPrinter.display_chart(records)
+        if user_inputs.b != '/':
             year, month = user_inputs.b.split('/')
             records = self.weather_file_reader.read_by_month(year, month)
-            self.report_printer.display_singleline_chart(records)
+            WeatherReportPrinter.display_single_line_chart(records)
 
     def get_max_temp(self, results):
         max_temp = max(results, key=lambda row: int(results[row]['max_temp']))
@@ -60,10 +55,10 @@ class WeatherReporter(object):
         return {max_humid: results[max_humid]}
 
     def get_avg_by(self, results, key):
-        sum = 0
+        accumulator = 0
         for row in results.values():
-            sum += int(row[key])
-        return sum / len(results)
+            accumulator += int(row[key])
+        return accumulator / len(results)
 
     def records_by_year(self, year):
         results = self.weather_file_reader.read_by_year(year)
@@ -78,6 +73,3 @@ class WeatherReporter(object):
                 'avg_min_temp': self.get_avg_by(results, 'min_temp'),
                 'avg_max_humid': self.get_avg_by(results, 'max_humid'),
                 }
-
-    def mean(self, temperatures):
-        return sum(temperatures) / len(temperatures)
