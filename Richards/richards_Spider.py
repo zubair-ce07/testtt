@@ -39,25 +39,31 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = {}
         garment['image_urls'] = []
 
-        return self.next_request(garment, product, response)
+        color_skus = self.get_color_skus(product['colorList'])
+        currency = self.get_currency(response)
+        garment['meta'] = {'requests_queue': self.get_request(product['id'], color_skus, currency)}
 
-    def next_request(self, garment, product, response):
+        return self.next_request_or_garment(garment)
 
-        all_color_sku = []
-        for color in product['colorList']:
-            all_color_sku.append(color['skuId'])
+    def get_color_skus(self, color_list):
+        color_skus = []
+        for color in color_list:
+            color_skus.append(color['skuId'])
+        return color_skus
 
-        params = {'imageProperties': 'thumb,large,zoom', 'productId': product['id'],
-                  'selectedSkuId': all_color_sku.pop()}
+    def request_params(self, sku, prod_id):
+        return {'imageProperties': 'thumb,large,zoom', 'productId': prod_id, 'selectedSkuId': sku}
 
-        url_color = self.create_url(params)
-        request = Request(url=url_color, callback=self.parse_color)
-        request.meta['garment'] = garment
-        request.meta['all_color_sku'] = all_color_sku
-        request.meta['params'] = params
-        request.meta['currency'] = self.get_currency(response)
+    def get_request(self, prod_id, color_skus, currency):
+        requests = []
+        for skus in color_skus:
+            params = self.request_params(skus, prod_id)
+            url_color = self.create_url(params)
+            request = Request(url=url_color, callback=self.parse_color)
+            request.meta['currency'] = currency
+            requests.append(request)
 
-        return request
+        return requests
 
     def get_currency(self, response):
         return CurrencyParser.currency(clean(response.css('meta[property="og:price:currency"]::attr(content)'))[0])
@@ -73,27 +79,14 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
     def parse_color(self, response):
 
         garment = response.meta['garment']
-        all_color_sku = response.meta['all_color_sku']
-        params = response.meta['params']
         json_data = json.loads(response.text)
         currency = response.meta['currency']
 
         garment['skus'] = self.skus(garment['skus'], json_data, currency)
         garment['image_urls'] = garment['image_urls'] + self.image_urls(json_data['mediaSets'])
 
-        if len(all_color_sku) > 0:
-            response.meta['all_color_sku'] = all_color_sku
-            response.meta['garment'] = garment
-            response.meta['params'] = params
-            response.meta['currency'] = currency
-
-            params["selectedSkuId"] = all_color_sku.pop()
-            url_color = self.create_url(params)
-
-            yield Request(url_color, callback=self.parse_color, meta=response.meta)
-
-        else:
-            yield garment
+        # garment['meta'] = {'requests_queue': self.get_request(garment, json_data['id'], color_skus, currency)}
+        return self.next_request_or_garment(garment)
 
     def product_description(self, product):
         return [rd for rd in self.raw_description(product) if not self.care_criteria(rd)]
@@ -125,7 +118,7 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         color_name = self.color_name(colors, color_sku)
 
         for size in sizes:
-            skus[color_sku + "_" + size['skuId']] = {"size": size['name'], 'price': json_data['atualPrice'],
+            skus[color_sku + "_" + size['skuId']] = {"size": size['name'], 'price': int(json_data['atualPrice'])*100,
                                                      'currency': currency, 'out_of_stock': size['hasStock'],
                                                      'color': color_name}
         return skus
