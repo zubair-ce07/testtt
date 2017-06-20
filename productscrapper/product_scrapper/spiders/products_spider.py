@@ -55,7 +55,6 @@ class ProductSpider(scrapy.Spider):
         product_desc = self.get_product_desc(response)
         product_care = self.get_product_care(response)
         colors = self.get_colors(response)
-        # product_price = self.get_product_price(response)
         url = response.url
         alternate_links = self.get_alternate_links(response)
 
@@ -63,7 +62,6 @@ class ProductSpider(scrapy.Spider):
 
         products.add_value('name', name)
         products.add_value('product_desc', product_desc)
-        # products.add_value('product_price', product_price)
         products.add_value('url', url)
         products.add_value('product_id', product_id)
         products.add_value('product_care', product_care)
