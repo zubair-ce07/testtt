@@ -122,11 +122,11 @@ class WeatherRecord:
             print date
             for weather in self.past_weather_data:
                 if weather.year + "/" + weather.month == date:
-                    print (weather.day + " " +
-                           colored('+' * int(weather.min_temp), 'blue') +
-                           colored('+' * int(weather.max_temp), 'red') +
-                           str(weather.min_temp) + "C - " +
-                           str(weather.max_temp) + "C")
+                    print(weather.day + " " +
+                          colored('+' * int(weather.min_temp), 'blue') +
+                          colored('+' * int(weather.max_temp), 'red') +
+                          str(weather.min_temp) + "C - " +
+                          str(weather.max_temp) + "C")
 
     def get_mean_weather(self):
         max_mean_temp, min_mean_temp, mean_humidity = -273, 50, 0

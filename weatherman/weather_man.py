@@ -6,8 +6,8 @@ from weather_record import WeatherRecord
 def get_input():
     # Checking whether command line arguments are given or not
     if len(sys.argv) == 1 or len(sys.argv) > 4:
-        print ("Compile program as : weather_man.py -a -e -c"
-               " date /path/to/files")
+        print("Compile program as : weather_man.py -a -e -c"
+              " date /path/to/files")
         sys.exit(2)
 
     parser = OptionParser()
@@ -31,6 +31,6 @@ def get_input():
 
 if __name__ == "__main__":
     option, date, path_to_files = get_input()
-    # import pdb; pdb.set_trace()
+
     record = WeatherRecord()
     record.print_weather_data(option, date, path_to_files)
