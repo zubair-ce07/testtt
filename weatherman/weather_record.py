@@ -8,7 +8,7 @@ class WeatherRecord:
 
     def __init__(self):
         self.past_weather_data = []
-        # self.parse_weather_files()
+        self.file_names = {}
         self.month_conversion = {
                             'Jan': 1, 'Feb': 2, 'Mar': 3,
                             'Apr': 4, 'May': 5, 'Jun': 6,
@@ -18,29 +18,53 @@ class WeatherRecord:
 
     def parse_weather_files(self, option, date, path_to_files):
         # keeps track of weather files
-        os.system("ls " + path_to_files + " > weatherfiles")
-
-        with open("weatherfiles") as file:
-            for line in file:
-                weather_file_name = path_to_files + line.split('\n')[0]
+        for root, dirs, files in os.walk(path_to_files):
+            for file_name in files:
+                weather_file_name = path_to_files + file_name
 
                 split_file_name = weather_file_name.split('_')
                 year = split_file_name[-2]
                 month = split_file_name[-1].split('.')[0]
 
                 month = self.month_conversion[month]
-                if option == 'a' or option == 'c':
-                    if year + '/' + str(month) == date:
-                        self.retrieve_weather_data_from_file(weather_file_name,
-                                                             year)
-                elif option == 'e':
-                    if year == date:
-                        self.retrieve_weather_data_from_file(weather_file_name,
-                                                             year)
-            if not self.past_weather_data:
-                print "---------No Relevant Data Found---------"
-                print "Check if you're giving correct arguments"
+
+                if year not in self.file_names:
+                    self.file_names[year] = {}
+
+                self.file_names[year][month] = weather_file_name
+
+        self.search_file_names(option, date)
+
+    def search_file_names(self, option, date):
+        year = date.split('/')[0]
+
+        if year not in self.file_names:
+            print "-------------No Relevant Data Found--------------"
+            print "Check if you're giving correct year and data path"
+            exit(2)
+
+        if option == 'a' or option == 'c':
+            split_date = date.split('/')
+            if len(split_date) > 1:
+                month = int(split_date[1])
+
+                if month not in self.file_names[year]:
+                    print "-------No Relevant Data Found-------"
+                    print "Check if you're giving correct month"
+                    exit(2)
+
+                relevant_file = self.file_names[year][month]
+                self.retrieve_weather_data_from_file(relevant_file,
+                                                     year)
+            else:
+                print "----No Relevant Data Found-----"
+                print "No month given to retrieve Data"
                 exit(2)
+
+        elif option == 'e':
+            for month in self.file_names[year]:
+                file_name = self.file_names[year][month]
+                self.retrieve_weather_data_from_file(file_name, year)
 
     def retrieve_weather_data_from_file(self, weather_file_name, year):
         with open(weather_file_name) as weather_file_data:
@@ -80,7 +104,7 @@ class WeatherRecord:
         if option == 'a':
             (max_mean_temp,
              min_mean_temp,
-             mean_humidity) = self.get_mean_weather(date)
+             mean_humidity) = self.get_mean_weather()
 
             print "Highest Average : " + str(max_mean_temp)
             print "Lowest Average : " + str(min_mean_temp)
@@ -89,7 +113,7 @@ class WeatherRecord:
         if option == 'e':
             (max_temp, min_temp,
              max_humidity, max_temp_day,
-             min_temp_day, max_humid_day) = self.get_extreme_weather(date)
+             min_temp_day, max_humid_day) = self.get_extreme_weather()
 
             print "Highest : " + str(max_temp) + "C on " + max_temp_day
             print "Lowest : " + str(min_temp) + "C on " + min_temp_day
@@ -105,7 +129,7 @@ class WeatherRecord:
                            str(weather.min_temp) + "C - " +
                            str(weather.max_temp) + "C")
 
-    def get_mean_weather(self, date):
+    def get_mean_weather(self):
         max_mean_temp, min_mean_temp, mean_humidity = -273, 50, 0
 
         weather = max(self.past_weather_data, key=lambda x: int(x.mean_temp))
@@ -120,7 +144,7 @@ class WeatherRecord:
 
         return max_mean_temp, min_mean_temp, mean_humidity
 
-    def get_extreme_weather(self, year):
+    def get_extreme_weather(self):
         max_temp, min_temp, max_humidity = -273, 50, 0
         max_temp_day, min_temp_day, max_humid_day = None, None, None
         # import pdb; pdb.set_trace()
