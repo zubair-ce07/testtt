@@ -69,7 +69,7 @@ class LiujoParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
-        garment['image_urls'] = self.image_urls(response)
+        garment['image_urls'] = self.image_urls(response, sku_id[0])
         garment['skus'] = self.skus(response, sku_id[0])
         garment['brand'] = 'Liujo'
         if self.gender_check(garment['trail']):
@@ -99,8 +99,11 @@ class LiujoParseSpider(BaseParseSpider):
         details_tab = clean(response.css('.details-content ::text'))
         return details_tab + description_tab
 
-    def image_urls(self, response):
-        return list(OrderedDict.fromkeys(clean(response.css('.small-preview a::attr(href)'))))
+    def image_urls(self, response, sku_id):
+        colour_ids = [sku_id.lower() + cid for cid in clean(response.css('.swatchContainer ::attr(title)'))]
+        raw_images = clean(response.css('.small-preview a::attr(data-zoom-image)'))
+        images = [img for img in raw_images if any(cid in img.lower() for cid in colour_ids)]
+        return sorted(set(images), key=raw_images.index)
 
     def skus(self, response, sku_id):
         skus = {}
