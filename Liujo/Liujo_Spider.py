@@ -1,7 +1,6 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from .base import BaseParseSpider, BaseCrawlSpider, clean
-from collections import OrderedDict
 import re
 
 
