@@ -163,7 +163,16 @@ class MarcJacobsSpider(scrapy.Spider):
                                     'size': next_color_size,
                                     'size_elements_of_this_color':
                                               size_elements_of_this_color,
-                                    'prev_meta': response.meta,
+                                    'product': response.meta['product'],
+                                    'top_color_name':
+                                              response.meta['top_color_name'],
+                                    'remaining_colors_elements':
+                                              response.meta[
+                                                  'remaining_colors_elements'],
+
+                                    'image_sources': response.meta[
+                                        'image_sources']
+
                               }, )
 
     def get_next_size_and_its_link(self, size_elements_of_this_color):
@@ -188,7 +197,7 @@ class MarcJacobsSpider(scrapy.Spider):
 
     def parse_color_size_product_page(self, response):
 
-        size_color = response.meta['prev_meta']['top_color_name']
+        size_color = response.meta['top_color_name']
 
         quantity_of_product = response.xpath(
             '//select[@id="Quantity"]//@value').extract_first()
@@ -206,10 +215,10 @@ class MarcJacobsSpider(scrapy.Spider):
                              response.meta['size'],
                              availability)
 
-        response.meta['prev_meta']['product'].append(size_color_sku)
+        response.meta['product'].append(size_color_sku)
 
         remaining_colors_elements = response.meta[
-            'prev_meta']['remaining_colors_elements']
+            'remaining_colors_elements']
         size_elements_of_this_color = response.meta[
                                                 'size_elements_of_this_color']
         if size_elements_of_this_color['color_size_product_urls']:
@@ -224,7 +233,14 @@ class MarcJacobsSpider(scrapy.Spider):
                       'size': next_size,
                       'size_elements_of_this_color':
                                 size_elements_of_this_color,
-                      'prev_meta': response.meta['prev_meta'],
+                      'product': response.meta['product'],
+                      'top_color_name':
+                                response.meta['top_color_name'],
+                      'remaining_colors_elements':
+                                response.meta['remaining_colors_elements'],
+
+                      'image_sources': response.meta[
+                                        'image_sources']
                     })
 
         elif remaining_colors_elements['remaining_color_urls']:
@@ -237,18 +253,16 @@ class MarcJacobsSpider(scrapy.Spider):
                                   meta={
                                       'top_color_name': next_color_name,
                                       'image_sources': response.meta[
-                                          'prev_meta'][
                                               'image_sources'],
-                                      'product': response.meta[
-                                          'prev_meta'][
-                                              'product'],
+                                      'product': response.meta['product'],
+
                                       'remaining_colors_elements':
                                           remaining_colors_elements
                                   })
         else:
 
-            path_to_images = response.meta['prev_meta']['image_sources'].pop(0)
+            path_to_images = response.meta['image_sources'].pop(0)
             yield response.follow(path_to_images, self.parse_images, meta={
-                'product': response.meta['prev_meta']['product'],
-                'path_to_images': response.meta['prev_meta']['image_sources']
+                'product': response.meta['product'],
+                'path_to_images': response.meta['image_sources']
             })
