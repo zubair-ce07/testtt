@@ -195,8 +195,7 @@ class MarcJacobsSpider(scrapy.Spider):
         else:
             return None
 
-    def parse_color_size_product_page(self, response):
-
+    def get_single_sku(self, response):
         size_color = response.meta['top_color_name']
 
         quantity_of_product = response.xpath(
@@ -210,17 +209,21 @@ class MarcJacobsSpider(scrapy.Spider):
             '//span[@itemprop="price"]/@content').extract_first()
         price_of_size = str(int(price_of_size[4:-3]))
 
-        size_color_sku = Sku(size_color,
-                             price_of_size,
-                             response.meta['size'],
-                             availability)
+        return Sku(size_color,
+                   price_of_size,
+                   response.meta['size'],
+                   availability)
 
+    def parse_color_size_product_page(self, response):
+
+        size_color_sku = self.get_single_sku(response)
         response.meta['product'].append(size_color_sku)
 
         remaining_colors_elements = response.meta[
             'remaining_colors_elements']
         size_elements_of_this_color = response.meta[
-                                                'size_elements_of_this_color']
+            'size_elements_of_this_color']
+
         if size_elements_of_this_color['color_size_product_urls']:
 
             next_size_url, next_size = self.get_next_size_and_its_link(
