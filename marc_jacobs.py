@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
-import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
 
 class Product:
@@ -41,20 +42,22 @@ class Sku:
         self.availability = availability
 
 
-class MarcJacobsSpider(scrapy.Spider):
+class MarcJacobsSpider(CrawlSpider):
     name = "marcjacobs_spider"
 
-    def start_requests(self):
-        start_url = 'https://www.marcjacobs.com/'
+    start_urls = ['https://www.marcjacobs.com/']
 
-        yield scrapy.Request(url=start_url, callback=self.parse)
-
-    def parse(self, response):
-        major_categories_page_links = response.xpath(
-            '//li[@class="mobile-hidden"]/a/@href').extract()
-
-        for url in major_categories_page_links:
-            yield response.follow(url, self.parse_single_major_category_page)
+    rules = (
+        Rule(LinkExtractor(restrict_css=[
+                'li.mobile-hidden div.level-2 ul.level-3 a']),
+             callback='parse_major_category'),
+        Rule(LinkExtractor(restrict_css=[
+                'li.mobile-hidden div.level-2 ul.menu-vertical a']),
+             callback='parse_major_category'),
+        Rule(LinkExtractor(restrict_css=[
+                'li.mobile-hidden:first-of-type a']),
+             callback='parse_major_category'),
+        )
 
     def product_format(self, product):
         return {
@@ -65,38 +68,54 @@ class MarcJacobsSpider(scrapy.Spider):
             'skus': product.skus
         }
 
-    def parse_single_major_category_page(self, response):
-        links_to_product_pages = response.xpath(
-            '//a[@class="product-page-link"]/@href').extract()
-        for product_link in links_to_product_pages:
-            yield response.follow(product_link, self.parse_product_page)
+    def get_product_category(self, response):
+        return response.css('a.breadcrumb-element::text').extract()
 
-    def get_color_names_and_urls_of_single_product(self, response):
-        product_colors_urls = response.xpath(
-            '//a[@class="swatchanchor"]//@href').extract()
-        product_colors_names = response.xpath(
-            '//a[@class="swatchanchor"]//text()').extract()
+    def parse_major_category(self, response):
 
-        top_color_url = product_colors_urls.pop(0)
-        top_color_name = product_colors_names.pop(0)
+        category = self.get_product_category(response)
+
+        links_to_product_pages = response.css(
+            'a.product-page-link::attr(href)').extract_first()
+
+        yield response.follow(links_to_product_pages,
+                              self.parse_product_page,
+                              meta={'category': category})
+
+    def get_color_urls(self, response):
+        return response.css(
+            'a.swatchanchor::attr(href)').extract()
+
+    def get_color_name(self, response):
+        return response.css(
+            'a.swatchanchor::text').extract()
+
+    def get_color_with_urls(self, response):
+        product_colors_urls = self.get_color_urls(response)
+        product_colors_names = self.get_color_name(response)
 
         return{
 
                 'remaining_color_urls': product_colors_urls,
                 'remaining_color_names': product_colors_names,
 
-              }, top_color_url, top_color_name
+              }
+
+    def get_product_name(self, response):
+        return response.css(
+            'h1.product-name::text').extract_first()
 
     def parse_product_page(self, response):
-        product_name = response.xpath(
-            '//h1[@class="product-name"]/text()').extract_first()
-        product_category = response.xpath(
-            '(//ul[@class="breadcrumb pdp"])/li[last()]/a/text()')\
-            .extract_first()
+        product_name = self.get_product_name(response)
 
-        remaining_colors_elements, top_color_url, top_color_name = self\
-            .get_color_names_and_urls_of_single_product(
+        product_category = response.meta['category']
+
+        remaining_colors_elements = self\
+            .get_color_with_urls(
                 response)
+
+        top_color_url, top_color_name = self.get_next_color_and_its_link(
+            remaining_colors_elements)
 
         single_product = Product(product_name, product_category, response.url)
 
@@ -129,31 +148,38 @@ class MarcJacobsSpider(scrapy.Spider):
         else:
             yield self.product_format(response.meta['product'])
 
+    def get_size_options(self, response):
+        options = response.css(
+            'select#va-size option[value!=""]::text').extract()
+        return list(map(str.strip, options))
+
+    def get_size_urls(self, response):
+        return response.css(
+            'select[id="va-size"] option[value!=""] ::attr(value)').extract()
+
     def get_available_sizes_and_urls(self, response):
-        options = response.xpath(
-            '//select[@id="va-size"]//option[@value!=""]//text()').extract()
 
-        color_size_options = list(map(str.strip, options))
+        color_size_options = self.get_size_options(response)
 
-        color_size_product_urls = response.xpath(
-            '//select[@id="va-size"]//option[@value!=""]//@value').extract()
+        color_size_product_urls = self.get_size_urls(response)
 
-        next_size_to_traverse = color_size_options.pop(0)
-        next_size_url = color_size_product_urls.pop(0)
         return{
 
                 'color_size_options': color_size_options,
                 'color_size_product_urls': color_size_product_urls
 
-              }, next_size_to_traverse, next_size_url
+              }
 
     def parse_color_of_product_page(self, response):
-        size_elements_of_this_color, next_color_size, next_size_url = self\
+        size_elements_of_this_color = self\
             .get_available_sizes_and_urls(
                 response)
 
-        path_to_images = response.xpath(
-            '//div[@class="product-images"]/@data-images').extract_first()
+        next_color_size, next_size_url = self.get_next_size_and_its_link(
+            size_elements_of_this_color)
+
+        path_to_images = response.css(
+            'div[class="product-images"]::attr(data-images)').extract_first()
 
         response.meta['image_sources'].append(path_to_images)
 
@@ -180,7 +206,7 @@ class MarcJacobsSpider(scrapy.Spider):
         next_size = size_elements_of_this_color['color_size_options'].pop(0)
         next_size_page_link = size_elements_of_this_color[
                                 'color_size_product_urls'].pop(0)
-        return next_size_page_link, next_size
+        return next_size, next_size_page_link
 
     def get_next_color_and_its_link(self, remaining_color_elements):
         if remaining_color_elements['remaining_color_urls']:
@@ -195,18 +221,18 @@ class MarcJacobsSpider(scrapy.Spider):
         else:
             return None
 
-    def get_single_sku(self, response):
+    def get_sku(self, response):
         size_color = response.meta['top_color_name']
 
-        quantity_of_product = response.xpath(
-            '//select[@id="Quantity"]//@value').extract_first()
+        quantity_of_product = response.css(
+            'select[id="Quantity"]::attr(value)').extract_first()
 
         availability = False
         if quantity_of_product:
             availability = True
 
-        price_of_size = response.xpath(
-            '//span[@itemprop="price"]/@content').extract_first()
+        price_of_size = response.css(
+            'span[itemprop="price"]::attr(content)').extract_first()
         price_of_size = str(int(price_of_size[4:-3]))
 
         return Sku(size_color,
@@ -216,7 +242,7 @@ class MarcJacobsSpider(scrapy.Spider):
 
     def parse_color_size_product_page(self, response):
 
-        size_color_sku = self.get_single_sku(response)
+        size_color_sku = self.get_sku(response)
         response.meta['product'].append(size_color_sku)
 
         remaining_colors_elements = response.meta[
@@ -226,7 +252,7 @@ class MarcJacobsSpider(scrapy.Spider):
 
         if size_elements_of_this_color['color_size_product_urls']:
 
-            next_size_url, next_size = self.get_next_size_and_its_link(
+            next_size, next_size_url = self.get_next_size_and_its_link(
                                             size_elements_of_this_color)
 
             yield response.follow(
