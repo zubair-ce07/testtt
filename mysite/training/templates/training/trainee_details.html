@@ -1,0 +1,21 @@
+{% if trainee %}
+    <h2>
+      Name : {{trainee.name}}
+    </h2>
+  {% if assignments %}
+    <h2>
+      Assignments Done :
+    </h2>
+    <ul>
+    {% for assignment in assignments %}
+        <li>
+          <a href="/training/assignment/{{ assignment.id }}">{{ assignment.title }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+      <p>No Assignments are alloted.</p>
+  {% endif %}
+{% else %}
+    <p>No Trainers/Trainees are available.</p>
+{% endif %}
