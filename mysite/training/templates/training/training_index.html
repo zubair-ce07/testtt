@@ -1,0 +1,12 @@
+{% if trainers_list %}
+    <ul>
+    {% for trainer in trainers_list %}
+        <li>
+          <a href="/training/trainer/{{ trainer.id }}">{{ trainer.name }}</a>:
+          <a href="/training/trainee/{{ trainer.trainee.id }}">{{ trainer.trainee.name }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No Trainers/Trainees are available.</p>
+{% endif %}

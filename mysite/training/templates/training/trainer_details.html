@@ -1,0 +1,36 @@
+{% if trainer %}
+    <h2>
+      Name : {{trainer.name}}
+    </h2>
+  {% if trainees %}
+    <h2>
+      Trainees Assigned :
+    </h2>
+    <ul>
+    {% for trainee in trainees %}
+        <li>
+          <a href="/training/trainee/{{ trainee.id }}">{{ trainee.name }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+      <p>No trainees assigned.</p>
+  {% endif %}
+
+  {% if assignments %}
+    <h2>
+      Assignments Alloted :
+    </h2>
+    <ul>
+    {% for assignment in assignments %}
+        <li>
+          <a href="/training/assignment/{{ assignment.id }}">{{ assignment.title }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+      <p>No Assignments are alloted.</p>
+  {% endif %}
+{% else %}
+    <p>No Trainers/Trainees are available.</p>
+{% endif %}

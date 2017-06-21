@@ -1,0 +1,22 @@
+{% if assignment %}
+    <h2>
+      Title : {{assignment.title}}
+    </h2>
+  {% if assignment.description %}
+      <h3>
+        Description :
+      </h3>
+      <p>{{ assignment.description }}</p>
+  {% else %}
+      <p>No Description.</p>
+  {% endif %}
+  {% if assignment.technology_used %}
+    <h2>
+      Technology : {{ assignment.technology_used }}
+    </h2>
+  {% else %}
+      <p>No Technology.</p>
+  {% endif %}
+{% else %}
+    <p>No Trainers/Trainees are available.</p>
+{% endif %}
