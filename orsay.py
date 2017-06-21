@@ -12,23 +12,27 @@ def url(response, product):
 
 
 def brand(response, product):
-    product['brand'] = response.xpath(
-        "//script[@type='application/ld+json']/text()").re(r'Brand.*name":"(\w*)"},')[0]
+    product['brand'] = response.css(
+        "script[type='application/ld+json']::text").re(r'Brand.*name":"(\w*)"},')[0]
+    # response.xpath("//script[@type='application/ld+json']/text()").re(r'Brand.*name":"(\w*)"},')[0]
 
 
 def care(response, product):
-    product['care'] = response.xpath(
-        "//div[@class='product-care six columns']//@src | //p[@class='material']/text()").extract()
+    product['care'] = response.css(
+        "p.material::text,ul.caresymbols *::attr(src)").extract()
+    #response.xpath("//div[@class='product-care six columns']//@src | //p[@class='material']/text()").extract()
 
 
 def description(response, product):
-    product['description'] = str(response.xpath(
-        "//p[@class='description']/text()").extract()[0]).strip()
+    product['description'] = str(response.css(
+        "p.description::text").extract()[0]).strip()
+    # str(response.xpath("//p[@class='description']/text()").extract()[0]).strip()
 
 
 def image_urls(response, product):
-    product['image_urls'] = response.xpath(
-        "//div[@class='product-image-gallery-thumbs configurable']//@href").extract()
+    product['image_urls'] = response.css(
+        "div.product-image-gallery-thumbs.configurable *::attr(href)").extract()
+    #response.xpath("//div[@class='product-image-gallery-thumbs configurable']//@href").extract()
 
 
 def name(response, product):
@@ -36,8 +40,9 @@ def name(response, product):
 
 
 def color_urls(response, product):
-    product['color_urls'] = [n.strip() for n in response.xpath(
-        "//ul[@class='product-colors']//a/@href").extract() if n != '#']
+    product['color_urls'] = [n.strip() for n in response.css(
+        "ul.product-colors a::attr(href)").extract() if n != '#']
+    #[n.strip() for n in response.xpath("//ul[@class='product-colors']//a/@href").extract() if n != '#']
 
 
 def retailer_sku(response, product):
@@ -48,23 +53,24 @@ def retailer_sku(response, product):
 def skus(response, product):
     sizes_list = list(filter(None, [n.strip() for n in response.css(
         "div.sizebox-wrapper li::text").extract()]))
-    avail_list = response.xpath(
-        "//div[@class='sizebox-wrapper']//li/@data-qty").extract()
+    avail_list = response.css(
+        "div.sizebox-wrapper li::attr(data-qty)").extract()
+    # response.xpath("//div[@class='sizebox-wrapper']//li/@data-qty").extract()
 
     for sizes in range(len(sizes_list)):
         if int(avail_list[sizes]):
             product['skus'].append({str(list(filter(None, response.css(
                 "p.sku::text").re(r'(\d*)')))[0] + '_' + sizes_list[sizes]):
                 {'color': response.css("img.has-tip[title]::attr(title)").extract()[0],
-                 'currency': response.xpath("//script[@type='application/ld+json']/text()").re(r'priceCurrency\":\"(\w*)')[0],
-                 'price': ''.join(response.xpath("//script[@type='application/ld+json']/text()").re(r'price":(\d)*(\.\d*)?')),
+                 'currency': response.css("script[type='application/ld+json']::text").re(r'priceCurrency\":\"(\w*)')[0],
+                 'price': ''.join(response.css("script[type='application/ld+json']::text").re(r'price":(\d)*(\.\d*)?')),
                  'size': sizes_list[sizes]}})
         else:
             product['skus'].append({str(list(filter(None, response.css(
                 "p.sku::text").re(r'(\d*)')))[0] + '_' + sizes_list[sizes]):
                 {'color': response.css("img.has-tip[title]::attr(title)").extract()[0],
-                 'currency': response.xpath("//script[@type='application/ld+json']/text()").re(r'priceCurrency\":\"(\w*)')[0],
-                 'price': ''.join(response.xpath("//script[@type='application/ld+json']/text()").re(r'price":(\d)*(\.\d*)?')),
+                 'currency': response.css("script[type='application/ld+json']::text").re(r'priceCurrency\":\"(\w*)')[0],
+                 'price': ''.join(response.css("script[type='application/ld+json']::text").re(r'price":(\d)*(\.\d*)?')),
                  'size': sizes_list[sizes], 'out_of_stock': 'true'}})
 
 
@@ -84,15 +90,15 @@ class OrsaySpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(
-        restrict_css="a.next.i-next")),
+            restrict_css="a.next.i-next")),
         Rule(LinkExtractor(
-        restrict_css="ul.product-colors.product-item-color a"), callback="parseprod"),)
-        
+            restrict_css="ul.product-colors.product-item-color a"), callback="parseprod"),)
 
     def temp(self, response):
         yield {
             'url': response.url
         }
+
     def parseprod(self, response):
         product = Product()
         product['skus'] = []
