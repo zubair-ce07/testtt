@@ -1,6 +1,5 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-import copy
 
 
 class KithSpider(CrawlSpider):
@@ -8,22 +7,22 @@ class KithSpider(CrawlSpider):
     start_urls = ['https://kith.com/']
     allowed_domains = ['kith.com']
     DOWNLOAD_DELAY = 0.5
+    css = ['ul.ksplash-header-upper-items', 'ul li.main-nav-list-item']
     rules = (
-        Rule(LinkExtractor(restrict_css='ul.ksplash-header-upper-items')),
-        Rule(LinkExtractor(restrict_css='ul li.main-nav-list-item')),
+        Rule(LinkExtractor(restrict_css=css)),
         Rule(LinkExtractor(restrict_css='a.product-card-info'), callback="parse_products"),
     )
 
     def parse_products(self, response):
-        items = {}
-        items['description'] = self.get_description(response)
-        items['image-urls'] = self.get_image_urls(response)
-        items['name'] = self.get_name(response)
-        items['retailer_sku'] = self.get_retailer_sku(response)
-        items['skus'] = self.get_skus(response)
-        items['gender'] = self.get_gender(response)
-        items['url'] = self.get_url(response)
-        return items
+        garment = {}
+        garment['description'] = self.get_description(response)
+        garment['image-urls'] = self.get_image_urls(response)
+        garment['name'] = self.get_name(response)
+        garment['retailer_sku'] = self.get_retailer_sku(response)
+        garment['skus'] = self.get_skus(response)
+        garment['gender'] = self.get_gender(response)
+        garment['url'] = self.get_url(response)
+        return garment
 
     def get_image_urls(self, response):
         css = 'div.super-slider-thumbnails-slide-wrapper img::attr(src)'
@@ -34,7 +33,7 @@ class KithSpider(CrawlSpider):
         return response.css(css).extract_first().strip()
 
     def get_retailer_sku(self, response):
-        css = 'input#product_id::attr(value)'
+        css = '#product_id::attr(value)'
         return response.css(css).extract_first()
 
     def get_url(self, response):
@@ -80,7 +79,7 @@ class KithSpider(CrawlSpider):
         details = {"colour": color, "currency": currency, "price": price}
         for product_id, size in zip(product_ids, sizes):
             skus[product_id] = {}
-            skus[product_id] = copy.deepcopy(details)
+            skus[product_id] = details.copy()
             skus[product_id]["size"] = size.strip()
         return skus
 
