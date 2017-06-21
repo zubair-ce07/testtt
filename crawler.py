@@ -4,7 +4,7 @@ import threading
 import time
 from asyncio.tasks import FIRST_COMPLETED
 from concurrent.futures.thread import ThreadPoolExecutor
-from urllib import parse
+from urllib.parse import urlparse, urljoin
 
 import aiohttp
 import requests
@@ -32,18 +32,16 @@ class Crawler:
                 break
 
             if 'http' not in relative_url:
-                absolute_url = parse.urljoin(self.base_url, relative_url)
-                if self.is_absolute_url(absolute_url) and absolute_url not in self.visited_urls:
+                absolute_url = urljoin(self.base_url, relative_url)
+                if bool(urlparse(absolute_url).netloc) and absolute_url not in self.visited_urls:
                     self.extracted_urls.append(absolute_url)
-
-    def is_absolute_url(self, url):
-        return bool(parse.urlparse(url).netloc)
 
     def show_performance(self, crawling_approach):
         print('Crawling through {}'.format(crawling_approach))
         print('Visited pages: {}'.format(len(self.visited_urls)))
         print('Downloaded Bytes: {}'.format(self.downloaded_bytes))
-        print('Average size of a page {0:.2f}\n\n'.format(self.downloaded_bytes / len(self.visited_urls)))
+        print('Average size of a page {0:.2f}\n\n'.
+              format(self.downloaded_bytes / len(self.visited_urls)))
 
 
 class AsyncCrawler(Crawler):
@@ -58,36 +56,31 @@ class AsyncCrawler(Crawler):
         await self.crawling(self.base_url)
         completed_request_count = 1
         while True:
-            active_task_count = len([task for task in self.active_requests if not task.done()])
-            new_requests_count = self.concurrent_requests_count - active_task_count
-            print('Active tasks count: {} New requests will be {}'.format(active_task_count,
-                                                                          new_requests_count))
             if len(self.visited_urls) == self.max_urls_to_visit:
                 break
-
+            active_task_count = len([task for task in self.active_requests if not task.done()])
+            new_requests_count = self.concurrent_requests_count - active_task_count
             if new_requests_count:
+                print('Active tasks count: {} New requests will be {}'.
+                      format(active_task_count, new_requests_count))
                 for _ in range(new_requests_count):
                     await asyncio.sleep(self.download_delay)
-                    print('request {}'.format(completed_request_count+1))
-                    await self.schedule_new_request(completed_request_count)
-                    completed_request_count += 1
+                    if completed_request_count < len(self.extracted_urls):
+                        print('request {}'.format(completed_request_count + 1))
+                        await self.schedule_new_request(completed_request_count)
+                        completed_request_count += 1
+
+                [self.active_requests.remove(tsk) for tsk in self.active_requests if tsk.done()]
                 await asyncio.wait(self.active_requests, return_when=FIRST_COMPLETED)
                 print('visited_urls: {}\n'.format(len(self.visited_urls)))
-            else:
-                print('wait for proceeding previous requests\n')
-                await asyncio.sleep(self.download_delay)
 
-        while active_task_count > 0:
-            print('{} tasks are pending. Wait to complete these tasks\n'.format(active_task_count))
-            await asyncio.sleep(self.download_delay)
-            active_task_count = len([task for task in self.active_requests if not task.done()])
+        await asyncio.wait(self.active_requests)
 
     async def schedule_new_request(self, completed_request_count):
-        if completed_request_count < len(self.extracted_urls):
-            url = self.extracted_urls[completed_request_count]
-            self.visited_urls.append(url)
-            task = asyncio.ensure_future(self.crawling(url))
-            self.active_requests.append(task)
+        url = self.extracted_urls[completed_request_count]
+        self.visited_urls.append(url)
+        task = asyncio.ensure_future(self.crawling(url))
+        self.active_requests.append(task)
 
     def start(self):
         loop = asyncio.get_event_loop()
@@ -117,7 +110,8 @@ class ParallelCrawler(Crawler):
                     url = self.extracted_urls[completed_request_count]
                     self.visited_urls.append(url)
                     completed_request_count += 1
-                    self.active_requests.append(executor.submit(self.crawling, url, completed_request_count))
+                    self.active_requests.append(executor.submit(self.crawling,
+                                                                url, completed_request_count))
                     time.sleep(self.download_delay)
                 else:
                     time.sleep(self.download_delay)
@@ -129,8 +123,8 @@ class ParallelCrawler(Crawler):
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--choice', choices=['c', 'p'], type=validate_crawling_approach,
-                        default='c', help='Choose between Concurrent or Parallel')
+    parser.add_argument('-c', '--choice', choices=['c', 'p'], default='c',
+                        help='Choose between Concurrent or Parallel')
     parser.add_argument('-u', '--url', type=validate_url,
                         default='https://www.tutorialspoint.com/', help='Enter any website url')
     parser.add_argument('-d', '--download_delay', type=float,
@@ -144,15 +138,8 @@ def get_arguments():
     return arguments
 
 
-def validate_crawling_approach(choice):
-    if len(choice) == 1 and ('c' in choice or 'p' in choice):
-        return choice
-    else:
-        raise argparse.ArgumentTypeError('Please Choose between Concurrent or Parallel')
-
-
 def validate_url(url):
-    if bool(parse.urlparse(url).netloc):
+    if bool(urlparse(url).netloc):
         return url
     else:
         raise argparse.ArgumentTypeError('Please enter a valid url')
