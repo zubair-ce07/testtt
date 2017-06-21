@@ -31,7 +31,7 @@ class DoctorSpider(scrapy.Spider):
             physicianid_key = physicianid_keys[index]
             viewprofile_key = viewprofile_keys[index]
             url = 'https://www.nwh.org/find-a-doctor/find-a-doctor-profile/' + name
-            #yield FormRequest(url, method='POST', formdata={physicianid_key: id, viewprofile_key: 'View Full Profile'}, callback=doctor_item_former.extract_doctor_profile_info)
+            yield FormRequest(url, method='POST', formdata={physicianid_key: id, viewprofile_key: 'View Full Profile'}, callback=doctor_item_former.extract_doctor_profile_info)
 
 
 class ExtractVarFromInfo():
