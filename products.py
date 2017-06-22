@@ -3,7 +3,7 @@ import json
 import time
 
 
-class QuotesSpider(scrapy.Spider):
+class ProductSpider(scrapy.Spider):
     name = "products"
     start_urls = [
         'https://www.alexachung.com/uk/pointy-boots-black-76',
@@ -51,7 +51,7 @@ class QuotesSpider(scrapy.Spider):
         images = response.css('.MagicZoom::attr(href)').extract()
         return {'image_urls': images}
 
-    def construct_json(self, response):
+    def construct_output(self, response):
         result_set = {}
         result_set.update(self.get_description(response))
         result_set.update(self.get_image_urls(response))
@@ -69,5 +69,4 @@ class QuotesSpider(scrapy.Spider):
             yield response.follow(next_item, callback=self.parse)
         for next_category in response.css('.item.product.product-item'):
             yield response.follow(next_category, callback=self.parse)
-        yield self.construct_json(response)
-
+        yield self.construct_output(response)
