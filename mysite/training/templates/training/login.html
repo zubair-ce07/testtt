@@ -1,0 +1,21 @@
+
+{% extends "authentication/base.html" %}
+{% block title %}Login{% endblock %}
+{% block content_title %}Login{% endblock %}
+{% block content %}
+    {% if form.errors %}
+    <p style="color: red;">
+        Please correct the error{{ form.errors|pluralize }} below.
+    </p>
+    {% endif %}
+
+    <form action="" method="post" novalidate>
+        <table>
+            {{ form.as_table }}
+            <tr>
+                <td><input type="submit" value="Login" name="login"></td>
+                <td><button onclick="location.href={% url 'signup' %}" type="button">Signup</button></td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}
