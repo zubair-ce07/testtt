@@ -6,7 +6,7 @@ import time
 class ProductSpider(scrapy.Spider):
     name = "products"
     start_urls = [
-        'https://www.alexachung.com/uk/pointy-boots-black-76',
+        'https://www.alexachung.com/uk/',
     ]
 
     def get_skus(self, response):
@@ -67,6 +67,6 @@ class ProductSpider(scrapy.Spider):
     def parse(self, response):
         for next_item in response.css('.product.photo.product-item-photo::attr(href)').extract():
             yield response.follow(next_item, callback=self.parse)
-        for next_category in response.css('.item.product.product-item'):
+        for next_category in response.css('.sub-menu li a::attr(href)').extract():
             yield response.follow(next_category, callback=self.parse)
         yield self.construct_output(response)
