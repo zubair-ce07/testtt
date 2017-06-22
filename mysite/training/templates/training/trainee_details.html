@@ -1,7 +1,8 @@
 {% if trainee %}
-    <h2>
-      Name : {{trainee.name}}
-    </h2>
+  <img src="{{trainee.picture}}" alt="{{trainee.name}}" width="200" height="200">
+  <h2>
+    Name : {{trainee.name}}
+  </h2>
   {% if assignments %}
     <h2>
       Assignments Done :
