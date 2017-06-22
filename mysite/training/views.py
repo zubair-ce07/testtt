@@ -4,6 +4,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from .models import Trainee, Trainer, Technology, Assignment
+from forms import LoginForm
+from django.contrib.auth.models import User
 
 
 def training_index(request):
@@ -52,3 +54,35 @@ def technology_details(request, technology_id):
         'technology': technology
     }
     return HttpResponse(template.render(context, request))
+
+
+def search(request):
+    error = False
+    if 'q' in request.GET:
+        q = request.GET['q']
+        if not q:
+            error = True
+        else:
+            trainees = Trainee.objects.filter(name=q)
+            return render(request, 'training/trainee_search_results.html',
+                                   {'trainees': trainees, 'query': q})
+    return render(request, 'training/search_trainees.html',
+                           {'error': error})
+
+
+def login(request):
+    form = LoginForm(request.POST)
+    message = ''
+    if form.is_valid():
+        username = form.cleaned_data['username']
+        password = form.cleaned_data['password']
+    user = authenticate(username=username, password=password)
+    if user:
+        if user.is_active:
+            login(self.request, user)
+            # Redirect to a success page.
+            return render(request, 'training/training_index.html')
+    # if request.method == 'POST':
+    #     form = LoginForm(request.POST)
+    #     if form.is_valid():
+    #         cd = form.cleaned_data
