@@ -1,18 +1,13 @@
 {% if trainer %}
+  <img src="{{trainee.picture}}" alt="{{trainee.name}}" width="200" height="200">
+  <h2>
+    Name : {{trainer.name}}
+  </h2>
+  {% if trainee %}
     <h2>
-      Name : {{trainer.name}}
+      Trainee Assigned :
     </h2>
-  {% if trainees %}
-    <h2>
-      Trainees Assigned :
-    </h2>
-    <ul>
-    {% for trainee in trainees %}
-        <li>
-          <a href="/training/trainee/{{ trainee.id }}">{{ trainee.name }}</a>
-        </li>
-    {% endfor %}
-    </ul>
+      <a href="/training/trainee/{{ trainee.id }}">{{ trainee.name }}</a>
   {% else %}
       <p>No trainees assigned.</p>
   {% endif %}

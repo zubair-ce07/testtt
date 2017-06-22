@@ -2,6 +2,7 @@
     <h2>
       Title : {{assignment.title}}
     </h2>
+
   {% if assignment.description %}
       <h3>
         Description :
@@ -10,13 +11,20 @@
   {% else %}
       <p>No Description.</p>
   {% endif %}
+
+  {% if assignment.completion_status %}
+      <h3> Assignment Completed </h3>
+  {% else %}
+      <h3> Assignment Not Completed Yet </h3>
+  {% endif %}
+
   {% if assignment.technology_used %}
-    <h2>
-      Technology : {{ assignment.technology_used }}
-    </h2>
+    <h2> Technology : </h2>
+    <a href="/training/technology/{{ assignment.technology_used.id }}">{{ assignment.technology_used }}</a>
   {% else %}
       <p>No Technology.</p>
   {% endif %}
+
 {% else %}
     <p>No Trainers/Trainees are available.</p>
 {% endif %}

@@ -1,0 +1,15 @@
+{% if technology %}
+    <h2>
+      Title : {{technology.name}}
+    </h2>
+  {% if technology.description %}
+      <h3>
+        Description :
+      </h3>
+      <p>{{ technology.description }}</p>
+  {% else %}
+      <p>No Description.</p>
+  {% endif %}
+{% else %}
+    <p>No Trainers/Trainees are available.</p>
+{% endif %}

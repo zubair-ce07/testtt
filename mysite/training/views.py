@@ -31,7 +31,7 @@ def trainer_details(request, trainer_id):
     context = {
         'trainer': trainer,
         'assignments': trainer.assignments.filter(),
-        'trainees': trainer.trainees.filter()
+        'trainee': trainer.trainee
     }
     return HttpResponse(template.render(context, request))
 
@@ -49,8 +49,6 @@ def technology_details(request, technology_id):
     technology = Technology.objects.get(id=technology_id)
     template = loader.get_template('training/technology_details.html')
     context = {
-        'technology': technology,
-        'assignments': trainer.assignments.filter(),
-        'trainees': trainer.trainees.filter()
+        'technology': technology
     }
     return HttpResponse(template.render(context, request))
