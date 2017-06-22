@@ -14,86 +14,37 @@ from termcolor import colored
 __author__ = 'ruhaib'
 
 
-class WeatherData:
-    'Class to extract weather data from the desired path'
+class WeatherReport:
 
-    def __init__(self, weather_data):
-        self.weather_data = weather_data
+    def display_month_report(self, analyzed_data):
+        print('Highest Average: {}C'.format(
+            analyzed_data['average_max_temperature']))
+        print('Lowest Average: {}C'.format(
+            analyzed_data['average_min_temperature']))
+        print('Average Humidity: {}%'.format(
+              analyzed_data['average_humidity']))
 
-    def column_analysis(self, column_key, is_max_required=True):
+    def display_year_report(self, analyzed_data):
+        print('Highest: {0[value]}C on {0[month]} {0[day]}'.format(
+                  analyzed_data['max']))
+        print('Lowest: {0[value]}C on {0[month]} {0[day]}'.format(
+                  analyzed_data['min']))
+        print('Humid: {0[value]}% on {0[month]} {0[day]}'.format(
+                  analyzed_data['humid']))
 
-        if is_max_required:
-            day_data = max(
-                self.weather_data,
-                key=lambda x:
-                float('-inf') if math.isnan(x[column_key]) else
-                x[column_key]
-            )
-        else:
-            day_data = min(
-                self.weather_data,
-                key=lambda x: float('inf') if math.isnan(x[column_key])
-                else x[column_key])
 
-        value = day_data[column_key]
-
-        date = datetime.datetime.strptime(
-            day_data['PKT'] or
-            day_data['PKST'],
-            '%Y-%m-%d')
-        day = date.day
-        month = calendar.month_name[date.month]
-        return {
-            'value': value,
-            'month': month,
-            'day': day
-        }
-
-    def analyze_data(self,
-                     max_temperature_key,
-                     min_temperature_key,
-                     humid_key,
-                     is_average_data=False):
-
-        max_temperature = self.column_analysis(
-            max_temperature_key)
-
-        min_temperature = self.column_analysis(
-            min_temperature_key, False)
-
-        if is_average_data:
-            humidity_data_of_month = pandas.DataFrame(self.weather_data)
-            humidity = {
-                'value': humidity_data_of_month[humid_key].mean()
-            }
-        else:
-            humidity = self.column_analysis(humid_key)
-
-        processed_data = {'max': max_temperature,
-                          'min': min_temperature,
-                          'humid': humidity}
-
-        if is_average_data:
-            self.display_analyzed_month_data(processed_data)
-        else:
-            self.display_analyzed_year_data(processed_data)
-
-    def display_analyzed_year_data(self, analyzed_data_of_year):
-
-        print('Highest: {0[value]}C on {0[month]}s {0[day]}d'.format(
-                  analyzed_data_of_year['max']))
-        print('Highest: {0[value]}C on {0[month]}s {0[day]}d'.format(
-                  analyzed_data_of_year['min']))
-        print('Highest: {0[value]}C on {0[month]}s {0[day]}d'.format(
-                  analyzed_data_of_year['humid']))
-
-    def display_analyzed_month_data(self, analyzed_data_of_month):
-        print('Highest Average: {0[value]}C'.format(
-            analyzed_data_of_month['max']))
-        print('Lowest Average: {0[value]}C'.format(
-            analyzed_data_of_month['min']))
-        print('Average Humidity: {0[value]}%%'.format(
-              analyzed_data_of_month['humid']))
+class Charts:
+    def display_temperature_chart_of_given_month(
+                                                self,
+                                                month_data,
+                                                is_stacked_chart=False):
+        for day_data in month_data:
+            if not math.isnan(day_data['Max TemperatureC']) and not math.isnan(
+                    day_data['Min TemperatureC']):
+                if is_stacked_chart:
+                    self.display_stacked_horizontal_chart(day_data)
+                else:
+                    self.display_simple_horizontal_chart(day_data)
 
     def display_stacked_horizontal_chart(self, one_day_data):
         date = (one_day_data['PKT'] or one_day_data['PKST'])
@@ -104,33 +55,99 @@ class WeatherData:
         text += colored('+' * int(one_day_data['Max TemperatureC']), 'red')
 
         text += ' {}C - {}C'.format(
-            one_day_data['Min TemperatureC'],
-            one_day_data['Max TemperatureC'])
+            str(int(one_day_data['Min TemperatureC'])),
+            str(int(one_day_data['Max TemperatureC'])))
 
         print(text)
 
     def display_simple_horizontal_chart(self, one_day_data):
-
         date = (one_day_data['PKT'] or one_day_data['PKST'])
         date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
         start_of_line = str(date.day) + ' '
-        end_of_line = ' {}C'.format(one_day_data['Min TemperatureC'])
+        cold_value = int(one_day_data['Min TemperatureC'])
+        hot_value = int(one_day_data['Max TemperatureC'])
 
-        coldness = colored('+' * int(one_day_data['Min TemperatureC']), 'blue')
+        coldness = colored(
+            '+' * int(one_day_data['Min TemperatureC']),
+            'blue') + ' ' + str(cold_value)
+
         hotness = colored('+' * int(one_day_data['Max TemperatureC']), 'red')
+        hotness += ' ' + str(hot_value)
+        print(start_of_line + coldness)
+        print(start_of_line + hotness)
 
-        print(start_of_line + coldness + end_of_line)
-        print(start_of_line + hotness + end_of_line)
 
-    def display_temperature_chart_of_given_month(self, is_stacked_chart=False):
-        for day_data in self.weather_data:
-            if not math.isnan(day_data['Max TemperatureC']) and not math.isnan(
-                    day_data['Min TemperatureC']):
-                if is_stacked_chart:
-                    self.display_stacked_horizontal_chart(day_data)
-                else:
-                    self.display_simple_horizontal_chart(day_data)
+class WeatherMan:
+
+    def __init__(self, weather_data):
+        self.weather_data = weather_data
+        self.reporter = WeatherReport()
+        self.chart_report = Charts()
+
+    def _data_analysis(self, column_key, is_max_required=True):
+        if is_max_required:
+            method, infinity = max, float('-inf')
+        else:
+            method, infinity = min, float('inf')
+        day_data = method(
+            self.weather_data,
+            key=lambda x: infinity if math.isnan(x[column_key]) else
+            x[column_key]
+            )
+        value = int(day_data[column_key])
+        date = datetime.datetime.strptime(day_data['PKT'] or day_data['PKST'],
+                                          '%Y-%m-%d')
+        day = date.day
+        month = calendar.month_name[date.month]
+        return {
+            'value': value,
+            'month': month,
+            'day': day
+        }
+
+    def analyze_yearly_data(self,
+                            max_temperature_key,
+                            min_temperature_key,
+                            humid_key):
+
+        max_temperature = self._data_analysis(
+            max_temperature_key)
+
+        min_temperature = self._data_analysis(
+            min_temperature_key, False)
+
+        humidity = self._data_analysis(humid_key)
+
+        processed_data = {'max': max_temperature,
+                          'min': min_temperature,
+                          'humid': humidity}
+
+        self.reporter.display_year_report(processed_data)
+
+    def analyze_monthly_average_data(self,
+                                     max_temperature_key,
+                                     min_temperature_key,
+                                     humid_key):
+        humidity_data_of_month = pandas.DataFrame(self.weather_data)
+
+        average_max_temperature = humidity_data_of_month[
+                                    max_temperature_key].mean()
+        average_min_temperature = humidity_data_of_month[
+                                    min_temperature_key].mean()
+        average_humidity = humidity_data_of_month[humid_key].mean()
+
+        processed_data = {'average_max_temperature': int(
+                                                    average_max_temperature),
+                          'average_min_temperature': int(
+                                                    average_min_temperature),
+                          'average_humidity': int(average_humidity)}
+
+        self.reporter.display_month_report(processed_data)
+
+    def monthly_chart_report(self, is_stacked=False):
+        self.chart_report.display_temperature_chart_of_given_month(
+                                                self.weather_data, is_stacked)
 
 
 class Validation:
@@ -155,43 +172,24 @@ class ExtractData:
     def __init__(self, date, directory):
         self.directory = directory
         self.date_string = str(date)
+
         if str(date).count('/') == 1:
-            self.date = datetime.datetime.strptime(date, "%Y/%m")
+            date = datetime.datetime.strptime(date, "%Y/%m")
+            month_abbreviated_name = calendar.month_abbr[int(date.month)]
+            self.file_name_pattern = os.path.join(
+                directory, 'lahore_weather_' + str(date.year) + '_' +
+                           month_abbreviated_name + '.txt')
         else:
-            self.date = datetime.datetime.strptime(str(date), "%Y")
-
-    def file_name(self):
-
-        if self.date_string.count('/') == 1:
-            month_abbreviated_name = calendar.month_abbr[int(self.date.month)]
-            return '{}/lahore_weather_{}_{}.txt'.format(
-                self.directory, self.date.year, month_abbreviated_name)
-        else:
-            return self.directory + '/lahore_weather_' + str(self.date.year) +\
-             '*.txt'
+            date = datetime.datetime.strptime(str(date), "%Y")
+            self.file_name_pattern = os.path.join(
+                directory, 'lahore_weather_' + str(date.year) + '_*.txt')
 
     def read_data(self):
-
-        if self.date_string.count('/') == 1:
-            return self.data_for_given_month()
-        else:
-            return self.data_for_given_year()
-
-    def data_for_given_year(self):
-
-        year_data = []
-        for filename in glob.glob(self.file_name()):
-            month_data = self.data_for_given_month(filename)
-            year_data.extend(month_data)
-        return year_data
-
-    def data_for_given_month(self, filename=''):
-
-        if filename == '':
-            filename = self.file_name()
-
-        return pandas.read_csv(
-            filename, header=0).to_dict(orient='records')
+        data = []
+        for filename in glob.glob(self.file_name_pattern):
+            data.extend(
+                pandas.read_csv(filename, header=0).to_dict(orient='records'))
+        return data
 
 
 def main():
@@ -247,29 +245,28 @@ def main():
     total_data = data_reader.read_data()
 
     if args.given_year:
-        weather_data = WeatherData(total_data)
-        weather_data.analyze_data(
+        weather_data = WeatherMan(total_data)
+        weather_data.analyze_yearly_data(
             'Max TemperatureC',
             'Min TemperatureC',
             'Max Humidity'
         )
 
     else:
-        weather_data = WeatherData(total_data)
+        weather_data = WeatherMan(total_data)
 
         if args.given_month_for_analysis:
-            weather_data.analyze_data(
-                'Mean TemperatureC',
-                'Mean TemperatureC',
+            weather_data.analyze_monthly_average_data(
+                'Max TemperatureC',
+                'Min TemperatureC',
                 ' Mean Humidity',
-                True
             )
 
         if args.simple_chart:
-            weather_data.display_temperature_chart_of_given_month()
+            weather_data.monthly_chart_report()
 
         if args.stacked_chart:
-            weather_data.display_temperature_chart_of_given_month(True)
+            weather_data.monthly_chart_report(True)
 
 
 if __name__ == '__main__':
