@@ -1,45 +1,10 @@
 #!/usr/bin/env python3
+import re
 import json
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
-
-
-class Product:
-    def __init__(self,
-                 product_name,
-                 product_category,
-                 source_url
-                 ):
-        self.product_name = product_name
-        self.product_category = product_category
-        self.source_url = source_url
-        self.images = []
-        self.skus = []
-
-    def addImages(self, image):
-        self.images.append(image)
-
-    def append(self, sku):
-        self.skus.append(
-            {
-                'color': sku.product_color,
-                'size': sku.product_size,
-                'price': sku.product_price,
-                'availability': sku.availability
-            }
-        )
-
-
-class Sku:
-    def __init__(self,
-                 product_color,
-                 product_price,
-                 product_size,
-                 availability):
-        self.product_color = product_color
-        self.product_price = product_price
-        self.product_size = product_size
-        self.availability = availability
+from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
+from .product import MarcJacobProduct
+from termcolor import colored
 
 
 class MarcJacobsSpider(CrawlSpider):
@@ -48,250 +13,197 @@ class MarcJacobsSpider(CrawlSpider):
     start_urls = ['https://www.marcjacobs.com/']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=[
-                'li.mobile-hidden div.level-2 ul.level-3 a']),
-             callback='parse_major_category'),
-        Rule(LinkExtractor(restrict_css=[
-                'li.mobile-hidden div.level-2 ul.menu-vertical a']),
-             callback='parse_major_category'),
-        Rule(LinkExtractor(restrict_css=[
-                'li.mobile-hidden:first-of-type a']),
-             callback='parse_major_category'),
-        )
+        Rule(LxmlLinkExtractor(restrict_css=[
+             'a[title="NEW ARRIVALS"]']), follow=True),
+        # Rule(LinkExtractor(restrict_css=[
+        #         'li.mobile-hidden div.level-2 ul.level-3 a'])),
+        # Rule(LinkExtractor(restrict_css=[
+        #         'li.mobile-hidden div.level-2 ul.menu-vertical a'])),
+        # Rule(LinkExtractor(restrict_css=[
+        #         'li.mobile-hidden:first-of-type a'])),
+        # Rule(LinkExtractor(restrict_css=['a.product-page-link'],
+        #                    attrs=('href',),
+        #                    callback='parse_product_page')),
+        Rule(
+            LxmlLinkExtractor(
+                restrict_css='div.product-tile.needsclick',
+                # attrs=('data-href',)
+                # tags=('div')
+                ),
+            callback='parse_product_page'),
+    )
 
-    def product_format(self, product):
-        return {
-            'name': product.product_name,
-            'category': product.product_category,
-            'source_url': product.source_url,
-            'images': product.images,
-            'skus': product.skus
-        }
+    def parse_product_page(self, response):
+
+        id = self.product_id(response)
+        product_name = self.get_product_name(response)
+        product_category = self.get_product_category(response)
+        remaining_colors_elements = self.color_url_combinations(response)
+
+        single_product = MarcJacobProduct(
+            product_id=id,
+            product_name=product_name,
+            product_category=product_category,
+            source_url=response.url,
+            images=[],
+            skus=[]
+        )
+        # print(colored(product_name, 'blue'))
+
+        yield self.next_color_request(response, remaining_colors_elements,
+                                      single_product)
+
+    def next_color_request(self, response, remaining_color_elements, product,
+                           source=[]):
+
+        next_color_url, next_color_name = self.next_color_with_link(
+            remaining_color_elements)
+        yield response.follow(next_color_url + '&Quantity=1&format=ajax',
+                              self.parse_color_of_product_page,
+                              meta={
+                                  'product': product,
+                                  'next_color_name': next_color_name,
+                                  'remaining_color_elements':
+                                      remaining_color_elements,
+                                  'image_sources': source,
+                              })
+
+    def parse_color_of_product_page(self, response):
+        size_elements_of_this_color = self.size_url_combinations(response)
+
+        path_to_images = self.image_paths(response)
+        response.meta['image_sources'].append(path_to_images)
+        yield self.next_size_request(response, size_elements_of_this_color)
+
+    def next_size_request(self, response, remaining_size_urls):
+        next_color_size, next_size_url = self.next_size_with_link(
+            remaining_size_urls)
+        yield response.follow(next_size_url + '&Quantity=1&format=ajax',
+                              self.parse_color_size_product_page,
+                              meta={
+                                  'size': next_color_size,
+                                  'size_elements_of_this_color':
+                                              remaining_size_urls,
+                                  'product': response.meta['product'],
+                                  'next_color_name':
+                                              response.meta['next_color_name'],
+                                  'remaining_color_elements':
+                                              response.meta[
+                                                  'remaining_color_elements'],
+                                  'image_sources': response.meta[
+                                      'image_sources']
+
+                              })
+
+    def parse_color_size_product_page(self, response):
+
+        size_color_sku = self.product_sku(response)
+        response.meta['product'].append(size_color_sku)
+
+        remaining_color_elements = response.meta[
+            'remaining_color_elements']
+        size_elements_of_this_color = response.meta[
+            'size_elements_of_this_color']
+
+        if size_elements_of_this_color:
+            yield self.next_size_request(response, size_elements_of_this_color)
+        elif remaining_color_elements:
+            yield self.next_color_request(response, remaining_color_elements,
+                                          response.meta['product'])
+        else:
+            yield self.next_image_request(response,
+                                          response.meta['image_sources'],
+                                          response.meta['product'])
+
+    def next_image_request(self, response, image_sources, product):
+        path_to_images = image_sources.pop(0)
+        yield response.follow(path_to_images, self.parse_images, meta={
+            'product': product,
+            'path_to_images': image_sources
+        })
+
+    def parse_images(self, response):
+        images = json.loads(response.text[26:-2])
+        response.meta['product'].extend(x['src'] for x in images['items'])
+
+        if response.meta['path_to_images']:
+            yield self.next_image_request(response,
+                                          response.meta['path_to_images'],
+                                          response.meta['product'])
+        else:
+            yield response.meta['product']
 
     def get_product_category(self, response):
         return response.css('a.breadcrumb-element::text').extract()
 
-    def parse_major_category(self, response):
-
-        category = self.get_product_category(response)
-
-        links_to_product_pages = response.css(
-            'a.product-page-link::attr(href)').extract_first()
-
-        yield response.follow(links_to_product_pages,
-                              self.parse_product_page,
-                              meta={'category': category})
-
-    def get_color_urls(self, response):
-        return response.css(
-            'a.swatchanchor::attr(href)').extract()
-
-    def get_color_name(self, response):
-        return response.css(
-            'a.swatchanchor::text').extract()
-
-    def get_color_with_urls(self, response):
-        product_colors_urls = self.get_color_urls(response)
-        product_colors_names = self.get_color_name(response)
-
-        return{
-
-                'remaining_color_urls': product_colors_urls,
-                'remaining_color_names': product_colors_names,
-
-              }
-
     def get_product_name(self, response):
         return response.css(
             'h1.product-name::text').extract_first()
-
-    def parse_product_page(self, response):
-        product_name = self.get_product_name(response)
-
-        product_category = response.meta['category']
-
-        remaining_colors_elements = self\
-            .get_color_with_urls(
-                response)
-
-        top_color_url, top_color_name = self.get_next_color_and_its_link(
-            remaining_colors_elements)
-
-        single_product = Product(product_name, product_category, response.url)
-
-        yield response.follow(top_color_url + '&Quantity=1&format=ajax',
-                              self.parse_color_of_product_page,
-                              meta={
-                                  'product': single_product,
-                                  'top_color_name': top_color_name,
-                                  'remaining_colors_elements':
-                                              remaining_colors_elements,
-                                  'image_sources': [],
-                              })
-
-    def parse_images(self, response):
-        images = json.loads(response.text[26:-2])
-
-        for item in images['items']:
-            response.meta['product'].addImages(item['src'])
-
-        if response.meta['path_to_images']:
-            path_to_next_image = response.meta['path_to_images'].pop(0)
-            yield response.follow(
-                path_to_next_image,
-                self.parse_images,
-                meta={
-                    'product': response.meta['product'],
-                    'path_to_images': response.meta['path_to_images']
-                })
-
-        else:
-            yield self.product_format(response.meta['product'])
 
     def get_size_options(self, response):
         options = response.css(
             'select#va-size option[value!=""]::text').extract()
         return list(map(str.strip, options))
 
-    def get_size_urls(self, response):
-        return response.css(
-            'select[id="va-size"] option[value!=""] ::attr(value)').extract()
+    def color_url_combinations(self, selector):
+        comibnations = []
+        for color_tag in selector.css(
+                'a[class="swatchanchor"]'):
+            color = color_tag.css('::attr(href)').extract_first()
+            color_url = color_tag.css('::text').extract_first()
+            comibnations.append({'color': color, 'color_url': color_url})
+        return comibnations
 
-    def get_available_sizes_and_urls(self, response):
+    def size_url_combinations(self, selector):
 
-        color_size_options = self.get_size_options(response)
+        comibnations = []
 
-        color_size_product_urls = self.get_size_urls(response)
+        for size_tag in selector.css(
+                'select[id="va-size"] option[value!=""]').extract():
+            size = size_tag.css('.::text').extract()
+            size_url = size_tag.css('.::attr(value)').extract()
+            comibnations.append({'size': size, 'size_url': size_url})
+        return comibnations
 
-        return{
+    def next_size_with_link(self, remaining_size_urls):
+        if remaining_size_urls:
+            next_size_url = remaining_size_urls.pop(0)
+            return next_size_url['size_url'], next_size_url['size']
+        return None
 
-                'color_size_options': color_size_options,
-                'color_size_product_urls': color_size_product_urls
+    def next_color_with_link(self, remaining_color_urls):
+        if remaining_color_urls:
+            next_color_url = remaining_color_urls.pop(0)
+            return next_color_url['color_url'], next_color_url['color']
+        return None
 
-              }
+    def product_sku(self, response):
+        size_color = response.meta['next_color_name']
+        quantity_of_product = self.product_quantity(response)
 
-    def parse_color_of_product_page(self, response):
-        size_elements_of_this_color = self\
-            .get_available_sizes_and_urls(
-                response)
-
-        next_color_size, next_size_url = self.get_next_size_and_its_link(
-            size_elements_of_this_color)
-
-        path_to_images = response.css(
-            'div[class="product-images"]::attr(data-images)').extract_first()
-
-        response.meta['image_sources'].append(path_to_images)
-
-        yield response.follow(next_size_url + '&Quantity=1&format=ajax',
-                              self.parse_color_size_product_page,
-                              meta={
-                                    'size': next_color_size,
-                                    'size_elements_of_this_color':
-                                              size_elements_of_this_color,
-                                    'product': response.meta['product'],
-                                    'top_color_name':
-                                              response.meta['top_color_name'],
-                                    'remaining_colors_elements':
-                                              response.meta[
-                                                  'remaining_colors_elements'],
-
-                                    'image_sources': response.meta[
-                                        'image_sources']
-
-                              }, )
-
-    def get_next_size_and_its_link(self, size_elements_of_this_color):
-
-        next_size = size_elements_of_this_color['color_size_options'].pop(0)
-        next_size_page_link = size_elements_of_this_color[
-                                'color_size_product_urls'].pop(0)
-        return next_size, next_size_page_link
-
-    def get_next_color_and_its_link(self, remaining_color_elements):
-        if remaining_color_elements['remaining_color_urls']:
-
-            next_color_url = remaining_color_elements[
-                                'remaining_color_urls'].pop(0)
-            next_color_name = remaining_color_elements[
-                                'remaining_color_names'].pop(0)
-
-            return next_color_url, next_color_name
-
-        else:
-            return None
-
-    def get_sku(self, response):
-        size_color = response.meta['top_color_name']
-
-        quantity_of_product = response.css(
-            'select[id="Quantity"]::attr(value)').extract_first()
-
-        availability = False
-        if quantity_of_product:
-            availability = True
+        availability = True if quantity_of_product else False
 
         price_of_size = response.css(
             'span[itemprop="price"]::attr(content)').extract_first()
-        price_of_size = str(int(price_of_size[4:-3]))
 
-        return Sku(size_color,
-                   price_of_size,
-                   response.meta['size'],
-                   availability)
+        price_of_size = str(int(re.search('USD (\d{1,4}).00')))
 
-    def parse_color_size_product_page(self, response):
+        return {
+            'color': size_color,
+            'price': price_of_size,
+            'size': response.meta['size'],
+            'availability': availability
+        }
 
-        size_color_sku = self.get_sku(response)
-        response.meta['product'].append(size_color_sku)
+    def product_id(self, selector):
+        id = selector.css(
+            'h3 span[itemprop="productID"]::text').extract()
+        return id
 
-        remaining_colors_elements = response.meta[
-            'remaining_colors_elements']
-        size_elements_of_this_color = response.meta[
-            'size_elements_of_this_color']
+    def image_paths(self, selector):
+        return selector.css(
+            'div[class="product-images"]::attr(data-images)').extract_first()
 
-        if size_elements_of_this_color['color_size_product_urls']:
-
-            next_size, next_size_url = self.get_next_size_and_its_link(
-                                            size_elements_of_this_color)
-
-            yield response.follow(
-                next_size_url + '&Quantity=1&format=ajax',
-                self.parse_color_size_product_page,
-                meta={
-                      'size': next_size,
-                      'size_elements_of_this_color':
-                                size_elements_of_this_color,
-                      'product': response.meta['product'],
-                      'top_color_name':
-                                response.meta['top_color_name'],
-                      'remaining_colors_elements':
-                                response.meta['remaining_colors_elements'],
-
-                      'image_sources': response.meta[
-                                        'image_sources']
-                    })
-
-        elif remaining_colors_elements['remaining_color_urls']:
-
-            next_color_url, next_color_name = self.get_next_color_and_its_link(
-                                                remaining_colors_elements)
-
-            yield response.follow(next_color_url + '&Quantity=1&format=ajax',
-                                  self.parse_color_of_product_page,
-                                  meta={
-                                      'top_color_name': next_color_name,
-                                      'image_sources': response.meta[
-                                              'image_sources'],
-                                      'product': response.meta['product'],
-
-                                      'remaining_colors_elements':
-                                          remaining_colors_elements
-                                  })
-        else:
-
-            path_to_images = response.meta['image_sources'].pop(0)
-            yield response.follow(path_to_images, self.parse_images, meta={
-                'product': response.meta['product'],
-                'path_to_images': response.meta['image_sources']
-            })
+    def product_quantity(self, selector):
+        return selector.css(
+            'select[id="Quantity"]::attr(value)').extract_first()
