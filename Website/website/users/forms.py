@@ -19,7 +19,6 @@ class UserLoginForm(forms.ModelForm):
 
 
 class UserUpdateForm(forms.ModelForm):
-    # Feel free to add the password validation field as on UserCreationForm
     password = forms.CharField(required=False, widget=forms.PasswordInput)
 
     class Meta:

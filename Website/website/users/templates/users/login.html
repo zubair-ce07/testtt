@@ -4,12 +4,12 @@
     {% csrf_token %}
     {% for field in form %}
         <div>
-            <div>
-                <span>{{ form.errors }}</span>
-            </div>
             <label>{{ field.label_tag }}</label>
         <div>{{ field }}</div>
         </div>
     {% endfor %}
+     <div>
+         <span>{{ error }}</span>
+     </div>
     <button type="submit">Submit</button>
 </form>

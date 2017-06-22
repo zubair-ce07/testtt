@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.views.generic import View
+from django.views.generic import View, RedirectView, TemplateView
 from django.views.generic.edit import UpdateView
 from .forms import UserRegisterForm, UserLoginForm, UserUpdateForm
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse_lazy, reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class UserRegisterFormView (View):
@@ -13,7 +14,6 @@ class UserRegisterFormView (View):
     def get(self, request):
         form = self.form_class(None)
         return render(request, self.template_name, {'form': form})
-        pass
 
     def post(self, request):
         form = self.form_class(request.POST)
@@ -33,39 +33,51 @@ class UserLoginFormView (View):
 
     def get(self, request):
         form = self.form_class(None)
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {'form': form, 'error': ' '})
 
     def post(self, request):
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(username=username, password=password)
+        message = Message.LOGIN_DISABLED
         if user is not None:
             if user.is_active:
                 login(request, user)
                 return redirect('users:profile')
-        form = self.form_class(None)
-        return render(request, self.template_name, {'form': form})
+            message = Message.LOGIN_INVALID
+        form = self.form_class(request.POST)
+        return render(request, self.template_name, {'form': form, 'error': message})
 
 
-class UserUpdate(UpdateView):
+class UserUpdate(LoginRequiredMixin, UpdateView):
     form_class = UserUpdateForm
     template_name = 'users/edit.html'
     success_url = reverse_lazy('users:profile')
-    
+    login_url = '/users/login/'
+
     def get_object(self, queryset=None):
         return self.request.user
 
 
-def get_user_profile(request):
-    return render(request, 'users/view.html', {"user": request.user})
+class Message:
+    LOGIN_INVALID = "Invalid Username and Password"
+    LOGIN_MISSING = "Missing Username and Password"
+    LOGIN_DISABLED = "Disabled Account"
+
+    SIGNUP_MISSING = "Please fill out all the fields"
 
 
-def profile_view(request):
-    if not request.user.is_authenticated:
-        return redirect('users:login')
-    return render(request, 'users/profile.html')
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = "users/view.html"
+    login_url = '/users/login/'
 
 
-def logout_view(request):
-    logout(request)
-    return redirect('users:login')
+class ProfilePage(LoginRequiredMixin, TemplateView):
+    template_name = "users/profile.html"
+    login_url = '/users/login/'
+
+
+class LogoutView(RedirectView):
+    def get_redirect_url(self):
+        logout(self.request)
+        return reverse('users:login')
