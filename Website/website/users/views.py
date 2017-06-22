@@ -53,7 +53,7 @@ class UserUpdate(LoginRequiredMixin, UpdateView):
     form_class = UserUpdateForm
     template_name = 'users/edit.html'
     success_url = reverse_lazy('users:profile')
-    login_url = '/users/login/'
+    login_url = '/login/'
 
     def get_object(self, queryset=None):
         return self.request.user
@@ -69,12 +69,12 @@ class Message:
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = "users/view.html"
-    login_url = '/users/login/'
+    login_url = '/login/'
 
 
 class ProfilePage(LoginRequiredMixin, TemplateView):
     template_name = "users/profile.html"
-    login_url = '/users/login/'
+    login_url = '/login/'
 
 
 class LogoutView(RedirectView):
