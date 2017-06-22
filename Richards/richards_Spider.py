@@ -13,6 +13,7 @@ class Mixin:
     start_urls = ['http://www.richards.com.br']
     # category id used in post request to retrieve product from a specific gender
     gender_map = {'1005777739': 'men', '43564721': 'women', '3056766704': 'girls', '560931917': 'boys'}
+    params = {'imageProperties': 'thumb,large,zoom', 'productId': 'id', 'selectedSkuId': 'sku'}
 
 
 class RichardsParseSpider(BaseParseSpider, Mixin):
@@ -26,7 +27,6 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate_minimal(garment, response)
-        garment['gender'] =response.meta['gender']
         garment['name'] = raw_product['name']
         garment['brand'] = self.brand_name(garment['name'])
         garment['url'] = raw_product['url']
@@ -40,14 +40,23 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
-    def request_params(self, sku, prod_id):
-        return {'imageProperties': 'thumb,large,zoom', 'productId': prod_id, 'selectedSkuId': sku}
+    def parse_color(self, response):
+
+        garment = response.meta['garment']
+        raw_product = json.loads(response.text)
+        currency = response.meta['currency']
+
+        garment['skus'] = self.skus(garment['skus'], raw_product, currency)
+        garment['image_urls'] += self.image_urls(raw_product['mediaSets'])
+
+        return self.next_request_or_garment(garment)
 
     def color_request(self, prod_id, color_list, currency):
         requests = []
         for color in color_list:
-            params = self.request_params(color['skuId'], prod_id)
-            colour_url = self.create_url(params)
+            self.params['selectedSkuId'] = color['skuId']
+            self.params['productId'] = prod_id
+            colour_url = self.create_url()
             requests.append(Request(url=colour_url, meta={'currency': currency}, callback=self.parse_color))
         return requests
 
@@ -60,17 +69,6 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         elif "BIRKENSTOCK" in name:
             return "BIRKENSTOCK"
         return "RICHARDS"
-
-    def parse_color(self, response):
-
-        garment = response.meta['garment']
-        raw_product = json.loads(response.text)
-        currency = response.meta['currency']
-
-        garment['skus'] = self.skus(garment['skus'], raw_product, currency)
-        garment['image_urls'] += self.image_urls(raw_product['mediaSets'])
-
-        return self.next_request_or_garment(garment)
 
     def product_description(self, raw_product):
         return [rd for rd in self.raw_description(raw_product) if not self.care_criteria(rd)]
@@ -91,12 +89,10 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         price = [raw_product['atualPrice'], currency]
         price = self.product_pricing_common_new('', money_strs=price)
 
-        if 'sizeList' in raw_product.keys():
-            sizes = raw_product['sizeList']
         color_sku = raw_product['skuId']
         color_name = self.color_name(colors, color_sku)
 
-        for size in sizes:
+        for size in raw_product.get('sizeList', []):
             skus[color_sku + "_" + size['skuId']] = {"size": size['name'], 'price': price['price'],
                                                      'currency': price['currency'], 'out_of_stock': size['hasStock'],
                                                      'color': color_name}
@@ -107,8 +103,8 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
             if color['skuId'] == color_sku:
                 return color['name']
 
-    def create_url(self, params):
-        return 'http://www.richards.com.br/services/get-complete-product.jsp?' + urllib.parse.urlencode(params)
+    def create_url(self):
+        return 'http://www.richards.com.br/services/get-complete-product.jsp?' + urllib.parse.urlencode(self.params)
 
     def raw_product(self, response):
         script = response.xpath('//script[contains(., "var globalProduct =")]/text()').extract()
@@ -124,13 +120,11 @@ class RichardsCrawlSpider(BaseCrawlSpider, Mixin):
 
     def parse(self, response):
         params = {'recsPerPage': 1000}
-        for ids, gender in self.gender_map.items():
-            params.update({'N': ids})
+        for category_id, gender in self.gender_map.items():
+            params.update({'N': category_id})
             url_params = urllib.parse.urlencode(params)
             url = self.start_urls[0] + '/services/records.jsp?' + url_params
-            request = Request(url=url, callback=self.parse_listings)
-            request.meta["gender"] = gender
-            yield request
+            yield Request(url=url, meta={'gender': gender}, callback=self.parse_listings)
 
     def parse_listings(self, response):
         product_links = json.loads(response.text)
