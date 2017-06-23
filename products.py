@@ -1,13 +1,18 @@
-import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractor import LinkExtractor
+from ..items import ProductItem
 import json
 import time
 
 
-class ProductSpider(scrapy.Spider):
+class ProductSpider(CrawlSpider):
     name = "products"
+    allowed_domains = ["alexachung.com"]
     start_urls = [
         'https://www.alexachung.com/uk/',
     ]
+
+    rules = [Rule(LinkExtractor(allow=['.*\/uk\/([a-z]|-|\/|[0-9])+$']), 'parse_products', follow=True)]
 
     def get_skus(self, response):
         item_details = {}
@@ -51,22 +56,18 @@ class ProductSpider(scrapy.Spider):
         images = response.css('.MagicZoom::attr(href)').extract()
         return {'image_urls': images}
 
-    def construct_output(self, response):
-        result_set = {}
-        result_set.update(self.get_description(response))
-        result_set.update(self.get_image_urls(response))
-        result_set.update(self.get_retailer_sku(response))
-        result_set.update(self.get_name(response))
-        result_set.update(self.get_url(response))
-        result_set.update(self.get_skus(response))
-        result_set.update({'gender': 'female'})
-        result_set.update({'brand': 'Alexa Chung'})
-        result_set.update({'date': time.strftime("%H:%M:%S")})
-        return result_set
+    def construct_output(self, response, output):
+        output['description'] = self.get_description(response)
+        output['image_urls'] = self.get_image_urls(response)
+        output['retailer_sku'] = self.get_image_urls(response)
+        output['name'] = self.get_image_urls(response)
+        output['url'] = self.get_image_urls(response)
+        output['skus'] = self.get_skus(response)
+        output['gender'] = 'female'
+        output['brand'] = 'Alexa Chung'
+        output['date'] = time.strftime("%H:%M:%S")
 
-    def parse(self, response):
-        for next_item in response.css('.product.photo.product-item-photo::attr(href)').extract():
-            yield response.follow(next_item, callback=self.parse)
-        for next_category in response.css('.sub-menu li a::attr(href)').extract():
-            yield response.follow(next_category, callback=self.parse)
-        yield self.construct_output(response)
+        return output
+
+    def parse_products(self, response):
+        yield self.construct_output(response, ProductItem())
