@@ -70,10 +70,10 @@ class Charts:
 
         coldness = colored(
             '+' * int(one_day_data['Min TemperatureC']),
-            'blue') + ' ' + str(cold_value)
+            'blue') + ' ' + str(cold_value) + 'C'
 
         hotness = colored('+' * int(one_day_data['Max TemperatureC']), 'red')
-        hotness += ' ' + str(hot_value)
+        hotness += ' ' + str(hot_value) + 'C'
         print(start_of_line + coldness)
         print(start_of_line + hotness)
 
@@ -106,18 +106,13 @@ class WeatherMan:
             'day': day
         }
 
-    def analyze_yearly_data(self,
-                            max_temperature_key,
-                            min_temperature_key,
-                            humid_key):
+    def analyze_yearly_data(self):
 
-        max_temperature = self._data_analysis(
-            max_temperature_key)
+        max_temperature = self._data_analysis('Max TemperatureC')
 
-        min_temperature = self._data_analysis(
-            min_temperature_key, False)
+        min_temperature = self._data_analysis('Min TemperatureC', False)
 
-        humidity = self._data_analysis(humid_key)
+        humidity = self._data_analysis('Max Humidity')
 
         processed_data = {'max': max_temperature,
                           'min': min_temperature,
@@ -125,17 +120,14 @@ class WeatherMan:
 
         self.reporter.display_year_report(processed_data)
 
-    def analyze_monthly_average_data(self,
-                                     max_temperature_key,
-                                     min_temperature_key,
-                                     humid_key):
+    def analyze_monthly_average_data(self):
         humidity_data_of_month = pandas.DataFrame(self.weather_data)
 
         average_max_temperature = humidity_data_of_month[
-                                    max_temperature_key].mean()
+                                                    'Max TemperatureC'].mean()
         average_min_temperature = humidity_data_of_month[
-                                    min_temperature_key].mean()
-        average_humidity = humidity_data_of_month[humid_key].mean()
+                                                    'Min TemperatureC'].mean()
+        average_humidity = humidity_data_of_month[' Mean Humidity'].mean()
 
         processed_data = {'average_max_temperature': int(
                                                     average_max_temperature),
@@ -246,21 +238,13 @@ def main():
 
     if args.given_year:
         weather_data = WeatherMan(total_data)
-        weather_data.analyze_yearly_data(
-            'Max TemperatureC',
-            'Min TemperatureC',
-            'Max Humidity'
-        )
+        weather_data.analyze_yearly_data()
 
     else:
         weather_data = WeatherMan(total_data)
 
         if args.given_month_for_analysis:
-            weather_data.analyze_monthly_average_data(
-                'Max TemperatureC',
-                'Min TemperatureC',
-                ' Mean Humidity',
-            )
+            weather_data.analyze_monthly_average_data()
 
         if args.simple_chart:
             weather_data.monthly_chart_report()
