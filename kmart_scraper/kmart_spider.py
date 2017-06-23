@@ -13,32 +13,42 @@ class KmartSpider(CrawlSpider):
     allowed_domains = ['kmart.com.au']
     start_urls = ["http://www.kmart.com.au"]
     pagination_regex = re.compile(r"\'http.*?\'")
+    categories_selector = '.mega-menu li>a'
+    item_card_selector = '.product_image>a'
+    allowed_categories = ['/category/men/mens-clothing/',
+                          '/category/women/womens-clothing/',
+                          '/kids-clothing/',
+                          '/baby-manchester/',
+                          '/baby-clothing/']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['li.mega-menu li>a']), callback="handle_pagination", follow=True),
-        Rule(LinkExtractor(restrict_css=['.product_image>a']), callback="parse_item"),
+        Rule(LinkExtractor(allow=allowed_categories, restrict_css=[categories_selector]), callback="handle_pagination",
+             follow=True),
+        Rule(LinkExtractor(restrict_css=[item_card_selector]), callback="parse_item"),
     )
 
     def handle_pagination(self, response):
-        pages_count = int(response.css("#pages_list_id li:nth-last-child(2) ::text").extract_first() or '0')
-        if not pages_count:
-            return
-        script_occurrence = response.xpath('//script[contains(text(),\'SearchBasedNavigationDisplayJS.init(\')]')
-        pagination_url = script_occurrence.re(self.pagination_regex)
+        pages_count_selector = "#pages_list_id li:nth-last-child(2) ::text"
+        pages_count = int(response.css(pages_count_selector).extract_first() or '0')
+
+        pagination_xpath = '//script[contains(text(),\'SearchBasedNavigationDisplayJS.init(\')]'
+        pagination_url = response.xpath(pagination_xpath).re(self.pagination_regex)
+
         for count in range(1, pages_count):
-            begin_index = product_begin_index = count*30
+            begin_index = product_begin_index = count * 30
             url = (pagination_url[0])[1:-1]
-            yield FormRequest(url, formdata={
-                                  'contentBeginIndex': '0',
-                                  'productBeginIndex': str(product_begin_index),
-                                  'beginIndex': str(begin_index),
-                                  'orderBy': '5',
-                                  'isHistory': 'false',
-                                  'pageView': 'grid',
-                                  'resultType': 'products',
-                                  'langId': '-1',
-                                  'pageSize': '30',
-                                  'requesttype': 'ajax'})
+            form_data = {
+                'contentBeginIndex': '0',
+                'productBeginIndex': str(product_begin_index),
+                'beginIndex': str(begin_index),
+                'orderBy': '5',
+                'isHistory': 'false',
+                'pageView': 'grid',
+                'resultType': 'products',
+                'langId': '-1',
+                'pageSize': '30',
+                'requesttype': 'ajax'}
+            yield FormRequest(url, formdata=form_data)
 
     def parse_item(self, response):
         item = KmartItem()
@@ -46,47 +56,56 @@ class KmartSpider(CrawlSpider):
         item['image_urls'] = self.get_image_urls(response)
         item['description'] = self.get_description(response)
         item['price'] = self.get_price(response)
+        item['skus'] = self.get_skus(response) or self.get_default_sku(item['price'])
         item['url'] = response.url
-        item['skus'] = self.get_skus(response) or {
-            "colour": 'no-color',
-            "currency": "AUD",
-            "price": item['price'],
-            "sku_id": 'none',
-            "size": 'one-size'
-        }
         return item
 
     def get_name(self, response):
-        return response.css('.h2[itemprop = "name"] ::text').extract_first()
+        name_selector = '.h2[itemprop = "name"] ::text'
+        return response.css(name_selector).extract_first()
 
     def get_image_urls(self, response):
-        image_urls = response.css('.multipleimages + input ::attr(value)').extract() or \
-                     response.css('#productMainImage ::attr(src)').extract()
+        images_selector = '.multipleimages + input ::attr(value)'
+        default_image_selector = '#productMainImage ::attr(src)'
+        image_urls = response.css(images_selector).extract() or \
+                     response.css(default_image_selector).extract()
         return [self.start_urls[0] + s for s in image_urls]
 
     def get_description(self, response):
-        return response.css('#product-details li ::text, #product-details p ::text').extract()
+        description_selector = '#product-details li ::text, #product-details p ::text'
+        return response.css(description_selector).extract()
 
     def get_price(self, response):
-        return response.css('.price-wrapper [itemprop="price"] ::text').extract_first()
+        price_selector = '.price-wrapper [itemprop="price"] ::text'
+        return response.css(price_selector).extract_first()
 
     def get_skus(self, response):
-        json_wo_quotes = response.css('#catEntryParams ::attr(value)').extract_first()
-        try:
-            skus_json = yaml.load(json_wo_quotes)
-        except:
-            skus_json = yaml.load(json_wo_quotes.replace("'", '"'))
+        skus_json_selector = '#catEntryParams ::attr(value)'
+        json_wo_quotes = response.css(skus_json_selector).extract_first()
+
+        skus_json = yaml.load(json_wo_quotes.replace("'", '"'))
         skus_data = skus_json['skus']
         price = self.get_price(response)
 
         skus = []
         for sku in skus_data:
+            colour = sku['attributes'].get('Colour', 'N/A')
+            size = sku['attributes'].get('Size', 'N/A')
             curr_sku = {
-                "colour": sku['attributes']['Colour'],
+                "colour": colour,
                 "currency": "AUD",
                 "price": price,
                 "sku_id": sku['id'],
-                "size": sku['attributes']['Size']
+                "size": size
             }
             skus.append(curr_sku)
+
         return skus
+
+    def get_default_sku(self, default_price):
+        return {
+            "currency": "AUD",
+            "price": default_price,
+            "sku_id": 'N/A',
+            "size": 'N/A'
+        }
