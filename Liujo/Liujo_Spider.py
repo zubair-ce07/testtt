@@ -111,14 +111,11 @@ class LiujoParseSpider(BaseParseSpider):
         skus = {}
         sizes = clean(response.css('.shoe-size ::text'))
         size_price = clean(response.css('.shoe-price ::text'))
-        size_currecny = clean(response.css('.shoe-currency ::text'))
-
-        itera = 0
-        for size in sizes:
-            sku = self.product_pricing_common_new('', money_strs=[size_currecny[itera], size_price[itera]])
+        size_currency = clean(response.css('.shoe-currency ::text'))
+        for size, price, currency in zip(sizes, size_price, size_currency):
+            sku = self.product_pricing_common_new('', money_strs=[price, currency])
             sku['size'] = size
             skus[sku_id+"_"+size] = sku
-            itera += 1
         return skus
 
     def skus(self, response, sku_id):
