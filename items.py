@@ -1,9 +1,7 @@
-
-
 import scrapy
 
 
-class ProductItem(scrapy.Item):
+class ProductInfo(scrapy.Item):
     description = scrapy.Field()
     retailer_sku = scrapy.Field()
     image_urls = scrapy.Field()

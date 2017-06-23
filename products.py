@@ -1,21 +1,25 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractor import LinkExtractor
-from ..items import ProductItem
+from ..items import ProductInfo
 import json
 import time
 
 
-class ProductSpider(CrawlSpider):
-    name = "products"
-    allowed_domains = ["alexachung.com"]
+class AlexaChungSpider(CrawlSpider):
+    name = 'alexachung'
+    allowed_domains = ['alexachung.com']
     start_urls = [
         'https://www.alexachung.com/uk/',
     ]
 
-    rules = [Rule(LinkExtractor(allow=['.*\/uk\/'], restrict_css='.sub-menu')),
-             Rule(LinkExtractor(allow=['.*\/uk\/[a-z]+$'], restrict_css='.products.wrapper.grid.products-grid')),
+    rules = [Rule(LinkExtractor(restrict_css='.sub-menu')),
+             Rule(LinkExtractor(allow=['.*[a-z]+$'], restrict_css='.products.wrapper.grid.products-grid')),
              Rule(LinkExtractor(allow=['.*\/uk\/[a-z-0-9]+$']), callback='parse_products')
              ]
+
+    def get_colour(self, response):
+        _, colour, _ = self.get_url(response).rsplit('-', 2)
+        return colour
 
     def get_skus(self, response):
         item_details = {}
@@ -33,7 +37,7 @@ class ProductSpider(CrawlSpider):
                                                         product_labels[next(iter(product_labels.keys()))][next(iter(
                                                         product_details.values()))]['value']})
                 item_product_ids[product_key].update({'price': price})
-                item_product_ids[product_key].update({'colour': 'blue'})
+                item_product_ids[product_key].update({'colour': self.get_colour(response)})
                 item_product_ids[product_key].update({'currency': 'GBP'})
                 return item_product_ids
         return {}
@@ -60,7 +64,7 @@ class ProductSpider(CrawlSpider):
         return images
 
     def parse_products(self, response):
-        output = ProductItem()
+        output = ProductInfo()
         output['description'] = self.get_description(response)
         output['image_urls'] = self.get_image_urls(response)
         output['retailer_sku'] = self.get_retailer_sku(response)
