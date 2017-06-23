@@ -14,7 +14,8 @@ class MarcJacobsSpider(CrawlSpider):
 
     rules = (
         Rule(LxmlLinkExtractor(restrict_css=[
-             'a[title="NEW ARRIVALS"]']), follow=True),
+            'a[title="NEW ARRIVALS"]']),
+            follow=True),
         # Rule(LinkExtractor(restrict_css=[
         #         'li.mobile-hidden div.level-2 ul.level-3 a'])),
         # Rule(LinkExtractor(restrict_css=[
@@ -29,29 +30,26 @@ class MarcJacobsSpider(CrawlSpider):
                 restrict_css='div.product-tile.needsclick',
                 # attrs=('data-href',)
                 # tags=('div')
-                ),
+            ),
             callback='parse_product_page'),
     )
 
+    def next_request(self):
+        pass
+
     def parse_product_page(self, response):
 
-        id = self.product_id(response)
-        product_name = self.get_product_name(response)
-        product_category = self.get_product_category(response)
-        remaining_colors_elements = self.color_url_combinations(response)
-
-        single_product = MarcJacobProduct(
-            product_id=id,
-            product_name=product_name,
-            product_category=product_category,
+        product = MarcJacobProduct(
+            product_id=self.product_id(response),
+            product_name=self.get_product_name(response),
+            product_category=self.get_product_category(response),
             source_url=response.url,
             images=[],
             skus=[]
         )
-        # print(colored(product_name, 'blue'))
 
-        yield self.next_color_request(response, remaining_colors_elements,
-                                      single_product)
+        yield self.next_color_request(
+            response, self.color_url_requests(response), product)
 
     def next_color_request(self, response, remaining_color_elements, product,
                            source=[]):
@@ -111,6 +109,7 @@ class MarcJacobsSpider(CrawlSpider):
             yield self.next_color_request(response, remaining_color_elements,
                                           response.meta['product'])
         else:
+            print(colored(response.meta['image_sources'], 'blue'))
             yield self.next_image_request(response,
                                           response.meta['image_sources'],
                                           response.meta['product'])
@@ -125,12 +124,12 @@ class MarcJacobsSpider(CrawlSpider):
     def parse_images(self, response):
         images = json.loads(response.text[26:-2])
         response.meta['product'].extend(x['src'] for x in images['items'])
-
         if response.meta['path_to_images']:
             yield self.next_image_request(response,
                                           response.meta['path_to_images'],
                                           response.meta['product'])
         else:
+            print(colored(response.meta['product'], 'yellow'))
             yield response.meta['product']
 
     def get_product_category(self, response):
@@ -145,12 +144,12 @@ class MarcJacobsSpider(CrawlSpider):
             'select#va-size option[value!=""]::text').extract()
         return list(map(str.strip, options))
 
-    def color_url_combinations(self, selector):
+    def color_url_requests(self, selector):
         comibnations = []
         for color_tag in selector.css(
                 'a[class="swatchanchor"]'):
-            color = color_tag.css('::attr(href)').extract_first()
-            color_url = color_tag.css('::text').extract_first()
+            color_url = color_tag.css('::attr(href)').extract_first()
+            color = color_tag.css('::text').extract_first()
             comibnations.append({'color': color, 'color_url': color_url})
         return comibnations
 
@@ -197,7 +196,7 @@ class MarcJacobsSpider(CrawlSpider):
 
     def product_id(self, selector):
         id = selector.css(
-            'h3 span[itemprop="productID"]::text').extract()
+            'h3 span[itemprop="productID"]::text').extract_first()
         return id
 
     def image_paths(self, selector):
