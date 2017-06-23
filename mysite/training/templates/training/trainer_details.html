@@ -1,3 +1,6 @@
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
 {% if trainer %}
   <img src="{{trainer.picture}}" alt="{{trainer.name}}" width="200" height="200">
   <h2>
@@ -29,3 +32,4 @@
 {% else %}
     <p>No Trainers/Trainees are available.</p>
 {% endif %}
+{% endblock %}

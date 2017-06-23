@@ -1,0 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <table>
+      <tr>
+        <td>  <a href="/training/search">SEARCH TRAINEES</a> </td>
+        <td>  <input id="logout" onclick='location.href="{% url 'logout' %}"' type="button" value="Log Out"> </td>
+      </tr>
+      <tr> <h1>{% block content_title %}{% endblock %}</h1> </tr>
+    </table>
+    {% block content %}{% endblock %}
+
+    {% block footer %}{% endblock %}
+</body>
+</html>

@@ -15,7 +15,6 @@ class Technology(models.Model):
 class Assignment(models.Model):
     title = models.CharField(max_length=50)
     description = models.CharField(max_length=200)
-    # due_date = models.DateTimeField("20-3-2012")
     completion_status = models.BooleanField(default=False)
     technology_used = models.ForeignKey(Technology)
 
@@ -25,7 +24,8 @@ class Assignment(models.Model):
 
 class Trainee(models.Model):
     name = models.CharField(max_length=100)
-    picture = models.CharField(max_length=200)
+    picture = models.ImageField(max_length=200,
+                                upload_to="training/templates/media/")
     assignments = models.ManyToManyField(Assignment)
 
     def __str__(self):
@@ -34,7 +34,8 @@ class Trainee(models.Model):
 
 class Trainer(models.Model):
     name = models.CharField(max_length=100)
-    picture = models.CharField(max_length=200)
+    picture = models.ImageField(max_length=200,
+                                upload_to="training/templates/media/")
     assignments = models.ManyToManyField(Assignment)
     trainee = models.ForeignKey(Trainee)
 

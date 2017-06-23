@@ -1,3 +1,6 @@
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
 {% if technology %}
     <h2>
       Title : {{technology.name}}
@@ -13,3 +16,4 @@
 {% else %}
     <p>No Trainers/Trainees are available.</p>
 {% endif %}
+{% endblock %}
