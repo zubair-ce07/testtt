@@ -12,7 +12,10 @@ class ProductSpider(CrawlSpider):
         'https://www.alexachung.com/uk/',
     ]
 
-    rules = [Rule(LinkExtractor(allow=['.*\/uk\/([a-z]|-|\/|[0-9])+$']), 'parse_products', follow=True)]
+    rules = [Rule(LinkExtractor(allow=['.*\/uk\/'], restrict_css='.sub-menu')),
+             Rule(LinkExtractor(allow=['.*\/uk\/[a-z]+$'], restrict_css='.products.wrapper.grid.products-grid')),
+             Rule(LinkExtractor(allow=['.*\/uk\/[a-z-0-9]+$']), callback='parse_products')
+             ]
 
     def get_skus(self, response):
         item_details = {}
@@ -29,45 +32,42 @@ class ProductSpider(CrawlSpider):
                 item_product_ids[product_key].update({'size':
                                                         product_labels[next(iter(product_labels.keys()))][next(iter(
                                                         product_details.values()))]['value']})
-                item_product_ids[product_key].update(price)
-                item_product_ids[product_key].update({'color': 'blue'})
+                item_product_ids[product_key].update({'price': price})
+                item_product_ids[product_key].update({'colour': 'blue'})
                 item_product_ids[product_key].update({'currency': 'GBP'})
-                return {'skus': item_product_ids}
-        return {'skus': {}}
+                return item_product_ids
+        return {}
 
     def get_retailer_sku(self, response):
         product_id = response.css('.price-box.price-final_price')
-        return {'retailer_sku': product_id.css('::attr(data-product-id)').extract_first()}
+        return product_id.css('::attr(data-product-id)').extract_first()
 
     def get_price(self, response):
-        return {'price': response.css('.price-wrapper .price::text').extract_first()}
+        return response.css('.price-wrapper .price::text').extract_first()
 
     def get_url(self, response):
-        return {'url': response.url}
+        return response.url
 
     def get_name(self, response):
-        return {'name': response.css('.page-title::text').extract_first()}
+        return response.css('.page-title::text').extract_first()
 
     def get_description(self, response):
         description = response.css('.value')
-        return {'description': description.css('p::text').extract()}
+        return description.css('p::text').extract()
 
     def get_image_urls(self, response):
         images = response.css('.MagicZoom::attr(href)').extract()
-        return {'image_urls': images}
+        return images
 
-    def construct_output(self, response, output):
+    def parse_products(self, response):
+        output = ProductItem()
         output['description'] = self.get_description(response)
         output['image_urls'] = self.get_image_urls(response)
-        output['retailer_sku'] = self.get_image_urls(response)
-        output['name'] = self.get_image_urls(response)
-        output['url'] = self.get_image_urls(response)
+        output['retailer_sku'] = self.get_retailer_sku(response)
+        output['name'] = self.get_name(response)
+        output['url'] = self.get_url(response)
         output['skus'] = self.get_skus(response)
         output['gender'] = 'female'
         output['brand'] = 'Alexa Chung'
         output['date'] = time.strftime("%H:%M:%S")
-
         return output
-
-    def parse_products(self, response):
-        yield self.construct_output(response, ProductItem())
