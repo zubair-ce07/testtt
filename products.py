@@ -14,7 +14,7 @@ class AlexaChungSpider(CrawlSpider):
 
     rules = [Rule(LinkExtractor(restrict_css='.sub-menu')),
              Rule(LinkExtractor(allow=['.*[a-z]+$'], restrict_css='.products.wrapper.grid.products-grid')),
-             Rule(LinkExtractor(allow=['.*\/uk\/[a-z-0-9]+$']), callback='parse_products')
+             Rule(LinkExtractor(allow=['.*\/[a-z-0-9]+$']), callback='parse_products')
              ]
 
     def get_colour(self, response):
