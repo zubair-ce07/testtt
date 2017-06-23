@@ -24,9 +24,9 @@ class MixinIT(Mixin):
     market = 'IT'
     lang = 'it'
     start_urls = ['http://www.liujo.com/it']
-    kids = Mixin.kids + ['bambino']
+    kids = Mixin.kids + ['bambina']
     size = Mixin.size + ['Taglia']
-    color = Mixin.color + ['colore']
+    color = Mixin.color + ['Colore']
 
 
 class MixinDE(Mixin):
@@ -69,7 +69,10 @@ class LiujoParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment['image_urls'] = self.image_urls(response, sku_id[0])
-        garment['skus'] = self.skus(response, sku_id[0])
+        if clean(response.css('.shoe-size ::text')):
+            garment['skus'] = self.shoe_skus(response, sku_id[0])
+        else:
+            garment['skus'] = self.skus(response, sku_id[0])
         garment['brand'] = 'Liujo'
         if self.gender_check(garment['trail']):
             garment['gender'] = 'unisex-kids'
@@ -78,7 +81,7 @@ class LiujoParseSpider(BaseParseSpider):
 
     def gender_check(self, trail):
         soup = " ".join([t for _, t in trail or []]).lower()
-        return any(child in soup for child in Mixin.kids)
+        return any(child in soup for child in self.kids)
 
     def product_id(self, response):
         return clean(response.css('.product-ids::text'))
@@ -104,6 +107,20 @@ class LiujoParseSpider(BaseParseSpider):
         images = [img for img in raw_images if any(cid in img.lower() for cid in colour_ids)]
         return sorted(set(images), key=raw_images.index)
 
+    def shoe_skus(self, response, sku_id):
+        skus = {}
+        sizes = clean(response.css('.shoe-size ::text'))
+        size_price = clean(response.css('.shoe-price ::text'))
+        size_currecny = clean(response.css('.shoe-currency ::text'))
+
+        itera = 0
+        for size in sizes:
+            sku = self.product_pricing_common_new('', money_strs=[size_currecny[itera], size_price[itera]])
+            sku['size'] = size
+            skus[sku_id+"_"+size] = sku
+            itera += 1
+        return skus
+
     def skus(self, response, sku_id):
         skus = {}
         script_json = self.magento_product_data(response)
@@ -122,6 +139,8 @@ class LiujoParseSpider(BaseParseSpider):
                 if val['name'] in self.color:
                     if val['label'] and val['label'] not in self.color:
                         sku['colour'] = val['label']
+                    elif val['id']:
+                        sku['colour'] = val['id']
                 if val['name'] in self.size:
                     sku['size'] = val['label']
             skus[keys] = sku
