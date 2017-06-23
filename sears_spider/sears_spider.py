@@ -16,15 +16,20 @@ def process_layout_link(value):
 
 
 class SearsSpider(CrawlSpider):
+
     name = "sears"
-    store_id = '10153'
-    catalog_id = '12605'
     allowed_domains = ["sears.com", "chrono.shld.net"]
     start_urls = ["http://chrono.shld.net/segments/sears-us-hdrv3-flyouts.html?v=107"]
+
+    store_id = '10153'
+    catalog_id = '12605'
+
     product_search_url = "http://www.sears.com/service/search/productSearch"
-    layouts_url = "http://chrono.shld.net/segments/sears-us-hdrv3-flyouts.html?v=107"
-    variant_price_url = "http://www.sears.com/content/pdp/products/pricing/v2/get/price/display/json?priceMatch=Y&mem\
-    berType=G&urgencyDeal=Y&site=SEARS&offer="
+    product_url = "http://www.sears.com/content/pdp/config/products/v1/products/{}?site=sears"
+    variant_price_url = "http://www.sears.com/content/pdp/products/pricing/v2/get/price/display/json?"\
+                        "priceMatch=Y&memberType=G&urgencyDeal=Y&site=SEARS&offer="
+    products_hierarchy_url = "http://www.sears.com/browse/services/v1/hierarchy/fetch-paths-by-id/{}?" \
+                             "clientId=obusearch&\site=sears"
 
     rules = (
         Rule(LinkExtractor(allow=['/clothing'], deny=['/articles', 'filterList='], process_value=process_layout_link),
@@ -32,13 +37,10 @@ class SearsSpider(CrawlSpider):
     )
 
     def parse_categories(self, response):
-        try:
-            cat_group_id = re.findall('/b-(\d+)', response.url)
-        except IndexError:
-            return
+        cat_group_id = re.findall('/b-(\d+)', response.url)
+
         if cat_group_id:
-            url = 'http://www.sears.com/browse/services/v1/hierarchy/fetch-paths-by-id/%s?clientId=obusearch&\site=\
-            sears' % cat_group_id[0]
+            url = self.products_hierarchy_url.format(cat_group_id[0])
             yield Request(url, callback=self.parse_products_api,
                           meta={'cat_group_id': cat_group_id[0]})
 
@@ -79,15 +81,15 @@ class SearsSpider(CrawlSpider):
                 product_data['sin'],
                 meta={"url": product_data['url']})
 
-        next_page_num = data['currentPageNumber'] + 1
-        current_page = data['currentPageNumber']
+        next_page_num = 'pageNum={}'.format(data['currentPageNumber'] + 1)
+        current_page = 'pageNum={}'.format(data['currentPageNumber'])
+
         if data['pageEnd'] != data['productCount']:
-            url = response.url.replace('pageNum=%s' % current_page,
-                                       'pageNum=%s' % next_page_num)
+            url = response.url.replace(current_page, next_page_num)
             yield Request(url, callback=self.parse_products_data)
 
     def get_product_data_request(self, prod_sin, meta):
-        url = "http://www.sears.com/content/pdp/config/products/v1/products/%s?site=sears" % prod_sin
+        url = self.product_url.format(prod_sin)
         return Request(url, callback=self.parse_item, meta=meta)
 
     def parse_item(self, response):
@@ -108,20 +110,19 @@ class SearsSpider(CrawlSpider):
         return product_data['name']
 
     def get_retailer_sku(self, data):
-        return data['data']['productstatus']['ssin']
+        return data['data']['productstatus'].get('ssin','N/A')
 
     def get_brand_name(self, product_data):
-        try:
-            return product_data['brand']['name']
-        except:
-            return 'Sears'
+        return product_data.get('brand', {'name': 'Sears'}).get('name', 'Sears')
 
     def get_image_urls(self, product_data):
         imgs = product_data['assets']['imgs']
-        try:
-            return [img['vals'][0]['src'] for img in imgs]
-        except:
-            return 'N/A'
+        image_urls = []
+        for img_assets in imgs:
+            image_types = img_assets.get('vals', [])
+            for images_data in image_types:
+                image_urls.append(images_data.get('src', ''))
+        return image_urls
 
     def get_item_description(self, product_data):
         item_desc = []
@@ -138,40 +139,42 @@ class SearsSpider(CrawlSpider):
 
     def parse_skus(self, response, item):
         data = json.loads(response.body)
-        try:
-            prod_attrs = data['data']['attributes']['variants']
-        except KeyError:
+
+        prod_attrs = data['data'].get('attributes', {'variants': []})['variants']
+        if not prod_attrs:
             item['skus'] = {'sku': 'N/A'}
             return item
 
         skus = {}
         sku_ids = []
         for attr in prod_attrs:
-            size_elements = [size_elem['value']
-                             for size_elem in attr['attributes']
-                             if size_elem['name'] != "Color"]
-            size = '-'.join(size_elements)
-            color = [size_elem['value']
-                     for size_elem in attr['attributes']
-                     if size_elem['name'] == 'Color'] or ['N/A']
-            try:
-                sku_id = attr['offerId']
-            except KeyError:
-                sku_id = 'N/A'
+            size_elems = []
+            color = []
+            for elem in attr['attributes']:
+                if elem['name'] == "Color":
+                    color.append(elem['value'])
+                else:
+                    size_elems.append(elem['value'])
+
+            size = '-'.join(size_elems)
+            color = color or ['N/A']
+
+            default_sku_id = size + color[0]
+            sku_id = attr.get('offerId', default_sku_id)
             sku = {
                 'currency': 'USD',
                 'size': size,
                 'colour': color[0],
             }
             skus[sku_id] = sku
-            sku_ids.append(sku_id)
+            if sku_id is not default_sku_id:
+                sku_ids.append(sku_id)
 
-        first_sku = sku_ids.pop(0)
-        return Request(self.variant_price_url + first_sku,
-                       meta={'skus': skus, 'sku_ids': sku_ids,
-                             'req_sku_id': first_sku, 'item': item},
-                       callback=self.parse_sku_price,
-                       headers={'AuthID': 'aA0NvvAIrVJY0vXTc99mQQ=='})
+        if sku_ids:
+            return self.get_sku_request(sku_ids, skus, item)
+        else:
+            item['skus'] = skus
+            return item
 
     def parse_sku_price(self, response):
         item = response.meta['item']
@@ -186,15 +189,21 @@ class SearsSpider(CrawlSpider):
         skus[req_sku_id]['previous_prices'] = prices['regularPrice']['max']
 
         if sku_ids:
-            first_sku = sku_ids.pop(0)
-            return Request(self.variant_price_url + first_sku,
-                           meta={'skus': skus, 'sku_ids': sku_ids,
-                                 'req_sku_id': first_sku, 'item': item},
-                           callback=self.parse_sku_price,
-                           headers={'AuthID': 'aA0NvvAIrVJY0vXTc99mQQ=='})
+            return self.get_sku_request(sku_ids, skus, item)
         else:
             item['skus'] = skus
             return item
+
+    def get_sku_request(self, sku_ids, skus, item):
+        first_sku = sku_ids.pop(0)
+        meta = {'skus': skus,
+                'sku_ids': sku_ids,
+                'req_sku_id': first_sku,
+                'item': item}
+        return Request(self.variant_price_url + first_sku,
+                       callback=self.parse_sku_price,
+                       headers={'AuthID': 'aA0NvvAIrVJY0vXTc99mQQ=='},
+                       meta=meta,)
 
     def clean_object(self, obj):
         clean_obj = [x.strip('\t\n ') for x in obj]
