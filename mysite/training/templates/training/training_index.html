@@ -1,4 +1,9 @@
-<a href="/training/search">SEARCH TRAINEES</a>
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
+{% if user_name %}
+    <h1>Welcome : {{user_name}}</h1>
+{% endif %}
 {% if trainers_list %}
     <ul>
     {% for trainer in trainers_list %}
@@ -11,3 +16,4 @@
 {% else %}
     <p>No Trainers/Trainees are available.</p>
 {% endif %}
+{% endblock %}
