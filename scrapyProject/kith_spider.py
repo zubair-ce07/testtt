@@ -6,17 +6,18 @@ class KithSpider(CrawlSpider):
     name = "kith"
     start_urls = ['https://kith.com/']
     allowed_domains = ['kith.com']
-    DOWNLOAD_DELAY = 0.5
+    custom_settings = {'DOWNLOAD_DELAY': 0.5}
     css = ['ul.ksplash-header-upper-items', 'ul li.main-nav-list-item']
+    restricted_domains = ('accessories', 'accessories-women')
     rules = (
-        Rule(LinkExtractor(restrict_css=css)),
+        Rule(LinkExtractor(restrict_css=css, deny=restricted_domains)),
         Rule(LinkExtractor(restrict_css='a.product-card-info'), callback="parse_products"),
     )
 
     def parse_products(self, response):
         garment = {}
         garment['description'] = self.get_description(response)
-        garment['image-urls'] = self.get_image_urls(response)
+        garment['image_urls'] = self.get_image_urls(response)
         garment['name'] = self.get_name(response)
         garment['retailer_sku'] = self.get_retailer_sku(response)
         garment['skus'] = self.get_skus(response)
@@ -25,16 +26,18 @@ class KithSpider(CrawlSpider):
         return garment
 
     def get_image_urls(self, response):
-        css = 'div.super-slider-thumbnails-slide-wrapper img::attr(src)'
+        css = 'img.js-super-slider-photo-img::attr(src)'
         return response.css(css).extract()
 
     def get_name(self, response):
         css = 'h1.product-header-title span::text'
-        return response.css(css).extract_first().strip()
+        names = response.css(css).extract()
+        return names[0].strip()
 
     def get_retailer_sku(self, response):
         css = '#product_id::attr(value)'
-        return response.css(css).extract_first()
+        retailer_skus = response.css(css).extract()
+        return retailer_skus[0]
 
     def get_url(self, response):
         return response.url
@@ -45,7 +48,8 @@ class KithSpider(CrawlSpider):
             return "unisex - kids"
 
         css = 'nav.breadcrumb a::attr(href)'
-        product_header = response.css(css).extract_first().strip()
+        product_headers = response.css(css).extract()
+        product_header = product_headers[0].strip()
         if "women" in product_header:
             return "women"
         return "men"
@@ -68,17 +72,19 @@ class KithSpider(CrawlSpider):
         product_ids = response.css(products_id_css).extract()
 
         currency_css = 'div.product-single-header meta::attr(content)'
-        currency = response.css(currency_css).extract_first()
+        currencies = response.css(currency_css).extract()
+        currency = currencies[0]
 
         color_css = 'div.product-single-header div span::text'
-        color = response.css(color_css).extract_first().strip()
+        colors = response.css(color_css).extract()
+        color = colors[0].strip()
 
-        price_css = 'span.product-header-title -price::attr(content)'
-        price = response.css(price_css).extract_first()
+        price_css = '#ProductPrice::text'
+        prices = response.css(price_css).extract()
+        price = prices[0].strip()
 
         details = {"colour": color, "currency": currency, "price": price}
         for product_id, size in zip(product_ids, sizes):
-            skus[product_id] = {}
             skus[product_id] = details.copy()
             skus[product_id]["size"] = size.strip()
         return skus
