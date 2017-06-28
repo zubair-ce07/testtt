@@ -31,6 +31,11 @@ def get_input():
 
 if __name__ == "__main__":
     option, date, path_to_files = get_input()
+    weather_record = WeatherRecord(path_to_files)
 
-    record = WeatherRecord()
-    record.print_weather_data(option, date, path_to_files)
+    if option == 'a':
+        weather_record.print_average_weather_report(date)
+    elif option == 'e':
+        weather_record.print_extreme_weather_report(date)
+    elif option == 'c':
+        weather_record.print_monthly_report(date)

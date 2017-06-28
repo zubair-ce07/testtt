@@ -14,7 +14,7 @@ class Weather:
         self.max_humidity = max_humidity
         self.min_humidity = min_humidity
         self.mean_humidity = mean_humidity
-        self.month_name = {
+        self.MONTH_NAMES_MAP = {
                     '1': 'January', '2': 'February', '3': 'March',
                     '4': 'April', '5': 'May', '6': 'June',
                     '7': 'July', '8': 'August', '9': 'September',
