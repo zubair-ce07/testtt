@@ -2,7 +2,7 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if trainer %}
-  <img src="{{trainer.picture}}" alt="{{trainer.name}}" width="200" height="200">
+  <img src="{{ image_url }}" alt="{{trainer.name}}" width="200" height="220">
   <h2>
     Name : {{trainer.name}}
   </h2>
@@ -10,7 +10,7 @@
     <h2>
       Trainee Assigned :
     </h2>
-      <a href="/training/trainee/{{ trainee.id }}">{{ trainee.name }}</a>
+      <a href="{% url 'trainee_details' trainee.id %}">{{ trainee.name }}</a>
   {% else %}
       <p>No trainees assigned.</p>
   {% endif %}
@@ -22,7 +22,9 @@
     <ul>
     {% for assignment in assignments %}
         <li>
-          <a href="/training/assignment/{{ assignment.id }}">{{ assignment.title }}</a>
+          <a href="{% url 'assignment_details' assignment.id %}">
+            {{ assignment.title }}
+          </a>
         </li>
     {% endfor %}
     </ul>

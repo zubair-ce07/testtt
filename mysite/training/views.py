@@ -8,6 +8,7 @@ from forms import LoginForm, SignUpForm
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib.auth.models import User
 from django.urls import reverse, reverse_lazy
+from django.conf import settings
 
 
 def training_index(request):
@@ -33,9 +34,17 @@ def trainee_details(request, trainee_id):
         return redirect(reverse("login"))
     trainee = Trainee.objects.get(id=trainee_id)
     template = loader.get_template('training/trainee_details.html')
+    image_url = settings.MEDIA_ROOT + trainee.picture.url[1:]
+    try:
+        with open(image_url) as image:
+            image_url = trainee.picture.url
+    except IOError as e:
+        image_url = " /training/templates/media/default.png"
+
     context = {
         'trainee': trainee,
-        'assignments': trainee.assignments.filter()
+        'assignments': trainee.assignments.filter(),
+        'image_url': image_url
     }
     return HttpResponse(template.render(context, request))
 
@@ -45,10 +54,18 @@ def trainer_details(request, trainer_id):
         return redirect(reverse("login"))
     trainer = Trainer.objects.get(id=trainer_id)
     template = loader.get_template('training/trainer_details.html')
+    image_url = settings.MEDIA_ROOT + trainer.picture.url[1:]
+    try:
+        with open(image_url) as image:
+            image_url = trainer.picture.url
+    except IOError as e:
+        image_url = " /training/templates/media/default.png"
+
     context = {
         'trainer': trainer,
         'assignments': trainer.assignments.filter(),
-        'trainee': trainer.trainee
+        'trainee': trainer.trainee,
+        'image_url': image_url
     }
     return HttpResponse(template.render(context, request))
 
@@ -84,7 +101,7 @@ def search(request):
         if not q:
             error = True
         else:
-            trainees = Trainee.objects.filter(name=q)
+            trainees = Trainee.objects.filter(name__contains=q)
             return render(request, 'training/trainee_search_results.html',
                                    {'trainees': trainees, 'query': q})
     return render(request, 'training/search_trainees.html',
@@ -125,7 +142,6 @@ def signup(request):
         return redirect(reverse('training_index'))
     if not request.POST:
         form = SignUpForm(None)
-        # ?return HttpResponse("GET Req")
         return render(request, template_name, {'form': form})
     form = SignUpForm(request.POST)
 

@@ -2,9 +2,8 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if trainee %}
-{{ trainee.picture }}
 {% load static %}
-  <img src="{% static trainee.picture.url %}" alt="{{trainee.name}}" width="200" height="200"/>
+  <img src="{{ image_url }}" alt="{{trainee.name}}" width="200" height="220"/>
   <h2>
     Name : {{trainee.name}}
   </h2>
@@ -15,7 +14,9 @@
     <ul>
     {% for assignment in assignments %}
         <li>
-          <a href="/training/assignment/{{ assignment.id }}">{{ assignment.title }}</a>
+          <a href="{% url 'assignment_details' assignment.id %}">
+            {{ assignment.title }}
+          </a>
         </li>
     {% endfor %}
     </ul>
