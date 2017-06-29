@@ -129,9 +129,7 @@ class MarcJacobsSpider(CrawlSpider):
             response.meta['product'])
 
     def parse_images(self, response):
-        images = json.loads(response.text[26:-2])
-        new = re.search('.*\((.*)\)', response.text).group(1)
-        print(new)
+        images = json.loads(re.search('.*\((.*)\)', response.text).group(1))
         response.meta['product']['images'].extend(
             x['src'] for x in images['items'])
         return self.next_request(response,
