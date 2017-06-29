@@ -9,7 +9,11 @@
             <!-- <p>Found {{ books|length }} book{{ books|pluralize }}.</p> -->
             <ul>
                 {% for trainee in trainees %}
-                <li><a href="/training/trainee/{{ trainee.id }}">{{ trainee.name }}</a></li>
+                <li>
+                  <a href="{% url 'trainee_details' trainee.id %}">
+                    {{ trainee.name }}
+                  </a>
+                </li>
                 {% endfor %}
             </ul>
         {% else %}

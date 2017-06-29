@@ -6,8 +6,12 @@
 <body>
     <table>
       <tr>
-        <td>  <a href="/training/search">SEARCH TRAINEES</a> </td>
-        <td>  <input id="logout" onclick='location.href="{% url 'logout' %}"' type="button" value="Log Out"> </td>
+        <td>
+          <a href="{% url 'search' %}">SEARCH TRAINEES</a>
+        </td>
+        <td>
+          <input id="logout" onclick='location.href="{% url 'logout' %}"' type="button" value="Log Out">
+        </td>
       </tr>
       <tr> <h1>{% block content_title %}{% endblock %}</h1> </tr>
     </table>
