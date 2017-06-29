@@ -90,5 +90,5 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 FEED_FORMAT = "json"
-FEED_EXPORT_FIELDS = ["product_id", "product_name", "product_category","source_url", "images", "skus"]
+FEED_EXPORT_FIELDS = ["product_id", "product_name", "product_category", "source_url", "images", "skus"]
 FEED_URI = "marcjacobs.json"

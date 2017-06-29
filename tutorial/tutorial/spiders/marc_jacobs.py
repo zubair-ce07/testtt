@@ -4,33 +4,30 @@ import json
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 from .product import MarcJacobProduct
-from termcolor import colored
 
 
 class MarcJacobsSpider(CrawlSpider):
     name = "marcjacobs_spider"
 
-    start_urls = ['https://www.marcjacobs.com/']
+    start_urls = ['https://www.marcjacobs.com']
 
     rules = (
-        Rule(LxmlLinkExtractor(restrict_css=[
-            'a[title="NEW ARRIVALS"]']),
-            follow=True),
-        # Rule(LinkExtractor(restrict_css=[
-        #         'li.mobile-hidden div.level-2 ul.level-3 a'])),
-        # Rule(LinkExtractor(restrict_css=[
-        #         'li.mobile-hidden div.level-2 ul.menu-vertical a'])),
-        # Rule(LinkExtractor(restrict_css=[
-        #         'li.mobile-hidden:first-of-type a'])),
-        # Rule(LinkExtractor(restrict_css=['a.product-page-link'],
-        #                    attrs=('href',),
-        #                    callback='parse_product_page')),
+        Rule(
+            LxmlLinkExtractor(
+                restrict_css=[
+                    'li.mobile-hidden div.level-2 ul.level-3 a',
+                    'li.mobile-hidden div.level-2 ul.menu-vertical a',
+                    'li.mobile-hidden:first-of-type a'],
+                allow=(r"https://www.marcjacobs.com/*"),
+                deny=(r".*\?.*"),
+            ),
+            follow=True
+        ),
         Rule(
             LxmlLinkExtractor(
                 restrict_css='div.product-tile.needsclick',
-                # attrs=('data-href',)
-                # tags=('div')
-            ),
+                tags=("div"),
+                attrs=("data-href"),),
             callback='parse_product_page'),
     )
 
@@ -38,8 +35,7 @@ class MarcJacobsSpider(CrawlSpider):
             self, response, color_requests,
             size_requests, image_requests, product):
 
-        next_color_request = self.single_color_request(
-            color_requests)
+        next_color_request = self.single_color_request(color_requests)
         return response.follow(
             next_color_request['color_url'] + '&Quantity=1&format=ajax',
             self.parse_color_of_product_page,
@@ -134,6 +130,8 @@ class MarcJacobsSpider(CrawlSpider):
 
     def parse_images(self, response):
         images = json.loads(response.text[26:-2])
+        new = re.search('.*\((.*)\)', response.text).group(1)
+        print(new)
         response.meta['product']['images'].extend(
             x['src'] for x in images['items'])
         return self.next_request(response,
@@ -152,7 +150,8 @@ class MarcJacobsSpider(CrawlSpider):
     def get_size_options(self, response):
         options = response.css(
             'select#va-size option[value!=""]::text').extract()
-        return list(map(str.strip, options))
+        test = list(map(str.strip, options))
+        return test
 
     def color_requests(self, selector):
         comibnations = []
@@ -168,11 +167,12 @@ class MarcJacobsSpider(CrawlSpider):
 
         for size_tag in selector.css(
                 'select[id="va-size"] option[value!=""]'):
-            if not selector.css(
-                    'li.variant-dropdown.double[style="display: none;"]'):
-                size = None
-            else:
+            if selector.css(
+                r'li.attribute.variant-dropdown.double input#onesizeproduct'
+                    + '[value="false"]').extract():
                 size = size_tag.css('::text').extract_first().strip('\n')
+            else:
+                size = None
             size_url = size_tag.css('::attr(value)').extract_first()
             comibnations.append(
                 {'size': size, 'size_url': size_url, 'color': color})
@@ -204,7 +204,7 @@ class MarcJacobsSpider(CrawlSpider):
     def price_of_size(self, selector):
         price = selector.css(
             'span[itemprop="price"]::attr(content)').extract_first()
-        return re.search('USD (\d{1,4}).00', price).group(1)
+        return re.search('USD (\d{1,4}).*', price).group(1)
 
     def product_id(self, selector):
         return selector.css(
