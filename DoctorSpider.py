@@ -20,17 +20,14 @@ class DoctorSpider(scrapy.Spider):
         doctor_ids = response.xpath('//div[@class="search-results-physician"]/input[@type = "hidden"]/@value').extract()
         physicianid_keys = response.xpath('//div[@class="search-results-physician"]/input[@type = "hidden"]/@name').extract()
         viewprofile_keys = response.xpath('//div[@class="view-profile-wrapper"]/input[@type = "submit"]/@name').extract()
-        doctor_item_loader = FormDoctorProfileItems()
         viewstate = response.xpath('//input[@id = "__VIEWSTATE"]/@value').extract_first()
         url = self.start_urls[0]
         for index in range(0, len(doctor_ids)):
             id = (doctor_ids[index])
             physicianid_key = physicianid_keys[index]
             viewprofile_key = viewprofile_keys[index]
-            yield FormRequest(url, method='POST', formdata={physicianid_key: id, viewprofile_key: 'View Full Profile', '__VIEWSTATE': viewstate}, callback=doctor_item_loader.extract_doctor_profile_info)
-
-
-class FormDoctorProfileItems():
+            yield FormRequest(url, method='POST', formdata={physicianid_key: id, viewprofile_key: 'View Full Profile', '__VIEWSTATE': viewstate}, callback=self.extract_doctor_profile_info)
+            break
 
     def get_graduation_info(self, response):
         graduate_education = []
