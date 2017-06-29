@@ -35,7 +35,7 @@ class MarcJacobsSpider(CrawlSpider):
             self, response, color_requests,
             size_requests, image_requests, product):
 
-        next_color_request = self.single_color_request(color_requests)
+        next_color_request = self.single_request(color_requests)
         return response.follow(
             next_color_request['color_url'] + '&Quantity=1&format=ajax',
             self.parse_color_of_product_page,
@@ -63,7 +63,7 @@ class MarcJacobsSpider(CrawlSpider):
     def next_size_request(
             self, response, color_requests,
             size_requests, image_requests, product):
-        next_size_request = self.single_size_request(size_requests)
+        next_size_request = self.single_request(size_requests)
         return response.follow(
             next_size_request['size_url'] + '&Quantity=1&format=ajax',
             self.parse_color_size_product_page,
@@ -103,7 +103,6 @@ class MarcJacobsSpider(CrawlSpider):
             images=[],
             skus=[]
         )
-
         return self.next_request(
             response, self.color_requests(response), [], [], product)
 
@@ -130,8 +129,8 @@ class MarcJacobsSpider(CrawlSpider):
 
     def parse_images(self, response):
         images = json.loads(re.search('.*\((.*)\)', response.text).group(1))
-        response.meta['product']['images'].extend(
-            x['src'] for x in images['items'])
+        response.meta[
+            'product']['images'].extend(x['src'] for x in images['items'])
         return self.next_request(response,
                                  [],
                                  [],
@@ -148,8 +147,7 @@ class MarcJacobsSpider(CrawlSpider):
     def get_size_options(self, response):
         options = response.css(
             'select#va-size option[value!=""]::text').extract()
-        test = list(map(str.strip, options))
-        return test
+        return list(map(str.strip, options))
 
     def color_requests(self, selector):
         comibnations = []
@@ -162,7 +160,6 @@ class MarcJacobsSpider(CrawlSpider):
 
     def size_requests(self, color, selector):
         comibnations = []
-
         for size_tag in selector.css(
                 'select[id="va-size"] option[value!=""]'):
             if selector.css(
@@ -176,27 +173,17 @@ class MarcJacobsSpider(CrawlSpider):
                 {'size': size, 'size_url': size_url, 'color': color})
         return comibnations
 
-    def single_size_request(self, remaining_size_requests):
-        if remaining_size_requests:
-            return remaining_size_requests.pop(0)
-        return None
-
-    def single_color_request(self, remaining_color_requests):
-        if remaining_color_requests:
-            return remaining_color_requests.pop(0)
+    def single_request(self, remaining_requests):
+        if remaining_requests:
+            return remaining_requests.pop(0)
         return None
 
     def product_sku(self, response):
-        size_color = response.meta['color_name']
-        quantity_of_product = self.product_quantity(response)
-        availability = True if quantity_of_product else False
-        price_of_size = self.price_of_size(response)
-
         return {
-            'color': size_color,
-            'price': price_of_size,
+            'color': response.meta['color_name'],
+            'price': self.price_of_size(response),
             'size': response.meta['size'],
-            'availability': availability
+            'availability': True if self.product_quantity(response) else False
         }
 
     def price_of_size(self, selector):
