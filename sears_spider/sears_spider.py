@@ -16,7 +16,6 @@ def process_layout_link(value):
 
 
 class SearsSpider(CrawlSpider):
-
     name = "sears"
     allowed_domains = ["sears.com", "chrono.shld.net"]
     start_urls = ["http://chrono.shld.net/segments/sears-us-hdrv3-flyouts.html?v=107"]
@@ -45,12 +44,12 @@ class SearsSpider(CrawlSpider):
                           meta={'cat_group_id': cat_group_id[0]})
 
     def parse_products_api(self, response):
-        data = json.loads(response.body)
-        data = data['data'][0]
+        json_response = json.loads(response.body)
+        json_response = json_response['data'][0]
 
-        catgroup_id = data['catgroupId']
-        catgroup_id_path = data['catgroups'][0]['idPath']
-        name_path = urllib.parse.quote_plus(data['catgroups'][0]['namePath'])
+        catgroup_id = json_response['catgroupId']
+        catgroup_id_path = json_response['catgroups'][0]['idPath']
+        name_path = urllib.parse.quote_plus(json_response['catgroups'][0]['namePath'])
         url = "http://www.sears.com/service/search/productSearch"
         params = {
             'pageNum': 1,
@@ -79,7 +78,7 @@ class SearsSpider(CrawlSpider):
         for product_data in data['products']:
             yield self.get_product_data_request(
                 product_data['sin'],
-                meta={"url": product_data['url']})
+                {"url": product_data['url']})
 
         next_page_num = 'pageNum={}'.format(data['currentPageNumber'] + 1)
         current_page = 'pageNum={}'.format(data['currentPageNumber'])
@@ -93,42 +92,67 @@ class SearsSpider(CrawlSpider):
         return Request(url, callback=self.parse_item, meta=meta)
 
     def parse_item(self, response):
-        data = json.loads(response.body)
-        product_data = data['data']['product']
+        response_data = json.loads(response.body)
+        product_data = response_data['data']['product']
 
         item = SearsItem()
+        retailer_sku = self.get_retailer_sku(response_data)
+        if not retailer_sku:
+            return
+
+        item['retailer_sku'] = retailer_sku
         item['name'] = self.get_name(product_data)
         item['brand'] = self.get_brand_name(product_data)
         item['image_urls'] = self.get_image_urls(product_data)
         item['desc'] = self.get_item_description(product_data)
-        item['retailer_sku'] = self.get_retailer_sku(data)
         item['url'] = self.get_item_url(response)
+        item['category'] = self.get_category(response)
+        item['gender'] = self.get_gender(response)
 
-        return self.parse_skus(response, item)
+        skus, sku_ids = self.get_sku_info(response)
+        if sku_ids:
+            return self.get_sku_request(sku_ids, skus, item)
+        else:
+            item['skus'] = skus or {'sku': 'N/A'}
+            return item
+
+    def get_gender(self, response):
+        response_data = json.loads(response.body)['data']
+        web_paths = response_data["productmapping"]["primaryWebPath"]
+        if [val for val in web_paths if 'Men\'s' in val['name']]:
+            return "male"
+        elif [val for val in web_paths if 'Women\'s' in val['name']]:
+            return "female"
+        else:
+            return "baby"
 
     def get_name(self, product_data):
         return product_data['name']
 
     def get_retailer_sku(self, data):
-        return data['data']['productstatus'].get('ssin','N/A')
+        return data['data']['productstatus'].get('ssin')
 
     def get_brand_name(self, product_data):
-        return product_data.get('brand', {'name': 'Sears'}).get('name', 'Sears')
+        return product_data.get('brand', {}).get('name', 'Sears')
 
     def get_image_urls(self, product_data):
-        imgs = product_data['assets']['imgs']
         image_urls = []
-        for img_assets in imgs:
-            image_types = img_assets.get('vals', [])
-            for images_data in image_types:
-                image_urls.append(images_data.get('src', ''))
+        for img_assets in product_data['assets']['imgs']:
+            images = [image['src'] for image in
+                      img_assets.get('vals', []) if image.get('src')]
+            image_urls.extend(images)
         return image_urls
+
+    def get_category(self, response):
+        response_data = json.loads(response.body)['data']
+        web_paths = response_data["productmapping"]["primaryWebPath"]
+        return max(web_paths, key=lambda x: x['level']).get('name', 'N/A')
 
     def get_item_description(self, product_data):
         item_desc = []
+        tags = 'li::text, p::text, strong::text'
         for desc in product_data['desc']:
             sel = Selector(text=desc['val'])
-            tags = 'li::text, p::text, strong::text'
             desc_points = sel.css(tags).extract()
             item_desc.extend(desc_points)
 
@@ -137,13 +161,9 @@ class SearsSpider(CrawlSpider):
     def get_item_url(self, response):
         return urlparse.urljoin('http://sears.com', response.meta['url'])
 
-    def parse_skus(self, response, item):
+    def get_sku_info(self, response):
         data = json.loads(response.body)
-
         prod_attrs = data['data'].get('attributes', {'variants': []})['variants']
-        if not prod_attrs:
-            item['skus'] = {'sku': 'N/A'}
-            return item
 
         skus = {}
         sku_ids = []
@@ -170,11 +190,7 @@ class SearsSpider(CrawlSpider):
             if sku_id is not default_sku_id:
                 sku_ids.append(sku_id)
 
-        if sku_ids:
-            return self.get_sku_request(sku_ids, skus, item)
-        else:
-            item['skus'] = skus
-            return item
+        return skus, sku_ids
 
     def parse_sku_price(self, response):
         item = response.meta['item']
