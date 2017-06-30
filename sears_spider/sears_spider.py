@@ -72,65 +72,64 @@ class SearsSpider(CrawlSpider):
         return Request(complete_url, callback=self.parse_products_data)
 
     def parse_products_data(self, response):
-        data = json.loads(response.body)
-        data = data['data']
+        json_data = json.loads(response.body)['data']
 
-        for product_data in data['products']:
+        for product_data in json_data['products']:
             yield self.get_product_data_request(
                 product_data['sin'],
                 {"url": product_data['url']})
 
-        next_page_num = 'pageNum={}'.format(data['currentPageNumber'] + 1)
-        current_page = 'pageNum={}'.format(data['currentPageNumber'])
+        next_page_num = 'pageNum={}'.format(json_data['currentPageNumber'] + 1)
+        current_page = 'pageNum={}'.format(json_data['currentPageNumber'])
 
-        if data['pageEnd'] != data['productCount']:
+        if json_data['pageEnd'] != json_data['productCount']:
             url = response.url.replace(current_page, next_page_num)
             yield Request(url, callback=self.parse_products_data)
 
     def get_product_data_request(self, prod_sin, meta):
         url = self.product_url.format(prod_sin)
-        return Request(url, callback=self.parse_item, meta=meta)
+        return Request(url, callback=self.parse_apparel_item, meta=meta)
 
-    def parse_item(self, response):
-        response_data = json.loads(response.body)
-        product_data = response_data['data']['product']
+    def parse_apparel_item(self, response):
+        response_data = json.loads(response.body)['data']
+        product_data = response_data['product']
 
-        item = SearsItem()
+        apparel_item = SearsItem()
         retailer_sku = self.get_retailer_sku(response_data)
         if not retailer_sku:
             return
 
-        item['retailer_sku'] = retailer_sku
-        item['name'] = self.get_name(product_data)
-        item['brand'] = self.get_brand_name(product_data)
-        item['image_urls'] = self.get_image_urls(product_data)
-        item['desc'] = self.get_item_description(product_data)
-        item['url'] = self.get_item_url(response)
-        item['category'] = self.get_category(response)
-        item['gender'] = self.get_gender(response)
+        apparel_item['retailer_sku'] = retailer_sku
+        apparel_item['name'] = self.get_name(product_data)
+        apparel_item['brand'] = self.get_brand_name(product_data)
+        apparel_item['image_urls'] = self.get_image_urls(product_data)
+        apparel_item['desc'] = self.get_item_description(product_data)
+        apparel_item['url'] = self.get_item_url(response)
 
-        skus, sku_ids = self.get_sku_info(response)
-        if sku_ids:
-            return self.get_sku_request(sku_ids, skus, item)
-        else:
-            item['skus'] = skus or {'sku': 'N/A'}
-            return item
-
-    def get_gender(self, response):
-        response_data = json.loads(response.body)['data']
         web_paths = response_data["productmapping"]["primaryWebPath"]
-        if [val for val in web_paths if 'Men\'s' in val['name']]:
-            return "male"
-        elif [val for val in web_paths if 'Women\'s' in val['name']]:
-            return "female"
+        apparel_item['category'] = self.get_category(web_paths)
+        apparel_item['gender'] = self.get_gender(web_paths)
+
+        skus, sku_ids = self.get_sku_info(response_data)
+        if sku_ids:
+            return self.get_sku_request(sku_ids, skus, apparel_item)
         else:
-            return "baby"
+            apparel_item['skus'] = skus or {'sku': 'one-size'}
+            return apparel_item
+
+    def get_gender(self, web_paths):
+        if [web_path for web_path in web_paths if 'Men\'s' in web_path['name']]:
+            return "male"
+        elif [web_path for web_path in web_paths if 'Women\'s' in web_path['name']]:
+            return "female"
+
+        return "baby"
 
     def get_name(self, product_data):
         return product_data['name']
 
-    def get_retailer_sku(self, data):
-        return data['data']['productstatus'].get('ssin')
+    def get_retailer_sku(self, response_data):
+        return response_data['productstatus'].get('ssin')
 
     def get_brand_name(self, product_data):
         return product_data.get('brand', {}).get('name', 'Sears')
@@ -143,10 +142,9 @@ class SearsSpider(CrawlSpider):
             image_urls.extend(images)
         return image_urls
 
-    def get_category(self, response):
-        response_data = json.loads(response.body)['data']
-        web_paths = response_data["productmapping"]["primaryWebPath"]
-        return max(web_paths, key=lambda x: x['level']).get('name', 'N/A')
+    def get_category(self, web_paths):
+        last_web_path = max(web_paths, key=lambda web_path: web_path['level'])
+        return last_web_path.get('name', 'N/A')
 
     def get_item_description(self, product_data):
         item_desc = []
@@ -161,9 +159,8 @@ class SearsSpider(CrawlSpider):
     def get_item_url(self, response):
         return urlparse.urljoin('http://sears.com', response.meta['url'])
 
-    def get_sku_info(self, response):
-        data = json.loads(response.body)
-        prod_attrs = data['data'].get('attributes', {'variants': []})['variants']
+    def get_sku_info(self, response_data):
+        prod_attrs = response_data.get('attributes', {}).get('variants',[])
 
         skus = {}
         sku_ids = []
@@ -198,8 +195,8 @@ class SearsSpider(CrawlSpider):
         sku_ids = response.meta['sku_ids']
         req_sku_id = response.meta['req_sku_id']
 
-        data = json.loads(response.body)
-        prices = data['priceDisplay']['response'][0]['prices']
+        json_data = json.loads(response.body)
+        prices = json_data['priceDisplay']['response'][0]['prices']
 
         skus[req_sku_id]['price'] = prices['finalPrice']['max']
         skus[req_sku_id]['previous_prices'] = prices['regularPrice']['max']
