@@ -7,6 +7,7 @@ import csv
 import argparse
 from termcolor import colored, cprint
 
+
 class ExtremeWeatherReport(object):
     def __init__(self):
         self.highest_temp_val = -999
@@ -33,46 +34,47 @@ class WeatherChartReport(object):
 
 
 class MakeReports(object):
-        def make_extreme_report(self, files, dir_path):
-            myreport = ExtremeWeatherReport()
-            extract_temp_vals = ExtractTemperatureValuesFromFiles()
-            for filename in files:
-                self.read_files(filename, dir_path, '-e', myreport, extract_temp_vals)
-            return myreport
+    def make_extreme_report(self, files, dir_path):
+        myreport = ExtremeWeatherReport()
+        extract_temp_vals = ExtractTemperatureValuesFromFiles()
+        for filename in files:
+            self.read_files(filename, dir_path, '-e', myreport, extract_temp_vals)
+        return myreport
 
-        def make_average_report(self, filename, dir_path):
-            myreport = AverageWeatherReport()
-            extract_temp_vals = ExtractTemperatureValuesFromFiles()
-            self.read_files(filename, dir_path, '-a', myreport, extract_temp_vals)
-            myreport.avg_highest_temp = self.compute_average(myreport.avg_highest_temp)
-            myreport.avg_lowest_temp = self.compute_average(myreport.avg_lowest_temp)
-            myreport.avg_humidity = self.compute_average(myreport.avg_humidity)
-            return myreport
+    def make_average_report(self, filename, dir_path):
+        myreport = AverageWeatherReport()
+        extract_temp_vals = ExtractTemperatureValuesFromFiles()
+        self.read_files(filename, dir_path, '-a', myreport, extract_temp_vals)
+        myreport.avg_highest_temp = self.compute_average(myreport.avg_highest_temp)
+        myreport.avg_lowest_temp = self.compute_average(myreport.avg_lowest_temp)
+        myreport.avg_humidity = self.compute_average(myreport.avg_humidity)
+        return myreport
 
-        def make_chart_report(self, filename, dir_path, year):
-            myreport = WeatherChartReport()
-            myreport.year = year
-            extract_temp_vals = ExtractTemperatureValuesFromFiles()
-            self.read_files(filename, dir_path, '-c', myreport, extract_temp_vals)
-            return myreport
+    def make_chart_report(self, filename, dir_path, year):
+        myreport = WeatherChartReport()
+        myreport.year = year
+        extract_temp_vals = ExtractTemperatureValuesFromFiles()
+        self.read_files(filename, dir_path, '-c', myreport, extract_temp_vals)
+        return myreport
 
-        def read_files(self, filename, dir_path,flag, myreport, extract_temp_vals):
-            with open(os.path.join(os.sep, dir_path, filename), 'r') as csvfile:
-                next(csvfile)
-                reader = csv.DictReader(csvfile)
-                for rows in reader:
-                    if Validator.temperature_values_are_none(rows):
-                        break
-                    if flag == '-e':
-                        myreport = extract_temp_vals.extract_extreme_vals(myreport, rows)
-                    elif flag == '-a':
-                        myreport = extract_temp_vals.extract_average_vals(myreport, rows)
-                    else:
-                        myreport = extract_temp_vals.extract_chart_report_vals(myreport, rows)
-                        myreport.month = FormatVariables.fetch_standard_month_name(filename)
+    def read_files(self, filename, dir_path,flag, myreport, extract_temp_vals):
+        with open(os.path.join(os.sep, dir_path, filename), 'r') as csvfile:
+            next(csvfile)
+            reader = csv.DictReader(csvfile)
+            for rows in reader:
+                if Validator.temperature_values_are_none(rows):
+                    break
+                if flag == '-e':
+                    myreport = extract_temp_vals.extract_extreme_vals(myreport, rows)
+                elif flag == '-a':
+                    myreport = extract_temp_vals.extract_average_vals(myreport, rows)
+                else:
+                    myreport = extract_temp_vals.extract_chart_report_vals(myreport, rows)
+                    myreport.month = FormatVariables.fetch_standard_month_name(filename)
 
-        def compute_average(self, vals):
-            return sum(vals)/len(vals)
+    def compute_average(self, vals):
+        return sum(vals)/len(vals)
+
 
 class DisplayReports(object):
     def display_extreme_report(self, myreport):
@@ -94,9 +96,9 @@ class DisplayReports(object):
              bar_max_temp, bar_min_temp,
              max_temp_red_str, min_temp_blue_str) = FormatVariables.format_bars_and_temp_vals(myreport, num)
             num = num + 1
-            date = num
-            date, max_temp_val, min_temp_val = FormatVariables.change_date_temp_format(date, num,
-                                                                    max_temp_val, min_temp_val)
+            date = FormatVariables.change_to_two_digit(num)
+            max_temp_val = FormatVariables.change_to_two_digit(max_temp_val)
+            min_temp_val = FormatVariables.change_to_two_digit(min_temp_val)
             output_variables = {'date':date, 'max_temp_val':max_temp_val, 'min_temp_val':min_temp_val,
                                 'bar_max_temp':bar_max_temp, 'bar_min_temp':bar_min_temp,
                                 'max_temp_red_str':max_temp_red_str, 'min_temp_blue_str':min_temp_blue_str}
@@ -133,7 +135,7 @@ class GetFilesAndDate():
 class FormatVariables():
     @staticmethod
     def form_horizontal_bars(num):
-        bar  = ''
+        bar = ''
         if num is not None:
             for count in range(0, num):
                 bar = '{}+'.format(bar)
@@ -153,11 +155,8 @@ class FormatVariables():
         return time.strftime('%B %d',time.strptime(date, '%Y-%m-%d'))
 
     @staticmethod
-    def change_date_temp_format(date, num, max_temp_val, min_temp_val):
-        date = '%02d' % date
-        max_temp_val = '%02d' % max_temp_val
-        min_temp_val = '%02d' % min_temp_val
-        return date, max_temp_val, min_temp_val
+    def change_to_two_digit(one_digit_num):
+        return '%02d' % one_digit_num
 
     @staticmethod
     def format_month_year(myreport):
@@ -176,7 +175,7 @@ class FormatVariables():
 
     @staticmethod
     def print_formatted_chart(date_temp, flag):
-        if flag == True:
+        if flag:
             FormatVariables.format_bars_according_to_data(date_temp['max_temp_red_str'],
                                                             date_temp['max_temp_val'],
                                                             date_temp['date'], date_temp['bar_max_temp'])
@@ -211,7 +210,7 @@ class Validator():
     @staticmethod
     def check_year_month(year, month):
         Validator.check_year(year)
-        match_obj = re.match(r'\d{1}', month, re.M|re.I)
+        match_obj = re.match(r'\d', month, re.M|re.I)
         if match_obj is None:
             print('invalid month')
             exit()
@@ -285,7 +284,6 @@ class ExtractTemperatureValuesFromFiles():
 
 
 class GenerateAndDisplayWeatherReport():
-
     def extreme_weathers(self, year, dir_path):
         Validator.check_year(year)
         all_files = os.listdir(dir_path)
