@@ -28,10 +28,9 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         garment = self.new_unique_garment(sku_id)
         if not garment:
             return
-        self.boilerplate_minimal(garment, response, raw_product['url'])
-        garment['name'] = raw_product['name']
-        garment['brand'] = self.brand_name(garment['name'])
-        garment['url'] = raw_product['url']
+        self.boilerplate_minimal(garment, response, url=raw_product['url'])
+        name_and_brand = raw_product['name']
+        garment['name'], garment['brand'] = self.brand_name(name_and_brand)
         garment['description'] = self.product_description(raw_product['details'])
         garment['care'] = self.product_care(raw_product['details'])
         garment['skus'] = {}
@@ -59,8 +58,7 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
             parameters = self.colour_request_params
             parameters['selectedSkuId'] = colour['skuId']
             parameters['productId'] = raw_product['id']
-            create_url = lambda params: self.product_request_url + urllib.parse.urlencode(params)
-            colour_url = create_url(parameters)
+            colour_url = self.product_request_url + urllib.parse.urlencode(parameters)
             requests.append(Request(url=colour_url, meta={'currency': currency}, callback=self.parse_colour))
         return requests
 
@@ -69,10 +67,10 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
 
     def brand_name(self, name):
         if "BIARRITZ" in name:
-            return "BIARRITZ"
+            return name.replace("BIARRITZ", ""), "BIARRITZ"
         elif "BIRKENSTOCK" in name:
-            return "BIRKENSTOCK"
-        return "RICHARDS"
+            return name.replace("BIRKENSTOCK", ""), "BIRKENSTOCK"
+        return name, "RICHARDS"
 
     def product_description(self, raw_product):
         return [rd for rd in self.raw_description(raw_product) if not self.care_criteria(rd)]
@@ -87,17 +85,22 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         return [img['zoom'] for img in images]
 
     def skus(self, raw_product, currency):
-
+        skus = {}
         colours = raw_product['colorList']
-        price = [raw_product['atualPrice'], currency]
+        price = [raw_product['fromPrice'], raw_product['atualPrice'], currency]
         common_sku = self.product_pricing_common_new('', money_strs=price)
-        skus ={}
         colour_sku = raw_product['skuId']
         colour_name = self.colour_name(colours, colour_sku)
 
         for size in raw_product.get('sizeList', []):
             sku = {}
-            sku = {"size": size['name'], 'colour': colour_name}
+
+            if size['name'] == 'UN':
+                sz = self.one_size
+            else:
+                sz = size['name']
+
+            sku = {"size": sz, 'colour': colour_name}
             if not size['hasStock']:
                 sku['out_of_stock'] = size['hasStock']
 
@@ -109,9 +112,6 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         for colour in colours:
             if colour['skuId'] == colour_sku:
                 return colour['name']
-
-    # def create_url(self, params):
-    #     return lambda parameters: self.product_request_url + urllib.parse.urlencode(parameters)
 
     def raw_product(self, response):
         script = response.xpath('//script[contains(., "var globalProduct =")]/text()').extract()
@@ -133,7 +133,9 @@ class RichardsCrawlSpider(BaseCrawlSpider, Mixin):
             params.update({'N': category_id})
             url_params = urllib.parse.urlencode(params)
             url = self.page_request_url + url_params
-            yield Request(url=url, meta={'gender': gender}, callback=self.parse_listings)
+            yield Request(url='http://www.richards.com.br/produto/cinto-barrientos/A-sku2052593.80160',
+                          meta={'gender': gender}, callback=self.parse_item)
+            # yield Request(url=url, meta={'gender': gender}, callback=self.parse_listings)
 
     def parse_listings(self, response):
         product_links = json.loads(response.text)
