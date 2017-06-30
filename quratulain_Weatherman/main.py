@@ -29,24 +29,36 @@ def main():
     arg_validator.check_number_arguments(args, parser)
 
     file_reader = FileReader(args)
-    files_dict = file_reader.read_files()
+    report_records = file_reader.read_files()
 
     if args.arg_report1:
         year = args.arg_report1
-        report_one = ReportOne(files_dict, year)
-        report_one.generate_report()
-        report_one.print_report()
+        report1_records = report_records['report1']
+        if report1_records:
+            report_one = ReportOne(report1_records)
+            report_one.generate_report()
+            report_one.print_report()
+        else:
+            print("Report1: Record for the year %s doesn't exists \n" % (year))
 
     if args.arg_report2:
         year, month = args.arg_report2.split('/')
-        report_two = ReportTwo(files_dict, year, month)
-        report_two.generate_report()
-        report_two.print_report()
+        report2_records = report_records['report2']
+        if report2_records:
+            report_two = ReportTwo(report_records['report2'])
+            report_two.generate_report()
+            report_two.print_report()
+        else:
+            print("Report2: Record for the %s/%s doesn't exists \n" % (year, month))
 
     if args.arg_report3:
         year, month = args.arg_report3.split('/')
-        report_three = ReportThree(files_dict, year, month)
-        report_three.print_report()
+        report3_records = report_records['report3']
+        if report3_records:
+            report_three = ReportThree(report_records['report3'])
+            report_three.print_report()
+        else:
+            print("Report3: Record for the %s/%s doesn't exists \n" % (year, month))
 
 
 if __name__ == "__main__":
