@@ -1,23 +1,20 @@
-<html>
-    <head>
-    <title>Trainee Search</title>
-    </head>
-    <body>
-        <p>You searched for: <strong>{{ query }}</strong></p>
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
+    <p>You searched for: <strong>{{ query }}</strong></p>
 
-        {% if trainees %}
-            <!-- <p>Found {{ books|length }} book{{ books|pluralize }}.</p> -->
-            <ul>
-                {% for trainee in trainees %}
-                <li>
-                  <a href="{% url 'trainee_details' trainee.id %}">
-                    {{ trainee.name }}
-                  </a>
-                </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No Trainees matched your search criteria.</p>
-        {% endif %}
-    </body>
-</html>
+    {% if trainees %}
+        <!-- <p>Found {{ books|length }} book{{ books|pluralize }}.</p> -->
+        <ul>
+            {% for trainee in trainees %}
+            <li>
+              <a href="{% url 'trainee_details' trainee.id %}">
+                {{ trainee.name }}
+              </a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No Trainees matched your search criteria.</p>
+    {% endif %}
+{% endblock %}

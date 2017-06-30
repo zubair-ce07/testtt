@@ -1,5 +1,7 @@
 <form action="" method="post">
-    <p style="color:red">{{error}}</p>
+    {% if error %}
+      <p style="color:red">{{error}}</p>
+    {% endif %}
     {% csrf_token %}
     <table>
         {{ form.as_table }}

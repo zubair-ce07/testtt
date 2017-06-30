@@ -1,8 +1,6 @@
-<html>
-<head>
-    <title>Search</title>
-</head>
-<body>
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
     {% if error %}
         <p style="color: red;">Please submit a search term.</p>
     {% endif %}
@@ -10,5 +8,4 @@
         <input type="text" name="q">
         <input type="submit" value="Search">
     </form>
-</body>
-</html>
+{% endblock %}
