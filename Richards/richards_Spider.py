@@ -133,9 +133,7 @@ class RichardsCrawlSpider(BaseCrawlSpider, Mixin):
             params.update({'N': category_id})
             url_params = urllib.parse.urlencode(params)
             url = self.page_request_url + url_params
-            yield Request(url='http://www.richards.com.br/produto/cinto-barrientos/A-sku2052593.80160',
-                          meta={'gender': gender}, callback=self.parse_item)
-            # yield Request(url=url, meta={'gender': gender}, callback=self.parse_listings)
+            yield Request(url=url, meta={'gender': gender}, callback=self.parse_listings)
 
     def parse_listings(self, response):
         product_links = json.loads(response.text)
