@@ -29,8 +29,9 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate_minimal(garment, response, url=raw_product['url'])
-        name_and_brand = raw_product['name']
-        garment['name'], garment['brand'] = self.brand_name(name_and_brand)
+        garment['name'] = raw_product['name']
+        garment['brand'] = self.brand_name(garment['name'])
+        garment['name'] = self.clean_name(garment['name'])
         garment['description'] = self.product_description(raw_product['details'])
         garment['care'] = self.product_care(raw_product['details'])
         garment['skus'] = {}
@@ -52,6 +53,10 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
+    def clean_name(self, name):
+        return (name.replace("BIARRITZ", "")).replace("BIRKENSTOCK", "")
+
+
     def colour_request(self, raw_product, currency):
         requests = []
         for colour in raw_product['colorList']:
@@ -67,10 +72,10 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
 
     def brand_name(self, name):
         if "BIARRITZ" in name:
-            return name.replace("BIARRITZ", ""), "BIARRITZ"
+            return "BIARRITZ"
         elif "BIRKENSTOCK" in name:
-            return name.replace("BIRKENSTOCK", ""), "BIRKENSTOCK"
-        return name, "RICHARDS"
+            return "BIRKENSTOCK"
+        return "RICHARDS"
 
     def product_description(self, raw_product):
         return [rd for rd in self.raw_description(raw_product) if not self.care_criteria(rd)]
@@ -92,20 +97,17 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         colour_sku = raw_product['skuId']
         colour_name = self.colour_name(colours, colour_sku)
 
-        for size in raw_product.get('sizeList', []):
+        for raw_size in raw_product.get('sizeList', []):
             sku = {}
 
-            if size['name'] == 'UN':
-                sz = self.one_size
-            else:
-                sz = size['name']
+            size = self.one_size if raw_size['name'] == 'UN' else raw_size['name']
 
-            sku = {"size": sz, 'colour': colour_name}
-            if not size['hasStock']:
-                sku['out_of_stock'] = size['hasStock']
+            sku = {"size": size, 'colour': colour_name}
+            if not raw_size['hasStock']:
+                sku['out_of_stock'] = raw_size['hasStock']
 
             sku.update(common_sku)
-            skus[colour_sku + "_" + size['skuId']] = sku
+            skus[colour_sku + "_" + raw_size['skuId']] = sku
         return skus
 
     def colour_name(self, colours, colour_sku):
