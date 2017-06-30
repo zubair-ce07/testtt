@@ -4,13 +4,14 @@ from scrapy.linkextractors import LinkExtractor
 from hypedc.items import HypedcItem
 from itertools import product
 
+
 class HypeDCSpider(CrawlSpider):
     name = "hypedc"
     start_urls = [
         'https://www.hypedc.com/',
     ]
     products_name_repository = []
-    extractor = LinkExtractor(allow=(), restrict_css='ul.nav-primary > li[id] a', allow_domains='hypedc.com')
+    extractor = LinkExtractor(restrict_css='ul.nav-primary > li[id] a', allow_domains='hypedc.com')
     rules = (Rule(extractor), Rule(LinkExtractor(restrict_css='div.item'), callback="parse_product"))
 
     def parse_product(self, response):
