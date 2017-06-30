@@ -174,15 +174,18 @@ class SearsSpider(CrawlSpider):
                     size_elems.append(elem['value'])
 
             size = '-'.join(size_elems)
-            color = color or ['N/A']
+            color = color or []
 
             default_sku_id = size + color[0]
             sku_id = attr.get('offerId', default_sku_id)
             sku = {
                 'currency': 'USD',
                 'size': size,
-                'colour': color[0],
             }
+
+            if color:
+                sku['color'] = color
+
             skus[sku_id] = sku
             if sku_id is not default_sku_id:
                 sku_ids.append(sku_id)
