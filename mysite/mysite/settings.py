@@ -118,7 +118,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/home/safi/PythonProjs/the-lab/mysite/static/'
+STATIC_URL = '/home/safi/PythonProjs/the-lab/mysite/staic/'
 
-MEDIA_ROOT = "/home/safi/PythonProjs/the-lab/mysite/"
-MEDIA_URL = '/'
+MEDIA_ROOT = "/home/safi/PythonProjs/the-lab/mysite/media/"
+MEDIA_URL = '/media/'
