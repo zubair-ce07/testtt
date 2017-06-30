@@ -18,12 +18,12 @@ class ErnstingsFamilySpider(CrawlSpider):
         url = response.xpath("//script[@type='text/javascript']").re("endlessScrollingUrl': '(.*)'")
         limit = response.xpath(".//ul[@class='category_product_list']/@data-max-page").extract_first()
         url = urllib.parse.urljoin(self.start_urls[0], url[0][:-1])
-        urls = []
+        
         for index in range(int(limit)):
-            urls.append(url+str(index+1))
+            yield scrapy.Request(url + str(index + 1), callback=self.parse_detail)
 
-        for url in urls:
-            yield scrapy.Request(url, callback=self.parse_detail)
+
+
 
     def parse_detail(self, response):
         product_item = Product()
