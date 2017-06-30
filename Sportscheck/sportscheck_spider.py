@@ -17,12 +17,13 @@ class Mixin:
         ('https://www.sportscheck.com/herren/', {'gender': 'men'}),
         ('https://www.sportscheck.com/kinder/', {'gender': 'unisex-kids'}),
     ]
+    image_url_end = "?$productimage_square$&w=400&aspect=1:1&qlt=70"
+    image_url_start = "https://amp.sportscheck.com/i/sportscheck/"
 
 
 class SportScheckParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    brands = ()
-    price_css = '.price'
+    price_css = '.price ::text'
 
     BLACKLISTED_CATEGORIES = {'Ausrüstung', 'Sportarten', 'Fitnessgeräte'}
     # we only want Rucksäcke and Handschuhe which may fall under Ausrüstung or Sportarten
@@ -41,7 +42,7 @@ class SportScheckParseSpider(BaseParseSpider, Mixin):
     def parse(self, response):
         sku_id = self.product_id(response)
         garment = self.new_unique_garment(sku_id)
-        if garment is None:
+        if not garment:
             return
 
         self.boilerplate_normal(garment, response)
@@ -50,48 +51,46 @@ class SportScheckParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = {}
         garment['image_urls'] = []
         garment['image_urls'] = self.image_urls(response)
-        garment['meta'] = {'requests_queue': self.color_request(response)}
+        garment['meta'] = {'requests_queue': self.colour_request(response)}
 
         return self.next_request_or_garment(garment)
 
-    def parse_color(self, response):
+    def parse_colour(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
         garment['image_urls'] += self.image_urls(response)
 
         return self.next_request_or_garment(garment)
 
-    def create_url(self, url, id):
+    def adding_parameters(self, url, id):
         params = {"ProductSKU": id}
         return url + '?' + urllib.parse.urlencode(params)
 
-    def color_request(self, response):
+    def colour_request(self, response):
         requests = []
         url = clean(response.css('form.small-12::attr(action)'))[0]
-        color_sku_ids = clean(response.css('.colors__tile::attr(data-product-sku)'))
-        for id in color_sku_ids:
-            requests.append(Request(url=self.create_url(url, id), callback=self.parse_color))
+        colour_sku_ids = clean(response.css('.colors__tile::attr(data-product-sku)'))
+        for sku_id in colour_sku_ids:
+            requests.append(Request(url=self.adding_parameters(url, sku_id), callback=self.parse_colour))
         return requests
 
     def image_urls(self, response):
-        url_end = "?$productimage_square$&w=400&aspect=1:1&qlt=70"
-        url_start = "https://amp.sportscheck.com/i/sportscheck/"
         url_middle = clean(response.css('li::attr(data-amp-image-name)'))
         image_urls = []
 
         for mid in url_middle:
-            image_urls.append(url_start+mid+url_end)
+            image_urls.append(self.image_url_start + mid + self.image_url_end)
 
         return image_urls
 
     def skus(self, response):
         skus = {}
-        color = clean(response.css('span.color-desc::text'))[0]
+        colour = clean(response.css('span.color-desc::text'))[0]
         common_sku = self.product_pricing_common_new(response)
         sizes = clean(response.css('#secondary-select option::attr(value)'))[1:]
         size_availability = clean(response.css('#secondary-select option::text'))[1:]
         itera = 0
-        color_id = self.product_id(response)
+        colour_id = self.product_id(response)
         for size in sizes:
             sku = {}
             if 'Einheitsgröße' in size:
@@ -102,9 +101,9 @@ class SportScheckParseSpider(BaseParseSpider, Mixin):
             if 'ausverkauft' in size_availability[itera]:
                 sku['out_of_stock'] = True
 
-            sku['color'] = color
+            sku['colour'] = colour
             sku.update(common_sku)
-            skus[color_id + "_" + size] = sku
+            skus[colour_id + "_" + size] = sku
             itera += 1
 
         return skus
@@ -120,7 +119,7 @@ class SportScheckParseSpider(BaseParseSpider, Mixin):
         brand = clean(response.xpath('//div[@itemprop="name"]/h1//span[@itemprop="brand"]/text()'))
         if brand:
             return brand[0]
-        product_name = self.raw_name(response)
+        product_name = self.product_name(response)
         for brand in self.brands:
             if product_name.lower().startswith(brand.lower() + " "):
                 return brand
