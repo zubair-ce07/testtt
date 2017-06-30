@@ -13,7 +13,7 @@ class KmartSpider(CrawlSpider):
     allowed_domains = ['kmart.com.au']
     start_urls = ["http://www.kmart.com.au"]
     pagination_regex = re.compile(r"\'http.*?\'")
-    categories_selector = '.mega-menu li>a'
+    categories_path = '.mega-menu li>a'
     item_card_path = '.product_image>a'
     allowed_categories = ['/category/men/mens-clothing/',
                           '/category/women/womens-clothing/',
@@ -22,14 +22,14 @@ class KmartSpider(CrawlSpider):
                           '/baby-clothing/']
 
     rules = (
-        Rule(LinkExtractor(allow=allowed_categories, restrict_css=[categories_selector]), callback="handle_pagination",
+        Rule(LinkExtractor(allow=allowed_categories, restrict_css=[categories_path]), callback="handle_pagination",
              follow=True),
-        Rule(LinkExtractor(restrict_css=item_card_path), callback="parse_item"),
+        Rule(LinkExtractor(restrict_css=item_card_path), callback="parse_apparel_item"),
     )
 
     def handle_pagination(self, response):
-        pages_count_selector = "#pages_list_id li:nth-last-child(2) ::text"
-        pages_count = int(response.css(pages_count_selector).extract_first() or '0')
+        pages_count_path = "#pages_list_id li:nth-last-child(2) ::text"
+        pages_count = int(response.css(pages_count_path).extract_first() or '0')
 
         pagination_xpath = '//script[contains(text(),\'SearchBasedNavigationDisplayJS.init(\')]'
         pagination_url = response.xpath(pagination_xpath).re(self.pagination_regex)
@@ -50,25 +50,26 @@ class KmartSpider(CrawlSpider):
                 'requesttype': 'ajax'}
             yield FormRequest(url, formdata=form_data)
 
-    def parse_item(self, response):
-        item = KmartItem()
+    def parse_apparel_item(self, response):
+        apparel_item = KmartItem()
 
         retailer_sku = self.get_retailer_sku(response)
         if not retailer_sku:
             return
 
-        item['retailer_sku'] = retailer_sku
-        item['name'] = self.get_name(response)
-        item['price'] = self.get_price(response)
-        item['category'] = self.get_category(response)
-        item['image_urls'] = self.get_image_urls(response)
-        item['description'] = self.get_description(response)
-        item['gender'] = self.get_gender(item['category'])
-        item['skus'] = self.get_skus(response) or self.get_default_sku(item['price'])
-        item['url'] = response.url
-        item['brand'] = 'Kmart'
+        apparel_item['retailer_sku'] = retailer_sku
+        apparel_item['name'] = self.get_name(response)
+        apparel_item['price'] = self.get_price(response)
+        apparel_item['category'] = self.get_category(response)
+        apparel_item['image_urls'] = self.get_image_urls(response)
+        apparel_item['description'] = self.get_description(response)
+        apparel_item['gender'] = self.get_gender(apparel_item['category'])
+        apparel_item['skus'] = self.get_skus(response) or \
+            self.get_default_sku(apparel_item['price'])
+        apparel_item['url'] = response.url
+        apparel_item['brand'] = 'Kmart'
 
-        return item
+        return apparel_item
 
     def get_name(self, response):
         name_path = '.h2[itemprop = "name"] ::text'
@@ -83,8 +84,8 @@ class KmartSpider(CrawlSpider):
             return 'women'
         elif "Men" in category:
             return 'men'
-        else:
-            return 'kids'
+
+        return 'kids'
 
     def get_category(self, response):
         category_path = '.columns h1[clas="h2"] ::text'
@@ -93,22 +94,23 @@ class KmartSpider(CrawlSpider):
     def get_image_urls(self, response):
         images_path = '.multipleimages + input ::attr(value)'
         default_image_path = '#productMainImage ::attr(src)'
-        image_urls = \
-            response.css(images_path).extract() or \
+
+        image_urls = response.css(images_path).extract() or \
             response.css(default_image_path).extract()
+
         return [self.start_urls[0] + s for s in image_urls]
 
     def get_description(self, response):
-        description_selector = '#product-details li ::text, #product-details p ::text'
-        return response.css(description_selector).extract()
+        description_path = '#product-details li ::text, #product-details p ::text'
+        return response.css(description_path).extract()
 
     def get_price(self, response):
-        price_selector = '.price-wrapper [itemprop="price"] ::text'
-        return response.css(price_selector).extract_first()
+        price_path = '.price-wrapper [itemprop="price"] ::text'
+        return response.css(price_path).extract_first()
 
     def get_skus(self, response):
-        skus_json_selector = '#catEntryParams ::attr(value)'
-        json_wo_quotes = response.css(skus_json_selector).extract_first() or {}
+        skus_json_path = '#catEntryParams ::attr(value)'
+        json_wo_quotes = response.css(skus_json_path).extract_first() or {}
 
         skus_json = yaml.load(json_wo_quotes.replace("'", '"'))
         skus_data = skus_json.get('skus', [])
@@ -116,9 +118,7 @@ class KmartSpider(CrawlSpider):
 
         skus = []
         for sku in skus_data:
-            size = sku['attributes'].get('Size', 'one-size')
             curr_sku = {
-                "size": size,
                 "currency": "AUD",
                 "price": price,
                 "sku_id": sku['id'],
@@ -126,6 +126,11 @@ class KmartSpider(CrawlSpider):
             colour = sku['attributes'].get('Colour')
             if colour:
                 curr_sku['colour'] = colour
+
+            size = sku['attributes'].get('Size')
+            if size:
+                curr_sku['size'] = size
+
             skus.append(curr_sku)
 
         return skus
@@ -134,6 +139,5 @@ class KmartSpider(CrawlSpider):
         return {
             "currency": "AUD",
             "price": default_price,
-            "sku_id": 'N/A',
-            "size": 'N/A'
+            "sku_id": 'one-size',
         }
