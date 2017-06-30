@@ -18,7 +18,7 @@ class ErnstingsFamilySpider(CrawlSpider):
         url = response.xpath("//script[@type='text/javascript']").re("endlessScrollingUrl': '(.*)'")
         limit = response.xpath(".//ul[@class='category_product_list']/@data-max-page").extract_first()
         url = urllib.parse.urljoin(self.start_urls[0], url[0][:-1])
-        
+
         for index in range(int(limit)):
             yield scrapy.Request(url + str(index + 1), callback=self.parse_detail)
 
@@ -33,11 +33,8 @@ class ErnstingsFamilySpider(CrawlSpider):
         product_item['description'] = self.get_description(response)
         product_item['name'] = self.get_name(response)
         product_item['image_urls'] = self.get_images(response)
-
-        color = response.xpath("//script[@type='text/javascript']/text()").re(r'"Farbe":\["(.*)"]')
-        color = color[0]
-        sizes =  response.xpath("//script[@type='text/javascript']/text()").re(r'"Größe":\["(.*)"],')
-        sizes = sizes[0]
+        color = self.get_color(response)
+        sizes = self.get_sizes(response)
         sizes = sizes.split(',')
         product_item['skus'] = self.get_skus(sizes, product_item, color)
 
