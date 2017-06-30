@@ -2,7 +2,7 @@ from termcolor import colored
 import calendar
 
 
-class ReportThree:
+class TemperatureGraph:
     def __init__(self, records):
         self.records = records
 

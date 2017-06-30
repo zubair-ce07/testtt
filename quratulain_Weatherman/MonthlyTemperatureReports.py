@@ -8,7 +8,7 @@ def average(sequence, key=None):
     return sum(sequence) / len(sequence)
 
 
-class ReportTwo:
+class MonthlyTemperatureReports:
     def __init__(self, records):
         self.records = records
 

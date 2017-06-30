@@ -1,7 +1,7 @@
 import fnmatch
 
 
-class ReportOne:
+class YearlyWeatherExtremesReport:
     def __init__(self, records):
         self.records = records
 

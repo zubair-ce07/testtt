@@ -1,15 +1,9 @@
 import argparse
-from reportone import ReportOne
-from reporttwo import ReportTwo
+from YearlyWeatherExtremesReport import YearlyWeatherExtremesReport
+from MonthlyTemperatureReports import MonthlyTemperatureReports
 from filereader import FileReader
-from reportthree import ReportThree
+from TemperatureGraph import TemperatureGraph
 from argumentvalidator import ArgumentValidator
-
-
-def average(sequence, key=None):
-    if key:
-        sequence = map(key, sequence)
-    return sum(sequence) / len(sequence)
 
 
 def main():
@@ -35,7 +29,7 @@ def main():
         year = args.arg_report1
         report1_records = report_records['report1']
         if report1_records:
-            report_one = ReportOne(report1_records)
+            report_one = YearlyWeatherExtremesReport(report1_records)
             report_one.generate_report()
             report_one.print_report()
         else:
@@ -45,7 +39,7 @@ def main():
         year, month = args.arg_report2.split('/')
         report2_records = report_records['report2']
         if report2_records:
-            report_two = ReportTwo(report_records['report2'])
+            report_two = MonthlyTemperatureReports(report_records['report2'])
             report_two.generate_report()
             report_two.print_report()
         else:
@@ -55,7 +49,7 @@ def main():
         year, month = args.arg_report3.split('/')
         report3_records = report_records['report3']
         if report3_records:
-            report_three = ReportThree(report_records['report3'])
+            report_three = TemperatureGraph(report_records['report3'])
             report_three.print_report()
         else:
             print("Report3: Record for the %s/%s doesn't exists \n" % (year, month))
