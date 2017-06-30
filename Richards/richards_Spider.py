@@ -29,9 +29,8 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate_minimal(garment, response, url=raw_product['url'])
-        garment['name'] = raw_product['name']
-        garment['brand'] = self.brand_name(garment['name'])
-        garment['name'] = self.clean_name(garment['name'])
+        garment['brand'] = self.brand_name(raw_product['name'])
+        garment['name'] = self.clean_name(raw_product['name'])
         garment['description'] = self.product_description(raw_product['details'])
         garment['care'] = self.product_care(raw_product['details'])
         garment['skus'] = {}
