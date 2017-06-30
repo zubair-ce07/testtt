@@ -9,12 +9,12 @@ class AlexaChungSpider(CrawlSpider):
     name = 'alexachung'
     allowed_domains = ['alexachung.com']
     start_urls = [
-        'https://www.alexachung.com/uk',
+        'https://www.alexachung.com/uk/',
     ]
 
     rules = [Rule(LinkExtractor(restrict_css='.sub-menu')),
-             Rule(LinkExtractor(restrict_css='.product-items'), callback='parse_products')
-             ]
+             Rule(LinkExtractor(restrict_css='.product-items'),
+                  callback='parse_products')]
 
     def get_colour(self, response):
         _, colour, _ = response.url.rsplit('-', 2)
@@ -22,22 +22,23 @@ class AlexaChungSpider(CrawlSpider):
 
     def get_skus(self, response):
         try:
-            item_details = json.loads(response.css('.swatch-opt + script::text').
+            item_details = json.loads(response.css
+                                      ('.swatch-opt + script::text').
                                       extract_first())['[data-role=swatch-options]']\
-                                                        ['Magento_Swatches/js/swatch-renderer']
+                                      ['Magento_Swatches/js/swatch-renderer']
         except TypeError:
             return {}
 
-        skus = item_details['jsonConfig']['index']
-        size_per_sku = item_details['jsonSwatchConfig']
-        sizes_per_type = {}
-        for sku_id in size_per_sku:
-            for sku_type, sku_info in size_per_sku[sku_id].iteritems():
-                sizes_per_type.update({sku_info['value']: {sku_id: sku_type}})
-        for sku, size in zip(skus, sizes_per_type):
-            skus[sku] = {'size': size, 'price': self.get_price(response),
-                         'colour': self.get_colour(response), 'currency': 'GBP'}
-        return {'skus': skus}
+        products = item_details['jsonConfig']['index']
+        sizes = item_details['jsonSwatchConfig']
+        for product_id, product_size in products.iteritems():
+            products[product_id] = {'size': sizes[''.join(product_size.keys())]\
+                                    [''.join(product_size.values())]['value'],
+                                    'price': self.get_price(response),
+                                    'colour': self.get_colour(response),
+                                    'currency': 'GBP'
+                                    }
+        return products
 
     def get_retailer_sku(self, response):
         return response.css('.price-final_price::attr(data-product-id)').extract_first()
@@ -49,12 +50,10 @@ class AlexaChungSpider(CrawlSpider):
         return response.css('.page-title::text').extract_first()
 
     def get_description(self, response):
-        description = response.css('.value')
-        return description.css('p::text').extract()
+        return response.css('.value p::text').extract()
 
     def get_image_urls(self, response):
-        images = response.css('.MagicZoom::attr(href)').extract()
-        return images
+        return response.css('.MagicZoom::attr(href)').extract()
 
     def parse_products(self, response):
         output = ProductInfo()
