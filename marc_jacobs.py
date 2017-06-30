@@ -138,7 +138,11 @@ class MarcJacobsSpider(CrawlSpider):
                                  response.meta['product'])
 
     def get_product_category(self, response):
-        return response.css('a.breadcrumb-element::text').extract()
+
+        category = response.css('a.breadcrumb-element::text').extract()
+        if category:
+            return category.pop()
+        return None
 
     def get_product_name(self, response):
         return response.css(
