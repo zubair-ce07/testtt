@@ -16,7 +16,7 @@ class DoctorSpider(scrapy.Spider):
                           formdata={'ctl00$cphContent$ctl01$ddlResultsPerPage': '99999', '__VIEWSTATE': viewstate},
                           callback=self.generator_viewprofile_request)
 
-    def generate_viewprofile_request(self, response):
+    def generator_viewprofile_request(self, response):
         doctor_ids = response.xpath('//div[@class="search-results-physician"]/input[@type = "hidden"]/@value').extract()
         physicianid_keys = response.xpath('//div[@class="search-results-physician"]/input[@type = "hidden"]/@name').extract()
         viewprofile_keys = response.xpath('//div[@class="view-profile-wrapper"]/input[@type = "submit"]/@name').extract()
@@ -27,7 +27,6 @@ class DoctorSpider(scrapy.Spider):
             physicianid_key = physicianid_keys[index]
             viewprofile_key = viewprofile_keys[index]
             yield FormRequest(url, method='POST', formdata={physicianid_key: id, viewprofile_key: 'View Full Profile', '__VIEWSTATE': viewstate}, callback=self.extract_doctor_profile_info)
-            break
 
     def get_graduation_info(self, response):
         graduate_education = []
