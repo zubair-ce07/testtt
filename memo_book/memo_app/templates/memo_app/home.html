@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'memo_app/bootstrap.min.css' %}" />
+    <title>Memo Book</title>
+</head>
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/home">Memo Book</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="">{{ request.session.user_name }}</a></li>
+
+                  <li>  <form method="post" action="/logout"> {% csrf_token %}<input type="submit" value="Logout" ></form></li>
+                </form>
+            </ul>
+
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Body contents are starting from here -->
+    <div class="container">
+        <div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-login">
+					<div class="panel-heading">
+
+                            <form id="register-form" action="/addmemo" method="post" role="form" style="display: block">
+									 {% csrf_token %}
+                                     {{ memo_form }}
+									<div class="form-group">
+										<div class="row">
+											<div class="col-sm-6 col-sm-offset-3">
+												<input type="submit" name="register-submit" id="register-submit" tabindex="4" class="form-control btn btn-register" value="Add Memory">
+											</div>
+										</div>
+									</div>
+								</form>
+                    </div>
+                    <div class="row" >
+                        {% for memo in memories_of_user %}
+
+                            <div class="jumbotron" style="padding: 5px">
+
+
+                                    <p> <b>{{ memo.title }}</b> </p>
+                                    <i> {{ memo.text }}</i>
+                                    <a href="{{ memo.url }}"> visit </a>
+                                    <p> {{ memo.tags }}</p>
+                                    <div class="row" >
+                                        <div class="col-md-2">
+                                            <form action="/deletememo" method="post">
+                                                 {% csrf_token %}
+                                                <input type="hidden" name="memo_id" value="{{ memo.id }}" />
+                                                <input type="submit" class="btn" value="Delete">
+                                            </form>
+                                        </div>
+
+                                            <div class="col-md-2">
+                                            <form action="/editmemo" method="get">
+                                                <input type="hidden" name="memo_id" value="{{ memo.id }}" />
+                                                <input type="submit" class="btn" value="Edit">
+                                            </form>
+                                        </div>
+
+                                    </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="pagination">
+                            <span class="step-links">
+                                {% if memories_of_user.has_previous %}
+                                    <a href="?page_no={{ memories_of_user.previous_page_number }}">previous</a>
+                                {% endif %}
+
+                                <span class="current">
+                                    Page {{ memories_of_user.number }} of {{ memories_of_user.paginator.num_pages }}.
+                                </span>
+
+                                {% if memories_of_user.has_next %}
+                                    <a href="?page_no={{ memories_of_user.next_page_number }}">next</a>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
