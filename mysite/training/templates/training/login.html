@@ -2,6 +2,7 @@
     {% for error in errors %}
       <p style="color:red">{{error}}</p>
     {% endfor %}
+
     {% csrf_token %}
     <table>
         {{ form.as_table }}
@@ -9,4 +10,3 @@
       <input type="submit" value="Login" name="login">
       <input id="signup" onclick='location.href="{% url 'training:signup' %}"' type="button" value="Signup">
 </form>
-  

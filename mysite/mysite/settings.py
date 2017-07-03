@@ -29,7 +29,6 @@ ALLOWED_HOSTS = []
 
 SITE_NAME = 'Training Portal'
 
-
 # Application definition
 
 INSTALLED_APPS = [
