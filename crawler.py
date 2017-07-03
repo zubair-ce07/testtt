@@ -70,7 +70,7 @@ class AsyncCrawler(Crawler):
                         await self.schedule_new_request(completed_request_count)
                         completed_request_count += 1
 
-                [self.active_requests.remove(tsk) for tsk in self.active_requests if tsk.done()]
+                self.active_requests = [task for task in self.active_requests if not task.done()]
                 await asyncio.wait(self.active_requests, return_when=FIRST_COMPLETED)
                 print('visited_urls: {}\n'.format(len(self.visited_urls)))
 
