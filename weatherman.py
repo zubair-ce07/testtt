@@ -5,7 +5,7 @@ import calendar
 import time
 import csv
 import argparse
-from termcolor import colored, cprint
+from termcolor import colored
 
 
 class ExtremeWeatherReport(object):
@@ -33,17 +33,17 @@ class WeatherChartReport(object):
         self.lowest_temp = []
 
 
-class MakeReports(object):
+class ReportFormer(object):
     def make_extreme_report(self, files, dir_path):
         myreport = ExtremeWeatherReport()
-        extract_temp_vals = ExtractTemperatureValuesFromFiles()
+        extract_temp_vals = TemperatureValuesExtractor()
         for filename in files:
             self.read_files(filename, dir_path, '-e', myreport, extract_temp_vals)
         return myreport
 
     def make_average_report(self, filename, dir_path):
         myreport = AverageWeatherReport()
-        extract_temp_vals = ExtractTemperatureValuesFromFiles()
+        extract_temp_vals = TemperatureValuesExtractor()
         self.read_files(filename, dir_path, '-a', myreport, extract_temp_vals)
         myreport.avg_highest_temp = self.compute_average(myreport.avg_highest_temp)
         myreport.avg_lowest_temp = self.compute_average(myreport.avg_lowest_temp)
@@ -53,7 +53,7 @@ class MakeReports(object):
     def make_chart_report(self, filename, dir_path, year):
         myreport = WeatherChartReport()
         myreport.year = year
-        extract_temp_vals = ExtractTemperatureValuesFromFiles()
+        extract_temp_vals = TemperatureValuesExtractor()
         self.read_files(filename, dir_path, '-c', myreport, extract_temp_vals)
         return myreport
 
@@ -70,13 +70,13 @@ class MakeReports(object):
                     myreport = extract_temp_vals.extract_average_vals(myreport, rows)
                 else:
                     myreport = extract_temp_vals.extract_chart_report_vals(myreport, rows)
-                    myreport.month = FormatVariables.fetch_standard_month_name(filename)
+                    myreport.month = VariableFormatter.fetch_standard_month_name(filename)
 
     def compute_average(self, vals):
         return sum(vals)/len(vals)
 
 
-class DisplayReports(object):
+class ReportDisplayer(object):
     def display_extreme_report(self, myreport):
         print('Highest: {0}C on {1}'.format(str(myreport.highest_temp_val), myreport.highest_temp_day))
         print('Lowest: {0}C on {1}'.format(str(myreport.lowest_temp_val), myreport.lowest_temp_day))
@@ -88,24 +88,23 @@ class DisplayReports(object):
         print('Average Humidity: {}%'.format(str(myreport.avg_humidity)))
 
     def display_chart(self, myreport, flag):
-        print(FormatVariables.format_month_year(myreport))
+        print(VariableFormatter.format_month_year(myreport))
         days = len(myreport.highest_temp)
-        num = 0
-        while num < days:
+        for num in range(0, days):
             (max_temp_val, min_temp_val,
              bar_max_temp, bar_min_temp,
-             max_temp_red_str, min_temp_blue_str) = FormatVariables.format_bars_and_temp_vals(myreport, num)
+             max_temp_red_str, min_temp_blue_str) = VariableFormatter.format_bars_and_temp_vals(myreport, num)
             num = num + 1
-            date = FormatVariables.change_to_two_digit(num)
-            max_temp_val = FormatVariables.change_to_two_digit(max_temp_val)
-            min_temp_val = FormatVariables.change_to_two_digit(min_temp_val)
+            date = VariableFormatter.change_to_two_digit(num)
+            max_temp_val = VariableFormatter.change_to_two_digit(max_temp_val)
+            min_temp_val = VariableFormatter.change_to_two_digit(min_temp_val)
             output_variables = {'date':date, 'max_temp_val':max_temp_val, 'min_temp_val':min_temp_val,
                                 'bar_max_temp':bar_max_temp, 'bar_min_temp':bar_min_temp,
                                 'max_temp_red_str':max_temp_red_str, 'min_temp_blue_str':min_temp_blue_str}
-            FormatVariables.print_formatted_chart(output_variables, flag)
+            VariableFormatter.print_formatted_chart(output_variables, flag)
 
 
-class GetFilesAndDate():
+class DataAccumulator():
     @staticmethod
     def acquire_files(dir_path, year, full_month_name):
         all_files = os.listdir(dir_path)
@@ -127,12 +126,12 @@ class GetFilesAndDate():
         month = year_and_month[1]
         Validator.check_year_month(year,month)
         if len(month) == 2 and int(month) < 10:
-            month = month[1:]
+            month = int(month)
         full_month_name = calendar.month_abbr[int(month)]
         return year, full_month_name
 
 
-class FormatVariables():
+class VariableFormatter():
     @staticmethod
     def form_horizontal_bars(num):
         bar = ''
@@ -140,7 +139,7 @@ class FormatVariables():
             for count in range(0, num):
                 bar = '{}+'.format(bar)
         else:
-            bar = '--'
+            bar = None
         return bar
 
     @staticmethod
@@ -156,7 +155,8 @@ class FormatVariables():
 
     @staticmethod
     def change_to_two_digit(one_digit_num):
-        return '%02d' % one_digit_num
+        if one_digit_num is not None:
+            return str(one_digit_num).zfill(2)
 
     @staticmethod
     def format_month_year(myreport):
@@ -165,9 +165,9 @@ class FormatVariables():
     @staticmethod
     def format_bars_and_temp_vals(myreport, num):
         max_temp_val = myreport.highest_temp[num]
-        bar_max_temp = FormatVariables.form_horizontal_bars(max_temp_val)
+        bar_max_temp = VariableFormatter.form_horizontal_bars(max_temp_val)
         min_temp_val = myreport.lowest_temp[num]
-        bar_min_temp = FormatVariables.form_horizontal_bars(min_temp_val)
+        bar_min_temp = VariableFormatter.form_horizontal_bars(min_temp_val)
         max_temp_red_str = colored(bar_max_temp, 'red')
         min_temp_blue_str = colored(bar_min_temp, 'blue')
         return (max_temp_val, min_temp_val, bar_max_temp,
@@ -176,10 +176,10 @@ class FormatVariables():
     @staticmethod
     def print_formatted_chart(date_temp, flag):
         if flag:
-            FormatVariables.format_bars_according_to_data(date_temp['max_temp_red_str'],
+            VariableFormatter.format_chart(date_temp['max_temp_red_str'],
                                                             date_temp['max_temp_val'],
                                                             date_temp['date'], date_temp['bar_max_temp'])
-            FormatVariables.format_bars_according_to_data(date_temp['min_temp_blue_str'],
+            VariableFormatter.format_chart(date_temp['min_temp_blue_str'],
                                                             date_temp['min_temp_val'],
                                                             date_temp['date'], date_temp['bar_min_temp'])
         else:
@@ -193,7 +193,7 @@ class FormatVariables():
                                                 date_temp['max_temp_red_str'],min_temp_val, max_temp_val))
 
     @staticmethod
-    def format_bars_according_to_data(bar, temperature, date, no_data_bar):
+    def format_chart(bar, temperature, date, no_data_bar):
         if Validator.validate_bar(no_data_bar):
             print('{0} {1}'.format(date, 'No data available'))
         else:
@@ -237,24 +237,24 @@ class Validator():
 
     @staticmethod
     def validate_bar(bar):
-        if bar == '--':
+        if bar is None:
             return True
 
 
-class ExtractTemperatureValuesFromFiles():
+class TemperatureValuesExtractor():
     def extract_extreme_vals(self, myreport, rows):
         maxtemp = rows['Max TemperatureC']
         if maxtemp != '' and int(maxtemp) > myreport.highest_temp_val:
             myreport.highest_temp_val = int(maxtemp)
-            myreport.highest_temp_day = FormatVariables.format_date(rows['PKT'])
+            myreport.highest_temp_day = VariableFormatter.format_date(rows['PKT'])
         mintemp = rows['Min TemperatureC']
         if mintemp != '' and int(mintemp) < myreport.lowest_temp_val:
             myreport.lowest_temp_val = int(mintemp)
-            myreport.lowest_temp_day = FormatVariables.format_date(rows['PKT'])
+            myreport.lowest_temp_day = VariableFormatter.format_date(rows['PKT'])
         maxhumid = rows['Max Humidity']
         if maxhumid != '' and int(maxhumid) > myreport.humidity_val:
             myreport.humidity_val = int(maxhumid)
-            myreport.humidity_day = FormatVariables.format_date(rows['PKT'])
+            myreport.humidity_day = VariableFormatter.format_date(rows['PKT'])
         return myreport
 
     def extract_average_vals(self, myreport, rows):
@@ -283,33 +283,33 @@ class ExtractTemperatureValuesFromFiles():
         return myreport
 
 
-class GenerateAndDisplayWeatherReport():
-    def extreme_weathers(self, year, dir_path):
+class WeatherReportGenerator():
+    def generate_extreme_weathers_report(self, year, dir_path):
         Validator.check_year(year)
         all_files = os.listdir(dir_path)
         required_files = []
         for files in all_files:
             if year in files:
                 required_files.append(files)
-        report_obj = MakeReports()
+        report_obj = ReportFormer()
         myreport = report_obj.make_extreme_report(required_files, dir_path)
-        display_obj = DisplayReports()
+        display_obj = ReportDisplayer()
         display_obj.display_extreme_report(myreport)
 
-    def average_weathers(self, year_month, dir_path):
-        year, full_month_name = GetFilesAndDate.get_year_and_month(year_month)
-        required_files = GetFilesAndDate.acquire_files(dir_path, year, full_month_name)
-        report_obj = MakeReports()
+    def generate_average_weathers_report(self, year_month, dir_path):
+        year, full_month_name = DataAccumulator.get_year_and_month(year_month)
+        required_files = DataAccumulator.acquire_files(dir_path, year, full_month_name)
+        report_obj = ReportFormer()
         myreport = report_obj.make_average_report(required_files[0], dir_path)
-        display_obj = DisplayReports()
+        display_obj = ReportDisplayer()
         display_obj.display_average_report(myreport)
 
-    def weather_charts(self, year_month, dir_path, report_label):
-        year, full_month_name = GetFilesAndDate.get_year_and_month(year_month)
-        required_files = GetFilesAndDate.acquire_files(dir_path, year, full_month_name)
-        report_obj = MakeReports()
+    def generate_weather_charts(self, year_month, dir_path, report_label):
+        year, full_month_name = DataAccumulator.get_year_and_month(year_month)
+        required_files = DataAccumulator.acquire_files(dir_path, year, full_month_name)
+        report_obj = ReportFormer()
         myreport = report_obj.make_chart_report(required_files[0], dir_path, year)
-        display_obj = DisplayReports()
+        display_obj = ReportDisplayer()
         if report_label == '-c':
             display_obj.display_chart(myreport,True)
         elif report_label == '-b':
@@ -331,17 +331,17 @@ def main():
     args = myparser.parse_args()
     dir_path = args.dirpath
     Validator.check_dirpath_exists(dir_path)
-    weather_report = GenerateAndDisplayWeatherReport()
+    weather_report = WeatherReportGenerator()
     if args.extreme_report:
-        weather_report.extreme_weathers(args.extreme_report, dir_path)
+        weather_report.generate_extreme_weathers_report(args.extreme_report, dir_path)
     elif args.average_report:
-        weather_report.average_weathers(args.average_report, dir_path)
+        weather_report.generate_average_weathers_report(args.average_report, dir_path)
     elif args.doublechart_report:
         report_label = '-c'
-        weather_report.weather_charts(args.doublechart_report, dir_path, report_label)
+        weather_report.generate_weather_charts(args.doublechart_report, dir_path, report_label)
     elif args.singlechart_report:
         report_label = '-b'
-        weather_report.weather_charts(args.singlechart_report, dir_path, report_label)
+        weather_report.generate_weather_charts(args.singlechart_report, dir_path, report_label)
     else:
         print('No Report Label Matched')
         exit()
