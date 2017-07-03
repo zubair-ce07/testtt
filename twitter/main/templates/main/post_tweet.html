@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post Tweet</title>
+    <style>
+         body{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <a href="{% url 'main:home' %}">Home</a>
+    <form method="post" action="{% url 'main:post_tweet' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Post Tweet">
+    </form>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SignUp</title>
+    <style>
+         body{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    {% if success_message %}
+        <p>{{ success_message }}</p>
+    {% endif %}
+
+    <form action="{% url 'main:signup' %}" method="post">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <input type="submit" value="Sign Up">
+    </form>
+
+</body>
+</html>

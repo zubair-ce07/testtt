@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <style>
+        body {
+            text-align: center; /* !!! */
+        }
+
+    </style>
+</head>
+<body>
+    {% if user.is_authenticated %}
+        <h1>Welcome {{ user }}</h1>
+        <p><a href="{% url 'main:logout' %}">Logout</a></p>
+        <hr><br>
+        <h2>Tweets</h2>
+        {% for tweet in user.tweet_set.all %}
+            <table align="center" border="1" cellspacing="0" cellpadding="20"  >
+            <tr>
+                <td>{{ tweet }}</td>
+            </tr>
+            </table><br>
+        {% endfor %}
+
+        <p><a href="{% url 'main:post_tweet' %}">Post New Tweet</a> </p>
+
+    {% else %}
+        <p><a href="{% url 'main:login' %}">LOGIN</a></p>
+        <p>OR</p>
+        <p><a href="{% url 'main:signup' %}">SIGN UP</a></p>
+    {% endif %}
+</body>
+</html>
