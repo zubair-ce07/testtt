@@ -67,12 +67,12 @@ class ErnstingsFamilySpider(CrawlSpider):
 
     def get_skus(self, sizes, product_item,color):
         skus = []
-        for s in sizes:
+        for size in sizes:
             sku = StoreKeepingUnits()
             sku['actual_price'] = product_item['actual_price']
             sku['discount_price'] = product_item['discount_price']
             sku['colour'] = color
-            sku['size'] = s
+            sku['size'] = size
             sku['sku_id'] = product_item['name'] + '_' + sku['size']
             skus.append(sku)
         return skus
