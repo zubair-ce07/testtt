@@ -15,8 +15,11 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.contrib.auth import views
 
 urlpatterns = [
+    url(r'^login/$', views.login, {'template_name': 'instagram/login.html'}, name='login'),
+    url(r'^logout/$', views.logout, name='login'),
     url(r'^instagram/', include('instagram.urls')),
     url(r'^admin/', admin.site.urls),
 ]
