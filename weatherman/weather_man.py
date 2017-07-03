@@ -20,7 +20,7 @@ def get_month(date):
 
 
 def get_input():
-    # Checking whether command line arguments are given or not
+    """Checking whether command line arguments are given or not"""
     if len(sys.argv) == 1 or len(sys.argv) > 4:
         print("Compile program as : weather_man.py -a -e -c"
               " date /path/to/files")
