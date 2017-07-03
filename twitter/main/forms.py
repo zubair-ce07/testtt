@@ -19,4 +19,3 @@ class LoginForm(forms.Form):
 
 class TweetForm(forms.Form):
     tweet_text = forms.CharField(widget=forms.Textarea)
-    pub_date = forms.DateTimeField(widget=forms.SelectDateWidget)
