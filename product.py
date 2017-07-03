@@ -8,6 +8,3 @@ class MarcJacobProduct(scrapy.Item):
     source_url = scrapy.Field()
     images = scrapy.Field()
     skus = scrapy.Field()
-
-
-
