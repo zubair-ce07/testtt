@@ -1,7 +1,6 @@
 import scrapy
 from scrapy.http import FormRequest
-from scrapy.loader import ItemLoader
-from FindADoctor.items import DoctorItem
+from FindADoctor.items import DoctorItem, DoctorItemLoader
 from datetime import datetime
 
 
@@ -14,19 +13,17 @@ class DoctorSpider(scrapy.Spider):
         viewstate = response.xpath('//input[@id = "__VIEWSTATE"]/@value').extract_first()
         yield FormRequest(url, method='POST',
                           formdata={'ctl00$cphContent$ctl01$ddlResultsPerPage': '99999', '__VIEWSTATE': viewstate},
-                          callback=self.generator_viewprofile_request)
+                          callback=self.generate_viewprofile_request)
 
     def generate_viewprofile_request(self, response):
-        doctor_ids = response.xpath('//div[@class="search-results-physician"]/input[@type = "hidden"]/@value').extract()
-        physicianid_keys = response.xpath('//div[@class="search-results-physician"]/input[@type = "hidden"]/@name').extract()
-        viewprofile_keys = response.xpath('//div[@class="view-profile-wrapper"]/input[@type = "submit"]/@name').extract()
-        viewstate = response.xpath('//input[@id = "__VIEWSTATE"]/@value').extract_first()
         url = self.start_urls[0]
-        for index in range(0, len(doctor_ids)):
-            id = (doctor_ids[index])
-            physicianid_key = physicianid_keys[index]
-            viewprofile_key = viewprofile_keys[index]
-            yield FormRequest(url, method='POST', formdata={physicianid_key: id, viewprofile_key: 'View Full Profile', '__VIEWSTATE': viewstate}, callback=self.extract_doctor_profile_info)
+        viewstate = response.xpath('//input[@id = "__VIEWSTATE"]/@value').extract_first()
+        doctor_profiles_selector = response.xpath('//div[@class="search-results-physician"]')
+        for doctor_profile in doctor_profiles_selector:
+            doctor_id = doctor_profile.xpath('./input[@type = "hidden"]/@value').extract_first()
+            doctor_id_key = doctor_profile.xpath('./input[@type = "hidden"]/@name').extract_first()
+            viewprofile_key = doctor_profile.xpath('./div[@class="row"]/div[@class="search-results-physician-info col-md-10"]/div[@class="search-results-physician-info-inner"]/div[@class="physician-info row"]/section/div[@class="view-profile-wrapper"]/input[@type = "submit"]/@name').extract_first()
+            yield FormRequest(url, method='POST', formdata={doctor_id_key: doctor_id, viewprofile_key: 'View Full Profile', '__VIEWSTATE': viewstate}, callback=self.parse_doctor_profile)
 
     def get_graduation_info(self, response):
         graduate_education = []
@@ -43,18 +40,18 @@ class DoctorSpider(scrapy.Spider):
         address = {'phone': phone, 'fax': fax, 'other': other}
         return address
 
-    def extract_doctor_profile_info(self, response):
-        l = ItemLoader(item=DoctorItem(), response=response)
-        l.add_value('crawled_date', str(datetime.now()))
-        l.add_value('source_url', response.url)
-        l.add_css('speciality', 'div#ctl00_cphContent_ctl01_pnlDocSpecialty h2::text')
-        l.add_css('image_url', 'div#ctl00_cphContent_ctl01_pnlDoctorImage img::attr(src)')
-        l.add_css('full_name', 'div#ctl00_cphContent_ctl01_pnlDocName h1::text')
+    def parse_doctor_profile(self, response):
+        doctor_item_loader = DoctorItemLoader(item=DoctorItem(), response=response)
+        doctor_item_loader.add_value('crawled_date', str(datetime.now()))
+        doctor_item_loader.add_value('source_url', response.url)
+        doctor_item_loader.add_css('speciality', 'div#ctl00_cphContent_ctl01_pnlDocSpecialty h2::text')
+        doctor_item_loader.add_css('image_url', 'div#ctl00_cphContent_ctl01_pnlDoctorImage img::attr(src)')
+        doctor_item_loader.add_css('full_name', 'div#ctl00_cphContent_ctl01_pnlDocName h1::text')
         address = self.get_address_info(response)
-        l.add_value('address', address)
-        l.add_css('medical_school', 'div#ctl00_cphContent_ctl01_pnlMedicalSchool li::text')
+        doctor_item_loader.add_value('address', address)
+        doctor_item_loader.add_css('medical_school', 'div#ctl00_cphContent_ctl01_pnlMedicalSchool li::text')
         affiliation = {'name': response.css('div#ctl00_cphContent_ctl01_pnlInternship li::text').extract()}
-        l.add_value('affiliation', affiliation)
+        doctor_item_loader.add_value('affiliation', affiliation)
         graduate_education = self.get_graduation_info(response)
-        l.add_value('graduate_education', graduate_education)
-        return l.load_item()
+        doctor_item_loader.add_value('graduate_education', graduate_education)
+        return doctor_item_loader.load_item()

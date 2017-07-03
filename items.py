@@ -1,5 +1,5 @@
 import scrapy
-from scrapy.loader.processors import MapCompose
+from scrapy.loader.processors import MapCompose, Join
 from scrapy.loader import ItemLoader
 
 
@@ -15,5 +15,5 @@ class DoctorItem(scrapy.Item):
     graduate_education = scrapy.Field()
 
 
-class DoctorLoader(ItemLoader):
+class DoctorItemLoader(ItemLoader):
     speciality_in = MapCompose(unicode.strip)
