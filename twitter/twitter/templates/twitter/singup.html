@@ -15,7 +15,7 @@
         <p>{{ success_message }}</p>
     {% endif %}
 
-    <form action="{% url 'main:signup' %}" method="post">
+    <form action="{% url 'signup' %}" method="post">
         {% csrf_token %}
 
         {{ form.as_p }}

@@ -1,8 +1,7 @@
-from django.forms import ModelForm
 from django import forms
-from main.models import Tweet
 from django.contrib.auth.models import User
-from django.contrib.admin import widgets
+from django.forms import ModelForm
+
 
 class UserSignUpForm(ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)

@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-<form action="{% url 'main:login' %}" method="post">
+<form action="{% url 'login' %}" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Login">
