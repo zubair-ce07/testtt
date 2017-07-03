@@ -10,23 +10,43 @@ from django.contrib.auth.models import User
 from django.urls import reverse, reverse_lazy
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.views import View
 
 
-@login_required(login_url='login')
-def training_index(request):
-    trainers_list = Trainer.objects.all()
-    template = loader.get_template('training/training_index.html')
-    name = ""
-    if request.user.first_name:
-        name = request.user.first_name
-    else:
-        name = request.user.username
+class TrainingIndex(View):
 
-    context = {
-        'user_name': name,
-        'trainers_list': trainers_list,
-    }
-    return HttpResponse(template.render(context, request))
+    @login_required(login_url='login')
+    def get(self, request):
+        trainers_list = Trainer.objects.all()
+        template = loader.get_template('training/training_index.html')
+        name = ""
+        if request.user.first_name:
+            name = request.user.first_name
+        else:
+            name = request.user.username
+
+        context = {
+            'user_name': name,
+            'trainers_list': trainers_list,
+        }
+        return HttpResponse(template.render(context, request))
+
+
+# @login_required(login_url='login')
+# def training_index(request):
+#     trainers_list = Trainer.objects.all()
+#     template = loader.get_template('training/training_index.html')
+#     name = ""
+#     if request.user.first_name:
+#         name = request.user.first_name
+#     else:
+#         name = request.user.username
+#
+#     context = {
+#         'user_name': name,
+#         'trainers_list': trainers_list,
+#     }
+#     return HttpResponse(template.render(context, request))
 
 
 @login_required(login_url='login')

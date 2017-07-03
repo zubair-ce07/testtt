@@ -12,7 +12,7 @@ urlpatterns = [
         name="technology_details"),
     url(r'^search/$', views.search, name="search"),
     url(r'^signup/$', views.signup, name="signup"),
-    url(r'^training_index/$', views.training_index, name="training_index"),
+    url(r'^training_index/$', views.TrainingIndex.as_view(), name="training_index"),
     url(r'^logout/$', views.logout, name="logout"),
     url(r'^login/$|^$', views.login, name="login"),
 ]
