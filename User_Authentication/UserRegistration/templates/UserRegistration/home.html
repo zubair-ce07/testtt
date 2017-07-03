@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+{% extends "UserRegistration/base.html" %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Home Page {% endblock %}</title>
+</head>
+<body>
+{% block heading %}
+    <p>Home Screen</p>
+{% endblock %}
+{% block content %}
+    <p><a href="{% url "users:login" %}">Login</a></p>
+    <p><a href="{% url "users:signup" %}">Sign Up</a></p>
+{% endblock %}
+{% block form_to_submit %}{% endblock %}
+</body>
+</html>

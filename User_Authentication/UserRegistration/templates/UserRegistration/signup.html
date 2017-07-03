@@ -1,0 +1,12 @@
+{% extends "UserRegistration/base.html" %}
+<head>
+    <title>{% block title %} Signup {% endblock %}</title>
+</head>
+<h1>{% block heading %}Create your Account{% endblock %}</h1>
+<br>
+
+{% block error_message %}
+{% if error %}
+    <p style="color: red">Username Already Exist</p>
+{% endif %}
+{% endblock %}

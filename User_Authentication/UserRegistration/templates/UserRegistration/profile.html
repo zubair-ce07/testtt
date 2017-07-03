@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{% extends "UserRegistration/base.html" %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} User Profile {% endblock %}</title>
+</head>
+<body>
+{% block logo %}{% endblock %}
+{% block content %}
+    {% if user.profile_picture %}
+    <img src="{{ user.profile_picture.url }}" height="250">
+    {% endif %}
+<p><b>Username: </b> {{ user.username }}</p>
+    <b>Full Name:</b> {{ user.first_name }} {{ user.last_name }}
+    <p><a href="{% url 'users:logout' %}">Logout</a></p>
+{% endblock %}
+</body>
+</html>

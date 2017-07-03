@@ -1,0 +1,23 @@
+{% extends "UserRegistration/base.html" %}
+<head>
+    <title>{% block title %} Login {% endblock %}</title>
+</head>
+{% block heading %}
+    <p>Login</p>
+{% endblock %}
+<hr>
+<body>
+    {% block error_message %}
+    {% if error_fields %}
+        <p style="color: red; font-weight: 300">
+            Enter correct username and password or <a href="{% url 'users:signup' %}">Signup</a>
+        </p>
+    {% elif error_not_login %}
+        <p style="color: red; font-weight: 300">
+            Please Login to view Profile
+        </p>
+    {% endif %}
+        <div>
+                <span>{{ form.errors }}</span>
+        </div>
+    {% endblock %}
