@@ -1,8 +1,10 @@
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule
-from .base import BaseParseSpider, BaseCrawlSpider, clean
 import re
 import json
+
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule
+
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
 class Mixin:
@@ -11,6 +13,8 @@ class Mixin:
     start_urls = ['http://www.bhldn.com/']
     market = 'US'
     brand = 'bhldr'
+    regexs = [r'All gowns .*', r'We recommend .*', r'See fit guide .*']
+    gender_map = {'groom': 'men', 'girl': 'girl', 'decor': 'homeware'}
 
 
 class BhldnParseSpider(BaseParseSpider, Mixin):
@@ -18,20 +22,20 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
     price_css = '.price::text'
 
     def parse(self, response):
-
+        sku_id = self.product_id(response)
         if clean(response.css('.moredetails-link')):
             return
-
-        sku_id = self.product_id(response)
-        garment = self.new_unique_garment(sku_id[0])
+        garment = self.new_unique_garment(sku_id)
         if not garment:
             return
 
         self.boilerplate_normal(garment, response)
 
-        garment['gender'] = self.gender(garment['url'])
-        if not garment['gender']:
-            garment['industry'] = 'homeware'
+        gender = self.gender(garment['url_original'])
+        if gender == 'homeware':
+            garment['industry'] = gender
+        else:
+            garment['gender'] = gender
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
         garment['merch_info'] = self.merch_info(response)
@@ -41,10 +45,10 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.product-form__unavailable p::text'))
 
     def product_id(self, response):
-        return clean(response.css('meta[itemprop=sku]::attr(content)'))
+        return clean(response.css('meta[itemprop=sku]::attr(content)'))[0]
 
     def product_name(self, response):
-        return clean(response.css('h1[itemprop=name]::text'))
+        return clean(response.css('h1[itemprop=name]::text'))[0]
 
     def product_description(self, response):
         return [rd for rd in self.clean_description(response) if not self.care_criteria(rd)]
@@ -54,8 +58,8 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
 
     def clean_description(self, response):
         description = self.raw_description(response)
-        for entry in list(description):
-            if any(re.match(regex, entry) for regex in [r'All gowns .*', r'We recommend .*', r'See fit guide .*']):
+        for entry in description:
+            if any(re.match(regex, entry) for regex in self.regexs):
                 description.remove(entry)
         return description
 
@@ -84,41 +88,41 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
         color, color_id = self.color(response)
-        sizes = response.css('select[data-color*="'+color_id+'"] option')[1:]
+        raw_skus = response.css('select[data-color*="'+color_id+'"] option')[1:]
         skus = {}
 
-        for size in sizes:
-            availability = json.loads(clean(size.css('option::attr(data-availability)'))[0])['STATUS']
-            if availability == 'instock':
-                availability = True
-            else:
-                availability = False
-            size_sku = clean(size.css('option::attr(value)'))[0]
-            saleprice = json.loads(clean(size.css('option::attr(data-saleprice)'))[0])['SALEPRICE']
-            price = json.loads(clean(size.css('option::attr(data-price)'))[0])['PRICE']
+        for raw_sku in raw_skus:
+            availability = self.check_availability(raw_sku)
+            size_sku = clean(raw_sku.css('option::attr(value)'))[0]
+            saleprice = json.loads(clean(raw_sku.css('option::attr(data-saleprice)'))[0])['SALEPRICE']
+            price = json.loads(clean(raw_sku.css('option::attr(data-price)'))[0])['PRICE']
             price = self.product_pricing_common_new('', money_strs=[saleprice+price])
-            size = clean(size.css('option::text'))[0]
-            sku = {'color': color, 'size': size, 'out_of_stock': availability}
+            size = clean(raw_sku.css('option::text'))[0]
+            sku = {'color': color, 'size': size}
+            if availability:
+                sku['out_of_stock'] = availability
             sku.update(price)
             skus[size_sku] = sku
 
         return skus
 
+    def check_availability(self, raw_sku):
+        availability = json.loads(clean(raw_sku.css('option::attr(data-availability)'))[0])['STATUS']
+        if availability == 'instock':
+            return True
+
     def gender(self, url):
-        if 'groom' in url:
-            return 'men'
-        elif 'girl' in url:
-            return 'girl'
-        elif not 'decor' in url:
-            return 'women'
-        return
+        for key, value in self.gender_map.items():
+            if key in url:
+                return value
+        return 'women'
 
 
 class BhldnCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = BhldnParseSpider()
 
-    listings_css = [".nav-secondary a", ".next a"]
+    listings_css = [".nav-secondary", ".next"]
     product_css = ".primary a"
 
     rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
