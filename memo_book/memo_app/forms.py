@@ -3,14 +3,15 @@ from django.core.validators import MinLengthValidator, MaxLengthValidator, Email
 
 
 class SignupForm(forms.Form):
+    error_css_class = 'error'
     name = forms.CharField(required=False, label='', max_length=100,
-                                widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}))
+                                widget=forms.TextInput(attrs={'class': 'form-control', 'style':'margin-bottom: 15px;', 'placeholder': 'Name'}))
     email = forms.EmailField(required=False, label='', max_length=100,
-                                widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+                                widget=forms.TextInput(attrs={'class': 'form-control ', 'style':'margin-bottom: 15px;', 'placeholder': 'Email'}))
     username = forms.CharField(required=False, label='', max_length=100,
-                                widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'User Name'}))
+                                widget=forms.TextInput(attrs={'class': 'form-control', 'style':'margin-bottom: 15px;', 'placeholder': 'User Name'}))
     password = forms.CharField(required=False, label='',max_length=100, widget=forms.TextInput
-                                (attrs={'class': 'form-control', 'placeholder': 'Password', 'type': 'password'}))
+                                (attrs={'class': 'form-control', 'placeholder': 'Password', 'type': 'password', 'style':'margin-bottom: 15px;'}))
 
     def clean_name(self):
         name = self.cleaned_data['name']
@@ -19,7 +20,7 @@ class SignupForm(forms.Form):
         try:
             min_validator(name)
         except:
-            raise forms.ValidationError('Name is required it couldn\'t be Null')
+            raise forms.ValidationError('Name is required it couldn\'t be Blank')
 
         try:
             max_validator(name)
@@ -45,7 +46,7 @@ class SignupForm(forms.Form):
         try:
             min_validator(username)
         except:
-            raise forms.ValidationError('User Name is required it couldn\'t be Null')
+            raise forms.ValidationError('User Name is required it couldn\'t be Blank')
 
         try:
             max_validator(username)
@@ -74,9 +75,9 @@ class SignupForm(forms.Form):
 
 class LoginForm(forms.Form):
     email = forms.EmailField(required=False, label='', max_length=100,
-                             widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+                             widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email', 'style':'margin-bottom: 15px;'}))
     password = forms.CharField(required=False, label='', max_length=100, widget=forms.TextInput
-                            (attrs={'class': 'form-control', 'placeholder': 'Password', 'type': 'password'}))
+                            (attrs={'class': 'form-control', 'placeholder': 'Password', 'type': 'password', 'style':'margin-bottom: 15px;'}))
 
     def clean_email(self):
         email = self.cleaned_data['email']
@@ -107,13 +108,13 @@ class LoginForm(forms.Form):
 
 class AddMemoForm(forms.Form):
     title = forms.CharField(required=False, label='', max_length=100,
-                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Title'}))
+                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Title', 'style':'margin-bottom: 15px;'}))
     memo_text = forms.CharField(required=False, label='',
-                           widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Memo Text'}))
+                           widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Memo Text', 'style':'margin-bottom: 15px;'}))
     url = forms.CharField(required=False, label='',
-                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Url'}))
+                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Url', 'style':'margin-bottom: 15px;'}))
     tags = forms.CharField(required=False, label='', max_length=300,
-                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tags, use comma seprated'}))
+                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tags, use comma seprated', 'style':'margin-bottom: 15px;'}))
 
     def clean_title(self):
         title = self.cleaned_data['title']
