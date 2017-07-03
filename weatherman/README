@@ -1,9 +1,0 @@
-Weather of the last decade is recorded and
-the program shows you the data on giving
-command line arguments.
-
-Data can be accessed using commands like:
-
-python weather_man.py -c 2005/6 ./weatherdata/
-python weather_man.py -a 2005/6 ./weatherdata/
-python weather_man.py -e 2011 ./weatherdata/
