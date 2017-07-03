@@ -1,16 +1,17 @@
+{% load sitename_tag %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html lang="en">
 <head>
-    <title>{% site_name %} : {% block title %}{% endblock %}</title>
+    <title>{% sitename_tag %}:{% block title %}{% endblock %}</title>
 </head>
 <body>
     <table>
       <tr>
         <td>
-          <a href="{% url 'search' %}">SEARCH TRAINEES</a>
+          <a href="{% url 'training:search' %}">SEARCH TRAINEES</a>
         </td>
         <td>
-          <input id="logout" onclick='location.href="{% url 'logout' %}"' type="button" value="Log Out">
+          <input id="logout" onclick='location.href="{% url 'training:logout' %}"' type="button" value="Log Out">
         </td>
       </tr>
       <tr> <h1>{% block content_title %}{% endblock %}</h1> </tr>

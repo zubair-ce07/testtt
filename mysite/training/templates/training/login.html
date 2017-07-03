@@ -1,11 +1,12 @@
 <form action="" method="post">
-    {% if error %}
+    {% for error in errors %}
       <p style="color:red">{{error}}</p>
-    {% endif %}
+    {% endfor %}
     {% csrf_token %}
     <table>
         {{ form.as_table }}
       </table>
       <input type="submit" value="Login" name="login">
-      <input id="signup" onclick='location.href="{% url 'signup' %}"' type="button" value="Signup">
+      <input id="signup" onclick='location.href="{% url 'training:signup' %}"' type="button" value="Signup">
 </form>
+  

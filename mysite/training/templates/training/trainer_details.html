@@ -10,7 +10,7 @@
     <h2>
       Trainee Assigned :
     </h2>
-      <a href="{% url 'trainee_details' trainee.id %}">{{ trainee.name }}</a>
+      <a href="{% url 'training:trainee_details' trainee.id %}">{{ trainee.name }}</a>
   {% else %}
       <p>No trainees assigned.</p>
   {% endif %}
@@ -22,7 +22,7 @@
     <ul>
     {% for assignment in assignments %}
         <li>
-          <a href="{% url 'assignment_details' assignment.id %}">
+          <a href="{% url 'training:assignment_details' assignment.id %}">
             {{ assignment.title }}
           </a>
         </li>

@@ -8,10 +8,10 @@
     <ul>
     {% for trainer in trainers_list %}
         <li>
-          <a href="{% url 'trainer_details' trainer.id %}">
+          <a href="{% url 'training:trainer_details' trainer.id %}">
             {{ trainer.name }}
           </a>:
-          <a href="{% url 'trainee_details' trainer.trainee.id %}">
+          <a href="{% url 'training:trainee_details' trainer.trainee.id %}">
             {{ trainer.trainee.name }}
           </a>
         </li>

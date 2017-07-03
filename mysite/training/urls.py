@@ -1,18 +1,21 @@
 from django.conf.urls import url
+
 from . import views
 
+app_name = "training"
 urlpatterns = [
-    url(r'^trainee/(?P<trainee_id>[0-9]+)/$', views.trainee_details,
-        name="trainee_details"),
-    url(r'^trainer/(?P<trainer_id>[0-9]+)/$', views.trainer_details,
-        name="trainer_details"),
-    url(r'^assignment/(?P<assignment_id>[0-9]+)/$', views.assignment_details,
-        name="assignment_details"),
-    url(r'^technology/(?P<technology_id>[0-9]+)/$', views.technology_details,
-        name="technology_details"),
-    url(r'^search/$', views.search, name="search"),
-    url(r'^signup/$', views.signup, name="signup"),
-    url(r'^training_index/$', views.TrainingIndex.as_view(), name="training_index"),
-    url(r'^logout/$', views.logout, name="logout"),
-    url(r'^login/$|^$', views.login, name="login"),
+    url(r'^trainee/(?P<trainee_id>[0-9]+)/$',
+        views.TraineeDetails.as_view(), name="trainee_details"),
+    url(r'^trainer/(?P<trainer_id>[0-9]+)/$',
+        views.TrainerDetails.as_view(), name="trainer_details"),
+    url(r'^assignment/(?P<assignment_id>[0-9]+)/$',
+        views.AssignmentDetails.as_view(), name="assignment_details"),
+    url(r'^technology/(?P<technology_id>[0-9]+)/$',
+        views.TechnologyDetails.as_view(), name="technology_details"),
+    url(r'^search/$', views.Search.as_view(), name="search"),
+    url(r'^signup/$', views.SignUp.as_view(), name="signup"),
+    url(r'^training_index/$',
+        views.TrainingIndex.as_view(), name="training_index"),
+    url(r'^logout/$', views.Logout.as_view(), name="logout"),
+    url(r'^login/$|^$', views.Login.as_view(), name="login"),
 ]
