@@ -58,3 +58,4 @@ target/
 
 #Project Files
 twitter/db.sqlite3
+poll_site/db.sqlite3
