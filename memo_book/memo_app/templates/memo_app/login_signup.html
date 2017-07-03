@@ -58,7 +58,7 @@
 										</div>
 									</div>
 								</form>
-								<form id="register-form" action="/signup" method="post" role="form" style="display: {% if is_sign_up %}  {{ 'block' }} {% else %} {{ 'none' }} {% endif %}">
+								<form id="register-form" action="/signup" method="post"  role="form" style="display: {% if is_sign_up %}  {{ 'block' }} {% else %} {{ 'none' }} {% endif %}">
 									 {% csrf_token %}
                                      {{ signup_form }}
 

@@ -14,3 +14,4 @@ class Memory(models.Model):
     text = models.TextField()
     url = models.CharField(max_length=300)
     tags = models.CharField(max_length=200)
+    image = models.FileField()

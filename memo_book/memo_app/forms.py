@@ -115,6 +115,9 @@ class AddMemoForm(forms.Form):
                            widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Url', 'style':'margin-bottom: 15px;'}))
     tags = forms.CharField(required=False, label='', max_length=300,
                            widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tags, use comma seprated', 'style':'margin-bottom: 15px;'}))
+    image = forms.FileField( label='Upload Image',
+                            widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'image', 'placeholder': 'Upload Image','accept':'image/*',
+                                                          'style':'margin-bottom: 15px;'}))
 
     def clean_title(self):
         title = self.cleaned_data['title']

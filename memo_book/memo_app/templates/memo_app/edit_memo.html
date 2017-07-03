@@ -35,7 +35,7 @@
 				<div class="panel panel-login">
 					<div class="panel-heading">
 
-                            <form id="register-form" action="/editmemo" method="post" role="form" style="display: block">
+                            <form id="register-form" action="/editmemo" enctype="multipart/form-data" method="post" role="form" style="display: block">
                                 {% csrf_token %}
                                 {{ memo_form }}
                                 <input type="hidden" name="memo_id" value="{{ memo_id }}">

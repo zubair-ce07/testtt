@@ -35,9 +35,11 @@
 				<div class="panel panel-login">
 					<div class="panel-heading">
 
-                            <form id="register-form" action="/addmemo" method="post" role="form" style="display: block">
+                            <form id="register-form" action="/addmemo" method="post" enctype="multipart/form-data" role="form" style="display: block">
 									 {% csrf_token %}
+                                <label for="image"> Upload Image </label>
                                      {{ memo_form }}
+
 									<div class="form-group">
 										<div class="row">
 											<div class="col-sm-6 col-sm-offset-3">
@@ -51,8 +53,7 @@
                         {% for memo in memories_of_user %}
 
                             <div class="jumbotron" style="padding: 5px">
-
-
+                                    <img width="100px" height="100px" src="{% static memo.image %}" style="float: left;margin: 5px"> <img>
                                     <p> <b>{{ memo.title }}</b> </p>
                                     <i> {{ memo.text }}</i>
                                     <a href="{{ memo.url }}"> visit </a>

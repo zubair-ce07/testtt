@@ -91,7 +91,7 @@ class Logout(View):
 
 class AddMemo(View):
     def post(self, request):
-        memo_form = AddMemoForm(request.POST)
+        memo_form = AddMemoForm(request.POST,  request.FILES)
         if memo_form.is_valid():
             memo_data = memo_form.cleaned_data
             memo = Memory()
@@ -100,12 +100,20 @@ class AddMemo(View):
             memo.text = memo_data['memo_text']
             memo.tags = memo_data['tags']
             memo.user_id_id = request.session.__getitem__('user_id')
+            memo.image = '/images/'
+            memo.save()
+            image = request.FILES['image']
+            image.name = str(memo.id)+'.jpg'
+            save_images(image)
+            memo.image = str(memo.image) + image.name
             memo.save()
             return HttpResponseRedirect('/home')
         else:
             page = loader.get_template('memo_app/home.html')
             context = {'memo_form': memo_form}
             return HttpResponse(page.render(context, request))
+
+
 
 
 class DeleteMemo(View):
@@ -127,7 +135,7 @@ class EditMemo(View):
         return HttpResponse(page.render(context, request))
 
     def post(self,request):
-        memo_form = AddMemoForm(request.POST)
+        memo_form = AddMemoForm(request.POST, request.FILES)
         id = request.POST.get('memo_id')
         if memo_form.is_valid():
             memo_data = memo_form.cleaned_data
@@ -136,6 +144,9 @@ class EditMemo(View):
             memo.url = memo_data['url']
             memo.text = memo_data['memo_text']
             memo.tags = memo_data['tags']
+            image = request.FILES['image']
+            image.name = str(memo.id) + '.jpg'
+            save_images(image)
             memo.save()
             return HttpResponseRedirect('/home')
         else:
@@ -144,4 +155,8 @@ class EditMemo(View):
             return HttpResponse(page.render(context, request))
 
 
-
+# Global method to save image files
+def save_images(image):
+        with open('memo_app/static/images/'+ image.name, 'wb+') as destination:
+            for img in image.chunks():
+                destination.write(img)
