@@ -27,6 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+SITE_NAME = 'Training Portal'
+
 
 # Application definition
 
