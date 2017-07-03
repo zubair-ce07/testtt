@@ -7,7 +7,7 @@ class TemperatureGraph:
         self.records = records
 
     def print_report(self):
-        print("Report3: ")
+        print("Temperature Graph: ")
 
         for record in self.records:
             day = record['day']

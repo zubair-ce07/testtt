@@ -11,7 +11,7 @@ class YearlyWeatherExtremesReport:
         self.max_humid_record = max(self.records, key=lambda x: x['maxHumidity'])
 
     def print_report(self):
-        print("Report1")
+        print("Yearly Weather Report")
         print("Highest: {}C on {} {}".format(
             self.max_temp_record['maxTemprature'],
             self.max_temp_record['month'],

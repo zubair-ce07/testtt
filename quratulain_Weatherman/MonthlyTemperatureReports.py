@@ -25,7 +25,7 @@ class MonthlyTemperatureReports:
         self.mean_humid_average = math.ceil(average(mean_humid))
 
     def print_report(self):
-        print("Report2:")
+        print("Monthly Temprature Report:")
         print("Highest Average: {}C ".format(self.max_temp_average))
         print("Lowest Average: {}C ".format(self.min_temp_average))
         print("Mean Humidity Average: {}% \n".format(self.mean_humid_average))
