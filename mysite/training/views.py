@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from forms import LoginForm, SignUpForm
-
 from django.conf import settings
 from django.contrib.auth import (
     authenticate, login as django_login,
@@ -18,6 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 
 from .models import Trainee, Trainer, Technology, Assignment
+from .forms import LoginForm, SignUpForm
 
 
 class TrainingIndex(LoginRequiredMixin, View):
@@ -67,7 +66,7 @@ class TrainerDetails(LoginRequiredMixin, View):
         try:
             trainer = Trainer.objects.get(id=trainer_id)
         except Trainer.DoesNotExist:
-            raise Http404("Trainee does not exist")
+            raise Http404("Trainer does not exist")
 
         context = {
             'trainer': trainer,
