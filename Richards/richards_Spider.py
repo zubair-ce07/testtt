@@ -57,9 +57,7 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def product_name(self, name):
-        for brand in self.brands:
-            name.replace(brand, "")
-        return name
+         return name.replace(self.brand_name(name), "")
 
     def colour_request(self, raw_product, currency):
         requests = []
@@ -127,12 +125,10 @@ class RichardsCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = RichardsParseSpider()
 
     def parse(self, response):
-        params = {'recsPerPage': 1000}
         for category_id, gender in self.gender_map.items():
             url = self.page_request_url
-            params.update({'N': category_id})
-            for parameter, value in params.items():
-                url = w3lib.url.add_or_replace_parameter(url, parameter, value)
+            url = w3lib.url.add_or_replace_parameter(url, 'N', category_id)
+            url = w3lib.url.add_or_replace_parameter(url, 'recsPerPage', 1000)
             yield Request(url=url, meta={'gender': gender}, callback=self.parse_listings)
 
     def parse_listings(self, response):
