@@ -41,10 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-AUTH_USER_MODEL = "training.CustomUser"
-
-AUTHENTICATION_BACKENDS = ('training.backends.CustomUserAuth')
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -123,7 +119,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
 MEDIA_ROOT = "media/"
 MEDIA_URL = '/media/'

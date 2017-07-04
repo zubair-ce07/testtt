@@ -6,30 +6,17 @@
   <h2>
     Name : {{trainer.name}}
   </h2>
-  {% if trainee %}
+  {% if trainees %}
     <h2>
-      Trainee Assigned :
-    </h2>
-      <a href="{% url 'training:trainee_details' trainee.id %}">{{ trainee.name }}</a>
-  {% else %}
-      <p>No trainees assigned.</p>
-  {% endif %}
-
-  {% if assignments %}
-    <h2>
-      Assignments Alloted :
+        Trainee Assigned :
     </h2>
     <ul>
-    {% for assignment in assignments %}
-        <li>
-          <a href="{% url 'training:assignment_details' assignment.id %}">
-            {{ assignment.title }}
-          </a>
-        </li>
+    {% for trainee in trainees %}
+        <li><a href="{% url 'training:trainee_details' trainee.id %}">{{ trainee.user.user_profile.name }}</a></li>
     {% endfor %}
     </ul>
   {% else %}
-      <p>No Assignments are alloted.</p>
+      <p>No trainees assigned.</p>
   {% endif %}
 {% else %}
     <p>No Trainers/Trainees are available.</p>

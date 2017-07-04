@@ -16,7 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 
 from .models import Trainee, Trainer, Technology, Assignment
-from .forms import LoginForm, SignUpForm
+from .forms import LoginForm, SignUpForm, ProfileForm
 
 
 class TrainingIndex(LoginRequiredMixin, View):
@@ -25,7 +25,7 @@ class TrainingIndex(LoginRequiredMixin, View):
     name = ''
 
     def get(self, request):
-        trainers_list = Trainer.objects.all()
+        trainees_list = Trainee.objects.all()
 
         if request.user.first_name:
             self.name = request.user.first_name
@@ -34,7 +34,7 @@ class TrainingIndex(LoginRequiredMixin, View):
 
         context = {
             'user_name': self.name,
-            'trainers_list': trainers_list,
+            'trainees_list': trainees_list,
         }
         return render(request, self.template_name, context)
 
@@ -52,7 +52,7 @@ class TraineeDetails(LoginRequiredMixin, View):
         context = {
             'trainee': trainee,
             'assignments': trainee.assignments.all(),
-            'image_url': trainee.picture.url
+            'image_url': trainee.user.user_profile.picture.url
         }
         return render(request, self.template_name, context)
 
@@ -70,9 +70,8 @@ class TrainerDetails(LoginRequiredMixin, View):
 
         context = {
             'trainer': trainer,
-            'assignments': trainer.assignments.all(),
-            'trainee': trainer.trainee,
-            'image_url': trainer.picture.url
+            'trainees': trainer.trainees.all(),
+            'image_url': trainer.user.user_profile.picture.url
         }
         return render(request, self.template_name, context)
 
@@ -128,7 +127,7 @@ class Login(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect(reverse('training_index'))
+            return redirect(reverse('training:training_index'))
         form = LoginForm(None)
         context = {
             'form': form
@@ -143,17 +142,18 @@ class Login(View):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+
+            user = authenticate(username=username, password=password)
+
+            if user and user.is_active:
+                django_login(request, user)
+                '''Redirect to a success page.'''
+                return redirect("training:training_index")
+            else:
+                messages.append("login failed")
+
         else:
             messages.append("Enter username and password")
-
-        user = authenticate(username=username, password=password)
-
-        if user and user.is_active:
-            django_login(request, user)
-            '''Redirect to a success page.'''
-            return redirect("training:training_index")
-        else:
-            messages.append("login failed")
 
         context = {
             'errors': messages,
@@ -162,31 +162,54 @@ class Login(View):
         return render(request, self.template_name, context)
 
 
-class SignUp(View):
+class Signup(View):
     template_name = 'training/signup.html'
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect(reverse('training_index'))
-        form = SignUpForm(None)
+            return redirect('training:training_index')
+
+        return render(request, self.template_name)
+
+
+class TrainerSignUp(View):
+    template_name = 'training/trainer_signup.html'
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect(reverse('training:training_index'))
+
+        user_form = SignUpForm(None)
+        # profile_form = ProfileForm(None)
         context = {
-            'form': form
+            'user_form': user_form,
+            # 'profile_form': profile_form
         }
         return render(request, self.template_name, context)
 
     def post(self, request):
-        form = SignUpForm(request.POST)
+        # profile_form = ProfileForm(request.POST)
+        user_form = SignUpForm(request.POST)
 
-        if form.is_valid():
-            user = form.save(commit=False)
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
+        if user_form.is_valid() and profile_form.is_valid():
+            user = user_form.save(commit=False)
+
+            username = user_form.cleaned_data['username']
+            password = user_form.cleaned_data['password']
             user.set_password(password)
+
+            # profile.picture = profile_form.cleaned_data['picture']
+
+            # import pdb; pdb.set_trace()
+
+            # profile.save()
+
             user.save()
             return redirect(reverse('training:login'))
 
         context = {
-            'form': form
+            'user_form': user_form,
+            # 'profile_form': profile_form
         }
         return render(request, self.template_name, context)
 

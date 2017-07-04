@@ -4,15 +4,15 @@
 {% if user_name %}
     <h1>Welcome : {{user_name}}</h1>
 {% endif %}
-{% if trainers_list %}
+{% if trainees_list %}
     <ul>
-    {% for trainer in trainers_list %}
+    {% for trainee in trainees_list %}
         <li>
-          <a href="{% url 'training:trainer_details' trainer.id %}">
-            {{ trainer.name }}
+          <a href="{% url 'training:trainer_details' trainee.trainer.id %}">
+              {{trainee.trainer.user.user_profile.name}}
           </a>:
-          <a href="{% url 'training:trainee_details' trainer.trainee.id %}">
-            {{ trainer.trainee.name }}
+          <a href="{% url 'training:trainee_details' trainee.id %}">
+              {{trainee.user.user_profile.name}}
           </a>
         </li>
     {% endfor %}
