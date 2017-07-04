@@ -5,9 +5,9 @@ from . import views
 
 urlpatterns = [
     url(r'^login/$', auth_views.login, {'template_name': 'connect/login.html'}, name='login'),
-    url(r'^logout/$', auth_views.logout, {'template_name': 'connect/login.html' }, name='logout'),
+    url(r'^logout/$', auth_views.logout, {'template_name': 'connect/login.html'}, name='logout'),
     url(r'^admin/', admin.site.urls),
-    url(r'^profile/$', views.profile, name='profile'),
+    url(r'^profile/$', views.viewprofile, name='profile'),
     url('^signup/$', views.create_user, name='create_user'),
-    url(r'^edit/$', views.edit_profile, name='edit_profile'),
+    url(r'^edit/$', views.editprofile, name='edit_profile'),
 ]

@@ -6,11 +6,11 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
-def profile(request):
+def viewprofile(request):
         user = request.user
         return render(request, 'connect/view_profile.html', {"user": user})
 
-def edit_profile(request):
+def editprofile(request):
     user = request.user
     form = EditProfileForm(request.POST or None, initial={'first_name': user.first_name, 'last_name': user.last_name,
                                                           'email': user.email})
@@ -20,7 +20,7 @@ def edit_profile(request):
             user.last_name = request.POST['last_name']
             user.email = request.POST['email']
             user.save()
-            return HttpResponseRedirect('%s'%(reverse('profile')))
+            return HttpResponseRedirect(reverse('profile'))
     context = {
         "form": form
     }
