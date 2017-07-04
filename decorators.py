@@ -1,6 +1,7 @@
 def bold(func):
     def wrapper(str_):
-        return func('<b> {} </b>'.format(str_))
+        str_ = func(str_)
+        return '<b> {0} </b>'.format(str_)
 
     return wrapper
 
@@ -8,7 +9,8 @@ def bold(func):
 def tag(name):
     def decorator(func):
         def wrapper(str_):
-            return func('{tag} {str_} {tag}'.format(tag=name, str_=str_))
+            str_ = func(str_)
+            return '{tag} {str_} {tag}'.format(tag=name, str_=str_)
 
         return wrapper
 
@@ -23,23 +25,21 @@ def force_str(func):
 
 
 @bold
+def to_bold(str_):
+    return str_
+
+
+@tag('<i>')
+def to_tag(str_):
+    return str_
+
+
+@force_str
 def print_str(str_):
     print(str_)
 
 
-@tag('<i>')
-def print_str1(str_):
-    print(str_)
-
-
-@force_str
-def print_str2(str_):
-    print(str_)
-
-
-
-
 if __name__ == '__main__':
-    print_str("hammad")
-    print_str1("hammad")
-    print_str2(b'hammad')
+    print(to_bold("hammad"))
+    print(to_tag("hammad"))
+    print_str(b'hammad')
