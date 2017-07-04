@@ -10,7 +10,7 @@ def tag(name):
     def decorator(func):
         def wrapper(str_):
             str_ = func(str_)
-            return '{tag} {str_} {tag}'.format(tag=name, str_=str_)
+            return '<{tag}> {str_} </{tag}>'.format(tag=name, str_=str_)
 
         return wrapper
 
@@ -19,7 +19,9 @@ def tag(name):
 
 def force_str(func):
     def wrapper(str_):
-        return func(str_.decode("utf-8"))
+        if isinstance(str_, bytes):
+            return func(str_.decode("utf-8"))
+        return func(str_)
 
     return wrapper
 
@@ -29,7 +31,7 @@ def to_bold(str_):
     return str_
 
 
-@tag('<i>')
+@tag('i')
 def to_tag(str_):
     return str_
 
