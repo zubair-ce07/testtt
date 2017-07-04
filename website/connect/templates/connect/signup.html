@@ -1,0 +1,14 @@
+ <html>
+<head>
+<title>Entrepreneurs Hub</title>
+</head>
+<body>
+<h2>Create An Acoount</h2>
+<form method = "POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+     <button type="submit">Sign Up</button>
+        <a href="/connect/login">Back</a>
+</form>
+</body>
+</html>

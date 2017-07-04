@@ -1,0 +1,17 @@
+ <html>
+<head>
+<title>Entrepreneurs Hub</title>
+</head>
+<body>
+{% if user %}
+    <h2>{{ user.username }}: Profile</h2>
+    <h3><b>Contact Information</b></h3>
+    <h4>E-Mail: {{ user.email}}</h4>
+    <h3><b>General Information</b></h3>
+    <h4>First Name: {{ user.first_name }}</h4>
+    <h4>Last Name: {{ user.last_name }}</h4>
+{% endif %}
+<a href="/connect/login">Logout</a>
+<a href="/connect/edit">Edit Profile</a>
+</body>
+</html>

@@ -1,0 +1,14 @@
+ <html>
+<head>
+<title>Entrepreneurs Hub</title>
+</head>
+<body>
+<h1>Edit Profile</h1>
+<form method="POST" action="/connect/edit/" class="" />
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
+</body>
+</html>
+

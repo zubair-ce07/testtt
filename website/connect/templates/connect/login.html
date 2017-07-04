@@ -1,0 +1,19 @@
+ <html>
+<head>
+<title>Entrepreneurs Hub</title>
+</head>
+<body>
+<h2>Welcome to Entrepreneurs Hub</h2>
+{% block content %}
+  <h2>Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+      <a href ="/profile/"><button type="submit">Login</button></a>
+  </form>
+{% endblock %}
+<p>You don't have an account? <a href="/connect/signup">Signup!</a></p>
+{% csrf_token %}
+</form>
+</body>
+</html>
