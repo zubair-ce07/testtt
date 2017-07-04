@@ -4,8 +4,10 @@ from django.core.validators import MinLengthValidator, MaxLengthValidator, Email
 
 class SignupForm(forms.Form):
     error_css_class = 'error'
-    name = forms.CharField(required=False, label='', max_length=100,
-                                widget=forms.TextInput(attrs={'class': 'form-control', 'style':'margin-bottom: 15px;', 'placeholder': 'Name'}))
+    first_name = forms.CharField(required=False, label='', max_length=100,
+                                widget=forms.TextInput(attrs={'class': 'form-control', 'style':'margin-bottom: 15px;', 'placeholder': 'First Name'}))
+    last_name = forms.CharField(required=False, label='', max_length=100,
+                                 widget=forms.TextInput(attrs={'class': 'form-control', 'style': 'margin-bottom: 15px;','placeholder': 'Last Name'}))
     email = forms.EmailField(required=False, label='', max_length=100,
                                 widget=forms.TextInput(attrs={'class': 'form-control ', 'style':'margin-bottom: 15px;', 'placeholder': 'Email'}))
     username = forms.CharField(required=False, label='', max_length=100,
@@ -13,21 +15,30 @@ class SignupForm(forms.Form):
     password = forms.CharField(required=False, label='',max_length=100, widget=forms.TextInput
                                 (attrs={'class': 'form-control', 'placeholder': 'Password', 'type': 'password', 'style':'margin-bottom: 15px;'}))
 
-    def clean_name(self):
-        name = self.cleaned_data['name']
+    def clean_first_name(self):
+        first_name = self.cleaned_data['first_name']
         min_validator = MinLengthValidator(1)
         max_validator = MaxLengthValidator(50)
         try:
-            min_validator(name)
+            min_validator(first_name)
         except:
-            raise forms.ValidationError('Name is required it couldn\'t be Blank')
+            raise forms.ValidationError('First Name is required it couldn\'t be Blank')
 
         try:
-            max_validator(name)
+            max_validator(first_name)
         except:
-            raise forms.ValidationError('Length of Name Shouldn\'t exceed 50')
+            raise forms.ValidationError('Length of First Name Shouldn\'t exceed 50')
+        return first_name
 
-        return name
+    def clean_last_name(self):
+        last_name = self.cleaned_data['last_name']
+
+        max_validator = MaxLengthValidator(50)
+        try:
+            max_validator(last_name)
+        except:
+            raise forms.ValidationError('Length of Last Name Shouldn\'t exceed 50')
+        return last_name
 
     def clean_email(self):
         email = self.cleaned_data['email']
@@ -74,19 +85,19 @@ class SignupForm(forms.Form):
 
 
 class LoginForm(forms.Form):
-    email = forms.EmailField(required=False, label='', max_length=100,
-                             widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Email', 'style':'margin-bottom: 15px;'}))
+    username = forms.CharField(required=False, label='', max_length=100,
+                             widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username', 'style':'margin-bottom: 15px;'}))
     password = forms.CharField(required=False, label='', max_length=100, widget=forms.TextInput
                             (attrs={'class': 'form-control', 'placeholder': 'Password', 'type': 'password', 'style':'margin-bottom: 15px;'}))
 
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        email_validator = EmailValidator()
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        min_validator = MinLengthValidator(1)
         try:
-            email_validator(email)
+            min_validator(username)
         except:
-            raise forms.ValidationError('Email is not correct')
-        return email
+            raise forms.ValidationError('Username is not valid')
+        return username
 
     def clean_password(self):
         password = self.cleaned_data['password']
@@ -96,7 +107,7 @@ class LoginForm(forms.Form):
         try:
             min_validator(password)
         except:
-            raise forms.ValidationError('Enter valid email address')
+            raise forms.ValidationError('Enter valid password')
 
         try:
             max_validator(password)

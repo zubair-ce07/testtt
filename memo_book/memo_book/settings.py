@@ -83,7 +83,7 @@ DATABASES = {
         'HOST': 'localhost',
         'USER': 'root',
         'PASSWORD': '123',
-        'NAME': 'memo_book',
+        'NAME': 'memo_app',
     }
 }
 
@@ -106,7 +106,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+AUTHENTICATION_BACKENDS = (
+        'django.contrib.auth.backends.ModelBackend',
+    )
+UserModel = 'django.contrib.auth.models.User'
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 

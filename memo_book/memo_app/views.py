@@ -5,12 +5,13 @@ from django.http import HttpResponse, HttpResponseRedirect
 from .forms import SignupForm, LoginForm, AddMemoForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User, Memory
+from django.contrib.auth import authenticate, login, logout
 
 
 class Home(View):
     def get(self, request):
         page = loader.get_template('memo_app/home.html')
-        memories_of_user = Memory.objects.filter(user_id_id = request.session.__getitem__('user_id'))
+        memories_of_user = Memory.objects.filter(user_id_id = request.user.id)
         paginator = Paginator(memories_of_user, 5)
         page_no = request.GET.get('page_no')
         try:
@@ -32,21 +33,21 @@ class Login(View):
         context = {'signup_form': signup_from, 'login_form': login_form}
         return HttpResponse(page.render(context, request))
 
-
     def post(self, request):
         login_form = LoginForm(request.POST)
         if login_form.is_valid():
-            login_data = login_form.cleaned_data;
-            user = User.objects.filter(email=login_data['email'], password=login_data['password']).first()
+            login_data = login_form.cleaned_data
+            username = login_data['username']
+            password = login_data['password']
+            user = authenticate(request, username=username, password=password)
             if user is not None:
-                request.session.__setitem__('user_name', user.name)
-                request.session.__setitem__('user_id', user.id)
+                login(request, user)
                 return HttpResponseRedirect('/home')
             else:
                 page = loader.get_template('memo_app/login_signup.html')
                 signup_from = SignupForm()
                 context = {'signup_form': signup_from, 'login_form': login_form,
-                           'is_sign_up': False, 'error_message': 'Email or password is not correct'}
+                           'is_sign_up': False, 'error_message': 'Username or password is not correct'}
                 return HttpResponse(page.render(context, request))
         else:
             page = loader.get_template('memo_app/login_signup.html')
@@ -64,18 +65,18 @@ class SignUp(View):
         return HttpResponse(page.render(context, request))
 
     def post(self, request):
-        new_user = User()
         signup_from = SignupForm(request.POST)
         if signup_from.is_valid():
             user_data = signup_from.cleaned_data
-            new_user.name = user_data['name']
-            new_user.email = user_data['email']
-            new_user.password = user_data['password']
-            new_user.user_name = user_data['username']
-            new_user.save()
-            request.session.__setitem__('user_name', new_user.name)
-            request.session.__setitem__('user_id', new_user.id)
-            return HttpResponseRedirect('/home')
+            try:
+                new_user = User.objects.create_user(user_data['username'], user_data['email'],  user_data['password'])
+                new_user.first_name = user_data['first_name']
+                new_user.last_name = user_data['last_name']
+                new_user.save()
+                login(request, new_user)
+                return HttpResponseRedirect('/home')
+            except:
+                pass
         else:
             login_form = LoginForm()
             page = loader.get_template('memo_app/login_signup.html')
@@ -85,7 +86,7 @@ class SignUp(View):
 
 class Logout(View):
     def post(self, request):
-        request.session.clear()
+        logout(request)
         return HttpResponseRedirect('/')
 
 
@@ -99,7 +100,7 @@ class AddMemo(View):
             memo.url = memo_data['url']
             memo.text = memo_data['memo_text']
             memo.tags = memo_data['tags']
-            memo.user_id_id = request.session.__getitem__('user_id')
+            memo.user_id_id = request.user.id
             memo.image = '/images/'
             memo.save()
             image = request.FILES['image']
