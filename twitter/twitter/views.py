@@ -19,6 +19,8 @@ def logout_view(request):
 
 class TweetView(View):
     def get(self, request):
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('home'))
         form = TweetForm()
         return render(request, 'twitter/tweet.html', {'form': form})
 
@@ -33,7 +35,10 @@ class TweetView(View):
 class HomeView(View):
     def get(self, request):
         context = {'user': request.user}
-        return render(request, 'twitter/home.html', context)
+        if request.user.is_authenticated:
+            return render(request, 'twitter/home.html', context)
+        else:
+            return render(request, 'twitter/home_unauthenticated.html')
 
 
 class LoginView(View):

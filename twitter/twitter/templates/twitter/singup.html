@@ -1,27 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>SignUp</title>
-    <style>
-         body{
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
+{% extends 'twitter/base.html' %}
 
-    {% if success_message %}
-        <p>{{ success_message }}</p>
-    {% endif %}
 
+{% block content %}
     <form action="{% url 'signup' %}" method="post">
         {% csrf_token %}
-
-        {{ form.as_p }}
+        {% for field in form %}
+            <br>
+            {{ field.label_tag}}
+            {{ field}}
+            {{ field.error}}<br>
+            {{ field.help_text}}<br>
+        {% endfor %}
 
         <input type="submit" value="Sign Up">
     </form>
-
-</body>
-</html>
+{% endblock %}
