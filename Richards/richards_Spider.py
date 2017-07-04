@@ -1,8 +1,10 @@
 import json
 import re
+import urllib.parse
+
 from scrapy import Request
 from .base import BaseParseSpider, BaseCrawlSpider, clean, CurrencyParser
-import urllib.parse
+
 
 
 class Mixin:
@@ -46,15 +48,15 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
         garment = response.meta['garment']
         raw_product = json.loads(response.text)
         currency = response.meta['currency']
+        colour = response.meta['colour']
 
-        garment['skus'].update(self.skus(raw_product, currency))
+        garment['skus'].update(self.skus(raw_product, currency, colour))
         garment['image_urls'] += self.image_urls(raw_product['mediaSets'])
 
         return self.next_request_or_garment(garment)
 
     def clean_name(self, name):
         return (name.replace("BIARRITZ", "")).replace("BIRKENSTOCK", "")
-
 
     def colour_request(self, raw_product, currency):
         requests = []
@@ -63,7 +65,7 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
             parameters['selectedSkuId'] = colour['skuId']
             parameters['productId'] = raw_product['id']
             colour_url = self.product_request_url + urllib.parse.urlencode(parameters)
-            requests.append(Request(url=colour_url, meta={'currency': currency}, callback=self.parse_colour))
+            requests.append(Request(url=colour_url, meta={'currency': currency, 'colour': colour}, callback=self.parse_colour))
         return requests
 
     def currency(self, response):
@@ -88,31 +90,26 @@ class RichardsParseSpider(BaseParseSpider, Mixin):
     def image_urls(self, images):
         return [img['zoom'] for img in images]
 
-    def skus(self, raw_product, currency):
+    def skus(self, raw_product, currency, colour):
         skus = {}
-        colours = raw_product['colorList']
         price = [raw_product['fromPrice'], raw_product['atualPrice'], currency]
         common_sku = self.product_pricing_common_new('', money_strs=price)
         colour_sku = raw_product['skuId']
-        colour_name = self.colour_name(colours, colour_sku)
+        colour_name = colour['name']
 
-        for raw_size in raw_product.get('sizeList', []):
+        for raw_size in raw_product.get('sizeList', ['no size']):
             sku = {}
-
-            size = self.one_size if raw_size['name'] == 'UN' else raw_size['name']
-
-            sku = {"size": size, 'colour': colour_name}
-            if not raw_size['hasStock']:
-                sku['out_of_stock'] = raw_size['hasStock']
-
+            sku['colour'] = colour_name
             sku.update(common_sku)
-            skus[colour_sku + "_" + raw_size['skuId']] = sku
+            if raw_size == 'no size':
+                sku['out_of_stock'] = True
+                skus[colour_sku] = sku
+            else:
+                sku["size"] = self.one_size if raw_size['name'] == 'UN' else raw_size['name']
+                if not raw_size['hasStock']:
+                    sku['out_of_stock'] = True
+                skus[colour_sku + "_" + raw_size['skuId']] = sku
         return skus
-
-    def colour_name(self, colours, colour_sku):
-        for colour in colours:
-            if colour['skuId'] == colour_sku:
-                return colour['name']
 
     def raw_product(self, response):
         script = response.xpath('//script[contains(., "var globalProduct =")]/text()').extract()
