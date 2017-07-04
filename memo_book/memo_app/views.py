@@ -6,9 +6,10 @@ from .forms import SignupForm, LoginForm, AddMemoForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User, Memory
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class Home(View):
+class Home(LoginRequiredMixin,View):
     def get(self, request):
         page = loader.get_template('memo_app/home.html')
         memories_of_user = Memory.objects.filter(user_id_id = request.user.id)
@@ -27,11 +28,15 @@ class Home(View):
 
 class Login(View):
     def get(self, request):
-        page = loader.get_template('memo_app/login_signup.html')
-        signup_from = SignupForm()
-        login_form = LoginForm()
-        context = {'signup_form': signup_from, 'login_form': login_form}
-        return HttpResponse(page.render(context, request))
+        if not request.user.is_authenticated():
+            page = loader.get_template('memo_app/login_signup.html')
+            signup_from = SignupForm()
+            login_form = LoginForm()
+            context = {'signup_form': signup_from, 'login_form': login_form}
+            return HttpResponse(page.render(context, request))
+        else:
+            return HttpResponseRedirect('/home')
+
 
     def post(self, request):
         login_form = LoginForm(request.POST)
@@ -58,11 +63,14 @@ class Login(View):
 
 class SignUp(View):
     def get(self, request):
-        page = loader.get_template('memo_app/login_signup.html')
-        signup_from = SignupForm()
-        login_form = LoginForm()
-        context = {'signup_form': signup_from, 'login_form': login_form, 'is_sign_up': True}
-        return HttpResponse(page.render(context, request))
+        if not request.user.is_authenticated():
+            page = loader.get_template('memo_app/login_signup.html')
+            signup_from = SignupForm()
+            login_form = LoginForm()
+            context = {'signup_form': signup_from, 'login_form': login_form, 'is_sign_up': True}
+            return HttpResponse(page.render(context, request))
+        else:
+            return HttpResponseRedirect('/home')
 
     def post(self, request):
         signup_from = SignupForm(request.POST)
@@ -76,7 +84,11 @@ class SignUp(View):
                 login(request, new_user)
                 return HttpResponseRedirect('/home')
             except:
-                pass
+                login_form = LoginForm()
+                page = loader.get_template('memo_app/login_signup.html')
+                context = {'signup_form': signup_from, 'login_form': login_form,'username_error':
+                           'User Name Already exists ', 'is_sign_up': True}
+                return HttpResponse(page.render(context, request))
         else:
             login_form = LoginForm()
             page = loader.get_template('memo_app/login_signup.html')
@@ -84,13 +96,13 @@ class SignUp(View):
             return HttpResponse(page.render(context, request))
 
 
-class Logout(View):
+class Logout(LoginRequiredMixin, View):
     def post(self, request):
         logout(request)
         return HttpResponseRedirect('/')
 
 
-class AddMemo(View):
+class AddMemo(LoginRequiredMixin, View):
     def post(self, request):
         memo_form = AddMemoForm(request.POST,  request.FILES)
         if memo_form.is_valid():
@@ -115,9 +127,7 @@ class AddMemo(View):
             return HttpResponse(page.render(context, request))
 
 
-
-
-class DeleteMemo(View):
+class DeleteMemo(LoginRequiredMixin, View):
     def post(self, request):
          id = request.POST.get('memo_id')
          memory = Memory.objects.get(pk=id)
@@ -125,7 +135,7 @@ class DeleteMemo(View):
          return HttpResponseRedirect('/home')
 
 
-class EditMemo(View):
+class EditMemo(LoginRequiredMixin,View):
     def get(self, request):
         id = request.GET.get('memo_id')
         memory = Memory.objects.get(pk=id)
