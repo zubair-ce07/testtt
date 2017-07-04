@@ -11,6 +11,7 @@ class PostAdmin(admin.ModelAdmin):
     list_display = ('pk', 'text', 'author', 'created_at')
     search_fields = ('text', 'author__username')
     list_filter = ('created_at',)
+    date_hierarchy = 'created_at'
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Comment)
