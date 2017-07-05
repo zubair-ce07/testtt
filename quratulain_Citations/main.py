@@ -13,8 +13,8 @@ if __name__ == '__main__':
 
     # Task 2
     print("\n Authors List: \n")
-    authors_list = citation.find_authors()
-    citation.print_authors(authors_list)
+    authors_list = citation.find_co_authors()
+    citation.print_co_authors(authors_list)
 
     # Task 3
     print("\n Common Co-Authors \n")

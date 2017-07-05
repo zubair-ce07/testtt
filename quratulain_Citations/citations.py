@@ -1,11 +1,13 @@
-from collections import defaultdict
+from collections import Counter
 import itertools
 import codecs
 import re
 
 
 class Citations:
-    citations = []
+    def __init__(self):
+        self.citations = []
+        self.regex = re.compile('(#[@tc\*]|#index)')
 
     def read_file(self, file_name):
         with codecs.open(file_name, encoding='iso-8859-1', mode='r') as open_file:
@@ -15,8 +17,6 @@ class Citations:
             for record in records:
                 cite = self.process_record(record)
                 self.citations.append(cite)
-
-        print(self.citations)
 
     def arrange_records(self, file_text):
         return list(map(lambda x: '#*' + x, file_text.split('#*')[1:]))
@@ -31,47 +31,41 @@ class Citations:
                        element.strip() != '']}
 
     def extract_value(self, record):
-        records = re.split('(#[\*|@|t|c]|#index)', record)
-        pairs = zip(records[1::2], records[2::2])
-        return {key: value for key, value in pairs}
+        records = self.regex.split(record)
+        return dict(zip(records[1::2], records[2::2]))
 
     def count_published_paper(self, start_year, end_year):
         return sum(start_year <= cite['year'] <= end_year for cite in self.citations)
 
-    def count_published_papers(self, duration):
-        return [self.count_published_paper(start_year, end_year) for start_year, end_year in
-                duration]
+    def count_published_paper_per_year_author(self, year, author):
+        return sum(year == cite['year'] and author in cite['author'] for cite in self.citations)
 
     def generate_records_per_year(self):
-        """ :return: [(author, year)] """
-        records = []
+        """ :return: {{author: {year:<2006>,year:<2007>}} """
+        records = {}
         for cite in self.citations:
             for author in cite.get('author'):
-                records.append((author, cite.get('year')))
+                year = cite.get('year')
+                records.setdefault(author, dict()).update(
+                    {year: self.count_published_paper_per_year_author(year, author)})
         return records
 
     def print_papers_published_percentage(self):
         records = self.generate_records_per_year()
+        for author, years in records.items():
+            for year, publications in years.items():
+                percentage = int(publications / len(years) * 100)
+                print("{}, {} -> {}%".format(author, year, percentage))
 
-        for author, year in records:
-            publications, author_occurrence = 0, 0
-            for author_compare, year_to_compare in records:
-                if author == author_compare:
-                    author_occurrence += 1
-                    if year == year_to_compare:
-                        publications += 1
-
-            print("{}, {} -> {}%".format(author, year, int(publications / author_occurrence * 100)))
-
-    def find_authors(self):
-        coauthors = defaultdict(set)
+    def find_co_authors(self):
+        coauthors = {}
         for cite in self.citations:
             for author, coauthor in itertools.permutations(cite['author'], 2):
-                coauthors[author].add(coauthor)
+                coauthors.setdefault(author, set()).add(coauthor)
         return coauthors
 
     def print_common_authors(self):
-        authors_records = self.find_authors()
+        authors_records = self.find_co_authors()
         pairs = itertools.combinations(authors_records.keys(), 2)
         for pair in pairs:
             common = set(authors_records[pair[0]]) & set(authors_records[pair[1]])
@@ -79,12 +73,12 @@ class Citations:
                 print("%s -> %s" % (', '.join(pair), ', '.join(common)))
 
     def print_published_papers_count(self, durations):
-        for index, duration in enumerate(durations):
-            start, end = duration[0], duration[1]
+        for start, end in durations:
             print(" {}, {} -> {}".format(str(start), str(end),
                                          self.count_published_paper(start, end)))
 
     @staticmethod
-    def print_authors(authors):
+    def print_co_authors(authors):
         for author, coauthor in authors.items():
             print("{} : {}".format(author, ', '.join(coauthor)))
+
