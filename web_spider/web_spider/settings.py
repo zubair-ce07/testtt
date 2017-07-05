@@ -1,4 +1,5 @@
 import os
+from os.path import abspath, dirname, join
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -64,8 +65,15 @@ USE_L10N = True
 
 USE_TZ = True
 
+LOGIN_URL = 'login'
+AUTH_USER_MODEL = 'url_crawler.CustomUser'
+
+AUTHENTICATION_BACKENDS = (
+    'url_crawler.auth_backend.CustomAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 STATIC_URL = '/static/'
 
-if os.path.exists('web_spider/conf.py'):
-    from web_spider.conf import SECRET_KEY, DATABASES
+if os.path.isfile(join(dirname(abspath(__file__)), 'conf.py')):
+    from web_spider.conf import *

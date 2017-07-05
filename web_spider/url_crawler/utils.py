@@ -52,10 +52,11 @@ class URLSpider:
 
         Returns:
             result (dict): returns meta data or None if error occurs
+
+        Raises:
+            TypeError: if response in not text or status is not OK
+            ConnectionError: if connection to URL can not be made
         """
-
-        result = None
-
         try:
             response = requests.get(self.url)
 
@@ -64,9 +65,9 @@ class URLSpider:
 
             # check if response is text and charset is UTF-8
             if response.status_code == 200 and content_type == 'text/html':
-                result = parse_html(response)
+                return parse_html(response)
+            else:
+                raise TypeError
 
         except requests.exceptions.ConnectionError:
-            result = None
-
-        return result
+            raise ConnectionError
