@@ -1,9 +1,9 @@
-from django.utils import timezone
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
+                                        PermissionsMixin)
 from django.core.mail import send_mail
-from django.contrib.auth.models import PermissionsMixin
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
@@ -35,12 +35,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=254, blank=True)
     last_name = models.CharField(max_length=254, blank=True)
     email = models.EmailField(blank=True, unique=True)
-    address1 = models.CharField(max_length=254, blank=True)
-    address2 = models.CharField(max_length=254, blank=True)
+    current_address = models.CharField(max_length=254, blank=True)
+    permanent_address = models.CharField(max_length=254, blank=True)
     area_code = models.CharField(max_length=20, blank=True)
     country_code = models.CharField(max_length=10, blank=True)
 
-    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
@@ -62,5 +62,4 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.first_name
 
     def email_user(self, subject, message, from_email=None, **kwargs):
-
         send_mail(subject, message, from_email, [self.email], **kwargs)

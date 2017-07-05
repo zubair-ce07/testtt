@@ -1,4 +1,5 @@
 from django.conf.urls import url
+
 from . import views
 
 app_name = 'custom_user'
@@ -9,5 +10,4 @@ urlpatterns = [
     url(r'^logout/$', views.LogoutView.as_view(), name='logout'),
     url(r'^edit/$', views.UserUpdate.as_view(), name='edit'),
     url(r'^view/$', views.ProfileView.as_view(), name='view'),
-    url(r'^$', views.UserLoginFormView.as_view(), name='login'),
 ]
