@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.views.generic import View, RedirectView, TemplateView
-from django.views.generic.edit import UpdateView
-from .forms import UserRegisterForm, UserLoginForm, UserUpdateForm
-from django.core.urlresolvers import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.urlresolvers import reverse, reverse_lazy
+from django.shortcuts import redirect, render
+from django.views.generic import RedirectView, TemplateView, View
+from django.views.generic.edit import UpdateView
+
+from .forms import UserLoginForm, UserRegisterForm, UserUpdateForm
 
 
 class UserRegisterFormView (View):
@@ -12,6 +13,8 @@ class UserRegisterFormView (View):
     template_name = 'users/register.html'
 
     def get(self, request):
+        if request.user.is_authenticated():
+            return redirect('users:profile')
         form = self.form_class(None)
         return render(request, self.template_name, {'form': form})
 
@@ -19,7 +22,6 @@ class UserRegisterFormView (View):
         form = self.form_class(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user.set_password(password)
             user.save()
@@ -32,6 +34,8 @@ class UserLoginFormView (View):
     template_name = 'users/login.html'
 
     def get(self, request):
+        if request.user.is_authenticated():
+            return redirect('users:profile')
         form = self.form_class(None)
         return render(request, self.template_name, {'form': form, 'error': ' '})
 
@@ -68,13 +72,13 @@ class Message:
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
-    template_name = "users/view.html"
-    login_url = '/login/'
+    template_name = "users/profile_view.html"
+    login_url = '/users/login/'
 
 
 class ProfilePage(LoginRequiredMixin, TemplateView):
     template_name = "users/profile.html"
-    login_url = '/login/'
+    login_url = '/users/login/'
 
 
 class LogoutView(RedirectView):

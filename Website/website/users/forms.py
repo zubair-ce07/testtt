@@ -1,5 +1,6 @@
-from django.contrib.auth.models import User
 from django import forms
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 
 
 class UserRegisterForm (forms.ModelForm):
@@ -27,7 +28,7 @@ class UserUpdateForm(forms.ModelForm):
 
     def save(self, commit=True):
         user_form = super(UserUpdateForm, self).save(commit=False)
-        user = User.objects.get(id=user_form.pk)
+        user = get_object_or_404(User, pk=user_form.pk)
         password = self.cleaned_data["password"]
         if password:
             user.set_password(password)
