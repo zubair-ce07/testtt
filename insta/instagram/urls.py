@@ -4,4 +4,6 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
+    # url(r'^search_form/$', views.search_form),
+    url(r'^search/$', views.search),
 ]

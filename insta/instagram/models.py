@@ -18,7 +18,7 @@ class User(models.Model):
 
 
 class Post(models.Model):
-    author = models.ForeignKey('User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     text = models.CharField(max_length=200)
 
