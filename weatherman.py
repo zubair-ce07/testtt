@@ -113,7 +113,6 @@ class DataExtractor():
             if year in files:
                 if full_month_name in files:
                     required_files.append(files)
-
         if not required_files:
             print('Data for this month is not available')
             exit()
