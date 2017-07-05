@@ -13,10 +13,10 @@ class Mixin:
     start_urls = ['http://www.bhldn.com/']
     market = 'US'
     brand = 'bhldn'
-    unwanted_description_re = [re.compile(r'All gowns .*'), re.compile(r'We recommend .*'),
-                               re.compile(r'See fit guide .*')]
-    gender_map = {'groom': 'men', 'girl': 'girl'}
-    industry_map = {'decor': 'homeware'}
+    unwanted_description_re = re.compile(
+        r'All gowns .*|We recommend .*|See fit guide .*')
+    brand_re = re.compile(r'By .*')
+    gender_map = {'groom': 'men', 'girl': 'girls'}
 
 
 class BhldnParseSpider(BaseParseSpider, Mixin):
@@ -26,7 +26,7 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
     def parse(self, response):
         sku_id = self.product_id(response)
 
-        if response.css('.moredetails-link').extract():
+        if response.css('.moredetails-link'):
             return
         garment = self.new_unique_garment(sku_id)
 
@@ -34,22 +34,19 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, response)
-        garment['industry'] = 'homeware' if self.is_industry(garment['url_original']) else None
-        garment['gender'] = self.gender(garment['url_original']) if not garment['industry'] else None
+
+        if self.is_homeware(garment['url_original']):
+            garment['industry'] = 'homeware'
+        else:
+            garment['gender'] = self.gender(garment['url_original'])
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
         garment['merch_info'] = self.merch_info(response)
 
         return garment
 
-    def is_industry(self, url):
-
-        for industry_string, industry in self.industry_map.items():
-
-            if industry_string in url:
-                return True
-
-        return False
+    def is_homeware(self, url):
+        return 'decor' in url
 
     def merch_info(self, response):
         return clean(response.css('.product-form__unavailable p::text'))
@@ -72,7 +69,7 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
 
         for rd in description:
 
-            if not any(re.match(regex, rd) for regex in self.unwanted_description_re):
+            if not re.match(self.unwanted_description_re, rd):
                 raw_description.append(rd)
 
         return raw_description
@@ -85,23 +82,25 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
 
         for entry in description:
 
-            if re.match(re.compile(r'By .*'), entry):
+            if re.match(self.brand_re, entry):
                 return entry
 
         return 'bhldn'
 
     def image_urls(self, response):
-        return clean(response.css('option[selected]::attr(value)'))
+        return clean(response.css('.js-bigimage::attr(href)'))
 
     def color(self, response):
-        color_id = clean(response.css('option::attr(value)'))[0]
-        color = json.loads(clean(response.css('option[value="'+color_id+'"]::attr(data-color)'))[0])
+        color_id = clean(response.css('option[selected]::attr(value)'))[0]
+        color = json.loads(
+            clean(response.css('option[value="' + color_id + '"]::attr(data-color)'))[0])
 
         return color['NAME'], color_id
 
     def skus(self, response):
         color, color_id = self.color(response)
-        raw_skus = response.css('select[data-color*="'+color_id+'"] option')[1:]
+        raw_skus = response.css(
+            'select[data-color*="' + color_id + '"] option')[1:]
         skus = {}
 
         for raw_sku in raw_skus:
@@ -119,8 +118,10 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_price(self, raw_sku):
-        saleprice = json.loads(clean(raw_sku.css('option::attr(data-saleprice)'))[0])['SALEPRICE']
-        price = json.loads(clean(raw_sku.css('option::attr(data-price)'))[0])['PRICE']
+        saleprice = json.loads(
+            clean(raw_sku.css('option::attr(data-saleprice)'))[0])['SALEPRICE']
+        price = json.loads(
+            clean(raw_sku.css('option::attr(data-price)'))[0])['PRICE']
 
         return self.product_pricing_common_new('', money_strs=[saleprice, price])
 
@@ -149,4 +150,3 @@ class BhldnCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
              Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'))
-
