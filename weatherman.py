@@ -33,7 +33,7 @@ class WeatherChartReport(object):
         self.lowest_temp = []
 
 
-class ReportFormer(object):
+class ReportMaker(object):
     def make_extreme_report(self, files, dir_path):
         myreport = ExtremeWeatherReport()
         extract_temp_vals = TemperatureValuesExtractor()
@@ -104,7 +104,7 @@ class ReportDisplayer(object):
             VariableFormatter.print_formatted_chart(output_variables, flag)
 
 
-class DataAccumulator():
+class DataExtractor():
     @staticmethod
     def acquire_files(dir_path, year, full_month_name):
         all_files = os.listdir(dir_path)
