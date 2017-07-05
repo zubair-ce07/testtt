@@ -16,7 +16,7 @@ class SignUpForm(forms.Form):
     first_name = forms.CharField(max_length=50)
     last_name = forms.CharField(max_length=50)
     password = forms.CharField(max_length=20, widget=forms.PasswordInput)
-    picture = forms.ImageField(max_length=200, required=False)
+    picture = forms.ImageField(required=False)
 
     def __update_user_profile(self, user):
         picture = self.cleaned_data['picture']
