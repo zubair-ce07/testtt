@@ -13,8 +13,7 @@ class Mixin:
     start_urls = ['http://www.bhldn.com/']
     market = 'US'
     brand = 'bhldn'
-    unwanted_description_re = re.compile(
-        r'All gowns .*|We recommend .*|See fit guide .*')
+    unwanted_description_re = re.compile('(All gowns|We recommend|See fit guide).*')
     brand_re = re.compile(r'By .*')
     gender_map = {'groom': 'men', 'girl': 'girls'}
 
@@ -68,7 +67,6 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
         raw_description = []
 
         for rd in description:
-
             if not re.match(self.unwanted_description_re, rd):
                 raw_description.append(rd)
 
@@ -81,7 +79,6 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
         description = self.raw_description(response)
 
         for entry in description:
-
             if re.match(self.brand_re, entry):
                 return entry
 
@@ -132,9 +129,7 @@ class BhldnParseSpider(BaseParseSpider, Mixin):
         return availability['STATUS'] == 'instock'
 
     def gender(self, url):
-
         for gender_string, gender in self.gender_map.items():
-
             if gender_string in url:
                 return gender
 
