@@ -20,7 +20,7 @@ class ErnstingsFamilySpider(CrawlSpider):
         limit = response.xpath(".//ul[@class='category_product_list']/@data-max-page").extract_first()
         url = urllib.parse.urljoin(self.start_urls[0], url[0][:-1])
         for index in range(int(limit)):
-            yield scrapy.Request(url + str(index + 1), callback=self.parse_detail)
+            yield scrapy.Request(url + str(index + 1))
 
     def parse_detail(self, response):
         product_item = Product()
