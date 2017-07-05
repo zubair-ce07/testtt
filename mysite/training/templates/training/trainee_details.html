@@ -2,9 +2,9 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if trainee %}
-  <img src="{{ image_url }}" alt="{{trainee.name}}" width="200" height="200"/>
+  <img src="{{ image_url }}" alt="{{trainee.user.user_profile.name}}" width="200" height="200"/>
   <h2>
-    Name : {{trainee.name}}
+    Name : {{trainee.user.user_profile.name}}
   </h2>
   {% if assignments %}
     <h2>

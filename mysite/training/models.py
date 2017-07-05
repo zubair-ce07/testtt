@@ -5,8 +5,6 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, User
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as get_text
 
 
@@ -38,31 +36,18 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.name
 
-    # def save(self, *args, **kwargs):
-
-
 
 class Trainer(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='trainer')
 
-    # def __str__(self):
-    #     return self.user.user_profile.name
+    def __str__(self):
+        return self.user.user_profile.name
 
 
 class Trainee(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='trainee')
     assignments = models.ManyToManyField(Assignment)
     trainer = models.ForeignKey(Trainer, related_name="trainees", null=True)
 
-    # def __str__(self):
-    #     return self.user.user_profile.name
-
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    import pdb; pdb.set_trace()
-    if created:
-        user = UserProfile.objects.create(user=instance.user,
-                                          name=instance.user.first_name,
-                                          picture=instance.picture)
-        Trainer.objects.create(user=instance)
+    def __str__(self):
+        return self.user.user_profile.name

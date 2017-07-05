@@ -15,8 +15,8 @@ from django.template import loader
 from django.urls import reverse, reverse_lazy
 from django.views import View
 
-from .models import Trainee, Trainer, Technology, Assignment
-from .forms import LoginForm, SignUpForm, ProfileForm
+from .models import Trainee, Trainer, Technology, Assignment, UserProfile
+from .forms import LoginForm, SignUpForm
 
 
 class TrainingIndex(LoginRequiredMixin, View):
@@ -25,16 +25,19 @@ class TrainingIndex(LoginRequiredMixin, View):
     name = ''
 
     def get(self, request):
-        trainees_list = Trainee.objects.all()
-
-        if request.user.first_name:
-            self.name = request.user.first_name
-        else:
-            self.name = request.user.username
+        trainers = Trainer.objects.all()
+        try:
+            request.user.trainer
+            status = "Trainer"
+        except Exception as e:
+            status = "Trainee"
 
         context = {
-            'user_name': self.name,
-            'trainees_list': trainees_list,
+            'image_url': request.user.user_profile.picture.url,
+            'user_name': request.user.get_full_name(),
+            'user': request.user,
+            'status': status,
+            'trainers': trainers,
         }
         return render(request, self.template_name, context)
 
@@ -46,7 +49,7 @@ class TraineeDetails(LoginRequiredMixin, View):
     def get(self, request, trainee_id):
         try:
             trainee = Trainee.objects.get(id=trainee_id)
-        except Traineeself.DoesNotExist:
+        except Trainee.DoesNotExist:
             raise Http404("Trainee does not exist")
 
         context = {
@@ -101,7 +104,7 @@ class TechnologyDetails(LoginRequiredMixin, View):
 
 
 class Search(LoginRequiredMixin, View):
-    template_name = 'training/trainee_search_results.html'
+    template_name = 'training/search_results.html'
     login_url = 'training:login'
 
     def get(self, request):
@@ -111,15 +114,20 @@ class Search(LoginRequiredMixin, View):
             if not q:
                 error = True
             else:
-                trainees = Trainee.objects.filter(name__contains=q)
+                try:
+                    users = UserProfile.objects.filter(name__contains=q)
+
+                except Trainee.DoesNotExist:
+                    raise Http404("Trainee does not exist")
+
                 context = {
-                    'trainees': trainees, 'query': q
+                    'users': users, 'query': q
                 }
                 return render(request, self.template_name, context)
         context = {
             'error': error
         }
-        return render(request, 'training/search_trainees.html', context)
+        return render(request, 'training/search_users.html', context)
 
 
 class Login(View):
@@ -142,7 +150,6 @@ class Login(View):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-
             user = authenticate(username=username, password=password)
 
             if user and user.is_active:
@@ -151,9 +158,6 @@ class Login(View):
                 return redirect("training:training_index")
             else:
                 messages.append("login failed")
-
-        else:
-            messages.append("Enter username and password")
 
         context = {
             'errors': messages,
@@ -173,43 +177,53 @@ class Signup(View):
 
 
 class TrainerSignUp(View):
-    template_name = 'training/trainer_signup.html'
+    template_name = 'training/user_signup.html'
 
     def get(self, request):
         if request.user.is_authenticated:
             return redirect(reverse('training:training_index'))
 
         user_form = SignUpForm(None)
-        # profile_form = ProfileForm(None)
         context = {
             'user_form': user_form,
-            # 'profile_form': profile_form
         }
         return render(request, self.template_name, context)
 
     def post(self, request):
-        # profile_form = ProfileForm(request.POST)
         user_form = SignUpForm(request.POST)
 
-        if user_form.is_valid() and profile_form.is_valid():
-            user = user_form.save(commit=False)
-
-            username = user_form.cleaned_data['username']
-            password = user_form.cleaned_data['password']
-            user.set_password(password)
-
-            # profile.picture = profile_form.cleaned_data['picture']
-
-            # import pdb; pdb.set_trace()
-
-            # profile.save()
-
-            user.save()
+        if user_form.is_valid():
+            user_form.save_trainer()
             return redirect(reverse('training:login'))
 
         context = {
             'user_form': user_form,
-            # 'profile_form': profile_form
+        }
+        return render(request, self.template_name, context)
+
+
+class TraineeSignUp(View):
+    template_name = 'training/user_signup.html'
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect(reverse('training:training_index'))
+
+        user_form = SignUpForm(None)
+        context = {
+            'user_form': user_form,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        user_form = SignUpForm(request.POST)
+
+        if user_form.is_valid():
+            user_form.save_trainee()
+            return redirect(reverse('training:login'))
+
+        context = {
+            'user_form': user_form,
         }
         return render(request, self.template_name, context)
 

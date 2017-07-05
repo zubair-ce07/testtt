@@ -2,17 +2,25 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if user_name %}
-    <h1>Welcome : {{user_name}}</h1>
+    <h2>Welcome : {{user_name}}</h2>
 {% endif %}
-{% if trainees_list %}
+<img src="{{ image_url }}" alt="{{trainee.name}}" width="200" height="200"/>
+<h2>Status : {{ status }}</h2>
+{% if status == 'Trainee' %}
+    <h2>
+      Trainer Assigned :
+      <a href="{% url 'training:trainer_details' user.trainee.trainer.id %}">
+        {{ user.trainee.trainer }}
+      </a>
+    </h2>
+{% endif %}
+<h2>All Trainers:</h2>
+{% if trainers %}
     <ul>
-    {% for trainee in trainees_list %}
+    {% for trainer in trainers %}
         <li>
-          <a href="{% url 'training:trainer_details' trainee.trainer.id %}">
-              {{trainee.trainer.user.user_profile.name}}
-          </a>:
-          <a href="{% url 'training:trainee_details' trainee.id %}">
-              {{trainee.user.user_profile.name}}
+          <a href="{% url 'training:trainer_details' trainer.id %}">
+              {{trainer.user.user_profile.name}}
           </a>
         </li>
     {% endfor %}

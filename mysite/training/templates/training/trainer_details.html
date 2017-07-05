@@ -2,13 +2,13 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if trainer %}
-  <img src="{{ image_url }}" alt="{{trainer.name}}" width="200" height="200">
+  <img src="{{ image_url }}" alt="{{trainer.user.user_profile.name}}" width="200" height="200">
   <h2>
-    Name : {{trainer.name}}
+    Name : {{trainer.user.user_profile.name}}
   </h2>
   {% if trainees %}
     <h2>
-        Trainee Assigned :
+        Trainees Assigned :
     </h2>
     <ul>
     {% for trainee in trainees %}
