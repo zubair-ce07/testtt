@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from .views import Login, SignUp, Home, Logout, AddMemo, DeleteMemo, EditMemo
+from .views import Login, SignUp, Home, Logout, AddMemo, DeleteMemo, EditMemo, UserProfile, EditProfile
 
 
 app_name = 'memo_app'
@@ -11,5 +11,7 @@ urlpatterns = [
     url(r'^home$', Home.as_view()),
     url(r'^addmemo$', AddMemo.as_view()),
     url(r'^deletememo$', DeleteMemo.as_view()),
-    url(r'^editmemo$', EditMemo.as_view())
+    url(r'^editmemo$', EditMemo.as_view()),
+    url(r'^profile$', UserProfile.as_view()),
+    url(r'^editprofile$', EditProfile.as_view())
 ]

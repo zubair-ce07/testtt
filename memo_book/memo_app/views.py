@@ -9,11 +9,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class Home(LoginRequiredMixin,View):
+class Home(LoginRequiredMixin, View):
     def get(self, request):
         page = loader.get_template('memo_app/home.html')
         memories_of_user = Memory.objects.filter(user_id_id = request.user.id)
-        paginator = Paginator(memories_of_user, 5)
+        paginator = Paginator(memories_of_user, 2)
         page_no = request.GET.get('page_no')
         try:
             memos = paginator.page(page_no)
@@ -166,8 +166,45 @@ class EditMemo(LoginRequiredMixin,View):
             return HttpResponse(page.render(context, request))
 
 
+class UserProfile(LoginRequiredMixin, View):
+    def get(self,request):
+        page = loader.get_template('memo_app/profile.html')
+        context = {}
+        return HttpResponse(page.render(context, request))
+
+
+class EditProfile(LoginRequiredMixin, View):
+
+    def get(self, request):
+        page = loader.get_template('memo_app/edit_profile.html')
+        user_form = SignupForm(initial={'first_name': request.user.first_name, 'last_name': request.user.last_name,
+                                        'username': request.user.username, 'email': request.user.email,
+                                        'password':'temporary to handle not valid'})
+        user_form.fields['password'].widget.attrs['class'] = 'hidden'
+        context = {'user_form': user_form}
+        return HttpResponse(page.render(context, request))
+
+    def post(self, request):
+        user_form = SignupForm(request.POST)
+        user_form.fields['password'].widget.attrs['class'] = 'hidden'
+        if user_form.is_valid():
+            user_data = user_form.cleaned_data
+            user = User.objects.get(pk=request.user.id)
+            user.first_name = user_data['first_name']
+            user.last_name = user_data['last_name']
+            user.username = user_data['username']
+            user.email = user_data['email']
+            user.save()
+            return HttpResponseRedirect('/home')
+        else:
+            page = loader.get_template('memo_app/edit_profile.html')
+            context = {'user_form': user_form}
+            return HttpResponse(page.render(context, request))
+
+
+
 # Global method to save image files
 def save_images(image):
-        with open('memo_app/static/images/'+ image.name, 'wb+') as destination:
+        with open('memo_app/static/images/' + image.name, 'wb+') as destination:
             for img in image.chunks():
                 destination.write(img)

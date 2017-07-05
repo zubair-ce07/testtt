@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'memo_app/bootstrap.min.css' %}" />
+    <title>Memo Book</title>
+</head>
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/home">Memo Book</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="">{{ user.first_name}}  {{ user.last_name }}</a></li>
+                  <li>  <form method="post" action="/logout"> {% csrf_token %}<input type="submit" value="Logout" ></form></li>
+            </ul>
+
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Body contents are starting from here -->
+  <div class="container">
+        <div class="row">
+			<div class="col-md-6 col-md-offset-3">
+
+            <div class="well well-sm">
+                <div class="row">
+                    <div class="col-sm-6 col-md-4">
+                        <img src="http://placehold.it/380x500" alt="" class="img-rounded img-responsive" />
+                    </div>
+                    <div class="col-sm-6 col-md-8">
+                        <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                        <small><cite title="San Francisco, USA">{{ user.username }} <i class="glyphicon glyphicon-map-marker">
+                        </i></cite></small>
+                        <p>
+                            <i class="glyphicon glyphicon-envelope"></i>{{ user.email }}
+                            <br />
+                            <i class="glyphicon glyphicon-gift"></i>{{ user.date_joined }}</p>
+                        <!-- Split button -->
+                        <div class="btn-group">
+                            <button type="button" onclick="window.location.href='/editprofile'" class="btn btn-primary"> Edit Profile </button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+  </div>
+
+
+
+</body>
+</html>
