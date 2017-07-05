@@ -72,6 +72,10 @@ def contact(request):
     return render(request, 'contact_form.html', {'form': form})
 
 
+def thanks(request):
+    # return HttpResponse('Thanks! :3')
+    return render(request, 'thanks.html')
+
 # def search(request):
 #     # error = False
 #     if 'query' in request.GET:
