@@ -219,7 +219,6 @@ class TraineeSignUp(View):
         user_form = SignUpForm(request.POST)
 
         if user_form.is_valid():
-            import pdb; pdb.set_trace()
             user_form.save_trainee()
             return redirect(reverse('training:login'))
 
