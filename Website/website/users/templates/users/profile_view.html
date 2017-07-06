@@ -1,0 +1,13 @@
+{% if user.is_authenticated %}
+<a href="{% url 'users:profile' %}">Home</a>
+<a href="{% url 'users:logout' %}">Log Out</a>
+<br>
+Username: {{ user.username }}
+<br>
+Email: {{ user.email }}
+<br>
+First Name: {{ user.first_name }}
+<br>
+Last Name: {{ user.last_name }}
+
+{% endif %}
