@@ -1,17 +1,10 @@
-# -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# http://doc.scrapy.org/en/latest/topics/items.html
-
-import scrapy
+from scrapy import Item, Field
 
 
-class MarcJacobsItem(scrapy.Item):
-    url = scrapy.Field()
-    brand = scrapy.Field()
-    name = scrapy.Field()
-    images_url = scrapy.Field()
-    description = scrapy.Field()
-    skus = scrapy.Field()
+class MarcJacobsItem(Item):
+    url = Field()
+    brand = Field()
+    name = Field()
+    image_urls = Field()
+    description = Field()
+    skus = Field()
