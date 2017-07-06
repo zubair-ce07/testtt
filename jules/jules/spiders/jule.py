@@ -71,7 +71,8 @@ class JulesSpider(CrawlSpider):
         item['image_urls'].extend(response.css('.product-image-link::attr(href)').extract())
         next_url = response.meta['urls'].pop()
         if len(response.meta['urls']) is 1:
-            yield Request(next_url, callback=self.get_image_urls, meta={'item': item, 'urls': response.meta['urls']})
+            yield Request(next_url, callback=self.get_image_urls,
+                          meta={'item': item, 'urls': response.meta['urls']})
         else:
             yield item
 
