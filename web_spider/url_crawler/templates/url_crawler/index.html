@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>URL Crawler</title>
+</head>
+<body>
+    <h3>Welcome {{ user.first_name }}</h3>
+    <a href="{% url 'logout' %}">Logout</a>
+    <form method="post">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Submit">
+    </form><br/>
+    {% if size %}
+        <b>Page Size: </b>{{ size }}<br/>
+        <b>Total Tags: </b>{{ total_tags }}<br/>
+        <b>Meta Tags: </b>{{ meta_tags }}<br/>
+        <b>Link Tags: </b>{{ link_tags }}<br/><br/>
+        <b>Links: </b>
+        <ol>
+            {% for link in link_urls %}
+                <li>{{ link }}</li>
+            {% endfor %}
+        </ol>
+    {% elif error %}
+        <b>Error: </b>{{ error }}
+    {% endif %}
+</body>
+</html>
