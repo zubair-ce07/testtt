@@ -1,0 +1,1561 @@
+[
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 1,
+    "fields": { "app_label": "admin", "model": "logentry" }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 5,
+    "fields": { "app_label": "contenttypes", "model": "contenttype" }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 6,
+    "fields": { "app_label": "sessions", "model": "session" }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "9c7fdh7rpgu07hhm1p9g5trk7mg2z477",
+    "fields": {
+      "session_data": "N2E2YzJhNjZkZjMwZGZjYjgzZTQ3YjI1Y2FiMWM2YzlmNTU2NTAzNjp7Il9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIiwiX2F1dGhfdXNlcl9oYXNoIjoiNjdjMzNiM2FkOTI1ZGYxNzNmMWY1ZjdiNDAzMjJjNDQ2M2M1OWYyZSIsIl9hdXRoX3VzZXJfaWQiOiIxIn0=",
+      "expire_date": "2017-07-16T20:22:44.658Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "jlf2mzf4pi2cb4g2qzvdh9xcjjjof5q6",
+    "fields": {
+      "session_data": "Y2ZhNTJhZTY2YzgzODY4M2ZhZWFmZTdkMGMwODM4Y2IwYTllMjlmYzp7Il9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIiwiX2F1dGhfdXNlcl9pZCI6IjEiLCJfYXV0aF91c2VyX2hhc2giOiI2N2MzM2IzYWQ5MjVkZjE3M2YxZjVmN2I0MDMyMmM0NDYzYzU5ZjJlIn0=",
+      "expire_date": "2017-07-13T13:21:59.923Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "mymwdyjsvyrq7mnuw4jklh2gu1hyxfhr",
+    "fields": {
+      "session_data": "NzZhMWNhOGRiZDEyYzQ2MzI1N2VhZmExNTExOTEwYmI0NGM5NjA0Mzp7Im51bV92aXNpdHMiOjJ9",
+      "expire_date": "2017-07-16T15:48:06.200Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "zp2yyzdpt4wp96uv1ybl64ji8t83jthv",
+    "fields": {
+      "session_data": "YjY4YzBhNmYzYThmNjUwYmJmNmU0OGFlOGYzZjY3NWQzNjE5YmNkODp7Il9hdXRoX3VzZXJfaGFzaCI6IjY3YzMzYjNhZDkyNWRmMTczZjFmNWY3YjQwMzIyYzQ0NjNjNTlmMmUiLCJfYXV0aF91c2VyX2lkIjoiMSIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=",
+      "expire_date": "2017-07-18T16:05:34.713Z"
+    }
+  },
+  { "model": "catalog.genre", "pk": 12, "fields": { "name": "Fiction" } },
+  {
+    "model": "catalog.genre",
+    "pk": 13,
+    "fields": { "name": "Science Fiction" }
+  },
+  { "model": "catalog.genre", "pk": 14, "fields": { "name": "Drama" } },
+  { "model": "catalog.genre", "pk": 16, "fields": { "name": "Poetry" } },
+  {
+    "model": "catalog.author",
+    "pk": 1,
+    "fields": {
+      "first_name": "Scott",
+      "last_name": "Snyder",
+      "date_of_birth": "1976-01-01",
+      "date_of_death": null
+    }
+  },
+  {
+    "model": "catalog.author",
+    "pk": 3,
+    "fields": {
+      "first_name": "Stan",
+      "last_name": "Lee",
+      "date_of_birth": "1922-01-22",
+      "date_of_death": "2016-12-10"
+    }
+  },
+  {
+    "model": "catalog.author",
+    "pk": 4,
+    "fields": {
+      "first_name": "Frank",
+      "last_name": "West",
+      "date_of_birth": "1980-10-02",
+      "date_of_death": "2016-12-10"
+    }
+  },
+  {
+    "model": "catalog.author",
+    "pk": 5,
+    "fields": {
+      "first_name": "Hameed",
+      "last_name": "Bashir",
+      "date_of_birth": "2017-07-04",
+      "date_of_death": null
+    }
+  },
+  { "model": "catalog.language", "pk": 1, "fields": { "name": "English" } },
+  { "model": "catalog.language", "pk": 2, "fields": { "name": "French" } },
+  {
+    "model": "catalog.book",
+    "pk": 1,
+    "fields": {
+      "title": "Batman",
+      "author": 1,
+      "summary": "a b c d",
+      "isbn": "1234567891234",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 2,
+    "fields": {
+      "title": "Spiderman",
+      "author": 3,
+      "summary": "z y x w",
+      "isbn": "9876543219876",
+      "language": 1,
+      "genre": [12, 13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 3,
+    "fields": {
+      "title": "a",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [12]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 4,
+    "fields": {
+      "title": "a",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [12]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 5,
+    "fields": {
+      "title": "c",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 6,
+    "fields": {
+      "title": "f",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 7,
+    "fields": {
+      "title": "fd",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 8,
+    "fields": {
+      "title": "fda",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 9,
+    "fields": {
+      "title": "fdads",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 10,
+    "fields": {
+      "title": "fdadsds",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "catalog.book",
+    "pk": 11,
+    "fields": {
+      "title": "fdadsdsds",
+      "author": 1,
+      "summary": "b",
+      "isbn": "1234567891233",
+      "language": 1,
+      "genre": [13]
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 1,
+    "fields": {
+      "name": "Can add log entry",
+      "content_type": 1,
+      "codename": "add_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 2,
+    "fields": {
+      "name": "Can change log entry",
+      "content_type": 1,
+      "codename": "change_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 3,
+    "fields": {
+      "name": "Can delete log entry",
+      "content_type": 1,
+      "codename": "delete_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 4,
+    "fields": {
+      "name": "Can add permission",
+      "content_type": 2,
+      "codename": "add_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 5,
+    "fields": {
+      "name": "Can change permission",
+      "content_type": 2,
+      "codename": "change_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 6,
+    "fields": {
+      "name": "Can delete permission",
+      "content_type": 2,
+      "codename": "delete_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 7,
+    "fields": {
+      "name": "Can add group",
+      "content_type": 3,
+      "codename": "add_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 8,
+    "fields": {
+      "name": "Can change group",
+      "content_type": 3,
+      "codename": "change_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 9,
+    "fields": {
+      "name": "Can delete group",
+      "content_type": 3,
+      "codename": "delete_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 10,
+    "fields": {
+      "name": "Can add user",
+      "content_type": 4,
+      "codename": "add_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 11,
+    "fields": {
+      "name": "Can change user",
+      "content_type": 4,
+      "codename": "change_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 12,
+    "fields": {
+      "name": "Can delete user",
+      "content_type": 4,
+      "codename": "delete_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 13,
+    "fields": {
+      "name": "Can add content type",
+      "content_type": 5,
+      "codename": "add_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 14,
+    "fields": {
+      "name": "Can change content type",
+      "content_type": 5,
+      "codename": "change_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 15,
+    "fields": {
+      "name": "Can delete content type",
+      "content_type": 5,
+      "codename": "delete_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 16,
+    "fields": {
+      "name": "Can add session",
+      "content_type": 6,
+      "codename": "add_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 17,
+    "fields": {
+      "name": "Can change session",
+      "content_type": 6,
+      "codename": "change_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 18,
+    "fields": {
+      "name": "Can delete session",
+      "content_type": 6,
+      "codename": "delete_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 19,
+    "fields": {
+      "name": "Can add genre",
+      "content_type": 7,
+      "codename": "add_genre"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 20,
+    "fields": {
+      "name": "Can change genre",
+      "content_type": 7,
+      "codename": "change_genre"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 21,
+    "fields": {
+      "name": "Can delete genre",
+      "content_type": 7,
+      "codename": "delete_genre"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 22,
+    "fields": {
+      "name": "Can add book",
+      "content_type": 8,
+      "codename": "add_book"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 23,
+    "fields": {
+      "name": "Can change book",
+      "content_type": 8,
+      "codename": "change_book"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 24,
+    "fields": {
+      "name": "Can delete book",
+      "content_type": 8,
+      "codename": "delete_book"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 25,
+    "fields": {
+      "name": "Can add author",
+      "content_type": 9,
+      "codename": "add_author"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 26,
+    "fields": {
+      "name": "Can change author",
+      "content_type": 9,
+      "codename": "change_author"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 27,
+    "fields": {
+      "name": "Can delete author",
+      "content_type": 9,
+      "codename": "delete_author"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 28,
+    "fields": {
+      "name": "Can add book instance",
+      "content_type": 10,
+      "codename": "add_bookinstance"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 29,
+    "fields": {
+      "name": "Can change book instance",
+      "content_type": 10,
+      "codename": "change_bookinstance"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 30,
+    "fields": {
+      "name": "Can delete book instance",
+      "content_type": 10,
+      "codename": "delete_bookinstance"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 31,
+    "fields": {
+      "name": "Can add language",
+      "content_type": 11,
+      "codename": "add_language"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 32,
+    "fields": {
+      "name": "Can change language",
+      "content_type": 11,
+      "codename": "change_language"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 33,
+    "fields": {
+      "name": "Can delete language",
+      "content_type": 11,
+      "codename": "delete_language"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 34,
+    "fields": {
+      "name": "Set book as returned",
+      "content_type": 10,
+      "codename": "can_mark_returned"
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": { "name": "Library Members", "permissions": [] }
+  },
+  {
+    "model": "auth.group",
+    "pk": 2,
+    "fields": { "name": "Librarians", "permissions": [34] }
+  },
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$36000$bW4dFRYpRRhU$rOrx7cQeH6OaQDlxWN+bW2OmU90K+muaFTLJbv+Q4wk=",
+      "last_login": "2017-07-04T16:05:34.647Z",
+      "is_superuser": true,
+      "username": "fakhar",
+      "first_name": "",
+      "last_name": "",
+      "email": "fakhar.muhammad@arbisoft.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2017-06-29T13:21:47.834Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$36000$bqos7E9NdwVV$2ZwOVWnV5XIuLqM0q8fQKifxzvn6AWvE6HsIIsRyPS4=",
+      "last_login": "2017-07-04T15:45:28.449Z",
+      "is_superuser": false,
+      "username": "ulblul",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2017-07-02T17:28:14Z",
+      "groups": [1],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$36000$IYsITew4egPq$nnkEL9ACxUrtSnvG6QEk0DaHZ513oYs8sivCgkPYILo=",
+      "last_login": "2017-07-02T19:34:00.731Z",
+      "is_superuser": false,
+      "username": "gulfaam",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2017-07-02T17:31:15Z",
+      "groups": [1],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$36000$J5FeBs23VCiI$jeEkoPRH4oXvASfrGA4oDshVJ6giba6ADF+Fp82cDwI=",
+      "last_login": "2017-07-04T14:59:07.907Z",
+      "is_superuser": false,
+      "username": "hameed",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2017-07-02T17:31:36Z",
+      "groups": [2],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "password": "sdfa",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "admi",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2017-07-04T16:28:03.676Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "password": "def",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "abc",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2017-07-04T16:28:14.075Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "password": "def",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "abcd",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2017-07-04T16:28:58.986Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "password": "def",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "abcg",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2017-07-04T16:29:21.738Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "catalog.bookinstance",
+    "pk": "1bd15091-260d-4f10-8c77-e2d54f94d924",
+    "fields": {
+      "book": 2,
+      "imprint": "1",
+      "due_back": null,
+      "status": "a",
+      "borrower": null
+    }
+  },
+  {
+    "model": "catalog.bookinstance",
+    "pk": "31c1b5d3-9bc6-485c-8000-077429a8699c",
+    "fields": {
+      "book": 1,
+      "imprint": "3",
+      "due_back": "2017-01-01",
+      "status": "d",
+      "borrower": null
+    }
+  },
+  {
+    "model": "catalog.bookinstance",
+    "pk": "40a62bd6-cb83-48dc-a803-fc4306199d71",
+    "fields": {
+      "book": 1,
+      "imprint": "2",
+      "due_back": null,
+      "status": "o",
+      "borrower": 3
+    }
+  },
+  {
+    "model": "catalog.bookinstance",
+    "pk": "6278de5e-0582-4576-baa2-869709a9c521",
+    "fields": {
+      "book": 1,
+      "imprint": "1",
+      "due_back": "2017-07-20",
+      "status": "o",
+      "borrower": 3
+    }
+  },
+  {
+    "model": "catalog.bookinstance",
+    "pk": "8d1990e0-e0e8-42e5-8584-a5beedbc641b",
+    "fields": {
+      "book": 2,
+      "imprint": "2",
+      "due_back": "2017-07-01",
+      "status": "a",
+      "borrower": null
+    }
+  },
+  {
+    "model": "catalog.bookinstance",
+    "pk": "9e6524dc-d022-4015-9070-0c523212411f",
+    "fields": {
+      "book": 2,
+      "imprint": "4",
+      "due_back": "2017-01-01",
+      "status": "o",
+      "borrower": 2
+    }
+  },
+  {
+    "model": "catalog.bookinstance",
+    "pk": "ab7530c6-0da3-4f8f-8879-3062ce22fd26",
+    "fields": {
+      "book": 1,
+      "imprint": "3",
+      "due_back": "2017-01-01",
+      "status": "d",
+      "borrower": null
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 1,
+    "fields": {
+      "action_time": "2017-06-29T13:33:17.657Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "11",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 2,
+    "fields": {
+      "action_time": "2017-06-29T13:33:17.731Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "10",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 3,
+    "fields": {
+      "action_time": "2017-06-29T13:33:17.822Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "9",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 4,
+    "fields": {
+      "action_time": "2017-06-29T13:33:17.897Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "8",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 5,
+    "fields": {
+      "action_time": "2017-06-29T13:33:17.964Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "7",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 6,
+    "fields": {
+      "action_time": "2017-06-29T13:33:18.031Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "6",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 7,
+    "fields": {
+      "action_time": "2017-06-29T13:33:18.089Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "5",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 8,
+    "fields": {
+      "action_time": "2017-06-29T13:33:18.155Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "4",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 9,
+    "fields": {
+      "action_time": "2017-06-29T13:33:18.222Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "3",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 10,
+    "fields": {
+      "action_time": "2017-06-29T13:33:18.289Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "2",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 11,
+    "fields": {
+      "action_time": "2017-06-29T13:33:18.372Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "1",
+      "object_repr": "fiction",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 12,
+    "fields": {
+      "action_time": "2017-06-30T07:07:53.329Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "12",
+      "object_repr": "Fiction",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 13,
+    "fields": {
+      "action_time": "2017-06-30T07:08:01.797Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "13",
+      "object_repr": "Science Fiction",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 14,
+    "fields": {
+      "action_time": "2017-06-30T07:08:17.653Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "14",
+      "object_repr": "Drama",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 15,
+    "fields": {
+      "action_time": "2017-06-30T07:08:25.419Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "15",
+      "object_repr": "Poetry",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 16,
+    "fields": {
+      "action_time": "2017-06-30T07:08:29.754Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "15",
+      "object_repr": "Poetry",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 17,
+    "fields": {
+      "action_time": "2017-06-30T07:08:34.875Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "15",
+      "object_repr": "Poetry",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 18,
+    "fields": {
+      "action_time": "2017-06-30T07:08:39.265Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "16",
+      "object_repr": "Poetry",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 19,
+    "fields": {
+      "action_time": "2017-06-30T07:08:44.969Z",
+      "user": 1,
+      "content_type": 7,
+      "object_id": "15",
+      "object_repr": "Poetry",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 20,
+    "fields": {
+      "action_time": "2017-06-30T07:13:33.781Z",
+      "user": 1,
+      "content_type": 9,
+      "object_id": "1",
+      "object_repr": "Snyder,Scott",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 21,
+    "fields": {
+      "action_time": "2017-06-30T07:14:08.593Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "1",
+      "object_repr": "Batman",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 22,
+    "fields": {
+      "action_time": "2017-06-30T07:14:19.277Z",
+      "user": 1,
+      "content_type": 11,
+      "object_id": "1",
+      "object_repr": "English",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 23,
+    "fields": {
+      "action_time": "2017-06-30T07:14:21.195Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "1",
+      "object_repr": "Batman",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"language\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 24,
+    "fields": {
+      "action_time": "2017-06-30T07:15:39.464Z",
+      "user": 1,
+      "content_type": 9,
+      "object_id": "2",
+      "object_repr": "Lee,Stan",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 25,
+    "fields": {
+      "action_time": "2017-06-30T07:16:12.776Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "2",
+      "object_repr": "Spiderman",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 26,
+    "fields": {
+      "action_time": "2017-06-30T07:17:22.124Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "1bd15091-260d-4f10-8c77-e2d54f94d924",
+      "object_repr": "1bd15091-260d-4f10-8c77-e2d54f94d924(Spiderman)",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 27,
+    "fields": {
+      "action_time": "2017-06-30T07:17:36.650Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "8d1990e0-e0e8-42e5-8584-a5beedbc641b",
+      "object_repr": "8d1990e0-e0e8-42e5-8584-a5beedbc641b(Spiderman)",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 28,
+    "fields": {
+      "action_time": "2017-06-30T07:17:39.844Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "8d1990e0-e0e8-42e5-8584-a5beedbc641b",
+      "object_repr": "8d1990e0-e0e8-42e5-8584-a5beedbc641b(Spiderman)",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 29,
+    "fields": {
+      "action_time": "2017-06-30T07:17:52.295Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "6278de5e-0582-4576-baa2-869709a9c521",
+      "object_repr": "6278de5e-0582-4576-baa2-869709a9c521(Batman)",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 30,
+    "fields": {
+      "action_time": "2017-06-30T07:17:58.964Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "40a62bd6-cb83-48dc-a803-fc4306199d71",
+      "object_repr": "40a62bd6-cb83-48dc-a803-fc4306199d71(Batman)",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 31,
+    "fields": {
+      "action_time": "2017-06-30T07:19:54.094Z",
+      "user": 1,
+      "content_type": 11,
+      "object_id": "2",
+      "object_repr": "French",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 32,
+    "fields": {
+      "action_time": "2017-06-30T07:21:53.638Z",
+      "user": 1,
+      "content_type": 9,
+      "object_id": "1",
+      "object_repr": "Snyder,Scott",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"date_of_birth\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 33,
+    "fields": {
+      "action_time": "2017-06-30T07:44:11.551Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "1",
+      "object_repr": "Batman",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 34,
+    "fields": {
+      "action_time": "2017-06-30T07:44:49.650Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "2",
+      "object_repr": "Spiderman",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 35,
+    "fields": {
+      "action_time": "2017-06-30T07:45:01.896Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "1",
+      "object_repr": "Batman",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 36,
+    "fields": {
+      "action_time": "2017-06-30T15:28:46.039Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "1bd15091-260d-4f10-8c77-e2d54f94d924",
+      "object_repr": "1bd15091-260d-4f10-8c77-e2d54f94d924(Spiderman)",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"status\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 37,
+    "fields": {
+      "action_time": "2017-06-30T15:32:50.624Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "1bd15091-260d-4f10-8c77-e2d54f94d924",
+      "object_repr": "1bd15091-260d-4f10-8c77-e2d54f94d924(Spiderman)",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"status\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 38,
+    "fields": {
+      "action_time": "2017-06-30T15:41:00.315Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "3",
+      "object_repr": "a",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 39,
+    "fields": {
+      "action_time": "2017-06-30T15:41:04.729Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "3",
+      "object_repr": "a",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 40,
+    "fields": {
+      "action_time": "2017-06-30T15:42:12.901Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "4",
+      "object_repr": "a",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 41,
+    "fields": {
+      "action_time": "2017-06-30T15:42:28.487Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "5",
+      "object_repr": "c",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 42,
+    "fields": {
+      "action_time": "2017-06-30T15:42:34.802Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "6",
+      "object_repr": "f",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 43,
+    "fields": {
+      "action_time": "2017-06-30T15:42:39.758Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "7",
+      "object_repr": "fd",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 44,
+    "fields": {
+      "action_time": "2017-06-30T15:42:45.014Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "8",
+      "object_repr": "fda",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 45,
+    "fields": {
+      "action_time": "2017-06-30T15:42:50.095Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "9",
+      "object_repr": "fdads",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 46,
+    "fields": {
+      "action_time": "2017-06-30T15:42:53.802Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "10",
+      "object_repr": "fdadsds",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 47,
+    "fields": {
+      "action_time": "2017-06-30T15:42:58.849Z",
+      "user": 1,
+      "content_type": 8,
+      "object_id": "11",
+      "object_repr": "fdadsdsds",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 48,
+    "fields": {
+      "action_time": "2017-07-02T17:27:10.922Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "1",
+      "object_repr": "Library Members",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 49,
+    "fields": {
+      "action_time": "2017-07-02T17:28:14.874Z",
+      "user": 1,
+      "content_type": 4,
+      "object_id": "2",
+      "object_repr": "ulblul",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 50,
+    "fields": {
+      "action_time": "2017-07-02T17:30:28.984Z",
+      "user": 1,
+      "content_type": 4,
+      "object_id": "2",
+      "object_repr": "ulblul",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 51,
+    "fields": {
+      "action_time": "2017-07-02T17:30:59.064Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "2",
+      "object_repr": "Librarians",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 52,
+    "fields": {
+      "action_time": "2017-07-02T17:31:15.126Z",
+      "user": 1,
+      "content_type": 4,
+      "object_id": "3",
+      "object_repr": "gulfaam",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 53,
+    "fields": {
+      "action_time": "2017-07-02T17:31:20.893Z",
+      "user": 1,
+      "content_type": 4,
+      "object_id": "3",
+      "object_repr": "gulfaam",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 54,
+    "fields": {
+      "action_time": "2017-07-02T17:31:36.341Z",
+      "user": 1,
+      "content_type": 4,
+      "object_id": "4",
+      "object_repr": "hameed",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 55,
+    "fields": {
+      "action_time": "2017-07-02T17:31:40.668Z",
+      "user": 1,
+      "content_type": 4,
+      "object_id": "4",
+      "object_repr": "hameed",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 56,
+    "fields": {
+      "action_time": "2017-07-02T19:18:11.394Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "40a62bd6-cb83-48dc-a803-fc4306199d71",
+      "object_repr": "40a62bd6-cb83-48dc-a803-fc4306199d71(Batman)",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"due_back\", \"borrower\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 57,
+    "fields": {
+      "action_time": "2017-07-02T19:18:22.352Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "40a62bd6-cb83-48dc-a803-fc4306199d71",
+      "object_repr": "40a62bd6-cb83-48dc-a803-fc4306199d71(Batman)",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"status\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 58,
+    "fields": {
+      "action_time": "2017-07-02T19:18:33.650Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "8d1990e0-e0e8-42e5-8584-a5beedbc641b",
+      "object_repr": "8d1990e0-e0e8-42e5-8584-a5beedbc641b(Spiderman)",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"borrower\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 59,
+    "fields": {
+      "action_time": "2017-07-02T19:18:45.411Z",
+      "user": 1,
+      "content_type": 10,
+      "object_id": "6278de5e-0582-4576-baa2-869709a9c521",
+      "object_repr": "6278de5e-0582-4576-baa2-869709a9c521(Batman)",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"due_back\", \"borrower\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 60,
+    "fields": {
+      "action_time": "2017-07-02T19:47:25.903Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "2",
+      "object_repr": "Librarians",
+      "action_flag": 2,
+      "change_message": "[]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 61,
+    "fields": {
+      "action_time": "2017-07-04T16:05:48.090Z",
+      "user": 1,
+      "content_type": 9,
+      "object_id": "5",
+      "object_repr": "Bashir, Hameed",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  }
+]
