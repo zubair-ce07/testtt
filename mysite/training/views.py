@@ -145,8 +145,6 @@ class Login(View):
     def post(self, request):
         form = LoginForm(request.POST)
         messages = []
-        username = ''
-        password = ''
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
@@ -208,6 +206,7 @@ class TrainerSignUp(View):
 
         context = {
             'user_form': user_form,
+            'error': error
         }
         return render(request, self.template_name, context)
 

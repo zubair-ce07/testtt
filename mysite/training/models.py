@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, User
-from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count
-from django.utils.translation import ugettext_lazy as get_text
 
 
 class Technology(models.Model):

@@ -13,7 +13,7 @@ class Command(BaseCommand):
             try:
                 assignment = Assignment.objects.get(pk=assignment_id)
             except Assignment.DoesNotExist:
-                raise CommandError('Assignment "%s" does not exist' % assignment_id)
+                raise CommandError('Assignment %s does not exist' % assignment_id)
 
             assignment.completion_status = True
             assignment.save()
