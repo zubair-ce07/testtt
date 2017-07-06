@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}
+    Search
+{% endblock title %}
+{% block content %}
+    <form action="" method="get">
+        <input type="text" name="q" />
+        <input type="submit" value="Search">
+    </form>
+
+    {% if books  %}
+        <p>Your search for : <strong>{{query}}</strong> returned the following results:</p>
+            <p>Found {{books|length}} book{{books|pluralize}}.</p>
+            <ul>
+                {% for book in books  %}
+                    <li>{{book.title}}</li>               
+                {% endfor %}
+            </ul>
+        
+    {% elif query %}
+         <p>Your search for <strong>{{query}}</strong> returned no result.</p>
+    {%elif error %}
+        <p>You passed an empty query, please retry</p>
+    {% endif %}
+   
+{% endblock content %}
