@@ -11,12 +11,6 @@ class JulesSpider(CrawlSpider):
         'http://www.jules.com/fr/p/polo-boutonne-708690.html?&dwvar_708690_color=9010'
     ]
 
-    # rules = [Rule(LinkExtractor(restrict_css='.viewall')),
-    #          Rule(LinkExtractor(restrict_css='.tiles-container', deny=['(ajax)$']),
-    #               callback='parse_products'
-    #               )
-    #          ]
-
     def get_colours(self, response):
         return response.css('.swatch-label::text').extract()
 
