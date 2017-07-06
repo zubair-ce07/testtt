@@ -11,9 +11,13 @@
     {% if user.profile_picture %}
     <img src="{{ user.profile_picture.url }}" height="250">
     {% endif %}
-<p><b>Username: </b> {{ user.username }}</p>
+    <p><b>Username: </b> {{ user.username }}</p>
     <b>Full Name:</b> {{ user.first_name }} {{ user.last_name }}
     <p><a href="{% url 'users:logout' %}">Logout</a></p>
+    <p><a href="{% url 'users:update' %}">Update</a></p>
+    <p><a href="{% url 'users:change_password' %}">Change Password</a></p>
+    <p><a href="{% url 'users:tasks' %}">Show Tasks</a> </p>
 {% endblock %}
+{% block form_to_submit %}{% endblock %}
 </body>
 </html>

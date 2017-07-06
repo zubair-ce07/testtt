@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.utils.translation import ugettext_lazy as _
 
 
-# Create your models here.
 class CustomUserManager(BaseUserManager):
     def _create_user(self, email, password, is_staff, is_superuser, **extra_fields):
         if not email:
@@ -23,12 +22,12 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser):
 
-    username = models.CharField(max_length=30, unique=True)
+    username = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     email = models.EmailField(unique=True)
     city = models.CharField(max_length=20)
-    profile_picture = models.ImageField(upload_to='profile_picture', blank=True,
+    profile_picture = models.ImageField(upload_to='profile_picture', blank=True, default='default.png',
                                         width_field="width_field", height_field="height_field")
     height_field = models.IntegerField(default=0)
     width_field = models.IntegerField(default=0)
@@ -58,3 +57,12 @@ class CustomUser(AbstractBaseUser):
     def get_short_name(self):
         return self.first_name
 
+
+class Task(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    name = models.CharField(max_length=20, unique=True)
+    dated = models.DateField()
+    status = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
