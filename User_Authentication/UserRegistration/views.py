@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordChangeForm
-from django.views.generic import TemplateView, View, RedirectView, FormView, UpdateView
-from .forms import LoginForm, CustomUserSignupForm, UpdateProfileForm, UpdateTaskForm
+from django.views.generic import TemplateView, View, RedirectView, FormView, UpdateView, ListView
+from .forms import LoginForm, CustomUserSignupForm, UpdateProfileForm, UpdateTaskForm, AddTaskForm
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.core.urlresolvers import reverse, reverse_lazy
 from .models import CustomUser, Task
@@ -17,6 +17,7 @@ class ProfileView(FormView):
         if request.user.is_authenticated():
             return render(request, self.template_name)
         else:
+            error_not_login = True
             return redirect('users:login')
 
 
@@ -117,6 +118,8 @@ class TasksView(RedirectView):
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated():
+            if request.user.is_superuser:
+                return render(request, self.template_name, {'tasks': Task.objects.all()})
             return render(request, self.template_name, {'tasks': Task.objects.filter(user=request.user.id)})
         else:
             error_not_login = True
@@ -130,6 +133,8 @@ class DeleteTaskView(RedirectView):
     def get(self, request, *args, **kwargs):
         name = request.GET.get('task_name')
         Task.objects.filter(name=name).delete()
+        if request.user.is_superuser:
+            return render(request, self.template_name, {'tasks': Task.objects.all()})
         return render(request, self.template_name, {'tasks': Task.objects.filter(user=request.user.id)})
 
 
@@ -139,7 +144,7 @@ class UpdateTaskView(View):
     success_url = 'UserRegistration/tasks.html'
 
     def get(self, request):
-        form = self.form(None)
+        form = self.form(initial={'status': Task.objects.get(name=request.GET.get('task_name')).status})
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
@@ -148,4 +153,32 @@ class UpdateTaskView(View):
             status = form.cleaned_data["status"]
             name = request.GET.get('task_name')
             Task.objects.filter(name=name).update(status=status)
+            if request.user.is_superuser:
+                return render(request, self.success_url, {'tasks': Task.objects.all()})
         return render(request, self.success_url, {'tasks': Task.objects.filter(user=request.user.id)})
+
+
+class ShowAllTasksView(ListView):
+    model = Task
+    context_object_name = 'tasks'
+    template_name = "UserRegistration/show_all_task.html"
+
+
+class AddNewTaskView(View):
+    form = AddTaskForm
+    template_name = "UserRegistration/add_task.html"
+
+    def get(self, request):
+        form = self.form(None)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.cleaned_data["user"]
+            name = form.cleaned_data["name"]
+            dated = form.cleaned_data["dated"]
+            status = form.cleaned_data["status"]
+            Task.objects.create(user=user, name=name, dated=dated, status=status)
+            return redirect('users:tasks')
+        return render(request, 'UserRegistration/add_task.html', {'form': form})

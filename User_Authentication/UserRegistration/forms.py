@@ -1,6 +1,7 @@
+from django.contrib.auth.models import User
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from .models import CustomUser
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from .models import CustomUser, Task
 
 
 class CustomUserSignupForm(UserCreationForm):
@@ -35,3 +36,12 @@ class UpdateProfileForm(forms.ModelForm):
 class UpdateTaskForm(forms.Form):
     status = forms.BooleanField(required=False)
 
+
+class AddTaskForm(forms.ModelForm):
+
+    class Meta:
+        model = Task
+        fields = ['name', 'user', 'status', 'dated']
+        widgets = {
+            'dated': forms.DateInput(attrs={'class': 'datepicker'}),
+        }

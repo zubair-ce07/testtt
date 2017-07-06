@@ -14,4 +14,6 @@ urlpatterns = [
     url(r'^tasks', views.TasksView.as_view(), name='tasks'),
     url(r'^delete_task', views.DeleteTaskView.as_view(), name='delete_task'),
     url(r'^edit_task', views.UpdateTaskView.as_view(), name='edit_task'),
+    url(r'^show_all_task', views.ShowAllTasksView.as_view(), name='show_all_task'),
+    url(r'^add_task', views.AddNewTaskView.as_view(), name='add_task'),
 ]
