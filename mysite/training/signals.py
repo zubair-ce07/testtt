@@ -19,6 +19,7 @@ add_trainer_signal = Signal(providing_args=['user'])
 def add_trainee(sender, **kwargs):
     trainee = Trainee.objects.create(user=kwargs['user'])
     trainers = Trainer.objects.annotate(num_trainees=Count('trainees')).filter(num_trainees__lt=3).order_by('num_trainees')
+
     if trainers:
         trainee.trainer = trainers[0]
     trainee.save()
