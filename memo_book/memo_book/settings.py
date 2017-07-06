@@ -129,3 +129,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 LOGIN_URL = '/login'
+
+MEDIA_ROOT = '/home/ahmad/Desktop/Workspace/the-lab/memo_book/media'
+MEDIA_URL = "media/"
+

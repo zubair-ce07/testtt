@@ -2,17 +2,18 @@ from django.shortcuts import render
 from django.views import  View
 from django.template import loader
 from django.http import HttpResponse, HttpResponseRedirect
-from .forms import SignupForm, LoginForm, AddMemoForm
+from memo_app.forms import SignupForm, LoginForm, AddMemoForm, EditProfileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import User, Memory
+from memo_app.models import User, Memory
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.hashers import make_password
 
 
 class Home(LoginRequiredMixin, View):
     def get(self, request):
         page = loader.get_template('memo_app/home.html')
-        memories_of_user = Memory.objects.filter(user_id_id = request.user.id)
+        memories_of_user = Memory.objects.filter(user_id = request.user.id)
         paginator = Paginator(memories_of_user, 2)
         page_no = request.GET.get('page_no')
         try:
@@ -36,7 +37,6 @@ class Login(View):
             return HttpResponse(page.render(context, request))
         else:
             return HttpResponseRedirect('/home')
-
 
     def post(self, request):
         login_form = LoginForm(request.POST)
@@ -73,26 +73,17 @@ class SignUp(View):
             return HttpResponseRedirect('/home')
 
     def post(self, request):
-        signup_from = SignupForm(request.POST)
-        if signup_from.is_valid():
-            user_data = signup_from.cleaned_data
-            try:
-                new_user = User.objects.create_user(user_data['username'], user_data['email'],  user_data['password'])
-                new_user.first_name = user_data['first_name']
-                new_user.last_name = user_data['last_name']
-                new_user.save()
-                login(request, new_user)
-                return HttpResponseRedirect('/home')
-            except:
-                login_form = LoginForm()
-                page = loader.get_template('memo_app/login_signup.html')
-                context = {'signup_form': signup_from, 'login_form': login_form,'username_error':
-                           'User Name Already exists ', 'is_sign_up': True}
-                return HttpResponse(page.render(context, request))
+        signup_form = SignupForm(request.POST)
+        if signup_form.is_valid():
+            signup_form.save(commit=False)
+            signup_form.password = make_password(signup_form.cleaned_data['password'])
+            signup_form.save()
+            login(request, signup_form.instance)
+            return HttpResponseRedirect('/home')
         else:
             login_form = LoginForm()
             page = loader.get_template('memo_app/login_signup.html')
-            context = {'signup_form': signup_from, 'login_form': login_form, 'is_sign_up': True}
+            context = {'signup_form': signup_form, 'login_form': login_form, 'is_sign_up': True}
             return HttpResponse(page.render(context, request))
 
 
@@ -106,19 +97,8 @@ class AddMemo(LoginRequiredMixin, View):
     def post(self, request):
         memo_form = AddMemoForm(request.POST,  request.FILES)
         if memo_form.is_valid():
-            memo_data = memo_form.cleaned_data
-            memo = Memory()
-            memo.title = memo_data['title']
-            memo.url = memo_data['url']
-            memo.text = memo_data['memo_text']
-            memo.tags = memo_data['tags']
-            memo.user_id_id = request.user.id
-            memo.image = '/images/'
-            memo.save()
-            image = request.FILES['image']
-            image.name = str(memo.id)+'.jpg'
-            save_images(image)
-            memo.image = str(memo.image) + image.name
+            memo = memo_form.save(commit=False)
+            memo.user_id = request.user.id
             memo.save()
             return HttpResponseRedirect('/home')
         else:
@@ -131,6 +111,7 @@ class DeleteMemo(LoginRequiredMixin, View):
     def post(self, request):
          id = request.POST.get('memo_id')
          memory = Memory.objects.get(pk=id)
+         memory.image.delete(False)
          memory.delete()
          return HttpResponseRedirect('/home')
 
@@ -139,26 +120,18 @@ class EditMemo(LoginRequiredMixin,View):
     def get(self, request):
         id = request.GET.get('memo_id')
         memory = Memory.objects.get(pk=id)
-        memo_form = AddMemoForm(initial={'title': memory.title, 'memo_text': memory.text,
-                                         'url': memory.url, 'tags': memory.tags})
+        memo_form = AddMemoForm(instance=memory)
         page = loader.get_template('memo_app/edit_memo.html')
         context = {'memo_form': memo_form, 'memo_id': id}
         return HttpResponse(page.render(context, request))
 
     def post(self,request):
-        memo_form = AddMemoForm(request.POST, request.FILES)
         id = request.POST.get('memo_id')
+        memory = Memory.objects.get(pk=id)
+        memory.image.delete(False)
+        memo_form = AddMemoForm(request.POST, request.FILES,instance=memory)
         if memo_form.is_valid():
-            memo_data = memo_form.cleaned_data
-            memo = Memory.objects.get(pk=id)
-            memo.title = memo_data['title']
-            memo.url = memo_data['url']
-            memo.text = memo_data['memo_text']
-            memo.tags = memo_data['tags']
-            image = request.FILES['image']
-            image.name = str(memo.id) + '.jpg'
-            save_images(image)
-            memo.save()
+            memo_form.save()
             return HttpResponseRedirect('/home')
         else:
             page = loader.get_template('memo_app/edit_memo.html')
@@ -177,34 +150,16 @@ class EditProfile(LoginRequiredMixin, View):
 
     def get(self, request):
         page = loader.get_template('memo_app/edit_profile.html')
-        user_form = SignupForm(initial={'first_name': request.user.first_name, 'last_name': request.user.last_name,
-                                        'username': request.user.username, 'email': request.user.email,
-                                        'password':'temporary to handle not valid'})
-        user_form.fields['password'].widget.attrs['class'] = 'hidden'
+        user_form = EditProfileForm(instance=request.user)
         context = {'user_form': user_form}
         return HttpResponse(page.render(context, request))
 
     def post(self, request):
-        user_form = SignupForm(request.POST)
-        user_form.fields['password'].widget.attrs['class'] = 'hidden'
+        user_form = EditProfileForm(request.POST, instance=request.user)
         if user_form.is_valid():
-            user_data = user_form.cleaned_data
-            user = User.objects.get(pk=request.user.id)
-            user.first_name = user_data['first_name']
-            user.last_name = user_data['last_name']
-            user.username = user_data['username']
-            user.email = user_data['email']
-            user.save()
+            user_form.save()
             return HttpResponseRedirect('/home')
         else:
             page = loader.get_template('memo_app/edit_profile.html')
             context = {'user_form': user_form}
             return HttpResponse(page.render(context, request))
-
-
-
-# Global method to save image files
-def save_images(image):
-        with open('memo_app/static/images/' + image.name, 'wb+') as destination:
-            for img in image.chunks():
-                destination.write(img)

@@ -47,7 +47,7 @@
                         {% for memo in memories_of_user %}
 
                             <div class="jumbotron" style="padding: 5px">
-                                    <img width="100px" height="100px" src="{% static memo.image %}" style="float: left;margin: 5px"> <img>
+                                    <img width="100px" height="100px" src="{% get_media_prefix %}{{  memo.image  }} " style="float: left;margin: 5px"> <img>
                                     <p> <b>{{ memo.title }}</b> </p>
                                     <i> {{ memo.text }}</i>
                                     <a href="{{ memo.url }}"> visit </a>

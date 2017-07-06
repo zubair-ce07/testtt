@@ -1,0 +1,1 @@
+Pillow is required for image upload in Add Memory functionality
