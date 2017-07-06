@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.contrib.auth import (
     authenticate, login as django_login,
     logout as django_logout
@@ -11,8 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
-from django.template import loader
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.views import View
 
 from .models import Trainee, Trainer, Technology, Assignment, UserProfile
@@ -33,9 +31,6 @@ class TrainingIndex(LoginRequiredMixin, View):
             status = "Trainee"
 
         context = {
-            'image_url': request.user.user_profile.picture.url,
-            'user_name': request.user.get_full_name(),
-            'user': request.user,
             'status': status,
             'trainers': trainers,
         }
@@ -65,7 +60,6 @@ class TrainerDetails(LoginRequiredMixin, View):
     login_url = 'training:login'
 
     def get(self, request, trainer_id):
-
         try:
             trainer = Trainer.objects.get(id=trainer_id)
         except Trainer.DoesNotExist:
@@ -84,7 +78,11 @@ class AssignmentDetails(LoginRequiredMixin, View):
     login_url = 'training:login'
 
     def get(self, request, assignment_id):
-        assignment = Assignment.objects.get(id=assignment_id)
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+        except Assignment.DoesNotExist:
+            raise Http404("Assignment does not exist")
+
         context = {
             'assignment': assignment
         }
@@ -96,7 +94,11 @@ class TechnologyDetails(LoginRequiredMixin, View):
     login_url = 'training:login'
 
     def get(self, request, technology_id):
-        technology = Technology.objects.get(id=technology_id)
+        try:
+            technology = Technology.objects.get(id=technology_id)
+        except Technology.DoesNotExist:
+            raise Http404("Technology does not exist")
+
         context = {
             'technology': technology
         }
@@ -110,7 +112,7 @@ class Search(LoginRequiredMixin, View):
     def get(self, request):
         error = False
         if 'q' in request.GET:
-            q = request.GET['q']
+            q = request.GET.get('q')
             if not q:
                 error = True
             else:
@@ -193,8 +195,18 @@ class TrainerSignUp(View):
         user_form = SignUpForm(request.POST)
 
         if user_form.is_valid():
-            user_form.save_trainer()
-            return redirect(reverse('training:login'))
+            username = user_form.cleaned_data['username']
+            password = user_form.cleaned_data['password']
+
+            user = authenticate(username=username, password=password)
+
+            if not user:
+                user_form.save_trainer()
+                return redirect(reverse('training:login'))
+            else:
+                error = "User name already exists"
+        else:
+            error = "Fill all fields"
 
         context = {
             'user_form': user_form,
@@ -219,11 +231,22 @@ class TraineeSignUp(View):
         user_form = SignUpForm(request.POST)
 
         if user_form.is_valid():
-            user_form.save_trainee()
-            return redirect(reverse('training:login'))
+            username = user_form.cleaned_data['username']
+            password = user_form.cleaned_data['password']
+
+            user = authenticate(username=username, password=password)
+
+            if not user:
+                user_form.save_trainee()
+                return redirect(reverse('training:login'))
+            else:
+                error = "User name already exists"
+        else:
+            error = "Fill all fields"
 
         context = {
             'user_form': user_form,
+            'error': error
         }
         return render(request, self.template_name, context)
 

@@ -6,4 +6,4 @@ register = template.Library()
 
 @register.simple_tag
 def sitename_tag():
-    return settings.SITE_NAME
+    return getattr(settings, "SITE_NAME", "MySite")

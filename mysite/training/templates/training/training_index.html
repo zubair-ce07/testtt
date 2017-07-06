@@ -1,11 +1,12 @@
 {% extends "training/base.html" %}
 {% block title %}Training Site{% endblock %}
 {% block content %}
-{% if user_name %}
-    <h2>Welcome : {{user_name}}</h2>
-{% endif %}
-<img src="{{ image_url }}" alt="{{trainee.name}}" width="200" height="200"/>
+<h2>Welcome : {{ user.user_profile.name }}</h2>
+
+<img src="{{ user.user_profile.picture.url }}" alt="{{user.user_profile.name}}" width="200" height="200"/>
+
 <h2>Status : {{ status }}</h2>
+
 {% if status == 'Trainee' %}
     <h2>
       Trainer Assigned :

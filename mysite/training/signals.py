@@ -1,6 +1,5 @@
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
-from django.db.models import Count
 from django.dispatch import Signal, receiver
 
 from .models import Trainee, Trainer, UserProfile
@@ -18,10 +17,11 @@ add_trainer_signal = Signal(providing_args=['user'])
 
 def add_trainee(sender, **kwargs):
     trainee = Trainee.objects.create(user=kwargs['user'])
-    trainers = Trainer.objects.annotate(num_trainees=Count('trainees')).filter(num_trainees__lt=3).order_by('num_trainees')
+    trainer = Trainer.objects.available_trainer()
 
-    if trainers:
-        trainee.trainer = trainers[0]
+    if trainer:
+        trainee.trainer = trainer
+
     trainee.save()
 
 

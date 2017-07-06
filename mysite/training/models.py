@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, User
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models import Count
 from django.utils.translation import ugettext_lazy as get_text
 
 
@@ -37,8 +38,17 @@ class UserProfile(models.Model):
         return self.name
 
 
+class TrainerManager(models.Manager):
+    def available_trainer(self):
+        trainees_count = Trainer. \
+                        objects.annotate(num_trainees=Count('trainees'))
+        trainees_lt_3 = trainees_count.filter(num_trainees__lt=3)
+        return trainees_lt_3.order_by('num_trainees')[0]
+
+
 class Trainer(models.Model):
     user = models.OneToOneField(User, related_name='trainer')
+    objects = TrainerManager()
 
     def __str__(self):
         return self.user.user_profile.name
