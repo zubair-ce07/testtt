@@ -1,0 +1,5 @@
+{% if not isScraping %}
+    <button onclick="location.href='{% url 'the_news:fetch_news' %}'" type="button">Fetch News</button>
+{% else %}
+    Wait for scraping to complete
+{% endif %}

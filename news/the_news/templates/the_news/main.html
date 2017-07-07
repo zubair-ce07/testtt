@@ -1,0 +1,5 @@
+{% if not isScraping %}
+    <button onclick="location.href='{% url 'the_news:fetch_news' %}'" type="button">Start Crawling</button>
+{% else %}
+    <button onclick="location.href='{% url 'the_news:terminate_fetch_news' %}'" type="button">Terminate Crawling</button>
+{% endif %}
