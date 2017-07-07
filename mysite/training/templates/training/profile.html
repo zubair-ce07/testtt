@@ -8,22 +8,32 @@
 <h2>Status : {{ status }}</h2>
 
 {% if status == 'Trainee' %}
-    <h2>
-        Trainer Assigned :
-        <a href="{% url 'training:trainer_details' user.trainee.trainer.id %}">
-          {{ user.trainee.trainer }}
-        </a>
-    </h2>
+    {% if user.trainee.trainer %}
+        <h2>
+            Trainer Assigned :
+            <a href="{% url 'training:trainer_details' user.trainee.trainer.id %}">
+              {{ user.trainee.trainer }}
+            </a>
+        </h2>
+    {% else %}
+        <h2>
+            No Trainer Assigned
+        </h2>
+    {% endif %}
 {% elif status == 'Trainer' %}
-    <h2>
-      Trainees Assigned :
-    </h2>
-    <ul>
-        {% for trainee in user.trainer.trainees.all %}
-            <li><a href="{% url 'training:trainee_details' trainee.id %}">
-              {{ trainee }}
-            </a></li>
-        {% endfor %}
-    </ul>
+    {% if user.trainer.trainees.all %}
+        <h2>
+          Trainees Assigned :
+        </h2>
+        <ul>
+            {% for trainee in user.trainer.trainees.all %}
+                <li><a href="{% url 'training:trainee_details' trainee.id %}">
+                  {{ trainee }}
+                </a></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h2>No Trainees Assigned</h2>
+    {% endif %}
 {% endif %}
 {% endblock %}

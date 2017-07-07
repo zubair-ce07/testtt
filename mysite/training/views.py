@@ -20,7 +20,6 @@ class Profile(LoginRequiredMixin, View):
     name = ''
 
     def get(self, request):
-        trainers = Trainer.objects.all()
         try:
             request.user.trainer
             status = "Trainer"
@@ -195,7 +194,7 @@ class TrainerSignUp(View):
             user = authenticate(username=username, password=password)
 
             if not user:
-                user_form.save_trainer()
+                user_form.save("Trainer")
                 return redirect('training:login')
             else:
                 error = "User name already exists"
@@ -232,7 +231,7 @@ class TraineeSignUp(View):
             user = authenticate(username=username, password=password)
 
             if not user:
-                user_form.save_trainee()
+                user_form.save("Trainee")
                 return redirect('training:login')
             else:
                 error = "User name already exists"

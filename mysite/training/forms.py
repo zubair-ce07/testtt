@@ -1,9 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserChangeForm
-from django.contrib.auth import authenticate
 
-from .models import Trainer, UserProfile
+from .models import UserProfile
 from .signals import add_trainee_signal, add_trainer_signal
 
 
@@ -44,16 +42,12 @@ class SignUpForm(forms.Form):
         user.save()
         return user
 
-    def save_trainee(self, commit=True):
+    def save(self, account_type, commit=True):
         if commit:
             user = self.__add_user()
             self.__update_user_profile(user)
-            add_trainee_signal.send(sender=self.__class__, user=user)
-        return self
-
-    def save_trainer(self, commit=True):
-        if commit:
-            user = self.__add_user()
-            self.__update_user_profile(user)
-            add_trainer_signal.send(sender=self.__class__, user=user)
+            if account_type == "Trainee":
+                add_trainee_signal.send(sender=self.__class__, user=user)
+            elif account_type == "Trainer":
+                add_trainer_signal.send(sender=self.__class__, user=user)
         return self

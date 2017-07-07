@@ -37,10 +37,11 @@ class UserProfile(models.Model):
 
 class TrainerManager(models.Manager):
     def available_trainer(self):
-        trainees_count = Trainer. \
-                        objects.annotate(num_trainees=Count('trainees'))
+        trainees_count = self.model.objects.annotate(num_trainees=Count(
+                                                     'trainees'))
         trainees_lt_3 = trainees_count.filter(num_trainees__lt=3)
-        return trainees_lt_3.order_by('num_trainees')[0]
+        if trainees_lt_3:
+            return trainees_lt_3.order_by('num_trainees')[0]
 
 
 class Trainer(models.Model):
