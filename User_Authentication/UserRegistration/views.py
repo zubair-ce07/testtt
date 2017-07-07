@@ -1,7 +1,10 @@
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordChangeForm
-from django.views.generic import TemplateView, View, RedirectView, FormView, UpdateView, ListView
-from .forms import LoginForm, CustomUserSignupForm, UpdateProfileForm, UpdateTaskForm, AddTaskForm
+from django.utils.decorators import method_decorator
+from django.views.generic import View, RedirectView, FormView, UpdateView, ListView
+from .forms import LoginForm, CustomUserSignupForm, UpdateProfileForm, UpdateTaskForm, AddTaskForm, AddUserTaskForm
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.core.urlresolvers import reverse, reverse_lazy
 from .models import CustomUser, Task
@@ -17,12 +20,7 @@ class ProfileView(FormView):
         if request.user.is_authenticated():
             return render(request, self.template_name)
         else:
-            error_not_login = True
             return redirect('users:login')
-
-
-class HomePageView(TemplateView):
-    template_name = "UserRegistration/home.html"
 
 
 class SignUpView(View):
@@ -31,6 +29,8 @@ class SignUpView(View):
 
     def get(self, request):
         form = self.form(None)
+        if request.user.is_authenticated:
+            return redirect('users:profile')
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
@@ -59,6 +59,8 @@ class LoginView(View):
 
     def get(self, request):
         form = self.form(None)
+        if request.user.is_authenticated:
+            return redirect('users:profile')
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
@@ -85,11 +87,10 @@ class LogoutView(RedirectView):
         return reverse('users:login')
 
 
-class UpdateProfileView(UpdateView):
+class UpdateProfileView(LoginRequiredMixin, UpdateView):
     form_class = UpdateProfileForm
     template_name = 'UserRegistration/edit_profile.html'
     success_url = reverse_lazy('users:profile')
-    login_url = '/login/'
 
     def get_object(self, queryset=None):
         return self.request.user
@@ -113,8 +114,20 @@ class ChangePasswordView(View):
         return render(request, self.template_name, {'form': form, 'error_fields': error})
 
 
-class TasksView(RedirectView):
+class TasksView(ListView):
     template_name = 'UserRegistration/tasks.html'
+
+    @method_decorator(user_passes_test(lambda user: user.is_superuser))
+    def get_queryset(self):
+        filter_val = self.request.GET.get('filter')
+        if filter_val is None:
+            return Task.objects.all()
+        new_context = Task.objects.filter(name__contains=filter_val)
+        return new_context
+
+    def get_context_data(self, **kwargs):
+        context = super(TasksView, self).get_context_data(**kwargs)
+        return context
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated():
@@ -163,10 +176,25 @@ class ShowAllTasksView(ListView):
     context_object_name = 'tasks'
     template_name = "UserRegistration/show_all_task.html"
 
+    def get_queryset(self):
+        filter_val = self.request.GET.get('filter')
+        if filter_val is None:
+            return Task.objects.all()
+        new_context = Task.objects.filter(name__icontains=filter_val)
+        return new_context
+
+    def get_context_data(self, **kwargs):
+        context = super(ShowAllTasksView, self).get_context_data(**kwargs)
+        return context
+
 
 class AddNewTaskView(View):
     form = AddTaskForm
     template_name = "UserRegistration/add_task.html"
+
+    @method_decorator(user_passes_test(lambda user: user.is_superuser))
+    def dispatch(self, request, *args, **kwargs):
+        return super(AddNewTaskView, self).dispatch(request,*args, **kwargs)
 
     def get(self, request):
         form = self.form(None)
@@ -176,6 +204,26 @@ class AddNewTaskView(View):
         form = self.form(request.POST, request.FILES)
         if form.is_valid():
             user = form.cleaned_data["user"]
+            name = form.cleaned_data["name"]
+            dated = form.cleaned_data["dated"]
+            status = form.cleaned_data["status"]
+            Task.objects.create(user=user, name=name, dated=dated, status=status)
+            return redirect('users:tasks')
+        return render(request, 'UserRegistration/add_task.html', {'form': form})
+
+
+class AddUserTaskView(View):
+    form = AddUserTaskForm
+    template_name = "UserRegistration/add_task.html"
+
+    def get(self, request):
+        form = self.form(None)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form(request.POST, request.FILES)
+        if form.is_valid():
+            user = request.user
             name = form.cleaned_data["name"]
             dated = form.cleaned_data["dated"]
             status = form.cleaned_data["status"]

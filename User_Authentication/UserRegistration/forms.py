@@ -42,6 +42,10 @@ class AddTaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = ['name', 'user', 'status', 'dated']
-        widgets = {
-            'dated': forms.DateInput(attrs={'class': 'datepicker'}),
-        }
+
+
+class AddUserTaskForm(forms.ModelForm):
+
+    class Meta:
+        model = Task
+        fields = ['name', 'status', 'dated']
