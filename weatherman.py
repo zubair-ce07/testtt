@@ -2,7 +2,7 @@ import csv
 import os
 import collections
 import argparse
-from _datetime import datetime
+from datetime import datetime
 
 
 class Record:
@@ -13,22 +13,22 @@ class Record:
     date = "00/00/00"
 
 
-def update_record(m_max_t, m_min_t, m_max_h, m_min_h, record):
+def update_record(month_max_t, month_min_t, month_max_h, month_min_h, record):
     """This function Updates the Yearly Record"""
-    index_for_max_temp_date = -1
-    if record.max_temperature < int(max(m_max_t)):
-        record.max_temperature = int(max(m_max_t))
-        index_for_max_temp_date = m_max_t.index(record.max_temperature)
-    if record.min_temperature > int(min(m_min_t)):
-        record.min_temperature = int(min(m_min_t))
-    if record.max_humidity < int(max(m_max_h)):
-        record.max_humidity = int(max(m_max_h))
-    if record.min_humidity > int(min(m_min_h)):
-        record.min_humidity = int(min(m_min_h))
-    return record, index_for_max_temp_date
+    max_temp_date_index = -1
+    if record.max_temperature < int(max(month_max_t)):
+        record.max_temperature = int(max(month_max_t))
+        max_temp_date_index = month_max_t.index(record.max_temperature)
+    if record.min_temperature > int(min(month_min_t)):
+        record.min_temperature = int(min(month_min_t))
+    if record.max_humidity < int(max(month_max_h)):
+        record.max_humidity = int(max(month_max_h))
+    if record.min_humidity > int(min(month_min_h)):
+        record.min_humidity = int(min(month_min_h))
+    return record, max_temp_date_index
 
 
-def default_display():
+def application_usage_info():
     """Function to Display Help"""
     print("[Report #]\n1 for Annual Max/Min Temperature and Humidity\n2 for Hottest day of each year\n")
     print("[Data_dir]\nDirectory containing weather data files")
@@ -36,36 +36,33 @@ def default_display():
 
 def process_month_data(month_data, yearly_record):
     """This function processes the available data"""
-    next(month_data)
     monthly_max_temp = []
     monthly_min_temp = []
     monthly_max_hum = []
     monthly_min_hum = []
-    date_max_temp = []
-    for each_day in month_data:
-        date = each_day[0]
-        if each_day[1] != '':
-            monthly_max_temp.append(int(each_day[1]))
-            date_max_temp.append(date)
+    max_temp_date = []
+    for each_day_date in month_data:
+        date = each_day_date['PKT'] if ('PKT' in each_day_date) else each_day_date['PKST']
+        if each_day_date['Max TemperatureC'] != '':
+            monthly_max_temp.append(int(each_day_date['Max TemperatureC']))
+            max_temp_date.append(date)
         else:
             monthly_max_temp.append(0)
-        if each_day[3] != '':
-            monthly_min_temp.append(int(each_day[3]))
-        if each_day[7] != '':
-            monthly_max_hum.append(int(each_day[7]))
-        if each_day[9] != '':
-            monthly_min_hum.append(int(each_day[9]))
+        if each_day_date['Min TemperatureC'] != '':
+            monthly_min_temp.append(int(each_day_date['Min TemperatureC']))
+        if each_day_date['Max Humidity'] != '':
+            monthly_max_hum.append(int(each_day_date['Max Humidity']))
+        if each_day_date[' Min Humidity'] != '':
+            monthly_min_hum.append(int(each_day_date[' Min Humidity']))
     data_year = date[0:4]
-    current_record = yearly_record[data_year]
+    record = yearly_record[data_year]
     #  Storing Updated Record
-    current_record, max_temp_date_index = update_record(
-                                monthly_max_temp, monthly_min_temp,
-                                monthly_max_hum, monthly_min_hum,
-                                current_record)
+    record, max_temp_date_index = update_record(monthly_max_temp, monthly_min_temp,
+                                                monthly_max_hum, monthly_min_hum, record)
     #   Updating Date
     if not max_temp_date_index == -1:
-        current_record.date = date_max_temp[max_temp_date_index]
-        yearly_record[data_year] = current_record
+        record.date = max_temp_date[max_temp_date_index]
+        yearly_record[data_year] = record
 
 
 def display_yearly_records(years_record):
@@ -93,26 +90,26 @@ def display_max_temp_yearly(years_record):
 
 
 def get_years_list_from_files(files):
-    years_list = []
+    years = []
     for name in files:
         if name.endswith('.txt'):
             year_value = name.split('_')
-            if year_value[2] not in years_list:
-                years_list.append(year_value[2])
-    return years_list
+            if year_value[2] not in years:
+                years.append(year_value[2])
+    return years
 
 
 def process(data_files, report_type):
     years = get_years_list_from_files(data_files)
     years_record = dict((key, Record()) for key in years)
-    for name in data_files:
-        if name.endswith('.txt'):
-            with open(report_type.dir + name, 'r') as csvfile:
-                line = csv.reader(csvfile, delimiter=',')
-                process_month_data(line, years_record)
-    if report_type.report == "1":
+    for file in data_files:
+        if file.endswith('.txt'):
+            with open(report_type.dir + file, 'r') as csvfile:
+                month_data = csv.DictReader(csvfile)
+                process_month_data(month_data, years_record)
+    if report_type.report == "a":
         display_yearly_records(years_record)
-    elif report_type.report == "2":
+    elif report_type.report == "b":
         display_max_temp_yearly(years_record)
 
 
@@ -126,7 +123,7 @@ def main():
     if (args.report is not None) and args.dir is not None:
         process(weather_files, args)
     else:
-        default_display()
+        application_usage_info()
 
 
 if __name__ == "__main__":
