@@ -64,7 +64,7 @@ class JulesSpider(CrawlSpider):
         item = response.meta['item']
         item['image_urls'].extend(response.css('.product-image-link::attr(href)').extract())
         next_url = response.meta['urls'].pop()
-        if len(response.meta['urls']) is 1:
+        if next_url:
             yield Request(next_url, callback=self.get_image_urls,
                           meta={'item': item, 'urls': response.meta['urls']})
         else:
@@ -87,4 +87,4 @@ class JulesSpider(CrawlSpider):
         output['date'] = time.strftime("%H:%M:%S")
         output['image_urls'] = []
         img_urls = response.css('.va-color a::attr(href)').extract()
-        yield Request(img_urls[0], callback=self.get_image_urls, meta={'item': output, 'urls': img_urls})
+        yield Request(img_urls.pop(), callback=self.get_image_urls, meta={'item': output, 'urls': img_urls})
