@@ -8,15 +8,14 @@ from django.contrib.auth import (
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
-from django.urls import reverse
 from django.views import View
 
 from .models import Trainee, Trainer, Technology, Assignment, UserProfile
 from .forms import LoginForm, SignUpForm
 
 
-class TrainingIndex(LoginRequiredMixin, View):
-    template_name = 'training/training_index.html'
+class Profile(LoginRequiredMixin, View):
+    template_name = 'training/profile.html'
     login_url = 'training:login'
     name = ''
 
@@ -30,7 +29,6 @@ class TrainingIndex(LoginRequiredMixin, View):
 
         context = {
             'status': status,
-            'trainers': trainers,
         }
         return render(request, self.template_name, context)
 
@@ -135,7 +133,7 @@ class Login(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect(reverse('training:training_index'))
+            return redirect('training:profile')
         form = LoginForm(None)
         context = {
             'form': form
@@ -153,7 +151,7 @@ class Login(View):
             if user and user.is_active:
                 django_login(request, user)
                 '''Redirect to a success page.'''
-                return redirect("training:training_index")
+                return redirect("training:profile")
             else:
                 messages.append("login failed")
 
@@ -169,7 +167,7 @@ class Signup(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('training:training_index')
+            return redirect('training:profile')
 
         return render(request, self.template_name)
 
@@ -179,7 +177,7 @@ class TrainerSignUp(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect(reverse('training:training_index'))
+            return redirect('training:profile')
 
         user_form = SignUpForm(None)
         context = {
@@ -188,7 +186,7 @@ class TrainerSignUp(View):
         return render(request, self.template_name, context)
 
     def post(self, request):
-        user_form = SignUpForm(request.POST)
+        user_form = SignUpForm(request.POST, request.FILES)
 
         if user_form.is_valid():
             username = user_form.cleaned_data['username']
@@ -198,7 +196,7 @@ class TrainerSignUp(View):
 
             if not user:
                 user_form.save_trainer()
-                return redirect(reverse('training:login'))
+                return redirect('training:login')
             else:
                 error = "User name already exists"
         else:
@@ -216,7 +214,7 @@ class TraineeSignUp(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect(reverse('training:training_index'))
+            return redirect('training:profile')
 
         user_form = SignUpForm(None)
         context = {
@@ -225,7 +223,7 @@ class TraineeSignUp(View):
         return render(request, self.template_name, context)
 
     def post(self, request):
-        user_form = SignUpForm(request.POST)
+        user_form = SignUpForm(request.POST, request.FILES)
 
         if user_form.is_valid():
             username = user_form.cleaned_data['username']
@@ -235,7 +233,7 @@ class TraineeSignUp(View):
 
             if not user:
                 user_form.save_trainee()
-                return redirect(reverse('training:login'))
+                return redirect('training:login')
             else:
                 error = "User name already exists"
         else:

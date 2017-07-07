@@ -11,7 +11,12 @@
           <a href="{% url 'training:search' %}">SEARCH USERS</a>
         </td>
         <td>
-          <input id="logout" onclick='location.href="{% url 'training:logout' %}"' type="button" value="Log Out">
+          <a style="margin-left: 10px" href="{% url 'training:profile' %}">PROFILE</a>
+        </td>
+        <td>
+          <input id="logout" style="margin-left: 10px"
+          onclick='location.href="{% url 'training:logout' %}"'
+          type="button" value="Log Out">
         </td>
       </tr>
       <tr> <h1>{% block content_title %}{% endblock %}</h1> </tr>

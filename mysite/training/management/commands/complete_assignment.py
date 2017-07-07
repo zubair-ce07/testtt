@@ -3,7 +3,7 @@ from training.models import Assignment
 
 
 class Command(BaseCommand):
-    help = 'Closes the specified poll for voting'
+    help = 'Changes the status of assignment to Completed'
 
     def add_arguments(self, parser):
         parser.add_argument('assignment_id', nargs='+', type=int)
@@ -13,7 +13,8 @@ class Command(BaseCommand):
             try:
                 assignment = Assignment.objects.get(pk=assignment_id)
             except Assignment.DoesNotExist:
-                raise CommandError('Assignment %s does not exist' % assignment_id)
+                raise CommandError('Assignment %s does'
+                                   ' not exist' % assignment_id)
 
             assignment.completion_status = True
             assignment.save()

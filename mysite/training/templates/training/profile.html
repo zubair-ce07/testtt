@@ -1,0 +1,29 @@
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
+<h2>Welcome : {{ user.user_profile.name }}</h2>
+
+<img src="{{ user.user_profile.picture.url }}" alt="{{user.user_profile.name}}" width="200" height="200"/>
+
+<h2>Status : {{ status }}</h2>
+
+{% if status == 'Trainee' %}
+    <h2>
+        Trainer Assigned :
+        <a href="{% url 'training:trainer_details' user.trainee.trainer.id %}">
+          {{ user.trainee.trainer }}
+        </a>
+    </h2>
+{% elif status == 'Trainer' %}
+    <h2>
+      Trainees Assigned :
+    </h2>
+    <ul>
+        {% for trainee in user.trainer.trainees.all %}
+            <li><a href="{% url 'training:trainee_details' trainee.id %}">
+              {{ trainee }}
+            </a></li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

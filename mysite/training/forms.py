@@ -32,7 +32,6 @@ class SignUpForm(forms.Form):
         user_profile.save()
 
     def __add_user(self):
-        # import pdb; pdb.set_trace()
         username = self.cleaned_data['username']
         password = self.cleaned_data['password']
         first_name = self.cleaned_data['first_name']

@@ -3,7 +3,7 @@
 {% block content %}
 {% if assignment %}
     <h2>
-      Title : {{assignment.title}}
+      Title : {{ assignment }}
     </h2>
 
   {% if assignment.description %}
@@ -23,7 +23,7 @@
 
   {% if assignment.technology_used %}
     <h3> Technology : </h3>
-    {{technology_url}}
+    {{ technology_url }}
     <a href="{% url 'training:technology_details' assignment.technology_used.id %}">
       {{ assignment.technology_used }}
     </a>

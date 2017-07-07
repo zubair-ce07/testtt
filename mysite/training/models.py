@@ -28,7 +28,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='user_profile')
     name = models.CharField(max_length=100)
     picture = models.ImageField(max_length=200,
-                                upload_to="trainee_images/",
+                                upload_to="user_images/",
                                 default="default.png")
 
     def __str__(self):
