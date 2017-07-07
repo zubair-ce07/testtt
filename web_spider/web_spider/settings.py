@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     'url_crawler',
+    'tz_detect',
 ]
 
 MIDDLEWARE = [
@@ -25,6 +26,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'tz_detect.middleware.TimezoneMiddleware',
 ]
 
 ROOT_URLCONF = 'web_spider.urls'
