@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('memo_app', '0001_initial'),
+        ('memoapp', '0001_initial'),
     ]
 
     operations = [

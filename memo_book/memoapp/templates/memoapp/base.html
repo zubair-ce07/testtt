@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'memoapp/bootstrap.min.css' %}" />
+    {%  if  request.path in '/login/signup' %}
+        <link rel="stylesheet" type="text/css" href="{% static 'memoapp/signup_login.css' %}" />
+    {% endif %}
+
+    <title>{% block page_title %}{% endblock page_title %}</title>
+</head>
+<body>
+{%  if  request.path not in '/login/signup' %}
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/home">Memo Book</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/profile">{{ user.first_name}}  {{ user.last_name }}</a></li>
+                  <li>  <form method="post" action="/logout"> {% csrf_token %}<input type="submit" value="Logout" ></form></li>
+            </ul>
+
+          </ul>
+        </div>
+      </div>
+    </nav>
+{% endif %}
+    {% block body %}
+    {% endblock body %}
+
+
+</body>
+</html>

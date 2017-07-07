@@ -5,16 +5,16 @@ from memo_book import settings
 from .views import Login, SignUp, Home, Logout, AddMemo, DeleteMemo, EditMemo, UserProfile, EditProfile
 
 
-app_name = 'memo_app'
+app_name = 'memoapp'
 urlpatterns = [
-    url(r'^$', Login.as_view()),
+    url(r'^$', Login.as_view(), name='loginsignup'),
     url(r'^signup$', SignUp.as_view()),
     url(r'^login$', Login.as_view()),
     url(r'^logout$', Logout.as_view()),
-    url(r'^home$', Home.as_view()),
+    url(r'^home$', Home.as_view(), name='home'),
     url(r'^addmemo$', AddMemo.as_view()),
     url(r'^deletememo$', DeleteMemo.as_view()),
     url(r'^editmemo$', EditMemo.as_view()),
     url(r'^profile$', UserProfile.as_view()),
     url(r'^editprofile$', EditProfile.as_view()),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

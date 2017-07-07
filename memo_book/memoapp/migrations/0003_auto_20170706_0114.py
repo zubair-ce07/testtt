@@ -8,7 +8,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('memo_app', '0002_auto_20170706_0113'),
+        ('memoapp', '0002_auto_20170706_0113'),
     ]
 
     operations = [

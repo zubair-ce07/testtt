@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import ModelForm, Textarea
-from memo_app.models import User, Memory
+from memoapp.models import User, Memory
 from django.core.validators import MinLengthValidator, MaxLengthValidator, EmailValidator, URLValidator
 
 

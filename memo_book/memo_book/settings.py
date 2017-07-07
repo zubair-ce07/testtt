@@ -34,7 +34,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'memo_app.apps.MemoAppConfig',
+    'memoapp.apps.MemoAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -83,7 +83,7 @@ DATABASES = {
         'HOST': 'localhost',
         'USER': 'root',
         'PASSWORD': '123',
-        'NAME': 'memo_app',
+        'NAME': 'memoapp',
     }
 }
 
