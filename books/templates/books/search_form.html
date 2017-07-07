@@ -9,7 +9,7 @@
     </form>
 
     {% if books  %}
-        <p>Your search for : <strong>{{query}}</strong> returned the following results:</p>
+        <p>Your search for <strong>{{query}}</strong> returned the following results:</p>
             <p>Found {{books|length}} book{{books|pluralize}}.</p>
             <ul>
                 {% for book in books  %}

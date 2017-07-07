@@ -22,10 +22,9 @@ from .import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^hello/$', views.hello),
     url(r'^$', views.homepage),
     url(r'^time/$', views.current_date_time),
-    url(r'^time/plus/(\d{1,2})/$', views.hours_ahead),
+    url(r'^time/plus/(\w{1,2})/$', views.hours_ahead),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^html-meta/$', views.html_meta, name='html-meta'),
     url(r'^books/', include('books.urls')),

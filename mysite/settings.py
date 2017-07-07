@@ -37,8 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'books.apps.BooksConfig',
 ]
+
+MY_APPS = [
+    'books',
+]
+INSTALLED_APPS += MY_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -55,7 +59,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates'), './templates/registration' ],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), './templates/registration'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
