@@ -1,8 +1,9 @@
-from django.db import models
 import uuid
+from datetime import date
+
+from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
-from datetime import date
 
 
 class Genre(models.Model):
@@ -17,6 +18,7 @@ class Author(models.Model):
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField(null=True, blank=True)
     date_of_death = models.DateField('Died', null=True, blank=True)
+
     def get_absolute_url(self):
         return reverse('author-detail', args=[str(self.id)])
 

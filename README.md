@@ -1,5 +1,4 @@
-the-lab
-=======
+*MDN Django Tutorial Local Library* (upper case)
 
 The purpose of this repo is to help the team lead and his team member in training and evaluating newly hired developers especially fresh grads. Code written by newbies for training/practice will be checked in here and reviewed by their respective team leads. All feedback must be in written on github.
 
@@ -16,3 +15,6 @@ The purpose of this repo is to help the team lead and his team member in trainin
 
 Do not add log files, temp files, data files etc.
 **Do not merge/push anything into master branch**.
+
+
+

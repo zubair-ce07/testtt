@@ -1,6 +1,10 @@
 from django.contrib import admin
+
 from .models import Genre, Book, BookInstance, Author, Language
 
+
+admin.site.register(Genre)
+admin.site.register(Language)
 
 class BookInline(admin.TabularInline):
     extra = 0
@@ -19,6 +23,7 @@ class BookInstanceInline(admin.TabularInline):
     model = BookInstance
     extra = 0
 
+
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'display_genre', 'language')
@@ -29,15 +34,7 @@ class BookAdmin(admin.ModelAdmin):
 
 @admin.register(BookInstance)
 class BookInstanceAdmin(admin.ModelAdmin):
-    fieldsets = ((None, {'fields': ('book','imprint')
-                         }),
+    fieldsets = ((None, {'fields': ('book', 'imprint')}),
                  ('Availability', {'fields': ('status', 'due_back', 'borrower')}))
-    list_display = ('id', 'book', 'status','borrower', 'due_back')
+    list_display = ('id', 'book', 'status', 'borrower', 'due_back')
     list_filter = ('status', 'due_back')
-
-
-admin.site.register(Genre)
-# admin.site.register(Book, BookAdmin)
-# admin.site.register(BookInstance, BookInstanceAdmin)
-# admin.site.register(Author, AuthorAdmin)
-admin.site.register(Language)

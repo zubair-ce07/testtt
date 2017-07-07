@@ -4,14 +4,14 @@
 {% endblock %}
 {% block content %}
     <h1> Author: {{author.first_name}} {{author.last_name}}</h1>
-    <p class="text-muted">{{author.date_of_birth}} - {%if author.date_of_death%}{{author.date_of_death}}{%endif%}</p>
+    <p class="text-muted">{{author.date_of_birth}} - {% if author.date_of_death %}{{author.date_of_death}}{% endif %}</p>
     <h2>Books</h2>
-    {%if author.book_set.all %}
-        {%for book in author.book_set.all %}
+    {% if author.book_set.all %}
+        {% for book in author.book_set.all %}
         <a href="{% url 'book-detail' book.pk %}">{{book.title}}</a> ({{book.bookinstance_set.count}})
         <p>{{book.summary}}</p>
-        {%endfor%}
+        {% endfor %}
     {% else %}
-    <p> There are currently no books available for this author.</p>
-        {%endif%}
+        <p> There are currently no books available for this author.</p>
+    {%endif%}
 {% endblock %}
