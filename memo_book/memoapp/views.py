@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
 from django.urls import reverse
+from django.db.models import Q
 
 
 class Home(LoginRequiredMixin, View):
@@ -24,6 +25,7 @@ class Home(LoginRequiredMixin, View):
 
         context = {'memo_form': AddMemoForm(), 'memories_of_user': memos}
         return render(request, 'memoapp/home.html', context)
+
 
 class Login(View):
     def get(self, request):
@@ -67,7 +69,7 @@ class SignUp(View):
             return HttpResponseRedirect(reverse('memoapp:home'))
 
     def post(self, request):
-        signup_form = SignupForm(request.POST)
+        signup_form = SignupForm(request.POST, request.FILES)
         if signup_form.is_valid():
             new_user = signup_form.save(commit=False)
             new_user.password = make_password(signup_form.cleaned_data['password'])
@@ -142,10 +144,30 @@ class EditProfile(LoginRequiredMixin, View):
         return render(request, 'memoapp/edit_profile.html', context)
 
     def post(self, request):
-        user_form = EditProfileForm(request.POST, instance=request.user)
+        user_form = EditProfileForm(request.POST,request.FILES, instance=request.user)
+        request.user.image.delete(False)
         if user_form.is_valid():
             user_form.save()
             return HttpResponseRedirect(reverse('memoapp:home'))
         else:
             context = {'user_form': user_form}
             return render(request, 'memoapp/edit_profile.html', context)
+
+
+class Search(LoginRequiredMixin, View):
+    def post(self, request):
+       search_text = request.POST['tosearch']
+       searched_mems = Memory.objects.filter(Q(tags__icontains=search_text) | Q(text__icontains=search_text))
+       paginator = Paginator(searched_mems, 2)
+       page_no = request.GET.get('page_no')
+       try:
+           memos = paginator.page(page_no)
+       except PageNotAnInteger:
+           memos = paginator.page(1)
+       except EmptyPage:
+           memos = paginator.page(paginator.num_pages)
+
+       context = {'memo_form': AddMemoForm(), 'memories_of_user': memos}
+       return render(request, 'memoapp/home.html', context)
+    def get(self, request):
+        pass

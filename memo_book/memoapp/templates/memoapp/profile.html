@@ -1,6 +1,6 @@
 {% extends "memoapp/base.html" %}
 {% block page_title %}Memo Book{% endblock page_title %}
-
+{% load static %}
 {% block body %}
     <!-- Body contents are starting from here -->
   <div class="container">
@@ -10,7 +10,7 @@
             <div class="well well-sm">
                 <div class="row">
                     <div class="col-sm-6 col-md-4">
-                        <img src="http://placehold.it/380x500" alt="" class="img-rounded img-responsive" />
+                        <img src="{% get_media_prefix %}{{  user.image  }}" alt="" class="img-rounded img-responsive" />
                     </div>
                     <div class="col-sm-6 col-md-8">
                         <h4>{{ user.first_name }} {{ user.last_name }}</h4>

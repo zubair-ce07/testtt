@@ -2,7 +2,7 @@ from django.conf.urls import url
 from django.conf.urls.static import static
 
 from memo_book import settings
-from .views import Login, SignUp, Home, Logout, AddMemo, DeleteMemo, EditMemo, UserProfile, EditProfile
+from .views import Login, SignUp, Home, Logout, AddMemo, DeleteMemo, EditMemo, UserProfile, EditProfile, Search
 
 
 app_name = 'memoapp'
@@ -17,4 +17,5 @@ urlpatterns = [
     url(r'^editmemo$', EditMemo.as_view()),
     url(r'^profile$', UserProfile.as_view()),
     url(r'^editprofile$', EditProfile.as_view()),
+    url(r'^search$', Search.as_view())
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

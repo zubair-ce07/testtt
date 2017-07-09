@@ -7,7 +7,8 @@
     {%  if  request.path in '/login/signup' %}
         <link rel="stylesheet" type="text/css" href="{% static 'memoapp/signup_login.css' %}" />
     {% endif %}
-
+    <script src="{% static 'memoapp/js/jquery.min.js' %}"> </script>
+    <script src="{% static 'memoapp/js/signup_login.js' %}"> </script>
     <title>{% block page_title %}{% endblock page_title %}</title>
 </head>
 <body>

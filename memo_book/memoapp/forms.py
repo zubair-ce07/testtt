@@ -7,7 +7,7 @@ from django.core.validators import MinLengthValidator, MaxLengthValidator, Email
 class SignupForm(ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'password']
+        fields = ['first_name', 'last_name', 'email', 'username', 'password', 'image']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control separate-form-fields','required': 'required',
                                                  'placeholder': 'First Name'}),
@@ -19,6 +19,7 @@ class SignupForm(ModelForm):
                                                'placeholder': 'User Name'}),
             'password': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                                'placeholder': 'Password', 'type': 'password'}),
+            'image': forms.FileInput(attrs={'class': 'form-control separate-form-fields'}),
         }
 
 

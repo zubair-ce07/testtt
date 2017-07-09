@@ -8,7 +8,7 @@
 			<div class="col-md-6 col-md-offset-3">
 				<div class="panel panel-login">
 					<div class="panel-heading">
-                        <form id="register-form" action="/editprofile" method="post" enctype="multipart/form-data" role="form" style="display: block">
+                        <form id="register-form" action="/editprofile"  method="post" enctype="multipart/form-data" role="form" style="display: block">
                             {% csrf_token %}
                             {{ user_form }}
                             <div class="form-group">

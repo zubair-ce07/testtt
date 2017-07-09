@@ -109,7 +109,11 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = (
         'django.contrib.auth.backends.ModelBackend',
     )
-UserModel = 'django.contrib.auth.models.User'
+
+UserModel = 'memoapp.modelssss.User'
+#UserModel = 'django.contrib.auth.models.User'
+
+AUTH_USER_MODEL = 'memoapp.User'
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
