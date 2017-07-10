@@ -16,8 +16,7 @@ class TodoItemSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    todoitem = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=TodoItem.objects.all())
+    todoitem = TodoItemSerializer(many=True)
 
     class Meta:
         model = User
