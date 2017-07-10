@@ -1,0 +1,4 @@
+A scrapper that retrieves all the products from the website
+
+How to run:
+scrapy crawl products
