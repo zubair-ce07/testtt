@@ -4,6 +4,12 @@ the-lab of Muhammad Osama Arshad
 
 Weather summary data API made using django
 
+## Getting weather data
+1. Copy [this](https://drive.google.com/a/arbisoft.com/file/d/0B-5-C5ij5upfRlNoYko2UVB5MUU/view?usp=sharing) csv file into the root folder of the project.
+2. Change the name of the CSV file in settings.py. Variable name is DATA_FILE
+3. Run the project.
+
+
 =======
 
 The purpose of this repo is to help the team lead and his team member in training and evaluating newly hired developers especially fresh grads. Code written by newbies for training/practice will be checked in here and reviewed by their respective team leads. All feedback must be in written on github.
