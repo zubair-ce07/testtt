@@ -22,7 +22,7 @@ urlpatterns = [
     # url(r'^login/$', auth_views.login, {'template_name': 'instagram/login.html'}, name='login'),
     # url(r'^logout/$', views.logout, name='login'),
     # url(r'^newsfeed/$', views.newsfeed, name='newsfeed'),
-    url(r'^instagram/', include('instagram.urls')),
+    url(r'^', include('instagram.urls')),
     url(r'^admin/', admin.site.urls),
     # url(r'^contact/thanks/$', views.thanks),
     # url(r'^contact/$', views.contact),
