@@ -20,9 +20,10 @@ class DoctorSpider(scrapy.Spider):
         viewstate = response.xpath('//input[@id = "__VIEWSTATE"]/@value').extract_first()
         doctor_profiles_selector = response.xpath('//div[@class="search-results-physician"]')
         for doctor_profile in doctor_profiles_selector:
-            doctor_id = doctor_profile.xpath('./input[@type="hidden"]/@value').extract_first()
-            doctor_id_key = doctor_profile.xpath('./input[@type="hidden"]/@name').extract_first()
-            viewprofile_key = doctor_profile.xpath('.//div[@class="view-profile-wrapper"]/input[@type = "submit"]/@name').extract_first()
+            doctor_id = doctor_profile.xpath('./input[contains(@id, "PhysicianID")]/@value').extract_first()
+            doctor_id_key = doctor_profile.xpath('./input[contains(@id, "PhysicianID")]/@name').extract_first()
+            viewprofile_wrapper = doctor_profile.xpath('.//div[@class="view-profile-wrapper"]').pop()
+            viewprofile_key = viewprofile_wrapper.xpath('./input[@value="View Full Profile"]/@name').extract_first()
             yield FormRequest(url, method='POST', formdata={doctor_id_key: doctor_id,
                                                             viewprofile_key: 'View Full Profile',
                                                             '__VIEWSTATE': viewstate},
@@ -30,8 +31,10 @@ class DoctorSpider(scrapy.Spider):
 
     def get_graduation_info(self, response):
         graduate_education = []
-        residency = {'type': 'Residency', 'name': response.xpath('//div[contains(@id, "pnlResidency")]//li//text()').extract()}
-        fellowship = {'type': 'Fellowship', 'name': response.xpath('//div[contains(@id, "pnlFellowship")]//li//text()').extract()}
+        residency = {'type': 'Residency',
+                     'name': response.xpath('//div[contains(@id, "pnlResidency")]//li//text()').extract()}
+        fellowship = {'type': 'Fellowship',
+                      'name': response.xpath('//div[contains(@id, "pnlFellowship")]//li//text()').extract()}
         graduate_education.append(residency)
         graduate_education.append(fellowship)
         return graduate_education
