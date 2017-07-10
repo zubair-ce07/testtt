@@ -15,10 +15,10 @@ class TodoItemSerializer(serializers.ModelSerializer):
                   'status', 'date_completed', )
 
 
-class UserSerializer(serializers.Serializer):
-    """
-    Serializer for default User Model
-    """
-    username = serializers.CharField()
+class UserSerializer(serializers.ModelSerializer):
     todoitem = serializers.PrimaryKeyRelatedField(
         many=True, queryset=TodoItem.objects.all())
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'todoitem')
