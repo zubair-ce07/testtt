@@ -1,6 +1,8 @@
 from django import forms
 from datetime import datetime
+
 from django.core.exceptions import ValidationError
+
 from .models import TodoItem
 
 
@@ -13,6 +15,10 @@ class TodoItemModelUpdateForm(forms.ModelForm):
         fields = ('description', 'status',)
 
     def clean(self):
+        """
+        Verifies whether the difference between date_created and 
+        date_completed of TodoItem is greater than 3 days
+        """
         cleaned_data = super(TodoItemModelUpdateForm, self).clean()
         status = cleaned_data.get('status')
 

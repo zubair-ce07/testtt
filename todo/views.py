@@ -1,29 +1,27 @@
-from django.views import generic
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.views import View, generic
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User
-from django.views import View
 from django.db.models import Count
+
 from rest_framework import viewsets
 
 from .models import TodoItem
 from .serializers import TodoItemSerializer, UserSerializer
 from .forms import TodoItemModelUpdateForm
-# Create your views here.
 
 
 class TodoViewSet(viewsets.ModelViewSet):
-    '''
+    """
     API endpoint that allows TodoItems to be edited or viewed
-    '''
+    """
     queryset = TodoItem.objects.all()
     serializer_class = TodoItemSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    '''
+    """
     API endpoint for Users
-    '''
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -56,7 +54,7 @@ class TodoCreateView(LoginRequiredMixin, generic.CreateView):
 
 class TodoDetailView(LoginRequiredMixin, generic.DetailView):
     """
-    displays the detail of a single item in todo list for
+    Displays the detail of a single item in todo list for
     a specific user
     """
     model = TodoItem
@@ -130,33 +128,28 @@ class SummaryView(PermissionRequiredMixin, View):
 
     def get(self, request):
         context = {}
-        # Users with most completed tasks
+
         context['all_time'] = User.objects.filter(todoitem__status='complete').annotate(
             Count('todoitem')).order_by('-todoitem__count')[:3]
-        #################################
-        # Users with most completed tasks who joined in the last 3 months
+
         current_month = timezone.make_aware(datetime.now())
         one_month_ago = current_month - timedelta(days=30)
         context['complete_last_month'] = User.objects.filter(
             todoitem__status='complete',
             todoitem__date_completed__gte=one_month_ago).annotate(
                 Count('todoitem')).order_by('-todoitem__count')[:3]
-        #################################
-        # Users with most tasks completed in last month by users who joined
-        # within last 3 months list (top 3)
+
         three_months_ago = current_month - timedelta(days=90)
         context['complete_last_month_with_3_months'] = User.objects.filter(
             todoitem__status='complete',
             date_joined__gte=three_months_ago,
             todoitem__date_completed__gte=one_month_ago).annotate(
                 Count('todoitem')).order_by('-todoitem__count')[:3]
-        #################################
-        # Users with most tasks in progress since last 2 months user list (top
-        # 3)
+
         two_months_ago = current_month - timedelta(days=60)
         context['inprogress_since_last_2_months'] = User.objects.filter(
             todoitem__date_created__gte=two_months_ago,
             todoitem__status='inprogress').annotate(
                 Count('todoitem')).order_by('-todoitem__count')[:3]
-        #################################
+
         return render(request, self.template_name, context)
