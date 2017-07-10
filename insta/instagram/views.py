@@ -5,36 +5,68 @@ from django.core.mail import send_mail, get_connection
 from django.shortcuts import render
 from instagram.models import User
 from django.db.models import Q
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 
-def index(request):
-    # def my_view(request):
-    # username = request.POST['username']
-    # password = request.POST['password']
-    # user = authenticate(username=username, password=password)
-    # if user is not None:
-    #     if user.is_active:
-    #         login(request, user)
-    #         # Redirect to a success page.
-    #     else:
-    #         # Return a 'disabled account' error message
-    #         return HttpResponse("Error: Disabled Account")
-    # else:
-    #     # Return an 'invalid login' error message.
-    #     return HttpResponse("Error: Invalid Login")
-    # return HttpResponse("Hello, world. You're at the Instagram index.")
-    values = request.META
-    html = []
-    for k in sorted(values):
-        html.append('<tr><td>%s</td><td>%s</td></tr>' % (k, values[k]))
-    return HttpResponse('<table>%s</table>' % '\n'.join(html))
+def newsfeed(request):
+    username = request.POST.get('username')
+    print(username)
+    password = request.POST.get('password')
+    user = authenticate(username=username, password=password)
+
+    if user is not None:
+        # if user.is_active:
+            # login(request, user)
+        print('HUEHUE')
+    else:
+        print(username, password)
+        return HttpResponseRedirect('login')
+    # # def my_view(request):
+    # # username = request.POST['username']
+    # # password = request.POST['password']
+    # # user = authenticate(username=username, password=password)
+    # # if user is not None:
+    # #     if user.is_active:
+    # #         login(request, user)
+    # #         # Redirect to a success page.
+    # #     else:
+    # #         # Return a 'disabled account' error message
+    # #         return HttpResponse("Error: Disabled Account")
+    # # else:
+    # #     # Return an 'invalid login' error message.
+    # #     return HttpResponse("Error: Invalid Login")
+    # # return HttpResponse("Hello, world. You're at the Instagram index.")
+    # # values = request.META
+    # # html = []
+    # # for k in sorted(values):
+    # #     html.append('<tr><td>%s</td><td>%s</td></tr>' % (k, values[k]))
+    # # return HttpResponse('<table>%s</table>' % '\n'.join(html))
+    # whut = '''<html lang="en">
+    #         <head>
+    #             <meta charset="UTF-8">
+    #             <title>Thanks</title>
+    #         </head>
+    #         <body>
+    #             <h1>THANKS! :3</h1>
+    #             <a href='https://www.google.com'> Some Text :3 </a>
+    #         </body>
+    #         </html>'''
+    # return HttpResponse(whut)
 
 
 # def search_form(request):
 #     return render(request, 'instagram/search_form.html')
 
 
+def index(request):
+    return HttpResponseRedirect('/instagram/login/')
+
+
+def logout_view(request):
+    logout(request)
+
+
+# @login_required
 def search(request):
     errors = []
     if 'query' in request.GET:

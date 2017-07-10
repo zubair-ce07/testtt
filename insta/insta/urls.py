@@ -15,14 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-# from django.contrib.auth import views
+# from django.contrib.auth import views as auth_views
 from instagram import views
 
 urlpatterns = [
-    # url(r'^login/$', views.login, {'template_name': 'instagram/login.html'}, name='login'),
+    # url(r'^login/$', auth_views.login, {'template_name': 'instagram/login.html'}, name='login'),
     # url(r'^logout/$', views.logout, name='login'),
+    # url(r'^newsfeed/$', views.newsfeed, name='newsfeed'),
     url(r'^instagram/', include('instagram.urls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^contact/thanks/$', views.thanks),
-    url(r'^contact/$', views.contact),
+    # url(r'^contact/thanks/$', views.thanks),
+    # url(r'^contact/$', views.contact),
 ]
