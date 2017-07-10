@@ -1,12 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>URL Crawler</title>
-</head>
-<body>
-    <h3>Welcome {{ user.first_name }}</h3>
-    <a href="{% url 'logout' %}">Logout</a>
+{% extends 'url_crawler/base_layout.html' %}
+
+{% block title %}URL Crawler{% endblock %}
+
+{% block links %}<a class="right" href="{% url 'logout' %}">Logout</a>{% endblock %}
+
+{% block content %}
+    <h2>Welcome {{ user.first_name }}</h2>
+
+    <p>
+        <b>Last Login was at: </b>
+        {% load tz %}
+        {{ user.last_login|localtime|date:'D, d N, Y - h:i a' }}
+    </p>
     <form method="post">
         {% csrf_token %}
         {{ form }}
@@ -26,5 +31,4 @@
     {% elif error %}
         <b>Error: </b>{{ error }}
     {% endif %}
-</body>
-</html>
+{% endblock %}
