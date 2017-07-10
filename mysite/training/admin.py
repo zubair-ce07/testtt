@@ -28,9 +28,25 @@ class AssignmentAdmin(admin.ModelAdmin):
     list_filter = ['technology_used', 'completion_status']
     search_fields = ['title']
     list_display = ['title', 'description']
+    filter_horizontal = ('technology_used',)
 
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ['name']
     list_filter = ['user']
+    list_display = ['name', 'user']
+    fields = ['name', 'user']
+    raw_id_fields = ('user',)
+
+    # A template for a very customized change view:
+    change_form_template = 'training/admin/change_form.html'
+
+    def get_osm_info(self):
+        pass
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['osm_data'] = self.get_osm_info()
+        return super(UserProfileAdmin, self).change_view(
+            request, object_id, form_url, extra_context=extra_context, )

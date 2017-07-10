@@ -18,7 +18,7 @@ class Assignment(models.Model):
     title = models.CharField(max_length=50)
     description = models.CharField(max_length=200)
     completion_status = models.BooleanField(default=False)
-    technology_used = models.ForeignKey(Technology)
+    technology_used = models.ManyToManyField(Technology)
 
     def __str__(self):
         return self.title
