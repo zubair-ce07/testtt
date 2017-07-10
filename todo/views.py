@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 
 from rest_framework import viewsets
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view
+
 
 from .models import TodoItem
 from .serializers import TodoItemSerializer, UserSerializer
@@ -17,6 +20,17 @@ class TodoViewSet(viewsets.ModelViewSet):
     queryset = TodoItem.objects.all()
     serializer_class = TodoItemSerializer
 
+
+@api_view(['POST'])
+def create_alone_user(request):
+    '''
+    Post view to create a single user without corresponding
+    todoitems
+    '''
+    print(request.data['username'])
+    user = User(username=request.data['username'])
+    user.save()
+    return UserSerializer(user)
 
 class UserViewSet(viewsets.ModelViewSet):
     """

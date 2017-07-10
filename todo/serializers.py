@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-
+from django.db import models
 from rest_framework import serializers
 
 from todo.models import TodoItem
@@ -16,6 +16,9 @@ class TodoItemSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the user class
+    """
     todoitem = TodoItemSerializer(many=True)
 
     class Meta:
