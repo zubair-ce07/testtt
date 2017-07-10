@@ -7,10 +7,14 @@
     Name : {{ trainee }}
   </h2>
   <h2>
-    Trainer Assigned :
-    <a href="{% url 'training:trainer_details' trainee.trainer.id %}">
-        {{ trainee.trainer }}
-      </a>
+    {% if trainee.trainer %}
+        Trainer Assigned :
+        <a href="{% url 'training:trainer_details' trainee.trainer.id %}">
+            {{ trainee.trainer }}
+        </a>
+    {% else %}
+        No Trainer Assigned
+    {% endif %}
   </h2>
   {% if assignments %}
     <h2>

@@ -42,10 +42,25 @@ class SignUpForm(forms.Form):
         user.save()
         return user
 
+    def clean(self):
+        cleaned_data = super(SignUpForm, self).clean()
+        username = cleaned_data.get("username")
+
+        try:
+            User.objects.get(username=username)
+        except User.DoesNotExist:
+            return
+
+        raise forms.ValidationError("Username already exists")
+
     def save(self, account_type, commit=True):
         if commit:
             user = self.__add_user()
             self.__update_user_profile(user)
+            """
+            Sending Trainer/Trainee Signal to
+            to add Trainer/Trainee accordingly
+            """
             if account_type == "Trainee":
                 add_trainee_signal.send(sender=self.__class__, user=user)
             elif account_type == "Trainer":

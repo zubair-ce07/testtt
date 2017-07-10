@@ -5,6 +5,7 @@ from django.contrib.auth import (
     authenticate, login as django_login,
     logout as django_logout
 )
+from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
@@ -188,22 +189,11 @@ class TrainerSignUp(View):
         user_form = SignUpForm(request.POST, request.FILES)
 
         if user_form.is_valid():
-            username = user_form.cleaned_data['username']
-            password = user_form.cleaned_data['password']
-
-            user = authenticate(username=username, password=password)
-
-            if not user:
-                user_form.save("Trainer")
-                return redirect('training:login')
-            else:
-                error = "User name already exists"
-        else:
-            error = "Fill all fields"
+            user_form.save("Trainer")
+            return redirect('training:login')
 
         context = {
-            'user_form': user_form,
-            'error': error
+            'user_form': user_form
         }
         return render(request, self.template_name, context)
 
@@ -225,22 +215,11 @@ class TraineeSignUp(View):
         user_form = SignUpForm(request.POST, request.FILES)
 
         if user_form.is_valid():
-            username = user_form.cleaned_data['username']
-            password = user_form.cleaned_data['password']
-
-            user = authenticate(username=username, password=password)
-
-            if not user:
-                user_form.save("Trainee")
-                return redirect('training:login')
-            else:
-                error = "User name already exists"
-        else:
-            error = "Fill all fields"
+            user_form.save("Trainee")
+            return redirect('training:login')
 
         context = {
-            'user_form': user_form,
-            'error': error
+            'user_form': user_form
         }
         return render(request, self.template_name, context)
 
