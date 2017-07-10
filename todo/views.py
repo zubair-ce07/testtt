@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 
 from rest_framework import viewsets
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 
 
