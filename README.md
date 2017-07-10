@@ -1,1 +1,2 @@
-**Master branch of arbisoft/the-lab Fakhar Muhammad Akhtar**
+**MDN Django Tutorial Poll Site**
+
