@@ -21,12 +21,15 @@
       <h3> Assignment Not Completed Yet </h3>
   {% endif %}
 
-  {% if assignment.technology_used %}
+  {% if assignment.technology_used.all %}
     <h3> Technology : </h3>
-    {{ technology_url }}
-    <a href="{% url 'training:technology_details' assignment.technology_used.id %}">
-      {{ assignment.technology_used }}
-    </a>
+    <ul>
+    {% for technology in assignment.technology_used.all %}
+        <a href="{% url 'training:technology_details' technology.id %}">
+          <li>{{ technology }}</li>
+        </a>
+    {% endfor %}
+    </ul>
   {% else %}
       <p>No Technology.</p>
   {% endif %}

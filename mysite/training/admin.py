@@ -36,7 +36,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ['name']
     list_filter = ['user']
     list_display = ['name', 'user']
-    fields = ['name', 'user']
+    fields = ['name', 'user', 'picture']
     raw_id_fields = ('user',)
 
     # A template for a very customized change view:
