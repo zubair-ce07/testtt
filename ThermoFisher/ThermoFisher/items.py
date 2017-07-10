@@ -1,0 +1,55 @@
+import scrapy
+
+
+class ThermoType2SpiderItem(scrapy.Item):
+    catalog_numbers = scrapy.Field()
+    brand = scrapy.Field()
+    name = scrapy.Field()
+    description = scrapy.Field()
+    category = scrapy.Field()
+    price = scrapy.Field()
+    image_urls = scrapy.Field()
+    unit_size = scrapy.Field()
+    url = scrapy.Field()
+    recommended_products = scrapy.Field()
+    specifications = scrapy.Field()
+    contents = scrapy.Field()
+    related_applications = scrapy.Field()
+    faqs = scrapy.Field()
+    product_literature = scrapy.Field()
+    manuals_and_protocols = scrapy.Field()
+    coa = scrapy.Field()
+    documents = scrapy.Field()
+
+
+class ThermoType1SpiderItem(scrapy.Item):
+    catalog_numbers = scrapy.Field()
+    brand = scrapy.Field()
+    name = scrapy.Field()
+    description = scrapy.Field()
+    category = scrapy.Field()
+    images = scrapy.Field()
+    url = scrapy.Field()
+    recommended_products = scrapy.Field()
+    specifications = scrapy.Field()
+    contents = scrapy.Field()
+    related_applications = scrapy.Field()
+    documents = scrapy.Field()
+    functions = scrapy.Field()
+    processes = scrapy.Field()
+    background_information = scrapy.Field()
+    references = scrapy.Field()
+    bioinformatics = scrapy.Field()
+    suggested_secondaries = scrapy.Field()
+    details = scrapy.Field()
+
+
+class ThermoType3SpiderItem(scrapy.Item):
+    catalog_numbers = scrapy.Field()
+    brand = scrapy.Field()
+    name = scrapy.Field()
+    description = scrapy.Field()
+    category = scrapy.Field()
+    images = scrapy.Field()
+    url = scrapy.Field()
+    documents = scrapy.Field()
