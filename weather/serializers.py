@@ -4,6 +4,9 @@ from .models import WeatherModel
 
 
 class WeatherSerializer(serializers.ModelSerializer):
+    '''
+    Simple model serializer for WeatherModel
+    '''
     class Meta:
         model = WeatherModel
         fields = '__all__'

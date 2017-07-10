@@ -1,13 +1,13 @@
 import json
 from datetime import date
-from django.utils.dateformat import DateFormat
 from collections import OrderedDict
+
+from django.utils.dateformat import DateFormat
 from django.shortcuts import render
 from rest_framework import viewsets, mixins, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-# Create your views here.
 from .models import WeatherModel
 from .serializers import WeatherSerializer
 
@@ -26,6 +26,9 @@ class WeatherSummaryView(APIView):
     '''
 
     def get(self, request, format=None):
+        '''
+        Method to get summary data based on url parameters
+        '''
         response_dict = {}
         response_dict['status'] = True,
         response_dict['error'] = '',
@@ -39,9 +42,6 @@ class WeatherSummaryView(APIView):
 
         the_status = status.HTTP_200_OK
         summary_dict = {}
-        # summary_dict['start_date'] = DateFormat(date.fromordinal(startdate)).format('Y-m-d')
-        # summary_dict['end_date'] = DateFormat(date.fromordinal(enddate)).format('Y-m-d')
-        # summary_dict['items'] = items
         param_dict = OrderedDict([
             ('start_date', DateFormat(startdate).format('Y-m-d')),
             ('end_date', DateFormat(enddate).format('Y-m-d')),

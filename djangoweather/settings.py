@@ -38,8 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'weather.apps.WeatherConfig',
 ]
+
+MY_APPS = [
+    'weather',
+]
+
+INSTALLED_APPS += MY_APPS
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',

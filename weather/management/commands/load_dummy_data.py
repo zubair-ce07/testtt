@@ -1,15 +1,15 @@
 import csv
 import os
-from weather.models import WeatherModel
 from datetime import date
-from django.utils import timezone
 
+from django.utils import timezone
 from django.core.management.base import BaseCommand
+
+from weather.models import WeatherModel
 
 
 class Command(BaseCommand):
-    def handle(self, **options):        
-        # WeatherModel.objects.all().delete()
+    def handle(self, **options):
         os.system('./manage.py flush --noinput')
         with open('madrid.csv', 'r') as csvfile:
             lines = csv.DictReader(csvfile)
@@ -29,7 +29,5 @@ class Command(BaseCommand):
                         except ValueError:
                             line[key] = 0
                 db_lines.append(line)
-                # print(line)
-            # print([WeatherModel(**line) for line in db_lines])
-            WeatherModel.objects.bulk_create([WeatherModel(**line) for line in db_lines])
-                # print(instance.wind_direction)
+            WeatherModel.objects.bulk_create(
+                [WeatherModel(**line) for line in db_lines])
