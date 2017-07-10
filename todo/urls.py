@@ -13,7 +13,8 @@ app_name = 'todo'
 
 urlpatterns = [
     url(r'^$', views.TodoView.as_view(), name='index'),
-    url(r'^api/users/createalone', views.create_alone_user, name='create_user'),
+    url(r'^api/users/create', views.UserAndTodoCreateView.as_view(), name='create_user_todo'),
+    url(r'^api/users/createalone', views.UserCreateView.as_view(), name='create_user'),
     url(r'^api/', include(router.urls)),
     url(r'add_item/$', views.TodoCreateView.as_view(), name='add_item'),
     url(r'summary/$', views.SummaryView.as_view(), name='summary'),

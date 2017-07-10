@@ -1,10 +1,17 @@
+from datetime import datetime, timedelta
+
+
 from django.views import View, generic
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User
 from django.db.models import Count
+from django.utils import timezone
+from django.shortcuts import get_object_or_404, redirect, render
 
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from rest_framework.generics import CreateAPIView
+from rest_framework.response import Response
 
 
 from .models import TodoItem
@@ -20,16 +27,25 @@ class TodoViewSet(viewsets.ModelViewSet):
     serializer_class = TodoItemSerializer
 
 
-@api_view(['POST'])
-def create_alone_user(request):
-    '''
-    Post view to create a single user without corresponding
-    todoitems
-    '''
-    print(request.data['username'])
-    user = User(username=request.data['username'])
-    user.save()
-    return UserSerializer(user)
+class UserCreateView(CreateAPIView):
+    """
+    Endpoint to create a single user from username only
+    """
+    serializer_class = UserSerializer
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+class UserAndTodoCreateView(CreateAPIView):
+    """
+    Endpoint to create a single user and his todoitems 
+    """
+    serializer_class = UserSerializer
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -136,6 +152,9 @@ class TodoUpdateView(LoginRequiredMixin, generic.UpdateView):
 
 
 class SummaryView(PermissionRequiredMixin, View):
+    '''
+    View to display the summary of the todo items 
+    '''
     permission_required = 'todo.is_manager'
     template_name = 'todo/summary.html'
 
