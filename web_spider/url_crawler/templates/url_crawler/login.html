@@ -1,0 +1,14 @@
+{% extends 'url_crawler/base_layout.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block links %}<a class="right" href="{% url 'signup' %}">Create a new account</a>{% endblock %}
+
+{% block content %}
+    <p style="color: red">{{ error }}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Login">
+    </form>
+{% endblock %}

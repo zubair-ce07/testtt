@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Web Spider{% endblock %}</title>
+    {% load staticfiles %}
+    <link href="{% static 'url_crawler/css/style.css' %}" rel="stylesheet">
+    {% load tz_detect %}
+    {% tz_detect %}
+</head>
+<body>
+    <div class="header">
+        <a href="{% url 'index' %}">Web Spider</a>
+        {% block links %}{% endblock %}
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+    <div class="footer">
+        <p>&copy; Arbisoft Inc.</p>
+    </div>
+
+</body>
+</html>
