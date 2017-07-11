@@ -47,7 +47,7 @@ class Skus(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     color = models.CharField(max_length=50)
     size = models.CharField(max_length=20, null=True, blank=True)
-    price = models.IntegerField()
+    price = models.FloatField()
     availability = models.BooleanField()
 
     def __str__(self):
