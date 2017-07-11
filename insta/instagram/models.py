@@ -11,15 +11,15 @@ class Profile(models.Model):
     # username = models.CharField(max_length=30, unique=True, null=False)
     # password = models.CharField(max_length=50, null=False)
     bio = models.TextField(max_length=300, blank=True)
-    following = models.ManyToManyField('self', blank=True)
-    followed_by = models.ManyToManyField('self', blank=True)
+    following = models.ManyToManyField('self', blank=True, symmetrical=False)
+    # followed_by = models.ManyToManyField('self', blank=True, symmetrical=False)
     # posts = models.ManyToManyField('Post', blank=True)
 
     def __str__(self):
         return self.user.username
 
     class Meta:
-        ordering = ['pk']
+        ordering = ['user__username']
 
 
 @receiver(post_save, sender=User)

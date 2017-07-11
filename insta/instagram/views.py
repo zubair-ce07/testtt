@@ -14,9 +14,10 @@ login_url = reverse_lazy('login')
 @login_required(login_url=login_url)
 def newsfeed(request):
     user = request.user
+    print('User: ', user)
     if user.is_authenticated():
         # return HttpResponse('Hi :3')
-        return render(request, 'instagram/newsfeed.html', {'user':user, })
+        return render(request, 'instagram/newsfeed.html', {'user': user, })
     else:
         # return HttpResponse(':3')
         return HttpResponseRedirect(reverse('login'))
@@ -30,9 +31,9 @@ def index(request):
 def logout_view(request):
     messages = []
     # logout(request)
-    print(request.user)
+    print('Logout: ', request.user)
     logout(request)
-    print(request.user)
+    print('Logout: ', request.user)
     messages.append('User logged out successfully')
     return HttpResponseRedirect(reverse('login'))
     # return render(request, 'instagram/login.html', {'extra_context' : {'messages':messages}})
@@ -63,18 +64,24 @@ def search(request):
 @login_required(login_url=login_url)
 def profile(request, pk):
     errors = []
-    print(pk)
+    print('Profile: ', pk)
     # print(request.url)
     # if pk in request.GET:
-        # print(request.GET)
+    # print(request.GET)
     if not pk:
         errors.append('ERROR')
         user = None
     else:
         user = User.objects.filter(Q(pk=pk)).first()
-        print(user.username)
+        # followers = User.objects.filter('followed_by')
+        # print('Profile: ', user.username)
+        # logged_in_profile = user.username == request.user.username
+        # already_followed = request.user in followers
     return render(request, 'instagram/profile.html',
-                      {'errors': errors, 'user':user})
+                  {'errors': errors, 'user': user,})
+                   # 'logged_in_profile': logged_in_profile,
+                   # 'already_followed': already_followed,
+                   # })
     # return HttpResponse('OOPS! :3')
 
 
@@ -90,17 +97,10 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             username = form.cleaned_data.get('username')
             user = authenticate(username=username, password=raw_password)
-            print(user)
+            print('Signup: ', user)
             if user is not None:
                 login(request, user)
                 return HttpResponseRedirect(reverse('newsfeed'))
     else:
         form = SignUpForm()
     return render(request, 'instagram/signup.html', {'form': form})
-# def login_view(request):
-#     return render(request, 'instagram/login.html')
-#     # logout(request)
-#     print(request.user)
-#     logout(request)
-#     print(request.user)
-#     return HttpResponse('Bye :3')
