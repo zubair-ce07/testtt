@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Registration</title>
+</head>
+
+<body>
+    <h2>{{user.get_full_name}}</h2>
+    <ul>
+        <li>Username: {{user.username}}</li>      
+        <li>Country: <img src="{{user.userprofile.country.flag}}" /></li>
+        <li>Phone #: {{user.userprofile.phone_number}}</li>
+        {% if user.userprofile.image %}
+            <li>Image: <img src="/{{user.userprofile.image.url}}" /></li>          
+        {% endif %}
+        <li>Address: {{user.userprofile.address.raw}}</li>
+</body>
+
+</html>
