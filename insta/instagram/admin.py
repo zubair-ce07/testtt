@@ -3,7 +3,7 @@ from .models import Profile, Comment, Like, Post
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('get_name', 'get_username', 'get_email')
+    list_display = ('pk', 'get_name', 'get_username', 'get_email')
     search_fields = ('name', 'username')
     ordering = ('pk',)
     # fields = ('email', 'username', 'password', 'name', 'following', 'followed_by')
