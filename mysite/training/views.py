@@ -32,6 +32,8 @@ class Profile(LoginRequiredMixin, View):
         }
         return render(request, self.template_name, context)
 
+    def post(self):
+        q = request.GET.get('q')
 
 class TraineeDetails(LoginRequiredMixin, View):
     template_name = 'training/trainee_details.html'
@@ -106,26 +108,22 @@ class Search(LoginRequiredMixin, View):
     login_url = 'training:login'
 
     def get(self, request):
-        error = False
-        if 'q' in request.GET:
-            q = request.GET.get('q')
-            if not q:
-                error = True
-            else:
-                try:
-                    users = UserProfile.objects.filter(name__contains=q)
+        q = request.GET.get('q')
+        if not q:
+            context = {
+                'error': True
+            }
+        else:
+            try:
+                users = UserProfile.objects.filter(name__contains=q)
 
-                except Trainee.DoesNotExist:
-                    raise Http404("Trainee does not exist")
+            except Trainee.DoesNotExist:
+                raise Http404("Trainee does not exist")
 
-                context = {
-                    'users': users, 'query': q
-                }
-                return render(request, self.template_name, context)
-        context = {
-            'error': error
-        }
-        return render(request, 'training/search_users.html', context)
+            context = {
+                'users': users, 'query': q
+            }
+        return render(request, self.template_name, context)
 
 
 class Login(View):
@@ -153,23 +151,13 @@ class Login(View):
                 '''Redirect to a success page.'''
                 return redirect("training:profile")
             else:
-                messages.append("login failed")
+                messages.append("Login failed")
 
         context = {
             'errors': messages,
             'form': form
         }
         return render(request, self.template_name, context)
-
-
-class Signup(View):
-    template_name = 'training/signup.html'
-
-    def get(self, request):
-        if request.user.is_authenticated:
-            return redirect('training:profile')
-
-        return render(request, self.template_name)
 
 
 class TrainerSignUp(View):

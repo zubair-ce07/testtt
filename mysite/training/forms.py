@@ -6,16 +6,23 @@ from .signals import add_trainee_signal, add_trainer_signal
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(max_length=20)
-    password = forms.CharField(max_length=20, widget=forms.PasswordInput)
+    username = forms.CharField(max_length=20, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'Username'}))
+    password = forms.CharField(max_length=20, widget=forms.PasswordInput(
+        attrs={'class': 'form-control', 'placeholder': 'Password'}))
 
 
 class SignUpForm(forms.Form):
-    username = forms.CharField(max_length=20)
-    first_name = forms.CharField(max_length=50)
-    last_name = forms.CharField(max_length=50)
-    password = forms.CharField(max_length=20, widget=forms.PasswordInput)
-    picture = forms.ImageField(required=False)
+    username = forms.CharField(max_length=20, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'Username'}))
+    first_name = forms.CharField(max_length=50, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'First Name'}))
+    last_name = forms.CharField(max_length=50, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'Last Name'}))
+    password = forms.CharField(max_length=20, widget=forms.PasswordInput(
+        attrs={'class': 'form-control', 'placeholder': 'Password'}))
+    picture = forms.ImageField(required=False, widget=forms.FileInput(
+        attrs={'class': 'form-control'}))
 
     def __update_user_profile(self, user):
         picture = self.cleaned_data['picture']

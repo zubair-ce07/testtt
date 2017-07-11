@@ -1,0 +1,8 @@
+html, body, .container {
+    height: 100%;
+}
+.container {
+    display: table;
+    vertical-align: middle;
+    background-color: black;
+}

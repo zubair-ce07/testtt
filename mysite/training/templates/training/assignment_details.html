@@ -2,38 +2,41 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if assignment %}
-    <h2>
-      Title : {{ assignment }}
-    </h2>
+    <div class="container-fluid">
+        <div class="jumbotron">
+            <h2>
+                Title : {{ assignment }}
+            </h2>
+            {% if assignment.description %}
+                <h3>
+                    Description :
+                    <p>{{ assignment.description }}</p>
+                </h3>
+            {% else %}
+                <p> No Description.</p>
+            {% endif %}
 
-  {% if assignment.description %}
-      <h3>
-        Description :
-      </h3>
-      <p>{{ assignment.description }}</p>
-  {% else %}
-      <p>No Description.</p>
-  {% endif %}
+            {% if assignment.completion_status %}
+                <h3> Assignment Completed </h3>
+            {% else %}
+                <h3> Assignment Not Completed Yet </h3>
+            {% endif %}
 
-  {% if assignment.completion_status %}
-      <h3> Assignment Completed </h3>
-  {% else %}
-      <h3> Assignment Not Completed Yet </h3>
-  {% endif %}
-
-  {% if assignment.technology_used.all %}
-    <h3> Technology : </h3>
-    <ul>
-    {% for technology in assignment.technology_used.all %}
-        <a href="{% url 'training:technology_details' technology.id %}">
-          <li>{{ technology }}</li>
-        </a>
-    {% endfor %}
-    </ul>
-  {% else %}
-      <p>No Technology.</p>
-  {% endif %}
-
+            {% if assignment.technology_used.all %}
+                <h3> Technology : </h3>
+                <div class="list-group">
+                    {% for technology in assignment.technology_used.all %}
+                    <a href="{% url 'training:technology_details' technology.id %}"
+                        class="list-group-item">
+                        <h4>{{ technology }}</h4>
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No Technology.</p>
+            {% endif %}
+        </div>
+    </div>
 {% else %}
     <p>No Trainers/Trainees are available.</p>
 {% endif %}

@@ -2,26 +2,36 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if trainer %}
-  <img src="{{ image_url }}" alt="{{ trainer }}" width="200" height="200">
-  <h2>
-    Name : {{trainer.user.user_profile.name}}
-  </h2>
-  {% if trainees %}
-    <h2>
-        Trainees Assigned :
-    </h2>
-    <ul>
-    {% for trainee in trainees %}
-        <li>
-          <a href="{% url 'training:trainee_details' trainee.id %}">
-            {{ trainee }}
-          </a>
-        </li>
-    {% endfor %}
-    </ul>
-  {% else %}
-      <p>No trainees assigned.</p>
-  {% endif %}
+     <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-3">
+                <img src="{{ image_url }}" alt="{{ trainer }}"
+                     class="img-thumbnail" width="300" height="300">
+            </div>
+            <div class="col-sm-9">
+                <div class="jumbotron">
+                    <h2>
+                        Name : {{trainer.user.user_profile.name}}
+                    </h2>
+                    {% if trainees %}
+                        <h2>
+                            Trainees Assigned :
+                        </h2>
+                    <div class="list-group">
+                        {% for trainee in trainees %}
+                            <a href="{% url 'training:trainee_details' trainee.id %}"
+                               class="list-group-item">
+                                <h4>{{ trainee }}</h4>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                        <p>No trainees assigned.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+     </div>
 {% else %}
     <p>No Trainers/Trainees are available.</p>
 {% endif %}

@@ -1,12 +1,50 @@
-<form action="" method="post">
-    {% for error in errors %}
-      <p style="color:red">{{error}}</p>
-    {% endfor %}
+{# Load the tag library #}
+{% load bootstrap3 %}
 
-    {% csrf_token %}
-    <table>
-        {{ form.as_table }}
-      </table>
-      <input type="submit" value="Login" name="login">
-      <input id="signup" onclick='location.href="{% url 'training:signup' %}"' type="button" value="Signup">
-</form>
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+{% load staticfiles %}
+{#<head>#}
+{#    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap_form.css">#}
+{#</head>#}
+<div class="row">
+    <div class="col-md-4">
+
+    </div>
+    <div class="col-md-4">
+        <div class="container">
+            <h1>Training Login</h1>
+            <div style="width:30%">
+                <form action="" method="post">
+                    {% for error in errors %}
+                      <div class="form-group has-errors text-danger">
+                        <h4>{{ error }}</h4>
+                      </div>
+                    {% endfor %}
+
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <input type="submit" class="btn btn-primary" style="width:100%;
+                           margin-top: 20px"
+                           value="Login" name="login">
+
+                    <div class="btn-group btn-group-justified" style="margin-top: 20px">
+                        <a class="btn btn-primary" href="{% url 'training:trainer_signup' %}">
+                            Trainer Signup
+                        </a>
+                        <a class="btn btn-primary"  href="{% url 'training:trainee_signup' %}">
+                            Trainee Signup
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+
+    </div>
+</div>

@@ -2,37 +2,47 @@
 {% block title %}Training Site{% endblock %}
 {% block content %}
 {% if trainee %}
-  <img src="{{ image_url }}" alt="{{ trainee }}" width="200" height="200"/>
-  <h2>
-    Name : {{ trainee }}
-  </h2>
-  <h2>
-    {% if trainee.trainer %}
-        Trainer Assigned :
-        <a href="{% url 'training:trainer_details' trainee.trainer.id %}">
-            {{ trainee.trainer }}
-        </a>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-3">
+                <img src="{{ image_url }}" alt="{{ trainee }}" class="img-thumbnail"
+                     width="300" height="300"/>
+            </div>
+            <div class="col-sm-9">
+                <div class="jumbotron">
+                    <h2>
+                        Name : {{ trainee }}
+                    </h2>
+                    <h2>
+                        {% if trainee.trainer %}
+                            Trainer Assigned :
+                            <a href="{% url 'training:trainer_details' trainee.trainer.id %}">
+                                {{ trainee.trainer }}
+                            </a>
+                        {% else %}
+                            No Trainer Assigned
+                        {% endif %}
+                    </h2>
+                    {% if assignments %}
+                        <h2>
+                          Assignments Assigned :
+                        </h2>
+                        <div class="list-group">
+                            {% for assignment in assignments %}
+                              <a href="{% url 'training:assignment_details' assignment.id %}"
+                              class="list-group-item">
+                                    <h4>{{ assignment }}</h4>
+                              </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>No Assignments are alloted.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
     {% else %}
-        No Trainer Assigned
+        <p>No Trainers/Trainees are available.</p>
     {% endif %}
-  </h2>
-  {% if assignments %}
-    <h2>
-      Assignments Done :
-    </h2>
-    <ul>
-    {% for assignment in assignments %}
-        <li>
-          <a href="{% url 'training:assignment_details' assignment.id %}">
-            {{ assignment }}
-          </a>
-        </li>
-    {% endfor %}
-    </ul>
-  {% else %}
-      <p>No Assignments are alloted.</p>
-  {% endif %}
-{% else %}
-    <p>No Trainers/Trainees are available.</p>
-{% endif %}
 {% endblock %}

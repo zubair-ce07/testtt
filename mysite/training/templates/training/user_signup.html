@@ -1,9 +1,28 @@
-<form action="" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <table>
-        {{ user_form.as_table }}
-        <tr>
-            <td><input type="submit" value="Signup" name="signup"></td>
-        </tr>
-    </table>
-</form>
+{# Load the tag library #}
+{% load bootstrap3 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+    <div class="col-md-4">
+
+    </div>
+    <div class="col-md-4">
+        <div class="container">
+            <h1>User Signup</h1>
+            <div style="width:30%">
+            <form action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                    {{ user_form.as_p }}
+                    <input type="submit" class="btn btn-primary" style="width:100%;
+                           margin-top: 20px" value="Signup" name="signup">
+            </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+
+    </div>

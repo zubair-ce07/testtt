@@ -1,27 +1,39 @@
 {% extends "training/base.html" %}
 {% block title %}Training Site{% endblock %}
 {% block content %}
-    <p>You searched for: <strong>{{ query }}</strong></p>
-
-    {% if users %}
-        <ul>
-            {% for user in users %}
-                {% if user.user.trainer %}
-                    <li>
-                      <a href="{% url 'training:trainer_details' user.user.trainer.id %}">
-                        {{ user.name }}
-                      </a>
-                    </li>
-                {% elif user.user.trainee %}
-                    <li>
-                      <a href="{% url 'training:trainee_details' user.user.trainee.id %}">
-                        {{ user.name }}
-                      </a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No Trainees matched your search criteria.</p>
-    {% endif %}
+    <div class="container-fluid">
+        {% if error %}
+            <h2 class="navbar-text" style="color: red">Please submit a
+                search term</h2>
+        {% elif users %}
+            <h2>You searched for: <strong>{{ query }}</strong></h2>
+            <div class="list-group">
+                {% for user in users %}
+                    {% if user.user.trainer %}
+                        <a href="{% url 'training:trainer_details' user.user.trainer.id %}"
+                           class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                {{ user.name }}
+                            </h4>
+                            <p class="list-group-item-text">
+                                Trainer
+                            </p>
+                        </a>
+                    {% elif user.user.trainee %}
+                        <a href="{% url 'training:trainee_details' user.user.trainee.id %}"
+                           class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                {{ user.name }}
+                            </h4>
+                            <p class="list-group-item-text">
+                                Trainee
+                            </p>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <h2>No Users matched your search criteria.</h2>
+        {% endif %}
+    </div>
 {% endblock %}

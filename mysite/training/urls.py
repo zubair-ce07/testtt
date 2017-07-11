@@ -18,7 +18,6 @@ urlpatterns = [
     url(r'^trainee_signup/$',
         views.TraineeSignUp.as_view(), name="trainee_signup"),
     url(r'^profile/$', views.Profile.as_view(), name="profile"),
-    url(r'^signup/$', views.Signup.as_view(), name="signup"),
     url(r'^logout/$', views.Logout.as_view(), name="logout"),
     url(r'^login/$|^$', views.Login.as_view(), name="login"),
 ]

@@ -1,26 +1,52 @@
 {% load sitename_tag %}
+{# Load the tag library #}
+{% load bootstrap3 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html lang="en">
 <head>
     <title>{% sitename_tag %}:{% block title %}{% endblock %}</title>
 </head>
 <body>
-    <table>
-      <tr>
-        <td>
-          <a href="{% url 'training:search' %}">SEARCH USERS</a>
-        </td>
-        <td>
-          <a style="margin-left: 10px" href="{% url 'training:profile' %}">PROFILE</a>
-        </td>
-        <td>
-          <input id="logout" style="margin-left: 10px"
-          onclick='location.href="{% url 'training:logout' %}"'
-          type="button" value="Log Out">
-        </td>
-      </tr>
-      <tr> <h1>{% block content_title %}{% endblock %}</h1> </tr>
-    </table>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+            <img src="/media/logo.png" alt="
+            {{user.user_profile.name}}" class="img-rounded" width="50"
+                 height="50"/>
+        </div>
+        <div class="collapse navbar-collapse"
+             id="bs-example-navbar-collapse-1">
+            <form class="navbar-form navbar-left" action=
+                    "{% url 'training:search' %}" method="get">
+                <div class="input-group">
+                    <input type="text" class="form-control"
+                           placeholder="Search" name="q">
+                    <div class="input-group-btn">
+                        <button type="submit" class="btn btn-default">
+                            <span class="glyphicon glyphicon-search"></span> Search
+                        </button>
+                    </div>
+                </div>
+{#                <input type="submit" class="btn btn-default" value="Search">#}
+            </form>
+            <ul class="nav navbar-nav">
+                <li><a href="{% url 'training:profile' %}">
+                    PROFILE </a></li>
+                <li><a href="{% url 'training:logout' %}" %}>
+                    LOGOUT <span class="sr-only">(current)
+                </span></a></li>
+            </ul>
+        </div>
+      </div>
+    </nav>
+    <h1>{% block content_title %}{% endblock %}</h1> </tr>
     {% block content %}{% endblock %}
 
     {% block footer %}{% endblock %}
