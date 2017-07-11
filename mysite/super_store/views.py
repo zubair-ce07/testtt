@@ -30,7 +30,8 @@ class ListBrandProductsView(LoginRequiredMixin, ListView):
             return self.model.objects.get(
                 name=self.kwargs['name']).product_set.all()
         except:
-            raise Http404("Brand name: {} does not exist".format(self.kwargs['name']))
+            raise Http404("Brand name: {} does not exist".format(
+                self.kwargs['name']))
 
     def get_context_data(self, **kwargs):
         context = super(ListBrandProductsView, self).get_context_data(**kwargs)
@@ -51,7 +52,9 @@ class ProductDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductDetailView, self).get_context_data(**kwargs)
-        context['category'] = ast.literal_eval(context['product'].category) if '[' in context['product'].category else [context['product'].category]
+        context['category'] = ast.literal_eval(
+            context['product'].category) if '[' in context[
+                'product'].category else [context['product'].category]
         context['colors'] = set()
         context['sizes'] = set()
         prod = context['product']
