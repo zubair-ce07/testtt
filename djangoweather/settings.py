@@ -44,7 +44,7 @@ MY_APPS = [
     'weather',
 ]
 
-DATA_FILE = 'madrid.csv'
+DATA_FILE = 'madrid.csv' # REPLACE NAME OF DATA FILE HERE
 
 INSTALLED_APPS += MY_APPS
 

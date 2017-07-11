@@ -22,7 +22,7 @@ class WeatherViewSet(viewsets.ModelViewSet):
 
 class WeatherSummaryView(APIView):
     '''
-    gives summary of the weather data
+    Custom view to get the summary of the weather data
     '''
 
     def get(self, request, format=None):
