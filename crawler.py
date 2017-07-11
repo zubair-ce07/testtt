@@ -33,7 +33,8 @@ class Crawler:
 
             if 'http' not in relative_url:
                 absolute_url = urljoin(self.base_url, relative_url)
-                if bool(urlparse(absolute_url).netloc) and absolute_url not in self.visited_urls:
+                if bool(urlparse(absolute_url).netloc)\
+                        and absolute_url not in self.visited_urls:
                     self.extracted_urls.append(absolute_url)
 
     def show_performance(self, crawling_approach):
@@ -106,15 +107,16 @@ class ParallelCrawler(Crawler):
         with ThreadPoolExecutor(max_workers=self.concurrent_requests_count) as executor:
             completed_request_count = 1
             while completed_request_count < self.max_urls_to_visit:
-                if completed_request_count < len(self.extracted_urls):
-                    url = self.extracted_urls[completed_request_count]
-                    self.visited_urls.append(url)
-                    completed_request_count += 1
-                    self.active_requests.append(executor.submit(self.crawling,
-                                                                url, completed_request_count))
-                    time.sleep(self.download_delay)
-                else:
-                    time.sleep(self.download_delay)
+                time.sleep(self.download_delay)
+
+                if completed_request_count >= len(self.extracted_urls):
+                    continue
+
+                url = self.extracted_urls[completed_request_count]
+                self.visited_urls.append(url)
+                completed_request_count += 1
+                self.active_requests.append(executor.submit(self.crawling,
+                                                            url, completed_request_count))
 
     def start(self):
         self.crawling(self.base_url)
