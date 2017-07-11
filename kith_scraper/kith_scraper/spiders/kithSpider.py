@@ -21,6 +21,9 @@ class KithSpider(CrawlSpider):
 
     def parse_item(self, response):
         item = KithItem()
+
+        item['retailer_sku'] = self.get_retailer_sku(response)
+        item['skus'] = self.get_skus(response)
         item['brand'] = self.get_brand(response)
         item['category'] = self.get_category(response)
         item['description'] = self.get_description(response)
@@ -28,17 +31,14 @@ class KithSpider(CrawlSpider):
         item['image_url'] = self.get_image_urls(response)
         item['name'] = self.get_name(response, item['brand'])
         item['retailer'] = self.get_retailer(response)
-        item['retailer_sku'] = self.get_retailer_sku(response)
-        item['skus'] = self.get_skus(response)
         item['url'] = response.url
 
-        if item['retailer_sku'] and item['skus'] is not None:
-            yield item
+        yield item
 
     def get_skus(self, response):
         product_skus = {}
-        color = self.get_color(response)
         currency = self.get_currency(response)
+        color = self.get_color(response)
         price = self.get_price(response)
 
         regex_for_skus_json = '(\[{"id".*available.*}\])'
@@ -51,8 +51,8 @@ class KithSpider(CrawlSpider):
                                             'size': sku_item["title"],
                                             'availability': sku_item["available"],
                                             }
-        if currency and color and price is not None:
-            return product_skus
+
+        return product_skus
 
     def get_description(self, response):
         descriptions = []
@@ -88,13 +88,13 @@ class KithSpider(CrawlSpider):
         return color
 
     def get_price(self, response):
-        return response.css("script.analytics::text").re_first('"price":"([0-9]*\.?[0-9]*)"')
+        return response.css("script.analytics::text").re('"price":"([0-9]*\.?[0-9]*)"')[0]
 
     def get_currency(self, response):
-        return response.css("script.analytics::text").re_first('"currency":"(\w+)"')
+        return response.css("script.analytics::text").re('"currency":"(\w+)"')[0]
 
     def get_retailer_sku(self, response):
-        return response.css("script.analytics::text").re_first('"productId":(\d+)')
+        return response.css("script.analytics::text").re('"productId":(\d+)')[0]
 
     def get_retailer(self, response):
         return 'kith-us'
