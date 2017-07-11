@@ -32,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Create and return a new `User` instance, given the validated data.
         """
-        todo_data = validated_data.get('todoitem')
+        todo_data = validated_data.pop('todoitem', default=None)
         user = User.objects.create_user(validated_data['username'])
         for item in todo_data:
             TodoItem.objects.create(user=user, **item)

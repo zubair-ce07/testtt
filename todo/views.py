@@ -35,32 +35,59 @@ class TodoSummaryApiView(APIView):
 
     def get(self, request, format=None):
         context = {}
-        
+        response = {}
+
         context['all_time'] = User.objects.filter(todoitem__status='complete').annotate(
             Count('todoitem')).order_by('-todoitem__count').only('username')[:3]
-        serializer = UserSerializer(context['all_time'][0])
-        print(serializer.data)
-        response = JSONRenderer().render(serializer.data)
-        # current_month = timezone.make_aware(datetime.now())
-        # one_month_ago = current_month - timedelta(days=30)
-        # context['complete_last_month'] = UserSerializer(User.objects.filter(
-        #     todoitem__status='complete',
-        #     todoitem__date_completed__gte=one_month_ago).annotate(
-        #         Count('todoitem')).order_by('-todoitem__count')[:3])
+        response['all_time'] = []
+        for user in context['all_time']:
+            serializer = UserSerializer(user)
+            data = serializer.data
+            items = data.pop('todoitem')
+            data['todoitem_count'] = len(items)
+            response['all_time'].append(data)
 
-        # three_months_ago = current_month - timedelta(days=90)
-        # context['complete_last_month_with_3_months'] = User.objects.filter(
-        #     todoitem__status='complete',
-        #     date_joined__gte=three_months_ago,
-        #     todoitem__date_completed__gte=one_month_ago).annotate(
-        #         Count('todoitem')).order_by('-todoitem__count')[:3]
+        current_month = timezone.make_aware(datetime.now())
+        one_month_ago = current_month - timedelta(days=30)
+        context['complete_last_month'] = User.objects.filter(
+            todoitem__status='complete',
+            todoitem__date_completed__gte=one_month_ago).annotate(
+                Count('todoitem')).order_by('-todoitem__count').only('username')[:3]
+        response['most_complete_last_month'] = []
+        for user in context['complete_last_month']:
+            serializer = UserSerializer(user)
+            data = serializer.data
+            items = data.pop('todoitem')
+            data['todoitem_count'] = len(items)
+            response['most_complete_last_month'].append(data)
 
-        # two_months_ago = current_month - timedelta(days=60)
-        # context['inprogress_since_last_2_months'] = User.objects.filter(
-        #     todoitem__date_created__gte=two_months_ago,
-        #     todoitem__status='inprogress').annotate(
-        #         Count('todoitem')).order_by('-todoitem__count')[:3]
-        # context = json.dumps(context)
+        three_months_ago = current_month - timedelta(days=90)
+        context['complete_last_month_with_3_months'] = User.objects.filter(
+            todoitem__status='complete',
+            date_joined__gte=three_months_ago,
+            todoitem__date_completed__gte=one_month_ago).annotate(
+                Count('todoitem')).order_by('-todoitem__count')[:3]
+        response['most_complete_last_month_with_3_months'] = []
+        for user in context['complete_last_month_with_3_months']:
+            serializer = UserSerializer(user)
+            data = serializer.data
+            items = data.pop('todoitem')
+            data['todoitem_count'] = len(items)
+            response['most_complete_last_month_with_3_months'].append(data)
+
+        two_months_ago = current_month - timedelta(days=60)
+        context['inprogress_since_last_2_months'] = User.objects.filter(
+            todoitem__date_created__gte=two_months_ago,
+            todoitem__status='inprogress').annotate(
+                Count('todoitem')).order_by('-todoitem__count')[:3]
+        response['most_inprogress_since_last_2_months'] = []
+        for user in context['inprogress_since_last_2_months']:
+            serializer = UserSerializer(user)
+            data = serializer.data
+            items = data.pop('todoitem')
+            data['todoitem_count'] = len(items)
+            response['most_inprogress_since_last_2_months'].append(data)
+
         return Response(response)
 
 
