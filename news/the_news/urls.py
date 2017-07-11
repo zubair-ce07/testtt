@@ -11,4 +11,7 @@ urlpatterns = [
     url(r'^the_news/terminate/$', views.TerminateView.as_view(),
         name='terminate_fetch_news'),
     url(r'^the_news/$', views.TheNewsMainView.as_view(), name='main'),
+
+    url(r'^khabar/$', views.NewsListAPIView.as_view()),
+    url(r'^khabar/(?P<pk>[0-9]+)/$', views.NewsDetailsAPIView.as_view()),
 ]

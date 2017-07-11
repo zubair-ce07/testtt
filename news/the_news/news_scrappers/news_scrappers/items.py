@@ -4,15 +4,15 @@
 #
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/items.html
-
 import scrapy
+from scrapy.loader.processors import Join
+from processors import CleanDate, StripString
 
 
 class NewsScrappersItem(scrapy.Item):
-    # define the fields for your item here like:
-    title = scrapy.Field(type='str')
-    date = scrapy.Field(type='str')
-    url = scrapy.Field(type='str')
-    img_url = scrapy.Field(type='str')
-    abstract = scrapy.Field(type='str')
-    detail = scrapy.Field(type='str')
+    title = scrapy.Field(output_processor=StripString(),)
+    date = scrapy.Field(output_processor=CleanDate(),)
+    url = scrapy.Field(output_processor=StripString(),)
+    img_url = scrapy.Field(output_processor=StripString(),)
+    abstract = scrapy.Field(output_processor=StripString(),)
+    detail = scrapy.Field(output_processor=Join('\n'),)

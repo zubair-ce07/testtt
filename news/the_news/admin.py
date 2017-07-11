@@ -7,11 +7,11 @@ import models
 
 
 class NewsPaperAdmin(admin.ModelAdmin):
-    list_display = ('name', 'website')
+    list_display = ('name', 'source_url')
 
 
 class NewsAdmin(admin.ModelAdmin):
-    list_display = ('title', 'date', 'news_paper')
+    list_display = ('title', 'date', 'news_paper', 'source_url')
 
     def get_newspaper(self, obj):
         return obj.newspaper.name

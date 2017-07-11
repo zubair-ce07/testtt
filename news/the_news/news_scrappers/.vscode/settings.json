@@ -1,0 +1,5 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "python.pythonPath": "/home/luqman/Envs/scrapy/bin/python",
+    "python.venvPath": "/home/luqman/Envs/scrapy"
+}
