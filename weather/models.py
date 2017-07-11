@@ -3,7 +3,7 @@ from django.db import models
 
 class WeatherModel(models.Model):
     '''
-    Model for weather data from madrid.csv file
+    Model for weather data from DATA_FILE file
     '''
     date = models.DateField()
     max_temp = models.FloatField(default=0, null=True, blank=True)

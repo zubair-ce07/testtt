@@ -9,6 +9,10 @@ from weather.models import WeatherModel
 
 
 class Command(BaseCommand):
+    '''
+    command to load data in DATA_FILE to the db
+    '''
+
     def handle(self, **options):
         os.system('./manage.py flush --noinput')
         with open('madrid.csv', 'r') as csvfile:

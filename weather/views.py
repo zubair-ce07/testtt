@@ -63,14 +63,14 @@ class WeatherSummaryView(APIView):
             mean_key = 'mean_' + key
             min_key = 'min_' + key
             max_ = [getattr(instance, max_key) for instance in WeatherModel.objects.filter(
-                    date__gte=startdate, date__lt=enddate).order_by(
-                        '-' + max_key)[:items]]
+                date__gte=startdate, date__lt=enddate).order_by(
+                    '-' + max_key)[:items]]
             mean_list = [getattr(instance, mean_key)
                          for instance in WeatherModel.objects.all()[:items]]
             mean_ = sum(mean_list) / len(mean_list)
 
             min_ = [getattr(instance, min_key) for instance in WeatherModel.objects.filter(
-                    date__gte=startdate, date__lte=enddate).order_by(min_key)[:items]]
+                date__gte=startdate, date__lte=enddate).order_by(min_key)[:items]]
             summary_dict[max_key] = max_
             summary_dict[mean_key] = mean_
             summary_dict[min_key] = min_
