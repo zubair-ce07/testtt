@@ -82,7 +82,9 @@ class KithSpider(CrawlSpider):
         return name
 
     def get_color(self, response):
-        return response.css('.-variant::text').extract_first().strip()
+        color = response.css('.-variant::text').extract_first()
+        color = color.strip()
+        return color
 
     def get_price(self, response):
         return response.css("script.analytics::text").re_first('"price":"([0-9]*\.?[0-9]*)"')
