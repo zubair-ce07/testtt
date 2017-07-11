@@ -1,3 +1,4 @@
+import json
 import re
 
 from scrapy.contrib.linkextractors import LinkExtractor
@@ -10,15 +11,12 @@ class KithSpider(CrawlSpider):
     name = "kith"
     start_urls = ['https://kith.com']
     allowed_domains = ['kith.com']
-    allowed_url_patterns = ('\/pages\/women',
-                            '\/pages\/kids',
-                            '\/collections\/\.+\/mens',  # brand links for men
-                            '\/collections\/.+\/wmns',  # brand links for momen
-                            '\/collections\/kids-latest',  # kids page contains all items
-                            )
+    restrict_css = ['.ksplash-header-upper-items',  # men women kid-set
+                    '.main-nav-list-item',  # brand links for men, women and kids
+                    ]
     rules = (
-        Rule(LinkExtractor(allow=allowed_url_patterns)),
-        Rule(LinkExtractor(allow='.+\/products\/.+', ), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=restrict_css)),
+        Rule(LinkExtractor(restrict_css='.product-card-info'), callback='parse_item'),
     )
 
     def parse_item(self, response):
@@ -34,7 +32,8 @@ class KithSpider(CrawlSpider):
         item['skus'] = self.get_skus(response)
         item['url'] = response.url
 
-        yield item
+        if item['retailer_sku'] and item['skus'] is not None:
+            yield item
 
     def get_skus(self, response):
         product_skus = {}
@@ -42,26 +41,31 @@ class KithSpider(CrawlSpider):
         currency = self.get_currency(response)
         price = self.get_price(response)
 
-        regex = '{"id":(\d+),"title":"([0-9]*\.?[0-9]*|\w+)".*?available":(.*?),"name.*?}'
-        raw_skus = response.css('script').re(regex)
-        for sku, size, availability in zip(raw_skus[0::3], raw_skus[1::3], raw_skus[2::3]):
-            product_skus[sku] = {'color': color,
-                                 'currency': currency,
-                                 'price': price,
-                                 'size': size,
-                                 'availability': availability,
-                                 }
-
-        return product_skus
+        regex_for_skus_json = '(\[{"id".*available.*}\])'
+        raw_skus_json = response.css('script').re_first(regex_for_skus_json)
+        skus_json = json.loads(raw_skus_json)
+        for sku_item in skus_json:
+            product_skus[sku_item['id']] = {'color': color,
+                                            'currency': currency,
+                                            'price': price,
+                                            'size': sku_item["title"],
+                                            'availability': sku_item["available"],
+                                            }
+        if currency and color and price is not None:
+            return product_skus
 
     def get_description(self, response):
-        descriptions = response.css('.product-single-details-rte p::text').extract()
-        descriptions = [desc.strip() for desc in descriptions]
-        descriptions = list(filter(None, descriptions))
+        descriptions = []
+        raw_descriptions = response.css('.product-single-details-rte p::text').extract()
+        for description_item in raw_descriptions:
+            description_item = description_item.strip()
+            if description_item is not '':
+                descriptions.append(description_item)
+
         return descriptions
 
     def get_category(self, response):
-        return '/'.join(response.css('.breadcrumb a::text').extract()[1:])
+        return response.css('.breadcrumb a::text').extract()[1:]
 
     def get_image_urls(self, response):
         raw_urls = response.css(".super-slider-photo-img::attr(src)").extract()
@@ -91,9 +95,6 @@ class KithSpider(CrawlSpider):
 
     def get_retailer(self, response):
         return 'kith-us'
-
-    def get_style(self, response):
-        return response.css('.product-single-details-rte p::text').re('Style: (.*)')
 
     def get_gender(self, response):
         if 'wmns' in response.url:
