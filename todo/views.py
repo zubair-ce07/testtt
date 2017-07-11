@@ -1,5 +1,5 @@
+import json
 from datetime import datetime, timedelta
-
 
 from django.views import View, generic
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -7,52 +7,72 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
-
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
-from rest_framework.generics import CreateAPIView
+from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from rest_framework.renderers import JSONRenderer
 
 from .models import TodoItem
 from .serializers import TodoItemSerializer, UserSerializer
 from .forms import TodoItemModelUpdateForm
 
 
+""" RESTFUL VIEWS """
+
+
 class TodoViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows TodoItems to be edited or viewed
+    API endpointS that allows TodoItems to be edited or viewed
     """
     queryset = TodoItem.objects.all()
     serializer_class = TodoItemSerializer
 
 
-class UserCreateView(CreateAPIView):
+class TodoSummaryApiView(APIView):
     """
-    Endpoint to create a single user from username only
+    A custom endpoint for TodoItem summary data
     """
-    serializer_class = UserSerializer
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+    def get(self, request, format=None):
+        context = {}
+        
+        context['all_time'] = User.objects.filter(todoitem__status='complete').annotate(
+            Count('todoitem')).order_by('-todoitem__count').only('username')[:3]
+        serializer = UserSerializer(context['all_time'][0])
+        print(serializer.data)
+        response = JSONRenderer().render(serializer.data)
+        # current_month = timezone.make_aware(datetime.now())
+        # one_month_ago = current_month - timedelta(days=30)
+        # context['complete_last_month'] = UserSerializer(User.objects.filter(
+        #     todoitem__status='complete',
+        #     todoitem__date_completed__gte=one_month_ago).annotate(
+        #         Count('todoitem')).order_by('-todoitem__count')[:3])
 
+        # three_months_ago = current_month - timedelta(days=90)
+        # context['complete_last_month_with_3_months'] = User.objects.filter(
+        #     todoitem__status='complete',
+        #     date_joined__gte=three_months_ago,
+        #     todoitem__date_completed__gte=one_month_ago).annotate(
+        #         Count('todoitem')).order_by('-todoitem__count')[:3]
 
-class UserAndTodoCreateView(CreateAPIView):
-    """
-    Endpoint to create a single user and his todoitems 
-    """
-    serializer_class = UserSerializer
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        # two_months_ago = current_month - timedelta(days=60)
+        # context['inprogress_since_last_2_months'] = User.objects.filter(
+        #     todoitem__date_created__gte=two_months_ago,
+        #     todoitem__status='inprogress').annotate(
+        #         Count('todoitem')).order_by('-todoitem__count')[:3]
+        # context = json.dumps(context)
+        return Response(response)
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-    API endpoint for Users
+    API endpointS for User Model
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+""" TEMPLATE VIEWS """
 
 
 class TodoView(LoginRequiredMixin, generic.ListView):
