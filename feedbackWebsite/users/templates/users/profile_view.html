@@ -15,5 +15,6 @@ Mobile Number: {{ user.profile.mobile_number }}
 Current Address: {{ user.profile.current_address }}
 <br>
 Permanent: {{ user.profile.permanent_address }}
-
+<br>
+<br><a href="{% url 'users:edit' %}">Edit</a>
 {% endif %}

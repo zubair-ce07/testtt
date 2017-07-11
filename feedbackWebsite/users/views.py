@@ -61,9 +61,9 @@ class UserUpdate(LoginRequiredMixin, View):
         form = self.form(initial={'email': request.user.email,
                                   'first_name': request.user.first_name,
                                   'last_name': request.user.last_name,
-                                  'mobile_number': request.user.profile.mobile_number,
-                                  'current_address': request.user.profile.current_address,
-                                  'permanent_address': request.user.profile.permanent_address
+                                  'mobile_number': request.user.person.mobile_number,
+                                  'current_address': request.user.person.current_address,
+                                  'permanent_address': request.user.person.permanent_address
                                   })
 
         return render(request, self.template_name, {'form': form})
@@ -75,9 +75,9 @@ class UserUpdate(LoginRequiredMixin, View):
             active_user.email = form.cleaned_data["email"]
             active_user.first_name = form.cleaned_data["first_name"]
             active_user.last_name = form.cleaned_data["last_name"]
-            active_user.profile.mobile_number = form.cleaned_data["mobile_number"]
-            active_user.profile.current_address = form.cleaned_data["current_address"]
-            active_user.profile.permanent_address = form.cleaned_data["permanent_address"]
+            active_user.person.mobile_number = form.cleaned_data["mobile_number"]
+            active_user.person.current_address = form.cleaned_data["current_address"]
+            active_user.person.permanent_address = form.cleaned_data["permanent_address"]
             password = form.cleaned_data["password"]
             if password:
                 active_user.set_password(password)
