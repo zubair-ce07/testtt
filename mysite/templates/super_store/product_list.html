@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block class-navbar-products %}
+    class="active"
+{% endblock %}
+
+{% block content-body %}
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+            </div>
+
+            <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+                {% if object_list %}
+
+                    <div class="row">
+
+                        {% for product in object_list %}
+
+                            <div class="col-xs-3 no-padding">
+                                <div class="thumbnail" style="height: 400px; width: 235px">
+                                    <a href={% url 'super_store:product-detail' product.pk %}>
+                                        <img src="{{product.images_set.first.image_url}}" alt="Product Picture" style="height: 300px">
+                                        <div class="caption">
+                                            <p class="text-center">{{product.product_name}}</p>
+                                            <p class="text-center">${{product.skus_set.first.price}}</p>
+
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <h3>  No products exist for the Brand: {{given_brand}}</h3>
+                {% endif %}
+
+
+            </div>
+
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+

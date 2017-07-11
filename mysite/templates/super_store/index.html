@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content-body %}
+
+
+    <table>
+        {% for product in  products %}
+            <tr>
+                <td>
+                    <h3>
+                        ID:
+                    </h3>
+                        {{product.product_id}}
+                    <h3>
+                        Name:
+                    </h3>
+                    {{product.product_name}}
+                    {% if product.category  %}
+                        <h3>
+                            Category:
+                        </h3>
+                        {{product.category}}
+                    {% endif %}
+                    <h3>
+                        Source URL:
+                    </h3>
+                    {{product.source_url}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <h3>
+                        Image Sources:
+                    </h3>
+                    [
+                    {% for img in product.images_set.all %}
+
+                            <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            {{img.image_url}},
+
+
+                    {% empty %}
+                        <u>
+                            No images exist for this product
+                        </u>
+                    {% endfor %}
+                    <br>
+                    ]
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <h3>
+                        Skus:
+                    </h3>
+                    [
+                    <br>
+                    {% for sku in product.skus_set.all %}
+                    <br>&nbsp;&nbsp;&nbsp;&nbsp;
+                    {
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                Color:
+                            {{sku.color}},<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                Size:
+                            {{sku.size}},<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                Availability:
+                            {{sku.availability}},<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                Price:
+                            {{sku.price}}
+                    <br>&nbsp;&nbsp;&nbsp;&nbsp;
+                    }
+                    {% empty %}
+                        <i>
+                            &nbsp;&nbsp;&nbsp;&nbsp; No skus exist for this product
+                        </i>
+                    {% endfor %}
+                    <br>
+                    ]
+                    <hr>
+                </td>
+            </tr>
+
+        {% empty %}
+            <h3>
+                No products exist.
+            </h3>
+        {% endfor %}
+    </table>
+{% endblock  %}

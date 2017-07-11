@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+
+{% block product %}
+    <li class="active">
+        <a href="{% url 'super_store:all-products' %}">{{product.product_id}}</a>
+    </li>
+{% endblock %}
+
+
+{% block content-body %}
+    <ol class="breadcrumb">
+        {% for item in category %}
+            {% if forloop.last %}
+                <li class="active">
+                    {{item}}
+                </li>
+            {% else %}
+                <li>
+                    <a href="#">{{item}}</a>
+                </li>
+            {% endif %}
+
+        {% endfor %}
+
+    </ol>
+
+    <div class="row">
+
+        <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2 col-md-offset-2 ">
+            {% for img in product.images_set.all %}
+
+                <img src="{{img.image_url}}" class="img-responsive" alt="Image" style="width: 72px; height: 107px;">
+
+            {% endfor %}
+        </div>
+
+        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+            {% for img in product.images_set.all %}
+            <div class="text-center">
+                <img src="{{img.image_url}}" class="center-block border-bottom" alt="Image" style="width: 340px; height: 510px;">
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5" style="padding: 0">
+                <h2 class="text-center">{{product.product_name}}</h2>
+                <h3 style="padding-left: 100px"><b>${{product.skus_set.first.price}}<b></h3>
+                <hr>
+                <h3 style="padding-left: 100px">Available Colors:</h3>
+                {% for color in colors %}
+
+                    <span class="rounded-circle" alt="Image" style="width: 50px; height: 50px;padding-left: 125px">
+                        {{color}}<br>
+                    </span>
+                {% endfor %}
+                <hr>
+                <h3 style="padding-left: 100px">Available sizes:</h3>
+                {% for size in sizes %}
+                    {% if size != None %}
+                        <span class="rounded-circle" alt="Image" style="width: 50px; height: 50px;padding-left: 125px">
+                            {{size}}<br>
+                        </span>
+                    {% endif %}
+                {% endfor %}
+
+
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                Color
+                            </th>
+                            <th>
+                                Size
+                            </th>
+                            <th>
+                                Price
+                            </th>
+                            <th>
+                                Availability
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sku in product.skus_set.all %}
+                            <tr>
+                                <td>
+                                    {{sku.color}}
+                                </td>
+                                <td>
+                                    {% if sku.size is None %}
+                                        --
+                                    {% else %}
+                                        {{sku.size}}
+                                    {% endif %}
+
+                                </td>
+                                <td>
+
+                                    <span class="glyphicon glyphicon-usd" aria-hidden="true">{{sku.price}}</span>
+
+                                </td>
+                                <td>
+                                    {% if sku.availability %}
+                                        Available
+                                    {% else %}
+                                        Out Of Stock
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+
+        </div>
+
+    </div>
+
+
+
+{% endblock  %}
