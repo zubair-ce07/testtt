@@ -83,7 +83,8 @@ class KithSpider(CrawlSpider):
 
     def get_color(self, response):
         color = response.css('.-variant::text').extract_first()
-        color = color.strip()
+        if color is not None:
+            color = color.strip()
         return color
 
     def get_price(self, response):
