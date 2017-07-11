@@ -1,30 +1,65 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import logout
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.db.models import Q
+
+login = reverse_lazy('login')
 
 
-@login_required
+@login_required(login_url=login)
 def newsfeed(request):
     user = request.user
-    # username = request.POST.get('username')
-    # print(username)
-    # password = request.POST.get('password')
-    # user = authenticate(username=username, password=password)
-
     if user.is_authenticated():
-        # if user.is_active:
-            # login(request, user)
-        print('HUEHUE')
-        return HttpResponse('Hi :3')
+        # return HttpResponse('Hi :3')
+        return render(request, 'instagram/newsfeed.html', {'user':user, })
     else:
-        # print(username, password)
-        return HttpResponseRedirect('/login')
+        # return HttpResponse(':3')
+        return HttpResponseRedirect(reverse('login'))
 
 
 def index(request):
-    return HttpResponseRedirect('login')
+    # return HttpResponse('Hi :3')
+    return HttpResponseRedirect(reverse('login'))
 
 
 def logout_view(request):
+    messages = []
+    # logout(request)
+    print(request.user)
     logout(request)
+    print(request.user)
+    messages.append('User logged out successfully')
+    return HttpResponseRedirect(reverse('login'))
+    # return render(request, 'instagram/login.html', {'extra_context' : {'messages':messages}})
+    # return HttpResponse('Bye :3')
 
+
+@login_required(login_url=login)
+def search(request):
+    errors = []
+    if 'query' in request.GET:
+        query = request.GET['query']
+        if not query:
+            errors.append('Enter a search term')
+            # return render(request, 'instagram/search_form.html',
+            # {'error': error})
+        elif len(query) > 20:
+            errors.append('Please enter at most 20 characters')
+        else:
+            users = User.objects.filter(Q(username__icontains=query) |
+                                        Q(first_name__icontains=query) |
+                                        Q(last_name__icontains=query))
+            return render(request, 'instagram/search_results.html',
+                          {'users': users, 'query': query})
+    return render(request, 'instagram/search_form.html',
+                  {'errors': errors})
+# def login_view(request):
+#     return render(request, 'instagram/login.html')
+#     # logout(request)
+#     print(request.user)
+#     logout(request)
+#     print(request.user)
+#     return HttpResponse('Bye :3')
