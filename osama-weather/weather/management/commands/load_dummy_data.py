@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from weather.models import WeatherModel
 
 
-class LoadDummyData(BaseCommand):
+class Command(BaseCommand):
     '''
     command to load data in DATA_FILE to the db
     '''
@@ -29,9 +29,9 @@ class LoadDummyData(BaseCommand):
                 for key in line:
                     if key != 'date':
                         try:
-                            line[key] = float(line[key])
-                        except:
-                            pass
+                            line[key] = float(line.get(key))
+                        except ValueError:
+                            line[key] = 0
                 db_lines.append(line)
             WeatherModel.objects.bulk_create(
                 [WeatherModel(**line) for line in db_lines])
