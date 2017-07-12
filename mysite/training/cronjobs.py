@@ -6,7 +6,7 @@ from .models import DateTime
 
 
 def my_scheduled_job():
-    with open(settings.BASE_DIR + '/index', 'r') as file:
+    with open(settings.BASE_DIR + '/index.log', 'r') as file:
         index = int(file.readline())
 
     datetimes = DateTime.objects.all()[index: index+5]
@@ -23,5 +23,5 @@ def my_scheduled_job():
 
         datetime.save()
 
-    with open(settings.BASE_DIR + '/index', 'w') as file:
+    with open(settings.BASE_DIR + '/index.log', 'w') as file:
         file.write(str((index+5) % len(DateTime.objects.all())))
