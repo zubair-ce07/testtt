@@ -50,6 +50,20 @@
         {% if object_list.has_other_pages %}
             <div class="text-center">
                 <ul class="pagination">
+                    {% if object_list.number == 1 %}
+                        <li class="disabled">
+                            <span>
+                                First
+                            </span>
+                        </li>
+                        {%else%}
+                        <li>
+                            <a href="?page=1">
+                                First
+                            </a>
+                        </li>
+                    {% endif %}
+
                     {% if object_list.number < 6 %}
                         <li class="disabled">
                             <span><<<</span>
@@ -75,12 +89,21 @@
                                     {{ i }} <span class="sr-only">(current)</span>
                                 </span>
                             </li>
+                        {%else%}
+                                {% if  i|sub:object_list.number > 0 and i|sub:object_list.number < 5 %}
+                                    <li>
+                                        <a href="?page={{ i }}">{{ i }}</a>
+                                    </li>
+                                {%else%}
+                                    {% if object_list.number|sub:5 <= i and i|sub:object_list.number < 5%}
+                                        <li>
+                                            <a href="?page={{ i }}">{{ i }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endif %}
                         {% endif %}
-                        {% if  i|sub:object_list.number > 0 and i|sub:object_list.number < 5 %}
-                            <li>
-                                <a href="?page={{ i }}">{{ i }}</a>
-                            </li>
-                        {% endif %}
+
+
                     {% endfor %}
                     {% if object_list.has_next %}
                     <li>
@@ -91,7 +114,7 @@
                         <span>&raquo;</span>
                     </li>
                     {% endif %}
-                    {% if object_list.number >= object_list.num_pages|sub:5 %}
+                    {% if object_list.number >= object_list.paginator.num_pages|sub:5 %}
                         <li class="disabled">
                             <span>>>></span>
                         </li>
@@ -100,6 +123,20 @@
                             <a href="?page={{ object_list.number|sub:-5 }}">>>></a>
                         </li>
                     {% endif %}
+                    {% if object_list.number == object_list.paginator.num_pages %}
+                        <li class="disabled">
+                            <span>
+                                Last
+                            </span>
+                        </li>
+                        {% else %}
+                        <li>
+                            <a href="?page={{ object_list.paginator.num_pages }}">
+                                Last
+                            </a>
+                        </li>
+                    {% endif %}
+
                 </ul>
             </div>
         {% endif %}
