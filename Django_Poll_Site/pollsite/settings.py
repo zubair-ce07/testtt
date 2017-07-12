@@ -81,12 +81,8 @@ WSGI_APPLICATION = 'pollsite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'pollsite',
-        'USER': 'fakhar',
-        'PASSWORD': 'csgogodancer',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
     }
 }
 
