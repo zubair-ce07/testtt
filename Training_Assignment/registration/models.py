@@ -16,18 +16,20 @@ class CustomUser(User):
         ordering = ('first_name', )
 
     def save(self, *args, **kwargs):
-        print(kwargs)
         # kwargs_temp = kwargs
-        # kwargs = {}
-        # kwargs = kwargs_temp
-
-        self._up = kwargs['up']
-        print(type(kwargs['up']))
-        # print(kwargs['phone_number'])
+        print(kwargs['phone_number'])
+        self._phone_number = kwargs['phone_number']
+        print(self._phone_number)
         kwargs = {}
         super(CustomUser, self).save(*args, **kwargs)
+        # kwargs = kwargs_temp
+        # print(kwargs_temp)
+        # print(kwargs)
+
+        # print(kwargs['phone_number'])
+
         # kwargs = {'phone_number': '1234567891'}
-        print(kwargs)
+        # print(kwargs)
 
 
 # def get_image_path(instance, filename):
@@ -57,11 +59,11 @@ class Profile(models.Model):
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     print('*******************************************************************')
-    # phone_number = getattr(instance, '_phone_number')
-    up = kwargs['_up']
-    # print(phone_number)
+    phone_number = getattr(instance, '_phone_number')
+    # phone_number = kwargs['_phone_number']
+    print(phone_number)
     if created:
-        up.save()
+        UserProfile.objects.create_user(instance, phone_number=phone_number)
 
 
 # @receiver(post_save, sender=User)

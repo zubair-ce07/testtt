@@ -19,10 +19,11 @@ class Command(BaseCommand):
                 phone_number = user['phone_number']
                 #  UserProfile.objects.get_or_create(phone_number='+9874561231')
                 # CustomUser.objects.create_user(username, password=password1)
-                
-                u = CustomUser(username, password=password1)
-                up = UserProfile(user=u, phone_number=phone_number, test='abdg')
-                u.save(up=up)
+
+                u = CustomUser(username=username, password=password1)
+                # up = UserProfile(
+                    # user=u, phone_number=phone_number, test='abdg')
+                u.save(phone_number=phone_number)
             # users = []
         csvfile.close()
         # print('bla')
