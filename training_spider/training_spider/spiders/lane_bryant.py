@@ -14,14 +14,9 @@ class AdidasSpider(CrawlSpider):
     start_urls = [
         'http://www.lanebryant.com'
     ]
-    # rules = (Rule(LinkExtractor(restrict_css='.mar-nav .grid__item li')),
-    #          Rule(LinkExtractor(restrict_css='.nextPage')),
-    #          Rule(LinkExtractor(restrict_css='.mar-prd-product-item'), follow=True,
-    #               callback='parse_products'))
-
-    rules = (Rule(LinkExtractor(
-        restrict_css='.xs-one-whole:nth-child(5) .grid__item:nth-child(2) ul li li:nth-child(3)')
-        , callback='parse_pagination', follow=True),
+    rules = (Rule(LinkExtractor(restrict_css='.mar-nav .grid__item'),
+                  callback='parse_pagination', follow=True),
+             Rule(LinkExtractor(restrict_css='.nextPage')),
              Rule(LinkExtractor(restrict_css='.mar-prd-product-item'), follow=True,
                   callback='parse_products'))
 
