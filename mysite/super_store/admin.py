@@ -28,9 +28,9 @@ class SkusInLine(admin.TabularInline):
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('product_id', 'product_name',
-                    'category', 'entry_date', 'update_date')
+                    'category', 'entry_date', 'update_date', 'brand')
     search_fields = ('product_id', 'product_name', 'category')
-    list_filter = ('entry_date', 'update_date')
+    list_filter = ('entry_date', 'update_date', 'brand')
     ordering = ('-entry_date',)
     fields = ('brand', 'product_id', 'product_name', 'category', 'source_url')
 
