@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 
 class UserRegisterForm (forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
+    first_name = forms.CharField(required=True)
+    email = forms.EmailField(required=True)
+    last_name = forms.CharField(required=True)
 
     class Meta:
         model = User
@@ -23,6 +26,9 @@ class UserProfileForm(forms.Form):
     first_name = forms.CharField(max_length=254)
     last_name = forms.CharField(max_length=254)
     password = forms.CharField(required=False, widget=forms.PasswordInput, initial='')
+
+
+class PersonProfileForm(forms.Form):
     mobile_number = forms.CharField(max_length=30, required=False)
     current_address = forms.CharField(max_length=254, required=False)
     permanent_address = forms.CharField(max_length=254, required=False)

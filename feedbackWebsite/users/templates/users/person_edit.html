@@ -3,6 +3,7 @@
 <a href="{% url 'users:logout' %}">Log Out</a>
 <br>
 <h1>Edit Your Profile: </h1>
+{{ user.username }}
 <br>
 <form action="", method="post">
     {% csrf_token %}

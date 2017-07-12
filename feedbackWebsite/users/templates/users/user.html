@@ -2,7 +2,7 @@
     <a href="{% url 'users:profile' %}">Home</a>
     <a href="{% url 'users:logout' %}">Log Out</a>
     <br>
-    <a href="{% url 'users:view' %}">{{ user.get_username }}</a>
+    <a href="{% url 'users:view' %}">{{ user.first_name }}</a>
     <br>
 
 

@@ -1,0 +1,14 @@
+{% if user.is_authenticated %}
+<a href="{% url 'users:profile' %}">Home</a>
+<a href="{% url 'users:logout' %}">Log Out</a>
+<br>
+Username: {{ user.username }}
+<br><br>
+Mobile Number: {{ user.person.mobile_number }}
+<br>
+Current Address: {{ user.person.current_address }}
+<br>
+Permanent: {{ user.person.permanent_address }}
+<br>
+<br><a href="{% url 'users:person_edit' %}">Edit</a>
+{% endif %}

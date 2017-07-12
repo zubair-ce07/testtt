@@ -11,22 +11,12 @@ class NpsListFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('0', _('0')),
-            ('1', _('1')),
-            ('2', _('2')),
-            ('3', _('3')),
+            ('0', _('0-3')),
         )
 
     def queryset(self, request, queryset):
         if self.value() == '0':
-            return queryset.filter(nps=0)
-        if self.value() == '1':
-            return queryset.filter(nps=1)
-        if self.value() == '2':
-            return queryset.filter(nps=2)
-        if self.value() == '3':
-            return queryset.filter(nps=3)
-
+            return queryset.filter(nps__gte=0, nps__lte=3)
 
 class SatisfactionlevelListFilter(SimpleListFilter):
     title = _('Satisfaction Level')
@@ -34,21 +24,12 @@ class SatisfactionlevelListFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('0', _('0')),
-            ('1', _('1')),
-            ('2', _('2')),
-            ('3', _('3')),
+            ('0', _('0-3')),
         )
 
     def queryset(self, request, queryset):
         if self.value() == '0':
-            return queryset.filter(satisfaction_level=0)
-        if self.value() == '1':
-            return queryset.filter(satisfaction_level=1)
-        if self.value() == '2':
-            return queryset.filter(satisfaction_level=2)
-        if self.value() == '3':
-            return queryset.filter(satisfaction_level=3)
+            return queryset.filter(satisfaction_level__gte=0, satisfaction_level__lte=3)
 
 
 class FeedbacksAdmin(admin.ModelAdmin):

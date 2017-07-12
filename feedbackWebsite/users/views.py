@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, render
 from django.views.generic import RedirectView, TemplateView, View
 
-from .forms import UserLoginForm, UserProfileForm, UserRegisterForm
+from .forms import UserLoginForm, UserProfileForm, UserRegisterForm, PersonProfileForm
 
 
 class UserRegisterFormView (View):
@@ -55,7 +55,7 @@ class UserLoginFormView(View):
 
 class UserUpdate(LoginRequiredMixin, View):
     form = UserProfileForm
-    template_name = 'users/edit.html'
+    template_name = 'users/user_edit.html'
 
     def get(self, request):
         form = self.form(initial={'email': request.user.email,
@@ -75,12 +75,33 @@ class UserUpdate(LoginRequiredMixin, View):
             active_user.email = form.cleaned_data["email"]
             active_user.first_name = form.cleaned_data["first_name"]
             active_user.last_name = form.cleaned_data["last_name"]
-            active_user.person.mobile_number = form.cleaned_data["mobile_number"]
-            active_user.person.current_address = form.cleaned_data["current_address"]
-            active_user.person.permanent_address = form.cleaned_data["permanent_address"]
             password = form.cleaned_data["password"]
             if password:
                 active_user.set_password(password)
+            active_user.save()
+            return redirect('users:profile')
+        return redirect('users:view')
+
+
+class PersonUpdate(LoginRequiredMixin, View):
+    form = PersonProfileForm
+    template_name = 'users/person_edit.html'
+
+    def get(self, request):
+        form = self.form(initial={'mobile_number': request.user.person.mobile_number,
+                                  'current_address': request.user.person.current_address,
+                                  'permanent_address': request.user.person.permanent_address
+                                  })
+
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form(request.POST)
+        active_user = request.user
+        if form.is_valid():
+            active_user.person.mobile_number = form.cleaned_data["mobile_number"]
+            active_user.person.current_address = form.cleaned_data["current_address"]
+            active_user.person.permanent_address = form.cleaned_data["permanent_address"]
             active_user.save()
             return redirect('users:profile')
         return redirect('users:view')
@@ -95,11 +116,15 @@ class Message:
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
-    template_name = "users/profile_view.html"
+    template_name = "users/user_view.html"
+
+
+class PersonProfileView(LoginRequiredMixin, TemplateView):
+    template_name = "users/person_view.html"
 
 
 class ProfilePage(LoginRequiredMixin, TemplateView):
-    template_name = "users/profile.html"
+    template_name = "users/user.html"
 
 
 class LogoutView(RedirectView):

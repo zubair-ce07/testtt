@@ -9,12 +9,6 @@ Email: {{ user.email }}
 First Name: {{ user.first_name }}
 <br>
 Last Name: {{ user.last_name }}
-<br>
-Mobile Number: {{ user.profile.mobile_number }}
-<br>
-Current Address: {{ user.profile.current_address }}
-<br>
-Permanent: {{ user.profile.permanent_address }}
-<br>
+<br><a href="{% url 'users:person_view' %}">Details</a><br>
 <br><a href="{% url 'users:edit' %}">Edit</a>
 {% endif %}

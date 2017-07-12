@@ -42,7 +42,7 @@ class Command(BaseCommand):
 
     def get_department(self, dept_name):
         if dept_name == "":
-            dept_name = "blank"
+            return None
 
         try:
             department = Department.objects.get(name=dept_name)
@@ -54,7 +54,7 @@ class Command(BaseCommand):
 
     def get_store(self, store_name):
         if store_name == "":
-            store_name = "blank"
+            return None
 
         try:
             store = Store.objects.get(name=store_name)
