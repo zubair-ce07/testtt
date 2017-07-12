@@ -1,56 +1,123 @@
+import re
+from urllib import parse
+
 import scrapy
-import w3lib.url
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.contrib.spiders.crawl import CrawlSpider, Rule
 
-from menatwork_scraper.items import Product
+from menatwork_scraper.items import Item
 
 
-class MySpider(CrawlSpider):
+class MenAtWorkSpider(CrawlSpider):
     name = 'menatwork'
     start_urls = ['https://www.menatwork.nl']
+    allowed_domains = ['menatwork.nl']
     rules = (
-        Rule(
-            LinkExtractor(allow='.*nl_NL/dames/.*', process_value=w3lib.url.url_query_cleaner)
-        ),
-        Rule(
-            LinkExtractor(allow='.+\d{18}.html.+'),
-            callback='parse_product_page'
-        ),
+        Rule(LinkExtractor(restrict_css='.headerlist__item')),
+        Rule(LinkExtractor(restrict_css='.name-link'), callback='parse_item'),
     )
 
-    def parse_product_page(self, response):
+    def parse_item(self, response):
+        item = Item()
 
-        a_product = Product()
-        a_product['name'] = response.xpath('//h1[@class="product-name"]/text()').extract_first()
-        a_product['size'] = {}
+        item['retailer_sku'] = self.get_retailer_sku(response)
+        if item['retailer_sku'] is None:
+            return
 
-        product_color = response.css('li.selected-value::text').extract_first()
-        size_variants = response.xpath('//select[@class="variation-select "]/option/text()').extract()
-        size_variants = list(map(str.strip, size_variants))
+        item['brand'] = self.get_brand(response)
+        item['category'] = self.get_category(response)
+        item['description'] = self.get_description(response)
+        item['gender'] = self.get_gender(item['category'])
+        item['image_url'] = self.get_image_urls(response)
+        item['name'] = self.get_name(response, item['brand'])
+        item['retailer'] = self.get_retailer()
+        item['url'] = response.url
+        item['skus'] = self.get_skus(response)
 
-        a_product['size'][product_color] = size_variants
+        color_urls = response.xpath('//ul[contains(@class,"color")]/li[@class="selectable"]/a/@href').extract()
+        if color_urls:
+            yield scrapy.Request(url=color_urls.pop(), callback=self.parse_colors,
+                                 meta={'item': item, 'color_urls': color_urls})
 
-        more_size_urls = response.xpath('//ul[contains(@class,"color")]/li[@class="selectable"]/a/@href').extract()
-        if more_size_urls:
-            size_url = more_size_urls.pop()
-            yield scrapy.Request(url=size_url, callback=self.get_product_size,
-                                 meta={'product': a_product, 'urls': more_size_urls})
-        else:
-            yield a_product
+        yield item
 
-    def get_product_size(self, response):
-        a_product = response.meta['product']
-        more_size_urls = response.meta['urls']
+    def parse_colors(self, response):
+        item = response.meta['item']
+        color_urls = response.meta['color_urls']
 
-        product_color = response.css('li.selected-value::text').extract_first()
-        size_variants = response.xpath('//select[@class="variation-select "]/option/text()').extract()
-        size_variants = list(map(str.strip, size_variants))
-        a_product['size'][product_color] = size_variants
+        item['skus'].update(self.get_skus(response))
 
-        if more_size_urls:
-            size_url = more_size_urls.pop()
-            yield scrapy.Request(url=size_url, callback=self.get_product_size,
-                                 meta={'product': a_product, 'urls': more_size_urls})
-        else:
-            yield a_product
+        if color_urls:
+            yield scrapy.Request(url=color_urls.pop(), callback=self.parse_colors,
+                                 meta={'item': item, 'color_urls': color_urls})
+        yield item
+
+    def get_skus(self, response):
+        skus = {}
+        raw_size_variants = response.css('select.variation-select option::text').extract()
+        size_variants = self.clean_objects(raw_size_variants)
+        color = self.get_color(response)
+        currency = self.get_currency()
+        price = self.get_price(response)
+
+        for size in size_variants:
+            sku_id = "{color}_{size}".format(color=color, size=size)
+            skus[sku_id] = {
+                "currency": currency,
+                "size": size,
+                "colour": color,
+                "price": price,
+            }
+        return skus
+
+    def clean_objects(self, objects):
+        cleaned_object = []
+        for obj in objects:
+            obj = obj.strip().replace('\n', '')
+            if obj is not '':
+                cleaned_object.append(obj)
+        return cleaned_object
+
+    def get_description(self, response):
+        descriptions = response.css("#tab1 *::text").extract()
+        descriptions = self.clean_objects(descriptions)
+        descriptions = descriptions[:-1]  # removing last element as it was non-relevant
+        return descriptions
+
+    def get_category(self, response):
+        return response.css('.breadcrumb a::text').extract()
+
+    def get_image_urls(self, response):
+        image_urls = response.css(".product-thumbnails a::attr(href)").extract()
+        return image_urls
+
+    def get_brand(self, response):
+        return parse.unquote(response.css("div::attr(data-brand)").extract_first())
+
+    def get_name(self, response, brand):
+        product_title = response.xpath('//h1[@class="product-name"]/text()').extract_first()
+        brand_pattern = re.compile(re.escape(brand), re.IGNORECASE)
+        name = brand_pattern.sub('', product_title).strip()
+        return name
+
+    def get_color(self, response):
+        return response.css('li.selected-value::text').extract_first()
+
+    def get_price(self, response):
+        return response.css('span.price-sales::text').extract()[0]
+
+    def get_retailer_sku(self, response):
+        return response.css("input#pid::attr(value)").extract()[0]  # remove first
+
+    def get_currency(self):
+        return "EURO"
+
+    def get_retailer(self):
+        return 'Men At Work'
+
+    def get_gender(self, category):
+        if any("Heren" in cate for cate in category):
+            return 'Men'
+        if any("Dames" in cate for cate in category):
+            return 'Women'
+        return 'Unisex'

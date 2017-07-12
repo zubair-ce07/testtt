@@ -8,10 +8,17 @@
 import scrapy
 
 
-class Product(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    #pass
+class Item(scrapy.Item):
     name = scrapy.Field()
-    size = {}  # format { color-name : [sizes]}
-
+    colors = scrapy.Field()
+    price = scrapy.Field()
+    brand = scrapy.Field()
+    category = scrapy.Field()
+    description = scrapy.Field()
+    url = scrapy.Field()
+    currency = scrapy.Field()
+    image_url = scrapy.Field()
+    retailer = scrapy.Field()
+    retailer_sku = scrapy.Field()
+    skus = scrapy.Field()
+    gender = scrapy.Field()
