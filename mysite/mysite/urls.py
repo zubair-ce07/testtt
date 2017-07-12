@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 
 urlpatterns = [
+    url(r'^api-auth/', include(
+        'rest_framework.urls', namespace='rest_framework')),
     url(r'^admin/', admin.site.urls),
     url(r'^$', RedirectView.as_view(url='/store/brands/', permanent=False)),
     url(r'^store/', include('super_store.urls')),

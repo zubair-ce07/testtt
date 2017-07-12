@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'super_store.apps.SuperStoreConfig',
     'authentication.apps.AuthenticationConfig',
-    'mathfilters.templatetags',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
