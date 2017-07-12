@@ -11,8 +11,8 @@ class KithSpider(CrawlSpider):
     name = "kith"
     start_urls = ['https://kith.com']
     allowed_domains = ['kith.com']
-    restrict_css = ['.ksplash-header-upper-items',  # men women kid-set
-                    '.main-nav-list-item',  # brand links for men, women and kids
+    restrict_css = ['.ksplash-header-upper-items',
+                    '.main-nav-list-item',
                     ]
     rules = (
         Rule(LinkExtractor(restrict_css=restrict_css)),
@@ -30,7 +30,7 @@ class KithSpider(CrawlSpider):
         item['gender'] = self.get_gender(response)
         item['image_url'] = self.get_image_urls(response)
         item['name'] = self.get_name(response, item['brand'])
-        item['retailer'] = self.get_retailer(response)
+        item['retailer'] = self.get_retailer()
         item['url'] = response.url
 
         yield item
@@ -55,14 +55,8 @@ class KithSpider(CrawlSpider):
         return product_skus
 
     def get_description(self, response):
-        descriptions = []
         raw_descriptions = response.css('.product-single-details-rte p::text').extract()
-        for description_item in raw_descriptions:
-            description_item = description_item.strip()
-            if description_item is not '':
-                descriptions.append(description_item)
-
-        return descriptions
+        return [description.strip() for description in raw_descriptions if description.strip()]
 
     def get_category(self, response):
         return response.css('.breadcrumb a::text').extract()[1:]
@@ -73,7 +67,7 @@ class KithSpider(CrawlSpider):
         return image_urls
 
     def get_brand(self, response):
-        return response.css("script.analytics::text").re_first('"brand":"(.*?)"')
+        return response.css(".analytics::text").re_first('"brand":"(.*?)"')
 
     def get_name(self, response, brand):
         product_title = response.css('.product-header-title span::text').extract_first()
@@ -83,20 +77,20 @@ class KithSpider(CrawlSpider):
 
     def get_color(self, response):
         color = response.css('.-variant::text').extract_first()
-        if color is not None:
-            color = color.strip()
-        return color
+        if not color:
+            return
+        return color.strip()
 
     def get_price(self, response):
-        return response.css("script.analytics::text").re('"price":"([0-9]*\.?[0-9]*)"')[0]
+        return response.css(".analytics::text").re('"price":"([0-9]*\.?[0-9]*)"')[0]
 
     def get_currency(self, response):
-        return response.css("script.analytics::text").re('"currency":"(\w+)"')[0]
+        return response.css(".analytics::text").re('"currency":"(\w+)"')[0]
 
     def get_retailer_sku(self, response):
-        return response.css("script.analytics::text").re('"productId":(\d+)')[0]
+        return response.css(".analytics::text").re('"productId":(\d+)')[0]
 
-    def get_retailer(self, response):
+    def get_retailer(self):
         return 'kith-us'
 
     def get_gender(self, response):
