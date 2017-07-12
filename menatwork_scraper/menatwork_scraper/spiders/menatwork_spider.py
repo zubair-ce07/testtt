@@ -2,9 +2,9 @@ import re
 from urllib import parse
 
 import scrapy
-from w3lib.url import url_query_cleaner
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.contrib.spiders.crawl import CrawlSpider, Rule
+from w3lib.url import url_query_cleaner
 
 from menatwork_scraper.items import Item
 
@@ -16,7 +16,7 @@ class MenAtWorkSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css='.headerlist__item', process_value=url_query_cleaner)),
         Rule(LinkExtractor(restrict_css='.thumb-link', process_value=url_query_cleaner),
-             callback='parse_item',),
+             callback='parse_item', ),
     )
 
     def parse_item(self, response):
@@ -85,7 +85,6 @@ class MenAtWorkSpider(CrawlSpider):
     def get_image_urls(self, response):
         return response.css(".product-thumbnails a::attr(href)").extract()
 
-
     def get_brand(self, response):
         return parse.unquote(response.css("div::attr(data-brand)").extract_first())
 
@@ -123,6 +122,7 @@ class MenAtWorkSpider(CrawlSpider):
             if item:
                 cleaned_items.append(item)
         return cleaned_items
+
     def append_ajax(self, urls):
         ajax = '&Quantity=1&format=ajax&productlistid=undefined'
-        return [url+ajax for url in urls]
+        return [url + ajax for url in urls]
