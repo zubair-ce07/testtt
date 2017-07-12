@@ -23,7 +23,7 @@
 
                             <div class="col-xs-3 no-padding">
                                 <div class="thumbnail" style="height: 400px; width: 235px">
-                                    <a href={% url 'super_store:product-detail' product.pk %}>
+                                    <a href={% url 'super_store:product-detail' product.pk|id_name:product.product_name %}>
                                         <img src="{{product.images_set.first.image_url}}" alt="Product Picture" style="height: 300px">
                                         <div class="caption">
                                             <p class="text-center">{{product.product_name}}</p>
