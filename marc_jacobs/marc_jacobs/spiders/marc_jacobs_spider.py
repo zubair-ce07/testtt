@@ -17,7 +17,8 @@ class MarcJacobsSpider(CrawlSpider):
              Rule(LinkExtractor(restrict_css='.infinite-scroll-placeholder', tags=('div',),
                                 attrs=('data-grid-url',))),
              Rule(LinkExtractor(restrict_css='.product-page-link', tags=('div',),
-                                attrs=('data-href',)), callback='parse_products', follow=True))
+                                attrs=('data-href',)),
+                  callback='parse_products', follow=True))
 
     def parse_products(self, response):
         item = MarcJacobsItem()
@@ -43,9 +44,12 @@ class MarcJacobsSpider(CrawlSpider):
             color_request = color_requests.pop(0)
             color_name = color_request.get('color_name')
             request = color_request.get('request')
-            request.meta['meta'] = {'item': item, 'color_name': color_name,
-                                    'skus': skus, 'color_requests': color_requests,
-                                    'img_colors_json_urls': img_colors_json_urls}
+            request.meta['color_name'] = color_name
+            request.meta['color_requests'] = color_requests
+            request.meta['item'] = item
+            request.meta['skus'] = skus
+            request.meta['img_colors_json_urls'] = img_colors_json_urls
+
             return request
         else:
             item['skus'] = skus
@@ -59,24 +63,14 @@ class MarcJacobsSpider(CrawlSpider):
             return self.request_image_colours(image_color_requests, item)
 
     def parse_product_colors(self, response):
-        meta = response.meta.get('meta')
+        meta = response.meta
         color_name = meta.get('color_name')
-        skus = meta.get('skus') or []
+        skus = self.get_skus(response, meta, color_name)
+
+        url = response.css('.product-images::attr(data-images)').extract_first()
         img_colors_json_urls = meta.get('img_colors_json_urls') or []
-        previous_price = response.css('.product-price span::text'). \
-                             extract_first().strip() or '-'
-        currency, price = response.css(
-            'span[itemprop="price"]::attr(content)').extract_first().split()
-        for size in self.get_sizes(response):
-            skus.append({'sku_id': '{}_{}'.format(color_name, size),
-                         'color': color_name,
-                         'size': size,
-                         'previous_price': previous_price,
-                         'price': price,
-                         'currency': currency})
-        img_colors_json_urls.append({
-            'color_name': color_name,
-            'url': response.css('.product-images::attr(data-images)').extract_first()})
+        img_colors_json_urls.append({'color_name': color_name, 'url': url})
+
         return self.request_product_color(
             meta.get('color_requests'), meta.get('item'), skus, img_colors_json_urls)
 
@@ -85,29 +79,46 @@ class MarcJacobsSpider(CrawlSpider):
             img_json = image_color_requests.pop(0)
             color_name = img_json.get('color_name')
             request = img_json.get('request')
-            request.meta['meta'] = {'item': item,
-                                    'image_color_requests': image_color_requests,
-                                    'color_name': color_name, 'image_urls': image_urls}
+            request.meta['color_name'] = color_name
+            request.meta['item'] = item
+            request.meta['image_color_requests'] = image_color_requests
+            request.meta['image_urls'] = image_urls
+
             return request
         else:
             item['image_urls'] = image_urls
             return item
 
     def parse_image_colors(self, response):
-        meta = response.meta.get('meta')
+        meta = response.meta
         image_urls = meta.get('image_urls') or []
 
         image_colors_json = json.loads(re.search(r'{.*}', response.text).group(0))
-        image_urls.append({meta.get('color_name'):
-                               [img_url['src'] for img_url in image_colors_json['items']]})
+        image_urls.append({
+            meta.get('color_name'): [img_url['src'] for img_url in image_colors_json['items']]
+        })
 
         return self.request_image_colours(
             meta.get('image_color_requests'), meta.get('item'), image_urls)
 
+    def get_skus(self, response, meta, color_name):
+        skus = meta.get('skus') or []
+        previous_price = response.css('.product-price span::text'). \
+                             extract_first().strip() or '-'
+        currency, price = response.css(
+            'span[itemprop="price"]::attr(content)').extract_first().split()
+        sizes = response.css('#Quantity option::text').extract()
+        sizes = list(filter(None, [size.strip() for size in sizes])) or ['-']
+
+        for size in sizes:
+            skus.append({'sku_id': '{}_{}'.format(color_name, size),
+                         'color': color_name,
+                         'size': size,
+                         'previous_price': previous_price,
+                         'price': price,
+                         'currency': currency})
+        return skus
+
     def get_description(self, response):
         description = response.css('.tab-content::text').extract()
-        return [desc.strip() for desc in description if desc.strip()]
-
-    def get_sizes(self, response):
-        sizes = response.css('#Quantity option::text').extract()
-        return [size.strip() for size in sizes if size.strip()] or ['-']
+        return list(filter(None, [desc.strip() for desc in description]))
