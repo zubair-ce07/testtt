@@ -1,0 +1,20 @@
+<html>
+<head>
+    <title>Search</title>
+</head>
+<body>
+    {% if errors %}
+        <ul>
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+{#        <p style="color: red;">Please submit a search term</p>#}
+    {% endif %}
+    <form action="" method="get">
+        <input type="text" name="query">
+        <input type="submit" value="Search">
+    </form>
+    <a href="{% url 'newsfeed' %}">Back</a>
+</body>
+</html>
