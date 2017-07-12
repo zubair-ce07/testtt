@@ -4,9 +4,10 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 # from django.contrib.auth.forms import SignUpForm
 from instagram.forms import SignUpForm
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.db.models import Q
+from instagram.models import Profile, Comment, Like, Post
 
 login_url = reverse_lazy('login')
 
@@ -16,15 +17,16 @@ def newsfeed(request):
     user = request.user
     print('User: ', user)
     if user.is_authenticated():
-        # return HttpResponse('Hi :3')
-        return render(request, 'instagram/newsfeed.html', {'user': user, })
+        followers = Profile.objects.filter(following__user__username=user.username)
+        following = Profile.objects.filter(user__username=user.username).values('following__user__username')
+        return render(request, 'instagram/newsfeed.html',
+                      {'user': user, 'followers': followers,
+                       'following': following,})
     else:
-        # return HttpResponse(':3')
         return HttpResponseRedirect(reverse('login'))
 
 
 def index(request):
-    # return HttpResponse('Hi :3')
     return HttpResponseRedirect(reverse('login'))
 
 
@@ -65,23 +67,42 @@ def search(request):
 def profile(request, pk):
     errors = []
     print('Profile: ', pk)
+    followers = []
+    following = []
     # print(request.url)
     # if pk in request.GET:
     # print(request.GET)
     if not pk:
         errors.append('ERROR')
-        user = None
+        profile_owner = None
+        logged_in_profile = None
     else:
-        user = User.objects.filter(Q(pk=pk)).first()
+        profile_owner = get_object_or_404(User, pk=pk)
+            # User.objects.filter(Q(pk=pk)).first()
+        already_followed = False
+        user = request.user
         # followers = User.objects.filter('followed_by')
         # print('Profile: ', user.username)
-        # logged_in_profile = user.username == request.user.username
+        logged_in_profile = profile_owner.username == user.username
+        followers = Profile.objects.filter(following__user__username=user.username)
+        print('FOLLOWERS', len(followers), followers)
+        following = Profile.objects.filter(user__username=user.username).values('following__user__username')
+        # following = Profile.objects.filter(profile__user__username=user.username).values('following')
+        for followee in following:
+            if followee['following__user__username'] == profile_owner.username:
+                already_followed = True
+                print('ALREADY FOLLOWING :3')
+                break
+
         # already_followed = request.user in followers
     return render(request, 'instagram/profile.html',
-                  {'errors': errors, 'user': user,})
-                   # 'logged_in_profile': logged_in_profile,
-                   # 'already_followed': already_followed,
-                   # })
+                  {'errors': errors,
+                   'user': profile_owner,
+                   'logged_in_profile': logged_in_profile,
+                   'already_followed': already_followed,
+                   'following': following,
+                   'followers': followers,
+                   })
     # return HttpResponse('OOPS! :3')
 
 
@@ -94,9 +115,9 @@ def signup(request):
             user.profile.bio = form.cleaned_data.get('bio')
             user.save()
             # username = form.cleaned_data.get('username')
-            raw_password = form.cleaned_data.get('password1')
-            username = form.cleaned_data.get('username')
-            user = authenticate(username=username, password=raw_password)
+            # raw_password = form.cleaned_data.get('password1')
+            # username = form.cleaned_data.get('username')
+            # user = authenticate(username=username, password=raw_password)
             print('Signup: ', user)
             if user is not None:
                 login(request, user)
@@ -104,3 +125,60 @@ def signup(request):
     else:
         form = SignUpForm()
     return render(request, 'instagram/signup.html', {'form': form})
+
+
+def follow_profile(request, pk):
+    errors = []
+    user = request.user
+    to_follow = get_object_or_404(Profile, pk=pk)
+    print('found:', to_follow)
+    user.profile.following.add(to_follow)
+    user.save()
+    print(user.profile.following)
+    to_follow.refresh_from_db()
+    followers = Profile.objects.filter(following__user__username=to_follow.user.username)
+    print('FOLLOWERS', len(followers), followers)
+    following = Profile.objects.filter(user__username=to_follow.user.username).values('following__user__username')
+    # following = Profile.objects.filter(profile__user__username=user.username).values('following')
+    # already_followed = True
+    # for followee in following:
+    #     if followee['following__user__username'] == to_follow.username:
+    #         already_followed = True
+    #         print('ALREADY FOLLOWING :3')
+    #         break
+
+            # already_followed = request.user in followers
+
+
+    return render(request, 'instagram/profile.html',
+                  {'errors': errors,
+                   'user': to_follow.user,
+                   'logged_in_profile': False,
+                   'already_followed': True,
+                   'following': following,
+                   'followers': followers,
+                   })
+
+
+def unfollow_profile(request, pk):
+    errors = []
+    user = request.user
+    to_unfollow = get_object_or_404(Profile, pk=pk)
+    print('found:', to_unfollow)
+    user.profile.following.remove(to_unfollow)
+    user.save()
+    print(user.profile.following)
+    to_unfollow.refresh_from_db()
+    followers = Profile.objects.filter(following__user__username=to_unfollow.user.username)
+    print('FOLLOWERS', len(followers), followers)
+    following = Profile.objects.filter(user__username=to_unfollow.user.username).values('following__user__username')
+    return render(request, 'instagram/profile.html',
+                  {'errors': errors,
+                   'user': to_unfollow.user,
+                   'logged_in_profile': False,
+                   'already_followed': False,
+                   'following': following,
+                   'followers': followers,
+                   })
+# def get_followers(user):
+#

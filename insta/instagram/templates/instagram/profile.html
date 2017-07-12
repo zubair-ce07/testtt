@@ -7,12 +7,19 @@
 <body>
     {% if user %}
 {#        {% for u in user %}#}
-            <h1>{{ user.username }} {{ user.profile.following.count }}</h1>
-{#            {% if not logged_in_profile and not already_followed %}#}
-{#                <form action="{% url 'profile' user.pk %}" method="POST">#}
-{#                    <input id="submit" type="button" value="Follow" />#}
-{#                </form>#}
-{#            {% endif %}#}
+            <h1>{{ user.username }} </h1>
+            <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>
+            <p>{{ following.count }} Following</p>
+            {% if not logged_in_profile and not already_followed %}
+                <form action="{% url 'follow' user.pk %}" method="POST">
+                    <input id="submit" type="button" value="Follow" />
+                </form>
+            {% elif not logged_in_profile and already_followed %}
+                <form action="{% url 'unfollow' user.pk %}" method="POST">
+                    <input id="submit" type="button" value="Unfollow" />
+                </form>
+            {% endif %}
+
 {#        {% endfor %}#}
         <h1>HI :3</h1>
 {#    {% elif errors %}#}

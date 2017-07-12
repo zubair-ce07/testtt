@@ -6,6 +6,8 @@
 </head>
 <body>
     <h1>Welcome, {{ user.username }}</h1>
+    <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>
+    <p>{{ following.count }} Following</p>
     <a href="{% url 'search' %}">Search</a>
     <a href="{% url 'logout' %}">Logout</a>
 {#    {% url 'instagram:logout' %}#}
