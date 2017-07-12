@@ -1,3 +1,2 @@
-username,password1,password2,phone_number
-testuser1,testpassword1,testpassword1,'+923241234567'
-
+username,password1,password2,phone_number,country,address,image
+testuser1,testpassword1,testpassword1,+923241234567,Australia, 184D Asif Block AIT Lahore,users/f1.jpg

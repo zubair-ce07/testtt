@@ -8,10 +8,10 @@ from django import forms
 from .models import UserProfile, Profile
 
 admin.site.unregister(User)
-admin.site.unregister(Address)
-admin.site.unregister(Country)
-admin.site.unregister(Locality)
-admin.site.unregister(State)
+# admin.site.unregister(Address)
+# admin.site.unregister(Country)
+# admin.site.unregister(Locality)
+# admin.site.unregister(State)
 
 
 # class UserCreateForm(UserCreationForm):
