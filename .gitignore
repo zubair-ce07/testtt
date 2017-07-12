@@ -1,12 +1,3 @@
-menatwork_scraper/item.jl
-menatwork_scraper/menatwork_scraper/__init__.py
-menatwork_scraper/menatwork_scraper/middlewares.py
-menatwork_scraper/menatwork_scraper/pipelines.py
-menatwork_scraper/menatwork_scraper/settings.py
-menatwork_scraper/menatwork_scraper/spiders/__init__.py
-menatwork_scraper/requirement.txt
-menatwork_scraper/scrapy.cfg
-
 
 
 
