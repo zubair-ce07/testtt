@@ -5,7 +5,6 @@ import "./App.css";
 class Task extends Component {
   constructor(props) {
     super();
-    this.handleClick = this.handleClick.bind(this);
     this.state = {
       id: props.id,
       description: props.value
@@ -13,7 +12,6 @@ class Task extends Component {
   }
 
   handleClick(evt) {
-    // window.confirm('Complete this task? \n"' + evt.target.innerHTML + '"')
     if (
       window.confirm('Complete this task? \n"' + evt.target.innerHTML + '"')
     ) {
@@ -26,7 +24,7 @@ class Task extends Component {
   render() {
     return (
       <li className="task">
-        <a href="#" onClick={this.handleClick}>
+        <a href="#" onClick={this.handleClick.bind(this)}>
           {this.state.description}
         </a>
       </li>
@@ -37,18 +35,18 @@ class Task extends Component {
 class App extends Component {
   constructor() {
     super();
+    this.getCount = this.getCount.bind(this);
     this.getTask = this.getTask.bind(this);
     this.getTaskList = this.getTaskList.bind(this);
     this.setTaskList = this.setTask.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.addTask = this.addTask.bind(this);
-    this.count = Boolean(localStorage.getItem("count"))
-      ? localStorage.getItem("count")
-      : 0;
     this.state = {
-      count: this.count,
+      render: false,
+      count: this.getCount(),
       tasks: this.getTaskList(),
-      inputValue: ""
+      inputValue: "",
+      filter: "pending"
     };
   }
 
@@ -57,9 +55,22 @@ class App extends Component {
     return JSON.parse(localStorage.getItem(+index));
   }
 
+  getCount() {
+    if (localStorage.getItem("count")) {
+      return localStorage.getItem("count");
+    } else {
+      return 0;
+    }
+  }
+
+  setCount(count) {
+    localStorage.setItem("count", count);
+  }
+
   getTaskList() {
-    var tasks = [];
-    for (let i = 0; i < this.count; i++) {
+    let tasks = [],
+      count = this.getCount();
+    for (let i = 0; i < count; i++) {
       var temp = this.getTask(i);
       tasks[i] = temp;
     }
@@ -87,16 +98,8 @@ class App extends Component {
   }
 
   handleRadioChange(evt) {
-    var filterStatus = evt.target.value;
-    var tasks = this.getTaskList();
-    if (filterStatus !== "all") {
-      tasks = tasks.filter(element => {
-        return element.status === filterStatus;
-      });
-    };    
-    
     this.setState({
-      tasks: tasks
+      filter: evt.target.value
     });
   }
 
@@ -110,9 +113,15 @@ class App extends Component {
   }
 
   render() {
-    const taskList = this.state.tasks.map(task => {
-      if (task) {
-        return <Task id={task.id} value={task.description} />;
+    const taskList = this.state.tasks.map((task, id) => {
+      if (task.status === this.state.filter || this.state.filter === "all") {
+        return (
+          <Task
+            key={id}
+            id={task.id}
+            value={task.description}
+          />
+        );
       }
     });
     return (
