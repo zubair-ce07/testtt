@@ -14,6 +14,7 @@ class MenAtWorkSpider(CrawlSpider):
     start_urls = ['https://www.menatwork.nl']
     allowed_domains = ['menatwork.nl']
     rules = (
+        Rule(LinkExtractor(restrict_css='.next')),
         Rule(LinkExtractor(restrict_css='.headerlist__item', process_value=url_query_cleaner)),
         Rule(LinkExtractor(restrict_css='.thumb-link', process_value=url_query_cleaner),
              callback='parse_item', ),
@@ -37,12 +38,17 @@ class MenAtWorkSpider(CrawlSpider):
         item['skus'] = self.get_skus(response)
 
         color_urls = response.css('.color li:not(.selected) a::attr(href)').extract()
-        color_urls = self.append_ajax(color_urls)
+        color_urls = self.append_ajax_query(color_urls)
+
+        yield self.yield_or_pasrse_more_colors(item, color_urls)
+
+    def yield_or_pasrse_more_colors(self, item, color_urls):
+
         if color_urls:
-            yield Request(url=color_urls.pop(), callback=self.parse_colors,
+            return Request(url=color_urls.pop(), callback=self.parse_colors,
                           meta={'item': item, 'color_urls': color_urls})
         else:
-            yield item
+            return item
 
     def parse_colors(self, response):
         item = response.meta['item']
@@ -50,23 +56,36 @@ class MenAtWorkSpider(CrawlSpider):
 
         item['skus'].update(self.get_skus(response))
 
-        if color_urls:
-            yield Request(url=color_urls.pop(), callback=self.parse_colors,
-                          meta={'item': item, 'color_urls': color_urls})
-        else:
-            yield item
+        yield self.yield_or_pasrse_more_colors(item, color_urls)
 
     def get_skus(self, response):
-        skus = {}
-        raw_size_variants = response.css('.variation-select option::text').extract()
-        size_variants = self.clean(raw_size_variants)
         color = self.get_color(response)
         currency = self.get_currency()
         price = self.get_price(response)
 
+        avail_variants_css = '.variation-select option:not([disabled])::text'
+        raw_avail_size_variants = response.css(avail_variants_css).extract()
+        avail_size_variants = self.clean(raw_avail_size_variants)
+
+        non_avail_variants_css = '.variation-select option[disabled]::text'
+        raw_non_avail_size_variants = response.css(non_avail_variants_css).extract()
+        non_avail_size_variants = self.clean(raw_non_avail_size_variants)
+
+        skus = self.initialize_skus(avail_size_variants, color,
+                                    currency, price, availability=True)
+
+        non_avail_skus = self.initialize_skus(non_avail_size_variants, color,
+                                              currency, price, availability=False)
+        skus.update(non_avail_skus)
+
+        return skus
+
+    def initialize_skus(self, size_variants, color, currency, price, availability):
+        skus = {}
         for size in size_variants:
             sku_id = "{color}_{size}".format(color=color, size=size)
             skus[sku_id] = {
+                "availability": availability,
                 "currency": currency,
                 "size": size,
                 "colour": color,
@@ -76,8 +95,10 @@ class MenAtWorkSpider(CrawlSpider):
 
     def get_description(self, response):
         descriptions = response.css("#tab1 *::text").extract()
-        cleaned_descriptions = self.clean(descriptions)
-        return cleaned_descriptions[:-1]
+        cleaned_description = self.clean(descriptions)[:-1]
+        if len(cleaned_description[-1]) < 2:
+            cleaned_description.pop()
+        return cleaned_description
 
     def get_category(self, response):
         return response.css('.breadcrumb a::text').extract()
@@ -123,6 +144,6 @@ class MenAtWorkSpider(CrawlSpider):
                 cleaned_items.append(item)
         return cleaned_items
 
-    def append_ajax(self, urls):
+    def append_ajax_query(self, urls):
         ajax = '&Quantity=1&format=ajax&productlistid=undefined'
         return [url + ajax for url in urls]
