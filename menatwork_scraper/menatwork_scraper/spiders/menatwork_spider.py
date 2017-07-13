@@ -1,7 +1,7 @@
 import re
 from urllib import parse
 
-import scrapy
+from scrapy import Request
 from scrapy.contrib.linkextractors import LinkExtractor
 from scrapy.contrib.spiders.crawl import CrawlSpider, Rule
 from w3lib.url import url_query_cleaner
@@ -36,11 +36,11 @@ class MenAtWorkSpider(CrawlSpider):
         item['url'] = response.url
         item['skus'] = self.get_skus(response)
 
-        color_urls = response.css('.swatches.color>li:not(.selected)>a ::attr(href)').extract()
+        color_urls = response.css('.color li:not(.selected) a::attr(href)').extract()
         color_urls = self.append_ajax(color_urls)
         if color_urls:
-            yield scrapy.Request(url=color_urls.pop(), callback=self.parse_colors,
-                                 meta={'item': item, 'color_urls': color_urls})
+            yield Request(url=color_urls.pop(), callback=self.parse_colors,
+                          meta={'item': item, 'color_urls': color_urls})
         else:
             yield item
 
@@ -51,8 +51,8 @@ class MenAtWorkSpider(CrawlSpider):
         item['skus'].update(self.get_skus(response))
 
         if color_urls:
-            yield scrapy.Request(url=color_urls.pop(), callback=self.parse_colors,
-                                 meta={'item': item, 'color_urls': color_urls})
+            yield Request(url=color_urls.pop(), callback=self.parse_colors,
+                          meta={'item': item, 'color_urls': color_urls})
         else:
             yield item
 
