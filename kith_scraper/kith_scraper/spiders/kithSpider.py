@@ -11,9 +11,11 @@ class KithSpider(CrawlSpider):
     name = "kith"
     start_urls = ['https://kith.com']
     allowed_domains = ['kith.com']
-    restrict_css = ['.ksplash-header-upper-items',
-                    '.main-nav-list-item',
-                    ]
+    restrict_css = [
+        '.ksplash-header-upper-items',
+        '.main-nav-list-item',
+        '.next',
+    ]
     rules = (
         Rule(LinkExtractor(restrict_css=restrict_css)),
         Rule(LinkExtractor(restrict_css='.product-card-info'), callback='parse_item'),
@@ -36,23 +38,24 @@ class KithSpider(CrawlSpider):
         yield item
 
     def get_skus(self, response):
-        product_skus = {}
+        final_skus = {}
         currency = self.get_currency(response)
         color = self.get_color(response)
         price = self.get_price(response)
 
-        regex_for_skus_json = '(\[{"id".*available.*}\])'
-        raw_skus_json = response.css('script').re_first(regex_for_skus_json)
-        skus_json = json.loads(raw_skus_json)
-        for sku_item in skus_json:
-            product_skus[sku_item['id']] = {'color': color,
-                                            'currency': currency,
-                                            'price': price,
-                                            'size': sku_item["title"],
-                                            'availability': sku_item["available"],
-                                            }
+        skus_regex = '(\[{"id".*available.*}\])'
+        raw_skus = response.css('script').re_first(skus_regex)
+        skus = json.loads(raw_skus)
+        for sku in skus:
+            temp_sku = {'color': color,
+                        'currency': currency,
+                        'price': price,
+                        'size': sku["title"],
+                        'availability': sku["available"],
+                        }
+            final_skus[sku['id']] = temp_sku
 
-        return product_skus
+        return final_skus
 
     def get_description(self, response):
         raw_descriptions = response.css('.product-single-details-rte p::text').extract()
@@ -73,13 +76,11 @@ class KithSpider(CrawlSpider):
         product_title = response.css('.product-header-title span::text').extract_first()
         brand_pattern = re.compile(re.escape(brand), re.IGNORECASE)
         name = brand_pattern.sub('', product_title)
-        return name
+        return name.strip() if name else None
 
     def get_color(self, response):
         color = response.css('.-variant::text').extract_first()
-        if not color:
-            return
-        return color.strip()
+        return color.strip() if color else None
 
     def get_price(self, response):
         return response.css(".analytics::text").re('"price":"([0-9]*\.?[0-9]*)"')[0]
