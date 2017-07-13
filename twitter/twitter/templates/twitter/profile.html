@@ -1,0 +1,29 @@
+{% extends 'twitter/home.html' %}
+
+
+{% block post_tweet %}
+{% endblock post_tweet %}
+
+{% block content %}
+
+    <h1>{{ view.profile_user.first_name|capfirst }}'s Profile</h1>
+    {% if not view.profile_user == user %}
+        <span>
+        <form action="{% url 'follow'%}" method="post">
+            {% csrf_token %}
+            {{ view.form.as_p }}
+            <input type="submit" value="Follow">
+        </form>
+        </span>
+    {% endif %}
+
+
+    <h2>Tweets</h2>
+
+    {% for tweet in view.profile_user.tweet_set.all %}
+        <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20"  >
+            <tr><td>{{ tweet }}</td></tr>
+        </table>
+    {% endfor %}
+
+{% endblock content%}
