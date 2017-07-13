@@ -23,13 +23,14 @@ class UserCreationForm(forms.ModelForm):
     confirm_password = forms.CharField(
         label='Password confirmation', widget=forms.PasswordInput)
 
-    def validate_password2(self):
+    def clean(self):
         # Check that the two password entries match
         password = self.cleaned_data.get("password")
         confirm_password = self.cleaned_data.get("confirm_password")
         if password and confirm_password and password != confirm_password:
-            raise forms.ValidationError("Password does not match")
-        return password
+            self.add_error('password', 'passwrod does not match')
+            self.add_error('confirm_password', 'password does not match')
+        return self.cleaned_data
 
     class Meta:
         model = CustomUser
@@ -37,7 +38,7 @@ class UserCreationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super(UserCreationForm, self).save(commit=False)
-        user.set_password(self.cleaned_data["password1"])
+        user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
         return user

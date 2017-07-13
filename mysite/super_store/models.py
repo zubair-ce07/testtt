@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.html import mark_safe
+from authentication.models import CustomUser
 
 
 class Brand(models.Model):
@@ -9,7 +10,7 @@ class Brand(models.Model):
     image_icon = models.ImageField()
 
     def image_tag(self):
-        return mark_safe('<img src="/media/{}" width="150" height="150"/>'\
+        return mark_safe('<img src="/media/{}" width="150" height="150"/>'
                          .format(self.image_icon))
 
     image_tag.short_description = 'Image'
@@ -32,7 +33,7 @@ class Product(models.Model):
         verbose_name='Update Date')
 
     def __str__(self):
-        return self.product_id+' '+self.product_name
+        return self.product_id + ' ' + self.product_name
 
 
 class Images(models.Model):

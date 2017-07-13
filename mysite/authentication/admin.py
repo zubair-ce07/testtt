@@ -7,17 +7,18 @@ from .forms import UserCreationForm
 class CustomUserAdmin(UserAdmin):
     # The forms to add and change user instances
     add_form = UserCreationForm
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
+    list_display = ('id', 'username', 'email',
+                    'first_name', 'last_name', 'is_staff')
     ordering = ("email",)
 
     fieldsets = (
         (None, {'fields': ('email', 'password',
-                           'first_name', 'last_name', 'country')}),
+                           'first_name', 'last_name',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password', 'first_name', 'last_name', 'country', 'is_superuser', 'is_staff', 'is_active')}
+            'fields': ('email', 'password', 'confirm_password', 'first_name', 'last_name', 'is_superuser', 'is_staff', 'is_active')}
          ),
     )
     list_filter = ('is_staff', 'is_superuser', 'is_active')
@@ -26,4 +27,3 @@ class CustomUserAdmin(UserAdmin):
 
 # Register your models here.
 admin.site.register(CustomUser, CustomUserAdmin)
-

@@ -11,4 +11,5 @@ urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/store/brands/', permanent=False)),
     url(r'^store/', include('super_store.urls')),
     url(r'^user/', include('authentication.urls')),
+    url(r'^api/', include('API.urls')),
 ] + static.static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
