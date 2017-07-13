@@ -7,8 +7,10 @@ from django.dispatch import receiver
 from django.core.validators import RegexValidator
 from django_countries.fields import CountryField, Country
 from address.models import AddressField, Address
-from django.db.models import ImageField
+from django.db.models.fields.files import FileField, ImageFieldFile, ImageField
 from django_countries.data import COUNTRIES
+from shutil import copy2
+from task1.settings import MEDIA_ROOT
 
 COUNTRIES_NAMES = dict([[v, k] for k, v in COUNTRIES.items()])
 
@@ -19,33 +21,18 @@ class CustomUser(User):
         ordering = ('first_name', )
 
     def save(self, *args, **kwargs):
-        # kwargs_temp = kwargs
-        # print(kwargs['phone_number'])
         self._phone_number = kwargs['phone_number']
         self._country_name = kwargs['country_name']
         self._address = kwargs['address']
         self._image = kwargs['image']
-        print(self._image)
         kwargs = {}
-        # CustomUser.set_password(self.passwordestpassword1')
+        self.full_clean()
         super(CustomUser, self).save(*args, **kwargs)
-        # kwargs = kwargs_temp
-        # print(kwargs_temp)
-        # print(kwargs)
-
-        # print(kwargs['phone_number'])
-
-        # kwargs = {'phone_number': '1234567891'}
-        # print(kwargs)
-
-
-# def get_image_path(instance, filename):
-#     return os.path.join('photos', str(instance.id), filename)
 
 
 class UserProfile(models.Model):
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # test = models.CharField(max_length=10)
     phone_number = models.CharField(validators=[RegexValidator(
         regex=r'^\+?\d{10,15}$', message="Phone number must be entered in the format: '+9999999999'.")], max_length=15)
     country = CountryField(blank=True, null=True)
@@ -56,36 +43,29 @@ class UserProfile(models.Model):
         return self.user.username
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE)
-    test = models.CharField(max_length=10)
-
-
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
-    print('*******************************************************************')
     phone_number = getattr(instance, '_phone_number')
     country_name = getattr(instance, '_country_name')
     address_raw = getattr(instance, '_address')
-    image = getattr(instance, '_image')
-    print(image)
-    # print(address1)
-    # print(address_raw)
-    # phone_number = kwargs['_phone_number']
-    # print(phone_number)
+    src = getattr(instance, '_image')
+    dest = MEDIA_ROOT + 'users/' + os.path.basename(src)
+    head, tail = os.path.splitext(os.path.basename(src))
+    count = 0
+    while os.path.exists(dest):
+        count += 1
+        dest = os.path.join(os.path.dirname(
+            dest), '{}-{}{}'.format(head, count, tail))
+    copy2(src, dest)
     if created:
-        # image = ImageField(name=image)
-        print(image)
-        address1 = Address(raw=address_raw)
+        address = Address(raw=address_raw, formatted=address_raw)
+        address.save()
         country = Country(code=COUNTRIES_NAMES[country_name])
-        address1.save()
-        u = UserProfile(user=instance, phone_number=phone_number,
-                        country=country, address=address1)
-        print(type(u.image))
-        u.image.name = image
-        print(u.image.name)
-        u.save()
+        dest_file = 'users/' + os.path.basename(dest)
+        image = ImageFieldFile(
+            instance=instance, field=FileField(), name=dest_file)
+        UserProfile.objects.create(user=instance, phone_number=phone_number,
+                                   country=country, address=address, image=image)
 
 
 # @receiver(post_save, sender=User)

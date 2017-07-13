@@ -5,13 +5,13 @@ from address.models import Address, Country, Locality, State
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 
-from .models import UserProfile, Profile
+from .models import UserProfile
 
 admin.site.unregister(User)
 # admin.site.unregister(Address)
-# admin.site.unregister(Country)
-# admin.site.unregister(Locality)
-# admin.site.unregister(State)
+admin.site.unregister(Country)
+admin.site.unregister(Locality)
+admin.site.unregister(State)
 
 
 # class UserCreateForm(UserCreationForm):
@@ -34,19 +34,13 @@ admin.site.unregister(User)
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
-    verbose_name_plural = 'Profile'
-    fk_name = 'user'
-
-class ProfileInline(admin.StackedInline):
-    model = UserProfile
-    can_delete = False
     # verbose_name_plural = 'Profile'
     # fk_name = 'user'
 
 
 @admin.register(User)
 class UserAdmin(UserAdmin):
-    inlines = (ProfileInline, )
+    inlines = (UserProfileInline, )
 
     # def get_inline_instances(self, request, obj=None):
     #     # if not obj:
@@ -73,8 +67,4 @@ class UserAdmin(UserAdmin):
 
 @admin.register(UserProfile)
 class UserProfile(admin.ModelAdmin):
-    pass
-
-@admin.register(Profile)
-class Profile(admin.ModelAdmin):
     pass

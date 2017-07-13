@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Registration</title>
+     {% load static %} 
+     <link rel="stylesheet" href="{% static 'users/css/styles.css' %}"/> 
+</head>
+
+<body>
+    <h2>{{user.get_full_name}}</h2>
+     <div>
+        {% if user.userprofile.image %}
+            <img class="dp" src="/{{user.userprofile.image.url}}" />
+        {% endif %}
+    </div>
+    <div>
+    <ul>
+        <li>Username: {{user.username}}</li>      
+        <li>Country: {{user.userprofile.country.name}} <img src="/{%static 'users/flags'%}/{{user.userprofile.country|lower}}.gif" /></li>
+        <li>Address: {{user.userprofile.address.raw}}</li>
+        <li>Phone #: {{user.userprofile.phone_number}}</li>
+        <li>Email: {{user.email}}</li>
+    </ul>
+    </div>
+</body>
+
+</html>
