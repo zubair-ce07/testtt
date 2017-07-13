@@ -1,0 +1,17 @@
+<a href="{% url 'users:login' %}">Login</a>
+<a href="{% url 'users:sign-up' %}">Sign Up</a>
+<h1>Create Your Account: </h1>
+<br>
+<form action="", method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div>
+            <label>{{ field.label_tag }}</label>
+        <div>{{ field }}</div>
+        </div>
+    {% endfor %}
+    <button type="submit">Submit</button>
+    <div>
+        <span>{{ form.errors }}</span>
+    </div>
+</form>

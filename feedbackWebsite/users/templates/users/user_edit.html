@@ -1,0 +1,13 @@
+{% if user.is_authenticated %}
+<a href="{% url 'users:profile' %}">Home</a>
+<a href="{% url 'users:logout' %}">Log Out</a>
+<br>
+<h1>Edit Your Profile: </h1>
+{{ user.username }}
+<br>
+<form action="", method="post">
+    {% csrf_token %}
+    {{form.as_p }}
+    <input type="submit" value="Update">
+</form>
+{% endif %}
