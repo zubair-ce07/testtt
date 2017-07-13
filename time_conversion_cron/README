@@ -1,0 +1,15 @@
+In order to add entries in the table type:
+python manage.py insert_time
+
+This will add 100 entries in the model DateTime
+
+In order to run the cronjob enter:
+python manage.py crontab add
+
+and then run the server
+python manage.py runserver
+
+The output will be shown in output.log file for convenience
+
+after you're done remove the cronjob:
+python manage.py crontab remove
