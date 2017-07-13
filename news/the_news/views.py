@@ -5,7 +5,9 @@ from django.shortcuts import render, redirect
 from rest_framework import generics
 from scrappers import CrawlSpiderThread, run_scrapy_project, initialize_spiders
 from django.conf import settings
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 from the_news.models import News, NewsPaper
 from the_news.serializers import NewsSerializer
@@ -18,6 +20,11 @@ class FetchView(View):
     scrapy_spiders_status['dawn-news']=False
     scrapy_spiders_thread['the-news'] = None
     scrapy_spiders_thread['dawn-news'] = None
+
+    @method_decorator(login_required(login_url=reverse_lazy('authentication:login')))
+    def dispatch(self, *args, **kwargs):
+        return super(FetchView, self).dispatch(*args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         spider_name = request.GET.get('spider_name', '')
 
@@ -44,6 +51,10 @@ class FetchView(View):
 
 
 class TerminateView(View):
+    @method_decorator(login_required(login_url=reverse_lazy('authentication:login')))
+    def dispatch(self, *args, **kwargs):
+        return super(TerminateView, self).dispatch(*args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         spider_name = request.GET.get('spider_name', '')
         if not spider_name:
@@ -57,9 +68,13 @@ class TerminateView(View):
                 message = spider_name + ' Spider Not Crawling. Start Spider First'
         return redirect(reverse('the_news:main')+'?message='+message)
 
-
 class TheNewsMainView(View):
     template_name = 'the_news/main.html'
+
+    @method_decorator(login_required(login_url=reverse_lazy('authentication:login')))
+    def dispatch(self, *args, **kwargs):
+        return super(TheNewsMainView, self).dispatch(*args, **kwargs)
+
 
     def get(self, request, *args, **kwargs):
             return render(request, self.template_name,{'scrapy_spider_status': FetchView.scrapy_spiders_status, 'message':request.GET.get('message','')})
