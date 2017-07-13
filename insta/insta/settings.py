@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 
 LOGIN_REDIRECT_URL = 'newsfeed'
 
+AUTH_USER_MODEL = 'instagram.User'
 
 # Application definition
 

@@ -1,22 +1,23 @@
 from django.contrib import admin
-from .models import Profile, Comment, Like, Post
+# from django.contrib.auth.admin import UserAdmin
+from .models import User, Comment, Like, Post
 
 
-class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'get_username', 'get_name', 'get_email')
-    search_fields = ('name', 'username')
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'username', 'get_name', 'email')
+    search_fields = ('first_name', 'last_name', 'username')
     ordering = ('pk',)
-    # fields = ('email', 'username', 'password', 'name', 'following', 'followed_by')
+    fields = ('first_name', 'last_name', 'username', 'email', 'password', 'date_of_birth', 'avatar', 'bio', 'following')
     filter_horizontal = ('following',)
 
     def get_name(self, instance):
-        return instance.user.first_name
-
-    def get_username(self, instance):
-        return instance.user.username
-
-    def get_email(self, instance):
-        return instance.user.email
+        return instance.first_name+' '+instance.last_name
+    #
+    # def get_username(self, instance):
+    #     return instance.user.username
+    #
+    # def get_email(self, instance):
+    #     return instance.user.email
 
 
 class PostAdmin(admin.ModelAdmin):
@@ -53,7 +54,7 @@ class LikeAdmin(admin.ModelAdmin):
         return obj.post.user.username
     get_username.short_description = 'Post Author'
 
-admin.site.register(Profile, ProfileAdmin)
+admin.site.register(User, UserAdmin)
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(Like, LikeAdmin)
 admin.site.register(Post, PostAdmin)
