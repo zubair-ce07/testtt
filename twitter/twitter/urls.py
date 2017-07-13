@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 
@@ -24,9 +25,9 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     url(r'^$', views.HomeView.as_view(), name='home'),
-    url(r'^login/$', views.LoginView.as_view(), name='login'),
+    url(r'^login/$', auth_views.login, {'template_name': 'twitter/login.html'}, name='login'),
     url(r'^signup/$', views.SignUpView.as_view(), name='signup'),
-    url(r'^logout/$', views.logout_view, name='logout'),
+    url(r'^logout/$', auth_views.logout, name='logout'),
     url(r'^tweet/$', login_required()(views.TweetView.as_view()), name='tweet'),
     url(r'^profiles/(?P<username>[\w]+)/$',
         login_required()(views.ProfileView.as_view()), name='profile'),

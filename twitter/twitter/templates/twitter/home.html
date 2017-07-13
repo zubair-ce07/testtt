@@ -1,13 +1,10 @@
-{% extends 'twitter/base.html' %}
+{% extends 'twitter/authenticated_base.html' %}
 
 
-{% block urls %}
-    {% if user.is_authenticated %}
-        <span>{{ user|capfirst }}</span>
-        <span><a href="{% url 'home' %}"> Home</a></span>
-        <span><a href="{% url 'logout' %}">Logout</a></span>
-    {% endif %}
-{% endblock urls %}
+{% if not user.is_authenticated %}
+    {% block header %}
+    {% endblock header %}
+{% endif %}
 
 {% block content %}
     {% if user.is_authenticated %}

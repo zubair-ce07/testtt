@@ -10,12 +10,6 @@ from twitter import forms
 from twitter.models import Tweet
 from twitter.models import User
 
-
-def logout_view(request):
-    logout(request)
-    return redirect(reverse('home'))
-
-
 class TweetView(FormView):
     template_name = 'twitter/tweet.html'
     form_class = forms.TweetForm
@@ -52,21 +46,6 @@ class FollowView(View):
         profile_user = get_object_or_404(User, username__iexact=profile_username)
         request.user.followers.add(profile_user)
         return redirect(reverse('profile', kwargs={'username': profile_username}))
-
-
-class LoginView(FormView):
-    form_class = forms.LoginForm
-    template_name = 'twitter/login.html'
-
-    def form_valid(self, form):
-        username = self.request.POST['username']
-        password = self.request.POST['password']
-        user = authenticate(self.request, username=username, password=password)
-        if user is not None:
-            login(self.request, user)
-            return HttpResponseRedirect(reverse('home'))
-        return render(self.request, 'twitter/login.html', {'form': form})
-
 
 class SignUpView(FormView):
     form_class = forms.UserSignUpForm

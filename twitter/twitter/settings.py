@@ -55,6 +55,8 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = ['twitter.core.backends.CaseInsensitiveModelBackend' ]
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
 
 ROOT_URLCONF = 'twitter.urls'
 
