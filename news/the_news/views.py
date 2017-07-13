@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import urlparse
 from django.views import View
 from django.shortcuts import render, redirect
 from rest_framework import generics
@@ -46,9 +47,13 @@ class FetchView(View):
                                                                          run_scrapy_project)
                     FetchView.scrapy_spiders_thread[spider_name].start()
                     FetchView.scrapy_spiders_status[spider_name] = True
-                    message = spider_name + ' Successfully Started'
-        return redirect(reverse('the_news:main')+'?message='+message)
 
+                    message = spider_name + ' Successfully Started'
+        url = request.META.get('HTTP_REFERER',reverse('the_news:main'))
+        url = urlparse.urljoin(url, urlparse.urlparse(url).path)
+        url = "{}?message={}".format(url,message)
+
+        return redirect(url)
 
 class TerminateView(View):
     @method_decorator(login_required(login_url=reverse_lazy('authentication:login')))
@@ -64,10 +69,14 @@ class TerminateView(View):
                     FetchView.scrapy_spiders_thread[spider_name].stop()
                     FetchView.scrapy_spiders_status[spider_name] = False
                     message = spider_name + ' Spider Successfully Terminated'
+
             else:
                 message = spider_name + ' Spider Not Crawling. Start Spider First'
-        return redirect(reverse('the_news:main')+'?message='+message)
+        url = request.META.get('HTTP_REFERER',reverse('the_news:main'))
+        url = urlparse.urljoin(url, urlparse.urlparse(url).path)
+        url = "{}?message={}".format(url, message)
 
+        return redirect(url)
 class TheNewsMainView(View):
     template_name = 'the_news/main.html'
 

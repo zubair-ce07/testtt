@@ -13,8 +13,6 @@ class NewsScrappersPipeline(object):
     news_paper = None
 
     def open_spider(self, spider):
-        print spider.news_paper, spider.source_url
-
         self.news_paper, created = NewsPaper.objects.update_or_create(name=spider.news_paper,
                                                                       defaults={'name': spider.news_paper,
                                                                                 'source_url': spider.source_url})
@@ -33,6 +31,9 @@ class NewsScrappersPipeline(object):
         except DatabaseError as e:
             logging.warning(e.message)
             raise DropItem("Item Not inserted in database")
+        except KeyError as e:
+            logging.warning(e.message)
+            raise DropItem("Keys missing in the item")
         except Exception as e:
             logging.warning(e.message)
             raise DropItem("Unexpected Values in item")
