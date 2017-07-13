@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import logo from "./logo.svg";
 import "./App.css";
 
 class Task extends Component {
@@ -12,13 +11,16 @@ class Task extends Component {
   }
 
   handleClick(evt) {
-    if (
-      window.confirm('Complete this task? \n"' + evt.target.innerHTML + '"')
-    ) {
+    if (window.confirm('Toggle this task? \n"' + evt.target.innerHTML + '"')) {
       var temp = JSON.parse(localStorage.getItem(this.state.id));
-      temp.status = "complete";
+      if (temp.status === "complete") {
+        temp.status = "pending";
+      } else {
+        temp.status = "complete";
+      }
       localStorage.setItem(this.state.id, JSON.stringify(temp));
     }
+    this.props.storage();
   }
 
   render() {
@@ -42,7 +44,6 @@ class App extends Component {
     this.handleInputChange = this.handleInputChange.bind(this);
     this.addTask = this.addTask.bind(this);
     this.state = {
-      render: false,
       count: this.getCount(),
       tasks: this.getTaskList(),
       inputValue: "",
@@ -104,12 +105,17 @@ class App extends Component {
   }
 
   addTask() {
-    console.log(this);
     this.setTask();
     this.setState({
       tasks: this.getTaskList()
     });
     document.getElementById("todoInput").value = "";
+  }
+
+  storageChange() {
+    this.setState({
+      tasks: this.getTaskList()
+    });
   }
 
   render() {
@@ -120,6 +126,7 @@ class App extends Component {
             key={id}
             id={task.id}
             value={task.description}
+            storage={this.storageChange.bind(this)}
           />
         );
       }
