@@ -60,11 +60,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CRONJOBS = [
-    ('*/1 * * * *', "training.cronjobs.my_scheduled_job",
-     '>> ' + BASE_DIR + '/output.log')
-]
-
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.

@@ -59,7 +59,3 @@ class Trainee(models.Model):
 
     def __str__(self):
         return self.user.user_profile.name
-
-
-class DateTime(models.Model):
-    date = models.DateTimeField()

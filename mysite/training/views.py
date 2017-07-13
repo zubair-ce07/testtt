@@ -5,7 +5,6 @@ from django.contrib.auth import (
     authenticate, login as django_login,
     logout as django_logout
 )
-from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
@@ -24,7 +23,7 @@ class Profile(LoginRequiredMixin, View):
         try:
             request.user.trainer
             status = "Trainer"
-        except Exception as e:
+        except Exception:
             status = "Trainee"
 
         context = {
@@ -32,8 +31,6 @@ class Profile(LoginRequiredMixin, View):
         }
         return render(request, self.template_name, context)
 
-    def post(self):
-        q = request.GET.get('q')
 
 class TraineeDetails(LoginRequiredMixin, View):
     template_name = 'training/trainee_details.html'
@@ -123,6 +120,35 @@ class Search(LoginRequiredMixin, View):
             context = {
                 'users': users, 'query': q
             }
+        return render(request, self.template_name, context)
+
+
+class UpdateImage(LoginRequiredMixin, View):
+    template_name = 'training/profile.html'
+    login_url = 'training:login'
+
+    def get(self, request):
+        picture = request.GET.get('picture')
+        if not picture:
+            try:
+                request.user.trainer
+                status = "Trainer"
+            except Exception as e:
+                status = "Trainee"
+            context = {
+                'error': True,
+                'status': status
+            }
+        else:
+            picture = "/user_images/" + picture
+            try:
+                user = UserProfile.objects.get(user=request.user)
+                user.picture = picture
+                user.save()
+            except UserProfile.DoesNotExist:
+                raise Http404("User does not exist")
+
+            return redirect("training:profile")
         return render(request, self.template_name, context)
 
 

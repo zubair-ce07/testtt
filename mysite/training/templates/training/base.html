@@ -17,9 +17,11 @@
     <nav class="navbar navbar-inverse">
       <div class="container-fluid">
         <div class="navbar-header">
-            <img src="/media/logo.png" alt="
-            {{user.user_profile.name}}" class="img-rounded" width="50"
+            <a href="/">
+                <img src="/media/logo.png" alt="
+                {{user.user_profile.name}}" class="img-rounded" width="50"
                  height="50"/>
+            </a>
         </div>
         <div class="collapse navbar-collapse"
              id="bs-example-navbar-collapse-1">
@@ -30,7 +32,8 @@
                            placeholder="Search" name="q">
                     <div class="input-group-btn">
                         <button type="submit" class="btn btn-default">
-                            <span class="glyphicon glyphicon-search"></span> Search
+                            <span class="glyphicon glyphicon-search"></span>
+                            Search
                         </button>
                     </div>
                 </div>

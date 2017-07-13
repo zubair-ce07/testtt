@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^technology/(?P<technology_id>[0-9]+)/$',
         views.TechnologyDetails.as_view(), name="technology_details"),
     url(r'^search/$', views.Search.as_view(), name="search"),
+    url(r'^update_image/$', views.UpdateImage.as_view(), name="update_image"),
     url(r'^trainer_signup/$',
         views.TrainerSignUp.as_view(), name="trainer_signup"),
     url(r'^trainee_signup/$',
