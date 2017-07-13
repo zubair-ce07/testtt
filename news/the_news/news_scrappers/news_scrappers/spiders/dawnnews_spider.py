@@ -1,38 +1,39 @@
-import scrapy
 from scrapy.loader import ItemLoader
 from news_scrappers.items import NewsScrappersItem
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
 
 
-class TheNewsSpider(CrawlSpider):
-    news_paper = 'The News'
-    source_url = 'https://www.thenews.com.pk/'
-    name = "the-news"
-    page = 0
-    date_css = 'div.category-date::text'
-    title_css = 'div.detail-heading h1::text'
-    img_url_css = 'div.detail-heading div.news-pic img::attr(src)'
-    detail_css = 'div.story-detail p::text'
-    abstract_css = 'div.story-detail p:first-of-type ::text'
+class DawnNewsSpider(CrawlSpider):
+    name = "dawn-news"
+    date_css = '.template__header .story__time::text'
+    title_css = '.template__header .story__title .story__link::text'
+    img_url_css = '.template__main .media__item img::attr(src)'
+    detail_css = '.story__content p ::text'
+    abstract_css = '.story__content p:first-of-type ::text'
+
+    news_paper = 'Dawn News'
+    source_url = 'https://www.dawn.com/'
+
     link_extractor = LxmlLinkExtractor(
-        restrict_css=['div.writter-list-item-story h2'],
+        restrict_css=[".story__link"],
+        allow=('www.dawn.com'),
     )
     rules = (
-
         Rule(
             link_extractor,
-            callback='parse_news_detail',
+            callback='parse_news_link',
             follow=True
         ),
     )
 
     start_urls = [
-        'https://www.thenews.com.pk/latest-stories/0',
+        'https://www.dawn.com',
     ]
 
-    def parse_news_detail(self, response):
+    def parse_news_link(self, response):
         news_item = ItemLoader(item=NewsScrappersItem(), response=response)
+
         news_item.add_css('date', self.date_css)
         news_item.add_css('title', self.title_css)
         news_item.add_css('img_url', self.img_url_css)
@@ -41,6 +42,3 @@ class TheNewsSpider(CrawlSpider):
         news_item.add_value('url', response.url)
 
         yield news_item.load_item()
-
-        self.page += 1
-        yield scrapy.Request('https://www.thenews.com.pk/latest-stories/' + str(self.page))

@@ -1,5 +1,32 @@
-{% if not isScraping %}
-    <button onclick="location.href='{% url 'the_news:fetch_news' %}'" type="button">Start Crawling</button>
+{% if message %}
+    {{ message }}
+{% endif %}
+{% if True in scrapy_spider_status.values %}
+    <table>
+        {% for spider_name, spider_status in scrapy_spider_status.items %}
+            {% if spider_status %}
+                <tr>
+                    <td>
+                        {{ spider_name }}
+                    </td>
+                    <td>
+                        <button onclick="location.href='{% url 'the_news:terminate_fetch_news' %}?spider_name={{ spider_name }}'" type="button">Terminate Crawling</button>
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
 {% else %}
-    <button onclick="location.href='{% url 'the_news:terminate_fetch_news' %}'" type="button">Terminate Crawling</button>
+    <table>
+        {% for spider_name, spider_status in scrapy_spider_status.items %}
+            <tr>
+                <td>
+                    {{ spider_name }}
+                </td>
+                <td>
+                    <button onclick="location.href='{% url 'the_news:fetch_news' %}?spider_name={{ spider_name }}'" type="button">Start Crawling</button>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
 {% endif %}

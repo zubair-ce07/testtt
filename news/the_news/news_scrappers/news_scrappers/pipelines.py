@@ -13,9 +13,11 @@ class NewsScrappersPipeline(object):
     news_paper = None
 
     def open_spider(self, spider):
-        self.news_paper, created = NewsPaper.objects.update_or_create(name='The News',
-                                                                      defaults={'name': 'The News',
-                                                                                'source_url': 'https://www.thenews.com.pk/'})
+        print spider.news_paper, spider.source_url
+
+        self.news_paper, created = NewsPaper.objects.update_or_create(name=spider.news_paper,
+                                                                      defaults={'name': spider.news_paper,
+                                                                                'source_url': spider.source_url})
 
     def process_item(self, item, spider):
         try:

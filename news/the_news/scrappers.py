@@ -4,7 +4,7 @@ import threading
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import reactor
 from multiprocessing import Process
-
+from the_news.models import NewsPaper
 
 def run_scrapy_project(path_to_settings, spider_name, scrapy_settings):
     os.environ['SCRAPY_SETTINGS_MODULE'] = path_to_settings
@@ -14,6 +14,15 @@ def run_scrapy_project(path_to_settings, spider_name, scrapy_settings):
     # the script will block here until the crawling is finished
     reactor.run(installSignalHandlers=False)
 
+
+def initialize_spiders(scrapy_settings, **scrapy_spiders_thread):
+    spider_names = NewsPaper.objects.values('spider_name')
+    for spider_name in spider_names:
+        if spider_name:
+            scrapy_spiders_thread[spider_name] = CrawlSpiderThread(spider_name,
+                                                                    'news_scrappers.settings',
+                                                                    scrapy_settings,
+                                                                    run_scrapy_project)
 
 class CrawlSpiderThread(threading.Thread):
     def __init__(self, spider_name, path_to_settings, scrapy_settings, crawl_function):

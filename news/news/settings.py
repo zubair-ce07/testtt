@@ -112,7 +112,20 @@ SCRAPY_SETTINGS = {
     'ITEM_PIPELINES': {
         'news_scrappers.pipelines.NewsScrappersPipeline': 300,
     },
+    'AUTOTHROTTLE_ENABLED': True,
+    'AUTOTHROTTLE_START_DELAY': 5,
+    'AUTOTHROTTLE_MAX_DELAY': 60,
+    'AUTOTHROTTLE_TARGET_CONCURRENCY': 1.0,
+    'AUTOTHROTTLE_DEBUG': False,
 
+}
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
 }
 
 # Internationalization
