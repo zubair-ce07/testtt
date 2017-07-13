@@ -14,7 +14,7 @@ class MenAtWorkSpider(CrawlSpider):
     start_urls = ['https://www.menatwork.nl']
     allowed_domains = ['menatwork.nl']
     rules = (
-        Rule(LinkExtractor(restrict_css='.next')),
+        Rule(LinkExtractor(restrict_css='link[rel="next"]',)),
         Rule(LinkExtractor(restrict_css='.headerlist__item', process_value=url_query_cleaner)),
         Rule(LinkExtractor(restrict_css='.thumb-link', process_value=url_query_cleaner),
              callback='parse_item', ),
@@ -22,7 +22,6 @@ class MenAtWorkSpider(CrawlSpider):
 
     def parse_item(self, response):
         item = Item()
-
         item['retailer_sku'] = self.get_retailer_sku(response)
         if item['retailer_sku'] is None:
             return
@@ -43,10 +42,9 @@ class MenAtWorkSpider(CrawlSpider):
         yield self.yield_or_pasrse_more_colors(item, color_urls)
 
     def yield_or_pasrse_more_colors(self, item, color_urls):
-
         if color_urls:
             return Request(url=color_urls.pop(), callback=self.parse_colors,
-                          meta={'item': item, 'color_urls': color_urls})
+                           meta={'item': item, 'color_urls': color_urls})
         else:
             return item
 
@@ -112,7 +110,8 @@ class MenAtWorkSpider(CrawlSpider):
     def get_name(self, response, brand):
         product_title = response.css('.product-name::text').extract_first()
         brand_pattern = re.compile(re.escape(brand), re.IGNORECASE)
-        return brand_pattern.sub('', product_title).strip()
+        name = brand_pattern.sub('', product_title)
+        return name.strip() if name else None
 
     def get_color(self, response):
         return response.css('.selected-value::text').extract_first()
