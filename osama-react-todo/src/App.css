@@ -1,0 +1,57 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 80px;
+}
+
+.App-header {
+  background-color: #222;
+  height: 70px;
+  padding: 20px;
+  color: white;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.inputField input {
+  width: 60%;
+}
+
+#filterForm {
+  margin: 15px;
+}
+
+#filterForm input {
+  width: auto;
+}
+
+#filterForm span {
+  font-size: 18px;
+  margin: 0 15px 0 0;
+}
+
+.task {
+  text-align: center;
+  list-style: none;
+  font-size: 20px;
+}
+
+.task a {
+  text-decoration: none;
+}
+
+.task a:hover {
+  color: blue;
+  cursor: pointer;
+}
+
