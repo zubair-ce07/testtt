@@ -14,14 +14,9 @@ class TodoItemTestCase(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create(username='user1')
-        self.factory = APIRequestFactory()
 
     def test_user_creation_post_request(self):
         """
-        Tests a single user creationg through post request
+        Tests a single user creationg
         """
-        username = 'user1'
-        request = self.factory.post('/api/users/', {'username': 'user1'})
-        # response = UserViewSet(request=request)
-
-        self.assertEqual(1, 1)
+        self.assertEqual('user1', self.user1.username)

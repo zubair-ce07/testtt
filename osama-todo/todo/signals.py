@@ -6,11 +6,11 @@ from todo.models import TodoItem
 
 
 @receiver(pre_save, sender=TodoItem)
-def log_todoitem(sender, **kwargs):
+def log_todoitem(sender, instance, **kwargs):
     """
     Logs the id, user of each TodoItem and the current time 
     before each save of TodoItem model
     """
-    kwargs['instance'].log += 'Task: %s | User: %s | Time: %s\n' % (
-        kwargs['instance'].id, kwargs['instance'].user, timezone.now()
+    instance.log += 'Task: %s | User: %s | Time: %s\n' % (
+        instance.id, instance.user, timezone.now()
     )

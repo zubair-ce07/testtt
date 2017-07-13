@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class UserTimeMiddleware(object):
+class UserTimestampLog(object):
     """
     Middleware that logs the current user and the timestamp
     on each request in a .txt file

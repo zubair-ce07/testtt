@@ -124,7 +124,7 @@ class TodoCreateView(LoginRequiredMixin, generic.CreateView):
     the logged in user
     """
     model = TodoItem
-    success_url = '/todo/'
+    success_url = '/'
     fields = ['description', 'user']
 
 
@@ -144,11 +144,11 @@ class TodoDetailView(LoginRequiredMixin, generic.DetailView):
         """
         item = get_object_or_404(TodoItem.objects.all(), pk=kwargs['pk'])
         if request.user.has_perm('todo.is_manager'):
-            return super().dispatch(request)
+            return super(TodoDetailView, self).dispatch(request)
         elif item.user.id != request.user.id:
             return redirect('todo:index')
         else:
-            return super().dispatch(request)
+            return super(TodoDetailView, self).dispatch(request)
 
 
 class TodoDeleteView(LoginRequiredMixin, generic.DeleteView):
@@ -157,7 +157,7 @@ class TodoDeleteView(LoginRequiredMixin, generic.DeleteView):
     """
     model = TodoItem
     template_name = 'todo/delete.html'
-    success_url = '/todo'
+    success_url = '/'
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -181,7 +181,7 @@ class TodoUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = TodoItem
     form_class = TodoItemModelUpdateForm
     template_name = 'todo/update.html'
-    success_url = '/todo/'
+    success_url = '/'
 
     def get(self, request, *args, **kwargs):
         """

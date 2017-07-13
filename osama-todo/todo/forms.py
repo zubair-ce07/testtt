@@ -41,7 +41,7 @@ class TodoItemModelCreateForm(forms.ModelForm):
     """
     ModelForm to create a single TodoItem
     """
-    success_url = '/todo/'
+    success_url = '/'
 
     class Meta:
         model = TodoItem
