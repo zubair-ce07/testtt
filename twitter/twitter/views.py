@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.views import View
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView, TemplateView, ListView
 
 from twitter import forms
 from twitter.models import Tweet
@@ -36,8 +36,10 @@ class ProfileView(TemplateView):
         return form
 
 
-class HomeView(TemplateView):
+class HomeView(ListView):
     template_name = 'twitter/home.html'
+    model = Tweet
+    context_object_name = 'tweets'
 
 
 class FollowView(View):

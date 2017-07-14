@@ -1,13 +1,10 @@
 {% extends 'twitter/authenticated_base.html' %}
 
 
-{% if user.is_authenticated %}
-{% endif %}
-
 {% block content %}
     {% if user.is_authenticated %}
             <h2>Tweets</h2>
-            {% for tweet in user.tweet_set.all %}
+            {% for tweet in tweets %}
                 <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20"  >
                     <tr><td>{{ tweet }}</td></tr>
                 </table>
