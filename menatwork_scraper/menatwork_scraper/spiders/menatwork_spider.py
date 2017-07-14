@@ -77,7 +77,7 @@ class MenAtWorkSpider(CrawlSpider):
         return skus
 
     def get_description(self, response):
-        descriptions = response.css("#tab1 *::text").extract()
+        descriptions = response.css("#tab1 *:not(.button)::text, #tab1::text").extract()
         return self.clean(descriptions)
 
     def get_category(self, response):
@@ -126,6 +126,6 @@ class MenAtWorkSpider(CrawlSpider):
         cleaned_items = []
         for item in items:
             item = item.strip().replace('\n', '')
-            if len(item) > 1 and not item == 'Printen':
+            if len(item) > 1:
                 cleaned_items.append(item)
         return cleaned_items
