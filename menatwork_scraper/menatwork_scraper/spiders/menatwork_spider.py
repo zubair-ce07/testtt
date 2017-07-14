@@ -14,7 +14,7 @@ class MenAtWorkSpider(CrawlSpider):
     start_urls = ['https://www.menatwork.nl']
     allowed_domains = ['menatwork.nl']
     rules = (
-        Rule(LinkExtractor(restrict_css='link[rel="next"]',)),
+        Rule(LinkExtractor(restrict_css='link[rel="next"]', )),
         Rule(LinkExtractor(restrict_css='.headerlist__item', process_value=url_query_cleaner)),
         Rule(LinkExtractor(restrict_css='.thumb-link', process_value=url_query_cleaner),
              callback='parse_item', ),
@@ -36,59 +36,46 @@ class MenAtWorkSpider(CrawlSpider):
         item['url'] = response.url
         item['skus'] = self.get_skus(response)
 
-        color_urls = response.css('.color li:not(.selected) a::attr(href)').extract()
-        color_urls = self.append_ajax_query(color_urls)
+        color_urls = self.get_color_urls(response)
+        yield self.return_item_or_request(item, color_urls)
 
-        yield self.yield_or_pasrse_more_colors(item, color_urls)
-
-    def yield_or_pasrse_more_colors(self, item, color_urls):
+    def return_item_or_request(self, item, color_urls):
         if color_urls:
-            return Request(url=color_urls.pop(), callback=self.parse_colors,
+            return Request(url=color_urls.pop(), callback=self.parse_color,
                            meta={'item': item, 'color_urls': color_urls})
         else:
             return item
 
-    def parse_colors(self, response):
+    def parse_color(self, response):
         item = response.meta['item']
         color_urls = response.meta['color_urls']
 
         item['skus'].update(self.get_skus(response))
 
-        yield self.yield_or_pasrse_more_colors(item, color_urls)
+        yield self.return_item_or_request(item, color_urls)
 
     def get_skus(self, response):
+        skus = {}
         color = self.get_color(response)
         currency = self.get_currency()
         price = self.get_price(response)
+        size_variants = response.css('.variation-select option')
 
-        avail_variants_css = '.variation-select option:not([disabled])::text'
-        raw_avail_size_variants = response.css(avail_variants_css).extract()
-        avail_size_variants = self.clean(raw_avail_size_variants)
-
-        non_avail_variants_css = '.variation-select option[disabled]::text'
-        raw_non_avail_size_variants = response.css(non_avail_variants_css).extract()
-        non_avail_size_variants = self.clean(raw_non_avail_size_variants)
-
-        skus = self.initialize_skus(avail_size_variants, color,
-                                    currency, price, availability=True)
-
-        non_avail_skus = self.initialize_skus(non_avail_size_variants, color,
-                                              currency, price, availability=False)
-        skus.update(non_avail_skus)
-
-        return skus
-
-    def initialize_skus(self, size_variants, color, currency, price, availability):
-        skus = {}
         for size in size_variants:
             sku_id = "{color}_{size}".format(color=color, size=size)
+            size_text = size.css('::text').extract_first()
+            availability = True
+            if size.css('[disabled]'):
+                availability = False
+
             skus[sku_id] = {
                 "availability": availability,
                 "currency": currency,
-                "size": size,
+                "size": size_text,
                 "colour": color,
                 "price": price,
             }
+
         return skus
 
     def get_description(self, response):
@@ -111,7 +98,7 @@ class MenAtWorkSpider(CrawlSpider):
         product_title = response.css('.product-name::text').extract_first()
         brand_pattern = re.compile(re.escape(brand), re.IGNORECASE)
         name = brand_pattern.sub('', product_title)
-        return name.strip() if name else None
+        return name.strip()
 
     def get_color(self, response):
         return response.css('.selected-value::text').extract_first()
@@ -135,6 +122,11 @@ class MenAtWorkSpider(CrawlSpider):
             return 'Women'
         return 'Unisex'
 
+    def get_color_urls(self, response):
+        urls = response.css('.color li:not(.selected) a::attr(href)').extract()
+        ajax_query = '&Quantity=1&format=ajax&productlistid=undefined'
+        return [url + ajax_query for url in urls]
+
     def clean(self, items):
         cleaned_items = []
         for item in items:
@@ -142,7 +134,3 @@ class MenAtWorkSpider(CrawlSpider):
             if item:
                 cleaned_items.append(item)
         return cleaned_items
-
-    def append_ajax_query(self, urls):
-        ajax = '&Quantity=1&format=ajax&productlistid=undefined'
-        return [url + ajax for url in urls]
