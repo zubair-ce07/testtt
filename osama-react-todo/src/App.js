@@ -68,7 +68,6 @@ class App extends Component {
     localStorage.setItem("count", ++this.state.count);
     taskList.push(task);
     this.setState({
-      count: this.state.count + 1,
       tasks: taskList
     });
     document.getElementById("todoInput").value = "";
