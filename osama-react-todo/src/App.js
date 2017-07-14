@@ -9,7 +9,9 @@ class App extends Component {
     this.getTask = this.getTask.bind(this);
     this.getTaskList = this.getTaskList.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleRadioChange = this.handleRadioChange.bind(this);
     this.addTask = this.addTask.bind(this);
+    this.storageChange = this.storageChange.bind(this);
     this.state = {
       count: this.getCount(),
       tasks: this.getTaskList(),
@@ -90,45 +92,39 @@ class App extends Component {
           <button onClick={this.addTask}>Add Task</button>
         </p>
         <form id="filterForm">
-          <input
-            type="radio"
-            onClick={this.handleRadioChange.bind(this)}
-            name="status"
-            value="pending"
-            defaultChecked
-          />
-          <span>Pending</span>
-          <input
-            type="radio"
-            onClick={this.handleRadioChange.bind(this)}
-            name="status"
-            value="complete"
-          />
-          <span>Completed</span>
-          <input
-            type="radio"
-            onClick={this.handleRadioChange.bind(this)}
-            name="status"
-            value="all"
-          />
-          <span>All</span>
+          {["pending", "complete", "all"].map((status, index) => {
+            return (
+              <span>
+                <input
+                  type="radio"
+                  onClick={this.handleRadioChange}
+                  name="status"
+                  value={status}
+                />
+                <span className="capitalize">
+                  {status}
+                </span>
+              </span>
+            );
+          })}
         </form>
         <ul>
-          {this.state.tasks.map((task, id) => {
-            if (
-              task.status === this.state.filter ||
-              this.state.filter === "all"
-            ) {
+          {this.state.tasks
+            .filter(task => {
+              return (
+                task.status === this.state.filter || this.state.filter === "all"
+              );
+            })
+            .map(task => {
               return (
                 <Task
-                  key={id}
+                  key={task.id}
                   id={task.id}
                   value={task.description}
-                  storage={this.storageChange.bind(this)}
+                  storage={this.storageChange}
                 />
               );
-            }
-          })}
+            })}
         </ul>
       </div>
     );

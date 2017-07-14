@@ -6,6 +6,7 @@ class Task extends Component {
   constructor(props) {
     super();
     this.toggleModal = this.toggleModal.bind(this);
+    this.toggleCompletion = this.toggleCompletion.bind(this);
     this.state = {
       id: props.id,
       description: props.value,
@@ -30,13 +31,14 @@ class Task extends Component {
   render() {
     return (
       <li className="task">
-        <a href="#" onClick={this.toggleModal.bind(this)}>
+        <a href="#" onClick={this.toggleModal}>
           {this.state.description}
         </a>
         <Modal
           show={this.state.modalOpen}
-          toggleTask={this.toggleCompletion.bind(this)}
+          toggleTask={this.toggleCompletion}
           onClose={this.toggleModal}
+          description={this.state.description}
         />
       </li>
     );
