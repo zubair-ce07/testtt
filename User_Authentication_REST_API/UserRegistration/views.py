@@ -6,7 +6,8 @@ from .serializer import UsersTaskSerializer, UserSerializer
 from rest_framework import generics, status
 from .models import CustomUser, Task
 from rest_framework import permissions
-from .permission import IsUserOrAdmin
+from rest_framework import viewsets
+from UserRegistration.permission import IsUserOrAdmin
 
 
 class UsersTaskList(generics.ListCreateAPIView):
@@ -29,7 +30,7 @@ class UserTaskDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticated, IsUserOrAdmin,)
 
 
-class CustomUserList(generics.ListCreateAPIView):
+class CustomUserList(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
