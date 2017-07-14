@@ -1,38 +1,6 @@
 import React, { Component } from "react";
+import Task from './Task.js'
 import "./App.css";
-
-class Task extends Component {
-  constructor(props) {
-    super();
-    this.state = {
-      id: props.id,
-      description: props.value
-    };
-  }
-
-  handleClick(evt) {
-    if (window.confirm('Toggle this task? \n"' + evt.target.innerHTML + '"')) {
-      var temp = JSON.parse(localStorage.getItem(this.state.id));
-      if (temp.status === "complete") {
-        temp.status = "pending";
-      } else {
-        temp.status = "complete";
-      }
-      localStorage.setItem(this.state.id, JSON.stringify(temp));
-    }
-    this.props.storage();
-  }
-
-  render() {
-    return (
-      <li className="task">
-        <a href="#" onClick={this.handleClick.bind(this)}>
-          {this.state.description}
-        </a>
-      </li>
-    );
-  }
-}
 
 class App extends Component {
   constructor() {
@@ -40,7 +8,6 @@ class App extends Component {
     this.getCount = this.getCount.bind(this);
     this.getTask = this.getTask.bind(this);
     this.getTaskList = this.getTaskList.bind(this);
-    this.setTaskList = this.setTask.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.addTask = this.addTask.bind(this);
     this.state = {
@@ -78,20 +45,6 @@ class App extends Component {
     return tasks;
   }
 
-  setTask() {
-    var task = {
-      id: this.state.count,
-      description: this.state.inputValue,
-      status: "pending"
-    };
-    this.setState({
-      count: this.state.count + 1
-    });
-    this.count += 1;
-    localStorage.setItem(this.state.count, JSON.stringify(task));
-    localStorage.setItem("count", ++this.state.count);
-  }
-
   handleInputChange(evt) {
     this.setState({
       inputValue: evt.target.value
@@ -105,9 +58,19 @@ class App extends Component {
   }
 
   addTask() {
-    this.setTask();
+    let task = {
+      id: this.state.count,
+      description: this.state.inputValue,
+      status: "pending"
+    };
+    let taskList = this.getTaskList();
+    localStorage.setItem(this.state.count, JSON.stringify(task));
+    localStorage.setItem("count", ++this.state.count);
+    taskList.push(task);
+    console.log(taskList);
     this.setState({
-      tasks: this.getTaskList()
+      count: this.state.count + 1,
+      tasks: taskList
     });
     document.getElementById("todoInput").value = "";
   }
@@ -169,15 +132,6 @@ class App extends Component {
         </ul>
       </div>
     );
-  }
-}
-
-// HELPER FUNCTIONS
-function search(nameid, myArray) {
-  for (var i = 0; i < myArray.length; i++) {
-    if (myArray[i].name === nameid) {
-      return myArray[i];
-    }
   }
 }
 

@@ -1,0 +1,14 @@
+.task {
+  text-align: center;
+  list-style: none;
+  font-size: 20px;
+}
+
+.task a {
+  text-decoration: none;
+}
+
+.task a:hover {
+  color: blue;
+  cursor: pointer;
+}
