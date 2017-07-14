@@ -1,9 +1,10 @@
 from django.conf.urls import url
 
-from .views import show_profile
+from .views import DetailsView, EditView
 
-app_name = 'users'
+app_name = 'registration'
 
 urlpatterns = [
-    url(r'^(?P<pk>\d+)/$', show_profile, name='details'),
+    url(r'^details/$', DetailsView, name='details'),
+    url(r'^edit/$', EditView , name='edit'),
 ]

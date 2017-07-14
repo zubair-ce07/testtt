@@ -132,7 +132,7 @@ USE_TZ = True
 
 STATIC_ROOT = '/home/fakhar/Documents/myenv/code/fakhar-master/Training_Assignment/static/'
 
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 
 MEDIA_ROOT = '/home/fakhar/Documents/myenv/code/fakhar-master/Training_Assignment/media/'
 

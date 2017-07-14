@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('phone_number', models.CharField(max_length=15, validators=[django.core.validators.RegexValidator(message="Phone number must be entered in the format: '+9999999999'.", regex='^\\+?\\d{10,15}$')])),
                 ('country', django_countries.fields.CountryField(blank=True, max_length=2, null=True)),
-                ('image', models.ImageField(blank=True, null=True, upload_to='users/')),
+                ('image', models.ImageField(blank=True, null=True, upload_to='registration/')),
                 ('address', address.models.AddressField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='address.Address')),
             ],
         ),

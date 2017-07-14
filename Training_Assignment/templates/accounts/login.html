@@ -1,0 +1,15 @@
+{% extends "registration/base.html" %}
+{% block sidebar %}
+    {{ block.super }}
+    <li><a href="{%url 'signup'%}">Signup</a></li>
+{% endblock %}
+{% block content %}
+    <h1>Login</h1>
+    <form action='' method="post">
+        {% csrf_token %}
+        <table>
+            {{form}}
+        </table>
+        <input type="submit" value="Login" />
+    </form>
+{% endblock content %}

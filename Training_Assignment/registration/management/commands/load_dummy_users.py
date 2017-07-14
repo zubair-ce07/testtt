@@ -1,6 +1,5 @@
 import csv
 
-from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
 
@@ -24,5 +23,5 @@ class Command(BaseCommand):
                 password = make_password(password)
                 dummy_user = CustomUser(username=username, password=password,
                                         first_name=first_name, last_name=last_name, email=email)
-                dummy_user.save(phone_number=phone_number,
-                                country_name=country_name, address=address, image=image, first_name=first_name)
+                dummy_user.save(phone_number=phone_number, country_name=country_name,
+                                address=address, image=image, first_name=first_name)
