@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'authentication.apps.AuthenticationConfig',
     'API.apps.APIConfig',
     'rest_framework',
+    'rest_framework_tracking',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +129,13 @@ STATIC_URL = '/static/'
 
 MEDIA_ROOT = "media/"
 MEDIA_URL = '/media/'
+
+
+# REST FRAMEWORK SPECIFIC SETTINGS
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ),
+
+}
