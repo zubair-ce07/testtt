@@ -26,8 +26,13 @@ class ProfileView(TemplateView):
     template_name = 'twitter/profile.html'
 
     @cached_property
+    def tweets(self):
+        tweet_set = Tweet.objects.filler_by_username(username=self.kwargs['username'])
+        return tweet_set
+
+    @cached_property
     def profile_user(self):
-        profile_user = get_object_or_404(User, username__iexact=self.kwargs['username'])
+        profile_user = User.objects.get_by_username(self.kwargs['username'])
         return profile_user
 
     @cached_property

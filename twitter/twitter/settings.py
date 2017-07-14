@@ -25,7 +25,7 @@ SECRET_KEY = '(34q+5ulpj%4zfthbo1@)00#=m6c4n(9ujg3mp(5u%c10$6xen'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 LOGIN_URL = '/login/'
 AUTH_USER_MODEL = 'twitter.User'

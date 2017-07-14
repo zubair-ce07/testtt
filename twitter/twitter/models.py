@@ -1,17 +1,32 @@
 from django.contrib.auth.models import AbstractUser, UserManager
+from django.http import Http404
 from django.db import models
-
+from django.core.exceptions import ObjectDoesNotExist
 # Create your models here.
 
 
+class ProfileDoestExist(Http404):
+    def __init__(self,username):
+        super().__init__("{username} does not exist".format(username=username))
+
+
+class CustomUserManager(models.Manager):
+    def get_by_username(self,username):
+        try:
+            return User.objects.get(username__iexact=username)
+        except ObjectDoesNotExist:
+            raise ProfileDoestExist(username)
+
 class TweetManager(models.Manager):
     def filler_by_username(self, username):
-        user = User.objects.get(username__iexact=username)
+        user = User.objects.get_by_username(username)
         return self.filter(user=user).order_by('-pub_date')
+
+
 
 class User(AbstractUser):
     followers = models.ManyToManyField('self', blank=True)
-
+    objects = CustomUserManager()
 
 class Tweet(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
