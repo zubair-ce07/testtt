@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Task from './Task.js'
+import Task from "./Task.js";
 import "./App.css";
 
 class App extends Component {
@@ -67,7 +67,6 @@ class App extends Component {
     localStorage.setItem(this.state.count, JSON.stringify(task));
     localStorage.setItem("count", ++this.state.count);
     taskList.push(task);
-    console.log(taskList);
     this.setState({
       count: this.state.count + 1,
       tasks: taskList
@@ -82,18 +81,6 @@ class App extends Component {
   }
 
   render() {
-    const taskList = this.state.tasks.map((task, id) => {
-      if (task.status === this.state.filter || this.state.filter === "all") {
-        return (
-          <Task
-            key={id}
-            id={task.id}
-            value={task.description}
-            storage={this.storageChange.bind(this)}
-          />
-        );
-      }
-    });
     return (
       <div className="App">
         <div className="App-header">
@@ -128,7 +115,21 @@ class App extends Component {
           <span>All</span>
         </form>
         <ul>
-          {taskList}
+          {this.state.tasks.map((task, id) => {
+            if (
+              task.status === this.state.filter ||
+              this.state.filter === "all"
+            ) {
+              return (
+                <Task
+                  key={id}
+                  id={task.id}
+                  value={task.description}
+                  storage={this.storageChange.bind(this)}
+                />
+              );
+            }
+          })}
         </ul>
       </div>
     );
