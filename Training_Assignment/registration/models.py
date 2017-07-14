@@ -28,8 +28,7 @@ class CustomUser(User):
             self._address = kwargs['address']
             self._image = kwargs['image']
         except:
-            print('bla')
-        kwargs = {}
+            pass
         self.full_clean()
         super(CustomUser, self).save(*args, **kwargs)
 
@@ -69,7 +68,7 @@ def create_user_profile(sender, instance, created, **kwargs):
         image = ImageFieldFile(
             instance=instance, field=FileField(), name=dest_file)
     except:
-        print('bla')
+        pass
     if created:
         try:
             UserProfile.objects.create(user=instance, phone_number=phone_number,
