@@ -1,19 +1,22 @@
 from django.shortcuts import render
 from django.views import View
 from django.http import HttpResponseRedirect
-from memoapp.forms import SignupForm, LoginForm, AddMemoForm, EditProfileForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from memoapp.models import User, Memory
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.hashers import make_password
 from django.urls import reverse
 from django.db.models import Q
 
+from memoapp.forms import SignupForm, LoginForm, AddMemoForm, EditProfileForm
+from memoapp.models import User, Memory
+from memoapp.signals import user_login, user_logout
+from memoapp.receivers import receiver
+
 
 class Home(LoginRequiredMixin, View):
     def get(self, request):
-        memories_of_user = Memory.objects.filter(user_id = request.user.id)
+        memories_of_user = Memory.objects.filter(user_id=request.user.id)
         paginator = Paginator(memories_of_user, 2)
         page_no = request.GET.get('page_no')
         try:
@@ -23,7 +26,7 @@ class Home(LoginRequiredMixin, View):
         except EmptyPage:
             memos = paginator.page(paginator.num_pages)
 
-        context = {'memo_form': AddMemoForm(), 'memories_of_user': memos}
+        context = {'memo_form': AddMemoForm(), 'memos': memos}
         return render(request, 'memoapp/home.html', context)
 
 
@@ -41,20 +44,24 @@ class Login(View):
         login_form = LoginForm(request.POST)
         if login_form.is_valid():
             login_data = login_form.cleaned_data
-            username = login_data['username']
+            email = login_data['email']
             password = login_data['password']
-            user = authenticate(request, username=username, password=password)
+            user = authenticate(request, email=email, password=password)
             if user:
                 login(request, user)
+                print('asdkfjashdkjf')
+                print(user.is_authenticated())
+                request.user = user
+                user_login.send(sender=None, user_name=user.username)
                 return HttpResponseRedirect(reverse('memoapp:home'))
             else:
                 signup_from = SignupForm()
                 context = {'signup_form': signup_from, 'login_form': login_form,
-                           'is_sign_up': False, 'error_message': 'Username or password is not correct'}
+                           'view': 'login', 'error_message': 'Username or password is not correct'}
                 return render(request, 'memoapp/login_signup.html', context)
         else:
             signup_from = SignupForm()
-            context = {'signup_form': signup_from, 'login_form': login_form, 'is_sign_up': False}
+            context = {'signup_form': signup_from, 'login_form': login_form, 'view': 'login'}
             return render(request, 'memoapp/login_signup.html', context)
 
 
@@ -63,7 +70,7 @@ class SignUp(View):
         if not request.user.is_authenticated():
             signup_from = SignupForm()
             login_form = LoginForm()
-            context = {'signup_form': signup_from, 'login_form': login_form, 'is_sign_up': True}
+            context = {'signup_form': signup_from, 'login_form': login_form, 'view': 'signup'}
             return render(request, 'memoapp/login_signup.html', context)
         else:
             return HttpResponseRedirect(reverse('memoapp:home'))
@@ -78,13 +85,15 @@ class SignUp(View):
             return HttpResponseRedirect(reverse('memoapp:home'))
         else:
             login_form = LoginForm()
-            context = {'signup_form': signup_form, 'login_form': login_form, 'is_sign_up': True}
+            context = {'signup_form': signup_form, 'login_form': login_form, 'view': 'signup'}
             return render(request, 'memoapp/login_signup.html', context)
 
 
 class Logout(LoginRequiredMixin, View):
-    def post(self, request):
+    def get(self, request):
+        username = request.user.username
         logout(request)
+        user_logout.send(sender=None, user_name=username)
         return HttpResponseRedirect(reverse('memoapp:loginsignup'))
 
 
@@ -169,5 +178,21 @@ class Search(LoginRequiredMixin, View):
 
        context = {'memo_form': AddMemoForm(), 'memories_of_user': memos}
        return render(request, 'memoapp/home.html', context)
+
     def get(self, request):
         pass
+
+class Public(LoginRequiredMixin, View):
+        def get(self, request):
+            public_mems = Memory.public_memories.all()
+            paginator = Paginator(public_mems, 5)
+            page_no = request.GET.get('page_no')
+            try:
+                memos = paginator.page(page_no)
+            except PageNotAnInteger:
+                memos = paginator.page(1)
+            except EmptyPage:
+                memos = paginator.page(paginator.num_pages)
+
+            context = { 'public_mems': memos}
+            return render(request, 'memoapp/public.html', context)

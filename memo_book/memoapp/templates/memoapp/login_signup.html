@@ -20,7 +20,7 @@
 					<div class="panel-body">
 						<div class="row">
 							<div class="col-lg-12">
-								<form id="login-form" action="/login" method="post" role="form" style="display: {% if is_sign_up %}  {{ 'none' }} {% else %} {{ 'block' }} {% endif %}">
+								<form id="login-form" action="/login" method="post" role="form" style="display: {% if view == 'signup' %}  {{ 'none' }} {% else %} {{ 'block' }} {% endif %}">
 									{% csrf_token %}
                                     {% if error_message %}
                                         <div class="form-group">
@@ -42,7 +42,7 @@
 									</div>
 
 								</form>
-								<form id="register-form" action="/signup" method="post" enctype="multipart/form-data" role="form" style="display: {% if is_sign_up %}  {{ 'block' }} {% else %} {{ 'none' }} {% endif %}">
+								<form id="register-form" action="/signup" method="post" enctype="multipart/form-data" role="form" style="display: {% if view == 'signup' %}  {{ 'block' }} {% else %} {{ 'none' }} {% endif %}">
 									 {% csrf_token %}
                                      {% if username_error %}
                                         <div class="form-group">

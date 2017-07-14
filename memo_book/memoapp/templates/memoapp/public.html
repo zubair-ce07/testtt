@@ -3,42 +3,13 @@
 {% load static %}
     <!-- Body contents are starting from here -->
 {% block body %}
+
     <div class="container">
         <div class="row">
 			<div class="col-md-6 col-md-offset-3">
 				<div class="panel panel-login">
-					<div class="panel-heading">
-                        <form id="register-form" action="/addmemo" method="post" enctype="multipart/form-data" role="form" style="display: block">
-                            {% csrf_token %}
-                            {{ memo_form }}
-                            <div class="form-group">
-                                <div class="row">
-                                    <div class="col-sm-6 col-sm-offset-3">
-                                        <input type="submit" name="register-submit" id="register-submit" tabindex="4" class="form-control btn btn-register" value="Add Memory">
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="row">
-                        <div class="span12">
-                            <form id="custom-search-form" action="/search" method="post" class="form-search form-horizontal pull-right">
-                                 {% csrf_token %}
-                                <div class="input-append span12">
-                                    <input type="text" name="tosearch" class="search-query" placeholder="Search">
-                                    <button type="submit" class="btn"><i class="icon-search"></i></button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <br>
-
                     <div class="row" >
-
-
-                        {% for memo in memos %}
-
+                        {% for memo in public_mems %}
                             <div class="jumbotron" style="padding: 5px">
                                     <img width="100px" height="100px" src="{% get_media_prefix %}{{  memo.image  }} " style="float: left;margin: 5px"> <img>
                                     <p> <b>{{ memo.title }}</b> </p>
@@ -64,9 +35,6 @@
                                     </div>
                             </div>
                         {% endfor %}
-
-
-
                         <div class="pagination">
                             <span class="step-links">
                                 {% if memories_of_user.has_previous %}
@@ -88,4 +56,3 @@
         </div>
     </div>
 {% endblock body %}
-
