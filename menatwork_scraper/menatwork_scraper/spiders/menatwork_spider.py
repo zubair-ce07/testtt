@@ -77,7 +77,7 @@ class MenAtWorkSpider(CrawlSpider):
         return skus
 
     def get_description(self, response):
-        descriptions = response.css("#tab1 :not(a)::text").extract()
+        descriptions = response.css("#tab1 *::text").extract()
         return self.clean(descriptions)
 
     def get_category(self, response):
@@ -87,7 +87,7 @@ class MenAtWorkSpider(CrawlSpider):
         return response.css(".product-thumbnails a::attr(href)").extract()
 
     def get_brand(self, response):
-        return parse.unquote(response.css("div::attr(data-brand)").extract_first())
+        return parse.unquote(response.css('div::attr(data-brand)').extract_first())
 
     def get_name(self, response, brand):
         product_title = response.css('.product-name::text').extract_first()
@@ -126,6 +126,6 @@ class MenAtWorkSpider(CrawlSpider):
         cleaned_items = []
         for item in items:
             item = item.strip().replace('\n', '')
-            if len(item) > 1:
+            if len(item) > 1 and not item == 'Printen':
                 cleaned_items.append(item)
         return cleaned_items
