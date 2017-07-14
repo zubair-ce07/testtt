@@ -43,8 +43,7 @@ class MenAtWorkSpider(CrawlSpider):
         if color_urls:
             return Request(url=color_urls.pop(), callback=self.parse_color,
                            meta={'item': item, 'color_urls': color_urls})
-        else:
-            return item
+        return item
 
     def parse_color(self, response):
         item = response.meta['item']
@@ -62,12 +61,11 @@ class MenAtWorkSpider(CrawlSpider):
         size_variants = response.css('.variation-select option')
 
         for size in size_variants:
-            sku_id = "{color}_{size}".format(color=color, size=size)
+            availability = bool(size.css(':not([disabled])'))
             size_text = size.css('::text').extract_first()
-            availability = True
-            if size.css('[disabled]'):
-                availability = False
+            size_text = size_text.strip().replace('\n', '') if size_text else None
 
+            sku_id = "{color}_{size}".format(color=color, size=size_text)
             skus[sku_id] = {
                 "availability": availability,
                 "currency": currency,
@@ -79,11 +77,8 @@ class MenAtWorkSpider(CrawlSpider):
         return skus
 
     def get_description(self, response):
-        descriptions = response.css("#tab1 *::text").extract()
-        cleaned_description = self.clean(descriptions)[:-1]
-        if len(cleaned_description[-1]) < 2:
-            cleaned_description.pop()
-        return cleaned_description
+        descriptions = response.css("#tab1 :not(a)::text").extract()
+        return self.clean(descriptions)
 
     def get_category(self, response):
         return response.css('.breadcrumb a::text').extract()
@@ -104,7 +99,7 @@ class MenAtWorkSpider(CrawlSpider):
         return response.css('.selected-value::text').extract_first()
 
     def get_price(self, response):
-        return response.css('.product-price span::text').extract()[0]
+        return response.css('.product-price *::text').re('[0-9]+\,?[0-9]*')[0]
 
     def get_retailer_sku(self, response):
         return response.css("#pid::attr(value)").extract()[0]
@@ -131,6 +126,6 @@ class MenAtWorkSpider(CrawlSpider):
         cleaned_items = []
         for item in items:
             item = item.strip().replace('\n', '')
-            if item:
+            if len(item) > 1:
                 cleaned_items.append(item)
         return cleaned_items
