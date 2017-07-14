@@ -1,6 +1,8 @@
 from django.contrib import admin
-# from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from .models import User, Comment, Like, Post
+from instagram.forms import SignUpForm, LoginForm
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -12,6 +14,9 @@ class UserAdmin(admin.ModelAdmin):
 
     def get_name(self, instance):
         return instance.first_name+' '+instance.last_name
+
+    # form = LoginForm
+    # add_form = SignUpForm
     #
     # def get_username(self, instance):
     #     return instance.user.username
@@ -53,6 +58,9 @@ class LikeAdmin(admin.ModelAdmin):
     def get_username(self, obj):
         return obj.post.user.username
     get_username.short_description = 'Post Author'
+
+# user_admin = UserAdmin()
+# user_admin.register(User, AuthUserAdmin)
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Comment, CommentAdmin)

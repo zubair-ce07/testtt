@@ -1,9 +1,9 @@
 from django.http import HttpResponse, HttpResponseRedirect
-from django.contrib.auth import logout, authenticate, login as auth_login
+from django.contrib.auth import logout as auth_logout, authenticate, login as auth_login
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 # from django.contrib.auth.forms import SignUpForm
-from instagram.forms import SignUpForm
+from instagram.forms import SignUpForm, LoginForm
 from django.shortcuts import render, get_object_or_404
 # from django.contrib.auth.models import User
 from django.db.models import Q
@@ -17,8 +17,11 @@ def newsfeed(request):
     user = request.user
     print('User: ', user)
     if user.is_authenticated():
-        followers = User.objects.filter(following__user__username=user.username)
-        following = User.objects.filter(user__username=user.username).values('following__user__username')
+        # followers = User.all_followers.get_queryset(user.username).all()
+        # following =
+        followers, following = get_followers_and_following(user)
+        print(followers, following)
+        # following = User.objects.filter(user__username=user.username).values('following__user__username')
         return render(request, 'instagram/newsfeed.html',
                       {'user': user, 'followers': followers,
                        'following': following,})
@@ -26,16 +29,33 @@ def newsfeed(request):
         return HttpResponseRedirect(reverse('login'))
 
 
+def get_followers_and_following(user):
+    # no_following = False
+    followers = User.all_followers.get_queryset(user.username).all()
+    following = User.all_following.filter(username=user.username)
+    # print('hey', User.objects.none())
+    for followee in following:
+        if followee['following'] is None:
+            # no_following = True
+            following = User.objects.none()
+            # following.count = 0
+            break
+    # if no_following:
+    #     return followers,
+    # else:
+    return followers, following
+
+
 def index(request):
     return HttpResponseRedirect('login')
     # return HttpResponse('Hi :3')
 
 
-def logout_view(request):
+def logout(request):
     messages = []
     # logout(request)
     print('Logout: ', request.user)
-    logout(request)
+    auth_logout(request)
     print('Logout: ', request.user)
     messages.append('User logged out successfully')
     return HttpResponseRedirect(reverse('login'))
@@ -70,10 +90,11 @@ def login(request):
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            if user.is_active():
-                login(request, user)
+            if user.is_active:
+                auth_login(request, user)
                 return HttpResponseRedirect(reverse('newsfeed'))
-
+    form = LoginForm()
+    return render(request, 'instagram/login.html', {'form': form,})
 
 #
 #
@@ -118,27 +139,27 @@ def login(request):
 #                    'followers': followers,
 #                    })
 #     # return HttpResponse('OOPS! :3')
-#
-#
-# def signup(request):
-#     if request.method == 'POST':
-#         form = SignUpForm(request.POST)
-#         if form.is_valid():
-#             user = form.save()
-#             user.refresh_from_db()
-#             user.profile.bio = form.cleaned_data.get('bio')
-#             user.save()
-#             # username = form.cleaned_data.get('username')
-#             # raw_password = form.cleaned_data.get('password1')
-#             # username = form.cleaned_data.get('username')
-#             # user = authenticate(username=username, password=raw_password)
-#             print('Signup: ', user)
-#             if user is not None:
-#                 login(request, user)
-#                 return HttpResponseRedirect(reverse('newsfeed'))
-#     else:
-#         form = SignUpForm()
-#     return render(request, 'instagram/signup.html', {'form': form})
+
+
+def signup(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.refresh_from_db()
+            user.bio = form.cleaned_data.get('bio')
+            user.save()
+            # username = form.cleaned_data.get('username')
+            # raw_password = form.cleaned_data.get('password1')
+            # username = form.cleaned_data.get('username')
+            # user = authenticate(username=username, password=raw_password)
+            print('Signup: ', user)
+            if user is not None:
+                auth_login(request, user)
+                return HttpResponseRedirect(reverse('newsfeed'))
+    else:
+        form = SignUpForm()
+    return render(request, 'instagram/signup.html', {'form': form})
 #
 #
 # def follow_profile(request, pk):
