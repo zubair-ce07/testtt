@@ -7,7 +7,7 @@ from rest_framework import generics, status
 from .models import CustomUser, Task
 from rest_framework import permissions
 from rest_framework import viewsets
-from UserRegistration.permission import IsUserOrAdmin
+from .permission import IsUserOrAdmin
 
 
 class UsersTaskList(generics.ListCreateAPIView):
