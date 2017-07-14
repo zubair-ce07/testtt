@@ -40,7 +40,7 @@ class AdidasSpider(CrawlSpider):
                 products_urls = selector.css(
                     '.mar-prd-item-image-container::attr(href)').extract()
                 for url in products_urls:
-                    yield Request(response.urljoin(url), callback=self.parse_products)
+                    yield response.follow(url, callback=self.parse_products)
 
                 next_page_url = page_contents.get('nextPageUrl')
                 if not next_page_url:
@@ -56,7 +56,7 @@ class AdidasSpider(CrawlSpider):
                 return
             next_page_url = urljoin(next_page_path, url_params)
 
-        yield Request(response.urljoin(next_page_url), callback=self.parse_pagination)
+        yield response.follow(next_page_url, callback=self.parse_pagination)
 
     def parse_products(self, response):
         product_id = response.css('#pdpProductID::attr(value)').extract_first()
