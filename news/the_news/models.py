@@ -14,10 +14,10 @@ class NewsPaper(models.Model):
 
     def crawler(self):
         if not crawler_settings.CRAWLER_STATE:
-            return mark_safe('<button onclick="location.href=\'' + reverse('the_news:fetch_news') + '?spider_name=' + self.spider_name + '\'" type="button">Start Crawling</button>')
+            return mark_safe('<button onclick="location.href=\'' + reverse('the_news:fetch_news') + self.spider_name + '\'" type="button">Start Crawling</button>')
         else:
             if crawler_settings.CRAWLER_NAME == self.spider_name:
-                return mark_safe('<button onclick="location.href=\'' + reverse('the_news:terminate_fetch_news') + '?spider_name=' + self.spider_name + '\'" type="button">Terminate Crawling</button>')
+                return mark_safe('<button onclick="location.href=\'' + reverse('the_news:terminate_fetch_news') + self.spider_name + '\'" type="button">Terminate Crawling</button>')
             else:
                 return 'Another Crawler is Already Running'
 

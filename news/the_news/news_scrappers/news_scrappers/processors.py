@@ -15,5 +15,5 @@ class CleanDate(object):
 class StripString(object):
     def __call__(self, values):
         string = ' '.join(values)
-        string = string.strip().strip('\r')
+        string = string.strip(' \r\n').strip('\r')
         return string.encode('utf-8')

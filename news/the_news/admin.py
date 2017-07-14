@@ -12,6 +12,8 @@ class NewsPaperAdmin(admin.ModelAdmin):
 
 class NewsAdmin(admin.ModelAdmin):
     list_display = ('title', 'date', 'news_paper', 'source_url')
+    list_filter = ('news_paper', 'date')
+    search_fields = ('title', 'abstract', 'detail')
 
     def get_newspaper(self, obj):
         return obj.newspaper.name

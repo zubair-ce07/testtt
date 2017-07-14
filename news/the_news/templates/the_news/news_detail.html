@@ -1,0 +1,28 @@
+{% extends 'the_news/base.html' %}
+
+{% block title %} News Detail {% endblock %}
+
+{% block content %}
+    <div class="col-sm-6 col-md-7 col-lg-8 mt-2" style="align-content: center" >
+        <div class="col-sm-8 col-md-9 col-lg-10 mt-2">
+            <img class="img-responsive center-block" src="{{ news_object.image_url }}">
+        </div>
+        <div class="container">
+            <div class="col-sm-8 col-md-9 col-lg-10 mt-2">
+                <h2 class="mt-3">{{ news_object.title }}</h2>
+            </div>
+            <div class="col-sm-4 col-md-4 col-lg-4 mt-2" style="float: left; text-align: center">
+                <h3>By '{{ news_object.news_paper.name }}' on </h3><h4>{{ news_object.date }}</h4>
+            </div>
+            <div class="container">
+                <div class="col-sm-4 col-md-4 col-lg-4 mt-2">
+                    <h4><a href="{{ news_object.source_url }}">VISIT NEWS LINK</a> </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            {{ news_object.detail }}
+        </div>
+    </div>
+{% endblock %}

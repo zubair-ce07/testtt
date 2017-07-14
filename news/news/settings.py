@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'authentication.apps.AuthenticationConfig',
     'the_news.apps.TheNewsConfig',
+    'bootstrap3',
 ]
 
 MIDDLEWARE = [

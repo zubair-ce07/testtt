@@ -10,7 +10,7 @@
                         {{ spider_name }}
                     </td>
                     <td>
-                        <button onclick="location.href='{% url 'the_news:terminate_fetch_news' %}?spider_name={{ spider_name }}'" type="button">Terminate Crawling</button>
+                        <button onclick="location.href='{% url 'the_news:terminate_fetch_news' spider_name  %}'" type="button">Terminate Crawling</button>
                     </td>
                 </tr>
             {% endif %}
@@ -24,7 +24,7 @@
                     {{ spider_name }}
                 </td>
                 <td>
-                    <button onclick="location.href='{% url 'the_news:fetch_news' %}?spider_name={{ spider_name }}'" type="button">Start Crawling</button>
+                    <button onclick="location.href='{% url 'the_news:fetch_news'  spider_name  %}'" type="button">Start Crawling</button>
                 </td>
             </tr>
         {% endfor %}

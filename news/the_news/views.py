@@ -9,9 +9,38 @@ from django.conf import settings
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from django.views.generic import DetailView, ListView
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 # Create your views here.
-from the_news.models import News, NewsPaper
-from the_news.serializers import NewsSerializer
+from models import News, NewsPaper
+from serializers import NewsSerializer
+
+
+class NewsListView(ListView):
+    model = News
+    context_object_name = 'news_list'
+    template_name = 'the_news/news_list.html'
+
+    def get(self, request, *args, **kwargs):
+        news_list = News.objects.all()
+        paginator = Paginator(news_list, 20)
+
+        page = kwargs.get('page', 1)
+        try:
+            news_list = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            news_list = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            news_list = paginator.page(paginator.num_pages)
+
+        return render(request, self.template_name, {'news_list': news_list})
+
+
+class NewsDetailView(DetailView):
+    model = News
+    context_object_name = 'news_object'
 
 
 class FetchView(View):
@@ -27,8 +56,7 @@ class FetchView(View):
         return super(FetchView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        spider_name = request.GET.get('spider_name', '')
-
+        spider_name = kwargs['spider_name']
         if True in FetchView.scrapy_spiders_status.values():
             message = 'A spider is already running please stop it first'
         else:
@@ -61,7 +89,7 @@ class TerminateView(View):
         return super(TerminateView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        spider_name = request.GET.get('spider_name', '')
+        spider_name = kwargs['spider_name']
         if not spider_name:
             message = 'Provide Spider Name'
         else:
