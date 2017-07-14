@@ -24,6 +24,5 @@ admin.autodiscover()
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^users/', include("UserRegistration.urls")),
-    url(r'^$', RedirectView.as_view(pattern_name='users:login', permanent=False)),
     url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -32,7 +32,7 @@ class UserTaskDetails(generics.RetrieveUpdateDestroyAPIView):
 
 class CustomUserList(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
 
     def perform_create(self, serializer):
         serializer.save()
@@ -55,7 +55,7 @@ class GetCurrentUserDetails(APIView):
 
 
 class GetUpdateDeleteUserAPIView(APIView):
-    def get(self, request, format=None):
+    def get(self, request):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
@@ -68,12 +68,12 @@ class GetUpdateDeleteUserAPIView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, format=None):
+    def delete(self, request):
         user = request.user
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def put(self, request, format=None):
+    def put(self, request):
         user = request.user
         serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():

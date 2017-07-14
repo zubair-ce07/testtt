@@ -44,7 +44,6 @@ INSTALLED_APPS = [
 ]
 AUTH_USER_MODEL = "UserRegistration.CustomUser"
 AUTHENTICATION_BACKENDS = {'UserRegistration.backend.CustomUserAuthentication'}
-PROJECT_FOLDER = os.getcwd()
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -84,7 +83,7 @@ WSGI_APPLICATION = 'User_Authentication.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(PROJECT_FOLDER, 'customUser.db'),
+        'NAME': '/home/faizan/PycharmProjects/customUser.db',
     }
 }
 
@@ -136,6 +135,6 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media_pic')
+MEDIA_ROOT = '/home/faizan/PycharmProjects/weatherman/media_pic'
 
 LOGIN_URL = '/users/login'
