@@ -15,9 +15,9 @@ class Task extends Component {
   }
 
   toggleModal() {
-    this.setState({
-      modalOpen: !this.state.modalOpen
-    });
+    this.setState((prevState, props) => ({
+      modalOpen: !prevState.modalOpen
+    }));
   }
 
   toggleCompletion() {
@@ -34,12 +34,18 @@ class Task extends Component {
         <a href="#" onClick={this.toggleModal}>
           {this.state.description}
         </a>
-        <Modal
-          show={this.state.modalOpen}
-          toggleTask={this.toggleCompletion}
-          onClose={this.toggleModal}
-          description={this.state.description}
-        />
+        {function() {
+          if (this.state.modalOpen) {
+            return (
+              <Modal
+                show={this.state.modalOpen}
+                toggleTask={this.toggleCompletion}
+                onClose={this.toggleModal}
+                description={this.state.description}
+              />
+            );
+          }
+        }.bind(this)()}
       </li>
     );
   }

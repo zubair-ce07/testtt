@@ -6,22 +6,18 @@ class Modal extends Component {
     super();
   }
   render() {
-    if (this.props.show) {
-      return (
-        <div className="backdrop">
-          <div className="modal">
-            <h2>Do you want to toggle this task?</h2>
-            <h3>
-              Task: {this.props.description}
-            </h3>
-            <button onClick={this.props.toggleTask}>Yes</button>
-            <button onClick={this.props.onClose}>No</button>
-          </div>
+    return (
+      <div className="backdrop">
+        <div className="modal">
+          <h2>Do you want to toggle this task?</h2>
+          <h3>
+            Task: {this.props.description}
+          </h3>
+          <button onClick={this.props.toggleTask}>Yes</button>
+          <button onClick={this.props.onClose}>No</button>
         </div>
-      );
-    } else {
-      return null;
-    }
+      </div>
+    );
   }
 }
 

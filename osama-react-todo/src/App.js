@@ -94,7 +94,7 @@ class App extends Component {
         <form id="filterForm">
           {["pending", "complete", "all"].map((status, index) => {
             return (
-              <span>
+              <span key={status}>
                 <input
                   type="radio"
                   onClick={this.handleRadioChange}
