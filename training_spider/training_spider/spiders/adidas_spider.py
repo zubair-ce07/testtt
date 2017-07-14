@@ -15,10 +15,13 @@ class AdidasSpider(CrawlSpider):
         'http://shop.adidas.com.my/'
     ]
 
-    rules = (Rule(LinkExtractor(restrict_css='.cateNaviLink')),
-             Rule(LinkExtractor(restrict_css='.toolbar-bottom .next')),
-             Rule(LinkExtractor(restrict_css='.product-image'), follow=True,
-                  callback='parse_products'))
+    rules = (
+        Rule(LinkExtractor(restrict_css='.cateNaviLink')),
+        Rule(LinkExtractor(restrict_css='.toolbar-bottom .next')),
+        Rule(LinkExtractor(restrict_css='.product-image'),
+             follow=True,
+             callback='parse_products')
+    )
 
     product_id_re = re.compile(r'p = \'(.*)\'')
     model_re = re.compile(r'model = \'(.*)\'')
@@ -37,13 +40,18 @@ class AdidasSpider(CrawlSpider):
         item['product_url'] = response.url
         item['country'] = 'my'
         item['currency'] = response.css('.price::text').extract_first().strip()[0:2]
+
         main_image = response.css('.product-image img::attr(src)').extract_first()
         main_image = response.urljoin(main_image)
+
         images_path = raw_script.re_first(self.images_path_re)
         images_path = response.urljoin(images_path)
+
         product_colors_url = raw_script.re_first(r'jQuery.getJSON\(\'(.*)\',')
         product_colors_url = response.urljoin(product_colors_url)
+
         url = self.get_product_size_quantities_url(response, raw_script, product_id)
+
         return Request(url, callback=self.parse_product_size_quantity,
                        meta={'item': item,
                              'main_image': main_image,
@@ -54,7 +62,9 @@ class AdidasSpider(CrawlSpider):
         product_size_quantity = json.loads(
             json.loads(response.text).get('qtys', {})
         ).get('options')
+
         product_color_url = response.meta.get('product_colors_url')
+
         return Request(
             product_color_url, callback=self.parse_product_colors,
             meta={'product_size_quantity': product_size_quantity,
@@ -77,22 +87,32 @@ class AdidasSpider(CrawlSpider):
         curret_time = raw_script.re_first(self.curret_time_re)
         store_id = raw_script.re_first(self.store_id_re)
 
-        return '{}?pid={}&model={}&span={}&store={}'. \
-            format(url, product_id, model, curret_time, store_id)
+        return '{url}?pid={product_id}&model={model}&span={curret_time}&store={store}'.\
+            format(url=url,
+                   product_id=product_id,
+                   model=model,
+                   curret_time=curret_time,
+                   store=store_id
+                   )
 
     def get_variations(self, colors_json, product_size_quantity, images_path, main_image):
         variations = []
         colors = colors_json.get('result', {}).get('adi_my', {}).get('color', {}).values()
         for color in colors:
             color_code = color.get('code')
-            color_slug = '{}_{}'.format(color.get('label'), color_code)
+            color_name = color.get('label')
+
             sizes = self.get_sizes(color, product_size_quantity, color_code)
             images_url = self.get_images_url(color, images_path)
             article_number = main_image.split('/')[-1].split('_')[0]
             main_image = main_image.replace(article_number, color.get('articlenumber'))
-            variations.append({color_slug: {'sizes': sizes,
-                                            'images_url': images_url,
-                                            'main_image': main_image}})
+
+            variation_key = '{}_{}'.format(color_name, color_code)
+            variation_value = {'sizes': sizes,
+                               'images_url': images_url,
+                               'main_image': main_image}
+            variations.append({variation_key: variation_value})
+
         return variations
 
     def get_sizes(self, product_color, product_size_quantity, color_code):
@@ -107,8 +127,14 @@ class AdidasSpider(CrawlSpider):
                 is_available = True
             price = size.get('price')
             sale_price = size.get('special_price') or '-'
-            sizes.append({'name': name, 'is_available': is_available,
-                          'price': price, 'sale_price': sale_price})
+
+            size = {'name': name,
+                    'is_available': is_available,
+                    'price': price,
+                    'sale_price': sale_price
+                    }
+            sizes.append(size)
+
         return sizes
 
     def get_images_url(self, product_color, images_path):
