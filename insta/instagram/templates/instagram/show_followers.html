@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanks</title>
+</head>
+<body>
+    {% for follower in followers %}
+        <li><a href="{% url 'profile' follower.pk %}">{{ follower.username }}</a> - {{ follower.first_name }} {{ follower.last_name }}</li>
+    {% endfor %}
+</body>
+</html>

@@ -14,7 +14,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('Last Name'), max_length=50, )
     date_of_birth = models.DateField(_('Date of Birth'), blank=False, null=False)
     bio = models.TextField(_('Bio'), max_length=300)
-    avatar = models.ImageField(_('Avatar'), upload_to='instagram/avatars/', default='instagram/avatars/default_avatar.png', blank=True)
+    avatar = models.ImageField(_('Avatar'), upload_to='avatars', default='instagram/avatars/default_avatar.png', blank=True)
     following = models.ManyToManyField('self', blank=True, symmetrical=False)
     is_active = models.BooleanField(_('Active'), default=True)
     is_admin = models.BooleanField(_('Admin'), default=False)

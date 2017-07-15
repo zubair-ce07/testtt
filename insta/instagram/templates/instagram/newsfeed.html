@@ -6,13 +6,14 @@
 </head>
 <body>
     <h1>Welcome, {{ user.username }}</h1>
-    <h1>Welcome, {{ user.avatar }}</h1>
-    <img src="{{ user.avatar }}" alt="My image"/>
+{#    <h1>Welcome, {{ user.avatar }}</h1>#}
+{#    <img src="{{ user.avatar.url }}" alt="My image"/>#}
 {#    <img src="/insta/instagram/avatars/{{ user.avatar }}">#}
     <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>
     <p>{{ following.count }} Following</p>
     <a href="{% url 'search' %}">Search</a>
     <a href="{% url 'logout' %}">Logout</a>
+{#    <img src.>#}
 {#    {% url 'instagram:logout' %}#}
 </body>
 </html>

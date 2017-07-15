@@ -2,22 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Thanks</title>
+    <title>{{ user.username }}</title>
 </head>
 <body>
     {% if user %}
 {#        {% for u in user %}#}
             <h1>{{ user.username }} </h1>
-            <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>
-            <p>{{ following.count }} Following</p>
+{#            <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>#}
+{#            <p>{{ following.count }} Following</p>#}
             {% if not logged_in_profile and not already_followed %}
-                <form action="{% url 'follow' user.pk %}" method="POST">
-                    <input id="submit" type="button" value="Follow" />
-                </form>
+                <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>
+                <p>{{ following.count }} Following</p>
+                <a href="{% url 'follow' user.pk %}">Follow</a>
+{#                <form action="{% url 'follow' user.pk %}" method="POST">#}
+{#                    <input id="submit" type="button" value="Follow" />#}
+{#                </form>#}
             {% elif not logged_in_profile and already_followed %}
-                <form action="{% url 'unfollow' user.pk %}" method="POST">
-                    <input id="submit" type="button" value="Unfollow" />
-                </form>
+                <p><a href="{% url 'followers' user.pk %}">{{ followers.count }}</a>Follower{{ followers|pluralize }}</p>
+                <p><a href="{% url 'following' user.pk %}">{{ following.count }}</a>Following</p>
+{#                <a href="{% url 'profile' user.pk %}">{{ user.username }}</a>#}
+                <a href="{% url 'unfollow' user.pk %}">Unfollow</a>
+{#                <form action="{% url 'unfollow' user.pk %}" method="POST">#}
+{#                    <input id="submit" type="button" value="Unfollow" />#}
+{#                </form>#}
+            {% elif logged_in_profile %}
+                <a href="{% url 'search' %}">Search</a>
+                <a href="{% url 'logout' %}">Logout</a>
             {% endif %}
 
 {#        {% endfor %}#}

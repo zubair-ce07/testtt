@@ -6,7 +6,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'username', 'get_name', 'email')
+    list_display = ('pk', 'username', 'get_name', 'email', 'avatar')
     search_fields = ('first_name', 'last_name', 'username')
     ordering = ('pk',)
     fields = ('first_name', 'last_name', 'username', 'email', 'password', 'date_of_birth', 'avatar', 'bio', 'following')
