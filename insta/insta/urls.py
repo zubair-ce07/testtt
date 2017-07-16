@@ -26,4 +26,4 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     # url(r'^contact/thanks/$', views.thanks),
     # url(r'^contact/$', views.contact),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

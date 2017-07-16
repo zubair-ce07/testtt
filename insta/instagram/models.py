@@ -4,6 +4,8 @@ from django.conf import settings
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
 from .managers import UserManager, FollowingManager, FollowerManager
+from insta.settings import BASE_DIR
+import os
 # from django.contrib.auth.models import User
 
 
@@ -14,7 +16,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('Last Name'), max_length=50, )
     date_of_birth = models.DateField(_('Date of Birth'), blank=False, null=False)
     bio = models.TextField(_('Bio'), max_length=300)
-    avatar = models.ImageField(_('Avatar'), upload_to='avatars', default='instagram/avatars/default_avatar.png', blank=True)
+    avatar = models.ImageField(upload_to='profile_image', blank=True, default='default_avatar.png',
+                               width_field="width_field", height_field="height_field")
+    height_field = models.IntegerField(default=0)
+    width_field = models.IntegerField(default=0)
+    # avatar = models.ImageField(_('Avatar'), upload_to='avatars', default='instagram/avatars/default_avatar.png', blank=True)
+    # os.path.join(BASE_DIR, 'instagram')
+    # avatar = models.ImageField(_('Avatar'), upload_to='avatars', default=os.path.join(BASE_DIR, 'instagram/avatars/default_avatar.png'),#'instagram/avatars/default_avatar.png',
+    #                            blank=True)
     following = models.ManyToManyField('self', blank=True, symmetrical=False)
     is_active = models.BooleanField(_('Active'), default=True)
     is_admin = models.BooleanField(_('Admin'), default=False)

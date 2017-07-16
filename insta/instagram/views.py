@@ -8,6 +8,7 @@ from django.shortcuts import render, get_object_or_404
 # from django.contrib.auth.models import User
 from django.db.models import Q
 from instagram.models import User # Profile, Comment, Like, Post
+from insta.settings import BASE_DIR
 
 login_url = reverse_lazy('login')
 
@@ -47,6 +48,7 @@ def get_followers_and_following(user):
 
 
 def index(request):
+    print(BASE_DIR)
     return HttpResponseRedirect('login')
     # return HttpResponse('Hi :3')
 
@@ -154,6 +156,7 @@ def signup(request):
             user = form.save()
             user.refresh_from_db()
             user.bio = form.cleaned_data.get('bio')
+            user.avatar = form.cleaned_data['avatar']
             user.save()
             # username = form.cleaned_data.get('username')
             # raw_password = form.cleaned_data.get('password1')
