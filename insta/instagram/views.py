@@ -16,7 +16,7 @@ login_url = reverse_lazy('login')
 @login_required(login_url=login_url)
 def newsfeed(request):
     user = request.user
-    print('User: ', user)
+    print('User: ', user.avatar)
     if user.is_authenticated():
         # followers = User.all_followers.get_queryset(user.username).all()
         # following =

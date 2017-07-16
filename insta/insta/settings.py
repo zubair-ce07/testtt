@@ -131,4 +131,4 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'insta_media/')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'instagram/insta_media')

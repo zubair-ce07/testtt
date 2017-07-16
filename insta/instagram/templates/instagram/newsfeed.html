@@ -7,9 +7,9 @@
 <body>
     <h1>Welcome, {{ user.username }}</h1>
 {#    <h1>Welcome, {{ user.avatar }}</h1>#}
-{#    {% if user.avatar %}#}
-{#        <img src="{{ user.avatar.url }}" alt="My image" width="240"/>#}
-{#    {% endif %}#}
+    {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="My image" width="240"/>
+    {% endif %}
 {#    <img src="/insta/instagram/avatars/{{ user.avatar }}">#}
     <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>
     <p>{{ following.count }} Following</p>
