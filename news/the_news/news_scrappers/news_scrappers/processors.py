@@ -17,3 +17,8 @@ class StripString(object):
         string = ' '.join(values)
         string = string.strip(' \r\n').strip('\r')
         return string.encode('utf-8')
+
+
+class StripURL(object):
+    def __call__(self, values):
+        return values[0].strip(' \r\n').strip('\r')

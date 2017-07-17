@@ -19,6 +19,7 @@ class NewsScrappersPipeline(object):
 
     def process_item(self, item, spider):
         try:
+            print 'inserting in database'
             news_item, created = News.objects.update_or_create(source_url=item['url'],
                                                                defaults={'title': item['title'],
                                                                          'date': item['date'],
@@ -28,13 +29,17 @@ class NewsScrappersPipeline(object):
                                                                          'detail': item['detail'].encode('utf-8'),
                                                                          'news_paper': self.news_paper})
             news_item.save()
+            print 'inserted'
         except DatabaseError as e:
+            print 'database error'
             logging.warning(e.message)
             raise DropItem("Item Not inserted in database")
         except KeyError as e:
+            print 'key error'
             logging.warning(e.message)
             raise DropItem("Keys missing in the item")
         except Exception as e:
+            print 'unexpected error'
             logging.warning(e.message)
             raise DropItem("Unexpected Values in item")
         return item

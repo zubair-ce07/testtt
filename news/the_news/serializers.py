@@ -5,6 +5,7 @@ from rest_framework import serializers
 from the_news.models import News
 from django.contrib.auth.models import User
 
+
 class NewsSerializer(serializers.ModelSerializer):
     website = serializers.ReadOnlyField(source='news_paper.website')
 

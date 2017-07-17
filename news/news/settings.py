@@ -106,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 current_path = os.getcwd()
-path.append(str(current_path)+'/the_news/news_scrappers')
+path.append(str(current_path) + '/the_news/news_scrappers')
 SCRAPY_SETTINGS = {
     'BOT_NAME': 'news_scrappers',
     'SPIDER_MODULES': ['news_scrappers.spiders'],

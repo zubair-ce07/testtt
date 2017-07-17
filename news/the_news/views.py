@@ -73,11 +73,12 @@ class FetchView(View):
 
                 if news_papers:
                     settings.CRAWLER_THREAD = CrawlSpiderThread(news_papers[0].spider_name,
-                                                        'news_scrappers.settings',
-                                                        settings.SCRAPY_SETTINGS,
-                                                        run_scrapy_project)
+                                                                'news_scrappers.settings',
+                                                                settings.SCRAPY_SETTINGS,
+                                                                run_scrapy_project)
                     settings.CRAWLER_THREAD.start()
-                    message = SpiderMessages.SUCCESSFUL_START.format(spider_name)
+                    message = SpiderMessages.SUCCESSFUL_START.format(
+                        spider_name)
                 else:
                     message = SpiderMessages.NOT_EXISTS.format(spider_name)
             else:
@@ -95,15 +96,17 @@ class TerminateView(View):
         return super(TerminateView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        spider_name = kwargs.get('spider_name','')
-        if not spider_name:
-            message = SpiderMessages.MISSING_SPIDER_NAME
-        else:
+        spider_name = kwargs.get('spider_name', '')
+        if spider_name:
             if settings.CRAWLER_NAME and settings.CRAWLER_NAME == spider_name and settings.CRAWLER_THREAD.isAlive():
                 settings.CRAWLER_THREAD.stop()
-                message = SpiderMessages.SUCCESSFUL_TERMINATION.format(spider_name)
+                message = SpiderMessages.SUCCESSFUL_TERMINATION.format(
+                    spider_name)
             else:
                 message = SpiderMessages.NOT_RUNNING.format(spider_name)
+        else:
+            message = SpiderMessages.MISSING_SPIDER_NAME
+
         url = request.META.get('HTTP_REFERER', reverse('the_news:main'))
         url = urlparse.urljoin(url, urlparse.urlparse(url).path)
         url = "{}?message={}".format(url, message)
