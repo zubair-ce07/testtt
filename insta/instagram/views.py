@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from instagram.forms import SignUpForm, LoginForm, NewPostForm
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
-from instagram.models import User
+from instagram.models import User, Post
 
 login_url = reverse_lazy('login')
 
@@ -15,11 +15,24 @@ def newsfeed(request):
     user = request.user
     if user.is_authenticated():
         followers, following = get_followers_and_following(user)
+        posts = get_posts(user)
+        # posts = Post.objects.filter(user__username=user.username)
         return render(request, 'instagram/newsfeed.html',
                       {'user': user, 'followers': followers,
-                       'following': following})
+                       'following': following,
+                       'posts':posts})
     else:
         return HttpResponseRedirect(reverse('login'))
+
+
+def get_posts(user):
+    posts = Post.objects.filter(user__username=user.username)
+    followers, following = get_followers_and_following(user)
+    following = get_user_objects(following, 'following')
+    for followee in following:
+        followee_posts = Post.objects.filter(user__username=followee.username)
+        posts = posts | followee_posts
+    return posts
 
 
 def get_followers_and_following(user):
@@ -178,7 +191,7 @@ def show_following(request, pk):
                         {'followers': following})
 
 
-def new_post(request, pk):
+def new_post(request):
     user = request.user
     if request.method == 'POST':
         form = NewPostForm(request.POST, request.FILES)

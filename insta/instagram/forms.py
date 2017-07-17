@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
-from .models import User
+from .models import User, Post
 
 
 class ContactForm(forms.Form):
@@ -13,9 +13,21 @@ class EdiProfileForm(UserChangeForm):
     avatar = forms.ImageField(required=False)
 
 
-class NewPostForm(forms.Form):
-    image = forms.ImageField(required=True)
-    text = forms.CharField(widget=forms.Textarea)
+class NewPostForm(forms.ModelForm):
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop("request")
+    #     super(NewPostForm, self).__init__(*args, **kwargs)
+    class Meta:
+        model = Post
+        fields = ('user', 'image', 'text')
+    # image = forms.ImageField(required=True)
+    # text = forms.CharField(widget=forms.Textarea)
+    # def save(self, commit=True):
+    #     post = super(NewPostForm, self).save(commit=False)
+    #     post.user = request.user
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop("request")
+    #     super(MyForm, self).__init__(*args, **kwargs)
 
 
 class SignUpForm(UserCreationForm):

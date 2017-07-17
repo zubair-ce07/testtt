@@ -15,7 +15,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'text', 'user', 'created_at')
+    list_display = ('pk', 'text', 'user', 'created_at', 'image')
     search_fields = ('text', 'user__username')
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'

@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'^login/$', views.login, name='login'),
     url(r'^logout/$', views.logout, name='logout'),
     url(r'^newsfeed/$', views.newsfeed, name='newsfeed'),
+    url(r'^newsfeed/new_post/$', views.new_post, name='new_post'),
     url(r'^search/$', views.search, name='search'),
     url(r'^profiles/(?P<pk>[0-9]+)/$', views.profile, name='profile'),
     url(r'^profiles/(?P<pk>[0-9]+)/follow/$', views.follow_profile, name='follow'),
