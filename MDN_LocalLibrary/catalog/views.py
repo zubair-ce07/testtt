@@ -9,8 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 
-from .models import Book, Author, BookInstance, Genre
-from .forms import RenewBookModelForm
+from catalog.models import Book, Author, BookInstance, Genre
+from catalog.forms import RenewBookModelForm
 
 
 @login_required
@@ -19,8 +19,7 @@ def index(request):
     request.session['num_visits'] = num_visits + 1
     num_books = Book.objects.all().count()
     num_instances = BookInstance.objects.all().count()
-    num_instances_available = BookInstance.objects.filter(
-        status__exact='a').count()
+    num_instances_available = BookInstance.objects.filter(status='a').count()
     num_authors = Author.objects.all().count()
     num_genres = Genre.objects.all().count()
 
@@ -60,7 +59,7 @@ class LoanedBookByUserListView(LoginRequiredMixin, generic.ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return BookInstance.objects.filter(borrower=self.request.user).filter(status__exact='o').order_by('due_back')
+        return BookInstance.objects.filter(borrower=self.request.user, status='o').order_by('due_back')
 
 
 class LoanedBooksByAllListView(PermissionRequiredMixin, generic.ListView):
@@ -137,7 +136,9 @@ class BookInstanceUpdateStatus(UpdateView):
     def get_success_url(self):
         if 'fk' in self.kwargs:
             foreign_key = self.kwargs['fk']
-        return reverse('book-detail', kwargs={'pk': foreign_key})
+            return reverse('book-detail', kwargs={'pk': foreign_key})
+        else:
+            return reverse('books')
 
 
 class BookInstanceDelete(PermissionRequiredMixin, DeleteView):
@@ -147,7 +148,9 @@ class BookInstanceDelete(PermissionRequiredMixin, DeleteView):
     def get_success_url(self):
         if 'fk' in self.kwargs:
             foreign_key = self.kwargs['fk']
-        return reverse('book-detail', kwargs={'pk': foreign_key})
+            return reverse('book-detail', kwargs={'pk': foreign_key})
+        else:
+            return reverse('books')
 
 
 class BookInstanceCreate(PermissionRequiredMixin, CreateView):
@@ -163,4 +166,6 @@ class BookInstanceCreate(PermissionRequiredMixin, CreateView):
     def get_success_url(self):
         if 'fk' in self.kwargs:
             foreign_key = self.kwargs['fk']
-        return reverse('book-detail', kwargs={'pk': foreign_key})
+            return reverse('book-detail', kwargs={'pk': foreign_key})
+        else:
+            return reverse('books')

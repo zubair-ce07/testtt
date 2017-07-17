@@ -98,8 +98,11 @@ ENV/
 # mypy
 .mypy_cache/
 
-# vscode
-.vscode/
-
 # request log
 userbooklog.txt
+
+#PyCharm
+.idea/
+
+#VSCode
+.vscode/

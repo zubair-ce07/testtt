@@ -1,10 +1,10 @@
 from django.contrib import admin
 
-from .models import Genre, Book, BookInstance, Author, Language
-
+from catalog.models import Genre, Book, BookInstance, Author, Language
 
 admin.site.register(Genre)
 admin.site.register(Language)
+
 
 class BookInline(admin.TabularInline):
     extra = 0
@@ -13,8 +13,7 @@ class BookInline(admin.TabularInline):
 
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name',
-                    'date_of_birth', 'date_of_death')
+    list_display = ('last_name', 'first_name', 'date_of_birth', 'date_of_death')
     fields = ['first_name', 'last_name', ('date_of_birth', 'date_of_death')]
     inlines = [BookInline]
 

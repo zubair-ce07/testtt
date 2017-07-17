@@ -1,5 +1,4 @@
 class ContextRequestMiddleware(object):
-
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -12,5 +11,4 @@ class ContextRequestMiddleware(object):
     def process_template_response(self, request, response):
         with open('userbooklog.txt', 'a') as booklog:
             booklog.write('Book: {}\n'.format(response.context_data))
-        booklog.close()
         return response

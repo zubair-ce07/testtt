@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 
-from .forms import UserForm
+from locallibrary.forms import UserForm
 
 
 def signup(request):

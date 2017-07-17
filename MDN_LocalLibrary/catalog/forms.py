@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.forms import ModelForm
 
-from .models import BookInstance
+from catalog.models import BookInstance
 
 
 class RenewBookForm(forms.Form):
@@ -19,8 +19,7 @@ class RenewBookForm(forms.Form):
             raise ValidationError(_('Invalid date - renewal in past'))
 
         if data > datetime.date.today() + datetime.timedelta(weeks=4):
-            raise ValidationError(
-                _('Invalid date - renewal more than 4 weeks ahead'))
+            raise ValidationError(_('Invalid date - renewal more than 4 weeks ahead'))
 
         return data
 
@@ -33,9 +32,7 @@ class RenewBookModelForm(ModelForm):
             raise ValidationError(_('Invalid date - renewal in past'))
 
         if data > datetime.date.today() + datetime.timedelta(weeks=3):
-            raise ValidationError(
-                _('Invalid date - renewal more than 4 weeks ahead'))
-
+            raise ValidationError(_('Invalid date - renewal more than 4 weeks ahead'))
         return data
 
     class Meta:
