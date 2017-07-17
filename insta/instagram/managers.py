@@ -44,5 +44,4 @@ class FollowingManager(models.Manager):
 
 class FollowerManager(models.Manager):
     def get_queryset(self, followers_for):
-        # return super(FollowerManager, self).get_queryset().filter(following__username=followers_for.username).all()
         return super(FollowerManager, self).get_queryset().filter(following__username=followers_for).all()

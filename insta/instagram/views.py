@@ -78,23 +78,18 @@ def profile(request, pk):
     errors = []
     if not pk:
         errors.append('ERROR')
-        profile_owner = None
-        logged_in_profile = None
+        return render(request, 'instagram/profile.html',
+                      {'errors': errors,
+                      })
     else:
         profile_owner = get_object_or_404(User, pk=pk)
         user = request.user
-        already_followed = False
         logged_in_profile = profile_owner.username == user.username
-        if logged_in_profile:
+        if user.is_authenticated():
             followers, following = get_followers_and_following(user)
         else:
             followers, following = get_followers_and_following(profile_owner)
-        for followee in following:
-            if followee['following'] == profile_owner.pk:
-                already_followed = True
-                break
-
-        # already_followed = request.user in followers
+        already_followed = is_already_followed(profile_owner, following)
     return render(request, 'instagram/profile.html',
                   {'errors': errors,
                    'user': profile_owner,
@@ -103,6 +98,13 @@ def profile(request, pk):
                    'following': following,
                    'followers': followers,
                    })
+
+
+def is_already_followed(profile_owner, following):
+    for followee in following:
+        if followee['following'] == profile_owner.pk:
+            return True
+    return False
 
 
 def signup(request):
