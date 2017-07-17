@@ -2,14 +2,18 @@
 {% block title %}
     Edit
 {% endblock title %}
+{% block sidebar %}
+    {{ block.super }}
+    <li><a href="{%url 'registration:details'%}">Details</a></li>
+{% endblock %}
 {% block content %}
 <div class="row">
     <div class="col-md-2"> </div>
     <div class="col-md-7"> 
         <form action='' enctype="multipart/form-data" method="post" >
             {% csrf_token %}
-            {{form.as_ul}} 
-            {{userform.as_ul}}
+            {{form}}
+            {{userform}}
             <input type="submit" value="Save" />
     </div>
     <div class="col-md-2"> </div>

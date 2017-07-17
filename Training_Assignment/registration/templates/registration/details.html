@@ -2,12 +2,11 @@
 {% block title %}
     {{user.get_full_name}}
 {% endblock title %}
-{% block head %}
-    {% load static %}
-    <link rel="stylesheet" href="/{% static 'css/style.css' %}">
-{% endblock head %}
+{% block sidebar %}
+    {{ block.super }}
+    <li><a href="{%url 'registration:edit'%}">Edit</a></li>
+{% endblock %}
 {% block content %}
-
     <h2>{{user.get_full_name}}</h2>
     <div>
         {% if user.userprofile.image %}
@@ -18,9 +17,10 @@
         <ul>
             <li>Username: {{user.username}}</li>
             {% if user.userprofile.country %}
-                <li>Country: {{user.userprofile.country.name}} <img src="/{%static 'registration/flags'%}/{{user.userprofile.country|lower}}.gif" /></li>
+                {% load static %}
+                <li>Country: {{user.userprofile.country.name}} <img src="{% static 'registration/flags' %}/{{user.userprofile.country|lower}}.gif" /></li>
             {% endif %}
-            <li>Address: {{user.userprofile.address.raw}}</li>
+            <li>Address: {{user.userprofile.address}}</li>
             <li>Phone #: {{user.userprofile.phone_number}}</li>
             <li>Email: {{user.email}}</li>
         </ul>

@@ -1,0 +1,9 @@
+img.dp {
+    width: 100%;
+    max-width: 300px;
+    float: right;
+}
+
+ul, h2 {
+    float: left;
+}

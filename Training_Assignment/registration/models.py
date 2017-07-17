@@ -7,19 +7,19 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import RegexValidator
 from django_countries.fields import CountryField, Country
-from address.models import AddressField, Address
+# from address.models import AddressField, Address
 from django.db.models.fields.files import FileField, ImageFieldFile, ImageField
 from django_countries.data import COUNTRIES
 
 from task1.settings import MEDIA_ROOT
 
-COUNTRIES_NAMES = dict([[v, k] for k, v in COUNTRIES.items()])
+COUNTRIES_NAMES = dict([[i, j] for j, i in COUNTRIES.items()])
 
 
 class CustomUser(User):
     class Meta:
         proxy = True
-        ordering = ('first_name', )
+        ordering = ('first_name',)
 
     def save(self, *args, **kwargs):
         try:
@@ -29,18 +29,19 @@ class CustomUser(User):
             self._image = kwargs['image']
         except:
             pass
+        kwargs = {}
         self.full_clean()
         super(CustomUser, self).save(*args, **kwargs)
 
 
 class UserProfile(models.Model):
-
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(validators=[RegexValidator(
-        regex=r'^\+?\d{10,15}$', message="Phone number must be entered in the format: '+9999999999'.")], max_length=15)
+        regex=r'^\+?\d{10,15}$', message="Phone number must be entered in the format: '+9999999999'.")],
+        default='+9999999999', max_length=15, blank=True, null=True)
     country = CountryField(blank=True, null=True)
     image = ImageField(upload_to='registration/', blank=True, null=True)
-    address = AddressField(blank=True, null=True)
+    address = models.TextField(max_length=1000, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -51,7 +52,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     try:
         phone_number = getattr(instance, '_phone_number')
         country_name = getattr(instance, '_country_name')
-        address_raw = getattr(instance, '_address')
+        address = getattr(instance, '_address')
         src = getattr(instance, '_image')
         dest = MEDIA_ROOT + 'registration/' + os.path.basename(src)
         head, tail = os.path.splitext(os.path.basename(src))
@@ -61,8 +62,8 @@ def create_user_profile(sender, instance, created, **kwargs):
             dest = os.path.join(os.path.dirname(
                 dest), '{}-{}{}'.format(head, count, tail))
         copy2(src, dest)
-        address = Address(raw=address_raw, formatted=address_raw)
-        address.save()
+        # address = Address(raw=address_raw, formatted=address_raw)
+        # address.save()
         country = Country(code=COUNTRIES_NAMES[country_name])
         dest_file = 'registration/' + os.path.basename(dest)
         image = ImageFieldFile(

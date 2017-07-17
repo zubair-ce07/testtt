@@ -6,7 +6,22 @@ from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse
 
 from registration.models import CustomUser
-from .forms import UserLoginForm
+from task1.forms import UserLoginForm, UserCreateForm
+
+
+def CreateView(request):
+    if request.method == 'GET':
+        form = UserCreateForm()
+    else:
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            user = CustomUser(username=form.cleaned_data['username'],
+                              password=make_password(form.cleaned_data['password1']))
+            user.save()
+            request.session['userid'] = str(user.id)
+            login(request, user)
+            return HttpResponseRedirect(redirect_to=reverse('registration:edit'))
+    return render(request, 'accounts/signup.html', {'form': form})
 
 
 def SignUpView(request):
@@ -15,14 +30,12 @@ def SignUpView(request):
     else:
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            raw_password = form.cleaned_data['password1']
-            raw_password = make_password(raw_password)
-            user = CustomUser(username=username, password=raw_password)
+            user = CustomUser(username=form.cleaned_data['username'],
+                              password=make_password(form.cleaned_data['password1']))
             user.save()
             request.session['userid'] = str(user.id)
             login(request, user)
-            return HttpResponseRedirect(redirect_to=reverse('registration:details'))
+            return HttpResponseRedirect(redirect_to=reverse('registration:edit'))
     return render(request, 'accounts/signup.html', {'form': form})
 
 
@@ -34,16 +47,11 @@ def LoginView(request):
     else:
         form = UserLoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            print('user: ', password)
-            user = authenticate(username=username, password=password)
-            print(user)
-            if user is not None:
-                if user.is_active:
-                    request.session['userid'] = str(user.id)
-                    login(request, user)
-                    return HttpResponseRedirect(redirect_to=reverse('registration:details'))
+            user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password'])
+            if user and user.is_active:
+                request.session['userid'] = str(user.id)
+                login(request, user)
+                return HttpResponseRedirect(redirect_to=reverse('registration:details'))
     return render(request, 'accounts/login.html', {'form': form})
 
 

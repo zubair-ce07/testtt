@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import UserProfile
+
+from registration.models import UserProfile
 
 
 class EditForm(forms.ModelForm):
@@ -9,7 +10,7 @@ class EditForm(forms.ModelForm):
         exclude = ('user',)
         widgets = {
             'phone_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'}),
-            'country':  forms.Select(attrs={'class': 'form-control', 'placeholder': 'Country'}),
+            'country': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Country'}),
             'address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address'}),
         }
 
@@ -25,6 +26,4 @@ class EditUserForm(forms.ModelForm):
                                                 'placeholder': 'Last Name'}),
             'email': forms.TextInput(attrs={'class': 'form-control', 'required': 'required',
                                             'placeholder': 'Email'}),
-
-
         }

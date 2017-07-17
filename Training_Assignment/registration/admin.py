@@ -1,16 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from address.models import Address, Country, Locality, State
+# from address.models import Address, Country, Locality, State
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 
-from .models import UserProfile
+from registration.models import UserProfile
 
 admin.site.unregister(User)
-admin.site.unregister(Country)
-admin.site.unregister(Locality)
-admin.site.unregister(State)
 
 
 class UserProfileInline(admin.StackedInline):
@@ -20,9 +17,9 @@ class UserProfileInline(admin.StackedInline):
 
 @admin.register(User)
 class UserAdmin(UserAdmin):
-    inlines = (UserProfileInline, )
+    inlines = (UserProfileInline,)
 
 
 @admin.register(UserProfile)
 class UserProfile(admin.ModelAdmin):
-    exclude = ('user', )
+    exclude = ('user',)

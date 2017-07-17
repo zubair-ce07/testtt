@@ -11,17 +11,8 @@ class Command(BaseCommand):
         with open('dummy.csv', 'r') as csvfile:
             users = csv.DictReader(csvfile)
             for user in users:
-                password = user['password']
-                phone_number = user['phone_number']
-                country_name = user['country']
-                address = user['address']
-                image = user['image']
-                first_name = user['first_name']
-                last_name = user['last_name']
-                email = user['email']
-                username = first_name + '.' + last_name
-                password = make_password(password)
-                dummy_user = CustomUser(username=username, password=password,
-                                        first_name=first_name, last_name=last_name, email=email)
-                dummy_user.save(phone_number=phone_number, country_name=country_name,
-                                address=address, image=image, first_name=first_name)
+                dummy_user = CustomUser(username='{}.{}'.format(user['first_name'], user['last_name']),
+                                        password=make_password(user['password']), email=user['email'],
+                                        first_name=user['first_name'], last_name=user['last_name'])
+                dummy_user.save(phone_number=user['phone_number'], image=user['image'],
+                                country_name=user['country'], address=user['address'])

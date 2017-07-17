@@ -1,10 +1,10 @@
 from django.conf.urls import url
 
-from .views import DetailsView, EditView
+from registration import views
 
 app_name = 'registration'
 
 urlpatterns = [
-    url(r'^details/$', DetailsView, name='details'),
-    url(r'^edit/$', EditView , name='edit'),
+    url(r'^details/$', views.DetailsView, name='details'),
+    url(r'^edit/$', views.EditView, name='edit'),
 ]
