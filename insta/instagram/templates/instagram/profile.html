@@ -8,6 +8,9 @@
     {% if user %}
 {#        {% for u in user %}#}
             <h1>{{ user.username }} </h1>
+            {% if user.avatar %}
+                <img id="avatar" src="{{ user.avatar.url }}" alt="My image" width="240"/>
+            {% endif %}
 {#            <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>#}
 {#            <p>{{ following.count }} Following</p>#}
             {% if not logged_in_profile and not already_followed %}
@@ -29,19 +32,6 @@
                 <a href="{% url 'search' %}">Search</a>
                 <a href="{% url 'logout' %}">Logout</a>
             {% endif %}
-
-{#        {% endfor %}#}
-        <h1>HI :3</h1>
-{#    {% elif errors %}#}
-{#        {% for error %}#}
-    {% endif %}
-    {% if errors %}
-        <ul>
-            {% for error in errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-{#        <p style="color: red;">Please submit a search term</p>#}
     {% endif %}
 </body>
 </html>

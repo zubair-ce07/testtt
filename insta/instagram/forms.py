@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
 from django.core.files.images import get_image_dimensions
 from .models import User
 
@@ -10,11 +10,27 @@ class ContactForm(forms.Form):
     message = forms.CharField(widget=forms.Textarea)
 
 
+class EdiProfileForm(UserChangeForm):
+    avatar = forms.ImageField(required=False)
+
+
+# class SignUpForm(forms.Form):
+#     username = forms.CharField(max_length=40)
+#     first_name = forms.CharField(max_length=50)
+#     last_name = forms.CharField(max_length=50)
+#     email = forms.EmailField(required=True)
+#     date_of_birth = forms.DateField(required=True)
+#     password1 = forms.CharField(required=True)
+#     password2 = forms.CharField(required=True)
+#     avatar = forms.ImageField(required=False)
+#     bio = forms.CharField(widget=forms.Textarea)
+
+
 class SignUpForm(UserCreationForm):
     bio = forms.CharField(widget=forms.Textarea)
     # password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
     # password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput)
-    # avatar = forms.ImageField()
+    avatar = forms.ImageField(required=False)
 
     class Meta:
         model = User

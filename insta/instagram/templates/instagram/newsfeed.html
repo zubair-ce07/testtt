@@ -1,20 +1,40 @@
 <!DOCTYPE html>
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'instagram/style.css' %}" />
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Instagram</title>
+    <title>{{ user.username }}</title>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 </head>
 <body>
+    <div class="navigation-bar">
+        <div id="navigation-container">
+            <img id="logo_camera" src="{% static 'instagram/images/logo2.png' %}" width="30"/>
+            <img id="logo" src="{% static 'instagram/images/logo.png' %}" width="100"/>
+{#            <img id="logo_camera" src="{% static 'instagram/images/logo2.png' %}" width="30"/>#}
+{#            <img src="/instagram/insta_media/logo.png">#}
+            <a href="{% url 'search' %}">Search</a>
+            <a href="{% url 'logout' %}">Logout</a>
+{#                <li><a href="#">Home</a></li>#}
+{#                <li><a href="#">Projects</a></li>#}
+{#                <li><a href="#">About</a></li>#}
+{#                <li><a href="#">Services</a></li>#}
+{#                <li><a href="#">Get in Touch</a></li>#}
+        </div>
+    </div>
     <h1>Welcome, {{ user.username }}</h1>
 {#    <h1>Welcome, {{ user.avatar }}</h1>#}
     {% if user.avatar %}
-        <img src="{{ user.avatar.url }}" alt="My image" width="240"/>
+        <img id="avatar" src="{{ user.avatar.url }}" alt="My image" width="240"/>
     {% endif %}
 {#    <img src="/insta/instagram/avatars/{{ user.avatar }}">#}
-    <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>
-    <p>{{ following.count }} Following</p>
+    <p><a href="{% url 'followers' user.pk %}">{{ followers.count }}</a> Follower{{ followers|pluralize }}</p>
+    <p><a href="{% url 'following' user.pk %}">{{ following.count }}</a> Following</p>
+{#    <p>{{ followers.count }} Follower{{ followers|pluralize }}</p>#}
+{#    <p>{{ following.count }} Following</p>#}
     <a href="{% url 'search' %}">Search</a>
     <a href="{% url 'logout' %}">Logout</a>
 {#    <img src.>#}

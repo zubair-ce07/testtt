@@ -4,9 +4,6 @@ from django.conf import settings
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
 from .managers import UserManager, FollowingManager, FollowerManager
-from insta.settings import BASE_DIR
-import os
-# from django.contrib.auth.models import User
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -66,14 +63,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Simplest possible answer: All admins are staff
         return self.is_admin
 
-    # def all_followers(self):
-
-
- # self.following
-
 
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='posts/', null=False, blank=False, default='default_avatar.png')
     created_at = models.DateTimeField(auto_now_add=True)
     text = models.CharField(max_length=200)
 

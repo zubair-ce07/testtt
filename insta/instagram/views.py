@@ -181,7 +181,7 @@ class signupView(View):
 
 def signup(request):
     if request.method == 'POST':
-        form = SignUpForm(request.POST)
+        form = SignUpForm(request.POST, request.FILES)
         if form.is_valid():
             avtr = form.cleaned_data.get('avatar')
             user = form.save()
@@ -279,6 +279,10 @@ def show_following(request, pk):
     print(following)
     return render(request, 'instagram/show_followers.html',
                         {'followers': following})
+
+
+# def edit_profile(request):
+#     user =
 
 
 def get_user_objects(query_set, key):
