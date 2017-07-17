@@ -1,19 +1,10 @@
 from django import forms
-from .models import CustomUser
+from .models import User
 
 
 class LoginForm(forms.Form):
     email = forms.EmailField(max_length=50)
     password = forms.CharField(max_length=20, widget=forms.PasswordInput)
-
-
-class SignupForm (forms.ModelForm):
-    password1 = forms.CharField(widget=forms.PasswordInput)
-    password2 = forms.CharField(widget=forms.PasswordInput)
-
-    class Meta:
-        model = CustomUser
-        fields = ['username', 'email', 'first_name', 'last_name', 'password']
 
 
 class UserCreationForm(forms.ModelForm):
@@ -33,7 +24,7 @@ class UserCreationForm(forms.ModelForm):
         return self.cleaned_data
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = ('email', 'username', 'first_name', 'last_name')
 
     def save(self, commit=True):

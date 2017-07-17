@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from super_store.models import Brand, Product, Images, Skus
-from authentication.models import CustomUser
+from authentication.models import User
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = ('id', 'email', 'first_name', 'last_name')
 
 
@@ -25,16 +25,6 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    brand = BrandSerializer()
-    image_product = ImageSerializer(many=True)
-
-    class Meta:
-        model = Product
-        fields = ('brand', 'product_id', 'product_name',
-                  'source_url', 'image_product')
-
-
-class ProductCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product

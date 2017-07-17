@@ -3,6 +3,7 @@ from django.views import View
 from django.contrib.auth import login, logout, authenticate
 from django.utils.http import is_safe_url
 from .forms import UserCreationForm, LoginForm
+from django.utils.translation import ugettext as __
 
 
 class SignupView(View):
@@ -66,14 +67,11 @@ class LoginView(View):
                 if user.is_active:
                     login(self.request, user)
                     redirect_to = request.GET.get('next', '')
-                    if redirect_to != '':
+                    if redirect_to:
                         if is_safe_url(url=redirect_to, host=request.get_host()):
                             return redirect(redirect_to)
-                        else:
-                            return render(self.request, redirect_to,
-                                          {'error': message, 'form': form})
-                    else:
-                        return redirect(reverse('super_store:brands'))
+
+                    return redirect(reverse('super_store:brands'))
                 else:
                     message = Message.LOGIN_DISABLED
             else:
@@ -84,7 +82,7 @@ class LoginView(View):
 
 
 class Message:
-    LOGIN_INVALID = "Invalid Username and Password"
-    LOGIN_MISSING = "Missing Username and Password"
-    LOGIN_DISABLED = "Disabled Account"
-    SIGNUP_MISSING = "Please fill out all the fields"
+    LOGIN_INVALID = __("Invalid Username and Password")
+    LOGIN_MISSING = __("Missing Username and Password")
+    LOGIN_DISABLED = __("Disabled Account")
+    SIGNUP_MISSING = __("Please fill out all the fields")

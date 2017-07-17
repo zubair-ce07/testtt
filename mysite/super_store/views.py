@@ -19,11 +19,12 @@ class ProductsListView(LoginRequiredMixin, ListView):
     login_url = reverse_lazy("authentication:login")
     model = Product
     template_name = 'super_store/product_list.html'
+    items_per_page = 48
 
     def get_queryset(self):
         product_list = self.model.objects.all()
         try:
-            paginator = Paginator(product_list, 50)
+            paginator = Paginator(product_list, self.items_per_page)
             page = self.request.GET.get('page', 1)
             products = paginator.page(page)
         except PageNotAnInteger:
@@ -37,19 +38,20 @@ class ListBrandProductsView(LoginRequiredMixin, ListView):
     login_url = reverse_lazy("authentication:login")
     model = Brand
     template_name = 'super_store/product_list.html'
+    items_per_page = 48
 
     def get_queryset(self):
         try:
             product_list = self.model.objects.get(
                 name=self.kwargs['name']).product_set.all()
-            paginator = Paginator(product_list, 50)
+            paginator = Paginator(product_list, self.items_per_page)
             page = self.request.GET.get('page', 1)
             products = paginator.page(page)
 
         except PageNotAnInteger:
             products = paginator.page(1)
         except EmptyPage:
-            products = paginator.page(paginator.num_pages)
+            products = None
         except Brand.DoesNotExist:
             raise Http404("Brand name: {} does not exist".format(
                 self.kwargs['name']))
@@ -75,9 +77,7 @@ class ProductDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductDetailView, self).get_context_data(**kwargs)
-        context['category'] = ast.literal_eval(
-            context['product'].category) if '[' in context[
-                'product'].category else [context['product'].category]
+
         context['colors'] = set()
         context['sizes'] = set()
         prod = context['product']

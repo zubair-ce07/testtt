@@ -9,21 +9,19 @@
 
 
 {% block content-body %}
-    <ol class="breadcrumb">
-        {% for item in category %}
-            {% if forloop.last %}
-                <li class="active">
-                    {{item}}
-                </li>
-            {% else %}
-                <li>
-                    <a href="#">{{item}}</a>
-                </li>
-            {% endif %}
 
-        {% endfor %}
 
-    </ol>
+    <blockquote>
+        <em style="font-family: 'Tangerine', serif; font-size: 48px;"> Category: </em>
+        {% if product.category %}
+            <u> {{product.category}}</u>
+        {% else %}
+            <u> Uncategorized </u>
+        {% endif %}
+
+    </blockquote>
+
+
 
     <div class="row">
 

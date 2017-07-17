@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.html import mark_safe
-from authentication.models import CustomUser
 
 
 class Brand(models.Model):
@@ -21,7 +20,7 @@ class Brand(models.Model):
 
 class Product(models.Model):
     brand = models.ForeignKey(
-        Brand, related_name='product_brand', on_delete=models.CASCADE)
+        Brand, on_delete=models.CASCADE)
     product_name = models.CharField(max_length=250, verbose_name="Name")
     product_id = models.CharField(max_length=50, verbose_name="Product ID")
     source_url = models.URLField()
@@ -38,8 +37,7 @@ class Product(models.Model):
 
 
 class Images(models.Model):
-    product = models.ForeignKey(
-        Product, related_name='image_product', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     image_url = models.URLField()
 
     def __str__(self):
@@ -47,8 +45,7 @@ class Images(models.Model):
 
 
 class Skus(models.Model):
-    product = models.ForeignKey(
-        Product, related_name='sku_product', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     color = models.CharField(max_length=50)
     size = models.CharField(max_length=20, null=True, blank=True)
     price = models.FloatField()

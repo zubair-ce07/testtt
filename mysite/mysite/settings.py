@@ -27,9 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = "authentication.CustomUser"
+AUTH_USER_MODEL = "authentication.User"
 
-AUTHENTICATION_BACKENDS = ('authentication.backends.CustomUserAuth',)
+AUTHENTICATION_BACKENDS = ('authentication.backends.UserAuth',)
 
 # Application definition
 

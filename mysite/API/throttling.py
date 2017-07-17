@@ -1,5 +1,5 @@
 from rest_framework import throttling
 
 
-class MyCustomThrottle(throttling.UserRateThrottle):
+class CustomThrottle(throttling.UserRateThrottle):
     rate = '100/day'

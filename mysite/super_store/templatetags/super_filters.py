@@ -8,6 +8,6 @@ def sub(value, arg):
     return value - arg
 
 
-@register.filter(name='id_name')
-def id_name(value, arg):
+@register.filter(name='id_name_concat')
+def id_name_concat(value, arg):
     return (str(value) + '-' + arg)

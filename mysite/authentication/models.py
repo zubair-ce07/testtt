@@ -26,7 +26,7 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(email, password, True, True, **extra_fields)
 
 
-class CustomUser(AbstractBaseUser):
+class User(AbstractBaseUser):
     username = models.CharField(max_length=30, unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
@@ -46,8 +46,11 @@ class CustomUser(AbstractBaseUser):
         return self.email
 
     class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
+
+    def get_username(self):
+        return self.email
 
     def get_full_name(self):
         full_name = "{} {}".format(self.first_name, self.last_name)
