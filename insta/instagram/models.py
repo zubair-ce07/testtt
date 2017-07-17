@@ -17,10 +17,6 @@ class User(AbstractBaseUser, PermissionsMixin):
                                width_field="width_field", height_field="height_field")
     height_field = models.IntegerField(default=0)
     width_field = models.IntegerField(default=0)
-    # avatar = models.ImageField(_('Avatar'), upload_to='avatars', default='instagram/avatars/default_avatar.png', blank=True)
-    # os.path.join(BASE_DIR, 'instagram')
-    # avatar = models.ImageField(_('Avatar'), upload_to='avatars', default=os.path.join(BASE_DIR, 'instagram/avatars/default_avatar.png'),#'instagram/avatars/default_avatar.png',
-    #                            blank=True)
     following = models.ManyToManyField('self', blank=True, symmetrical=False)
     is_active = models.BooleanField(_('Active'), default=True)
     is_admin = models.BooleanField(_('Admin'), default=False)

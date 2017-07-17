@@ -19,11 +19,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # url(r'^login/$', auth_views.login, {'template_name': 'instagram/login.html'}, name='login'),
-    # url(r'^logout/$', views.logout, name='login'),
-    # url(r'^newsfeed/$', views.newsfeed, name='newsfeed'),
     url(r'^', include('instagram.urls')),
     url(r'^admin/', admin.site.urls),
-    # url(r'^contact/thanks/$', views.thanks),
-    # url(r'^contact/$', views.contact),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

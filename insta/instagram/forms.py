@@ -14,6 +14,11 @@ class EdiProfileForm(UserChangeForm):
     avatar = forms.ImageField(required=False)
 
 
+class NewPostForm(forms.Form):
+    image = forms.ImageField(required=True)
+    text = forms.CharField(widget=forms.Textarea)
+
+
 # class SignUpForm(forms.Form):
 #     username = forms.CharField(max_length=40)
 #     first_name = forms.CharField(max_length=50)
