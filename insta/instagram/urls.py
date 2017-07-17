@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^profiles/(?P<pk>[0-9]+)/followers/$', views.show_followers, name='followers'),
     url(r'^profiles/(?P<pk>[0-9]+)/following/$', views.show_following, name='following'),
     url(r'^signup/$', views.signup, name='signup'),
+    # url(r'^signup/$', views.signupView.as_view(), name='signup'),
     url(r'^$', views.index, name='index'),
 
     # url(r'^search_form/$', views.search_form),

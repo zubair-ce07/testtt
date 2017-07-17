@@ -16,7 +16,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('Last Name'), max_length=50, )
     date_of_birth = models.DateField(_('Date of Birth'), blank=False, null=False)
     bio = models.TextField(_('Bio'), max_length=300)
-    avatar = models.ImageField(upload_to='avatars', blank=True, default='default_avatar.png',
+    avatar = models.ImageField(upload_to='avatars/', blank=True, default='default_avatar.png',
                                width_field="width_field", height_field="height_field")
     height_field = models.IntegerField(default=0)
     width_field = models.IntegerField(default=0)

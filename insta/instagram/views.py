@@ -9,6 +9,7 @@ from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
 from instagram.models import User # Profile, Comment, Like, Post
 from insta.settings import BASE_DIR
+from django.views.generic import View
 
 login_url = reverse_lazy('login')
 
@@ -149,14 +150,45 @@ def profile(request, pk):
     # return HttpResponse('OOPS! :3')
 
 
+class signupView(View):
+    form = SignUpForm
+    template_name = 'instagram/signup.html'
+
+    def post(self, request):
+        form = self.form(request.POST, request.FILES)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            first_name = form.cleaned_data.get('first_name')
+            last_name = form.cleaned_data.get('last_name')
+            avatar = form.cleaned_data.get('avatar')
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password')
+            date_of_birth = form.cleaned_data.get('date_of_birth')
+            user = User.objects.create_user(username=username, first_name=first_name,
+                                       last_name=last_name, avatar=avatar, email=email,
+                                       password=password, date_of_birth=date_of_birth)
+            auth_login(request, user)
+        return render(request, 'instagram/signup.html', {'form': form})
+
+    def get(self, request):
+        form = self.form(None)
+        user = request.user
+        if user.is_authenticated():
+            return HttpResponseRedirect(reverse('newsfeed'))
+        return render(request, 'instagram/signup.html', {'form': form})
+
+
+
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
+            avtr = form.cleaned_data.get('avatar')
             user = form.save()
+            print('USERRRRRRR', user.username, user.avatar, ':3', avtr)
             user.refresh_from_db()
             user.bio = form.cleaned_data.get('bio')
-            user.avatar = form.cleaned_data['avatar']
+            user.avatar = form.cleaned_data.get('avatar')
             user.save()
             # username = form.cleaned_data.get('username')
             # raw_password = form.cleaned_data.get('password1')
