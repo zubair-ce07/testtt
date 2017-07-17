@@ -7,7 +7,7 @@ import models
 
 
 class NewsPaperAdmin(admin.ModelAdmin):
-    list_display = ('name', 'source_url', 'crawler')
+    list_display = ('name', 'source_url', 'crawler_button')
 
 
 class NewsAdmin(admin.ModelAdmin):

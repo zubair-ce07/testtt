@@ -104,6 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
 current_path = os.getcwd()
 path.append(str(current_path)+'/the_news/news_scrappers')
 SCRAPY_SETTINGS = {
@@ -121,6 +122,9 @@ SCRAPY_SETTINGS = {
     'AUTOTHROTTLE_DEBUG': False,
 
 }
+CRAWLER_STATE = False
+CRAWLER_NAME = None
+CRAWLER_THREAD = None
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,

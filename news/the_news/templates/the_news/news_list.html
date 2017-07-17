@@ -6,45 +6,48 @@
 {% endblock  %}
 
 {% block content %}
-
-
-<h1 style="text-align: center">News</h1>
-<div class="container">
-    {% for news in news_list %}
-        <div class="col-sm-6 col-md-4 col-lg-3 mt-4" style="min-height: 420px; max-height: 420px">
-            <div class="card card-inverse card-info" style="min-height: 400px; max-height: 400px">
-                <img class="card-img-top" style="max-height: 200px; min-height:200px" src="{{ news.image_url }}">
-                <div class="card-block">
-                    <h4 class="card-title mt-3 text">{{ news.title }}</h4>
-                    <div class="meta card-text text">
-                        <a>{{ news.news_paper.name }}</a>
-                    </div>
-                    <div class="card-text text">
-                        {{ news.abstract }}
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <small>{{ news.date }}</small>
-                    <a href="{% url 'the_news:news_detail' pk=news.id %}"><button class="btn btn-info float-right btn-sm" >Read</button></a>
-                </div>
-            </div>
+    <h1 style="text-align: center">News</h1>
+    {% if message %}
+        <div class="container" style="text-align: center">
+            {{ message }} for search {{ query }}
         </div>
-    {% endfor %}
-</div>
+    {% else %}
+        <div class="container">
+            {% for news in news_list %}
+                <div class="col-sm-6 col-md-4 col-lg-3 mt-4" style="min-height: 420px; max-height: 420px">
+                    <div class="card card-inverse card-info" style="min-height: 400px; max-height: 400px">
+                        <img class="card-img-top" style="max-height: 200px; min-height:200px" src="{{ news.image_url }}">
+                        <div class="card-block">
+                            <h4 class="card-title mt-3 text">{{ news.title }}</h4>
+                            <div class="meta card-text text">
+                                <a>{{ news.news_paper.name }}</a>
+                            </div>
+                            <div class="card-text text">
+                                {{ news.abstract }}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <small>{{ news.date }}</small>
+                            <a href="{% url 'the_news:news_detail' pk=news.id %}"><button class="btn btn-info float-right btn-sm" >Read</button></a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="pagination">
+            <span class="step-links">
+                {% if news_list.has_previous %}
+                    <a href="{% url 'the_news:news_list' page=news_list.previous_page_number %}?query={{ query }}">previous</a>
+                {% endif %}
 
-<div class="pagination">
-    <span class="step-links">
-        {% if news_list.has_previous %}
-            <a href="{% url 'the_news:news_list' page=news_list.previous_page_number %}">previous</a>
-        {% endif %}
+                <span class="current">
+                    Page {{ news_list.number }} of {{ news_list.paginator.num_pages }}.
+                </span>
 
-        <span class="current">
-            Page {{ news_list.number }} of {{ news_list.paginator.num_pages }}.
-        </span>
-
-        {% if news_list.has_next %}
-            <a href="{% url 'the_news:news_list' page=news_list.next_page_number %}">next</a>
-        {% endif %}
-    </span>
-</div>
+                {% if news_list.has_next %}
+                    <a href="{% url 'the_news:news_list' page=news_list.next_page_number %}?query={{ query }}">next</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
 {% endblock %}

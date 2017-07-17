@@ -1,7 +1,7 @@
 {% if message %}
     {{ message }}
 {% endif %}
-{% if True in scrapy_spider_status.values %}
+{% if crawler_state %}
     <table>
         {% for spider_name, spider_status in scrapy_spider_status.items %}
             {% if spider_status %}

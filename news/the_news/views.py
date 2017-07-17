@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import urlparse
+from rest_framework import generics
+from scrappers import CrawlSpiderThread
+from scrappers import run_scrapy_project
+from models import News, NewsPaper
+from serializers import NewsSerializer
+from messages import SpiderMessages
 from django.views import View
 from django.shortcuts import render, redirect
-from rest_framework import generics
-from scrappers import CrawlSpiderThread, run_scrapy_project, initialize_spiders
-from django.conf import settings
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.views.generic import DetailView, ListView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-# Create your views here.
-from models import News, NewsPaper
-from serializers import NewsSerializer
+from django.db.models import Q
+from django.conf import settings
 
 
 class NewsListView(ListView):
@@ -21,21 +23,34 @@ class NewsListView(ListView):
     context_object_name = 'news_list'
     template_name = 'the_news/news_list.html'
 
+    def get_queryset(self):
+        filter_val = self.request.GET.get('query')
+        if not filter_val:
+            return News.objects.all().order_by('-date')
+        return News.objects.filter(Q(title__icontains=filter_val) |
+                                   Q(detail__icontains=filter_val) |
+                                   Q(abstract__icontains=filter_val)).order_by('-date')
+
     def get(self, request, *args, **kwargs):
-        news_list = News.objects.all()
-        paginator = Paginator(news_list, 20)
+        news_list = self.get_queryset()
+        if news_list:
+            paginator = Paginator(news_list, 20)
+            page = kwargs.get('page', 1)
+            try:
+                news_list = paginator.page(page)
+            except PageNotAnInteger:
+                # If page is not an integer, deliver first page.
+                news_list = paginator.page(1)
+            except EmptyPage:
+                # If page is out of range (e.g. 9999), deliver last page of results.
+                news_list = paginator.page(paginator.num_pages)
+            context = {'news_list': news_list,
+                       'query': request.GET.get('query', '')}
+        else:
+            context = {'query': request.GET.get(
+                'query',), 'message': 'No news found'}
 
-        page = kwargs.get('page', 1)
-        try:
-            news_list = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            news_list = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
-            news_list = paginator.page(paginator.num_pages)
-
-        return render(request, self.template_name, {'news_list': news_list})
+        return render(request, self.template_name, context)
 
 
 class NewsDetailView(DetailView):
@@ -44,44 +59,35 @@ class NewsDetailView(DetailView):
 
 
 class FetchView(View):
-    scrapy_spiders_status = {}
-    scrapy_spiders_thread = {}
-    scrapy_spiders_status['the-news']=False
-    scrapy_spiders_status['dawn-news']=False
-    scrapy_spiders_thread['the-news'] = None
-    scrapy_spiders_thread['dawn-news'] = None
-
     @method_decorator(login_required(login_url=reverse_lazy('authentication:login')))
     def dispatch(self, *args, **kwargs):
         return super(FetchView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         spider_name = kwargs['spider_name']
-        if True in FetchView.scrapy_spiders_status.values():
-            message = 'A spider is already running please stop it first'
+        if settings.CRAWLER_STATE:
+            message = SpiderMessages.RUNNING.format(spider_name)
         else:
-            if not spider_name:
-                message = 'Provide Spider Name'
-            else:
-                # if spider name exists in database
-                # should be checked
-                spider_status = FetchView.scrapy_spiders_status.get(spider_name, False)
-                if not spider_status:
-                    FetchView.scrapy_spiders_status[spider_name] = False
-                if spider_status == False:
-                    FetchView.scrapy_spiders_thread[spider_name] = CrawlSpiderThread(spider_name,
-                                                                         'news_scrappers.settings',
-                                                                         settings.SCRAPY_SETTINGS,
-                                                                         run_scrapy_project)
-                    FetchView.scrapy_spiders_thread[spider_name].start()
-                    FetchView.scrapy_spiders_status[spider_name] = True
+            if spider_name:
+                news_papers = NewsPaper.objects.filter(spider_name=spider_name)
 
-                    message = spider_name + ' Successfully Started'
-        url = request.META.get('HTTP_REFERER',reverse('the_news:main'))
+                if news_papers:
+                    settings.CRAWLER_THREAD = CrawlSpiderThread(news_papers[0].spider_name,
+                                                        'news_scrappers.settings',
+                                                        settings.SCRAPY_SETTINGS,
+                                                        run_scrapy_project)
+                    settings.CRAWLER_THREAD.start()
+                    message = SpiderMessages.SUCCESSFUL_START.format(spider_name)
+                else:
+                    message = SpiderMessages.NOT_EXISTS.format(spider_name)
+            else:
+                message = SpiderMessages.MISSING_SPIDER_NAME
+        url = request.META.get('HTTP_REFERER', reverse('the_news:main'))
         url = urlparse.urljoin(url, urlparse.urlparse(url).path)
-        url = "{}?message={}".format(url,message)
+        url = "{}?message={}".format(url, message)
 
         return redirect(url)
+
 
 class TerminateView(View):
     @method_decorator(login_required(login_url=reverse_lazy('authentication:login')))
@@ -89,22 +95,22 @@ class TerminateView(View):
         return super(TerminateView, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        spider_name = kwargs['spider_name']
+        spider_name = kwargs.get('spider_name','')
         if not spider_name:
-            message = 'Provide Spider Name'
+            message = SpiderMessages.MISSING_SPIDER_NAME
         else:
-            if FetchView.scrapy_spiders_status.has_key(spider_name) and FetchView.scrapy_spiders_thread[spider_name].isAlive():
-                    FetchView.scrapy_spiders_thread[spider_name].stop()
-                    FetchView.scrapy_spiders_status[spider_name] = False
-                    message = spider_name + ' Spider Successfully Terminated'
-
+            if settings.CRAWLER_NAME and settings.CRAWLER_NAME == spider_name and settings.CRAWLER_THREAD.isAlive():
+                settings.CRAWLER_THREAD.stop()
+                message = SpiderMessages.SUCCESSFUL_TERMINATION.format(spider_name)
             else:
-                message = spider_name + ' Spider Not Crawling. Start Spider First'
-        url = request.META.get('HTTP_REFERER',reverse('the_news:main'))
+                message = SpiderMessages.NOT_RUNNING.format(spider_name)
+        url = request.META.get('HTTP_REFERER', reverse('the_news:main'))
         url = urlparse.urljoin(url, urlparse.urlparse(url).path)
         url = "{}?message={}".format(url, message)
 
         return redirect(url)
+
+
 class TheNewsMainView(View):
     template_name = 'the_news/main.html'
 
@@ -112,9 +118,19 @@ class TheNewsMainView(View):
     def dispatch(self, *args, **kwargs):
         return super(TheNewsMainView, self).dispatch(*args, **kwargs)
 
-
     def get(self, request, *args, **kwargs):
-            return render(request, self.template_name,{'scrapy_spider_status': FetchView.scrapy_spiders_status, 'message':request.GET.get('message','')})
+        news_papers = NewsPaper.objects.all()
+        scrapy_spider_state = dict()
+        for news_paper in news_papers:
+            if settings.CRAWLER_NAME and settings.CRAWLER_NAME == news_paper.spider_name:
+                scrapy_spider_state[news_paper.spider_name] = True
+            else:
+                scrapy_spider_state[news_paper.spider_name] = False
+
+        return render(request, self.template_name, {'scrapy_spider_status': scrapy_spider_state,
+                                                    'crawler_state': settings.CRAWLER_STATE,
+                                                    'message': request.GET.get('message', '')})
+
 
 class NewsListAPIView(generics.ListAPIView):
     queryset = News.objects.all()
