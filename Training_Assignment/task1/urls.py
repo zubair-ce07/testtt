@@ -23,7 +23,7 @@ from task1 import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^users/', include('registration.urls')),
-    url(r'^accounts/signup/$', views.CreateView, name='signup'),
+    url(r'^accounts/signup/$', views.SignUpView, name='signup'),
     url(r'^accounts/login/$', views.LoginView, name='login'),
     url(r'^accounts/logout/$', views.LogoutView, name='logout'),
 ]

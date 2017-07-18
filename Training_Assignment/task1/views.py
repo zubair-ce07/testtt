@@ -10,7 +10,9 @@ from task1.forms import UserLoginForm, UserCreateForm
 from registration.forms import EditUserProfileForm
 
 
-def CreateView(request):
+def SignUpView(request):
+    if request.user.is_authenticated:
+        return HttpResponseRedirect(redirect_to=reverse('registration:details'))
     if request.method == 'GET':
         userform = UserCreateForm()
         userprofileform = EditUserProfileForm()
@@ -24,42 +26,26 @@ def CreateView(request):
                       image=request.FILES.get('image', None),
                       country_name=userprofileform.cleaned_data.get('country', None),
                       address=userprofileform.cleaned_data.get('address', None))
-
             request.session['userid'] = str(user.id)
             login(request, user)
             return HttpResponseRedirect(redirect_to=reverse('registration:details'))
-    return render(request, 'accounts/signup.html', {'userform': userform, 'profileform': userprofileform})
-
-
-def SignUpView(request):
-    if request.method == 'GET':
-        form = UserCreationForm()
-    else:
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = CustomUser(username=form.cleaned_data['username'],
-                              password=make_password(form.cleaned_data['password1']))
-            user.save()
-            request.session['userid'] = str(user.id)
-            login(request, user)
-            return HttpResponseRedirect(redirect_to=reverse('registration:edit'))
-    return render(request, 'accounts/signup.html', {'form': form})
+    return render(request, 'accounts/signup.html', {'userform': userform, 'userprofileform': userprofileform})
 
 
 def LoginView(request):
     if request.user.is_authenticated:
         return HttpResponseRedirect(redirect_to=reverse('registration:details'))
     if request.method == 'GET':
-        form = UserLoginForm()
+        userform = UserLoginForm()
     else:
-        form = UserLoginForm(request.POST)
-        if form.is_valid():
-            user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password'])
+        userform = UserLoginForm(request.POST)
+        if userform.is_valid():
+            user = authenticate(username=userform.cleaned_data['username'], password=userform.cleaned_data['password'])
             if user and user.is_active:
                 request.session['userid'] = str(user.id)
                 login(request, user)
                 return HttpResponseRedirect(redirect_to=reverse('registration:details'))
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/login.html', {'userform': userform})
 
 
 def LogoutView(request):
