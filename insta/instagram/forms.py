@@ -14,12 +14,18 @@ class EdiProfileForm(UserChangeForm):
 
 
 class NewPostForm(forms.ModelForm):
-    # def __init__(self, *args, **kwargs):
-    #     self.request = kwargs.pop("request")
-    #     super(NewPostForm, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super(NewPostForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        self.instance.user = self.user
+        return super(NewPostForm, self).clean()
+
     class Meta:
         model = Post
-        fields = ('user', 'image', 'text')
+        fields = ('image', 'text')
+
     # image = forms.ImageField(required=True)
     # text = forms.CharField(widget=forms.Textarea)
     # def save(self, commit=True):

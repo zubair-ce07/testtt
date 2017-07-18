@@ -32,7 +32,7 @@ def get_posts(user):
     for followee in following:
         followee_posts = Post.objects.filter(user__username=followee.username)
         posts = posts | followee_posts
-    return posts
+    return posts.order_by('-created_at')
 
 
 def get_followers_and_following(user):
@@ -194,7 +194,7 @@ def show_following(request, pk):
 def new_post(request):
     user = request.user
     if request.method == 'POST':
-        form = NewPostForm(request.POST, request.FILES)
+        form = NewPostForm(request.POST, request.FILES, user=user)
         if form.is_valid():
             post = form.save()
             post.refresh_from_db()
@@ -202,7 +202,7 @@ def new_post(request):
             post.save()
             return HttpResponseRedirect(reverse('newsfeed'))
     else:
-        form = NewPostForm()
+        form = NewPostForm(user=user)
         return render(request, 'instagram/new_post.html', {'form': form})
 
 
