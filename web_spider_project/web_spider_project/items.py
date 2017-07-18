@@ -9,21 +9,22 @@ import scrapy
 from scrapy.item import Item, Field
 
 
-class HypedcProductAttr(Item):
-    Item_Id = Field()
-    Url = Field()
-    Name = Field()
-    Brand = Field()
-    Description = Field()
-    Currency = Field()
-    Is_Discounted = Field()
-    Price = Field()
-    Old_Price = Field()
-    Color_Name = Field()
-    Image_Urls = Field()
+class HypedcItem(Item):
+    item_id = Field()
+    url = Field()
+    name = Field()
+    brand = Field()
+    description = Field()
+    currency = Field()
+    is_discounted = Field()
+    price = Field()
+    old_price = Field()
+    color_name = Field()
+    image_urls = Field()
 
 
 class WebSpiderProjectItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
+
