@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from registration.models import UserProfile
 
 
-class EditForm(forms.ModelForm):
+class EditUserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ('user',)

@@ -7,31 +7,15 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import RegexValidator
 from django_countries.fields import CountryField, Country
-# from address.models import AddressField, Address
 from django.db.models.fields.files import FileField, ImageFieldFile, ImageField
 from django_countries.data import COUNTRIES
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
 
 from task1.settings import MEDIA_ROOT
 
-COUNTRIES_NAMES = dict([[i, j] for j, i in COUNTRIES.items()])
-
-
-class CustomUser(User):
-    class Meta:
-        proxy = True
-        ordering = ('first_name',)
-
-    def save(self, *args, **kwargs):
-        try:
-            self._phone_number = kwargs['phone_number']
-            self._country_name = kwargs['country_name']
-            self._address = kwargs['address']
-            self._image = kwargs['image']
-        except:
-            pass
-        kwargs = {}
-        self.full_clean()
-        super(CustomUser, self).save(*args, **kwargs)
+COUNTRY_NAMES = dict([[v, k] for k, v in COUNTRIES.items()])
 
 
 class UserProfile(models.Model):
@@ -40,39 +24,58 @@ class UserProfile(models.Model):
         regex=r'^\+?\d{10,15}$', message="Phone number must be entered in the format: '+9999999999'.")],
         default='+9999999999', max_length=15, blank=True, null=True)
     country = CountryField(blank=True, null=True)
-    image = ImageField(upload_to='registration/', blank=True, null=True)
+    image = ImageField(upload_to='registration/', blank=True, null=True, max_length=255)
     address = models.TextField(max_length=1000, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
 
 
+class CustomUser(User):
+    class Meta:
+        proxy = True
+        ordering = ('first_name',)
+
+    def save(self, *args, **kwargs):
+        self._phone_number = kwargs.get('phone_number', None)
+        self._country_name = kwargs.get('country_name', None)
+        self._address = kwargs.get('address', None)
+        self._image = kwargs.get('image', None)
+        kwargs = {}
+        self.full_clean()
+        super(CustomUser, self).save(*args, **kwargs)
+
+
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
-    try:
-        phone_number = getattr(instance, '_phone_number')
-        country_name = getattr(instance, '_country_name')
-        address = getattr(instance, '_address')
-        src = getattr(instance, '_image')
-        dest = MEDIA_ROOT + 'registration/' + os.path.basename(src)
-        head, tail = os.path.splitext(os.path.basename(src))
-        count = 0
-        while os.path.exists(dest):
-            count += 1
-            dest = os.path.join(os.path.dirname(
-                dest), '{}-{}{}'.format(head, count, tail))
-        copy2(src, dest)
-        # address = Address(raw=address_raw, formatted=address_raw)
-        # address.save()
-        country = Country(code=COUNTRIES_NAMES[country_name])
-        dest_file = 'registration/' + os.path.basename(dest)
-        image = ImageFieldFile(
-            instance=instance, field=FileField(), name=dest_file)
-    except:
-        pass
-    if created:
+    phone_number = getattr(instance, '_phone_number')
+    country = getattr(instance, '_country_name')
+    address = getattr(instance, '_address')
+    image = getattr(instance, '_image')
+
+    if image:
         try:
-            UserProfile.objects.create(user=instance, phone_number=phone_number,
-                                       country=country, address=address, image=image)
-        except:
-            UserProfile.objects.create(user=instance)
+            # from browser
+            path = default_storage.save('registration/' + image.name, ContentFile(image.read()))
+            dest = os.path.join(settings.MEDIA_ROOT, path)
+        except FileNotFoundError:
+            # from dummy users
+            dest = MEDIA_ROOT + 'registration/' + os.path.basename(image)
+            head, tail = os.path.splitext(os.path.basename(image))
+            count = 0
+            while os.path.exists(dest):
+                count += 1
+                dest = os.path.join(os.path.dirname(dest), '{}-{}{}'.format(head, count, tail))
+            copy2(image, dest)
+        dest_file = 'registration/' + os.path.basename(dest)
+        image = ImageFieldFile(instance=instance, field=FileField(), name=dest_file)
+    if country:
+        try:
+            # from dummy users
+            country = Country(code=COUNTRY_NAMES[country])
+        except ValueError:
+            # from browser
+            country = Country(code=country)
+    if created:
+        UserProfile.objects.create(user=instance, phone_number=phone_number,
+                                   country=country, address=address, image=image)

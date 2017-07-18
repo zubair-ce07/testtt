@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.urls import reverse
 
-from registration.forms import EditForm, EditUserForm
+from registration.forms import EditUserProfileForm, EditUserForm
 from task1.decorators import login_required
 
 
@@ -21,15 +21,15 @@ def EditView(request):
         user = request.user
         user_profile = user.userprofile
         if request.method == 'GET':
-            form = EditForm(None, instance=user_profile)
+            profileform = EditUserProfileForm(None, instance=user_profile)
             userform = EditUserForm(None, instance=user)
         else:
-            form = EditForm(request.POST, request.FILES, instance=user_profile)
+            profileform = EditUserProfileForm(request.POST, request.FILES, instance=user_profile)
             userform = EditUserForm(request.POST, instance=user)
-            if form.is_valid() and userform.is_valid():
-                form.save()
+            if profileform.is_valid() and userform.is_valid():
+                profileform.save()
                 userform.save()
                 return HttpResponseRedirect(redirect_to=reverse('registration:details'))
-        return render(request, 'registration/edit.html', {'form': form, 'userform': userform})
+        return render(request, 'registration/edit.html', {'profileform': profileform, 'userform': userform})
     else:
         return HttpResponseRedirect(redirect_to=reverse('login'))

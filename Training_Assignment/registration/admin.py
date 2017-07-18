@@ -23,3 +23,4 @@ class UserAdmin(UserAdmin):
 @admin.register(UserProfile)
 class UserProfile(admin.ModelAdmin):
     exclude = ('user',)
+    list_display = ('user', 'country')
