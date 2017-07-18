@@ -1,15 +1,39 @@
 import os
 import sys
+import csv
 import argparse
 
+def year_check(value):
+    if int(value) < 2003 or int(value) > 2017:
+        raise argparse.ArgumentTypeError("Year Should be Between 2004 and 2016")
+    else:
+        return value
+
+def year_month_check(value):
+    try:
+        year,month =  value.split('/')
+    except Exception as e:
+        raise argparse.ArgumentTypeError("Input should be in Year/Month Format")
+    year_check(year)
+    if int(month) < 1 or int(month) > 12:
+        raise argparse.ArgumentTypeError("Invalid Month value, Month should be Between 01-12")
+    else:
+        return value
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-e', '--task1', type=str, help='Task-1', required=False, default=None)
-parser.add_argument('-a', '--task2', type=str, help='Task-2', required=False, default=None)
-parser.add_argument('-c', '--task3', type=str, help='Task-3', required=False, default=None)
+parser.add_argument('-e', '--annual_weather_extremes', type=year_check, help='Annual Weather Extremes', required=False, default=None)
+parser.add_argument('-a', '--monthly_average_weather', type=year_month_check, help='Montly Average Weather', required=False, default=None)
+parser.add_argument('-c', '--daily_weather_extremes', type=year_month_check, help='Daily Weather extremes of Specifies Month', required=False, default=None)
+parser.add_argument('file_path', help='Directory to data, use relative path like dir/to/files')
 args = parser.parse_args()
 
-files = os.listdir('weatherfiles/')
+
+report_1 = args.annual_weather_extremes
+report_2 = args.monthly_average_weather
+report_3 = args.daily_weather_extremes
+file_path = args.file_path
+
+files = os.listdir(file_path)
 
 months = [
           'Jan', 'Feb', 'Mar',
@@ -18,7 +42,7 @@ months = [
           'Oct', 'Nov', 'Dec'
          ]
 
-def task1(year):
+def annual_weather_extremes(year):
     print 'Report: 1 for the Year: {} \n'.format(year)
     year_files = []
     for file_ in files:
@@ -32,53 +56,56 @@ def task1(year):
     max_humid_date = None
     list_vals = []
 
-
     for file_ in year_files:
-        weather_file = open('weatherfiles/' + file_)
-        lines = weather_file.readlines()
-
-        for i in range(1,len(lines)):
-
-            list_vals = lines[i].split(',')
-            if list_vals[1] != '': 
-                if max_temp < int(list_vals[1]):
-                    max_temp = int(list_vals[1])
-                    max_temp_date = list_vals[0]
-            if list_vals[3] != '': 
-                if min_temp < int(list_vals[3]):
-                    min_temp = int(list_vals[3])
-                    min_temp_date = list_vals[0]
-            if list_vals[7] != '': 
-                if max_humid < float(list_vals[7]):
-                    max_humid = float(list_vals[7])
-                    max_humid_date = list_vals[0]
+        weather_file = open(file_path + '/' + file_)
+        reader = csv.DictReader(weather_file)
+        for line in reader:
+            if line['Max TemperatureC'] != '':
+                if max_temp < int(line['Max TemperatureC']):
+                    max_temp = int(line['Max TemperatureC'])
+                    max_temp_date = line['PKT']
+            if line['Min TemperatureC'] != '':
+                if min_temp < int(line['Min TemperatureC']):
+                    min_temp = int(line['Min TemperatureC'])
+                    min_temp_date = line['PKT']
+            if line['Max Humidity'] != '':
+                if max_humid < float(line['Max Humidity']):
+                    max_humid = float(line['Max Humidity'])
+                    max_humid_date = line['PKT']
         weather_file.close()
-    print 'Highest: {}C on {} {}'.format(max_temp, months[int(max_temp_date.split('-')[1])-1], max_temp_date.split('-')[2])
-    print 'Lowest: {}C on {} {}'.format(min_temp, months[int(min_temp_date.split('-')[1])-1], min_temp_date.split('-')[2])
-    print 'Humidity: {}% on {} {}'.format(max_humid, months[int(max_humid_date.split('-')[1])-1], max_humid_date.split('-')[2])
+
+    month_highest_temp = months[int(max_temp_date.split('-')[1])-1]
+    month_lowest_temp = months[int(min_temp_date.split('-')[1])-1]
+    month_max_humid = months[int(max_humid_date.split('-')[1])-1]
+
+    print 'Highest: {}C on {} {}'.format(max_temp, month_highest_temp, max_temp_date.split('-')[2])
+    print 'Lowest: {}C on {} {}'.format(min_temp, month_lowest_temp, min_temp_date.split('-')[2])
+    print 'Humidity: {}% on {} {}'.format(max_humid, month_max_humid, max_humid_date.split('-')[2])
     print '\n\n'
 
 
-def task2(year, month):
+def monthly_average_weather(year, month):
     print 'Report:2 for month of {}, {}\n'.format(months[int(month)-1],year)
-    weather_file = open('weatherfiles/Murree_weather_' + year + '_' +months[int(month)-1]+'.txt')
-    lines = weather_file.readlines()
+    weather_file = open(file_path + '/Murree_weather_' + year + '_' +months[int(month)-1]+'.txt')
     avg_htemp = 0
     avg_mhum = 0
     avg_ltemp = 0
     avg_mhum = 0
     list_vals = []
-    for i in range(1,len(lines)):
-        list_vals = lines[i].split(',')
-        if list_vals[1] != '':
-            avg_htemp += int(list_vals[1])
-        if list_vals[3] != '':
-            avg_ltemp += int(list_vals[3])
-        if list_vals[8] != '':
-            avg_mhum += int(list_vals[8])
-    avg_htemp /= len(lines)-1
-    avg_ltemp /= len(lines)-1
-    avg_mhum /= len(lines)-1
+    row_count = 0
+    reader = csv.DictReader(weather_file)
+    for line in reader:
+        row_count += 1
+        if line['Max TemperatureC'] != '':
+            avg_htemp += int(line['Max TemperatureC'])
+        if line['Min TemperatureC'] != '':
+            avg_ltemp += int(line['Min TemperatureC'])
+        if line[' Mean Humidity'] != '':
+            avg_mhum += int(line[' Mean Humidity'])
+
+    avg_htemp /= row_count
+    avg_ltemp /= row_count
+    avg_mhum /= row_count
     print 'Highest Average: {}C'.format(avg_htemp)
     print 'Lowest Average: {}C'.format(avg_ltemp)
     print 'Average Mean Humidity: {}%'.format(avg_mhum)
@@ -86,34 +113,40 @@ def task2(year, month):
     print '\n\n'
 
 
-def task3(year, month):
+def daily_weather_extremes(year, month):
     print 'Report:3 for month of {}, {}\n'.format(months[int(month)-1],year)
-    weather_file = open('weatherfiles/Murree_weather_' + year + '_' +months[int(month)-1]+'.txt')
-    lines = weather_file.readlines()
+    weather_file = open(file_path + '/Murree_weather_' + year + '_' +months[int(month)-1]+'.txt')
     max_temp = 0
     min_temp = 0
     blue = '\033[94m'
     red = '\033[91m'
-    list_vals = []
-    for i in range(1,len(lines)):
-        list_vals = lines[i].split(',')
-        if list_vals[1] != '' and list_vals[3] != '':
-            max_temp = int(list_vals[1])
+    row_count = 0
+    reader = csv.DictReader(weather_file)
+    for line in reader:
+        row_count += 1
+        if line['Max TemperatureC'] != '' and  line['Min TemperatureC'] != '':
+            max_temp = int(line['Max TemperatureC'])
             string_red = '+' * max_temp
-            min_temp = int(list_vals[3])
+            min_temp = int(line['Min TemperatureC'])
             string_blue = '+' * min_temp
-            print '{:0>2} {} {}{}{} \033[97m {}C - {}C'.format(i, blue, string_blue, red, string_red, min_temp, max_temp)
+            print '{:0>2} {} {}{}{} \033[97m {}C - {}C'.format(row_count, blue, string_blue, red, string_red, min_temp, max_temp)
     weather_file.close()
 
-task_1 = args.task1
-task_2 = args.task2
-task_3 = args.task3
 
-if task_1 is not None:
-    task1(task_1)
+if os.path.exists(file_path):
 
-if task_2 is not None:
-    task2(task_2.split('/')[0], task_2.split('/')[1])
+    if not (report_1 or report_2 or report_3):
+        parser.error('No action requested, add -e followed by Year or -a/-c followed by year/month')
 
-if task_3 is not None:
-    task3(task_3.split('/')[0], task_3.split('/')[1])
+    if report_1 is not None:
+        annual_weather_extremes(report_1)
+
+    if report_2 is not None:
+        year, month = report_2.split("/")
+        monthly_average_weather(year, month)
+
+    if report_3 is not None:
+        year, month = report_3.split("/")
+        daily_weather_extremes(year, month)
+else:
+    print "Directory {} doesn't exists".format(file_path)
