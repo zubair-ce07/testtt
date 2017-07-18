@@ -11,9 +11,8 @@ app_name = "users"
 
 urlpatterns = [
 
-    url(r'^tasks/$', views.UsersTaskList.as_view(), name='home'),
+    url(r'^tasks/$', views.UsersTaskListCreateView.as_view(), name='home'),
     url(r'^task_details/(?P<pk>[0-9]+)/$', views.UserTaskDetails.as_view()),
-    url(r'^get_current_user/', views.GetCurrentUserDetails.as_view()),
     url(r'^user_profile_options/$', views.GetUpdateDeleteUserAPIView.as_view()),
     url(r'^login/$', v.obtain_auth_token),
     url(r'^', include(router.urls)),
