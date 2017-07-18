@@ -1,0 +1,147 @@
+import calendar
+import csv
+import glob
+import sys
+
+
+def pr_red(prt):
+    print("\033[91m {}\033[00m".format(prt), end="")
+
+
+def pr_blue(prt):
+    print("\033[34m {}\033[00m".format(prt), end="")
+
+
+def monthly_bar_chart(filesdir, date_):
+    print("\n\n\t+++Monthly Bar Chart+++\n")
+    data_set = []
+    year, month = date_.split("/")
+    month_name_ = calendar.month_name[int(month)]
+    print(month_name_ + " " + year)
+    month_name_ = month_name_[:3]
+    sub_string = year + "_" + month_name_
+    file_name = glob.glob(filesdir + "/*" + sub_string + ".txt")
+    with open(file_name[0], 'rt') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        header = next(reader)
+        for row in reader:
+            data_set.append(row)
+    max_temp_list = []
+    for row in data_set:
+        if row[1] == "":
+            max_temp_list.append(0)
+        else:
+            max_temp_list.append(int(row[1]))
+    min_temp_list = []
+    for row in data_set:
+        if row[3] == "":
+            min_temp_list.append(0)
+        else:
+            min_temp_list.append(int(row[3]))
+    for i in range(0, len(max_temp_list)):
+        print(str(i + 1) + " ", end="")
+        symbolsred = "+" * max_temp_list[i]
+        pr_red(symbolsred)
+        print(" " + str(max_temp_list[i]) + "C")
+        print(str(i + 1) + " ", end="")
+        symbolsblue = "+" * min_temp_list[i]
+        pr_blue(symbolsred)
+        print(" " + str(min_temp_list[i]) + "C")
+
+    print("\n\n\t+++Monthly Bar Chart+++")
+    print("\t+++Bonus Task+++\n")
+    for i in range(0, len(max_temp_list)):
+        print(str(i + 1) + " ", end="")
+        symbolsblue = "+" * min_temp_list[i]
+        pr_blue(symbolsblue)
+        symbolsred = "+" * max_temp_list[i]
+        pr_red(symbolsred)
+        print(" " + str(min_temp_list[i]) + "C - " + str(max_temp_list[i]) + "C")
+
+
+def monthly_report(filesdir, date_):
+    print("\n\n\t+++Monthly Report+++\n")
+    data_set = []
+    year, month = date_.split("/")
+    month_name_ = calendar.month_name[int(month)]
+    month_name_ = month_name_[:3]
+    sub_string = year + "_" + month_name_
+    file_name = glob.glob(filesdir + "/*" + sub_string + ".txt")
+    with open(file_name[0], 'rt') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        header = next(reader)
+        for row in reader:
+            data_set.append(row)
+    max_temp_list = [float(row[1]) for row in data_set if row[1] != ""]
+    min_temp_list = [float(row[3]) for row in data_set if row[1] != ""]
+    humidity_list = [float(row[8]) for row in data_set if row[1] != ""]
+    avg_max_temp = int(sum(max_temp_list) / len(max_temp_list))
+    avg_min_temp = int(sum(min_temp_list) / len(min_temp_list))
+    avg_mean_humidity = int(sum(humidity_list) / float(len(humidity_list)))
+    print("Highest Average:       " + str(avg_max_temp) + "C")
+    print("Lowest Average:        " + str(avg_min_temp) + "C")
+    print("Average Mean Humidity: " + str(avg_max_temp) + "%")
+
+
+def yearly_report(filesdir, year):
+    print("\n\n\t+++Yearly Report+++\n")
+    header = []
+    data_set = []
+    file_names = glob.glob(filesdir + "/*" + year + "*.txt")
+    for f in file_names:
+        with open(f, 'rt') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            header = next(reader)
+
+            for row in reader:
+                data_set.append(row)
+    max_temp_list = []
+    for row in data_set:
+        if row[1] == "":
+            max_temp_list.append(-100)
+        else:
+            max_temp_list.append(float(row[1]))
+    min_temp_list = []
+    for row in data_set:
+        if row[3] == "":
+            min_temp_list.append(10000)
+        else:
+            min_temp_list.append(float(row[3]))
+    humidity_list = []
+    for row in data_set:
+        if row[7] == "":
+            humidity_list.append(-100)
+        else:
+            humidity_list.append(float(row[7]))
+    max_temp = max(max_temp_list)
+    max_index = max_temp_list.index(max_temp)
+    min_temp = min(min_temp_list)
+    min_index = min_temp_list.index(min_temp)
+    max_humidity = max(humidity_list)
+    humid_index = humidity_list.index(max_humidity)
+    year_, month, day = data_set[max_index][0].split("-")
+    print("Highest:  " + str(max_temp) + "C on " + calendar.month_name[int(month)] + " " + day)
+    year_, month, day = data_set[min_index][0].split("-")
+    print("Lowest:   " + str(min_temp) + "C on " + calendar.month_name[int(month)] + " " + day)
+    year_, month, day = data_set[humid_index][0].split("-")
+    print("Humidity: " + str(max_humidity) + "% on " + calendar.month_name[int(month)] + " " + day)
+
+
+def main():
+    if (len(sys.argv) == 4):
+        if (sys.argv[2] == "-e"):
+            yearly_report(sys.argv[1], sys.argv[3])
+        elif (sys.argv[2] == "-a"):
+            monthly_report(sys.argv[1], sys.argv[3])
+        elif (sys.argv[2] == "-c"):
+            monthly_bar_chart(sys.argv[1], sys.argv[3])
+        else:
+            print("Wrong Option for report")
+    elif (len(sys.argv) == 8):
+        yearly_report(sys.argv[1], sys.argv[7])
+        monthly_report(sys.argv[1], sys.argv[5])
+        monthly_bar_chart(sys.argv[1], sys.argv[3])
+
+
+if __name__ == "__main__":
+    main()
