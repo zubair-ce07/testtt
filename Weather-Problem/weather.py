@@ -54,33 +54,31 @@ def annual_weather_extremes(year):
     min_temp_date = None
     max_humid = 0
     max_humid_date = None
-    list_vals = []
+    max_temp_month = []
+    min_temp_month = []
+    max_humid_month = []
 
     for file_ in year_files:
         weather_file = open(file_path + '/' + file_)
         reader = csv.DictReader(weather_file)
-        for line in reader:
-            if line['Max TemperatureC'] != '':
-                if max_temp < int(line['Max TemperatureC']):
-                    max_temp = int(line['Max TemperatureC'])
-                    max_temp_date = line['PKT']
-            if line['Min TemperatureC'] != '':
-                if min_temp < int(line['Min TemperatureC']):
-                    min_temp = int(line['Min TemperatureC'])
-                    min_temp_date = line['PKT']
-            if line['Max Humidity'] != '':
-                if max_humid < float(line['Max Humidity']):
-                    max_humid = float(line['Max Humidity'])
-                    max_humid_date = line['PKT']
+        list_of_dicts = [x for x in reader if x['Max TemperatureC'] != "" or x['Min TemperatureC'] != "" or x['Max Humidity'] != "" ]
+        max_temp_month.append(max(list_of_dicts, key=lambda x: int(x['Max TemperatureC'])))
+        min_temp_month.append(min(list_of_dicts, key=lambda x: int(x['Min TemperatureC'])))
+        max_humid_month.append(max(list_of_dicts, key=lambda x: int(x['Max Humidity'])))
         weather_file.close()
 
-    month_highest_temp = months[int(max_temp_date.split('-')[1])-1]
-    month_lowest_temp = months[int(min_temp_date.split('-')[1])-1]
-    month_max_humid = months[int(max_humid_date.split('-')[1])-1]
 
-    print 'Highest: {}C on {} {}'.format(max_temp, month_highest_temp, max_temp_date.split('-')[2])
-    print 'Lowest: {}C on {} {}'.format(min_temp, month_lowest_temp, min_temp_date.split('-')[2])
-    print 'Humidity: {}% on {} {}'.format(max_humid, month_max_humid, max_humid_date.split('-')[2])
+    max_temp = max(max_temp_month, key=lambda x: int(x['Max TemperatureC']))
+    min_temp = min(min_temp_month, key=lambda x: int(x['Min TemperatureC']))
+    max_humid = max(max_humid_month, key=lambda x: int(x['Max Humidity']))
+
+    month_highest_temp = months[int(max_temp['PKT'].split('-')[1])-1]
+    month_lowest_temp = months[int(min_temp['PKT'].split('-')[1])-1]
+    month_max_humid = months[int(max_humid['PKT'].split('-')[1])-1]
+
+    print 'Highest: {}C on {} {}'.format(max_temp['Max TemperatureC'], month_highest_temp, max_temp['PKT'].split('-')[2])
+    print 'Lowest: {}C on {} {}'.format(min_temp['Min TemperatureC'], month_lowest_temp, min_temp['PKT'].split('-')[2])
+    print 'Humidity: {}% on {} {}'.format(max_humid['Max Humidity'], month_max_humid, max_humid['PKT'].split('-')[2])
     print '\n\n'
 
 
@@ -94,6 +92,7 @@ def monthly_average_weather(year, month):
     list_vals = []
     row_count = 0
     reader = csv.DictReader(weather_file)
+
     for line in reader:
         row_count += 1
         if line['Max TemperatureC'] != '':
