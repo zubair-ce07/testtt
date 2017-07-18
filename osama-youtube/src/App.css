@@ -1,0 +1,11 @@
+.App-header {
+  padding: 10px;
+  border-bottom: 1px solid black;
+}
+
+.result-container {
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+}
+

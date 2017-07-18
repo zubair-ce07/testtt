@@ -1,0 +1,6 @@
+.player {
+  box-shadow: 0 0px 5px grey;
+  display: flex;
+  margin: 20px 40px;
+  cursor: pointer;
+}
