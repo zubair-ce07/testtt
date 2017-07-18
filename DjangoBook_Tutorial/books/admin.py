@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from .models import Publisher, Author, Book
 
-
 admin.site.register(Publisher)
 
 
@@ -18,6 +17,5 @@ class BookAdmin(admin.ModelAdmin):
     list_filter = ('publication_date',)
     date_hierarchy = 'publication_date'
     ordering = ('-publication_date',)
-    #fields = ('title', 'authors', 'publisher')
     filter_horizontal = ('authors',)
     raw_id_fields = ('publisher',)

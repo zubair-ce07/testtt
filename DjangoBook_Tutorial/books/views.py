@@ -1,14 +1,15 @@
 from django.shortcuts import render
-from .models import Book
+from books.models import Book
 
 
 def search_form(request):
     if 'q' in request.GET:
         query = request.GET['q']
+        context = {'query': query, 'error': True}
         if query:
-            books = Book.objects.filter(title__icontains=q)
-            return render(request, 'books/search_form.html', {'query': query, 'books': books})
-        else:
-            return render(request, 'books/search_form.html', {'query': query, 'error': True})
+            books = Book.objects.filter(title__icontains=query)
+            context['books'] = books
+            context['error'] = False
+        return render(request, 'books/search_form.html', context)
     else:
         return render(request, 'books/search_form.html')

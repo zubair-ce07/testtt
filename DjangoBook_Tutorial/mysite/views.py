@@ -17,8 +17,7 @@ def hours_ahead(request, offset):
     try:
         offset = int(offset)
     except ValueError:
-        raise Http404(
-            'Enter a number in the range of 0-99 instead of a character')
+        raise Http404('Enter a number in the range of 0-99 instead of a character')
     time_ahead = datetime.datetime.now() + datetime.timedelta(hours=offset)
     return render(request, 'hours_ahead.html', {'hours_offset': offset, 'next_time': time_ahead})
 
