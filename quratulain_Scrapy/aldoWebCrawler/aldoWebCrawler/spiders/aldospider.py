@@ -1,15 +1,16 @@
 from aldoWebCrawler.items import AldoProductItem, AldoSizeItem, AldoVariantionItem
 from scrapy.loader import ItemLoader
 from scrapy import Spider
+import copy
 
 
 class AldoSpider(Spider):
     name = 'aldospider'
     start_urls = ['https://www.aldoshoes.com/ca/en/']
-    aldo_css = {'sizes': "#PdpProductSizeSelectorOpts li::text",
-                'brand': "meta[property$=':site']::attr(content)",
+    aldo_css = {'brand': "meta[property$=':site']::attr(content)",
                 'title': "meta[property$=':title']::attr(content)",
                 'locale': "meta[property$=':locale']::attr(content)",
+                'size_names': "#PdpProductSizeSelectorOpts li::text",
                 'image_urls': "meta[property$=':image']::attr(content)",
                 'currency': "meta[property$=':currency']::attr(content)",
                 'product_link': ".c-product-tile__link-product::attr(href)",
@@ -63,8 +64,7 @@ class AldoSpider(Spider):
 
     def parse_responses(self, responses):
         product = self.load_product_item(responses[0])
-        product = self.add_variation(responses[0], product)
-        for response in responses[1:]:
+        for response in responses:
             product = self.add_variation(response, product)
         return product
 
@@ -81,12 +81,13 @@ class AldoSpider(Spider):
     def load_size_items(self, response):
         loaded_sizes = list()
         size_item = self.load_size_item(response)
+        size = copy.deepcopy(size_item)
 
-        sizes = response.css(self.aldo_css['sizes']).extract()
-        for size in sizes:
-            loaded_sizes.append({'size_name': size, 'price': size_item['price'],
-                                 'is_discounted': size_item['is_discounted'],
-                                 'discounted_price': size_item['discounted_price']})
+        size_names = response.css(self.aldo_css['size_names']).extract()
+        for size_name in size_names:
+            loaded_sizes.append({'size_name': size_name, 'price': size['price'],
+                                 'is_discounted': size['is_discounted'],
+                                 'discounted_price': size['discounted_price']})
         return loaded_sizes
 
     def load_size_item(self, response):
@@ -99,22 +100,22 @@ class AldoSpider(Spider):
         return size_items.load_item()
 
     def load_variation_item(self, response):
-        variation_items = ItemLoader(item=AldoVariantionItem(), response=response)
-        variation_items.add_css('image_urls', self.aldo_css['image_urls'])
-        variation_items.add_css('display_color_name', self.aldo_css['display_color_name'])
-        return variation_items.load_item()
+        variation_item = ItemLoader(item=AldoVariantionItem(), response=response)
+        variation_item.add_css('image_urls', self.aldo_css['image_urls'])
+        variation_item.add_css('display_color_name', self.aldo_css['display_color_name'])
+        return variation_item.load_item()
 
     def load_product_item(self, response):
-        product_items = ItemLoader(item=AldoProductItem(), response=response)
-        product_items.add_value('product_url', response.url)
-        product_items.add_css('brand', self.aldo_css['brand'])
-        product_items.add_css('title', self.aldo_css['title'])
-        product_items.add_css('locale', self.aldo_css['locale'])
-        product_items.add_css('locale', self.aldo_css['locale'])
-        product_items.add_css('currency', self.aldo_css['currency'])
-        product_items.add_css('description', self.aldo_css['description'])
-        product_items.add_value('store_keeping_unit', response.url.split('/')[-1].split('-')[0])
-        return product_items.load_item()
+        product_item = ItemLoader(item=AldoProductItem(), response=response)
+        product_item.add_value('product_url', response.url)
+        product_item.add_css('brand', self.aldo_css['brand'])
+        product_item.add_css('title', self.aldo_css['title'])
+        product_item.add_css('locale', self.aldo_css['locale'])
+        product_item.add_css('locale', self.aldo_css['locale'])
+        product_item.add_css('currency', self.aldo_css['currency'])
+        product_item.add_css('description', self.aldo_css['description'])
+        product_item.add_value('store_keeping_unit', response.url.split('/')[-1].split('-')[0])
+        return product_item.load_item()
 
     def is_discounted(self, response):
         if response.css(self.aldo_css['discounted_price']):

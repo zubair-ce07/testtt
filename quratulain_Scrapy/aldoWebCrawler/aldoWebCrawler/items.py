@@ -8,10 +8,6 @@ import scrapy
 from scrapy.loader.processors import TakeFirst
 
 
-class AldowebcrawlerItem(scrapy.Item):
-    pass
-
-
 class AldoProductItem(scrapy.Item):
     variations = scrapy.Field(type='list')
     title = scrapy.Field(output_processor=TakeFirst())
