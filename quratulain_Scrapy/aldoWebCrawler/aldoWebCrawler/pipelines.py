@@ -5,7 +5,9 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
+from json import dumps
+from datetime import datetime
+
 
 class AldowebcrawlerPipeline(object):
-    def process_item(self, item, spider):
-        return item
+    pass

@@ -5,7 +5,7 @@
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/items.html
 import scrapy
-from scrapy.contrib.loader.processor import TakeFirst
+from scrapy.loader.processors import TakeFirst
 
 
 class AldowebcrawlerItem(scrapy.Item):
@@ -24,8 +24,8 @@ class AldoProductItem(scrapy.Item):
 
 
 class AldoVariantionItem(scrapy.Item):
-    sizes = scrapy.Field()
-    image_urls = scrapy.Field()
+    sizes = scrapy.Field(type='list')
+    image_urls = scrapy.Field(type='list')
     display_color_name = scrapy.Field(output_processor=TakeFirst())
 
 
