@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <!-- This file has been downloaded from Bootsnipp.com. Enjoy! -->
+    <title>Signup - Bootsnipp.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+        .mycolor {
+            color: #428bca;
+        }
+        
+        .myborder {
+            padding: 20px;
+            ;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-box-shadow: 0px 0px 3px 0px #428bca;
+            -moz-box-shadow: 0px 0px 3px 0px #428bca;
+            box-shadow: 0px 0px 3px 0px #428bca;
+        }
+        
+        .mybutton {
+            position: relative;
+            left: 50%;
+            top: 193px;
+        }
+        
+        .margin-bottom-20 {
+            margin-bottom: 20px;
+        }
+        
+        .btn-u:hover {
+            background: #428bca;
+        }
+        
+        .btn-u:hover,
+        .btn-u:focus,
+        .btn-u:active,
+        .btn-u.active,
+        .open .dropdown-toggle.btn-u {
+            background: #428bca;
+        }
+        
+        .btn-u:hover {
+            color: #fff;
+            text-decoration: none;
+            -webkit-transition: all 0.3s ease-in-out;
+            -moz-transition: all 0.3s ease-in-out;
+            -o-transition: all 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .btn-u {
+            background: #428bca;
+        }
+        
+        .btn-u {
+            white-space: nowrap;
+            border: 0;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 400;
+            padding: 6px 13px;
+            position: relative;
+            background: #428bca;
+            display: inline-block;
+            text-decoration: none;
+        }
+        
+        .input-group-addon {
+            border-right: 0;
+            /*color: #b3b3b3;*/
+            font-size: 14px;
+            background: #fff;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1;
+            color: #555;
+            text-align: center;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        .input-group .form-control {
+            float: left;
+            width: 100%;
+            margin-bottom: 0;
+        }
+        
+        .form-control {
+            box-shadow: none;
+        }
+        
+        .form-control {
+            display: block;
+            width: 100%;
+            height: 34px !important;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.428571429;
+            color: #555;
+            background-color: #fff;
+            background-image: none;
+            border: 1px solid #428bca !important;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+
+    </style>
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <br />
+    <form method="post" action="{% url 'wblog:signup' %}">
+        {% csrf_token %}
+        <div class="container">
+            <div class="col-md-3"></div>
+            <div class="col-md-6">
+                <div class="row myborder">
+                    <h4 style="color: #7EB59E; margin: initial; margin-bottom: 10px;">Sign Up Now</h4>
+                    <hr>
+                    <div class="input-group margin-bottom-20">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-user mycolor"></i></span> {{ form.username }}
+                    </div>
+                    <div class="input-group margin-bottom-20">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock mycolor"></i></span> {{ form.password }}
+                    </div>
+                    <div class="input-group margin-bottom-20">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-user mycolor"></i></span> {{ form.gender }}
+                    </div>
+                    <div class="input-group margin-bottom-20">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-user mycolor"></i></span> {{ form.date_of_birth }}
+                    </div>
+                        {% if form.date_of_birth.errors %}
+                        <p>Invalid Date Format</p>
+                        {% endif %}
+
+                    <div class="input-group margin-bottom-20">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-envelope mycolor"></i></span> {{ form.phone_no }}
+                    </div>
+                    <div class="input-group margin-bottom-20">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-user mycolor"></i></span> {{ form.address }}
+                     </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn-u pull-left" type="submit">Sign Up</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        </div>
+    </form>
+    <script type="text/javascript">
+
+
+    </script>
+</body>
+
+</html>

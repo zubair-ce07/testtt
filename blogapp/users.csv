@@ -1,0 +1,4 @@
+username,password,email,phone_num,address,dob,gender,created_at
+john1,pass_john1,john@email.com,+9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00
+john2,pass_john1,john@email.com,+9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00
+john3,pass_john1,john@email.com,+9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00
