@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import "./Result.css";
 
 class Result extends React.Component {
@@ -7,7 +8,7 @@ class Result extends React.Component {
     this.handleClick = this.handleClick.bind(this);
   }
   handleClick() {
-      this.props.play(this.props.vidId);
+    this.props.play(this.props.vidId);
   }
   render() {
     return (
@@ -29,5 +30,11 @@ class Result extends React.Component {
     );
   }
 }
+
+Result.PropTypes = {
+  imgurl: PropTypes.string,
+  title: PropTypes.string,
+  description: PropTypes.string
+};
 
 export default Result;

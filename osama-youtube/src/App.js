@@ -48,22 +48,20 @@ class App extends Component {
         </div>
         {this.state.playVid &&
           <div className="player-container">
-            <VideoPlayer play={this.state.playVid} vidId={this.state.vidId} />
+            <VideoPlayer vidId={this.state.vidId} />
           </div>}
 
         <div className="result-container">
-          {this.state.results.map(item => {
-            return (
-              <Result
-                key={item.etag}
-                imgurl={item.snippet.thumbnails.medium.url}
-                title={item.snippet.title}
-                description={item.snippet.description}
-                vidId={item.id.videoId}
-                play={this.playVideo}
-              />
-            );
-          })}
+          {this.state.results.map(item =>
+            <Result
+              key={item.etag}
+              imgurl={item.snippet.thumbnails.medium.url}
+              title={item.snippet.title}
+              description={item.snippet.description}
+              vidId={item.id.videoId}
+              play={this.playVideo}
+            />
+          )}
         </div>
       </div>
     );
