@@ -1,6 +1,7 @@
 import string
 import random
 
+
 rand_str = lambda n: ''.join([random.choice(string.ascii_lowercase) for i in range(n)])
 f = open('users.csv', 'w')
 f.write('username,password,email,phone_num,address,dob,gender,created_at,blog_slug,blog_text,blog_is_published,blog_comments_allowed,blog_is_public,comment_text,ip\n')
