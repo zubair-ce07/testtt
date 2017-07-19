@@ -5,7 +5,7 @@ from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
-from ThermoFisher.items import ThermoType2SpiderItem
+from ThermoFisher.items import ThermoType2Item
 from ThermoFisher.spiders import thermo_constants as constants
 
 catalog_ids = []
@@ -44,19 +44,20 @@ class ThermoType2Spider(CrawlSpider):
 
     def parse_items(self, response):
         diff = response.css(constants.product_type).extract_first()
+        # diff identifies which type of product it is
         if diff:
             if 'Details' in diff:
                 pass
             elif 'overview' in diff:
                 if not response.css(constants.product_type_2):
-                    request = self.parse_overview_items(response)
+                    request = self.parse_type_2_items(response)
                     yield request
 
-    def parse_overview_items(self, response):
+    def parse_type_2_items(self, response):
         c_id = response.css(constants.get_cid_2).extract_first()
         if c_id not in catalog_ids:
             catalog_ids.append(c_id)
-            item = self.compile_overview_item(response)
+            item = self.compile_type_2_item(response)
             request = Request(constants.get_additional_info_url.format(c_id), callback=self.parse_additional_info)
             request.meta['c_id'] = c_id
             request.meta['item'] = item
@@ -81,8 +82,8 @@ class ThermoType2Spider(CrawlSpider):
         item['coa'] = self.get_product_coas(document_info)
         yield item
 
-    def compile_overview_item(self, response):
-        item = ThermoType2SpiderItem()
+    def compile_type_2_item(self, response):
+        item = ThermoType2Item()
         item['brand'] = self.get_brand(response)
         item['name'] = self.get_product_name(response)
         item['description'] = self.get_product_description(response)

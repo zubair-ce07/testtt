@@ -1,7 +1,7 @@
 import scrapy
 
 
-class ThermoType2SpiderItem(scrapy.Item):
+class ThermoType2Item(scrapy.Item):
     catalog_numbers = scrapy.Field()
     brand = scrapy.Field()
     name = scrapy.Field()
@@ -22,7 +22,7 @@ class ThermoType2SpiderItem(scrapy.Item):
     documents = scrapy.Field()
 
 
-class ThermoType1SpiderItem(scrapy.Item):
+class ThermoType1Item(scrapy.Item):
     catalog_numbers = scrapy.Field()
     brand = scrapy.Field()
     name = scrapy.Field()
@@ -44,7 +44,7 @@ class ThermoType1SpiderItem(scrapy.Item):
     details = scrapy.Field()
 
 
-class ThermoType3SpiderItem(scrapy.Item):
+class ThermoType3Item(scrapy.Item):
     catalog_numbers = scrapy.Field()
     brand = scrapy.Field()
     name = scrapy.Field()

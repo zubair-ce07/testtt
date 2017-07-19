@@ -5,7 +5,7 @@ from scrapy import Request, FormRequest
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
-from ThermoFisher.items import ThermoType1SpiderItem
+from ThermoFisher.items import ThermoType1Item
 from ThermoFisher.spiders import thermo_constants as constants
 
 catalog_ids = []
@@ -57,17 +57,18 @@ class ThermoType1Spider(CrawlSpider):
 
     def parse_items(self, response):
         diff = response.css(constants.product_type).extract_first()
+        # diff identifies which type of product it is
         if diff:
             if 'Details' in diff:
-                yield self.parse_details_items(response)
+                yield self.parse_type_1_items(response)
             elif 'overview' in diff:
                 pass
 
-    def parse_details_items(self, response):
+    def parse_type_1_items(self, response):
         c_id = response.css(constants.get_cid_1).extract_first()
         if c_id not in catalog_ids:
             catalog_ids.append(c_id)
-            item = self.compile_details_item(response)
+            item = self.compile_type_1_item(response)
             request = Request(constants.get_documents_info_url.format(
                 response.css(constants.product_type_1_formatted_sku).extract_first()),
                               callback=self.parse_documents_info)
@@ -198,11 +199,11 @@ class ThermoType1Spider(CrawlSpider):
             'pluginName': ''
         }
 
-    def compile_details_item(self, response):
+    def compile_type_1_item(self, response):
         cat_ids = self.get_product_cat_ids(response)
         sizes = self.get_product_sizes(response)
         prices = self.get_product_prices(response)
-        item = ThermoType1SpiderItem()
+        item = ThermoType1Item()
         item['name'] = response.css(constants.get_name_1).extract_first()
         item['category'] = list(
             filter(None,
