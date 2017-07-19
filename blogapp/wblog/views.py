@@ -16,7 +16,6 @@ app_name = 'wblog'
 class Login(LoginView):
     authentication_form = LoginForm
     template_name = 'wblog/index.html'
-    redirect_authenticated_user = True
 
 
 class Profile(FormView):
@@ -24,13 +23,12 @@ class Profile(FormView):
 
 
 class Logout(LogoutView):
-    next_page = 'wblog/index.html'
+    next_page = '/wblog'
 
 
 class SignupView(FormView):
     template_name = 'wblog/signup.html'
     form_class = SignUpForm
-    success_url = '/welcome/'
 
     def post(self, request, *args, **kwargs):
         form = SignUpForm(request.POST)
@@ -60,7 +58,9 @@ def profile_view(request):
     if request.method == 'POST':
         print(request.POST)
         form = SignUpForm(request.POST, instance=user)
-        form.save(commit=True)
+        user.image = request.FILES['image']
+        print(request.FILES)
+        user.save()
     else:
         print(request.user)
         form = SignUpForm(initial={'username': request.user.username,
@@ -68,6 +68,7 @@ def profile_view(request):
                                    'phone_no': user.phone_no,
                                    'address': user.address,
                                    'date_of_birth': user.date_of_birth,
-                                   'gender': user.gender
+                                   'gender': user.gender,
+                                   'image': user.image
                                    })
     return render(request, 'wblog/profile.html', {'user': form})
