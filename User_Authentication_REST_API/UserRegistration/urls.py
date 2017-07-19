@@ -5,7 +5,7 @@ from rest_framework.authtoken import views as v
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'user', CustomUserList, base_name='sample')
+router.register(r'user', CustomUserList, base_name='list-detail')
 
 app_name = "users"
 

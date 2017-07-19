@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -11,12 +11,16 @@ class CustomUserManager(BaseUserManager):
     def _create_user(self, email, password, is_staff, is_superuser, **extra_fields):
         """
         Create a new user with given parameters and return the user
-        :param email:
-        :param password:
-        :param is_staff:
-        :param is_superuser:
-        :param extra_fields:
-        :return: user
+
+        Args:
+            email (str): The unique email given by the user
+            password (str): Password consisting of 9 words not all numeric
+            is_staff (boolean): Parameter to determine whether the user should be staff member or not
+            is_superuser (boolean): Parameter to determine whether the user should be superuser or not
+            extra_fields (extra parameters): Variable length arguments list for user fields
+
+        Returns:
+            CustomUser: The Created user
         """
         if not email:
             raise ValueError("Email Required")
@@ -28,30 +32,49 @@ class CustomUserManager(BaseUserManager):
 
     def create_user(self, email, password, **extra_fields):
         """
-        Calls private _create_user() method with given parameters
-        :param email:
-        :param password:
-        :param extra_fields:
-        :return: created user
+        Calls private _create_user() method with given parameters to return user
+
+        Args:
+            email (str): The unique email given by the user
+            password (str): Password consisting of 9 words not all numeric
+            extra_fields (extra parameters): Variable length arguments list for user fields
+
+        Returns:
+            CustomUser: The user created after calling _create_user()
         """
         return self._create_user(email, password, False, False, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
         """
-        Calls private create_user() method with given parameters for superuser
-        :param email:
-        :param password:
-        :param extra_fields:
-        :return: superuser
+        Calls private _create_user() method with given parameters to return superuser
+
+        Args:
+            email (str): The unique email given by the user
+            password (str): Password consisting of 9 words not all numeric
+            extra_fields (extra parameters): Variable length arguments list for user fields
+
+        Returns:
+            CustomUser: The user created after calling _create_user()
         """
         return self._create_user(email, password, True, True, **extra_fields)
 
 
 class CustomUser(AbstractBaseUser):
     """
-    Custom model for representing users
+    Model for representing users
 
-    All fields are required except profile_picture. Email and password are unique fields
+    Attributes:
+        username (str): Username field of the user
+        first_name (str): First name of the user
+        last_name (str): Last name of the user
+        email (email field): Uniques identifier for the users
+        city (str): City where the user belongs
+        profile_picture (ImageField): The display picture of the user
+        height_field (int): Store the height of the profile picture uploaded. Default to 0
+        width_field (int): Store the width of the profile picture uploaded. Default to 0
+        is_active (boolean): Field to keep the check whether the user is active or not. Defaults to True
+        is_superuser (boolean): Field to keep the check whether the user is superuser or not. Defaults to True
+        is_staff (boolean): Field to keep the check whether the user is staff member or not. Defaults to True
     """
     username = models.CharField(max_length=30)
     first_name = models.CharField(max_length=30)
@@ -76,6 +99,9 @@ class CustomUser(AbstractBaseUser):
         verbose_name_plural = _('users')
 
     def get_full_name(self):
+        """
+        Return the full name for this User
+        """
         full_name = "{} {}".format(self.first_name, self.last_name)
         return full_name
 
@@ -93,7 +119,11 @@ class Task(models.Model):
     """
     Model to represent the tasks assigned to the users
 
-    All field are required. Name is unique field
+    Attributes:
+        user (CustomUser): Custom user object to which the tasks are assigned
+        name (str): The unique name of the task acting as an identifier
+        due_date (DateField): The due date for the task
+        status (Boolean): The field representing the status of the task (complete or incomplete)
     """
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=20, unique=True)

@@ -13,6 +13,10 @@ from .models import Task
 class UsersTaskListCreateView(generics.ListCreateAPIView):
     """
     View for creating and listing tasks for user
+
+    Attributes:
+        serializer_class: Being equal to UserTaskSerializer
+        permission_classes: Permissions that would be checked before giving the response to the user
     """
     serializer_class = UsersTaskSerializer
     permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser)
@@ -20,9 +24,10 @@ class UsersTaskListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         """
         Create task for incoming request user
-        :param serializer:
-
         Note: The default perform_create() method is overwritten
+
+        Args:
+            serializer: The serializer that should be used
         """
         if self.request.user.is_superuser:
             user_id = self.request.POST.get('user')
@@ -54,7 +59,11 @@ class UserTaskDetails(generics.RetrieveUpdateDestroyAPIView):
 
 class CustomUserList(viewsets.ModelViewSet):
     """
-    View for creating and listing users
+    View for creating and listing users using inherited ModelViewSet
+
+    Attributes:
+        serializer_class: Being equal to UserTaskSerializer
+        permission_classes: Permissions that would be checked before giving the response to the user
     """
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAuthenticated,)
@@ -72,6 +81,9 @@ class CustomUserList(viewsets.ModelViewSet):
 class GetUpdateDeleteUserAPIView(APIView):
     """
     View to get, edit and destroy current user details
+
+    Attributes:
+        permission_classes: Permissions that would be checked before giving the response to the user
     """
     permission_classes = (permissions.IsAuthenticated,)
 
