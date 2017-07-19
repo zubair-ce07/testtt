@@ -43,15 +43,11 @@ class Language(models.Model):
 class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True)
-    summary = models.TextField(
-        max_length=1000, help_text='Enter a brief description of the book')
-    isbn = models.CharField(
-        'ISBN', max_length=13,
-        help_text='13 Character <a href = "https://www.isbn-international.org/content/what-isbn">ISBN</a>')
-    genre = models.ManyToManyField(
-        Genre, help_text='Select genres for this book')
-    language = models.ForeignKey(
-        Language, on_delete=models.SET_NULL, null=True, blank=True)
+    summary = models.TextField(max_length=1000, help_text='Enter a brief description of the book')
+    isbn = models.CharField('ISBN', max_length=13,
+                            help_text='13 Character <a href = "https://www.isbn-international.org/content/what-isbn">ISBN</a>')
+    genre = models.ManyToManyField(Genre, help_text='Select genres for this book')
+    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -71,11 +67,9 @@ class BookInstance(models.Model):
     book = models.ForeignKey(Book, on_delete=models.SET_NULL, null=True)
     imprint = models.CharField(max_length=200)
     due_back = models.DateField(null=True, blank=True)
-
-    status = models.CharField(max_length=1, choices=BookInstanceLoanChoices.Choices,
-                              blank=True, default='d', help_text='Book availability')
-    borrower = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=1, choices=BookInstanceLoanChoices.Choices, blank=True, default='d',
+                              help_text='Book availability')
+    borrower = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         ordering = ['due_back']
@@ -86,4 +80,4 @@ class BookInstance(models.Model):
 
     @property
     def is_overdue(self):
-        return True if self.due_back and date.today() > self.due_back else False
+        return self.due_back and date.today() > self.due_back

@@ -77,18 +77,13 @@ def renew_book_librarian(request, pk):
     book_inst = get_object_or_404(BookInstance, pk=pk)
     if request.method == 'POST':
         form = RenewBookModelForm(request.POST)
-
         if form.is_valid():
             book_inst.due_back = form.cleaned_data['renewal_date']
             book_inst.save()
-
             return HttpResponseRedirect(reverse('borrowed'))
-
     else:
         proposed_renewal_date = datetime.datetime.today() + datetime.timedelta(weeks=3)
-        form = RenewBookModelForm(
-            initial={'renewal_date': proposed_renewal_date})
-
+        form = RenewBookModelForm(initial={'renewal_date': proposed_renewal_date})
     return render(request, 'catalog/book_renew_librarian.html', {'form': form, 'bookinst': book_inst})
 
 
@@ -135,10 +130,8 @@ class BookInstanceUpdateStatus(UpdateView):
 
     def get_success_url(self):
         if 'fk' in self.kwargs:
-            foreign_key = self.kwargs['fk']
-            return reverse('book-detail', kwargs={'pk': foreign_key})
-        else:
-            return reverse('books')
+            return reverse('book-detail', kwargs={'pk': self.kwargs['fk']})
+        return reverse('books')
 
 
 class BookInstanceDelete(PermissionRequiredMixin, DeleteView):
@@ -147,10 +140,8 @@ class BookInstanceDelete(PermissionRequiredMixin, DeleteView):
 
     def get_success_url(self):
         if 'fk' in self.kwargs:
-            foreign_key = self.kwargs['fk']
-            return reverse('book-detail', kwargs={'pk': foreign_key})
-        else:
-            return reverse('books')
+            return reverse('book-detail', kwargs={'pk': self.kwargs['fk']})
+        return reverse('books')
 
 
 class BookInstanceCreate(PermissionRequiredMixin, CreateView):
@@ -165,7 +156,5 @@ class BookInstanceCreate(PermissionRequiredMixin, CreateView):
 
     def get_success_url(self):
         if 'fk' in self.kwargs:
-            foreign_key = self.kwargs['fk']
-            return reverse('book-detail', kwargs={'pk': foreign_key})
-        else:
-            return reverse('books')
+            return reverse('book-detail', kwargs={'pk': self.kwargs['fk']})
+        return reverse('books')

@@ -5,7 +5,6 @@ class ContextRequestMiddleware(object):
     def __call__(self, request):
         with open('userbooklog.txt', 'a') as booklog:
             booklog.write('Request: {}\n'.format(request.user))
-        booklog.close()
         return self.get_response(request)
 
     def process_template_response(self, request, response):
