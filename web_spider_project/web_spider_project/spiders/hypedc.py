@@ -13,25 +13,21 @@ class HypedcSpider(CrawlSpider):
         "https://www.hypedc.com/",
     ]
     rules = (
-        Rule(LinkExtractor(restrict_css='a.next.btn.btn-primary')),
-        Rule(LinkExtractor(restrict_css='li.dropdown>a'), callback='parse_items'),
-        # Rule(LinkExtractor(allow='https://www.hypedc.com/womens/'), callback='parse_items'),
-        # Rule(LinkExtractor(allow='https://www.hypedc.com/mens'), callback='parse_items'),
-        # Rule(LinkExtractor(allow='https://www.hypedc.com/kids/'), callback='parse_items'),
-
+        Rule(LinkExtractor(restrict_css='.next.btn.btn-primary')),
+        Rule(LinkExtractor(restrict_css='.nav-primary .dropdown [href]'), callback='parse_items'),
     )
 
     def parse_items(self, response):
-        for item_selector in response.css('div.category-products.row>div.item'):
+        for item_selector in response.css('#catalog-listing .item'):
             item = HypedcItem()
-            raw_items = item_selector.css('a::attr(data-product)').extract_first()
+            raw_items = item_selector.css('::attr(data-product)').extract_first()
             formatted_items = json.loads(raw_items)
             item['item_id'] = formatted_items['id']
             item['name'] = formatted_items['name']
             item['brand'] = formatted_items['brand']
             item['price'] = formatted_items['price']
             item['color_name'] = formatted_items['variant']
-            item['url'] = item_selector.css('a::attr(href)').extract_first()
+            item['url'] = item_selector.css('::attr(href)').extract_first()
             request = scrapy.Request(item['url'], callback=self.parse_details,
                                      meta={'item': item})
             yield request
@@ -45,11 +41,11 @@ class HypedcSpider(CrawlSpider):
         return item
 
     def item_description(self, item, response):
-        item['description'] = response.css('.product-description.std::text').extract()
+        item['description'] = response.css('.product-description.std::text').extract_first()
         return item
 
     def item_currency(self, item, response):
-        item['currency'] = response.css('h2.product-price>meta::attr(content)').extract()
+        item['currency'] = response.css('.product-price [itemprop=priceCurrency]::attr(content)').extract_first()
         return item
 
     def item_image_urls(self, item, response):
