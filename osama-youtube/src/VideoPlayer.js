@@ -5,7 +5,8 @@ class VideoPlayer extends React.Component {
   constructor(props) {
     super();
     this.state = {
-      vidId: props.vid
+      play: props.play,
+      vidId: props.vidId
     };
   }
   render() {

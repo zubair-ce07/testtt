@@ -11,13 +11,15 @@ class App extends Component {
     this.searchYoutube = this.searchYoutube.bind(this);
     this.playVideo = this.playVideo.bind(this);
     this.state = {
-      vidId: false,
+      playVid: false,
+      vidId: "",
       results: []
     };
   }
 
   playVideo(vidId) {
     this.setState({
+      playVid: true,
       vidId: vidId
     });
   }
@@ -52,7 +54,11 @@ class App extends Component {
         <div className="App-header">
           <SearchForm searchHandler={this.searchYoutube} />
         </div>
-        <VideoPlayer vid={this.state.vidId} />
+        {(function(playVid, vidId) {
+          if (playVid) {
+            return <VideoPlayer play={playVid} vidId={vidId} />;
+          }
+        })(this.state.playVid, this.state.vidId)}
         <div className="result-container">
           {this.state.results}
         </div>
