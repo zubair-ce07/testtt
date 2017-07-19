@@ -11,9 +11,9 @@ class SearchForm extends Component {
     };
   }
 
-  handleChange(evt) {
+  handleChange(query) {
     this.setState({
-      query: evt.target.value
+      query
     });
   }
 
@@ -27,7 +27,7 @@ class SearchForm extends Component {
       <div className="search-container">
         <form action="" className="search-form">
           <input
-            onChange={this.handleChange}
+            onChange={(evt) => this.handleChange(evt.target.value)}
             className="search-input"
             type="text"
             placeholder="Search"
