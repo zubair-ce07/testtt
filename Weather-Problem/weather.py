@@ -45,9 +45,9 @@ months = [
 def annual_weather_extremes(year):
     print 'Report: 1 for the Year: {} \n'.format(year)
     year_files = []
-    for file_ in files:
-        if file_.find(year) > 0:
-            year_files.append(file_)
+    for file in files:
+        if file.find(year) > 0:
+            year_files.append(file)
 
     max_temp_month = []
     min_temp_month = []
