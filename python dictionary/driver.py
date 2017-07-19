@@ -18,7 +18,7 @@ print(dictionary[0])
 # if dictionary has key
 if dictionary.has_key(1):
     print('Key Exists')
-else:
+if not dictionary.has_key(0):
     print('key does not exists')
 
 # over writing dictionary key value
