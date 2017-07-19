@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import "./App.css";
 import SearchForm from "./SearchForm.js";
 import Result from "./Result.js";
-import ResultList from "./ResultList.js";
 import VideoPlayer from "./VideoPlayer.js";
 import * as youtube from "./fetch.js";
 
@@ -21,7 +20,7 @@ class App extends Component {
   playVideo(vidId) {
     this.setState({
       playVid: true,
-      vidId: vidId
+      vidId
     });
   }
 
@@ -51,7 +50,6 @@ class App extends Component {
         })(this.state.playVid, this.state.vidId)}
 
         <div className="result-container">
-          {/* <ResultList list={this.state.results} /> */}
           {(function(state, playFunction) {
             return state.results.map(item => {
               return (
