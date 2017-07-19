@@ -1,10 +1,9 @@
-<<<<<<< HEAD
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import login, authenticate
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import render, redirect
-from .models import User
+from django.shortcuts import render
+from .models import User, UserInfo
 from django.views.generic.edit import FormView
 from .forms import LoginForm, SignUpForm
 
@@ -17,6 +16,15 @@ app_name = 'wblog'
 class Login(LoginView):
     authentication_form = LoginForm
     template_name = 'wblog/index.html'
+    redirect_authenticated_user = True
+
+
+class Profile(FormView):
+    template_name = 'wblog/profile.html'
+
+
+class Logout(LogoutView):
+    next_page = 'wblog/index.html'
 
 
 class SignupView(FormView):
@@ -45,8 +53,21 @@ class SignupView(FormView):
 
         else:
             return render(request, 'wblog/signup.html', {'form': form})
-=======
-from django.shortcuts import render
 
-# Create your views here.
->>>>>>> d6e8908... Adding Main Models
+
+def profile_view(request):
+    user = UserInfo.objects.get(user=request.user)
+    if request.method == 'POST':
+        print(request.POST)
+        form = SignUpForm(request.POST, instance=user)
+        form.save(commit=True)
+    else:
+        print(request.user)
+        form = SignUpForm(initial={'username': request.user.username,
+                                   'password': request.user.password,
+                                   'phone_no': user.phone_no,
+                                   'address': user.address,
+                                   'date_of_birth': user.date_of_birth,
+                                   'gender': user.gender
+                                   })
+    return render(request, 'wblog/profile.html', {'user': form})
