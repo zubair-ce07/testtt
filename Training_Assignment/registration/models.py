@@ -2,7 +2,7 @@ import os
 from shutil import copy2
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, UserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import RegexValidator
@@ -12,6 +12,7 @@ from django_countries.data import COUNTRIES
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.db.models.signals import post_save
 
 from task1.settings import MEDIA_ROOT
 
@@ -31,7 +32,16 @@ class UserProfile(models.Model):
         return self.user.username
 
 
+class CustomManager(UserManager):
+    def bulk_create(self, items):
+        super(CustomManager, self).bulk_create([i[0] for i in items])
+        for i in items:
+            post_save.send(CustomUser, instance=i[0], created=True, attribs=i[1])
+
+
 class CustomUser(User):
+    objects = CustomManager()
+
     class Meta:
         proxy = True
         ordering = ('first_name',)
@@ -48,17 +58,19 @@ class CustomUser(User):
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
-    phone_number = getattr(instance, '_phone_number')
-    country = getattr(instance, '_country_name')
-    address = getattr(instance, '_address')
-    image = getattr(instance, '_image')
+    if 'attribs' in kwargs:
+        phone_number = kwargs.get('attribs').get('phone_number', None)
+        country = kwargs.get('attribs').get('country', None)
+        address = kwargs.get('attribs').get('address', None)
+        image = kwargs.get('attribs').get('image', None)
+    else:
+        phone_number = getattr(instance, '_phone_number', None)
+        country = getattr(instance, '_country_name', None)
+        address = getattr(instance, '_address', None)
+        image = getattr(instance, '_image', None)
 
     if image:
-        try:
-            # from browser
-            path = default_storage.save('registration/' + image.name, ContentFile(image.read()))
-            dest = os.path.join(settings.MEDIA_ROOT, path)
-        except FileNotFoundError:
+        if isinstance(image, str):
             # from dummy users
             dest = MEDIA_ROOT + 'registration/' + os.path.basename(image)
             head, tail = os.path.splitext(os.path.basename(image))
@@ -67,15 +79,20 @@ def create_user_profile(sender, instance, created, **kwargs):
                 count += 1
                 dest = os.path.join(os.path.dirname(dest), '{}-{}{}'.format(head, count, tail))
             copy2(image, dest)
+        else:
+            # from browser
+            path = default_storage.save('registration/' + image.name, ContentFile(image.read()))
+            dest = os.path.join(settings.MEDIA_ROOT, path)
         dest_file = 'registration/' + os.path.basename(dest)
         image = ImageFieldFile(instance=instance, field=FileField(), name=dest_file)
     if country:
-        try:
+        if country in COUNTRIES:
             # from dummy users
-            country = Country(code=COUNTRY_NAMES[country])
-        except ValueError:
-            # from browser
             country = Country(code=country)
+        else:
+            # from browser
+            country = Country(code=COUNTRY_NAMES[country])
+
     if created:
         UserProfile.objects.create(user=instance, phone_number=phone_number,
                                    country=country, address=address, image=image)
