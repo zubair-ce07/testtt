@@ -7,12 +7,9 @@ class VideoPlayer extends React.Component {
       <iframe
         title="playerFrame"
         className="player"
-        width="854"
-        height="480"
         src={"https://www.youtube.com/embed/" + this.props.vidId + "?autoplay=1"}
         frameBorder="0"
         allowFullScreen
-        autoplay="1"
       />
     );
   }

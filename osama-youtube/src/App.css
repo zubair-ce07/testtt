@@ -9,3 +9,30 @@
   padding: 30px;
 }
 
+.player-container {
+  display: block;
+  position: relative;
+  width: 854px;
+}
+
+.player-container:after {
+  padding-top: 56.25%;
+  /* 16:9 ratio */
+  display: block;
+  content: '';
+}
+
+.center-right {
+  display: block;
+  position: fixed;
+  width: 500px;
+  left: 30px;
+}
+
+#bottom {
+  position: absolute;
+  bottom: 0;
+  height: 10px;
+  width: 10px;
+  background: red;
+}

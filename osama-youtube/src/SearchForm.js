@@ -27,7 +27,7 @@ class SearchForm extends Component {
       <div className="search-container">
         <form action="" className="search-form">
           <input
-            onChange={(evt) => this.handleChange(evt.target.value)}
+            onChange={evt => this.handleChange(evt.target.value)}
             className="search-input"
             type="text"
             placeholder="Search"

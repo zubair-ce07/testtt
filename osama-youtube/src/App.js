@@ -36,34 +36,34 @@ class App extends Component {
     this.searchYoutube("");
   }
 
+  scrolled(evt) {
+    console.log(evt.target.getBoundingClientRect());
+  }
+
   render() {
     return (
       <div className="App">
         <div className="App-header">
           <SearchForm searchHandler={this.searchYoutube} />
         </div>
-
-        {(function(playVid, vidId) {
-          if (playVid) {
-            return <VideoPlayer play={playVid} vidId={vidId} />;
-          }
-        })(this.state.playVid, this.state.vidId)}
+        {this.state.playVid &&
+          <div className="player-container">
+            <VideoPlayer play={this.state.playVid} vidId={this.state.vidId} />
+          </div>}
 
         <div className="result-container">
-          {(function(state, playFunction) {
-            return state.results.map(item => {
-              return (
-                <Result
-                  key={item.etag}
-                  imgurl={item.snippet.thumbnails.medium.url}
-                  title={item.snippet.title}
-                  description={item.snippet.description}
-                  vidId={item.id.videoId}
-                  play={playFunction}
-                />
-              );
-            });
-          })(this.state, this.playVideo)}
+          {this.state.results.map(item => {
+            return (
+              <Result
+                key={item.etag}
+                imgurl={item.snippet.thumbnails.medium.url}
+                title={item.snippet.title}
+                description={item.snippet.description}
+                vidId={item.id.videoId}
+                play={this.playVideo}
+              />
+            );
+          })}
         </div>
       </div>
     );
