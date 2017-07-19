@@ -18,7 +18,7 @@ class SignUpForm(ModelForm):
 
     class Meta:
         model = UserInfo
-        fields = ['phone_no', 'address', 'date_of_birth', 'gender']
+        fields = ['phone_no', 'address', 'date_of_birth', 'gender', 'image']
         widgets = {
             "phone_no": TextInput(attrs={'placeholder': 'Phone Number', 'name': 'phone_no', 'class': 'form-control'}),
             "address": TextInput(attrs={'placeholder': 'Address', 'name': 'address', 'class': 'form-control'}),
