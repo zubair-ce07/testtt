@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import "./App.css";
 import SearchForm from "./SearchForm.js";
 import Result from "./Result.js";
+import ResultList from "./ResultList.js";
 import VideoPlayer from "./VideoPlayer.js";
 import * as youtube from "./fetch.js";
 
@@ -25,21 +26,9 @@ class App extends Component {
   }
 
   searchYoutube(query) {
-    var that = this;
     youtube.search(jsonData => {
-      that.setState({
-        results: jsonData.items.map((item, key) => {
-          return (
-            <Result
-              key={item.etag}
-              imgurl={item.snippet.thumbnails.medium.url}
-              title={item.snippet.title}
-              description={item.snippet.description}
-              vidId={item.id.videoId}
-              play={this.playVideo}
-            />
-          );
-        })
+      this.setState({
+        results: jsonData.items
       });
     }, query);
   }
@@ -54,13 +43,29 @@ class App extends Component {
         <div className="App-header">
           <SearchForm searchHandler={this.searchYoutube} />
         </div>
+
         {(function(playVid, vidId) {
           if (playVid) {
             return <VideoPlayer play={playVid} vidId={vidId} />;
           }
         })(this.state.playVid, this.state.vidId)}
+
         <div className="result-container">
-          {this.state.results}
+          {/* <ResultList list={this.state.results} /> */}
+          {(function(state, playFunction) {
+            return state.results.map(item => {
+              return (
+                <Result
+                  key={item.etag}
+                  imgurl={item.snippet.thumbnails.medium.url}
+                  title={item.snippet.title}
+                  description={item.snippet.description}
+                  vidId={item.id.videoId}
+                  play={playFunction}
+                />
+              );
+            });
+          })(this.state, this.playVideo)}
         </div>
       </div>
     );
