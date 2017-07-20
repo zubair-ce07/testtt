@@ -33,7 +33,7 @@ class NewsListView(ListView):
         if filter_val:
             query = News.objects.filter(Q(title__icontains=filter_val) |
                                        Q(detail__icontains=filter_val) |
-                                       Q(abstract__icontains=filter_val)).order_by('-date')
+                                       Q(abstract__icontains=filter_val))
         else:
             query = News.objects.all()
 
