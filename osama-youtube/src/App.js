@@ -51,6 +51,7 @@ class App extends Component {
             this.state.playVid &&
             <div className="player-container">
               <VideoPlayer vidId={this.state.vidId} />
+              <Link to="/search" className="backlink">Back</Link>
             </div>}
         />
 
