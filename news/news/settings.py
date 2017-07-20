@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
-from sys import path
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -105,34 +104,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-current_path = os.getcwd()
-path.append(str(current_path) + '/the_news/news_scrappers')
-SCRAPY_SETTINGS = {
-    'BOT_NAME': 'news_scrappers',
-    'SPIDER_MODULES': ['news_scrappers.spiders'],
-    'NEWSPIDER_MODULE': 'news_scrappers.spiders',
-    'ROBOTSTXT_OBEY': True,
-    'ITEM_PIPELINES': {
-        'news_scrappers.pipelines.NewsScrappersPipeline': 300,
-    },
-    'AUTOTHROTTLE_ENABLED': True,
-    'AUTOTHROTTLE_START_DELAY': 5,
-    'AUTOTHROTTLE_MAX_DELAY': 60,
-    'AUTOTHROTTLE_TARGET_CONCURRENCY': 1.0,
-    'AUTOTHROTTLE_DEBUG': False,
-
-}
-CRAWLER_STATE = False
-CRAWLER_NAME = None
-CRAWLER_THREAD = None
-
-REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
-}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -152,3 +123,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+from scrapy_settings import *
+from rest_framework_settings import *

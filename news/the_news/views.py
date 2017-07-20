@@ -7,6 +7,7 @@ from scrappers import run_scrapy_project
 from models import News, NewsPaper
 from serializers import NewsSerializer
 from messages import SpiderMessages
+from decorators import ip_check
 from django.views import View
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
@@ -23,16 +24,25 @@ class NewsListView(ListView):
     context_object_name = 'news_list'
     template_name = 'the_news/news_list.html'
 
+    @method_decorator(ip_check(ip_list=['127.0.0.1']))
+    def dispatch(self, *args, **kwargs):
+        return super(NewsListView, self).dispatch(*args, **kwargs)
+
     def get_queryset(self):
         filter_val = self.request.GET.get('query')
-        if not filter_val:
-            return News.objects.all().order_by('-date')
-        return News.objects.filter(Q(title__icontains=filter_val) |
-                                   Q(detail__icontains=filter_val) |
-                                   Q(abstract__icontains=filter_val)).order_by('-date')
+        if filter_val:
+            query = News.objects.filter(Q(title__icontains=filter_val) |
+                                       Q(detail__icontains=filter_val) |
+                                       Q(abstract__icontains=filter_val)).order_by('-date')
+        else:
+            query = News.objects.all()
+
+        return query.order_by('-date')
 
     def get(self, request, *args, **kwargs):
         news_list = self.get_queryset()
+        context = {'query': request.GET.get('query','')}
+
         if news_list:
             paginator = Paginator(news_list, 20)
             page = kwargs.get('page', 1)
@@ -44,11 +54,9 @@ class NewsListView(ListView):
             except EmptyPage:
                 # If page is out of range (e.g. 9999), deliver last page of results.
                 news_list = paginator.page(paginator.num_pages)
-            context = {'news_list': news_list,
-                       'query': request.GET.get('query', '')}
+            context['news_list'] = news_list
         else:
-            context = {'query': request.GET.get(
-                'query',), 'message': 'No news found'}
+            context['message'] = 'No news found'
 
         return render(request, self.template_name, context)
 
@@ -69,10 +77,10 @@ class FetchView(View):
             message = SpiderMessages.RUNNING.format(spider_name)
         else:
             if spider_name:
-                news_papers = NewsPaper.objects.filter(spider_name=spider_name)
+                news_paper = NewsPaper.objects.filter(spider_name=spider_name).first()
 
-                if news_papers:
-                    settings.CRAWLER_THREAD = CrawlSpiderThread(news_papers[0].spider_name,
+                if news_paper:
+                    settings.CRAWLER_THREAD = CrawlSpiderThread(news_paper.spider_name,
                                                                 'news_scrappers.settings',
                                                                 settings.SCRAPY_SETTINGS,
                                                                 run_scrapy_project)
@@ -116,7 +124,6 @@ class TerminateView(View):
 
 class TheNewsMainView(View):
     template_name = 'the_news/main.html'
-
     @method_decorator(login_required(login_url=reverse_lazy('authentication:login')))
     def dispatch(self, *args, **kwargs):
         return super(TheNewsMainView, self).dispatch(*args, **kwargs)
