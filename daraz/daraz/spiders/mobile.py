@@ -42,6 +42,5 @@ class MobileSpider(scrapy.Spider):
                     'Descrip': model
                     }
         next_page = response.css('section.pagination li.-selected + li a::attr(href)').extract_first()
-        print "Next Page", next_page
         if next_page is not None:
             yield response.follow(next_page, callback=self.parse)
