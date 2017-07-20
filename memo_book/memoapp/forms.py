@@ -1,7 +1,6 @@
 from django import forms
-from django.forms import ModelForm, Textarea
-from memoapp.models import User, Memory
-from django.core.validators import MinLengthValidator, MaxLengthValidator,  URLValidator
+from django.forms import ModelForm
+from memoapp.models import User, Memory, Category
 
 
 class SignupForm(ModelForm):
@@ -40,7 +39,7 @@ class LoginForm(forms.Form):
 class AddMemoForm(ModelForm):
     class Meta:
         model = Memory
-        fields = ['title', 'text', 'url', 'tags', 'is_public', 'image']
+        fields = ['category', 'title', 'text', 'url', 'tags', 'is_public', 'image']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
                                             'placeholder': 'Title'}),
@@ -50,6 +49,20 @@ class AddMemoForm(ModelForm):
                                           'placeholder': 'Url'}),
             'tags': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                            'placeholder': 'Comma separated tags'}),
+            'category': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Country'}),
             'image': forms.FileInput(attrs={'class': 'form-control separate-form-fields'}),
             'is_public': forms.CheckboxInput(attrs={'class': 'form-control separate-form-fields'})
         }
+
+
+class Category(ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
+                                            'placeholder': 'Name'}),
+            'description': forms.Textarea(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
+                                          'placeholder': 'Enter description of category'}),
+        }
+

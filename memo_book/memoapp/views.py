@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import make_password
 from django.urls import reverse
 from django.db.models import Q
 
-from memoapp.forms import SignupForm, LoginForm, AddMemoForm, EditProfileForm
+from memoapp.forms import SignupForm, LoginForm, AddMemoForm, EditProfileForm, Category
 from memoapp.models import User, Memory
 from memoapp.signals import user_login, user_logout
 from memoapp.receivers import receiver
@@ -16,7 +16,7 @@ from memoapp.receivers import receiver
 
 class Home(LoginRequiredMixin, View):
     def get(self, request):
-        memories_of_user = Memory.objects.filter(user_id=request.user.id)
+        memories_of_user = request.user.memory_set.all()
         paginator = Paginator(memories_of_user, 2)
         page_no = request.GET.get('page_no')
         try:
@@ -26,7 +26,9 @@ class Home(LoginRequiredMixin, View):
         except EmptyPage:
             memos = paginator.page(paginator.num_pages)
 
-        context = {'memo_form': AddMemoForm(), 'memos': memos}
+        memo_form = AddMemoForm()
+        memo_form.fields['category'].queryset = request.user.category_set.all()
+        context = {'memo_form': memo_form, 'memos': memos}
         return render(request, 'memoapp/home.html', context)
 
 
@@ -124,6 +126,7 @@ class EditMemo(LoginRequiredMixin,View):
         id = request.GET.get('memo_id')
         memory = Memory.objects.get(pk=id)
         memo_form = AddMemoForm(instance=memory)
+        memo_form.fields['category'].queryset = request.user.category_set.all()
         context = {'memo_form': memo_form, 'memo_id': id}
         return render(request, 'memoapp/edit_memo.html', context)
 
@@ -146,7 +149,6 @@ class UserProfile(LoginRequiredMixin, View):
 
 
 class EditProfile(LoginRequiredMixin, View):
-
     def get(self, request):
         user_form = EditProfileForm(instance=request.user)
         context = {'user_form': user_form}
@@ -182,6 +184,7 @@ class Search(LoginRequiredMixin, View):
     def get(self, request):
         pass
 
+
 class Public(LoginRequiredMixin, View):
         def get(self, request):
             public_mems = Memory.public_memories.all()
@@ -194,5 +197,27 @@ class Public(LoginRequiredMixin, View):
             except EmptyPage:
                 memos = paginator.page(paginator.num_pages)
 
-            context = { 'public_mems': memos}
+            context = {'public_mems': memos}
             return render(request, 'memoapp/public.html', context)
+
+
+class Logs(LoginRequiredMixin, View):
+    def get(self, request):
+        logs = request.user.activity_set.all()
+        return render(request, 'memoapp/activities.html', {'logs': logs})
+
+
+class AddCategory(LoginRequiredMixin, View):
+    def get(self, request):
+        category_form = Category()
+        return render(request, 'memoapp/addcategory.html', {'category_form': category_form})
+
+    def post(self, request):
+        category_form = Category(request.POST)
+        if category_form.is_valid():
+            category = category_form.save(commit=False)
+            category.user_id = request.user.id
+            category.save()
+            return HttpResponseRedirect(reverse('memoapp:home'))
+        else:
+            return render(request, 'memoapp/addcategory.html', {'category_form': category_form})

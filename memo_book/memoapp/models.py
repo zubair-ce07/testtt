@@ -1,6 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-
+from datetime import datetime
+from django.contrib.auth.models import  AbstractBaseUser, BaseUserManager
+from django.utils import timezone
 
 
 class PrivateMemoryManager(models.Manager):
@@ -55,18 +56,51 @@ class User(AbstractBaseUser):
         ),
     )
     is_superuser = models.BooleanField(
-        ('active'),
+        ('superuser'),
         default=True,
         help_text=(
             'Designates whether this user should be treated as super user or not . '
             'Unselect this instead of deleting accounts.'
         ),
     )
+
+    has_perm = models.BooleanField(
+        ('perm'),
+        default=True,
+        help_text=(
+            'Designates whether this user should be treated as super user or not . '
+            'Unselect this instead of deleting accounts.'
+        ),
+    )
+
+    def has_perm(self, arg):
+        if self.is_superuser:
+            return True
+        return False
+
+    def get_short_name(self):
+        return self.email
+
+    def has_module_perms(self, app_label):
+        if self.is_active and self.is_superuser:
+            return True
+
     USERNAME_FIELD = 'email'
     objects = UserManager()
 
+
+class Category(models.Model):
+    name = models.CharField(max_length=50, null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
 class Memory(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     text = models.TextField()
     url = models.CharField(max_length=300)
@@ -76,3 +110,13 @@ class Memory(models.Model):
     objects = models.Manager()
     private_memories = PrivateMemoryManager()
     public_memories = PublicMemoryManager()
+
+    def __str__(self):
+        return self.title
+
+
+class Activity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    memory_title = models.CharField(max_length=200)
+    datetime = models.DateTimeField(default=timezone.now())
+    activity = models.CharField(choices=(('Add', 'Add'), ('Edit', 'Edit'), ('Delete', 'Delete')), max_length=6)

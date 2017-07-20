@@ -32,3 +32,20 @@ ahmed is logged OUT at 2017-07-13 20:30:39.407161
  is logged OUT at 2017-07-13 23:02:57.778356
  is logged in at 2017-07-13 23:05:28.471562
  is logged OUT at 2017-07-13 23:05:30.381941
+ is logged in at 2017-07-19 17:24:16.878552
+ is logged in at 2017-07-19 18:02:29.556805
+ali is logged OUT at 2017-07-19 20:55:23.808552
+ali is logged in at 2017-07-19 20:55:31.062471
+ali is logged OUT at 2017-07-19 20:55:44.201118
+ali is logged in at 2017-07-19 20:55:55.972713
+ali is logged OUT at 2017-07-20 01:18:36.741664
+ is logged OUT at 2017-07-20 02:00:17.327652
+ is logged OUT at 2017-07-20 02:14:50.870420
+ is logged in at 2017-07-20 02:21:54.838856
+ is logged OUT at 2017-07-20 02:26:19.557155
+ is logged in at 2017-07-20 17:05:18.858044
+ is logged in at 2017-07-20 17:08:07.589125
+ is logged OUT at 2017-07-20 17:08:11.533527
+ is logged in at 2017-07-20 17:09:11.003773
+ is logged OUT at 2017-07-20 20:30:36.401769
+ali is logged in at 2017-07-20 20:32:08.162210

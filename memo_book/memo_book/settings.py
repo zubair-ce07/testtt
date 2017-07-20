@@ -110,9 +110,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-
         'django.contrib.auth.backends.ModelBackend',
-        'memoapp.backends.FileBackend',
+        #'memoapp.backends.FileBackend',
+
     )
 
 UserModel = 'memoapp.models.User'

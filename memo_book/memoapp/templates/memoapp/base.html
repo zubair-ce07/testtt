@@ -26,7 +26,6 @@
                 <li><a href="/profile">{{ user.first_name}}  {{ user.last_name }}</a></li>
                   <li>  <form method="GET" action="/logout"> {% csrf_token %}<input type="submit" value="Logout" ></form></li>
             </ul>
-
           </ul>
         </div>
       </div>
@@ -44,6 +43,8 @@
     <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
       <ul class="nav navbar-nav">
         <li class="active"><a href="/public">&nbsp;&nbsp; Public Mems &nbsp;&nbsp;</a></li>
+          <li class="active"><a href="/activities">&nbsp;&nbsp;Your Acitivities </a></li>
+          <li class="active"><a href="/addcategory">&nbsp;&nbsp;Add Category </a></li>
         </ul>
     </div>
   </div>
@@ -51,7 +52,5 @@
 {% endif %}
     {% block body %}
     {% endblock body %}
-
-
 </body>
 </html>

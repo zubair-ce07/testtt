@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.contrib.admin import options
 import debug_toolbar
 
 urlpatterns = [
@@ -22,3 +23,5 @@ urlpatterns = [
     url(r'^__debug__/', include(debug_toolbar.urls)),
     url(r'^', include('memoapp.urls'))
 ]
+
+
