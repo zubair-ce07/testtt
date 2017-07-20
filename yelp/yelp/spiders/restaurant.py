@@ -24,5 +24,5 @@ class Restaurant(scrapy.Spider):
                     'phone': phone
             }
             next_page = response.css('div.current + div a::attr(href)').extract_first()
-            if next_page is not None:
+            if next_page:
                 yield response.follow(next_page, callback=self.parse)
