@@ -28,9 +28,9 @@ parser.add_argument('file_path', help='Directory to data, use relative path like
 args = parser.parse_args()
 
 
-report_1 = args.annual_weather_extremes
-report_2 = args.monthly_average_weather
-report_3 = args.daily_weather_extremes
+annual_weather = args.annual_weather_extremes
+monthly_weather = args.monthly_average_weather
+daily_weather = args.daily_weather_extremes
 file_path = args.file_path
 
 files = os.listdir(file_path)
@@ -125,18 +125,18 @@ def daily_weather_extremes(year, month):
 
 if os.path.exists(file_path):
 
-    if not (report_1 or report_2 or report_3):
+    if not (annual_weather or monthly_weather or daily_weather):
         parser.error('No action requested, add -e followed by Year or -a/-c followed by year/month')
 
-    if report_1 is not None:
-        annual_weather_extremes(report_1)
+    if annual_weather is not None:
+        annual_weather_extremes(annual_weather)
 
-    if report_2 is not None:
-        year, month = report_2.split("/")
+    if monthly_weather is not None:
+        year, month = monthly_weather.split("/")
         monthly_average_weather(year, month)
 
-    if report_3 is not None:
-        year, month = report_3.split("/")
+    if daily_weather is not None:
+        year, month = daily_weather.split("/")
         daily_weather_extremes(year, month)
 else:
     print "Directory {} doesn't exists".format(file_path)
