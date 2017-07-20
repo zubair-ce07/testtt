@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import json
+
 import scrapy
 from scrapy.linkextractors import LinkExtractor
-from web_spider_project.items import HypedcItem
 from scrapy.spiders import Rule, CrawlSpider
-import json
+
+from web_spider_project.items import HypedcItem
 
 
 class HypedcSpider(CrawlSpider):
@@ -16,24 +18,30 @@ class HypedcSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css='.next.btn.btn-primary')),
         Rule(LinkExtractor(restrict_css='.nav-primary .dropdown [href]'), callback='parse_items'),
     )
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            'web_spider_project.pipelines.WebSpiderProjectPipeline': 0,
+        }
+    }
 
     def parse_items(self, response):
-        for item_selector in response.css('#catalog-listing .item'):
+        for product in response.css('#catalog-listing .item'):
             item = HypedcItem()
-            raw_items = item_selector.css('::attr(data-product)').extract_first()
-            formatted_items = json.loads(raw_items)
-            item['item_id'] = formatted_items['id']
-            item['name'] = formatted_items['name']
-            item['brand'] = formatted_items['brand']
-            item['price'] = formatted_items['price']
-            item['color_name'] = formatted_items['variant']
-            item['url'] = item_selector.css('::attr(href)').extract_first()
+            self.product_attr = product.css('::attr(data-product)').extract_first()
+            product_attr = json.loads(self.product_attr)
+            item['item_id'] = product_attr['id']
+            item['name'] = product_attr['name']
+            item['brand'] = product_attr['brand']
+            item['price'] = product_attr['price']
+            item['color_name'] = product_attr['variant']
+            item['url'] = product.css('::attr(href)').extract_first()
             request = scrapy.Request(item['url'], callback=self.parse_details,
                                      meta={'item': item})
             yield request
 
     def parse_details(self, response):
         item = response.meta['item']
+
         item = self.item_description(item, response)
         item = self.item_currency(item, response)
         item = self.item_image_urls(item, response)
@@ -41,7 +49,7 @@ class HypedcSpider(CrawlSpider):
         return item
 
     def item_description(self, item, response):
-        item['description'] = response.css('.product-description.std::text').extract_first()
+        item['description'] = str(response.css('.product-description.std::text').extract_first()).strip()
         return item
 
     def item_currency(self, item, response):
@@ -58,6 +66,7 @@ class HypedcSpider(CrawlSpider):
             item['is_discounted'] = False
         else:
             item['is_discounted'] = True
-            item['old_price'] = response.css('#product_addtocart_form .old-price .price::text').extract()
+            item['old_price'] = str(
+                response.css('#product_addtocart_form .old-price .price::text').extract_first()).strip()
         return item
 
