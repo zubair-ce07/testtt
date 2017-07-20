@@ -45,7 +45,7 @@ class Book(models.Model):
     author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True)
     summary = models.TextField(max_length=1000, help_text='Enter a brief description of the book')
     isbn = models.CharField('ISBN', max_length=13,
-                            help_text='13 Character <a href = "https://www.isbn-international.org/content/what-isbn">ISBN</a>')
+                            help_text='13 Character <a href="isbn-international.org/content/what-isbn">ISBN</a>')
     genre = models.ManyToManyField(Genre, help_text='Select genres for this book')
     language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True, blank=True)
 
