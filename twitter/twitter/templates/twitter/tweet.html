@@ -1,0 +1,16 @@
+{% extends 'twitter/base.html' %}
+
+{% block urls %}
+        <span>{{ user|capfirst }}</span>
+        <span><a href="{% url 'home' %}"> Home</a></span>
+        <span><a href="{% url 'logout' %}">Logout</a></span>
+{% endblock urls %}
+
+
+{% block content %}
+    <form method="post" action="{% url 'tweet' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Post Tweet">
+    </form>
+{% endblock %}

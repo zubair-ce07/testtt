@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+        <title>Tweeter</title>
+    {% endblock %}
+    <style>
+        body {
+            text-align: center; /* !!! */
+
+        }
+        header {
+            border-bottom: 3px solid black;
+            background-color: dodgerblue;
+        }
+        header > h1 {
+            display: inline-block;
+        }
+        header span {
+            margin-left: 10px;
+        }
+        table.tweet{
+            background-color: #dff8ff;
+        }
+    </style>
+</head>
+<body>
+    {% block header %}
+        <header>
+            <h1>Tweeter</h1>
+            {% block urls %}{% endblock urls%}
+        </header>
+    {% endblock header %}
+    {% block content %}
+        <p align="center">"I'm Body</p>
+    {% endblock %}
+</body>
+</html>

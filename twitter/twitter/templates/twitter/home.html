@@ -1,0 +1,23 @@
+{% extends 'twitter/base.html' %}
+
+
+{% block urls %}
+        <span>{{ user|capfirst }}</span>
+        <span><a href="{% url 'home' %}"> Home</a></span>
+        <span><a href="{% url 'logout' %}">Logout</a></span>
+{% endblock urls %}
+
+
+{% block content %}
+        <h2>Tweets</h2>
+        {% for tweet in user.tweet_set.all %}
+
+            <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20"  >
+                <tr><td>{{ tweet }}</td></tr>
+            </table>
+
+        {% endfor %}
+        <form action="{% url 'tweet' %}" method="get">
+            <input type="submit" value="Post Tweet">
+        </form>
+{% endblock content%}
