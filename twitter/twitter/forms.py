@@ -5,6 +5,8 @@ from twitter.models import User
 
 
 class UserSignUpForm(UserCreationForm):
+#    username = forms.CharField(max_length=User._meta.get_field('username').max_length)
+
     def clean_username(self):
         if User.objects.filter(username__iexact=self.cleaned_data['username']).exists():
             raise forms.ValidationError("username already exist")
@@ -15,10 +17,9 @@ class UserSignUpForm(UserCreationForm):
         fields = ['first_name', 'last_name', 'email', 'username', 'password1', 'password2']
 
 
-# class LoginForm(forms.Form):
-#     username = forms.CharField(max_length=100)
-#     password = forms.CharField(widget=forms.PasswordInput)
-
+class AdminUserSignUpForm(UserSignUpForm):
+    class Meta(UserSignUpForm.Meta):
+        fields = ['is_active', 'is_staff', 'is_superuser',  'followers']
 
 
 class TweetForm(forms.Form):

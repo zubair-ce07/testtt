@@ -1,12 +1,13 @@
 from django.contrib.auth.models import Group
 from django.contrib import admin
 from twitter.models import User, Tweet
-from twitter.forms import UserSignUpForm
+from twitter.forms import AdminUserSignUpForm
 
 
 class UserAdmin(admin.ModelAdmin):
-    form = UserSignUpForm
-    list_display = ('is_staff','username', 'email')
+    form = AdminUserSignUpForm
+    list_display = ('username','first_name', 'email')
+    search_fields = ('username', 'first_name', 'last_name')
     filter_horizontal = ('followers',)
 
 
