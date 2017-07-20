@@ -23,6 +23,5 @@ def hours_ahead(request, offset):
 
 
 def html_meta(request):
-    values = request.META
-    html = [(val, values[val]) for val in values]
+    html = [(val, request.META[val]) for val in request.META]
     return render(request, 'html_meta.html', {'values': html})
