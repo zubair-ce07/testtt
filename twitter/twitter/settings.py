@@ -34,14 +34,14 @@ AUTH_USER_MODEL = 'twitter.User'
 # Application definition
 
 INSTALLED_APPS = [
-    'twitter',
-
-    'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'twitter',
 ]
 
 MIDDLEWARE = [
