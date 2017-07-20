@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import "./SearchForm.css";
 
@@ -37,13 +38,15 @@ class SearchForm extends Component {
             type="text"
             placeholder="Search"
           />
-          <button
-            onClick={this.handleSubmit}
-            className="search-button"
-            type="submit"
-          >
-            Search
-          </button>
+          <Link to="/search">
+            <button
+              onClick={this.handleSubmit}
+              className="search-button"
+              type="submit"
+            >
+              Search
+            </button>
+          </Link>
         </form>
       </div>
     );

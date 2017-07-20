@@ -1,8 +1,10 @@
 import React, { Component } from "react";
+import { Route, Link } from "react-router-dom";
 import "./App.css";
 import SearchForm from "./SearchForm.js";
 import Result from "./Result.js";
 import VideoPlayer from "./VideoPlayer.js";
+
 import * as youtube from "./youtubeapi.js";
 
 class App extends Component {
@@ -32,33 +34,46 @@ class App extends Component {
     }, query);
   }
 
-  componentDidMount() {
-    this.searchYoutube("");
-  }
-
   render() {
     return (
       <div className="App">
-        <div className="App-header">
-          <SearchForm searchHandler={this.searchYoutube} />
-        </div>
-        {this.state.playVid &&
-          <div className="player-container">
-            <VideoPlayer vidId={this.state.vidId} />
-          </div>}
+        <Route
+          path="/"
+          render={() =>
+            <div className="App-header">
+              <SearchForm searchHandler={this.searchYoutube} />
+            </div>}
+        />
 
-        <div className="result-container">
-          {this.state.results.map(item =>
-            <Result
-              key={item.etag}
-              imgurl={item.snippet.thumbnails.medium.url}
-              title={item.snippet.title}
-              description={item.snippet.description}
-              vidId={item.id.videoId}
-              play={this.playVideo}
-            />
-          )}
-        </div>
+        <Route
+          path="/video"
+          render={() =>
+            this.state.playVid &&
+            <div className="player-container">
+              <VideoPlayer vidId={this.state.vidId} />
+            </div>}
+        />
+
+        <Route
+          path="/search"
+          render={() =>
+            <div className="result-container">
+              {this.state.results.length !== 0
+                ? this.state.results.map(item =>
+                    <Link to="/video">
+                      <Result
+                        key={item.etag}
+                        imgurl={item.snippet.thumbnails.medium.url}
+                        title={item.snippet.title}
+                        description={item.snippet.description}
+                        vidId={item.id.videoId}
+                        play={this.playVideo}
+                      />
+                    </Link>
+                  )
+                : <h1>Sorry, There are no results to display</h1>}
+            </div>}
+        />
       </div>
     );
   }
