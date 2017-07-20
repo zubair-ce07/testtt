@@ -230,11 +230,12 @@ class BenchSpider(Spider):
             images_urls = [image['small'] for image in product['gallery']]
 
             updated_size = {
-                'name': size_label,
-                'is_available': is_available,
-                'price': price,
-                'sale_price': sale_price,
-                'main_image': main_image,
-                'images_urls': images_urls}
+                size_label: {
+                    'is_available': is_available,
+                    'price': price,
+                    'sale_price': sale_price,
+                    'main_image': main_image,
+                    'images_urls': images_urls}
+            }
 
             return updated_size
