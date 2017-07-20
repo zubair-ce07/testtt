@@ -3,6 +3,9 @@ import PropTypes from "prop-types";
 import "./VideoPlayer.css";
 
 class VideoPlayer extends React.Component {
+  static propTypes = {
+    vidId: PropTypes.string
+  };
   render() {
     return (
       <iframe
@@ -17,9 +20,5 @@ class VideoPlayer extends React.Component {
     );
   }
 }
-
-VideoPlayer.propTypes = {
-  vidId: PropTypes.string
-};
 
 export default VideoPlayer;

@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import "./SearchForm.css";
 
 class SearchForm extends Component {
@@ -10,6 +11,10 @@ class SearchForm extends Component {
       query: ""
     };
   }
+
+  static propTypes = {
+    searchHandler: PropTypes.func
+  };
 
   handleChange(query) {
     this.setState({

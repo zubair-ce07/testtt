@@ -3,7 +3,7 @@ import "./App.css";
 import SearchForm from "./SearchForm.js";
 import Result from "./Result.js";
 import VideoPlayer from "./VideoPlayer.js";
-import * as youtube from "./fetch.js";
+import * as youtube from "./youtubeapi.js";
 
 class App extends Component {
   constructor() {
@@ -34,10 +34,6 @@ class App extends Component {
 
   componentDidMount() {
     this.searchYoutube("");
-  }
-
-  scrolled(evt) {
-    console.log(evt.target.getBoundingClientRect());
   }
 
   render() {
