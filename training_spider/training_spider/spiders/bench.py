@@ -71,9 +71,9 @@ class BenchSpider(Spider):
                 yield Request(product_url, callback=self.parse_products)
 
             params_text = 'a:6:{opening_brace}s:4:"sort";s:0:"";s:4:"page";i:' \
-                         '{page_id};''s:10:"searchword";s:0:"";s:7:"storeId";i:' \
-                         '{store_id};s:6:"filter";a:0:{braces}s:6:' \
-                         '"cateId";i:{cat_id};{closing_brace}'
+                          '{page_id};''s:10:"searchword";s:0:"";s:7:"storeId";i:' \
+                          '{store_id};s:6:"filter";a:0:{braces}s:6:' \
+                          '"cateId";i:{cat_id};{closing_brace}'
 
             params = {
                 'pagination_url': product_json['requestUrl'],
@@ -85,12 +85,12 @@ class BenchSpider(Spider):
             }
 
         params_text = params_text.format(page_id=params['page_id'],
-                                       store_id=params['store_id'],
-                                       cat_id=params['cat_id'],
-                                       opening_brace='{',
-                                       closing_brace='}',
-                                       braces='{}'
-                                       )
+                                         store_id=params['store_id'],
+                                         cat_id=params['cat_id'],
+                                         opening_brace='{',
+                                         closing_brace='}',
+                                         braces='{}'
+                                         )
         yield FormRequest(params['pagination_url'],
                           callback=self.parse_pagination,
                           formdata={'form_key': params['form_key'],
@@ -99,38 +99,37 @@ class BenchSpider(Spider):
                           )
 
     def parse_products(self, response):
-        if not response.text:
+        raw_script = response.css('#main-product-content script::text').extract_first()
+        if not raw_script:
             print('Product is not found')
             return
 
-        product = json.loads(
-            response.css('#main-product-content script::text').extract_first()
-        )['#main-product-content']['Magento_Ui/js/core/app']
-
+        product = json.loads(raw_script)['#main-product-content']['Magento_Ui/js/core/app']
         product = product['components']['productshow']
-        product_info = product['data']
-        product_id = product_info['id']
 
         item = TrainingSpiderItem()
         item['product_url'] = response.url
-        item['product_id'] = product_id
+        item['product_id'] = product['data']['id']
         item['product_name'] = response.css('.base::text').extract_first()
         item['currency'] = 'PHP'
 
+        return self.request_product_color(item, product)
+
+    def request_product_color(self, item, product):
+        product_info = product['data']
+        product_id = product_info['id']
         sizes_and_colors = product_info['config_attr']
 
         if sizes_and_colors:
-            sizes_ids = self.get_product_sizes_ids(sizes_and_colors)
-            product_colors_ids = self.get_product_colors_ids(sizes_and_colors,
-                                                             sizes_ids)
-
+            sizes_ids = self.get_sizes_ids(sizes_and_colors)
+            product_colors_ids = self.get_colors_ids(sizes_and_colors, sizes_ids)
             product_color_url = self.get_product_colors_url(product, product_id)
 
-            yield Request(product_color_url,
-                          callback=self.parse_colors,
-                          meta={'item': item,
-                                'colors': product_colors_ids}
-                          )
+            return Request(product_color_url,
+                           callback=self.parse_colors,
+                           meta={'item': item,
+                                 'colors': product_colors_ids}
+                           )
         else:
             price = product_info['final_price']
             sale_price = product_info['max_price']
@@ -145,43 +144,7 @@ class BenchSpider(Spider):
                 'main_image': main_image,
                 'images_urls': images_urls
             }
-
-            yield item
-
-    def parse_colors(self, response):
-        meta = response.meta
-        item = meta['item']
-        colors = meta['colors']
-        for color in colors:
-            color_key = list(color.keys())[0]
-            for size in color[color_key]:
-                size_key = list(size.keys())[0]
-
-                for product in json.loads(response.text)['data']:
-                    if size_key == product['id']:
-                        size_label = size.pop(size_key)
-                        price = product['final_price']
-                        sale_price = product['max_price']
-
-                        is_available = False
-                        quantity = product['qty']
-                        if int(float(quantity)):
-                            is_available = True
-
-                        main_image = product['ImgUrl']
-                        images_urls = [image['small'] for image in product['gallery']]
-
-                        size.update({
-                            size_label: {
-                                'is_available': is_available,
-                                'price': price,
-                                'sale_price': sale_price,
-                                'main_image': main_image,
-                                'images_urls': images_urls}
-                        })
-
-        item['variations'] = colors
-        yield item
+            return item
 
     def get_product_colors_url(self, product, product_id):
         form_key = product['form_key']
@@ -191,10 +154,9 @@ class BenchSpider(Spider):
             product_id=product_id,
             form_key=form_key
         )
-
         return product_color_url
 
-    def get_product_colors_ids(self, sizes_and_colors, sizes_ids):
+    def get_colors_ids(self, sizes_and_colors, sizes_ids):
         product_colors_ids = []
         for size_or_color in sizes_and_colors:
             for color in size_or_color:
@@ -202,26 +164,28 @@ class BenchSpider(Spider):
                     continue
 
                 color_label = color['label']
-                product_sizes_ids = []
+                sizes = self.get_sizes(color, sizes_ids)
 
-                for id in color['product_ids']:
-                    if sizes_ids:
-                        size = [siz for siz in sizes_ids if id == list(siz.keys())[0]]
-                        if size:
-                            size = size[0]
-                        else:
-                            size = {id: '-'}
-                    else:
-                        size = {id: '-'}
-
-                    product_sizes_ids.append(size)
-
-                color = {color_label: product_sizes_ids}
+                color = {color_label: sizes}
                 product_colors_ids.append(color)
-
         return product_colors_ids
 
-    def get_product_sizes_ids(self, sizes_and_colors):
+    def get_sizes(self, color, sizes_ids):
+        sizes = []
+        for product_id in color['product_ids']:
+            if sizes_ids:
+                size = [siz for siz in sizes_ids if product_id == list(siz.keys())[0]]
+                if size:
+                    size = size[0]
+                else:
+                    size = {product_id: '-'}
+            else:
+                size = {product_id: '-'}
+
+            sizes.append(size)
+        return sizes
+
+    def get_sizes_ids(self, sizes_and_colors):
         sizes = []
         for sizes_or_colors in sizes_and_colors:
             for size in sizes_or_colors:
@@ -232,3 +196,45 @@ class BenchSpider(Spider):
                     _size = {id: size_label}
                     sizes.append(_size)
         return sizes
+
+    def parse_colors(self, response):
+        meta = response.meta
+        item = meta['item']
+        colors = meta['colors']
+        for color in colors:
+            color_key = list(color.keys())[0]
+            for size in color[color_key]:
+                updated_size = self.update_size(response, size)
+                size.update(updated_size)
+
+        item['variations'] = colors
+        yield item
+
+    def update_size(self, response, size):
+        size_key = list(size.keys())[0]
+
+        for product in json.loads(response.text)['data']:
+            if size_key != product['id']:
+                continue
+
+            size_label = size.pop(size_key)
+            price = product['final_price']
+            sale_price = product['max_price']
+
+            is_available = False
+            quantity = product['qty']
+            if int(float(quantity)):
+                is_available = True
+
+            main_image = product['ImgUrl']
+            images_urls = [image['small'] for image in product['gallery']]
+
+            updated_size = {
+                'name': size_label,
+                'is_available': is_available,
+                'price': price,
+                'sale_price': sale_price,
+                'main_image': main_image,
+                'images_urls': images_urls}
+
+            return updated_size
