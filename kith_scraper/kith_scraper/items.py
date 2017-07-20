@@ -8,7 +8,7 @@
 import scrapy
 
 
-class Item(scrapy.Item):
+class KithItem(scrapy.Item):
     name = scrapy.Field()
     colors = scrapy.Field()
     price = scrapy.Field()
