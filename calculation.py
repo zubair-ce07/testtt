@@ -14,22 +14,15 @@ class Calculation:
 
         max_temp_list = []
         for x in str_max_temp:
-            if not x:
-                max_temp_list.append(-100)
-            else:
-                max_temp_list.append(float(x))
+            max_temp_list.append(float(x) if x else -100)
         min_temp_list = []
         for x in str_min_temp:
-            if not x:
-                min_temp_list.append(10000)
-            else:
-                min_temp_list.append(float(x))
+            min_temp_list.append(float(x)  if x else 10000)
+
         humidity_list = []
         for x in str_humidity:
-            if x == "":
-                humidity_list.append(-100)
-            else:
-                humidity_list.append(float(x))
+            humidity_list.append(float(x) if x else -100)
+
 
         max_temp = max(max_temp_list)
         max_index = max_temp_list.index(max_temp)
@@ -54,9 +47,9 @@ class Calculation:
         str_min_temp = data_set["Min TemperatureC"]
         str_humidity = data_set[" Mean Humidity"]
 
-        max_temp_list = [float(x) for x in str_max_temp if x != ""]
-        min_temp_list = [float(x) for x in str_min_temp if x != ""]
-        humidity_list = [float(x) for x in str_humidity if x != ""]
+        max_temp_list = [float(x) for x in str_max_temp if x]
+        min_temp_list = [float(x) for x in str_min_temp if x]
+        humidity_list = [float(x) for x in str_humidity if x]
 
         avg_max_temp = int(sum(max_temp_list) / len(max_temp_list))
         avg_min_temp = int(sum(min_temp_list) / len(min_temp_list))
@@ -73,16 +66,10 @@ class Calculation:
         str_min_temp = data_set["Min TemperatureC"]
         max_temp_list = []
         for x in str_max_temp:
-            if not x:
-                max_temp_list.append(0)
-            else:
-                max_temp_list.append(int(x))
+            max_temp_list.append(int(x) if x else 0)
         min_temp_list = []
         for x in str_min_temp:
-            if not x:
-                min_temp_list.append(0)
-            else:
-                min_temp_list.append(int(x))
+            min_temp_list.append(int(x) if x else 0)
 
         self.__monthly_barchart_cal["max_temp"] = max_temp_list
         self.__monthly_barchart_cal["min_temp"] = min_temp_list
