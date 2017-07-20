@@ -1,8 +1,8 @@
 import argparse
 
-from Calculation import Calculation
-from ExtractData import ExtractData
-from Report import Report
+from calculation import Calculation
+from extract_data import ExtractData
+from report import Report
 
 
 def main():
