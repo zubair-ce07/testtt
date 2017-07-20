@@ -26,6 +26,10 @@ class App extends Component {
     });
   }
 
+  componentDidMount() {
+    this.searchYoutube("");
+  }
+
   searchYoutube(query) {
     youtube.search(jsonData => {
       this.setState({
@@ -46,24 +50,24 @@ class App extends Component {
         />
 
         <Route
+          exact
           path="/video"
           render={() =>
             this.state.playVid &&
             <div className="player-container">
               <VideoPlayer vidId={this.state.vidId} />
-              <Link to="/search" className="backlink">Back</Link>
             </div>}
         />
 
         <Route
+          exact
           path="/search"
           render={() =>
             <div className="result-container">
               {this.state.results.length !== 0
                 ? this.state.results.map(item =>
-                    <Link to="/video">
+                    <Link key={item.etag} to="/video">
                       <Result
-                        key={item.etag}
                         imgurl={item.snippet.thumbnails.medium.url}
                         title={item.snippet.title}
                         description={item.snippet.description}

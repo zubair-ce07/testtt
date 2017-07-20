@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
+import { Route, Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import "./SearchForm.css";
 
@@ -24,14 +24,21 @@ class SearchForm extends Component {
   }
 
   handleSubmit(evt) {
-    evt.preventDefault();
     this.props.searchHandler(this.state.query);
   }
 
   render() {
     return (
       <div className="search-container">
-        <form action="" className="search-form">
+        <form id="search-form" className="search-form">
+          <Route
+            exact
+            path="/video"
+            render={() =>
+              <Link to="/search">
+                <button className="search-button">Go Back</button>
+              </Link>}
+          />
           <input
             onChange={evt => this.handleChange(evt.target.value)}
             className="search-input"
@@ -40,9 +47,9 @@ class SearchForm extends Component {
           />
           <Link to="/search">
             <button
+              type="submit"
               onClick={this.handleSubmit}
               className="search-button"
-              type="submit"
             >
               Search
             </button>
