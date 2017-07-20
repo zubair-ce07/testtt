@@ -16,7 +16,7 @@ from django.db.models.signals import post_save
 
 from task1.settings import MEDIA_ROOT
 
-COUNTRY_NAMES = dict([[v, k] for k, v in COUNTRIES.items()])
+COUNTRY_NAMES = dict([[name, code] for code, name in COUNTRIES.items()])
 
 
 class UserProfile(models.Model):
@@ -31,6 +31,26 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+    def make_image_object(self, image):
+        """makes image object out of provided path if save is called from management command"""
+
+        dest = MEDIA_ROOT + 'registration/' + os.path.basename(image)
+        head, tail = os.path.splitext(os.path.basename(image))
+        count = 0
+        while os.path.exists(dest):
+            count += 1
+            dest = os.path.join(os.path.dirname(dest), '{}-{}{}'.format(head, count, tail))
+        copy2(image, dest)
+        dest_file = 'registration/' + os.path.basename(dest)
+        return ImageFieldFile(instance=self, field=FileField(), name=dest_file)
+
+    def save(self, *args, **kwargs):
+        if self.country in COUNTRY_NAMES:
+            self.country = Country(code=COUNTRY_NAMES[self.country])
+        if kwargs.get('load_from_text'):
+            self.image = self.make_image_object(str(self.image))
+        super(UserProfile, self).save()
+
 
 class CustomManager(UserManager):
     def bulk_create(self, items):
@@ -44,7 +64,7 @@ class CustomUser(User):
 
     class Meta:
         proxy = True
-        ordering = ('first_name',)
+        # ordering = ('first_name',)
 
     def save(self, *args, **kwargs):
         self._phone_number = kwargs.get('phone_number', None)
@@ -86,12 +106,7 @@ def create_user_profile(sender, instance, created, **kwargs):
         dest_file = 'registration/' + os.path.basename(dest)
         image = ImageFieldFile(instance=instance, field=FileField(), name=dest_file)
     if country:
-        if country in COUNTRIES:
-            # from dummy users
-            country = Country(code=country)
-        else:
-            # from browser
-            country = Country(code=COUNTRY_NAMES[country])
+        country = Country(code=country if country in COUNTRIES else COUNTRY_NAMES[country])
 
     if created:
         UserProfile.objects.create(user=instance, phone_number=phone_number,

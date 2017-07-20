@@ -131,6 +131,6 @@ STATICFILES_DIRS = [
 ]
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = '/home/fakhar/Documents/myenv/code/fakhar-master/Training_Assignment/media/'
+MEDIA_ROOT = '/home/fakhar/Documents/Django-Virtualenv/code/fakhar-master/Training_Assignment/media/'
 
 MEDIA_URL = 'media/'
