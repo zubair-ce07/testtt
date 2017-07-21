@@ -32,7 +32,6 @@ class rules(CrawlSpider):
     rules = [
 
             Rule(LinkExtractor(restrict_css=('.link')), callback='parse_details'),
-            Rule(LinkExtractor(restrict_css=('.item')), callback='parse'),
-            Rule(LinkExtractor(restrict_css=('.-gallery','.pagination .-selected + li')), follow=True)
+            Rule(LinkExtractor(restrict_css=('.-gallery','.pagination .-selected + li.item')), callback='parse')
 
     ]
