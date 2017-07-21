@@ -1,4 +1,6 @@
 import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
 
 
@@ -10,12 +12,12 @@ class Restaurant(scrapy.Spider):
 
 
     def parse(self, response):
-        for ad in response.css('div.biz-listing-large'):
-            title = ad.css('a.biz-name span::text').extract()
-            speciality = ad.css('span.category-str-list a::text').extract()
-            district = ad.css('span.neighborhood-str-list::text').extract()
+        for ad in response.css('.biz-listing-large'):
+            title = ad.css('.biz-name span::text').extract()
+            speciality = ad.css('.category-str-list a::text').extract()
+            district = ad.css('.neighborhood-str-list::text').extract()
             address = ad.css('address::text').extract()
-            phone = ad.css('span.biz-phone::text').extract()
+            phone = ad.css('.biz-phone::text').extract()
             yield {
                     'title': title,
                     'speciality': speciality,
@@ -23,6 +25,6 @@ class Restaurant(scrapy.Spider):
                     'address': address,
                     'phone': phone
             }
-            next_page = response.css('div.current + div a::attr(href)').extract_first()
+            next_page = response.css('.current + div a::attr(href)').extract_first()
             if next_page:
                 yield response.follow(next_page, callback=self.parse)
