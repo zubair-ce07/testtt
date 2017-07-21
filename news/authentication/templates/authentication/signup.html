@@ -5,10 +5,15 @@
 {% block content_title %}Signup{% endblock %}
 
 {% block content %}
+    {% if error %}
+        <p style="color: red;">
+          {{ error }}
+        </p>
+    {% endif %}
     {% if form.errors %}
-     <p style="color: red;">
-        Please correct the error{{ form.errors|pluralize }} below.
-    </p>
+         <p style="color: red;">
+            Please correct the error{{ form.errors|pluralize }} below.
+        </p>
     {% endif %}
 
     <form action="" method="post" novalidate>

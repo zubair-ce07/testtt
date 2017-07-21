@@ -9,9 +9,6 @@ from django.urls import reverse, reverse_lazy
 from messages import Message
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-
-
-# from django.views.generic.edit import FormView
 from forms import LoginForm, SignupForm
 
 
@@ -58,7 +55,7 @@ class SignupView(View):
         if request.user.is_authenticated:
             return redirect(reverse('authentication:welcome'))
 
-        form = self.form_class(None)
+        form = self.form_class()
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
@@ -66,14 +63,19 @@ class SignupView(View):
             return redirect(reverse('authentication:welcome'))
         
         form = self.form_class(request.POST)
+        context = {'form': form}
         if form.is_valid():
             user = form.save(commit=False)
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            user.set_password(password)
-            user.save()
-            return redirect(reverse('authentication:login') + '?username=' + username)
-        return render(request, self.template_name, {'form': form})
+            confirm_password = form.cleaned_data['confirm_password']
+            if password == confirm_password:
+                user.set_password(password)
+                user.save()
+                return redirect(reverse('authentication:login') + '?username=' + username)
+            else:
+                context['error'] = 'Passwords fields are not matching, Please fill password fields carefully'
+        return render(request, self.template_name, context)
 
 
 class WelcomeView(View):

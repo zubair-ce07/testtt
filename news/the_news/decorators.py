@@ -11,7 +11,7 @@ def ip_check(function=None, ip_list=[], *args, **kwargs):
         @wraps(view_function, assigned=available_attrs(view_function))
         def wrapped_view(request, *args, **kwargs):
             ip = request.META.get('REMOTE_ADDR', None)
-            if ip is not None and ip in ip_list:
+            if ip and ip in ip_list:
                 if function:
                     return function(request,*args, **kwargs)
                 else:

@@ -11,9 +11,9 @@ class IpFilterMiddleware(object):
 
     def __call__(self, request):
         ip = request.META.get('REMOTE_ADDR', None)
-        if ip is None or ip not in settings.ALLOWED_IP_LIST:
-            response = HttpResponseForbidden()
-        else:
+        if ip and ip in settings.ALLOWED_IP_LIST:
             response = self.get_response(request)
+        else:
+            response = HttpResponseForbidden()
 
         return response

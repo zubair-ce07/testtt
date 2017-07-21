@@ -12,6 +12,9 @@ class NewsPaper(models.Model):
     source_url = models.URLField(unique=True)
     spider_name = models.CharField(max_length=20)
 
+    class Meta:
+        verbose_name_plural = "News Paper"
+
     def crawler_button(self):
         button = "<button onclick=\"location.href='{}'\" type=\"button\" {}>{}</button>"
         button_state = 'enabled'
@@ -32,9 +35,6 @@ class NewsPaper(models.Model):
     def __str__(self):
         return self.name
 
-    class Meta:
-        verbose_name_plural = "News Paper"
-
 
 class News(models.Model):
     title = models.TextField()
@@ -45,9 +45,9 @@ class News(models.Model):
     detail = models.TextField()
     news_paper = models.ForeignKey(NewsPaper, on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name_plural = "News"
+
     def __str__(self):
 
         return ("{} {}".format(self.title, str(self.date))).encode('utf-8')
-
-    class Meta:
-        verbose_name_plural = "News"
