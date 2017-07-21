@@ -1,4 +1,4 @@
-from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth import login
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -9,6 +9,7 @@ from django.views.generic import FormView, TemplateView, ListView
 from twitter import forms
 from twitter.models import Tweet
 from twitter.models import User
+
 
 class TweetView(FormView):
     template_name = 'twitter/tweet.html'
@@ -53,6 +54,7 @@ class FollowView(View):
         profile_user = get_object_or_404(User, username__iexact=profile_username)
         request.user.followers.add(profile_user)
         return redirect(reverse('profile', kwargs={'username': profile_username}))
+
 
 class SignUpView(FormView):
     form_class = forms.UserSignUpForm

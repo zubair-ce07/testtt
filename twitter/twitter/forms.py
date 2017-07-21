@@ -14,6 +14,7 @@ class UserSignUpForm(UserCreationForm):
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
 
+
 class TweetForm(forms.Form):
     tweet_text = forms.CharField(widget=forms.Textarea)
 
