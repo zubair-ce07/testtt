@@ -1,20 +1,22 @@
-from . import views
-from .views import CustomUserList
-from django.conf.urls import url, include
-from rest_framework.authtoken import views as v
-from rest_framework.routers import DefaultRouter
+from django.conf.urls import url
+from django.contrib.auth.decorators import login_required
 
-router = DefaultRouter()
-router.register(r'user', CustomUserList, base_name='list-detail')
+from . import views
 
 app_name = "users"
 
 urlpatterns = [
 
-    url(r'^tasks/$', views.UsersTaskListCreateView.as_view(), name='home'),
-    url(r'^task_details/(?P<pk>[0-9]+)/$', views.UserTaskDetails.as_view()),
-    url(r'^user_profile_options/$', views.GetUpdateDeleteUserAPIView.as_view()),
-    url(r'^login/$', v.obtain_auth_token),
-    url(r'^', include(router.urls)),
+    url(r'^login$', views.LoginView.as_view(), name='login'),
+    url(r'^signup$', views.SignUpView.as_view(), name='signup'),
+    url(r'^profiles$', views.ProfileView.as_view(), name='profile'),
+    url(r'^logout$', views.LogoutView.as_view(), name='logout'),
+    url(r'^update', views.UpdateProfileView.as_view(), name='update'),
+    url(r'^change_password', views.ChangePasswordView.as_view(), name='change_password'),
+    url(r'^tasks', views.TasksView.as_view(), name='tasks'),
+    url(r'^delete_task', views.DeleteTaskView.as_view(), name='delete_task'),
+    url(r'^edit_task', views.UpdateTaskView.as_view(), name='edit_task'),
+    url(r'^show_all_task', views.ShowAllTasksView.as_view(), name='show_all_task'),
+    url(r'^add_task', login_required(views.AddNewTaskView.as_view()), name='add_task'),
+    url(r'^add_user_task', login_required(views.AddUserTaskView.as_view()), name='add_user_task'),
 ]
-

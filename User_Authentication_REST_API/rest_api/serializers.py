@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import CustomUser, Task
+
+from UserRegistration.models import CustomUser, Task
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -41,5 +42,4 @@ class UsersTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ['id', 'name', 'status', 'due_date', 'user']
-
+        fields = ['id', 'name', 'status', 'dated', 'user']
