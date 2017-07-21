@@ -1,12 +1,13 @@
 {% extends 'twitter/home.html' %}
 
 
-{% block post_tweet %}
-{% endblock post_tweet %}
-
 {% block content %}
+    {% if view.profile_user.first_name %}
+        <h1>{{ view.profile_user.first_name|capfirst }}'s Profile</h1>
+    {% else %}
+        <h1>{{ view.profile_user.username|capfirst }}'s Profile</h1>
+    {% endif %}
 
-    <h1>{{ view.profile_user.first_name|capfirst }}'s Profile</h1>
     {% if not view.profile_user == user %}
         <span>
         <form action="{% url 'follow'%}" method="post">
@@ -22,7 +23,7 @@
 
     {% for tweet in view.tweets %}
         <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20"  >
-            <tr><td>{{ tweet }}</td></tr>
+            <tr><td><pre>{{ tweet }}</pre></td></tr>
         </table>
     {% endfor %}
 

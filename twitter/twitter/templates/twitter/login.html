@@ -1,8 +1,5 @@
-{% extends 'twitter/authenticated_base.html' %}
+{% extends 'twitter/base.html' %}
 
-{% block urls %}
-    <span><a href="{% url 'home' %}"> Home</a></span>
-{% endblock urls %}
 
 {% block content %}
     <form action="{% url 'login' %}" method="post">

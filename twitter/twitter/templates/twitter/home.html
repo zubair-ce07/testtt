@@ -1,20 +1,19 @@
 {% extends 'twitter/authenticated_base.html' %}
 
+{% block header_authenticated %}
+    {% if user.is_authenticated %}
+        {{ block.super }}
+    {% endif %}
+{% endblock header_authenticated %}
 
 {% block content %}
     {% if user.is_authenticated %}
             <h2>Tweets</h2>
             {% for tweet in tweets %}
                 <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20"  >
-                    <tr><td>{{ tweet }}</td></tr>
+                    <tr><td><pre>{{ tweet }}</pre></td></tr>
                 </table>
             {% endfor %}
-
-            {% block post_tweet %}
-                <form action="{% url 'tweet' %}" method="get">
-                    <input type="submit" value="Post Tweet">
-                </form>
-            {% endblock post_tweet %}
 
     {% else %}
 
