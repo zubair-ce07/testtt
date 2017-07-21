@@ -14,6 +14,8 @@ class rules(CrawlSpider):
         rating =  response.css('.stars::attr(style)').extract_first()
         if rating:
             rating = rating.split()[-1]
+        else:
+            rating = None
         price = response.css('.price span::text').extract()[1]
         specs_heading = response.css('.osh-row .-head::text').extract()
         specs = response.css('#product-details .osh-row .osh-col+div::text').extract()
