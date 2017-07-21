@@ -1,15 +1,10 @@
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
-
-
 
 class Restaurant(scrapy.Spider):
     name = "restaurant"
     start_urls = [
                     'https://www.yelp.com/search?attrs=NewBusiness&find_loc=New+York%2C+NY'
                 ]
-
 
     def parse(self, response):
         for ad in response.css('.biz-listing-large'):
