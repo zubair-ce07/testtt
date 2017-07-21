@@ -2,19 +2,7 @@
 from scrapy import Item, Field
 
 
-class MarinaItem(Item):
-    def __init__(self, *args, **kwargs):
-        super(MarinaItem, self).__init__(*args, **kwargs)
-        self['locality'] = u'Bubenské nábř 17000 Praha 7 Czechia'
-        self['gps'] = {"latitude": "50.106281", "longitude": "14.458883"}
-        self['finished'] = False
-        self['energy_class'] = 'B'
-        self['cellar'] = True
-        self['ownership'] = 'private'
-        self['project'] = 'Trigema Island'
-        self['developer'] = 'Trigema Island inc.'
-        self['type'] = 'flat'
-
+class TrigemaItem(Item):
     ownership = Field()
     project = Field()
     developer = Field()

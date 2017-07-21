@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from scrapy.spiders import Spider
 from scrapy import Request, FormRequest
-from Trigema.items import MarinaItem
+from Trigema.items import TrigemaItem
 import datetime
 import re
 
@@ -45,9 +45,18 @@ class MarinaIslandSpider(Spider):
         yield item
 
     def compile_common_item_details(self, response, parking_price, url):
-        item = MarinaItem()
+        item = TrigemaItem()
         results = response.css('td::text').extract()
         if results:
+            item['locality'] = u'Bubenské nábř 17000 Praha 7 Czechia'
+            item['gps'] = {"latitude": "50.106281", "longitude": "14.458883"}
+            item['finished'] = False
+            item['energy_class'] = 'B'
+            item['cellar'] = True
+            item['ownership'] = 'private'
+            item['project'] = 'Marina Island'
+            item['developer'] = 'Marina Island inc.'
+            item['type'] = 'flat'
             item['number'] = results[1]
             item['local_id'] = results[1]
             item['detail_url'] = url
