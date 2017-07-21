@@ -6,4 +6,18 @@ img.dp {
 
 ul, h2 {
     float: left;
+    padding-top: 10px;
+}
+
+ul>li{
+    margin:0 0 3px 0;
+}
+
+label{
+    margin-right: 10px;
+}
+
+input[type='submit']{
+    float: right;
+    margin-right: 45%;
 }

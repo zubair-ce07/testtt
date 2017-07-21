@@ -1,15 +1,25 @@
 {% extends "registration/base.html" %}
+{% block title %}
+    Login Page
+{% endblock %}
 {% block sidebar %}
     {{ block.super }}
-    <li><a href="{%url 'signup'%}">Signup</a></li>
+    <li><a href="{% url 'signup' %}">Signup</a></li>
+{% endblock %}
+{% block heading %}
+    Login Form
 {% endblock %}
 {% block content %}
-    <h1>Login</h1>
-    <form action='' method="post">
-        {% csrf_token %}
-        <table>
-            {{userform}}
-        </table>
-        <input type="submit" value="Login" />
-    </form>
+
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <form action='' method="post">
+            {% csrf_token %}
+            <table>
+                {{ form }}
+            </table>
+            <input type="submit" value="Login" class="btn btn-primary"/>
+        </form>
+    </div>
+
 {% endblock content %}

@@ -134,3 +134,9 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = '/home/fakhar/Documents/Django-Virtualenv/code/fakhar-master/Training_Assignment/media/'
 
 MEDIA_URL = 'media/'
+
+COUNTRIES_FIRST = ['US', 'GB', 'PK']
+
+COUNTRIES_FIRST_BREAK = '--------'
+
+COUNTRIES_FIRST_SORT = True
