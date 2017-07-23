@@ -15,17 +15,16 @@ class Command(BaseCommand):
     def handle(self, **options):
         cache.set('count', 0)
         cache.set('convert', True)
-        dt = datetime.datetime.now()
-        tz = timezone('Asia/Karachi')
-        dtz = tz.normalize(tz.localize(dt))
+        date_time = datetime.datetime.now()
+        time_zone = timezone('Asia/Karachi')
+        date_time = time_zone.normalize(time_zone.localize(date_time))
         datetime_list = []
         for i in range(100):
-            datetime_list.append(DateTime(datetime=dtz, timezone=tz.zone))
+            datetime_list.append(DateTime(datetime=date_time, timezone=time_zone.zone))
         DateTime.objects.bulk_create(datetime_list)
         with open('dummy.csv', 'r') as csvfile:
             users_info = csv.DictReader(csvfile)
             users = []
-
             for user in users_info:
                 users.append(UserProfile(
                     user=User.objects.create(username='{}.{}'.format(user['first_name'], user['last_name']),

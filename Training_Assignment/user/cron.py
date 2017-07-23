@@ -7,7 +7,7 @@ from user.models import DateTime
 
 
 def time_zone_convert():
-    tz = timezone(TIME_ZONE)
+    time_zone = timezone(TIME_ZONE)
     count = cache.get('count')
     cache.set('count', count + 10)
     convert = cache.get('convert')
@@ -17,20 +17,20 @@ def time_zone_convert():
     if convert:
         for i in range(count, count + 10):
             date = DateTime.objects.all().order_by('id').__getitem__(i)
-            dt = date.datetime
-            dtz = tz.normalize(tz.localize(dt))
-            dtz = dtz.astimezone(utc)
-            dtz = dtz.replace(tzinfo=None)
-            date.datetime = dtz
+            date_time = date.datetime
+            date_time = time_zone.normalize(time_zone.localize(date_time))
+            date_time = date_time.astimezone(utc)
+            date_time = date_time.replace(tzinfo=None)
+            date.datetime = date_time
             date.timezone = utc.zone
             date.save()
     else:
         for i in range(count, count + 10):
             date = DateTime.objects.all().order_by('id').__getitem__(i)
-            dt = date.datetime
-            dtz = utc.localize(dt)
-            dtz = dtz.astimezone(tz)
-            dtz = dtz.replace(tzinfo=None)
-            date.datetime = dtz
-            date.timezone = tz.zone
+            date_time = date.datetime
+            date_time = utc.localize(date_time)
+            date_time = date_time.astimezone(time_zone)
+            date_time = date_time.replace(tzinfo=None)
+            date.datetime = date_time
+            date.timezone = time_zone.zone
             date.save()
