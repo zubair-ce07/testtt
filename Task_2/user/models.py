@@ -48,6 +48,9 @@ class UserProfile(models.Model):
         dest_file = 'user/' + os.path.basename(dest)
         return ImageFieldFile(instance=self, field=FileField(), name=dest_file)
 
+    class Meta:
+        db_table = 'userprofile'
+
 
 class DateTime(models.Model):
     datetime = models.DateTimeField(blank=True, null=True)
@@ -56,6 +59,8 @@ class DateTime(models.Model):
     def __str__(self):
         return str(self.datetime)
 
+    class Meta:
+        db_table = 'datetime'
 
 # Older implementation using Proxy class and post_save signal
 

@@ -9,15 +9,16 @@ ul, h2 {
     padding-top: 10px;
 }
 
-ul>li{
-    margin:0 0 3px 0;
+ul > li {
+    margin: 0 0 3px 0;
 }
 
-label{
+label {
     margin-right: 10px;
 }
 
-input[type='submit']{
+
+input[type='submit'] {
     float: right;
     margin-right: 45%;
 }

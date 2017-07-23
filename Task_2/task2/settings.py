@@ -40,11 +40,13 @@ DJANGO_DEFAULT_APPS = [
 THIRD_PARTY_APPS = [
     'django_countries',
     'django_crontab',
+    'crispy_forms',
+    'djmoney'
 ]
 
 LOCAL_APPS = [
     'user',
-
+    'product',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -132,7 +134,7 @@ STATICFILES_DIRS = [
 ]
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = '/home/fakhar/Documents/Django-Virtualenv/code/fakhar-master/Training_Assignment/media/'
+MEDIA_ROOT = '/home/fakhar/Documents/Django-Virtualenv/code/fakhar-master/Task_2/media/'
 
 MEDIA_URL = 'media/'
 
