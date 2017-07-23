@@ -13,8 +13,8 @@ from user.models import UserProfile, DateTime
 
 class Command(BaseCommand):
     def handle(self, **options):
-        count = cache.set('count', 0)
-        convert = cache.set('convert', True)
+        cache.set('count', 0)
+        cache.set('convert', True)
         dt = datetime.datetime.now()
         tz = timezone('Asia/Karachi')
         dtz = tz.normalize(tz.localize(dt))

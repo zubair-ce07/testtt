@@ -11,6 +11,9 @@ def time_zone_convert():
     count = cache.get('count')
     cache.set('count', count + 10)
     convert = cache.get('convert')
+    if count >= DateTime.objects.count() - 10:
+        cache.set('count', 0)
+        cache.set('convert', not convert)
     if convert:
         for i in range(count, count + 10):
             date = DateTime.objects.all().order_by('id').__getitem__(i)
@@ -31,8 +34,3 @@ def time_zone_convert():
             date.datetime = dtz
             date.timezone = tz.zone
             date.save()
-    if count == 90:
-        cache.set('count', 0)
-        cache.set('convert', not convert)
-    else:
-        cache.set('count', count + 10)
