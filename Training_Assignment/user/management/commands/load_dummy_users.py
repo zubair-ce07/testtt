@@ -1,14 +1,27 @@
 import csv
+import datetime
+from pytz import timezone
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
 
-from user.models import UserProfile
+from user.models import UserProfile, DateTime
+
 
 
 class Command(BaseCommand):
     def handle(self, **options):
+        count = cache.set('count', 0)
+        convert = cache.set('convert', True)
+        dt = datetime.datetime.now()
+        tz = timezone('Asia/Karachi')
+        dtz = tz.normalize(tz.localize(dt))
+        datetime_list = []
+        for i in range(100):
+            datetime_list.append(DateTime(datetime=dtz, timezone=tz.zone))
+        DateTime.objects.bulk_create(datetime_list)
         with open('dummy.csv', 'r') as csvfile:
             users_info = csv.DictReader(csvfile)
             users = []

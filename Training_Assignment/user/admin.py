@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
-from user.models import UserProfile
+from user.models import UserProfile, DateTime
 
 admin.site.unregister(User)
 
@@ -15,3 +15,8 @@ class UserProfileInline(admin.StackedInline):
 @admin.register(User)
 class UserAdmin(UserAdmin):
     inlines = (UserProfileInline,)
+
+@admin.register(DateTime)
+class DateTime(admin.ModelAdmin):
+    list_display = ('pk', 'datetime', 'timezone')
+    ordering = ('pk',)

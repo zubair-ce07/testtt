@@ -39,6 +39,7 @@ DJANGO_DEFAULT_APPS = [
 
 THIRD_PARTY_APPS = [
     'django_countries',
+    'django_crontab',
 ]
 
 LOCAL_APPS = [
@@ -58,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'task1.urls'
+ROOT_URLCONF = 'task2.urls'
 
 TEMPLATES = [
     {
@@ -76,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'task1.wsgi.application'
+WSGI_APPLICATION = 'task2.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -84,7 +85,7 @@ WSGI_APPLICATION = 'task1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'django_task',
+        'NAME': 'django_task2',
         'USER': 'fakhar',
         'PASSWORD': 'csgogodancer',
         'HOST': 'localhost',
@@ -121,7 +122,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
@@ -140,3 +141,15 @@ COUNTRIES_FIRST = ['US', 'GB', 'PK']
 COUNTRIES_FIRST_BREAK = '--------'
 
 COUNTRIES_FIRST_SORT = True
+
+CRONJOBS = [
+    ('*/5 * * * *', 'user.cron.time_zone_convert')
+]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'count_cache',
+        'TIMEOUT': None,
+    }
+}

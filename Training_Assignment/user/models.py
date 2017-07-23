@@ -13,7 +13,7 @@ from django.db.models.fields.files import FileField, ImageFieldFile, ImageField
 # from django.db.models.signals import post_save
 # from django.dispatch import receiver
 
-from task1.settings import MEDIA_ROOT
+from task2.settings import MEDIA_ROOT
 
 
 class UserProfile(models.Model):
@@ -47,6 +47,15 @@ class UserProfile(models.Model):
         copy2(image, dest)
         dest_file = 'user/' + os.path.basename(dest)
         return ImageFieldFile(instance=self, field=FileField(), name=dest_file)
+
+
+class DateTime(models.Model):
+    datetime = models.DateTimeField(blank=True, null=True)
+    timezone = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.datetime)
+
 
 # Older implementation using Proxy class and post_save signal
 

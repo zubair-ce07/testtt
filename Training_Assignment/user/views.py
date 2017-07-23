@@ -1,7 +1,6 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
-
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import login, authenticate, logout
@@ -10,7 +9,6 @@ from django.contrib.auth.models import User
 from user.decorators import login_required
 from user.models import UserProfile
 from user.forms import LoginForm, SignupForm, EditForm
-
 
 
 @login_required
