@@ -18,13 +18,9 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from django.conf import settings
 
-from task1 import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^users/', include('registration.urls')),
-    url(r'^accounts/signup/$', views.SignUpView, name='signup'),
-    url(r'^accounts/login/$', views.LoginView, name='login'),
-    url(r'^accounts/logout/$', views.LogoutView, name='logout'),
+    url(r'^user/', include('user.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

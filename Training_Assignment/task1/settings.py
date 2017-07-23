@@ -42,7 +42,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'registration',
+    'user',
 
 ]
 
@@ -63,7 +63,7 @@ ROOT_URLCONF = 'task1.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['./templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'task1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'django_assignment',
+        'NAME': 'django_task',
         'USER': 'fakhar',
         'PASSWORD': 'csgogodancer',
         'HOST': 'localhost',
