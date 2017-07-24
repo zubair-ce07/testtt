@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from product.models import Product, ImageURL, sku, ColorURL
+from product.models import Product, ImageURL, SKU, ColorURL
 
 
 class ImageURLInline(admin.StackedInline):
@@ -14,7 +14,7 @@ class ColorURLInline(admin.StackedInline):
 
 
 class skuInline(admin.StackedInline):
-    model = sku
+    model = SKU
     extra = 1
 
 
@@ -22,3 +22,18 @@ class skuInline(admin.StackedInline):
 class ProductAdmin(admin.ModelAdmin):
     inlines = (ImageURLInline, ColorURLInline, skuInline)
     list_display = ('name', 'brand',)
+
+
+@admin.register(ImageURL)
+class ImageURLAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ColorURL)
+class ColorURLAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(SKU)
+class skuAdmin(admin.ModelAdmin):
+    pass

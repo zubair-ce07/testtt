@@ -1,8 +1,10 @@
 from django.shortcuts import render
-from django.views.generic.edit import View
+from django.views.generic.edit import View, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
+from django.urls import reverse_lazy
 
-from product.models import Product, ImageURL, sku, ColorURL
+from product.models import Product, ImageURL, SKU, ColorURL
 from product.forms import CreateProductForm, ImageFormSet, ColorFormSet, skuFormSet
 
 
@@ -10,7 +12,7 @@ class CreateProductView(LoginRequiredMixin, View):
     form_class = CreateProductForm
     template_name = 'product/create_product.html'
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         product = Product()
         form = self.form_class()
         imageformset = ImageFormSet(instance=product)
@@ -22,14 +24,30 @@ class CreateProductView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
-        # imageformset = ImageFormSet(instance=product)
-        # colorformset = ColorFormSet(instance=product)
-        # skuformset = skuFormSet(instance=product)
         if form.is_valid():
+            # skuformset.clean()
+            #
+            # skuform = sku(product=form.cleaned_data.get('product'),
+            #               id='{}_{}'.format(form.cleaned_data.get('product').retailer_sku,
+            #                                 form.cleaned_data.get('size')), size=form.cleaned_data.get('size'),
+            #               price=form.cleaned_data.get('price'), color=form.cleaned_data.get('color'))
+            # skuform.save()
+            product = form.save()
+            skuformset = skuFormSet(request.POST, instance=product)
+            imageformset = ImageFormSet(request.POST, instance=product)
+            colorformset = ColorFormSet(request.POST, instance=product)
 
-            pass
-            # return HttpResponseRedirect('/success/')
-        return render(request, self.template_name, {'form': form})
+            if imageformset.is_valid() and colorformset.is_valid() and skuformset.is_valid():
+                imageformset.save()
+                colorformset.save()
+                skuformset.save()
+
+        return HttpResponse('worked')
+        # if skuformset.is_valid():
+        #     skuformset.save()
+
+        # return HttpResponseRedirect('/success/')
+
 
         # self.object = None
         # form_class = self.get_form_class()
@@ -82,3 +100,26 @@ class CreateProductView(LoginRequiredMixin, View):
         #         ctx['image_formhelper'] = image_formhelper
         #
         #     return ctx
+
+
+class DeleteProductView(LoginRequiredMixin, View):
+    template_name = 'product/delete_product.html'
+
+    def get(self, request, *args, **kwargs):
+        product = Product.objects.get(pk=kwargs.get('pk'))
+        return render(request, self.template_name, {'product': product})
+
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        Product.objects.get(pk=pk).delete()
+        return render(request, reverse_lazy('search-product'))
+
+
+class SearchProductView(LoginRequiredMixin, View):
+    template_name = 'product/search_product.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        pass

@@ -1,0 +1,33 @@
+{% extends 'user/base.html' %}
+{% block title %}
+    Search Products
+{% endblock title %}
+{% block heading %}
+    Search Products
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-7">
+            <form action="" method="get">
+                <input type="text" name="q"/>
+                <input type="submit" value="Search" class="btn btn-primary">
+            </form>
+
+            {% if books %}
+                <p>Your search for <strong>{{ query }}</strong> returned the following results:</p>
+                <p>Found {{ books|length }} book{{ books|pluralize }}.</p>
+                <ul>
+                    {% for book in books %}
+                        <li>{{ book.title }}</li>
+                    {% endfor %}
+                </ul>
+
+            {% elif query %}
+                <p>Your search for <strong>{{ query }}</strong> returned no result.</p>
+            {% elif error %}
+                <p>You passed an empty query, please retry</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

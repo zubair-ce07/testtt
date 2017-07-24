@@ -1,0 +1,17 @@
+{% extends 'user/base.html' %}
+{% block Title %}
+    Delete Product?
+{% endblock %}
+{% block heading %}
+    Delete Product?
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-7">
+            <p>Are you sure you want to delete the product {{ product }}?</p>
+            <form action="" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Submit" class="btn btn-primary"/>
+            </form>
+{% endblock content %}

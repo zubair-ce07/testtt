@@ -134,7 +134,7 @@ STATICFILES_DIRS = [
 ]
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = '/home/fakhar/Documents/Django-Virtualenv/code/fakhar-master/Task_2/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 MEDIA_URL = 'media/'
 

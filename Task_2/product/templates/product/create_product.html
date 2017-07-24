@@ -14,24 +14,27 @@
                 {{ form }}
                 <hr>
                 {% for form in imageformset.forms %}
-                    <table>
-                        <tr>
-                            <th>{{ form.url.label_tag }}</th>
-                            <td>{{ form.url }}{{ field.errors }}</td>
-                        </tr>
-                    </table>
+                    {{ form.url.label_tag }}
+                    {{ form.url }}{{ field.errors }}
                 {% endfor %}
+                {{ imageformset.management_form }}
                 <hr>
                 {% for form in colorformset.forms %}
-                    <table>
-                        <tr>
-                            <th>{{ form.url.label_tag }}</th>
-                            <td>{{ form.url }}{{ field.errors }}</td>
-                        </tr>
-                    </table>
+                    {{ form.url.label_tag }}
+                    {{ form.url }}{{ field.errors }}
                 {% endfor %}
+                {{ colorformset.management_form }}
                 <hr>
+                {#                {% for form in skuformset.forms %}#}
+                {#                {% for form in skuformset.forms %}#}
+                {#                    {% for field in form.visible_fields %}#}
+                {#                        {{ field.label_tag }}#}
+                {#                        {{ field }}{{ field.errors }}#}
+                {#                        <br/>#}
+                {#                    {% endfor %}#}
+                {#                {% endfor %}#}
                 {{ skuformset }}
+                {{ skuformset.management_form }}
                 <input type="submit" value="Create" class="btn btn-primary"/>
             </form>
         </div>
