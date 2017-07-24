@@ -34,25 +34,27 @@ class Report:
 
         print("\n\n\t+++Monthly Bar Chart+++")
 
-        max_temp_list = result["max_temp"]
-        min_temp_list = result["min_temp"]
-
-        for i in range(0, len(max_temp_list)):
+        max_temperatures = result["max_temp"]
+        min_temperatures = result["min_temp"]
+        i=0
+        for minimum,maximum in zip(min_temperatures,max_temperatures):
             print("{0} ".format(i + 1), end="")
-            symbolsred = "+" * max_temp_list[i]
+            symbolsred = "+" * maximum
             self.print_red(symbolsred)
-            print(" {0}C".format(max_temp_list[i]))
+            print(" {0}C".format(maximum))
             print("{0} ".format(i + 1), end="")
-            symbolsblue = "+" * min_temp_list[i]
+            symbolsblue = "+" * minimum
             self.print_blue(symbolsblue)
-            print(" {0}C".format(min_temp_list[i]))
-
+            print(" {0}C".format(minimum))
+            i += 1
+        i =0
         print("\n\n\t+++Monthly Bar Chart+++")
         print("\t+++Bonus Task+++\n")
-        for i in range(0, len(max_temp_list)):
+        for minimum, maximum in zip(min_temperatures, max_temperatures):
             print("{0} ".format(i + 1), end="")
-            symbolsblue = "+" * min_temp_list[i]
+            symbolsblue = "+" * minimum
             self.print_blue(symbolsblue)
-            symbolsred = "+" * max_temp_list[i]
+            symbolsred = "+" * maximum
             self.print_red(symbolsred)
-            print(" {0}C - {1}C".format(min_temp_list[i], max_temp_list[i]))
+            print(" {0}C - {1}C".format(minimum, maximum))
+            i += 1

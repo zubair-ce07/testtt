@@ -3,37 +3,43 @@ import collections
 import csv
 import glob
 
+from weather_record import WeatherRecord
+
 
 class ExtractData:
     def __init__(self):
-        self.__file_names = ""
-        self.__data_set = collections.defaultdict(lambda: 0)
-        self.__header = []
+        self.file_names = ""
+        self.weather_records = []
 
     def get_file_names_yearly(self, files_dir, date_):
         header = []
         data_set = []
-        self.__file_names = glob.glob("{0}/*{1}*.txt".format(files_dir, date_))
+        self.file_names = glob.glob("{0}/*{1}*.txt".format(files_dir, date_))
 
     def get_file_names_monthly(self, files_dir, date_):
         year, month = date_.split("/")
         month_name_ = calendar.month_name[int(month)]
         month_name_ = month_name_[:3]
         sub_string = year + "_" + month_name_
-        self.__file_names = glob.glob("{0}/*{1}.txt".format(files_dir, sub_string))
+        self.file_names = glob.glob("{0}/*{1}.txt".format(files_dir, sub_string))
 
     def read_data(self):
-        list = []
-        for f in self.__file_names:
+
+        for f in self.file_names:
             with open(f, 'rt') as csvfile:
                 reader = csv.DictReader(csvfile)
-                self.__header = reader.fieldnames
-                x = [[] for i in range(len(self.__header))]
-                list = x
                 for row in reader:
-                    for i in range(0, len(self.__header)):
-                        list[i].append(row[self.__header[i]])
-        for i in range(0, len(self.__header)):
-            self.__data_set[self.__header[i]] = list[i]
+                    records = WeatherRecord()
+                    records.load_weather_record(row["PKT"], row["Max TemperatureC"], row["Mean TemperatureC"],
+                                                row["Min TemperatureC"], row["Dew PointC"], row["MeanDew PointC"],
+                                                row["Min DewpointC"], row["Max Humidity"], row[" Mean Humidity"],
+                                                row[" Min Humidity"], row[" Max Sea Level PressurehPa"],
+                                                row[" Mean Sea Level PressurehPa"], row[" Min Sea Level PressurehPa"],
+                                                row[" Max VisibilityKm"], row[" Mean VisibilityKm"],
+                                                row[" Min VisibilitykM"], row[" Max Wind SpeedKm/h"],
+                                                row[" Mean Wind SpeedKm/h"], row[" Max Gust SpeedKm/h"],
+                                                row["Precipitationmm"], row[" CloudCover"], row[" Events"],
+                                                row["WindDirDegrees"])
+                    self.weather_records.append(records)
 
-        return self.__data_set
+        return self.weather_records

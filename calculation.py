@@ -3,74 +3,90 @@ import collections
 
 class Calculation:
     def __init__(self):
-        self.__yearly_cal = collections.defaultdict(lambda: 0)
-        self.__monthly_cal = collections.defaultdict(lambda: 0)
-        self.__monthly_barchart_cal = collections.defaultdict(lambda: 0)
+        self.yearly_cal = collections.defaultdict(lambda: 0)
+        self.monthly_cal = collections.defaultdict(lambda: 0)
+        self.monthly_barchart_cal = collections.defaultdict(lambda: 0)
 
-    def yearly_calculation(self, data_set):
-        str_max_temp = data_set["Max TemperatureC"]
-        str_min_temp = data_set["Min TemperatureC"]
-        str_humidity = data_set["Max Humidity"]
+    def yearly_calculation(self, weather_records):
+        max_temp = []
+        min_temp = []
+        humiditi = []
+        date = []
+        for record in weather_records:
+            date.append(record.date)
+            max_temp.append(record.max_temperature)
+            min_temp.append(record.min_temperature)
+            humiditi.append(record.max_humidity)
 
-        max_temp_list = []
-        for x in str_max_temp:
-            max_temp_list.append(float(x) if x else -100)
-        min_temp_list = []
-        for x in str_min_temp:
-            min_temp_list.append(float(x)  if x else 10000)
+        max_temperatures = []
+        for x in max_temp:
+            max_temperatures.append(float(x) if x else -100)
+        min_temperatures = []
+        for x in min_temp:
+            min_temperatures.append(float(x)  if x else 10000)
 
-        humidity_list = []
-        for x in str_humidity:
-            humidity_list.append(float(x) if x else -100)
+        humidity = []
+        for x in humiditi:
+            humidity.append(float(x) if x else -100)
 
 
-        max_temp = max(max_temp_list)
-        max_index = max_temp_list.index(max_temp)
-        min_temp = min(min_temp_list)
-        min_index = min_temp_list.index(min_temp)
-        max_humidity = max(humidity_list)
-        humid_index = humidity_list.index(max_humidity)
+        max_temperature = max(max_temperatures)
+        max_index = max_temperatures.index(max_temperature)
+        min_temperature = min(min_temperatures)
+        min_index = min_temperatures.index(min_temperature)
+        max_humidity = max(humidity)
+        humid_index = humidity.index(max_humidity)
 
-        self.__yearly_cal["max_temp"] = str(max_temp)
-        self.__yearly_cal["max_temp_date"] = str(data_set["PKT"][max_index])
+        self.yearly_cal["max_temp"] = str(max_temperature)
+        self.yearly_cal["max_temp_date"] = str(date[max_index])
 
-        self.__yearly_cal["min_temp"] = str(min_temp)
-        self.__yearly_cal["min_temp_date"] = str(data_set["PKT"][min_index])
+        self.yearly_cal["min_temp"] = str(min_temperature)
+        self.yearly_cal["min_temp_date"] = str(date[min_index])
 
-        self.__yearly_cal["max_humidity"] = str(max_humidity)
-        self.__yearly_cal["max_humidity_date"] = str(data_set["PKT"][humid_index])
-        return self.__yearly_cal
+        self.yearly_cal["max_humidity"] = str(max_humidity)
+        self.yearly_cal["max_humidity_date"] = str(date[humid_index])
+        return self.yearly_cal
 
-    def monthly_report_calculation(self, data_set):
+    def monthly_report_calculation(self, weather_records):
+        max_temp = []
+        min_temp = []
+        humiditi = []
 
-        str_max_temp = data_set["Max TemperatureC"]
-        str_min_temp = data_set["Min TemperatureC"]
-        str_humidity = data_set[" Mean Humidity"]
+        for record in weather_records:
+            max_temp.append(record.max_temperature)
+            min_temp.append(record.min_temperature)
+            humiditi.append(record.mean_humidity)
 
-        max_temp_list = [float(x) for x in str_max_temp if x]
-        min_temp_list = [float(x) for x in str_min_temp if x]
-        humidity_list = [float(x) for x in str_humidity if x]
 
-        avg_max_temp = int(sum(max_temp_list) / len(max_temp_list))
-        avg_min_temp = int(sum(min_temp_list) / len(min_temp_list))
-        avg_mean_humidity = int(sum(humidity_list) / float(len(humidity_list)))
+        max_temperatures = [float(x) for x in max_temp if x]
+        min_temperatures = [float(x) for x in min_temp if x]
+        humidity = [float(x) for x in humiditi if x]
 
-        self.__monthly_cal["age_max_temp"] = avg_max_temp
-        self.__monthly_cal["age_min_temp"] = avg_min_temp
-        self.__monthly_cal["age_mean_humidity"] = avg_mean_humidity
-        return self.__monthly_cal
+        avg_max_temp = int(sum(max_temperatures) / len(max_temperatures))
+        avg_min_temp = int(sum(min_temperatures) / len(min_temperatures))
+        avg_mean_humidity = int(sum(humidity) / float(len(humidity)))
 
-    def monthly_barchart_calculation(self, data_set):
+        self.monthly_cal["age_max_temp"] = avg_max_temp
+        self.monthly_cal["age_min_temp"] = avg_min_temp
+        self.monthly_cal["age_mean_humidity"] = avg_mean_humidity
+        return self.monthly_cal
 
-        str_max_temp = data_set["Max TemperatureC"]
-        str_min_temp = data_set["Min TemperatureC"]
-        max_temp_list = []
-        for x in str_max_temp:
-            max_temp_list.append(int(x) if x else 0)
-        min_temp_list = []
-        for x in str_min_temp:
-            min_temp_list.append(int(x) if x else 0)
+    def monthly_barchart_calculation(self, weather_records):
 
-        self.__monthly_barchart_cal["max_temp"] = max_temp_list
-        self.__monthly_barchart_cal["min_temp"] = min_temp_list
-        return self.__monthly_barchart_cal
+        max_temp = []
+        min_temp = []
+        for record in weather_records:
+            max_temp.append(record.max_temperature)
+            min_temp.append(record.min_temperature)
+
+
+        max_temperatures = []
+        for x in max_temp:
+            max_temperatures.append(int(x) if x else 0)
+        min_temperatures = []
+        for x in min_temp:
+            min_temperatures.append(int(x) if x else 0)
+
+        self.monthly_barchart_cal["max_temp"] = max_temperatures
+        self.monthly_barchart_cal["min_temp"] = min_temperatures
+        return self.monthly_barchart_cal

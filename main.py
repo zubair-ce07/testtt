@@ -27,56 +27,34 @@ def main():
     parser.add_argument(
         '-f', '--filesdir', type=str, help='files directory', required=True)
 
-    parser.add_argument('-c', '--command', choices=DATA_READING_FUNCTION_MAP.keys(), required=True)
+    parser.add_argument('-c', '--command1', choices=DATA_READING_FUNCTION_MAP.keys(), required=True)
 
     parser.add_argument(
-        '-d', '--date', type=str, help='Summary of date', required=True)
+        '-d', '--date1', type=str, help='Summary of date', required=True)
 
-    parser.add_argument('-exc1', '--command1', choices=DATA_READING_FUNCTION_MAP.keys(), required=False)
-
-    parser.add_argument(
-        '-exd1', '--date1', type=str, help='Summary of date', required=False)
-
-    parser.add_argument('-exc2', '--command2', choices=DATA_READING_FUNCTION_MAP.keys(), required=False)
+    parser.add_argument('-exc1', '--command2', choices=DATA_READING_FUNCTION_MAP.keys(), required=False)
 
     parser.add_argument(
-        '-exd2', '--date2', type=str, help='Summary of date', required=False)
+        '-exd1', '--date2', type=str, help='Summary of date', required=False)
+
+    parser.add_argument('-exc2', '--command3', choices=DATA_READING_FUNCTION_MAP.keys(), required=False)
+
+    parser.add_argument(
+        '-exd2', '--date3', type=str, help='Summary of date', required=False)
 
     args = parser.parse_args()
+    for i in range(1, 4):
+        if eval("args.command"+str(i)):
+            func = DATA_READING_FUNCTION_MAP[eval("args.command"+str(i))]
+            func(args.filesdir, eval("args.date"+str(i)))
 
-    func = DATA_READING_FUNCTION_MAP[args.command]
-    func(args.filesdir, args.date)
+            weather_records = datareader.read_data()
 
-    data_set = datareader.read_data()
+            func = CALCULATION_FUNCTION_MAP[eval("args.command"+str(i))]
+            result = func(weather_records)
 
-    func = CALCULATION_FUNCTION_MAP[args.command]
-    result = func(data_set)
-
-    func = REPORTING_FUNCTION_MAP[args.command]
-    func(result)
-
-    if args.command1:
-        func = DATA_READING_FUNCTION_MAP[args.command1]
-        func(args.filesdir, args.date1)
-
-        data_set = datareader.read_data()
-
-        func = CALCULATION_FUNCTION_MAP[args.command1]
-        result = func(data_set)
-
-        func = REPORTING_FUNCTION_MAP[args.command1]
-        func(result)
-    if args.command2:
-        func = DATA_READING_FUNCTION_MAP[args.command2]
-        func(args.filesdir, args.date2)
-
-        data_set = datareader.read_data()
-
-        func = CALCULATION_FUNCTION_MAP[args.command2]
-        result = func(data_set)
-
-        func = REPORTING_FUNCTION_MAP[args.command2]
-        func(result)
+            func = REPORTING_FUNCTION_MAP[eval("args.command"+str(i))]
+            func(result)
 
 
 if __name__ == "__main__":
