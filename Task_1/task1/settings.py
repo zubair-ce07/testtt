@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'task1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'django_task',
+        'NAME': 'django_task1',
         'USER': 'fakhar',
         'PASSWORD': 'csgogodancer',
         'HOST': 'localhost',
@@ -131,7 +131,7 @@ STATICFILES_DIRS = [
 ]
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = '/home/fakhar/Documents/Django-Virtualenv/code/fakhar-master/Training_Assignment/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 MEDIA_URL = 'media/'
 

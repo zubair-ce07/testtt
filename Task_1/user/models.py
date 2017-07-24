@@ -48,6 +48,9 @@ class UserProfile(models.Model):
         dest_file = 'user/' + os.path.basename(dest)
         return ImageFieldFile(instance=self, field=FileField(), name=dest_file)
 
+    class Meta:
+        db_table = 'userprofile'
+
 # Older implementation using Proxy class and post_save signal
 
 # COUNTRY_NAMES = dict([[name, code] for code, name in COUNTRIES.items()])
