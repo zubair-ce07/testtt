@@ -219,13 +219,18 @@ class ThermoSpider(CrawlSpider):
         if 'msdsList' in document_info['searchResults']:
             msdss = []
             for msds in document_info['searchResults']['msdsList']:
-                msdss.append({'title': msds['title'], 'url': msds['msdsFiles']})
+                msds_obj = {'title': msds['title']}
+                if 'msdsFiles' in msds:
+                    msds_obj['url'] = msds['msdsFiles']
+                elif 'internalURL' in  msds:
+                    msds_obj['url'] = msds['internalURL']
+                msdss.append(msds_obj)
             return msdss
 
 # Type 2 Item methods
 
     def parse_type_2_items(self, response):
-        c_id = response.css(constants.get_cid_2).extract_first()
+        c_id = clean_str(response.css(constants.get_cid_2).extract_first())
         if c_id not in catalog_ids:
             catalog_ids.append(c_id)
             item = self.compile_type_2_item(response)

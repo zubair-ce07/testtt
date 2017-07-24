@@ -13,7 +13,6 @@ catalog_ids = []
 
 class ThermoType2Spider(CrawlSpider):
     name = "thermo_type_2"
-    download_delay = 2.0
     allowed_domains = ["thermofisher.com"]
     start_urls = [
         'https://www.thermofisher.com/pk/en/home/order.html',
