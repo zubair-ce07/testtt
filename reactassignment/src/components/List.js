@@ -4,16 +4,13 @@ class ListTODO extends React.Component {
 
     _delete_task(e)
     {
-        this
-            .props
-            .onDeleteTask(e)
+        this.props.onDeleteTask(e)
     }
 
     _checkbox_clicked(e) {
-        this
-            .props
-            .onCheckClick(e)
+        this.props.onCheckClick(e)
     }
+
     is_pending(task) {
         if (task.pending)
             return task.subject
@@ -27,23 +24,14 @@ class ListTODO extends React.Component {
         }
         let addedTasks = []
 
-        let handle_click = this
-            ._checkbox_clicked
-            .bind(this)
+        let handle_click = this._checkbox_clicked.bind(this)
+        let handle_delete = this._delete_task.bind(this)
+        let _is_pending = this.is_pending.bind(this)
 
-        let handle_delete = this
-            ._delete_task
-            .bind(this)
 
-        let click = this
-            .is_pending
-            .bind(this)
-        this
-            .props
-            .taskList
-            .forEach(function (task) {
+        this.props.taskList.forEach(function (task) {
                 if (task) {
-                    let subject = click(task)
+                    let subject = _is_pending(task)
                     let index = task.index
                     addedTasks.push(
                         <ListGroupItem>

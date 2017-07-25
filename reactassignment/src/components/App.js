@@ -1,12 +1,18 @@
 import React from 'react'
+import {Route, withRouter, Switch} from 'react-router-dom'
+
+
 import InputTODO from './Input'
 import ListTODO from './List'
-import Navigation from './nav'
-import {Route} from 'react-router-dom'
+import CustomJumbotron from './HomePage'
+import Footer from './Common/Footer'
+import Navigation from './Common/Header'
+
 
 class App extends React.Component {
     constructor() {
         super()
+
         this.state = {
             history: [],
             task: {
@@ -15,15 +21,10 @@ class App extends React.Component {
                 pending: true
             }
         }
-        this.changeInput = this
-            .handleInput
-            .bind(this)
-        this.onSubmit = this
-            .onSubmit
-            .bind(this)
-        this.handleCheckClick = this
-            .handleCheckClick
-            .bind(this)
+        const c = 0
+        this.changeInput = this.handleInput.bind(this)
+        this.onSubmit = this.onSubmit.bind(this)
+        this.handleCheckClick = this.handleCheckClick.bind(this)
         this.handleDeleteTask = this.handleDeleteTask.bind(this)
         this.count = 0
     }
@@ -36,14 +37,12 @@ class App extends React.Component {
                 update_history.push(element)
             }
         });
+
         this.setState({history: update_history})
     }
 
     handleCheckClick(e) {
-        let update_history = this
-            .state
-            .history
-            .slice()
+        let update_history = this.state.history.slice()
 
         update_history.forEach(function(element) {
             if(e.target.value == element.index){
@@ -51,22 +50,18 @@ class App extends React.Component {
             }
             return element
         });
+
         this.setState({history: update_history})
     }
 
     onSubmit(e) {
-        const newHistory = this
-            .state
-            .history
-            .slice()
+        const newHistory = this.state.history.slice()
         newHistory.push(this.state.task)
 
         if (this.state.task.subject && !(this.state.task.subject.includes(' '))) {
             this.setState({history: newHistory})
-            this.count++;
-            document
-                .getElementById('inputBox')
-                .value = ''
+            this.count++
+            document.getElementById('inputBox').value = ''
         } else {
             alert('Incorrect Input')
         }
@@ -90,33 +85,70 @@ class App extends React.Component {
         })
         return (
             <div>
+                <Route
+                    path='/'
+                    component={Navigation}
+                />
 
-                <Navigation/>
                 <div className="container">
+                    <Switch>
+                        <Route
+                            exact
+                            path="/"
+                            component={CustomJumbotron}
+                        />
 
-                    <h1 className="text-center">
-                        Todo App!
-                    </h1>
 
-                    <Route path="/home" render = {
-                        () => (
-                        <div className="group">
-                            <InputTODO change={this.changeInput} onAddClick={this.onSubmit}/>
-                            <br/><br/><br/>
-                            <ListTODO taskList={this.state.history} onCheckClick={this.handleCheckClick} onDeleteTask={this.handleDeleteTask}/>
-                        </div>
-                    )} />
+                        <Route
+                            path="/home"
+                            render = {
+                                () => (
+                                <div className="group">
 
-                    <Route path="/all" render = {
-                        ()=> (<div className="group">
-                            All:
-                                <ListTODO taskList={this.state.history} onCheckClick={this.handleCheckClick} onDeleteTask={this.handleDeleteTask}/>
-                            Completed:
-                                <ListTODO taskList={Completed} onCheckClick={this.handleCheckClick} onDeleteTask={this.handleDeleteTask}/>
-                            </div>)
-                    } />
+                                    <InputTODO
+                                        change={this.changeInput}
+                                        onAddClick={this.onSubmit}
+                                    />
+
+                                    <br/><br/><br/>
+
+                                    <ListTODO
+                                        taskList={this.state.history}
+                                        onCheckClick={this.handleCheckClick}
+                                        onDeleteTask={this.handleDeleteTask}
+                                    />
+
+                                </div>
+                                )}
+                        />
+
+                        <Route
+
+                            path="/todos"
+                            render = {
+                                    ()=> (
+                                        <div className="group">
+                                        All:
+                                            <ListTODO
+                                                taskList={this.state.history}
+                                                onCheckClick={this.handleCheckClick}
+                                                onDeleteTask={this.handleDeleteTask}
+                                            />
+
+                                        Completed:
+                                            <ListTODO
+                                                taskList={Completed}
+                                                onCheckClick={this.handleCheckClick}
+                                                onDeleteTask={this.handleDeleteTask}
+                                            />
+
+                                        </div>)
+                                }
+                        />
+                    </Switch>
 
                 </div>
+                <Footer />
             </div>
         )
     }
