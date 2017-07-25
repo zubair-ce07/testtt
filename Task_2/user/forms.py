@@ -44,9 +44,6 @@ class EditForm(forms.ModelForm):
         return super(EditForm, self).save(commit=commit)
 
 
-
-
-
 class SignupForm(forms.Form):
     username = forms.CharField(max_length=150, label='Username', widget=forms.TextInput(
         attrs={'class': 'form-group form-control',

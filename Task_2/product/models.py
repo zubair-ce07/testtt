@@ -42,7 +42,7 @@ class ColorURL(models.Model):
 class SKU(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     size = models.CharField(max_length=3)
-    color = models.CharField(max_length=10)
+    color = models.CharField(max_length=10, blank=True, null=True)
     price = MoneyField(max_digits=6, decimal_places=2, default_currency='EUR')
     out_of_stock = models.BooleanField(default=False)
 

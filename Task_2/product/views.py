@@ -41,8 +41,22 @@ class CreateProductView(LoginRequiredMixin, View):
                 imageformset.save()
                 colorformset.save()
                 skuformset.save()
-
         return HttpResponse('worked')
+
+
+class EditProductView(LoginRequiredMixin, View):
+    template_name = 'product/edit_product.html'
+
+    def get(self, request, *args, **kwargs):
+        product = Product.objects.get(pk=kwargs.get('pk'))
+        print(product)
+        return render(request, self.template_name, {'product': product})
+
+    def post(self, request, *args, **kwargs):
+        pass
+
+
+
         # if skuformset.is_valid():
         #     skuformset.save()
 
@@ -119,7 +133,12 @@ class SearchProductView(LoginRequiredMixin, View):
     template_name = 'product/search_product.html'
 
     def get(self, request, *args, **kwargs):
+        if 'q' in request.GET:
+            query = request.GET.get('q')
+            context = {'query': query, 'error': True}
+            if query:
+                products = Product.objects.filter(name__icontains=query)
+                context['products'] = products
+                context['error'] = False
+            return render(request, self.template_name, context)
         return render(request, self.template_name)
-
-    def post(self, request, *args, **kwargs):
-        pass

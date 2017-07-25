@@ -13,27 +13,13 @@
                 {% csrf_token %}
                 {{ form }}
                 <hr>
-                {% for form in imageformset.forms %}
-                    {{ form.url.label_tag }}
-                    {{ form.url }}{{ field.errors }}
-                {% endfor %}
+                {{ imageformset.as_p }}
                 {{ imageformset.management_form }}
                 <hr>
-                {% for form in colorformset.forms %}
-                    {{ form.url.label_tag }}
-                    {{ form.url }}{{ field.errors }}
-                {% endfor %}
+                {{ colorformset.as_p }}
                 {{ colorformset.management_form }}
                 <hr>
-                {#                {% for form in skuformset.forms %}#}
-                {#                {% for form in skuformset.forms %}#}
-                {#                    {% for field in form.visible_fields %}#}
-                {#                        {{ field.label_tag }}#}
-                {#                        {{ field }}{{ field.errors }}#}
-                {#                        <br/>#}
-                {#                    {% endfor %}#}
-                {#                {% endfor %}#}
-                {{ skuformset }}
+                {{ skuformset.as_p }}
                 {{ skuformset.management_form }}
                 <input type="submit" value="Create" class="btn btn-primary"/>
             </form>

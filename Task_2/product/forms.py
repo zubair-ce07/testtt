@@ -42,27 +42,39 @@ class CreateProductForm(forms.ModelForm):
 #         self.layout = Layout(Fieldset('Add Image Url', 'url'))
 #
 
-# class ImageURLForm(forms.ModelForm):
-#     class Meta:
-#         model = ImageURL
-#         fields = '__all__'
-
-class skuForm(forms.ModelForm):
+class SKUForm(forms.ModelForm):
     class Meta:
         model = SKU
         fields = '__all__'
+        widgets = \
+            {'id': forms.HiddenInput(), 'out_of_stock': forms.CheckboxInput(attrs={}),
+             'color': forms.TextInput(attrs={'class': 'form-control form-group', 'placeholder': 'Color (Optional)'}),
+             'price': MoneyWidget(attrs={'class': 'form-control form-group', 'placeholder': 'Enter SKU price'}),
+             'size': forms.TextInput(attrs={'class': 'form-control form-group', 'placeholder': 'Enter SKU size'})}
 
 
-sku_widget = {'id': forms.HiddenInput(attrs={'class': 'form-control form-group', 'placeholder': 'SKU ID'}),
-              'color': forms.TextInput(attrs={'class': 'form-control form-group', 'placeholder': 'Color'}),
-              'out_of_stock': forms.CheckboxInput(attrs={}),
-              'price': MoneyWidget(attrs={'class': 'form-control form-group', 'placeholder': 'Enter SKU price'}),
-              'size': forms.TextInput(attrs={'class': 'form-control form-group', 'placeholder': 'Enter SKU size'})}
+class ColorURLForm(forms.ModelForm):
+    class Meta:
+        model = ColorURL
+        fields = ('url',)
+        labels = {'url': 'Product Color Page URL'},
+        widgets = {'url': forms.URLInput(
+            attrs={'class': 'form-control form-group', 'placeholder': 'URL for Product Colors (Optional)'})}
 
-ImageFormSet = inlineformset_factory(Product, ImageURL, fields='__all__', extra=5, can_delete=True,
-                                     labels={'url': 'Product Image URL'}, widgets={
-        'url': forms.URLInput(attrs={'class': 'form-control form-group', 'placeholder': 'URL for Product Image'})})
-ColorFormSet = inlineformset_factory(Product, ColorURL, fields='__all__', extra=1, can_delete=True,
-                                     labels={'url': 'Product Color Page URL'}, widgets={
-        'url': forms.URLInput(attrs={'class': 'form-control form-group', 'placeholder': 'URL for Product Colors'})})
-skuFormSet = inlineformset_factory(Product, SKU, extra=2, can_delete=True, form=skuForm, widgets=sku_widget)
+
+class ImageURLForm(forms.ModelForm):
+    class Meta:
+        model = ImageURL
+        fields = ('url',)
+        labels = {'url': 'Product Image URL'}
+        widgets = {'url': forms.URLInput(
+            attrs={'class': 'form-control form-group', 'placeholder': 'URL for Product Image (Optional)'})}
+
+
+ImageFormSet = inlineformset_factory(Product, ImageURL, extra=5, can_delete=False, form=ImageURLForm)
+ColorFormSet = inlineformset_factory(Product, ColorURL, extra=4, can_delete=False, form=ColorURLForm)
+skuFormSet = inlineformset_factory(Product, SKU, extra=5, can_delete=False, form=SKUForm)
+
+
+class EditProductForm(forms.ModelForm):
+    pass

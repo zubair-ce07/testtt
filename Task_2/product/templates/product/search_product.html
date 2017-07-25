@@ -13,16 +13,14 @@
                 <input type="text" name="q"/>
                 <input type="submit" value="Search" class="btn btn-primary">
             </form>
-
-            {% if books %}
+            {% if products %}
                 <p>Your search for <strong>{{ query }}</strong> returned the following results:</p>
-                <p>Found {{ books|length }} book{{ books|pluralize }}.</p>
+                <p>Found {{ products|length }} product{{ products|pluralize }}.</p>
                 <ul>
-                    {% for book in books %}
-                        <li>{{ book.title }}</li>
+                    {% for product in products %}
+                        <li><a href="{{ product.url }}">{{ product.name }}</a></li>
                     {% endfor %}
                 </ul>
-
             {% elif query %}
                 <p>Your search for <strong>{{ query }}</strong> returned no result.</p>
             {% elif error %}
