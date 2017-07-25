@@ -1,0 +1,20 @@
+{% extends "authentication/base.html" %}
+{% block title %}Home{% endblock %}
+{% block content_title %} Home Page {% endblock %}
+{% block content %}
+    <table>
+        <tr>
+            <td>
+                <h3>Welcome {{ username }}</h3>
+            </td>
+            <td>
+                <button onclick="location.href='{% url 'the_news:main' %}'" type="button">Start/Terminate</button>
+            </td>
+            <td>
+                <button onclick="location.href='{% url 'authentication:logout' %}'" type="button">Logout</button>
+            </td>
+        </tr>
+    </table>
+
+
+{% endblock %}

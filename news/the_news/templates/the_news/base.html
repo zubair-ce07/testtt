@@ -1,0 +1,118 @@
+{% load bootstrap3 %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% bootstrap_css %}
+    <script src="{% bootstrap_jquery_url %}"></script>
+
+    <style>
+        .card {
+            font-size: 1em;
+            overflow: hidden;
+            padding: 0;
+            border: none;
+            border-radius: .28571429rem;
+            box-shadow: 0 1px 3px 0 #d4d4d5, 0 0 0 1px #d4d4d5;
+        }
+        .card-inverse .btn {
+            border: 1px solid rgba(0, 0, 0, .05);
+        }
+        .card-img-top {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .profile {
+            position: absolute;
+            top: -12px;
+            display: inline-block;
+            overflow: hidden;
+            box-sizing: border-box;
+            width: 25px;
+            height: 25px;
+            margin: 0;
+            border: 1px solid #fff;
+            border-radius: 50%;
+        }
+        .profile-avatar {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 50%;
+        }
+        .card-title {
+            font-size: 1.28571429em;
+            font-weight: 700;
+            line-height: 1.2857em;
+        }
+        .meta {
+            font-size: 1em;
+            color: rgba(0, 0, 0, .4);
+        }
+        .card-text {
+            clear: both;
+            margin-top: .5em;
+            color: rgba(0, 0, 0, .68);
+        }
+        .card-footer {
+            font-size: 1em;
+            position: static;
+            top: 0;
+            left: 0;
+            max-width: 100%;
+            padding: .75em 1em;
+            color: rgba(0, 0, 0, .4);
+            border-top: 1px solid rgba(0, 0, 0, .05) !important;
+            background: #fff;
+        }
+        .text {
+           overflow: hidden;
+           text-overflow: ellipsis;
+           display: -webkit-box;
+           line-height: 16px;     /* fallback */
+           max-height: 32px;      /* fallback */
+           -webkit-line-clamp: 2; /* number of lines to show */
+           -webkit-box-orient: vertical;
+        }
+        .input-block-level {
+        display: block;
+        width: 100%;
+        }
+    </style>
+</head>
+<body>
+{% block navigation_bar %}        
+    
+    <nav class="navbar navbar-default" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header navbar-brand">
+            News Room
+        </div>
+    
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="{% url 'the_news:news_list' page=1 %}">News</a></li>
+            </ul>
+            
+            <form class="navbar-form navbar-left" role="search" method="get" action="{% url 'the_news:news_list' page=1 %}">
+                <div class="form-group">
+                    <input type="text" class="form-control" name="query" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-default">Submit</button>
+            </form>
+        </div><!-- /.navbar-collapse -->
+    </nav>
+    
+{% endblock %}
+    
+    {% block content %}
+    {% endblock %}
+    {% block footer %}
+    {% endblock %}
+
+</body>
+</html>
