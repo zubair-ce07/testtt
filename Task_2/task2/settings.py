@@ -44,8 +44,8 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'user',
-    'product',
+    'users',
+    'products',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -144,7 +144,7 @@ COUNTRIES_FIRST_BREAK = '--------'
 COUNTRIES_FIRST_SORT = True
 
 CRONJOBS = [
-    ('*/5 * * * *', 'user.cron.time_zone_convert')
+    ('*/5 * * * *', 'users.cron.time_zone_convert')
 ]
 
 CACHES = {
@@ -155,4 +155,4 @@ CACHES = {
     }
 }
 
-LOGIN_URL = '/user/login/'
+LOGIN_URL = '/users/login/'

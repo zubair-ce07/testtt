@@ -17,8 +17,11 @@ label {
     margin-right: 10px;
 }
 
-
 input[type='submit'] {
     float: right;
     margin-right: 45%;
+}
+
+ol > li {
+    margin: 0 0 10px 0;
 }
