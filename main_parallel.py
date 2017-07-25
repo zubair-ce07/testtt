@@ -30,8 +30,7 @@ def visit_links_parallel(url_list, index, count, max_urls, timeout_, max_worker)
         count += 1
         return bytesdownloaded + visit_links_parallel(url_list, index + 1, count, max_urls,
                                                       timeout_, max_worker)
-    else:
-        return 0
+    return 0
 
 
 def print_report(url_list, index, count, max_urls, timeout_, max_worker):

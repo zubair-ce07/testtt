@@ -24,8 +24,7 @@ async def get_result(url_list, index, count, max_urls, timeout_):
         index += 1
         count += 1
         return bytesdownloaded + await  get_result(url_list, index, count, max_urls, timeout_)
-    else:
-        return 0
+    return 0
 
 
 async def print_report(url_list, index, count, max_urls, timeout_):
