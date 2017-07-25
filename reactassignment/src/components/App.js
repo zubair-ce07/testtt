@@ -10,11 +10,11 @@ import Navigation from './Common/Header'
 
 
 class App extends React.Component {
-    constructor() {
-        super()
+    constructor(props) {
+        super(props)
 
         this.state = {
-            history: [],
+            taskList: [],
             task: {
                 index: 0,
                 subject: '',
@@ -30,36 +30,36 @@ class App extends React.Component {
     }
 
     handleDeleteTask(e){
-        let update_history = []
+        let updateTaskList = []
 
-        this.state.history.forEach(function(element) {
+        this.state.taskList.forEach(function(element) {
             if(e != element.index){
-                update_history.push(element)
+                updateTaskList.push(element)
             }
         });
 
-        this.setState({history: update_history})
+        this.setState({taskList: updateTaskList})
     }
 
     handleCheckClick(e) {
-        let update_history = this.state.history.slice()
+        let updateTaskList = this.state.taskList.slice()
 
-        update_history.forEach(function(element) {
+        updateTaskList.forEach(function(element) {
             if(e.target.value == element.index){
                 element.pending = !element.pending
             }
             return element
         });
 
-        this.setState({history: update_history})
+        this.setState({taskList: updateTaskList})
     }
 
     onSubmit(e) {
-        const newHistory = this.state.history.slice()
-        newHistory.push(this.state.task)
+        const newTaskList = this.state.taskList.slice()
+        newTaskList.push(this.state.task)
 
         if (this.state.task.subject && !(this.state.task.subject.includes(' '))) {
-            this.setState({history: newHistory})
+            this.setState({taskList: newTaskList})
             this.count++
             document.getElementById('inputBox').value = ''
         } else {
@@ -78,7 +78,7 @@ class App extends React.Component {
     }
 
     render() {
-        var Completed = this.state.history.map(function(item){
+        var Completed = this.state.taskList.map(function(item){
             if(!item.pending){
                 return item
             }
@@ -96,6 +96,7 @@ class App extends React.Component {
                             exact
                             path="/"
                             component={CustomJumbotron}
+
                         />
 
 
