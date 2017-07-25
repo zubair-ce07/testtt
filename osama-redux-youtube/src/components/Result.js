@@ -3,16 +3,9 @@ import PropTypes from "prop-types";
 import "./Result.css";
 
 class Result extends React.Component {
-  constructor() {
-    super();
-    this.handleClick = this.handleClick.bind(this);
-  }
-  handleClick() {
-    this.props.play(this.props.vidId);
-  }
   render() {
     return (
-      <div className="result" onClick={this.handleClick}>
+      <div className="result">
         <img
           className="thumbnail"
           src={this.props.imgurl}

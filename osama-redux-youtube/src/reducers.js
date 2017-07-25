@@ -1,20 +1,21 @@
-import { combineReducers } from "redux";
+import { SEARCH_YOUTUBE, END_REQUEST } from "./actions";
 
-import { SEARCH_YOUTUBE } from "./actions";
+const initialState = {
+  results: []
+};
 
-const search = (state = [], action) => {
+const search = (state = initialState, action) => {
   switch (action.type) {
     case SEARCH_YOUTUBE:
-      console.log("hello");
-      return state.concat("hello");
+      return state;
+    case END_REQUEST:
+      return Object.assign({}, state, {
+        results: action.results
+      });
     default:
       return state;
   }
 };
-
-// const rootReducer = combineReducers({
-//   search
-// });
 
 const rootReducer = search;
 
