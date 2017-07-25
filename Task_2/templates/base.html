@@ -31,10 +31,21 @@
                 {% endif %}
                 <li>User: {{ user.get_username }}</li>
                 <li><a href="{% url 'user:logout' %}?next={{ request.path }}">Logout</a></li>
+                {% block user %}
+                    <li><a href="{% url 'user:details' %}">Profile Details</a></li>
+                {% endblock %}
             {% else %}
                 <li><a href="{% url 'user:login' %}?next={{ request.path }}">Login</a></li>
             {% endif %}
         {% endblock %}
+        </ul>
+        <ul class="sidebar-nav" style="margin-right:5%">
+            {% if user.is_authenticated %}
+                {% block product %}
+                    <li><a href="{% url 'product:search-product' %}">Search Products</a></li>
+                    <li><a href="{% url 'product:create-product' %}">Create New Product</a></li>
+                {% endblock %}
+            {% endif %}
         </ul>
     </div>
     <div class="col-md-10">

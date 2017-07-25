@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from user.decorators import login_required
 from user.models import UserProfile
 from user.forms import LoginForm, SignupForm, EditForm
+from task2.settings import LOGIN_URL
 
 
 @login_required
@@ -66,7 +67,7 @@ def LoginView(request):
             if user and user.is_active:
                 request.session['userid'] = str(user.id)
                 login(request, user)
-                if 'next' in request.GET:
+                if 'next' in request.GET and request.GET['next'] != LOGIN_URL:
                     return redirect(request.GET['next'])
                 return redirect('user:details')
     return render(request, 'user/login.html', {'form': form})
@@ -74,4 +75,6 @@ def LoginView(request):
 
 def LogoutView(request):
     logout(request)
-    return HttpResponseRedirect(redirect_to=reverse('user:login'))
+    if 'next' in request.GET:
+        return redirect(reverse('user:login') + '?next=' + request.GET['next'])
+    return redirect('user:login')

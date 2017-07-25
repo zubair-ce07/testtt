@@ -155,4 +155,4 @@ CACHES = {
     }
 }
 
-LOGIN_URL = '/user/login'
+LOGIN_URL = '/user/login/'

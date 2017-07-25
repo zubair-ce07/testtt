@@ -2,22 +2,21 @@
 {% block title %}
     Edit
 {% endblock title %}
-{% block sidebar %}
-    {{ block.super }}
-    <li><a href="{%url 'user:details'%}">Details</a></li>
+{% block user %}
+    <li><a href="{% url 'user:details' %}">Profile Details</a></li>
 {% endblock %}
 {% block heading %}
     Edit Profile
 {% endblock %}
 {% block content %}
-<div class="row">
-    <div class="col-md-2"> </div>
-    <div class="col-md-6">
-        <form action='' enctype="multipart/form-data" method="post" >
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" value="Save" class="btn btn-primary" />
-        </form>
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-6">
+            <form action='' enctype="multipart/form-data" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" value="Save" class="btn btn-primary"/>
+            </form>
+        </div>
     </div>
-</div>
 {% endblock content %}
