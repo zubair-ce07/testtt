@@ -1,0 +1,35 @@
+{% extends "users/base.html" %}
+{% block title %}
+    {{ user.get_full_name }}
+{% endblock title %}
+{% block sidebar %}
+    {{ block.super }}
+    <li><a href="{% url 'users:edit' %}">Edit</a></li>
+{% endblock %}
+{% block heading %}
+    User Details
+{% endblock %}
+{% block content %}
+    <h2>{{ user.get_full_name }}</h2>
+    <div>
+        {% if user.userprofile.image %}
+            <img class="dp" src="/{{ user.userprofile.image.url }}"/>
+        {% endif %}
+    </div>
+    <div>
+        <ul>
+            <li>Username: {{ user.username }}</li>
+            <li>Email: {{ user.email }}</li>
+            <li>Name: {% if user.first_name %} {{ user.first_name }}
+                {% if user.last_name %}{{ user.last_name }} {% endif %} {% else %} N/A {% endif %}</li>
+            <li>Country: {% if user.userprofile.country %} {% load static %} {{ user.userprofile.country.name }} <img
+                    src="{% static 'users/flags' %}/{{ user.userprofile.country|lower }}.gif"/> {% else %}
+                N/A {% endif %}</li>
+            <li>Address: {% if user.userprofile.address %} {{ user.userprofile.address }} {% else %}
+                N/A {% endif %}</li>
+            <li>Phone #: {% if user.userprofile.phone_number %} {{ user.userprofile.phone_number }} {% else %}
+                N/A {% endif %}</li>
+
+        </ul>
+    </div>
+{% endblock content %}
