@@ -1,4 +1,4 @@
-{% extends 'user/base.html' %}
+{% extends 'base.html' %}
 {% block Title %}
     Create new Product
 {% endblock %}
@@ -8,7 +8,7 @@
 {% block content %}
     <div class="row">
         <div class="col-md-2"></div>
-        <div class="col-md-7">
+        <div class="col-md-6">
             <form action="" method="post">
                 {% csrf_token %}
                 {{ form }}
@@ -21,7 +21,9 @@
                 <hr>
                 {{ skuformset.as_p }}
                 {{ skuformset.management_form }}
-                <input type="submit" value="Create" class="btn btn-primary"/>
+                {% block button %}
+                    <input type="submit" value="Create" class="btn btn-primary"/>
+                {% endblock %}
             </form>
         </div>
     </div>

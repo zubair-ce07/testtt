@@ -1,16 +1,10 @@
-{% extends 'user/base.html' %}
+{% extends 'product/create_product.html' %}
 {% block Title %}
     Update Product
 {% endblock %}
 {% block heading %}
     Update Product
 {% endblock %}
-{% block content %}
-    <div class="row">
-        <div class="col-md-2"></div>
-        <div class="col-md-7">
-            <form action="" method="post">
-                {% csrf_token %}
-                <input type="submit" value="Submit" class="btn btn-primary"/>
-            </form>
-{% endblock content %}
+{% block button %}
+    <input type="submit" value="Edit" class="btn btn-primary"/>
+{% endblock %}

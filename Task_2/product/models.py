@@ -4,7 +4,7 @@ from djmoney.models.fields import MoneyField
 
 class Product(models.Model):
     url = models.URLField()
-    retailer_sku = models.BigIntegerField()
+    retailer_sku = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=50)
     brand = models.CharField(max_length=20, blank=True, null=True)
     description = models.CharField(max_length=300, blank=True, null=True)

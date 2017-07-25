@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 
@@ -66,7 +66,9 @@ def LoginView(request):
             if user and user.is_active:
                 request.session['userid'] = str(user.id)
                 login(request, user)
-                return HttpResponseRedirect(redirect_to=reverse('user:details'))
+                if 'next' in request.GET:
+                    return redirect(request.GET['next'])
+                return redirect('user:details')
     return render(request, 'user/login.html', {'form': form})
 
 

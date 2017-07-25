@@ -40,7 +40,6 @@ DJANGO_DEFAULT_APPS = [
 THIRD_PARTY_APPS = [
     'django_countries',
     'django_crontab',
-    'crispy_forms',
     'djmoney'
 ]
 
@@ -66,7 +65,7 @@ ROOT_URLCONF = 'task2.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['./templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,3 +154,5 @@ CACHES = {
         'TIMEOUT': None,
     }
 }
+
+LOGIN_URL = '/user/login'

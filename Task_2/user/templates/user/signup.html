@@ -1,4 +1,4 @@
-{% extends "user/base.html" %}
+{% extends "base.html" %}
 {% block title %}
     Sign Up Page
 {% endblock %}
@@ -12,7 +12,7 @@
         <form action='' enctype="multipart/form-data" method="post">
             {% csrf_token %}
             <table>
-                {{ form }}
+                {{ form.as_p }}
             </table>
             <input type="submit" value="Register" class="btn btn-primary"/>
         </form>

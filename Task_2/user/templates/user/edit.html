@@ -1,4 +1,4 @@
-{% extends "user/base.html" %}
+{% extends "base.html" %}
 {% block title %}
     Edit
 {% endblock title %}
@@ -12,10 +12,10 @@
 {% block content %}
 <div class="row">
     <div class="col-md-2"> </div>
-    <div class="col-md-7"> 
+    <div class="col-md-6">
         <form action='' enctype="multipart/form-data" method="post" >
             {% csrf_token %}
-            {{ form }}
+            {{ form.as_p }}
             <input type="submit" value="Save" class="btn btn-primary" />
         </form>
     </div>

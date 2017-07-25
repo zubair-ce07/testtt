@@ -21,19 +21,4 @@ class skuInline(admin.StackedInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     inlines = (ImageURLInline, ColorURLInline, skuInline)
-    list_display = ('name', 'brand',)
-
-
-@admin.register(ImageURL)
-class ImageURLAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(ColorURL)
-class ColorURLAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(SKU)
-class skuAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'url',)
