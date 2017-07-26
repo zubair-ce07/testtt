@@ -1,6 +1,9 @@
 import React from 'react'
 import {Jumbotron, Button} from 'react-bootstrap/lib'
 
+import GridInstance from './GridInstance'
+
+
 class CustomJumbotron extends React.Component {
     constructor(props)
     {
@@ -9,18 +12,21 @@ class CustomJumbotron extends React.Component {
     }
     render(){
         return (
-        <Jumbotron>
-            <h1>TODO, App!</h1>
+            <div>
+                <Jumbotron>
+                    <h1>TODO, App!</h1>
 
-            <p>This app lets you manage your daily tasks. {console.log(this.props.count)}</p>
+                    <p>This app lets you manage your daily tasks.</p>
 
-            <p> Simply add a list of tasks, and later check them as you
-                accomplish your daily goals or delete the tasks holding you back!</p>
+                    <p> Simply add a list of tasks, and later check them as you
+                        accomplish your daily goals or delete the tasks holding you back!</p>
 
-            <p>
-                <Button bsStyle="primary" onClick={() => this.props.history.push('/home')}>Learn more</Button>
-            </p>
-        </Jumbotron>
+                    <p>
+                        <Button bsStyle="primary" onClick={() => this.props.history.push('/home')}>Learn more</Button>
+                    </p>
+                </Jumbotron>
+                <GridInstance />
+            </div>
     )
     }
 }

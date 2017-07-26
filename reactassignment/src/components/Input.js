@@ -7,7 +7,6 @@ class InputTODO extends React.Component{
         if(e.keyCode === 13){
             this.props.onAddClick()
         }
-
     }
 
     render()
@@ -16,9 +15,10 @@ class InputTODO extends React.Component{
             <div>
                 <hr/>
                 <div className="text-center">
-                    <input id="inputBox" type="text" onChange={this.props.change} onKeyUp={this._handleKeyUp.bind(this)}/>
+                    <input id="inputBox" type="text" onChange={this.props.onChange} onKeyUp={this._handleKeyUp.bind(this)}/>
                     <input type="button" value="Add+" onClick={this.props.onAddClick}></input>
                 </div>
+                <br/><br/><br/>
             </div>
         )
     }

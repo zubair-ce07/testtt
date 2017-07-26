@@ -1,17 +1,16 @@
 import React from 'react'
-import {Route, withRouter, Switch} from 'react-router-dom'
+import {Route} from 'react-router-dom'
 
 
 import InputTODO from './Input'
-import ListTODO from './List'
 import CustomJumbotron from './HomePage'
 import Footer from './Common/Footer'
 import Navigation from './Common/Header'
-
+import Todos from './Todos/Todos'
 
 class App extends React.Component {
-    constructor(props) {
-        super(props)
+    constructor() {
+        super()
 
         this.state = {
             taskList: [],
@@ -21,23 +20,29 @@ class App extends React.Component {
                 pending: true
             }
         }
-        const c = 0
-        this.changeInput = this.handleInput.bind(this)
+        this.handleInput = this.handleInput.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
         this.handleCheckClick = this.handleCheckClick.bind(this)
         this.handleDeleteTask = this.handleDeleteTask.bind(this)
         this.count = 0
+
+        this.handlers = {
+            handleCheckClick: this.handleCheckClick,
+            handleDeleteTask: this.handleDeleteTask
+        }
     }
 
     handleDeleteTask(e){
         let updateTaskList = []
 
         this.state.taskList.forEach(function(element) {
-            if(e != element.index){
+            if(e !== element.index){
                 updateTaskList.push(element)
             }
-        });
+            else{
 
+            }
+        });
         this.setState({taskList: updateTaskList})
     }
 
@@ -45,7 +50,7 @@ class App extends React.Component {
         let updateTaskList = this.state.taskList.slice()
 
         updateTaskList.forEach(function(element) {
-            if(e.target.value == element.index){
+            if(parseInt(e.target.value, 10) === element.index){
                 element.pending = !element.pending
             }
             return element
@@ -59,9 +64,15 @@ class App extends React.Component {
         newTaskList.push(this.state.task)
 
         if (this.state.task.subject && !(this.state.task.subject.includes(' '))) {
-            this.setState({taskList: newTaskList})
             this.count++
             document.getElementById('inputBox').value = ''
+            const task = {
+                subject: ''
+            }
+            this.setState({
+                taskList: newTaskList,
+                task: task
+            })
         } else {
             alert('Incorrect Input')
         }
@@ -75,14 +86,10 @@ class App extends React.Component {
         }
 
         this.setState({task: task})
+        document.getElementById('inputBox')
     }
 
     render() {
-        var Completed = this.state.taskList.map(function(item){
-            if(!item.pending){
-                return item
-            }
-        })
         return (
             <div>
                 <Route
@@ -91,62 +98,53 @@ class App extends React.Component {
                 />
 
                 <div className="container">
-                    <Switch>
-                        <Route
-                            exact
-                            path="/"
-                            component={CustomJumbotron}
+                    <Route
+                        exact
+                        path="/"
+                        component={CustomJumbotron}
+                    />
 
-                        />
-
-
+                    <div className="group">
                         <Route
                             path="/home"
                             render = {
                                 () => (
-                                <div className="group">
-
                                     <InputTODO
-                                        change={this.changeInput}
+                                        onChange={this.handleInput}
                                         onAddClick={this.onSubmit}
                                     />
-
-                                    <br/><br/><br/>
-
-                                    <ListTODO
-                                        taskList={this.state.history}
-                                        onCheckClick={this.handleCheckClick}
-                                        onDeleteTask={this.handleDeleteTask}
-                                    />
-
-                                </div>
-                                )}
+                                )
+                            }
                         />
+                        <Route
+                            path="/home"
+                            component = {
+                                ()=> (
+                                    <Todos
+                                        taskList = {this.state.taskList}
+                                        handlers = {this.handlers}
+                                        completed = {false}
+                                    />
+                                )
+                            }
+                        />
+                    </div>
+
+                    <div className="group">
 
                         <Route
-
                             path="/todos"
-                            render = {
-                                    ()=> (
-                                        <div className="group">
-                                        All:
-                                            <ListTODO
-                                                taskList={this.state.history}
-                                                onCheckClick={this.handleCheckClick}
-                                                onDeleteTask={this.handleDeleteTask}
-                                            />
-
-                                        Completed:
-                                            <ListTODO
-                                                taskList={Completed}
-                                                onCheckClick={this.handleCheckClick}
-                                                onDeleteTask={this.handleDeleteTask}
-                                            />
-
-                                        </div>)
-                                }
+                            component = {
+                                ()=> (
+                                    <Todos
+                                        taskList = {this.state.taskList}
+                                        handlers = {this.handlers}
+                                        completed = {true}
+                                    />
+                                )
+                            }
                         />
-                    </Switch>
+                    </div>
 
                 </div>
                 <Footer />

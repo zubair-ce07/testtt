@@ -1,7 +1,6 @@
 import React from 'react'
-import {Link} from 'react-router-dom'
 
-import {Navbar, NavItem, Nav, Button} from 'react-bootstrap/lib'
+import {Navbar, NavItem, Nav} from 'react-bootstrap/lib'
 
 class Navigation extends React.Component {
     render() {
