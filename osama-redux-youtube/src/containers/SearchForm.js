@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 
 import { connect } from "react-redux";
-
+import { bindActionCreators } from "redux";
 import "./SearchForm.css";
 
-import { startRequest } from "../actions";
+import { startSearchRequest } from "../actions";
 
 class SearchForm extends Component {
   constructor(props) {
@@ -24,7 +24,7 @@ class SearchForm extends Component {
             if (!this.input.value.trim()) {
               return;
             }
-            this.dispatch(startRequest(this.input.value));
+            this.props.startSearchRequest(this.input.value);
             this.input.value = "";
           }}
         >
@@ -45,6 +45,8 @@ class SearchForm extends Component {
   }
 }
 
-SearchForm = connect()(SearchForm);
+function mapDispatchToProps(dispatch) {
+  return bindActionCreators({ startSearchRequest: startSearchRequest }, dispatch);
+}
 
-export default SearchForm;
+export default connect(null, mapDispatchToProps)(SearchForm);

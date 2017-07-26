@@ -3,11 +3,6 @@ import PropTypes from "prop-types";
 import "./VideoPlayer.css";
 
 class VideoPlayer extends React.Component {
-  constructor(props) {
-    super();
-    this.dispatch = props.dispatch;
-  }
-
   render() {
     return (
       <iframe

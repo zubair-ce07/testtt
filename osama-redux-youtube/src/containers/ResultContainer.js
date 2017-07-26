@@ -1,19 +1,13 @@
 import React from "react";
-
 import { connect } from "react-redux";
-
+import { playVideo } from "../actions";
 import Result from "../components/Result";
 
 class ResultContainer extends React.Component {
-  // handleClick() {
-  //   // this.props.play(this.props.vidId);
-  // }
   render() {
-    // return this.props.results.length !== 0
-    // ? this.props.results.map(item =>
     if (this.props.results.length > 0)
       return (
-        <div>
+        <div className="result-container">
           {this.props.results.map(item =>
             <Result
               key={item.etag}
@@ -21,6 +15,9 @@ class ResultContainer extends React.Component {
               title={item.snippet.title}
               description={item.snippet.description}
               vidId={item.id.videoId}
+              playFunction={() => {
+                this.props.onResultClick(item.id.videoId);
+              }}
             />
           )}
         </div>
@@ -28,8 +25,15 @@ class ResultContainer extends React.Component {
     else {
       return <h1>Sorry, There are no results to display</h1>;
     }
-    // )
   }
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    onResultClick: vidId => {
+      dispatch(playVideo(vidId));
+    }
+  };
 }
 
 function mapStateToProps(state) {
@@ -38,4 +42,4 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(ResultContainer);
+export default connect(mapStateToProps, mapDispatchToProps)(ResultContainer);

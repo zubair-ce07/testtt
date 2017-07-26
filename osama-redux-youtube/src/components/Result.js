@@ -5,7 +5,7 @@ import "./Result.css";
 class Result extends React.Component {
   render() {
     return (
-      <div className="result">
+      <div className="result" onClick={this.props.playFunction}>
         <img
           className="thumbnail"
           src={this.props.imgurl}

@@ -9,20 +9,28 @@ export const searchYoutube = query => {
   };
 };
 
-export const START_REQUEST = "START_REQUEST";
-export const startRequest = query => {
+export const START_SEARCH_REQUEST = "START_SEARCH_REQUEST";
+export const startSearchRequest = query => {
   return dispatch => {
     return youtube.search(query).then(jsonData => {
-      dispatch(endRequest(jsonData));
+      dispatch(endSearchRequest(jsonData));
     });
     // .catch(error => error);
   };
 };
 
-export const END_REQUEST = "END_REQUEST";
-export const endRequest = jsonData => {
+export const END_SEARCH_REQUEST = "END_SEARCH_REQUEST";
+export const endSearchRequest = jsonData => {
   return {
-    type: END_REQUEST,
+    type: END_SEARCH_REQUEST,
     results: jsonData.items
+  };
+};
+
+export const PLAY_VIDEO = "PLAY_VIDEO";
+export const playVideo = vidId => {
+  return {
+    type: PLAY_VIDEO,
+    vidId
   };
 };
