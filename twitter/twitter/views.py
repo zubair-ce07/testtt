@@ -4,11 +4,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.views import View
-from django.views.generic import FormView, TemplateView, ListView
+from django.views.generic import FormView, TemplateView, ListView, DetailView
 
 from twitter import forms
-from twitter.models import Tweet
-from twitter.models import User
+from twitter.models import Tweet, User, News
 
 
 class TweetView(FormView):
@@ -64,3 +63,14 @@ class SignUpView(FormView):
         new_user = form.save()
         login(self.request, new_user)
         return HttpResponseRedirect(reverse('home'))
+
+
+class NewsView(ListView):
+    template_name = 'twitter/news.html'
+    model = News
+    context_object_name = 'all_news'
+
+class NewsDetailedView(DetailView):
+    template_name = 'twitter/news_detailed.html'
+    model = News
+    context_object_name = 'news'
