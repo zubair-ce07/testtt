@@ -12,6 +12,8 @@ urlpatterns = [
         views.AssignmentDetails.as_view(), name="assignment_details"),
     url(r'^technology/(?P<technology_id>[0-9]+)/$',
         views.TechnologyDetails.as_view(), name="technology_details"),
+    url(r'^validate_username/$', views.ValidateUserName.as_view(),
+        name="validate_username"),
     url(r'^search/$', views.Search.as_view(), name="search"),
     url(r'^update_image/$', views.UpdateImage.as_view(), name="update_image"),
     url(r'^trainer_signup/$',

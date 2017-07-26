@@ -6,6 +6,7 @@ from django.contrib.auth import (
     logout as django_logout
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
 from django.views import View
@@ -243,3 +244,19 @@ class Logout(View):
     def get(self, request):
         django_logout(request)
         return redirect('training:login')
+
+
+class ValidateUserName(View):
+
+    def get(self, request):
+        username = request.GET.get('username')
+
+        try:
+            User.objects.get(username=username)
+            """
+            409 represents Conflict
+            Returned when user already exists
+            """
+            return HttpResponse(status=409)
+        except:
+            return HttpResponse(status=200)

@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls import include, static, url
 from django.contrib import admin
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from mysite.views import hello
 
@@ -25,5 +26,7 @@ urlpatterns = [
     url(r'', include('training.urls')),
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework'))
-] + static.static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + \
-    static.static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static.static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # static.static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+urlpatterns += staticfiles_urlpatterns()

@@ -4,5 +4,8 @@ html, body, .container {
 .container {
     display: table;
     vertical-align: middle;
+}
 
+#errors {
+    color: red;
 }

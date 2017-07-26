@@ -13,14 +13,29 @@ class LoginForm(forms.Form):
 
 
 class SignUpForm(forms.Form):
+
+    class Media:
+        js = ('js/validations.js',
+              'https://code.jquery.com/jquery-3.1.0.min.js')
+
     username = forms.CharField(max_length=20, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Username'}))
+        attrs={'class': 'form-control',
+               'placeholder': 'Username',
+               'onfocusout': "verifyUserName(event)"}))
+
     first_name = forms.CharField(max_length=50, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'First Name'}))
+        attrs={'class': 'form-control',
+               'placeholder': 'First Name',
+               'onkeypress': 'return verifyName(event)'}))
+
     last_name = forms.CharField(max_length=50, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Last Name'}))
+        attrs={'class': 'form-control',
+               'placeholder': 'Last Name',
+               'onkeypress': 'return verifyName(event)'}))
+
     password = forms.CharField(max_length=20, widget=forms.PasswordInput(
         attrs={'class': 'form-control', 'placeholder': 'Password'}))
+
     picture = forms.ImageField(required=False, widget=forms.FileInput(
         attrs={'class': 'form-control'}))
 

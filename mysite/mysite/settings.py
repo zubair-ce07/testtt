@@ -35,6 +35,9 @@ SITE_NAME = 'Training Portal'
 #     os.path.join(os.path.dirname(os.path.dirname(__file__)), "static",
 #                  "templates")
 # )
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static'),
+)
 
 INSTALLED_APPS = [
     'training.apps.TrainingConfig',
@@ -45,8 +48,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrap3',
-    "django_crontab",
+    'django_crontab',
     'rest_framework',
+    'jquery',
 ]
 
 MIDDLEWARE = [
@@ -136,8 +140,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_ROOT = 'static/'
+STATIC_ROOT = './'
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = 'media/'
+MEDIA_ROOT = './media/'
 MEDIA_URL = '/media/'
