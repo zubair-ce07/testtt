@@ -1,11 +1,11 @@
-html, body, .container {
-    height: 100%;
-}
-.container {
-    display: table;
-    vertical-align: middle;
+.success {
+    border-color: #179e25;
+    background-color: #179e25;
+    color: white;
 }
 
-#errors {
-    color: red;
+.error {
+    border-color: red;
+    background-color: red;
+    color: white;
 }

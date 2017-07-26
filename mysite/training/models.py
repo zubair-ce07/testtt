@@ -40,6 +40,7 @@ class TrainerManager(models.Manager):
         trainees_count = self.model.objects.annotate(num_trainees=Count(
                                                      'trainees'))
         trainees_lt_3 = trainees_count.filter(num_trainees__lt=3)
+
         if trainees_lt_3:
             return trainees_lt_3.order_by('num_trainees')[0]
 

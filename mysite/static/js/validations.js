@@ -10,15 +10,11 @@ function verifyUserName(e)
               'username': username
             },
             success: function(result){
-                e.target.style.borderColor = "#179e25";
-                e.target.style.backgroundColor = "#179e25";
-                e.target.style.color = "white";
+                e.target.className = "form-control success"
             },
             error: function (HttpRequest, textStatus, errorThrown) {
                 console.log("Error: " + errorThrown);
-                e.target.style.borderColor = "red";
-                e.target.style.backgroundColor = "red";
-                e.target.style.color = "white";
+                e.target.className = "form-control error"
             }
         });
     }

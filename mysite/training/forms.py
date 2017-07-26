@@ -16,6 +16,7 @@ class SignUpForm(forms.Form):
 
     class Media:
         js = ('js/validations.js',
+              'css/bootstrap_form.css',
               'https://code.jquery.com/jquery-3.1.0.min.js')
 
     username = forms.CharField(max_length=20, widget=forms.TextInput(
