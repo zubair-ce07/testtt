@@ -1,5 +1,5 @@
 """
-WSGI config for memo_book project.
+WSGI config for mems_api project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "memo_book.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mems_api.settings")
 
 application = get_wsgi_application()

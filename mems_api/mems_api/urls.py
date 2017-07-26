@@ -1,4 +1,4 @@
-"""memo_book URL Configuration
+"""mems_api URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.11/topics/http/urls/
@@ -15,12 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-import debug_toolbar
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^__debug__/', include(debug_toolbar.urls)),
-    url(r'^', include('memoapp.urls'))
+    url(r'^', include('memsapi_app.urls'))
 ]
-
-

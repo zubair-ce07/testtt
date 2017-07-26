@@ -37,11 +37,12 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-    image = models.ImageField(upload_to='images/')
+    image = models.ImageField(upload_to='images/', null=True)
     email = models.EmailField(unique=True)
     first_name =  models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
+
     is_staff = models.BooleanField(
         ('staff status'),
         default=False,
@@ -91,7 +92,7 @@ class User(AbstractBaseUser):
 
 class Category(models.Model):
     name = models.CharField(max_length=50, null=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='categories', on_delete=models.CASCADE)
     description = models.TextField()
 
     def __str__(self):
@@ -99,8 +100,8 @@ class Category(models.Model):
 
 
 class Memory(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    user = models.ForeignKey(User,related_name='mems', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, related_name='mems', on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     text = models.TextField()
     url = models.CharField(max_length=300)
@@ -116,7 +117,7 @@ class Memory(models.Model):
 
 
 class Activity(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='activities', on_delete=models.CASCADE)
     memory_title = models.CharField(max_length=200)
     datetime = models.DateTimeField(default=timezone.now())
     activity = models.CharField(choices=(('Add', 'Add'), ('Edit', 'Edit'), ('Delete', 'Delete')), max_length=6)
