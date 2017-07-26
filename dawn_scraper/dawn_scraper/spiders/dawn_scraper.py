@@ -4,7 +4,7 @@ from scrapy.contrib.spiders.crawl import CrawlSpider, Rule
 from dawn_scraper.items import DawnScraperItem
 
 
-class MenAtWorkSpider(CrawlSpider):
+class DawnSpider(CrawlSpider):
     name = 'dawn'
     start_urls = ['https://www.dawn.com']
     allowed_domains = ['dawn.com']
