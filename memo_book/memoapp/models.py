@@ -106,7 +106,7 @@ class Memory(models.Model):
     url = models.CharField(max_length=300)
     tags = models.CharField(max_length=200)
     is_public = models.BooleanField(default=True)
-    image = models.ImageField(upload_to='images/')
+    image = models.ImageField(upload_to='images/', null=True)
     objects = models.Manager()
     private_memories = PrivateMemoryManager()
     public_memories = PublicMemoryManager()

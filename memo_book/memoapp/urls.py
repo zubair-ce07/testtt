@@ -1,6 +1,5 @@
 from django.conf.urls import url
 from django.conf.urls.static import static
-
 from memo_book import settings
 from .views import Login, SignUp, Home, Logout, AddMemo, AddCategory,\
     DeleteMemo, EditMemo, UserProfile, EditProfile, Search, Public, Logs

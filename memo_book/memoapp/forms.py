@@ -50,8 +50,8 @@ class AddMemoForm(ModelForm):
             'tags': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                            'placeholder': 'Comma separated tags'}),
             'category': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Country'}),
-            'image': forms.FileInput(attrs={'class': 'form-control separate-form-fields'}),
-            'is_public': forms.CheckboxInput(attrs={'class': 'form-control separate-form-fields'})
+            
+            'is_public': forms.CheckboxInput(attrs={'class': 'input-group separate-form-fields'})
         }
 
 

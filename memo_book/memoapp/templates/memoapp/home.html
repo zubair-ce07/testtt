@@ -11,6 +11,7 @@
                         <form id="register-form" action="/addmemo" method="post" enctype="multipart/form-data" role="form" style="display: block">
                             {% csrf_token %}
                             {{ memo_form }}
+
                             <div class="form-group">
                                 <div class="row">
                                     <div class="col-sm-6 col-sm-offset-3">
@@ -36,7 +37,7 @@
 
                     <div class="row" >
 
-
+                    {% if memos %}
                         {% for memo in memos %}
 
                             <div class="jumbotron" style="padding: 5px">
@@ -63,6 +64,7 @@
 
                                     </div>
                             </div>
+                            </div>
                         {% endfor %}
 
 
@@ -70,7 +72,7 @@
                         <div class="pagination">
                             <span class="step-links">
                                 {% if memos.has_previous %}
-                                    <a href="?page_no={{ memos.previous_page_number }}">previous</a>
+                                    <a href="?tosearch={{ text }}&page_no={{ memos.previous_page_number }}">previous</a>
                                 {% endif %}
 
                                 <span class="current">
@@ -78,10 +80,13 @@
                                 </span>
 
                                 {% if memos.has_next %}
-                                    <a href="?page_no={{ memos.next_page_number }}">next</a>
+                                    <a href="?tosearch={{ text }}&page_no={{ memos.next_page_number }}">next</a>
                                 {% endif %}
                             </span>
                         </div>
+                    {% else %}
+                        <p> No Mem found </p>
+                    {% endif %}
                     </div>
                 </div>
             </div>

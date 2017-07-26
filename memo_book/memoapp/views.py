@@ -102,6 +102,7 @@ class Logout(LoginRequiredMixin, View):
 class AddMemo(LoginRequiredMixin, View):
     def post(self, request):
         memo_form = AddMemoForm(request.POST,  request.FILES)
+        memo_form.fields['category'].queryset = request.user.category_set.all()
         if memo_form.is_valid():
             memo = memo_form.save(commit=False)
             memo.user_id = request.user.id
@@ -127,15 +128,21 @@ class EditMemo(LoginRequiredMixin,View):
         memory = Memory.objects.get(pk=id)
         memo_form = AddMemoForm(instance=memory)
         memo_form.fields['category'].queryset = request.user.category_set.all()
+        print (memo_form.instance.image)
+        memo_form.fields['category'].queryset = request.user.category_set.all()
+
         context = {'memo_form': memo_form, 'memo_id': id}
         return render(request, 'memoapp/edit_memo.html', context)
 
     def post(self,request):
         id = request.POST.get('memo_id')
         memory = Memory.objects.get(pk=id)
-        memory.image.delete(False)
+
         memo_form = AddMemoForm(request.POST, request.FILES,instance=memory)
+        memo_form.fields['category'].queryset = request.user.category_set.all()
         if memo_form.is_valid():
+            print('*****')
+            print(memo_form.instance.image)
             memo_form.save()
             return HttpResponseRedirect(reverse('memoapp:home'))
         else:
@@ -156,7 +163,7 @@ class EditProfile(LoginRequiredMixin, View):
 
     def post(self, request):
         user_form = EditProfileForm(request.POST,request.FILES, instance=request.user)
-        request.user.image.delete(False)
+
         if user_form.is_valid():
             user_form.save()
             return HttpResponseRedirect(reverse('memoapp:home'))
@@ -167,22 +174,40 @@ class EditProfile(LoginRequiredMixin, View):
 
 class Search(LoginRequiredMixin, View):
     def post(self, request):
-       search_text = request.POST['tosearch']
-       searched_mems = Memory.objects.filter(Q(tags__icontains=search_text) | Q(text__icontains=search_text))
-       paginator = Paginator(searched_mems, 2)
-       page_no = request.GET.get('page_no')
-       try:
-           memos = paginator.page(page_no)
-       except PageNotAnInteger:
-           memos = paginator.page(1)
-       except EmptyPage:
-           memos = paginator.page(paginator.num_pages)
-
-       context = {'memo_form': AddMemoForm(), 'memories_of_user': memos}
-       return render(request, 'memoapp/home.html', context)
+        search_text = request.POST['tosearch']
+        searched_mems = request.user.memory_set.filter(Q(title__icontains=search_text) |
+                                                       Q(tags__icontains=search_text) |
+                                                       Q(text__icontains=search_text))
+        paginator = Paginator(searched_mems, 2)
+        page_no = request.GET.get('page_no')
+        try:
+            memos = paginator.page(page_no)
+        except PageNotAnInteger:
+            memos = paginator.page(1)
+        except EmptyPage:
+            memos = paginator.page(paginator.num_pages)
+        memo_form = AddMemoForm()
+        memo_form.fields['category'].queryset = request.user.category_set.all()
+        context = {'memo_form': memo_form, 'memos': memos, 'text': search_text}
+        return render(request, 'memoapp/home.html', context)
 
     def get(self, request):
-        pass
+        search_text = request.GET['tosearch']
+        searched_mems = request.user.memory_set.filter(Q(title__icontains=search_text) |
+                                                       Q(tags__icontains=search_text) |
+                                                       Q(text__icontains=search_text))
+        paginator = Paginator(searched_mems, 2)
+        page_no = request.GET.get('page_no')
+        try:
+            memos = paginator.page(page_no)
+        except PageNotAnInteger:
+            memos = paginator.page(1)
+        except EmptyPage:
+            memos = paginator.page(paginator.num_pages)
+        memo_form = AddMemoForm()
+        memo_form.fields['category'].queryset = request.user.category_set.all()
+        context = {'memo_form': memo_form, 'memos': memos, 'text': search_text}
+        return render(request, 'memoapp/home.html', context)
 
 
 class Public(LoginRequiredMixin, View):

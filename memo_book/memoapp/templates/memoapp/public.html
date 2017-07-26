@@ -3,7 +3,6 @@
 {% load static %}
     <!-- Body contents are starting from here -->
 {% block body %}
-
     <div class="container">
         <div class="row">
 			<div class="col-md-6 col-md-offset-3">
@@ -16,23 +15,25 @@
                                     <i> {{ memo.text }}</i>
                                     <a href="{{ memo.url }}"> visit </a>
                                     <p> {{ memo.tags }}</p>
+                                {% if memo.user_id == user.id %}
                                     <div class="row" >
-                                        <div class="col-md-2">
-                                            <form action="/deletememo" method="post">
-                                                 {% csrf_token %}
-                                                <input type="hidden" name="memo_id" value="{{ memo.id }}" />
-                                                <input type="submit" class="btn" value="Delete">
-                                            </form>
-                                        </div>
-
                                             <div class="col-md-2">
-                                            <form action="/editmemo" method="get">
-                                                <input type="hidden" name="memo_id" value="{{ memo.id }}" />
-                                                <input type="submit" class="btn" value="Edit">
-                                            </form>
-                                        </div>
+                                                <form action="/deletememo" method="post">
+                                                     {% csrf_token %}
+                                                    <input type="hidden" name="memo_id" value="{{ memo.id }}" />
+                                                    <input type="submit" class="btn" value="Delete">
+                                                </form>
+                                            </div>
 
-                                    </div>
+                                                <div class="col-md-2">
+                                                <form action="/editmemo" method="get">
+                                                    <input type="hidden" name="memo_id" value="{{ memo.id }}" />
+                                                    <input type="submit" class="btn" value="Edit">
+                                                </form>
+                                            </div>
+
+                                        </div>
+                                {% endif %}
                             </div>
                         {% endfor %}
                         <div class="pagination">
