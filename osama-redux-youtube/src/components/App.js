@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-
 import "./App.css";
-import SearchForm from "../containers/SearchForm";
-import ResultContainer from "../containers/ResultContainer";
-import VideoContainer from "../containers/VideoContainer";
+import SearchForm from "./search/SearchFormContainer";
+import ResultContainer from "./results/ResultContainer";
+import VideoContainer from "./video/VideoPlayerContainer";
+
 class App extends Component {
   render() {
     return (

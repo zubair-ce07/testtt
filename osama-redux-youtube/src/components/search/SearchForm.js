@@ -1,18 +1,7 @@
 import React, { Component } from "react";
-
-import { connect } from "react-redux";
-import { bindActionCreators } from "redux";
 import "./SearchForm.css";
 
-import { startSearchRequest } from "../actions";
-
 class SearchForm extends Component {
-  constructor(props) {
-    super();
-    this.input = "";
-    this.dispatch = props.dispatch;
-  }
-
   render() {
     return (
       <div className="search-container">
@@ -45,8 +34,4 @@ class SearchForm extends Component {
   }
 }
 
-function mapDispatchToProps(dispatch) {
-  return bindActionCreators({ startSearchRequest: startSearchRequest }, dispatch);
-}
-
-export default connect(null, mapDispatchToProps)(SearchForm);
+export default SearchForm;
