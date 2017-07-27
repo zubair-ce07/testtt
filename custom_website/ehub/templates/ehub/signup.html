@@ -1,0 +1,21 @@
+ <html>
+<head>
+<title>Entrepreneurs Hub</title>
+</head>
+<body>
+<h2>Create An Account</h2>
+<form  method = "POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    {% if form.errors %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                <p><strong>{{ error.as_text}}</strong></p>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+     <button type="submit">Sign Up</button>
+        <a href="/ehub/login/">Back</a>
+</form>
+</body>
+</html>
