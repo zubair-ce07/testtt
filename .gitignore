@@ -119,4 +119,4 @@ yarn.lock
 # dotenv environment variables file
 .env
 
-.sqlite3
+*.sqlite3
