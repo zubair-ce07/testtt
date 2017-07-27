@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.cache import cache
 from pytz import timezone, utc
 
-from users.models import DateTime
+from products.models import DateTime
 
 
 def time_zone_convert():

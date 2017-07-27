@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from products.models import Product, ImageURL, Sku, ColorURL
+from products.models import Product, ImageURL, Sku, ColorURL, DateTime
 
 
 class ImageURLInline(admin.StackedInline):
@@ -22,3 +22,7 @@ class SkuInline(admin.StackedInline):
 class ProductAdmin(admin.ModelAdmin):
     inlines = (ImageURLInline, ColorURLInline, SkuInline)
     list_display = ('name', 'url',)
+
+@admin.register(DateTime)
+class DateTime(admin.ModelAdmin):
+    list_display = ('datetime', 'timezone')

@@ -51,3 +51,14 @@ class Sku(models.Model):
 
     class Meta:
         db_table = 'sku'
+
+
+class DateTime(models.Model):
+    datetime = models.DateTimeField(blank=True, null=True)
+    timezone = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.datetime)
+
+    class Meta:
+        db_table = 'datetime'

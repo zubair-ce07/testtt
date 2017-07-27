@@ -38,13 +38,11 @@ DJANGO_DEFAULT_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    'django_countries',
     'django_crontab',
     'djmoney'
 ]
 
 LOCAL_APPS = [
-    'users',
     'products',
 ]
 
@@ -133,18 +131,8 @@ STATICFILES_DIRS = [
 ]
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
-
-MEDIA_URL = 'media/'
-
-COUNTRIES_FIRST = ['US', 'GB', 'PK']
-
-COUNTRIES_FIRST_BREAK = '--------'
-
-COUNTRIES_FIRST_SORT = True
-
 CRONJOBS = [
-    ('*/5 * * * *', 'users.cron.time_zone_convert')
+    ('*/1 * * * *', 'products.cron.time_zone_convert')
 ]
 
 CACHES = {
@@ -154,5 +142,3 @@ CACHES = {
         'TIMEOUT': None,
     }
 }
-
-LOGIN_URL = '/users/login/'
