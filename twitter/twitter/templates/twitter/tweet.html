@@ -1,9 +1,11 @@
 {% extends 'twitter/home.html' %}
 
 {% block content %}
-    <form method="post" action="{% url 'tweet' %}">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Post Tweet">
-    </form>
+    <div class="tweet_form">
+        <form method="post" action="{% url 'tweet' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Post Tweet">
+        </form>
+    </div>
 {% endblock %}

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.contrib.auth.models import Group
 
-from twitter.models import User, Tweet, News
+from twitter.models import User, Tweet
 
 
 class UserAdmin(AuthUserAdmin):
@@ -18,19 +18,7 @@ class UserAdmin(AuthUserAdmin):
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
 
-
-class NewsAdmin(admin.ModelAdmin):
-    fieldsets = (
-        (None, {'fields': ('title', 'content',)}),
-        ('Media', {'fields': ('image', )})
-    )
-
-    def save_model(self, request, obj, form, change):
-        obj.get_publisher = request.user
-        super(NewsAdmin, self).save_model(request, obj, form, change)
-
 admin.site.register(User, UserAdmin)
-admin.site.register(News, NewsAdmin)
 admin.site.register(Tweet)
 
 admin.site.unregister(Group)

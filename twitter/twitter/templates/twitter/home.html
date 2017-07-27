@@ -1,14 +1,8 @@
-{% extends 'twitter/authenticated_base.html' %}
-
-{% block header_authenticated %}
-    {% if user.is_authenticated %}
-        {{ block.super }}
-    {% endif %}
-{% endblock header_authenticated %}
+{% extends 'twitter/base.html' %}
 
 {% block content %}
     {% if user.is_authenticated %}
-            <h2>Tweets</h2>
+            <h2 class="heading">Tweets</h2>
             {% for tweet in tweets %}
                 <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20"  >
                     <tr><td><pre>{{ tweet }}</pre></td></tr>

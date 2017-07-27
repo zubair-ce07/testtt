@@ -1,19 +1,11 @@
-{% extends 'twitter/authenticated_base.html' %}
+{% extends 'twitter/base.html' %}
 {% load tweeter_extras %}
-
-{% block header_authenticated %}
-    {% if user.is_authenticated %}
-        {{ block.super }}
-    {% endif %}
-{% endblock header_authenticated %}
 
 {% block content %}
     {% if user.is_authenticated %}
-        <h2>News</h2>
+        <h2 class="heading">News</h2>
 
         {% for news in all_news %}
-
-
             <div class="media">
                 <div class="media-left media-middle news-image">
                     <a href="{% url 'news_detailed' news.id %}">
@@ -46,8 +38,6 @@
                 </div>
                 <hr>
             </div>
-
-
         {% endfor %}
     {% endif %}
 {% endblock content %}

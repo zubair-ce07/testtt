@@ -12,7 +12,7 @@
           crossorigin="anonymous"
     >
     <style>
-        body {
+        .heading, .tweet_form, body {
             text-align: center;
         }
 
@@ -21,14 +21,16 @@
             margin-bottom: 5px;
         }
 
-        .published-time span{
+        .published-time span {
             color: red;
         }
-        .media{
+
+        .media {
             margin-left: 10%;
             margin-right: 10%;
         }
-        .news-image img{
+
+        .news-image img {
             width: 300px;
             height: 150px;
         }
@@ -49,8 +51,23 @@
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-right">
-                        {% block header_authenticated %}
-                        {% endblock header_authenticated %}
+                        {% if user.is_authenticated %}
+                            {% block header_authenticated %}
+                                <li><a href="{% url 'news' %}">News</a></li>
+                                <li><a href="{% url 'tweet' %}">Post Tweet</a></li>
+                                <li class="dropdown">
+                                    <a href="{% url 'home' %}" class="dropdown-toggle" data-toggle="dropdown"
+                                       role="button" aria-haspopup="true" aria-expanded="false">
+                                        {{ user|capfirst }}<span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="{% url 'profile' user.username %}">Profile</a></li>
+                                        <li role="separator" class="divider"></li>
+                                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                                    </ul>
+                                </li>
+                            {% endblock header_authenticated %}
+                        {% endif %}
                     </ul>
                 </div><!-- /.navbar-collapse -->
 

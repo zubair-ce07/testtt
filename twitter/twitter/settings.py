@@ -24,7 +24,7 @@ SECRET_KEY = '(34q+5ulpj%4zfthbo1@)00#=m6c4n(9ujg3mp(5u%c10$6xen'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1','172.16.12.83','116.58.62.58','*']
 
 LOGIN_URL = '/login/'
 AUTH_USER_MODEL = 'twitter.User'
@@ -39,7 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'twitter',
+    'twitter.apps.TwitterConfig',
+    'news.apps.NewsConfig',
+    'news.api.apps.ApiConfig',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -122,5 +125,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'twitter/media/twitter')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'

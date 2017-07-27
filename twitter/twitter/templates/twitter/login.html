@@ -1,6 +1,5 @@
 {% extends 'twitter/base.html' %}
 
-
 {% block content %}
     <form action="{% url 'login' %}" method="post">
         {% csrf_token %}
