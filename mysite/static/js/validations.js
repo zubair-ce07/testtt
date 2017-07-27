@@ -10,6 +10,7 @@ function verifyUserName(e)
               'username': username
             },
             success: function(result){
+                console.log("Success");
                 e.target.className = "form-control success"
             },
             error: function (HttpRequest, textStatus, errorThrown) {
@@ -21,8 +22,7 @@ function verifyUserName(e)
     else
     {
         console.log("Error: Username empty");
-        e.target.style.backgroundColor = "red";
-        e.target.style.color = "white";
+        e.target.className = "form-control error"
     }
 }
 

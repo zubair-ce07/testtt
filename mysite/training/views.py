@@ -258,5 +258,5 @@ class ValidateUserName(View):
             Returned when user already exists
             """
             return HttpResponse(status=409)
-        except:
+        except User.DoesNotExist:
             return HttpResponse(status=200)

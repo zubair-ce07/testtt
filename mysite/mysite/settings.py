@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'bootstrap3',
     'django_crontab',
     'rest_framework',
-    'jquery',
+    'djangojs',
 ]
 
 MIDDLEWARE = [
