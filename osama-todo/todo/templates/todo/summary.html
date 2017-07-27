@@ -1,0 +1,31 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'todo/style.css' %}" />
+
+<h1>Top 3 users with most tasks completed</h1>
+<ul>
+    {% for item in all_time %}
+        <li>Username: {{ item.username }} - Tasks: {{ item.todoitem__count }}</li>
+    {% endfor %}
+</ul>
+
+<h1>Top 3 users with most tasks completed in last month</h1>
+<ul>
+    {% for item in complete_last_month %}
+        <li>username: {{ item.username }} - Tasks: {{ item.todoitem__count }}</li>
+    {% endfor %}
+</ul>
+
+<h1>Top 3 users with most tasks completed in last month by users who joined in last 3 months</h1>
+<ul>
+    {% for item in complete_last_month_with_3_months %}
+        <li>username: {{ item.username }} - Tasks: {{ item.todoitem__count }}</li>
+    {% endfor %}
+</ul>
+
+<h1>Top 3 users with most tasks in progress since last 2 months</h1>
+<ul>
+    {% for item in inprogress_since_last_2_months %}
+        <li>username: {{ item.username }} - Tasks: {{ item.todoitem__count }}</li>
+    {% endfor %}
+</ul>
