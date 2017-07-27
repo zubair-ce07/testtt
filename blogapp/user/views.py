@@ -1,63 +1,27 @@
-import datetime
 from django.contrib.auth.views import LoginView, LogoutView
-from django.contrib.auth import login, authenticate
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-from django.shortcuts import render
-from .models import User, UserProfile
-from django.views.generic.edit import FormView
-from .forms import LoginForm, SignUpForm
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView, UpdateView
+from user.forms import LoginForm, SignUpForm
+from user.models import UserProfile
 
 
 class Login(LoginView):
     authentication_form = LoginForm
-    template_name = 'wblog/index.html'
+    template_name = 'user/index.html'
+    redirect_field_name = 'username'
 
 
-class Profile(FormView):
-    template_name = 'wblog/profile.html'
+class SignUp(CreateView):
+    form_class = SignUpForm
+    template_name = 'user/create.html'
+    success_url = reverse_lazy('wblog_user:login')
+
+
+class Update(UpdateView):
+    model = UserProfile
+    template_name = 'user/update.html'
 
 
 class Logout(LogoutView):
     next_page = '/wblog'
 
-
-class SignupView(FormView):
-    template_name = 'wblog/signup.html'
-    form_class = SignUpForm
-
-    def post(self, request, *args, **kwargs):
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = User(username=form.cleaned_data['username'],
-                        password=form.cleaned_data['password']
-                        )
-            user.info = {'phone_num': form.cleaned_data['phone_no'],
-                         'address': form.cleaned_data['address'],
-                         'dob': form.cleaned_data['date_of_birth'],
-                         'gender': form.cleaned_data['gender'],
-                         'created_at': datetime.datetime.now()
-                         }
-            user.save()
-            user = authenticate(username=user.username, password=user.password)
-            login(request, user)
-            return HttpResponseRedirect(reverse('wblog:login'))
-        return render(request, 'wblog/signup.html', {'form': form})
-
-
-def profile_view(request):
-    user = UserProfile.objects.get(user=request.user)
-    if request.method == 'POST':
-        form = SignUpForm(request.POST, instance=user)
-        user.image = request.FILES['image']
-        user.save()
-    else:
-        form = SignUpForm(initial={'username': request.user.username,
-                                   'password': request.user.password,
-                                   'phone_no': user.phone_no,
-                                   'address': user.address,
-                                   'date_of_birth': user.date_of_birth,
-                                   'gender': user.gender,
-                                   'image': user.image
-                                   })
-    return render(request, 'wblog/profile.html', {'user': form})

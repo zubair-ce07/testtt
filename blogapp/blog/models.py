@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Blog(models.Model):
@@ -12,3 +13,5 @@ class Blog(models.Model):
     comments_allowed = models.BooleanField(default=True)
     is_public = models.BooleanField()
 
+    def __str__(self):
+        return self.title

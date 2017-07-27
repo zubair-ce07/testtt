@@ -1,0 +1,30 @@
+{% extends "user/base.html" %}
+{% block content %}
+
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+            <div class="error">
+                <strong>{{ error|escape }}</strong>
+            </div>
+        {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+        <div class="error">
+            <strong>{{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+{% endif %}
+
+
+
+  <form class="register-form" action="{% url 'wblog_user:signup' %}" method="post">
+      {% csrf_token %}
+      {{ form.username }}
+      {{ form.email }}
+      {{ form.password1 }}
+      {{ form.password2 }}
+    <button>Create</button>
+    <p class="message">Already registered? <a href="{% url 'wblog_user:login' %}">Sign In</a></p>
+  </form>
+{% endblock %}

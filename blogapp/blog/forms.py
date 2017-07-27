@@ -1,6 +1,6 @@
 from django.forms import ModelForm, TextInput, PasswordInput, CharField, DateInput
 from django.contrib.auth.forms import AuthenticationForm
-from .models import UserProfile
+from user.models import UserProfile
 
 
 class LoginForm(AuthenticationForm):

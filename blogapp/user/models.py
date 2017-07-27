@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class UserProfile(models.Model):
@@ -10,5 +11,4 @@ class UserProfile(models.Model):
     image = models.ImageField(upload_to='user-images', default='user.png', blank=True)
     created_at = models.DateTimeField(blank=True)
 
-    def __str__(self):
-        return self.user.username
+
