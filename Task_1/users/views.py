@@ -4,8 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.views.generic.edit import View
 from django.urls import reverse
+from django.views.generic.edit import View
 
 from users.decorators import login_required
 from users.forms import LoginForm, SignupForm, EditForm

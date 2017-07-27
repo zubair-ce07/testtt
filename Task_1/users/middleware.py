@@ -1,4 +1,3 @@
-from django.utils.deprecation import MiddlewareMixin
 from django.contrib import auth
 from django.utils.functional import SimpleLazyObject
 
