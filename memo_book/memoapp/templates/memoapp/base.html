@@ -42,10 +42,12 @@
     </div>
     <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="/public">&nbsp;&nbsp; Public Mems &nbsp;&nbsp;</a></li>
-          <li class="active"><a href="/activities">&nbsp;&nbsp;Your Acitivities </a></li>
-          <li class="active"><a href="/addcategory">&nbsp;&nbsp;Add Category </a></li>
+        <li class={%  if  request.path == '/public'%}"active"{% endif %}><a href="/public">&nbsp;&nbsp; Public Mems &nbsp;&nbsp;</a></li>
+          <li class={%  if  request.path == '/activities'%}"active"{% endif %}><a href="/activities">&nbsp;&nbsp;Your Acitivities </a></li>
+          <li class={%  if  request.path == '/addcategory'%}"active"{% endif %}><a href="/addcategory">&nbsp;&nbsp;Add Category </a></li>
         </ul>
+
+
     </div>
   </div>
 </nav>
