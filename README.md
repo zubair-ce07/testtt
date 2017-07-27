@@ -1,17 +1,57 @@
-the-lab
+EDUCARE
 =======
 
-The purpose of this repo is to help the team lead and his team member in training and evaluating newly hired developers especially fresh grads. Code written by newbies for training/practice will be checked in here and reviewed by their respective team leads. All feedback must be in written on github.
+The purpose of this project is to provide an API for the application EDUCARE. This project uses django REST framework to develop an API.
 
-## Getting Started
+#Getting Started
+1. Clone this project on your local machine.
+2. Open the terminal and activate your virtual environment
+3. Install the libraries mentioned in requirements.txt
+4. Navigate to the project folder using the terminal
+5. Run: *python manage.py runserver*
 
-1. Clone this repo on your local machine.
-1. Create a new branch with your name like *alisufian-master* (lower case).
-1. Push this empty branch.
-1. For every assigned task create a new branch e.g. alisufian-borjanspider.
-1. When the task is complete make sure the code confirms to [pep8](https://www.python.org/dev/peps/pep-0008/).
-1. Push the code and create a pull request against your *name-master* branch.
-1. In case you [mess](http://ohshitgit.com/) up the repo.
+##Register a Student
+Open any web browser and go to *http://127.0.0.1:8000/educare/register/student/*
 
-Do not add log files, temp files, data files etc.
-**Do not merge/push anything into master branch**.
+>'Email' and 'Username' are unique fields 
+>'Subjects' is a multiple choice field
+
+##Register a Tutor
+Go to *http://127.0.0.1:8000/educare/register/tutor/*
+
+>'Email' and 'Username' are unique fields 
+>'Subjects' is a multiple choice field
+>Enter the phone number in this format **+41524204242**
+
+##Login
+Go to *http://127.0.0.1:8000/educare/login/*
+
+All other views require token authentication so you can install *curl* and then get response through it 
+
+##Getting Token
+After registering a user and installing curl, use the command *curl -X POST -d "username=<username>&password=<password>" http://localhost:8000/educare/auth/token*
+This will return you a token. Copy and save it.
+
+##View User's Profile
+To view any users profile
+
+Use the command *curl -H "Authorization: Token <your_token>" http://localhost:8000/educare/viewprofile/<username>*
+
+##View Student List
+Only a Tutor can view this list
+
+Use the command *curl -H "Authorization: Token <your_token>" http://localhost:8000/educare/studentlist/*
+
+##View Tutor List
+Only a Student can view this list
+Use the command *curl -H "Authorization: Token <your_token>" http://localhost:8000/educare/tutorlist/*
+
+##Edit Profile
+Only the owner of the object can edit their profile
+
+Use the command *curl -H "Authorization: Token <your_token>" http://localhost:8000/educare/editprofile/<username>*
+
+##Reset Password
+Only the owner of the object can change their password
+
+Use the command *curl -H "Authorization: Token <your_token>" http://localhost:8000/educare/resetpassword/<username>*
