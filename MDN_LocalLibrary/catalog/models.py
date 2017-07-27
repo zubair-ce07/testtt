@@ -23,6 +23,7 @@ class Author(models.Model):
     date_of_death = models.DateField('Died', null=True, blank=True)
 
     def clean(self):
+        super(Author, self).clean()
         if self.date_of_death < self.date_of_birth:
             raise forms.ValidationError('Date of Death should come after Date of Birth')
 
