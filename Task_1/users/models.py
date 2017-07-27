@@ -8,11 +8,15 @@ from django.db import models
 from django.db.models.fields.files import FileField, ImageFieldFile, ImageField
 from django_countries.fields import CountryField, Country, countries
 
+from users.managers import UserProfileManager
+
 message = "Phone number must be entered in the format: '+9999999999'."
 phone_validator = RegexValidator(regex=r'^\+?\d{10,15}$', message=message)
 
 
 class UserProfile(models.Model):
+    objects = UserProfileManager()
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(validators=[phone_validator], max_length=15, blank=True, null=True)
     country = CountryField(blank=True, null=True)

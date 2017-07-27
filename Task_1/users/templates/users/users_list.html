@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}
+    Users List
+{% endblock title %}
+{% block user %}
+    <li><a href="{% url 'users:details' %}">Profile Details</a></li>
+    <li><a href="{% url 'users:edit' %}">Edit Profile</a></li>
+{% endblock %}
+{% block heading %}
+    Users List
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-3">
+            <h3>Active Users:</h3>
+            {% if active_list %}
+                <ul>
+                    {% for user_profile in active_list %}
+                        <li>{{ user_profile.user.first_name }} {{ user_profile.user.last_name }} </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        <div class="col-md-3">
+            <h3>Inactive Users:</h3>
+            {% if inactive_list %}
+                <ul>
+                    {% for user_profile in inactive_list %}
+                        <li>{{ user_profile.user.first_name }} {{ user_profile.user.last_name}}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

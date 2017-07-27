@@ -28,9 +28,13 @@
             {% if user.is_authenticated %}
                 {% if request.user.is_superuser %}
                     <li style=" margin:0 0 3px 0;"><a href="{% url 'admin:index' %}">Admin Panel</a></li>
+                    <li style=" margin:0 0 3px 0;"><a href="{% url 'users:list' %}">Users List</a></li>
                 {% endif %}
                 <li>User: {{ user.get_username }}</li>
                 <li><a href="{% url 'users:logout' %}?next={{ request.path }}">Logout</a></li>
+                {% block user %}
+                    <li><a href="{% url 'users:details' %}">Profile Details</a></li>
+                {% endblock %}
             {% else %}
                 <li><a href="{% url 'users:login' %}?next={{ request.path }}">Login</a></li>
             {% endif %}

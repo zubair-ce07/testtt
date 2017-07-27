@@ -1,8 +1,10 @@
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.views.generic.edit import View
 from django.urls import reverse
 
 from users.decorators import login_required
@@ -72,3 +74,12 @@ def LoginView(request):
 def LogoutView(request):
     logout(request)
     return HttpResponseRedirect(redirect_to=reverse('users:login'))
+
+
+class ListView(LoginRequiredMixin, View):
+    template_name = 'users/users_list.html'
+
+    def get(self, request, *args, **kwargs):
+        context = {'active_list': UserProfile.objects.active_list(),
+                   'inactive_list': UserProfile.objects.inactive_list()}
+        return render(request, self.template_name, context)
