@@ -1,6 +1,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
 *.py[cod]
 
 # C extensions
@@ -59,7 +58,6 @@ target/
 
 # VS code
 .vscode/
-*log.txt
 
 # Logs
 logs
@@ -116,7 +114,9 @@ typings/
 
 # Yarn Integrity file
 .yarn-integrity
+yarn.lock
 
 # dotenv environment variables file
 .env
 
+*.sqlite3
