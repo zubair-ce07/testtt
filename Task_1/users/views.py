@@ -6,9 +6,12 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic.edit import View
+from django.db import transaction
 
 from users.decorators import login_required
-from users.forms import LoginForm, SignupForm, EditForm
+from users.forms.edit_form import EditForm
+from users.forms.login_form import LoginForm
+from users.forms.signup_form import SignupForm
 from users.models import UserProfile
 
 
@@ -41,19 +44,20 @@ def SignUpView(request):
     else:
         form = SignupForm(request.POST, request.FILES)
         if form.is_valid():
-            user_profile = UserProfile.objects.create(
-                user=User.objects.create(username=form.cleaned_data['username'],
-                                         password=make_password(form.cleaned_data['password']),
-                                         email=form.cleaned_data['email'],
-                                         first_name=form.cleaned_data.get('first_name', None),
-                                         last_name=form.cleaned_data.get('last_name', None)),
-                phone_number=form.cleaned_data.get('phone_number', None),
-                country=form.cleaned_data.get('country', None),
-                address=form.cleaned_data.get('address', None),
-                image=request.FILES.get('image', None))
-            request.session['userid'] = str(user_profile.user.id)
-            login(request, user_profile.user)
-            return HttpResponseRedirect(redirect_to=reverse('users:details'))
+            with transaction.atomic():
+                user_profile = UserProfile.objects.create(
+                    user=User.objects.create(username=form.cleaned_data['username'],
+                                             password=make_password(form.cleaned_data['password']),
+                                             email=form.cleaned_data['email'],
+                                             first_name=form.cleaned_data.get('first_name', None),
+                                             last_name=form.cleaned_data.get('last_name', None)),
+                    phone_number=form.cleaned_data.get('phone_number', None),
+                    country=form.cleaned_data.get('country', None),
+                    address=form.cleaned_data.get('address', None),
+                    image=request.FILES.get('image', None))
+                request.session['userid'] = str(user_profile.user.id)
+                login(request, user_profile.user)
+                return HttpResponseRedirect(redirect_to=reverse('users:details'))
     return render(request, 'users/signup.html', {'form': form})
 
 
