@@ -48,10 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrap3',
-    'django_crontab',
     'rest_framework',
     'rest_framework.authtoken',
-    'djangojs',
 ]
 
 MIDDLEWARE = [
