@@ -5,6 +5,7 @@ from django.views.generic.edit import View
 
 from products.forms import CreateProductForm, EditProductForm, ImageFormSet, ColorFormSet, SkuFormSet
 from products.models import Product
+from products.services import product_load_service
 
 
 class CreateProductView(LoginRequiredMixin, View):
@@ -97,3 +98,14 @@ class SearchProductView(LoginRequiredMixin, View):
                 context['error'] = False
             return render(request, self.template_name, context)
         return render(request, self.template_name, {'products': Product.objects.all()})
+
+
+class LoadProductsView(LoginRequiredMixin, View):
+    template_name = 'products/load_product.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        product_load_service()
+        return redirect('products:search-product')

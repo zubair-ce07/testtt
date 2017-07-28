@@ -38,6 +38,7 @@
                 {% block product %}
                     <li><a href="{% url 'products:search-product' %}">Search Products</a></li>
                     <li><a href="{% url 'products:create-product' %}">Create New Product</a></li>
+                    <li><a href="{% url 'products:load-product' %}">Load Products</a></li>
                 {% endblock %}
             {% endif %}
         </ul>

@@ -1,4 +1,3 @@
-import csv
 import datetime
 
 from django.core.cache import cache

@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^edit/(?P<pk>\d+)$', views.EditProductView.as_view(), name='edit-product'),
     url(r'^delete/(?P<pk>\d+)$', views.DeleteProductView.as_view(), name='delete-product'),
     url(r'^search/$', views.SearchProductView.as_view(), name='search-product'),
+    url(r'^load/$', views.LoadProductsView.as_view(), name='load-product'),
 ]
