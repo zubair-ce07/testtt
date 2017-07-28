@@ -11,9 +11,11 @@ class DoctorSpider(scrapy.Spider):
     def parse(self, response):
         url = self.start_urls[0]
         viewstate = response.xpath('//input[@id = "__VIEWSTATE"]/@value').extract_first()
-        yield FormRequest(url, method='POST',
-                          formdata={'ctl00$cphContent$ctl01$ddlResultsPerPage': '99999', '__VIEWSTATE': viewstate},
-                          callback=self.generate_viewprofile_request)
+        yield FormRequest(
+            url,
+            formdata={'ctl00$cphContent$ctl01$ddlResultsPerPage': '99999', '__VIEWSTATE': viewstate},
+            callback=self.generate_viewprofile_request
+        )
 
     def generate_viewprofile_request(self, response):
         url = self.start_urls[0]
@@ -30,14 +32,11 @@ class DoctorSpider(scrapy.Spider):
                               callback=self.parse_doctor_profile)
 
     def get_graduation_info(self, response):
-        graduate_education = []
         residency = {'type': 'Residency',
-                     'name': response.xpath('//div[contains(@id, "pnlResidency")]//li//text()').extract()}
+                     'name': response.xpath('//div[contains(@id, "pnlResidency")]//li//text()').extract_first()}
         fellowship = {'type': 'Fellowship',
-                      'name': response.xpath('//div[contains(@id, "pnlFellowship")]//li//text()').extract()}
-        graduate_education.append(residency)
-        graduate_education.append(fellowship)
-        return graduate_education
+                      'name': response.xpath('//div[contains(@id, "pnlFellowship")]//li//text()').extract_first()}
+        return [residency, fellowship]
 
     def get_address_info(self, response):
         phone = response.xpath('//span[contains(@id, "lblDocContactPhone")]//text()').extract_first()
@@ -46,21 +45,30 @@ class DoctorSpider(scrapy.Spider):
         address = {'phone': phone, 'fax': fax, 'other': other}
         return address
 
+    def get_list_of_specialities(self, response):
+        specialities = (response.xpath('//div[contains(@id, "pnlDocSpecialty")]/h2//text()').extract_first()).strip()
+        specialities = specialities.split(',')
+        list_of_dictionaries = []
+        for speciality in specialities:
+            item = {'name': speciality}
+            list_of_dictionaries.append(item)
+        return list_of_dictionaries
+
     def parse_doctor_profile(self, response):
         doctor_item_loader = DoctorItemLoader(item=DoctorItem(), response=response)
         doctor_item_loader.add_value('crawled_date', str(datetime.now()))
         doctor_item_loader.add_value('source_url', response.url)
-        speciality = response.xpath('//div[contains(@id, "pnlDocSpecialty")]/h2//text()').extract_first()
-        doctor_item_loader.add_value('speciality', speciality)
+        doctor_item_loader.add_value('speciality', self.get_list_of_specialities(response))
         image_url = response.xpath('//div[contains(@id, "pnlDoctorImage")]/img/@src').extract_first()
         doctor_item_loader.add_value('image_url', image_url)
         full_name = response.xpath('//div[contains(@id, "pnlDocName")]/h1//text()').extract_first()
         doctor_item_loader.add_value('full_name', full_name)
         address = self.get_address_info(response)
         doctor_item_loader.add_value('address', address)
-        medical_school = response.xpath('//div[contains(@id, "pnlMedicalSchool")]//li//text()').extract()
+        medical_school = {'name': response.xpath('//div[contains(@id,'
+                                                 '"pnlMedicalSchool")]//li//text()').extract_first()}
         doctor_item_loader.add_value('medical_school', medical_school)
-        affiliation = {'name': response.xpath('//div[contains(@id, "pnlInternship")]//li//text()').extract()}
+        affiliation = {'name': response.xpath('//div[contains(@id, "pnlInternship")]//li//text()').extract_first()}
         doctor_item_loader.add_value('affiliation', affiliation)
         graduate_education = self.get_graduation_info(response)
         doctor_item_loader.add_value('graduate_education', graduate_education)

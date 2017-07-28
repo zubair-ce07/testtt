@@ -1,6 +1,7 @@
 import scrapy
 from scrapy.loader.processors import MapCompose
 from scrapy.loader import ItemLoader
+from scrapy.contrib.loader.processor import TakeFirst
 
 
 class DoctorItem(scrapy.Item):
@@ -16,4 +17,5 @@ class DoctorItem(scrapy.Item):
 
 
 class DoctorItemLoader(ItemLoader):
-    speciality_in = MapCompose(unicode.strip)
+    default_output_processor = TakeFirst()
+    #speciality_in = MapCompose(unicode.strip)
