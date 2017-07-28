@@ -1,11 +1,9 @@
 {% extends 'twitter/home.html' %}
-
+{% load tweeter_extras %}
 {% block content %}
-    {% if view.profile_user.first_name %}
-        <h1>{{ view.profile_user.first_name|capfirst }}'s Profile</h1>
-    {% else %}
-        <h1>{{ view.profile_user.username|capfirst }}'s Profile</h1>
-    {% endif %}
+
+    {% users_name view.profile_user as users_name %}
+    <h1>{{ users_name|capfirst }}'s Profile</h1>
 
     {% if not view.profile_user == user %}
         <span>
