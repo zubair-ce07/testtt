@@ -6,9 +6,9 @@ from products.models import Product
 
 
 def product_load_service():
-    with open('products.json') as test:
-        data = json.load(test)
-    for key, value in data.items():
+    with open('products.json') as products:
+        products = json.load(products)
+    for key, value in products.items():
         p = Product.objects.create(url=value.get('url'), retailer_sku=value.get('retailer_sku'),
                                    name=value.get('name')[0],
                                    brand=value.get('brand'), description=value.get('description'),
