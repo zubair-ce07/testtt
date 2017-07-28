@@ -22,11 +22,11 @@ from mysite.views import hello
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^training/api/v1/', include('training_api.urls')),
     url(r'^training/', include('training.urls')),
     url(r'', include('training.urls')),
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework'))
 ] + static.static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    # static.static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 urlpatterns += staticfiles_urlpatterns()

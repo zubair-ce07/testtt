@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'bootstrap3',
     'django_crontab',
     'rest_framework',
+    'rest_framework.authtoken',
     'djangojs',
 ]
 
@@ -68,7 +69,7 @@ REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+        # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
 
