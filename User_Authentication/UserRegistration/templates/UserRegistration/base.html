@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Authentication - {% block title %}{% endblock %}</title>
+</head>
+<body>
+    {% block logo %}
+        <img src="../media/logo.jpg" width="125px" align="right">
+    {% endblock %}
+    <h1>{% block heading %}{% endblock %}</h1>
+    {% block error_message %}{% endblock %}
+    {% block content %}{% endblock %}
+    {% block form_to_submit %}
+        <form action="" method="post" novalidate enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Submit</button>
+        </form>
+    {% endblock %}
+</body>
+</html>
