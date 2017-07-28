@@ -18,6 +18,7 @@ class UserAdmin(AuthUserAdmin):
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
 
+
 admin.site.register(User, UserAdmin)
 admin.site.register(Tweet)
 

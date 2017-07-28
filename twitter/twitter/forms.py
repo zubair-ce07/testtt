@@ -20,4 +20,4 @@ class TweetForm(forms.Form):
 
 
 class FollowForm(forms.Form):
-    follower_username=forms.CharField(widget=forms.HiddenInput())
+    follower_username = forms.CharField(widget=forms.HiddenInput())

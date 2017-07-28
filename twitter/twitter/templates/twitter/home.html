@@ -2,18 +2,22 @@
 
 {% block content %}
     {% if user.is_authenticated %}
-            <h2 class="heading">Tweets</h2>
-            {% for tweet in tweets %}
-                <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20"  >
-                    <tr><td><pre>{{ tweet }}</pre></td></tr>
-                </table>
-            {% endfor %}
+        <h2 class="heading">Tweets</h2>
+        {% for tweet in tweets %}
+            <table class="tweet" align="center" border="0" cellspacing="0" cellpadding="20">
+                <tr>
+                    <td>
+                        <pre>{{ tweet }}</pre>
+                    </td>
+                </tr>
+            </table>
+        {% endfor %}
 
     {% else %}
 
-            <p><a href="{% url 'login' %}">LOGIN</a></p>
-            <p>OR</p>
-            <p><a href="{% url 'signup' %}">SIGN UP</a></p>
+        <p><a href="{% url 'login' %}">LOGIN</a></p>
+        <p>OR</p>
+        <p><a href="{% url 'signup' %}">SIGN UP</a></p>
 
     {% endif %}
-{% endblock content%}
+{% endblock content %}

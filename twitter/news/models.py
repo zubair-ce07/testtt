@@ -1,4 +1,5 @@
 from django.db import models
+
 from twitter.models import User
 
 
@@ -12,8 +13,8 @@ class NewsManager(models.Manager):
 
 class News(models.Model):
     title = models.CharField(max_length=200)
-    content =  models.CharField(max_length=1000)
-    publisher =models.ForeignKey(User, blank=True, null=True)
+    content = models.CharField(max_length=1000)
+    publisher = models.ForeignKey(User, blank=True, null=True)
     pub_date = models.DateTimeField('published date', auto_now_add=True)
     image = models.ImageField(null=True)
     image_url = models.URLField(null=True)

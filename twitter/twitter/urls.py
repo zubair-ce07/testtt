@@ -32,6 +32,6 @@ urlpatterns = [
                   url(r'^profiles/(?P<username>[a-zA-Z0-9@.+-_]+)/$', views.ProfileView.as_view(), name='profile'),
                   url(r'^follow', require_POST(views.FollowView.as_view()), name='follow'),
                   url(r'^news/', include('news.urls')),
-                  url(r'^api/news/', include('news.api.urls')),
+                  url(r'^api/', include('twitter.api_url')),
 
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

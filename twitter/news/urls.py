@@ -1,9 +1,8 @@
-from django.conf.urls import url, include
-from django.contrib.auth.decorators import login_required
+from django.conf.urls import url
 
 from news import views
 
 urlpatterns = [
-    url(r'^$', login_required()(views.NewsView.as_view()), name='news'),
-    url(r'^(?P<pk>[\d]+)/$', login_required()(views.NewsDetailedView.as_view()), name='news_detailed'),
+    url(r'^$', views.NewsView.as_view(), name='news'),
+    url(r'^(?P<pk>[\d]+)/$', views.NewsDetailedView.as_view(), name='news_detailed'),
 ]

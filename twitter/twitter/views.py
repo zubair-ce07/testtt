@@ -1,11 +1,11 @@
 from django.contrib.auth import login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.views import View
 from django.views.generic import FormView, TemplateView, ListView
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 from twitter import forms
 from twitter.models import Tweet, User

@@ -39,5 +39,6 @@ class Tweet(models.Model):
 
     def __str__(self):
         return self.tweet_text
+
     class Meta:
         db_table = 'tweet'

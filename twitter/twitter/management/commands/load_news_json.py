@@ -2,10 +2,13 @@ import json
 from datetime import datetime
 from json.decoder import JSONDecodeError
 
-from django.core.management.base import BaseCommand, CommandError
 import mock
-from twitter.models import News, User, ProfileDoestExist
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
+
+from news.models import News
+from twitter.models import User, ProfileDoestExist
+
 
 class Command(BaseCommand):
     help = 'Get path of json file contains news objects and load into "News" Model.'
