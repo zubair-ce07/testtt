@@ -27,4 +27,3 @@ print_multiplication_table(5)
 #>>> 3 * 1 = 3
 #>>> 3 * 2 = 6
 #>>> 3 * 3 = 9
-

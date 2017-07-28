@@ -26,9 +26,9 @@
 def split_string(source, splitlist):
     temp = 0
     words = []
-    for i in range(len(source)):
-        if splitlist.find(source[i]) != -1:
-            words.append(source[temp:i])
+    for index, char in source:
+        if splitlist.find(char) != -1:
+            words.append(source[temp:index])
             temp = i+1
     words = filter(None,words)
     return words
@@ -48,10 +48,3 @@ print out
 out = split_string("First Name,Last Name,Street Address,City,State,Zip Code",",")
 print out
 #>>>['First Name', 'Last Name', 'Street Address', 'City', 'State', 'Zip Code']
-
-
-# In[ ]:
-
-
-
-

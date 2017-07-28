@@ -6,7 +6,7 @@
 # choose to as long as rotate returns the correct string.
 # Note that n can be positive, negative or zero.
 
-#COments 
+#COments
 
 
 def shift_n_letters(letter, n):
@@ -20,14 +20,14 @@ def shift_n_letters(letter, n):
 
 
 def rotate(string, number):
-    temp = ""
+    temp = None
     for character in string:
         if character == " ":
             temp += " "
             continue
         temp += shift_n_letters(character, number)
     return temp
-    
+
 
 print rotate ('sarah', 13)
 #>>> 'fnenu'
@@ -39,6 +39,3 @@ print rotate('ifaj',-5)
 #>>>'dave'
 print rotate(("zw pfli tfuv nfibj tfiivtkcp pfl jyflcu "
                 "sv rscv kf ivru kyzj"),-17)
-
-
-

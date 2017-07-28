@@ -5,27 +5,27 @@
 
 
 # By Ashwath from forums
-# Given a list of lists representing a n * n matrix as input, 
-# define a  procedure that returns True if the input is an identity matrix 
+# Given a list of lists representing a n * n matrix as input,
+# define a  procedure that returns True if the input is an identity matrix
 # and False otherwise.
 
-# An IDENTITY matrix is a square matrix in which all the elements 
-# on the principal/main diagonal are 1 and all the elements outside 
-# the principal diagonal are 0. 
-# (A square matrix is a matrix in which the number of rows 
+# An IDENTITY matrix is a square matrix in which all the elements
+# on the principal/main diagonal are 1 and all the elements outside
+# the principal diagonal are 0.
+# (A square matrix is a matrix in which the number of rows
 # is equal to the number of columns)
 
 def is_identity_matrix(matrix):
     if len(matrix) != len(matrix[0]):
         return False
 
-    for i in range(len(matrix)):
-        for j in range(len(matrix)):
-            if i == j:
-                if matrix[i][j] != 1:
+    for index_i, val_i in matrix:
+        for index_j, val_j in val_i:
+            if index_i == index_j:
+                if val_j != 1:
                     return False
             else:
-                if matrix[i][j] != 0:
+                if val_j != 0:
                     return False
     return True
 
@@ -35,8 +35,8 @@ matrix1 = [[1,0,0,0],
            [0,0,1,0],
            [0,0,0,1]]
 print is_identity_matrix(matrix1)
-#>>>True
 
+#>>>True
 matrix2 = [[1,0,0],
            [0,1,0],
            [0,0,0]]
@@ -63,9 +63,9 @@ matrix5 = [[1,0,0,0,0,0,0,0,0]]
 print is_identity_matrix(matrix5)
 #>>>False
 
-matrix6 = [[1,0,0,0],  
-           [0,1,0,2],  
-           [0,0,1,0],  
+matrix6 = [[1,0,0,0],
+           [0,1,0,2],
+           [0,0,1,0],
            [0,0,0,1]]
 
 print is_identity_matrix(matrix6)
@@ -75,13 +75,4 @@ matrix7 = [[1, -1, 1],
            [0, 1, 0],
            [0, 0, 1]]
 print is_identity_matrix(matrix7)
-#>>>False           
-
-           
-
-
-# In[ ]:
-
-
-
-
+#>>>False

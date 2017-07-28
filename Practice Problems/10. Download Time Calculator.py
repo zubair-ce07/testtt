@@ -6,7 +6,7 @@
 
 # Write a procedure download_time which takes as inputs a file size, the
 # units that file size is given in, bandwidth and the units for
-# bandwidth (excluding per second) and returns the time taken to download 
+# bandwidth (excluding per second) and returns the time taken to download
 # the file.
 # Your answer should be a string in the form
 # "<number> hours, <number> minutes, <number> seconds"
@@ -27,29 +27,29 @@
 #print 2 ** 40      # one terabit, Tb
 #print 2 ** 40 * 8  # one terabyte, TB
 
-# Often bandwidth is given in megabits (Mb) per second whereas file size 
-# is given in megabytes (MB).    
+# Often bandwidth is given in megabits (Mb) per second whereas file size
+# is given in megabytes (MB).
 
 
 # In[15]:
 
 
-def BitsConversion(filesize, fileunit):
-    if fileunit == "kb":
+def BitsConversion(filesize, file_unit):
+    if file_unit == "kb":
         filesize *= 2**10
-    elif fileunit == "kB":
+    elif file_unit == "kB":
         filesize *= 2**10*8
-    elif fileunit == "Mb":
+    elif file_unit == "Mb":
         filesize *= 2**20
-    elif fileunit == "MB":
+    elif file_unit == "MB":
         filesize *= 2**20*8
-    elif fileunit == "Gb":
+    elif file_unit == "Gb":
         filesize *= 2**30
-    elif fileunit == "GB":
+    elif file_unit == "GB":
         filesize *= 2**30*8
-    elif fileunit == "Tb":
+    elif file_unit == "Tb":
         filesize *= 2**40
-    elif fileunit == "TB":
+    elif file_unit == "TB":
         filesize *= 2**40*8
     return filesize
 
@@ -73,16 +73,16 @@ def convert_seconds(number):
         m = " minute, "
     if number == 1:
         s = " second"
-    return str(hours) + h + str(mins) + m + str(number) + s
+    return '{} {} {} {} {} {}'.format(hours, h, mins, m, number, s)
 
 
 # In[22]:
 
 
-def download_time(filesize, fileUnit, BandWidth, BandWiddthUnit):
-    filesize = BitsConversion(filesize, fileUnit)
-    BandWidth = BitsConversion(BandWidth,BandWiddthUnit)
-    seconds = filesize/BandWidth
+def download_time(filesize, file_unit, bandwidth, Bandwidth_unit):
+    filesize = BitsConversion(filesize, file_unit)
+    bandwidth = BitsConversion(bandwidth,Bandwidth_unit)
+    seconds = filesize/bandwidth
     time = convert_seconds(seconds)
     return time
 
@@ -113,10 +113,3 @@ print download_time(10,'MB', 2, 'kB')
 
 print download_time(10,'MB', 2, 'kb')
 #>>> 11 hours, 22 minutes, 40 seconds  # 40.0 seconds is also acceptable
-
-
-# In[ ]:
-
-
-
-

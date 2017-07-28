@@ -12,10 +12,10 @@
 def symmetric(matrix):
     if len(matrix) != len(matrix[0]):
         return False
-    
-    for i in range(len(matrix)):
-        for j in range(len(matrix)):
-            if matrix[i][j] != matrix[j][i]:
+
+    for index_i, val_i in matrix:
+        for index_j, val_j in val_i:
+            if matrix[index_i][index_j] != matrix[index_j][index_i]:
                 return False
     return True
 
@@ -43,7 +43,3 @@ print symmetric([[1, 2, 3, 4],
                 [2, 3, 4, 5],
                 [3, 4, 5, 6]])
 #>>> False
-
-
-
-

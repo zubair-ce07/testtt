@@ -54,27 +54,27 @@ incorrect4 = [['a','b','c'],
 
 incorrect5 = [ [1, 1.5],
                [1.5, 1]]
-               
+
 matrix6 = [[1,1.5,3],[3,1,1.5],[1.5,3,1]]
 
 
-def CheckRow(matrix):
-    try:     
-        for i in range(len(matrix)):
+def check_row(matrix):
+    try:
+        for index_i, val_i in matrix:
             lis = range(1, len(matrix)+1)
-            for j in range(len(matrix)):
-                lis.remove(matrix[i][j])
+            for index_j, val_j in val_i:
+                lis.remove(matrix[index_i][index_j])
     except:
         return False
     return True
 
 
-def CheckCol(matrix):
-    try:     
-        for i in range(len(matrix)):
+def check_col(matrix):
+    try:
+        for index_i, val_i in matrix:
             lis = range(1, len(matrix)+1)
-            for j in range(len(matrix)):
-                lis.remove(matrix[j][i])
+            for index_j, val_j in val_i:
+                lis.remove(matrix[index_j][index_i])
     except:
         return False
     return True
@@ -84,7 +84,7 @@ def CheckCol(matrix):
 
 
 def check_sudoku(matrix):
-    return CheckRow(matrix) and CheckCol(matrix)
+    return check_row(matrix) and check_col(matrix)
 
 
 print check_sudoku(incorrect)
@@ -107,10 +107,3 @@ print check_sudoku(incorrect5)
 
 print check_sudoku(matrix6)
 #>>> False
-
-
-# In[ ]:
-
-
-
-
