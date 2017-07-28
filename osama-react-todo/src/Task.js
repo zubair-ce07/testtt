@@ -31,21 +31,16 @@ class Task extends Component {
   render() {
     return (
       <li className="task">
-        <a href="#" onClick={this.toggleModal}>
+        <a onClick={this.toggleModal}>
           {this.state.description}
         </a>
-        {function() {
-          if (this.state.modalOpen) {
-            return (
-              <Modal
-                show={this.state.modalOpen}
-                toggleTask={this.toggleCompletion}
-                onClose={this.toggleModal}
-                description={this.state.description}
-              />
-            );
-          }
-        }.bind(this)()}
+        {this.state.modalOpen &&
+          <Modal
+            show={this.state.modalOpen}
+            toggleTask={this.toggleCompletion}
+            onClose={this.toggleModal}
+            description={this.state.description}
+          />}
       </li>
     );
   }

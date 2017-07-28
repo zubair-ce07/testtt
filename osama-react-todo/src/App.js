@@ -47,15 +47,15 @@ class App extends Component {
     return tasks;
   }
 
-  handleInputChange(evt) {
+  handleInputChange(value) {
     this.setState({
-      inputValue: evt.target.value
+      inputValue: value
     });
   }
 
-  handleRadioChange(evt) {
+  handleRadioChange(value) {
     this.setState({
-      filter: evt.target.value
+      filter: value
     });
   }
 
@@ -88,7 +88,11 @@ class App extends Component {
           <h2>The 10001st Todo App</h2>
         </div>
         <p className="inputField">
-          <input id="todoInput" type="text" onChange={this.handleInputChange} />
+          <input
+            id="todoInput"
+            type="text"
+            onChange={evt => this.handleInputChange(evt.target.value)}
+          />
           <button onClick={this.addTask}>Add Task</button>
         </p>
         <form id="filterForm">
@@ -97,7 +101,7 @@ class App extends Component {
               <span key={status}>
                 <input
                   type="radio"
-                  onClick={this.handleRadioChange}
+                  onClick={evt => this.handleRadioChange(evt.target.value)}
                   name="status"
                   value={status}
                 />
@@ -110,21 +114,18 @@ class App extends Component {
         </form>
         <ul>
           {this.state.tasks
-            .filter(task => {
-              return (
+            .filter(
+              task =>
                 task.status === this.state.filter || this.state.filter === "all"
-              );
-            })
-            .map(task => {
-              return (
-                <Task
-                  key={task.id}
-                  id={task.id}
-                  value={task.description}
-                  storage={this.storageChange}
-                />
-              );
-            })}
+            )
+            .map(task =>
+              <Task
+                key={task.id}
+                id={task.id}
+                value={task.description}
+                storage={this.storageChange}
+              />
+            )}
         </ul>
       </div>
     );
