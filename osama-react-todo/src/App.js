@@ -38,12 +38,10 @@ class App extends Component {
   }
 
   getTaskList() {
-    let tasks = [],
-      count = this.getCount();
-    for (let i = 0; i < count; i++) {
-      var temp = this.getTask(i);
-      tasks[i] = temp;
-    }
+    let tasks = [];
+    [...Array(+this.getCount()).keys()].map(
+      index => (tasks[index] = this.getTask(index))
+    );
     return tasks;
   }
 
