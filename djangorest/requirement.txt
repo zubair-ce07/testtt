@@ -1,0 +1,7 @@
+django==1.11
+djangorestframework
+pygments
+psycopg2
+httpie
+nose-1.3.7
+
