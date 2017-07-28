@@ -8,6 +8,7 @@ from calendar import month_abbr
 def rename (path):
     directory = path + '/weathercsv'
 
+
     for wt in os.listdir("{0}".format(path)):
 
         w_cym, w_ext = os.path.splitext(wt)
@@ -24,7 +25,11 @@ def rename (path):
             lines = (line.split(",") for line in stripped if line)
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            with open( "{0}/{1}-{2}.csv".format(directory,w_year, month), 'w') as out_file:
+            m_directory = directory + '/' + w_year
+            if not os.path.exists(m_directory):
+                os.makedirs(m_directory)
+
+            with open( "{0}/{1}.csv".format(m_directory,month), 'w') as out_file:
                 writer = csv.writer(out_file)
                 writer.writerow(())
                 writer.writerows(lines)

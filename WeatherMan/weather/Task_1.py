@@ -16,7 +16,7 @@ def task1(year,path):
     i=0
 
 
-    files = [file for file in glob.glob(path +'/weathercsv/' + year +'*.csv', recursive=True)]
+    files = [file for file in glob.glob(path +'/weathercsv/' + year +'/*.csv', recursive=True)]
     #print(files)
 
     for i in files:

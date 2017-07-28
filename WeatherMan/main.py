@@ -1,6 +1,10 @@
 import sys
+import os
 import shutil
 from weather import renaming, Task_1, Task_2, Task_3, Bonus_Task
+
+if os.path.exists(sys.argv[3] +'/weathercsv'):
+    shutil.rmtree(sys.argv[3] +'/weathercsv')
 
 renaming.rename(sys.argv[3])
 #print("'" + sys.argv[3] +'/' + sys.argv[2]+'*.csv' +"'")
