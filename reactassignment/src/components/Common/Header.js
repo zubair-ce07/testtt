@@ -1,14 +1,13 @@
 import React from 'react'
-
 import {Navbar, NavItem, Nav} from 'react-bootstrap/lib'
 
-class Navigation extends React.Component {
-    render() {
-        return (
-            <Navbar inverse collapseOnSelect>
+
+const Navigation = (props) => {
+    return(
+        <Navbar inverse collapseOnSelect>
                 <Navbar.Header>
                     <Navbar.Brand>
-                        <a onClick={() => this.props.history.push('/')}>
+                        <a onClick={() => props.history.push('/')}>
                                 React-ToDo
                         </a>
                     </Navbar.Brand>
@@ -17,17 +16,16 @@ class Navigation extends React.Component {
                 <Navbar.Collapse>
 
                     <Nav pullRight>
-                        <NavItem eventKey={1} onClick={()=>this.props.history.push('/home')}>
+                        <NavItem eventKey={1} onClick={()=>props.history.push('/home')}>
                                 Home
                         </NavItem>
-                        <NavItem eventKey={2} onClick={()=>this.props.history.push('/todos')}>
+                        <NavItem eventKey={2} onClick={()=>props.history.push('/todos')}>
                                 Todos
                         </NavItem>
                     </Nav>
                 </Navbar.Collapse>
             </Navbar>
-        )
-    }
+    )
 }
 
 export default Navigation

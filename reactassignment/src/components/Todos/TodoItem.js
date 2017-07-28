@@ -7,8 +7,6 @@ class TodoItem extends React.Component{
     constructor(props){
         super(props)
 
-        // var index, subject, pending
-        // var handleCheckClick, handleDeleteTask
         var {index, subject, pending} = this.props.task;
         console.log(index)
         var {handleCheckClick, handleDeleteTask} = this.props.handlers;

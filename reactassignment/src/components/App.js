@@ -20,6 +20,7 @@ class App extends React.Component {
                 pending: true
             }
         }
+
         this.handleInput = this.handleInput.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
         this.handleCheckClick = this.handleCheckClick.bind(this)
@@ -78,6 +79,7 @@ class App extends React.Component {
         }
 
     }
+
     handleInput(e) {
         const task = {
             index: this.count,
