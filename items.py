@@ -18,4 +18,3 @@ class DoctorItem(scrapy.Item):
 
 class DoctorItemLoader(ItemLoader):
     default_output_processor = TakeFirst()
-    #speciality_in = MapCompose(unicode.strip)
