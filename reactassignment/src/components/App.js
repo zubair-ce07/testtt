@@ -1,12 +1,13 @@
 import React from 'react'
 import {Route} from 'react-router-dom'
 
-
 import InputTODO from './Input'
 import CustomJumbotron from './HomePage'
 import Footer from './Common/Footer'
 import Navigation from './Common/Header'
 import Todos from './Todos/Todos'
+
+var toastr = require('toastr');
 
 class App extends React.Component {
     constructor() {
@@ -74,8 +75,9 @@ class App extends React.Component {
                 taskList: newTaskList,
                 task: task
             })
+            toastr.success('Task Added')
         } else {
-            alert('Incorrect Input')
+            toastr.error('Incorrect Input')
         }
 
     }
