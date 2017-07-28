@@ -1,0 +1,81 @@
+FOR TEMP:
+Maximum value was 41 on 2012-08-10
+Mean temperature was 14
+Minimum temperature was 0 on 1997-01-02
+The 10 Maximum values recorded were:
+41: on 2012-08-10
+40: on 4 days
+39: on 23 days
+38: on 47 days
+37: on 90 days
+36: on 156 days
+35: on 177 days
+34: on 194 days
+33: on 204 days
+32: on 254 days
+The 10 Minimum values recorded were:
+0: on 943 days
+1: on 270 days
+2: on 285 days
+3: on 274 days
+4: on 308 days
+5: on 294 days
+6: on 347 days
+7: on 335 days
+8: on 330 days
+9: on 347 days
+
+FOR DEW:
+Maximum value was 20 on 2015-08-30
+Mean temperature was 4
+Minimum temperature was -18 on 2014-12-29
+The 10 Maximum values recorded were:
+20: on 4 days
+19: on 13 days
+18: on 39 days
+17: on 72 days
+16: on 151 days
+15: on 223 days
+14: on 326 days
+13: on 429 days
+12: on 510 days
+11: on 503 days
+The 10 Minimum values recorded were:
+-18: on 2014-12-29
+-16: on 3 days
+-14: on 4 days
+-13: on 3 days
+-12: on 5 days
+-11: on 8 days
+-10: on 16 days
+-9: on 25 days
+-8: on 45 days
+-7: on 63 days
+
+FOR VISIBILITY:
+Maximum value was 31 on 2015-12-31
+Mean temperature was 10
+Minimum temperature was 0 on 1997-01-07
+The 10 Maximum values recorded were:
+31: on 1291 days
+27: on 5 days
+26: on 14 days
+24: on 2 days
+23: on 3 days
+21: on 2015-12-20
+19: on 10 days
+18: on 8 days
+16: on 2 days
+14: on 9 days
+The 10 Minimum values recorded were:
+0: on 1107 days
+1: on 104 days
+2: on 104 days
+3: on 265 days
+4: on 189 days
+5: on 259 days
+6: on 239 days
+7: on 208 days
+8: on 362 days
+9: on 194 days
+
