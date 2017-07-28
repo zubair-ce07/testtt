@@ -59,3 +59,4 @@ target/
 # secrets file
 conf.py
 
+migrations/
