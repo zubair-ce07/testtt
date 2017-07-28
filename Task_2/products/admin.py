@@ -23,6 +23,7 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = (ImageURLInline, ColorURLInline, SkuInline)
     list_display = ('name', 'url',)
 
+
 @admin.register(DateTime)
 class DateTime(admin.ModelAdmin):
     list_display = ('datetime', 'timezone')
