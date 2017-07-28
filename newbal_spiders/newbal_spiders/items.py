@@ -19,4 +19,4 @@ class NewbalanceItem(Item):
     locale = Field()
     currency = Field()
     variationitems = Field()
-    # sizeitem = Field()
+    sizeitems = Field()

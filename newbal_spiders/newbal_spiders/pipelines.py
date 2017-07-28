@@ -38,7 +38,8 @@ class NewbalSpidersPipeline(object):
             Description TEXT, \
             Locale TEXT, \
             Currency TEXT, \
-            VariationItems REAL \
+            VariationItems TEXT, \
+            SizeItems TEXT \
             )")
 
     def process_item(self, item, spider):
@@ -54,9 +55,10 @@ class NewbalSpidersPipeline(object):
             Description, \
             Locale, \
             Currency, \
-            VariationItems \
+            VariationItems, \
+            SizeItems \
             )\
-             VALUES (?,?,?,?,?,?,?,?)", \
+             VALUES (?,?,?,?,?,?,?,?,?)", \
                          ( \
                              item.get('product_url', ''),
                              item.get('product_id', ''),
@@ -65,6 +67,7 @@ class NewbalSpidersPipeline(object):
                              item.get('description', ''),
                              item.get('locale', ''),
                              item.get('currency', ''),
-                             json.dumps(item.get('variationitems', ''))
+                             json.dumps(item.get('variationitems', '')),
+                             json.dumps(item.get('sizeitems',''))
                          ))
         self.con.commit()

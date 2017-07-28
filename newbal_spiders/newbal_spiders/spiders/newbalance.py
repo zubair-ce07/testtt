@@ -23,7 +23,8 @@ class NewbalanceSpider(CrawlSpider):
     custom_settings = {
         "ITEM_PIPELINES": {
             'newbal_spiders.pipelines.NewbalSpidersPipeline': 300,
-        }
+        },
+        "DOWNLOAD_DELAY": 1
     }
 
     def parse_prod(self, response):
@@ -114,4 +115,5 @@ class NewbalanceSpider(CrawlSpider):
                 img.append(url['URL'])
                 imgs.append(img)
             item['variationitems'] = dict(zip(unique_color, imgs))
+            item['sizeitems']=sizeitems
         return item
