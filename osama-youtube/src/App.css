@@ -1,0 +1,31 @@
+.App-header {
+  padding: 10px;
+  border-bottom: 1px solid black;
+}
+
+.result-container {
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+}
+
+.player-container {
+  display: block;
+  position: relative;
+  width: 854px;
+  height: 480px;
+}
+
+.player-container:after {
+  padding-top: 56.25%;
+  /* 16:9 ratio */
+  display: block;
+  content: '';
+}
+
+.center-right {
+  display: block;
+  position: fixed;
+  width: 500px;
+  left: 30px;
+}
