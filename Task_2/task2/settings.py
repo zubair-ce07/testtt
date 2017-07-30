@@ -132,7 +132,7 @@ STATICFILES_DIRS = [
 STATIC_URL = '/static/'
 
 CRONJOBS = [
-    ('*/1 * * * *', 'products.cron.time_zone_convert')
+    ('*/5 * * * *', 'products.cron.time_zone_convert')
 ]
 
 CACHES = {

@@ -1,7 +1,10 @@
 from django import forms
 from djmoney.forms import MoneyWidget
 
+from products.dict import dict
 from products.models import Product, ImageURL, ColorURL, Sku
+
+attr = dict({'class': 'form-control form-group'})
 
 
 class CreateProductForm(forms.ModelForm):
@@ -14,14 +17,12 @@ class CreateProductForm(forms.ModelForm):
             'name': 'Product Name',
         }
         widgets = {
-            'url': forms.URLInput(attrs={'class': 'form-control form-group', 'placeholder': 'Product Page URL'}),
-            'brand': forms.TextInput(attrs={'class': 'form-control form-group', 'placeholder': 'Brand (Optional)'}),
-            'description': forms.TextInput(
-                attrs={'class': 'form-control form-group', 'placeholder': 'Product Description (Optional)'}),
-            'name': forms.TextInput(attrs={'class': 'form-control form-group', 'placeholder': 'Product Name'}),
-            'retailer_sku': forms.TextInput(attrs={'class': 'form-control form-group', 'placeholder': 'Retailer ID'}),
-            'fabric': forms.TextInput(
-                attrs={'class': 'form-control form-group', 'placeholder': 'Cloth Fabric Material (Optional)'})
+            'url': forms.URLInput(attrs=attr.update({'placeholder': 'Product Page URL'})),
+            'brand': forms.TextInput(attrs=attr.update({'placeholder': 'Brand (Optional)'})),
+            'description': forms.TextInput(attrs=attr.update({'placeholder': 'Product Description (Optional)'})),
+            'name': forms.TextInput(attrs=attr.update({'placeholder': 'Product Name'})),
+            'retailer_sku': forms.TextInput(attrs=attr.update({'placeholder': 'Retailer ID'})),
+            'fabric': forms.TextInput(attrs=attr.update({'placeholder': 'Cloth Fabric Material (Optional)'})),
         }
 
 
@@ -37,8 +38,7 @@ class ImageURLForm(forms.ModelForm):
         model = ImageURL
         fields = ('url',)
         labels = {'url': 'Product Image URL'}
-        widgets = {'url': forms.URLInput(
-            attrs={'class': 'form-control form-group', 'placeholder': 'URL for Product Image (Optional)'})}
+        widgets = {'url': forms.URLInput(attrs=attr.update({'placeholder': 'URL for Product Image (Optional)'}))}
 
 
 class ColorURLForm(forms.ModelForm):
@@ -46,21 +46,18 @@ class ColorURLForm(forms.ModelForm):
         model = ColorURL
         fields = ('url',)
         labels = {'url': 'Product Color Page URL'},
-        widgets = {'url': forms.URLInput(
-            attrs={'class': 'form-control form-group', 'placeholder': 'URL for Product Colors (Optional)'})}
+        widgets = {'url': forms.URLInput(attrs=attr.update({'placeholder': 'URL for Product Colors (Optional)'}))}
 
 
 class SkuForm(forms.ModelForm):
     class Meta:
         model = Sku
         fields = '__all__'
-        widgets = \
-            {'id': forms.HiddenInput(), 'out_of_stock': forms.CheckboxInput(attrs={}),
-             'color': forms.TextInput(
-                 attrs={'class': 'form-control form-group', 'placeholder': 'Color (Optional)'}),
-             'price': MoneyWidget(attrs={'class': 'form-control form-group', 'placeholder': 'Enter SKU price'}),
-             'size': forms.TextInput(
-                 attrs={'class': 'form-control form-group', 'placeholder': 'Enter SKU size'})}
+        widgets = {'id': forms.HiddenInput(),
+                   'out_of_stock': forms.CheckboxInput(),
+                   'color': forms.TextInput(attrs=attr.update({'placeholder': 'Color (Optional)'})),
+                   'price': MoneyWidget(attrs=attr.update({'placeholder': 'Enter SKU price'})),
+                   'size': forms.TextInput(attrs=attr.update({'placeholder': 'Enter SKU size'}))}
 
 
 ImageFormSet = forms.inlineformset_factory(Product, ImageURL, extra=5, can_delete=False, form=ImageURLForm)

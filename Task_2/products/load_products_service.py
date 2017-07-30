@@ -5,7 +5,7 @@ from djmoney.money import Money
 from products.models import Product
 
 
-def product_load_service():
+def load_products_service():
     with open('products.json') as products:
         products = json.load(products)
     for key, value in products.items():
@@ -20,4 +20,3 @@ def product_load_service():
         for sku in value.get('skus').values():
             p.sku_set.create(color=sku.get('color'), size=sku.get('size'),
                              price=Money(sku.get('price'), sku.get('currency')))
-    return data

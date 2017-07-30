@@ -4,8 +4,8 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import View
 
 from products.forms import CreateProductForm, EditProductForm, ImageFormSet, ColorFormSet, SkuFormSet
+from products.load_products_service import load_products_service
 from products.models import Product
-from products.services import product_load_service
 
 
 class CreateProductView(LoginRequiredMixin, View):
@@ -107,5 +107,5 @@ class LoadProductsView(LoginRequiredMixin, View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
-        product_load_service()
+        load_products_service()
         return redirect('products:search-product')

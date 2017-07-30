@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.core.cache import cache
 from django.core.management.base import BaseCommand
 from pytz import timezone
@@ -12,7 +13,7 @@ class Command(BaseCommand):
         cache.set('count', 0)
         cache.set('convert', True)
         date_time = datetime.datetime.now()
-        time_zone = timezone('Asia/Karachi')
+        time_zone = timezone(settings.TIME_ZONE)
         date_time = time_zone.normalize(time_zone.localize(date_time))
         datetime_list = []
         for i in range(100):

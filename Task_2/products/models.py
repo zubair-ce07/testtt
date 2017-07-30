@@ -54,8 +54,8 @@ class Sku(models.Model):
 
 
 class DateTime(models.Model):
-    datetime = models.DateTimeField(blank=True, null=True)
-    timezone = models.CharField(max_length=50, blank=True, null=True)
+    datetime = models.DateTimeField()
+    timezone = models.CharField(max_length=50)
 
     def __str__(self):
         return str(self.datetime)
