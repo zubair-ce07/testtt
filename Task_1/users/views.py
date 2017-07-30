@@ -36,6 +36,7 @@ def EditView(request):
     return render(request, 'users/edit.html', {'form': form})
 
 
+@transaction.atomic
 def SignUpView(request):
     if request.user.is_authenticated:
         return HttpResponseRedirect(redirect_to=reverse('users:details'))
@@ -44,20 +45,19 @@ def SignUpView(request):
     else:
         form = SignupForm(request.POST, request.FILES)
         if form.is_valid():
-            with transaction.atomic():
-                user_profile = UserProfile.objects.create(
-                    user=User.objects.create(username=form.cleaned_data['username'],
-                                             password=make_password(form.cleaned_data['password']),
-                                             email=form.cleaned_data['email'],
-                                             first_name=form.cleaned_data.get('first_name', None),
-                                             last_name=form.cleaned_data.get('last_name', None)),
-                    phone_number=form.cleaned_data.get('phone_number', None),
-                    country=form.cleaned_data.get('country', None),
-                    address=form.cleaned_data.get('address', None),
-                    image=request.FILES.get('image', None))
-                request.session['userid'] = str(user_profile.user.id)
-                login(request, user_profile.user)
-                return HttpResponseRedirect(redirect_to=reverse('users:details'))
+            user_profile = UserProfile.objects.create(
+                user=User.objects.create(username=form.cleaned_data['username'],
+                                         password=make_password(form.cleaned_data['password']),
+                                         email=form.cleaned_data['email'],
+                                         first_name=form.cleaned_data.get('first_name', None),
+                                         last_name=form.cleaned_data.get('last_name', None)),
+                phone_number=form.cleaned_data.get('phone_number', None),
+                country=form.cleaned_data.get('country', None),
+                address=form.cleaned_data.get('address', None),
+                image=request.FILES.get('image', None))
+            request.session['userid'] = str(user_profile.user.id)
+            login(request, user_profile.user)
+            return HttpResponseRedirect(redirect_to=reverse('users:details'))
     return render(request, 'users/signup.html', {'form': form})
 
 
