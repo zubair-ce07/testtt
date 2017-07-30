@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
@@ -10,22 +10,20 @@ class CustomUserManager(BaseUserManager):
     """
     Provides a manager to create user objects and super user
     """
-    def create_user(self, email, password, first_name=None, last_name=None):
+    def create_user(self, email, password, phone=None):
         """
         Save user object created with given parameters to database and returns user
 
         Arguments:
             email (str): email address
             password (str): password to be set
-            first_name (str): first name of user
-            last_name (str): last name of user
+            phone (str): phone no of user
         Returns:
              user (User): user created with given attributes
         """
         user = self.model(
             email=self.normalize_email(email),
-            first_name=first_name,
-            last_name=last_name
+            phone=phone
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -54,19 +52,18 @@ class User(AbstractBaseUser):
     """
     Model to store user's details
     """
-    first_name = models.CharField(max_length=30, blank=True, null=True)
-    last_name = models.CharField(max_length=30, blank=True, null=True)
     email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=30, unique=True, blank=True, null=True)
     is_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     objects = CustomUserManager()
 
     def get_short_name(self):
-        return self.last_name
+        return self.profile.last_name
 
     def get_full_name(self):
-        return self.first_name
+        return '{first} {last}'.format(first=self.profile.first_name, last=self.profile.last_name)
 
 
 class Designation(models.Model):
@@ -75,26 +72,6 @@ class Designation(models.Model):
     """
     job_title = models.CharField(max_length=30, unique=True)
 
-    @classmethod
-    def get_or_create(cls, job_title):
-        """
-        Checks if job title is already in database
-        if not saves it and returns designation with job title
-
-        Arguments:
-            job_title (str): job title against which to search
-        Returns:
-            designation (Designation): designation with provided job title
-        """
-        designations = cls.objects.filter(job_title=job_title)
-
-        if not designations.exists():
-            designation = cls.objects.create(job_title=job_title)
-        else:
-            designation = designations.first()
-
-        return designation
-
 
 class Address(models.Model):
     """
@@ -102,6 +79,8 @@ class Address(models.Model):
     """
     street = models.CharField(max_length=30, blank=True, null=True)
     city = models.CharField(max_length=30, blank=True, null=True)
+    country = models.CharField(max_length=30, blank=True, null=True)
+    zip_code = models.PositiveSmallIntegerField(blank=True, null=True)
 
 
 class Profile(models.Model):
@@ -109,9 +88,10 @@ class Profile(models.Model):
     model to store additional data about user
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone = models.CharField(max_length=30, blank=True, null=True)
+    first_name = models.CharField(max_length=30, blank=True, null=True)
+    last_name = models.CharField(max_length=30, blank=True, null=True)
     gender = models.CharField(max_length=30)
-    address = models.OneToOneField(Address, on_delete=models.CASCADE)
+    address = models.OneToOneField(Address)
     designation = models.ForeignKey(Designation)
 
 
@@ -126,3 +106,8 @@ def create_auth_token(instance=None, created=False, **kwargs):
     """
     if created:
         Token.objects.create(user=instance)
+
+
+@receiver(post_delete, sender=Profile)
+def auto_delete_address(sender, instance, **kwargs):
+    instance.address.delete()

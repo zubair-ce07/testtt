@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # if config not found will use this default
-SECRET_KEY = 'sample_secret_key'
+SECRET_KEY = 'insecure_secret_key'
 
 DEBUG = True
 
@@ -15,9 +15,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'user_api',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'user_api',
 ]
 
 REST_FRAMEWORK = {

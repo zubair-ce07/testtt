@@ -8,103 +8,92 @@ class AddressSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Address
-        fields = ('street', 'city',)
-
-    @classmethod
-    def update(cls, instance, validated_data):
-        instance.street = validated_data.get('street', instance.street)
-        instance.city = validated_data.get('city', instance.city)
-        instance.save()
-        return instance
+        fields = ('street', 'city', 'country', 'zip_code')
 
 
 class DesignationSerializer(serializers.ModelSerializer):
     """
-        serializes data for designation model
-        """
-    job_title = serializers.CharField()
-
+    serializes data for designation model
+    """
     class Meta:
         model = Designation
         fields = ('job_title',)
-
-    @classmethod
-    def update(cls, instance, validated_data):
-        try:
-            job_title = validated_data.pop('job_title')
-            instance = Designation.get_or_create(job_title)
-        except KeyError:
-            pass
-
-        return instance
+        extra_kwargs = {
+            'job_title': {'validators': []},
+        }
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     """
-        serializes data for profile model
-        """
+    serializes data for profile model
+    """
     address = AddressSerializer()
     designation = DesignationSerializer()
 
     class Meta:
         model = Profile
-        fields = ('gender', 'phone', 'designation', 'address',)
+        fields = ('first_name', 'last_name', 'gender', 'designation', 'address',)
 
-    @classmethod
-    def update(cls, instance, validated_data):
+    def update(self, instance, validated_data):
+        # if designation is in update request data then sets with new instance
+        try:
+            job_title = validated_data.pop('designation').pop('job_title')
+            instance.designation, created = Designation.objects.get_or_create(job_title=job_title)
+        except KeyError:
+            pass
+
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.gender = validated_data.get('gender', instance.gender)
-        instance.phone = validated_data.get('phone', instance.phone)
-        instance.designation = DesignationSerializer.update(instance.designation, validated_data.get('designation', {}))
-        AddressSerializer.update(instance.address, validated_data.get('address', {}))
         instance.save()
+
+        # saving updates in address
+        serializer = AddressSerializer(instance.address, validated_data.get('address', {}), partial=self.partial)
+        if serializer.is_valid():
+            serializer.save()
+
         return instance
 
 
 class UserSerializer(serializers.ModelSerializer):
     """
-        serializes data for user model
-        """
+    serializes data for user model. Along with user details provides
+    with user's own token.
+    """
     profile = ProfileSerializer()
-    password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+    password = serializers.CharField(write_only=True)
+    token = serializers.ReadOnlyField(source='auth_token.key')
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'email', 'profile', 'password',)
+        fields = ('id', 'phone', 'email', 'profile', 'password', 'token',)
+
+    def to_representation(self, instance):
+        # this makes sure that user can only see his own token.
+        representation = super(UserSerializer, self).to_representation(instance)
+        if instance != self.context['request'].user:
+            representation.pop('token')
+        return representation
 
     def create(self, validated_data):
         profile = validated_data.pop('profile')
-        address = profile.pop('address')
-        designation = profile.pop('designation')
-
         user = User.objects.create_user(**validated_data)
-        address = Address.objects.create(**address)
-        designation = Designation.get_or_create(**designation)
+        address = Address.objects.create(**profile.pop('address'))
+        designation, created = Designation.objects.get_or_create(**profile.pop('designation'))
         profile = Profile.objects.create(user=user, address=address, designation=designation, **profile)
         return user
 
-
-class UserUpdateSerializer(serializers.ModelSerializer):
-    """
-    serializes data for User model when request for
-    updating user. it excludes email and password
-    """
-    profile = ProfileSerializer()
-
-    class Meta:
-        model = User
-        fields = ('id', 'first_name', 'last_name', 'profile',)
-
     def update(self, instance, validated_data):
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.email = validated_data.get('email', instance.email)
+        password = validated_data.get('password', None)
+        if password:
+            instance.set_password(validated_data.get('password'))
         instance.save()
-        ProfileSerializer.update(instance.profile, validated_data.get('profile', {}))
+
+        # saving changes to profile model for the user
+        serializer = ProfileSerializer(instance.profile, validated_data.get('profile', {}), partial=self.partial)
+        if serializer.is_valid():
+            serializer.save()
+
         return instance
-
-
-class AuthTokenSerializer(serializers.Serializer):
-    """
-    serializes email and password for getting auth token
-    """
-    email = serializers.EmailField()
-    password = serializers.CharField(style={'input_type': 'password'})
