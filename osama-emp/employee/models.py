@@ -11,15 +11,5 @@ class Profile(models.Model):
     '''
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     job_title = models.CharField(max_length=32)
-    supervisor = models.ForeignKey(User, related_name='supervisor', blank=True, null=True)
-
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    supervisor = models.ForeignKey(
+        User, related_name='supervisor', blank=True, null=True)
