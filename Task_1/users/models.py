@@ -17,7 +17,7 @@ phone_validator = RegexValidator(regex=r'^\+?\d{10,15}$', message=message)
 class UserProfile(models.Model):
     objects = UserProfileManager()
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     phone_number = models.CharField(validators=[phone_validator], max_length=15, blank=True, null=True)
     country = CountryField(blank=True, null=True)
     image = ImageField(upload_to='users/', blank=True, null=True, max_length=255)

@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from rest_framework.urlpatterns import format_suffix_patterns
 
 from users import views
 
@@ -12,3 +13,4 @@ urlpatterns = [
     url(r'^login/$', views.LoginView, name='login'),
     url(r'^logout/$', views.LogoutView, name='logout'),
 ]
+

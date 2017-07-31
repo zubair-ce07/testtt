@@ -2,17 +2,21 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic.edit import View
 from django.db import transaction
+
 
 from users.decorators import login_required
 from users.forms.edit_form import EditForm
 from users.forms.login_form import LoginForm
 from users.forms.signup_form import SignupForm
 from users.models import UserProfile
+
+
+
 
 
 @login_required

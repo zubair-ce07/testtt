@@ -39,10 +39,12 @@ DJANGO_DEFAULT_APPS = [
 
 THIRD_PARTY_APPS = [
     'django_countries',
+    'rest_framework',
 ]
 
 LOCAL_APPS = [
     'users',
+    'api',
 
 ]
 
