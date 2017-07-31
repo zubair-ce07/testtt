@@ -77,14 +77,12 @@ class Designation(models.Model):
     CHIEF_EXECUTIVE_OFFICER = 'CEO'
     SOFTWARE_ENGINEER = 'SE'
     SENIOR_SOFTWARE_ENGINEER = 'SSE'
-    INTERN = 'I'
     CHIEF_TECHNOLOGY_OFFICER = 'CTO'
 
     JOB_TITLES = (
         (CHIEF_EXECUTIVE_OFFICER, 'Chief Executive Officer'),
         (SOFTWARE_ENGINEER, 'Software Engineer'),
         (SENIOR_SOFTWARE_ENGINEER, 'Senior Software Engineer'),
-        (INTERN, 'Intern'),
         (CHIEF_TECHNOLOGY_OFFICER, 'Chief Technology Officer'),
     )
 
