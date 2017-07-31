@@ -14,15 +14,3 @@ class Product(scrapy.Item):
     skus = Field()
     url = Field()
     url_original = Field()
-
-
-class ChildProduct(scrapy.Item):
-    items = Field()
-
-
-class GrandChildProduct(scrapy.Item):
-    items = Field()
-
-
-class Count(scrapy.Item):
-    counter = Field()

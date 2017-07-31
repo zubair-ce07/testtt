@@ -1,85 +1,140 @@
-import scrapy
-from product_item import ChildProduct
-from product_item import Count
-from product_item import GrandChildProduct
 from product_item import Product
-from  scrapy.http import Request
+from scrapy.http import Request
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 
-class OrseySpider(scrapy.Spider):
+class OrseySpider(CrawlSpider):
     name = 'orsay.com'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de', ]
-    urls = []
+    download_delay = 1
 
-    def parse(self, response):
-        #category links
-        for href in response.css('span.widget.widget-category-link a::attr(href)'):
-            yield response.follow(href, self.parse)
-        #extra links
-        for href in response.css('ul#nav a::attr(href)'):
-            yield response.follow(href, self.parse)
-        #product_links
-        for href in response.css('h2.product-name a::attr(href)'):
-            yield response.follow(href, self.parse_product)
+    rules = (
+        Rule(LinkExtractor(restrict_css=['span.widget.widget-category-link', 'ul#nav']), follow=True),
+        Rule(LinkExtractor(restrict_css=['h2.product-name']), callback='parse_product'),
+    )
 
     def parse_product(self, response):
         item = Product()
-        child_item = ChildProduct()
-        grand_child_item = GrandChildProduct()
-        counter = Count()
-        if "item" in response.meta.keys():
-            counter = response.meta['counter']
-            counter['counter'] -= 1
-            item = response.meta['item']
-            item['image_urls'].append(response.css('a[data-zoom-id^=mainZoom]::attr(href)').extract_first())
-            child_item = item['skus']
-            key_item = child_item['items']
-            sku_key = key_item.keys().pop(0)
-            grand_child_item = key_item[sku_key]
-            grand_child_key_item = grand_child_item['items']
-            grand_child_key_item['colour'].append(
-                response.css('div.no-display input[name^=color]::attr(value)').extract_first())
-            if not counter['counter']:
-                yield item
+        item['brand'] = self.parse_brand(response)
+        item['care'] = self.parse_care(response)
+        item['category'] = self.parse_category(response)
+        item['description'] = self.parse_description(response)
+        item['gender'] = self.parse_gender(response)
+        item['image_urls'] = []
+        item['name'] = self.parse_name(response)
+        item['retailer_sku'] = self.parse_retailer_sku(response)
+        item['skus'] = self.get_skus(response)
+        item['url'] = self.parse_url(response)
+        item['url_original'] = self.parse_url(response)
+        response.meta['item'] = item
+        response.meta['next_color_urls'] = self.parse_urls_for_color(response)
+        response.meta['next_color_urls'].remove('#')
+        for r in self.parse_next_color_items(response):
+            yield r
+
+    def parse_next_color_items(self, response):
+        next_color_urls = response.meta['next_color_urls']
+        item = response.meta['item']
+        item['image_urls'] = self.update_image_urls(item['image_urls'], response)
+        item['skus'] = self.update_color_field(item['skus'], response)
+        if not next_color_urls:
+            yield item
         else:
-            sizes = []
-            key_part = response.css('div.twelve.columns label[for^="sku"]+input::attr(value)').extract_first()
-            items_for_grand_child = dict(
-                colour=response.css('div.no-display input[name^=color]::attr(value)').extract(),
-                currency="Euro",
-                price=response.css('div.product-view span.price::text').extract_first()
-            )
-            if response.css('script[type="application/ld+json"]::text').extract_first().find("OutOfStock") > 0:
-                items_for_grand_child['OutOfStock'] = "True"
-            for size in response.css('div.sizebox-wrapper li::text').extract():
-                sizes.append(size.strip('\n').strip(' '))
-            sizes_of_item = filter(None, sizes)
-            items_for_child = dict()
-            for size in sizes_of_item:
-                key = "{0}_{1}".format(key_part, size)
-                items_for_grand_child['size'] = size
-                grand_child_item['items'] = items_for_grand_child
-                items_for_child[key] = grand_child_item
-            child_item['items'] = items_for_child
-            item['brand'] = "orsay"
-            item['care'] = response.css('ul.caresymbols img::attr(src)').extract()
-            item['category'] = response.css('div.no-display input[name^=category_name]::attr(value)').extract_first()
-            item['description'] = response.css('p.description::text').extract()
-            item['gender'] = "women"
-            item['image_urls'] = [response.css('a[data-zoom-id^=mainZoom]::attr(href)').extract_first()]
-            item['name'] = response.css('h1.product-name::text').extract()
-            item['retailer_sku'] = response.css('p.sku::text').extract_first().split(':')[1].strip(' ')[:6]
-            item['skus'] = child_item
-            item['url'] = response.url
-            item['url_original'] = response.url
-            self.urls = response.css('ul.product-colors  a::attr(href)').extract()
-            self.urls.remove('#')
-            counter['counter'] = len(self.urls)
-        for next_color_page in self.urls:
-            self.urls = filter(lambda a: a != next_color_page, self.urls)
-            if next_color_page is not None and next_color_page is not "#":
-                request = Request(next_color_page, callback=self.parse_product, dont_filter=True)
-                request.meta['item'] = item
-                request.meta['counter'] = counter
-                yield request
+            next_color_page_url = next_color_urls.pop(0)
+            request = Request(next_color_page_url, callback=self.parse_next_color_items, dont_filter=True)
+            request.meta['item'] = item
+            request.meta['next_color_urls'] = next_color_urls
+            yield request
+
+    def parse_brand(self, response):
+        return "Orsay"
+
+    def parse_care(self, response):
+        return response.css('ul.caresymbols img::attr(src)').extract()
+
+    def parse_category(self, response):
+        return response.css('div.no-display input[name^=category_name]::attr(value)').extract_first()
+
+    def parse_description(self, response):
+        return response.css('p.description::text').extract()
+
+    def parse_gender(self, response):
+        return "women"
+
+    def parse_image_urls(self, response):
+        return response.css('a[data-zoom-id^=mainZoom]::attr(href)').extract_first()
+
+    def parse_name(self, response):
+        return response.css('h1.product-name::text').extract()
+
+    def parse_retailer_sku(self, response):
+        return response.css('p.sku::text').extract_first().split(':')[1].strip(' ')[:6]
+
+    def parse_urls_for_color(self, response):
+        url = response.css('ul.product-colors  a::attr(href)').extract()
+        return url
+
+    def check_if_out_of_stock(self, response):
+        return response.css('script[type="application/ld+json"]::text').extract_first().find("OutOfStock")
+
+    def parse_color(self, response):
+        return response.css('div.no-display input[name^=color]::attr(value)').extract_first()
+
+    def parse_currency(self, response):
+        return "Euro"
+
+    def parse_price(self, response):
+        return response.css('div.product-view span.price::text').extract_first()
+
+    def parse_item_key_number(self, response):
+        return response.css('div.twelve.columns label[for^="sku"]+input::attr(value)').extract_first()
+
+    def parse_available_sizes(self, response):
+        return response.css('div.sizebox-wrapper li::text').extract()
+
+    def get_available_sizes(self, response):
+        sizes = []
+        for size in self.parse_available_sizes(response):
+            sizes.append(size.strip('\n').strip(' '))
+        sizes_of_item = filter(None, sizes)
+        return sizes_of_item
+
+    def parse_item_characteristics(self, response):
+        item_characterstics = dict(
+            colour=[],
+            currency=self.parse_currency(response),
+            price=self.parse_price(response)
+        )
+        if self.check_if_out_of_stock(response) > 0:
+            item_characterstics['OutOfStock'] = "True"
+        return item_characterstics
+
+    def get_skus(self, response):
+        skus = dict()
+        key_part = self.parse_item_key_number(response)
+        item_characteristics = self.parse_item_characteristics(response)
+        sizes_of_item = self.get_available_sizes(response)
+        for size in sizes_of_item:
+            key = self.get_key(key_part, size)
+            item_characteristics['size'] = size
+            skus = {
+                key: item_characteristics
+            }
+        return skus
+
+    def get_key(self, key_part, size):
+        return "{0}_{1}".format(key_part, size)
+
+    def parse_url(self, response):
+        return response.url
+
+    def update_color_field(self, skus, response):
+        for value in skus.values():
+            value['colour'].append(self.parse_color(response))
+        return skus
+
+    def update_image_urls(self, image_urls, response):
+        image_urls.append(self.parse_image_urls(response))
+        return image_urls
