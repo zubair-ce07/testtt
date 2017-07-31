@@ -1,4 +1,4 @@
-""" Task 1 assigned my Hamza Gul.
+""" Task 1
 Looking into git, basic Python, and csv data
 manipulation using Python
 """
