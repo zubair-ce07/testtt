@@ -105,10 +105,18 @@ class Profile(models.Model):
     """
     model to store additional data about user
     """
+    MALE = 'Male'
+    FEMALE = 'Female'
+
+    GENDERS = (
+        (MALE, 'Male'),
+        (FEMALE, 'Female'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=30, blank=True, null=True)
     last_name = models.CharField(max_length=30, blank=True, null=True)
-    gender = models.CharField(max_length=30)
+    gender = models.CharField(max_length=30, choices=GENDERS)
     address = models.OneToOneField(Address)
     designation = models.ForeignKey(Designation)
 
