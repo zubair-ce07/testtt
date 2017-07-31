@@ -1,11 +1,12 @@
 from django.contrib import admin
 
 
-from .models import Profile
+from .models import Employee
 # Register your models here.
 
-class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'job_title', 'supervisor')
+
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'first_name', 'last_name')
 
 
-admin.site.register(Profile, ProfileAdmin)
+admin.site.register(Employee, EmployeeAdmin)

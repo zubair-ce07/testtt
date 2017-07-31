@@ -1,7 +1,6 @@
 import json
 
 from django.shortcuts import render
-from django.contrib.auth.models import User
 
 from rest_framework import viewsets
 from rest_framework import status
@@ -9,38 +8,31 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
-from .models import Profile
-from .serializers import UserSerializer, ProfileSerializer
+from .models import Employee
+from .serializers import EmployeeSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().select_related('profile')
-    serializer_class = UserSerializer
+class EmployeeViewSet(viewsets.ModelViewSet):
+    queryset = Employee.objects.all().select_related('user')
+    serializer_class = EmployeeSerializer
 
 
-class UserDirectsView(APIView):
+class EmployeeDirectsView(APIView):
     """
-    View to list the complete heirarchy of users starting from the current user
+    View to list the complete heirarchy of Employees starting from the current Employee
     """
-
-    def make_direct(self, user):
-        direct_dict = {}
-        direct_dict['username'] = user.username
-        direct_dict['job_title'] = user.profile.job_title
-        return direct_dict
 
     def get(self, request, pk, *args, **kwargs):
         """
-        Returns the directs of the current user
+        Returns the directs of the current Employee
         """
         response_dict = {
-            'user': "",
+            'Employee': "",
             'directs': []
         }
-        user = User.objects.get(pk=pk)
-        directs = User.objects.filter(profile__supervisor=user).all()
-        directs = list(map(lambda x: UserSerializer(x).data, directs))
-        response_dict['user'] = UserSerializer(user).data
+        employee = Employee.objects.get(pk=pk)
+        directs = Employee.objects.filter(reports_to=employee).all()
+        directs = list(map(lambda x: EmployeeSerializer(x).data, directs))
+        response_dict['Employee'] = EmployeeSerializer(employee).data
         response_dict['directs'] = directs
         return Response(response_dict, status=status.HTTP_200_OK)
-        pass
