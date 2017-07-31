@@ -22,6 +22,18 @@ class EmployeeTestCase(TestCase):
             'date_of_joining': '2017-6-5',
             'nationality': 'Pakistani'
         })
+        self.client.post('/employees/', {
+            'username': 'yasser',
+            'first_name': 'Yasser',
+            'last_name': 'Bashir',
+            'gender': 'M',
+            'date_of_birth': '1976-2-2',
+            'job_title': 'CEO',
+            'is_active': True,
+            'date_of_joining': '2010-6-5',
+            'nationality': 'Pakistani',
+            'reports_to': Employee.objects.get(username='osama').id,
+        })
 
     def test_user_fields_have_been_passed(self):
         """
@@ -34,6 +46,9 @@ class EmployeeTestCase(TestCase):
         self.assertEqual(emp.username, user.username)
         self.assertEqual(emp.first_name, user.first_name)
         self.assertEqual(emp.last_name, user.last_name)
-    
+
     def test_reports_to_field_is_working(self):
+        yasser = Employee.objects.get(username='yasser')
+        osama = Employee.objects.get(username='osama')
         
+        self.assertEqual(yasser.reports_to.username, osama.username)
