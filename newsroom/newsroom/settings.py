@@ -129,5 +129,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
-
+from newsroom.scrapy_settings import *
