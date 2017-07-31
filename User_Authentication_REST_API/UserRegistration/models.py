@@ -20,7 +20,7 @@ class CustomUserManager(BaseUserManager):
             extra_fields (extra parameters): Variable length arguments list for user fields
 
         Returns:
-            CustomUser: The Created user
+            User: The Created user
         """
         if not email:
             raise ValueError("Email Required")
@@ -40,7 +40,7 @@ class CustomUserManager(BaseUserManager):
             extra_fields (extra parameters): Variable length arguments list for user fields
 
         Returns:
-            CustomUser: The user created after calling _create_user()
+            User: The user created after calling _create_user()
         """
         return self._create_user(email, password, False, False, **extra_fields)
 
@@ -54,12 +54,12 @@ class CustomUserManager(BaseUserManager):
             extra_fields (extra parameters): Variable length arguments list for user fields
 
         Returns:
-            CustomUser: The user created after calling _create_user()
+            User: The user created after calling _create_user()
         """
         return self._create_user(email, password, True, True, **extra_fields)
 
 
-class CustomUser(AbstractBaseUser):
+class User(AbstractBaseUser):
     """
     Model for representing users
 
@@ -68,23 +68,16 @@ class CustomUser(AbstractBaseUser):
         first_name (str): First name of the user
         last_name (str): Last name of the user
         email (email field): Uniques identifier for the users
-        city (str): City where the user belongs
-        profile_picture (ImageField): The display picture of the user
-        height_field (int): Store the height of the profile picture uploaded. Default to 0
-        width_field (int): Store the width of the profile picture uploaded. Default to 0
         is_active (boolean): Field to keep the check whether the user is active or not. Defaults to True
         is_superuser (boolean): Field to keep the check whether the user is superuser or not. Defaults to True
         is_staff (boolean): Field to keep the check whether the user is staff member or not. Defaults to True
     """
-    username = models.CharField(max_length=30)
+    username = models.CharField(max_length=30, unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     email = models.EmailField(unique=True)
-    city = models.CharField(max_length=20)
-    profile_picture = models.ImageField(upload_to='profile_picture', blank=True, default='default.png',
-                                        width_field="width_field", height_field="height_field")
-    height_field = models.IntegerField(default=0)
-    width_field = models.IntegerField(default=0)
+    profile_picture = models.ImageField(upload_to='profile_pic', default='default.png')
+    city = models.CharField(max_length=15)
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
@@ -120,12 +113,12 @@ class Task(models.Model):
     Model to represent the tasks assigned to the users
 
     Attributes:
-        user (CustomUser): Custom user object to which the tasks are assigned
+        user (User): Custom user object to which the tasks are assigned
         name (str): The unique name of the task acting as an identifier
         due_date (DateField): The due date for the task
         status (Boolean): The field representing the status of the task (complete or incomplete)
     """
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=20, unique=True)
     dated = models.DateField()
     status = models.BooleanField(default=False)

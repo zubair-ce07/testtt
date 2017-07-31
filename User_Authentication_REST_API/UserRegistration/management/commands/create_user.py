@@ -2,7 +2,7 @@ import getpass
 
 from django.contrib.auth.hashers import make_password
 from django.core.management.base import BaseCommand, CommandError
-from UserRegistration.models import CustomUser
+from UserRegistration.models import User
 
 
 class Command(BaseCommand):
@@ -15,11 +15,11 @@ class Command(BaseCommand):
         count = options['count']
         users = []
         for user_number in range(count):
-            user = CustomUser(first_name='User%dFirstName' % user_number, last_name='User%dLastName' % user_number,
-                              username='user%d' % user_number, email='user%d@gmail.com' % user_number,
-                              password=make_password("asdasdasd"), city='Lhr', is_active=True)
+            user = User(first_name='User%dFirstName' % user_number, last_name='User%dLastName' % user_number,
+                        username='user%d' % user_number, email='user%d@gmail.com' % user_number,
+                        password=make_password("asdasdasd"), city='Lhr', is_active=True)
             users.append(user)
-        CustomUser.objects.bulk_create(users)
+        User.objects.bulk_create(users)
         # from pip._vendor.distlib.compat import raw_input
         # email = self.check_email_contains(raw_input("Email: "), "@.")
         # password = getpass.getpass('Password: ')

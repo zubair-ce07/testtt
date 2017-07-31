@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CustomUser, Task
+from .models import User, Task
 
 
 class CustomUserAdmin(admin.ModelAdmin):
@@ -8,5 +8,5 @@ class CustomUserAdmin(admin.ModelAdmin):
     search_fields = ('username', 'first_name', 'last_name')
 
 
-admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(User, CustomUserAdmin)
 admin.site.register(Task)

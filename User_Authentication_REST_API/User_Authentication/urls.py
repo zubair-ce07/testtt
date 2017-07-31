@@ -14,5 +14,4 @@ urlpatterns = [
     url(r'^apicall/', include("rest_api.urls")),
     url(r'^$', RedirectView.as_view(pattern_name='users:login', permanent=False)),
     url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^cinescore/', include("cinescore_rest_api.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

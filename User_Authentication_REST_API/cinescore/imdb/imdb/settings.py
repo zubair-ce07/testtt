@@ -90,10 +90,10 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 import sys
-sys.path.append('/home/faizan/Django_projects/movie_rating_website')
+sys.path.append('/home/faizan/PycharmProjects/weatherman/the-lab/User_Authentication_REST_API')
 
 
 import os
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'movie_rating_website.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'User_Authentication.settings')
 django.setup()

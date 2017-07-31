@@ -11,7 +11,7 @@ from django.views.generic import (FormView, ListView, RedirectView, UpdateView,
 
 from .forms import (AddTaskForm, AddUserTaskForm, CustomUserSignupForm,
                     LoginForm, UpdateProfileForm, UpdateTaskForm)
-from .models import CustomUser, Task
+from .models import User, Task
 
 
 class ProfileView(FormView):
@@ -46,12 +46,12 @@ class SignUpView(View):
             password = form.cleaned_data["password1"]
             city = form.cleaned_data["city"]
             profile_picture = form.cleaned_data["profile_picture"]
-            if CustomUser.objects.filter(email=email).exists():
+            if User.objects.filter(email=email).exists():
                 error = True
                 return render(request, 'UserRegistration/signup.html', {'error': error, 'form': form})
-            user = CustomUser.objects.create_user(username=username, email=email, password=password,
-                                                  first_name=first_name, last_name=last_name, city=city,
-                                                  profile_picture=profile_picture)
+            user = User.objects.create_user(username=username, email=email, password=password,
+                                            first_name=first_name, last_name=last_name, city=city,
+                                            profile_picture=profile_picture)
             return redirect('users:login')
         return render(request, 'UserRegistration/signup.html', {'form': form})
 
@@ -71,7 +71,7 @@ class LoginView(View):
         if form.is_valid():
             email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
-            user, created = CustomUser.objects.get_or_create(email=email, defaults={'username': 'User Name',
+            user, created = User.objects.get_or_create(email=email, defaults={'username': 'User Name',
                                                                                     'first_name': 'First Name'})
             if created:
                 user.set_password(password)

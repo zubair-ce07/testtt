@@ -5,17 +5,17 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 from cinescore.models import Movie, Category, Rating, Website
-from decimal import Decimal
 
 
 class ImdbPipeline(object):
     def process_item(self, item, spider):
         categories = []
-        # object, created = Category.objects.get_or_create(category_name="Action")
         for category in item['categories']:
             obj, created = Category.objects.get_or_create(category_name=category)
+            import pdb; pdb.set_trace()
             categories.append(obj)
-
+        import pdb;
+        pdb.set_trace()
         content_rating = item['content_rating']
         poster = item['poster']
         release_date = item['release_date'] or "Unknown"

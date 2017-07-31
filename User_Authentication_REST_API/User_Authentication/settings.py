@@ -26,11 +26,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'UserRegistration.apps.UserregistrationConfig',
+    'cinescore.apps.CinescoreConfig',
     'rest_framework',
     'rest_framework.authtoken',
 
 ]
-AUTH_USER_MODEL = "UserRegistration.CustomUser"
+AUTH_USER_MODEL = "UserRegistration.User"
 AUTHENTICATION_BACKENDS = {'UserRegistration.backend.CustomUserAuthentication'}
 
 MIDDLEWARE = [
@@ -70,8 +71,12 @@ WSGI_APPLICATION = 'User_Authentication.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '../../customUser.db',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'cinescoree',
+        'USER': 'faizan',
+        'PASSWORD': 'asdasdasd',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
@@ -123,6 +128,6 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = '../../media_pic'
+# MEDIA_ROOT = '../../media_pic'
 
 LOGIN_URL = '/users/login'

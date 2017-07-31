@@ -1,65 +1,8 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
 from rest_framework.authtoken.models import Token
 from django.db.models.signals import post_save
 from django.conf import settings
-
-
-class UserManager(BaseUserManager):
-    def _create_user(self, email, password, is_staff, is_superuser, **extra_fields):
-        if not email:
-            raise ValueError("Email Required")
-        email = self.normalize_email(email)
-        user = self.model(email=email, is_active=True, is_staff=is_staff, is_superuser=is_superuser, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_user(self, email, password, **extra_fields):
-        return self._create_user(email, password, False, False, **extra_fields)
-
-    def create_superuser(self, email, password, **extra_fields):
-        return self._create_user(email, password, True, True, **extra_fields)
-
-    def get_logged_in_user(self, email=None, username=None):
-        pass
-
-
-class User(AbstractBaseUser):
-    username = models.CharField(max_length=30, unique=True)
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
-    email = models.EmailField(unique=True)
-
-    is_active = models.BooleanField(default=True)
-    is_superuser = models.BooleanField(default=False)
-    is_staff = models.BooleanField(default=False)
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-
-    objects = UserManager()
-
-    class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
-
-    def get_full_name(self):
-        return "{} {}".format(self.first_name, self.last_name)
-
-    def get_username(self):
-        return self.username
-
-    def has_perm(self, perm, obj=None):
-        return True
-
-    def has_module_perms(self, app_label):
-        return True
-
-    def get_short_name(self):
-        return self.first_name
+from User_Authentication import settings
 
 
 class Category(models.Model):
@@ -101,7 +44,7 @@ class Rating(models.Model):
 
 
 class UserRating(models.Model):
-    user = models.ManyToManyField(User)
+    user = models.ManyToManyField(settings.AUTH_USER_MODEL)
     movie = models.ManyToManyField(Movie)
     rating = models.IntegerField()
 
@@ -110,12 +53,6 @@ class UserRating(models.Model):
 
 
 class Favorites(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True)
     movies = models.ManyToManyField(Movie)
 
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    """Creates Token for each new user created"""
-    if created:
-        Token.objects.create(user=instance)
