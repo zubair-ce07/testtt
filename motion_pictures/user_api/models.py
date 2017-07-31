@@ -53,24 +53,42 @@ class User(AbstractBaseUser):
     Model to store user's details
     """
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=30, unique=True, blank=True, null=True)
+    phone = models.CharField(max_length=30, unique=True)
     is_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     objects = CustomUserManager()
 
     def get_short_name(self):
-        return self.profile.last_name
+        return self.profile.first_name if self.profile else None
 
     def get_full_name(self):
-        return '{first} {last}'.format(first=self.profile.first_name, last=self.profile.last_name)
+        if self.profile:
+            full_name = '{first} {last}'.format(first=self.profile.first_name, last=self.profile.last_name)
+        else:
+            full_name = None
+        return full_name
 
 
 class Designation(models.Model):
     """
     Model class to store job titles as designations
     """
-    job_title = models.CharField(max_length=30, unique=True)
+    CHIEF_EXECUTIVE_OFFICER = 'CEO'
+    SOFTWARE_ENGINEER = 'SE'
+    SENIOR_SOFTWARE_ENGINEER = 'SSE'
+    INTERN = 'I'
+    CHIEF_TECHNOLOGY_OFFICER = 'CTO'
+
+    JOB_TITLES = (
+        (CHIEF_EXECUTIVE_OFFICER, 'Chief Executive Officer'),
+        (SOFTWARE_ENGINEER, 'Software Engineer'),
+        (SENIOR_SOFTWARE_ENGINEER, 'Senior Software Engineer'),
+        (INTERN, 'Intern'),
+        (CHIEF_TECHNOLOGY_OFFICER, 'Chief Technology Officer'),
+    )
+
+    job_title = models.CharField(max_length=30, choices=JOB_TITLES, unique=True)
 
 
 class Address(models.Model):

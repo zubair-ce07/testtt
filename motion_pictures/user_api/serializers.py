@@ -34,6 +34,22 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ('first_name', 'last_name', 'gender', 'designation', 'address',)
 
+    def create(self, validated_data):
+        address = AddressSerializer(data=validated_data.pop('address'))
+        address.is_valid(raise_exception=True)
+        address.save()
+
+        designation, created = Designation.objects.get_or_create(**validated_data.pop('designation'))
+
+        profile = Profile.objects.create(
+            user=validated_data.pop('user'),
+            address=address,
+            designation=designation,
+            **validated_data
+        )
+
+        return profile
+
     def update(self, instance, validated_data):
         # if designation is in update request data then sets with new instance
         try:
@@ -48,9 +64,14 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.save()
 
         # saving updates in address
-        serializer = AddressSerializer(instance.address, validated_data.get('address', {}), partial=self.partial)
-        if serializer.is_valid():
-            serializer.save()
+        try:
+            address = instance.address
+        except Address.DoesNotExist:
+            address = None
+
+        serializer = AddressSerializer(address, validated_data.get('address', {}), partial=self.partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
         return instance
 
@@ -62,25 +83,29 @@ class UserSerializer(serializers.ModelSerializer):
     """
     profile = ProfileSerializer()
     password = serializers.CharField(write_only=True)
-    token = serializers.ReadOnlyField(source='auth_token.key')
+    token = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('id', 'phone', 'email', 'profile', 'password', 'token',)
 
-    def to_representation(self, instance):
-        # this makes sure that user can only see his own token.
-        representation = super(UserSerializer, self).to_representation(instance)
-        if instance != self.context['request'].user:
-            representation.pop('token')
-        return representation
+    def get_token(self, obj):
+        """
+        Checks if requesting user is same as serializing object
+        and if are same returns key of token
+        Arguments:
+            obj (User): user being serialized
+        Returns:
+            token_key (str): key of token associated to user
+        """
+        req_user = self.context['request'].user
+        return None if obj != req_user else obj.auth_token.key
 
     def create(self, validated_data):
-        profile = validated_data.pop('profile')
+        serializer = ProfileSerializer(data=validated_data.pop('profile'))
+        serializer.is_valid(raise_exception=True)
         user = User.objects.create_user(**validated_data)
-        address = Address.objects.create(**profile.pop('address'))
-        designation, created = Designation.objects.get_or_create(**profile.pop('designation'))
-        profile = Profile.objects.create(user=user, address=address, designation=designation, **profile)
+        serializer.save(user=user)
         return user
 
     def update(self, instance, validated_data):
@@ -92,8 +117,13 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
 
         # saving changes to profile model for the user
-        serializer = ProfileSerializer(instance.profile, validated_data.get('profile', {}), partial=self.partial)
-        if serializer.is_valid():
-            serializer.save()
+        try:
+            profile = instance.profile
+        except Profile.DoesNotExist:
+            profile = None
+
+        serializer = ProfileSerializer(profile, validated_data.get('profile', {}), partial=self.partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=instance)
 
         return instance

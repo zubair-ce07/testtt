@@ -9,8 +9,8 @@ from user_api.serializers import UserSerializer
 
 class ObtainAuthToken(APIView):
     """
-    API endpoint to obtain token by posting email and
-    password, to use as authorization header
+    API endpoint to obtain token by posting email or phone as
+    user identifier and password, to use as authorization header
     """
     def post(self, request):
         """
@@ -23,22 +23,32 @@ class ObtainAuthToken(APIView):
         Raises:
             AuthenticationFailed: If user can not be verified for some reason
         """
+
         try:
-            email_or_phone = request.data['user']
-            password = request.data['password']
-            user = authenticate(email_or_phone=email_or_phone, password=password)
+            email = request.data['email']
         except KeyError:
-            msg = 'Email or Phone (as user) and Password are required.'
-            raise exceptions.AuthenticationFailed(msg, code='authorization')
+            email = None
+
+        try:
+            phone = request.data['phone']
+        except KeyError:
+            phone = None
+
+        if not (email or phone):
+            raise exceptions.ParseError('Email-Password or Phone-Password are required.')
+        try:
+            password = request.data['password']
+            user = authenticate(email_or_phone=email or phone, password=password)
+        except KeyError:
+            raise exceptions.ParseError('Password is required.')
 
         if not user:
-            msg = 'Unable to log in with provided credentials.'
-            raise exceptions.AuthenticationFailed(msg, code='authorization')
+            raise exceptions.AuthenticationFailed('Unable to log in with provided credentials.')
 
         if not user.is_active:
-            msg = 'User\'s account is not active.'
-            raise exceptions.AuthenticationFailed(msg, code='authorization')
+            raise exceptions.AuthenticationFailed('User\'s account is not active.', code='authorization')
 
+        # setting user as it is authenticated and serializer will use it serialize token
         request.user = user
         return Response(UserSerializer(user, context={'request': request}).data)
 
