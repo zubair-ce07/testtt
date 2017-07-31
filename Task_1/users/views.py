@@ -3,20 +3,16 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, Http404
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic.edit import View
 from django.db import transaction
-
 
 from users.decorators import login_required
 from users.forms.edit_form import EditForm
 from users.forms.login_form import LoginForm
 from users.forms.signup_form import SignupForm
 from users.models import UserProfile
-
-
-
 
 
 @login_required
@@ -59,9 +55,9 @@ def SignUpView(request):
                 country=form.cleaned_data.get('country', None),
                 address=form.cleaned_data.get('address', None),
                 image=request.FILES.get('image', None))
-            request.session['userid'] = str(user_profile.user.id)
             login(request, user_profile.user)
-            return HttpResponseRedirect(redirect_to=reverse('users:details'))
+            request.session['userid'] = str(user_profile.user.id)
+            return redirect('users:details')
     return render(request, 'users/signup.html', {'form': form})
 
 

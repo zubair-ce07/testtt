@@ -26,6 +26,9 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+    def get_user(self):
+        return self.user
+
     def __init__(self, *args, **kwargs):
         if kwargs.get('load_from_file'):
             kwargs['image'] = self.make_image_object(str(kwargs.get('image')))

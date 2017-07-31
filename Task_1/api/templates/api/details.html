@@ -1,19 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>{% block title %} User Details {% endblock %}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="shortcut icon" href="{% static 'icon.ico' %}" type="image/x-icon">
-</head>
-<body style="padding-top: 10px">
+{% extends "api/base.html" %}
+{% block title %}
+    {{ user.get_full_name }}
+{% endblock title %}
+{% block sidebar %}
+    {{ block.super }}
+    <li><a href="{% url 'api:edit' %}">Edit</a></li>
+{% endblock %}
+{% block heading %}
+    User Details
+{% endblock %}
 {% block content %}
     <h2>{{ user.get_full_name }}</h2>
+    <div>
+        {% if user.userprofile.image %}
+            <img class="dp" src="/{{ user.userprofile.image.url }}"/>
+        {% endif %}
+    </div>
     <div>
         <ul>
             <li>Username: {{ user.username }}</li>
@@ -27,8 +29,7 @@
                 N/A {% endif %}</li>
             <li>Phone #: {% if user.userprofile.phone_number %} {{ user.userprofile.phone_number }} {% else %}
                 N/A {% endif %}</li>
+
         </ul>
     </div>
-{% endblock %}
-</body>
-</html>
+{% endblock content %}

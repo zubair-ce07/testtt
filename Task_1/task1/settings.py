@@ -142,3 +142,13 @@ COUNTRIES_FIRST = ['US', 'GB', 'PK']
 COUNTRIES_FIRST_BREAK = '--------'
 
 COUNTRIES_FIRST_SORT = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
