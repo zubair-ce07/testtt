@@ -11,8 +11,8 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.summarizers.lsa import LsaSummarizer as Summarizer
 from sumy.utils import get_stop_words
 
-from news.models import Category, News, NewsSource
-
+from news.models import News, NewsSource
+from categories.models import Category
 
 def logger_configuration():
     logger = logging.getLogger()
@@ -34,7 +34,7 @@ class NewsScrappersPipeline(object):
         error_message = '{} : {}'
         try:
             category, created = Category.objects.get_or_create(name=item.get('category','un-identified').lower())
-            news_source, created = NewsSource.objects.get_or_create(name=item.get('reporter', 'unknown').lower())
+            news_source, created = NewsSource.objects.get_or_create(name=item.get('news_source', 'un-identified').lower())
             News.objects.update_or_create(title=item['title'],
                                           source_url=item['source_url'],
                                           image_url=item['image_url'],

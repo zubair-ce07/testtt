@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from news.models import Category
+from categories.models import Category
 
 
 class UserInterest(models.Model):

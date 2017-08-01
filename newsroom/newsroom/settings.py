@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 ]
 
 CUSTOM_APPS = [
+    'categories.apps.CategoriesConfig',
     'news.apps.NewsConfig',
     'user.apps.UserConfig',
 ]

@@ -1,5 +1,5 @@
 from django.db import models
-
+from categories.models import Category
 
 class Newspaper(models.Model):
     name = models.CharField(max_length=50)
@@ -12,16 +12,6 @@ class Newspaper(models.Model):
 class Scrapper(models.Model):
     name = models.CharField(unique=True, max_length=50)
     newspaper = models.ForeignKey(Newspaper, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
-
-
-class Category(models.Model):
-    name = models.CharField(unique=True, max_length=50)
-
-    class Meta:
-        verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.name
