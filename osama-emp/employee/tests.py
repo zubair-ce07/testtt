@@ -47,11 +47,3 @@ class EmployeeTestCase(TestCase):
         self.assertEqual(emp.username, user.username)
         self.assertEqual(emp.first_name, user.first_name)
         self.assertEqual(emp.last_name, user.last_name)
-
-    def test_reports_to_field_is_working(self):
-        """
-        Tests whether the reports_to field has the correct value
-        """
-        yasser = Employee.objects.get(username='yasser')
-        osama = Employee.objects.get(username='osama')
-        # self.assertEqual(yasser.reports_to, )

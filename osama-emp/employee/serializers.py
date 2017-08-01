@@ -20,8 +20,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ('username', 'profile', 'job_title',
-                  'reports_to', 'directs',)
+        fields = ('username', 'profile', 'first_name', 'last_name', 'gender',
+                  'date_of_birth', 'date_of_joining', 'job_title',
+                  'nationality', 'reports_to', 'directs',)
 
     def create(self, validated_data):
         """
@@ -35,20 +36,3 @@ class EmployeeSerializer(serializers.ModelSerializer):
         }
         user = User.objects.create(**user_data)
         return Employee.objects.create(user=user, **validated_data)
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-    profile = serializers.HyperlinkedIdentityField(
-        view_name='employee-detail', read_only=True,
-    )
-    directs = serializers.HyperlinkedIdentityField(
-        view_name='directs', format='json')
-    reports_to = serializers.HyperlinkedRelatedField(
-        view_name='employee-detail', read_only=True,
-    )
-
-    class Meta:
-        model = Employee
-        fields = ('username', 'profile', 'first_name', 'last_name', 'gender',
-                  'date_of_birth', 'date_of_joining', 'job_title',
-                  'nationality', 'reports_to', 'directs',)
