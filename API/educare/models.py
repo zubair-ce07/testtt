@@ -9,6 +9,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -97,6 +98,27 @@ class Student(User):
 
     grade = models.CharField(choices=GRADE_CHOICES, max_length=10)
     objects = CustomUserManager()
+
+
+class Feedback(models.Model):
+    tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    text = models.TextField(max_length=200)
+    rating = models.FloatField(validators=[MinValueValidator(0.0), MaxValueValidator(5.0)], default=0.0)
+
+    def __unicode__(self):
+        return 'Text: %s  Rating: %f Given by %s' % (self.text, self.rating, self.student.get_full_name())
+
+
+class Invite(models.Model):
+    accepted = models.BooleanField(default=False)
+    tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    message = models.TextField(max_length=200)
+    accepting_time = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return '%s Sent by %s' % (self.message, self.tutor.get_full_name())
 
 
 @receiver(post_save, sender=Student)

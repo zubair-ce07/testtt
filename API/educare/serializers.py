@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
-from .models import User, Tutor, Student
+from .models import User, Tutor, Student, Feedback, Invite
 from django.db.models import Q
 
 
@@ -106,9 +106,55 @@ class StudentProfileSerializer(UserSerializer):
 
 
 class TutorProfileSerializer(UserSerializer):
+
     class Meta(UserSerializer.Meta):
         model = Tutor
         fields = ('username', 'subjects', 'education', 'phone_number', ) + UserSerializer.Meta.fields
 
     def update(self, instance, validated_data):
         return self.set_user_attributes(instance, validated_data, False)
+
+
+class CreateFeedbackSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Feedback
+        fields = ('text', 'rating')
+
+
+class DetailFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ('text', 'rating', 'student')
+
+
+class TutorFeedbackSerializer(serializers.ModelSerializer):
+    feedback_set = DetailFeedbackSerializer(many=True)
+
+    class Meta:
+        model = Tutor
+        fields = ('feedback_set',)
+
+
+class CreateInviteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invite
+        fields = ('message',)
+
+
+class DetailInviteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Invite
+        fields = ('message', 'tutor')
+
+
+class StudentInviteSerializer(serializers.ModelSerializer):
+    invite_set = DetailInviteSerializer(many=True)
+
+    class Meta:
+        model = Student
+        fields = ('invite_set',)
+
+
+

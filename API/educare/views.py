@@ -6,6 +6,10 @@ from educare.serializers import (
     StudentSerializer,
     TutorSerializer,
     StudentProfileSerializer,
+    CreateFeedbackSerializer,
+    TutorFeedbackSerializer,
+    CreateInviteSerializer,
+    StudentInviteSerializer,
     )
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
@@ -20,10 +24,12 @@ from rest_framework.generics import (
     ListAPIView,
     CreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    RetrieveDestroyAPIView,
     )
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import User, Student, Tutor
-from .permissions import IsOwner, IsStudent, IsTutor
+from .models import User, Student, Tutor, Feedback, Invite
+from .permissions import IsOwner, IsStudent, IsTutor, CanGiveFeedback
+from django.utils.timezone import now
 
 
 class UserView(APIView):
@@ -114,7 +120,7 @@ class UserProfileView(UserView, RetrieveAPIView):
 
 
 class TutorListView(ListAPIView):
-    permission_classes = (IsStudent, permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, IsStudent)
     serializer_class = TutorProfileSerializer
     queryset = Tutor.objects.all()
     filter_backends = (DjangoFilterBackend,)
@@ -127,3 +133,72 @@ class StudentListView(ListAPIView):
     queryset = Student.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('grade', )
+
+
+class CreateFeedbackView(CreateAPIView):
+    permission_classes = (permissions.IsAuthenticated, IsStudent, CanGiveFeedback,)
+    serializer_class = CreateFeedbackSerializer
+
+    def get(self, request, *args, **kwargs):
+        username = self.kwargs["username"]
+        student_object = get_object_or_404(Tutor, username=username)
+        self.check_object_permissions(self.request, student_object)
+        return Response('You have the access to give feedback', status=HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        username = self.kwargs["username"]
+        tutor_object = get_object_or_404(Tutor, username=username)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        kwargs = {'text': serializer.data['text'], 'rating':serializer.data['rating'], 'tutor_id': tutor_object.id,
+                  'student_id': request.user.id}
+        feedback_object = Feedback.objects.create(**kwargs)
+        return Response('feedback successfully saved!', status=HTTP_200_OK)
+
+
+class ListFeedbackView(RetrieveAPIView):
+    serializer_class = TutorFeedbackSerializer
+    lookup_field = 'username'
+    queryset = Tutor.objects.all()
+
+
+class CreateInviteView(CreateAPIView):
+    permission_classes = (permissions.IsAuthenticated, IsTutor)
+    serializer_class = CreateInviteSerializer
+    queryset = Invite.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        username = self.kwargs["username"]
+        student_object = get_object_or_404(Student, username=username)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        kwargs = {'message': serializer.data['message'], 'tutor_id': request.user.id, 'student_id': student_object.id}
+        invite_object = Invite.objects.create(**kwargs)
+        return Response('Invite successfully sent!', status=HTTP_200_OK)
+
+
+class ListInviteView(RetrieveAPIView):
+    permission_classes = (permissions.IsAuthenticated, IsOwner)
+    serializer_class = StudentInviteSerializer
+    lookup_field = 'username'
+    queryset = Student.objects.all()
+
+
+class AcceptInviteView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        primary_key = self.kwargs["pk"]
+        invite_object = get_object_or_404(Invite, id=primary_key)
+        invite_object.accepted = True
+        invite_object.accepting_time = now()
+        invite_object.save()
+        return Response('Invitation successfully accepted. You can give feedback to this tutor after after 1 week',
+                        status=HTTP_200_OK)
+
+
+class DeleteInviteView(RetrieveDestroyAPIView):
+    serializer_class = CreateInviteSerializer
+    lookup_field = 'pk'
+    queryset = Invite.objects.all()
+
+
