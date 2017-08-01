@@ -6,14 +6,19 @@ from .models import Employee
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the employee class
+    """
+    directs = serializers.HyperlinkedIdentityField(
+        view_name='directs', format='json')
 
     class Meta:
         model = Employee
         fields = ('username', 'first_name', 'last_name', 'gender',
                   'date_of_birth', 'date_of_joining', 'job_title',
-                  'nationality', 'reports_to',)
+                  'nationality', 'reports_to', 'directs')
 
-    def create(self, validated_data, *args, **kwargs):
+    def create(self, validated_data):
         """
         Create method override that ensures that a django User model is created
         alongside with each employee

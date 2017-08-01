@@ -27,12 +27,13 @@ class EmployeeDirectsView(APIView):
         Returns the directs of the current Employee
         """
         response_dict = {
-            'Employee': "",
             'directs': []
         }
         employee = Employee.objects.get(pk=pk)
         directs = Employee.objects.filter(reports_to=employee).all()
-        directs = list(map(lambda x: EmployeeSerializer(x).data, directs))
-        response_dict['Employee'] = EmployeeSerializer(employee).data
+        directs = list(map(lambda x: EmployeeSerializer(
+            x, context={'request': request}).data, directs))
+        # response_dict['Employee'] = EmployeeSerializer(
+        #     employee, context={'request': request}).data
         response_dict['directs'] = directs
         return Response(response_dict, status=status.HTTP_200_OK)
