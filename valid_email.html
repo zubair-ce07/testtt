@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email</title>
+</head>
+<body>
+<input type="text" id='email' title="Email Address" value="email"/>
+<input type="button" onclick="validateEmail()" value="submit"/>
+<script>
+    function validateAtSign(emailAddress) {
+        var count_of_at = 0;
+        for (var index = 0; index < emailAddress.length; index++) {
+            if (emailAddress.charAt(index) === '@') {
+                count_of_at++;
+            }
+        }
+        return count_of_at === 1;
+    }
+
+    function haveDomain(emailAddress) {
+        return emailAddress.search("@") !== (emailAddress.length - 1);
+    }
+
+    function haveOnlyValidChar(emailAddress) {
+        var special_char = ".!#$%&'*+=?^_`{|}~-@";
+        for (var index = 0; index < emailAddress.length; index++) {
+            if (emailAddress.charAt(index) >= 'A' && emailAddress.charAt(index) <= 'Z')
+                continue;
+            if (emailAddress.charAt(index) >= 'a' && emailAddress.charAt(index) <= 'z')
+                continue;
+            if (emailAddress.charAt(index) >= '0' && emailAddress.charAt(index) <= '9')
+                continue;
+            if (special_char.search(emailAddress.charAt(index)) >= 0)
+                continue;
+            return false;
+        }
+        return true;
+    }
+
+    function validateEmail() {
+        var emailAddress = document.getElementById('email').value;
+        debugger;
+        if (!validateAtSign(emailAddress) || !haveDomain(emailAddress) || !haveOnlyValidChar(emailAddress))
+            alert("Invalid Email");
+        else
+            alert("Valid");
+    }
+
+    function validateEmailRe() {
+        var emailAddress = document.getElementById('email').value;
+        var re = new RegExp("[A-Za-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+=?^_`{|}~-]+)*" +
+            "@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?");
+        if (re.test(emailAddress))
+            alert("Valid Email");
+        else
+            alert("Invalid Email");
+    }
+
+</script>
+</body>
+</html>
