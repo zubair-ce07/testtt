@@ -12,17 +12,14 @@ class ImdbPipeline(object):
         categories = []
         for category in item['categories']:
             obj, created = Category.objects.get_or_create(category_name=category)
-            import pdb; pdb.set_trace()
             categories.append(obj)
-        import pdb;
-        pdb.set_trace()
         content_rating = item['content_rating']
         poster = item['poster']
         release_date = item['release_date'] or "Unknown"
         title = item['title']
         movie_id = item['movie_id']
-        movie = Movie.objects.create(movie_id=movie_id, title=title, content_rating=content_rating,
-                                     date_of_release=release_date, poster=poster)
+        movie, created = Movie.objects.get_or_create(movie_id=movie_id, title=title, content_rating=content_rating,
+                                                    date_of_release=release_date, poster=poster)
         movie.category.add(*categories)
 
         website_base_url = item['base_url']
@@ -30,7 +27,7 @@ class ImdbPipeline(object):
         rating = float(rating.strip(' "'))
         url = item['url']
         web, created = Website.objects.get_or_create(url=website_base_url, name=website_base_url.split(".")[1])
-        rating = Rating.objects.update_or_create(movie=movie, website_base_url=web,
-                                                 rating=rating, website_url=url)
+        rating = Rating.objects.update_or_create(movie=movie, provider_website=web,
+                                                 rating=rating, target_url=url)
         return item
 

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from UserRegistration.models import User, Task
-from cinescore.models import Movie, Category, Rating, Website, UserRating
+from cinescore.models import Movie, Category, Rating, Website, UserRating, Favorites
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -55,13 +55,12 @@ class WebsiteSerializer(serializers.ModelSerializer):
 
 
 class RatingSerializer(serializers.ModelSerializer):
-    movie = MovieSerializer()
-    website_base_url = WebsiteSerializer()
+    movie = MovieSerializer(read_only=True)
+    provider_website = WebsiteSerializer(read_only=True)
 
     class Meta:
         model = Rating
-        fields = ['movie', 'website_base_url', 'rating', 'website_url']
-        read_only_fields = '__all__'
+        fields = ['movie', 'provider_website', 'rating', 'target_url']
 
 
 class UserRatingSerializer(serializers.ModelSerializer):
@@ -75,7 +74,8 @@ class UserRatingSerializer(serializers.ModelSerializer):
 
 class FavouritesSerializer(serializers.ModelSerializer):
     user = UserSerializer()
-    movie = MovieSerializer(many=True)
+    movies = MovieSerializer(many=True)
 
     class Meta:
-        fields = ['user', 'movie']
+        model = Favorites
+        fields = ['user', 'movies']

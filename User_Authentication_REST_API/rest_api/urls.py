@@ -19,5 +19,7 @@ urlpatterns = [
     url(r'^movies/$', views.MovieListView.as_view(), name='movie-list'),
     url(r'^rate_movie/$', views.RateMovieView.as_view(), name='rate-movie'),
     url(r'^fav_movie/$', views.FavoriteMoviesView.as_view(), name='add-fav-movie'),
+    url(r'^list_fav/$', views.FavoriteMoviesListView.as_view(), name='add-fav-movie'),
+    url(r'^rating_list/$', views.RatingsListView.as_view(), name='add-fav-movie'),
     url(r'^', include(router.urls)),
 ]

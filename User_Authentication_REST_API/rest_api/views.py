@@ -1,4 +1,4 @@
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
@@ -6,9 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from UserRegistration.models import User, Task
-from .serializers import UsersTaskSerializer
+from .serializers import UsersTaskSerializer, RatingSerializer
 from .serializers import UserSerializer, MovieSerializer, FavouritesSerializer, UserRatingSerializer
-from cinescore.models import Movie, UserRating, Favorites
+from cinescore.models import Movie, UserRating, Favorites, Rating
 
 
 class UsersTaskListCreateView(generics.ListCreateAPIView):
@@ -134,18 +134,24 @@ class UserList(generics.CreateAPIView):
         serializer.save()
 
 
-class RateMovieView(generics.CreateAPIView):
+class RateMovieView(generics.ListCreateAPIView):
     serializer_class = UserRatingSerializer
     permission_classes = (IsAuthenticated,)
     authentication_classes = (TokenAuthentication,)
+
+    def get_queryset(self):
+        rated_movies = UserRating.objects.filter(user=self.request.user)
+        return UserRating.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         user = request.user
         movie = Movie.objects.get(movie_id=request.POST['movie_id'])
         rating = request.POST['rating']
-        user_rating = UserRating.objects.create(rating=rating)
-        user_rating.movie.add(movie)
-        user_rating.user.add(user)
+        user_rating = UserRating.objects.get(movie=movie, user=user)
+        user_rating.rating = float(rating)
+        user_rating.save()
+        user_rating_serializer = UserRatingSerializer(user_rating)
+        return Response(data=user_rating_serializer.data, status=status.HTTP_200_OK)
 
 
 class FavoriteMoviesView(generics.CreateAPIView):
@@ -161,7 +167,22 @@ class FavoriteMoviesView(generics.CreateAPIView):
         return Response(status=status.HTTP_201_CREATED)
 
 
+class FavoriteMoviesListView(generics.ListAPIView):
+    serializer_class = FavouritesSerializer
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (TokenAuthentication,)
+
+    def get_queryset(self):
+        return Favorites.objects.filter(user=self.request.user)
+
+
 class MovieListView(generics.ListAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
+    pagination_class = StandardResultsSetPagination
+
+
+class RatingsListView(generics.ListAPIView):
+    serializer_class = RatingSerializer
+    queryset = Rating.objects.all()
     pagination_class = StandardResultsSetPagination

@@ -14,9 +14,9 @@ class Category(models.Model):
 
 class Movie(models.Model):
     movie_id = models.CharField(max_length=12, unique=True)
-    category = models.ManyToManyField(Category, related_name='Movie')
+    category = models.ManyToManyField(Category, related_name='category')
     title = models.CharField(max_length=75)
-    date_of_release = models.DateField(max_length=12)
+    date_of_release = models.CharField(max_length=12)
     poster = models.URLField(max_length=400, null=True)
     content_rating = models.CharField(max_length=7)
     plot = models.TextField()
@@ -35,24 +35,31 @@ class Website(models.Model):
 
 class Rating(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    website_base_url = models.ForeignKey(Website, on_delete=models.CASCADE)
+    provider_website = models.ForeignKey(Website, on_delete=models.CASCADE)
     rating = models.DecimalField(max_digits=2, decimal_places=1)
-    website_url = models.URLField(max_length=200)
+    target_url = models.URLField(max_length=200)
 
     def __str__(self):
         return self.movie.title
 
 
 class UserRating(models.Model):
-    user = models.ManyToManyField(settings.AUTH_USER_MODEL)
-    movie = models.ManyToManyField(Movie)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     rating = models.IntegerField()
 
+    class Meta:
+        unique_together = (('user', 'movie'),)
+
     def __str__(self):
-        return str(self.rating)
+        return str(self.user.username)
 
 
 class Favorites(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True)
     movies = models.ManyToManyField(Movie)
+
+    def __str__(self):
+        return self.user.username
 
