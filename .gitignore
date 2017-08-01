@@ -58,3 +58,6 @@ target/
 
 #react
 reactassignment/node_modules/*
+
+#vscode
+.vscode/*
