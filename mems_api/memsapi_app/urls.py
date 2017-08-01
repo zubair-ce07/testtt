@@ -2,7 +2,7 @@ from django.conf.urls import url, include
 from rest_framework import routers
 from memsapi_app.views import UserListView, UserView, MemoryListView, MemoryView, \
                               ActivityListView, ActivityView, CategoryListView, CategoryView
-
+from rest_framework.authtoken import views
 
 router = routers.DefaultRouter()
 
@@ -18,5 +18,6 @@ urlpatterns = [
     url(r'^categories/$', CategoryListView.as_view()),
     url(r'^category/(?P<pk>[0-9]+)/$', CategoryView.as_view()),
     url(r'^activities/$', ActivityListView.as_view()),
-    url(r'^activity/(?P<pk>[0-9]+)/$', ActivityView.as_view())
+    url(r'^activity/(?P<pk>[0-9]+)/$', ActivityView.as_view()),
+    url(r'^get-api-token/$' , views.obtain_auth_token)
 ]

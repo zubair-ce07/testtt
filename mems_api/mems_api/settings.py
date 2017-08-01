@@ -9,10 +9,8 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
 import os
 import pymysql
-
 pymysql.install_as_MySQLdb()
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +25,7 @@ SECRET_KEY = '$(esm+*pl!j3n13=5^az+3um87v_wc2xy4c*i@jo#h#pqac2t='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -40,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'memsapi_app'
+    'memsapi_app',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -87,7 +86,14 @@ DATABASES = {
     }
 }
 
-
+REST_FRAMEWORK = {
+'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+                                                        # it was IsAdminUser
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'PAGINATE_BY': 10
+}
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
@@ -107,6 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+UserModel = 'memsapi_app.models.User'
+
+AUTH_USER_MODEL = 'memsapi_app.User'
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 

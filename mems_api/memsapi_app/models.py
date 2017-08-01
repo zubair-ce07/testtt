@@ -2,7 +2,11 @@ from django.db import models
 from datetime import datetime
 from django.contrib.auth.models import  AbstractBaseUser, BaseUserManager
 from django.utils import timezone
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.hashers import make_password
 
 class PrivateMemoryManager(models.Manager):
     def get_queryset(self):
@@ -74,6 +78,12 @@ class User(AbstractBaseUser):
         ),
     )
 
+    def save(self, *args, **kwargs):
+        if self.password:
+            self.password = make_password(self.password)
+        super(User, self).save(*args, **kwargs)
+
+
     def has_perm(self, arg):
         if self.is_superuser:
             return True
@@ -120,4 +130,10 @@ class Activity(models.Model):
     user = models.ForeignKey(User, related_name='activities', on_delete=models.CASCADE)
     memory_title = models.CharField(max_length=200)
     datetime = models.DateTimeField(default=timezone.now())
-    activity = models.CharField(choices=(('Add', 'Add'), ('Edit', 'Edit'), ('Delete', 'Delete')), max_length=6)
+    activity = models.CharField(choices=(('Add', 'Add'), ('Edit', 'Edit'), ('Delete', 'Delete')),
+                                max_length=6)
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
