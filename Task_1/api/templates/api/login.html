@@ -13,11 +13,27 @@
 
     <div class="col-md-4 col-md-offset-3">
         {% load rest_framework %}
-        <form action="" method="POST">
+        <form id="loginForm" action="" method="POST">
             {% csrf_token %}
             {% render_form serializer %}
-            <input type="submit" value="Login" class="btn btn-primary">
+            <input id="submitButton" type="submit" value="Login" class="btn btn-primary">
         </form>
     </div>
+    <script
+            src="http://code.jquery.com/jquery-3.2.1.js"
+            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+            crossorigin="anonymous"></script>
+    <script>
+        $('#submitButton').click(function (evt) {
+            var form = $('#loginForm');
+            var credentials = {
+                username: $('input[name="username"]').val(),
+                password: $('input[name="password"]').val()
+            };
+            $.post("http://localhost:8000/api/login2/", credentials, function (auth) {
+                $.cookie("token", auth.token, {path: '', domain: '', secure: true});
 
+            });
+        })
+    </script>
 {% endblock content %}

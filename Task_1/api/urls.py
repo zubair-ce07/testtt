@@ -13,6 +13,6 @@ urlpatterns = [
     url(r'^signup/$', views.SignupView.as_view(), name='signup'),
     url(r'^login/$', views.LoginView.as_view(), name='login'),
     url(r'^logout/$', views.LogoutView.as_view(), name='logout'),
-    # url(r'^login/', obtain_jwt_token),
+    url(r'^login2/', obtain_jwt_token),
     url(r'^$', views.api_root),
 ]

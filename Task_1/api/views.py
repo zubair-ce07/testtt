@@ -7,13 +7,16 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.decorators import api_view
 from rest_framework.validators import ValidationError
 from rest_framework.permissions import AllowAny
-from rest_framework_jwt.views import ObtainJSONWebToken
+from rest_framework_jwt.views import JSONWebTokenAPIView
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework.reverse import reverse
+from rest_framework.request import Request
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from django.http import QueryDict
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.auth import login, authenticate, logout
 
@@ -21,6 +24,17 @@ from django.db import transaction
 
 from users.models import UserProfile
 from api.serializers import UserSerializer, UserProfileSerializer, SignupSerializer, UserListSerializer
+
+
+def get_token(request):
+    req_data = {'csrfmiddlewaretoken': request.data.get('csrfmiddlewaretoken'),
+                'username': request.data.get('username'),
+                'password': request.data.get('password1')}
+    data = QueryDict('', mutable=True)
+    data.update(req_data)
+    token = JSONWebTokenSerializer(data=data)
+    if token.is_valid():
+        return token.validated_data.get('token')
 
 
 @api_view(['GET'])
@@ -32,11 +46,12 @@ def api_root(request, format=None):
 
 class UserList(APIView):
     def get(self, request, format=None):
-        users = UserProfile.objects.get(pk=request.user.use)
+        users = UserProfile.objects.all()
         serializer = UserListSerializer(users, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, format=None):
+        request.META['Authorization'] = 'JWT ' + get_token(request)
         serializer = UserListSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -110,10 +125,10 @@ class SignupView(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            user_profile = serializer.save()
-            login(request, user_profile.user)
-            request.session['userid'] = str(user_profile.user.id)
-            return redirect('api:details')
+            serializer.save()
+            response = redirect('api:details')
+            response.set_cookie('token', get_token(request))
+            return response
         return Response({'serializer': serializer})
 
 
@@ -123,6 +138,7 @@ class LoginView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
+
         serializer = UserSerializer()
         return Response({'serializer': serializer})
 
@@ -132,16 +148,14 @@ class LoginView(APIView):
             user = authenticate(username=serializer.validated_data.get('username'),
                                 password=serializer.validated_data.get('password'))
             if user and user.is_active:
-                # ojwt = JSONWebTokenSerializer(instance=user, data=request.data)
-                # if ojwt.is_valid():
-                #     print(ojwt.validated_data)
-                request.session['userid'] = str(user.id)
-                login(request, user)
                 return redirect('api:details')
-            return Response({'serializer': serializer})
+        return Response({'serializer': serializer})
 
 
 class LogoutView(APIView):
     def get(self, request):
         logout(request)
-        return redirect('api:login')
+        request.COOKIES.clear()
+        response = redirect('api:login')
+        response.delete_cookie('token')
+        return response

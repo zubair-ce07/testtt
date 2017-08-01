@@ -149,6 +149,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
     ),
+}
+
+JWT_AUTH = {
+    'JWT_AUTH_COOKIE': 'token',
 }
