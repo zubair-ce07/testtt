@@ -30,7 +30,7 @@
                 username: $('input[name="username"]').val(),
                 password: $('input[name="password"]').val()
             };
-            $.post("http://localhost:8000/api/login2/", credentials, function (auth) {
+            $.post("{% url 'api:token' %}", credentials, function (auth) {
                 $.cookie("token", auth.token, {path: '', domain: '', secure: true});
 
             });

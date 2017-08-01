@@ -1,13 +1,9 @@
-from django.contrib.auth.models import User
-from rest_framework import serializers
-from django_countries.serializers import CountryFieldMixin
-from django_countries.fields import CountryField
-from django.core.validators import RegexValidator
-from rest_framework.validators import UniqueValidator, ValidationError
 from django.contrib.auth.hashers import make_password
-from rest_framework import status
+from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator, ValidationError
 
 from users.models import UserProfile
 
@@ -29,7 +25,7 @@ class UserSerializer(serializers.Serializer):
     password = serializers.CharField(style={'placeholder': 'Password', 'input_type': 'password'})
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class EditSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=20, source='user.first_name', required=False, allow_blank=True,
                                        style={'placeholder': 'e.g. John (Optional)'})
     last_name = serializers.CharField(max_length=20, source='user.last_name', required=False, allow_blank=True,
@@ -45,14 +41,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
         user.first_name = user_data.pop('first_name')
         user.last_name = user_data.pop('last_name')
         user.save()
-        return super(UserProfileSerializer, self).update(instance, validated_data)
+        return super(EditSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = UserProfile
         fields = ('email', 'first_name', 'last_name', 'phone_number', 'address', 'image', 'country',)
 
 
-class SignupSerializer(UserProfileSerializer):
+class SignupSerializer(EditSerializer):
     username = serializers.CharField(source='user.username', style={
         'placeholder': '150 characters or fewer. Letters, digits and @/./+/-/_ only.'}, validators=[
         UniqueValidator(queryset=User.objects.all(), message='A user with that username already exists'),
@@ -94,3 +90,18 @@ class SignupSerializer(UserProfileSerializer):
         fields = (
             'username', 'password1', 'password2', 'email', 'first_name', 'last_name', 'phone_number', 'address',
             'image', 'country',)
+
+
+class USerializer(serializers.ModelSerializer):
+    # for details view
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name')
+
+
+class UPSerializer(serializers.ModelSerializer):
+    user = USerializer()
+
+    class Meta:
+        model = UserProfile
+        fields = '__all__'

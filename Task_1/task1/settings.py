@@ -145,7 +145,7 @@ COUNTRIES_FIRST_SORT = True
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
@@ -155,3 +155,5 @@ REST_FRAMEWORK = {
 JWT_AUTH = {
     'JWT_AUTH_COOKIE': 'token',
 }
+
+LOGIN_URL = '/api/login'

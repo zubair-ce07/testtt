@@ -1,29 +1,18 @@
-from rest_framework import generics
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import viewsets
-from rest_framework.renderers import TemplateHTMLRenderer
-from rest_framework.decorators import api_view
-from rest_framework.validators import ValidationError
-from rest_framework.permissions import AllowAny
-from rest_framework_jwt.views import JSONWebTokenAPIView
-from rest_framework_jwt.serializers import JSONWebTokenSerializer
-from rest_framework.reverse import reverse
-from rest_framework.request import Request
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from django.http import QueryDict
-
-from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect
-from django.contrib.auth import login, authenticate, logout
-
+from django.contrib.auth import authenticate, logout
 from django.db import transaction
+from django.http import QueryDict
+from django.shortcuts import redirect, get_object_or_404
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.permissions import AllowAny
+from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+from rest_framework.views import APIView
+from rest_framework_jwt.serializers import JSONWebTokenSerializer
 
+from api.serializers import UserSerializer, EditSerializer, SignupSerializer, UserListSerializer, UPSerializer
 from users.models import UserProfile
-from api.serializers import UserSerializer, UserProfileSerializer, SignupSerializer, UserListSerializer
 
 
 def get_token(request):
@@ -41,14 +30,18 @@ def get_token(request):
 def api_root(request, format=None):
     return Response({
         'users': reverse('api:list', request=request, format=format),
-    })
+    }, status=status.HTTP_200_OK)
 
 
 class UserList(APIView):
+    """
+    Endpoint for Users
+    """
+
     def get(self, request, format=None):
         users = UserProfile.objects.all()
-        serializer = UserListSerializer(users, many=True, context={'request': request})
-        return Response(serializer.data)
+        serializer = UserListSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
         request.META['Authorization'] = 'JWT ' + get_token(request)
@@ -60,23 +53,24 @@ class UserList(APIView):
 
 
 class UserDetail(APIView):
+    """
+    Endpoint for a single User profile
+    """
+
     def get_object(self):
-        try:
-            return UserProfile.objects.get(user=self.request.user)
-        except UserProfile.DoesNotExist:
-            raise Http404
+        return get_object_or_404(UserProfile, user__id=self.request.user.id)
 
     def get(self, request, format=None):
         user = self.get_object()
         serializer = UserListSerializer(user)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, format=None):
         user = self.get_object()
         serializer = UserListSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, format=None):
@@ -90,8 +84,11 @@ class UserProfileDetails(APIView):
     template_name = 'api/details.html'
 
     def get(self, request):
-        user_profile = UserProfile.objects.get(user=request.user)
-        return Response({'user': user_profile.user})
+        if request.user.is_authenticated:
+            user_profile = UserProfile.objects.get(user=request.user)
+            serializer = UPSerializer(user_profile)
+            return Response({'user': user_profile.user, 'serializer': serializer.data}, status=status.HTTP_200_OK)
+        return redirect('api:login')
 
 
 class UserProfileEdit(APIView):
@@ -99,17 +96,19 @@ class UserProfileEdit(APIView):
     template_name = 'api/edit.html'
 
     def get(self, request):
-        user_profile = UserProfile.objects.get(user=request.user)
-        serializer = UserProfileSerializer(user_profile)
-        return Response({'serializer': serializer})
+        if request.user.is_authenticated:
+            user_profile = UserProfile.objects.get(user=request.user)
+            serializer = EditSerializer(user_profile)
+            return Response({'serializer': serializer}, status=status.HTTP_200_OK)
+        return redirect('api:login')
 
     def post(self, request):
         user_profile = UserProfile.objects.get(user=request.user)
-        serializer = UserProfileSerializer(user_profile, data=request.data)
+        serializer = EditSerializer(user_profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return redirect('api:details')
-        return Response({'serializer': serializer})
+        return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignupView(APIView):
@@ -118,8 +117,10 @@ class SignupView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('api:details')
         serializer = SignupSerializer()
-        return Response({'serializer': serializer})
+        return Response({'serializer': serializer}, status=status.HTTP_200_OK)
 
     @transaction.atomic
     def post(self, request):
@@ -129,7 +130,7 @@ class SignupView(APIView):
             response = redirect('api:details')
             response.set_cookie('token', get_token(request))
             return response
-        return Response({'serializer': serializer})
+        return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -138,9 +139,10 @@ class LoginView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
-
+        if request.user.is_authenticated:
+            return redirect('api:details')
         serializer = UserSerializer()
-        return Response({'serializer': serializer})
+        return Response({'serializer': serializer}, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -149,7 +151,7 @@ class LoginView(APIView):
                                 password=serializer.validated_data.get('password'))
             if user and user.is_active:
                 return redirect('api:details')
-        return Response({'serializer': serializer})
+        return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
