@@ -20,10 +20,10 @@ class DawnSpider(CrawlSpider):
         if not item['content']:
             return
         item['title'] = response.css("meta[property='og:title']::attr(content)").extract_first()
+        item['publisher'] = "Dawn.com"
         item['pub_date'] = response.css("meta[property='article:published_time']::attr(content)").extract_first()
         item['image_url'] = response.css("meta[property='og:image']::attr(content)").extract_first()
         item['url'] = response.url
-        item['publisher'] = "Dawn.com"
         yield item
 
     def get_content(self, response):
