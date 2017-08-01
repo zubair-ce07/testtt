@@ -11,6 +11,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
     """
     directs = serializers.HyperlinkedIdentityField(
         view_name='directs', format='json')
+    reports_to = serializers.HyperlinkedRelatedField(
+        view_name='employee-detail', read_only=True,
+    )
 
     class Meta:
         model = Employee
