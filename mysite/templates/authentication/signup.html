@@ -1,0 +1,37 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+    Sign up
+{% endblock  %}
+
+{% block navbar-not-on-logout %}{% endblock  %}
+{% block navbar-logout %}{% endblock  %}
+
+
+
+{% block content-title %}
+    Sign up to view reknowned products
+{% endblock %}
+
+{% block content-body %}
+
+
+    {% if form.errors %}
+        <p style="color: red;">
+            Please correct the error{{ form.errors|pluralize }} below.
+        </p>
+    {% endif %}
+
+    <form action="" method="post" novalidate>
+        {% csrf_token %}
+            {{ form.as_p }}
+            <tr>
+                <td><input type="submit" value="Signup" name="signup"></td>
+                <td>
+                <button
+                onClick="location.href='{% url 'authentication:login' %}'"
+                type="button">Login</button></td>
+            </tr>
+    </form>
+{% endblock  %}
