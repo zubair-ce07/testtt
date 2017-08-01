@@ -56,8 +56,5 @@ target/
 # PyCharm
 .idea
 
-#vscode
-.vscode/
-
 #react
 reactassignment/node_modules/*
