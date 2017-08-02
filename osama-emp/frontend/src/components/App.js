@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
+import djangoapi from "../djangoapi";
 
 class App extends Component {
   constructor(props) {
@@ -9,23 +10,12 @@ class App extends Component {
     };
   }
 
-  api_call() {
-    let that = this;
-    fetch("http://localhost:8000/employees/", {
-      method: "get"
-    })
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(jsonData) {
-        that.setState({
-          results: jsonData.results
-        });
-      });
-  }
-
   componentDidMount() {
-    this.api_call();
+    djangoapi.listEmployees(jsonData => {
+      this.setState({
+        results: jsonData.results
+      });
+    });
   }
 
   render() {
@@ -35,14 +25,19 @@ class App extends Component {
           {this.state.results.map(current => {
             return (
               <li key={current.username}>
-                {current.username}
+                <p>
+                  {current.username}
+                </p>
+                <p>
+                  {current.reports_to}
+                </p>
+                <p>
+                  {current.directs}
+                </p>
               </li>
             );
           })}
         </ul>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
       </div>
     );
   }

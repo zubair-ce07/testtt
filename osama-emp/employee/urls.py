@@ -1,6 +1,7 @@
 from django.conf.urls import include, url
 
 from rest_framework import routers
+from rest_framework.authtoken.views import obtain_auth_token
 
 from . import views
 
@@ -16,4 +17,5 @@ urlpatterns = [
     url(r'^employees/(?P<pk>[0-9]+)/directs$',
         views.EmployeeDirectsView.as_view(), name="directs"),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^obtain-auth-token/$', obtain_auth_token)
 ]
