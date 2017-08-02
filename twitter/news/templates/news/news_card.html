@@ -15,7 +15,7 @@
         <a href="{% url 'news_detailed' news.id %}">
             <h4 class="media-heading">{{ news.title }}</h4>
         </a>
-        {{ news.content|striptags|excerpt_news|safe }}
+        {{ news.content|striptags|excerpt_news }}
         <div class="published-time">
             PUBLISHED <span>{{ news.pub_date|timesince }} ago </span>
         </div>
