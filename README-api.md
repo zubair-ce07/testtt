@@ -1,5 +1,3 @@
-# the-lab
-Training Ground
 
 EDUCARE
 =======
