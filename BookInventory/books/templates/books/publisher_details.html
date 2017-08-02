@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Publisher Details</title>
+</head>
+<body>
+<h2>Name: {{ publisher.name }}</h2>
+<h3>Address: {{ publisher.address }}</h3>
+<h3>Contact: {{ publisher.contact }} </h3>
+<h3>Email: {{ publisher.email }}</h3>
+<h3>City: {{ publisher.city }} </h3>
+<h3>Country: {{ publisher.country }} </h3>
+<h3>Books Published:</h3>
+{% if books_list %}
+    <ul>
+        {% for book in books_list %}
+            <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No Books are available.</p>
+{% endif %}
+</body>
+</html>

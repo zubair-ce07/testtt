@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Books</title>
+</head>
+<body>
+<h1>Books</h1>
+<br>
+<a href="{% url 'books:book_form' %}" class="button">Add New Book</a>
+<table style="width:80%" border="1">
+    <tr>
+        <th>Title</th>
+        <th>Genre</th>
+        <th>Publisher</th>
+        <th>Date Published</th>
+        <th>Authors</th>
+    </tr>
+    {% for book in books_list %}
+        <tr>
+            <td align="center"><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></td>
+            <td align="center">{{ book.genre }}</td>
+            <td align="center"><a href="{% url 'books:publisher_detail' book.publisher.id %}">{{ book.publisher }}</a>
+            </td>
+            <td align="center">{{ book.pub_date }}</td>
+            <td>
+                <ul>
+                    {% for author in book.authors.all %}
+                        <li><a href="{% url 'books:author_detail' author.id %}">{{ author }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        <tr>
+    {% endfor %}
+</table>
+</body>
+</html>

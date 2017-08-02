@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Publishers</title>
+</head>
+<body>
+<h1>Publishers</h1>
+<br>
+<a href="{% url 'books:publisher_form' %}" class="button">Add New Publisher</a>
+<table style="width:80%" border="1">
+    <tr>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Contact</th>
+        <th>Email</th>
+        <th>City</th>
+        <th>Country</th>
+        <th>Books</th>
+    </tr>
+    {% for publisher in publisher_list %}
+        <tr>
+            <td align="center"><a>{{ publisher.name }}</a></td>
+            <td align="center">{{ publisher.address }}</td>
+            <td align="center">{{ publisher.contact }}</td>
+            <td align="center">{{ publisher.email }}</td>
+            <td align="center">{{ publisher.city }}</td>
+            <td align="center">{{ publisher.country }}</td>
+            <td>
+                <ul>
+                    {% for book in books_list %}
+                        {% if book.publisher.id == publisher.id %}
+                            <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
+                        {% endif %}
+
+                    {% endfor %}
+                </ul>
+            </td>
+        <tr>
+    {% endfor %}
+</table>
+</body>
+</html>
