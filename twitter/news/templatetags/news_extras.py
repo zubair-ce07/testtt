@@ -3,17 +3,15 @@ from django.template.defaultfilters import stringfilter
 
 register = template.Library()
 
+ELLIPSIS = '...'
+CENTER = 250
+ACCURACY = 25
+SEPARATOR_KEYS = ['.', ' ']
+
 
 def get_closest_to_center(values, center):
     if values:
-        closest = values[0]
-    else:
-        return
-    for value in values:
-        if abs(center - value) < closest:
-            closest = value
-    return closest
-
+        return min(values, key=lambda x: abs(x - center))
 
 def slice_string_to_key(string, key, accuracy, center):
     temp_indexs = (
@@ -30,19 +28,14 @@ def slice_string_to_key(string, key, accuracy, center):
 @register.filter()
 @stringfilter
 def excerpt_news(news_complete):
-    continue_ = '...'
-    center = 250
-    accuracy = 25
-    keys = ['.', ' ']
-
-    if len(news_complete) <= center:
+    if len(news_complete) <= CENTER:
         return news_complete
 
-    for key in keys:
-        news_excerpted = slice_string_to_key(news_complete, key, accuracy, center)
+    for key in SEPARATOR_KEYS:
+        news_excerpted = slice_string_to_key(news_complete, key, ACCURACY, CENTER)
         if news_excerpted:
-            return news_excerpted + continue_
-    return news_complete[:center] + continue_
+            return news_excerpted + ELLIPSIS
+    return news_complete[:CENTER] + ELLIPSIS
 
 
 @register.inclusion_tag('news/news_card.html')
