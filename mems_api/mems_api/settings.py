@@ -85,12 +85,11 @@ DATABASES = {
         'NAME': 'membookapi',
     }
 }
-
+from rest_framework.authentication import TokenAuthentication
 REST_FRAMEWORK = {
-'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
-    ),
-                                                        # it was IsAdminUser
+    ),                                                      # it was IsAdminUser
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'PAGINATE_BY': 10
 }

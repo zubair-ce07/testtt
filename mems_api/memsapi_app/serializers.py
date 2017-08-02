@@ -18,7 +18,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ['id', 'memory_title', 'datetime', 'activity', 'user']
+        fields = ['id', 'memory_title', 'datetime', 'activity']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,3 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id','first_name', 'last_name', 'email', 'username', 'image',
                   'password', 'categories', 'activities', 'mems']
 
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required='required'),
+    password = serializers.CharField(max_length=200)
