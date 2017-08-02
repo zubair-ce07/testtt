@@ -1,5 +1,6 @@
 {% extends 'twitter/home.html' %}
 {% load tweeter_extras %}
+
 {% block content %}
 
     {% users_name view.profile_user as users_name %}
@@ -9,7 +10,7 @@
         <span>
         <form action="{% url 'follow'%}" method="post">
             {% csrf_token %}
-            {{ view.form.as_p }}
+            {{ view.form_follow.as_p }}
             <input type="submit" value="Follow">
         </form>
         </span>

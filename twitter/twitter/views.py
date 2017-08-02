@@ -37,7 +37,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         return profile_user
 
     @cached_property
-    def form(self):
+    def form_follow(self):
         return forms.FollowForm(initial={'follower_username': self.profile_user.username})
 
 
