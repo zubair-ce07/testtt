@@ -16,7 +16,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('publisher', help='publisher username')
         parser.add_argument('source', help='Path to news json file.')
-        parser.add_argument('--truncate', action='store_true',
+        parser.add_argument('--truncate', action='store_true', default=False,
                             help='remove all previous News from database before adding')
 
     def handle(self, *args, **options):
