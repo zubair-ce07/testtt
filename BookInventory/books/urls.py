@@ -9,7 +9,7 @@ urlpatterns = [
 
 urlpatterns += [
     url(r'^books/$', views.books, name="books"),
-    url(r'^authors/$', views.authors_a, name="authors"),
+    url(r'^authors/$', views.authors, name="authors"),
     url(r'^publishers/$', views.publishers, name="publishers"),
 ]
 

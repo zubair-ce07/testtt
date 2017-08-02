@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 from django.db.models import Q
 from books.models import Book, Author, Publisher
 from books.forms import BookForm, AuthorForm, PublisherForm
 
 
+@login_required
 def book_form(request):
     if request.method == 'POST':
         form = BookForm(request.POST)
@@ -18,6 +20,7 @@ def book_form(request):
     return render(request, 'books/add_book.html', {'form': form})
 
 
+@login_required
 def author_form(request):
     if request.method == 'POST':
         form = AuthorForm(request.POST)
@@ -29,6 +32,7 @@ def author_form(request):
     return render(request, 'books/add_author.html', {'form': form})
 
 
+@login_required
 def publisher_form(request):
     if request.method == 'POST':
         form = PublisherForm(request.POST)
@@ -44,7 +48,10 @@ def index(request):
     books_list = Book.objects.order_by('-pub_date')
     authors_list = Author.objects.all()
     publisher_list = Publisher.objects.all()
-    context = {'books_list': books_list, 'authors_list': authors_list, 'publisher_list': publisher_list}
+    num_vist = request.session.get('visit_counter', 1)
+    request.session['visit_counter'] = num_vist + 1
+    context = {'books_list': books_list, 'authors_list': authors_list,
+               'publisher_list': publisher_list, 'num_vist': num_vist}
     return render(request, 'books/index.html', context)
 
 
@@ -54,7 +61,7 @@ def books(request):
     return render(request, 'books/books.html', context)
 
 
-def authors_a(request):
+def authors(request):
     authors_list = Author.objects.all()
     books_list = Book.objects.all()
     context = {'authors_list': authors_list, 'books_list': books_list}
