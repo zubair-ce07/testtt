@@ -20,7 +20,7 @@ class UserManager(AuthUserManager):
 class TweetManager(models.Manager):
     def filler_by_username(self, username):
         user = User.objects.get_by_username(username)
-        return self.filter(user=user).order_by('-pub_date')
+        return self.filter(user=user)
 
 
 class User(AbstractUser):
@@ -42,3 +42,4 @@ class Tweet(models.Model):
 
     class Meta:
         db_table = 'tweet'
+        ordering = ('-pub_date',)

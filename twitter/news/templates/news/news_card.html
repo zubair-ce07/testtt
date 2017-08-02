@@ -7,7 +7,7 @@
             {% if news.image %}
                 <img class="media-object" src="{{ news.image.url }}">
             {% else %}
-                <img class="media-object" src={{ news.image_url }}>
+                <img class="media-object" src="{{ news.image_url }}">
             {% endif %}
         </a>
     </div>
@@ -15,7 +15,7 @@
         <a href="{% url 'news_detailed' news.id %}">
             <h4 class="media-heading">{{ news.title }}</h4>
         </a>
-        {{ news.content|split_to_fullstop|safe }} ...
+        {{ news.content|striptags|excerpt_news|safe }}
         <div class="published-time">
             PUBLISHED <span>{{ news.pub_date|timesince }} ago </span>
         </div>

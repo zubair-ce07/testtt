@@ -1,8 +1,7 @@
-from django.http import Http404
 from rest_framework import status
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 
 from news.api.serializers import NewsSerializer
 from news.models import News
@@ -23,10 +22,7 @@ class NewsList(APIView):
 
 
 class NewsDetail(APIView):
-    def get(self,request, pk):
-        try:
-            news = News.objects.get(pk=pk)
-            serializer = NewsSerializer(news)
-            return Response(serializer.data)
-        except News.DoesNotExist:
-            raise Http404
+    def get(self, request, pk):
+        news = get_object_or_404(News, pk=pk)
+        serializer = NewsSerializer(news)
+        return Response(serializer.data)

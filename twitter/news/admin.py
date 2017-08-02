@@ -10,7 +10,7 @@ class NewsAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        obj.get_publisher = request.user
+        obj.publisher = request.user
         super(NewsAdmin, self).save_model(request, obj, form, change)
 
 

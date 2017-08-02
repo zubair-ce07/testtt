@@ -31,7 +31,7 @@
         </div>
 
         <div class="media-body" align="left">
-            {{ news.content|safe }}
+            {{ news.content|striptags|safe }}
         </div>
     </div>
 {% endblock content %}
