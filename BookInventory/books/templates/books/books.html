@@ -3,35 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>Books</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
 <h1>Books</h1>
 <br>
+
 <a href="{% url 'books:book_form' %}" class="button">Add New Book</a>
-<table style="width:80%" border="1">
-    <tr>
-        <th>Title</th>
-        <th>Genre</th>
-        <th>Publisher</th>
-        <th>Date Published</th>
-        <th>Authors</th>
-    </tr>
-    {% for book in books_list %}
+<div class="table-responsive">
+    <table class="table-bordered">
         <tr>
-            <td align="center"><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></td>
-            <td align="center">{{ book.genre }}</td>
-            <td align="center"><a href="{% url 'books:publisher_detail' book.publisher.id %}">{{ book.publisher }}</a>
-            </td>
-            <td align="center">{{ book.pub_date }}</td>
-            <td>
-                <ul>
-                    {% for author in book.authors.all %}
-                        <li><a href="{% url 'books:author_detail' author.id %}">{{ author }}</li>
-                    {% endfor %}
-                </ul>
-            </td>
-        <tr>
-    {% endfor %}
-</table>
+            <th>Title</th>
+            <th>Genre</th>
+            <th>Publisher</th>
+            <th>Date Published</th>
+            <th>Authors</th>
+        </tr>
+        {% for book in books_list %}
+            <tr>
+                <td align="center"><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></td>
+                <td align="center">{{ book.genre }}</td>
+                <td align="center"><a
+                        href="{% url 'books:publisher_detail' book.publisher.id %}">{{ book.publisher }}</a>
+                </td>
+                <td align="center">{{ book.pub_date }}</td>
+                <td>
+                    <ul>
+                        {% for author in book.authors.all %}
+                            <li><a href="{% url 'books:author_detail' author.id %}">{{ author }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+            <tr>
+        {% endfor %}
+    </table>
+</div>
 </body>
 </html>
