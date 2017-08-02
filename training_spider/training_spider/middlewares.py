@@ -47,7 +47,6 @@ class TrainingSpiderSpiderMiddleware(object):
         # Called with the start requests of the spider, and works
         # similarly to the process_spider_output() method, except
         # that it doesn’t have a response associated.
-
         # Must return only requests (not items).
         for r in start_requests:
             yield r
@@ -59,5 +58,5 @@ class TrainingSpiderSpiderMiddleware(object):
 class ProxyMiddleware(object):
 
     def process_request(self, request, spider):
-        request.meta['proxy'] = 'http://192.95.18.162:8080'
+        request.meta['proxy'] = 'https://47.90.9.82:80'
         spider.log('Proxy : %s' % request.meta['proxy'])
