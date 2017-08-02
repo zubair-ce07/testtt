@@ -7,6 +7,7 @@
 <input type="text" id='email' title="Email Address" value="email"/>
 <input type="button" onclick="validateEmail()" value="submit"/>
 <script>
+    "use strict";
     function validateAtSign(emailAddress) {
         var countOfAtSign = 0;
         for (var index = 0; index < emailAddress.length; index++) {
