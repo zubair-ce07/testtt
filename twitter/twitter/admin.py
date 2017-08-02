@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group
 from twitter.models import User, Tweet
 
 
+@admin.register(User)
 class UserAdmin(AuthUserAdmin):
     list_display = ('username', 'first_name', 'last_name', 'email')
     search_fields = ('username', 'first_name', 'last_name', 'email')
@@ -19,7 +20,6 @@ class UserAdmin(AuthUserAdmin):
     )
 
 
-admin.site.register(User, UserAdmin)
 admin.site.register(Tweet)
 
 admin.site.unregister(Group)
