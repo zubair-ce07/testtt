@@ -2,7 +2,7 @@ from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.functional import cached_property
 from django.views import View
 from django.views.generic import FormView, TemplateView, ListView
@@ -38,8 +38,8 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
     @cached_property
     def form(self):
-        form = forms.FollowForm(initial={'follower_username': self.profile_user.username})
-        return form
+        return forms.FollowForm(initial={'follower_username': self.profile_user.username})
+
 
 
 class HomeView(ListView):
@@ -53,14 +53,16 @@ class FollowView(View):
         profile_username = request.POST['follower_username']
         profile_user = get_object_or_404(User, username__iexact=profile_username)
         request.user.followers.add(profile_user)
-        return redirect(reverse('profile', kwargs={'username': profile_username}))
+        return HttpResponseRedirect(reverse('profile', kwargs={'username': profile_username}))
 
 
 class SignUpView(FormView):
     form_class = forms.UserSignUpForm
     template_name = 'twitter/singup.html'
+    success_url =  reverse_lazy('home')
+
 
     def form_valid(self, form):
         new_user = form.save()
         login(self.request, new_user)
-        return HttpResponseRedirect(reverse('home'))
+        return super(SignUpView, self).form_valid(form)

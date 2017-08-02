@@ -13,7 +13,7 @@ class UserManager(AuthUserManager):
     def get_by_username(self, username):
         try:
             return User.objects.get(username__iexact=username)
-        except ObjectDoesNotExist:
+        except User.DoesNotExist:
             raise ProfileDoestExist(username)
 
 
