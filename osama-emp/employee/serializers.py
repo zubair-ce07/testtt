@@ -24,7 +24,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
                   'date_of_birth', 'date_of_joining', 'job_title',
                   'nationality', 'reports_to', 'directs',)
 
-    def create(self, validated_data):
+    def create(self, validated_data, *args, **kwargs):
         """
         Create method override that ensures that a django User model is created
         alongside with each employee

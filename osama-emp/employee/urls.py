@@ -4,11 +4,15 @@ from rest_framework import routers
 
 from . import views
 
-router = routers.DefaultRouter()
-router.register(r'employees', views.EmployeeViewSet)
+# router = routers.DefaultRouter()
+# router.register(r'employees', views.EmployeeViewSet)
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
+    # url(r'^', include(router.urls)),
+    url(r'^employees/$', views.EmployeeListAPIView.as_view(),
+        name='employee-list'),
+    url(r'^employees/(?P<pk>[0-9]+)/$', views.EmployeeRetrieveAPIView.as_view(),
+        name='employee-detail'),
     url(r'^employees/(?P<pk>[0-9]+)/directs$',
         views.EmployeeDirectsView.as_view(), name="directs"),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
