@@ -11,7 +11,8 @@ class OrseySpider(CrawlSpider):
     download_delay = 1
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['span.widget.widget-category-link', 'ul#nav']), follow=True),
+        Rule(LinkExtractor(deny=['specials.*\.html'], restrict_css=['span.widget.widget-category-link', 'ul#nav',
+                                                                    'div.toolbar-top ul.pagination']), follow=True),
         Rule(LinkExtractor(restrict_css=['h2.product-name']), callback='parse_product'),
     )
 
@@ -24,15 +25,13 @@ class OrseySpider(CrawlSpider):
         item['gender'] = self.parse_gender(response)
         item['image_urls'] = []
         item['name'] = self.parse_name(response)
-        item['retailer_sku'] = self.parse_retailer_sku(response)
         item['skus'] = self.get_skus(response)
+        item['retailer_sku'] = self.parse_retailer_sku(response)
         item['url'] = self.parse_url(response)
         item['url_original'] = self.parse_url(response)
         response.meta['item'] = item
         response.meta['next_color_urls'] = self.parse_urls_for_color(response)
-        response.meta['next_color_urls'].remove('#')
-        for r in self.parse_next_color_items(response):
-            yield r
+        return self.parse_next_color_items(response)
 
     def parse_next_color_items(self, response):
         next_color_urls = response.meta['next_color_urls']
@@ -58,7 +57,7 @@ class OrseySpider(CrawlSpider):
         return response.css('div.no-display input[name^=category_name]::attr(value)').extract_first()
 
     def parse_description(self, response):
-        return response.css('p.description::text').extract()
+        return self.remove_whitespace(response.css('p.description::text').extract())
 
     def parse_gender(self, response):
         return "women"
@@ -73,8 +72,7 @@ class OrseySpider(CrawlSpider):
         return response.css('p.sku::text').extract_first().split(':')[1].strip(' ')[:6]
 
     def parse_urls_for_color(self, response):
-        url = response.css('ul.product-colors  a::attr(href)').extract()
-        return url
+        return [x for x in response.css('ul.product-colors  a::attr(href)').extract() if x != '#']
 
     def check_if_out_of_stock(self, response):
         return response.css('script[type="application/ld+json"]::text').extract_first().find("OutOfStock")
@@ -101,27 +99,21 @@ class OrseySpider(CrawlSpider):
         sizes_of_item = filter(None, sizes)
         return sizes_of_item
 
-    def parse_item_characteristics(self, response):
-        item_characterstics = dict(
-            colour=[],
-            currency=self.parse_currency(response),
-            price=self.parse_price(response)
-        )
-        if self.check_if_out_of_stock(response) > 0:
-            item_characterstics['OutOfStock'] = "True"
-        return item_characterstics
-
     def get_skus(self, response):
         skus = dict()
         key_part = self.parse_item_key_number(response)
-        item_characteristics = self.parse_item_characteristics(response)
         sizes_of_item = self.get_available_sizes(response)
         for size in sizes_of_item:
+            item_characterstics = dict(
+                colour=[],
+                currency=self.parse_currency(response),
+                price=self.parse_price(response)
+            )
+            if self.check_if_out_of_stock(response) > 0:
+                item_characterstics['OutOfStock'] = "True"
             key = self.get_key(key_part, size)
-            item_characteristics['size'] = size
-            skus = {
-                key: item_characteristics
-            }
+            item_characterstics['size'] = size
+            skus[key] = item_characterstics
         return skus
 
     def get_key(self, key_part, size):
@@ -138,3 +130,9 @@ class OrseySpider(CrawlSpider):
     def update_image_urls(self, image_urls, response):
         image_urls.append(self.parse_image_urls(response))
         return image_urls
+
+    def remove_whitespace(self, text):
+        text = str(text).replace(" ", "")
+        position = text.find("UnserTipp")
+        text = text[position:]
+        return text
