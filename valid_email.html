@@ -8,21 +8,21 @@
 <input type="button" onclick="validateEmail()" value="submit"/>
 <script>
     function validateAtSign(emailAddress) {
-        var count_of_at = 0;
+        var countOfAtSign = 0;
         for (var index = 0; index < emailAddress.length; index++) {
             if (emailAddress.charAt(index) === '@') {
-                count_of_at++;
+                countOfAtSign++;
             }
         }
-        return count_of_at === 1;
+        return countOfAtSign === 1;
     }
 
     function haveDomain(emailAddress) {
-        return emailAddress.search("@") !== (emailAddress.length - 1);
+        return emailAddress.indexOf("@") !== (emailAddress.length - 1);
     }
 
     function haveOnlyValidChar(emailAddress) {
-        var special_char = ".!#$%&'*+=?^_`{|}~-@";
+        var specialChar = ".!#$%&'*+=?^_`{|}~-@";
         for (var index = 0; index < emailAddress.length; index++) {
             if (emailAddress.charAt(index) >= 'A' && emailAddress.charAt(index) <= 'Z')
                 continue;
@@ -30,7 +30,7 @@
                 continue;
             if (emailAddress.charAt(index) >= '0' && emailAddress.charAt(index) <= '9')
                 continue;
-            if (special_char.search(emailAddress.charAt(index)) >= 0)
+            if (specialChar.indexOf(emailAddress.charAt(index)) >= 0)
                 continue;
             return false;
         }
@@ -39,7 +39,6 @@
 
     function validateEmail() {
         var emailAddress = document.getElementById('email').value;
-        debugger;
         if (!validateAtSign(emailAddress) || !haveDomain(emailAddress) || !haveOnlyValidChar(emailAddress))
             alert("Invalid Email");
         else
