@@ -18,6 +18,7 @@ from .permissions import IsSelf, IsDirect
 class EmployeeListAPIView(ListAPIView):
     queryset = Employee.objects.all().select_related('user')
     serializer_class = EmployeeSerializer
+    permission_classes = (permissions.IsAuthenticated,)
 
 
 class EmployeeRetrieveAPIView(RetrieveAPIView):

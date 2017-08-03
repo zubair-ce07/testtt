@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
+import Employee from "./Employee";
 import djangoapi from "../djangoapi";
 
 class App extends Component {
@@ -12,6 +13,7 @@ class App extends Component {
 
   componentDidMount() {
     djangoapi.listEmployees(jsonData => {
+      console.log(jsonData);
       this.setState({
         results: jsonData.results
       });
@@ -23,19 +25,7 @@ class App extends Component {
       <div className="App">
         <ul>
           {this.state.results.map(current => {
-            return (
-              <li key={current.username}>
-                <p>
-                  {current.username}
-                </p>
-                <p>
-                  {current.reports_to}
-                </p>
-                <p>
-                  {current.directs}
-                </p>
-              </li>
-            );
+            return <Employee emp={current} />;
           })}
         </ul>
       </div>
