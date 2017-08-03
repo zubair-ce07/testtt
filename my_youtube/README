@@ -1,0 +1,6 @@
+Mini youtube using youtube APIs
+
+How to run:
+npm start
+
+And the server starts listening on port 3000

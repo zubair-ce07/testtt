@@ -5,6 +5,7 @@ import axios from 'axios';
 import YouTube from 'react-youtube';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/css/bootstrap-theme.css';
+import $ from 'jquery';
 import { ListGroup, ListGroupItem, Grid, Row, Image, Col,
          Jumbotron, TabContainer, Navbar, FormGroup,
          FormControl, Button, Form, ButtonGroup,
@@ -29,8 +30,7 @@ class SearchList extends React.Component
     render()
     {
         let results = this.props.items;
-
-        if (results)
+        if (results && results.length)
         {
             return (
                 <ListGroup>
@@ -74,8 +74,8 @@ class SearchList extends React.Component
 class YoutubePlayer extends React.Component {
   render() {
     const opts = {
-      height: '304',
-      width: '530',
+      height: this.props.height,
+      width: this.props.width,
     };
 
     if(this.props.show)
@@ -120,6 +120,7 @@ class MiniYoutube extends React.Component
         this.setVidId = this.setVidId.bind(this);
         this.setVidDesc = this.setVidDesc.bind(this);
         this.setVidTitle = this.setVidTitle.bind(this);
+        this.updatePlayerDimensions = this.updatePlayerDimensions.bind(this);
         this.state = {'query': '', 'videoId': '', 'videoDesc': '',
                       'videoTitle': '', 'items': [], 'show': false,
                       'nextPageToken': ''};
@@ -155,9 +156,9 @@ class MiniYoutube extends React.Component
     {
         axios.get(getRequest)
         .then(res => {
-            this.setState({'items': res.data.items});
-            this.setState({'nextPageToken': res.data.nextPageToken});
-            this.setState({'prevPageToken': res.data.prevPageToken});
+            this.setState({'items': res.data.items,
+                           'nextPageToken': res.data.nextPageToken,
+                           'prevPageToken': res.data.prevPageToken});
         });
     }
 
@@ -192,8 +193,7 @@ class MiniYoutube extends React.Component
 
     setVidId(videoId)
     {
-        this.setState({'videoId': videoId});
-        this.setState({'show': true});
+        this.setState({'videoId': videoId, 'show': true});
     }
 
     setVidDesc(videoDesc)
@@ -206,11 +206,40 @@ class MiniYoutube extends React.Component
         this.setState({'videoTitle': videoTitle});
     }
 
+    updatePlayerDimensions()
+    {
+        let width = 0;
+        const aspectRatio = 0.5736;
+    
+        if($(window).width() < 1200 && $(window).width() > 990)
+            width = 420;
+        else if($(window).width() <= 990 && $(window).width() > 755)
+            width = 600;
+        else if($(window).width() <= 755)
+            width = 380;
+        else
+            width = 530;
+
+        this.setState({'playerWidth': width, 'playerHeight': width * aspectRatio});
+    }
+
+    componentDidMount()
+    {
+        this.updatePlayerDimensions();
+        window.addEventListener("resize", this.updatePlayerDimensions);
+    }
+
     render()
     {
         return (
             <div>
-                <Navbar inverse collapseOnSelect>
+                <Navbar inverse>
+                    <Navbar.Header>
+                        <Navbar.Brand>
+                            <a href="#">Mini-Youtube</a>
+                        </Navbar.Brand>
+                    <Navbar.Toggle />
+                    </Navbar.Header>
                     <Navbar.Collapse>
                     <form onSubmit={this.search}>
                         <Navbar.Form pullRight>
@@ -227,7 +256,8 @@ class MiniYoutube extends React.Component
                     <Row>
                         <Col md={7}>
                             <YoutubePlayer title={this.state.videoTitle} desc={this.state.videoDesc}
-                                     id={this.state.videoId} show={this.state.show}/>
+                                     id={this.state.videoId} show={this.state.show}
+                                     height={this.state.playerHeight} width={this.state.playerWidth}/>
                         </Col>
                         <Col md={5}>
                             <SearchList setVidTitle={this.setVidTitle} 
