@@ -1,17 +1,5 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{% static 'books/style.css' %}"/>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
-</head>
-<body>
-<div class="container">
+{% extends 'books/base.html' %}
+{% block content %}
     <div class="page-header">
         <div class="row">
             <div class="col-sm-6">
@@ -36,6 +24,4 @@
     <div class="well well-lg">
         <a href="{% url 'books:publishers' %}">Publishers</a>
     </div>
-</div>
-</body>
-</html>
+{% endblock %}

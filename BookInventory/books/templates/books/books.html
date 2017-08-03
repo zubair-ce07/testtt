@@ -1,19 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Books</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-</head>
-<body>
-
-<div class="container">
+{% extends 'books/base.html' %}
+{% block content %}
     <div class="well row">
         <div class="col-sm-9">
             <h2>Books</h2>
-            </div>
+        </div>
         <div class="col-sm-3">
             <a href="{% url 'books:book_form' %}" class="btn btn-primary "><h3>Add New Book</h3></a>
         </div>
@@ -53,7 +43,4 @@
         {% endfor %}
         <tbody>
     </table>
-</div>
-
-</body>
-</html>
+{% endblock %}
