@@ -3,44 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <title>Authors</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
-<h1>Authors</h1>
-<br>
-<a href="{% url 'books:author_form' %}" class="button">Add New Author</a>
-<table border="1">
-    <tr>
-        <th>First Name</th>
-        <th>First Name</th>
-        <th>Address</th>
-        <th>Contact</th>
-        <th>Email</th>
-        <th>City</th>
-        <th>Country</th>
-        <th>Books</th>
-    </tr>
-    {% for author in authors_list %}
-        <tr>
-            <td align="center">{{ author.first_name }}</td>
-            <td align="center">{{ author.last_name }}</td>
-            <td align="center">{{ author.address }}</td>
-            <td align="center">{{ author.contact }}</td>
-            <td align="center">{{ author.email }}</td>
-            <td align="center">{{ author.city }}</td>
-            <td align="center">{{ author.country }}</td>
-            <td>
-                <ul>
-                    {% for book in books_list %}
-                        {% for Author in book.authors.all %}
-                            {% if Author.id == author.id %}
-                                <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
-                            {% endif %}
-                        {% endfor %}
-                    {% endfor %}
-                </ul>
-            </td>
-        <tr>
-    {% endfor %}
-</table>
+<div class="container">
+    <div class="well row">
+        <div class="col-sm-9">
+            <h2>Authors</h2>
+        </div>
+        <div class="col-sm-3">
+            <a href="{% url 'books:author_form' %}" class="btn btn-primary "><h3>Add New Author</h3></a>
+        </div>
+    </div>
+        <br>
+        <br>
+        <table class="table table-bordered table-striped" width="100%">
+            <thead class="thead-inverse">
+            <tr>
+                <th>#</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Address</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>City</th>
+                <th>Country</th>
+                <th>Books</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for author in authors_list %}
+                <tr>
+                    <th>{{ forloop.counter }}</th>
+                    <td>{{ author.first_name }}</td>
+                    <td> {{ author.last_name }}</td>
+                    <td>{{ author.address }}</td>
+                    <td>{{ author.contact }}</td>
+                    <td>{{ author.email }}</td>
+                    <td>{{ author.city }}</td>
+                    <td>{{ author.country }}</td>
+                    <td>
+                        <ul>
+                            {% for book in books_list %}
+                                {% for Author in book.authors.all %}
+                                    {% if Author.id == author.id %}
+                                        <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </td>
+                <tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </body>
+
 </html>

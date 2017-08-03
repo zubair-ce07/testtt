@@ -15,15 +15,12 @@
                 <h1>Books Database</h1>
             </div>
             <div class="col-sm-6">
-                <p>
-                    {% if user.is_authenticated %}
-
-                        <li>User: {{ user.get_username }}</li>
-                        <li><a href="{% url 'logout' %}?next={{ request.path }}">Logout</a></li>
-                    {% else %}
-                        <li><a href="{% url 'login' %}?next={{ request.path }}">Login</a></li>
-                    {% endif %}
-                 </p>
+                {% if user.is_authenticated %}
+                    <li>User: {{ user.get_username }}</li>
+                    <li><a href="{% url 'logout' %}?next={{ request.path }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}?next={{ request.path }}">Login</a></li>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -3,41 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <title>Publishers</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
-<body>
-<h1>Publishers</h1>
-<br>
-<a href="{% url 'books:publisher_form' %}" class="button">Add New Publisher</a>
-<table style="width:80%" border="1">
-    <tr>
-        <th>Name</th>
-        <th>Address</th>
-        <th>Contact</th>
-        <th>Email</th>
-        <th>City</th>
-        <th>Country</th>
-        <th>Books</th>
-    </tr>
-    {% for publisher in publisher_list %}
-        <tr>
-            <td align="center"><a>{{ publisher.name }}</a></td>
-            <td align="center">{{ publisher.address }}</td>
-            <td align="center">{{ publisher.contact }}</td>
-            <td align="center">{{ publisher.email }}</td>
-            <td align="center">{{ publisher.city }}</td>
-            <td align="center">{{ publisher.country }}</td>
-            <td>
-                <ul>
-                    {% for book in books_list %}
-                        {% if book.publisher.id == publisher.id %}
-                            <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
-                        {% endif %}
+<div>
+    <div class="container">
+        <div class="well row">
+            <div class="col-sm-9">
+                <h2>Publishers</h2>
+            </div>
+            <div class="col-sm-3">
+                <a href="{% url 'books:publisher_form' %}" class="btn btn-primary "><h3>Add New Publisher</h3></a>
+            </div>
+        </div>
+        <br>
+        <br>
+        <table class="table table-bordered table-striped" width="100%">
+            <thead class="thead-inverse">
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>City</th>
+                <th>Country</th>
+                <th>Books</th>
+            </tr>
+            {% for publisher in publisher_list %}
+                <tr>
+                    <th>{{ forloop.counter }}</th>
+                    <td>{{ publisher.name }}</td>
+                    <td>{{ publisher.address }}</td>
+                    <td>{{ publisher.contact }}</td>
+                    <td>{{ publisher.email }}</td>
+                    <td>{{ publisher.city }}</td>
+                    <td>{{ publisher.country }}</td>
+                    <td>
+                        <ul>
+                            {% for book in books_list %}
+                                {% if book.publisher.id == publisher.id %}
+                                    <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
+                                {% endif %}
 
-                    {% endfor %}
-                </ul>
-            </td>
-        <tr>
-    {% endfor %}
-</table>
-</body>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                <tr>
+            {% endfor %}
+        </table>
+    </div>
+    </body>
 </html>

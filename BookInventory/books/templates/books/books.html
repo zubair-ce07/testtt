@@ -8,27 +8,40 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
-<h1>Books</h1>
-<br>
 
-<a href="{% url 'books:book_form' %}" class="button">Add New Book</a>
-<div class="table-responsive">
-    <table class="table-bordered">
+<div class="container">
+    <div class="well row">
+        <div class="col-sm-9">
+            <h2>Books</h2>
+            </div>
+        <div class="col-sm-3">
+            <a href="{% url 'books:book_form' %}" class="btn btn-primary "><h3>Add New Book</h3></a>
+        </div>
+    </div>
+
+    <br>
+    <br>
+    <table class="table table-bordered" width="100%">
+        <thead class="thead-inverse">
         <tr>
+            <th>#</th>
             <th>Title</th>
             <th>Genre</th>
             <th>Publisher</th>
             <th>Date Published</th>
             <th>Authors</th>
         </tr>
+        </thead>
+        <tbody>
         {% for book in books_list %}
             <tr>
-                <td align="center"><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></td>
-                <td align="center">{{ book.genre }}</td>
-                <td align="center"><a
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></td>
+                <td>{{ book.genre }}</td>
+                <td><a
                         href="{% url 'books:publisher_detail' book.publisher.id %}">{{ book.publisher }}</a>
                 </td>
-                <td align="center">{{ book.pub_date }}</td>
+                <td>{{ book.pub_date }}</td>
                 <td>
                     <ul>
                         {% for author in book.authors.all %}
@@ -36,9 +49,11 @@
                         {% endfor %}
                     </ul>
                 </td>
-            <tr>
+            </tr>
         {% endfor %}
+        <tbody>
     </table>
 </div>
+
 </body>
 </html>
