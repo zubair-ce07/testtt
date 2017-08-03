@@ -38,16 +38,16 @@ class QcrawlSpider(CrawlSpider):
             
         item = {
                 'item_id': item_id,
-   #             'url': response.url,
+                'url': response.url,
                 'name': name,
-  #              'brand': brand,
- #               'description': description,
-#                'colour_name' : colour_name,
+                'brand': brand,
+                'description': description,
+                'colour_name' : colour_name,
                 'old_price': old_price,
                 'price': price,
                 'is_discounted' : is_discounted,
                 'currency': currency,
-#                'image_urls' : image_urls,
+                'image_urls' : image_urls,
             }
 
         yield item
