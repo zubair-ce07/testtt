@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from rest_framework import generics, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import detail_route
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -22,6 +23,12 @@ from .serializers import (
     AssignmentSerializer,
     TechnologySerializer
 )
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 
 class TrainerSignUp(generics.CreateAPIView):
@@ -102,6 +109,7 @@ class Search(generics.ListAPIView):
     permission_classes = (IsAuthenticated, )
     model = UserProfile
     serializer_class = UserProfileSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         try:
@@ -149,6 +157,7 @@ class AssignmentsAssigned(generics.ListAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated, )
     serializer_class = AssignmentSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         try:
@@ -165,6 +174,7 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
+    pagination_class = StandardResultsSetPagination
 
     """
     returns the technologies used by the selected assignment
@@ -191,6 +201,7 @@ class TrainerViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated, )
     queryset = Trainer.objects.all()
     serializer_class = TrainerSerializer
+    pagination_class = StandardResultsSetPagination
 
     """
     returns the trainees assigned to the selected trainer
@@ -216,6 +227,7 @@ class TraineeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated, )
     queryset = Trainee.objects.all()
     serializer_class = TraineeSerializer
+    pagination_class = StandardResultsSetPagination
 
     """
     returns the trainer assigned to the selected trainee
@@ -251,3 +263,4 @@ class TechnologyViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated, )
     queryset = Technology.objects.all()
     serializer_class = TechnologySerializer
+    pagination_class = StandardResultsSetPagination
