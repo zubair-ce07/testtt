@@ -1,4 +1,0 @@
-sumy==0.7.0
-Twisted==17.5.0
-Scrapy==1.4.0
-Django==1.11.3
