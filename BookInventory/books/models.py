@@ -5,13 +5,13 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
 GENRE_CHOICES = [
-    ('1', 'Novel'),
-    ('2', 'Thriller'),
-    ('3', 'Drama'),
-    ('4', 'Biograghy'),
-    ('5', 'Text Book'),
-    ('6', 'Science'),
-    ('7', 'Not Specified'),
+    ('Novel', 'Novel'),
+    ('Thriller', 'Thriller'),
+    ('Drama', 'Drama'),
+    ('Biograpghy', 'Biograghy'),
+    ('Text Book', 'Text Book'),
+    ('Science', 'Science'),
+    ('Not Specified', 'Not Specified'),
 ]
 
 
