@@ -1,13 +1,10 @@
-from django.conf.urls import url, include
-from rest_framework.routers import DefaultRouter
-from backend.users.views.interests import UserInterestViewSet
+from django.conf.urls import url
+from backend.users.views.interests import UserInterestAPIView
+from backend.users.views.profile import UserProfileAPIView
 
-
-# router = DefaultRouter()
-# router.register(r'users', UserInterestViewSet)
-# print(router.urls)
 
 app_name = 'users'
 urlpatterns = [
-    url(r'interests/?', UserInterestViewSet.as_view()),
+    url(r'interests/?', UserInterestAPIView.as_view()),
+    url(r'profile/?', UserProfileAPIView.as_view()),
 ]
