@@ -21,6 +21,7 @@ from users.models import UserProfile
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
+max_age = int(settings.JWT_AUTH.get('JWT_EXPIRATION_DELTA').total_seconds())
 
 
 def get_token(user):
@@ -34,8 +35,7 @@ def refresh_token(request, response):
     expire = datetime.datetime.fromtimestamp(jwt_decode_handler(token).get('exp'))
     delta = datetime.datetime.now() + datetime.timedelta(hours=1)
     if expire < delta:
-        response.set_cookie('token', get_token(request.user),
-                            max_age=int(settings.JWT_AUTH.get('JWT_EXPIRATION_DELTA').total_seconds()))
+        response.set_cookie('token', get_token(request.user), max_age=max_age)
 
 
 @api_view(['GET'])
@@ -71,7 +71,6 @@ class UserList(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
-        request.META['Authorization'] = 'JWT ' + get_token(request)
         serializer = UserListSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -173,9 +172,7 @@ class SignupView(APIView):
         if serializer.is_valid():
             user_profile = serializer.save()
             response = redirect('api:details')
-            token = get_token(user_profile.user)
-            response.set_cookie('token', token,
-                                max_age=int(settings.JWT_AUTH.get('JWT_EXPIRATION_DELTA').total_seconds()))
+            response.set_cookie('token', get_token(user_profile.user), max_age=max_age)
             return response
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -186,7 +183,6 @@ class LoginView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
-        print(request.COOKIES.get('token'))
         if request.user.is_authenticated:
             return redirect('api:details')
         serializer = UserSerializer()
@@ -200,8 +196,7 @@ class LoginView(APIView):
             if user and user.is_active:
                 response = redirect('api:details')
                 token = get_token(user)
-                response.set_cookie('token', token,
-                                    max_age=int(settings.JWT_AUTH.get('JWT_EXPIRATION_DELTA').total_seconds()))
+                response.set_cookie('token', token, max_age=max_age)
                 return response
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 

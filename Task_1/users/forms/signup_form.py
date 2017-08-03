@@ -41,6 +41,6 @@ class SignupForm(forms.ModelForm):
             'placeholder': '150 characters or fewer. Letters, digits and @/./+/-/_ only.'})),
             'password': forms.PasswordInput(attrs=attr.update({'placeholder': 'Enter Password'})),
             'email': forms.EmailInput(attrs=attr.update({'placeholder': 'Email Address', 'required': True})),
-            'first_name': forms.TextInput(attrs=attr.update({'placeholder': 'e.g. John (Optional)'})),
-            'last_name': forms.TextInput(attrs=attr.update({'placeholder': 'e.g. Doe (Optional)'}))
+            'last_name': forms.TextInput(attrs=attr.update({'placeholder': 'e.g. Doe (Optional)', 'required': False})),
+            'first_name': forms.TextInput(attrs=attr.update({'placeholder': 'e.g. John (Optional)', 'required': False}))
         }
