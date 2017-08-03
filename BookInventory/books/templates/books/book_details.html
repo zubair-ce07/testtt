@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Book Details</title>
-</head>
-<body>
+{% extends 'books/base.html' %}
+{% block title %}Book Details{% endblock %}
+{% block content %}
 <h2>Title: {{ book.title }}</h2>
 <h3>Genre: {{ book.genre }}</h3>
 <h3>Publisher: {{ book.publisher }} </h3>
@@ -15,5 +11,4 @@
     {% endfor %}
 </ul>
 <h3>Date Published: {{ book.pub_date|date }}</h3>
-</body>
-</html>
+{% endblock %}

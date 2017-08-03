@@ -1,25 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Author Details</title>
-</head>
-<body>
-    <h2>Name: {{ author.name }}</h2>
-    <h3>Address: {{ author.address }}</h3>
-    <h3>Contact: {{ author.contact }} </h3>
-    <h3>Email: {{ author.email }}</h3>
-    <h3>City: {{ author.city }} </h3>
-    <h3>Country: {{ author.country }} </h3>
-    <h3>Books Authored:</h3>
-    {% if books_list %}
-        <ul>
-            {% for book in books_list %}
-                <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No Books are available.</p>
-    {% endif %}
-</body>
-</html>
+{% extends 'books/base.html' %}
+{% block title %}Author Details{% endblock %}
+{% block content %}
+<h2>Name: {{ author.name }}</h2>
+<h3>Address: {{ author.address }}</h3>
+<h3>Contact: {{ author.contact }} </h3>
+<h3>Email: {{ author.email }}</h3>
+<h3>City: {{ author.city }} </h3>
+<h3>Country: {{ author.country }} </h3>
+<h3>Books Authored:</h3>
+{% if books_list %}
+    <ul>
+        {% for book in books_list %}
+            <li><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No Books are available.</p>
+{% endif %}
+{% endblock %}

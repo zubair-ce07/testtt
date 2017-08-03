@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Publisher Details</title>
-</head>
-<body>
+{% extends 'books/base.html' %}
+{% block title %}Publisher Details{% endblock %}
+{% block content %}
 <h2>Name: {{ publisher.name }}</h2>
 <h3>Address: {{ publisher.address }}</h3>
 <h3>Contact: {{ publisher.contact }} </h3>
@@ -21,5 +17,4 @@
 {% else %}
     <p>No Books are available.</p>
 {% endif %}
-</body>
-</html>
+{% endblock %}
