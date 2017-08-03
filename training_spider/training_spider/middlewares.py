@@ -59,5 +59,5 @@ class TrainingSpiderSpiderMiddleware(object):
 class ProxyMiddleware(object):
 
     def process_request(self, request, spider):
-        request.meta['proxy'] = 'https://34.208.47.183:80'
+        request.meta['proxy'] = 'https://47.90.9.82:80'
         spider.log('Proxy : %s' % request.meta['proxy'])

@@ -2,7 +2,11 @@ import json
 import re
 from json.decoder import JSONDecodeError
 
-from scrapy import Spider, Request, FormRequest
+import logging
+from urllib.parse import urljoin
+
+from copy import deepcopy
+from scrapy import Spider, Request, FormRequest, Selector
 
 from training_spider.items import TrainingSpiderItem
 
@@ -15,6 +19,11 @@ class BenchSpider(Spider):
 
     form_key_re = re.compile('{\"form_key\".*\"}')
 
+    params_text_t = 'a:6:{{s:4:"sort";s:0:"";s:4:"page";i:{params[page_id]};''' \
+                    's:10:"searchword";s:0:"";s:7:"storeId";i:{params[store_id]};s:6:"filter";' \
+                    'a:0:{{}}s:6:"cateId";i:{params[cat_id]};}}'
+    logger = logging.getLogger('Bench_spider')
+
     def parse(self, response):
         categories = response.css(
             'script[type="text/x-magento-init"]'
@@ -22,129 +31,127 @@ class BenchSpider(Spider):
 
         category_json = json.loads(categories)
 
-        url = category_json['getTopMenuList']
+        categories_url = category_json['getTopMenuList']
         form_key = category_json['form_key']
 
         for category_id in response.css('#pc-nav .level0::attr(data)').re('\d+'):
-            yield FormRequest(url,
+            form_data = {'form_key': form_key,
+                         'categoryId': category_id
+                         }
+            yield FormRequest(categories_url,
                               callback=self.parse_categories,
-                              formdata={'form_key': form_key,
-                                        'categoryId': category_id}
+                              formdata=form_data
                               )
 
     def parse_categories(self, response):
         categories = json.loads(response.text)
         categories = categories['AllChildData']
 
+        for category in  self.traverse_categories(response, categories):
+            yield category
+
+    def traverse_categories(self, response, categories):
         for category in categories.values():
             url = category['url']
-            yield response.follow(url, callback=self.parse_pagination)
-
-            sub_categories = category.get('_child')
-            if sub_categories:
-                for sub_category in sub_categories.values():
-                    url = sub_category['url']
-                    yield response.follow(url, callback=self.parse_pagination)
-
-    def parse_pagination(self, response):
-        try:
-            products = json.loads(response.text)['data']
-            for product in products['products']:
-                url = product['product_url']
-                yield Request(url, callback=self.parse_products)
-
-            next_page = products['cannextload']
-            if next_page == 'yes':
-                params = response.meta
-                params['page_id'] = params['page_id'] + 1
-                params_text = params['params_text']
-            else:
-                return
-        except JSONDecodeError:
-            product_json = json.loads(
-                response.css('#list-div-content script::text').extract_first()
-            )['#list-div-content']['Magento_Ui/js/core/app']['components']['listgrid']
-
-            products = product_json['data']['products']
-            for product in products:
-                product_url = product['product_url']
-                yield Request(product_url, callback=self.parse_products)
-
-            params_text = 'a:6:{opening_brace}s:4:"sort";s:0:"";s:4:"page";i:' \
-                          '{page_id};''s:10:"searchword";s:0:"";s:7:"storeId";i:' \
-                          '{store_id};s:6:"filter";a:0:{braces}s:6:' \
-                          '"cateId";i:{cat_id};{closing_brace}'
-
-            params = {
-                'pagination_url': product_json['requestUrl'],
-                'form_key': product_json['form_key'],
-                'cat_id': product_json['cateId'],
-                'store_id': product_json['storeId'],
-                'page_id': 2,
-                'params_text': params_text
-            }
-
-        params_text = params_text.format(page_id=params['page_id'],
-                                         store_id=params['store_id'],
-                                         cat_id=params['cat_id'],
-                                         opening_brace='{',
-                                         closing_brace='}',
-                                         braces='{}'
-                                         )
-        yield FormRequest(params['pagination_url'],
-                          callback=self.parse_pagination,
-                          formdata={'form_key': params['form_key'],
-                                    'data': params_text},
-                          meta=params
+            yield Request(urljoin(response.url, url),
+                          callback=self.parse_products,
                           )
 
+            sub_categories = category.get('_child', {})
+            if sub_categories:
+                yield self.traverse_categories(response, sub_categories, category_names)
+
     def parse_products(self, response):
+        raw_script = response.css('#list-div-content script::text').extract_first()
+        raw_json = json.loads(raw_script)
+        products_grid = raw_json['#list-div-content']
+        products_grid = products_grid['Magento_Ui/js/core/app']['components']['listgrid']
+        products_details = products_grid['data']
+
+        for detail in products_details['products']:
+            url = detail['product_url']
+
+            yield Request(url,
+                          callback=self.parse_details,
+                          )
+            break
+        # yield self.request_product_details(response, products_details)
+
+        params = {
+            'pagination_url': products_grid['requestUrl'],
+            'form_key': products_grid['form_key'],
+            'cat_id': products_grid['cateId'],
+            'store_id': products_grid['storeId'],
+            'page_id': 2,
+        }
+        yield self.request_pagination(params)
+
+    def request_pagination(self, params):
+        self.logger.info('request_pagination')
+        params_text = self.params_text_t.format(params=params)
+        form_data = {
+            'form_key': params['form_key'],
+            'data': params_text
+        }
+        return FormRequest(params['pagination_url'],
+                           callback=self.parse_pagination,
+                           formdata=form_data,
+                           meta=params
+                           )
+
+    def parse_pagination(self, response):
+        self.logger.info('pagination')
+        products = json.loads(response.text)['data']
+        # yield self.request_product_details(response, products)
+
+        for detail in products['products']:
+            url = detail['product_url']
+            yield Request(url,
+                          callback=self.parse_details,
+                          )
+            break
+
+        next_page = products['cannextload']
+        if next_page == 'yes':
+            params = response.meta
+            params['page_id'] = params['page_id'] + 1
+            yield self.request_pagination(params)
+
+    def parse_details(self, response):
         raw_script = response.css('#main-product-content script::text').extract_first()
         if not raw_script:
-            print('Product is not found')
+            self.logger.info('Product is not found')
             return
 
-        product = json.loads(raw_script)['#main-product-content']['Magento_Ui/js/core/app']
-        product = product['components']['productshow']
+        raw_json = json.loads(raw_script)['#main-product-content']['Magento_Ui/js/core/app']
+        raw_json = raw_json['components']['productshow']
+        product_detail = raw_json['data']
 
         item = TrainingSpiderItem()
         item['product_url'] = response.url
-        item['product_id'] = product['data']['id']
+        item['product_id'] = product_detail['id']
         item['product_name'] = response.css('.base::text').extract_first()
         item['currency'] = 'PHP'
+        item['country'] = 'ph'
 
-        return self.request_product_color(item, product)
-
-    def request_product_color(self, item, product):
-        product_info = product['data']
-        product_id = product_info['id']
-        sizes_and_colors = product_info['config_attr']
-
-        if sizes_and_colors:
-            sizes_ids = self.get_sizes_ids(sizes_and_colors)
-            product_colors_ids = self.get_colors_ids(sizes_and_colors, sizes_ids)
-            product_color_url = self.get_product_colors_url(product, product_id)
-
-            return Request(product_color_url,
-                           callback=self.parse_colors,
-                           meta={'item': item,
-                                 'colors': product_colors_ids}
-                           )
+        variations = product_detail['config_attr']
+        if variations:
+            yield self.request_product_color(item, raw_json, product_detail, variations)
         else:
-            price = product_info['final_price']
-            sale_price = product_info['max_price']
-            is_available = True
-            main_image = product_info['gallery'][0]['medium']
-            images_urls = [image['small'] for image in product_info['gallery']]
+            yield self.items_without_variation(item, product_detail)
 
-            item['variations'] = {
-                'price': price,
-                'sale_price': sale_price,
-                'is_available': is_available,
-                'main_image': main_image,
-                'images_urls': images_urls
-            }
-            return item
+    def request_product_color(self, item, raw_json, product_datail, variations):
+        self.logger.info('request_products')
+        product_id = product_datail['id']
+        size_mappings = self.get_size_mapping(variations)
+        colors_mappings = self.get_colors_mappings(variations, size_mappings)
+        product_color_url = self.get_product_colors_url(raw_json, product_id)
+        meta = {'item': item,
+                'colors': colors_mappings,
+                }
+        yield Request(product_color_url,
+                      callback=self.parse_colors,
+                      meta=meta)
 
     def get_product_colors_url(self, product, product_id):
         form_key = product['form_key']
@@ -156,86 +163,136 @@ class BenchSpider(Spider):
         )
         return product_color_url
 
-    def get_colors_ids(self, sizes_and_colors, sizes_ids):
-        product_colors_ids = []
-        for size_or_color in sizes_and_colors:
-            for color in size_or_color:
-                if not color['frontend_label'] == 'Color':
-                    continue
-
-                color_label = color['label']
-                sizes = self.get_sizes(color, sizes_ids)
-
-                color = {color_label: sizes}
-                product_colors_ids.append(color)
-        return product_colors_ids
-
-    def get_sizes(self, color, sizes_ids):
-        sizes = []
-        for product_id in color['product_ids']:
-            if sizes_ids:
-                size = [siz for siz in sizes_ids if product_id == list(siz.keys())[0]]
-                if size:
-                    size = size[0]
-                else:
-                    size = {product_id: '-'}
-            else:
-                size = {product_id: '-'}
-
-            sizes.append(size)
-        return sizes
-
-    def get_sizes_ids(self, sizes_and_colors):
-        sizes = []
-        for sizes_or_colors in sizes_and_colors:
-            for size in sizes_or_colors:
-                if not size['frontend_label'] == 'Size':
-                    continue
-                size_label = size['label']
-                for id in size['product_ids']:
-                    _size = {id: size_label}
-                    sizes.append(_size)
-        return sizes
-
     def parse_colors(self, response):
+        self.logger.info('Parse_Colors')
         meta = response.meta
         item = meta['item']
         colors = meta['colors']
+        variations = []
+
         for color in colors:
-            color_key = list(color.keys())[0]
-            for size in color[color_key]:
-                updated_size = self.update_size(response, size)
-                size.update(updated_size)
+            size_mappings = color['size_mappings']
+            color_name = color['color_name']
+            color_code = color['color_code']
+            color_key = '{}_{}'.format(color_name, color_code)
 
-        item['variations'] = colors
-        yield item
+            color_value = self.get_variations(response, color, size_mappings)
+            variations.append({color_key: color_value})
 
-    def update_size(self, response, size):
-        size_key = list(size.keys())[0]
+        item['variations'] = variations
 
-        for product in json.loads(response.text)['data']:
-            if size_key != product['id']:
+    def get_variations(self, response, color_ids, size_mappings):
+        self.logger.info('Parse_color_variations')
+        images_urls = []
+        sizes = []
+        for product_info in json.loads(response.text)['data']:
+            product_id = product_info['id']
+            if product_id not in color_ids:
                 continue
 
-            size_label = size.pop(size_key)
-            price = product['final_price']
-            sale_price = product['max_price']
+            if size_mappings:
+                size = self.get_size_item(product_info, size_mappings[product_id])
+                sizes.append(size)
+            else:
+                price = product_info['max_price']
+                sale_price = product_info['final_price']
 
-            is_available = False
-            quantity = product['qty']
-            if int(float(quantity)):
-                is_available = True
+                is_available = False
+                quantity = product_info.get('qty')
+                if float(quantity):
+                    is_available = True
+                sizes = {
+                    'common_size': {
+                        'price': price,
+                        'sale_price': sale_price,
+                        'is_available': is_available
+                    }
+                }
+            if not images_urls:
+                images_urls = [image.get('base', image.get('medium', ''))
+                               for image in product_info['gallery']
+                               ]
+        variations = {
+            'sizes': sizes,
+            'images_urls': images_urls
+        }
+        return variations
 
-            main_image = product['ImgUrl']
-            images_urls = [image['small'] for image in product['gallery']]
+    def get_size_item(self, item_detail, size):
+        price = item_detail['max_price']
+        sale_price = item_detail['final_price']
+        size_name = size['size_name']
 
-            updated_size = {
-                size_label: {
-                    'is_available': is_available,
-                    'price': price,
-                    'sale_price': sale_price,
-                    'main_image': main_image,
-                    'images_urls': images_urls}
+        is_available = False
+        quantity = item_detail.get('qty')
+        if float(quantity):
+            is_available = True
+        size = {
+            size_name: {
+                'price': price,
+                'sale_price': sale_price,
+                'is_available': is_available
             }
+        }
+        return size
 
-            return updated_size
+    def get_colors_mappings(self, variations, size_mappings):
+        colors_mappings = []
+        for size_or_color in variations:
+            for element in size_or_color:
+                if not element['frontend_label'] == 'Color':
+                    continue
+
+                sizes = {}
+                if size_mappings:
+                    for product_id in element['product_ids']:
+                        sizes.update({product_id: size_mappings[product_id]})
+
+                element = {
+                    'color_code': element['option_id'],
+                    'color_name': element['label'],
+                    'size_mappings': sizes,
+                    'product_ids': element['product_ids']
+                }
+                colors_mappings.append(element)
+        return colors_mappings
+
+    def get_size_mapping(self, variations):
+        size_mappings = {}
+        for sizes_or_colors in variations:
+            for element in sizes_or_colors:
+                if not element['frontend_label'] == 'Size':
+                    continue
+
+                size_name = element['label']
+                size_code = element['option_id']
+                for product_id in element['product_ids']:
+                    size_mappings.update({
+                        product_id: {
+                            'size_name': size_name,
+                            'size_code': size_code}
+                    })
+        return size_mappings
+
+    def get_description(self, item_detail):
+        short_description = Selector(text=item_detail['shot_description'])
+        return short_description.css('::text').extract()
+
+    def items_without_variation(self, item, item_detail):
+        price = item_detail['max_price']
+        sale_price = item_detail['final_price']
+        is_available = True
+        image_urls = [image.get('base',
+                                image.get('medium', '')
+                                )
+                      for image in item_detail['gallery']
+                      ]
+        variation = {
+            'price': price,
+            'sale_price': sale_price,
+            'is_available': is_available,
+            'image_urls': image_urls
+        }
+
+        item['variations'] = variation
+        return item
