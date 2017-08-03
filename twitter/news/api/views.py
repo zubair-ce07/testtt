@@ -10,7 +10,6 @@ from news.models import News
 
 
 class NewsList(APIView):
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
@@ -27,7 +26,6 @@ class NewsList(APIView):
 
 
 class NewsDetail(APIView):
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, pk):
