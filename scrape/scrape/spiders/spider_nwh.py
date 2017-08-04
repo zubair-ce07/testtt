@@ -12,7 +12,6 @@ class Doctor(CrawlSpider):
     allowed_domains = ['nwh.org']
     start_urls = [
             'https://www.nwh.org/find-a-doctor/find-a-doctor-home/',
-            'https://www.nwh.org/find-a-doctor/find-a-doctor-profile/todd-e-abbott-md'
     ]
 
     rules = [
