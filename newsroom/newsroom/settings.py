@@ -45,6 +45,7 @@ CUSTOM_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 INSTALLED_APPS += THIRD_PARTY_APPS + CUSTOM_APPS
