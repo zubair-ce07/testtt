@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf.urls import url
 from url_crawler import views
 
+app_name = 'url_crawler'
 
 urlpatterns = [
     url(r'^$', login_required(views.Index.as_view()), name='index'),

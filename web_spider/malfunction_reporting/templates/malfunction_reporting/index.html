@@ -1,0 +1,12 @@
+{% extends 'url_crawler/base_layout.html' %}
+
+{% block title %}Reporting{% endblock %}
+
+{% block content %}
+    <h2>Add new Safety Hazard</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Submit">
+    </form><br/>
+{% endblock %}

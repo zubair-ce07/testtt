@@ -1,0 +1,16 @@
+{% extends 'url_crawler/base_layout.html' %}
+
+{% block title %}Investigations{% endblock %}
+
+{% block content %}
+    <h1>Safe Acts Karma</h1>
+    {% for investigation in safe_investigations %}
+        <p><b>Remarks: </b>{{ investigation.report.get.remarks }}</p>
+        <p><b>Verified: </b> {{ investigation.is_correct }}</p>
+    {% endfor %}
+    <h1>Not so safe acts</h1>
+    {% for investigation in hazard_investigations %}
+        <p><b>Description: </b>{{ investigation.hazard.get.desc }}</p>
+        <p><b>Verified: </b> {{ investigation.is_correct }}</p>
+    {% endfor %}
+{% endblock %}

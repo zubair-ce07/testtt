@@ -1,0 +1,21 @@
+{% extends 'url_crawler/base_layout.html' %}
+
+{% block title %}Task{% endblock %}
+
+{% block content %}
+    <h2>Task</h2>
+    <h4>Description: {{ task.safetyhazard.desc }}</h4>
+    {% load tz %}
+    <p>At: {{ task.created_at|localtime }}</p>
+    <p>Priority: {{ task.get_priority_display }}</p>
+    <p>By: {{ task.safetyhazard.reported_by }}</p>
+    <p>Completed at: {{ task.completed_at|localtime }}</p>
+    {% for investigation in investigations %}
+        <p>Verified: {{ investigation.is_correct }} By {{ investigation.investigated_by }}</p>
+    {% endfor %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Submit">
+    </form><br/>
+{% endblock %}

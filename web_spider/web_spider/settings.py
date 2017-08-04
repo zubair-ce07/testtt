@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # if config not found will use this default
-SECRET_KEY = 'sample_secret_key'
+SECRET_KEY = 'insecure_secret_key'
 
 DEBUG = True
 
@@ -17,8 +17,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'url_crawler',
     'tz_detect',
+    'malfunction_reporting',
+    'url_crawler',
 ]
 
 MIDDLEWARE = [
@@ -49,7 +50,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'web_spider.wsgi.application'
 
-# if config not found will use this default
+# if config not found, will use this default
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -67,7 +68,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-LOGIN_URL = 'login'
+LOGIN_URL = 'url_crawler:login'
 AUTH_USER_MODEL = 'url_crawler.CustomUser'
 
 AUTHENTICATION_BACKENDS = (
