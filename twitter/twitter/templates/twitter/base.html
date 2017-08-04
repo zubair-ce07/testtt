@@ -5,35 +5,86 @@
     {% block title %}
         <title>Tweeter</title>
     {% endblock %}
-    <style>
-        body {
-            text-align: center; /* !!! */
 
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous"
+    >
+    <style>
+        .heading, .tweet_form, body {
+            text-align: center;
         }
-        header {
-            border-bottom: 3px solid black;
-            background-color: dodgerblue;
-        }
-        header > h1 {
-            display: inline-block;
-        }
-        header span {
-            margin-left: 10px;
-        }
-        table.tweet{
+
+        table.tweet {
             background-color: #dff8ff;
+            margin-bottom: 5px;
+        }
+
+        .published-time span {
+            color: red;
+        }
+
+        .media {
+            margin-left: 10%;
+            margin-right: 10%;
+        }
+
+        .news-image img {
+            width: 300px;
+            height: 150px;
         }
     </style>
+
 </head>
 <body>
-    {% block header %}
-        <header>
-            <h1>Tweeter</h1>
-            {% block urls %}{% endblock urls%}
-        </header>
-    {% endblock header %}
-    {% block content %}
-        <p align="center">"I'm Body</p>
-    {% endblock %}
+{% block header %}
+    <header>
+
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="{% url 'home' %}">Tweeter</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="links_for_authenticated">
+                    <ul class="nav navbar-nav navbar-right">
+                        {% if user.is_authenticated %}
+                            {% block header_authenticated %}
+                                <li><a href="{% url 'news' %}">News</a></li>
+                                <li><a href="{% url 'tweet' %}">Post Tweet</a></li>
+                                <li class="dropdown">
+                                    <a href="{% url 'home' %}" class="dropdown-toggle" data-toggle="dropdown"
+                                       role="button" aria-haspopup="true" aria-expanded="false">
+                                        {{ user|capfirst }}<span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="{% url 'profile' user.username %}">Profile</a></li>
+                                        <li role="separator" class="divider"></li>
+                                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                                    </ul>
+                                </li>
+                            {% endblock header_authenticated %}
+                        {% endif %}
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+
+            </div><!-- /.container-fluid -->
+        </nav>
+
+    </header>
+{% endblock header %}
+
+{% block content %}
+{% endblock content %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous">
+</script>
+
 </body>
 </html>

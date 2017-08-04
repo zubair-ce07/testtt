@@ -13,16 +13,25 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
+from django.conf.urls import url, include
+from django.conf.urls.static import static
 from django.contrib import admin
-from twitter import views
+from django.contrib.auth import views as auth_views
+from django.views.decorators.http import require_POST
+
+from twitter import views, settings
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+                  url(r'^admin/', admin.site.urls),
 
-    url(r'^$', views.HomeView.as_view(), name='home'),
-    url(r'^login/$', views.LoginView.as_view(), name='login'),
-    url(r'^signup/$', views.SignUpView.as_view(), name='signup'),
-    url(r'^logout/$', views.logout_view, name='logout'),
-    url(r'^tweet/$', views.TweetView.as_view(), name='tweet'),
-]
+                  url(r'^$', views.HomeView.as_view(), name='home'),
+                  url(r'^login/$', auth_views.login, {'template_name': 'twitter/login.html'}, name='login'),
+                  url(r'^signup/$', views.SignUpView.as_view(), name='signup'),
+                  url(r'^logout/$', auth_views.logout, name='logout'),
+                  url(r'^tweet/$', views.TweetView.as_view(), name='tweet'),
+                  url(r'^profiles/(?P<username>[a-zA-Z0-9@.+-_]+)/$', views.ProfileView.as_view(), name='profile'),
+                  url(r'^follow', require_POST(views.FollowView.as_view()), name='follow'),
+                  url(r'^news/', include('news.urls')),
+                  url(r'^api/', include('twitter.api_url')),
+
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

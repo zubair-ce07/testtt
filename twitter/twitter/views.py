@@ -1,72 +1,68 @@
-from django.contrib.auth import logout, login, authenticate
-from django.contrib.auth.models import User
+from django.contrib.auth import login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.utils.functional import cached_property
 from django.views import View
+from django.views.generic import FormView, TemplateView, ListView
 
-from twitter.forms import UserSignUpForm, LoginForm, TweetForm
-from twitter.models import Tweet
-
-
-# Create your views here.
+from twitter import forms
+from twitter.models import Tweet, User
 
 
-def logout_view(request):
-    logout(request)
-    return redirect(reverse('home'))
+class TweetView(LoginRequiredMixin, FormView):
+    template_name = 'twitter/tweet.html'
+    form_class = forms.TweetForm
+
+    def form_valid(self, form):
+        Tweet.objects.create(user=self.request.user, **form.cleaned_data)
+        return HttpResponseRedirect(reverse('home'))
+
+    def form_invalid(self, form):
+        return render(self.request, 'twitter/tweet.html', {'form': form})
 
 
-class TweetView(View):
-    def get(self, request):
-        if not request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('home'))
-        form = TweetForm()
-        return render(request, 'twitter/tweet.html', {'form': form})
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'twitter/profile.html'
 
+    @cached_property
+    def tweets(self):
+        tweet_set = Tweet.objects.filler_by_username(username=self.kwargs['username'])
+        return tweet_set
+
+    @cached_property
+    def profile_user(self):
+        profile_user = User.objects.get_by_username(self.kwargs['username'])
+        return profile_user
+
+    @cached_property
+    def form_follow(self):
+        return forms.FollowForm(initial={'follower_username': self.profile_user.username})
+
+
+
+class HomeView(ListView):
+    template_name = 'twitter/home.html'
+    model = Tweet
+    context_object_name = 'tweets'
+
+
+class FollowView(View):
     def post(self, request):
-        form = TweetForm(request.POST)
-        if form.is_valid():
-            Tweet.objects.create(user=request.user, **form.cleaned_data)
-            return HttpResponseRedirect(reverse('home'))
-        return render(request, 'twitter/tweet.html', {'form': form})
+        profile_username = request.POST['follower_username']
+        profile_user = get_object_or_404(User, username__iexact=profile_username)
+        request.user.followers.add(profile_user)
+        return HttpResponseRedirect(reverse('profile', kwargs={'username': profile_username}))
 
 
-class HomeView(View):
-    def get(self, request):
-        context = {'user': request.user}
-        if request.user.is_authenticated:
-            return render(request, 'twitter/home.html', context)
-        else:
-            return render(request, 'twitter/home_unauthenticated.html')
+class SignUpView(FormView):
+    form_class = forms.UserSignUpForm
+    template_name = 'twitter/singup.html'
+    success_url =  reverse_lazy('home')
 
 
-class LoginView(View):
-    def get(self, request):
-        form = LoginForm()
-        return render(request, 'twitter/login.html', {'form': form})
-
-    def post(self, request):
-        form = LoginForm(request.POST)
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return HttpResponseRedirect(reverse('home'))
-        return render(request, 'twitter/login.html', {'form': form})
-
-
-class SignUpView(View):
-    def get(self, request):
-        form = UserSignUpForm()
-        return render(request, 'twitter/singup.html', {'form': form})
-
-    def post(self, request):
-        form = UserSignUpForm(request.POST)
-        if form.is_valid():
-            new_user = User.objects.create_user(**form.cleaned_data)
-            login(request, new_user)
-            # redirect, or however you want to get to the twitter view
-            return HttpResponseRedirect(reverse('home'))
-        return render(request, 'twitter/singup.html', {'form': form})
+    def form_valid(self, form):
+        new_user = form.save()
+        login(self.request, new_user)
+        return super(SignUpView, self).form_valid(form)

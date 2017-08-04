@@ -1,0 +1,35 @@
+{% load news_extras %}
+
+
+<div class="media">
+    <div class="media-left media-middle news-image">
+        <a href="{% url 'news_detailed' news.id %}">
+            {% if news.image %}
+                <img class="media-object" src="{{ news.image.url }}">
+            {% else %}
+                <img class="media-object" src="{{ news.image_url }}">
+            {% endif %}
+        </a>
+    </div>
+    <div class="media-body" align="left">
+        <a href="{% url 'news_detailed' news.id %}">
+            <h4 class="media-heading">{{ news.title }}</h4>
+        </a>
+        {{ news.content|striptags|excerpt_news }}
+        <div class="published-time">
+            PUBLISHED <span>{{ news.pub_date|timesince }} ago </span>
+        </div>
+        {% if news.publisher %}
+            <div class="publisher">
+                PUBLISHER
+                <span>
+                        <a href="{% url 'profile' news.publisher.username %}">
+                        {{ news.publisher|capfirst }}
+                        </a>
+                    </span>
+            </div>
+        {% endif %}
+
+    </div>
+    <hr>
+</div>

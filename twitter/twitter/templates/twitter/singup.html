@@ -1,17 +1,9 @@
 {% extends 'twitter/base.html' %}
 
-
 {% block content %}
     <form action="{% url 'signup' %}" method="post">
         {% csrf_token %}
-        {% for field in form %}
-            <br>
-            {{ field.label_tag}}
-            {{ field}}
-            {{ field.error}}<br>
-            {{ field.help_text}}<br>
-        {% endfor %}
-
-        <input type="submit" value="Sign Up">
+        {{ form.as_p }}
+        <input type="submit" value="SIGN UP">
     </form>
 {% endblock %}

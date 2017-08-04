@@ -1,20 +1,23 @@
 from django import forms
-from django.contrib.auth.models import User
-from django.forms import ModelForm
+from django.contrib.auth.forms import UserCreationForm
+
+from twitter.models import User
 
 
-class UserSignUpForm(ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
+class UserSignUpForm(UserCreationForm):
+    def clean_username(self):
+        if User.objects.filter(username__iexact=self.cleaned_data['username']).exists():
+            raise forms.ValidationError("username already exist")
+        return self.cleaned_data['username']
 
     class Meta:
         model = User
-        fields = ['first_name', 'username']
-
-
-class LoginForm(forms.Form):
-    username = forms.CharField(max_length=100)
-    password = forms.CharField(widget=forms.PasswordInput)
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
 
 
 class TweetForm(forms.Form):
     tweet_text = forms.CharField(widget=forms.Textarea)
+
+
+class FollowForm(forms.Form):
+    follower_username = forms.CharField(widget=forms.HiddenInput())

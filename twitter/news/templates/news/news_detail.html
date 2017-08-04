@@ -1,0 +1,37 @@
+{% extends 'twitter/base.html' %}
+
+{% block content %}
+    <h2 class="media-heading heading">{{ news.title }}</h2>
+    <div class="media">
+        <div class="published-time">
+            PUBLISHED <span>{{ news.pub_date|timesince }} ago </span>
+        </div>
+
+        {% if news.publisher %}
+            <div class="publisher">
+                PUBLISHER
+                <span>
+                        <a href="{% url 'profile' news.publisher.username %}">
+                        {{ news.publisher|capfirst }}
+                        </a>
+                     </span>
+            </div>
+        {% endif %}
+
+        <div class="media-left news-image">
+            {% if news.image %}
+                <a href="{{ news.image.url }}">
+                    <img class="media-object" src="{{ news.image.url }}">
+                </a>
+            {% else %}
+                <a href="{{ news.image_url }}">
+                    <img class="media-object" src="{{ news.image_url }}">
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="media-body" align="left">
+            {{ news.content|striptags }}
+        </div>
+    </div>
+{% endblock content %}

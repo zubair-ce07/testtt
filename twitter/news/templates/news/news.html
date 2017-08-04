@@ -1,0 +1,12 @@
+{% extends 'twitter/base.html' %}
+{% load news_extras %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <h2 class="heading">News</h2>
+
+        {% for news in all_news %}
+            {% show_news_card news %}
+        {% endfor %}
+    {% endif %}
+{% endblock content %}
