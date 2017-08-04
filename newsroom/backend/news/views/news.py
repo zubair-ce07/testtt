@@ -5,6 +5,7 @@ from backend.news.serializers.news import NewsSerializer
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from django.db.models import Q
+from nltk.corpus import stopwords
 
 
 class NewsViewSet(ReadOnlyModelViewSet):
@@ -31,12 +32,14 @@ class NewsViewSet(ReadOnlyModelViewSet):
     @list_route(url_path='search')
     def get_search_news(self, request):
         search_string = request.GET.get('query', "")
-        keywords = search_string.split('+')
-        queries = [Q(detail__icontains=keyword) for keyword in keywords]
+        keywords = search_string.split(' ')
+        filtered_words = [word for word in keywords if word.lower() not in stopwords.words('english')]
+        queries = [Q(detail__icontains=keyword) for keyword in filtered_words]
         query = queries.pop()
         for condition in queries:
             query |= condition
         searched_news = News.objects.filter(query).order_by('-published_date')
         serializer = NewsSerializer(searched_news, many=True)
         return Response(serializer.data)
+
 

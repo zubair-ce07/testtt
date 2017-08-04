@@ -37,7 +37,6 @@ class UserInterestAPIView(APIView):
                     query |= item
 
                 interests = Category.objects.filter(query)
-
                 UserInterest.objects.bulk_create([UserInterest(user=request.user,
                                                                category=interest) for interest in interests])
 
