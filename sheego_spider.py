@@ -9,8 +9,8 @@ from scrapy.spiders import CrawlSpider, Rule
 class SheegoSpider(CrawlSpider):
     name = 'Sheego.de'
     allowed_domains = ['sheego.de']
-    start_urls = ['https://www.sheego.de/', ]
-    download_delay = 1
+    start_urls = ['https://www.sheego.de/',]
+    download_delay = 0
     rules = (
 
         Rule(LinkExtractor(deny=(
@@ -137,19 +137,19 @@ class SheegoSpider(CrawlSpider):
         sizes = response.css('section.js-variantSelector.size div.l-hidden-xs.l-hidden-s div::text').extract()
         disable_sizes = response.css(
             'section.js-variantSelector.size div.l-hidden-xs.l-hidden-s div[class$="disabled "]::text').extract()
-        return [size for size in sizes if size not in disable_sizes]
+        return sizes, disable_sizes
 
     def get_skus(self, response):
         skus = response.meta['item']['skus']
         color_key_part = self.parse_color(response)
-        sizes_of_item = self.parse_available_sizes(response)
+        sizes_of_item, disable_sizes = self.parse_available_sizes(response)
         for size in sizes_of_item:
             item_characterstics = dict(
                 colour=color_key_part,
                 currency=self.parse_currency(response),
                 price=self.parse_price(response)
             )
-            if self.check_if_out_of_stock(response) > 0:
+            if size in disable_sizes:
                 item_characterstics['OutOfStock'] = "True"
             key = self.get_key(color_key_part, size)
             item_characterstics['size'] = size
