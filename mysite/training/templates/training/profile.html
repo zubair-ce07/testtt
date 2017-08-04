@@ -1,0 +1,79 @@
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3">
+            <img src="{{ user.user_profile.picture.url }}" alt="
+            {{user.user_profile.name}}" class="img-thumbnail" width="300"
+                 height="300"/>
+            <form action="{% url 'training:update_image' %}" method="get">
+                <div class="input-group">
+                    <input class="form-control" type="file" name="picture"
+                           accept="image/*">
+                    <input class="form-control" type="submit"
+                           value="Update Image">
+                </div>
+            </form>
+            {% if error %}
+                <h2 class="navbar-text" style="color: red">Please select an image
+                </h2>
+            {% endif %}
+        </div>
+        <div class="col-sm-9">
+            <div class="jumbotron">
+                <h2><strong>{{ user.user_profile.name }}</strong></h2>
+                <h2>Status : {{ status }}</h2>
+
+                {% if status == 'Trainee' %}
+                    {% if user.trainee.trainer %}
+                        <h2>
+                            Trainer Assigned :
+                            <a href="{% url 'training:trainer_details' user.trainee.trainer.id %}">
+                                {{ user.trainee.trainer }}
+                            </a>
+                        </h2>
+                    {% else %}
+                        <h2>
+                            No Trainer Assigned
+                        </h2>
+                    {% endif %}
+                    {% if user.trainee.assignments.all %}
+                        <h2>
+                          Assignments Assigned :
+                        </h2>
+                        <div class="list-group">
+                            {% for assignment in user.trainee.assignments.all %}
+                              <a href="{% url 'training:assignment_details' assignment.id %}"
+                              class="list-group-item">
+                                    <h4>{{ assignment }}</h4>
+                              </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>No Assignments are alloted.</p>
+                    {% endif %}
+                {% elif status == 'Trainer' %}
+                    {% if user.trainer.trainees.all %}
+                        <h2>
+                          Trainees Assigned :
+                        </h2>
+                        <div class="list-group">
+                            {% for trainee in user.trainer.trainees.all %}
+                                <a href="{% url 'training:trainee_details' trainee.id %}"
+                                   class="list-group-item">
+                                    <h4>{{ trainee }}</h4>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <h2>No Trainees Assigned</h2>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

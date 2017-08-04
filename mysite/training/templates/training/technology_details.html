@@ -1,0 +1,22 @@
+{% extends "training/base.html" %}
+{% block title %}Training Site{% endblock %}
+{% block content %}
+{% if technology %}
+    <div class="container-fluid">
+        <div class="jumbotron">
+            <h2>
+                Title : {{technology.name}}
+            </h2>
+            {% if technology.description %}
+                <h3>
+                    Description :<p>{{ technology.description }}</p>
+                </h3>
+            {% else %}
+                <p>No Description.</p>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <p>No Trainers/Trainees are available.</p>
+{% endif %}
+{% endblock %}
