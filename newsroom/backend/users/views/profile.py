@@ -29,7 +29,7 @@ class UserProfileAPIView(APIView):
                                               defaults=request.data)
                 return Response(request.data, status=status.HTTP_200_OK)
             except KeyError:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
             except DatabaseError:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             except:
