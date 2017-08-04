@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
-from django.contrib.auth.forms import AuthenticationForm
 
 from books.models import UserModel
 
@@ -18,7 +17,6 @@ def signup(request):
         user = UserModel.objects.create()
         user.username = username
         user.set_password(password)
-        user.address = "lhr"
         user.save()
         return HttpResponseRedirect('./login')
     else:

@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 
 from books.forms import BookForm, AuthorForm, PublisherForm
-from books.models import Book, Author, Publisher
+from books.models import Book, Author, Publisher, UserModel
 
 
 @login_required
@@ -20,6 +20,27 @@ def book_form(request):
     else:
         form = BookForm()
     return render(request, 'books/add_book.html', {'form': form})
+
+
+@login_required
+def profile(request):
+    if request.user.is_authenticated:
+        user = get_object_or_404(UserModel, username=request.user)
+        context = {'user': user}
+        return render(request, 'books/profile.html', context)
+
+
+def update_profile(request):
+    user = get_object_or_404(UserModel, username=request.user)
+    if request.method == 'POST':
+        user.first_name = request.POST.get('fname', '')
+        user.last_name = request.POST.get('lname', '')
+        user.email = request.POST.get('email', '')
+        user.address = request.POST.get('address', '')
+        user.contact = request.POST.get('contact', '')
+        user.timezone = request.POST.get('timezone', '')
+        user.save()
+        return HttpResponseRedirect('../')
 
 
 @login_required
