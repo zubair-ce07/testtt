@@ -25,5 +25,6 @@ urlpatterns = [
 ]
 
 urlpatterns += [
+    url(r'^accounts/signup', views.signup, name='signup'),
     url(r'^accounts/', include('django.contrib.auth.urls')),
 ]
