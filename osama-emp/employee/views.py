@@ -47,7 +47,7 @@ class EmployeeDirectsView(APIView):
             'directs': []
         }
         employee = Employee.objects.get(username=username)
-        directs = Employee.objects.filter(reports_to=employee).all()
+        directs = Employee.objects.filter(reports_to=employee)
         directs = list(map(
             lambda x: EmployeeSerializer(x, context={'request': request}).data,
             directs))

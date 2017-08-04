@@ -9,6 +9,7 @@ class Employee extends React.Component {
       directs: []
     };
   }
+  
   listDirects(username) {
     if (this.state.directs.length === 0) {
       djangoapi.getDirects(username, jsonData => {
@@ -30,7 +31,6 @@ class Employee extends React.Component {
         <a
           href="#"
           onClick={() => {
-            console.log(this.props.emp.username);
             this.listDirects(this.props.emp.username);
           }}
         >
