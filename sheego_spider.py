@@ -9,8 +9,8 @@ from scrapy.spiders import CrawlSpider, Rule
 class SheegoSpider(CrawlSpider):
     name = 'Sheego.de'
     allowed_domains = ['sheego.de']
-    start_urls = ['https://www.sheego.de/',]
-    download_delay = 0
+    start_urls = ['https://www.sheego.de/', ]
+    download_delay = 1
     rules = (
 
         Rule(LinkExtractor(deny=(
@@ -118,9 +118,6 @@ class SheegoSpider(CrawlSpider):
     def parse_retailer_sku(self, response):
         return response.css('input.js-webtrends-data::attr(data-webtrends)').extract_first().split(',')[1].split(":")[1]
 
-    def check_if_out_of_stock(self, response):
-        return response.css('input.js-webtrends-data::attr(data-webtrends)').extract_first().split(',"')[4].find("Not")
-
     def parse_color(self, response):
         return self.remove_whitespace(response.css(
             'span.colorspots__item.cj-active.js-click-variant.at-qs-color-sel::attr(title)').extract_first())
@@ -150,7 +147,7 @@ class SheegoSpider(CrawlSpider):
                 price=self.parse_price(response)
             )
             if size in disable_sizes:
-                item_characterstics['OutOfStock'] = "True"
+                item_characterstics['OutOfStock'] = True
             key = self.get_key(color_key_part, size)
             item_characterstics['size'] = size
             skus[key] = item_characterstics
