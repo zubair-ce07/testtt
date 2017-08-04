@@ -51,9 +51,9 @@ def SignUpView(request):
                                          email=form.cleaned_data['email'],
                                          first_name=form.cleaned_data.get('first_name', ''),
                                          last_name=form.cleaned_data.get('last_name', '')),
-                phone_number=form.cleaned_data.get('phone_number', None),
-                country=form.cleaned_data.get('country', None),
-                address=form.cleaned_data.get('address', None),
+                phone_number=form.cleaned_data.get('phone_number', ''),
+                country=form.cleaned_data.get('country', ''),
+                address=form.cleaned_data.get('address', ''),
                 image=request.FILES.get('image', None))
             login(request, user_profile.user)
             request.session['userid'] = str(user_profile.user.id)

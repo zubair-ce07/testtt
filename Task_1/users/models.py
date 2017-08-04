@@ -20,7 +20,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     phone_number = models.CharField(validators=[phone_validator], max_length=15, blank=True)
     country = CountryField(blank=True)
-    image = ImageField(upload_to='users/', blank=True, null=True,max_length=255)
+    image = ImageField(upload_to='users/', blank=True, null=True, max_length=255)
     address = models.TextField(max_length=1000, blank=True)
 
     def __str__(self):

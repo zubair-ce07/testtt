@@ -18,16 +18,16 @@
     </div>
     <div>
         <ul>
-            <li>Username: {{ user.username }}</li>
-            <li>Email: {{ user.email }}</li>
-            <li>Name: {% if user.first_name %} {{ user.first_name }}
-                {% if user.last_name %}{{ user.last_name }} {% endif %} {% else %} N/A {% endif %}</li>
-            <li>Country: {% if user.userprofile.country %} {% load static %} {{ user.userprofile.country.name }} <img
-                    src="{% static 'users/flags' %}/{{ user.userprofile.country|lower }}.gif"/> {% else %}
+            <li>Username: {{ serializer.username }}</li>
+            <li>Email: {{ serializer.email }}</li>
+            <li>Name: {% if serializer.first_name %} {{ serializer.first_name }}
+                {% if serializer.last_name %}{{ serializer.last_name }} {% endif %} {% else %} N/A {% endif %}</li>
+            <li>Country: {% if serializer.country %} {% load static %} {{ serializer.country}} <img
+                    src="{% static 'users/flags' %}/{{ serializer.country|lower }}.gif"/> {% else %}
                 N/A {% endif %}</li>
-            <li>Address: {% if user.userprofile.address %} {{ user.userprofile.address }} {% else %}
+            <li>Address: {% if serializer.address %} {{ serializer.address }} {% else %}
                 N/A {% endif %}</li>
-            <li>Phone #: {% if user.userprofile.phone_number %} {{ user.userprofile.phone_number }} {% else %}
+            <li>Phone #: {% if serializer.phone_number %} {{ serializer.phone_number }} {% else %}
                 N/A {% endif %}</li>
 
         </ul>

@@ -1,21 +1,21 @@
 import datetime
 
-from django.contrib.auth import authenticate, logout
+from django.conf import settings
+from django.contrib.auth import authenticate
 from django.db import transaction
-from django.http import QueryDict
 from django.shortcuts import redirect, get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
-from django.conf import settings
 
-from api.serializers import UserSerializer, EditSerializer, SignupSerializer, UserListSerializer, UPSerializer
+from api.serializers.edit_serializer import EditSerializer
+from api.serializers.signup_serializer import SignupSerializer
+from api.serializers.user_serializers import UserListSerializer, LoginSerializer
 from users.models import UserProfile
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -40,9 +40,7 @@ def refresh_token(request, response):
 
 @api_view(['GET'])
 def api_root(request, format=None):
-    return Response({
-        'users': reverse('api:list', request=request, format=format),
-    }, status=status.HTTP_200_OK)
+    return Response({'users': reverse('api:list', request=request, format=format)}, status=status.HTTP_200_OK)
 
 
 class UserList(APIView):
@@ -80,11 +78,11 @@ class UserList(APIView):
 
 class UserDetail(APIView):
     """
-         API: 'api/detail/'
+        API: 'api/detail/'
 
-         Method: 'GET, PUT, DELETE'
-
-         Response body:
+        Method: 'GET, PUT, DELETE'
+        GET:
+        Response body:
          {
             "email": "a@b.com",
             "username": "user",
@@ -95,56 +93,63 @@ class UserDetail(APIView):
             "image": "media/users/image.jpg",
             "address": "Address"
         }
+        PUT:
+        Response body:
+         {
+            "email": "a@b.com",
+            "first_name": "Test",
+            "last_name": "User",
+            "phone_number": "(+)1234567891",
+            "country": "Select from drop down",
+            "image": "File upload button",
+            "address": "Address"
+        }
+        DELETE:
+        {
+            Redirect to other page
+        }
          """
-
-    def get_object(self):
-        return get_object_or_404(UserProfile, user__id=self.request.user.id)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-        user = self.get_object()
-        serializer = UserListSerializer(user)
+        serializer = UserListSerializer(request.user.userprofile)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, format=None):
-        user = self.get_object()
-        serializer = UserListSerializer(user, data=request.data)
+        serializer = UserListSerializer(request.user.userprofile, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, format=None):
-        user = self.get_object()
-        user.delete()
+        request.user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserProfileDetails(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'api/details.html'
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        if request.user.is_authenticated:
-            user_profile = UserProfile.objects.get(user=request.user)
-            serializer = UPSerializer(user_profile)
-            response = Response({'user': user_profile.user, 'serializer': serializer.data}, status=status.HTTP_200_OK)
-            refresh_token(request, response)
-            return response
-        return redirect('api:login')
+        serializer = UserListSerializer(UserProfile.objects.get(user=request.user))
+        response = Response({'serializer': serializer.data}, status=status.HTTP_200_OK)
+        refresh_token(request, response)
+        return response
 
 
 class UserProfileEdit(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'api/edit.html'
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        if request.user.is_authenticated:
-            user_profile = UserProfile.objects.get(user=request.user)
-            serializer = EditSerializer(user_profile)
-            response = Response({'serializer': serializer}, status=status.HTTP_200_OK)
-            refresh_token(request, response)
-            return response
-        return redirect('api:login')
+        user_profile = UserProfile.objects.get(user=request.user)
+        serializer = EditSerializer(user_profile)
+        response = Response({'serializer': serializer}, status=status.HTTP_200_OK)
+        refresh_token(request, response)
+        return response
 
     def post(self, request):
         user_profile = UserProfile.objects.get(user=request.user)
@@ -163,8 +168,7 @@ class SignupView(APIView):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('api:details')
-        serializer = SignupSerializer()
-        return Response({'serializer': serializer}, status=status.HTTP_200_OK)
+        return Response({'serializer': SignupSerializer()}, status=status.HTTP_200_OK)
 
     @transaction.atomic
     def post(self, request):
@@ -185,11 +189,11 @@ class LoginView(APIView):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('api:details')
-        serializer = UserSerializer()
+        serializer = LoginSerializer()
         return Response({'serializer': serializer}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = authenticate(username=serializer.validated_data.get('username'),
                                 password=serializer.validated_data.get('password'))
