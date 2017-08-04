@@ -10,12 +10,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
     Serializer for the employee class
     """
     profile = serializers.HyperlinkedIdentityField(
-        view_name='employee-detail', read_only=True,
+        view_name='employee-detail', read_only=True, lookup_field='username'
     )
     directs = serializers.HyperlinkedIdentityField(
-        view_name='directs', format='json')
+        view_name='directs', format='json', lookup_field='username')
     reports_to = serializers.HyperlinkedRelatedField(
-        view_name='employee-detail', read_only=True,
+        view_name='employee-detail', read_only=True, lookup_field='username'
     )
 
     class Meta:
@@ -23,6 +23,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = ('username', 'profile', 'first_name', 'last_name', 'gender',
                   'date_of_birth', 'date_of_joining', 'job_title',
                   'nationality', 'reports_to', 'directs',)
+        extra_kwargs = {
+            'url': {'view_name': 'employee-detail', 'lookup_field': 'username'},
+        }
 
     def create(self, validated_data, *args, **kwargs):
         """

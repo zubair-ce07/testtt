@@ -1,6 +1,8 @@
 import json
 
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 
 from rest_framework import viewsets
 from rest_framework import status
@@ -18,28 +20,37 @@ from .permissions import IsSelf, IsDirect
 class EmployeeListAPIView(ListAPIView):
     queryset = Employee.objects.all().select_related('user')
     serializer_class = EmployeeSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'username'
 
 
 class EmployeeRetrieveAPIView(RetrieveAPIView):
     queryset = Employee.objects.all().select_related('user')
     serializer_class = EmployeeSerializer
-    # permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'username'
+
+    def retrieve(self, request, username, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class EmployeeDirectsView(APIView):
     """
     View to list the complete heirarchy of Employees starting from the current Employee
     """
+    lookup_field = 'username'
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, pk, *args, **kwargs):
+    def get(self, request, username, *args, **kwargs):
         """
         Returns the directs of the current Employee
         """
         response_dict = {
             'directs': []
         }
-        employee = Employee.objects.get(pk=pk)
+        employee = Employee.objects.get(username=username)
         directs = Employee.objects.filter(reports_to=employee).all()
         directs = list(map(
             lambda x: EmployeeSerializer(x, context={'request': request}).data,

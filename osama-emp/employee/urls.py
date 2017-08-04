@@ -12,9 +12,9 @@ urlpatterns = [
     # url(r'^', include(router.urls)),
     url(r'^employees/$', views.EmployeeListAPIView.as_view(),
         name='employee-list'),
-    url(r'^employees/(?P<pk>[0-9]+)/$', views.EmployeeRetrieveAPIView.as_view(),
-        name='employee-detail'),
-    url(r'^employees/(?P<pk>[0-9]+)/directs$',
+    url(r'^employees/(?P<username>\w+)/$', views.EmployeeRetrieveAPIView.as_view(),
+        name='employee-detail',),
+    url(r'^employees/(?P<username>\w+)/directs$',
         views.EmployeeDirectsView.as_view(), name="directs"),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^obtain-auth-token/$', obtain_auth_token)
