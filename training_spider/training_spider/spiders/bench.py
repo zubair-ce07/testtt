@@ -40,7 +40,6 @@ class BenchSpider(Spider):
                               callback=self.parse_categories,
                               formdata=form_data
                               )
-            break
 
     def parse_categories(self, response):
         categories = json.loads(response.text)
@@ -48,7 +47,6 @@ class BenchSpider(Spider):
 
         for category in self.traverse_categories(response, categories):
             yield category
-            break
 
     def traverse_categories(self, response, categories):
         for category in categories.values():
@@ -59,7 +57,6 @@ class BenchSpider(Spider):
 
             sub_categories = category.get('_child', {})
             yield self.traverse_categories(response, sub_categories)
-            break
 
     def parse_products(self, response):
         raw_script = response.css('#list-div-content script::text').extract_first()
@@ -106,7 +103,6 @@ class BenchSpider(Spider):
             yield Request(url,
                           callback=self.parse_details,
                           )
-            break
 
         next_page = products['cannextload']
         if next_page == 'yes':
