@@ -1,10 +1,7 @@
 import json
 import re
-from json.decoder import JSONDecodeError
-
 from urllib.parse import urljoin
 
-from copy import deepcopy
 from scrapy import Spider, Request, FormRequest, Selector
 
 from training_spider.items import TrainingSpiderItem
@@ -19,13 +16,12 @@ class BenchSpider(Spider):
     form_key_re = re.compile('{\"form_key\".*\"}')
 
     params_text_t = 'a:6:{{s:4:"sort";s:0:"";s:4:"page";i:{params[page_id]};''' \
-                    's:10:"searchword";s:0:"";s:7:"storeId";i:{params[store_id]};s:6:"filter";' \
-                    'a:0:{{}}s:6:"cateId";i:{params[cat_id]};}}'
+                    's:10:"searchword";s:0:"";s:7:"storeId";i:{params[store_id]};' \
+                    's:6:"filter";a:0:{{}}s:6:"cateId";i:{params[cat_id]};}}'
 
     def parse(self, response):
-        categories = response.css(
-            'script[type="text/x-magento-init"]'
-        ).re_first(self.form_key_re)
+        categories = \
+            response.css('script[type="text/x-magento-init"]').re_first(self.form_key_re)
 
         category_json = json.loads(categories)
 
@@ -33,13 +29,15 @@ class BenchSpider(Spider):
         form_key = category_json['form_key']
 
         for category_id in response.css('#pc-nav .level0::attr(data)').re('\d+'):
-            form_data = {'form_key': form_key,
-                         'categoryId': category_id
-                         }
-            yield FormRequest(categories_url,
-                              callback=self.parse_categories,
-                              formdata=form_data
-                              )
+            form_data = {
+                'form_key': form_key,
+                'categoryId': category_id
+            }
+            yield FormRequest(
+                categories_url,
+                callback=self.parse_categories,
+                formdata=form_data
+            )
 
     def parse_categories(self, response):
         categories = json.loads(response.text)
@@ -51,15 +49,19 @@ class BenchSpider(Spider):
     def traverse_categories(self, response, categories):
         for category in categories.values():
             url = category['url']
-            yield Request(urljoin(response.url, url),
-                          callback=self.parse_products,
-                          )
+            yield Request(
+                urljoin(response.url, url),
+                callback=self.parse_products,
+            )
 
             sub_categories = category.get('_child', {})
-            yield self.traverse_categories(response, sub_categories)
+            for category in self.traverse_categories(response, sub_categories):
+                yield category
 
     def parse_products(self, response):
         raw_script = response.css('#list-div-content script::text').extract_first()
+        if not raw_script:
+            return
         raw_json = json.loads(raw_script)
         products_grid = raw_json['#list-div-content']
         products_grid = products_grid['Magento_Ui/js/core/app']['components']['listgrid']
@@ -68,9 +70,7 @@ class BenchSpider(Spider):
         for detail in products_details['products']:
             url = detail['product_url']
 
-            yield Request(url,
-                          callback=self.parse_details,
-                          )
+            yield Request(url, callback=self.parse_details)
 
         params = {
             'pagination_url': products_grid['requestUrl'],
@@ -82,27 +82,24 @@ class BenchSpider(Spider):
         yield self.request_pagination(params)
 
     def request_pagination(self, params):
-        self.logger.info('request_pagination')
         params_text = self.params_text_t.format(params=params)
         form_data = {
             'form_key': params['form_key'],
             'data': params_text
         }
-        return FormRequest(params['pagination_url'],
-                           callback=self.parse_pagination,
-                           formdata=form_data,
-                           meta=params
-                           )
+        return FormRequest(
+            params['pagination_url'],
+            callback=self.parse_pagination,
+            formdata=form_data,
+            meta=params
+        )
 
     def parse_pagination(self, response):
-        self.logger.info('pagination')
         products = json.loads(response.text)['data']
 
         for detail in products['products']:
             url = detail['product_url']
-            yield Request(url,
-                          callback=self.parse_details,
-                          )
+            yield Request(url, callback=self.parse_details)
 
         next_page = products['cannextload']
         if next_page == 'yes':
@@ -111,7 +108,6 @@ class BenchSpider(Spider):
             yield self.request_pagination(params)
 
     def parse_details(self, response):
-        self.logger.info('Parse_Details')
         raw_script = response.css('#main-product-content script::text').extract_first()
         if not raw_script:
             self.logger.info('Product is not found')
@@ -135,20 +131,20 @@ class BenchSpider(Spider):
             return self.items_without_variation(item, product_detail)
 
     def request_product_color(self, item, raw_json, product_datail, variations):
-        self.logger.info('request_products')
         product_id = product_datail['id']
         size_mappings = self.get_size_mapping(variations)
         colors_mappings = self.get_colors_mappings(variations, size_mappings)
         product_color_url = self.get_product_colors_url(raw_json, product_id)
-        meta = {'item': item,
-                'colors': colors_mappings,
-                }
-        yield Request(product_color_url,
-                      callback=self.parse_colors,
-                      meta=meta)
+        meta = {
+            'item': item,
+            'colors': colors_mappings
+        }
+        yield Request(
+            product_color_url,
+            callback=self.parse_colors,
+            meta=meta)
 
     def get_product_colors_url(self, product, product_id):
-        self.logger.info('Parse_Colors')
         form_key = product['form_key']
         product_color_url = product['getProductUrl']
         product_color_url = '{url}?id={product_id}&form_key={form_key}'.format(
@@ -159,7 +155,6 @@ class BenchSpider(Spider):
         return product_color_url
 
     def parse_colors(self, response):
-        self.logger.info('Parse_Colors')
         meta = response.meta
         item = meta['item']
         colors = meta['colors']
@@ -178,7 +173,6 @@ class BenchSpider(Spider):
         yield item
 
     def get_variations(self, response, color, size_mappings):
-        self.logger.info('Parse_color_variations')
         images_urls = []
         sizes = []
         for product_info in json.loads(response.text)['data']:
@@ -187,6 +181,8 @@ class BenchSpider(Spider):
                 continue
 
             if size_mappings:
+                if product_id not in size_mappings:
+                    continue
                 size = self.get_size_item(product_info, size_mappings[product_id])
                 sizes.append(size)
             else:
@@ -205,9 +201,10 @@ class BenchSpider(Spider):
                     }
                 }
             if not images_urls:
-                images_urls = [image.get('base', image.get('medium', ''))
-                               for image in product_info['gallery']
-                               ]
+                images_urls = [
+                    image.get('base', image.get('medium', ''))
+                    for image in product_info['gallery']
+                ]
         variations = {
             'sizes': sizes,
             'images_urls': images_urls
@@ -242,6 +239,8 @@ class BenchSpider(Spider):
                 sizes = {}
                 if size_mappings:
                     for product_id in element['product_ids']:
+                        if product_id not in size_mappings:
+                            continue
                         sizes.update({product_id: size_mappings[product_id]})
 
                 element = {
@@ -278,11 +277,10 @@ class BenchSpider(Spider):
         price = item_detail['max_price']
         sale_price = item_detail['final_price']
         is_available = True
-        image_urls = [image.get('base',
-                                image.get('medium', '')
-                                )
-                      for image in item_detail['gallery']
-                      ]
+        image_urls = [
+            image.get('base', image.get('medium', ''))
+            for image in item_detail['gallery']
+        ]
         variation = {
             'price': price,
             'sale_price': sale_price,
