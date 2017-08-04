@@ -3,7 +3,7 @@ from backend.news.models import News
 from backend.categories.models import Category
 from backend.news.serializers.news import NewsSerializer
 from backend.categories.serializers.category import CategorySerializer
-from rest_framework.decorators import list_route, detail_route
+from rest_framework.decorators import detail_route
 from rest_framework.response import Response
 
 

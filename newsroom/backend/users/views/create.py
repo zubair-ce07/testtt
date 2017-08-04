@@ -14,7 +14,7 @@ class UserCreateAPIView(APIView):
             first_name = request.data['first_name']
             last_name = request.data['last_name']
             validate_email(email)
-            user = User(username=email, email=email,first_name =first_name,last_name=last_name)
+            user = User(username=email, email=email, first_name=first_name, last_name=last_name)
             user.set_password(password)
             user.save()
             return Response(request.data, status=status.HTTP_200_OK)
