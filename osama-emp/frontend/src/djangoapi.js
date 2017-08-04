@@ -1,13 +1,16 @@
+import { loggedIn } from "./auth";
+
+const headers = {
+  Accept: "application/json",
+  "Content-Type": "application/json",
+  Authorization: loggedIn() ? "Token " + localStorage.token : ""
+};
+
 function login(username, password, callback) {
   let loginData = {
     username,
     password
   };
-  let headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json"
-  };
-
   let request = new Request("http://localhost:8000/obtain-auth-token/", {
     method: "post",
     headers,
@@ -20,15 +23,24 @@ function login(username, password, callback) {
 }
 
 function getProfile(callback) {
-  let headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: "Token " + localStorage.token
-  };
   fetch("http://localhost:8000/employees/" + localStorage.username, {
     method: "get",
     headers
   })
+    .then(function(response) {
+      return response.json();
+    })
+    .then(callback);
+}
+
+function getDirects(username, callback) {
+  fetch(
+    "http://localhost:8000/employees/" + localStorage.username + "/directs",
+    {
+      method: "get",
+      headers
+    }
+  )
     .then(function(response) {
       return response.json();
     })
@@ -54,6 +66,7 @@ function listEmployees(callback) {
 let djangoapi = {
   login,
   getProfile,
+  getDirects,
   listEmployees
 };
 

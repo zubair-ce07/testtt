@@ -1,21 +1,21 @@
 import React, { Component } from "react";
+import { Route } from "react-router-dom";
 import "./App.css";
 import Employee from "./Employee";
+import { loggedIn } from "../auth.js";
 import djangoapi from "../djangoapi";
 
 class App extends Component {
   constructor(props) {
     super();
     this.state = {
-      username: "",
       profile: {},
-      results: []
+      hierarchy: {}
     };
   }
 
   componentDidMount() {
     djangoapi.getProfile(jsonData => {
-      console.log(jsonData);
       this.setState({
         profile: jsonData
       });
@@ -25,11 +25,8 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <ul>
-          <li>
-             {this.state.profile.username} 
-          </li>
-        </ul>
+        {loggedIn() &&
+          <Employee emp={this.state.profile} />}
       </div>
     );
   }

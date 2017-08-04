@@ -20,7 +20,8 @@ from .permissions import IsSelf, IsDirect
 class EmployeeListAPIView(ListAPIView):
     queryset = Employee.objects.all().select_related('user')
     serializer_class = EmployeeSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,
+                          permissions.IsAdminUser,)
     lookup_field = 'username'
 
 

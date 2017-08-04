@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./components/App";
 import registerServiceWorker from "./registerServiceWorker";
@@ -9,13 +9,7 @@ import { loggedIn } from "./auth";
 
 ReactDOM.render(
   <BrowserRouter history={BrowserRouter.browserHistory}>
-    {loggedIn()
-      ? <div>
-          <Route path="/employees/">
-            <App />
-          </Route>
-        </div>
-      : <Login />}
+    {loggedIn() ? <App /> : <Login />}
   </BrowserRouter>,
   document.getElementById("root")
 );
