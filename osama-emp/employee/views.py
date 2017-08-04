@@ -31,11 +31,6 @@ class EmployeeRetrieveAPIView(RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = 'username'
 
-    def retrieve(self, request, username, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
 
 class EmployeeDirectsView(APIView):
     """

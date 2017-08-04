@@ -35,7 +35,7 @@ function getProfile(callback) {
 
 function getDirects(username, callback) {
   fetch(
-    "http://localhost:8000/employees/" + localStorage.username + "/directs",
+    "http://localhost:8000/employees/" + username + "/directs",
     {
       method: "get",
       headers
