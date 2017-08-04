@@ -16,8 +16,9 @@ class Login extends React.Component {
     var pass = this.refs.password.value;
 
     djangoapi.login(username, pass, jsonData => {
+      localStorage.username = username;
       localStorage.token = jsonData.token;
-      window.location = "/employees/";
+      window.location = "/employees/" + username;
     });
   }
 

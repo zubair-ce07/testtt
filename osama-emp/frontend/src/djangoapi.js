@@ -19,6 +19,22 @@ function login(username, password, callback) {
   fetch(request).then(response => response.json()).then(callback);
 }
 
+function getProfile(callback) {
+  let headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: "Token " + localStorage.token
+  };
+  fetch("http://localhost:8000/employees/" + localStorage.username, {
+    method: "get",
+    headers
+  })
+    .then(function(response) {
+      return response.json();
+    })
+    .then(callback);
+}
+
 function listEmployees(callback) {
   let headers = {
     Accept: "application/json",
@@ -37,6 +53,7 @@ function listEmployees(callback) {
 
 let djangoapi = {
   login,
+  getProfile,
   listEmployees
 };
 

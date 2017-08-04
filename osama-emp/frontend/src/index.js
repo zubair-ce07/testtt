@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Route, Redirect } from "react-router-dom";
+import { BrowserRouter, Route } from "react-router-dom";
 import "./index.css";
 import App from "./components/App";
 import registerServiceWorker from "./registerServiceWorker";
@@ -11,7 +11,7 @@ ReactDOM.render(
   <BrowserRouter history={BrowserRouter.browserHistory}>
     {loggedIn()
       ? <div>
-          <Route exact path="/employee/">
+          <Route path="/employees/">
             <App />
           </Route>
         </div>

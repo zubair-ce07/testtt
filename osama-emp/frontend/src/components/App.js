@@ -7,15 +7,17 @@ class App extends Component {
   constructor(props) {
     super();
     this.state = {
+      username: "",
+      profile: {},
       results: []
     };
   }
 
   componentDidMount() {
-    djangoapi.listEmployees(jsonData => {
+    djangoapi.getProfile(jsonData => {
       console.log(jsonData);
       this.setState({
-        results: jsonData.results
+        profile: jsonData
       });
     });
   }
@@ -24,9 +26,9 @@ class App extends Component {
     return (
       <div className="App">
         <ul>
-          {this.state.results.map(current => {
-            return <Employee emp={current} />;
-          })}
+          <li>
+             {this.state.profile.username} 
+          </li>
         </ul>
       </div>
     );
