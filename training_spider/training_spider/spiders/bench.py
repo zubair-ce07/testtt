@@ -2,7 +2,6 @@ import json
 import re
 from json.decoder import JSONDecodeError
 
-import logging
 from urllib.parse import urljoin
 
 from copy import deepcopy
@@ -22,7 +21,6 @@ class BenchSpider(Spider):
     params_text_t = 'a:6:{{s:4:"sort";s:0:"";s:4:"page";i:{params[page_id]};''' \
                     's:10:"searchword";s:0:"";s:7:"storeId";i:{params[store_id]};s:6:"filter";' \
                     'a:0:{{}}s:6:"cateId";i:{params[cat_id]};}}'
-    logger = logging.getLogger('Bench_spider')
 
     def parse(self, response):
         categories = response.css(
@@ -42,13 +40,15 @@ class BenchSpider(Spider):
                               callback=self.parse_categories,
                               formdata=form_data
                               )
+            break
 
     def parse_categories(self, response):
         categories = json.loads(response.text)
         categories = categories['AllChildData']
 
-        for category in  self.traverse_categories(response, categories):
+        for category in self.traverse_categories(response, categories):
             yield category
+            break
 
     def traverse_categories(self, response, categories):
         for category in categories.values():
@@ -58,8 +58,8 @@ class BenchSpider(Spider):
                           )
 
             sub_categories = category.get('_child', {})
-            if sub_categories:
-                yield self.traverse_categories(response, sub_categories, category_names)
+            yield self.traverse_categories(response, sub_categories)
+            break
 
     def parse_products(self, response):
         raw_script = response.css('#list-div-content script::text').extract_first()
@@ -74,8 +74,6 @@ class BenchSpider(Spider):
             yield Request(url,
                           callback=self.parse_details,
                           )
-            break
-        # yield self.request_product_details(response, products_details)
 
         params = {
             'pagination_url': products_grid['requestUrl'],
@@ -102,7 +100,6 @@ class BenchSpider(Spider):
     def parse_pagination(self, response):
         self.logger.info('pagination')
         products = json.loads(response.text)['data']
-        # yield self.request_product_details(response, products)
 
         for detail in products['products']:
             url = detail['product_url']
@@ -118,6 +115,7 @@ class BenchSpider(Spider):
             yield self.request_pagination(params)
 
     def parse_details(self, response):
+        self.logger.info('Parse_Details')
         raw_script = response.css('#main-product-content script::text').extract_first()
         if not raw_script:
             self.logger.info('Product is not found')
@@ -136,9 +134,9 @@ class BenchSpider(Spider):
 
         variations = product_detail['config_attr']
         if variations:
-            yield self.request_product_color(item, raw_json, product_detail, variations)
+            return self.request_product_color(item, raw_json, product_detail, variations)
         else:
-            yield self.items_without_variation(item, product_detail)
+            return self.items_without_variation(item, product_detail)
 
     def request_product_color(self, item, raw_json, product_datail, variations):
         self.logger.info('request_products')
@@ -154,6 +152,7 @@ class BenchSpider(Spider):
                       meta=meta)
 
     def get_product_colors_url(self, product, product_id):
+        self.logger.info('Parse_Colors')
         form_key = product['form_key']
         product_color_url = product['getProductUrl']
         product_color_url = '{url}?id={product_id}&form_key={form_key}'.format(
@@ -180,14 +179,15 @@ class BenchSpider(Spider):
             variations.append({color_key: color_value})
 
         item['variations'] = variations
+        yield item
 
-    def get_variations(self, response, color_ids, size_mappings):
+    def get_variations(self, response, color, size_mappings):
         self.logger.info('Parse_color_variations')
         images_urls = []
         sizes = []
         for product_info in json.loads(response.text)['data']:
             product_id = product_info['id']
-            if product_id not in color_ids:
+            if product_id not in color['product_ids']:
                 continue
 
             if size_mappings:
@@ -202,7 +202,7 @@ class BenchSpider(Spider):
                 if float(quantity):
                     is_available = True
                 sizes = {
-                    'common_size': {
+                    '-': {
                         'price': price,
                         'sale_price': sale_price,
                         'is_available': is_available
