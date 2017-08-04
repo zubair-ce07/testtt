@@ -1,18 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-</head>
-<body>
-{% if user.is_authenticated %}
-     <li>User: {{ user.get_username }}</li>
-     <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
-{% else %}
-     <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>
-{% endif %}
-<a href="{% url 'books:books' %}">Books</a>
-<a href="{% url 'books:authors' %}">Authors</a>
-<a href="{% url 'books:publishers' %}">Publishers</a>
-</body>
-</html>
+{% extends 'books/base.html' %}
+{% block title %}Index {% endblock %}
+{% block content %}
+    <div class="page-header">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>Books Database</h1>
+            </div>
+            <div class="col-sm-6 login">
+                {% if user.is_authenticated %}
+                    <li>User: {{ user.get_username }}</li>
+                    <li><a href="{% url 'logout' %}?next={{ request.path }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}?next={{ request.path }}">Login</a></li>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="well well-lg">
+        <a href="{% url 'books:books' %}">Books</a>
+    </div>
+    <div class="well well-lg">
+        <a href="{% url 'books:authors' %}">Authors</a>
+    </div>
+    <div class="well well-lg">
+        <a href="{% url 'books:publishers' %}">Publishers</a>
+    </div>
+{% endblock %}

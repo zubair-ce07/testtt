@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 from datetime import datetime
+
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
 GENRE_CHOICES = [
-    (1, u'Novel'),
-    (2, u'Thriller'),
-    (3, u'Drama'),
-    (4, u'Biograghy'),
-    (5, u'Text Book'),
-    (6, u'Science'),
-    (7, u'Not Specified'),
+    ('Novel', 'Novel'),
+    ('Thriller', 'Thriller'),
+    ('Drama', 'Drama'),
+    ('Biograpghy', 'Biograghy'),
+    ('Text Book', 'Text Book'),
+    ('Science', 'Science'),
+    ('Not Specified', 'Not Specified'),
 ]
 
 

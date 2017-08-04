@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from django.http import HttpResponseRedirect
+
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
 from django.db.models import Q
-from books.models import Book, Author, Publisher
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+
 from books.forms import BookForm, AuthorForm, PublisherForm
+from books.models import Book, Author, Publisher
 
 
 @login_required
