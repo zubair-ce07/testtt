@@ -9,3 +9,6 @@ class Comment(models.Model):
     created_on = models.DateTimeField()
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     user_ip = models.GenericIPAddressField()
+
+    def __str__(self):
+        return self.text

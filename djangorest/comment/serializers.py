@@ -1,13 +1,12 @@
-from rest_framework.serializers import ModelSerializer
-from user.serializers import UserSerializer
+from rest_framework.serializers import ModelSerializer, SlugRelatedField
 from comment.models import Comment
-from blog.serializers import BlogSerializer
+from user.models import User
+from blog.models import Blog
 
 
 class CommentSerializer(ModelSerializer):
-
-    comment_for = BlogSerializer(read_only=True)
-    created_by = UserSerializer(read_only=True)
+    created_by = SlugRelatedField(slug_field='username', queryset=User.objects.all())
+    comment_for = SlugRelatedField(slug_field='title', queryset=Blog.objects.all())
 
     class Meta:
         model = Comment

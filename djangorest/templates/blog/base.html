@@ -15,6 +15,8 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/owl-carousel/1.3.3/owl.carousel.min.js"></script>
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="{% static 'js/blog.js' %}"></script>
+    {% block script %}{% endblock %}
+
 </head>
 
 <body>
@@ -29,49 +31,77 @@
             </button>
                 <a target="_blank" href="#" class="navbar-brand">WBlog App</a>
             </div>
-            <!--<div class="collapse navbar-collapse">-->
-            <!--<ul class="nav navbar-nav navbar-right">-->
-            <!--<li class="dropdown">-->
-            <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown">-->
-            <!--<span class="glyphicon glyphicon-user"></span>-->
-            <!--<strong>{% block username %}UserName{% endblock %}</strong>-->
-            <!--<span class="glyphicon glyphicon-chevron-down"></span>-->
-            <!--</a>-->
-            <!--<ul class="dropdown-menu">-->
-            <!--<li>-->
-            <!--<div class="navbar-login">-->
-            <!--<div class="row">-->
-            <!--<div class="col-lg-4">-->
-            <!--<p class="text-center">-->
-            <!--<span class="glyphicon glyphicon-user icon-size"></span>-->
-            <!--</p>-->
-            <!--</div>-->
-            <!--<div class="col-lg-8">-->
-            <!--<p class="text-left"><strong>{% block fullname %}Full Name{% endblock %}</strong></p>-->
-            <!--<p class="text-left small">{% block email %}Email{% endblock %}</p>-->
-            <!--</div>-->
-            <!--</div>-->
-            <!--</div>-->
-            <!--</li>-->
-            <!--<li class="divider"></li>-->
-            <!--<li>-->
-            <!--<div class="navbar-login navbar-login-session">-->
-            <!--<div class="row">-->
-            <!--<div class="col-lg-12">-->
-            <!--<p>-->
-            <!--<a href="#" class="btn btn-danger btn-block">Logout</a>-->
-            <!--</p>-->
-            <!--</div>-->
-            <!--</div>-->
-            <!--</div>-->
-            <!--</li>-->
-            <!--</ul>-->
-            <!--</li>-->
-            <!--</ul>-->
-            <!--</div>-->
         </div>
     </div>
-    {% endblock %} {% block content %}{% endblock %}
+    {% endblock %}
+    <!-- Preloader Start -->
+    <div class="preloader">
+        <div class="rounder"></div>
+    </div>
+    <!-- Preloader End -->
+
+    <div id="main">
+        <div class="container">
+            <div class="row">
+                <!-- About Me (Left Sidebar) Start -->
+                {% block aboutme %}
+                <div class="col-md-3">
+                    <div class="about-fixed">
+
+                        <div class="my-pic">
+                            <img src="{% static 'images/my-pic.png' %}" alt="">
+                        </div>
+
+                        <div class="my-detail">
+
+                            <div class="white-spacing">
+                                <h1 class="username"></h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+                <!-- About Me (Left Sidebar) End -->
+                <!-- Blog Post (Right Sidebar) Start -->
+                {% block blog_size %}
+                <div class="col-md-9">
+                    {% endblock %}
+                    <div class="col-md-12 page-body">
+                        <div class="row">
+
+                            <div class="sub-title">
+                                <h2>WBlogs</h2>
+                                <a href="contact.html"><i class="icon-envelope"></i></a>
+                            </div>
+                            <div class="col-md-12 content-page">
+
+                                {% block blog %}{% endblock %}
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Start -->
+                    <div class="col-md-12 page-body margin-top-50 footer">
+                        <footer>
+                            <ul class="menu-link">
+                                <li><a href="#">Home</a></li>
+                                <li><a href="#">About</a></li>
+                                <li><a href="#">Work</a></li>
+                                <li><a href="#">Contact</a></li>
+                            </ul>
+                            <p>© Copyright 2016 DevBlog. All rights reserved</p>
+                            <!-- UiPasta Credit Start -->
+                            <div class="uipasta-credit">Design By <a href="http://www.uipasta.com" target="_blank">UiPasta</a></div>
+                            <!-- UiPasta Credit End -->
+                        </footer>
+                    </div>
+                    <!-- Footer End -->
+                </div>
+                <!-- Blog Post (Right Sidebar) End -->
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

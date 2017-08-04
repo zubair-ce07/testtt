@@ -7,21 +7,42 @@ function add_blog_post(blog) {
         "</a>" +
         "</div>" +
         "<div class=\"post-info\">" +
-        "<span>" + blog.created_on + " by <a href=\"#\" target=\"_blank\">" + blog.created_by.username + "</a></span>" +
+        "<span>" + blog.created_on + " by <a href=\"#\" target=\"_blank\">" + blog.created_by + "</a></span>" +
         "</div>" +
         "<p>" + blog.summary + "</p>" +
-        "<a href=\"single.html\" class=\"button button-style button-anim fa fa-long-arrow-right\"><span>Read More</span></a>" +
+        "<a href=single/" + blog.slug + " class=\"slug button button-style button-anim fa fa-long-arrow-right\"><span>Read More</span></a>" +
         "</div>");
-
     $(".content-page").append($blog_post);
+}
+
+function populate_blog_page() {
+    /* Populate Blogs */
+    $.ajax({
+        method: 'GET',
+        dataType: 'json',
+        url: 'http://127.0.0.1:8000/blog/',
+        success: function (result) {
+            console.log(result);
+            result.forEach(function (blog) {
+                add_blog_post(blog);
+            });
+//            $('.username').text(result['current_user']);
+        }
+    });
 }
 
 
 
-(function ($) {
-    'use strict';
 
+
+(function ($) {
+    
+    
+    
+    'use strict';
     jQuery(document).ready(function () {
+    
+			
 
         /* Preloader */
         $(window).load(function () {
@@ -124,18 +145,7 @@ function add_blog_post(blog) {
                 $("#load-more-portfolio").fadeOut(100);
             }
         });
-    });
-
-    /* Populate Blogs */
-    $.ajax({
-        method: 'GET',
-        dataType: 'json',
-        url: 'http://127.0.0.1:8000/blog/',
-        success: function (blogs) {
-            blogs.forEach(function (blog) {
-                add_blog_post(blog);
-                console.log(blog);
-            });
-        }
+        
+        
     });
 })(jQuery);
