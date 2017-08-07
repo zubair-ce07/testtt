@@ -22,13 +22,10 @@ class ActivitySerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    mems = MemorySerializer(many=True, read_only=True)
-    categories = CategorySerializer(many=True, read_only=True)
-    activities = ActivitySerializer(many=True, read_only=True)
     class Meta:
         model = User
         fields = ['id','first_name', 'last_name', 'email', 'username', 'image',
-                  'password', 'categories', 'activities', 'mems']
+                  'password']
 
 
 class LoginSerializer(serializers.Serializer):

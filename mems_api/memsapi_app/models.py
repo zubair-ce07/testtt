@@ -1,12 +1,13 @@
 from django.db import models
 from datetime import datetime
-from django.contrib.auth.models import  AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import  AbstractBaseUser, UserManager
 from django.utils import timezone
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.conf import settings
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import make_password
+
 
 class PrivateMemoryManager(models.Manager):
     def get_queryset(self):
@@ -18,28 +19,6 @@ class PublicMemoryManager(models.Manager):
         return super(PublicMemoryManager, self).get_queryset().filter(is_public=True)
 
 
-class UserManager(BaseUserManager):
-    def _create_user(self, email, password, **extra_fields):
-        if not email:
-            raise ValueError('Email must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save()
-        return user
-
-    def create_superuser(self, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-        return self._create_user(email, password, **extra_fields)
-
-
 class User(AbstractBaseUser):
     image = models.ImageField(upload_to='images/', null=True)
     email = models.EmailField(unique=True)
@@ -48,12 +27,10 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=50, unique=True)
 
     is_staff = models.BooleanField(
-        ('staff status'),
         default=False,
         help_text=('Designates whether the user can log into this site.'),
     )
     is_active = models.BooleanField(
-        ('active'),
         default=True,
         help_text=(
             'Designates whether this user should be treated as active. '
@@ -61,7 +38,6 @@ class User(AbstractBaseUser):
         ),
     )
     is_superuser = models.BooleanField(
-        ('superuser'),
         default=True,
         help_text=(
             'Designates whether this user should be treated as super user or not . '
@@ -70,7 +46,6 @@ class User(AbstractBaseUser):
     )
 
     has_perm = models.BooleanField(
-        ('perm'),
         default=True,
         help_text=(
             'Designates whether this user should be treated as super user or not . '

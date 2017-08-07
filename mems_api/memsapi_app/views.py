@@ -8,46 +8,50 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 
 
 class Login(APIView):
     authentication_classes = ()
     permission_classes = (AllowAny, )
+    serializer_class = LoginSerializer
 
     def post(self, request):
         data = JSONParser().parse(request)
-        login_serializer = LoginSerializer(data=data)
+        login_serializer = self.serializer_class(data=data)
         if login_serializer.is_valid():
             user = authenticate(request, email=data['email'], password=data['password'])
             if user:
                 user = User.objects.get(email=user)
-                try:
-                    token = Token.objects.create(user=user)
-                except:
-                    token = Token.objects.get(user_id=user.id)
-                return Response({'token': token.key})
+                token = Token.objects.get_or_create(user=user)
+                key = str(token[0])
+                return Response({'Token': key})
             else:
                 return HttpResponse("User name or password is not valid")
         return JsonResponse(login_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class Logout(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
 
-class CreateUser(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
-
-class GetAndUpdateUser(generics.RetrieveUpdateAPIView):
+class UserView(generics.CreateAPIView, generics.RetrieveUpdateAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
 
 class CreateAndListCategory(generics.ListCreateAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
@@ -68,6 +72,8 @@ class CreateAndListCategory(generics.ListCreateAPIView):
 
 
 class ActivityListView(generics.ListAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
 
@@ -79,7 +85,9 @@ class ActivityListView(generics.ListAPIView):
         return super(ActivityListView, self).get(request, *args, **kwargs)
 
 
-class MemoryListView(generics.ListCreateAPIView):
+class MemoryListView(generics.ListCreateAPIView, generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     queryset = Memory.objects.all()
     serializer_class = MemorySerializer
 
@@ -99,11 +107,8 @@ class MemoryListView(generics.ListCreateAPIView):
         return super(MemoryListView, self).post(request, *args, **kwargs)
 
 
-class MemoryView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Memory.objects.all()
-    serializer_class = MemorySerializer
-
-
 class GetPublicMems(generics.ListAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     queryset = Memory.public_memories.all()
     serializer_class = MemorySerializer
