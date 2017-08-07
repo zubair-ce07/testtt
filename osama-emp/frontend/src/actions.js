@@ -16,3 +16,12 @@ export const getProfileEnd = jsonData => {
     profile: jsonData
   };
 };
+
+export const REPLACE_DIRECTS = "REPLACE_DIRECTS";
+export const replaceDirects = (username, hierarchy) => {
+  return {
+    type: REPLACE_DIRECTS,
+    username,
+    hierarchy
+  };
+};

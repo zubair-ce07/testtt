@@ -13,11 +13,12 @@ class Hierarchy extends React.Component {
     var treemap = d3.tree().size([height, width]);
 
     // load the external data
-    let treeData = this.props.tree;
+
+    let treeData = this.props.hierarchy;
 
     //  assigns the data to a hierarchy using parent-child relationships
     var nodes = d3.hierarchy(treeData, function(d) {
-      return d.children;
+      return d.directs;
     });
 
     // maps the node data to the tree layout
@@ -70,7 +71,7 @@ class Hierarchy extends React.Component {
       .enter()
       .append("g")
       .attr("class", function(d) {
-        return "node" + (d.children ? " node--internal" : " node--leaf");
+        return "node" + (d.directs ? " node--internal" : " node--leaf");
       })
       .attr("transform", function(d) {
         return "translate(" + d.y + "," + d.x + ")";
@@ -84,22 +85,22 @@ class Hierarchy extends React.Component {
       .append("text")
       .attr("dy", ".35em")
       .attr("x", function(d) {
-        return d.children ? -13 : 13;
+        return d.directs ? -13 : 13;
       })
       .style("text-anchor", function(d) {
-        return d.children ? "end" : "start";
+        return d.directs ? "end" : "start";
       })
       .text(function(d) {
-        return d.data.name;
+        return d.data.username;
       });
 
-    node.on("click", function(current) {
-      console.log(current.data.name);
+    node.on("click", current => {      
+      this.props.onClick(current.data.username);
     });
   }
 
   render() {
-    return <div />;
+    return <div id="hierarchy" />;
   }
 }
 
