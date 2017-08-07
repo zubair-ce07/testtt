@@ -3,16 +3,12 @@ import * as d3 from "d3";
 import "./Hierarchy.css";
 
 class Hierarchy extends React.Component {
-  constructor() {
-    super();
-  }
-
   componentDidMount() {
     // set the dimensions and margins of the diagram
     var margin = { top: 20, right: 90, bottom: 30, left: 90 },
-      width = 660 - margin.left - margin.right,
-      height = 500 - margin.top - margin.bottom;
-    console.log(d3.version);
+      width = 1000 - margin.left - margin.right,
+      height = 700 - margin.top - margin.bottom;
+
     // declares a tree layout and assigns the size
     var treemap = d3.tree().size([height, width]);
 
@@ -96,6 +92,10 @@ class Hierarchy extends React.Component {
       .text(function(d) {
         return d.data.name;
       });
+
+    node.on("click", function(current) {
+      console.log(current.data.name);
+    });
   }
 
   render() {

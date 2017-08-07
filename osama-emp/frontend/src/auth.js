@@ -4,7 +4,10 @@ module.exports = {
   },
 
   loggedIn: function() {
-    if (localStorage.token == "undefined" || localStorage.token === undefined) {
+    if (
+      localStorage.token ===   "undefined" ||
+      localStorage.token === undefined
+    ) {
       return false;
     } else {
       return true;

@@ -9,7 +9,7 @@ class Employee extends React.Component {
       directs: []
     };
   }
-  
+
   listDirects(username) {
     if (this.state.directs.length === 0) {
       djangoapi.getDirects(username, jsonData => {
@@ -18,7 +18,9 @@ class Employee extends React.Component {
         });
       });
     } else {
-      this.state.directs = [];
+      this.setState({
+        directs: []
+      });
     }
   }
 
