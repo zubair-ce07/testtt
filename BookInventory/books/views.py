@@ -1,13 +1,45 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django import forms
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 
-from books.forms import BookForm, AuthorForm, PublisherForm
+from books.form import BookForm, AuthorForm, PublisherForm
 from books.models import Book, Author, Publisher, UserModel
+
+
+@login_required
+def profile(request):
+    if request.user.is_authenticated:
+        user = get_object_or_404(UserModel, username=request.user)
+        context = {'user': user}
+        return render(request, 'books/profile.html', context)
+
+
+class ImageUploadForm(forms.Form):
+    image = forms.ImageField()
+
+
+def update_profile(request):
+    user = get_object_or_404(UserModel, username=request.user)
+    if request.method == 'POST':
+        user.first_name = request.POST.get('fname', '')
+        user.last_name = request.POST.get('lname', '')
+        user.email = request.POST.get('email', '')
+        user.address = request.POST.get('address', '')
+        user.contact = request.POST.get('contact', '')
+        user.timezone = request.POST.get('timezone', '')
+        if request.FILES:
+            user.image = request.FILES['image']
+        user.save()
+        return redirect("books:index")
+    else:
+        user = get_object_or_404(UserModel, username=request.user)
+        context = {'user': user}
+        return render(request, 'books/profile_update.html', context)
 
 
 @login_required
@@ -20,27 +52,6 @@ def book_form(request):
     else:
         form = BookForm()
     return render(request, 'books/add_book.html', {'form': form})
-
-
-@login_required
-def profile(request):
-    if request.user.is_authenticated:
-        user = get_object_or_404(UserModel, username=request.user)
-        context = {'user': user}
-        return render(request, 'books/profile.html', context)
-
-
-def update_profile(request):
-    user = get_object_or_404(UserModel, username=request.user)
-    if request.method == 'POST':
-        user.first_name = request.POST.get('fname', '')
-        user.last_name = request.POST.get('lname', '')
-        user.email = request.POST.get('email', '')
-        user.address = request.POST.get('address', '')
-        user.contact = request.POST.get('contact', '')
-        user.timezone = request.POST.get('timezone', '')
-        user.save()
-        return HttpResponseRedirect('../')
 
 
 @login_required

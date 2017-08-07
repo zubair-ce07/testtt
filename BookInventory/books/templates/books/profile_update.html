@@ -1,0 +1,64 @@
+{% extends 'books/base.html' %}
+{% load static %}
+{% block title %}Profile Update{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'books/profile.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="jumbotron">
+        <h1>{{ user.username }}</h1>
+        <form name="update_profile" method="post" action="{% url 'books:profile_update' %}"
+              enctype="multipart/form-data" onsubmit="return validateForm()">
+            {% csrf_token %}
+            <input type="hidden" id='username' name="username" value="{{ user.username }}"/>
+
+            <div class="well">
+                <label>Profile Pic: </label>
+                 <input id="id_image" type="file" class="" name="image">
+            </div>
+
+            <div class="well">
+                <label>First Name: </label>
+                <input id="fname" name="fname" type="text"
+                       class="form-control" value="{{ user.first_name }}"/>
+            </div>
+
+            <div class="well">
+                <label>Last Name: </label>
+                <input id="lname" name="lname" type="text"
+                       class="form-control" value="{{ user.last_name }}"/>
+            </div>
+
+            <div id="email_div" class="well form-group">
+                <label>Email: </label>
+                <input id="email" name="email" type="text"
+                       class="form-control" value="{{ user.email }}"/>
+                <div id="email_error"></div>
+            </div>
+
+            <div class="well">
+                <label>Address: </label>
+                <input id="address" name="address" type="text"
+                       class="form-control" value="{{ user.address }}"/>
+            </div>
+            <div class="well">
+                <label>Contact: </label>
+                <input id="contact" name="contact" type="text"
+                       class="form-control" value="{{ user.contact }}"/>
+            </div>
+            <div class="well">
+                <label>Timezone: </label>
+                <input id="timezone" name="timezone" type="text"
+                       class="form-control" value="{{ user.timezone }}"/>
+            </div>
+
+            <div>
+                <input type="submit" class="btn btn-info" value="Update Info">
+            </div>
+
+
+        </form>
+    </div>
+{% endblock %}

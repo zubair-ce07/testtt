@@ -5,10 +5,9 @@ function validateEmail(email) {
 
 function validateForm() {
     var email = document.forms["update_profile"]["email"].value;
-    if(!validateEmail(email))
-    {
+    if (!validateEmail(email)) {
         $("#email_div").addClass("has-error");
-        $("#email_error").text("Invalid Email");
+        $("#email_error").text("Invalid Email").css("color", "red");
         return false;
     }
 }

@@ -13,13 +13,16 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.conf.urls import url, include
+from django.conf.urls.static import static
 from django.contrib import admin
+from django.views.generic import RedirectView
 
 from BookInventory import views
 
 urlpatterns = [
-    url(r'^$', views.index, name='home'),
+    url(r'^$', RedirectView.as_view(url='/books', permanent=False)),
     url(r'^books/', include('books.urls')),
     url(r'^admin/', admin.site.urls),
 ]
@@ -28,3 +31,5 @@ urlpatterns += [
     url(r'^accounts/signup', views.signup, name='signup'),
     url(r'^accounts/', include('django.contrib.auth.urls')),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

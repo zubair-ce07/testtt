@@ -19,7 +19,7 @@ GENRE_CHOICES = (
 
 
 class UserModel(User):
-    image = models.ImageField(blank=True)
+    image = models.ImageField(upload_to='books/', null=True, blank=True)
     address = models.CharField(max_length=512, blank=True)
     contact = models.CharField(max_length=32, blank=True)
     timezone = models.CharField(max_length=64, default='Asia/Karachi')
