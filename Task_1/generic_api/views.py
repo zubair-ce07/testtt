@@ -104,12 +104,6 @@ class UserDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    def retrieve(self, request, *args, **kwargs):
-        return super(UserDetails, self).retrieve(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        return super(UserDetails, self).partial_update(request, *args, **kwargs)
-
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         if request.user.id != int(kwargs.get('pk')):

@@ -4,9 +4,9 @@ from users.models import UserProfile
 
 
 class EditSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(max_length=20, source='user.first_name', required=False, allow_blank=True,
+    first_name = serializers.CharField(max_length=30, source='user.first_name', required=False, allow_blank=True,
                                        style={'placeholder': 'e.g. John (Optional)'})
-    last_name = serializers.CharField(max_length=20, source='user.last_name', required=False, allow_blank=True,
+    last_name = serializers.CharField(max_length=30, source='user.last_name', required=False, allow_blank=True,
                                       style={'placeholder': 'e.g. Doe (Optional)'})
     email = serializers.EmailField(source='user.email', style={'placeholder': 'Email Address'})
 
