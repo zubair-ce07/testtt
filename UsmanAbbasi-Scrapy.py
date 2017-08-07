@@ -1,54 +1,58 @@
-import scrapy
+# -*- coding: utf-8 -*-
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+from HypeDC.items import HypedcItem
 
-class QcrawlSpider(CrawlSpider):
-    name = 'hypesp'
+
+class HypedcSpider(CrawlSpider):
+    name = 'hypedc'
     allowed_domains = ['hypedc.com']
     start_urls = ['http://hypedc.com/brands/']
 
     rules = (
-       Rule(LinkExtractor(allow=(), deny=('news')), follow=True, callback='parse_item'),
+        Rule(LinkExtractor(allow=(r'\.com/[A-Za-z]*/$'), deny=('news|faq|legals|contacts')),
+             follow=True,),
+        Rule(LinkExtractor(allow=(r'.*\.html'), deny=('news|faq|legals|contacts')), follow=True, callback='parse_item'),
     )
-    def parse_item(self, response):
-        if(response.css('p.addtocart')):
-            old_price, price = None, None
-            is_discounted, currency = "", ""
-            item_id = response.css('div.product-code::text').extract_first()
-            name = response.css('h1.product-name::text').extract_first()
-            brand = response.css('h2.product-manufacturer::text').extract_first()
-            description = response.css('div.product-description.std::text').extract_first()
-            description = description.strip()       
-            image_urls = response.css('div.slider-inner.col-sm-13.col-sm-offset-11 > div.unveil-container > img.img-responsive::attr(data-src)').extract()
-            colour_name = response.css('h3.h4.product-colour::attr(data-bf-color)').extract_first()
-            
-            if response.css('span.label.label-primary.label-tag.label-tag-lg.label-tag-discount'):
-                old_price = response.css('[id^=old-pri]::text').extract_first()
-                old_price = old_price.strip()
-                price = response.css('[id^=product-pri]::text').extract_first()
-                price = price.strip()
-                currency = price[0]
-                is_discounted = "Yes"
-            
-            else:
-                price = response.css('span.price-dollars::text').extract_first() + response.css('span.price-cents::text').extract_first()
-                is_discounted = "No"
-                old_price = price
-                currency = price[0]
-                
-            item = {
-                    'item_id': item_id,
-                    'url': response.url,
-                    'name': name,
-                    'brand': brand,
-                    'description': description,
-                    'colour_name' : colour_name,
-                    'old_price': old_price,
-                    'price': price,
-                    'is_discounted' : is_discounted,
-                    'currency': currency,
-                    'image_urls' : image_urls,
-                }
 
-            yield item
+    def parse_item(self, response):
+        item = HypedcItem()
+        if response.css('p.addtocart'):
+            item['item_id'] = response.css('.product-code::text').extract_first()
+            item['url'] = response.url
+            item['name'] = response.css('.product-name::text').extract_first()
+            item['brand'] = response.css('.product-manufacturer::text').extract_first()
+            description = response.css('.product-description.std::text').extract_first()
+            item['description'] = description.strip()
+            item['color_name'] = response.css('.product-colour::attr(data-bf-color)').extract_first()
+            self.image_urls_to_string(response, item)
+            self.find_prices(response, item)
+        yield item
+
+    def find_prices(self, response, item):
+        if response.css('.label-tag.label-tag-lg.label-tag-discount'):
+            old_price = response.css('[id^=old-price]::text').extract_first()
+            old_price = old_price.strip()
+            item['old_price'] = old_price[1:]
+            price = response.css('[id^=product-price]::text').extract_first()
+            price = price.strip()
+            item['price'] = price[1:]
+            item['currency'] = price[0]
+            item['is_discounted'] = True
+
+        else:
+            price = response.css('.price-dollars::text').extract_first() \
+                    + response.css('.price-cents::text').extract_first()
+            item['is_discounted'] = False
+            item['old_price'] = price[1:]
+            item['price'] = price[1:]
+            item['currency'] = price[0]
+
+    def image_urls_to_string(self, response, item):
+        item['image_urls'] = ""
+        image_urls_list = response.css('#carousel-product .slides img::attr(src)').extract()
+        for url in image_urls_list:
+            if r'/750x/' in url:
+                item['image_urls'] = url + " " + item['image_urls']
 
