@@ -9,9 +9,9 @@ class Blog(models.Model):
     text = models.TextField()
     summary = models.TextField()
     created_on = models.DateField()
-    is_published = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=True)
     comments_allowed = models.BooleanField(default=True)
-    is_public = models.BooleanField()
+    is_public = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title
