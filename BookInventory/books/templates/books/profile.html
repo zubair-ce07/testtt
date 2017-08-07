@@ -3,14 +3,14 @@
 {% block title %}Profile{% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'books/script.js'%}"></script>
+    <script src="{% static 'books/script.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-
     <div class="jumbotron">
-        <h1>{{ user.username  }}</h1>
-        <form  name="update_profile" method="post" action="{% url 'books:profile_update' %}" onsubmit="return validateForm()">
+        <h1>{{ user.username }}</h1>
+        <form name="update_profile" method="post" action="{% url 'books:profile_update' %}"
+              onsubmit="return validateForm()">
             {% csrf_token %}
             <input type="hidden" id='username' name="username" value="{{ user.username }}"/>
 
@@ -26,10 +26,11 @@
                        class="form-control" value="{{ user.last_name }}"/>
             </div>
 
-            <div class="well">
+            <div id="email_div" class="well form-group">
                 <label>Email: </label>
                 <input id="email" name="email" type="text"
                        class="form-control" value="{{ user.email }}"/>
+                <div id="email_error"></div>
             </div>
 
             <div class="well">
@@ -51,6 +52,8 @@
             <div>
                 <input type="submit" class="btn btn-info" value="Update Info">
             </div>
+
+
         </form>
     </div>
 {% endblock %}

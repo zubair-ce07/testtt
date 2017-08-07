@@ -7,7 +7,8 @@ function validateForm() {
     var email = document.forms["update_profile"]["email"].value;
     if(!validateEmail(email))
     {
-        alert("Invalid Email");
+        $("#email_div").addClass("has-error");
+        $("#email_error").text("Invalid Email");
         return false;
     }
 }
