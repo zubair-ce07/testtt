@@ -1,0 +1,7 @@
+username,password,email,phone_num,address,dob,gender,created_at,blog_slug,blog_text,blog_is_published,blog_comments_allowed,blog_is_public,comment_text,ip
+chckz,pass_john1,john@email.com,9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00,blog1,This is blog text,TRUE,TRUE,TRUE,This is comment,127.0.0.1
+elrjz,pass_john1,john@email.com,9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00,blog1,This is blog text,TRUE,TRUE,TRUE,This is comment,127.0.0.1
+jhijo,pass_john1,john@email.com,9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00,blog1,This is blog text,TRUE,TRUE,TRUE,This is comment,127.0.0.1
+delrx,pass_john1,john@email.com,9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00,blog1,This is blog text,TRUE,TRUE,TRUE,This is comment,127.0.0.1
+tbkoq,pass_john1,john@email.com,9248484848,76Street6-UK,2017-06-07,M,2017-04-01 18:00:00,blog1,This is blog text,TRUE,TRUE,TRUE,This is comment,127.0.0.1
+

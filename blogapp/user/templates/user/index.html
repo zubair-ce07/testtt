@@ -1,0 +1,14 @@
+{% extends "user/base.html" %} {% block content %}
+<form class="login-form" action="{% url 'wblog_user:login' %}" method="post">
+    {% csrf_token %} 
+    {{ form.username }} 
+    {{ form.password }} 
+    {% if form.errors %}
+        <p class="error">Invalid Username or Password</p>
+    {% endif %}
+    <button>Login</button>
+    <!--<input type="hidden" name="next"/>-->
+    <p class="message">Not registered? <a href="{% url 'wblog_user:signup' %}">Create an account</a></p>
+</form>
+<p>{{ time_delta }}</p>
+{% endblock %}
