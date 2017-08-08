@@ -2,10 +2,6 @@ import React from "react";
 import "./Profile";
 
 class Profile extends React.Component {
-  constructor(props) {
-    super();
-  }
-
   render() {
     return (
       <div className="profile">
