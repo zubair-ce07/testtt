@@ -56,9 +56,11 @@ target/
 # PyCharm
 .idea
 
-
 #node_modules
 super_store/node_modules/*
+
+#react
+reactassignment/node_modules/*
 
 #vscode
 .vscode/*
