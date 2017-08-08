@@ -8,7 +8,15 @@
 import scrapy
 
 
-class SheegoItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class Product(scrapy.Item):
+    url = scrapy.Field()
+    name = scrapy.Field()
+    retailer_id = scrapy.Field()
+    brand = scrapy.Field()
+    details = scrapy.Field()
+    features = scrapy.Field()
+    material = scrapy.Field()
+    color = scrapy.Field()
+    # image_urls = scrapy.Field()
+    # skus = scrapy.Field()
+    # color_urls = scrapy.Field()
