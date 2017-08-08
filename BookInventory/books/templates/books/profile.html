@@ -9,14 +9,13 @@
             <h3><strong>Last Name: </strong>{{ user.last_name }}</h3>
             <h3><strong>Email: </strong>{{ user.email }}</h3>
             <h3><strong>Contact: </strong>{{ user.contact }}</h3>
+            <h3><strong>Address: </strong>{{ user.address }}</h3>
             <h3><strong>Time Zone: </strong>{{ user.timezone }}</h3>
             <a href="{% url 'books:profile_update' %}"><input type="button" class="btn btn-info"
                                                               value="Update Info"></a>
         </div>
         <div class="col-sm-5">
-            {% if user.image %}
-                <img id="profile_img" src="/{{ user.image.url }}"/>
-            {% endif %}
+            <img id="profile_img" src="/{{ user.image.url }}" alt=""/>
         </div>
     </div>
 {% endblock %}

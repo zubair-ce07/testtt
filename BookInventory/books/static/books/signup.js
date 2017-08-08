@@ -1,6 +1,6 @@
 function validateForm() {
-    var password = $("#password").val();
-    var re_password = $("#re-password").val();
+    var password = $("#password").val(),
+        re_password = $("#re-password").val();
     if ($("#username").val() == "") {
         $("#username_error").text("You can't have empty username")
         return false;

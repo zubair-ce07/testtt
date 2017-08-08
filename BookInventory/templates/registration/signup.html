@@ -12,14 +12,13 @@
                 {{ form.errors }}
             </div>
         {% endif %}
-
         <form method="post" action="{% url 'signup' %}" onsubmit="return validateForm()">
             {% csrf_token %}
             <div class="well">
                 <label> Username</label>
                 <input id="username" name="username"
                        class="form-control" placeholder="Enter Username"/>
-                <div id="username_error">{{ error_username }}</div>
+                <div id="username_error" class="error_text">{{ error_username }}</div>
             </div>
             <div class="well">
                 <label> Password</label>
@@ -29,7 +28,7 @@
                 <label>Confirm Password</label>
                 <input type="password" id="re-password" name="re-password"
                        class="form-control" placeholder="Re-Enter Password">
-                <div id="password_error"></div>
+                <div id="password_error" class="error_text"></div>
             </div>
             <div>
                 <input type="submit" class="btn btn-info" value="Sign Up">

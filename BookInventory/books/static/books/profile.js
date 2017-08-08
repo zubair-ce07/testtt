@@ -4,10 +4,10 @@ function validateEmail(email) {
 }
 
 function validateForm() {
-    var email = document.forms["update_profile"]["email"].value;
+    var email = $("#update_profile input[name=email]").val()
     if (!validateEmail(email)) {
         $("#email_div").addClass("has-error");
-        $("#email_error").text("Invalid Email").css("color", "red");
+        $("#email_error").text("Invalid Email").addClass("error_text");
         return false;
     }
 }

@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django import forms
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 
-from books.form import BookForm, AuthorForm, PublisherForm
+from books.forms import BookForm, AuthorForm, PublisherForm
 from books.models import Book, Author, Publisher, UserModel
 
 
@@ -19,19 +18,15 @@ def profile(request):
         return render(request, 'books/profile.html', context)
 
 
-class ImageUploadForm(forms.Form):
-    image = forms.ImageField()
-
-
 def update_profile(request):
     user = get_object_or_404(UserModel, username=request.user)
     if request.method == 'POST':
-        user.first_name = request.POST.get('fname', '')
-        user.last_name = request.POST.get('lname', '')
-        user.email = request.POST.get('email', '')
-        user.address = request.POST.get('address', '')
-        user.contact = request.POST.get('contact', '')
-        user.timezone = request.POST.get('timezone', '')
+        user.first_name = request.POST.get('fname', None)
+        user.last_name = request.POST.get('lname', None)
+        user.email = request.POST.get('email', None)
+        user.address = request.POST.get('address', None)
+        user.contact = request.POST.get('contact', None)
+        user.timezone = request.POST.get('timezone', None)
         if request.FILES:
             user.image = request.FILES['image']
         user.save()
