@@ -6,13 +6,30 @@ from memoapp.models import User, Memory, Category
 class SignupForm(ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'username', 'password',  'image']
+        fields = ['first_name', 'email', 'username', 'password']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control separate-form-fields','required': 'required',
+            'first_name': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
+                                                 'placeholder': 'First Name'}),
+
+            'email': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
+                                            'placeholder': 'Email'}),
+            'username': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
+                                               'placeholder': 'User Name'}),
+            'password': forms.TextInput( attrs={'class': 'form-control separate-form-fields',
+                                               'placeholder': 'Password', 'type': 'password'}),
+        }
+
+
+class EditProfileForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'username', 'image']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                                  'placeholder': 'First Name'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                                 'placeholder': 'Last Name'}),
-            'email': forms.TextInput(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
+            'email': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                             'placeholder': 'Email'}),
             'username': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                                'placeholder': 'User Name'}),
@@ -21,19 +38,13 @@ class SignupForm(ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-control separate-form-fields'}),
         }
 
-
-class EditProfileForm(SignupForm):
-    class Meta(SignupForm.Meta):
-        exclude = ('password', )
-
-
 class LoginForm(forms.Form):
-    email = forms.EmailField(label='', max_length=100,
+    login_email = forms.EmailField(label='', max_length=100, required=False,
                              widget=forms.TextInput(attrs={'class': 'form-control separate-form-fields',
                                                            'placeholder': 'Email'}))
-    password = forms.CharField(label='', max_length=100, widget=forms.TextInput
-                            (attrs={'class': 'form-control separate-form-fields', 'placeholder': 'Password',
-                                    'type': 'password'}))
+    login_password = forms.CharField(label='', max_length=100, required=False,
+                                     widget=forms.TextInput (attrs={'class': 'form-control separate-form-fields',
+                                                                    'placeholder': 'Password','type': 'password'}))
 
 
 class AddMemoForm(ModelForm):
@@ -41,17 +52,17 @@ class AddMemoForm(ModelForm):
         model = Memory
         fields = ['category', 'title', 'text', 'url', 'tags', 'is_public', 'image']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
+            'title': forms.TextInput(attrs={'class': 'form-control',
                                             'placeholder': 'Title'}),
-            'text': forms.Textarea(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
+            'text': forms.Textarea(attrs={'class': 'form-control',
                                           'placeholder': 'Enter detail of the memory'}),
-            'url': forms.URLInput(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
+            'url': forms.URLInput(attrs={'class': 'form-control',
                                           'placeholder': 'Url'}),
-            'tags': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
+            'tags': forms.TextInput(attrs={'class': 'form-control',
                                            'placeholder': 'Comma separated tags'}),
             'category': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Country'}),
             
-            'is_public': forms.CheckboxInput(attrs={'class': 'input-group separate-form-fields'})
+            'is_public': forms.CheckboxInput(attrs={'class': 'input-group '})
         }
 
 
@@ -60,9 +71,9 @@ class Category(ModelForm):
         model = Category
         fields = ['name', 'description']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
-                                            'placeholder': 'Name'}),
-            'description': forms.Textarea(attrs={'class': 'form-control separate-form-fields', 'required': 'required',
+            'name': forms.TextInput(attrs={'class': 'form-control separate-form-fields',
+                                           'placeholder': 'Name'}),
+            'description': forms.Textarea(attrs={'class': 'form-control separate-form-fields',
                                           'placeholder': 'Enter description of category'}),
         }
 

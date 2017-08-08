@@ -38,10 +38,12 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     image = models.ImageField(upload_to='images/')
-    email = models.EmailField(unique=True)
-    first_name =  models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    username = models.CharField(max_length=50, unique=True)
+    # blank is set to True for test of client side validation checks (Temporarily)
+    email = models.EmailField(unique=True, blank=True)
+    first_name =  models.CharField(max_length=50, blank=True)
+    last_name = models.CharField(max_length=50,  blank=True)
+    username = models.CharField(max_length=50, unique=True, blank=True)
+    password = models.CharField(max_length=80, blank=True)
     is_staff = models.BooleanField(
         ('staff status'),
         default=False,
@@ -90,9 +92,9 @@ class User(AbstractBaseUser):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50, null=False)
+    name = models.CharField(max_length=50, null=False, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    description = models.TextField()
+    description = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
@@ -100,13 +102,14 @@ class Category(models.Model):
 
 class Memory(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100)
-    text = models.TextField()
-    url = models.CharField(max_length=300)
-    tags = models.CharField(max_length=200)
+    # null is set to True for test of client side validation checks (Temporarily)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True)
+    title = models.CharField(max_length=100, blank=True)
+    text = models.TextField(blank=True)
+    url = models.CharField(max_length=300, blank=True)
+    tags = models.CharField(max_length=200, blank=True)
     is_public = models.BooleanField(default=True)
-    image = models.ImageField(upload_to='images/', null=True)
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
     objects = models.Manager()
     private_memories = PrivateMemoryManager()
     public_memories = PublicMemoryManager()

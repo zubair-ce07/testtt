@@ -11,20 +11,119 @@
 
                             <form id="register-form" action="/editmemo" enctype="multipart/form-data" method="post" role="form" style="display: block">
                                 {% csrf_token %}
-                                {{ memo_form }}
-                                <input type="hidden" name="memo_id" value="{{ memo_id }}">
                                 <div class="form-group">
-                                    <div class="row">
-                                        <div class="col-sm-6 col-sm-offset-3">
-                                            <input type="submit" name="register-submit" id="register-submit" tabindex="4" class="form-control btn btn-register" value="Update">
-                                        </div>
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <strong><span style="margin: 5px; color: red" id="category_span">  </span></strong>
+                                    </div>
+                                    <div class="col-md-12">
+                                         <label>Choose Category:</label>
+                                        {{ memo_form.category }}
                                     </div>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <strong><span style="margin: 5px; color: red" id="title_span">  </span></strong>
+                                    </div>
+                                    <div class="col-md-12">
+                                        {{ memo_form.title }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <strong><span style="margin: 5px; color: red" id="text_span">  </span></strong>
+                                    </div>
+                                    <div class="col-md-12">
+                                        {{ memo_form.text }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <strong><span style="margin: 5px; color: red" id="url_span">  </span></strong>
+                                    </div>
+                                    <div class="col-md-12">
+                                        {{ memo_form.url }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <strong><span style="margin: 5px; color: red" id="tags_span">  </span></strong>
+                                    </div>
+                                    <div class="col-md-12">
+                                        {{ memo_form.tags }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                       <div class="col-md-12">
+                                           <label for="{{ memo_form.is_public.id_for_label }}">Is Public:</label>
+                                           {{ memo_form.is_public }}
+                                       </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="row">
+                                     <div class="col-md-12">
+                                         <label for="{{ memo_form.image.id_for_label }}">Image</label>
+                                        {{ memo_form.image }}
+                                     </div>
+
+                                </div>
+                            </div>
+                                <input type="hidden" name="memo_id" value="{{ memo_id }}">
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-sm-6 col-sm-offset-3">
+                                        <input type="submit" name="register-submit" onclick="return validate_memory()" id="register-submit" tabindex="4" class="form-control btn btn-register" value="Add Memory">
+                                    </div>
+                                </div>
+                            </div>
+
+
                             </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        function validateUrl(value) {
+            return /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(value);
+        };
+        function validate_memory() {
+            var is_valid = true;
+            if(!$("input[name='password']").val()){
+                is_valid = false;
+                 $('#category_span').html('Choose some category');
+            };
+            if(!$("input[name='title']").val()){
+                 $('#title_span').html('Title is not valid');
+                is_valid = false;
+            };
+            if(!$("input[name='text']").val()){
+                 $('#text_span').html('Text is not valid');
+                is_valid = false;
+            };
+            if(!$("input[name='tags']").val()){
+                 $('#tags_span').html('Tags are not valid');
+                is_valid = false;
+            };
+            if(!validateUrl($("input[name='url']").val())){
+                 $('#url_span').html('Url is not valid');
+                is_valid = false;
+            };
+            return is_valid;
+        };
+    </script>
 
 {% endblock body %}

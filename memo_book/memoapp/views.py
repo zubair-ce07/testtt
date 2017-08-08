@@ -46,8 +46,8 @@ class Login(View):
         login_form = LoginForm(request.POST)
         if login_form.is_valid():
             login_data = login_form.cleaned_data
-            email = login_data['email']
-            password = login_data['password']
+            email = login_data['login_email']
+            password = login_data['login_password']
             user = authenticate(request, email=email, password=password)
             if user:
                 login(request, user)
@@ -106,7 +106,11 @@ class AddMemo(LoginRequiredMixin, View):
         if memo_form.is_valid():
             memo = memo_form.save(commit=False)
             memo.user_id = request.user.id
-            memo.save()
+            try:
+                memo.save()
+            except:
+                context = {'memo_form': memo_form}
+                return render(request, 'memoapp/home.html', context)
             return HttpResponseRedirect(reverse('memoapp:home'))
         else:
             context = {'memo_form': memo_form}

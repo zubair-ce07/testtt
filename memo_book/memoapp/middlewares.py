@@ -10,7 +10,7 @@ class CheckSuperUserMiddleware(object):
 
 
     def __call__(self, request):
-        if request.path == '/editprofile' and request.user.first_name == 'Ahmed':
+        if request.path == '/editprofile' and request.user.first_name == 'Ali':
             raise Http404
         else:
             return  self.get_response(request)
