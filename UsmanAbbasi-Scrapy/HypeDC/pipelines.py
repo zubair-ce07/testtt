@@ -10,8 +10,15 @@ con = None
 
 class HypedcPipeline(object):
     def process_item(self, item, spider):
-        self.store_in_db(item)
+        images_list = self.image_urls_formatting(item)
+        self.store_in_db(item, images_list)
         return item
+
+    def image_urls_formatting(self, item):
+        images_list = ""
+        for url in item['image_urls']:
+            images_list = images_list + " " + url
+        return images_list
 
     def __init__(self):
         self.setup_db_con()
@@ -42,10 +49,10 @@ class HypedcPipeline(object):
         price REAL, \
         old_price REAL, \
         color_name TEXT, \
-        image_urls TEXT \
+        image_list TEXT \
         )")
 
-    def store_in_db(self, item):
+    def store_in_db(self, item, images_list):
         self.cur.execute("INSERT INTO HYPE(\
             item_id, \
             url, \
@@ -57,7 +64,7 @@ class HypedcPipeline(object):
             price, \
             old_price, \
             color_name, \
-            image_urls \
+            image_list \
             ) \
         VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
@@ -71,6 +78,6 @@ class HypedcPipeline(object):
             item['price'],
             item['old_price'],
             item['color_name'],
-            item['image_urls']
+            images_list
         ))
         self.con.commit()
