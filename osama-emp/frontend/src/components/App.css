@@ -1,19 +1,45 @@
-.node circle {
-  fill: #fff;
-  stroke: steelblue;
-  stroke-width: 3px;
+.App {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
-.node text {
-  font: 12px sans-serif;
+section {
+  width: 50%;
+  padding: 1%;
 }
 
-.node--internal text {
-  text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
+ul.tree,
+ul.tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-
-.link {
-  fill: none;
-  stroke: #ccc;
-  stroke-width: 2px;
+ul.tree ul {
+  margin-left: 10px;
+}
+ul.tree li {
+  margin: 0;
+  padding: 0 7px;
+  line-height: 20px;
+  color: #369;
+  font-weight: bold;
+  border-left: 1px solid rgb(100, 100, 100);
+}
+ul.tree li:last-child {
+  border-left: none;
+}
+ul.tree li:before {
+  position: relative;
+  top: -0.3em;
+  height: 1em;
+  width: 12px;
+  color: white;
+  border-bottom: 1px solid rgb(100, 100, 100);
+  content: "";
+  display: inline-block;
+  left: -7px;
+}
+ul.tree li:last-child:before {
+  border-left: 1px solid rgb(100, 100, 100);
 }

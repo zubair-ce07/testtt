@@ -16,11 +16,7 @@ store.dispatch(getProfileStart(localStorage.username));
 
 ReactDOM.render(
   <BrowserRouter history={BrowserRouter.browserHistory}>
-    {loggedIn()
-      ? <Provider store={store}>
-          <App />
-        </Provider>
-      : <Login />}
+    {loggedIn() ? <App /> : <Login />}
   </BrowserRouter>,
   document.getElementById("root")
 );

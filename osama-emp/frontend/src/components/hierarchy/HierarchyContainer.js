@@ -1,11 +1,11 @@
 import { connect } from "react-redux";
 import Hierarchy from "./Hierarchy";
-import { replaceDirects } from "../../actions";
+import { replaceDirectsStart } from "../../actions";
 
 function mapDispatchToProps(dispatch) {
   return {
-    onClick: username => {
-      dispatch(replaceDirects(username));
+    onClick: (username, hierarchy) => {
+      dispatch(replaceDirectsStart(username, hierarchy));
     }
   };
 }
