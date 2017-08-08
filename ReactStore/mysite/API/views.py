@@ -1,5 +1,6 @@
 from .serializers import BrandSerializer, UserSerializer, ProductSerializer
 from rest_framework import generics, permissions, authentication
+from rest_framework.views import APIView
 from authentication.models import User
 from super_store.models import Brand, Product
 from .throttling import CustomThrottle
@@ -22,15 +23,16 @@ class BrandCreate(generics.CreateAPIView):
     throttle_classes = (CustomThrottle,)
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
+
     permission_classes = (
         permissions.IsAuthenticated,
         permissions.IsAdminUser,
     )
+    authentication_classes = (authentication.TokenAuthentication,)
 
 
 class BrandDetails(LoggingMixin, generics.RetrieveUpdateDestroyAPIView):
     throttle_classes = (CustomThrottle,)
-
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
     permission_classes = (

@@ -22,7 +22,6 @@ const List = (props) => {
     return(
         <Grid>
             {List}
-            <button></button>
         </Grid>
     )
 }

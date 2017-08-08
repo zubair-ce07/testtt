@@ -40,7 +40,7 @@ export function listItems(URL, callback){
 
 
 export function logout () {
-    delete localStorage.token
+    localStorage.removeItem('token')
 
 }
 
@@ -48,3 +48,24 @@ export function loggedIn () {
     return !!localStorage.token
 }
 
+export function createBrand(formData, callback ){
+    let headers = {
+    Accept: "application/json",
+    Authorization: 'Token ' + localStorage.token,
+  };
+
+  var data = new FormData()
+  data.append('name', formData.name.value.toString())
+  data.append('brand_link', formData.brand_link.value.toString())
+  data.append('image_icon', formData.image_icon.files[0])
+
+  let request = new Request('http://localhost:8000/api/brand/create/', {
+    method: "post",
+    headers,
+    mode: "cors",
+    redirect: "follow",
+    body: data
+  });
+
+  fetch(request).then(response => response.json()).then(callback);
+}

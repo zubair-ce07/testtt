@@ -5,7 +5,7 @@ import Footer from './Common/Footer'
 import GridInstance from './Grid/GridInstance'
 import {Route} from 'react-router-dom'
 import {loggedIn, listItems} from './authentication/auth'
-
+import AddBrandForm from './AddBrandForm'
 
 class App extends React.Component {
     constructor(){
@@ -33,7 +33,6 @@ class App extends React.Component {
         })
         listItems("http://localhost:8000/api/products/", (jsonData) => {
             var products = []
-            console.log(jsonData)
             if(jsonData.results){
                 jsonData.results.forEach(function(element) {
                     products.push(element)
@@ -53,6 +52,7 @@ class App extends React.Component {
                 <h1 className="text-center">
                     Super Store's reknowned {this.props.match.params.name}
                 </h1>
+                <AddBrandForm />
                 <GridInstance itemList={this.state[this.props.match.params.name]} name={this.props.match.params.name}/>
                 <Footer />
             </div>
