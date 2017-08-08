@@ -58,7 +58,6 @@ target/
 
 
 #node_modules
-reactassignment/node_modules/*
 super_store/node_modules/*
 
 #vscode
