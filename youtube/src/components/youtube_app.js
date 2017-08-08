@@ -5,7 +5,7 @@ import $ from 'jquery';
 import { Navbar, Grid, Row, Col } from 'react-bootstrap'
 
 
-class MiniYoutube extends React.Component
+class YouTubeApp extends React.Component
 {
     constructor(props)
     {
@@ -88,4 +88,4 @@ class MiniYoutube extends React.Component
     }
 }
 
-export default MiniYoutube;
+export default YouTubeApp;

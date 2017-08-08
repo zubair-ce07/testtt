@@ -22,7 +22,6 @@ class YoutubePlayer extends React.Component {
                     <YouTube
                         videoId={this.props.id}
                         opts={opts}
-                        onReady={this._onReady}
                     />
                     <h2>{this.props.title}</h2>
                     <h4>
@@ -36,10 +35,6 @@ class YoutubePlayer extends React.Component {
         return (
             <div></div>
         )
-  }
-
-  _onReady(event) {
-    event.target.pauseVideo();
   }
 }
 

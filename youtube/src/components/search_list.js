@@ -1,9 +1,10 @@
 import React from 'react';
 import axios from 'axios';
-import SearchBar from './search_bar'
+import SearchBar from './search_bar';
+import {youtubeConfig} from '../config';
 import { ListGroup, ListGroupItem,
-         Row, Image, Col, Button,
-         ButtonGroup } from 'react-bootstrap';
+         Row, Image, Col,
+         Pager } from 'react-bootstrap';
 
 
 class SearchList extends React.Component
@@ -33,23 +34,21 @@ class SearchList extends React.Component
 
     _prepareGETRequest()
     {
-        const base_url = 'https://www.googleapis.com/youtube/v3/search';
-        const key =  'AIzaSyDMyxo6mKMTtCiI6t7JoItSwI2NjJGHzDk';
-        const part = 'snippet';
+        const base_url = youtubeConfig.youtubeAPIUrl;
+        const key =  youtubeConfig.apiKey;
+        const part = youtubeConfig.part;
         const query = this.state.query;
-        const type = 'video'
-        const videoCaption = 'closedCaption'
-        const totalResults = 5;
+        const type = youtubeConfig.type;
+        const videoCaption = youtubeConfig.videoCaption;
+        const totalResults = youtubeConfig.totalResults;
 
-        let getRequest = base_url + '?part=' + part +
-                         '&q=' + query + '&type=' + type +
-                         '&videoCaption=' + videoCaption +
-                         '&maxResults=' + totalResults +
-                         '&order=viewCount';
-
-        getRequest += '&key=' + key;
-
-        return getRequest;
+        return (
+             base_url + '?part=' + part +
+             '&q=' + query + '&type=' + type +
+             '&videoCaption=' + videoCaption +
+             '&maxResults=' + totalResults +
+             '&order=viewCount&key=' + key
+        );
     }
 
     sendRequest(getRequest)
@@ -59,7 +58,6 @@ class SearchList extends React.Component
             this.setState({'items': res.data.items,
                            'nextPageToken': res.data.nextPageToken,
                            'prevPageToken': res.data.prevPageToken});
-            console.log(this.state.items);
         });
     }
 
@@ -112,8 +110,7 @@ class SearchList extends React.Component
                                                                         result.snippet.title)}>
                                         <Row>
                                             <Col xs={3}>
-                                                <Image className="list-group-item-text"
-                                                    alt={result.snippet.name} responsive
+                                                <Image alt={result.snippet.name} responsive
                                                     src={result.snippet.thumbnails.default.url}/>
                                             </Col>
                                             <Col xs={9}>
@@ -121,18 +118,14 @@ class SearchList extends React.Component
                                             </Col>
                                         </Row>
                                     </ListGroupItem>
-                                )
+                                );
                             })
                         }
                     </ListGroup>
-                    <ButtonGroup justified>
-                        <ButtonGroup>
-                            <Button type="submit" onClick={this.prevPage}>Prev</Button>
-                        </ButtonGroup>
-                        <ButtonGroup>
-                            <Button type="submit" onClick={this.nextPage}>Next</Button>
-                        </ButtonGroup>
-                    </ButtonGroup>
+                    <Pager>
+                        <Pager.Item previous onClick={this.prevPage}>&larr; Previous</Pager.Item>
+                        <Pager.Item next onClick={this.nextPage}>Next &rarr;</Pager.Item>
+                    </Pager>
                 </div>
             )
         }
