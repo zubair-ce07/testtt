@@ -30,6 +30,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'books.apps.BooksConfig',
+    'accounts.apps.AccountsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -53,7 +54,7 @@ ROOT_URLCONF = 'BookInventory.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['./templates', ],
+        'DIRS': ['./accounts/templates/accounts', ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
