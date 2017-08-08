@@ -20,7 +20,7 @@ class APILogin(APIView):
         if requested_user:
             user_token, is_created = Token.objects.get_or_create(user=requested_user)
             return Response(data={'data': 'User Logged In', 'token': user_token.key}, status=status.HTTP_200_OK,
-                            template_name='blog/index.html')
+                            template_name='blog/blogs.html')
         return Response(data={'data': 'Invalid Username or Password'}, status=status.HTTP_404_NOT_FOUND)
 
 

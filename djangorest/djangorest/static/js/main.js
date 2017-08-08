@@ -60,9 +60,12 @@ function populate_blog_page() {
         dataType: 'json',
         url: 'http://127.0.0.1:8000/blog/',
         success: function (result) {
-            result.forEach(function (blog) {
-                add_blog_post(blog);
+            result.forEach(blog => {
+                add_blog_post(blog);  
             });
+//            result.forEach(function (blog) {
+//                add_blog_post(blog);
+//            });
         }
     });
 }

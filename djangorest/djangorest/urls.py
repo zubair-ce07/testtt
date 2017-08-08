@@ -25,7 +25,7 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    url(r'^$', TemplateView.as_view(template_name='user/index.html')),
-    url(r'^blogs$', TemplateView.as_view(template_name='blog/index.html')),
-    url(r'^blogs/(?P<slug>[a-z_]+)/$', TemplateView.as_view(template_name='blog/blog.html')),
+    url(r'^$', TemplateView.as_view(template_name='index.html')),
+    url(r'^blogs$', TemplateView.as_view(template_name='blog/blogs.html')),
+    url(r'^blogs/(?P<slug>[a-z_]+)/$', TemplateView.as_view(template_name='blog/single.html')),
 ]
