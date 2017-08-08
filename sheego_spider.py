@@ -175,3 +175,6 @@ class SheegoSpider(CrawlSpider):
             text = text.replace("\\n", "")
             clean_text += text
         return clean_text
+
+    def convert_to_float(input_str):
+        return float(''.join(findall(r'([0-9.,])', input_str)).replace(',', '.'))
