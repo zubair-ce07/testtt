@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'tz_detect',
     'malfunction_reporting',
     'url_crawler',
+    'users',
 ]
 
 MIDDLEWARE = [
