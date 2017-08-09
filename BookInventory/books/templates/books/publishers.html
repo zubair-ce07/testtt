@@ -1,4 +1,5 @@
 {% extends 'books/base.html' %}
+{% load static %}
 {% block title %}Publishers{% endblock %}
 {% block content %}
     <div class="well row">
@@ -22,9 +23,10 @@
             <th>City</th>
             <th>Country</th>
             <th>Books</th>
+            <th>Action</th>
         </tr>
         {% for publisher in publisher_list %}
-            <tr>
+            <tr id="{{ publisher.id }}">
                 <th>{{ forloop.counter }}</th>
                 <td>{{ publisher.name }}</td>
                 <td>{{ publisher.address }}</td>
@@ -42,7 +44,13 @@
                         {% endfor %}
                     </ul>
                 </td>
+                <td>
+                    <button type="button" id="{{ publisher.id }}" class="btn btn-danger delete">Delete Publisher</button>
+                </td>
             <tr>
         {% endfor %}
     </table>
+    {% block scripts %}
+        <script src="{% static 'books/table.js' %}"></script>
+    {% endblock %}
 {% endblock %}
