@@ -8,7 +8,7 @@
 {% block content %}
     <div class="jumbotron">
         <h1>{{ user.username }}</h1>
-        <form id="update_profile" method="post" action="{% url 'accounts:profile_update' %}"
+        <form id="update_profile" method="post" action="{% url 'books:profile_update' %}"
               enctype="multipart/form-data" onsubmit="return validateForm()">
             {% csrf_token %}
             <input type="hidden" id='username' name="username" value="{{ user.username }}" readonly/>

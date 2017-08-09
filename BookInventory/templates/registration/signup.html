@@ -12,7 +12,7 @@
                 {{ form.errors }}
             </div>
         {% endif %}
-        <form method="post" action="{% url 'accounts:signup' %}" onsubmit="return validateForm()">
+        <form method="post" action="{% url 'signup' %}" onsubmit="return validateForm()">
             {% csrf_token %}
             <div class="well">
                 <label> Username</label>

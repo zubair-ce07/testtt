@@ -19,12 +19,17 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic import RedirectView
 
+from BookInventory import views
+
 urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/books', permanent=False)),
     url(r'^books/', include('books.urls')),
-    url(r'^accounts/', include('accounts.urls', namespace='accounts')),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^admin/', admin.site.urls),
+]
+
+urlpatterns += [
+    url(r'^accounts/signup', views.signup, name='signup'),
+    url(r'^accounts/', include('django.contrib.auth.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
