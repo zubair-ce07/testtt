@@ -1,0 +1,14 @@
+$primary: #006699;
+
+h2 {
+	color: $primary;
+}
+
+td, th {
+	vertical-align: middle !important;
+	text-align: center !important;
+}
+
+div.alert {
+	margin-top: 20px;
+}
