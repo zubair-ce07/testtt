@@ -12,7 +12,7 @@ def signup(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        try:git p
+        try:
             if username and password:
                 user = UserModel.objects.create(username=username)
                 user.set_password(password)
@@ -20,6 +20,6 @@ def signup(request):
                 return HttpResponseRedirect('./login')
             else:
                 context['error_username'] = "Username or Passoword cannot be empty"
-        except IntegrityError:
+        except IntegrityError as e:
             context['error_username'] = "Username Already Exist"
     return render(request, 'registration/signup.html', context)
