@@ -84,6 +84,13 @@ class AddBrandForm extends React.Component {
         createBrand(data, (jsonData) => {
             console.log(jsonData)
             data.reset()
+            this.setState({
+                file: '',
+                imagePreviewUrl: '',
+                binaryString: '',
+                linkError: '',
+                nameError: '',
+            })
             toastr.success('brand created successfully!')
         })
     }

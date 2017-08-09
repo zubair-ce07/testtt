@@ -1,20 +1,28 @@
-from .serializers import BrandSerializer, UserSerializer, ProductSerializer
+from .serializers import BrandSerializer, UserSerializer, ProductSerializer,\
+                            BrandOnlySerializer
 from rest_framework import generics, permissions, authentication
-from rest_framework.views import APIView
 from authentication.models import User
 from super_store.models import Brand, Product
 from .throttling import CustomThrottle
 from rest_framework_tracking.mixins import LoggingMixin
+from rest_framework.pagination import PageNumberPagination
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 
 class BrandList(generics.ListAPIView):
     throttle_classes = (CustomThrottle,)
     queryset = Brand.objects.all()
-    serializer_class = BrandSerializer
+    serializer_class = BrandOnlySerializer
     permission_classes = (
         permissions.IsAuthenticated,
         permissions.IsAdminUser,
     )
+    pagination_class = StandardResultsSetPagination
     authentication_classes = (authentication.TokenAuthentication,)
 
 
@@ -67,21 +75,23 @@ class ProductList(generics.ListAPIView):
         permissions.IsAuthenticated,
         permissions.IsAdminUser,
     )
+    pagination_class = StandardResultsSetPagination
     authentication_classes = (authentication.TokenAuthentication,)
 
 
 class BrandProductList(generics.ListAPIView):
     throttle_classes = (CustomThrottle,)
-    serializer_class = ProductSerializer
+    serializer_class = BrandSerializer
     permission_classes = (
         permissions.IsAuthenticated,
         permissions.IsAdminUser,
     )
     authentication_classes = (authentication.TokenAuthentication,)
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         name = self.kwargs['name']
-        return Brand.objects.get(name=name).product_set.all()
+        return Brand.objects.filter(name=name)
 
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -91,5 +101,4 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
         permissions.IsAuthenticated,
         permissions.IsAdminUser,
     )
-
     authentication_classes = (authentication.TokenAuthentication,)

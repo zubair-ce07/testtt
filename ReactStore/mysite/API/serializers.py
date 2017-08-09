@@ -10,13 +10,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'first_name', 'last_name')
 
 
-class BrandSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Brand
-        fields = ('name', 'brand_link', 'image_icon', )
-
-
 class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -41,4 +34,17 @@ class ProductSerializer(serializers.ModelSerializer):
                   'source_url', 'images', 'skus_set')
 
 
+class BrandOnlySerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = Brand
+        fields = ('name', 'brand_link', 'image_icon')
+
+
+class BrandSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Brand
+        fields = ('pk', 'name', 'brand_link', 'image_icon', 'product')
+        read_only_fields = ('pk',)

@@ -24,7 +24,7 @@ class Brand(models.Model):
 
 class Product(models.Model):
     brand = models.ForeignKey(
-        Brand, on_delete=models.CASCADE)
+        Brand, related_name='product', on_delete=models.CASCADE)
     product_name = models.CharField(max_length=250, verbose_name="Name")
     product_id = models.CharField(max_length=50, verbose_name="Product ID")
     source_url = models.URLField()

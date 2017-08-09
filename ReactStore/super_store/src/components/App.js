@@ -22,6 +22,7 @@ class App extends React.Component {
         const that = this
         listItems("http://localhost:8000/api/brand/list", (jsonData) => {
             var brands = []
+            console.log(jsonData)
             if(jsonData.results){
                 jsonData.results.forEach(function(element) {
                     brands.push(element)

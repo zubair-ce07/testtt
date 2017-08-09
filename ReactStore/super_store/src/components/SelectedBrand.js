@@ -11,7 +11,8 @@ class SelectedBrand extends React.Component {
     constructor(){
         super()
         this.state = {
-            products: []
+            products: [],
+            brand: {}
         }
     }
     componentWillMount(){
@@ -23,14 +24,16 @@ class SelectedBrand extends React.Component {
         listItems("http://localhost:8000/api/brand/products/"+this.props.match.params.name, (jsonData) => {
             var products = []
             console.log(jsonData)
-            if(jsonData.results){
-                jsonData.results.forEach(function(element) {
+            if(jsonData.results[0].product.length > 0){
+                jsonData.results[0].product.forEach(function(element) {
                     products.push(element)
                 }, this);
-                that.setState({
-                    products
-                })
+
             }
+            that.setState({
+                    products,
+                    brand: jsonData.results[0]
+            })
 
         })
     }
@@ -40,7 +43,7 @@ class SelectedBrand extends React.Component {
             <div>
                 <Route component={Navigation} />
                 <h1 className="text-center">
-                    Super Store's reknowned Products
+                    Super Store's reknowned Products of {this.state.brand.name}
                 </h1>
                 {(this.state.products.length > 0 ?
                     <GridInstance itemList={this.state.products} name='products'/>:
