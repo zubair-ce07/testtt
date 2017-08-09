@@ -10,13 +10,8 @@ class ColorFilter(RFPDupeFilter):
 
     def request_seen(self, request):
         fp = self.__getid(request.url)
-        if 'color=' in fp:
+        if '.html' in fp:
             fp = fp.split('?')[0]
         if fp in self.fingerprints:
             return True
         self.fingerprints.add(fp)
-        # if 'color=' in fp:
-        #     self.fingerprints.add(fp.split('?')[0])
-        # else:
-
-        # print(self.fingerprints)
