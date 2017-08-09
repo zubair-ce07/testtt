@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 from rest_framework import routers
-from memsapi_app.views import UserView,  MemoryListView, Logout, \
+from memsapi_app.views import UserView,  MemoryListView, Logout, index, \
                               ActivityListView, CreateAndListCategory, GetPublicMems, Login
 from rest_framework.authtoken import views
 
@@ -10,6 +10,7 @@ router = routers.DefaultRouter()
 app_name = 'memoapp'
 urlpatterns = [
     url(r'^$', include(router.urls)),
+    url(r'^index/', index),
     url(r'^login/$', Login.as_view()),
     url(r'^logout/$', Logout.as_view()),
     url(r'^user/$', UserView.as_view()),

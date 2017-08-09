@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render
 from memsapi_app.models import User, Memory, Activity, Category
 from memsapi_app.serializers import UserSerializer, MemorySerializer, LoginSerializer,\
                                     ActivitySerializer, CategorySerializer
@@ -13,21 +14,24 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 
 
+def index(request):
+    return render(request, 'memsapi_app/index.html', {})
+
 class Login(APIView):
     authentication_classes = ()
     permission_classes = (AllowAny, )
     serializer_class = LoginSerializer
 
     def post(self, request):
-        data = JSONParser().parse(request)
-        login_serializer = self.serializer_class(data=data)
+        data = request.data
+        login_serializer = self.serializer_class(data=request.data)
         if login_serializer.is_valid():
             user = authenticate(request, email=data['email'], password=data['password'])
             if user:
                 user = User.objects.get(email=user)
                 token = Token.objects.get_or_create(user=user)
                 key = str(token[0])
-                return Response({'Token': key})
+                return Response({'token': key})
             else:
                 return HttpResponse("User name or password is not valid")
         return JsonResponse(login_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,0 +1,136 @@
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script>
+        var LoginData = function(email,pass){
+            this.email = email;
+            this.password = pass;
+        };
+        $(document).ready(function(){
+            $('#logout-div').on('click','button', function(){
+                $.ajax({
+                  type: "POST",
+                  url: 'http://127.0.0.1:8000/logout/',
+                  headers:{'Authorization': $.cookie('token') },
+                  success: function (data) {
+                      $.removeCookie('token')
+                      alert('Logout success');
+                      $('body').remove();
+                  },
+                   failure: function (data) {
+                     alert('failure');
+                   },
+                    complete: function(response){
+                      console.log(response.responseText);
+                    }
+                });
+            });
+
+            $('#categories-div').on('click', '#cat', function () {
+               function append_categories(categories) {
+                   $('#categories-div').children('#ul').remove();
+                   var response = '<ul id=\'ul\'>';
+                   for (var i in categories){
+                       response += '<li>' + categories[i].name + '</li>';
+                    };
+                   response += '</ul>'
+                   $('#categories-div').append(response);
+               };
+               $.ajax({
+                  type: "GET",
+                  url: 'http://127.0.0.1:8000/categories/',
+                  headers:{'Authorization': $.cookie('token') },
+                  success: append_categories,
+                   failure: function (data) {
+                     alert('failure');
+                   },
+                    complete: function(response){
+                      console.log(response);
+                    }
+                });
+            });
+            $('#mems-div').on('click', '#mem', function () {
+               function append_mems(mems) {
+                   $('#mems-div').children('#ul-mem').remove();
+                   var response = '<ul id=\'ul-mem\'>';
+                   for (var i in mems){
+                       response += '<li>' + mems[i].title + '</li>';
+                    };
+                   response += '</ul>'
+                   $('#mems-div').append(response);
+               };
+               $.ajax({
+                  type: "GET",
+                  url: 'http://127.0.0.1:8000/mems/',
+                  headers:{'Authorization': $.cookie('token') },
+                  success: append_mems,
+                   failure: function (data) {
+                     alert('failure');
+                   },
+                    complete: function(response){
+                      console.log(response);
+                    }
+                });
+            });
+            $('#activities-div').on('click', 'button', function () {
+                alert('using namespace std')
+               function append_activities(activities) {
+                    $('#activities-div').children('#ul-ac').remove();
+                   var response = '<ul id=\'ul-ac\'>';
+                   for (var i in activities){
+                       response += '<li> You ' + activities[i].activity + ' '+ activities[i].memory_title +'</li>';
+                    };
+                   response += '</ul>'
+                   $('#activities-div').append(response);
+               };
+               $.ajax({
+                  type: "GET",
+                  url: 'http://127.0.0.1:8000/activities/',
+                  headers:{'Authorization': $.cookie('token') },
+                  success: append_activities,
+                   failure: function (data) {
+                     alert('failure');
+                   },
+                    complete: function(response){
+                      console.log(response);
+                    }
+                });
+            });
+             /* Login ajax request is handled here
+                after successful login login form is removed
+                and other (logout, categories etc) divs are added
+             */
+            $('#login-button').click(function () {
+                var email = $('#email').val();
+                var pass = $('#password').val();
+                login_data = new LoginData(email, pass);
+                $.post('http://127.0.0.1:8000/login/', login_data,function (data) {
+                    if (data.token) {
+                        $.cookie('token', 'Token ' + data.token);
+                        $('.login').remove();
+                        $('#logout-div').append("<button id='logout'>Logout</button>");
+                        $('#categories-div').append("<button id='cat'>View Categories of Mems Added by  You</button>");
+                        $('#activities-div').append("<button id='act'>View Your Activiites</button>");
+                        $('#mems-div').append("<button id='mem'>View Your Mems</button>");
+                        alert(data.token);
+                    }else {
+                        alert('Email or password is not correct');
+                    };
+                });
+            });
+        });
+
+    </script>
+</head>
+<body>
+<div id="logout-div"></div>
+<div id="categories-div"> </div>
+<div id="mems-div"></div>
+<div id="activities-div"></div>
+        <input class="login" type="text" id="email">
+        <input class="login" type="password" id="password">
+        <button class="login" id="login-button">Login</button>
+
+</body>
+</html>
