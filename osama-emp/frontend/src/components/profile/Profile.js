@@ -51,6 +51,7 @@ class Profile extends React.Component {
         <p>
           Reports To: {this.props.profile.reports_to}
         </p>
+
         <div className="appraisal-container">
           {this.state.appraisals !== []
             ? this.state.appraisals.map(current => {

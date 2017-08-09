@@ -9,6 +9,12 @@ section {
   padding: 1%;
 }
 
+#logout {
+  position: absolute;
+  top: 10px;
+  right: 50%;
+}
+
 ul.tree,
 ul.tree ul {
   list-style: none;

@@ -15,7 +15,7 @@ urlpatterns = [
         views.EmployeeDirectsView.as_view(), name="directs"),
     url(r'^employees/(?P<username>\w+)/appraisals/?$',
         views.AppraisalView.as_view(), name="appraisals"),
-    url(r'^employees/(?P<username>\w+)/appraisals/create/?$',
+    url(r'^employees/appraisals/create/?$',
         views.AppraisalCreateAPIView.as_view(), name="appraisals-create"),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^obtain-auth-token/$', obtain_auth_token)

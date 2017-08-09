@@ -19,7 +19,7 @@ class Login extends React.Component {
     djangoapi.login(username, pass, jsonData => {
       localStorage.username = username;
       localStorage.token = jsonData.token;
-      window.location = "/employees/" + username;
+      window.location.reload();
     });
   }
 

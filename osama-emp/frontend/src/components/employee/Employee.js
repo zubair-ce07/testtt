@@ -23,18 +23,31 @@ class Employee extends React.Component {
         directs: []
       });
     }
-    this.props.profileHandler(this.props.emp.username);
   }
 
   render() {
     return (
       <div>
         <li>
-          <a href="" onClick={evt => this.listEmployees(evt)}>
+          Name:
+          <a
+            href=""
+            onClick={evt => {
+              evt.preventDefault();
+              this.props.profileHandler(this.props.emp.username);
+            }}
+          >
             {this.props.emp.first_name + " " + this.props.emp.last_name}
           </a>
         </li>
-
+        {this.props.emp.reports_to === localStorage.username
+          ? <li>Give Appraisal:</li>
+          : null}
+        <li>
+          <a href="" onClick={evt => this.listEmployees(evt)}>
+            Directs
+          </a>
+        </li>
         <ul>
           {this.state.directs !== []
             ? this.state.directs.map(current => {
