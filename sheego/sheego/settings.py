@@ -101,4 +101,4 @@ FEED_EXPORTERS = {
     'json': 'sheego.settings.MyJsonItemExporter',
 }
 
-# DUPEFILTER_CLASS = 'sheego.filter.ColorFilter'
+DUPEFILTER_CLASS = 'sheego.filter.ColorFilter'
