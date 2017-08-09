@@ -1,8 +1,13 @@
-import scrapy
 import re
-from sheego.items import Product
+from urllib.parse import urlencode
+from urllib import request
+
+import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
+from scrapy.utils.response import open_in_browser
+
+from sheego.items import Product
 
 
 def clean_list(list):
@@ -82,37 +87,7 @@ def name(response, product):
 #
 #
 def retailer_id(response, product):
-    product['retailer_id'] = response.css('.js-artNr::text').extract_first().strip().rstrip('W5')
-
-
-#
-#
-# def skus(response, product):
-#     sizes_list = list(filter(None, [n.strip() for n in response.css(
-#         "div.sizebox-wrapper li::text").extract()]))
-#     avail_list = response.css(
-#         "div.sizebox-wrapper li::attr(data-qty)").extract()
-#     # response.xpath("//div[@class='sizebox-wrapper']//li/@data-qty").extract()
-#
-#     for sizes in range(len(sizes_list)):
-#         if int(avail_list[sizes]):
-#             product['skus'].append({str(list(filter(None, response.css(
-#                 "p.sku::text").re(r'(\d*)')))[0] + '_' + sizes_list[sizes]):
-#                                         {'color': response.css("img.has-tip[title]::attr(title)").extract()[0],
-#                                          'currency': response.css("script[type='application/ld+json']::text").re(
-#                                              r'priceCurrency\":\"(\w*)')[0],
-#                                          'price': ''.join(response.css("script[type='application/ld+json']::text").re(
-#                                              r'price":(\d)*(\.\d*)?')),
-#                                          'size': sizes_list[sizes]}})
-#         else:
-#             product['skus'].append({str(list(filter(None, response.css(
-#                 "p.sku::text").re(r'(\d*)')))[0] + '_' + sizes_list[sizes]):
-#                                         {'color': response.css("img.has-tip[title]::attr(title)").extract()[0],
-#                                          'currency': response.css("script[type='application/ld+json']::text").re(
-#                                              r'priceCurrency\":\"(\w*)')[0],
-#                                          'price': ''.join(response.css("script[type='application/ld+json']::text").re(
-#                                              r'price":(\d)*(\.\d*)?')),
-#                                          'size': sizes_list[sizes], 'out_of_stock': 'true'}})
+    product['retailer_id'] = re.search(r'(\d+)', response.css('.js-artNr::text').extract_first()).group()
 
 
 class SheegoSpider(CrawlSpider):
@@ -127,20 +102,44 @@ class SheegoSpider(CrawlSpider):
         Rule(LinkExtractor(
             restrict_css='a.product__top'), callback="parseprod"),)
 
+    def parse_sku(self, response):
+        item = response.meta.get('item')
+        sku = {'color': response.css('span.js-color-value::text').extract_first().lstrip('– '),
+               'available_sizes': response.css('div.at-dv-size-button::text').extract(),
+               'out_of_stock_sizes': response.css('div.sizespots__item--disabled::text').extract(),
+               'current_price': response.css('span.at-lastprice::text').extract_first().strip(),
+               }
+        if response.css('span.at-wrongprice'):
+            sku.update({'regular_price': response.css('span.at-wrongprice::text').extract_first().strip()})
+        print('***************')
+        print(sku)
+        item['sku'].append(sku)
+        print('***************')
+
+        yield item
+
     def parseprod(self, response):
         product = Product()
-        # product['skus'] = []
-        url(response, product)
-        retailer_id(response, product)
+        product['skus'] = []
+        # url(response, product)
+        # retailer_id(response, product)
         name(response, product)
-        brand(response, product)
-        details(response, product)
-        features(response, product)
-        material(response, product)
-        color(response, product)
+        # brand(response, product)
+        # details(response, product)
+        # features(response, product)
+        # material(response, product)
+        # color(response, product)
         # image_urls(response, product)
+        product_id = re.search(r'(\d+)', response.css('.js-artNr::text').extract_first()).group()
+        colors_list = response.css('span.colorspots__item::attr(data-varselid)').extract()
+        base_url = 'https://www.sheego.de/index.php?'
+        for color in colors_list:
+            params = urlencode(
+                {'anid': product_id, 'cl': 'oxwarticledetails', 'varselid[0]': color, 'ajaxdetails': 'adsColorChange'})
+            curl = base_url + params
+            print(curl)
+            yield scrapy.Request(curl, callback=self.parse_sku, meta={'item': product})
+            # color_urls(response, product)
 
-        # color_urls(response, product)
-
-        # skus(response, product)
-        yield product
+            # skus(response, product)
+            # yield product

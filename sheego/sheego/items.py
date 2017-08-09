@@ -18,5 +18,5 @@ class Product(scrapy.Item):
     material = scrapy.Field()
     color = scrapy.Field()
     # image_urls = scrapy.Field()
-    # skus = scrapy.Field()
+    skus = scrapy.Field()
     # color_urls = scrapy.Field()
