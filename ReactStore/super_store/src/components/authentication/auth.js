@@ -59,13 +59,19 @@ export function createBrand(formData, callback ){
   data.append('brand_link', formData.brand_link.value.toString())
   data.append('image_icon', formData.image_icon.files[0])
 
-  let request = new Request('http://localhost:8000/api/brand/create/', {
+  // let request = new Request('http://localhost:8000/api/brand/create/', {
+  //   method: "post",
+  //   headers,
+  //   mode: "cors",
+  //   redirect: "follow",
+  //   body: data
+  // });
+
+  fetch('http://localhost:8000/api/brand/create/', {
     method: "post",
     headers,
     mode: "cors",
     redirect: "follow",
     body: data
-  });
-
-  fetch(request).then(response => response.json()).then(callback);
+  }).then(response => response.json()).then(callback);
 }

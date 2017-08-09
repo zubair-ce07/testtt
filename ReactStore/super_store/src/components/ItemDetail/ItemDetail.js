@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import {Route} from 'react-router-dom'
 
 import {Image, Row, Col, Table} from 'react-bootstrap/lib'
@@ -16,7 +17,7 @@ class ItemDetail extends React.Component{
         }
 
     }
-    componentWillMount(){
+    componentDidMount(){
         if (!loggedIn()) {
             this.props.history.push('/app/login/')
         }
@@ -85,6 +86,11 @@ class ItemDetail extends React.Component{
             </div>
         )
     }
+}
+
+ItemDetail.propTypes = {
+    history: PropTypes.object.isRequired,
+    match: PropTypes.object.isRequired
 }
 
 export default ItemDetail

@@ -45,7 +45,7 @@ class AddBrandForm extends React.Component {
         reader.readAsBinaryString(file)
     }
     validateURL(textval) {
-        var urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/;
+        const urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/;
         return urlregex.test(textval);
     }
     _handleSubmit(e){
@@ -95,7 +95,7 @@ class AddBrandForm extends React.Component {
         })
     }
     render(){
-        let {imagePreviewUrl} = this.state;
+        const {imagePreviewUrl} = this.state;
         let $imagePreview = null;
         if (imagePreviewUrl) {
             $imagePreview = (<img src={imagePreviewUrl} alt="Brand" />);
@@ -104,6 +104,7 @@ class AddBrandForm extends React.Component {
             <div>
                 <Jumbotron>
                     <div className='container'>
+                        <h1>Add A New Brand!!</h1>
                         <form id="brandCreate" encType='multipart/form-data' onSubmit={this._handleSubmit}>
                             <FieldGroup
                                 id="formControlsBrandName"

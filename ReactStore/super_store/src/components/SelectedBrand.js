@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 import Navigation from './Common/Header'
 import Footer from './Common/Footer'
@@ -15,7 +16,7 @@ class SelectedBrand extends React.Component {
             brand: {}
         }
     }
-    componentWillMount(){
+    componentDidMount(){
         if (!loggedIn()) {
             this.props.history.push('/app/login/')
         }
@@ -23,7 +24,6 @@ class SelectedBrand extends React.Component {
         const that = this
         listItems("http://localhost:8000/api/brand/products/"+this.props.match.params.name, (jsonData) => {
             var products = []
-            console.log(jsonData)
             if(jsonData.results[0].product.length > 0){
                 jsonData.results[0].product.forEach(function(element) {
                     products.push(element)
@@ -56,6 +56,11 @@ class SelectedBrand extends React.Component {
             </div>
         )
     }
+}
+
+SelectedBrand.propTypes = {
+    history: PropTypes.object.isRequired,
+    match: PropTypes.object.isRequired
 }
 
 export default SelectedBrand

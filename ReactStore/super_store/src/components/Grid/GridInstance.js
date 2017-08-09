@@ -1,14 +1,20 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import List from './ListTiles'
 
-const GridInstance = (props) => {
+class GridInstance extends React.Component{
+    render(){
+        return(
+            <div className="container">
+                <List itemList={this.props.itemList} name={this.props.name}/>
+            </div>
+        )
+    }
+}
 
-
-    return(
-        <div className="container">
-            <List itemList={props.itemList} name={props.name}/>
-        </div>
-    )
+GridInstance.PropType = {
+    itemList: PropTypes.array.isRequired,
+    name: PropTypes.string.isRequired
 }
 
 export default GridInstance
