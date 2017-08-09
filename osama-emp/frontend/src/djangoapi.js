@@ -50,13 +50,8 @@ function getDirects(username, callback) {
     .catch(error => console.log(error));
 }
 
-function listEmployees(callback) {
-  let headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    Authorization: "Token " + localStorage.token
-  };
-  fetch(SERVER_URL + "employees/", {
+function getAppraisals(username, callback) {
+  fetch(SERVER_URL + "employees/" + username + "/appraisals", {
     method: "get",
     headers
   })
@@ -71,7 +66,7 @@ let djangoapi = {
   login,
   getProfile,
   getDirects,
-  listEmployees
+  getAppraisals
 };
 
 export default djangoapi;

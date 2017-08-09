@@ -32,7 +32,7 @@ class Employee(models.Model):
     nationality = models.CharField(max_length=32)
 
     def __str__(self):
-        return self.username
+        return self.first_name + ' ' + self.last_name
 
 
 class Appraisal(models.Model):
@@ -45,3 +45,8 @@ class Appraisal(models.Model):
         choices=YEAR_CHOICES, default=datetime.datetime.now().year)
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     description = models.TextField(default="")
+    rating = models.IntegerField(
+        choices=[(n, n) for n in range(1, 6)], default=5)
+
+    def __str__(self):
+        return '%s %s' % (self.employee, self.year)

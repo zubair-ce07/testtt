@@ -7,13 +7,13 @@ from django.shortcuts import redirect
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework import permissions
 
 
-from .models import Employee
-from .serializers import EmployeeSerializer
+from .models import Employee, Appraisal
+from .serializers import EmployeeSerializer, AppraisalSerializer
 from .permissions import IsSelf, IsDirect
 
 
@@ -23,11 +23,6 @@ class EmployeeListAPIView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,
                           permissions.IsAdminUser,)
     lookup_field = 'username'
-
-
-class EmployeeListCreateAPIView(ListCreateAPIView):
-    queryset = Employee.objects.all()
-    serializer_class = EmployeeSerializer
 
 
 class EmployeeRetrieveAPIView(RetrieveAPIView):
@@ -58,3 +53,27 @@ class EmployeeDirectsView(APIView):
             directs))
         response_dict['directs'] = directs
         return Response(response_dict, status=status.HTTP_200_OK)
+
+
+class AppraisalView(APIView):
+    """
+    Returns the appraisals of the current Employee
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, username, *args, **kwargs):
+        response_dict = {
+            'appraisals': []
+        }
+        appraisals = Appraisal.objects.filter(
+            employee=username).order_by('-year')
+        appraisals = list(map(lambda x: AppraisalSerializer(
+            x, context={'request': request}).data, appraisals))
+        response_dict['appraisals'] = appraisals
+        return Response(response_dict, status=status.HTTP_200_OK)
+
+
+class AppraisalCreateAPIView(CreateAPIView):
+    queryset = Appraisal.objects.all()
+    serializer_class = AppraisalSerializer
+    permission_classes = (permissions.IsAuthenticated,)

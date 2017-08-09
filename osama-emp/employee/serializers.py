@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import serializers
 
-from .models import Employee
+from .models import Employee, Appraisal
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -38,3 +38,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
         }
         user = User.objects.create(**user_data)
         return Employee.objects.create(user=user, **validated_data)
+
+
+class AppraisalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appraisal
+        fields = ('year', 'employee', 'description', 'rating')

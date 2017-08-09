@@ -1,7 +1,28 @@
 import React from "react";
 import "./Profile";
+import djangoapi from "../../djangoapi";
+import Appraisal from "../appraisal/Appraisal";
 
 class Profile extends React.Component {
+  constructor(props) {
+    super();
+    this.state = {
+      appraisals: []
+    };
+  }
+
+  componentDidMount() {
+    djangoapi.getAppraisals(this.props.profile.username, jsonData => {
+      this.setState({
+        appraisals: jsonData.appraisals.sort((a, b) => b.year - a.year)
+      });
+    });
+  }
+
+  componentDidUpdate() {
+    this.componentDidMount();
+  }
+
   render() {
     return (
       <div className="profile">
@@ -30,6 +51,13 @@ class Profile extends React.Component {
         <p>
           Reports To: {this.props.profile.reports_to}
         </p>
+        <div className="appraisal-container">
+          {this.state.appraisals !== []
+            ? this.state.appraisals.map(current => {
+                return <Appraisal key={current.year} data={current} />;
+              })
+            : null}
+        </div>
       </div>
     );
   }
