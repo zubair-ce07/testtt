@@ -28,29 +28,29 @@ def read_files(new_args, selected_files):
             for row in reader:
                 data.append(row)
 
-    for i in data:
+    for record in data:
 
-        if i.get('PKST'):
-            i['PKT'] = i['PKST']
-            del i['PKST']
+        if record.get('PKST'):
+            record['PKT'] = record['PKST']
+            del record['PKST']
 
-        if i['PKT']:
-            i['PKT'] = datetime.strptime(i['PKT'], '%Y-%m-%d').date()
+        if record['PKT']:
+            record['PKT'] = datetime.strptime(record['PKT'], '%Y-%m-%d').date()
 
-        if i['Max TemperatureC']:
-            i['Max TemperatureC'] = int(i['Max TemperatureC'])
+        if record['Max TemperatureC']:
+            record['Max TemperatureC'] = int(record['Max TemperatureC'])
 
-        if i['Mean TemperatureC']:
-            i['Mean TemperatureC'] = int(i['Mean TemperatureC'])
+        if record['Mean TemperatureC']:
+            record['Mean TemperatureC'] = int(record['Mean TemperatureC'])
 
-        if i['Min TemperatureC']:
-            i['Min TemperatureC'] = int(i['Min TemperatureC'])
+        if record['Min TemperatureC']:
+            record['Min TemperatureC'] = int(record['Min TemperatureC'])
 
-        if i['Max Humidity']:
-            i['Max Humidity'] = int(i['Max Humidity'])
+        if record['Max Humidity']:
+            record['Max Humidity'] = int(record['Max Humidity'])
 
-        if i[' Mean Humidity']:
-            i[' Mean Humidity'] = int(i[' Mean Humidity'])
+        if record[' Mean Humidity']:
+            record[' Mean Humidity'] = int(record[' Mean Humidity'])
 
     return data
 
@@ -183,4 +183,3 @@ if __name__ == "__main__":
         print(calendar.month_name[args.c.month], args.c.year)
         bar_chart(extracted_data)
         bar_chart_bonus(extracted_data)
-
