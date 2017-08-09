@@ -1,3 +1,11 @@
 .login {
     padding-left: 25%;
 }
+
+#profile_img {
+    width: 250px;
+}
+
+.error_text {
+    color: red;
+}

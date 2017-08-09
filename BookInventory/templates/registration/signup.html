@@ -1,0 +1,38 @@
+{% extends 'books/base.html' %}
+{% load static %}
+{% block scripts %}
+    <script src="{% static 'books/signup.js' %}"></script>
+{% endblock %}
+{% block title %}Sign Up{% endblock %}
+{% block content %}
+    <div class="jumbotron">
+        <h1>Sign Up</h1>
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                {{ form.errors }}
+            </div>
+        {% endif %}
+        <form method="post" action="{% url 'signup' %}" onsubmit="return validateForm()">
+            {% csrf_token %}
+            <div class="well">
+                <label> Username</label>
+                <input id="username" name="username"
+                       class="form-control" placeholder="Enter Username"/>
+                <div id="username_error" class="error_text">{{ error_username }}</div>
+            </div>
+            <div class="well">
+                <label> Password</label>
+                <input type="password" id="password" name="password"
+                       class="form-control" placeholder="Enter Password">
+                <br>
+                <label>Confirm Password</label>
+                <input type="password" id="re-password" name="re-password"
+                       class="form-control" placeholder="Re-Enter Password">
+                <div id="password_error" class="error_text"></div>
+            </div>
+            <div>
+                <input type="submit" class="btn btn-info" value="Sign Up">
+            </div>
+        </form>
+    </div>
+{% endblock %}

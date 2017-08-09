@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, UserManager
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-GENRE_CHOICES = [
+GENRE_CHOICES = (
     ('Novel', 'Novel'),
     ('Thriller', 'Thriller'),
     ('Drama', 'Drama'),
@@ -15,7 +15,15 @@ GENRE_CHOICES = [
     ('Text Book', 'Text Book'),
     ('Science', 'Science'),
     ('Not Specified', 'Not Specified'),
-]
+)
+
+
+class UserModel(User):
+    image = models.ImageField(upload_to='books/', null=True, blank=True)
+    address = models.CharField(max_length=512, blank=True)
+    contact = models.CharField(max_length=32, blank=True)
+    timezone = models.CharField(max_length=64, default='Asia/Karachi')
+    objects = UserManager()
 
 
 @python_2_unicode_compatible
