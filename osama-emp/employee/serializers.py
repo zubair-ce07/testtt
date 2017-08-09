@@ -14,9 +14,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
     )
     directs = serializers.HyperlinkedIdentityField(
         view_name='directs', format='json', lookup_field='username')
-    reports_to = serializers.HyperlinkedRelatedField(
-        view_name='employee-detail', read_only=True, lookup_field='username'
-    )
+    reports_to = serializers.PrimaryKeyRelatedField(
+        queryset=Employee.objects.all(), allow_null=True)
 
     class Meta:
         model = Employee

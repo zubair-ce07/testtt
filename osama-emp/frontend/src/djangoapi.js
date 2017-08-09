@@ -27,7 +27,7 @@ function login(username, password, callback) {
 }
 
 function getProfile(username, callback) {
-  fetch(SERVER_URL + "employees/" + username, {
+  fetch(SERVER_URL + "employees/" + username + "/", {
     method: "get",
     headers
   })

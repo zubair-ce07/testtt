@@ -7,7 +7,7 @@ from django.shortcuts import redirect
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework import permissions
 
@@ -23,6 +23,11 @@ class EmployeeListAPIView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,
                           permissions.IsAdminUser,)
     lookup_field = 'username'
+
+
+class EmployeeListCreateAPIView(ListCreateAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
 
 
 class EmployeeRetrieveAPIView(RetrieveAPIView):

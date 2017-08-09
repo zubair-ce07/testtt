@@ -27,6 +27,9 @@ class Profile extends React.Component {
         <p>
           Nationality: {this.props.profile.nationality}
         </p>
+        <p>
+          Reports To: {this.props.profile.reports_to}
+        </p>
       </div>
     );
   }
