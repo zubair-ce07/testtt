@@ -13,7 +13,7 @@ def not_logged_in_required(original):
     """
     def wrapper(request):
         if request.user.is_authenticated:
-            response = redirect('index')
+            response = redirect('users:index')
         else:
             response = original(request)
         return response

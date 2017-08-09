@@ -15,5 +15,10 @@ urlpatterns = [
     url(r'^tz_detect/', include('tz_detect.urls')),
     url(r'^crawler/', include('url_crawler.urls')),
     url(r'^reporting/', include('malfunction_reporting.urls')),
-    url(r'^', include(router.urls)),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    url(r'^api/', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^', include('users.urls'))
+]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

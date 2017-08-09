@@ -1,3 +1,6 @@
+import os
+import time
+from uuid import uuid4
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from url_crawler.utils import URLSpider
@@ -77,7 +80,7 @@ class CustomUserManager(BaseUserManager):
     """
     Provides a manager to create user objects and super user
     """
-    def create_user(self, email, password, date_of_birth=None, first_name=None, last_name=None):
+    def create_user(self, email, password, date_of_birth=None, first_name=None, last_name=None, photo=None):
         """
         Save user object created with given parameters to database and returns user
 
@@ -95,6 +98,7 @@ class CustomUserManager(BaseUserManager):
             first_name=first_name,
             last_name=last_name,
             date_of_birth=date_of_birth,
+            photo=photo
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -119,6 +123,12 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
+def image_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = '{}.{}'.format(uuid4().hex, ext)
+    return os.path.join('uploads/{}'.format(time.strftime("%Y/%m/")), filename)
+
+
 class CustomUser(AbstractBaseUser):
     """
     Custom User model class to store users
@@ -127,6 +137,7 @@ class CustomUser(AbstractBaseUser):
     first_name = models.CharField(max_length=50, null=True)
     last_name = models.CharField(max_length=50, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
+    photo = models.ImageField(blank=True, null=True, upload_to=image_path)
     is_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'

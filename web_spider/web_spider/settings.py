@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'rest_framework',
     'tz_detect',
     'malfunction_reporting',
     'url_crawler',
@@ -30,6 +31,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'tz_detect.middleware.TimezoneMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
 
 ROOT_URLCONF = 'web_spider.urls'
 
@@ -69,7 +76,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-LOGIN_URL = 'url_crawler:login'
+LOGIN_URL = 'users:login'
 AUTH_USER_MODEL = 'url_crawler.CustomUser'
 
 AUTHENTICATION_BACKENDS = (
@@ -78,6 +85,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 STATIC_URL = '/static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = join(dirname(dirname(abspath(__file__))), 'media')
 
 if os.path.isfile(join(dirname(abspath(__file__)), 'conf.py')):
     from web_spider.conf import *

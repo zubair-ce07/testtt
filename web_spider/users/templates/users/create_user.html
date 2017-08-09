@@ -1,0 +1,51 @@
+{% extends 'users/base_layout.html' %}
+{% block content %}
+    <h3>Create User: </h3>
+    <ul class="errors" id="error_list">
+
+    </ul>
+    <pre class="errors" id="json"></pre>
+    <p id="success"></p>
+    <form method="post">
+        <label>
+            First Name:
+            <input id="f_name" type="text">
+        </label>
+        <label>
+            Last Name:
+            <input id="l_name" type="text">
+        </label><br/>
+        <label>
+            Date Of Birth:
+            <input id="dob" type="date" required>
+        </label><br/>
+        <label>
+            Email:
+            <input id="email" type="email" required>
+        </label><br/>
+         <label>
+            Password:
+            <input id="password" type="password" required>
+        </label>
+        <label>
+            Confirm Password:
+            <input id="c_password" type="password" required>
+        </label>
+        <br/>
+        <label>
+            Photo:
+            <input id="photo" type="file">
+        </label>
+        <br/>
+        {% csrf_token %}
+        <br/>
+        <input id="create_user" type="submit" value="Create user">
+    </form>
+    <progress style="display:none;"></progress>
+{% endblock %}
+
+{% load staticfiles %}
+{% block scripts %}
+    <script src="{% static 'users/js/user.js' %}"></script>
+    <script src="{% static 'users/js/create_user.js' %}"></script>
+{% endblock %}
