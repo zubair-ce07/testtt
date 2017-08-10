@@ -2,7 +2,7 @@ import glob
 import os
 import datetime
 import csv
-import sys
+import argparse
 
 
 class Assignment:
@@ -80,19 +80,16 @@ class Assignment:
         maxhumi_year = []
         for i in range(len(list_file)):
             with open(list_file[i], 'r') as csvfile:
-                spamreader = csv.reader(csvfile, delimiter=',')
-                complete_data = []
+                reader = csv.DictReader(csvfile)
                 high_temp_month = []
                 low_temp_month = []
                 high_humidity_month = []
                 date_list = []
-                for row in spamreader:
-                    complete_data.append(row)
-                for i in range(1, len(complete_data)):
-                    date_list.append(complete_data[i][0])
-                    high_temp_month.append(complete_data[i][1])
-                    low_temp_month.append(complete_data[i][3])
-                    high_humidity_month.append(complete_data[i][7])
+                for row in reader:
+                    date_list.append(row['PKT'])
+                    high_temp_month.append(row['Max TemperatureC'])
+                    low_temp_month.append(row['Min TemperatureC'])
+                    high_humidity_month.append(row['Max Humidity'])
                 self.making_list(high_temp_month)
                 self.making_list(low_temp_month)
                 self.making_list(high_humidity_month)
@@ -143,15 +140,12 @@ class Assignment:
         for f in glob.glob("*" + filename + "*"):
             file_list.append(f)
             with open(file_list[0], 'r') as csvfile:
-                spamreader = csv.reader(csvfile, delimiter=',')
-                for row in spamreader:
-                    complete_data.append(row)
-            csvfile.closed
-            for i in range(1, len(complete_data)):
-                date_list.append(complete_data[i][0])
-                high_temp_month.append(complete_data[i][1])
-                low_temp_month.append(complete_data[i][3])
-                high_humidity_month.append(complete_data[i][7])
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    date_list.append(row['PKT'])
+                    high_temp_month.append(row['Max TemperatureC'])
+                    low_temp_month.append(row['Min TemperatureC'])
+                    high_humidity_month.append(row['Max Humidity'])
             self.making_list(high_temp_month)
             self.making_list(low_temp_month)
             self.making_list(high_humidity_month)
@@ -172,15 +166,11 @@ class Assignment:
         for f in glob.glob("*" + filename + "*"):
             file_list.append(f)
             with open(file_list[0], 'r') as csvfile:
-                spamreader = csv.reader(csvfile, delimiter=',')
-                for row in spamreader:
-                    complete_data.append(row)
-            csvfile.closed
-            for i in range(1, len(complete_data)):
-                date_list.append(complete_data[i][0])
-                high_temp_month.append(complete_data[i][1])
-                low_temp_month.append(complete_data[i][3])
-                high_humidity_month.append(complete_data[i][7])
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    date_list.append(row['PKT'])
+                    high_temp_month.append(row['Max TemperatureC'])
+                    low_temp_month.append(row['Min TemperatureC'])
             self.making_list(high_temp_month)
             self.making_list(low_temp_month)
         self.graph_chart(high_temp_month, low_temp_month, date_list)
@@ -198,15 +188,11 @@ class Assignment:
         for f in glob.glob("*" + filename + "*"):
             file_list.append(f)
             with open(file_list[0], 'r') as csvfile:
-                spamreader = csv.reader(csvfile, delimiter=',')
-                for row in spamreader:
-                    complete_data.append(row)
-            csvfile.closed
-            for i in range(1, len(complete_data)):
-                date_list.append(complete_data[i][0])
-                high_temp_month.append(complete_data[i][1])
-                low_temp_month.append(complete_data[i][3])
-                high_humidity_month.append(complete_data[i][7])
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    date_list.append(row['PKT'])
+                    high_temp_month.append(row['Max TemperatureC'])
+                    low_temp_month.append(row['Min TemperatureC'])
             self.making_list(high_temp_month)
             self.making_list(low_temp_month)
         self.graph_chart1(high_temp_month, low_temp_month, date_list)
@@ -221,34 +207,37 @@ class Assignment:
         return filename
 if __name__ == '__main__':
     class_obj = Assignment()
-    list_path = sys.argv
-    Name_of_year = list_path[3]
-    path = list_path[1]
-    if len(list_path) < 5:
-        if list_path[2] == '-e':
-            class_obj.get_file(path, list_path[3])
-        elif (list_path[2]) == '-a':
-            filename = class_obj.find_filename(Name_of_year)
-            class_obj.find_report_task2(path, filename)
-        elif list_path[2] == "-c":
-            filename = class_obj.find_filename(Name_of_year)
-            class_obj.find_report_task3(path, filename)
-        elif list_path[2] == "-d":
-            filename = class_obj.find_filename(Name_of_year)
-            class_obj.find_report_task5(path, filename)
-        else:
-            print("Wrong Input")
-    elif len(list_path) > 5:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path", type=str)
+    parser.add_argument("-e", type=str)
+    parser.add_argument("-a", type=str)
+    parser.add_argument("-c", type=str)
+    parser.add_argument("-d", type=str)
+    args = parser.parse_args()
+    if(args.e is not None and args.a is not None and args.c is not None and args.d is not None):
         print("\nReport of complete year\n")
-        class_obj.get_file(path, list_path[3])
+        class_obj.get_file(args.path, args.e)
         print("\nReport of complete month\n\n")
-        filename = class_obj.find_filename(list_path[5])
-        class_obj.find_report_task2(path, filename)
+        filename = class_obj.find_filename(args.a)
+        class_obj.find_report_task2(args.path, filename)
         print("\nReport of complete month in Graph\n\n")
-        filename = class_obj.find_filename(list_path[7])
-        class_obj.find_report_task3(path, filename)
+        filename = class_obj.find_filename(args.c)
+        class_obj.find_report_task3(args.path, filename)
         print("\nReport of month in Graph by Low and High Temprature\n\n")
-        filename = class_obj.find_filename(list_path[9])
-        class_obj.find_report_task5(path, filename)
+        filename = class_obj.find_filename(args.d)
+        class_obj.find_report_task5(args.path, filename)
     else:
-        print("Wrong Input")
+        if args.e is not None:
+            class_obj.get_file(args.path, args.e)
+        elif args.a is not None:
+            filename = class_obj.find_filename(args.a)
+            class_obj.find_report_task2(args.path, filename)
+        elif args.c is not None:
+            filename = class_obj.find_filename(args.c)
+            class_obj.find_report_task3(args.path, filename)
+        elif args.d is not None:
+            filename = class_obj.find_filename(args.d)
+            class_obj.find_report_task5(args.path, filename)
+        else:
+            print("Plz Vlaid arguments")
+
