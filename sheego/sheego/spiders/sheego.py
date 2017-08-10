@@ -60,6 +60,7 @@ class SheegoSpider(CrawlSpider):
         self.product_name(response, product)
         self.brand(response, product)
         self.details(response, product)
+        product['image_urls'] = []
         product['skus'] = []
         color_urls = create_color_urls(response.css('span.colorspots__item::attr(data-varselid)').extract(), product_id)
         yield scrapy.Request(color_urls.pop(), callback=self.parse_sku,
@@ -68,7 +69,8 @@ class SheegoSpider(CrawlSpider):
     def parse_sku(self, response):
         color_urls = response.meta.get('color_urls')
         product = response.meta.get('product')
-        sku = {'image_urls': response.css('a#magic::attr(href)').extract()}
+        product['image_urls'] += response.css('a#magic::attr(href)').extract()
+        sku = {}
         sku.update(create_size_list(response, clean_list(response.css('div.at-dv-size-button::text').extract())))
         sku.update(
             create_size_list(response, clean_list(response.css('div.sizespots__item--disabled::text').extract()), True))

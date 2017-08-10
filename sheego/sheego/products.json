@@ -1,280 +1,5 @@
 [
   {
-    "url": "https://www.sheego.de/rieker-schnuerschuh_125368.html",
-    "retailer_id": "125368",
-    "name": "Schnürschuh",
-    "brand": "RIEKER",
-    "details": {
-      "bulletpoints": [
-        "Trendiger Halbschuh mit auffälliger Plateausohle",
-        "Aus feinem Lacklederimitat mit Lyralochung",
-        "Gepolsterte Leder-Innensohle",
-        "Synthetik-Laufsohle mit Zacken-Profil",
-        "4 cm Keilabsatz und 2,5 cm Plateau"
-      ],
-      "description": [
-        "Schnürer von Rieker aus Lacklederimitat. Besondere Merkmale: in Dandy-Optik. Verschluss: Schnürung. Laufsohlenmaterial: Synthetik."
-      ],
-      "materials": {
-        "Obermaterial Schuhe": "Lederimitat"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7500436_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7501534_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7501172_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7500083_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7500084_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7501173_94?$format_zoom$"
-        ],
-        "schwarz-grau_36": {
-          "size": "36",
-          "color": "schwarz-grau",
-          "current_price": "49,99 €"
-        },
-        "schwarz-grau_37": {
-          "size": "37",
-          "color": "schwarz-grau",
-          "current_price": "49,99 €"
-        },
-        "schwarz-grau_38": {
-          "size": "38",
-          "color": "schwarz-grau",
-          "current_price": "49,99 €"
-        },
-        "schwarz-grau_39": {
-          "size": "39",
-          "color": "schwarz-grau",
-          "current_price": "49,99 €"
-        },
-        "schwarz-grau_40": {
-          "size": "40",
-          "color": "schwarz-grau",
-          "current_price": "49,99 €"
-        },
-        "schwarz-grau_41": {
-          "size": "41",
-          "color": "schwarz-grau",
-          "current_price": "49,99 €"
-        },
-        "schwarz-grau_42": {
-          "size": "42",
-          "color": "schwarz-grau",
-          "current_price": "49,99 €"
-        }
-      }
-    ]
-  },
-  {
-    "url": "https://www.sheego.de/s-oliver-red-label-stiefelette_125360.html",
-    "retailer_id": "125360",
-    "name": "s.Oliver RED LABEL Stiefelette",
-    "brand": "s.Oliver RED LABEL FM",
-    "details": {
-      "bulletpoints": [
-        "Stiefelette mit trendigem Muster",
-        "Obermaterial aus Textil",
-        "Weiches Textilfutter",
-        "Geposterte Textildecksohle mit s.Oliver Soft Foam",
-        "Mit Innenreißverschluss"
-      ],
-      "description": [
-        "Stiefelette von S.Oliver aus Textil. Besondere Merkmale: in aufwändigem Materialdesgin. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
-      ],
-      "materials": {
-        "Obermaterial Schuhe": "Textilmaterial"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7023646_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7023650_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7024165_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7023902_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7024392_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7023389_94?$format_zoom$"
-        ],
-        "weiß-schwarz_36": {
-          "size": "36",
-          "color": "weiß-schwarz",
-          "current_price": "59,99 €"
-        },
-        "weiß-schwarz_37": {
-          "size": "37",
-          "color": "weiß-schwarz",
-          "current_price": "59,99 €"
-        },
-        "weiß-schwarz_38": {
-          "size": "38",
-          "color": "weiß-schwarz",
-          "current_price": "59,99 €"
-        },
-        "weiß-schwarz_39": {
-          "size": "39",
-          "color": "weiß-schwarz",
-          "current_price": "59,99 €"
-        },
-        "weiß-schwarz_40": {
-          "size": "40",
-          "color": "weiß-schwarz",
-          "current_price": "59,99 €"
-        },
-        "weiß-schwarz_41": {
-          "size": "41",
-          "color": "weiß-schwarz",
-          "current_price": "59,99 €"
-        }
-      }
-    ]
-  },
-  {
-    "url": "https://www.sheego.de/bugatti-spangenpumps_125336.html",
-    "retailer_id": "125336",
-    "name": "Spangenpumps",
-    "brand": "Bugatti",
-    "details": {
-      "bulletpoints": [
-        "Festlicher Pumps mit verstellbarer Schnalle",
-        "Obermaterial aus Lederimitat im Metallic-Look",
-        "Angenehmes Textilfutter",
-        "Gepolsterte Lederdecksohle mit Genial Insole",
-        "8 cm Absatz und 1,5 cm Plateau"
-      ],
-      "description": [
-        "Spangenpumps von Bugatti aus Lederimitat. Besondere Merkmale: im schimmernden Look. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
-      ],
-      "features": {
-        "Anlass": "Partymode"
-      },
-      "materials": {
-        "Obermaterial Schuhe": "Lederimitat"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7003908_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7003784_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7003526_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7003527_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7004046_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7003907_94?$format_zoom$"
-        ],
-        "taupe_36": {
-          "size": "36",
-          "color": "taupe",
-          "current_price": "59,99 €"
-        },
-        "taupe_37": {
-          "size": "37",
-          "color": "taupe",
-          "current_price": "59,99 €"
-        },
-        "taupe_38": {
-          "size": "38",
-          "color": "taupe",
-          "current_price": "59,99 €"
-        },
-        "taupe_39": {
-          "size": "39",
-          "color": "taupe",
-          "current_price": "59,99 €"
-        },
-        "taupe_40": {
-          "size": "40",
-          "color": "taupe",
-          "current_price": "59,99 €"
-        },
-        "taupe_41": {
-          "size": "41",
-          "color": "taupe",
-          "current_price": "59,99 €"
-        },
-        "taupe_42": {
-          "size": "42",
-          "color": "taupe",
-          "current_price": "59,99 €"
-        }
-      }
-    ]
-  },
-  {
-    "url": "https://www.sheego.de/bugatti-spangenpumps_125335.html",
-    "retailer_id": "125335",
-    "name": "Spangenpumps",
-    "brand": "Bugatti",
-    "details": {
-      "bulletpoints": [
-        "Mit feinen Metallic-Details",
-        "Obermaterial aus Textil in trendiger Samt-Optik",
-        "Mit verstellbarer Schnalle",
-        "Gepolsterte Lederdecksohle mit Genial Insole",
-        "Bezogener 8,5 cm Absatz und 1 cm Plateau"
-      ],
-      "description": [
-        "Spangenpumps von Bugatti aus Textil. Besondere Merkmale: mit silberfarbener Paspelierung. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
-      ],
-      "features": {
-        "Anlass": "Partymode"
-      },
-      "materials": {
-        "Obermaterial Schuhe": "Textilmaterial",
-        "Futter": "Synthetik",
-        "Decksohle Schuhe": "Leder"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7018891_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7018752_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7019406_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7018968_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7018753_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7018576_94?$format_zoom$"
-        ],
-        "schwarz_36": {
-          "size": "36",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_37": {
-          "size": "37",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_38": {
-          "size": "38",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_39": {
-          "size": "39",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_40": {
-          "size": "40",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_41": {
-          "size": "41",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_42": {
-          "size": "42",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        }
-      }
-    ]
-  },
-  {
     "url": "https://www.sheego.de/gabor-pumps_125328.html",
     "retailer_id": "125328",
     "name": "Pumps",
@@ -296,15 +21,15 @@
         "Obermaterial Schuhe": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_6736547_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6736275_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6736549_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6736277_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6736544_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_6736547_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6736275_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6736549_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6736277_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6736544_94?$format_zoom$"
-        ],
         "dunkelrot_36": {
           "size": "36",
           "color": "dunkelrot",
@@ -349,68 +74,137 @@
     ]
   },
   {
-    "url": "https://www.sheego.de/rieker-hochfrontpumps_125323.html",
-    "retailer_id": "125323",
-    "name": "Hochfrontpumps",
-    "brand": "RIEKER",
+    "url": "https://www.sheego.de/s-oliver-red-label-stiefelette_125360.html",
+    "retailer_id": "125360",
+    "name": "s.Oliver RED LABEL Stiefelette",
+    "brand": "s.Oliver RED LABEL FM",
     "details": {
       "bulletpoints": [
-        "Obermaterial aus pflegeleichtem Nubuklederimitat",
-        "Wärmendes Textilfutter",
-        "Mit Reißverschluss an der Innenseite für den bequemen Einstieg",
-        "Blockiger 5,5 cm Absatz"
+        "Stiefelette mit trendigem Muster",
+        "Obermaterial aus Textil",
+        "Weiches Textilfutter",
+        "Geposterte Textildecksohle mit s.Oliver Soft Foam",
+        "Mit Innenreißverschluss"
       ],
       "description": [
-        "Hochfrontpumps von Rieker aus Nubuklederimitat. Besondere Merkmale: im schlichten Design. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
+        "Stiefelette von S.Oliver aus Textil. Besondere Merkmale: in aufwändigem Materialdesgin. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
       ],
       "materials": {
-        "Obermaterial Schuhe": "Lederimitat"
+        "Obermaterial Schuhe": "Textilmaterial"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7023646_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7023650_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7024165_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7023902_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7024392_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7023389_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5794520_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5794528_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5794803_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5793993_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5795070_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5794260_94?$format_zoom$"
-        ],
+        "weiß-schwarz_36": {
+          "size": "36",
+          "color": "weiß-schwarz",
+          "current_price": "59,99 €"
+        },
+        "weiß-schwarz_37": {
+          "size": "37",
+          "color": "weiß-schwarz",
+          "current_price": "59,99 €"
+        },
+        "weiß-schwarz_38": {
+          "size": "38",
+          "color": "weiß-schwarz",
+          "current_price": "59,99 €"
+        },
+        "weiß-schwarz_39": {
+          "size": "39",
+          "color": "weiß-schwarz",
+          "current_price": "59,99 €"
+        },
+        "weiß-schwarz_40": {
+          "size": "40",
+          "color": "weiß-schwarz",
+          "current_price": "59,99 €"
+        },
+        "weiß-schwarz_41": {
+          "size": "41",
+          "color": "weiß-schwarz",
+          "current_price": "59,99 €"
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/bugatti-spangenpumps_125335.html",
+    "retailer_id": "125335",
+    "name": "Spangenpumps",
+    "brand": "Bugatti",
+    "details": {
+      "bulletpoints": [
+        "Mit feinen Metallic-Details",
+        "Obermaterial aus Textil in trendiger Samt-Optik",
+        "Mit verstellbarer Schnalle",
+        "Gepolsterte Lederdecksohle mit Genial Insole",
+        "Bezogener 8,5 cm Absatz und 1 cm Plateau"
+      ],
+      "description": [
+        "Spangenpumps von Bugatti aus Textil. Besondere Merkmale: mit silberfarbener Paspelierung. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
+      ],
+      "features": {
+        "Anlass": "Partymode"
+      },
+      "materials": {
+        "Obermaterial Schuhe": "Textilmaterial",
+        "Futter": "Synthetik",
+        "Decksohle Schuhe": "Leder"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7018891_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7018752_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7019406_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7018968_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7018753_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7018576_94?$format_zoom$"
+    ],
+    "skus": [
+      {
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "schwarz_37": {
           "size": "37",
           "color": "schwarz",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "schwarz_38": {
           "size": "38",
           "color": "schwarz",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "schwarz_39": {
           "size": "39",
           "color": "schwarz",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "schwarz_40": {
           "size": "40",
           "color": "schwarz",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "schwarz_41": {
           "size": "41",
           "color": "schwarz",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "schwarz_42": {
           "size": "42",
           "color": "schwarz",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         }
       }
     ]
@@ -437,16 +231,22 @@
         "Laufsohle Schuhe": "Synthetik"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7440673_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7441181_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7440119_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7441182_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7440120_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7440674_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7390337_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7390338_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7391006_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7391660_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7390339_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7390670_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7440673_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7441181_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7440119_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7441182_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7440120_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7440674_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -484,14 +284,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7390337_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7390338_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7391006_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7391660_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7390339_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7390670_94?$format_zoom$"
-        ],
         "braun_36": {
           "size": "36",
           "color": "braun",
@@ -553,16 +345,22 @@
         "Obermaterial": "Textilmaterial"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7238266_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7239110_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7238831_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7238265_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7238549_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7239111_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7238551_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7239112_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7238267_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7238832_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7239423_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7238268_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7238266_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7239110_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7238831_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7238265_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7238549_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7239111_94?$format_zoom$"
-        ],
         "taupe_36": {
           "size": "36",
           "color": "taupe",
@@ -600,14 +398,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7238551_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7239112_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7238267_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7238832_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7239423_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7238268_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -647,116 +437,72 @@
     ]
   },
   {
-    "url": "https://www.sheego.de/s-oliver-red-label-spangenpumps_125352.html",
-    "retailer_id": "125352",
-    "name": "s.Oliver RED LABEL Spangenpumps",
-    "brand": "s.Oliver RED LABEL FM",
+    "url": "https://www.sheego.de/bugatti-spangenpumps_125336.html",
+    "retailer_id": "125336",
+    "name": "Spangenpumps",
+    "brand": "Bugatti",
     "details": {
       "bulletpoints": [
-        "Spangenpumps in sportlilcher Optik",
-        "Obermaterial aus Lederimitat mit Textilspange",
-        "Weiches Textilfutter",
-        "Gepolsterte Synthetikdecksohle mit s.Oliver Soft foam",
-        "6 cm Blockabsatz"
+        "Festlicher Pumps mit verstellbarer Schnalle",
+        "Obermaterial aus Lederimitat im Metallic-Look",
+        "Angenehmes Textilfutter",
+        "Gepolsterte Lederdecksohle mit Genial Insole",
+        "8 cm Absatz und 1,5 cm Plateau"
       ],
       "description": [
-        "Pumps von S.Oliver aus Lederimitat und Textil. Größenhinweis: Fällt klein aus, bitte eine Größe größer bestellen.. Besondere Merkmale: mit auffälliger Schnalle. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
+        "Spangenpumps von Bugatti aus Lederimitat. Besondere Merkmale: im schimmernden Look. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
       ],
+      "features": {
+        "Anlass": "Partymode"
+      },
       "materials": {
-        "Obermaterial Schuhe": "Lederimitat",
-        "Futter": "Textilmaterial",
-        "Laufsohle Schuhe": "Synthetik"
+        "Obermaterial Schuhe": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7003908_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7003784_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7003526_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7003527_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7004046_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7003907_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7051452_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7051451_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7052060_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7051453_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7051146_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7051454_94?$format_zoom$"
-        ],
         "taupe_36": {
           "size": "36",
           "color": "taupe",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "taupe_37": {
           "size": "37",
           "color": "taupe",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "taupe_38": {
           "size": "38",
           "color": "taupe",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "taupe_39": {
           "size": "39",
           "color": "taupe",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "taupe_40": {
           "size": "40",
           "color": "taupe",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "taupe_41": {
           "size": "41",
           "color": "taupe",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         },
         "taupe_42": {
           "size": "42",
           "color": "taupe",
-          "current_price": "49,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7025935_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7027289_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7025937_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7026618_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7026283_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7026619_94?$format_zoom$"
-        ],
-        "dunkelgrau_36": {
-          "size": "36",
-          "color": "dunkelgrau",
-          "current_price": "49,99 €"
-        },
-        "dunkelgrau_37": {
-          "size": "37",
-          "color": "dunkelgrau",
-          "current_price": "49,99 €"
-        },
-        "dunkelgrau_38": {
-          "size": "38",
-          "color": "dunkelgrau",
-          "current_price": "49,99 €"
-        },
-        "dunkelgrau_39": {
-          "size": "39",
-          "color": "dunkelgrau",
-          "current_price": "49,99 €"
-        },
-        "dunkelgrau_40": {
-          "size": "40",
-          "color": "dunkelgrau",
-          "current_price": "49,99 €"
-        },
-        "dunkelgrau_41": {
-          "size": "41",
-          "color": "dunkelgrau",
-          "current_price": "49,99 €"
-        },
-        "dunkelgrau_42": {
-          "size": "42",
-          "color": "dunkelgrau",
-          "current_price": "49,99 €"
+          "current_price": "59,99 €"
         }
       }
     ]
@@ -784,16 +530,22 @@
         "Obermaterial": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7010453_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7009673_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7010449_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7010041_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7009866_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7010450_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7019703_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7020187_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7020690_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7020442_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7020443_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7020444_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7010453_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7009673_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7010449_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7010041_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7009866_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7010450_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -831,14 +583,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7019703_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7020187_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7020690_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7020442_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7020443_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7020444_94?$format_zoom$"
-        ],
         "dunkelrot_36": {
           "size": "36",
           "color": "dunkelrot",
@@ -878,311 +622,136 @@
     ]
   },
   {
-    "url": "https://www.sheego.de/rieker-slipper_125321.html",
-    "retailer_id": "125321",
-    "name": "Slipper",
+    "url": "https://www.sheego.de/rieker-schnuerschuh_125368.html",
+    "retailer_id": "125368",
+    "name": "Schnürschuh",
     "brand": "RIEKER",
     "details": {
       "bulletpoints": [
-        "Obermaterial aus hochwertigem Veloursleder",
-        "Innensohle aus tragefreundlichem Leder",
-        "Mit Stretcheinsatz zur individuellen Anpassung an den Fuß",
-        "Leichte Synthetik-Laufsohle"
+        "Trendiger Halbschuh mit auffälliger Plateausohle",
+        "Aus feinem Lacklederimitat mit Lyralochung",
+        "Gepolsterte Leder-Innensohle",
+        "Synthetik-Laufsohle mit Zacken-Profil",
+        "4 cm Keilabsatz und 2,5 cm Plateau"
       ],
       "description": [
-        "Slipper von Rieker aus Veloursleder. Verschluss: Stretcheinsatz. Laufsohlenmaterial: Synthetik."
+        "Schnürer von Rieker aus Lacklederimitat. Besondere Merkmale: in Dandy-Optik. Verschluss: Schnürung. Laufsohlenmaterial: Synthetik."
       ],
       "materials": {
-        "Obermaterial Schuhe": "Leder"
+        "Obermaterial Schuhe": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7500436_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7501534_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7501172_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7500083_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7500084_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7501173_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5961261_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5961916_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5962122_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5961474_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5961269_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5961687_94?$format_zoom$"
-        ],
-        "weinrot_36": {
+        "schwarz-grau_36": {
           "size": "36",
-          "color": "weinrot",
-          "current_price": "64,99 €"
+          "color": "schwarz-grau",
+          "current_price": "49,99 €"
         },
-        "weinrot_37": {
+        "schwarz-grau_37": {
           "size": "37",
-          "color": "weinrot",
-          "current_price": "64,99 €"
+          "color": "schwarz-grau",
+          "current_price": "49,99 €"
         },
-        "weinrot_38": {
+        "schwarz-grau_38": {
           "size": "38",
-          "color": "weinrot",
-          "current_price": "64,99 €"
+          "color": "schwarz-grau",
+          "current_price": "49,99 €"
         },
-        "weinrot_39": {
+        "schwarz-grau_39": {
           "size": "39",
-          "color": "weinrot",
-          "current_price": "64,99 €"
+          "color": "schwarz-grau",
+          "current_price": "49,99 €"
         },
-        "weinrot_40": {
+        "schwarz-grau_40": {
           "size": "40",
-          "color": "weinrot",
-          "current_price": "64,99 €"
+          "color": "schwarz-grau",
+          "current_price": "49,99 €"
         },
-        "weinrot_41": {
+        "schwarz-grau_41": {
           "size": "41",
-          "color": "weinrot",
-          "current_price": "64,99 €"
+          "color": "schwarz-grau",
+          "current_price": "49,99 €"
         },
-        "weinrot_42": {
+        "schwarz-grau_42": {
           "size": "42",
-          "color": "weinrot",
-          "current_price": "64,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5960597_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5960130_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5960363_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5960821_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5960598_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5961065_94?$format_zoom$"
-        ],
-        "dunkelblau_36": {
-          "size": "36",
-          "color": "dunkelblau",
-          "current_price": "64,99 €"
-        },
-        "dunkelblau_37": {
-          "size": "37",
-          "color": "dunkelblau",
-          "current_price": "64,99 €"
-        },
-        "dunkelblau_38": {
-          "size": "38",
-          "color": "dunkelblau",
-          "current_price": "64,99 €"
-        },
-        "dunkelblau_39": {
-          "size": "39",
-          "color": "dunkelblau",
-          "current_price": "64,99 €"
-        },
-        "dunkelblau_40": {
-          "size": "40",
-          "color": "dunkelblau",
-          "current_price": "64,99 €"
-        },
-        "dunkelblau_41": {
-          "size": "41",
-          "color": "dunkelblau",
-          "current_price": "64,99 €"
-        },
-        "dunkelblau_42": {
-          "size": "42",
-          "color": "dunkelblau",
-          "current_price": "64,99 €"
+          "color": "schwarz-grau",
+          "current_price": "49,99 €"
         }
       }
     ]
   },
   {
-    "url": "https://www.sheego.de/tamaris-keilpumps-borage-_119068.html",
-    "retailer_id": "119068",
-    "name": "Tamaris Keilpumps »Borage«",
-    "brand": "Tamaris FM",
+    "url": "https://www.sheego.de/rieker-hochfrontpumps_125323.html",
+    "retailer_id": "125323",
+    "name": "Hochfrontpumps",
+    "brand": "RIEKER",
     "details": {
       "bulletpoints": [
-        "Obermaterial aus weichem Leder",
-        "Weich gepolsterte Innensohle mit Touch It-Ausstattung",
-        "4 cm Absatz",
-        "Schuhweite: normal",
-        "Absatzhöhe: 40 mm"
+        "Obermaterial aus pflegeleichtem Nubuklederimitat",
+        "Wärmendes Textilfutter",
+        "Mit Reißverschluss an der Innenseite für den bequemen Einstieg",
+        "Blockiger 5,5 cm Absatz"
       ],
       "description": [
-        "Pumps, Tamaris, aus Leder. Besondere Merkmale: in schlichtem Look. Verschluss: ohne Verschluss. Laufsohlenmaterial: Synthetik."
+        "Hochfrontpumps von Rieker aus Nubuklederimitat. Besondere Merkmale: im schlichten Design. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
       ],
-      "features": {
-        "Anlass": "Businessmode"
-      },
       "materials": {
-        "Laufsohle Schuhe": "Synthetik",
-        "Obermaterial": "Leder"
+        "Obermaterial Schuhe": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_5794520_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5794528_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5794803_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5793993_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5795070_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5794260_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_2665527_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3542210_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3542316_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3542555_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3542441_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3542076_94?$format_zoom$"
-        ],
-        "braun_36": {
-          "size": "36",
-          "color": "braun",
-          "current_price": "59,99 €"
-        },
-        "braun_37": {
-          "size": "37",
-          "color": "braun",
-          "current_price": "59,99 €"
-        },
-        "braun_38": {
-          "size": "38",
-          "color": "braun",
-          "current_price": "59,99 €"
-        },
-        "braun_39": {
-          "size": "39",
-          "color": "braun",
-          "current_price": "59,99 €"
-        },
-        "braun_40": {
-          "size": "40",
-          "color": "braun",
-          "current_price": "59,99 €"
-        },
-        "braun_41": {
-          "size": "41",
-          "color": "braun",
-          "current_price": "59,99 €"
-        },
-        "braun_35": {
-          "size": "35",
-          "color": "braun",
-          "current_price": "59,99 €",
-          "out_of_stock": true
-        },
-        "braun_42": {
-          "size": "42",
-          "color": "braun",
-          "current_price": "59,99 €",
-          "out_of_stock": true
-        },
-        "braun_43": {
-          "size": "43",
-          "color": "braun",
-          "current_price": "59,99 €",
-          "out_of_stock": true
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_6227433_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6227434_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6227642_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6228088_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6227864_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6228295_94?$format_zoom$"
-        ],
-        "hellgrau_36": {
-          "size": "36",
-          "color": "hellgrau",
-          "current_price": "59,99 €"
-        },
-        "hellgrau_37": {
-          "size": "37",
-          "color": "hellgrau",
-          "current_price": "59,99 €"
-        },
-        "hellgrau_38": {
-          "size": "38",
-          "color": "hellgrau",
-          "current_price": "59,99 €"
-        },
-        "hellgrau_39": {
-          "size": "39",
-          "color": "hellgrau",
-          "current_price": "59,99 €"
-        },
-        "hellgrau_40": {
-          "size": "40",
-          "color": "hellgrau",
-          "current_price": "59,99 €"
-        },
-        "hellgrau_42": {
-          "size": "42",
-          "color": "hellgrau",
-          "current_price": "59,99 €"
-        },
-        "hellgrau_43": {
-          "size": "43",
-          "color": "hellgrau",
-          "current_price": "59,99 €"
-        },
-        "hellgrau_35": {
-          "size": "35",
-          "color": "hellgrau",
-          "current_price": "59,99 €",
-          "out_of_stock": true
-        },
-        "hellgrau_41": {
-          "size": "41",
-          "color": "hellgrau",
-          "current_price": "59,99 €",
-          "out_of_stock": true
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_1184959_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6234869_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6235064_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6234452_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6234249_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6234656_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
-          "current_price": "59,99 €"
+          "current_price": "49,99 €"
         },
         "schwarz_37": {
           "size": "37",
           "color": "schwarz",
-          "current_price": "59,99 €"
+          "current_price": "49,99 €"
         },
         "schwarz_38": {
           "size": "38",
           "color": "schwarz",
-          "current_price": "59,99 €"
+          "current_price": "49,99 €"
         },
         "schwarz_39": {
           "size": "39",
           "color": "schwarz",
-          "current_price": "59,99 €"
+          "current_price": "49,99 €"
         },
         "schwarz_40": {
           "size": "40",
           "color": "schwarz",
-          "current_price": "59,99 €"
+          "current_price": "49,99 €"
         },
         "schwarz_41": {
           "size": "41",
           "color": "schwarz",
-          "current_price": "59,99 €"
+          "current_price": "49,99 €"
         },
         "schwarz_42": {
           "size": "42",
           "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_43": {
-          "size": "43",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_35": {
-          "size": "35",
-          "color": "schwarz",
-          "current_price": "59,99 €",
-          "out_of_stock": true
+          "current_price": "49,99 €"
         }
       }
     ]
@@ -1207,16 +776,28 @@
         "Obermaterial Schuhe": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7043264_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7043265_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7043267_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7043266_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7043069_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7043070_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7037246_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7037687_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7037469_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7037468_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7037688_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7036778_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7041050_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7040607_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7041281_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7041054_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7040608_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7041055_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7043264_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7043265_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7043267_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7043266_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7043069_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7043070_94?$format_zoom$"
-        ],
         "braun_36": {
           "size": "36",
           "color": "braun",
@@ -1254,14 +835,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7037246_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7037687_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7037469_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7037468_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7037688_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7036778_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -1299,14 +872,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7041050_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7040607_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7041281_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7041054_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7040608_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7041055_94?$format_zoom$"
-        ],
         "khaki_36": {
           "size": "36",
           "color": "khaki",
@@ -1346,230 +911,6 @@
     ]
   },
   {
-    "url": "https://www.sheego.de/tamaris-ankleboots-carmen-_125236.html",
-    "retailer_id": "125236",
-    "name": "Tamaris Ankleboots »Carmen«",
-    "brand": "Tamaris FM",
-    "details": {
-      "bulletpoints": [
-        "Elegante Stiefelette im klassischen Look",
-        "Obermaterial aus edlem Leder",
-        "Tragefreundliches Textilfutter",
-        "Mit Reißverschluss an der Innenseite",
-        "Mit elegantem 7,5 cm Absatz und 1,5 cm Plateau"
-      ],
-      "description": [
-        "Ankle Boots, Tamaris, aus Leder. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
-      ],
-      "materials": {
-        "Obermaterial Schuhe": "Leder"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_2796800_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2796801_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2796888_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2796999_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2796718_94?$format_zoom$"
-        ],
-        "schwarz_36": {
-          "size": "36",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_37": {
-          "size": "37",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_38": {
-          "size": "38",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_39": {
-          "size": "39",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_40": {
-          "size": "40",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_41": {
-          "size": "41",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_42": {
-          "size": "42",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        }
-      }
-    ]
-  },
-  {
-    "url": "https://www.sheego.de/s-oliver-red-label-chelseaboots_125354.html",
-    "retailer_id": "125354",
-    "name": "s.Oliver RED LABEL Chelseaboots",
-    "brand": "s.Oliver RED LABEL FM",
-    "details": {
-      "bulletpoints": [
-        "Chelsea Boots in klassischer Optik",
-        "Obermaterial aus weichem Leder",
-        "Weiches Textilfutter",
-        "Gepolsterte Textildecksohle mit s.Oliver Soft Foam",
-        "Mit breiten Stretcheinsatz"
-      ],
-      "description": [
-        "Chelseaboot von S.Oliver aus Leder. Besondere Merkmale: mit breitem Stretcheinsatz. Verschluss: Stretcheinsatz. Laufsohlenmaterial: Synthetik."
-      ],
-      "materials": {
-        "Obermaterial Schuhe": "Leinen"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7051147_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7051771_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050829_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050830_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7051148_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7051455_94?$format_zoom$"
-        ],
-        "beigefarben_36": {
-          "size": "36",
-          "color": "beigefarben",
-          "current_price": "69,99 €"
-        },
-        "beigefarben_37": {
-          "size": "37",
-          "color": "beigefarben",
-          "current_price": "69,99 €"
-        },
-        "beigefarben_38": {
-          "size": "38",
-          "color": "beigefarben",
-          "current_price": "69,99 €"
-        },
-        "beigefarben_39": {
-          "size": "39",
-          "color": "beigefarben",
-          "current_price": "69,99 €"
-        },
-        "beigefarben_40": {
-          "size": "40",
-          "color": "beigefarben",
-          "current_price": "69,99 €"
-        },
-        "beigefarben_41": {
-          "size": "41",
-          "color": "beigefarben",
-          "current_price": "69,99 €"
-        },
-        "beigefarben_42": {
-          "size": "42",
-          "color": "beigefarben",
-          "current_price": "69,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7022676_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7022436_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7022889_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7023124_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7022890_94?$format_zoom$"
-        ],
-        "schwarz_36": {
-          "size": "36",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_37": {
-          "size": "37",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_38": {
-          "size": "38",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_39": {
-          "size": "39",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_40": {
-          "size": "40",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_41": {
-          "size": "41",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        },
-        "schwarz_42": {
-          "size": "42",
-          "color": "schwarz",
-          "current_price": "69,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7032984_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7032986_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7032985_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7032634_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7032635_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7032636_94?$format_zoom$"
-        ],
-        "nachtblau_36": {
-          "size": "36",
-          "color": "nachtblau",
-          "current_price": "69,99 €"
-        },
-        "nachtblau_37": {
-          "size": "37",
-          "color": "nachtblau",
-          "current_price": "69,99 €"
-        },
-        "nachtblau_38": {
-          "size": "38",
-          "color": "nachtblau",
-          "current_price": "69,99 €"
-        },
-        "nachtblau_39": {
-          "size": "39",
-          "color": "nachtblau",
-          "current_price": "69,99 €"
-        },
-        "nachtblau_40": {
-          "size": "40",
-          "color": "nachtblau",
-          "current_price": "69,99 €"
-        },
-        "nachtblau_41": {
-          "size": "41",
-          "color": "nachtblau",
-          "current_price": "69,99 €"
-        },
-        "nachtblau_42": {
-          "size": "42",
-          "color": "nachtblau",
-          "current_price": "69,99 €"
-        }
-      }
-    ]
-  },
-  {
     "url": "https://www.sheego.de/s-oliver-red-label-loafer_125346.html",
     "retailer_id": "125346",
     "name": "s.Oliver RED LABEL Loafer",
@@ -1592,16 +933,28 @@
         "Obermaterial": "Textilmaterial"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7342683_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7342978_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7343577_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7342383_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7342679_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7342680_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7155969_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7155351_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7156239_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7155352_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7156240_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7155353_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7045078_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7044851_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7044852_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7045077_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7045312_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7045536_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7342683_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7342978_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7343577_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7342383_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7342679_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7342680_94?$format_zoom$"
-        ],
         "beere_36": {
           "size": "36",
           "color": "beere",
@@ -1639,14 +992,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7155969_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7155351_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7156239_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7155352_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7156240_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7155353_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -1684,14 +1029,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7045078_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7044851_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7044852_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7045077_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7045312_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7045536_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -1750,15 +1087,27 @@
         "Obermaterial": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7050170_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050166_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050167_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050168_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050508_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7257318_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7258196_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7257609_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7258474_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7258475_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7258197_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7519603_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7520422_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7520861_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7519980_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7519602_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7520423_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7050170_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050166_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050167_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050168_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050508_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -1796,14 +1145,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7257318_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7258196_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7257609_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7258474_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7258475_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7258197_94?$format_zoom$"
-        ],
         "grau_36": {
           "size": "36",
           "color": "grau",
@@ -1841,16 +1182,13 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7519603_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7520422_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7520861_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7519980_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7519602_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7520423_94?$format_zoom$"
-        ],
         "beere_36": {
           "size": "36",
+          "color": "beere",
+          "current_price": "59,99 €"
+        },
+        "beere_37": {
+          "size": "37",
           "color": "beere",
           "current_price": "59,99 €"
         },
@@ -1878,149 +1216,272 @@
           "size": "42",
           "color": "beere",
           "current_price": "59,99 €"
-        },
-        "beere_37": {
-          "size": "37",
-          "color": "beere",
-          "current_price": "59,99 €",
-          "out_of_stock": true
         }
       }
     ]
   },
   {
-    "url": "https://www.sheego.de/polarino-outdoorschuh-visionary-high-cut-_124759.html",
-    "retailer_id": "124759",
-    "name": "Outdoorschuh »Visionary High Cut«",
-    "brand": "Polarino",
+    "url": "https://www.sheego.de/s-oliver-red-label-chelseaboots_125354.html",
+    "retailer_id": "125354",
+    "name": "s.Oliver RED LABEL Chelseaboots",
+    "brand": "s.Oliver RED LABEL FM",
     "details": {
       "bulletpoints": [
-        "Funktioneller Wanderstiefel von Polarino",
-        "Obermaterial aus Veloursleder und Textil",
-        "Wasserdicht und atmungsaktiv durch Comfortex Klimamembran",
-        "Griffige TPR Laufsohle",
-        "Gute Dämpfung"
+        "Chelsea Boots in klassischer Optik",
+        "Obermaterial aus weichem Leder",
+        "Weiches Textilfutter",
+        "Gepolsterte Textildecksohle mit s.Oliver Soft Foam",
+        "Mit breiten Stretcheinsatz"
       ],
       "description": [
-        "Atmungsaktive und wasserdichte Membran. Stabile, profilierte TPR-Laufsohle. Sehr gute Sohlendämpfung. 5-Loch-Schnürung mit Bergsteigerösen. Robuster Materialmix.. Verschluss: Schnürung. Laufsohlenmaterial: Gummi."
+        "Chelseaboot von S.Oliver aus Leder. Besondere Merkmale: mit breitem Stretcheinsatz. Verschluss: Stretcheinsatz. Laufsohlenmaterial: Synthetik."
       ],
-      "features": {
-        "Anlass": "Outdoormode"
-      },
       "materials": {
-        "Obermaterial Schuhe": "Leder"
+        "Obermaterial Schuhe": "Leinen"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7051147_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7051771_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050829_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050830_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7051148_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7051455_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7022676_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7022436_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7022889_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7023124_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7022890_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7032984_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7032986_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7032985_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7032634_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7032635_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7032636_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7244280_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7245237_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7244908_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7245544_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7244281_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7244582_94?$format_zoom$"
-        ],
-        "grau-pink_38": {
+        "beigefarben_36": {
+          "size": "36",
+          "color": "beigefarben",
+          "current_price": "69,99 €"
+        },
+        "beigefarben_37": {
+          "size": "37",
+          "color": "beigefarben",
+          "current_price": "69,99 €"
+        },
+        "beigefarben_38": {
           "size": "38",
-          "color": "grau-pink",
-          "current_price": "79,99 €"
+          "color": "beigefarben",
+          "current_price": "69,99 €"
         },
-        "grau-pink_39": {
+        "beigefarben_39": {
           "size": "39",
-          "color": "grau-pink",
-          "current_price": "79,99 €"
+          "color": "beigefarben",
+          "current_price": "69,99 €"
         },
-        "grau-pink_40": {
+        "beigefarben_40": {
           "size": "40",
-          "color": "grau-pink",
-          "current_price": "79,99 €"
+          "color": "beigefarben",
+          "current_price": "69,99 €"
         },
-        "grau-pink_41": {
+        "beigefarben_41": {
           "size": "41",
-          "color": "grau-pink",
-          "current_price": "79,99 €"
+          "color": "beigefarben",
+          "current_price": "69,99 €"
         },
-        "grau-pink_42": {
+        "beigefarben_42": {
           "size": "42",
-          "color": "grau-pink",
-          "current_price": "79,99 €"
+          "color": "beigefarben",
+          "current_price": "69,99 €"
+        }
+      },
+      {
+        "schwarz_36": {
+          "size": "36",
+          "color": "schwarz",
+          "current_price": "69,99 €"
         },
-        "grau-pink_43": {
-          "size": "43",
-          "color": "grau-pink",
-          "current_price": "79,99 €"
+        "schwarz_37": {
+          "size": "37",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_38": {
+          "size": "38",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_39": {
+          "size": "39",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_40": {
+          "size": "40",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_41": {
+          "size": "41",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_42": {
+          "size": "42",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        }
+      },
+      {
+        "nachtblau_36": {
+          "size": "36",
+          "color": "nachtblau",
+          "current_price": "69,99 €"
+        },
+        "nachtblau_37": {
+          "size": "37",
+          "color": "nachtblau",
+          "current_price": "69,99 €"
+        },
+        "nachtblau_38": {
+          "size": "38",
+          "color": "nachtblau",
+          "current_price": "69,99 €"
+        },
+        "nachtblau_39": {
+          "size": "39",
+          "color": "nachtblau",
+          "current_price": "69,99 €"
+        },
+        "nachtblau_40": {
+          "size": "40",
+          "color": "nachtblau",
+          "current_price": "69,99 €"
+        },
+        "nachtblau_41": {
+          "size": "41",
+          "color": "nachtblau",
+          "current_price": "69,99 €"
+        },
+        "nachtblau_42": {
+          "size": "42",
+          "color": "nachtblau",
+          "current_price": "69,99 €"
         }
       }
     ]
   },
   {
-    "url": "https://www.sheego.de/mustang-shoes-slingpumps_118876.html",
-    "retailer_id": "118876",
-    "name": "Slingpumps",
-    "brand": "Mustang Shoes",
+    "url": "https://www.sheego.de/s-oliver-red-label-spangenpumps_125352.html",
+    "retailer_id": "125352",
+    "name": "s.Oliver RED LABEL Spangenpumps",
+    "brand": "s.Oliver RED LABEL FM",
     "details": {
       "bulletpoints": [
-        "Elegante Slingpumps mit schimmernder Oberfläche und angesagter Struktur",
-        "Obermaterial aus Textil und Lederimitat",
-        "Hochwertige Lederinnenausstattung",
-        "Verstellbare Schnalle als Verschluss",
-        "Schmale Form"
+        "Spangenpumps in sportlilcher Optik",
+        "Obermaterial aus Lederimitat mit Textilspange",
+        "Weiches Textilfutter",
+        "Gepolsterte Synthetikdecksohle mit s.Oliver Soft foam",
+        "6 cm Blockabsatz"
       ],
       "description": [
-        "Sling von Mustang aus Textil und Lederimitat. Besondere Merkmale: mit Metallic Effekt. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
+        "Pumps von S.Oliver aus Lederimitat und Textil. Größenhinweis: Fällt klein aus, bitte eine Größe größer bestellen.. Besondere Merkmale: mit auffälliger Schnalle. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
       ],
       "materials": {
         "Obermaterial Schuhe": "Lederimitat",
-        "Laufsohle Schuhe": "Synthetik",
-        "Futter": "Leder"
+        "Futter": "Textilmaterial",
+        "Laufsohle Schuhe": "Synthetik"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7051452_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7051451_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7052060_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7051453_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7051146_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7051454_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7025935_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7027289_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7025937_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7026618_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7026283_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7026619_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_6398671_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6399297_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6399494_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6398902_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6398674_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6399132_94?$format_zoom$"
-        ],
-        "grau_37": {
-          "size": "37",
-          "color": "grau",
-          "current_price": "69,99 €"
-        },
-        "grau_38": {
-          "size": "38",
-          "color": "grau",
-          "current_price": "69,99 €"
-        },
-        "grau_39": {
-          "size": "39",
-          "color": "grau",
-          "current_price": "69,99 €"
-        },
-        "grau_40": {
-          "size": "40",
-          "color": "grau",
-          "current_price": "69,99 €"
-        },
-        "grau_41": {
-          "size": "41",
-          "color": "grau",
-          "current_price": "69,99 €"
-        },
-        "grau_42": {
-          "size": "42",
-          "color": "grau",
-          "current_price": "69,99 €"
-        },
-        "grau_36": {
+        "taupe_36": {
           "size": "36",
-          "color": "grau",
-          "current_price": "69,99 €",
-          "out_of_stock": true
+          "color": "taupe",
+          "current_price": "49,99 €"
+        },
+        "taupe_37": {
+          "size": "37",
+          "color": "taupe",
+          "current_price": "49,99 €"
+        },
+        "taupe_38": {
+          "size": "38",
+          "color": "taupe",
+          "current_price": "49,99 €"
+        },
+        "taupe_39": {
+          "size": "39",
+          "color": "taupe",
+          "current_price": "49,99 €"
+        },
+        "taupe_40": {
+          "size": "40",
+          "color": "taupe",
+          "current_price": "49,99 €"
+        },
+        "taupe_41": {
+          "size": "41",
+          "color": "taupe",
+          "current_price": "49,99 €"
+        },
+        "taupe_42": {
+          "size": "42",
+          "color": "taupe",
+          "current_price": "49,99 €"
+        }
+      },
+      {
+        "dunkelgrau_36": {
+          "size": "36",
+          "color": "dunkelgrau",
+          "current_price": "49,99 €"
+        },
+        "dunkelgrau_37": {
+          "size": "37",
+          "color": "dunkelgrau",
+          "current_price": "49,99 €"
+        },
+        "dunkelgrau_38": {
+          "size": "38",
+          "color": "dunkelgrau",
+          "current_price": "49,99 €"
+        },
+        "dunkelgrau_39": {
+          "size": "39",
+          "color": "dunkelgrau",
+          "current_price": "49,99 €"
+        },
+        "dunkelgrau_40": {
+          "size": "40",
+          "color": "dunkelgrau",
+          "current_price": "49,99 €"
+        },
+        "dunkelgrau_41": {
+          "size": "41",
+          "color": "dunkelgrau",
+          "current_price": "49,99 €"
+        },
+        "dunkelgrau_42": {
+          "size": "42",
+          "color": "dunkelgrau",
+          "current_price": "49,99 €"
         }
       }
     ]
@@ -2045,15 +1506,27 @@
         "Obermaterial Schuhe": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_5718077_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5718923_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5718354_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5718078_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5718642_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7440122_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7440677_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7441184_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7439627_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7440678_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7441748_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5716901_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5716615_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5716909_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5717434_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5717175_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5717731_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5718077_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5718923_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5718354_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5718078_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5718642_94?$format_zoom$"
-        ],
         "dunkelgrau_37": {
           "size": "37",
           "color": "dunkelgrau",
@@ -2107,14 +1580,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7440122_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7440677_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7441184_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7439627_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7440678_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7441748_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -2167,14 +1632,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5716901_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5716615_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5716909_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5717434_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5717175_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5717731_94?$format_zoom$"
-        ],
         "bordeaux_36": {
           "size": "36",
           "color": "bordeaux",
@@ -2248,16 +1705,28 @@
         "Obermaterial": "Textilmaterial"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_5596142_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5595673_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5595907_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5596370_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5596146_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5595433_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5616082_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5616708_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5616926_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5616274_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5616083_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5616490_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5610792_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5611023_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5611295_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5610575_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5611528_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5610795_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5596142_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5595673_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5595907_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5596370_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5596146_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5595433_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -2295,14 +1764,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5616082_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5616708_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5616926_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5616274_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5616083_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5616490_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -2340,14 +1801,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5610792_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5611023_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5611295_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5610575_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5611528_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5610795_94?$format_zoom$"
-        ],
         "hellgrau_36": {
           "size": "36",
           "color": "hellgrau",
@@ -2387,162 +1840,685 @@
     ]
   },
   {
-    "url": "https://www.sheego.de/sheego-casual-robuste-stiefelette_118027.html",
-    "retailer_id": "118027",
-    "name": "sheego Casual Robuste Stiefelette",
-    "brand": "sheego Shoes",
+    "url": "https://www.sheego.de/rieker-slipper_125321.html",
+    "retailer_id": "125321",
+    "name": "Slipper",
+    "brand": "RIEKER",
     "details": {
       "bulletpoints": [
-        "Mit Innenreißverschluss und gefüttert",
-        "Weitenverstellbare Schnalle am Knöchel",
-        "Obermaterial aus weichem Nappaleder",
-        "Robuste Laufsohle, 2 cm Absatzhöhe",
-        "Schafthöhe: 21 cm, Schaftweite: 36-39 cm"
+        "Obermaterial aus hochwertigem Veloursleder",
+        "Innensohle aus tragefreundlichem Leder",
+        "Mit Stretcheinsatz zur individuellen Anpassung an den Fuß",
+        "Leichte Synthetik-Laufsohle"
       ],
-      "description": "Die robuste Stiefelette von sheego überzeugt als unverzichtbarer Kombipartner bei kühlen Temperaturen. Die runde Leistenform sorgt für ein kerniges Aussehen, helle und dunkle Effekte erzeugen eine modische Optik. Besonders bequem ist der Schuh durch sein molliges Winterfutter, eine weitenverstellbare Schnalle in Knöchelhöhe sowie einen Innenreißverschluss, der einen leichten Einstieg ermöglicht. Der Schaft kann hoch oder umgeschlagen getragen werden und ist so vielseitig kombinierbar.",
-      "Mehr zum Material": "Das Nappaleder besticht durch eine weiche Qualität, die robuste Laufsohle sorgt für sicheren Halt.",
-      "features": {
-        "Saison": "Winter"
-      },
+      "description": [
+        "Slipper von Rieker aus Veloursleder. Verschluss: Stretcheinsatz. Laufsohlenmaterial: Synthetik."
+      ],
       "materials": {
-        "Obermaterial": "100% Leder"
+        "Obermaterial Schuhe": "Leder"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_5961261_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5961916_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5962122_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5961474_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5961269_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5961687_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5960597_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5960130_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5960363_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5960821_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5960598_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5961065_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/11802700289-02-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700289-07-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700289-04-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700289-01-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700289-06-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700289-05-SH?$format_zoom$"
-        ]
+        "weinrot_36": {
+          "size": "36",
+          "color": "weinrot",
+          "current_price": "64,99 €"
+        },
+        "weinrot_37": {
+          "size": "37",
+          "color": "weinrot",
+          "current_price": "64,99 €"
+        },
+        "weinrot_38": {
+          "size": "38",
+          "color": "weinrot",
+          "current_price": "64,99 €"
+        },
+        "weinrot_39": {
+          "size": "39",
+          "color": "weinrot",
+          "current_price": "64,99 €"
+        },
+        "weinrot_40": {
+          "size": "40",
+          "color": "weinrot",
+          "current_price": "64,99 €"
+        },
+        "weinrot_41": {
+          "size": "41",
+          "color": "weinrot",
+          "current_price": "64,99 €"
+        },
+        "weinrot_42": {
+          "size": "42",
+          "color": "weinrot",
+          "current_price": "64,99 €"
+        }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/11802700066-00-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700066-05-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700066-01-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700066-04-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700066-03-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700066-07-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11802700066-02-SH?$format_zoom$"
-        ]
+        "dunkelblau_36": {
+          "size": "36",
+          "color": "dunkelblau",
+          "current_price": "64,99 €"
+        },
+        "dunkelblau_37": {
+          "size": "37",
+          "color": "dunkelblau",
+          "current_price": "64,99 €"
+        },
+        "dunkelblau_38": {
+          "size": "38",
+          "color": "dunkelblau",
+          "current_price": "64,99 €"
+        },
+        "dunkelblau_39": {
+          "size": "39",
+          "color": "dunkelblau",
+          "current_price": "64,99 €"
+        },
+        "dunkelblau_40": {
+          "size": "40",
+          "color": "dunkelblau",
+          "current_price": "64,99 €"
+        },
+        "dunkelblau_41": {
+          "size": "41",
+          "color": "dunkelblau",
+          "current_price": "64,99 €"
+        },
+        "dunkelblau_42": {
+          "size": "42",
+          "color": "dunkelblau",
+          "current_price": "64,99 €"
+        }
       }
     ]
   },
   {
-    "url": "https://www.sheego.de/mustang-shoes-stiefelette_125501.html",
-    "retailer_id": "125501",
-    "name": "Stiefelette",
+    "url": "https://www.sheego.de/polarino-outdoorschuh-visionary-high-cut-_124759.html",
+    "retailer_id": "124759",
+    "name": "Outdoorschuh »Visionary High Cut«",
+    "brand": "Polarino",
+    "details": {
+      "bulletpoints": [
+        "Funktioneller Wanderstiefel von Polarino",
+        "Obermaterial aus Veloursleder und Textil",
+        "Wasserdicht und atmungsaktiv durch Comfortex Klimamembran",
+        "Griffige TPR Laufsohle",
+        "Gute Dämpfung"
+      ],
+      "description": [
+        "Atmungsaktive und wasserdichte Membran. Stabile, profilierte TPR-Laufsohle. Sehr gute Sohlendämpfung. 5-Loch-Schnürung mit Bergsteigerösen. Robuster Materialmix.. Verschluss: Schnürung. Laufsohlenmaterial: Gummi."
+      ],
+      "features": {
+        "Anlass": "Outdoormode"
+      },
+      "materials": {
+        "Obermaterial Schuhe": "Leder"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7244280_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7245237_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7244908_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7245544_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7244281_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7244582_94?$format_zoom$"
+    ],
+    "skus": [
+      {
+        "grau-pink_38": {
+          "size": "38",
+          "color": "grau-pink",
+          "current_price": "79,99 €"
+        },
+        "grau-pink_39": {
+          "size": "39",
+          "color": "grau-pink",
+          "current_price": "79,99 €"
+        },
+        "grau-pink_40": {
+          "size": "40",
+          "color": "grau-pink",
+          "current_price": "79,99 €"
+        },
+        "grau-pink_41": {
+          "size": "41",
+          "color": "grau-pink",
+          "current_price": "79,99 €"
+        },
+        "grau-pink_42": {
+          "size": "42",
+          "color": "grau-pink",
+          "current_price": "79,99 €"
+        },
+        "grau-pink_43": {
+          "size": "43",
+          "color": "grau-pink",
+          "current_price": "79,99 €"
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/mustang-shoes-slingpumps_118876.html",
+    "retailer_id": "118876",
+    "name": "Slingpumps",
     "brand": "Mustang Shoes",
     "details": {
       "bulletpoints": [
-        "Stiefelette mit Nieten und Zierreißverschluss außen",
-        "Obermaterial aus Lederimitat",
-        "Wärmende Textilinnenausstattung",
-        "Innenreißverschluss für komfortables Anziehen",
-        "6 cm Absatz"
+        "Elegante Slingpumps mit schimmernder Oberfläche und angesagter Struktur",
+        "Obermaterial aus Textil und Lederimitat",
+        "Hochwertige Lederinnenausstattung",
+        "Verstellbare Schnalle als Verschluss",
+        "Schmale Form"
       ],
       "description": [
-        "Stiefelette von Mustang aus Lederimitat. Besondere Merkmale: mit Reptilprägung. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
+        "Sling von Mustang aus Textil und Lederimitat. Besondere Merkmale: mit Metallic Effekt. Verschluss: Schnallenverschluss. Laufsohlenmaterial: Synthetik."
       ],
       "materials": {
         "Obermaterial Schuhe": "Lederimitat",
-        "Futter": "Textilmaterial",
-        "Laufsohle Schuhe": "Synthetik"
+        "Laufsohle Schuhe": "Synthetik",
+        "Futter": "Leder"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_6398671_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6399297_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6399494_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6398902_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6398674_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6399132_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7393340_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7393921_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7394532_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7393646_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7394533_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7394232_94?$format_zoom$"
-        ],
+        "grau_37": {
+          "size": "37",
+          "color": "grau",
+          "current_price": "69,99 €"
+        },
+        "grau_38": {
+          "size": "38",
+          "color": "grau",
+          "current_price": "69,99 €"
+        },
+        "grau_39": {
+          "size": "39",
+          "color": "grau",
+          "current_price": "69,99 €"
+        },
+        "grau_40": {
+          "size": "40",
+          "color": "grau",
+          "current_price": "69,99 €"
+        },
+        "grau_41": {
+          "size": "41",
+          "color": "grau",
+          "current_price": "69,99 €"
+        },
+        "grau_42": {
+          "size": "42",
+          "color": "grau",
+          "current_price": "69,99 €"
+        },
+        "grau_36": {
+          "size": "36",
+          "color": "grau",
+          "current_price": "69,99 €",
+          "out_of_stock": true
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/tamaris-keilpumps-borage-_119068.html",
+    "retailer_id": "119068",
+    "name": "Tamaris Keilpumps »Borage«",
+    "brand": "Tamaris FM",
+    "details": {
+      "bulletpoints": [
+        "Obermaterial aus weichem Leder",
+        "Weich gepolsterte Innensohle mit Touch It-Ausstattung",
+        "4 cm Absatz",
+        "Schuhweite: normal",
+        "Absatzhöhe: 40 mm"
+      ],
+      "description": [
+        "Pumps, Tamaris, aus Leder. Besondere Merkmale: in schlichtem Look. Verschluss: ohne Verschluss. Laufsohlenmaterial: Synthetik."
+      ],
+      "features": {
+        "Anlass": "Businessmode"
+      },
+      "materials": {
+        "Laufsohle Schuhe": "Synthetik",
+        "Obermaterial": "Leder"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_2665527_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3542210_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3542316_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3542555_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3542441_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3542076_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6227433_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6227434_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6227642_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6228088_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6227864_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6228295_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_1184959_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6234869_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6235064_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6234452_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6234249_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6234656_94?$format_zoom$"
+    ],
+    "skus": [
+      {
         "braun_36": {
           "size": "36",
           "color": "braun",
-          "current_price": "79,99 €"
+          "current_price": "59,99 €"
         },
         "braun_37": {
           "size": "37",
           "color": "braun",
-          "current_price": "79,99 €"
+          "current_price": "59,99 €"
         },
         "braun_38": {
           "size": "38",
           "color": "braun",
-          "current_price": "79,99 €"
+          "current_price": "59,99 €"
         },
         "braun_39": {
           "size": "39",
           "color": "braun",
-          "current_price": "79,99 €"
+          "current_price": "59,99 €"
         },
         "braun_40": {
           "size": "40",
           "color": "braun",
-          "current_price": "79,99 €"
+          "current_price": "59,99 €"
         },
         "braun_41": {
           "size": "41",
           "color": "braun",
-          "current_price": "79,99 €"
+          "current_price": "59,99 €"
+        },
+        "braun_35": {
+          "size": "35",
+          "color": "braun",
+          "current_price": "59,99 €",
+          "out_of_stock": true
         },
         "braun_42": {
           "size": "42",
           "color": "braun",
-          "current_price": "79,99 €"
+          "current_price": "59,99 €",
+          "out_of_stock": true
+        },
+        "braun_43": {
+          "size": "43",
+          "color": "braun",
+          "current_price": "59,99 €",
+          "out_of_stock": true
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7416327_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7417897_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7417363_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7417898_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7418441_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7417899_94?$format_zoom$"
-        ],
-        "anthrazit_36": {
+        "hellgrau_36": {
           "size": "36",
-          "color": "anthrazit",
-          "current_price": "79,99 €"
+          "color": "hellgrau",
+          "current_price": "59,99 €"
         },
-        "anthrazit_37": {
+        "hellgrau_37": {
           "size": "37",
-          "color": "anthrazit",
-          "current_price": "79,99 €"
+          "color": "hellgrau",
+          "current_price": "59,99 €"
         },
-        "anthrazit_38": {
+        "hellgrau_38": {
           "size": "38",
-          "color": "anthrazit",
-          "current_price": "79,99 €"
+          "color": "hellgrau",
+          "current_price": "59,99 €"
         },
-        "anthrazit_39": {
+        "hellgrau_39": {
           "size": "39",
-          "color": "anthrazit",
-          "current_price": "79,99 €"
+          "color": "hellgrau",
+          "current_price": "59,99 €"
         },
-        "anthrazit_40": {
+        "hellgrau_40": {
           "size": "40",
-          "color": "anthrazit",
-          "current_price": "79,99 €"
+          "color": "hellgrau",
+          "current_price": "59,99 €"
         },
-        "anthrazit_41": {
-          "size": "41",
-          "color": "anthrazit",
-          "current_price": "79,99 €"
-        },
-        "anthrazit_42": {
+        "hellgrau_42": {
           "size": "42",
-          "color": "anthrazit",
-          "current_price": "79,99 €"
+          "color": "hellgrau",
+          "current_price": "59,99 €"
+        },
+        "hellgrau_43": {
+          "size": "43",
+          "color": "hellgrau",
+          "current_price": "59,99 €"
+        },
+        "hellgrau_35": {
+          "size": "35",
+          "color": "hellgrau",
+          "current_price": "59,99 €",
+          "out_of_stock": true
+        },
+        "hellgrau_41": {
+          "size": "41",
+          "color": "hellgrau",
+          "current_price": "59,99 €",
+          "out_of_stock": true
+        }
+      },
+      {
+        "schwarz_36": {
+          "size": "36",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_37": {
+          "size": "37",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_38": {
+          "size": "38",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_39": {
+          "size": "39",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_40": {
+          "size": "40",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_41": {
+          "size": "41",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_42": {
+          "size": "42",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_43": {
+          "size": "43",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_35": {
+          "size": "35",
+          "color": "schwarz",
+          "current_price": "59,99 €",
+          "out_of_stock": true
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/city-walk-schnuerstiefelette_125229.html",
+    "retailer_id": "125229",
+    "name": "Schnürstiefelette",
+    "brand": "CITY WALK",
+    "details": {
+      "bulletpoints": [
+        "Eleganter Schnürstiefelette in schlichtem Look",
+        "Tragefreundliche Innenausstattung aus Textil",
+        "5,5 cm Absatz",
+        "Mit 5,5 cm Absatz",
+        "Absatzhöhe: 55 mm"
+      ],
+      "description": [
+        "Schnürstiefelette von City Walk aus Textil. Besondere Merkmale: in eleganter Optik. Verschluss: Schnürung. Laufsohlenmaterial: Synthetik."
+      ],
+      "materials": {
+        "Obermaterial Schuhe": "Textilmaterial"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_2790472_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2790430_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2790474_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2790555_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2790382_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_928401_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_655581_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_466467_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_707290_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_823242_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_599605_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_449551_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_713730_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_651437_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_487284_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_478695_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_677859_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2790473_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2800251_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2800396_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2799991_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2799857_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2800114_94?$format_zoom$"
+    ],
+    "skus": [
+      {
+        "taupe_36": {
+          "size": "36",
+          "color": "taupe",
+          "current_price": "29,99 €"
+        },
+        "taupe_37": {
+          "size": "37",
+          "color": "taupe",
+          "current_price": "29,99 €"
+        },
+        "taupe_38": {
+          "size": "38",
+          "color": "taupe",
+          "current_price": "29,99 €"
+        },
+        "taupe_39": {
+          "size": "39",
+          "color": "taupe",
+          "current_price": "29,99 €"
+        },
+        "taupe_40": {
+          "size": "40",
+          "color": "taupe",
+          "current_price": "29,99 €"
+        },
+        "taupe_41": {
+          "size": "41",
+          "color": "taupe",
+          "current_price": "29,99 €"
+        }
+      },
+      {
+        "grau_36": {
+          "size": "36",
+          "color": "grau",
+          "current_price": "29,99 €"
+        },
+        "grau_37": {
+          "size": "37",
+          "color": "grau",
+          "current_price": "29,99 €"
+        },
+        "grau_38": {
+          "size": "38",
+          "color": "grau",
+          "current_price": "29,99 €"
+        },
+        "grau_39": {
+          "size": "39",
+          "color": "grau",
+          "current_price": "29,99 €"
+        },
+        "grau_40": {
+          "size": "40",
+          "color": "grau",
+          "current_price": "29,99 €"
+        },
+        "grau_41": {
+          "size": "41",
+          "color": "grau",
+          "current_price": "29,99 €"
+        }
+      },
+      {
+        "schwarz_36": {
+          "size": "36",
+          "color": "schwarz",
+          "current_price": "29,99 €"
+        },
+        "schwarz_37": {
+          "size": "37",
+          "color": "schwarz",
+          "current_price": "29,99 €"
+        },
+        "schwarz_38": {
+          "size": "38",
+          "color": "schwarz",
+          "current_price": "29,99 €"
+        },
+        "schwarz_39": {
+          "size": "39",
+          "color": "schwarz",
+          "current_price": "29,99 €"
+        },
+        "schwarz_40": {
+          "size": "40",
+          "color": "schwarz",
+          "current_price": "29,99 €"
+        },
+        "schwarz_41": {
+          "size": "41",
+          "color": "schwarz",
+          "current_price": "29,99 €"
+        }
+      },
+      {
+        "dunkelblau_36": {
+          "size": "36",
+          "color": "dunkelblau",
+          "current_price": "29,99 €"
+        },
+        "dunkelblau_37": {
+          "size": "37",
+          "color": "dunkelblau",
+          "current_price": "29,99 €"
+        },
+        "dunkelblau_38": {
+          "size": "38",
+          "color": "dunkelblau",
+          "current_price": "29,99 €"
+        },
+        "dunkelblau_39": {
+          "size": "39",
+          "color": "dunkelblau",
+          "current_price": "29,99 €"
+        },
+        "dunkelblau_40": {
+          "size": "40",
+          "color": "dunkelblau",
+          "current_price": "29,99 €"
+        },
+        "dunkelblau_41": {
+          "size": "41",
+          "color": "dunkelblau",
+          "current_price": "29,99 €"
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/tamaris-ankleboots-carmen-_125236.html",
+    "retailer_id": "125236",
+    "name": "Tamaris Ankleboots »Carmen«",
+    "brand": "Tamaris FM",
+    "details": {
+      "bulletpoints": [
+        "Elegante Stiefelette im klassischen Look",
+        "Obermaterial aus edlem Leder",
+        "Tragefreundliches Textilfutter",
+        "Mit Reißverschluss an der Innenseite",
+        "Mit elegantem 7,5 cm Absatz und 1,5 cm Plateau"
+      ],
+      "description": [
+        "Ankle Boots, Tamaris, aus Leder. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
+      ],
+      "materials": {
+        "Obermaterial Schuhe": "Leder"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_2796800_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2796801_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2796888_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2796999_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2796718_94?$format_zoom$"
+    ],
+    "skus": [
+      {
+        "schwarz_36": {
+          "size": "36",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_37": {
+          "size": "37",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_38": {
+          "size": "38",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_39": {
+          "size": "39",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_40": {
+          "size": "40",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_41": {
+          "size": "41",
+          "color": "schwarz",
+          "current_price": "69,99 €"
+        },
+        "schwarz_42": {
+          "size": "42",
+          "color": "schwarz",
+          "current_price": "69,99 €"
         }
       }
     ]
@@ -2572,16 +2548,28 @@
         "Laufsohle Schuhe": "Synthetik"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_5504563_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5467928_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5468196_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5504412_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5468452_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5467930_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5500325_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5458932_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5459311_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5500409_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5459501_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5459118_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7017312_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7016655_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7017229_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7017086_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7016656_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7017087_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5504563_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5467928_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5468196_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5504412_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5468452_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5467930_94?$format_zoom$"
-        ],
         "schwarz-silberfarben_36": {
           "size": "36",
           "color": "schwarz-silberfarben",
@@ -2620,14 +2608,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5500325_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5458932_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5459311_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5500409_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5459501_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5459118_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -2666,14 +2646,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7017312_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7016655_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7017229_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7017086_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7016656_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7017087_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -2736,26 +2708,135 @@
         "Obermaterial Schuhe": "100% Leder"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/11362200289-05-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200289-07-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200289-04-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200289-02-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200289-06-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200289-03-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200066-04-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200066-00-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200066-03-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200066-01-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200066-05-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11362200066-02-SH?$format_zoom$"
+    ],
+    "skus": [
+      {},
+      {}
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/mustang-shoes-stiefelette_125501.html",
+    "retailer_id": "125501",
+    "name": "Stiefelette",
+    "brand": "Mustang Shoes",
+    "details": {
+      "bulletpoints": [
+        "Stiefelette mit Nieten und Zierreißverschluss außen",
+        "Obermaterial aus Lederimitat",
+        "Wärmende Textilinnenausstattung",
+        "Innenreißverschluss für komfortables Anziehen",
+        "6 cm Absatz"
+      ],
+      "description": [
+        "Stiefelette von Mustang aus Lederimitat. Besondere Merkmale: mit Reptilprägung. Verschluss: Reißverschluss. Laufsohlenmaterial: Synthetik."
+      ],
+      "materials": {
+        "Obermaterial Schuhe": "Lederimitat",
+        "Futter": "Textilmaterial",
+        "Laufsohle Schuhe": "Synthetik"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7393340_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7393921_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7394532_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7393646_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7394533_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7394232_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7416327_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7417897_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7417363_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7417898_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7418441_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7417899_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/11362200289-05-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200289-07-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200289-04-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200289-02-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200289-06-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200289-03-SH?$format_zoom$"
-        ]
+        "braun_36": {
+          "size": "36",
+          "color": "braun",
+          "current_price": "79,99 €"
+        },
+        "braun_37": {
+          "size": "37",
+          "color": "braun",
+          "current_price": "79,99 €"
+        },
+        "braun_38": {
+          "size": "38",
+          "color": "braun",
+          "current_price": "79,99 €"
+        },
+        "braun_39": {
+          "size": "39",
+          "color": "braun",
+          "current_price": "79,99 €"
+        },
+        "braun_40": {
+          "size": "40",
+          "color": "braun",
+          "current_price": "79,99 €"
+        },
+        "braun_41": {
+          "size": "41",
+          "color": "braun",
+          "current_price": "79,99 €"
+        },
+        "braun_42": {
+          "size": "42",
+          "color": "braun",
+          "current_price": "79,99 €"
+        }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/11362200066-04-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200066-00-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200066-03-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200066-01-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200066-05-SH?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/11362200066-02-SH?$format_zoom$"
-        ]
+        "anthrazit_36": {
+          "size": "36",
+          "color": "anthrazit",
+          "current_price": "79,99 €"
+        },
+        "anthrazit_37": {
+          "size": "37",
+          "color": "anthrazit",
+          "current_price": "79,99 €"
+        },
+        "anthrazit_38": {
+          "size": "38",
+          "color": "anthrazit",
+          "current_price": "79,99 €"
+        },
+        "anthrazit_39": {
+          "size": "39",
+          "color": "anthrazit",
+          "current_price": "79,99 €"
+        },
+        "anthrazit_40": {
+          "size": "40",
+          "color": "anthrazit",
+          "current_price": "79,99 €"
+        },
+        "anthrazit_41": {
+          "size": "41",
+          "color": "anthrazit",
+          "current_price": "79,99 €"
+        },
+        "anthrazit_42": {
+          "size": "42",
+          "color": "anthrazit",
+          "current_price": "79,99 €"
+        }
       }
     ]
   },
@@ -2779,16 +2860,22 @@
         "Obermaterial Schuhe": "Leder"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7006617_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7006615_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7006616_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7007065_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7007257_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7006618_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7015011_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7015313_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7014844_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7015314_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7014604_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7015315_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7006617_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7006615_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7006616_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7007065_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7007257_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7006618_94?$format_zoom$"
-        ],
         "schwarz-silberfarben_36": {
           "size": "36",
           "color": "schwarz-silberfarben",
@@ -2826,14 +2913,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7015011_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7015313_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7014844_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7015314_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7014604_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7015315_94?$format_zoom$"
-        ],
         "braun-kupfer_36": {
           "size": "36",
           "color": "braun-kupfer",
@@ -2890,16 +2969,22 @@
         "Obermaterial Schuhe": "Synthetik"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_4168065_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4166854_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4167265_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4168075_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5332949_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5333325_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5676025_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5676587_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5675451_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5676027_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5675741_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5676321_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_4168065_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4166854_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4167265_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4168075_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5332949_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5333325_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -2937,14 +3022,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5676025_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5676587_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5675451_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5676027_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5675741_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5676321_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -2984,188 +3061,6 @@
     ]
   },
   {
-    "url": "https://www.sheego.de/city-walk-schnuerstiefelette_125229.html",
-    "retailer_id": "125229",
-    "name": "Schnürstiefelette",
-    "brand": "CITY WALK",
-    "details": {
-      "bulletpoints": [
-        "Eleganter Schnürstiefelette in schlichtem Look",
-        "Tragefreundliche Innenausstattung aus Textil",
-        "5,5 cm Absatz",
-        "Mit 5,5 cm Absatz",
-        "Absatzhöhe: 55 mm"
-      ],
-      "description": [
-        "Schnürstiefelette von City Walk aus Textil. Besondere Merkmale: in eleganter Optik. Verschluss: Schnürung. Laufsohlenmaterial: Synthetik."
-      ],
-      "materials": {
-        "Obermaterial Schuhe": "Textilmaterial"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_2790472_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2790430_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2790474_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2790555_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2790382_94?$format_zoom$"
-        ],
-        "taupe_36": {
-          "size": "36",
-          "color": "taupe",
-          "current_price": "29,99 €"
-        },
-        "taupe_37": {
-          "size": "37",
-          "color": "taupe",
-          "current_price": "29,99 €"
-        },
-        "taupe_38": {
-          "size": "38",
-          "color": "taupe",
-          "current_price": "29,99 €"
-        },
-        "taupe_39": {
-          "size": "39",
-          "color": "taupe",
-          "current_price": "29,99 €"
-        },
-        "taupe_40": {
-          "size": "40",
-          "color": "taupe",
-          "current_price": "29,99 €"
-        },
-        "taupe_41": {
-          "size": "41",
-          "color": "taupe",
-          "current_price": "29,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_928401_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_655581_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_466467_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_707290_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_823242_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_599605_94?$format_zoom$"
-        ],
-        "grau_36": {
-          "size": "36",
-          "color": "grau",
-          "current_price": "29,99 €"
-        },
-        "grau_37": {
-          "size": "37",
-          "color": "grau",
-          "current_price": "29,99 €"
-        },
-        "grau_38": {
-          "size": "38",
-          "color": "grau",
-          "current_price": "29,99 €"
-        },
-        "grau_39": {
-          "size": "39",
-          "color": "grau",
-          "current_price": "29,99 €"
-        },
-        "grau_40": {
-          "size": "40",
-          "color": "grau",
-          "current_price": "29,99 €"
-        },
-        "grau_41": {
-          "size": "41",
-          "color": "grau",
-          "current_price": "29,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_449551_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_713730_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_651437_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_487284_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_478695_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_677859_94?$format_zoom$"
-        ],
-        "schwarz_36": {
-          "size": "36",
-          "color": "schwarz",
-          "current_price": "29,99 €"
-        },
-        "schwarz_37": {
-          "size": "37",
-          "color": "schwarz",
-          "current_price": "29,99 €"
-        },
-        "schwarz_38": {
-          "size": "38",
-          "color": "schwarz",
-          "current_price": "29,99 €"
-        },
-        "schwarz_39": {
-          "size": "39",
-          "color": "schwarz",
-          "current_price": "29,99 €"
-        },
-        "schwarz_40": {
-          "size": "40",
-          "color": "schwarz",
-          "current_price": "29,99 €"
-        },
-        "schwarz_41": {
-          "size": "41",
-          "color": "schwarz",
-          "current_price": "29,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_2790473_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2800251_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2800396_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2799991_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2799857_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2800114_94?$format_zoom$"
-        ],
-        "dunkelblau_36": {
-          "size": "36",
-          "color": "dunkelblau",
-          "current_price": "29,99 €"
-        },
-        "dunkelblau_37": {
-          "size": "37",
-          "color": "dunkelblau",
-          "current_price": "29,99 €"
-        },
-        "dunkelblau_38": {
-          "size": "38",
-          "color": "dunkelblau",
-          "current_price": "29,99 €"
-        },
-        "dunkelblau_39": {
-          "size": "39",
-          "color": "dunkelblau",
-          "current_price": "29,99 €"
-        },
-        "dunkelblau_40": {
-          "size": "40",
-          "color": "dunkelblau",
-          "current_price": "29,99 €"
-        },
-        "dunkelblau_41": {
-          "size": "41",
-          "color": "dunkelblau",
-          "current_price": "29,99 €"
-        }
-      }
-    ]
-  },
-  {
     "url": "https://www.sheego.de/schnuerboots_118718.html",
     "retailer_id": "118718",
     "name": "Schnürboots",
@@ -3187,16 +3082,28 @@
         "Laufsohle Schuhe": "Synthetik"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_4122659_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4240152_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4240313_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4239826_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4239678_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4239983_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5584187_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5584441_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5584703_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5583924_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5583666_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5584188_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2839967_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2839791_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2839882_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2840053_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2839968_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2840143_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_4122659_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4240152_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4240313_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4239826_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4239678_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_4239983_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -3234,14 +3141,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5584187_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5584441_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5584703_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5583924_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5583666_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5584188_94?$format_zoom$"
-        ],
         "beigefarben_36": {
           "size": "36",
           "color": "beigefarben",
@@ -3279,14 +3178,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_2839967_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2839791_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2839882_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2840053_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2839968_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_2840143_94?$format_zoom$"
-        ],
         "weiß bedruckt_36": {
           "size": "36",
           "color": "weiß bedruckt",
@@ -3354,16 +3245,32 @@
         "Laufsohle Schuhe": "Synthetik"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_645402_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_11294_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_12893_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_8161_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_14467_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_9699_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3406516_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3406381_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3406378_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3406267_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_448375_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_719892_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_769473_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_752647_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_816974_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_761057_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_903827_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_1023684_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_531158_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_928487_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_454161_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_1025974_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_645402_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_11294_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_12893_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_8161_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_14467_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_9699_94?$format_zoom$"
-        ],
         "rot_36": {
           "size": "36",
           "color": "rot",
@@ -3427,12 +3334,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_3406516_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3406381_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3406378_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_3406267_94?$format_zoom$"
-        ],
         "dunkelblau_36": {
           "size": "36",
           "color": "dunkelblau",
@@ -3490,14 +3391,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_448375_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_719892_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_769473_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_752647_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_816974_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_761057_94?$format_zoom$"
-        ],
         "weiß_36": {
           "size": "36",
           "color": "weiß",
@@ -3554,14 +3447,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_903827_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_1023684_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_531158_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_928487_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_454161_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_1025974_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -3620,6 +3505,218 @@
     ]
   },
   {
+    "url": "https://www.sheego.de/s-oliver-red-label-ballerina_125349.html",
+    "retailer_id": "125349",
+    "name": "s.Oliver RED LABEL Ballerina",
+    "brand": "s.Oliver RED LABEL FM",
+    "details": {
+      "bulletpoints": [
+        "Sportlicher Ballerina mit Lgooprägung",
+        "Aus pflegeleichtem Lederimitat",
+        "Weiches Textilfutter",
+        "Gepolsterte Synthetikdecksohle mit s.Oliver Soft Foam Dämpfung",
+        "Sehr flexible Synthetiklaufsohle"
+      ],
+      "description": [
+        "Ballerina von S.Oliver aus Lederimitat. Besondere Merkmale: mit glänzenden Highlights. Verschluss: ohne Verschluss. Laufsohlenmaterial: Synthetik."
+      ],
+      "materials": {
+        "Obermaterial": "Lederimitat"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_7175616_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7175348_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7175615_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7174882_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7175349_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7174628_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7049856_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7049515_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7049516_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7049198_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050173_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7050511_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7240028_1199?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7240898_1199?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7240029_1199?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7240341_1199?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7239741_1199?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_7240603_1199?$format_zoom$"
+    ],
+    "skus": [
+      {
+        "taupe_36": {
+          "size": "36",
+          "color": "taupe",
+          "current_price": "39,99 €"
+        },
+        "taupe_37": {
+          "size": "37",
+          "color": "taupe",
+          "current_price": "39,99 €"
+        },
+        "taupe_38": {
+          "size": "38",
+          "color": "taupe",
+          "current_price": "39,99 €"
+        },
+        "taupe_39": {
+          "size": "39",
+          "color": "taupe",
+          "current_price": "39,99 €"
+        },
+        "taupe_40": {
+          "size": "40",
+          "color": "taupe",
+          "current_price": "39,99 €"
+        },
+        "taupe_41": {
+          "size": "41",
+          "color": "taupe",
+          "current_price": "39,99 €"
+        },
+        "taupe_42": {
+          "size": "42",
+          "color": "taupe",
+          "current_price": "39,99 €"
+        },
+        "taupe_43": {
+          "size": "43",
+          "color": "taupe",
+          "current_price": "39,99 €",
+          "out_of_stock": true
+        }
+      },
+      {
+        "dunkelgrau_36": {
+          "size": "36",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        },
+        "dunkelgrau_37": {
+          "size": "37",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        },
+        "dunkelgrau_38": {
+          "size": "38",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        },
+        "dunkelgrau_39": {
+          "size": "39",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        },
+        "dunkelgrau_40": {
+          "size": "40",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        },
+        "dunkelgrau_41": {
+          "size": "41",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        },
+        "dunkelgrau_42": {
+          "size": "42",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        },
+        "dunkelgrau_43": {
+          "size": "43",
+          "color": "dunkelgrau",
+          "current_price": "39,99 €"
+        }
+      },
+      {
+        "marine metallic_36": {
+          "size": "36",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        },
+        "marine metallic_37": {
+          "size": "37",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        },
+        "marine metallic_38": {
+          "size": "38",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        },
+        "marine metallic_39": {
+          "size": "39",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        },
+        "marine metallic_40": {
+          "size": "40",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        },
+        "marine metallic_41": {
+          "size": "41",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        },
+        "marine metallic_42": {
+          "size": "42",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        },
+        "marine metallic_43": {
+          "size": "43",
+          "color": "marine metallic",
+          "current_price": "39,99 €"
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/sheego-casual-robuste-stiefelette_118027.html",
+    "retailer_id": "118027",
+    "name": "sheego Casual Robuste Stiefelette",
+    "brand": "sheego Shoes",
+    "details": {
+      "bulletpoints": [
+        "Mit Innenreißverschluss und gefüttert",
+        "Weitenverstellbare Schnalle am Knöchel",
+        "Obermaterial aus weichem Nappaleder",
+        "Robuste Laufsohle, 2 cm Absatzhöhe",
+        "Schafthöhe: 21 cm, Schaftweite: 36-39 cm"
+      ],
+      "description": "Die robuste Stiefelette von sheego überzeugt als unverzichtbarer Kombipartner bei kühlen Temperaturen. Die runde Leistenform sorgt für ein kerniges Aussehen, helle und dunkle Effekte erzeugen eine modische Optik. Besonders bequem ist der Schuh durch sein molliges Winterfutter, eine weitenverstellbare Schnalle in Knöchelhöhe sowie einen Innenreißverschluss, der einen leichten Einstieg ermöglicht. Der Schaft kann hoch oder umgeschlagen getragen werden und ist so vielseitig kombinierbar.",
+      "Mehr zum Material": "Das Nappaleder besticht durch eine weiche Qualität, die robuste Laufsohle sorgt für sicheren Halt.",
+      "features": {
+        "Saison": "Winter"
+      },
+      "materials": {
+        "Obermaterial": "100% Leder"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/11802700289-02-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700289-07-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700289-04-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700289-01-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700289-06-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700289-05-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700066-00-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700066-05-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700066-01-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700066-04-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700066-03-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700066-07-SH?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/11802700066-02-SH?$format_zoom$"
+    ],
+    "skus": [
+      {},
+      {}
+    ]
+  },
+  {
     "url": "https://www.sheego.de/tamaris-pumps_119093.html",
     "retailer_id": "119093",
     "name": "Tamaris Pumps",
@@ -3643,16 +3740,28 @@
         "Obermaterial": "Leder"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_6425009_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6427317_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6424230_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6425765_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6425014_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6426551_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6456395_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6458796_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6455560_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6457181_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6456407_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_6457988_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5458152_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5458577_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5458282_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5458578_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5458422_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5465813_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_6425009_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6427317_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6424230_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6425765_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6425014_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6426551_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -3706,14 +3815,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_6456395_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6458796_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6455560_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6457181_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6456407_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_6457988_94?$format_zoom$"
-        ],
         "rosa metallic_36": {
           "size": "36",
           "color": "rosa metallic",
@@ -3766,14 +3867,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5458152_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5458577_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5458282_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5458578_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5458422_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5465813_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -3825,415 +3918,6 @@
     ]
   },
   {
-    "url": "https://www.sheego.de/s-oliver-red-label-ballerina_125349.html",
-    "retailer_id": "125349",
-    "name": "s.Oliver RED LABEL Ballerina",
-    "brand": "s.Oliver RED LABEL FM",
-    "details": {
-      "bulletpoints": [
-        "Sportlicher Ballerina mit Lgooprägung",
-        "Aus pflegeleichtem Lederimitat",
-        "Weiches Textilfutter",
-        "Gepolsterte Synthetikdecksohle mit s.Oliver Soft Foam Dämpfung",
-        "Sehr flexible Synthetiklaufsohle"
-      ],
-      "description": [
-        "Ballerina von S.Oliver aus Lederimitat. Besondere Merkmale: mit glänzenden Highlights. Verschluss: ohne Verschluss. Laufsohlenmaterial: Synthetik."
-      ],
-      "materials": {
-        "Obermaterial": "Lederimitat"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7175616_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7175348_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7175615_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7174882_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7175349_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7174628_94?$format_zoom$"
-        ],
-        "taupe_36": {
-          "size": "36",
-          "color": "taupe",
-          "current_price": "39,99 €"
-        },
-        "taupe_37": {
-          "size": "37",
-          "color": "taupe",
-          "current_price": "39,99 €"
-        },
-        "taupe_38": {
-          "size": "38",
-          "color": "taupe",
-          "current_price": "39,99 €"
-        },
-        "taupe_39": {
-          "size": "39",
-          "color": "taupe",
-          "current_price": "39,99 €"
-        },
-        "taupe_40": {
-          "size": "40",
-          "color": "taupe",
-          "current_price": "39,99 €"
-        },
-        "taupe_41": {
-          "size": "41",
-          "color": "taupe",
-          "current_price": "39,99 €"
-        },
-        "taupe_42": {
-          "size": "42",
-          "color": "taupe",
-          "current_price": "39,99 €"
-        },
-        "taupe_43": {
-          "size": "43",
-          "color": "taupe",
-          "current_price": "39,99 €",
-          "out_of_stock": true
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7049856_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7049515_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7049516_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7049198_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050173_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7050511_94?$format_zoom$"
-        ],
-        "dunkelgrau_36": {
-          "size": "36",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        },
-        "dunkelgrau_37": {
-          "size": "37",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        },
-        "dunkelgrau_38": {
-          "size": "38",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        },
-        "dunkelgrau_39": {
-          "size": "39",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        },
-        "dunkelgrau_40": {
-          "size": "40",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        },
-        "dunkelgrau_41": {
-          "size": "41",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        },
-        "dunkelgrau_42": {
-          "size": "42",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        },
-        "dunkelgrau_43": {
-          "size": "43",
-          "color": "dunkelgrau",
-          "current_price": "39,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_7240028_1199?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7240898_1199?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7240029_1199?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7240341_1199?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7239741_1199?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_7240603_1199?$format_zoom$"
-        ],
-        "marine metallic_36": {
-          "size": "36",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        },
-        "marine metallic_37": {
-          "size": "37",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        },
-        "marine metallic_38": {
-          "size": "38",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        },
-        "marine metallic_39": {
-          "size": "39",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        },
-        "marine metallic_40": {
-          "size": "40",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        },
-        "marine metallic_41": {
-          "size": "41",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        },
-        "marine metallic_42": {
-          "size": "42",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        },
-        "marine metallic_43": {
-          "size": "43",
-          "color": "marine metallic",
-          "current_price": "39,99 €"
-        }
-      }
-    ]
-  },
-  {
-    "url": "https://www.sheego.de/city-walk-westernstiefelette_118501.html",
-    "retailer_id": "118501",
-    "name": "Westernstiefelette",
-    "brand": "CITY WALK",
-    "details": {
-      "bulletpoints": [
-        "Aus softem Lederimitat",
-        "Leicht geraffter Schaft",
-        "Innenausstattung aus Textil",
-        "5 cm Absatz",
-        "Absatzhöhe: 45 mm"
-      ],
-      "description": [
-        "Stiefelette von City Walk aus Lederimitat. Besondere Merkmale: im Western-Look. Verschluss: ohne Verschluss. Laufsohlenmaterial: Synthetik."
-      ],
-      "materials": {
-        "Obermaterial Schuhe": "Lederimitat",
-        "Futter": "Textilmaterial",
-        "Laufsohle Schuhe": "Synthetik"
-      }
-    },
-    "skus": [
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_3389730_94?$format_zoom$"
-        ],
-        "türkis_36": {
-          "size": "36",
-          "color": "türkis",
-          "current_price": "29,99 €"
-        },
-        "türkis_37": {
-          "size": "37",
-          "color": "türkis",
-          "current_price": "29,99 €"
-        },
-        "türkis_38": {
-          "size": "38",
-          "color": "türkis",
-          "current_price": "29,99 €"
-        },
-        "türkis_39": {
-          "size": "39",
-          "color": "türkis",
-          "current_price": "29,99 €"
-        },
-        "türkis_40": {
-          "size": "40",
-          "color": "türkis",
-          "current_price": "29,99 €"
-        },
-        "türkis_41": {
-          "size": "41",
-          "color": "türkis",
-          "current_price": "29,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_2696906_1199?$format_zoom$"
-        ],
-        "grau_36": {
-          "size": "36",
-          "color": "grau",
-          "current_price": "59,99 €"
-        },
-        "grau_37": {
-          "size": "37",
-          "color": "grau",
-          "current_price": "59,99 €"
-        },
-        "grau_38": {
-          "size": "38",
-          "color": "grau",
-          "current_price": "59,99 €"
-        },
-        "grau_39": {
-          "size": "39",
-          "color": "grau",
-          "current_price": "59,99 €"
-        },
-        "grau_40": {
-          "size": "40",
-          "color": "grau",
-          "current_price": "59,99 €"
-        },
-        "grau_41": {
-          "size": "41",
-          "color": "grau",
-          "current_price": "59,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_4444899_94?$format_zoom$"
-        ],
-        "cognac_36": {
-          "size": "36",
-          "color": "cognac",
-          "current_price": "29,99 €"
-        },
-        "cognac_37": {
-          "size": "37",
-          "color": "cognac",
-          "current_price": "29,99 €"
-        },
-        "cognac_38": {
-          "size": "38",
-          "color": "cognac",
-          "current_price": "29,99 €"
-        },
-        "cognac_39": {
-          "size": "39",
-          "color": "cognac",
-          "current_price": "29,99 €"
-        },
-        "cognac_40": {
-          "size": "40",
-          "color": "cognac",
-          "current_price": "29,99 €"
-        },
-        "cognac_41": {
-          "size": "41",
-          "color": "cognac",
-          "current_price": "29,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_2759541_1199?$format_zoom$"
-        ],
-        "braun_36": {
-          "size": "36",
-          "color": "braun",
-          "current_price": "29,99 €"
-        },
-        "braun_37": {
-          "size": "37",
-          "color": "braun",
-          "current_price": "29,99 €"
-        },
-        "braun_38": {
-          "size": "38",
-          "color": "braun",
-          "current_price": "29,99 €"
-        },
-        "braun_39": {
-          "size": "39",
-          "color": "braun",
-          "current_price": "29,99 €"
-        },
-        "braun_40": {
-          "size": "40",
-          "color": "braun",
-          "current_price": "29,99 €"
-        },
-        "braun_41": {
-          "size": "41",
-          "color": "braun",
-          "current_price": "29,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_3120723_94?$format_zoom$"
-        ],
-        "blau_36": {
-          "size": "36",
-          "color": "blau",
-          "current_price": "29,99 €"
-        },
-        "blau_37": {
-          "size": "37",
-          "color": "blau",
-          "current_price": "29,99 €"
-        },
-        "blau_38": {
-          "size": "38",
-          "color": "blau",
-          "current_price": "29,99 €"
-        },
-        "blau_39": {
-          "size": "39",
-          "color": "blau",
-          "current_price": "29,99 €"
-        },
-        "blau_40": {
-          "size": "40",
-          "color": "blau",
-          "current_price": "29,99 €"
-        },
-        "blau_41": {
-          "size": "41",
-          "color": "blau",
-          "current_price": "29,99 €"
-        }
-      },
-      {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_3097835_94?$format_zoom$"
-        ],
-        "schwarz_36": {
-          "size": "36",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_37": {
-          "size": "37",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_38": {
-          "size": "38",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_39": {
-          "size": "39",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_40": {
-          "size": "40",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        },
-        "schwarz_41": {
-          "size": "41",
-          "color": "schwarz",
-          "current_price": "59,99 €"
-        }
-      }
-    ]
-  },
-  {
     "url": "https://www.sheego.de/city-walk-stiefelette_125281.html",
     "retailer_id": "125281",
     "name": "Stiefelette",
@@ -4253,16 +3937,45 @@
         "Obermaterial": "Lederimitat"
       }
     },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_5583667_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5584442_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5584704_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5583925_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5583668_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5584189_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5573197_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5572694_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5572945_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5573198_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5573741_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570301_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5571090_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570026_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570568_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570302_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570809_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5571088_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570571_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570812_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570030_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5571094_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5570306_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5566625_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5566054_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5566233_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5566627_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5566437_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5566801_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5569453_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5569067_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5569259_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5569641_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5569454_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_5569862_94?$format_zoom$"
+    ],
     "skus": [
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5583667_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5584442_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5584704_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5583925_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5583668_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5584189_94?$format_zoom$"
-        ],
         "rot_36": {
           "size": "36",
           "color": "rot",
@@ -4300,13 +4013,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5573197_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5572694_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5572945_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5573198_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5573741_94?$format_zoom$"
-        ],
         "rosé_36": {
           "size": "36",
           "color": "rosé",
@@ -4345,14 +4051,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5570301_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5571090_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570026_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570568_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570302_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570809_94?$format_zoom$"
-        ],
         "camelfarben_36": {
           "size": "36",
           "color": "camelfarben",
@@ -4390,14 +4088,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5571088_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570571_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570812_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570030_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5571094_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5570306_94?$format_zoom$"
-        ],
         "schwarz_36": {
           "size": "36",
           "color": "schwarz",
@@ -4435,14 +4125,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5566625_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5566054_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5566233_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5566627_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5566437_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5566801_94?$format_zoom$"
-        ],
         "marine_36": {
           "size": "36",
           "color": "marine",
@@ -4480,14 +4162,6 @@
         }
       },
       {
-        "image_urls": [
-          "//media.sheego.de/is/image/sheego/O_5569453_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5569067_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5569259_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5569641_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5569454_94?$format_zoom$",
-          "//media.sheego.de/is/image/sheego/O_5569862_94?$format_zoom$"
-        ],
         "grau_36": {
           "size": "36",
           "color": "grau",
@@ -4522,6 +4196,231 @@
           "size": "42",
           "color": "grau",
           "current_price": "29,99 €"
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://www.sheego.de/city-walk-westernstiefelette_118501.html",
+    "retailer_id": "118501",
+    "name": "Westernstiefelette",
+    "brand": "CITY WALK",
+    "details": {
+      "bulletpoints": [
+        "Aus softem Lederimitat",
+        "Leicht geraffter Schaft",
+        "Innenausstattung aus Textil",
+        "5 cm Absatz",
+        "Absatzhöhe: 45 mm"
+      ],
+      "description": [
+        "Stiefelette von City Walk aus Lederimitat. Besondere Merkmale: im Western-Look. Verschluss: ohne Verschluss. Laufsohlenmaterial: Synthetik."
+      ],
+      "materials": {
+        "Obermaterial Schuhe": "Lederimitat",
+        "Futter": "Textilmaterial",
+        "Laufsohle Schuhe": "Synthetik"
+      }
+    },
+    "image_urls": [
+      "//media.sheego.de/is/image/sheego/O_3389730_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2696906_1199?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_4444899_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_2759541_1199?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3120723_94?$format_zoom$",
+      "//media.sheego.de/is/image/sheego/O_3097835_94?$format_zoom$"
+    ],
+    "skus": [
+      {
+        "türkis_36": {
+          "size": "36",
+          "color": "türkis",
+          "current_price": "29,99 €"
+        },
+        "türkis_37": {
+          "size": "37",
+          "color": "türkis",
+          "current_price": "29,99 €"
+        },
+        "türkis_38": {
+          "size": "38",
+          "color": "türkis",
+          "current_price": "29,99 €"
+        },
+        "türkis_39": {
+          "size": "39",
+          "color": "türkis",
+          "current_price": "29,99 €"
+        },
+        "türkis_40": {
+          "size": "40",
+          "color": "türkis",
+          "current_price": "29,99 €"
+        },
+        "türkis_41": {
+          "size": "41",
+          "color": "türkis",
+          "current_price": "29,99 €"
+        }
+      },
+      {
+        "grau_36": {
+          "size": "36",
+          "color": "grau",
+          "current_price": "59,99 €"
+        },
+        "grau_37": {
+          "size": "37",
+          "color": "grau",
+          "current_price": "59,99 €"
+        },
+        "grau_38": {
+          "size": "38",
+          "color": "grau",
+          "current_price": "59,99 €"
+        },
+        "grau_39": {
+          "size": "39",
+          "color": "grau",
+          "current_price": "59,99 €"
+        },
+        "grau_40": {
+          "size": "40",
+          "color": "grau",
+          "current_price": "59,99 €"
+        },
+        "grau_41": {
+          "size": "41",
+          "color": "grau",
+          "current_price": "59,99 €"
+        }
+      },
+      {
+        "cognac_36": {
+          "size": "36",
+          "color": "cognac",
+          "current_price": "29,99 €"
+        },
+        "cognac_37": {
+          "size": "37",
+          "color": "cognac",
+          "current_price": "29,99 €"
+        },
+        "cognac_38": {
+          "size": "38",
+          "color": "cognac",
+          "current_price": "29,99 €"
+        },
+        "cognac_39": {
+          "size": "39",
+          "color": "cognac",
+          "current_price": "29,99 €"
+        },
+        "cognac_40": {
+          "size": "40",
+          "color": "cognac",
+          "current_price": "29,99 €"
+        },
+        "cognac_41": {
+          "size": "41",
+          "color": "cognac",
+          "current_price": "29,99 €"
+        }
+      },
+      {
+        "braun_36": {
+          "size": "36",
+          "color": "braun",
+          "current_price": "29,99 €"
+        },
+        "braun_37": {
+          "size": "37",
+          "color": "braun",
+          "current_price": "29,99 €"
+        },
+        "braun_38": {
+          "size": "38",
+          "color": "braun",
+          "current_price": "29,99 €"
+        },
+        "braun_39": {
+          "size": "39",
+          "color": "braun",
+          "current_price": "29,99 €"
+        },
+        "braun_40": {
+          "size": "40",
+          "color": "braun",
+          "current_price": "29,99 €"
+        },
+        "braun_41": {
+          "size": "41",
+          "color": "braun",
+          "current_price": "29,99 €"
+        }
+      },
+      {
+        "blau_36": {
+          "size": "36",
+          "color": "blau",
+          "current_price": "29,99 €"
+        },
+        "blau_37": {
+          "size": "37",
+          "color": "blau",
+          "current_price": "29,99 €"
+        },
+        "blau_38": {
+          "size": "38",
+          "color": "blau",
+          "current_price": "29,99 €"
+        },
+        "blau_39": {
+          "size": "39",
+          "color": "blau",
+          "current_price": "29,99 €"
+        },
+        "blau_40": {
+          "size": "40",
+          "color": "blau",
+          "current_price": "29,99 €"
+        },
+        "blau_41": {
+          "size": "41",
+          "color": "blau",
+          "current_price": "29,99 €"
+        }
+      },
+      {
+        "schwarz_36": {
+          "size": "36",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_37": {
+          "size": "37",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_38": {
+          "size": "38",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_39": {
+          "size": "39",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_40": {
+          "size": "40",
+          "color": "schwarz",
+          "current_price": "59,99 €"
+        },
+        "schwarz_41": {
+          "size": "41",
+          "color": "schwarz",
+          "current_price": "59,99 €"
         }
       }
     ]

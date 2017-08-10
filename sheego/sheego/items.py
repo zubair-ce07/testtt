@@ -14,4 +14,5 @@ class Product(scrapy.Item):
     retailer_id = scrapy.Field()
     brand = scrapy.Field()
     details = scrapy.Field()
+    image_urls = scrapy.Field()
     skus = scrapy.Field()
