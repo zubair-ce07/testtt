@@ -19,10 +19,6 @@ class Profile extends React.Component {
     });
   }
 
-  componentDidUpdate() {
-    this.componentDidMount();
-  }
-
   render() {
     return (
       <div className="profile">
