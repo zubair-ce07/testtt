@@ -58,7 +58,6 @@ class App extends Component {
         <section>
           <Profile profile={this.state.displayProfile} />
         </section>
-        <AppraisalModal />
       </div>
     );
   }

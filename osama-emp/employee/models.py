@@ -50,3 +50,6 @@ class Appraisal(models.Model):
 
     def __str__(self):
         return '%s %s' % (self.employee, self.year)
+
+    class Meta:
+        unique_together = ('year', 'employee',)

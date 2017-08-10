@@ -1,12 +1,14 @@
 import React from "react";
 import "./Employee.css";
+import AppraisalModal from "../appraisal/AppraisalModal";
 import djangoapi from "../../djangoapi";
 
 class Employee extends React.Component {
   constructor(props) {
     super();
     this.state = {
-      directs: []
+      directs: [],
+      openModal: false
     };
   }
 
@@ -25,6 +27,19 @@ class Employee extends React.Component {
     }
   }
 
+  openModal = evt => {
+    evt.preventDefault();
+    this.setState({
+      openModal: !this.state.openModal
+    });
+  };
+
+  closeModal = () => {
+    this.setState({
+      openModal: false
+    });
+  };
+
   render() {
     return (
       <div>
@@ -41,7 +56,22 @@ class Employee extends React.Component {
           </a>
         </li>
         {this.props.emp.reports_to === localStorage.username
-          ? <li>Give Appraisal:</li>
+          ? <li>
+              <a
+                href=""
+                onClick={evt => {
+                  this.openModal(evt);
+                }}
+              >
+                Give Appraisal
+              </a>
+              {this.state.openModal
+                ? <AppraisalModal
+                    employee={this.props.emp.username}
+                    closeModal={this.closeModal}
+                  />
+                : null}
+            </li>
           : null}
         <li>
           <a href="" onClick={evt => this.listEmployees(evt)}>

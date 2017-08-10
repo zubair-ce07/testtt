@@ -1,5 +1,7 @@
 .modal-container {
-  position: absolute;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -13,6 +15,7 @@
   height: 500px;
   background: rgba(255, 255, 255, 1);
   padding: 10px;
+  border-radius: 10px;
 }
 
 label {
@@ -21,7 +24,19 @@ label {
   margin: 5px 0;
 }
 
-input {
+input,
+textarea {
   padding: 5px;
   margin: 5px;
+}
+
+button {
+  display: block;
+  margin: 5px;
+}
+
+#close-button {
+  position: absolute;
+  top: 10px;
+  right: 20px;
 }

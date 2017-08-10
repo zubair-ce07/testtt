@@ -62,11 +62,33 @@ function getAppraisals(username, callback) {
     .catch(error => console.log(error));
 }
 
+function submitAppraisal(username, elements, callback) {
+  let data = {
+    employee: username,
+    rating: elements.rating.value ? elements.rating.value : 5,
+    description: elements.description.value ? elements.description.value : "",
+    year: elements.year.value ? elements.year.value : 2007
+  };
+  let request = new Request(SERVER_URL + "employees/appraisals/create", {
+    method: "post",
+    headers,
+    mode: "cors",
+    redirect: "follow",
+    body: JSON.stringify(data)
+  });
+
+  fetch(request)
+    .then(response => response.json())
+    .then(callback)
+    .catch(error => console.log(error));
+}
+
 let djangoapi = {
   login,
   getProfile,
   getDirects,
-  getAppraisals
+  getAppraisals,
+  submitAppraisal
 };
 
 export default djangoapi;
