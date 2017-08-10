@@ -113,7 +113,7 @@ class SheegoSpider(CrawlSpider):
     allowed_domains = ['www.sheego.de']
     start_urls = ['https://www.sheego.de/damenmode/',
                   'https://www.sheego.de/waesche-und-bademode/',
-                  'https://www.sheego.de/damenschuhe/city-walk/']
+                  'https://www.sheego.de/damenschuhe/']
     rules = (
         Rule(LinkExtractor(
             restrict_css="a.js-next")),
