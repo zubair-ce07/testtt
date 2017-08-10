@@ -3,7 +3,6 @@ import React, { Component } from "react";
 import "./App.css";
 import Employee from "./employee/Employee";
 import Profile from "./profile/Profile";
-import AppraisalModal from "./appraisal/AppraisalModal";
 
 import djangoapi from "../djangoapi";
 import { loggedIn, logout } from "../auth.js";
