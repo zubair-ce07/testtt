@@ -4,10 +4,10 @@ from urllib.parse import urlencode
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
-
 from sheego.items import Product
 
 
+# utilit methods
 def clean_list(data):
     temp = []
     for item in data:
@@ -23,73 +23,6 @@ def create_color_urls(color_ids, product_id):
                             'ajaxdetails': 'adsColorChange'})
         color_urls.append(base_url + params)
     return color_urls
-
-
-def url(response, product):
-    product['url'] = response.url.split('?')[0]
-
-
-def brand(response, product):
-    if response.css('.p-details__brand a'):
-        product['brand'] = response.css('.p-details__brand a::text').extract_first().strip()
-    else:
-        product['brand'] = response.css('.p-details__brand::text').extract_first().strip()
-
-
-def color(response, product):
-    product['color'] = response.css('span.js-color-value::text').extract_first().lstrip('– ')
-
-
-def details(response, product):
-    product_details = {'bulletpoints': response.css('div.at-dv-article-details ul li::text').extract()}
-    if response.css('[itemprop=description] p'):
-        description = response.css('[itemprop=description] p::text').extract_first()
-    else:
-        description = clean_list(response.css('[itemprop=description]::text').extract())
-    product_details.update({'description': description})
-    details_key = response.css('div.at-dv-article-details b::text').extract()
-    details_value = response.css('div.at-dv-article-details p::text').extract()[1:]
-    product_details.update(dict(zip(details_key, details_value)))
-    # features and materials
-    if len(response.css('table.p-details__material')) > 1:
-        feature_rows = response.css('table.p-details__material')[0].css('tr')
-        feature_descriptions = clean_list(feature_rows.css('span::text').extract())
-        feature_values = list(filter(None, clean_list(feature_rows.css('td::text').extract())))
-        product_details.update({'features': dict(zip(feature_descriptions, feature_values))})
-        material_rows = response.css('table.p-details__material')[1].css('tr')
-    else:
-        material_rows = response.css('table.p-details__material')[0].css('tr')
-    material_descriptions = clean_list(material_rows.css('span::text').extract())
-    material_values = list(filter(None, clean_list(material_rows.css('td::text').extract())))
-    product_details.update({'materials': dict(zip(material_descriptions, material_values))})
-    product['details'] = product_details
-
-
-# def features(response, product):
-#     rows = response.css('table.p-details__material')[0].css('tr')
-#     desc = clean_list(rows.css('span::text').extract())
-#     values = list(filter(None, clean_list(rows.css('td::text').extract())))
-#     product['features'] = dict(zip(desc, values))
-
-
-# def material(response, product):
-#     if len(response.css('table.p-details__material')) > 1:
-#         rows = response.css('table.p-details__material')[1].css('tr')
-#     else:
-#         rows = response.css('table.p-details__material')[0].css('tr')
-#     desc = clean_list(rows.css('span::text').extract())
-#     values = list(filter(None, clean_list(rows.css('td::text').extract())))
-#     product['material'] = dict(zip(desc, values))
-
-
-def name(response, product):
-    product['name'] = response.css('h1[itemprop=name]::text').extract_first().strip()
-
-
-def retailer_id(response, product):
-    product_id = re.search(r'(\d+)', response.css('.js-artNr::text').extract_first()).group()
-    product['retailer_id'] = product_id
-    return product_id
 
 
 def create_size_list(response, size_list, out_of_stock=False):
@@ -111,14 +44,26 @@ def create_size_list(response, size_list, out_of_stock=False):
 class SheegoSpider(CrawlSpider):
     name = 'sheego'
     allowed_domains = ['www.sheego.de']
-    start_urls = ['https://www.sheego.de/damenmode/',
-                  'https://www.sheego.de/waesche-und-bademode/',
+    start_urls = [#'https://www.sheego.de/damenmode/',
+                  # 'https://www.sheego.de/waesche-und-bademode/',
                   'https://www.sheego.de/damenschuhe/']
     rules = (
-        Rule(LinkExtractor(
-            restrict_css="a.js-next")),
+        # Rule(LinkExtractor(
+        #     restrict_css="a.js-next")),
         Rule(LinkExtractor(
             restrict_css='a.product__top'), callback="parse_product"),)
+
+    def parse_product(self, response):
+        product = Product()
+        self.url(response, product)
+        product_id = self.retailer_id(response, product)
+        self.product_name(response, product)
+        self.brand(response, product)
+        self.details(response, product)
+        product['skus'] = []
+        color_urls = create_color_urls(response.css('span.colorspots__item::attr(data-varselid)').extract(), product_id)
+        yield scrapy.Request(color_urls.pop(), callback=self.parse_sku,
+                             meta={'product': product, 'color_urls': color_urls})
 
     def parse_sku(self, response):
         color_urls = response.meta.get('color_urls')
@@ -134,16 +79,49 @@ class SheegoSpider(CrawlSpider):
         else:
             yield product
 
-    def parse_product(self, response):
-        product = Product()
-        url(response, product)
-        product_id = retailer_id(response, product)
-        name(response, product)
-        brand(response, product)
-        details(response, product)
-        # features(response, product)
-        # material(response, product)
-        product['skus'] = []
-        color_urls = create_color_urls(response.css('span.colorspots__item::attr(data-varselid)').extract(), product_id)
-        yield scrapy.Request(color_urls.pop(), callback=self.parse_sku,
-                             meta={'product': product, 'color_urls': color_urls})
+    # functions for scraping fields
+    @staticmethod
+    def url(response, product):
+        product['url'] = response.url.split('?')[0]
+
+    @staticmethod
+    def retailer_id(response, product):
+        product_id = re.search(r'(\d+)', response.css('.js-artNr::text').extract_first()).group()
+        product['retailer_id'] = product_id
+        return product_id
+
+    @staticmethod
+    def product_name(response, product):
+        product['name'] = response.css('h1[itemprop=name]::text').extract_first().strip()
+
+    @staticmethod
+    def brand(response, product):
+        if response.css('.p-details__brand a'):
+            product['brand'] = response.css('.p-details__brand a::text').extract_first().strip()
+        else:
+            product['brand'] = response.css('.p-details__brand::text').extract_first().strip()
+
+    @staticmethod
+    def details(response, product):
+        product_details = {'bulletpoints': response.css('div.at-dv-article-details ul li::text').extract()}
+        if response.css('[itemprop=description] p'):
+            description = response.css('[itemprop=description] p::text').extract_first()
+        else:
+            description = clean_list(response.css('[itemprop=description]::text').extract())
+        product_details.update({'description': description})
+        details_key = response.css('div.at-dv-article-details b::text').extract()
+        details_value = response.css('div.at-dv-article-details p::text').extract()[1:]
+        product_details.update(dict(zip(details_key, details_value)))
+        # features and materials
+        if len(response.css('table.p-details__material')) > 1:
+            feature_rows = response.css('table.p-details__material')[0].css('tr')
+            feature_descriptions = clean_list(feature_rows.css('span::text').extract())
+            feature_values = list(filter(None, clean_list(feature_rows.css('td::text').extract())))
+            product_details.update({'features': dict(zip(feature_descriptions, feature_values))})
+            material_rows = response.css('table.p-details__material')[1].css('tr')
+        else:
+            material_rows = response.css('table.p-details__material')[0].css('tr')
+        material_descriptions = clean_list(material_rows.css('span::text').extract())
+        material_values = list(filter(None, clean_list(material_rows.css('td::text').extract())))
+        product_details.update({'materials': dict(zip(material_descriptions, material_values))})
+        product['details'] = product_details
