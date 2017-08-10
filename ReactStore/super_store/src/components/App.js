@@ -7,6 +7,9 @@ import Footer from './Common/Footer'
 import GridInstance from './Grid/GridInstance'
 import {loggedIn, listItems} from './authentication/auth'
 import AddBrandForm from './AddBrandForm'
+import {getOrDeleteBrand} from './authentication/auth'
+
+var toastr = require('toastr')
 
 class App extends React.Component {
     constructor(){
@@ -15,6 +18,21 @@ class App extends React.Component {
             brands: [],
             products: []
         }
+        this._handleDelete = this._handleDelete.bind(this)
+    }
+
+    _handleDelete(pk){
+        let brands = this.state.brands.reduce((accumulator, currentvalue)=>{
+            if(currentvalue.pk !== pk){
+                accumulator.push(currentvalue)
+            }
+            return accumulator
+         }, [])
+        this.setState({
+            brands
+        })
+        getOrDeleteBrand(pk, 'delete', () => {toastr.success('Brand Deleted Successfully!')})
+
     }
     componentDidMount(){
         if (!loggedIn()) {
@@ -54,7 +72,7 @@ class App extends React.Component {
                     Super Store's reknowned {this.props.match.params.name}
                 </h1>
                 {(this.props.match.params.name === 'brands' ? <AddBrandForm />:'')}
-                <GridInstance itemList={this.state[this.props.match.params.name]} name={this.props.match.params.name}/>
+                <GridInstance itemList={this.state[this.props.match.params.name]} name={this.props.match.params.name} _handleDelete={this._handleDelete}/>
                 <Footer />
             </div>
         )

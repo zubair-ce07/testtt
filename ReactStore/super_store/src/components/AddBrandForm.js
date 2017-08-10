@@ -1,7 +1,12 @@
 import React from 'react'
+import PropTypes from 'prop-types'
+import {Route} from 'react-router-dom'
 import {Jumbotron, Button, FormControl,  HelpBlock, FormGroup, ControlLabel} from 'react-bootstrap/lib'
 
-import {createBrand} from './authentication/auth'
+import Navigation from './Common/Header'
+import {createOrUpdateBrand} from './authentication/auth'
+import {getOrDeleteBrand} from './authentication/auth'
+
 var toastr = require('toastr');
 
 function FieldGroup({ id, label, help, error, ...props }) {
@@ -24,8 +29,32 @@ class AddBrandForm extends React.Component {
             binaryString: '',
             linkError: '',
             nameError: '',
+            imageError: '',
+            brand: {}
         }
         this._handleSubmit = this._handleSubmit.bind(this)
+        this._handleNameChange = this._handleNameChange.bind(this)
+    }
+
+    _handleNameChange(e){
+        const brand = Object.assign({}, this.state.brand)
+        brand[e.target.name] = e.target.value
+        this.setState({
+            brand
+        })
+    }
+
+    componentDidMount(){
+        if(this.props.match !== undefined){
+            getOrDeleteBrand(this.props.match.params.id, 'get', jsonData => {
+                let brand = Object.assign({}, jsonData)
+                this.setState({
+                    brand,
+                    imagePreviewUrl: brand.image_icon
+                })
+                console.log(this.state.brand)
+            })
+        }
     }
     _handleImageChange(e) {
         e.preventDefault();
@@ -59,6 +88,10 @@ class AddBrandForm extends React.Component {
         else{
             this.setState({linkError: ''})
         }
+        if(this.state.imagePreviewUrl === ''){
+            this.setState({imageError: 'Image is required!'})
+            bool = true
+        }
         if(e.target.formControlsBrandName.value.length === 0){
             this.setState({
                 nameError: 'name of the brand is required'
@@ -74,25 +107,36 @@ class AddBrandForm extends React.Component {
         if(bool){
             return false
         }
-
-        var data = document.getElementById('brandCreate')
-        var formData = new FormData()
-        formData.append('name', data.name.value)
-        formData.append('image_icon', data.image_icon.files[0])
-        formData.append('brand_link', data.brand_link.value)
-
-        createBrand(data, (jsonData) => {
-            console.log(jsonData)
-            data.reset()
-            this.setState({
-                file: '',
-                imagePreviewUrl: '',
-                binaryString: '',
-                linkError: '',
-                nameError: '',
+        let data = document.getElementById('brandCreate')
+        if(this.props.match === undefined){
+            createOrUpdateBrand(data, false, (jsonData) => {
+                data.reset()
+                this.setState({
+                    file: '',
+                    imagePreviewUrl: '',
+                    binaryString: '',
+                    linkError: '',
+                    nameError: '',
+                    imageError: '',
+                    brand: {}
+                })
+                toastr.success('brand created successfully!')
             })
-            toastr.success('brand created successfully!')
-        })
+        }
+        else{
+            createOrUpdateBrand(data, true, (jsonData) => {
+                this.setState({
+                    file: '',
+                    imagePreviewUrl: '',
+                    binaryString: '',
+                    linkError: '',
+                    nameError: '',
+                    imageError: '',
+                    brand: jsonData
+                })
+                toastr.success('brand updated successfully!')
+            })
+        }
     }
     render(){
         const {imagePreviewUrl} = this.state;
@@ -102,10 +146,12 @@ class AddBrandForm extends React.Component {
         }
         return (
             <div>
+                {this.props.match !== undefined ? <Route component={Navigation} />:''}
                 <Jumbotron>
                     <div className='container'>
-                        <h1>Add A New Brand!!</h1>
+                        <h1>{this.props.match === undefined ? 'Add A New Brand!!':'Update This Brand!!'}</h1>
                         <form id="brandCreate" encType='multipart/form-data' onSubmit={this._handleSubmit}>
+                            <input type="hidden" value={this.state.brand.pk || ''} name='pk'/>
                             <FieldGroup
                                 id="formControlsBrandName"
                                 type="text"
@@ -113,6 +159,8 @@ class AddBrandForm extends React.Component {
                                 placeholder="Enter brand name"
                                 name="name"
                                 error={this.state.nameError}
+                                value={this.state.brand.name || ''}
+                                onChange={this._handleNameChange}
                             />
                             <FieldGroup
                                 id="formControlsBrandLink"
@@ -121,19 +169,21 @@ class AddBrandForm extends React.Component {
                                 placeholder="Enter brand website Link"
                                 name="brand_link"
                                 error={this.state.linkError}
+                                value={this.state.brand.brand_link || ''}
+                                onChange={this._handleNameChange}
                             />
-                            {$imagePreview}
+                            {this.state.imagePreviewUrl === '' ? <img src={this.state.brand.image_icon} alt='Brand'/>:$imagePreview}
                             <FieldGroup
                                 id="formControlsFile"
                                 type="file"
                                 label="File"
                                 help="Choose brand's image or logo for display"
                                 name="image_icon"
+                                error={this.state.imageError}
                                 onChange={(e)=>this._handleImageChange(e)}
-                                required
                             />
                             <Button type="submit">
-                                Submit
+                                {this.props.match === undefined ? 'Submit':'Update'}
                             </Button>
                         </form>
                     </div>
@@ -141,6 +191,10 @@ class AddBrandForm extends React.Component {
             </div>
         )
     }
+}
+
+AddBrandForm.propTypes = {
+    match: PropTypes.object
 }
 
 export default AddBrandForm

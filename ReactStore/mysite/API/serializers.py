@@ -38,7 +38,8 @@ class BrandOnlySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Brand
-        fields = ('name', 'brand_link', 'image_icon')
+        fields = ('pk', 'name', 'brand_link', 'image_icon')
+        read_only_fields = ('pk',)
 
 
 class BrandSerializer(serializers.ModelSerializer):

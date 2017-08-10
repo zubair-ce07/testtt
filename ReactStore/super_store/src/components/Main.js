@@ -5,6 +5,7 @@ import App from './App'
 import Login from './LogInOut/Login'
 import SelectedBrand from './SelectedBrand'
 import ItemDetail from './ItemDetail/ItemDetail'
+import AddBrandForm from './AddBrandForm'
 
 const MainApp = (props) => {
     return (
@@ -18,12 +19,17 @@ const MainApp = (props) => {
                 component={App}
             />
             <Route
+                exact
                 path='/brand/:name'
                 component={SelectedBrand}
             />
             <Route
                 path='/product/:id([0-9]+)(-[\s\S]*)'
                 component={ItemDetail}
+            />
+            <Route
+                path='/brand/update/:id'
+                component={AddBrandForm}
             />
         </div>
     )

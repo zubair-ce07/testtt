@@ -1,9 +1,9 @@
 export function login(username, password, callback) {
-  let loginData = {
+  const loginData = {
     username,
     password
   };
-  let headers = {
+  const headers = {
     Accept: "application/json",
     "Content-Type": "application/json"
   };
@@ -21,14 +21,14 @@ export function login(username, password, callback) {
 
 
 export function listItems(URL, callback){
-    let headers = {
+  const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
     Authorization: 'Token ' + localStorage.token
 
   };
 
-  let request = new Request(URL, {
+  const request = new Request(URL, {
     method: "get",
     headers,
     mode: "cors",
@@ -48,30 +48,51 @@ export function loggedIn () {
     return !!localStorage.token
 }
 
-export function createBrand(formData, callback ){
-    let headers = {
+export function createOrUpdateBrand(formData, is_update, callback ){
+  const headers = {
     Accept: "application/json",
     Authorization: 'Token ' + localStorage.token,
   };
 
-  var data = new FormData()
+  const data = new FormData()
+  data.append('pk', parseInt(formData.pk.value.toString(), 10))
   data.append('name', formData.name.value.toString())
   data.append('brand_link', formData.brand_link.value.toString())
-  data.append('image_icon', formData.image_icon.files[0])
+  if (formData.image_icon.files.length > 0){
+    data.append('image_icon', formData.image_icon.files[0])
+  }
+  let URL = ''
+  let method = 'post'
 
-  // let request = new Request('http://localhost:8000/api/brand/create/', {
-  //   method: "post",
-  //   headers,
-  //   mode: "cors",
-  //   redirect: "follow",
-  //   body: data
-  // });
+  if(is_update){
+    URL = 'http://localhost:8000/api/brand/'+formData.pk.value.toString()+'/'
+    method = 'PATCH'
+  }else{
+    URL = 'http://localhost:8000/api/brand/create/'
+    method='post'
+  }
 
-  fetch('http://localhost:8000/api/brand/create/', {
-    method: "post",
+  fetch(URL, {
+    method,
     headers,
     mode: "cors",
     redirect: "follow",
     body: data
-  }).then(response => response.json()).then(callback);
+  }).then(response => response.json()).then(callback).catch(response => console.log(response));
+}
+
+
+export function getOrDeleteBrand(pk, method, callback){
+  let headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: 'Token ' + localStorage.token,
+  };
+
+  fetch('http://localhost:8000/api/brand/'+pk, {
+    method,
+    headers,
+    mode: "cors",
+    redirect: "follow",
+  }).then(response => response).then(callback);
 }

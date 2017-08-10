@@ -24,6 +24,7 @@ class SelectedBrand extends React.Component {
         const that = this
         listItems("http://localhost:8000/api/brand/products/"+this.props.match.params.name, (jsonData) => {
             var products = []
+            console.log(jsonData)
             if(jsonData.results[0].product.length > 0){
                 jsonData.results[0].product.forEach(function(element) {
                     products.push(element)

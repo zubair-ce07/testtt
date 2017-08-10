@@ -39,14 +39,15 @@ class BrandCreate(generics.CreateAPIView):
     authentication_classes = (authentication.TokenAuthentication,)
 
 
-class BrandDetails(LoggingMixin, generics.RetrieveUpdateDestroyAPIView):
+class BrandDetails(generics.RetrieveUpdateDestroyAPIView):
     throttle_classes = (CustomThrottle,)
     queryset = Brand.objects.all()
-    serializer_class = BrandSerializer
+    serializer_class = BrandOnlySerializer
     permission_classes = (
         permissions.IsAuthenticated,
         permissions.IsAdminUser
     )
+    authentication_classes = (authentication.TokenAuthentication,)
 
 
 class UserList(generics.ListAPIView):

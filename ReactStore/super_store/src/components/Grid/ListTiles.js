@@ -13,7 +13,7 @@ class List extends React.Component {
                     accumulator.push([])
                 }
                 accumulator[accumulator.length - 1].push((this.props.name === 'brands'
-                    ? <ListBrandItem brand={currentValue} key={currentIndex}/>
+                    ? <ListBrandItem _handleDelete={this.props._handleDelete} brand={currentValue} key={currentIndex}/>
                     : <ListProductItem product={currentValue} key={currentIndex}/>))
                 return accumulator
             },
