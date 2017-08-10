@@ -18,6 +18,7 @@ class App extends React.Component {
             brands: [],
             products: []
         }
+
         this._handleDelete = this._handleDelete.bind(this)
     }
 

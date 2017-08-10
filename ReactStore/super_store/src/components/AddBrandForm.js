@@ -47,12 +47,13 @@ class AddBrandForm extends React.Component {
     componentDidMount(){
         if(this.props.match !== undefined){
             getOrDeleteBrand(this.props.match.params.id, 'get', jsonData => {
+                console.log(jsonData)
                 let brand = Object.assign({}, jsonData)
                 this.setState({
                     brand,
                     imagePreviewUrl: brand.image_icon
                 })
-                console.log(this.state.brand)
+                console.log(this.state)
             })
         }
     }

@@ -88,11 +88,11 @@ export function getOrDeleteBrand(pk, method, callback){
     "Content-Type": "application/json",
     Authorization: 'Token ' + localStorage.token,
   };
-
+  console.log(method)
   fetch('http://localhost:8000/api/brand/'+pk, {
     method,
     headers,
     mode: "cors",
     redirect: "follow",
-  }).then(response => response).then(callback);
+  }).then(response => response.json()).then(callback);
 }
