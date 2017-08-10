@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -86,15 +87,20 @@ def book_detail(request, book_id):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-def book_delete(request):
+def item_delete(request):
     item_id = request.POST['id']
     type_del = request.POST['type']
-    if type_del == "Delete Book":
-        Book.objects.filter(id=item_id).delete()
-    elif type_del == "Delete Author":
-        Author.objects.filter(id=item_id).delete()
-    elif type_del == "Delete Publisher":
-        Publisher.objects.filter(id=item_id).delete()
+    try:
+        if type_del == "book":
+            Book.objects.filter(id=item_id).delete()
+        elif type_del == "author":
+            Author.objects.filter(id=item_id).delete()
+        elif type_del == "publisher":
+            Publisher.objects.filter(id=item_id).delete()
+        else:
+            raise ObjectDoesNotExist
+    except ObjectDoesNotExist:
+        return HttpResponse("fail")
     return HttpResponse("done")
 
 

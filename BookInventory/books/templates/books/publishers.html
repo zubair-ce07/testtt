@@ -7,9 +7,10 @@
             <h2>Publishers</h2>
         </div>
         <div class="col-sm-3">
-            <a href="{% url 'books:publisher_form' %}" class="btn btn-primary "><h3>Add New Publisher</h3></a>
+            {% include "books/login_template.html" %}
         </div>
     </div>
+    <a href="{% url 'books:publisher_form' %}" class="btn btn-primary "><h4>Add New Publisher</h4></a>
     <br>
     <br>
     <table class="table table-bordered table-striped" width="100%">
@@ -45,11 +46,17 @@
                     </ul>
                 </td>
                 <td>
-                    <button type="button" id="{{ publisher.id }}" class="btn btn-danger delete">Delete Publisher</button>
+                    <button type="button" data-type="publisher" data-id="{{ publisher.id }}"
+                            class="btn btn-danger delete">Delete
+                    </button>
                 </td>
             <tr>
         {% endfor %}
     </table>
+
+
+
+
     {% block scripts %}
         <script src="{% static 'books/table.js' %}"></script>
     {% endblock %}

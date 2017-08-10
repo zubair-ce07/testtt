@@ -24,7 +24,7 @@ SECRET_KEY = 'omg5n&n--j9m9l@!#o3ui5#7)dse6-8%5k7h@+j8g5m=2$55o^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', '172.16.10.62', 'localhost']
 
 # Application definition
 
@@ -119,7 +119,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # Redirect to home URL after login (Default redirects to /accounts/profile/)
 LOGIN_REDIRECT_URL = '/books'
-
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 

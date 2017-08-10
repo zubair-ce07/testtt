@@ -27,7 +27,7 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-    url(r'^books/delete/$', views.book_delete, name='book_delete'),
-    url(r'^authors/delete/$', views.book_delete, name='book_delete'),
-    url(r'^publishers/delete/$', views.book_delete, name='book_delete'),
+    url(r'^books/delete/$', views.item_delete, name='item_delete_book'),
+    url(r'^authors/delete/$', views.item_delete, name='item_delete_author'),
+    url(r'^publishers/delete/$', views.item_delete, name='item_delete_publisher'),
 ]
