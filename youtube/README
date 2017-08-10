@@ -1,0 +1,11 @@
+Youtube App using youtube google api that can search
+for videos and then user can play a certain video by
+clicking on it.
+
+How to run:
+
+-To install all packages run the following command:
+  npm install
+
+-After that all you need to do is run the server:
+  npm start
