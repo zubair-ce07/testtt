@@ -44,12 +44,12 @@ def create_size_list(response, size_list, out_of_stock=False):
 class SheegoSpider(CrawlSpider):
     name = 'sheego'
     allowed_domains = ['www.sheego.de']
-    start_urls = [#'https://www.sheego.de/damenmode/',
-                  # 'https://www.sheego.de/waesche-und-bademode/',
+    start_urls = ['https://www.sheego.de/damenmode/',
+                  'https://www.sheego.de/waesche-und-bademode/',
                   'https://www.sheego.de/damenschuhe/']
     rules = (
-        # Rule(LinkExtractor(
-        #     restrict_css="a.js-next")),
+        Rule(LinkExtractor(
+            restrict_css="a.js-next")),
         Rule(LinkExtractor(
             restrict_css='a.product__top'), callback="parse_product"),)
 
