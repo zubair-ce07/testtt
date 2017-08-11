@@ -1,9 +1,7 @@
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django_countries.fields import Country
 from django_countries.serializer_fields import CountryField
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from users.models import UserProfile
 
@@ -23,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('url','username', 'email', 'first_name', 'last_name', 'userprofile')
+        fields = ('url', 'username', 'email', 'first_name', 'last_name', 'userprofile')
         read_only_fields = ('username',)
 
     def update(self, instance, validated_data):
@@ -36,30 +34,3 @@ class UserSerializer(serializers.ModelSerializer):
             user_profile.image = user_profile_data.get('image')
         user_profile.save()
         return super(UserSerializer, self).update(instance, validated_data)
-
-
-class SignupSerializer(UserSerializer):
-    password = serializers.CharField()
-    password2 = serializers.CharField()
-
-    class Meta:
-        model = User
-        fields = (
-            'username', 'password', 'password2', 'email', 'first_name', 'last_name', 'userprofile')
-
-    def create(self, validated_data):
-        user_profile_data = validated_data.pop('userprofile')
-        validated_data['password'] = make_password(validated_data.get('password'))
-        user = super(SignupSerializer, self).create(validated_data)
-        user_profile = UserProfile(user=user, phone_number=user_profile_data.get('phone_number'),
-                                   country=user_profile_data.get('country'),
-                                   address=user_profile_data.get('address'),
-                                   image=user_profile_data.get('image'))
-        user_profile.full_clean()
-        user_profile.save()
-        return user
-
-
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()

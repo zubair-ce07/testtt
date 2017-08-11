@@ -13,19 +13,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-from rest_framework_jwt.settings import api_settings
 
 from generic_api.serializers import UserSerializer, SignupSerializer, LoginSerializer
+from viewset_api.utils import get_token
 
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 max_age = int(settings.JWT_AUTH.get('JWT_EXPIRATION_DELTA').total_seconds())
-
-
-def get_token(user):
-    payload = jwt_payload_handler(user)
-    token = jwt_encode_handler(payload)
-    return token
 
 
 @api_view(['GET'])
@@ -133,7 +125,7 @@ class UserDetails(generics.RetrieveUpdateDestroyAPIView):
         return response
 
 
-class Login(APIView):
+class Login(generics.GenericAPIView):
     """
     API: 'generic_api/login/'
 
@@ -151,15 +143,16 @@ class Login(APIView):
     }
     """
     permission_classes = (AllowAny,)
+    serializer_class = LoginSerializer
 
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('generic:details', pk=request.user.id)
-        serializer = LoginSerializer()
+        serializer = self.serializer_class()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = authenticate(username=serializer.validated_data.get('username'),
                                 password=serializer.validated_data.get('password'))

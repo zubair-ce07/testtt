@@ -3,25 +3,19 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import BasicAuthentication
-from rest_framework.decorators import api_view
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 
-from users.models import UserProfile
-from viewset_api.serializers import UserSerializer, LoginSerializer, SignupSerializer, UserProfileSerializer
-from viewset_api.utils import response_json, get_token
 from viewset_api.permissions import IsOwnerOrReadOnly
-
-
-@api_view(['GET'])
-def api_root(request, format=None):
-    return Response({'users': reverse('viewset:list', request=request, format=format), }, status=status.HTTP_200_OK)
+from viewset_api.serializers.auth_serializers import LoginSerializer, SignupSerializer
+from viewset_api.serializers.user_serializers import UserSerializer
+from viewset_api.utils import response_json, get_token
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-        List API: 'viewset_api/list/'
+        List API: 'viewset_api/users/'
 
         Method: 'GET'
 
@@ -30,7 +24,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 "success": true,
                 "message": null,
                 "response": {
-                    "url": "http://localhost:8000/viewset_api/[0-9]+/details/",
+                    "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
                     "username": "username",
                     "email": "email address",
                     "first_name": "First Name",
@@ -48,7 +42,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 .......
             }
 
-        Details API: 'viewset_api/[0-9]+(user_id)/details/'
+        Details API: 'viewset_api/users/[0-9]+(user_id)/'
 
         Methods: 'GET, PUT, PATCH, DELETE'
 
@@ -58,7 +52,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     "success": true,
                     "message": null,
                     "response": {
-                        "url": "http://localhost:8000/viewset_api/[0-9]+/details/",
+                        "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
                         "username": "username",
                         "email": "email address",
                         "first_name": "First Name",
@@ -78,7 +72,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     "success": true,
                     "message": "User successfully updated",
                     "response": {
-                        "url": "http://localhost:8000/viewset_api/[0-9]+/details/",
+                        "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
                         "username": "username",
                         "email": "email address",
                         "first_name": "First Name",
@@ -141,8 +135,8 @@ class Login(viewsets.GenericViewSet):
     POST:
     Response Body:
     {
-        "success": true,
-        "message": "User has been logged in",
+        "success": true/false,
+        "message": "User has been logged in"/"Invalid Credentials",
         "response": {
             "username": "fakhar",
             "password": "csgogodancer",
@@ -174,7 +168,7 @@ class Login(viewsets.GenericViewSet):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
-class Signup(viewsets.GenericViewSet):
+class Signup(CreateModelMixin, viewsets.GenericViewSet):
     """
         API: 'viewset_api/signup/'
 
@@ -215,36 +209,38 @@ class Signup(viewsets.GenericViewSet):
     authentication_classes = (BasicAuthentication,)
     serializer_class = SignupSerializer
 
+    def get_object(self, username):
+        return User.objects.get(username=username)
+
     def get(self, request):
         serializer = self.serializer_class()
         return Response(response_json(True, serializer.data, None), status=status.HTTP_200_OK)
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-            token = get_token(user)
-            response = Response(
-                response_json(True, {'token': token}, message='User has been successfully created'),
-                status=status.HTTP_200_OK)
-            response.set_cookie('token', token)
-            return response
+    def create(self, request, *args, **kwargs):
+        response = super(Signup, self).create(request, *args, **kwargs)
+        token = get_token(self.get_object(response.data.get('username')))
+        response.data.update({'token': token})
+        response = Response(response_json(True, response.data, message='User has been successfully created'),
+                            status=status.HTTP_200_OK)
+        response.set_cookie('token', token)
+        return response
 
 
 class Logout(viewsets.GenericViewSet):
     """
     API: 'viewset/logout/'
 
-        Method: 'GET'
+    Method: 'GET'
 
-        GET:
-        Response body:
-        {
-            "success": true/false,
-            "message": "User has been successfully logged out."/ "No user logged in to log out.",
-            "response": null
-        }
+    GET:
+    Response body:
+    {
+        "success": true/false,
+        "message": "User has been successfully logged out."/ "No user logged in to log out.",
+        "response": null
+    }
     """
+    permission_classes = (AllowAny,)
 
     def get(self, request):
         if request.user.is_authenticated:
