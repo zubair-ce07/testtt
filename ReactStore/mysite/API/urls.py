@@ -8,20 +8,29 @@ app_name = "api"
 
 urlpatterns = [
     url(r'^brand/list/$', views.BrandList.as_view(), name="brand-list"),
+
     url(r'^brand/create/$', views.BrandCreate.as_view(), name="brand-create"),
+
     url(r'^brand/(?P<pk>[0-9]+)/$',
         views.BrandDetails.as_view(), name="brand-detail"),
 
     url(r'^users/$', views.UserList.as_view(), name="user-list"),
+
     url(r'^user/(?P<pk>[0-9]+)/$',
         views.UserDetail.as_view(), name="user-detail"),
 
     url(r'^products/$', views.ProductList.as_view(), name="product-list"),
+
+    url(r'^product/create/', views.ProductCreate.as_view(),
+        name='product-create'),
+
     url(r'^product/(?P<pk>[0-9]+)/$', views.ProductDetail.as_view(),
         name="product-detail"),
+
     url(r'^api-login/', auth_views.obtain_auth_token),
 
-    url(r'brand/products/(?P<name>[\s\S]+)/$', views.BrandProductList.as_view(), name="brand-products-list")
+    url(r'brand/products/(?P<name>[\s\S]+)/$',
+        views.BrandProductList.as_view(), name="brand-products-list")
 
 ]
 

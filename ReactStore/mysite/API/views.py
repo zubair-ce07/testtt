@@ -1,5 +1,5 @@
 from .serializers import BrandSerializer, UserSerializer, ProductSerializer,\
-                            BrandOnlySerializer
+                            BrandOnlySerializer, ProductOnlySerializer
 from rest_framework import generics, permissions, authentication
 from authentication.models import User
 from super_store.models import Brand, Product
@@ -37,6 +37,22 @@ class BrandCreate(generics.CreateAPIView):
         permissions.IsAdminUser,
     )
     authentication_classes = (authentication.TokenAuthentication,)
+
+
+class ProductCreate(generics.CreateAPIView):
+    throttle_classes = (CustomThrottle,)
+    queryset = Product.objects.all()
+    serializer_class = ProductOnlySerializer
+
+    permission_classes = (
+        permissions.IsAuthenticated,
+        permissions.IsAdminUser,
+    )
+    authentication_classes = (authentication.TokenAuthentication,)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            brand=Brand.objects.get(name=self.request.data['name']))
 
 
 class BrandDetails(generics.RetrieveUpdateDestroyAPIView):

@@ -96,3 +96,65 @@ export function getOrDeleteBrand(pk, method, callback){
     redirect: "follow",
   }).then(response => response.json()).then(callback);
 }
+
+export function getOrDeleteProduct(pk, method, callback){
+  let headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: 'Token ' + localStorage.token,
+  };
+  console.log(method)
+  fetch('http://localhost:8000/api/product/'+pk, {
+    method,
+    headers,
+    mode: "cors",
+    redirect: "follow",
+  }).then(response => {
+      console.log(response);
+      if(response.status === 200){
+        return response.json()
+      }
+    }).then(callback).catch(null);
+}
+
+export function createOrUpdateProduct(formData, is_update, callback ){
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: 'Token ' + localStorage.token,
+  };
+
+  let name = formData.name.value.toString()
+  let product_id = formData.product_id.value.toString()
+  let product_name = formData.product_name.value.toString()
+  let source_url = formData.source_url.value.toString()
+  const data = {
+    name,
+    product_id,
+    product_name,
+    source_url,
+  }
+  if (formData.category.value.length > 0){
+    let category = formData.category.value.toString()
+    data.category = category
+  }
+
+  let URL = ''
+  let method = 'post'
+
+  if(is_update){
+    URL = 'http://localhost:8000/api/product/'+formData.pk.value.toString()+'/'
+    method = 'PATCH'
+  }else{
+    URL = 'http://localhost:8000/api/product/create/'
+    method='post'
+  }
+
+  fetch(URL, {
+    method,
+    headers,
+    mode: "cors",
+    redirect: "follow",
+    body: JSON.stringify(data)
+  }).then(response => response.json()).then(callback).catch(response => console.log(response));
+}

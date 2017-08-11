@@ -29,17 +29,22 @@ class ItemDetail extends React.Component{
                 return <Col md={12} key={index}> <Image src={val.image_url} key={index} responsive style={{height: '400px', margin: '0 auto'}} /></Col>
 
             })
-            var skus = jsonData.skus_set.map(function(val, index){
-                return <tr key={index}><th>{val.color}</th><th>{val.size === null ? '--':val.size}</th><th>{val.price === null ? '--': val.price}</th><th>{val.availability ? 'available':'out of stock'}</th></tr>
-            })
-            let price = jsonData.skus_set[0].price
+            let skus = []
+            let price = 'NA'
+            if(jsonData.skus_set.length > 0){
+
+                skus = jsonData.skus_set.map(function(val, index){
+                    return <tr key={index}><th>{val.color}</th><th>{val.size === null ? '--':val.size}</th><th>{val.price === null ? '--': val.price}</th><th>{val.availability ? 'available':'out of stock'}</th></tr>
+                })
+                price = jsonData.skus_set[0].price
+            }
             console.log(jsonData.skus_set)
-            that.setState({
-                product: jsonData,
-                imageBoxes,
-                price,
-                skus
-            })
+                that.setState({
+                    product: jsonData,
+                    imageBoxes,
+                    price,
+                    skus
+                })
         })
     }
 

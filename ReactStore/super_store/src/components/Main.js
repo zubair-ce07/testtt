@@ -5,7 +5,8 @@ import App from './App'
 import Login from './LogInOut/Login'
 import SelectedBrand from './SelectedBrand'
 import ItemDetail from './ItemDetail/ItemDetail'
-import AddBrandForm from './AddBrandForm'
+import AddBrandForm from './Forms/AddBrandForm'
+import AddProductForm from './Forms/AddProductForm'
 
 const MainApp = (props) => {
     return (
@@ -30,6 +31,10 @@ const MainApp = (props) => {
             <Route
                 path='/brand/update/:id'
                 component={AddBrandForm}
+            />
+            <Route
+                path='/product/update/:id'
+                component={AddProductForm}
             />
         </div>
     )

@@ -34,6 +34,13 @@ class ProductSerializer(serializers.ModelSerializer):
                   'source_url', 'images', 'skus_set')
 
 
+class ProductOnlySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Product
+        fields = ('product_id', 'product_name', 'category', 'source_url')
+
+
 class BrandOnlySerializer(serializers.ModelSerializer):
 
     class Meta:

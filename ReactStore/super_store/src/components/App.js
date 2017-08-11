@@ -6,7 +6,7 @@ import Navigation from './Common/Header'
 import Footer from './Common/Footer'
 import GridInstance from './Grid/GridInstance'
 import {loggedIn, listItems} from './authentication/auth'
-import AddBrandForm from './AddBrandForm'
+import AddBrandForm from './Forms/AddBrandForm'
 import {getOrDeleteBrand} from './authentication/auth'
 
 var toastr = require('toastr')

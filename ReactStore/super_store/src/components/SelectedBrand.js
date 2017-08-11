@@ -6,6 +6,7 @@ import Footer from './Common/Footer'
 import GridInstance from './Grid/GridInstance'
 import {Route} from 'react-router-dom'
 import {loggedIn, listItems} from './authentication/auth'
+import AddProductForm from './Forms/AddProductForm'
 
 
 class SelectedBrand extends React.Component {
@@ -43,6 +44,7 @@ class SelectedBrand extends React.Component {
         return(
             <div>
                 <Route component={Navigation} />
+                <AddProductForm brand={this.props.match.params.name}/>
                 <h1 className="text-center">
                     Super Store's reknowned Products of {this.state.brand.name}
                 </h1>
