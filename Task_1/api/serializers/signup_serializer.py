@@ -3,11 +3,11 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueValidator
 
-from users.models import UserProfile
 from api.serializers.edit_serializer import EditSerializer
+from users.models import UserProfile
 
 
 class SignupSerializer(EditSerializer):

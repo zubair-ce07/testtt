@@ -1,31 +1,17 @@
 from django.contrib.auth import authenticate
-from django.shortcuts import redirect
-from django.conf import settings
 from django.contrib.auth.models import User
+from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import api_view
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework import status
-from rest_framework.permissions import AllowAny
-from rest_framework_jwt.settings import api_settings
-# from django.core.files.base import ContentFile
-# from django.core.files.storage import default_storage
-# from django.db.models.fields.files import FileField, ImageFieldFile
-# from django_countries.fields import Country
 
 from users.models import UserProfile
-from viewset_api.serializers import UserSerializer, LoginSerializer, SignupSerializer
-
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-max_age = int(settings.JWT_AUTH.get('JWT_EXPIRATION_DELTA').total_seconds())
-
-
-def get_token(user):
-    payload = jwt_payload_handler(user)
-    token = jwt_encode_handler(payload)
-    return token
+from viewset_api.serializers import UserSerializer, LoginSerializer, SignupSerializer, UserProfileSerializer
+from viewset_api.utils import response_json, get_token
+from viewset_api.permissions import IsOwnerOrReadOnly
 
 
 @api_view(['GET'])
@@ -40,23 +26,27 @@ class UserViewSet(viewsets.ModelViewSet):
         Method: 'GET'
 
         Response Body:
-            [
-                {
-                    "url": "generic_api/[0-9]+(user_id)/details/",
+            {
+                "success": true,
+                "message": null,
+                "response": {
+                    "url": "http://localhost:8000/viewset_api/[0-9]+/details/",
                     "username": "username",
                     "email": "email address",
                     "first_name": "First Name",
                     "last_name": "Last Name",
-                    "phone_number": "Phone number with at least 9 numbers",
-                    "country": "2 digit country code",
-                    "image": "path for image file on server",
-                    "address": "Address"
+                     "userprofile": {
+                        "phone_number": "(+)123456789",
+                        "country": "AZ",
+                        "image": "users/user.jpg",
+                        "address": "Address"
+                    }
                 }
                 {
-                    .......
+                    ......
                 }
-                .....
-            ]
+                .......
+            }
 
         Details API: 'viewset_api/[0-9]+(user_id)/details/'
 
@@ -65,51 +55,70 @@ class UserViewSet(viewsets.ModelViewSet):
             GET:
                 Response Body:
                 {
-                    "url": "generic_api/[0-9]+(user_id)/details/",
-                    "username": "username",
-                    "email": "email address",
-                    "first_name": "First Name",
-                    "last_name": "Last Name",
-                    "phone_number": "Phone number with at least 9 numbers",
-                    "country": "2 digit country code",
-                    "image": "path for image file on server",
-                    "address": "Address"
+                    "success": true,
+                    "message": null,
+                    "response": {
+                        "url": "http://localhost:8000/viewset_api/[0-9]+/details/",
+                        "username": "username",
+                        "email": "email address",
+                        "first_name": "First Name",
+                        "last_name": "Last Name",
+                        "userprofile": {
+                            "phone_number": "(+)123456789",
+                            "country": "AZ",
+                            "image": "users/user.jpg",
+                            "address": "Address"
+                        }
                 }
+}
 
             PUT, PATCH:
                 Response Body:
                 {
-                    "url": "generic_api/[0-9]+(user_id)/details/",
-                    "username": "username",
-                    "email": "email address",
-                    "first_name": "First Name",
-                    "last_name": "Last Name",
-                    "phone_number": "Phone number with at least 9 numbers",
-                    "country": "2 digit country code",
-                    "image": "path for image file on server",
-                    "address": "Address"
+                    "success": true,
+                    "message": "User successfully updated",
+                    "response": {
+                        "url": "http://localhost:8000/viewset_api/[0-9]+/details/",
+                        "username": "username",
+                        "email": "email address",
+                        "first_name": "First Name",
+                        "last_name": "Last Name",
+                        "userprofile": {
+                            "phone_number": "(+)123456789",
+                            "country": "AZ",
+                            "image": "users/user.jpg",
+                            "address": "Address"
+                        }
                 }
 
             DELETE:
             {
-                Redirect to login page
+                "success": True,
+                "message='User successfully deleted',
+                "response": null,
             }
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (IsOwnerOrReadOnly,)
+
+    def list(self, request, *args, **kwargs):
+        response = super(UserViewSet, self).list(request, *args, **kwargs)
+        return Response(response_json(True, response.data, message=None), status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super(UserViewSet, self).retrieve(request, *args, **kwargs)
+        return Response(response_json(True, response.data, message=None), status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
-        if request.user.id != int(kwargs.get('pk')):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.update(request.user, serializer.validated_data)
-            return super(UserViewSet, self).update(request, *args, **kwargs)
-        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        response = super(UserViewSet, self).update(request, *args, **kwargs)
+        return Response(response_json(True, response.data, message='User successfully updated'),
+                        status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         super(UserViewSet, self).destroy(request, *args, **kwargs)
-        response = redirect('viewset:login')
+        response = Response(response_json(True, None, message='User successfully deleted'),
+                            status=status.HTTP_204_NO_CONTENT)
         response.delete_cookie('token')
         return response
 
@@ -122,93 +131,126 @@ class Login(viewsets.GenericViewSet):
     GET:
     Response Body:
         {
-            "username": "",
-            "password": ""
+            "success": true,
+            "message": null,
+            "response": {
+                "username": "",
+                "password": ""
+            }
         }
     POST:
     Response Body:
     {
-        Redirect to details page
+        "success": true,
+        "message": "User has been logged in",
+        "response": {
+            "username": "fakhar",
+            "password": "csgogodancer",
+            "token": "JWT token"
+        }
     }
     """
     permission_classes = (AllowAny,)
+    authentication_classes = (BasicAuthentication,)
     serializer_class = LoginSerializer
 
-    def retrieve(self, request):
-        if request.user.is_authenticated:
-            return redirect('viewset:details', pk=request.user.userprofile.id)
+    def get(self, request):
         serializer = self.serializer_class()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(response_json(True, serializer.data, None), status=status.HTTP_200_OK)
 
-    def submit(self, request):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             user = authenticate(username=serializer.validated_data.get('username'),
                                 password=serializer.validated_data.get('password'))
             if user and user.is_active:
-                response = redirect('viewset:details', pk=user.userprofile.id)
-                response.set_cookie('token', get_token(user), max_age=max_age)
+                token = get_token(user)
+                serializer.validated_data.update({'token': token})
+                response = Response(response_json(True, serializer.validated_data, message='User has been logged in'),
+                                    status=status.HTTP_200_OK)
+                response.set_cookie('token', token)
                 return response
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(response_json(False, serializer.data, message='Invalid credentials'),
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class Signup(viewsets.GenericViewSet):
     """
-        API: 'viewset/signup/'
+        API: 'viewset_api/signup/'
 
         Method: 'GET, POST'
 
         GET:
         Response body:
         {
-        "username": "",
-        "password": "",
-        "password2": "",
-        "email": "",
-        "first_name": "",
-        "last_name": "",
-        "phone_number": "",
-        "country": "",
-        "image": file upload button,
-        "address": ""
+            "success": true,
+            "message": null,
+            "response": {
+                "username": "",
+                "password": "",
+                "password2": "",
+                "email": "",
+                "first_name": "",
+                "last_name": "",
+                "userprofile": {
+                    "phone_number": "",
+                    "country": null,
+                    "image": null,
+                    "address": ""
+                }
+            }
         }
 
         POST:
+        Response Body:
         {
-        Either same data with errors or redirect to user details page
-        username": "",
-        "password": "",
-        "password2": "",
-        "email": "",
-        "first_name": "",
-        "last_name": "",
-        "phone_number": "",
-        "country": "",
-        "image": file upload button,
-        "address": ""
+            "success": true/false,
+            "message": null/'User has been successfully created',
+            "response": {
+                "token":"JWT Token"
+            }
         }
         """
     permission_classes = (AllowAny,)
+    authentication_classes = (BasicAuthentication,)
     serializer_class = SignupSerializer
 
-    def retrieve(self, request):
-        if request.user.is_authenticated:
-            return redirect('viewset:details', pk=request.user.id)
+    def get(self, request):
         serializer = self.serializer_class()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(response_json(True, serializer.data, None), status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.save()
-            response = redirect('viewset:details', pk=user.id)
-            response.set_cookie('token', get_token(user), max_age=max_age)
+            token = get_token(user)
+            response = Response(
+                response_json(True, {'token': token}, message='User has been successfully created'),
+                status=status.HTTP_200_OK)
+            response.set_cookie('token', token)
             return response
-        return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Logout(viewsets.GenericViewSet):
+    """
+    API: 'viewset/logout/'
+
+        Method: 'GET'
+
+        GET:
+        Response body:
+        {
+            "success": true/false,
+            "message": "User has been successfully logged out."/ "No user logged in to log out.",
+            "response": null
+        }
+    """
+
     def get(self, request):
-        response = redirect('viewset:login')
-        response.delete_cookie('token')
-        return response
+        if request.user.is_authenticated:
+            response = Response(response_json(True, None, message='User has been successfully logged out.'),
+                                status=status.HTTP_204_NO_CONTENT)
+            response.delete_cookie('token')
+            return response
+        return Response(response_json(False, None, message='No user logged in to log out.'),
+                        status=status.HTTP_400_BAD_REQUEST)

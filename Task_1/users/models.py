@@ -11,7 +11,7 @@ from django_countries.fields import CountryField, Country, countries
 from users.managers import UserProfileManager
 
 message = "Phone number must be entered in the format: '+9999999999'."
-phone_validator = RegexValidator(regex=r'^\+?\d{10,15}$', message=message)
+phone_validator = RegexValidator(regex=r'^\+?\d{9,15}$', message=message)
 
 
 class UserProfile(models.Model):

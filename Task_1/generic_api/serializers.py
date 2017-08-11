@@ -14,7 +14,7 @@ phone_validator = RegexValidator(regex=r'^\+?\d{9,15}$', message=message)
 
 class UserSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='generic:details')
-    phone_number = serializers.CharField(source='userprofile.phone_number', validators=[phone_validator], max_length=15,
+    phone_number = serializers.CharField(source='userprofile.phone_number', max_length=15,
                                          allow_blank=True, required=False)
     country = CountryField(source='userprofile.country', allow_blank=True, required=False)
     image = serializers.ImageField(allow_empty_file=True, source='userprofile.image', use_url=False, allow_null=True)
@@ -23,12 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('url', 'username', 'email', 'first_name', 'last_name', 'phone_number', 'country', 'image', 'address')
-        read_only_fields = (
-            'id', 'username', 'user_permissions', 'date_joined', 'last_login', 'groups', 'is_superuser', 'is_staff',
-            'is_active')
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
 
 
 class SignupSerializer(UserSerializer):

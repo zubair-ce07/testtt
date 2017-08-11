@@ -3,7 +3,7 @@ import datetime
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db import transaction
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny, IsAuthenticated
