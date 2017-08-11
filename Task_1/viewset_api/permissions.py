@@ -5,6 +5,6 @@ class IsOwnerOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         return (
             request.method in SAFE_METHODS or
-            request.user and
-            request.user.id == int(view.kwargs.get('pk'))
+            request.user #and
+            # request.user.id == int(view.kwargs.get('pk'))
         )

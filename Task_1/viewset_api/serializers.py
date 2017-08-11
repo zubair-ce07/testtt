@@ -18,12 +18,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # url = serializers.HyperlinkedIdentityField(view_name='user-detail')
+    url = serializers.HyperlinkedIdentityField(view_name='viewset:user-detail')
     userprofile = UserProfileSerializer()
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'userprofile')
+        fields = ('url','username', 'email', 'first_name', 'last_name', 'userprofile')
         read_only_fields = ('username',)
 
     def update(self, instance, validated_data):
