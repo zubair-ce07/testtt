@@ -5,25 +5,27 @@ import csv
 import argparse
 
 
-class Assignment:
+class WeatherReport:
     def __init__(self):
         pass
 
-    def get_file(self, path, filename):
-        self.filename = filename
+    def get_file(self, path, filename_string):
+        self.filename_string = filename_string
         self.path = path
         list_file = []
         os.chdir(path)
-        for f in glob.glob("*" + filename + "*"):
+        sammy_string = "{}"+filename_string+"{}"
+        filename = sammy_string.format("*", "*")
+        for f in glob.glob(filename):
             list_file.append(f)
-        return self.find_report_year(list_file)
+        return list_file
 
-    def average_of(self, lst, stra, strb):
+    def average_of(self, list_temp, stra, strb):
         addition = 0
-        for i in range(len(lst)):
-            if lst[i] != '':
-                addition = addition + lst[i]
-        avg = addition / len(lst)
+        for i in range(len(list_temp)):
+            if list_temp[i] != '':
+                addition = addition + list_temp[i]
+        avg = addition / len(list_temp)
         print(stra, avg, strb)
 
     def graph_chart(self, high_temlist, low_templist, listdate):
@@ -72,12 +74,14 @@ class Assignment:
                 list_data[i] = int(list_data[i])
         return list_data
 
-    def find_report_year(self, list_file):
-        self.file_list = list_file
+    def find_report_year(self, path, filename_string):
+        self.filename_string = filename_string
+        self.path = path
         list_date = []
         maxtamp_year = []
         mintamp_year = []
         maxhumi_year = []
+        list_file = self.get_file(path, filename_string)
         for i in range(len(list_file)):
             with open(list_file[i], 'r') as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -127,25 +131,21 @@ class Assignment:
         print("Highest:", max(maxhumi_year), "%", "on",
               list_date[maxhumi_year.index(min(maxhumi_year))])
 
-    def find_report_task2(self, path, filename):
+    def find_report_month(self, path, filename_string):
         self.path = path
-        self.filename = filename
-        complete_data = []
+        self.filename_string = filename_string
         high_temp_month = []
         low_temp_month = []
         high_humidity_month = []
         date_list = []
-        file_list = []
-        os.chdir(path)
-        for f in glob.glob("*" + filename + "*"):
-            file_list.append(f)
-            with open(file_list[0], 'r') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    date_list.append(row['PKT'])
-                    high_temp_month.append(row['Max TemperatureC'])
-                    low_temp_month.append(row['Min TemperatureC'])
-                    high_humidity_month.append(row['Max Humidity'])
+        list_file = self.get_file(path, filename_string)
+        with open(list_file[0], 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                date_list.append(row['PKT'])
+                high_temp_month.append(row['Max TemperatureC'])
+                low_temp_month.append(row['Min TemperatureC'])
+                high_humidity_month.append(row['Max Humidity'])
             self.making_list(high_temp_month)
             self.making_list(low_temp_month)
             self.making_list(high_humidity_month)
@@ -153,46 +153,36 @@ class Assignment:
         self.average_of(low_temp_month, "Avg Lowest Temprature  ", "C")
         self.average_of(high_humidity_month, "Average Mean Humidity ", "%")
 
-    def find_report_task3(self, path, filename):
+    def findreport_month_graph(self, path, filename_string):
         self.path = path
-        self.filename = filename
-        complete_data = []
+        self.filename_string = filename_string
         high_temp_month = []
         low_temp_month = []
-        high_humidity_month = []
         date_list = []
-        file_list = []
-        os.chdir(path)
-        for f in glob.glob("*" + filename + "*"):
-            file_list.append(f)
-            with open(file_list[0], 'r') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    date_list.append(row['PKT'])
-                    high_temp_month.append(row['Max TemperatureC'])
-                    low_temp_month.append(row['Min TemperatureC'])
+        list_file = self.get_file(path, filename_string)
+        with open(list_file[0], 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                date_list.append(row['PKT'])
+                high_temp_month.append(row['Max TemperatureC'])
+                low_temp_month.append(row['Min TemperatureC'])
             self.making_list(high_temp_month)
             self.making_list(low_temp_month)
         self.graph_chart(high_temp_month, low_temp_month, date_list)
 
-    def find_report_task5(self, path, filename):
+    def findreport_month_graph1(self, path, filename_string):
         self.path = path
-        self.filename = filename
-        complete_data = []
+        self.filename_string = filename_string
         high_temp_month = []
         low_temp_month = []
-        high_humidity_month = []
         date_list = []
-        file_list = []
-        os.chdir(path)
-        for f in glob.glob("*" + filename + "*"):
-            file_list.append(f)
-            with open(file_list[0], 'r') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    date_list.append(row['PKT'])
-                    high_temp_month.append(row['Max TemperatureC'])
-                    low_temp_month.append(row['Min TemperatureC'])
+        list_file = self.get_file(path, filename_string)
+        with open(list_file[0], 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                date_list.append(row['PKT'])
+                high_temp_month.append(row['Max TemperatureC'])
+                low_temp_month.append(row['Min TemperatureC'])
             self.making_list(high_temp_month)
             self.making_list(low_temp_month)
         self.graph_chart1(high_temp_month, low_temp_month, date_list)
@@ -206,7 +196,7 @@ class Assignment:
         filename = year + '_' + splits[0]
         return filename
 if __name__ == '__main__':
-    class_obj = Assignment()
+    class_obj = WeatherReport()
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str)
     parser.add_argument("-e", type=str)
@@ -214,30 +204,30 @@ if __name__ == '__main__':
     parser.add_argument("-c", type=str)
     parser.add_argument("-d", type=str)
     args = parser.parse_args()
-    if(args.e is not None and args.a is not None and args.c is not None and args.d is not None):
+    if(args.e and args.a and args.c and args.d):
         print("\nReport of complete year\n")
-        class_obj.get_file(args.path, args.e)
+        class_obj.find_report_year(args.path, args.e)
         print("\nReport of complete month\n\n")
         filename = class_obj.find_filename(args.a)
-        class_obj.find_report_task2(args.path, filename)
+        class_obj.find_report_month(args.path, filename)
         print("\nReport of complete month in Graph\n\n")
         filename = class_obj.find_filename(args.c)
-        class_obj.find_report_task3(args.path, filename)
+        class_obj.findreport_month_graph(args.path, filename)
         print("\nReport of month in Graph by Low and High Temprature\n\n")
         filename = class_obj.find_filename(args.d)
-        class_obj.find_report_task5(args.path, filename)
+        class_obj.findreport_month_graph1(args.path, filename)
     else:
-        if args.e is not None:
-            class_obj.get_file(args.path, args.e)
-        elif args.a is not None:
+        if args.e:
+            class_obj.find_report_year(args.path, args.e)
+        elif args.a:
             filename = class_obj.find_filename(args.a)
-            class_obj.find_report_task2(args.path, filename)
-        elif args.c is not None:
+            class_obj.find_report_month(args.path, filename)
+        elif args.c:
             filename = class_obj.find_filename(args.c)
-            class_obj.find_report_task3(args.path, filename)
-        elif args.d is not None:
+            class_obj.findreport_month_graph(args.path, filename)
+        elif args.d:
             filename = class_obj.find_filename(args.d)
-            class_obj.find_report_task5(args.path, filename)
+            class_obj.findreport_month_graph1(args.path, filename)
         else:
-            print("Plz Vlaid arguments")
+            print("Plz Valid arguments")
 
