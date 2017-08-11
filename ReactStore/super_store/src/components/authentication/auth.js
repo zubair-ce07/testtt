@@ -94,7 +94,11 @@ export function getOrDeleteBrand(pk, method, callback){
     headers,
     mode: "cors",
     redirect: "follow",
-  }).then(response => response.json()).then(callback);
+  }).then(response => {
+      if(response.status === 200){
+        return response.json()
+      }
+    }).then(callback);
 }
 
 export function getOrDeleteProduct(pk, method, callback){
