@@ -4,25 +4,19 @@ import "./VideoPlayer.css";
 
 class VideoPlayer extends React.Component {
   render() {
-    if (this.props.playVid) {
-      return (
-        <div className="player-container">
-          <iframe
-            title="playerFrame"
-            className="player"
-            src={
-              "https://www.youtube.com/embed/" +
-              this.props.vidId +
-              "?autoplay=1"
-            }
-            frameBorder="0"
-            allowFullScreen
-          />
-        </div>
-      );
-    } else {
-      return null;
-    }
+    return (
+      <div className="player-container">
+        <iframe
+          title="playerFrame"
+          className="player"
+          src={
+            "https://www.youtube.com/embed/" + this.props.vidId + "?autoplay=1"
+          }
+          frameBorder="0"
+          allowFullScreen
+        />
+      </div>
+    );
   }
 }
 

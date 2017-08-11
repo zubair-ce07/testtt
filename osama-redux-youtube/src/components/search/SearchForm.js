@@ -2,25 +2,25 @@ import React, { Component } from "react";
 import "./SearchForm.css";
 
 class SearchForm extends Component {
+  handleSubmit = evt => {
+    evt.preventDefault();
+    const inputValue = evt.target.elements.query.value;
+    if (!inputValue.trim()) {
+      return;
+    }
+    this.props.startSearchRequest(inputValue);
+  };
+
   render() {
     return (
       <div className="search-container">
         <form
           id="search-form"
           className="search-form"
-          onSubmit={evt => {
-            evt.preventDefault();
-            if (!this.input.value.trim()) {
-              return;
-            }
-            this.props.startSearchRequest(this.input.value);
-            this.input.value = "";
-          }}
+          onSubmit={evt => this.handleSubmit(evt)}
         >
           <input
-            ref={node => {
-              this.input = node;
-            }}
+            name="query"
             className="search-input"
             type="text"
             placeholder="Search"

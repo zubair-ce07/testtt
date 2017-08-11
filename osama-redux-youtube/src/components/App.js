@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import "./App.css";
 import SearchForm from "./search/SearchFormContainer";
 import ResultContainer from "./results/ResultContainer";
@@ -11,11 +12,18 @@ class App extends Component {
         <div className="App-header">
           <SearchForm />
         </div>
-        <VideoContainer />
-        <ResultContainer />
+        {this.props.playVid && <VideoContainer />}
+        {this.props.results.length > 0 && <ResultContainer />}
       </div>
     );
   }
 }
 
-export default App;
+function mapStateToProps(state) {
+  return {
+    playVid: state.playVid,
+    results: state.results
+  };
+}
+
+export default connect(mapStateToProps, null)(App);
