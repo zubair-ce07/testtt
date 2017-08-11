@@ -7,7 +7,7 @@
             <h2>Books</h2>
         </div>
         <div class="col-sm-3">
-             {% include "books/login_template.html" %}
+            {% include "books/login_template.html" %}
         </div>
     </div>
     <a href="{% url 'books:book_form' %}" class="btn btn-primary "><h4>Add New Book</h4></a>
@@ -43,7 +43,8 @@
                     </ul>
                 </td>
                 <td>
-                    <button type="button" data-type="book" data-id="{{ book.id }}" class="btn btn-danger delete">
+                    <button type="button" data-type="book" data-url="{% url 'books:delete_book' %}"
+                            data-id="{{ book.id }}" class="btn btn-danger delete">
                         Delete
                     </button>
                 </td>
@@ -51,8 +52,7 @@
         {% endfor %}
         <tbody>
     </table>
-
     {% block scripts %}
-        <script src="{% static 'books/table.js' %}"></script>
+        <script src="{% static 'books/items.js' %}"></script>
     {% endblock %}
 {% endblock %}

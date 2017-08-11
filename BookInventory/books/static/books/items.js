@@ -1,6 +1,7 @@
 $(".delete").click(function (e) {
         var id = $(this).data("id"),
-            text = $(this).data("type");
+            text = $(this).data("type"),
+            url = $(this).data("url");
         $.confirm({
             title: 'Confirmation!',
             content: 'Are you sure you want to delete this?',
@@ -8,7 +9,7 @@ $(".delete").click(function (e) {
                 confirm: function () {
                     $.ajax({
                         type: 'POST',
-                        url: 'delete/',
+                        url: url,
                         data: {
                             "id": id,
                             "type": text
@@ -18,7 +19,7 @@ $(".delete").click(function (e) {
                                 $('table tr#' + id).remove();
                             }
                             else {
-                                $.alert("Sorry we cant find the record");
+                                $.alert(response);
                             }
                         },
                         failure: function () {

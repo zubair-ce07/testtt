@@ -51,7 +51,8 @@
                     </ul>
                 </td>
                 <td>
-                    <button type="button" data-type="author" data-id="{{ author.id }}" class="btn btn-danger delete">
+                    <button type="button" data-type="author" data-id="{{ author.id }}"
+                            data-url="{% url 'books:delete_author' %}" class="btn btn-danger delete">
                         Delete
                     </button>
                 </td>
@@ -60,6 +61,6 @@
         </tbody>
     </table>
     {% block scripts %}
-        <script src="{% static 'books/table.js' %}"></script>
+        <script src="{% static 'books/items.js' %}"></script>
     {% endblock %}
 {% endblock %}

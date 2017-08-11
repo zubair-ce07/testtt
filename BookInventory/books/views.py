@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -88,20 +88,23 @@ def book_detail(request, book_id):
 
 @method_decorator(csrf_exempt, name='dispatch')
 def item_delete(request):
-    item_id = request.POST['id']
-    type_del = request.POST['type']
-    try:
-        if type_del == "book":
-            Book.objects.filter(id=item_id).delete()
-        elif type_del == "author":
-            Author.objects.filter(id=item_id).delete()
-        elif type_del == "publisher":
-            Publisher.objects.filter(id=item_id).delete()
-        else:
-            raise ObjectDoesNotExist
-    except ObjectDoesNotExist:
-        return HttpResponse("fail")
-    return HttpResponse("done")
+    if request.user.is_authenticated:
+        item_id = request.POST['id']
+        type_del = request.POST['type']
+        try:
+            if type_del == "book":
+                Book.objects.filter(id=item_id).delete()
+            elif type_del == "author":
+                Author.objects.filter(id=item_id).delete()
+            elif type_del == "publisher":
+                Publisher.objects.filter(id=item_id).delete()
+            else:
+                raise ObjectDoesNotExist
+        except ObjectDoesNotExist:
+            return HttpResponse("Cant find the record")
+        return HttpResponse("done")
+    else:
+        return HttpResponse("Login Required to Delete any Item")
 
 
 def author_detail(request, author_id):
