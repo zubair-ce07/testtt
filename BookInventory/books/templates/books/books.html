@@ -1,4 +1,5 @@
 {% extends 'books/base.html' %}
+{% load static %}
 {% block title %}Books{% endblock %}
 {% block content %}
     <div class="well row">
@@ -6,9 +7,10 @@
             <h2>Books</h2>
         </div>
         <div class="col-sm-3">
-            <a href="{% url 'books:book_form' %}" class="btn btn-primary "><h3>Add New Book</h3></a>
+            {% include "books/login_template.html" %}
         </div>
     </div>
+    <a href="{% url 'books:book_form' %}" class="btn btn-primary "><h4>Add New Book</h4></a>
     <br>
     <br>
     <table class="table table-bordered" width="100%">
@@ -20,11 +22,12 @@
             <th>Publisher</th>
             <th>Date Published</th>
             <th>Authors</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
         {% for book in books_list %}
-            <tr>
+            <tr id="{{ book.id }}">
                 <th scope="row">{{ forloop.counter }}</th>
                 <td><a href="{% url 'books:book_detail' book.id %}">{{ book.title }}</a></td>
                 <td>{{ book.genre }}</td>
@@ -39,8 +42,17 @@
                         {% endfor %}
                     </ul>
                 </td>
+                <td>
+                    <button type="button" data-type="book" data-url="{% url 'books:delete_book' %}"
+                            data-id="{{ book.id }}" class="btn btn-danger delete">
+                        Delete
+                    </button>
+                </td>
             </tr>
         {% endfor %}
         <tbody>
     </table>
+    {% block scripts %}
+        <script src="{% static 'books/items.js' %}"></script>
+    {% endblock %}
 {% endblock %}

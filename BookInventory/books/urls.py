@@ -25,3 +25,9 @@ urlpatterns += [
     url(r'^author/(?P<author_id>[0-9]+)/$', views.author_detail, name='author_detail'),
     url(r'^publisher/(?P<publisher_id>[0-9]+)/$', views.publisher_detail, name='publisher_detail'),
 ]
+
+urlpatterns += [
+    url(r'^books/delete/$', views.item_delete, name='delete_book'),
+    url(r'^authors/delete/$', views.item_delete, name='delete_author'),
+    url(r'^publishers/delete/$', views.item_delete, name='delete_publisher'),
+]

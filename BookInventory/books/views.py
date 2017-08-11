@@ -2,9 +2,12 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 from books.forms import BookForm, AuthorForm, PublisherForm
 from books.models import Book, Author, Publisher
@@ -81,6 +84,27 @@ def book_detail(request, book_id):
     book = get_object_or_404(Book, pk=book_id)
     context = {'book': book}
     return render(request, 'books/book_details.html', context)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+def item_delete(request):
+    if request.user.is_authenticated:
+        item_id = request.POST['id']
+        type_del = request.POST['type']
+        try:
+            if type_del == "book":
+                Book.objects.filter(id=item_id).delete()
+            elif type_del == "author":
+                Author.objects.filter(id=item_id).delete()
+            elif type_del == "publisher":
+                Publisher.objects.filter(id=item_id).delete()
+            else:
+                raise ObjectDoesNotExist
+        except ObjectDoesNotExist:
+            return HttpResponse("Cant find the record")
+        return HttpResponse("done")
+    else:
+        return HttpResponse("Login Required to Delete any Item")
 
 
 def author_detail(request, author_id):
