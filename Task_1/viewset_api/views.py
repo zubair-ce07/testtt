@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.db import transaction
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import BasicAuthentication
@@ -15,11 +16,39 @@ from viewset_api.utils import response_json, get_token
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-        List API: 'viewset_api/users/'
+    List API: 'viewset_api/users/'
 
-        Method: 'GET'
+    Method: 'GET'
 
-        Response Body:
+    Response Body:
+        {
+            "success": true,
+            "message": null,
+            "response": {
+                "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
+                "username": "username",
+                "email": "email address",
+                "first_name": "First Name",
+                "last_name": "Last Name",
+                 "userprofile": {
+                    "phone_number": "(+)123456789",
+                    "country": "AZ",
+                    "image": "users/user.jpg",
+                    "address": "Address"
+                }
+            }
+            {
+                ......
+            }
+            .......
+        }
+
+    Details API: 'viewset_api/users/[0-9]+(user_id)/'
+
+    Methods: 'GET, PUT, PATCH, DELETE'
+
+        GET:
+            Response Body:
             {
                 "success": true,
                 "message": null,
@@ -29,68 +58,40 @@ class UserViewSet(viewsets.ModelViewSet):
                     "email": "email address",
                     "first_name": "First Name",
                     "last_name": "Last Name",
-                     "userprofile": {
+                    "userprofile": {
                         "phone_number": "(+)123456789",
                         "country": "AZ",
                         "image": "users/user.jpg",
                         "address": "Address"
                     }
-                }
-                {
-                    ......
-                }
-                .......
             }
-
-        Details API: 'viewset_api/users/[0-9]+(user_id)/'
-
-        Methods: 'GET, PUT, PATCH, DELETE'
-
-            GET:
-                Response Body:
-                {
-                    "success": true,
-                    "message": null,
-                    "response": {
-                        "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
-                        "username": "username",
-                        "email": "email address",
-                        "first_name": "First Name",
-                        "last_name": "Last Name",
-                        "userprofile": {
-                            "phone_number": "(+)123456789",
-                            "country": "AZ",
-                            "image": "users/user.jpg",
-                            "address": "Address"
-                        }
-                }
 }
 
-            PUT, PATCH:
-                Response Body:
-                {
-                    "success": true,
-                    "message": "User successfully updated",
-                    "response": {
-                        "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
-                        "username": "username",
-                        "email": "email address",
-                        "first_name": "First Name",
-                        "last_name": "Last Name",
-                        "userprofile": {
-                            "phone_number": "(+)123456789",
-                            "country": "AZ",
-                            "image": "users/user.jpg",
-                            "address": "Address"
-                        }
-                }
-
-            DELETE:
+        PUT, PATCH:
+            Response Body:
             {
-                "success": True,
-                "message='User successfully deleted',
-                "response": null,
+                "success": true,
+                "message": "User successfully updated",
+                "response": {
+                    "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
+                    "username": "username",
+                    "email": "email address",
+                    "first_name": "First Name",
+                    "last_name": "Last Name",
+                    "userprofile": {
+                        "phone_number": "(+)123456789",
+                        "country": "AZ",
+                        "image": "users/user.jpg",
+                        "address": "Address"
+                    }
             }
+
+        DELETE:
+        {
+            "success": True,
+            "message='User successfully deleted',
+            "response": null,
+        }
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -138,8 +139,8 @@ class Login(viewsets.GenericViewSet):
         "success": true/false,
         "message": "User has been logged in"/"Invalid Credentials",
         "response": {
-            "username": "fakhar",
-            "password": "csgogodancer",
+            "username": "username",
+            "password": "password",
             "token": "JWT token"
         }
     }
@@ -198,12 +199,22 @@ class Signup(CreateModelMixin, viewsets.GenericViewSet):
         POST:
         Response Body:
         {
-            "success": true/false,
-            "message": null/'User has been successfully created',
+            "success": true,
+            "message": "User has been successfully created",
             "response": {
-                "token":"JWT Token"
+                "username": "Username",
+                "password": "Hashed Password",
+                "email": "Email Address",
+                "first_name": "First Name",
+                "last_name": "Last Name",
+                "userprofile": {
+                    "phone_number": "(+)123456789",
+                    "country": "AZ",
+                    "image": "users/image.jpg",
+                    "address": "Address"
+                },
+                    "token": "JWT Token"
             }
-        }
         """
     permission_classes = (AllowAny,)
     authentication_classes = (BasicAuthentication,)
@@ -216,6 +227,7 @@ class Signup(CreateModelMixin, viewsets.GenericViewSet):
         serializer = self.serializer_class()
         return Response(response_json(True, serializer.data, None), status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         response = super(Signup, self).create(request, *args, **kwargs)
         token = get_token(self.get_object(response.data.get('username')))

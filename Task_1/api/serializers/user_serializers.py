@@ -4,7 +4,7 @@ from rest_framework import serializers
 from users.models import UserProfile
 
 
-class UserListSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.HyperlinkedModelSerializer):
     username = serializers.CharField(source='user.username')
     email = serializers.EmailField(source='user.email')
     first_name = serializers.CharField(source='user.first_name')

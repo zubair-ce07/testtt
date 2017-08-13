@@ -5,8 +5,8 @@ from api import views
 app_name = 'api'
 
 urlpatterns = [
-    url(r'^list/$', views.UserList.as_view(), name='list'),
-    url(r'^detail/$', views.UserDetail.as_view(), name='detail'),
+    url(r'^list_api/$', views.UserListAPI.as_view(), name='list-api'),
+    url(r'^details_api/$', views.UserDetailAPI.as_view(), name='details-api'),
     url(r'^details/$', views.UserProfileDetails.as_view(), name='details'),
     url(r'^edit/$', views.UserProfileEdit.as_view(), name='edit'),
     url(r'^signup/$', views.SignupView.as_view(), name='signup'),
