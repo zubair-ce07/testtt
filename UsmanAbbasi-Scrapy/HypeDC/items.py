@@ -21,3 +21,14 @@ class HypedcItem(scrapy.Item):
     old_price = scrapy.Field()
     color_name = scrapy.Field()
     image_urls = scrapy.Field()
+
+
+class LululemonItem(scrapy.Item):
+    url = scrapy.Field()
+    item_id = scrapy.Field()
+    name = scrapy.Field()
+    brand = scrapy.Field()
+    description = scrapy.Field()
+    currency = scrapy.Field()
+    image_urls = scrapy.Field()
+    sku = scrapy.Field()

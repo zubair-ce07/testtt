@@ -16,7 +16,6 @@ SPIDER_MODULES = ['HypeDC.spiders']
 NEWSPIDER_MODULE = 'HypeDC.spiders'
 
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'HypeDC (+http://www.yourdomain.com)'
 
