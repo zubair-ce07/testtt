@@ -15,7 +15,7 @@ BOT_NAME = 'HypeDC'
 SPIDER_MODULES = ['HypeDC.spiders']
 NEWSPIDER_MODULE = 'HypeDC.spiders'
 
-ITEM_PIPELINES = {'HypeDC.pipelines.HypedcPipeline': 1}
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'HypeDC (+http://www.yourdomain.com)'

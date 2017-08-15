@@ -11,6 +11,7 @@ class HypedcSpider(CrawlSpider):
     name = 'hypedc'
     allowed_domains = ['hypedc.com']
     start_urls = ['http://hypedc.com/']
+    custom_settings = {'ITEM_PIPELINES' : {'HypeDC.pipelines.HypedcPipeline': 1}}
 
     rules = (
         Rule(LinkExtractor(restrict_css=('li[id^=navbar] a',), deny=('news|faq|legals|contacts'))),
