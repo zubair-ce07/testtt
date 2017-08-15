@@ -79,6 +79,15 @@ TEMPLATES = [
     },
 ]
 
+TIME_ZONE = 'Asia/Karachi'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S.%fZ",
+}
+
 WSGI_APPLICATION = 'djangorest.wsgi.application'
 
 
@@ -128,6 +137,9 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+MEDIA_ROOT = '/home/wasiq/img/'
 
 
 # Static files (CSS, JavaScript, Images)

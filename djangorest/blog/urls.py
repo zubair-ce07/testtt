@@ -1,8 +1,9 @@
 from django.conf.urls import url
-from blog.views import APIBlogList, APIBlogDetail
+from blog.views import APIBlogList, APIBlogDetailUpdateDelete, APIUserAllBlogList
 
 
 urlpatterns = [
-    url(r'^blog/$', APIBlogList.as_view(), name='blog'),
-    url(r'^blog/(?P<slug>[a-z_]+)/$', APIBlogDetail.as_view(), name='detail'),
+    url(r'^$', APIBlogList.as_view(), name='blog_list'),
+    url(r'^(?P<slug>[a-z-]+)/$', APIBlogDetailUpdateDelete.as_view(), name='detail'),
+    url(r'^(?P<username>[a-z_]+)/$', APIUserAllBlogList.as_view(), name='user_blog')
 ]

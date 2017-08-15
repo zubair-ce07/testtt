@@ -8,7 +8,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ('address', 'gender', 'date_of_birth')
+        fields = ('address', 'gender', 'date_of_birth', 'phone_num')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,14 +17,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'profile')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ('username', 'first_name', 'last_name', 'email', 'password', 'profile')
+        extra_kwargs = {'password': {'write_only': True},
+                        'first_name': {'write_only': True},
+                        'last_name': {'write_only': True},
+                        'email': {'write_only': True}
+                        }
 
     def create(self, validated_data):
         profile_data = validated_data.pop('profile')
-        profile_data.update({'created_at': datetime.datetime.now()})
-        user = User.objects.create_user(username=validated_data['username'])
+        user = User.objects.create(**validated_data)
         user.set_password(validated_data['password'])
         user.save()
-        UserProfile.objects.create(owner=user, **profile_data)
-        return user
+        user_profile = UserProfile.objects.create(owner=user, **profile_data)
+        user_profile.save()
+        return user_profile

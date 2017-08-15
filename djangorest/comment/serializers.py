@@ -6,7 +6,7 @@ from blog.models import Blog
 
 class CommentSerializer(ModelSerializer):
     created_by = SlugRelatedField(slug_field='username', queryset=User.objects.all())
-    comment_for = SlugRelatedField(slug_field='title', queryset=Blog.objects.all())
+    comment_for = SlugRelatedField(slug_field='id', queryset=Blog.objects.all())
 
     class Meta:
         model = Comment
