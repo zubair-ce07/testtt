@@ -9,41 +9,41 @@ class WeatherReport:
     def __init__(self):
         pass
 
-    def get_file(self, path, filename_string):
-        self.filename_string = filename_string
+    def get_file(self, path, filename):
+        self.filename = filename
         self.path = path
-        list_file = []
+        files = []
         os.chdir(path)
-        filename = ('*%s*' % filename_string)
+        filename = '*{}*'.format(filename)
         for f in glob.glob(filename):
-            list_file.append(f)
-        return list_file
+            files.append(f)
+        return files
 
-    def get_average_of(self, list_temp, str_a, str_b):
+    def get_average_of(self, list_temp):
         addition = 0
         for i in range(len(list_temp)):
             if list_temp[i]:
                 addition = addition + list_temp[i]
         avg = addition / len(list_temp)
-        print(str_a, avg, str_b)
+        return avg
 
     def graph_chart(self, high_tem_list, low_temp_list, list_date):
         self.high_tem_list = high_tem_list
         self.low_temp_list = low_temp_list
         self.list_date = list_date
         for i in high_tem_list:
-            print(list_date[i], " ", end='')
+            print('{} '.format(list_date[i]), end='')
             if high_tem_list[i]:
                 for j in range((high_tem_list[i])):
-                    print("\033[31m+", end='')
-                print(" \033[37m", high_tem_list[i], 'C')
+                    print('{}'.format('\033[31m+'), end='')
+                print(' \033[38m{}C'.format(high_tem_list[i]))
             else:
                 print(0, "C")
-            print(list_date[i], " ", end='')
+            print('{} '.format(list_date[i]), end='')
             if low_temp_list[i]:
                 for k in range((low_temp_list[i])):
-                    print("\033[34m+", end='')
-                print("\033[37m", low_temp_list[i], 'C')
+                    print('{}'.format('\033[34m+'), end='')
+                print('\033[38m{}C'.format(low_temp_list[i]))
             else:
                 print(0, "C")
 
@@ -52,19 +52,20 @@ class WeatherReport:
         self.low_temp_list = low_temp_list
         self.list_date = list_date
         for i in high_tem_list:
-            print(list_date[i], " ", end='')
+            print('{} '.format(list_date[i]), end='')
             if low_temp_list[i]:
                 for j in range(low_temp_list[i]):
-                    print("\033[34m+", end='')
-                print("\033[37m", end='')
+                    print('{}'.format('\033[34m+'), end='')
+                print('{}'.format('\033[38m'), end='')
             else:
                 print(end='')
             if high_tem_list[i]:
                 for k in range(high_tem_list[i]):
-                    print("\033[31m+", end='')
-                print(" \033[37m", low_temp_list[i], "-", high_tem_list[i], 'C')
+                    print('{}'.format('\033[31m+'), end='')
+                print(' \033[37m{}C-{}C'.format(low_temp_list[i],
+                high_tem_list[i]))
             else:
-                print(low_temp_list[i], "-", high_tem_list[i], "C")
+                print('{}C-{}C'.format(low_temp_list[i], high_tem_list[i]))
 
     def make_list(self, list_data):
         self.list_data = list_data
@@ -123,22 +124,25 @@ class WeatherReport:
                 list_date.append(list_date_humi[(list_humi.index
                                                  (max(list_humi)))])
                 max_humi_year.append(max(list_humi))
-        print("Highest:", max(max_tamp_year), "C", " on",
-              list_date[max_tamp_year.index(max(max_tamp_year))])
-        print("Lowest:", min(min_tamp_year), "C", "  on",
-              list_date[min_tamp_year.index(min(min_tamp_year))])
-        print("Highest:", max(max_humi_year), "%", "on",
-              list_date[max_humi_year.index(min(max_humi_year))])
+        print('Highest Temprature: {}C on {}'
+              .format(max(max_tamp_year),
+                list_date[max_tamp_year.index(max(max_tamp_year))]))
+        print('Lowest Temprature: {}C on {}'
+              .format(min(min_tamp_year),
+                list_date[min_tamp_year.index(min(min_tamp_year))]))
+        print('Highest Humidity: {}% on {}'
+              .format(max(max_humi_year),
+                list_date[max_humi_year.index(min(max_humi_year))]))
 
-    def find_month_report(self, path, filename_string):
+    def find_month_report(self, path, filename):
         self.path = path
-        self.filename_string = filename_string
+        self.filename = filename
         high_temp_month = []
         low_temp_month = []
         high_humidity_month = []
         date_list = []
-        list_file = self.get_file(path, filename_string)
-        with open(list_file[0], 'r') as csvfile:
+        files = self.get_file(path, filename)
+        with open(files[0], 'r') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 date_list.append(row['PKT'])
@@ -148,18 +152,21 @@ class WeatherReport:
             self.make_list(high_temp_month)
             self.make_list(low_temp_month)
             self.make_list(high_humidity_month)
-        self.get_average_of(high_temp_month, "Avg Highest Temprature ", "C")
-        self.get_average_of(low_temp_month, "Avg Lowest Temprature  ", "C")
-        self.get_average_of(high_humidity_month, "Average Mean Humidity ", "%")
+        print('Avg Highest Temprature {}C'.
+        format(self.get_average_of(high_temp_month)))
+        print('Avg Lowest Temprature {}C'.
+        format(self.get_average_of(low_temp_month)))
+        print('Average Mean Humidity {}%'.
+        format(self.get_average_of(high_humidity_month)))
 
-    def find_month_report_graph(self, path, filename_string):
+    def find_month_report_graph(self, path, filename):
         self.path = path
-        self.filename_string = filename_string
+        self.filename = filename
         high_temp_month = []
         low_temp_month = []
         date_list = []
-        list_file = self.get_file(path, filename_string)
-        with open(list_file[0], 'r') as csvfile:
+        files = self.get_file(path, filename)
+        with open(files[0], 'r') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 date_list.append(row['PKT'])
@@ -169,14 +176,14 @@ class WeatherReport:
             self.make_list(low_temp_month)
         self.graph_chart(high_temp_month, low_temp_month, date_list)
 
-    def find_month_report_graph1(self, path, filename_string):
+    def find_month_report_graph1(self, path, filename):
         self.path = path
-        self.filename_string = filename_string
+        self.filename = filename
         high_temp_month = []
         low_temp_month = []
         date_list = []
-        list_file = self.get_file(path, filename_string)
-        with open(list_file[0], 'r') as csvfile:
+        files = self.get_file(path, filename)
+        with open(files[0], 'r') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 date_list.append(row['PKT'])
@@ -194,8 +201,20 @@ class WeatherReport:
         year = month1[0]
         filename = year + '_' + splits[0]
         return filename
+
+    def _get_help(self):
+        print('Report of Complete year input should be like{}'
+        .format('python_assignment.py /path/to/files-dir -e 2002'))
+        print('Report of month input should be like\n {}'
+        .format('python_assignment.py /path/to/files-dir -a 2002/1'))
+        print('Report of month in Graph input should be like\n {}'
+        .format('python_assignment.py /path/to/files-dir -c 2011/03'))
+        print('For Multiple reports input sholud be like\n {}'
+        .format('python_assignment.py /path/to/files-dir '
+                '-c 2011/03 -a 2011/3 -e 2011 -d 2011/12'))
+   
 if __name__ == '__main__':
-    class_obj = WeatherReport()
+    Weather = WeatherReport()
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=str)
     parser.add_argument("-e", type=str)
@@ -203,30 +222,30 @@ if __name__ == '__main__':
     parser.add_argument("-c", type=str)
     parser.add_argument("-d", type=str)
     args = parser.parse_args()
-    if(args.e and args.a and args.c and args.d):
+    if(args.e and args.a and args.c or args.d):
         print("\nReport of complete year\n")
-        class_obj.find_year_report(args.path, args.e)
+        Weather.find_year_report(args.path, args.e)
         print("\nReport of complete month\n\n")
-        filename = class_obj.get_file_name(args.a)
-        class_obj.find_month_report(args.path, filename)
+        filename = Weather.get_file_name(args.a)
+        Weather.find_month_report(args.path, filename)
         print("\nReport of complete month in Graph\n\n")
-        filename = class_obj.get_file_name(args.c)
-        class_obj.find_month_report_graph(args.path, filename)
+        filename = Weather.get_file_name(args.c)
+        Weather.find_month_report_graph(args.path, filename)
         print("\nReport of month in Graph by Low and High Temprature\n\n")
-        filename = class_obj.get_file_name(args.d)
-        class_obj.find_month_report_graph1(args.path, filename)
+        filename = Weather.get_file_name(args.d)
+        Weather.find_month_report_graph1(args.path, filename)
     else:
         if args.e:
-            class_obj.find_year_report(args.path, args.e)
+            Weather.find_year_report(args.path, args.e)
         elif args.a:
-            filename = class_obj.get_file_name(args.a)
-            class_obj.find_month_report(args.path, filename)
+            filename = Weather.get_file_name(args.a)
+            Weather.find_month_report(args.path, filename)
         elif args.c:
-            filename = class_obj.get_file_name(args.c)
-            class_obj.find_month_report_graph(args.path, filename)
+            filename = Weather.get_file_name(args.c)
+            Weather.find_month_report_graph(args.path, filename)
         elif args.d:
-            filename = class_obj.get_file_name(args.d)
-            class_obj.find_month_report_graph1(args.path, filename)
+            filename = Weather.get_file_name(args.d)
+            Weather.find_month_report_graph1(args.path, filename)
         else:
-            print("Plz Valid arguments")
+            Weather._get_help()
 
