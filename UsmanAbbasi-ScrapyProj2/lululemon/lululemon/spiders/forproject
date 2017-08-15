@@ -1,0 +1,37 @@
+response.css('.section-nav-header ::attr(href)').extract()
+    main page's men, women, inspiration links. but links don't start with http: they start with //
+
+.submenu .OneLinkNoTx
+for sub-categories of 3 major categories in homepage
+
+
+#    .large - menu[data - menu - id $=u - 1]        men on homepage
+#    .large - menu[data - menu - id $=u - 2]        women on homepage
+
+
+#############################################################
+    def set_image_code(self, response):
+        image_code = {}
+        colors_list = response.css('.section-color-swatch img::attr(alt)').extract()
+        colors_codes = response.css('.section-color-swatch img::attr(data-stylenumber)').extract()
+        for color, code in zip(colors_list, colors_codes):
+            image_code[color] = code
+        return image_code
+
+
+#    def set_image_urls(self, response, image_code):
+#        for value in image_code:
+#            if value in response.url:
+#                item['image_urls'] = {value[]:}
+
+
+    def other_links(self, response):
+        prod_url = ""
+        colors_list = response.css('.section-color-swatch img::attr(alt)').extract()
+        colors_codes = response.css('.section-color-swatch img::attr(data-stylenumber)').extract()
+        for code in colors_codes:
+            s = "color=" + code
+            prod_url = re.sub('color=.*', s, response.url)
+            print("URLLL: ", prod_url)
+   #         scrapy.Request(prod_url)
+#############################################################
