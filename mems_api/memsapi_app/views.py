@@ -17,6 +17,15 @@ from rest_framework.response import Response
 def index(request):
     return render(request, 'memsapi_app/index.html', {})
 
+
+# just for test in React App
+class GetAllMems(generics.ListAPIView):
+    authentication_classes = ()
+    permission_classes = (AllowAny, )
+    queryset = Memory.objects.all()
+    serializer_class = MemorySerializer
+
+
 class Login(APIView):
     authentication_classes = ()
     permission_classes = (AllowAny, )

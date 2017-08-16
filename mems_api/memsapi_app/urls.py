@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 from rest_framework import routers
-from memsapi_app.views import UserView,  MemoryListView, Logout, index, \
+from memsapi_app.views import UserView,  MemoryListView, Logout, index, GetAllMems, \
                               ActivityListView, CreateAndListCategory, GetPublicMems, Login
 from rest_framework.authtoken import views
 
@@ -19,5 +19,6 @@ urlpatterns = [
     url(r'^categories/$', CreateAndListCategory.as_view()),
     url(r'^activities/$', ActivityListView.as_view()),
     url(r'^get-public-mems/$', GetPublicMems.as_view()),
-    url(r'^get-api-token/$' , views.obtain_auth_token)
+    url(r'^get-api-token/$' , views.obtain_auth_token),
+    url(r'^get-all-mems/$' , GetAllMems.as_view())
 ]
