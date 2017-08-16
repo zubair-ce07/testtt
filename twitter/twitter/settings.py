@@ -25,6 +25,7 @@ SECRET_KEY = '(34q+5ulpj%4zfthbo1@)00#=m6c4n(9ujg3mp(5u%c10$6xen'
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1','172.16.12.83','116.58.62.58','*']
+CORS_ORIGIN_ALLOW_ALL = True
 
 LOGIN_URL = '/login/'
 AUTH_USER_MODEL = 'twitter.User'
@@ -43,16 +44,22 @@ INSTALLED_APPS = [
     'news.apps.NewsConfig',
     'news.api.apps.ApiConfig',
     'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 AUTHENTICATION_BACKENDS = ['twitter.core.backends.CaseInsensitiveModelBackend']
@@ -80,7 +87,7 @@ TEMPLATES = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     )
 }
 

@@ -1,7 +1,10 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, UserManager as AuthUserManager
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.http import Http404
+from rest_framework.authtoken.models import Token
 
 
 class ProfileDoestExist(Http404):
@@ -43,3 +46,9 @@ class Tweet(models.Model):
     class Meta:
         db_table = 'tweet'
         ordering = ('-pub_date',)
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)

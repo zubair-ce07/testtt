@@ -1,5 +1,4 @@
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,7 +10,6 @@ from news.models import News
 
 class NewsList(APIView):
     permission_classes = (IsAuthenticated,)
-
     def get(self, request):
         news = News.objects.all()
         serializer = NewsSerializer(news, many=True)
