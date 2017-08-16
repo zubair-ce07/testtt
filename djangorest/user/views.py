@@ -38,7 +38,6 @@ class Login(APIView):
 class APISignUp(APIView):
 
     def post(self, request, format=None):
-        print (request.data)
         profile = UserSerializer(data=request.data)
         if profile.is_valid():
             profile.save()
@@ -58,7 +57,5 @@ class APILogout(APIView):
             request.user.auth_token.delete()
         except AttributeError:
             pass
-
         logout(request)
-
         return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)

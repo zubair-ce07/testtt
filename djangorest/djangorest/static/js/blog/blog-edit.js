@@ -3,7 +3,6 @@ $(function () {
     
     $('.edit-blog').click(function (event) {
         event.preventDefault();
-        console.log('Clicked');
         $(this).parent().find('textarea').removeAttr('readonly');
     });
     
@@ -21,7 +20,9 @@ $(function () {
             url: 'http://127.0.0.1:8000/api/blog/' + $(this).attr('name') + '/',
             data: $(this).serializeJSON({checkboxUncheckedValue: "false"}),
             success: function (result) {
-                
+                if (result.is_public && result.is_published) {
+                    add_published_blog(result);
+                }
             }
         });
     });

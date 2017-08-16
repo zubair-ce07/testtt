@@ -42,4 +42,3 @@ class CommentUpdateDelete(APIView):
         comment = get_object_or_404(Comment, pk=pk)
         comment.delete()
         return Response(status=status.HTTP_200_OK)
-

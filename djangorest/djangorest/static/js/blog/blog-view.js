@@ -3,7 +3,7 @@
 var published_comments = null;
 
 function add_comment(comment) {
-    
+
     var $comment_post = $('#content1 .comment:first:first-of-type').clone(true);
     $comment_post.find('.created-by').text(comment.created_by);
     $comment_post.find('.created-on').text((new Date(comment.created_on)).toUTCString());
@@ -24,6 +24,16 @@ $(function () {
     $('.view-more').on('click', function (event) {
         event.preventDefault();
 
+        if (TOKEN == null) {
+
+            $('.alert-request').show().fadeTo(3000, 0).slideUp(200, function () {
+                $(this).css({ opacity: 1 });
+            });
+            
+            event.stopPropagation();
+            return;
+        }
+
         $.ajax({
             context: this,
             method: 'GET',
@@ -38,8 +48,7 @@ $(function () {
                 $(this).removeAttr('href').off('click');
                 if (!result.blog.comments_allowed) {
                     $('#' + result.blog.id).find('.card').remove();
-                }
-                else {
+                } else {
                     $('#' + result.blog.id).find('.comment-for').attr('value', result.blog.id);
                 }
             }

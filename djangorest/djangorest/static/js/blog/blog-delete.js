@@ -2,7 +2,6 @@ $(function () {
 
     $('.delete-blog').on('submit', function (event) {
         event.preventDefault();
-        console.log();
 
         $.ajax({
             context: this,
@@ -12,10 +11,13 @@ $(function () {
                 'Authorization': 'Token ' + TOKEN
             },
             url: 'http://127.0.0.1:8000/api/blog/' + $(this).find('.blog-slug').attr('value'),
-            success: function (result) {
-                console.log('Deleted');
-                console.log(result);
-                console.log($(this).parent('.blog-post'));
+            complete: function () {
+                $(this).parent('.blog-post').hide('slow', function () {
+                    $(this).remove();
+                });
+                $('#content1 a[href=' + $(this).find('.blog-slug').attr('value') + ']').parents('.blog-post').hide('slow', function () {
+                    $(this).remove();
+                });
             }
         });
     });

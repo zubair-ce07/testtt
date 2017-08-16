@@ -27,6 +27,7 @@ class APIBlogList(APIView):
     def post(self, request, format=None):
         form_data = request.POST.copy()
         form_data.update({'slug': slugify(request.data.get('title')), 'created_by': request.user})
+        print(form_data)
         serializer = BlogSerializer(data=form_data)
         if serializer.is_valid():
             serializer.save()
@@ -36,7 +37,7 @@ class APIBlogList(APIView):
 
 class APIUserAllBlogList(APIView):
 
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, username, format=None):
         return Response(BlogSerializer(Blog.objects.filter(created_by=User.objects.get(username=username)),
@@ -76,5 +77,4 @@ class BlogDetail(TemplateView):
     template_name = 'blog/single.html'
 
     def get_context_data(self, **kwargs):
-        print (self.kwargs['slug'])
         return {'slug': self.kwargs['slug']}
