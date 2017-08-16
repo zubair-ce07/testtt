@@ -86,14 +86,15 @@ class HypedcPipeline(object):
 
 class LululemonPipeline(object):
     def process_item(self, item, spider):
-        sku, image_urls = self.format_readings(item)
-        self.store_in_db(item, image_urls, sku)
+        sku, image_urls, description = self.format_readings(item)
+        self.store_in_db(item, image_urls, sku, description)
         return item
 
     def format_readings(self, item):
         sku = json.dumps(item['sku'])
         image_urls = json.dumps(item['image_urls'])
-        return sku, image_urls
+        desciption = json.dumps(item['description'])
+        return sku, image_urls, desciption
 
     def __init__(self):
         self.setup_db_con()
@@ -124,7 +125,7 @@ class LululemonPipeline(object):
         image_urls TEXT \
         )")
 
-    def store_in_db(self, item, image_urls, sku):
+    def store_in_db(self, item, image_urls, sku, description):
         self.cur.execute("INSERT INTO LEMON(\
             item_id, \
             url, \
@@ -141,7 +142,7 @@ class LululemonPipeline(object):
             item['url'],
             item['name'],
             item['brand'],
-            item['description'],
+            description,
             item['currency'],
             sku,
             image_urls
