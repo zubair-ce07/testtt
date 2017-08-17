@@ -58,3 +58,6 @@ target/
 
 # secrets file
 conf.py
+
+# media files
+media/
