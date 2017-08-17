@@ -6,11 +6,14 @@ from django.db import DatabaseError
 from backend.users.serializers.interest import UserInterestSerializer
 from backend.users.models import UserInterest
 from backend.categories.models import Category
-
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class UserInterestAPIView(APIView):
     queryset = UserInterest.objects.all()
     serializer_class = UserInterestSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:

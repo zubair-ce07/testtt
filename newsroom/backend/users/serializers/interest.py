@@ -5,9 +5,8 @@ from backend.categories.serializers.category import CategorySerializer
 
 
 class UserInterestSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
     category = CategorySerializer()
 
     class Meta:
         model = UserInterest
-        fields = ('user', 'category', )
+        fields = ('category', )
