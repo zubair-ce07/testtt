@@ -46,9 +46,3 @@ class Tweet(models.Model):
     class Meta:
         db_table = 'tweet'
         ordering = ('-pub_date',)
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
