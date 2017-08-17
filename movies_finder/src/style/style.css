@@ -1,0 +1,39 @@
+.search-bar {
+    margin: 20px;
+    height: 50px;
+    text-align: center;
+    width: 50%;
+    border-radius: 20px;
+    border: 1px solid #555;
+    font-size: 25px;
+}
+
+.centered {
+    text-align: center;
+}
+
+.movie-detail {
+    overflow: hidden;
+}
+
+.list-group-item {
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: #eee;
+}
+
+.movie-list {
+    overflow-y: scroll;
+    height: 700px;
+}
+
+.backdrop {
+    padding: 10px;
+}
+
+.details {
+    border-radius: 20px;
+    border: 1px solid #ddd;
+}
