@@ -1,19 +1,31 @@
-import React from 'react';
-import MemDiv from './MemDiv';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types'
+import Memory from './Memory';
+import MemoryAPI from './MemoryAPI';
+import AddMemory from './AddMemory'
 
-class MainPage extends React.Component{
-
+class MainPage extends Component{
+    constructor(props){
+        super(props);
+         this.state = { mems: [] };
+    }
     render(){
-
-        let mems = this.props.mems.map(mem => {
-             return <MemDiv mem={mem} key={mem.id}/>
+        let mems = this.state.mems.map(mem => {
+             return <Memory mem={mem} key={mem.id}/>
         });
-        console.log(mems);
         return (
-            <div >
-                {mems}
+            <div>
+                <div> <AddMemory /> </div>
+                <div > {mems} </div>
             </div>
         );
     }
+    componentDidMount(){
+        new MemoryAPI().getAllMems().then(data => {this.setState({mems:data})});
+    }
 }
+MainPage.propTypes = {
+    mems : PropTypes.array
+}
+
 export default MainPage;
