@@ -17,11 +17,11 @@
         </a>
         {{ news.content|striptags|excerpt_news }}
         <div class="published-time">
-            PUBLISHED <span>{{ news.pub_date|timesince }} ago </span>
+            PUBLISHED: <span>{{ news.pub_date|timesince }} ago </span>
         </div>
         {% if news.publisher %}
             <div class="publisher">
-                PUBLISHER
+                PUBLISHER:
                 <span>
                         <a href="{% url 'profile' news.publisher.username %}">
                         {{ news.publisher|capfirst }}
