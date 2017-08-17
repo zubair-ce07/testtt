@@ -137,7 +137,8 @@ class MotelSpider(scrapy.Spider):
                  '262': 'M', '282': 'L', '605': 'S/M', '606': 'M/L', '592': 'OS', '462': 'L', '583': 'XXS', '322': 'XS',
                  '342': 'S', '362': 'M', '302': 'XL'}
         all_sizes = [sizes[size] for size in response.css('li.sizeli::attr(rel)').extract() if size in sizes]
-        unavailable_sizes = [sizes[size] for size in response.css('li.sizeli[instock^="0"]::attr(rel)').extract() if size in sizes]
+        unavailable_sizes = [sizes[size] for size in response.css('li.sizeli[instock^="0"]::attr(rel)').extract() if
+                             size in sizes]
         return all_sizes, unavailable_sizes
 
     def get_skus(self, response):
