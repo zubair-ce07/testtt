@@ -10,6 +10,12 @@ class UserCreateAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            try:
+                password = request.data['password']
+            except KeyError:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user = serializer.save()
+            user.set_password(password)
+            user.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
