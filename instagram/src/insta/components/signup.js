@@ -1,6 +1,7 @@
 import React from 'react';
 import validateUsernameEmail from '../utils/validate/usernameEmail'
 import validateNamePasswordDOB from '../utils/validate/namePasswordDOB'
+import urls from '../../index'
 
 
 class SignUp extends React.Component{
@@ -54,12 +55,14 @@ class AppIcons extends React.Component{
                 </div>
                 <div className=" col-md-1 col-sm-6 get-app">
                     <img
+                        alt="insta"
                         className="center-block get-app-logo"
                         src={require("../static/images/app-store.png")}
                     />
                 </div>
                 <div className=" col-md-1 col-sm-6 get-app">
                     <img
+                        alt="insta"
                         className="center-block get-app-logo"
                         src={require("../static/images/play-store.png")}
                     />
@@ -76,6 +79,7 @@ class LoginPanel extends React.Component{
                 <div className="col-lg-4 col-md-4 col-sm-12 login-form-panel">
                     <div className="insta-logo-text">
                         <img
+                            alt="insta"
                             className="center-block signup-logo"
                             src={require("../static/images/logo.png")}
                         />
@@ -112,46 +116,65 @@ class LogInForm extends React.Component{
         this.state = {
             isValidUsername: false,
             isValidPassword: false,
-        }
+        };
         // this.handleSubmit = this.handleSubmit.bind(this);
+        this.usernameLength = 2;
+        this.passwordLength = 5;
         this.handleInputChange = this.handleInputChange.bind(this);
+        this.validateUsernamePassword = this.validateUsernamePassword.bind(this)
+        this.handleSubmit = this.handleSubmit.bind(this)
+    }
+
+    handleSubmit(e) {
+        e.preventDefault();
+        if(!(this.state.isValidUsername && this.state.isValidPassword)) {
+            alert('Errors aarahay hain..')
+        } else {
+            console.log('ABOUT TO')
+            fetch(urls.baseURL+urls.login, {
+                method: 'post',
+                body: JSON.stringify({
+                    username: this.state.username,
+                    password: this.state.password,
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((response) => {
+                return response.json()
+            }).then((data) => {
+                console.log(data)
+            }).catch((error) => {
+                console.log('ERROR', error)
+            })
+        }
+
+    }
+
+    validateUsernamePassword(name, value,) {
+        // debugger;
+        if(name === "username") {
+            // debugger;
+            this.setState({
+                isValidUsername: value.length >= this.usernameLength,
+            })
+        } else if(name === "password"){
+            this.setState({
+                isValidPassword: value.length >= this.passwordLength,
+            })
+        }
     }
 
     handleInputChange(event){
         const name = event.target.name;
         const value = event.target.value;
 
-        console.log(name, value)
+        // console.log(name, value)
 
         this.setState({
             [name]: value
         });
-        if(name === "username") {
-            debugger;
-            if(value.length < 1){
-                this.setState({
-                    isValidPassword: false,
-                })
-            console.log(':3')
-            } else {
-                console.log(':>')
-                this.setState({
-                    isValidPassword: true,
-                })
-            }
-            console.log(this.state.isValidUsername)
-        } else if(name === "password"){
-            // let isValid = validateNamePasswordDOB(value, 15, 5);
-            if(value.length < 5){
-                this.setState({
-                    isValidPassword: false,
-                })
-            } else {
-                this.setState({
-                    isValidPassword: true,
-                })
-            }
-        }
+        this.validateUsernamePassword(name, value)
     }
 
     render(){
@@ -214,6 +237,7 @@ class PhonePanel extends React.Component{
             <div>
                 <div className="parent">
                     <img
+                        alt="insta"
                         className="center-block phone-main"
                         src={require("../static/images/phone_main.png")}
                     />
@@ -224,19 +248,13 @@ class PhonePanel extends React.Component{
 }
 
 class SignUpPanel extends React.Component{
-    constructor (props) {
-        super(props);
-    }
-
-    componentDidMount() {
-        console.log(this.props.switchParentPanel)
-    }
     render() {
         return(
             <div>
                 <div className="col-lg-4 col-md-4 col-sm-12 signup-form-panel">
                     <div className="insta-logo-text">
                         <img
+                            alt="insta"
                             className="center-block signup-logo"
                             src={require("../static/images/logo.png")}
                         />
@@ -246,6 +264,7 @@ class SignUpPanel extends React.Component{
                             </strong>
                         </h4>
                         <img
+                            alt="insta"
                             className="center-block"
                             src={require("../static/images/login-facebook.png")}
                         /> <br/>
@@ -294,18 +313,25 @@ class SignUpForm extends React.Component{
         };
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
+        this.validateUsernameEmail = this.validateUsernameEmail.bind(this)
+    }
+
+    validateUsernameEmail(data){
+        // console.log('IN')
+        // console.log(data, this)
     }
 
     handleInputChange(event){
         const name = event.target.name;
         const value = event.target.value;
+        // var jsonData;
 
         this.setState({
             [name]: value
         });
-        console.log(event.target.name, event.target.value);
+        // console.log(event.target.name, event.target.value);
         if(name === "email" || name === "username") {
-            fetch('http://127.0.0.1:8000/api/signup/available/', {
+            fetch(urls.baseURL+urls.validUsernameEmail, {
                 method: 'post',
                 body: JSON.stringify({
                     [name]: event.target.value
@@ -315,48 +341,48 @@ class SignUpForm extends React.Component{
                 }
             }).then(function (response) {
                 return response.json()
-            }).then(function (data) {
-                let isValid = validateUsernameEmail(data, value, name);
+            }).then((data) => {
+                // console.log(':>', this)
+                // console.log(':<')
                 if(name === "email"){
                     this.setState({
-                        isValidEmail: isValid,
+                        isValidEmail: validateUsernameEmail(data, value, name),
+                    })
+                } else {
+                    this.setState({
+                        isValidUsername: validateUsernameEmail(data, value, name),
                     })
                 }
 
             }).catch(function (error) {
-                console.log(error)
+                // console.log(error)
             });
+            // console.log(':3', name, this)
         } else if(name === "first_name"){
-            let isValid = validateNamePasswordDOB(value, 13, 2);
             this.setState({
-                isValidFirstName: isValid,
+                isValidFirstName: validateNamePasswordDOB(value, 13, 2),
             })
         } else if(name === "last_name"){
-            debugger;
-            const isValid = validateNamePasswordDOB(value, 14, 2);
-            console.log(isValid)
             this.setState({
-                isValidLastName: isValid,
+                isValidLastName: validateNamePasswordDOB(value, 14, 2),
             })
-            debugger
         } else if(name === "password"){
-            let isValid = validateNamePasswordDOB(value, 15, 5);
             this.setState({
-                isValidPassword: isValid,
+                isValidPassword: validateNamePasswordDOB(value, 15, 5),
             })
         } else if(name === "date_of_birth"){
-            let isValid = validateNamePasswordDOB(value, 16, 2);
             this.setState({
-                isValidDOB: isValid,
+                isValidDOB: validateNamePasswordDOB(value, 16, 2)
             })
         }
     }
 
     handleSubmit(event){
-        console.log(this.state.email);
+        // console.log(this.state.email);
         event.preventDefault();
     //    validate data
     //    fetch api here and send data
+    //     console.log(this.state)
         if(
             !(this.state.isValidEmail &&
             this.state.isValidFirstName &&
@@ -366,6 +392,29 @@ class SignUpForm extends React.Component{
             this.state.isValidDOB)
         ){
             alert('Please correct all errors..')
+        } else {
+                console.log('ABOUT TO')
+            fetch(urls.baseURL+urls.signup, {
+                method: 'post',
+                body: JSON.stringify({
+                    // [name]: event.target.value
+                    email: this.state.email,
+                    first_name: this.state.first_name,
+                    last_name: this.state.last_name,
+                    username: this.state.username,
+                    password: this.state.password,
+                    date_of_birth: this.state.date_of_birth,
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((response)=>{
+                return response.json()
+            }).then((data) => {
+                console.log(data)
+            }).catch((error) => {
+                console.log('ERROR', error)
+            })
         }
     }
 
