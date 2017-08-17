@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { loginUser } from '../actions'
 
-class Login extends Component {
+class Profile extends Component {
     renderField(field) {
         const { meta: { touched, error } } = field;
         const className = `form-group ${touched && error ? 'has-error' : ''}`;

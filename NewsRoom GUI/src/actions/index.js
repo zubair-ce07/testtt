@@ -6,6 +6,7 @@ export const FETCH_NEWS_TOP = 'fetch_news_top';
 export const FETCH_NEWS_CATEGORIES = 'fetch_news_categories';
 export const FETCH_SEARCH_NEWS = 'fetch_search_news';
 export const LOGIN_USER = 'login_user';
+export const SIGNUP_USER = 'signup_user';
 
 
 const ROOT_URL = 'http://localhost:8000/api';
@@ -56,6 +57,21 @@ export function loginUser(data){
         type: LOGIN_USER,
         payload: request,
     };
+}
+
+export function signupUser(data){
+    const request = axios.post(`${ROOT_URL}/v1/users/create/`,{
+        username: data.email,
+        password: data.password,
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name
+    });
+
+    return {
+        type: SIGNUP_USER,
+        payload: request
+    }
 }
 
 
