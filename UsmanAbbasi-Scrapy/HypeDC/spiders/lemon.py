@@ -5,6 +5,7 @@ import json
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy.loader import ItemLoader
 
 from HypeDC.items import LululemonItem
 
@@ -12,40 +13,39 @@ from HypeDC.items import LululemonItem
 class LemonSpider(CrawlSpider):
     name = 'lululemon'
     allowed_domains = ['shop.lululemon.com']
-    start_urls = ["http://shop.lululemon.com/"]
+#    start_urls = ["http://shop.lululemon.com/"]
+    start_urls = ["https://shop.lululemon.com/p/men-ss-tops/5-Year-Basic-Tee-459786/_/prod240113?rcnt=2&N=1z13ziiZ7tu&cnt=59&color=LM3EE6S_029949"]
     denied_keywords = 'login|inspiration|help|features|designs|stores|community'
     custom_settings = {'ITEM_PIPELINES': {'HypeDC.pipelines.LululemonPipeline': 1},
                        'DOWNLOADER_MIDDLEWARES': {'HypeDC.middlewares.ProxyMiddleware': 10}
-    }
+                       }
 
     rules = (
-        Rule(LinkExtractor(restrict_css=('.large-menu li a',), deny=(denied_keywords,))),
-        Rule(LinkExtractor(restrict_css=('.submenu li a',), deny=(denied_keywords,))),
-        Rule(LinkExtractor(allow=('prod[0-9]+',), deny=(denied_keywords,)), callback='parse_item'),
+#        Rule(LinkExtractor(restrict_css=('.large-menu li a',), deny=(denied_keywords,))),
+#        Rule(LinkExtractor(restrict_css=('.submenu li a',), deny=(denied_keywords,))),
+#        Rule(LinkExtractor(allow=('prod[0-9]+',), deny=(denied_keywords,)), callback='parse_item'),
+        Rule(LinkExtractor(allow=('prod240113',), deny=(denied_keywords,)), callback='parse_item'),
     )
 
     def parse_item(self, response):
-        item = LululemonItem()
+        item_loader = ItemLoader(item=LululemonItem(), response=response)
         print("Current proxy:", response.meta['proxy'])
-        item['url'] = response.url
-        item['item_id'] = self.get_item_id(response)
-        item['name'] = response.css('.product-description .OneLinkNoTx::text').extract_first()
-        item['brand'] = 'lululemon'
-        item['description'] = self.get_description(response)
+        item_loader.add_value('url', response.url)
+        item_loader.add_value('brand', 'lululemon')
+        item_loader.add_css('name', '.product-description .OneLinkNoTx::text')
+        item_loader.add_value('item_id', response.url)
+        item_loader.add_css('description', '.ellipsis div::text')
+        item_loader.add_css('description', '#fabric p::text')
+        item_loader.add_css('description', '#fabric li::text')
+        care = self.get_care(response)
+        item_loader.add_value('description', care)
         color_map = self.get_color_map(response)
-        item['image_urls'] = self.get_image_urls(color_map)
-        item['sku'], item['currency'] = self.get_sku_and_currency(response, color_map)
-        yield item
-
-    def get_description(self, response):
-        description = []
-        description.append(response.css('.ellipsis div::text').extract_first().strip())
-        description.append(response.css('#fabric p::text').extract_first().strip())
-        description.append(response.css('#fabric li::text').extract())
-        care = json.loads(response.css('head script::text').re_first(r'styleColorMap = (.*);'))
-        for care_details in care[0]['care']:
-            description.append(care_details['careDescription'])
-        return description
+        image_urls = self.get_image_urls(color_map)
+        item_loader.add_value('image_urls', image_urls)
+        skus, currency = self.get_sku_and_currency(response, color_map)
+        item_loader.add_value('currency', currency)
+        item_loader.add_value('skus', skus)
+        return item_loader.load_item()
 
     def get_sku_and_currency(self, response, color_map):
         sku_info = json.loads(response.css('head > script::text').re_first('colorDriverString = (.*);'))
@@ -64,16 +64,24 @@ class LemonSpider(CrawlSpider):
                         currency = sku['old_price'][0]
         return skus, currency
 
-    def get_image_urls(self, color_map):
-        image_urls = {}
-        image_url_pattern = 'https://images.lululemon.com/is/image/lululemon/{color_code}_{number}'
-        for style_code in color_map:
-            urls_per_color = []
-            for iteration in range(color_map[style_code]['count']):
-                url = image_url_pattern.format(color_code=style_code, number=iteration+1)
-                urls_per_color.append(url)
-            image_urls[color_map[style_code]['name']] = urls_per_color
-        return image_urls
+    def get_item_price(self, response):
+        if response.css('.price-sale'):
+            old_price = response.css('.price-original::text').extract_first()
+            old_price = old_price.strip()
+            is_discounted = True
+        else:
+            old_price = response.css('.price-fixed::text').extract_first()
+            old_price = old_price.strip()
+            is_discounted = False
+        return old_price, is_discounted
+
+
+    def get_care(self, response):
+        description = []
+        care = json.loads(response.css('head script::text').re_first(r'styleColorMap = (.*);'))
+        for care_details in care[0]['care']:
+            description.append(care_details['careDescription'])
+        return description
 
     def get_color_map(self, response):
         color_map = {}
@@ -91,17 +99,13 @@ class LemonSpider(CrawlSpider):
                     color_map[style_code]['count'] = int(image_count[0][0])
         return color_map
 
-    def get_item_id(self, response):
-        item_id_match = re.search('prod[0-9]*', response.url)
-        return item_id_match.group(0)
-
-    def get_item_price(self, response):
-        if response.css('.price-sale'):
-            old_price = response.css('.price-original::text').extract_first()
-            old_price = old_price.strip()
-            is_discounted = True
-        else:
-            old_price = response.css('.price-fixed::text').extract_first()
-            old_price = old_price.strip()
-            is_discounted = False
-        return old_price, is_discounted
+    def get_image_urls(self, color_map):
+        image_urls = {}
+        image_url_pattern = 'https://images.lululemon.com/is/image/lululemon/{color_code}_{number}'
+        for style_code in color_map:
+            urls_per_color = []
+            for iteration in range(color_map[style_code]['count']):
+                url = image_url_pattern.format(color_code=style_code, number=iteration+1)
+                urls_per_color.append(url)
+            image_urls[color_map[style_code]['name']] = urls_per_color
+        return image_urls
