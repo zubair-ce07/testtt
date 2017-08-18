@@ -55,6 +55,6 @@ class Enrollment(models.Model):
     student = models.ForeignKey(Student)
     course = models.ForeignKey(Course)
     status = models.CharField(max_length=32, choices=CHOICES, default='Active')
-    joining_date = models.DateField(auto_now_add=True)
+    joining_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
