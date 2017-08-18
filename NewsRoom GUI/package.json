@@ -32,10 +32,12 @@
     "pug": "^2.0.0-rc.3",
     "react": "^0.14.3",
     "react-bootstrap": "^0.31.2",
+    "react-bootstrap-multiselect": "^1.0.2",
     "react-dom": "^0.14.3",
     "react-redux": "4.3.0",
     "react-router": "^2.0.1",
     "react-router-dom": "^4.1.2",
+    "reactjs-localstorage": "0.0.5",
     "redux": "^3.0.4",
     "redux-form": "^7.0.3",
     "redux-promise": "^0.5.3"

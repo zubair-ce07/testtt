@@ -1,9 +1,9 @@
-import { FETCH_SEARCH_NEWS } from '../actions';
-import _ from 'lodash'
+import { ALL_CATEGORIES } from '../actions';
 
 export default function(state = [], action) {
     switch(action.type) {
-        case FETCH_SEARCH_NEWS:
+        case ALL_CATEGORIES:
+            console.log("All Categories", action.payload.data);
             return action.payload.data;
         default:
             return state;

@@ -19,7 +19,7 @@ class NewsList extends Component {
         if (!this.props.searchNews){
             return <div>Loading...</div>
         }
-        return ( 
+        return (
             <div>
                 <SearchBar />
                 <NewsThumbnailList news_list={ this.props.searchNews } />
@@ -29,8 +29,8 @@ class NewsList extends Component {
 }
 
 function mapStateToProps(state) {
-    return { 
-        searchNews: state.searchNews,
+    return {
+        searchNews: state.newsList,
     };
 }
 

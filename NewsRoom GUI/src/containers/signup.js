@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { signupUser } from '../actions'
 
+
 class Signup extends Component {
     renderField(field) {
         const { meta: { touched, error } } = field;

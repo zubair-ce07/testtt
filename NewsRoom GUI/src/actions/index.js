@@ -7,9 +7,13 @@ export const FETCH_NEWS_CATEGORIES = 'fetch_news_categories';
 export const FETCH_SEARCH_NEWS = 'fetch_search_news';
 export const LOGIN_USER = 'login_user';
 export const SIGNUP_USER = 'signup_user';
-
+export const FETCH_NEWS_BY_CATEGORY_NAME = 'fetch_news_by_category_name';
+export const PROFILE_USER = 'profile_user';
+export const INTERESTS_USER = 'interests_user';
+export const ALL_CATEGORIES = 'all_categories';
 
 const ROOT_URL = 'http://localhost:8000/api';
+
 
 export function fetchNewsDetail(id) {
     const request = axios.get(`${ROOT_URL}/v1/news/${id}`);
@@ -52,7 +56,7 @@ export function loginUser(data){
         username: data.email,
         password: data.password
     });
-    
+
     return {
         type: LOGIN_USER,
         payload: request,
@@ -74,11 +78,42 @@ export function signupUser(data){
     }
 }
 
+export function fetchCategoryNews(categoryName) {
+  const request = axios.get(`${ROOT_URL}/v1/categories/${categoryName}/news`);
 
+  return {
+      type: FETCH_NEWS_BY_CATEGORY_NAME,
+      payload: request
+  }
+}
 
+export function userProfile(token){
+    const request = axios.get(`${ROOT_URL}/v1/users/profile/`,{
+        headers : { Authorization : `Token ${token}`}
+    });
+    
+    return {
+        type: PROFILE_USER,
+        payload: request,
+    };
+}
 
+export function userCategories(token){
+    const request = axios.get(`${ROOT_URL}/v1/users/interests/`,{
+        headers : { Authorization : `Token ${token}`}
+    });
+    
+    return {
+        type: INTERESTS_USER,
+        payload: request,
+    };
+}
 
-
-
-
-
+export function allCategories(){
+    const request = axios.get(`${ROOT_URL}/v1/categories/`);
+    
+    return {
+        type: ALL_CATEGORIES,
+        payload: request,
+    };
+}

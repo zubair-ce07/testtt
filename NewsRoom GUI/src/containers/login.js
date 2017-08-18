@@ -3,6 +3,7 @@ import { Field, reduxForm } from 'redux-form';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { loginUser } from '../actions'
+import {reactLocalStorage} from 'reactjs-localstorage';
 
 class Login extends Component {
     renderField(field) {
@@ -24,8 +25,12 @@ class Login extends Component {
     }
 
     onSubmit(values) {
-        this.props.loginUser(values).then(() => {
-            this.props.history.push('/news');
+        this.props.loginUser(values).then(({payload:{data:{token}}}) => {
+            console.log("local", reactLocalStorage);
+            console.log("Login Luqman assurity", token);
+            reactLocalStorage.set('token', token);
+            console.log('Local token: ',reactLocalStorage.get('token'))
+            this.props.history.push('/profile');
         });
     }
 
@@ -70,13 +75,9 @@ function validate(values) {
     return errors;
 }
 
-function mapStateToProps({ user }){
-    return { user }
-}
-
 export default reduxForm({
     validate,
     form: 'LoginForm'
 })(
-    connect(mapStateToProps, { loginUser })(Login)
+    connect(null, { loginUser })(Login)
 );

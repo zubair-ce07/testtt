@@ -11,6 +11,9 @@ import Signup from './containers/signup';
 import NewsDetail from './containers/news_detail';
 import NewsHome from './containers/news_home';
 import NewsSearchList from './containers/news_search';
+import CategoryNewsList from './containers/category_news_list'
+import Profile from './containers/profile';
+import Test from './components/test'
 
 const createStoreWithMiddleware = applyMiddleware(promise)(createStore);
 
@@ -19,9 +22,11 @@ ReactDOM.render(
     <BrowserRouter>
       <div>
         <Switch>
-          <Route path="/profile" component={ Login } />
+          <Route path="/test" component={ Test } />
+          <Route path="/profile" component={ Profile } />
           <Route path="/login" component={ Login } />
           <Route path="/signup" component={ Signup } />
+          <Route path="/news/categories/:name" component={ CategoryNewsList } />
           <Route path="/news/search/:query" component={ NewsSearchList } />
           <Route path="/news/:id" component={ NewsDetail } />
           <Route path="/news" component={ NewsHome }>
