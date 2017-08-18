@@ -1,0 +1,13 @@
+body {
+    margin: 10px;
+    font-family: sans-serif;
+}
+
+div.loginForm {
+    text-align: center;
+
+}
+
+div.loginForm input {
+    border-radius: 25px;
+}
