@@ -4,10 +4,10 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from classes.models import Student, Course, Instructor, Enrollment
-from classes.serializers.course import CourseSerializer
-from classes.serializers.enrollment import EnrollmentSerializer
-from classes.serializers.instructor import InstructorSerializer
-from classes.serializers.student import StudentSerializer
+from classes.serializers import CourseSerializer
+from classes.serializers import EnrollmentSerializer
+from classes.serializers import InstructorSerializer
+from classes.serializers import StudentSerializer
 
 
 @api_view(['GET'])
