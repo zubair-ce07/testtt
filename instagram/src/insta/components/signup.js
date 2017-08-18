@@ -1,7 +1,7 @@
 import React from 'react';
-import validateUsernameEmail from '../utils/validate/usernameEmail'
-import validateNamePasswordDOB from '../utils/validate/namePasswordDOB'
-import urls from '../../index'
+import validateUsernameEmail from '../utils/validate/usernameEmail';
+import validateNamePasswordDOB from '../utils/validate/namePasswordDOB';
+import {globalVars} from '../utils/common';
 
 
 class SignUp extends React.Component{
@@ -131,7 +131,7 @@ class LogInForm extends React.Component{
             alert('Errors aarahay hain..')
         } else {
             console.log('ABOUT TO')
-            fetch(urls.baseURL+urls.login, {
+            fetch(globalVars.urls.baseURL+globalVars.urls.login, {
                 method: 'post',
                 body: JSON.stringify({
                     username: this.state.username,
@@ -143,9 +143,13 @@ class LogInForm extends React.Component{
             }).then((response) => {
                 return response.json()
             }).then((data) => {
-                console.log(data)
-            }).catch((error) => {
-                console.log('ERROR', error)
+                debugger;
+                console.log(data);
+                globalVars.isLoggedIn = true;
+                console.log(globalVars)
+            }).catch((xhr) => {
+                console.warn(xhr.responseText)
+                // console.log(error)
             })
         }
 
@@ -331,7 +335,7 @@ class SignUpForm extends React.Component{
         });
         // console.log(event.target.name, event.target.value);
         if(name === "email" || name === "username") {
-            fetch(urls.baseURL+urls.validUsernameEmail, {
+            fetch(globalVars.urls.baseURL+globalVars.urls.validUsernameEmail, {
                 method: 'post',
                 body: JSON.stringify({
                     [name]: event.target.value
@@ -394,7 +398,7 @@ class SignUpForm extends React.Component{
             alert('Please correct all errors..')
         } else {
                 console.log('ABOUT TO')
-            fetch(urls.baseURL+urls.signup, {
+            fetch(globalVars.urls.baseURL+globalVars.urls.signup, {
                 method: 'post',
                 body: JSON.stringify({
                     // [name]: event.target.value

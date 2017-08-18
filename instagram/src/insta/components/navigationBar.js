@@ -1,5 +1,6 @@
 import React from 'react'
-import urls from '../../index'
+import {globalVars} from '../utils/common';
+
 
 class NavigationBar extends React.Component{
     constructor(props) {
@@ -8,7 +9,7 @@ class NavigationBar extends React.Component{
     }
 
     handleLogout(){
-        fetch(urls.baseURL+urls.logout, {
+        fetch(globalVars.urls.baseURL+globalVars.urls.logout, {
             method: 'get',
         }).then((response) => {
             return response.json()
