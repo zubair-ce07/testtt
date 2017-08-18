@@ -14,7 +14,9 @@ class LemonSpider(CrawlSpider):
     allowed_domains = ['shop.lululemon.com']
     start_urls = ["http://shop.lululemon.com/"]
     denied_keywords = 'login|inspiration|help|features|designs|stores|community'
-    custom_settings = {'ITEM_PIPELINES': {'HypeDC.pipelines.LululemonPipeline': 1}}
+    custom_settings = {'ITEM_PIPELINES': {'HypeDC.pipelines.LululemonPipeline': 1},
+                       'DOWNLOADER_MIDDLEWARES': {'HypeDC.middlewares.ProxyMiddleware': 10}
+    }
 
     rules = (
         Rule(LinkExtractor(restrict_css=('.large-menu li a',), deny=(denied_keywords,))),
@@ -24,6 +26,7 @@ class LemonSpider(CrawlSpider):
 
     def parse_item(self, response):
         item = LululemonItem()
+        print("Current proxy:", response.meta['proxy'])
         item['url'] = response.url
         item['item_id'] = self.get_item_id(response)
         item['name'] = response.css('.product-description .OneLinkNoTx::text').extract_first()
