@@ -3,6 +3,12 @@ import {withRouter} from "react-router-dom";
 import {MenuItem, Nav, Navbar, NavDropdown, NavItem} from "react-bootstrap";
 import Link from "react-router-dom/es/Link";
 
+const event = {
+    news: 1,
+    Menu: 2,
+    profile:2.1,
+    logout: 2.2,
+};
 
 class Header extends React.Component{
     constructor(props){
@@ -10,10 +16,12 @@ class Header extends React.Component{
         this.handleSelect = this.handleSelect.bind(this);
     }
     handleSelect(eventKey) {
-        if(eventKey===3.2)
+        if(eventKey===event.logout)
         {
             localStorage.clear();
             this.props.history.push('/');
+        } else if (eventKey === event.news) {
+            this.props.history.push('/news');
         }
     }
 
@@ -24,11 +32,11 @@ class Header extends React.Component{
             loggedUserLinks = (
                 <Navbar.Collapse >
                     <Nav pullRight onSelect={this.handleSelect}>
-                        <NavItem eventKey={1} href="#">News</NavItem>
-                        <NavDropdown eventKey={2} title="Dropdown" id="basic-nav-dropdown">
-                            <MenuItem eventKey={2.1}>Profile</MenuItem>
+                        <NavItem eventKey={event.news}>News</NavItem>
+                        <NavDropdown eventKey={event.menu} title="Menu" id="basic-nav-dropdown">
+                            <MenuItem eventKey={event.profile}>Profile</MenuItem>
                             <MenuItem divider/>
-                            <MenuItem eventKey={3.2}>Logout</MenuItem>
+                            <MenuItem eventKey={event.logout}>Logout</MenuItem>
                         </NavDropdown>
                     </Nav>
                 </Navbar.Collapse>

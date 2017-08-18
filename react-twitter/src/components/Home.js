@@ -1,5 +1,4 @@
 import React from "react";
-import AuthenticatedHome from "./AuthenticatedHome";
 import Header from "./Header";
 
 class Home extends React.Component{
@@ -8,7 +7,7 @@ class Home extends React.Component{
     return (
         <div>
             <Header/>
-            <AuthenticatedHome/>
+            <h3>Welcome Home</h3>
         </div>
     );
     }
