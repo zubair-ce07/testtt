@@ -17,12 +17,25 @@ from django.conf import settings
 from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.contrib import admin
+from rest_framework.routers import DefaultRouter
+from rest_framework.schemas import get_schema_view
+
+from classes import views as classes_views
+
+schema_view = get_schema_view(title='Pastebin API')
+router = DefaultRouter()
+router.register(r'students', classes_views.StudentViewSet)
+router.register(r'courses', classes_views.CourseViewSet)
+router.register(r'enrollments', classes_views.EnrollmentViewSet)
+router.register(r'instructors', classes_views.InstructorViewSet)
+router.register(r'users', classes_views.UserViewSet)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^', include(router.urls)),
+    url(r'^schema/$', schema_view),
     url(r'^', include('classes.urls')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
