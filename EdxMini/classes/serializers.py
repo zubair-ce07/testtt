@@ -5,24 +5,32 @@ from classes.models import Student, Instructor, Course, Enrollment
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+
     class Meta:
         model = Enrollment
         fields = '__all__'
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+
     class Meta:
         model = Course
         fields = '__all__'
 
 
 class InstructorSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+
     class Meta:
         model = Instructor
         fields = '__all__'
 
 
 class StudentSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+
     class Meta:
         model = Student
         fields = '__all__'
@@ -36,4 +44,4 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'snippets')
+        fields = ('id', 'username', 'student', 'course', 'enrollment', 'instructor')

@@ -18,6 +18,7 @@ class Student(models.Model):
     date_of_birth = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey('auth.user', related_name='student', on_delete=models.CASCADE)
 
     def __str__(self):  # __unicode__ on Python 2
         return '{} {}'.format(self.first_name, self.last_name)
@@ -32,6 +33,7 @@ class Instructor(models.Model):
     image = models.ImageField(upload_to='Instructor/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey('auth.user', related_name='instructor', on_delete=models.CASCADE)
 
     def __str__(self):  # __unicode__ on Python 2
         return '{} {}'.format(self.first_name, self.last_name)
@@ -46,6 +48,7 @@ class Course(models.Model):
     instructors = models.ManyToManyField(Instructor)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey('auth.user', related_name='course', on_delete=models.CASCADE)
 
     def __str__(self):  # __unicode__ on Python 2
         return self.name
@@ -58,3 +61,4 @@ class Enrollment(models.Model):
     joining_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey('auth.user', related_name='enrollment', on_delete=models.CASCADE)
