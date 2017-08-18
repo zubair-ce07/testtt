@@ -4,7 +4,7 @@ import withRouter from "react-router-dom/es/withRouter";
 
 function Logout(props) {
     localStorage.clear();
-    props.history.push('/')
+    props.history.push('/');
     return (
         <Home/>
     )
