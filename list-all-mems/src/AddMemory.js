@@ -24,10 +24,9 @@ export  default class AddMemory extends Component{
                 });
     }
     handleSubmit(event){
-        new MemoryAPI().addMemory(this.state).then(alert('Added Successfully'));
         event.preventDefault();
+        new MemoryAPI().addMemory(this.state).then(memory =>{this.props.onAdd(memory)});
     }
-
     render(){
         return (
                 <form onSubmit={this.handleSubmit}>

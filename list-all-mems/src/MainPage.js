@@ -9,13 +9,18 @@ class MainPage extends Component{
         super(props);
          this.state = { mems: [] };
     }
+    onNewMemoryAdd(memory){
+        this.setState((prevState, props) => {prevState.mems.push(memory);{
+            mems:prevState.mems
+        }});
+    }
     render(){
         let mems = this.state.mems.map(mem => {
              return <Memory mem={mem} key={mem.id}/>
         });
         return (
             <div>
-                <div> <AddMemory /> </div>
+                <div> <AddMemory onAdd={this.onNewMemoryAdd.bind(this)}/> </div>
                 <div > {mems} </div>
             </div>
         );

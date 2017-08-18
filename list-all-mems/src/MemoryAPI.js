@@ -20,7 +20,6 @@ class MemoryAPI {
             }
         ).then((response) => response.json())
         .then((responseData) => {
-            alert(responseData);
           return responseData;
         })
         .catch(error => {
