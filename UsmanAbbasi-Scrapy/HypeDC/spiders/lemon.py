@@ -13,7 +13,7 @@ from HypeDC.items import LululemonItem
 class LemonSpider(CrawlSpider):
     name = 'lululemon'
     allowed_domains = ['shop.lululemon.com']
-    start_urls = ["https://shop.lululemon.com/p/men-ss-tops/5-Year-Basic-Tee-459786/_/prod240113?rcnt=2&N=1z13ziiZ7tu&cnt=59&color=LM3EE6S_029949"]
+    start_urls = ["https://shop.lululemon.com"]
     denied_keywords = 'login|inspiration|help|features|designs|stores|community'
     custom_settings = {'ITEM_PIPELINES': {'HypeDC.pipelines.LululemonPipeline': 1},
                        'DOWNLOADER_MIDDLEWARES': {'HypeDC.middlewares.ProxyMiddleware': 10}
