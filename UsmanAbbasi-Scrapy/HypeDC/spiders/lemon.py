@@ -13,7 +13,6 @@ from HypeDC.items import LululemonItem
 class LemonSpider(CrawlSpider):
     name = 'lululemon'
     allowed_domains = ['shop.lululemon.com']
-#    start_urls = ["http://shop.lululemon.com/"]
     start_urls = ["https://shop.lululemon.com/p/men-ss-tops/5-Year-Basic-Tee-459786/_/prod240113?rcnt=2&N=1z13ziiZ7tu&cnt=59&color=LM3EE6S_029949"]
     denied_keywords = 'login|inspiration|help|features|designs|stores|community'
     custom_settings = {'ITEM_PIPELINES': {'HypeDC.pipelines.LululemonPipeline': 1},
@@ -21,10 +20,9 @@ class LemonSpider(CrawlSpider):
                        }
 
     rules = (
-#        Rule(LinkExtractor(restrict_css=('.large-menu li a',), deny=(denied_keywords,))),
-#        Rule(LinkExtractor(restrict_css=('.submenu li a',), deny=(denied_keywords,))),
-#        Rule(LinkExtractor(allow=('prod[0-9]+',), deny=(denied_keywords,)), callback='parse_item'),
-        Rule(LinkExtractor(allow=('prod240113',), deny=(denied_keywords,)), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=('.large-menu li a',), deny=(denied_keywords,))),
+        Rule(LinkExtractor(restrict_css=('.submenu li a',), deny=(denied_keywords,))),
+        Rule(LinkExtractor(allow=('prod[0-9]+',), deny=(denied_keywords,)), callback='parse_item'),
     )
 
     def parse_item(self, response):
