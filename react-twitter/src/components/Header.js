@@ -11,7 +11,10 @@ class Header extends React.Component{
     }
     handleSelect(eventKey) {
         if(eventKey===3.2)
-            this.props.history.push('/logout');
+        {
+            localStorage.clear();
+            this.props.history.push('/');
+        }
     }
 
     render() {

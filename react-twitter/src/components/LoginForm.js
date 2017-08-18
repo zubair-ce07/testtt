@@ -1,8 +1,10 @@
 import React from "react";
 import {withRouter} from "react-router-dom";
+import Header from "./Header";
 
 
 class LoginForm extends React.Component {
+    static isPrivate = false
     constructor(props) {
         super(props);
         this.state = {
@@ -59,6 +61,7 @@ class LoginForm extends React.Component {
     render() {
         return (
             <div name="loginForm" className="loginForm">
+                <Header/>
                 <h2>Please Login</h2>
                 <form onSubmit={this.handleSubmit}>
                     <input type="text" name="username" placeholder="username" value={this.state.username}
