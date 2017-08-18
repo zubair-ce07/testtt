@@ -5,7 +5,7 @@ const MovieListItem = ({movie, onMovieSelect}) => {
 
     let imageUrl = 'images/no-img.png';
     if (movie.poster_path)
-        imageUrl = 'http://image.tmdb.org/t/p/w92' + movie.poster_path;
+        imageUrl = `http://image.tmdb.org/t/p/w92${movie.poster_path}`;
 
     return (
         <li onClick={() => onMovieSelect(movie)} className="list-group-item">

@@ -8,9 +8,9 @@ const MovieDetail = ({movie}) => {
     let imageUrl = 'images/no-img.png';
     let backdrop_url = 'images/no-img.png';
     if (movie.poster_path)
-        imageUrl = 'http://image.tmdb.org/t/p/w500' + movie.poster_path;
+        imageUrl = `http://image.tmdb.org/t/p/w500${movie.poster_path}`;
     if (movie.backdrop_path)
-        backdrop_url = 'http://image.tmdb.org/t/p/w780' + movie.backdrop_path;
+        backdrop_url = `http://image.tmdb.org/t/p/w780${movie.backdrop_path}`;
 
     return (
         <div className="movie-detail col-md-9 ">
