@@ -16,7 +16,6 @@ SPIDER_MODULES = ['HypeDC.spiders']
 NEWSPIDER_MODULE = 'HypeDC.spiders'
 
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'HypeDC (+http://www.yourdomain.com)'
 
@@ -56,6 +55,7 @@ DOWNLOAD_DELAY = 3
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
 #    'HypeDC.middlewares.MyCustomDownloaderMiddleware': 543,
+#    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': None
 #}
 
 # Enable or disable extensions

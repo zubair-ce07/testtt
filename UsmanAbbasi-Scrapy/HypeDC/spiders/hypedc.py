@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from scrapy.linkextractors import LinkExtractor
 
 from scrapy.spiders import CrawlSpider, Rule
@@ -11,12 +10,13 @@ class HypedcSpider(CrawlSpider):
     name = 'hypedc'
     allowed_domains = ['hypedc.com']
     start_urls = ['http://hypedc.com/']
-    custom_settings = {'ITEM_PIPELINES' : {'HypeDC.pipelines.HypedcPipeline': 1}}
+    custom_settings = {'ITEM_PIPELINES' : {'HypeDC.pipelines.HypedcPipeline': 1},}
 
     rules = (
         Rule(LinkExtractor(restrict_css=('li[id^=navbar] a',), deny=('news|faq|legals|contacts'))),
-        Rule(LinkExtractor(allow=(r'\?p='), deny=('news|faq|legals|contacts'))),
-        Rule(LinkExtractor(allow=(r'.*\.html'), deny=('news|faq|legals|contacts')), follow=False, callback='parse_item'),
+        Rule(LinkExtractor(allow=(r'\?p=',), deny=('news|faq|legals|contacts'))),
+        Rule(LinkExtractor(allow=(r'.*\.html',), deny=('news|faq|legals|contacts',)),
+             follow=False, callback='parse_item'),
     )
 
     def parse_item(self, response):
