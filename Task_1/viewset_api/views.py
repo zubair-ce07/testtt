@@ -5,10 +5,10 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.mixins import CreateModelMixin
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from viewset_api.permissions import IsOwnerOrReadOnly
+from task1.permissions import IsOwnerOrReadOnly
 from viewset_api.serializers.auth_serializers import LoginSerializer, SignupSerializer
 from viewset_api.serializers.user_serializers import UserSerializer
 from viewset_api.utils import response_json, get_token
@@ -20,82 +20,80 @@ class UserViewSet(viewsets.ModelViewSet):
 
     Method: 'GET'
 
-    Response Body:
-        {
-            "success": true,
-            "message": null,
-            "response": {
-                "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
-                "username": "username",
-                "email": "email address",
-                "first_name": "First Name",
-                "last_name": "Last Name",
-                 "userprofile": {
-                    "phone_number": "(+)123456789",
-                    "country": "AZ",
-                    "image": "users/user.jpg",
-                    "address": "Address"
-                }
+    Response Body: {
+        "success": true,
+        "message": null,
+        "response": {
+            "url": "http://localhost:8000/viewset_api/users/<user_id>/",
+            "username": "username",
+            "email": "email address",
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "userprofile": {
+                "phone_number": "(+)123456789",
+                "country": "AZ",
+                "image": "users/user.jpg",
+                "address": "Address"
             }
-            {
-                ......
-            }
-            .......
         }
+        {
+            ......
+        }
+        .......
+    }
 
-    Details API: 'viewset_api/users/[0-9]+(user_id)/'
+    Details API: 'viewset_api/users/<user_id>/'
 
     Methods: 'GET, PUT, PATCH, DELETE'
 
-        GET:
-            Response Body:
-            {
-                "success": true,
-                "message": null,
-                "response": {
-                    "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
-                    "username": "username",
-                    "email": "email address",
-                    "first_name": "First Name",
-                    "last_name": "Last Name",
-                    "userprofile": {
-                        "phone_number": "(+)123456789",
-                        "country": "AZ",
-                        "image": "users/user.jpg",
-                        "address": "Address"
-                    }
+    GET:
+    Response Body: {
+        "success": true,
+        "message": null,
+        "response": {
+            "url": "http://localhost:8000/viewset_api/users/<user_id>/",
+            "username": "username",
+            "email": "email address",
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "userprofile": {
+                "phone_number": "(+)123456789",
+                "country": "AZ",
+                "image": "users/user.jpg",
+                "address": "Address"
             }
-}
-
-        PUT, PATCH:
-            Response Body:
-            {
-                "success": true,
-                "message": "User successfully updated",
-                "response": {
-                    "url": "http://localhost:8000/viewset_api/users/[0-9]+/",
-                    "username": "username",
-                    "email": "email address",
-                    "first_name": "First Name",
-                    "last_name": "Last Name",
-                    "userprofile": {
-                        "phone_number": "(+)123456789",
-                        "country": "AZ",
-                        "image": "users/user.jpg",
-                        "address": "Address"
-                    }
-            }
-
-        DELETE:
-        {
-            "success": True,
-            "message='User successfully deleted',
-            "response": null,
         }
+    }
+
+    PUT, PATCH:
+    Response Body: {
+        "success": true,
+        "message": "User successfully updated",
+        "response": {
+            "url": "http://localhost:8000/viewset_api/users/<user_id>/",
+            "username": "username",
+            "email": "email address",
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "userprofile": {
+                "phone_number": "(+)123456789",
+                "country": "AZ",
+                "image": "users/user.jpg",
+                "address": "Address"
+            }
+        }
+    }
+
+    DELETE: {
+        "success": True,
+        "message='User successfully deleted',
+        "response": null,
+    }
     """
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
 
     def list(self, request, *args, **kwargs):
         response = super(UserViewSet, self).list(request, *args, **kwargs)
@@ -122,20 +120,10 @@ class Login(viewsets.GenericViewSet):
     """
     API: 'viewset_api/login/'
 
-    Method: 'GET, POST'
-    GET:
-    Response Body:
-        {
-            "success": true,
-            "message": null,
-            "response": {
-                "username": "",
-                "password": ""
-            }
-        }
+    Method: 'POST'
+
     POST:
-    Response Body:
-    {
+    Response Body: {
         "success": true/false,
         "message": "User has been logged in"/"Invalid Credentials",
         "response": {
@@ -145,13 +133,10 @@ class Login(viewsets.GenericViewSet):
         }
     }
     """
+
     permission_classes = (AllowAny,)
     authentication_classes = (BasicAuthentication,)
     serializer_class = LoginSerializer
-
-    def get(self, request):
-        serializer = self.serializer_class()
-        return Response(response_json(True, serializer.data, None), status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -165,67 +150,46 @@ class Login(viewsets.GenericViewSet):
                                     status=status.HTTP_200_OK)
                 response.set_cookie('token', token)
                 return response
+            else:
+                return Response(response_json(False, serializer.validated_data, message='User account inactive'),
+                                status=status.HTTP_400_BAD_REQUEST)
         return Response(response_json(False, serializer.data, message='Invalid credentials'),
                         status=status.HTTP_400_BAD_REQUEST)
 
 
 class Signup(CreateModelMixin, viewsets.GenericViewSet):
     """
-        API: 'viewset_api/signup/'
+    API: 'viewset_api/signup/'
 
-        Method: 'GET, POST'
+    Method: 'POST'
 
-        GET:
-        Response body:
-        {
-            "success": true,
-            "message": null,
-            "response": {
-                "username": "",
-                "password": "",
-                "password2": "",
-                "email": "",
-                "first_name": "",
-                "last_name": "",
-                "userprofile": {
-                    "phone_number": "",
-                    "country": null,
-                    "image": null,
-                    "address": ""
-                }
-            }
+    POST:
+    Response Body: {
+        "success": true,
+        "message": "User has been successfully created",
+        "response": {
+            "username": "Username",
+            "password": "Hashed Password",
+            "email": "Email Address",
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "userprofile": {
+                "phone_number": "(+)123456789",
+                "country": "AZ",
+                "image": "users/image.jpg",
+                "address": "Address"
+            },
+            "token": "JWT Token"
         }
+    }
+    """
 
-        POST:
-        Response Body:
-        {
-            "success": true,
-            "message": "User has been successfully created",
-            "response": {
-                "username": "Username",
-                "password": "Hashed Password",
-                "email": "Email Address",
-                "first_name": "First Name",
-                "last_name": "Last Name",
-                "userprofile": {
-                    "phone_number": "(+)123456789",
-                    "country": "AZ",
-                    "image": "users/image.jpg",
-                    "address": "Address"
-                },
-                    "token": "JWT Token"
-            }
-        """
     permission_classes = (AllowAny,)
     authentication_classes = (BasicAuthentication,)
     serializer_class = SignupSerializer
 
     def get_object(self, username):
         return User.objects.get(username=username)
-
-    def get(self, request):
-        serializer = self.serializer_class()
-        return Response(response_json(True, serializer.data, None), status=status.HTTP_200_OK)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -245,20 +209,17 @@ class Logout(viewsets.GenericViewSet):
     Method: 'GET'
 
     GET:
-    Response body:
-    {
+    Response body: {
         "success": true/false,
-        "message": "User has been successfully logged out."/ "No user logged in to log out.",
+        "message": "User has been successfully logged out.",
         "response": null
     }
     """
-    permission_classes = (AllowAny,)
+
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        if request.user.is_authenticated:
-            response = Response(response_json(True, None, message='User has been successfully logged out.'),
-                                status=status.HTTP_204_NO_CONTENT)
-            response.delete_cookie('token')
-            return response
-        return Response(response_json(False, None, message='No user logged in to log out.'),
-                        status=status.HTTP_400_BAD_REQUEST)
+        response = Response(response_json(True, None, message='User has been successfully logged out.'),
+                            status=status.HTTP_204_NO_CONTENT)
+        response.delete_cookie('token')
+        return response

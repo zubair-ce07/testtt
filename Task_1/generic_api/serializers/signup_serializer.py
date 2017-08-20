@@ -14,9 +14,7 @@ class SignupSerializer(UserSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'username', 'password', 'password2', 'email', 'first_name', 'last_name', 'phone_number', 'country', 'image',
-            'address')
+        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name', 'userprofile')
 
     def create(self, validated_data):
         user_profile_data = validated_data.pop('userprofile')

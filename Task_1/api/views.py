@@ -33,7 +33,7 @@ class UserListAPI(APIView):
     Method: 'GET'
 
     GET:
-    Response body:{
+    Response body: {
         "success": true,
         "message": null,
         "response": [
@@ -65,11 +65,10 @@ class UserDetailAPI(APIView):
     """
     API: 'api/details_api/'
 
-    Method: 'GET, PUT, DELETE'
+    Methods: 'GET, PUT, DELETE'
 
     GET:
-    Response body:
-    {
+    Response body: {
         "success": true,
         "message": null,
         "response": {
@@ -82,9 +81,10 @@ class UserDetailAPI(APIView):
             "image": "media/users/image.jpg",
             "address": "Address"
         }
+    }
+
     PUT:
-    Response body:
-    {
+    Response body: {
         "success": true,
         "message": null,
         "response": {
@@ -97,13 +97,14 @@ class UserDetailAPI(APIView):
             "address": "Address"
         }
     }
-    DELETE:
-    {
-         "success": true,
+
+    DELETE: {
+        "success": true,
         "message": "User has been succesfully deleted",
         "response": null
     }
-     """
+    """
+    
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):

@@ -10,6 +10,6 @@ router.register(r'signup', views.Signup, base_name='signup')
 
 urlpatterns = [
     url('^', include(router.urls)),
-    url(r'login/$', views.Login.as_view({'get': 'get', 'post': 'post'}), name='login'),
+    url(r'login/$', views.Login.as_view({'post': 'post'}), name='login'),
     url(r'logout/$', views.Logout.as_view({'get': 'get'}), name='logout'),
 ]

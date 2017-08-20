@@ -19,21 +19,4 @@
             <input id="submitButton" type="submit" value="Login" class="btn btn-primary">
         </form>
     </div>
-{#    <script#}
-    {#            src="http://code.jquery.com/jquery-3.2.1.js"#}
-    {#            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="#}
-    {#            crossorigin="anonymous"></script>#}
-    {#    <script>#}
-    {#        $('#submitButton').click(function (evt) {#}
-    {#            var form = $('#loginForm');#}
-    {#            var credentials = {#}
-    {#                username: $('input[name="username"]').val(),#}
-    {#                password: $('input[name="password"]').val()#}
-    {#            };#}
-    {#            $.post("{% url 'api:token' %}", credentials, function (auth) {#}
-    {#                $.cookie("token", auth.token, {path: '', domain: '', secure: true});#}
-    {##}
-    {#            });#}
-    {#        })#}
-    {#    </script>#}
 {% endblock content %}

@@ -1,26 +1,41 @@
 from django.contrib.auth.models import User
-from django.core.validators import RegexValidator
+from django_countries.fields import Country
 from django_countries.serializer_fields import CountryField
 from rest_framework import serializers
 
-message = "Phone number must be entered in the format: '+9999999999'."
-phone_validator = RegexValidator(regex=r'^\+?\d{9,15}$', message=message)
+from users.models import UserProfile
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    country = CountryField(allow_blank=True, required=False)
+    image = serializers.ImageField(allow_empty_file=True, use_url=False, allow_null=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ('phone_number', 'country', 'image', 'address')
 
 
 class UserSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='generic:details')
-    phone_number = serializers.CharField(source='userprofile.phone_number', max_length=15, validators=[phone_validator],
-                                         allow_blank=True, required=False)
-    country = CountryField(source='userprofile.country', allow_blank=True, required=False)
-    image = serializers.ImageField(allow_empty_file=True, source='userprofile.image', use_url=False, allow_null=True)
-    address = serializers.CharField(source='userprofile.address', max_length=1000, allow_blank=True, required=False)
+    userprofile = UserProfileSerializer()
 
     class Meta:
         model = User
-        fields = ('url', 'username', 'email', 'first_name', 'last_name', 'phone_number', 'country', 'image', 'address')
+        fields = ('url', 'username', 'email', 'first_name', 'last_name', 'userprofile')
         read_only_fields = ('username',)
+
+    def update(self, instance, validated_data):
+        user_profile = instance.userprofile
+        user_profile_data = validated_data.pop('userprofile')
+        user_profile.phone_number = user_profile_data.get('phone_number')
+        user_profile.country = Country(code=user_profile_data.get('country'))
+        user_profile.address = user_profile_data.get('address')
+        if user_profile_data.get('image'):
+            user_profile.image = user_profile_data.get('image')
+        user_profile.save()
+        return super(UserSerializer, self).update(instance, validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
