@@ -11,12 +11,17 @@ class MotelRocksSpider(CrawlSpider):
     allowed_domains = ["motelrocks.com"]
     start_urls = ['http://www.motelrocks.com/']
 
-    rules = (Rule(LinkExtractor(restrict_css=('ul#nav-menu li a',)), callback='request_next_pages'),)
+    rules = (Rule(LinkExtractor(restrict_css=('ul#nav-menu li',)), callback='request_next_pages'),)
 
     def get_category_id(self, response):
         categoryid = response.xpath('//script[contains(.,"catid:")]//text()').extract_first()
-        categoryid = re.search('categoryid:.-?(\w)+.', categoryid).group().split(':')[1]
-        return re.sub('[^\w]', '', categoryid)
+        categoryid = re.findall('categoryid:\s*\'(\w)+\'', categoryid)[0]
+        return categoryid
+
+    def clean_description_output(self, descriptions):
+        descriptions = descriptions[1:-1]
+        nonword_char = descriptions.pop(-2)
+        return descriptions
 
     def request_next_pages(self, response):
         total_pages = int(response.css('div.pageitem::text').extract()[-2])
@@ -41,7 +46,8 @@ class MotelRocksSpider(CrawlSpider):
         return 'MotelRocks'
 
     def parse_description_info(self, response):
-        return response.css('#Details p span::text').extract()
+        descriptions = response.css('#Details ::text').extract()
+        return self.clean_description_output(descriptions)
 
     def parse_item_name(self, response):
         return response.css('#product-desc h1::text').extract_first()
