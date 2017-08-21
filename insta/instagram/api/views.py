@@ -5,24 +5,29 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+import json
 
-from instagram.serializers import *
+from instagram.models import User, Post, Comment, Like, FollowRelation
+from instagram import serializers
 
 
 class NewsfeedListAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = PostSerializer
+    permission_classes = [permissions.AllowAny]
+    serializer_class = serializers.PostSerializer
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        posts = Post.objects.filter(user=user)
-        all_following = FollowRelation.objects.filter(follower__username=user.username).values('user')
-        for item in all_following:
-            pk = item['user']
-            user = User.objects.get(pk=pk)
-            posts = posts | Post.objects.filter(user__username=user.username)
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
+        if user.is_authenticated:
+            posts = Post.objects.filter(user=user)
+            all_following = FollowRelation.objects.filter(follower__username=user.username).values('user')
+            for item in all_following:
+                pk = item['user']
+                user = User.objects.get(pk=pk)
+                posts = posts | Post.objects.filter(user__username=user.username)
+            serializer = serializers.PostSerializer(posts, many=True)
+            return Response(serializer.data)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class UserLogoutAPIView(APIView):
@@ -35,26 +40,31 @@ class UserLogoutAPIView(APIView):
 
 class UserLoginAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    serializer_class = UserLoginSerializer
+    serializer_class = serializers.UserLoginSerializer
 
     def post(self, request, *args, **kwargs):
         if request.user.is_anonymous:
-            serializer = UserLoginSerializer(request.data)
+            serializer = serializers.UserLoginSerializer(request.data)
             user = authenticate(**serializer.data)
+            token = Token.objects.get_or_create(user=user)
+            print(token[0])
+            user_credentials = {
+                'username': serializer.data["username"],
+                'token': token[0]
+                }
             login(request, user)
 
-            return Response(serializer.data)
-        else:
-            return Response({}, status=status.HTTP_204_NO_CONTENT)
+            return Response(json.dumps(user_credentials))
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
 
 class UserSignupAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    serializer_class = UserCreateSerializer
+    serializer_class = serializers.UserCreateSerializer
     queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
-        serializer = UserCreateSerializer(data=request.data)
+        serializer = serializers.UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.initial_data['username']
         first_name = serializer.initial_data['first_name']
@@ -91,41 +101,41 @@ class UsernameEmailAvailableAPIView(APIView):
 class UserListAPIView(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = serializers.UserSerializer
 
 
 class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = User.objects.all()
-    serializer_class = UserDetailSerializer
+    serializer_class = serializers.UserDetailSerializer
     lookup_field = 'pk'
 
 
 class PostListAPIView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
-    serializer_class = PostSerializer
+    serializer_class = serializers.PostSerializer
 
 
 class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
-    serializer_class = PostDetailSerializer
+    serializer_class = serializers.PostDetailSerializer
 
 
 class LikeListAPIView(generics.ListCreateAPIView):
     queryset = Like.objects.all()
-    serializer_class = LikeSerializer
+    serializer_class = serializers.LikeSerializer
 
 
 class LikeDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Like.objects.all()
-    serializer_class = LikeSerializer
+    serializer_class = serializers.LikeSerializer
 
 
 class CommentListAPIView(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    serializer_class = serializers.CommentSerializer
 
 
 class CommentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    serializer_class = serializers.CommentSerializer

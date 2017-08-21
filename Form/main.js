@@ -32,27 +32,14 @@ $(document).ready(function () {
         })
     });
 
-    $first_name.on('click', function () {
-        raiseBlankField(1)
-    });
-
     $first_name.on('keydown', function() {
         $("div.first-name").text("")
         $("div.first-name").html('<br>')
     });
 
-    $last_name.on('click', function () {
-        raiseBlankField(2)
-    });
-
     $last_name.on('keydown', function() {
         $("div.last-name").text("")
         $("div.last-name").html('<br>')
-    });
-
-    $email.on('click', function () {
-        raiseBlankField(3)
-        console.log(this)
     });
 
     $email.on('keyup', function () {
@@ -80,22 +67,14 @@ $(document).ready(function () {
         })
     });
 
-    $password.on('click', function (event) {
-        raiseBlankField(4)
-    });
-
     $password.on('keydown', function() {
         $("div.password").text("")
         $("div.password").html('<br>')
     });
 
-    $date_of_birth.on('click', function (event) {
-        raiseBlankField(5)
-    });
-
     $("button").on('click', function (event) {
         event.preventDefault();
-        console.log("Button Clicked!", $username.val())
+        raiseBlankField();
        $.ajax({
            data: {
                'username':$username.val(),
@@ -119,41 +98,26 @@ $(document).ready(function () {
     });
 });
 
-var raiseBlankField = function(inp){
-    if(inp >= 1){
-        if($username.val().length < 1){
-            $("div.username").text("Username can not be blank")
-        }
-    }
-    if(inp >= 2){
-        if($first_name.val().length < 1){
-            $("div.first-name").text("Name field can not be blank")
-        }
-    }
-    if(inp >= 3){
-        if($last_name.val().length < 1){
-            $("div.last-name").text("Name field can not be blank")
-        }
-    }
-    if(inp >= 4){
-        if($email.val().length < 1){
-            $("div.email").text("Email field can not be blank")
-        }
-    }
-    if(inp >= 5){
-        if($password.val().length < 1){
-            $("div.password").text("Password can not be blank")
-        }
-    }
-    if(inp >= 6){
-        if($date_of_birth.val().length < 1){
-            $("div.date-of-birth").text("Date can not be blank")
+var raiseBlankField = function(){
+    $inputFields = $("input.input-field")
+    for(let i = 0; i < $inputFields.length; i++){
+        if($inputFields[i].value.length < 1){
+            divName = getDivName($inputFields[i].name)
+            $("div."+$inputFields[i].name.replace("_", "-")).text(divName+" can not be blank")
         }
     }
 }
 
+var getDivName = function(inputFieldName){
+    divName = inputFieldName.replace("_", " ")
+    return divName.replace(/\w\S*/g, function(txt){
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
+
 var displayAvailability = function(data, $handle, field){
-    if(data=='true'){
+    data = JSON.parse(data)
+    if(data['is_taken'] === true){
         if(field == "username"){
             $("div."+field).text("Username " + $handle.val() + " is unavailable")
         } else {

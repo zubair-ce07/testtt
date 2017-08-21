@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
-from .models import User, Post
+
+from instagram.models import User, Post
 
 
 class ContactForm(forms.Form):

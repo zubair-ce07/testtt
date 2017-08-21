@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
 
+import logging
+
 from instagram.forms import SignUpForm, LoginForm, NewPostForm
 from instagram.models import User, Post
 
@@ -136,14 +138,11 @@ def follow_profile(request, pk):
     to_follow = get_object_or_404(User, pk=pk)
     user.following.add(to_follow)
     user.save()
-    followers, following = get_followers_and_following(to_follow)
     return render(request, 'instagram/profile.html',
                   {'errors': errors,
                    'user': to_follow,
                    'logged_in_profile': False,
                    'already_followed': True,
-                   'following': following,
-                   'followers': followers,
                    })
 
 
@@ -154,14 +153,11 @@ def unfollow_profile(request, pk):
     to_unfollow = get_object_or_404(User, pk=pk)
     user.following.remove(to_unfollow)
     to_unfollow.refresh_from_db()
-    followers, following = get_followers_and_following(to_unfollow)
     return render(request, 'instagram/profile.html',
                   {'errors': errors,
                    'user': to_unfollow,
                    'logged_in_profile': False,
                    'already_followed': False,
-                   'following': following,
-                   'followers': followers,
                    })
 
 
@@ -204,5 +200,5 @@ def get_user_objects(query_set, key):
             user = get_object_or_404(User, pk=int(item[key]))
             users.append(user)
         except KeyError:
-            print('ERROR')
+            logging.error('User does not exist..')
     return users

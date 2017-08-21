@@ -56,9 +56,6 @@ class FollowRelation(models.Model):
     follower = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='follower', on_delete=models.CASCADE)
     followed_at = models.DateTimeField(auto_now_add=True)
 
-    # def __str__(self):
-    #     return self.follower.username + ' -> ' +self.user.username
-
 
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

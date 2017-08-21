@@ -1,4 +1,3 @@
-from django.db import models
 from django.contrib.auth.models import BaseUserManager
 
 
@@ -35,5 +34,4 @@ class UserManager(BaseUserManager):
         user.is_admin = True
         user.save(using=self._db)
         return user
-
 
