@@ -1,6 +1,6 @@
 import React from "react";
 import {Media} from "react-bootstrap";
-import {domain, userToken} from "../config";
+import {domain, getHeader} from "../config";
 
 class NewsDetailedCard extends React.Component {
     render() {
@@ -41,11 +41,7 @@ export default class NewsDetailed extends React.Component {
     fetchNewsFromApi = () => {
         fetch(domain + '/news/' + this.props.match.params.id, {
             method: 'GET',
-            headers: {
-                'Authorization': 'Token ' + userToken,
-                'Content-Type': 'application/json',
-
-            },
+            headers: getHeader(),
         })
             .then((response) => response.json())
             .then((responseJson) => {

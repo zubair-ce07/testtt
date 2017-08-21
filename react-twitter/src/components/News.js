@@ -1,6 +1,6 @@
 import React from "react";
 import NewsCard from "./NewsCard";
-import {domain, userToken} from "../config";
+import {domain, getHeader} from "../config";
 
 class News extends React.Component {
     static isPrivate = true;
@@ -16,11 +16,7 @@ class News extends React.Component {
     fetchNewsFromApi() {
         fetch(domain + '/news/', {
             method: 'GET',
-            headers: {
-                Authorization: 'Token ' + userToken,
-                'Content-Type': 'application/json',
-
-            },
+            headers: getHeader()
         })
             .then((response) => response.json())
             .then((responseJson) => {
@@ -37,7 +33,6 @@ class News extends React.Component {
     }
 
     render() {
-        debugger;
         let newsComponents = this.state.news.map((news) => <NewsCard key={news.id} news={news}/>);
         return (
             <div>
