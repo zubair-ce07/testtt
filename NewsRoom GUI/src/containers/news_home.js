@@ -21,7 +21,9 @@ class NewsHome extends Component {
                 <Panel key={categoryObject.category}>
                     <Row>
                         <Well>
-                            <h2>{categoryObject.category}</h2>
+                            <h2>
+                                <Link to={`/news/categories/${categoryObject.category}`}>{categoryObject.category}</Link>
+                            </h2>
                         </Well>
                         <NewsThumbnailList news_list={categoryObject.news} />
                     </Row>

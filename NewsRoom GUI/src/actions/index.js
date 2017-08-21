@@ -11,6 +11,8 @@ export const FETCH_NEWS_BY_CATEGORY_NAME = 'fetch_news_by_category_name';
 export const PROFILE_USER = 'profile_user';
 export const INTERESTS_USER = 'interests_user';
 export const ALL_CATEGORIES = 'all_categories';
+export const UPDATE_INTERESTS = 'update_user_interests';
+export const UPDATE_USER_PROFILE = 'update_user_profile';
 
 const ROOT_URL = 'http://localhost:8000/api';
 
@@ -114,6 +116,33 @@ export function allCategories(){
     
     return {
         type: ALL_CATEGORIES,
+        payload: request,
+    };
+}
+
+export function updateUserInterests(token, interests){
+    console.log("Update Token Action", token)
+    const config = {
+        headers : { Authorization : `Token ${token}`}
+    }
+    const params = { interests };
+    const request = axios.post(`${ROOT_URL}/v1/users/interests/`, params, config);
+    
+    return {
+        type: UPDATE_INTERESTS,
+        payload: request,
+    };
+}
+
+export function updateUserProfile(token, data){
+    const config = {
+        headers : { Authorization : `Token ${token}`}
+    }
+    const params = data;
+    const request = axios.post(`${ROOT_URL}/v1/users/profile/`, params, config);
+    
+    return {
+        type: UPDATE_USER_PROFILE,
         payload: request,
     };
 }

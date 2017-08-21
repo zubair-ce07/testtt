@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Field, reduxForm } from 'redux-form';
-import _ from 'lodash';
+import { updateUserProfile } from '../actions';
+import { connect } from 'react-redux';
+import { reactLocalStorage } from 'reactjs-localstorage';
 
 
 class ProfileForm extends Component {
@@ -12,11 +14,6 @@ class ProfileForm extends Component {
     }
 
     renderField(field) {
-        
-        // const readonly = 'readonly'
-        console.log("TOuched", field);
-        /*value={field.read_value ? field.data : field.input.value }*/
-         
         return (
             <div className="form-group">
                 <label className="control-label">{ field.label }</label>
@@ -32,11 +29,14 @@ class ProfileForm extends Component {
     }
 
     onEdit() {
+        console.log("EDITED")
         this.setState({read_only: false});
     }
 
     onSubmit(values){
-
+        const token = reactLocalStorage.get('token', "");
+        this.props.updateUserProfile(token, values);
+        this.setState({read_only: true});
     }
 
     toggleDisplay(display_property){
@@ -51,6 +51,7 @@ class ProfileForm extends Component {
         console.log("P1: ", dis);
         console.log("P2: ", dis1);
         return (
+            <div>
             <form onSubmit={ handleSubmit(this.onSubmit.bind(this))}>
                 <Field 
                     label="Email" 
@@ -73,13 +74,29 @@ class ProfileForm extends Component {
                     read_value={this.state.read_only}
                     component={ this.renderField }
                 />
-                <button onClick={this.onEdit.bind(this)} className="btn btn-primary" style={{display:dis}}>Edit</button>
                 <button type="submit" className="btn btn-primary" style={{display:dis1}}>Update</button>
             </form>
+            <button onClick={this.onEdit.bind(this)} className="btn btn-primary" style={{display:dis}}>Edit</button>
+            </div>
         );
     }
 }
 
+function validate(values) {
+    const errors = {};
+
+    if (!values.first_name){
+        errors.first_name = "Enter your First Name";
+    }
+    if (!values.last_name){
+        errors.last_name = "Enter your Last Name";
+    }
+    return errors;
+}
+
 export default reduxForm({
-    form: 'ProfileForm',
-})(ProfileForm);
+    validate,
+    form: 'ProfileForm'
+})(
+    connect(null, { updateUserProfile })(ProfileForm)
+);

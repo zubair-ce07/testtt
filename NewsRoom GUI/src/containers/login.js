@@ -6,6 +6,13 @@ import { loginUser } from '../actions'
 import {reactLocalStorage} from 'reactjs-localstorage';
 
 class Login extends Component {
+    componentWillMount(){
+        const token = reactLocalStorage.get('token', "");
+        if (token){
+            this.props.history.push('/profile');
+        }
+    }
+
     renderField(field) {
         const { meta: { touched, error } } = field;
         const className = `form-group ${touched && error ? 'has-error' : ''}`;

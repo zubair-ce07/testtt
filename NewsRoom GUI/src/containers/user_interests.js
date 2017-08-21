@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Multiselect from 'react-bootstrap-multiselect';
 import _ from 'lodash';
 import { reactLocalStorage } from 'reactjs-localstorage';
-import { userCategories, allCategories } from '../actions';
+import { userCategories, allCategories, updateUserInterests } from '../actions';
 
 class UserInterests extends Component {
 
@@ -67,6 +67,20 @@ class UserInterests extends Component {
         return  _.union(selectedInterests, unselectedInterests);        
     }
 
+    onUpdateInterests() {
+        let userInterests = [];
+        const interests = this.state.interests; 
+        for (var i=0; i< interests.length; i++) {
+            if (interests[i].selected){
+                
+                userInterests.push(interests[i].value);
+            }
+        }
+        const token = reactLocalStorage.get('token', "");
+        console.log("Update Token", token)
+        this.props.updateUserInterests(token, userInterests);
+    }
+
     render () {
         if(this.state.error)
         {
@@ -78,12 +92,15 @@ class UserInterests extends Component {
         }
         
         return (
-            <Multiselect 
-                onChange={ this.handleChange.bind(this )} 
-                data={ this.state.interests } 
-                multiple 
-                enableCaseInsensitiveFiltering
-            />
+            <div>
+                <Multiselect 
+                    onChange={ this.handleChange.bind(this )} 
+                    data={ this.state.interests } 
+                    multiple 
+                    enableCaseInsensitiveFiltering
+                />
+                <button onClick={this.onUpdateInterests.bind(this)}>Update</button>
+            </div>
         );
     }
 }
@@ -92,6 +109,6 @@ function mapStateToProps({ userInterests, categories }){
     return { userInterests, categories };
 }
 
-export default connect(mapStateToProps,{ userCategories, allCategories })(UserInterests);
+export default connect(mapStateToProps,{ userCategories, allCategories, updateUserInterests })(UserInterests);
 
 
