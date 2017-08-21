@@ -7,7 +7,9 @@ class News extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {};
+        this.state = {
+            news: []
+        };
         this.fetchNewsFromApi();
     }
 
@@ -35,9 +37,8 @@ class News extends React.Component {
     }
 
     render() {
-        let newsComponents = (this.state.news ? this.state.news.map((news) =>
-            <NewsCard key={news.id} news={news}/>
-        ) : null);
+        debugger;
+        let newsComponents = this.state.news.map((news) => <NewsCard key={news.id} news={news}/>);
         return (
             <div>
                 <h3>News</h3>
