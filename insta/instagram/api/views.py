@@ -32,7 +32,7 @@ class UserLogoutAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         logout(request)
-        return Response({})
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
 
 class UserLoginAPIView(APIView):

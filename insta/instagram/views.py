@@ -38,8 +38,9 @@ def get_followers_and_following(user):
     return followers, following
 
 
+@login_required(login_url=login_url)
 def index(request):
-    return HttpResponseRedirect('login')
+    return HttpResponseRedirect('newsfeed')
 
 
 def logout(request):
