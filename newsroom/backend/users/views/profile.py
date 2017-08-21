@@ -28,7 +28,7 @@ class UserProfileAPIView(APIView):
     def post(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             try:
-                User.objects.update_or_create(username=request.user.username,
+                User.objects.update_or_create(email=request.user.email,
                                               defaults=request.data)
                 return Response(request.data, status=status.HTTP_200_OK)
             except KeyError:

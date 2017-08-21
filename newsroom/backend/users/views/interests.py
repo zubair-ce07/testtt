@@ -28,13 +28,12 @@ class UserInterestAPIView(APIView):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     def post(self, request, *args, **kwargs):
+        print(request);
         if request.user.is_authenticated:
             try:
-                request_data = dict(request.data.lists())
-
                 UserInterest.objects.filter(user=request.user).delete()
 
-                queries = [Q(name=value) for value in request_data['interests']]
+                queries = [Q(name=value) for value in request.data['interests']]
                 query = queries.pop()
                 for item in queries:
                     query |= item
@@ -43,11 +42,13 @@ class UserInterestAPIView(APIView):
                 UserInterest.objects.bulk_create([UserInterest(user=request.user,
                                                                category=interest) for interest in interests])
 
-                return Response(request.data, status=status.HTTP_201_CREATED)
+                queryset = self.queryset.filter(user=request.user)
+                serializer = self.serializer_class(queryset, many=True)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             except DatabaseError:
-                Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             except KeyError:
-                Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             except:
-                Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
