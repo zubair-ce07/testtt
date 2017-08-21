@@ -37,11 +37,3 @@ class UserManager(BaseUserManager):
         return user
 
 
-class FollowingManager(models.Manager):
-    def get_queryset(self):
-        return super(FollowingManager, self).get_queryset().values('following')
-
-
-class FollowerManager(models.Manager):
-    def get_queryset(self, followers_for):
-        return super(FollowerManager, self).get_queryset().filter(following__username=followers_for).all()

@@ -13,7 +13,6 @@ from instagram.serializers import *
 class NewsfeedListAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PostSerializer
-    # query_set = Post.objects.all()
 
     def get(self, request, *args, **kwargs):
         user = request.user
@@ -37,7 +36,6 @@ class UserLogoutAPIView(APIView):
 
 class UserLoginAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    # authentication_classes = [SessionAuthentication, BasicAuthentication]
     serializer_class = UserLoginSerializer
 
     def post(self, request, *args, **kwargs):
@@ -74,32 +72,29 @@ class UserSignupAPIView(APIView):
             date_of_birth=date_of_birth,
             password=password,
         )
-        # user = User(
-        #     username=username,
-        #     first_name=first_name,
-        #     last_name=last_name,
-        #     email=email,
-        #     date_of_birth=date_of_birth,
-        # )
-        # user.save()
-        # user.set_password(password)
-        # user.save()
         return Response(serializer.data)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsernameEmailAvailableAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    # queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
-        try:
-            username = request.data['username']
-            is_taken = User.objects.filter(username=username).exists()
-        except KeyError:
-            email = request.data['email']
-            is_taken = User.objects.filter(email=email).exists()
-        return Response(is_taken)
+        filters = {}
+        if "username" in request.data:
+            filters["username"] = request.data["username"]
+        elif "email" in request.data:
+            filters["email"] = request.data["email"]
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        is_taken = User.objects.filter(**filters).exists()
+        return Response({"is_taken": is_taken})
+        # try:
+        #     username = request.data['username']
+        #     is_taken = User.objects.filter(username=username).exists()
+        # except KeyError:
+        #     email = request.data['email']
+        #     is_taken = User.objects.filter(email=email).exists()
+        # return Response(is_taken)
 
 
 class UserListAPIView(generics.ListCreateAPIView):

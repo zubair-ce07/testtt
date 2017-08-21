@@ -3,7 +3,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.conf import settings
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
-from .managers import UserManager, FollowingManager, FollowerManager
+from .managers import UserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -27,8 +27,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['first_name', 'last_name', 'email', 'date_of_birth', ]
 
     objects = UserManager()
-    all_following = FollowingManager()
-    all_followers = FollowerManager()
+    # all_following = FollowingManager()
+    # all_followers = FollowerManager()
 
     class Meta:
         verbose_name = _('user')

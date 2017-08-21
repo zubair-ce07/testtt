@@ -2,9 +2,10 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth import logout as auth_logout, authenticate, login as auth_login
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
-from instagram.forms import SignUpForm, LoginForm, NewPostForm
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
+
+from instagram.forms import SignUpForm, LoginForm, NewPostForm
 from instagram.models import User, Post
 
 login_url = reverse_lazy('login')
@@ -71,7 +72,7 @@ def login(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(username=username, password=password)
         if user is not None:
             if user.is_active:
                 auth_login(request, user)
@@ -138,7 +139,6 @@ def follow_profile(request, pk):
     to_follow = get_object_or_404(User, pk=pk)
     user.following.add(to_follow)
     user.save()
-    to_follow.refresh_from_db()
     followers, following = get_followers_and_following(to_follow)
     return render(request, 'instagram/profile.html',
                   {'errors': errors,
