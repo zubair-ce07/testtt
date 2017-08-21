@@ -1,3 +1,8 @@
+urls = {
+    baseUrl: "http://127.0.0.1:8000/api",
+    availableUsernamePassword: "signup/available/"
+};
+
 $(document).ready(function () {
     $username = $("input.username");
     $first_name = $("input.first_name");
@@ -7,18 +12,17 @@ $(document).ready(function () {
     $date_of_birth = $("input.date_of_birth");
 
     $username.on('keyup', function() {
-        $("div.username").text("")
-        $("div.username").html('<br>')
+        $("div.username").text("");
+        $("div.username").html('<br>');
         $.ajax({
             data:{
                 'username':$username.val()
             },
             type:"POST",
-            url: 'http://127.0.0.1:8000/api/signup/available/',
+            url: urls.baseUrl+urls.availableUsernamePassword,
             dataType: 'text',
             success: function(data){
-                // console.log(data)
-                display_availability(data, $username, 'username')
+                displayAvailability(data, $username, 'username')
             },
             error: function (xhr, ajaxOptions, thrownError) {
                 console.log(xhr.status);
@@ -28,7 +32,7 @@ $(document).ready(function () {
     });
 
     $first_name.on('click', function () {
-        RaiseBlankField(1)
+        raiseBlankField(1)
     });
 
     $first_name.on('keydown', function() {
@@ -37,7 +41,7 @@ $(document).ready(function () {
     });
 
     $last_name.on('click', function () {
-        RaiseBlankField(2)
+        raiseBlankField(2)
     });
 
     $last_name.on('keydown', function() {
@@ -46,7 +50,7 @@ $(document).ready(function () {
     });
 
     $email.on('click', function () {
-        RaiseBlankField(3)
+        raiseBlankField(3)
         console.log(this)
     });
 
@@ -63,11 +67,10 @@ $(document).ready(function () {
                 'email':$email.val()
             },
             type:"POST",
-            url: 'http://127.0.0.1:8000/api/signup/available/',
+            url: urls.baseUrl+urls.availableUsernamePassword,
             dataType: 'text',
             success: function(data){
-                // console.log(data)
-                display_availability(data, $email, 'email')
+                displayAvailability(data, $email, 'email')
             },
             error: function (xhr, ajaxOptions, thrownError) {
                 console.log(xhr.status);
@@ -77,7 +80,7 @@ $(document).ready(function () {
     });
 
     $password.on('click', function (event) {
-        RaiseBlankField(4)
+        raiseBlankField(4)
     });
 
     $password.on('keydown', function() {
@@ -86,7 +89,7 @@ $(document).ready(function () {
     });
 
     $date_of_birth.on('click', function (event) {
-        RaiseBlankField(5)
+        raiseBlankField(5)
     });
 
     $("button").on('click', function (event) {
@@ -102,7 +105,7 @@ $(document).ready(function () {
                'date_of_birth':$date_of_birth.val()
            },
            type: "POST",
-           url: 'http://127.0.0.1:8000/api/signup/',
+           url: urls.baseUrl+urls.availableUsernamePassword,
            dataType: 'text',
            success: function(data){
                    console.log(data)
@@ -115,7 +118,7 @@ $(document).ready(function () {
     });
 });
 
-var RaiseBlankField = function(inp){
+var raiseBlankField = function(inp){
     if(inp >= 1){
         if($username.val().length < 1){
             $("div.username").text("Username can not be blank")
@@ -148,9 +151,8 @@ var RaiseBlankField = function(inp){
     }
 }
 
-var display_availability = function(data, $handle, field){
+var displayAvailability = function(data, $handle, field){
     if(data=='true'){
-        // console.log(":'3")
         if(field == "username"){
             $("div."+field).text("Username " + $handle.val() + " is unavailable")
         } else {
