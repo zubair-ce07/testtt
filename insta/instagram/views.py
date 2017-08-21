@@ -13,12 +13,9 @@ login_url = reverse_lazy('login')
 @login_required(login_url=login_url)
 def newsfeed(request):
     user = request.user
-    if user.is_authenticated():
-        return render(request, 'instagram/newsfeed.html',
-                      {'user': user,
-                       })
-    else:
-        return HttpResponseRedirect(reverse('login'))
+    return render(request, 'instagram/newsfeed.html',
+                  {'user': user,
+                   })
 
 
 def get_posts(user):
@@ -79,7 +76,7 @@ def login(request):
                 auth_login(request, user)
                 return HttpResponseRedirect(reverse('newsfeed'))
     form = LoginForm()
-    return render(request, 'instagram/login.html', {'form': form,})
+    return render(request, 'instagram/login.html', {'form': form, })
 
 
 @login_required(login_url=login_url)
@@ -89,7 +86,7 @@ def profile(request, pk):
         errors.append('ERROR')
         return render(request, 'instagram/profile.html',
                       {'errors': errors,
-                      })
+                       })
     else:
         profile_owner = get_object_or_404(User, pk=pk)
         user = request.user
@@ -175,7 +172,7 @@ def show_followers(request, pk):
     target_profile = get_object_or_404(User, pk=pk)
     followers, following = get_followers_and_following(target_profile)
     return render(request, 'instagram/show_followers.html',
-                        {'followers': followers})
+                  {'followers': followers})
 
 
 @login_required(login_url=login_url)
@@ -184,7 +181,7 @@ def show_following(request, pk):
     followers, following = get_followers_and_following(target_profile)
     following = get_user_objects(following, 'following')
     return render(request, 'instagram/show_followers.html',
-                        {'followers': following})
+                  {'followers': following})
 
 
 def new_post(request):

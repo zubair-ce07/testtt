@@ -1,40 +1,30 @@
-from rest_framework import generics
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from django.contrib.auth import login, logout, authenticate
+
+from rest_framework import generics
+# from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework import status
 from rest_framework.views import APIView
-from instagram.models import User, Post, Like, Comment, FollowRelation
-from instagram.serializers import (
-    UserSerializer,
-    PostSerializer,
-    UserDetailSerializer,
-    PostDetailSerializer,
-    LikeSerializer,
-    CommentSerializer,
-    UserCreateSerializer,
-    UserLoginSerializer,
-)
 from rest_framework import permissions
 from rest_framework.response import Response
+
+from instagram.serializers import *
 
 
 class NewsfeedListAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = PostSerializer
-    query_set = Post.objects.all()
+    # query_set = Post.objects.all()
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        if user.is_authenticated:
-            posts = Post.objects.filter(user=user)
-            all_following = FollowRelation.objects.filter(follower__username=user.username).values('user')
-            for item in all_following:
-                pk = item['user']
-                user = User.objects.get(pk=pk)
-                posts = posts | Post.objects.filter(user__username=user.username)
-            serializer = PostSerializer(posts, many=True)
-            return Response(serializer.data)
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        posts = Post.objects.filter(user=user)
+        all_following = FollowRelation.objects.filter(follower__username=user.username).values('user')
+        for item in all_following:
+            pk = item['user']
+            user = User.objects.get(pk=pk)
+            posts = posts | Post.objects.filter(user__username=user.username)
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
 
 
 class UserLogoutAPIView(APIView):
@@ -47,18 +37,18 @@ class UserLogoutAPIView(APIView):
 
 class UserLoginAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    # authentication_classes = [SessionAuthentication, BasicAuthentication]
     serializer_class = UserLoginSerializer
 
     def post(self, request, *args, **kwargs):
         if request.user.is_anonymous:
             serializer = UserLoginSerializer(request.data)
-            user = authenticate(request, username=serializer.data['username'], password=serializer.data['password'])
+            user = authenticate(**serializer.data)
             login(request, user)
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data)
         else:
-            return Response({})
+            return Response({}, status=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -69,30 +59,38 @@ class UserSignupAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = UserCreateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            username = serializer.initial_data['username']
-            first_name = serializer.initial_data['first_name']
-            last_name = serializer.initial_data['last_name']
-            email = serializer.initial_data['email']
-            password = serializer.initial_data['password']
-            date_of_birth = serializer.initial_data['date_of_birth']
-            user = User(
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                date_of_birth=date_of_birth,
-            )
-            user.save()
-            user.set_password(password)
-            user.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.initial_data['username']
+        first_name = serializer.initial_data['first_name']
+        last_name = serializer.initial_data['last_name']
+        email = serializer.initial_data['email']
+        password = serializer.initial_data['password']
+        date_of_birth = serializer.initial_data['date_of_birth']
+        User.objects.create_user(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            date_of_birth=date_of_birth,
+            password=password,
+        )
+        # user = User(
+        #     username=username,
+        #     first_name=first_name,
+        #     last_name=last_name,
+        #     email=email,
+        #     date_of_birth=date_of_birth,
+        # )
+        # user.save()
+        # user.set_password(password)
+        # user.save()
+        return Response(serializer.data)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsernameEmailAvailableAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    queryset = User.objects.all()
+    # queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
         try:
@@ -101,7 +99,7 @@ class UsernameEmailAvailableAPIView(APIView):
         except KeyError:
             email = request.data['email']
             is_taken = User.objects.filter(email=email).exists()
-        return Response(is_taken, status=status.HTTP_200_OK)
+        return Response(is_taken)
 
 
 class UserListAPIView(generics.ListCreateAPIView):

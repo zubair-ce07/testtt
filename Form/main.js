@@ -1,6 +1,7 @@
 urls = {
     baseUrl: "http://127.0.0.1:8000/api",
-    availableUsernamePassword: "signup/available/"
+    availableUsernamePassword: "/signup/available/",
+    signup: "/signup/"
 };
 
 $(document).ready(function () {
@@ -105,7 +106,7 @@ $(document).ready(function () {
                'date_of_birth':$date_of_birth.val()
            },
            type: "POST",
-           url: urls.baseUrl+urls.availableUsernamePassword,
+           url: urls.baseUrl+urls.signup,
            dataType: 'text',
            success: function(data){
                    console.log(data)

@@ -9,7 +9,7 @@ class ContactForm(forms.Form):
     message = forms.CharField(widget=forms.Textarea)
 
 
-class EdiProfileForm(UserChangeForm):
+class EditProfileForm(UserChangeForm):
     avatar = forms.ImageField(required=False)
 
 

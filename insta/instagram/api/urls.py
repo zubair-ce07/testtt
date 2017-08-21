@@ -1,19 +1,6 @@
 from django.conf.urls import url
-from instagram.api.views import (
-    UserListAPIView,
-    UserDetailAPIView,
-    PostListAPIView,
-    PostDetailAPIView,
-    LikeListAPIView,
-    LikeDetailAPIView,
-    CommentListAPIView,
-    CommentDetailAPIView,
-    UserSignupAPIView,
-    UserLoginAPIView,
-    UserLogoutAPIView,
-    NewsfeedListAPIView,
-    UsernameEmailAvailableAPIView,
-)
+from instagram.api.views import *
+
 
 urlpatterns = [
     url(r'^users/$', UserListAPIView.as_view(), name='user-list'),

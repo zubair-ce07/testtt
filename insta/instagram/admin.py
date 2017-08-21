@@ -2,18 +2,18 @@ from django.contrib import admin
 from .models import User, Comment, Like, Post, FollowRelation
 
 
+@admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'username', 'get_name', 'email', 'date_of_birth', 'avatar',)
+    list_display = ('pk', 'username', 'get_name', 'email', 'date_of_birth',)# 'avatar',)
     search_fields = ('first_name', 'last_name', 'username')
-    ordering = ('pk',)
     fields = ('first_name', 'last_name', 'username', 'email',
               'date_of_birth', 'avatar', 'bio')
-    # filter_horizontal = ('following',)
 
     def get_name(self, instance):
         return instance.first_name+' '+instance.last_name
 
 
+@admin.register(FollowRelation)
 class FollowersAdmin(admin.ModelAdmin):
     list_display = ('pk', 'get_user_name', 'get_follower_name')
 
@@ -26,6 +26,7 @@ class FollowersAdmin(admin.ModelAdmin):
     get_follower_name.short_description = 'Follower'
 
 
+@admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = ('pk', 'text', 'user', 'created_at', 'image')
     search_fields = ('text', 'user__username')
@@ -35,6 +36,7 @@ class PostAdmin(admin.ModelAdmin):
     raw_id_fields = ('user',)
 
 
+@admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('pk', 'text', 'user', 'post', 'get_username',
                     'timestamp')
@@ -48,6 +50,7 @@ class CommentAdmin(admin.ModelAdmin):
     get_username.short_description = 'Post Author'
 
 
+@admin.register(Like)
 class LikeAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'post', 'get_username', 'timestamp')
     search_fields = ('user__username', 'post__text', 'post__username')
@@ -59,9 +62,3 @@ class LikeAdmin(admin.ModelAdmin):
         return obj.post.user.username
     get_username.short_description = 'Post Author'
 
-
-admin.site.register(User, UserAdmin)
-admin.site.register(Comment, CommentAdmin)
-admin.site.register(Like, LikeAdmin)
-admin.site.register(Post, PostAdmin)
-admin.site.register(FollowRelation, FollowersAdmin)
