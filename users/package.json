@@ -1,5 +1,5 @@
 {
-  "name": "list-all-mems",
+  "name": "users",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
