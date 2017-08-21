@@ -1,7 +1,6 @@
 import React from "react";
-import {withRouter} from "react-router-dom";
+import {Link, withRouter} from "react-router-dom";
 import {MenuItem, Nav, Navbar, NavDropdown, NavItem} from "react-bootstrap";
-import Link from "react-router-dom/es/Link";
 
 const event = {
     news: 1,
@@ -26,10 +25,7 @@ class Header extends React.Component{
     }
 
     render() {
-
-        let loggedUserLinks = null;
-        if (localStorage.user) {
-            loggedUserLinks = (
+        let loggedUserLinks = localStorage.user ? (
                 <Navbar.Collapse >
                     <Nav pullRight onSelect={this.handleSelect}>
                         <NavItem eventKey={event.news}>News</NavItem>
@@ -40,8 +36,8 @@ class Header extends React.Component{
                         </NavDropdown>
                     </Nav>
                 </Navbar.Collapse>
-            );
-        }
+        ) : null;
+
 
         return (
             <Navbar inverse collapseOnSelect>

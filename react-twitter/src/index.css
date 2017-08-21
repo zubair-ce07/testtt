@@ -11,6 +11,16 @@ div.loginForm {
 div.loginForm input {
     border-radius: 25px;
 }
-h3{
+
+h1,h2,h3{
     text-align: center;
+}
+
+div.news-card{
+    margin-right: 10%;
+    margin-left: 10%;
+}
+div.news-card img{
+    width: 300px;
+    height: 150px;
 }
