@@ -6,6 +6,7 @@ export const globalVars = {
         logout: "logout/",
         validUsernameEmail: "signup/available/",
         newsfeed: "newsfeed/",
+        authToken: "api-token-auth/",
     },
     isLoggedIn: false,
 };

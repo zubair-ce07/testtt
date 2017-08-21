@@ -116,6 +116,7 @@ class LogInForm extends React.Component{
         this.state = {
             isValidUsername: false,
             isValidPassword: false,
+            token: "d18a0418fb087bb426baecc31cfb6eb417158873"
         };
         // this.handleSubmit = this.handleSubmit.bind(this);
         this.usernameLength = 2;
@@ -131,23 +132,56 @@ class LogInForm extends React.Component{
             alert('Errors aarahay hain..')
         } else {
             console.log('ABOUT TO')
-            fetch(globalVars.urls.baseURL+globalVars.urls.login, {
-                method: 'post',
-                body: JSON.stringify({
-                    username: this.state.username,
-                    password: this.state.password,
-                }),
+            // fetch(globalVars.urls.baseURL+globalVars.urls.authToken, {
+            //     method: 'post',
+            //     body: JSON.stringify({
+            //         username: this.state.username,
+            //         password: this.state.password,
+            //     }),
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     }
+            // }).then((response) => {
+            //     debugger;
+            //     // console.log(response.json())
+            //     return response.json()
+            // }).then((data) => {
+            //     debugger;
+            //     console.log(data);
+            //     this.setState({
+            //         token: data["token"]
+            //     })
+            //     // globalVars.isLoggedIn = true;
+            //     // console.log(globalVars)
+            // }).catch((xhr) => {
+            //     console.log("ERRORRR")
+            //     console.warn(xhr.responseText)
+            //     // console.log(error)
+            // })
+            console.log('HEY NOW!')
+            debugger;
+            // const vars = globalVars;
+            // fetch(globalVars.urls.baseURL+globalVars.url.newsfeed, {
+            fetch(globalVars.urls.baseURL+globalVars.urls.newsfeed, {
+                method: "get",
                 headers: {
+                    'Authorization': 'Token '+this.state.token,
                     'Content-Type': 'application/json'
                 }
             }).then((response) => {
+                debugger;
+                // console.log(response.json())
                 return response.json()
             }).then((data) => {
                 debugger;
                 console.log(data);
-                globalVars.isLoggedIn = true;
-                console.log(globalVars)
+                this.setState({
+                    token: data["token"]
+                })
+                // globalVars.isLoggedIn = true;
+                // console.log(globalVars)
             }).catch((xhr) => {
+                console.log("ERRORRR")
                 console.warn(xhr.responseText)
                 // console.log(error)
             })

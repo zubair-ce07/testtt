@@ -107,7 +107,7 @@ class SearchBar extends React.Component{
                             <img
                                 className="search-icon"
                                 src={require("../static/images/search-icon.png")}
-
+                                alt = 'insta'
                             />
                         </a>
                     </div>
