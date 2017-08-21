@@ -17,7 +17,6 @@ class User(AbstractBaseUser, PermissionsMixin):
                                width_field="width_field", height_field="height_field")
     height_field = models.IntegerField(default=0)
     width_field = models.IntegerField(default=0)
-    # following = models.ManyToManyField('self', blank=True, symmetrical=False)
     is_active = models.BooleanField(_('Active'), default=True)
     is_admin = models.BooleanField(_('Admin'), default=False)
     date_joined = models.DateTimeField(_('Date Joined'), auto_now_add=True)
@@ -27,8 +26,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['first_name', 'last_name', 'email', 'date_of_birth', ]
 
     objects = UserManager()
-    # all_following = FollowingManager()
-    # all_followers = FollowerManager()
 
     class Meta:
         verbose_name = _('user')

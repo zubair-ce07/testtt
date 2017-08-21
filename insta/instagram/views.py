@@ -109,10 +109,7 @@ def profile(request, pk):
 
 
 def is_already_followed(profile_owner, following):
-    for followee in following:
-        if followee['following'] == profile_owner.pk:
-            return True
-    return False
+    return any(f['following'] == profile_owner.pk for f in following)
 
 
 def signup(request):

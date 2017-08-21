@@ -1,7 +1,6 @@
 from django.contrib.auth import login, logout, authenticate
 
 from rest_framework import generics
-# from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework import permissions
@@ -49,7 +48,6 @@ class UserLoginAPIView(APIView):
             return Response({}, status=status.HTTP_204_NO_CONTENT)
 
 
-
 class UserSignupAPIView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = UserCreateSerializer
@@ -88,13 +86,6 @@ class UsernameEmailAvailableAPIView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         is_taken = User.objects.filter(**filters).exists()
         return Response({"is_taken": is_taken})
-        # try:
-        #     username = request.data['username']
-        #     is_taken = User.objects.filter(username=username).exists()
-        # except KeyError:
-        #     email = request.data['email']
-        #     is_taken = User.objects.filter(email=email).exists()
-        # return Response(is_taken)
 
 
 class UserListAPIView(generics.ListCreateAPIView):
