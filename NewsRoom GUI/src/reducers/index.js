@@ -6,7 +6,6 @@ import NewsListReducer from './reducer_news_list';
 import UserReducer from './reducer_user';
 import InterestsReducer from './reducer_user_interests';
 import CategoriesReducer from './reducer_all_categories';
-import TokenReducer from './reducer_token';
 import { reducer as formReducer } from 'redux-form';
 
 const rootReducer = combineReducers({
@@ -18,7 +17,6 @@ const rootReducer = combineReducers({
   user: UserReducer,
   userInterests: InterestsReducer,
   categories: CategoriesReducer,
-  token: TokenReducer
 });
 
 export default rootReducer;

@@ -13,7 +13,6 @@ import NewsHome from './containers/news_home';
 import NewsSearchList from './containers/news_search';
 import CategoryNewsList from './containers/category_news_list'
 import Profile from './containers/profile';
-import Test from './components/test'
 import NavigationBar from './containers/nav_bar';
 
 const createStoreWithMiddleware = applyMiddleware(promise)(createStore);
@@ -24,7 +23,6 @@ ReactDOM.render(
       <div>
         <NavigationBar />
         <Switch>
-          <Route path="/test" component={ Test } />
           <Route path="/profile" component={ Profile } />
           <Route path="/login" component={ Login } />
           <Route path="/signup" component={ Signup } />      

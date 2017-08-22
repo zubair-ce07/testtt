@@ -9,16 +9,6 @@ import { reactLocalStorage } from 'reactjs-localstorage';
 class NavigationBar extends Component {
     constructor(props){
         super(props);
-        const token = reactLocalStorage.get('token', "");
-        this.obj = {log_logout: "", href_link: ""}
-        if (token){
-            this.obj.log_logout = "Logout"
-            this.obj.href_link = ""
-        }
-        else{
-            this.obj.log_logout = "Login"
-            this.obj.href_link = "/login"
-        }
 
     }
 
@@ -26,7 +16,6 @@ class NavigationBar extends Component {
         this.props.allCategories();
     }
     renderDropdown(){
-        console.log("Search Categories", this.props.categories);
         if (!this.props.categories) {
             return<li></li>
         }
@@ -45,9 +34,17 @@ class NavigationBar extends Component {
     }
 
     render(){
-        console.log("render Categories", this.props.categories);
         const token = reactLocalStorage.get('token', "");
-        
+        this.obj = {log_logout: "", href_link: ""}
+        if (token){
+            this.obj.log_logout = "Logout"
+            this.obj.href_link = ""
+        }
+        else{
+            this.obj.log_logout = "Login"
+            this.obj.href_link = "/login"
+        }
+              
         return(
             <nav className="navbar navbar-inverse" role="navigation">
                 <div className="navbar-header">

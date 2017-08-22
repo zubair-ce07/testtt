@@ -36,7 +36,6 @@ class NewsHome extends Component {
         if (!this.props.topNews || _.isEmpty(this.props.otherNews)) {
             return <div>Loading ... </div>
         }
-        console.log(this.props.otherNews)
         return (
             <div>
                 <SearchBar />

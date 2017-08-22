@@ -9,7 +9,6 @@ class Signup extends Component {
     renderField(field) {
         const { meta: { touched, error } } = field;
         const className = `form-group ${touched && error ? 'has-error has-feedback' : touched ? 'has-success has-feedback':''}`;
-        console.log(className);
         return (
             <div className={className}>
                 <label className="control-label">{ field.label }</label>

@@ -33,10 +33,7 @@ class Login extends Component {
 
     onSubmit(values) {
         this.props.loginUser(values).then(({payload:{data:{token}}}) => {
-            console.log("local", reactLocalStorage);
-            console.log("Login Luqman assurity", token);
             reactLocalStorage.set('token', token);
-            console.log('Local token: ',reactLocalStorage.get('token'))
             this.props.history.push('/profile');
         });
     }

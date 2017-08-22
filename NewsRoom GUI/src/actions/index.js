@@ -121,7 +121,6 @@ export function allCategories(){
 }
 
 export function updateUserInterests(token, interests){
-    console.log("Update Token Action", token)
     const config = {
         headers : { Authorization : `Token ${token}`}
     }

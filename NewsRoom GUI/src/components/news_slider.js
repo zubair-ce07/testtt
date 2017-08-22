@@ -5,7 +5,6 @@ import { Carousel } from 'react-bootstrap';
 export default class NewsSlider extends Component{
 
     renderNews() {
-        console.log("Slider: ",this.props.news);
         return this.props.news.map(news => {
             return(
                 

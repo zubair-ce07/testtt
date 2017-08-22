@@ -29,7 +29,6 @@ class ProfileForm extends Component {
     }
 
     onEdit() {
-        console.log("EDITED")
         this.setState({read_only: false});
     }
 
@@ -45,11 +44,8 @@ class ProfileForm extends Component {
 
     render() {
         const handleSubmit = this.props.handleSubmit;
-        console.log("Study display property", !this.state.read_only);
         let dis = this.toggleDisplay(this.state.read_only);
         let dis1 = this.toggleDisplay(!this.state.read_only);;
-        console.log("P1: ", dis);
-        console.log("P2: ", dis1);
         return (
             <div>
             <form onSubmit={ handleSubmit(this.onSubmit.bind(this))}>

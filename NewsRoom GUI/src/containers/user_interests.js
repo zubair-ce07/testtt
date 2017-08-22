@@ -77,7 +77,6 @@ class UserInterests extends Component {
             }
         }
         const token = reactLocalStorage.get('token', "");
-        console.log("Update Token", token)
         this.props.updateUserInterests(token, userInterests);
     }
 
