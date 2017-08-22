@@ -13,10 +13,8 @@ class Routes extends React.Component{
         return(
             <Router history={history}>
                 <div>
-                {/*<Route exact path="/" component={Signup}>*/}
                     <Route exact path="/" component={Signup}/>
                     <Route exact path="/newsfeed" component={Newsfeed}/>
-                {/*</Route>*/}
                 </div>
             </Router>
         )

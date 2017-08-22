@@ -1,4 +1,5 @@
 import React from 'react'
+
 import {globalVars} from '../utils/common';
 
 
@@ -17,7 +18,7 @@ class NavigationBar extends React.Component{
             console.log(data);
             window.location = "/"
         }).catch((error) => {
-            console.log('ERROR', error)
+            console.log(error)
         })
     }
 
@@ -80,7 +81,6 @@ class SearchBar extends React.Component{
     }
 
     leftAlignSearchText(){
-        console.log('HEA');
         this.setState({
             alignment: "text-left"
         })

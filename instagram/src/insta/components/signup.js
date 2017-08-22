@@ -1,4 +1,5 @@
 import React from 'react';
+
 import validateUsernameEmail from '../utils/validate/usernameEmail';
 import validateNamePasswordDOB from '../utils/validate/namePasswordDOB';
 import {globalVars} from '../utils/common';
@@ -26,7 +27,6 @@ class SignUp extends React.Component{
                     <div className="col-md-6 visible-lg">
                         <PhonePanel/>
                     </div>
-                    {/*{this.state.panel}*/}
                     {this.state.isSignup ?
                         <SignUpPanel switchParentPanel={this.switchPanel}/>
                         :
@@ -116,9 +116,8 @@ class LogInForm extends React.Component{
         this.state = {
             isValidUsername: false,
             isValidPassword: false,
-            token: "d18a0418fb087bb426baecc31cfb6eb417158873"
+            token: ""
         };
-        // this.handleSubmit = this.handleSubmit.bind(this);
         this.usernameLength = 2;
         this.passwordLength = 5;
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -129,70 +128,45 @@ class LogInForm extends React.Component{
     handleSubmit(e) {
         e.preventDefault();
         if(!(this.state.isValidUsername && this.state.isValidPassword)) {
-            alert('Errors aarahay hain..')
+            alert('Please make sure the username and password are valid (minimum length: 5 characters)')
         } else {
-            console.log('ABOUT TO')
-            // fetch(globalVars.urls.baseURL+globalVars.urls.authToken, {
-            //     method: 'post',
-            //     body: JSON.stringify({
-            //         username: this.state.username,
-            //         password: this.state.password,
-            //     }),
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     }
-            // }).then((response) => {
-            //     debugger;
-            //     // console.log(response.json())
-            //     return response.json()
-            // }).then((data) => {
-            //     debugger;
-            //     console.log(data);
-            //     this.setState({
-            //         token: data["token"]
-            //     })
-            //     // globalVars.isLoggedIn = true;
-            //     // console.log(globalVars)
-            // }).catch((xhr) => {
-            //     console.log("ERRORRR")
-            //     console.warn(xhr.responseText)
-            //     // console.log(error)
-            // })
-            console.log('HEY NOW!')
-            debugger;
-            // const vars = globalVars;
-            // fetch(globalVars.urls.baseURL+globalVars.url.newsfeed, {
-            fetch(globalVars.urls.baseURL+globalVars.urls.newsfeed, {
-                method: "get",
+            fetch(globalVars.urls.baseURL+globalVars.urls.authToken, {
+                method: 'post',
+                body: JSON.stringify({
+                    username: this.state.username,
+                    password: this.state.password,
+                }),
                 headers: {
-                    'Authorization': 'Token '+this.state.token,
                     'Content-Type': 'application/json'
                 }
             }).then((response) => {
-                debugger;
-                // console.log(response.json())
                 return response.json()
             }).then((data) => {
-                debugger;
-                console.log(data);
                 this.setState({
                     token: data["token"]
+                });
+                fetch(globalVars.urls.baseURL+globalVars.urls.newsfeed, {
+                    method: "get",
+                    headers: {
+                        'Authorization': 'Token '+this.state.token,
+                        'Content-Type': 'application/json'
+                    }
+                }).then((response) => {
+                    return response.json()
+                }).then((data) => {
+                    console.log('Newsfeed: ', data);
+                }).catch((xhr) => {
+                    console.warn(xhr.responseText);
                 })
-                // globalVars.isLoggedIn = true;
-                // console.log(globalVars)
             }).catch((xhr) => {
-                console.log("ERRORRR")
-                console.warn(xhr.responseText)
-                // console.log(error)
-            })
+                console.warn(xhr.responseText);
+            });
         }
 
     }
 
     validateUsernamePassword(name, value,) {
-        // debugger;
         if(name === "username") {
-            // debugger;
             this.setState({
                 isValidUsername: value.length >= this.usernameLength,
             })
@@ -206,8 +180,6 @@ class LogInForm extends React.Component{
     handleInputChange(event){
         const name = event.target.name;
         const value = event.target.value;
-
-        // console.log(name, value)
 
         this.setState({
             [name]: value
@@ -252,24 +224,6 @@ class LogInForm extends React.Component{
 }
 
 class PhonePanel extends React.Component{
-    // constructor(props){
-    //     super(props);
-    //     this.baseImagePath = "../static/images/";
-    //     this.allImages = ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg"]
-    //     this.state = {
-    //         currentImage: "../static/images/1.jpg",
-    //         currentIndex: 0,
-    //     }
-    // }
-    //
-    // componentDidMount(){
-    //     // setInterval(
-    //     //     () => this.changeImage(),
-    //     //     2000
-    //     // );
-    //     // console.log(this.baseImagePath+this.state.currentImage)
-    // }
-
     render() {
         return(
             <div>
@@ -351,23 +305,15 @@ class SignUpForm extends React.Component{
         };
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
-        this.validateUsernameEmail = this.validateUsernameEmail.bind(this)
-    }
-
-    validateUsernameEmail(data){
-        // console.log('IN')
-        // console.log(data, this)
     }
 
     handleInputChange(event){
         const name = event.target.name;
         const value = event.target.value;
-        // var jsonData;
 
         this.setState({
             [name]: value
         });
-        // console.log(event.target.name, event.target.value);
         if(name === "email" || name === "username") {
             fetch(globalVars.urls.baseURL+globalVars.urls.validUsernameEmail, {
                 method: 'post',
@@ -380,8 +326,6 @@ class SignUpForm extends React.Component{
             }).then(function (response) {
                 return response.json()
             }).then((data) => {
-                // console.log(':>', this)
-                // console.log(':<')
                 if(name === "email"){
                     this.setState({
                         isValidEmail: validateUsernameEmail(data, value, name),
@@ -393,9 +337,8 @@ class SignUpForm extends React.Component{
                 }
 
             }).catch(function (error) {
-                // console.log(error)
+                console.log(error)
             });
-            // console.log(':3', name, this)
         } else if(name === "first_name"){
             this.setState({
                 isValidFirstName: validateNamePasswordDOB(value, 13, 2),
@@ -416,11 +359,7 @@ class SignUpForm extends React.Component{
     }
 
     handleSubmit(event){
-        // console.log(this.state.email);
         event.preventDefault();
-    //    validate data
-    //    fetch api here and send data
-    //     console.log(this.state)
         if(
             !(this.state.isValidEmail &&
             this.state.isValidFirstName &&
@@ -431,11 +370,9 @@ class SignUpForm extends React.Component{
         ){
             alert('Please correct all errors..')
         } else {
-                console.log('ABOUT TO')
             fetch(globalVars.urls.baseURL+globalVars.urls.signup, {
                 method: 'post',
                 body: JSON.stringify({
-                    // [name]: event.target.value
                     email: this.state.email,
                     first_name: this.state.first_name,
                     last_name: this.state.last_name,
@@ -451,7 +388,7 @@ class SignUpForm extends React.Component{
             }).then((data) => {
                 console.log(data)
             }).catch((error) => {
-                console.log('ERROR', error)
+                console.log(error)
             })
         }
     }
