@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="{% static 'javascript/main.js' %}"> </script>
+{#    {% block javascript %}{% endblock %}#}
+</head>
+<body>
+    <div class="navigation-bar">
+        <div id="navigation-container">
+            <img id="logo_camera" src="{% static 'instagram/images/logo2.png' %}" width="30"/>
+            <img id="logo" src="{% static 'instagram/images/logo.png' %}" width="100"/>
+            {% block navbar_links %}{% endblock %}
+        </div>
+    </div>
+    {% block contents %}{% endblock %}
+{#    {% block javascript %}{% endblock %}#}
+</body>
+{#    {% block javascript %}{% endblock %}#}
+</html>
