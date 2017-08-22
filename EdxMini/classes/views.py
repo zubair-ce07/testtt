@@ -9,17 +9,6 @@ from classes.serializers import InstructorSerializer
 from classes.serializers import StudentSerializer
 
 
-# @api_view(['GET'])
-# @permission_classes((permissions.AllowAny,))
-# def api_root(request, format=None):
-#     return Response({
-#         'students': reverse('students-list', request=request, format=format),
-#         'courses': reverse('courses-list', request=request, format=format),
-#         'enrollments': reverse('enrollments-list', request=request, format=format),
-#         'instructors': reverse('instructors-list', request=request, format=format),
-#     })
-
-
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
