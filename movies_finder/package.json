@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run build",
-    "build": "webpack -d && cp src/index.html dist/index.html && webpack-dev-server --content-base src/ --inline --hot",
-    "build:prod": "webpack -p && cp src/index.html dist/index.html"
+    "build": "webpack -d && webpack-dev-server --content-base src/ --inline --hot",
+    "build:prod": "webpack -p"
   },
   "author": "Hamza Pervez",
   "license": "ISC",
