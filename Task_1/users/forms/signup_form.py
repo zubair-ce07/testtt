@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 from django_countries import countries
 from django_countries.fields import LazyTypedChoiceField
 
-from users.forms.dict import dict
+from task1.dict import dict
 
 attr = dict({'class': 'form-control form-group'})
 message = "Phone number must be entered in the format: '+9999999999'."

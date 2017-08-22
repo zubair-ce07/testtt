@@ -10,25 +10,32 @@
     User Details
 {% endblock %}
 {% block content %}
-    <h2>{{ user.get_full_name }}</h2>
+
+    <h2>
+        {% if serializer.first_name %}
+            {{ serializer.first_name }} {{ serializer.last_name }}
+        {% endif %}
+    </h2>
     <div>
-        {% if user.userprofile.image %}
-            <img class="dp" src="/{{ user.userprofile.image.url }}"/>
+        {% if serializer.userprofile.image %}
+            {% load static %}
+            <img class="dp" src="/{% get_media_prefix %}{{ serializer.userprofile.image }}"/>
         {% endif %}
     </div>
     <div>
         <ul>
             <li>Username: {{ serializer.username }}</li>
-            <li>Email: {{ serializer.email }}</li>
+            <li>Email:{% if serializer.email %} {{ serializer.email }}{% else %} N/A {% endif %}</li>
             <li>Name: {% if serializer.first_name %} {{ serializer.first_name }}
                 {% if serializer.last_name %}{{ serializer.last_name }} {% endif %} {% else %} N/A {% endif %}</li>
-            <li>Country: {% if serializer.country %} {% load static %} {{ serializer.country}} <img
-                    src="{% static 'users/flags' %}/{{ serializer.country|lower }}.gif"/> {% else %}
+            <li>Country: {% if serializer.userprofile.country %} {% load static %} {{ serializer.userprofile.country }}
+                <img src="{% static 'users/flags' %}/{{ serializer.userprofile.country|lower }}.gif"/> {% else %}
                 N/A {% endif %}</li>
-            <li>Address: {% if serializer.address %} {{ serializer.address }} {% else %}
+            <li>Address: {% if serializer.userprofile.address %} {{ serializer.userprofile.address }} {% else %}
                 N/A {% endif %}</li>
-            <li>Phone #: {% if serializer.phone_number %} {{ serializer.phone_number }} {% else %}
-                N/A {% endif %}</li>
+            <li>Phone #:
+                {% if serializer.userprofile.phone_number %}{{ serializer.userprofile.phone_number }} {% else %}
+                    N/A {% endif %}</li>
 
         </ul>
     </div>

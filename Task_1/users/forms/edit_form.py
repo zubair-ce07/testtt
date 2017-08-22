@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django_countries import countries
 from django_countries.fields import LazyTypedChoiceField
 
-from users.forms.dict import dict
+from task1.dict import dict
 from users.forms.signup_form import phone_validator
 
 attr = dict({'class': 'form-control form-group'})

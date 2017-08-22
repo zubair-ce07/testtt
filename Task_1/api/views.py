@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import redirect
 from rest_framework import status
@@ -8,17 +9,11 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-from rest_framework_jwt.settings import api_settings
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from api.serializers.edit_serializer import EditSerializer
-from api.serializers.signup_serializer import SignupSerializer
-from api.serializers.user_serializers import UserSerializer, LoginSerializer
-from users.models import UserProfile
-from viewset_api.utils import get_token, response_json
-
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
+from api.serializers.auth_serializers import LoginSerializer, SignupSerializer
+from api.serializers.user_serializers import UserSerializer
+from task1.utils import get_token, response_json
 
 
 @api_view(['GET'])
@@ -38,14 +33,16 @@ class UserListAPI(APIView):
         "message": null,
         "response": [
         {
-            "email": "a@b.com",
-            "username": "user",
-            "first_name": "Test",
-            "last_name": "User",
-            "phone_number": "(+)1234567891",
-            "country": "AZ",
-            "image": "media/users/image.jpg",
-            "address": "Address"
+            "username": "username",
+            "email": "Email Address",
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "userprofile": {
+                "phone_number": "(+)123456789",
+                "country": "AZ",
+                "image": "users/image.jpg",
+                "address": "Address"
+            }
         },
         {
             .....
@@ -54,14 +51,15 @@ class UserListAPI(APIView):
         ]
     }
     """
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JSONWebTokenAuthentication,)
 
     def get(self, request, format=None):
-        users = UserProfile.objects.all()
-        serializer = UserSerializer(users, many=True)
+        serializer = UserSerializer(User.objects.all(), many=True)
         return Response(response_json(True, serializer.data, message=None), status=status.HTTP_200_OK)
 
 
-class UserDetailAPI(APIView):
+class RetrieveUpdateDeleteUserProfile(APIView):
     """
     API: 'api/details_api/'
 
@@ -72,18 +70,30 @@ class UserDetailAPI(APIView):
         "success": true,
         "message": null,
         "response": {
-            "email": "Email Address",
             "username": "Username",
+            "email": "Email Address",
             "first_name": "First Name",
             "last_name": "Last Name",
-            "phone_number": "(+)123456789",
-            "country": "AZ",
-            "image": "media/users/image.jpg",
-            "address": "Address"
+            "userprofile": {
+                "phone_number": "(+)123456789",
+                "country": "AZ",
+                "image": "media/users/image.jpg",
+                "address": "Address"
+            }
         }
     }
 
     PUT:
+    Request Body: {
+        "email": "Email Address",
+        "first_name": "First Name",
+        "last_name": "Last Name",
+        "userprofile.phone_number": "(+)123456789",
+        "userprofile.country": "AZ",
+        "userprofile.image": "users/image.jpg",
+        "userprofile.address": "Address"
+    }
+
     Response body: {
         "success": true,
         "message": null,
@@ -91,10 +101,12 @@ class UserDetailAPI(APIView):
             "email": "Email Address",
             "first_name": "First Name",
             "last_name": "Last Name",
-            "phone_number": "(+)1234567891",
-            "country": "AZ",
-            "image": "media/users/image.jpg"/null,
-            "address": "Address"
+            "userprofile": {
+                "phone_number": "(+)1234567891",
+                "country": "AZ",
+                "image": "users/image.jpg"/null,
+                "address": "Address"
+            }
         }
     }
 
@@ -104,15 +116,16 @@ class UserDetailAPI(APIView):
         "response": null
     }
     """
-    
+
     permission_classes = (IsAuthenticated,)
+    authentication_classes = (JSONWebTokenAuthentication,)
 
     def get(self, request, format=None):
-        serializer = UserSerializer(request.user.userprofile)
+        serializer = UserSerializer(request.user)
         return Response(response_json(True, serializer.data, message=None), status=status.HTTP_200_OK)
 
     def put(self, request, format=None):
-        serializer = UserSerializer(request.user.userprofile, data=request.data)
+        serializer = UserSerializer(request.user, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
@@ -129,27 +142,27 @@ class UserProfileDetails(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'api/details.html'
     permission_classes = (IsAuthenticated,)
+    authentication_classes = (JSONWebTokenAuthentication,)
 
     def get(self, request):
-        serializer = UserSerializer(UserProfile.objects.get(user=request.user))
+        serializer = UserSerializer(request.user)
         return Response({'serializer': serializer.data}, status=status.HTTP_200_OK)
 
 
-class UserProfileEdit(APIView):
+class UpdateUserProfile(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'api/edit.html'
     permission_classes = (IsAuthenticated,)
+    authentication_classes = (JSONWebTokenAuthentication,)
 
     def get(self, request):
-        user_profile = UserProfile.objects.get(user=request.user)
-        serializer = EditSerializer(user_profile)
+        serializer = UserSerializer(request.user)
         return Response({'serializer': serializer}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        user_profile = UserProfile.objects.get(user=request.user)
-        serializer = EditSerializer(user_profile, data=request.data)
+        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.update(request.user, serializer.validated_data)
             return redirect('api:details')
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -168,9 +181,9 @@ class SignupView(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            user_profile = serializer.save()
+            user = serializer.save()
             response = redirect('api:details')
-            response.set_cookie('token', get_token(user_profile.user))
+            response.set_cookie('token', get_token(user))
             return response
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -181,8 +194,6 @@ class LoginView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
-        if request.user.is_authenticated:
-            return redirect('api:details')
         serializer = LoginSerializer()
         return Response({'serializer': serializer}, status=status.HTTP_200_OK)
 
@@ -200,6 +211,9 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JSONWebTokenAuthentication,)
+
     def get(self, request):
         response = redirect('api:login')
         response.delete_cookie('token')
