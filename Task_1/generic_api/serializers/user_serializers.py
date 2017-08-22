@@ -1,5 +1,4 @@
 from django.contrib.auth.models import User
-from django_countries.fields import Country
 from django_countries.serializer_fields import CountryField
 from rest_framework import serializers
 
@@ -14,6 +13,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = ('phone_number', 'country', 'image', 'address')
 
+    def update(self, instance, validated_data):
+        if not validated_data.get('image'):
+            validated_data.pop('image')
+        return super(UserProfileSerializer, self).update(instance, validated_data)
+
 
 class UserSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='generic:details')
@@ -25,17 +29,8 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('username',)
 
     def update(self, instance, validated_data):
-        user_profile = instance.userprofile
         user_profile_data = validated_data.pop('userprofile')
-        user_profile.phone_number = user_profile_data.get('phone_number')
-        user_profile.country = Country(code=user_profile_data.get('country'))
-        user_profile.address = user_profile_data.get('address')
-        if user_profile_data.get('image'):
-            user_profile.image = user_profile_data.get('image')
-        user_profile.save()
+        profile_serializer = UserProfileSerializer(instance.userprofile, data=user_profile_data)
+        if profile_serializer.is_valid(raise_exception=True):
+            profile_serializer.save()
         return super(UserSerializer, self).update(instance, validated_data)
-
-
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)

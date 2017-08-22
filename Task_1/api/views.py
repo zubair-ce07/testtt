@@ -3,11 +3,9 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import redirect
 from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -16,32 +14,28 @@ from api.serializers.user_serializers import UserSerializer
 from task1.utils import get_token, response_json
 
 
-@api_view(['GET'])
-def api_root(request, format=None):
-    return Response({'users': reverse('api:list', request=request, format=format)}, status=status.HTTP_200_OK)
-
-
-class UserListAPI(APIView):
+class UserListView(APIView):
     """
-    API: 'api/list_api/'
+    API: 'api/user_list/'
 
     Method: 'GET'
 
     GET:
+    Function name: get
     Response body: {
         "success": true,
         "message": null,
         "response": [
         {
-            "username": "username",
-            "email": "Email Address",
-            "first_name": "First Name",
-            "last_name": "Last Name",
+            "username": "john_doe",
+            "email": "john@doe.com",
+            "first_name": "John",
+            "last_name": "Doe",
             "userprofile": {
-                "phone_number": "(+)123456789",
-                "country": "AZ",
-                "image": "users/image.jpg",
-                "address": "Address"
+                "phone_number": "+923331234567",
+                "country": "US",
+                "image": "users/john.jpg"/null,
+                "address": "X House, Y Street, Brooklyn, NY 11229"
             }
         },
         {
@@ -54,65 +48,152 @@ class UserListAPI(APIView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = (JSONWebTokenAuthentication,)
 
-    def get(self, request, format=None):
-        serializer = UserSerializer(User.objects.all(), many=True)
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
         return Response(response_json(True, serializer.data, message=None), status=status.HTTP_200_OK)
 
 
-class RetrieveUpdateDeleteUserProfile(APIView):
+class CreateUserView(APIView):
     """
-    API: 'api/details_api/'
+    API: 'api/user_create/'
 
     Methods: 'GET, PUT, DELETE'
 
     GET:
+    Function name: get
     Response body: {
         "success": true,
         "message": null,
         "response": {
-            "username": "Username",
-            "email": "Email Address",
-            "first_name": "First Name",
-            "last_name": "Last Name",
+            "username": "",
+            "email": "",
+            "first_name": "",
+            "last_name": "",
             "userprofile": {
-                "phone_number": "(+)123456789",
-                "country": "AZ",
-                "image": "media/users/image.jpg",
-                "address": "Address"
+                "phone_number": "",
+                "country": null,
+                "image": null,
+                "address": ""
             }
         }
     }
 
     PUT:
+    Function name: put
     Request Body: {
-        "email": "Email Address",
-        "first_name": "First Name",
-        "last_name": "Last Name",
-        "userprofile.phone_number": "(+)123456789",
-        "userprofile.country": "AZ",
-        "userprofile.image": "users/image.jpg",
-        "userprofile.address": "Address"
+        "username":"john_doe",
+        "password":"abcdefgh"
+        "password2":"abcdefgh",
+        "email": "john@doe.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "userprofile": {
+            "phone_number": "+923331234567",
+            "country": "US",
+            image": "UploadedFile:users/john.jpg"/null,
+            "address": "X House, Y Street, Brooklyn, NY 11229"
+        }
+    }
+
+    Response body: {
+        "success": true,
+        "message": "User successfully created",
+        "response": {
+            "username":"john_doe",
+            "password":"abcdefgh"
+            "email": "john@doe.com",
+            "first_name": "John",
+            "last_name": "Doe",
+            "userprofile": {
+                "phone_number": "+923331234567",
+                "country": "US",
+                image": "users/john.jpg"/null,
+                "address": "X House, Y Street, Brooklyn, NY 11229"
+            },
+            "token": "JWT token"
+        }
+    }
+    """
+
+    def get(self, request):
+        serializer = SignupSerializer()
+        return Response(response_json(True, serializer.data, message=None), status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def put(self, request):
+        serializer = SignupSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.save()
+            token = get_token(user)
+            serializer.validated_data.update({'token': token})
+            response = Response(response_json(True, serializer.validated_data, 'User succesfully created'),
+                                status=status.HTTP_200_OK)
+            response.set_cookie('token', token)
+            return response
+        return Response(response_json(False, None, message=serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+
+
+class RetrieveUpdateDeleteUserView(APIView):
+    """
+    API: 'api/users/'
+
+    Methods: 'GET, PUT, DELETE'
+
+    GET:
+    Function name: get
+    Response body: {
+        "success": true,
+        "message": null,
+        "response": {
+            "username": "john_doe",
+            "email": "john@doe.com",
+            "first_name": "John",
+            "last_name": "Doe",
+            "userprofile": {
+                "phone_number": "+923331234567",
+                "country": "US",
+                "image": "users/john.jpg"/null,
+                "address": "X House, Y Street, Brooklyn, NY 11229"
+            }
+        }
+    }
+
+    PUT:
+    Function name: put
+    Request Body: {
+        "email": "john@doe.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "userprofile": {
+            "phone_number": "+923331234567",
+            "country": "US",
+            image": "UploadedFile:users/john.jpg"/null,
+            "address": "X House, Y Street, Brooklyn, NY 11229"
+        }
     }
 
     Response body: {
         "success": true,
         "message": null,
         "response": {
-            "email": "Email Address",
-            "first_name": "First Name",
-            "last_name": "Last Name",
+            "email": "john@doe.com",
+            "first_name": "John",
+            "last_name": "Doe",
             "userprofile": {
-                "phone_number": "(+)1234567891",
-                "country": "AZ",
-                "image": "users/image.jpg"/null,
-                "address": "Address"
+                "phone_number": "+923331234567",
+                "country": "US",
+                "image": "users/john.jpg"/null,
+                "address": "X House, Y Street, Brooklyn, NY 11229"
             }
         }
     }
 
-    DELETE: {
+    DELETE:
+    Function name: delete
+    Response body: {
         "success": true,
-        "message": "User has been succesfully deleted",
+        "message": "User succesfully deleted",
         "response": null
     }
     """
@@ -120,25 +201,26 @@ class RetrieveUpdateDeleteUserProfile(APIView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = (JSONWebTokenAuthentication,)
 
-    def get(self, request, format=None):
+    def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(response_json(True, serializer.data, message=None), status=status.HTTP_200_OK)
 
-    def put(self, request, format=None):
+    @transaction.atomic
+    def put(self, request):
         serializer = UserSerializer(request.user, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
-        return Response(response_json(False, serializer.data, message=serializer.errors),
-                        status=status.HTTP_400_BAD_REQUEST)
+            return Response(response_json(True, serializer.validated_data, 'User successfully updated'),
+                            status=status.HTTP_200_OK)
+        return Response(response_json(False, None, message=serializer.errors), status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, format=None):
+    def delete(self, request):
         request.user.delete()
-        return Response(response_json(True, None, message='User has been succesfully deleted'),
+        return Response(response_json(True, None, message='User succesfully deleted'),
                         status=status.HTTP_204_NO_CONTENT)
 
 
-class UserProfileDetails(APIView):
+class UserProfileDetailView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'api/details.html'
     permission_classes = (IsAuthenticated,)
@@ -149,7 +231,7 @@ class UserProfileDetails(APIView):
         return Response({'serializer': serializer.data}, status=status.HTTP_200_OK)
 
 
-class UpdateUserProfile(APIView):
+class UpdateUserProfileView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'api/edit.html'
     permission_classes = (IsAuthenticated,)
@@ -159,18 +241,41 @@ class UpdateUserProfile(APIView):
         serializer = UserSerializer(request.user)
         return Response({'serializer': serializer}, status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = UserSerializer(request.user, data=request.data)
         if serializer.is_valid():
-            serializer.update(request.user, serializer.validated_data)
+            serializer.save()
             return redirect('api:details')
+        return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'api/login.html'
+
+    def get(self, request):
+        serializer = LoginSerializer()
+        return Response({'serializer': serializer}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = authenticate(username=serializer.validated_data.get('username'),
+                                password=serializer.validated_data.get('password'))
+            if user:
+                response = redirect('api:details')
+                response.set_cookie('token', get_token(user))
+                return response
+            else:
+                return Response({'serializer': serializer, 'errors': 'Incorrect username or password'},
+                                status=status.HTTP_400_BAD_REQUEST)
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignupView(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'api/signup.html'
-    permission_classes = (AllowAny,)
 
     def get(self, request):
         if request.user.is_authenticated:
@@ -185,28 +290,6 @@ class SignupView(APIView):
             response = redirect('api:details')
             response.set_cookie('token', get_token(user))
             return response
-        return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class LoginView(APIView):
-    renderer_classes = [TemplateHTMLRenderer]
-    template_name = 'api/login.html'
-    permission_classes = (AllowAny,)
-
-    def get(self, request):
-        serializer = LoginSerializer()
-        return Response({'serializer': serializer}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = authenticate(username=serializer.validated_data.get('username'),
-                                password=serializer.validated_data.get('password'))
-            if user and user.is_active:
-                response = redirect('api:details')
-                token = get_token(user)
-                response.set_cookie('token', token)
-                return response
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
 

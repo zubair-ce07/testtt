@@ -4,17 +4,21 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from api.serializers.user_serializers import UserSerializer
+from api.serializers.user_serializers import UserSerializer, UserProfileSerializer
 from users.models import UserProfile
 
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(style={'placeholder': 'Username'})
-    password = serializers.CharField(style={'placeholder': 'Password', 'input_type': 'password'})
+class LoginSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=True, validators=[])
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    class Meta:
+        model = User
+        fields = ('username', 'password',)
 
 
 class SignupSerializer(UserSerializer):
-    password = serializers.CharField(style={'input_type': 'password'}, )
+    password = serializers.CharField(style={'input_type': 'password'})
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
     class Meta:
@@ -25,12 +29,10 @@ class SignupSerializer(UserSerializer):
         user_profile_data = validated_data.pop('userprofile')
         validated_data['password'] = make_password(validated_data.get('password'))
         user = super(SignupSerializer, self).create(validated_data)
-        user_profile = UserProfile(user=user, phone_number=user_profile_data.get('phone_number'),
-                                   country=user_profile_data.get('country'),
-                                   address=user_profile_data.get('address'),
-                                   image=user_profile_data.get('image'))
-        user_profile.full_clean()
-        user_profile.save()
+        user_profile = UserProfile.objects.create(user=user)
+        profile_serializer = UserProfileSerializer(instance=user_profile, data=user_profile_data)
+        if profile_serializer.is_valid():
+            profile_serializer.save()
         return user
 
     def validate(self, attrs):

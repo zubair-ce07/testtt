@@ -3,40 +3,40 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import generics
 from rest_framework import status
-from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from generic_api.serializers.signup_serializer import SignupSerializer
-from generic_api.serializers.user_serializers import UserSerializer, LoginSerializer
+from generic_api.serializers.auth_serializers import SignupSerializer, LoginSerializer
+from generic_api.serializers.user_serializers import UserSerializer
 from task1.permissions import IsOwnerOrReadOnly
 from task1.utils import get_token, response_json
 
 
-class UserList(generics.ListAPIView):
+class UserListView(generics.ListAPIView):
     """
-    API: 'generic_api/list/'
+    API: 'generic_api/users/'
 
     Method: 'GET'
 
-    Response Body:
-    {
+    GET:
+    Function name: list
+    Response Body: {
         "success": true,
         "message": null,
         "response": [
             {
-                "url": "generic_api/<user_id>/details/",
-                "username": "Username",
-                "email": "Email Address",
-                "first_name": "First Name",
-                "last_name": "Last Name",
+                "url": "generic_api/users/<user_id>/",
+                "username": "john_doe",
+                "email": "john@doe.com",
+                "first_name": "John",
+                "last_name": "Doe",
                 "userprofile": {
-                    "phone_number": "(+)123456789",
-                    "country": "AZ",
-                    "image": "users/image.jpg",
-                    "address": "Address"
+                    "phone_number": "+923331234567",
+                    "country": "US",
+                    "image": "users/john.jpg"/null,
+                    "address": "X House, Y Street, Brooklyn, NY 11229"
                 }
             }
             {
@@ -52,65 +52,70 @@ class UserList(generics.ListAPIView):
     authentication_classes = (JSONWebTokenAuthentication,)
 
     def list(self, request, *args, **kwargs):
-        response = super(UserList, self).list(request, *args, **kwargs)
+        response = super(UserListView, self).list(request, *args, **kwargs)
         return Response(response_json(True, response.data, message=None), status=status.HTTP_200_OK)
 
 
-class UserDetails(generics.RetrieveUpdateDestroyAPIView):
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    API: 'generic_api/<user_id>/details/'
+    API: 'generic_api/users/<user_id>/'
 
     Methods: 'GET, PUT, PATCH, DELETE'
 
     GET:
-    Response Body:
-    {
+    Function name: retrieve
+    Response Body: {
         "success": true,
         "message": null,
         "response": {
-            "url": "generic_api/<user_id>/details/",
-            "username": "Username",
-            "email": "Email Address",
-            "first_name": "First Name",
-            "last_name": "Last Name",
+            "url": "generic_api/users/<user_id>/",
+            "username": "john_doe",
+            "email": "john@doe.com",
+            "first_name": "John",
+            "last_name": "Doe",
             "userprofile": {
-                "phone_number": "(+)123456789",
-                "country": "AZ",
-                "image": "users/image.jpg",
-                "address": "Address"
+                "phone_number": "+923331234567",
+                "country": "US",
+                "image": "users/john.jpg"/null,
+                "address": "X House, Y Street, Brooklyn, NY 11229"
             }
         }
     }
 
     PUT, PATCH:
+    Function name: update
     Request Body: {
-        "email": "Email Address",
-        "first_name": "First Name",
-        "last_name": "Last Name",
-        "userprofile.phone_number": "(+)123456789",
-        "userprofile.country": "AZ"(2 Digit code),
-        "userprofile.image": "upload image file",
-        "userprofile.address": "Address"
+        "email": "john@doe.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "userprofile": {
+            "phone_number": "+923331234567",
+            "country": "US",
+            image": "UploadedFile:users/john.jpg"/null,
+            "address": "X House, Y Street, Brooklyn, NY 11229"
+        }
     }
 
     Response Body: {
         "success": true,
         "message": "User successfully updated",
         "response": {
-            "url": "generic_api/<user_id>/details/",
-            "username": "Username",
-            "email": "Email Address",
-            "first_name": "First Name",
-            "last_name": "Last Name",
+            "url": "generic_api/users/<user_id>/",
+            "username": "john_doe",
+            "email": "john@doe.com",
+            "first_name": "John",
+            "last_name": "Doe",
             "userprofile": {
-                "phone_number": "(+)123456789",
-                "country": "AZ",
-                "image": "users/image.jpg",
-                "address": "Address"
+                "phone_number": "+923331234567",
+                "country": "US",
+                "image": "users/john.jpg"/null,
+                "address": "X House, Y Street, Brooklyn, NY 11229"
             }
         }
     }
+
     DELETE:
+    Function name: destroy
     Response Body: {
         "success": True,
         "message='User successfully deleted',
@@ -124,44 +129,45 @@ class UserDetails(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = (JSONWebTokenAuthentication,)
 
     def retrieve(self, request, *args, **kwargs):
-        response = super(UserDetails, self).retrieve(request, *args, **kwargs)
+        response = super(UserDetailView, self).retrieve(request, *args, **kwargs)
         return Response(response_json(True, response.data, message=None), status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
-        response = super(UserDetails, self).update(request, *args, **kwargs)
+        response = super(UserDetailView, self).update(request, *args, **kwargs)
         return Response(response_json(True, response.data, message='User successfully updated'),
                         status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
-        response = super(UserDetails, self).destroy(request, *args, **kwargs)
+        response = super(UserDetailView, self).destroy(request, *args, **kwargs)
         response.delete_cookie('token')
-        return Response(response_json(True, response.data, message='User has been succesfully deleted'),
+        return Response(response_json(True, response.data, message='User succesfully deleted'),
                         status=status.HTTP_204_NO_CONTENT)
 
 
-class Login(generics.GenericAPIView):
+class LoginView(generics.GenericAPIView):
     """
     API: 'generic_api/login/'
 
     Method: 'POST'
 
     POST:
+    Function name: post
     Request Body: {
-        "csrfmiddlewaretoken": "token",
-        "username": "username",
-        "password": "password",
+        "username": "john.doe",
+        "password": "abcdefgh",
     }
+
     Response Body: {
         "success": true/false,
-        "message": "User has been logged in"/"Invalid Credentials",
+        "message": "User successfully logged in"/"Invalid Credentials",
         "response": {
-            "username": "username",
-            "password": "password",
+            "username": "john.doe",
+            "password": "abcdefgh",
             "token": "JWT token"
         }
     }
     """
-    permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
 
     def post(self, request):
@@ -169,63 +175,60 @@ class Login(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             user = authenticate(username=serializer.validated_data.get('username'),
                                 password=serializer.validated_data.get('password'))
-            if user:
-                if user.is_active:
-                    token = get_token(user)
-                    serializer.validated_data.update({'token': token})
-                    response = Response(
-                        response_json(True, serializer.validated_data, message='User has been logged in'),
-                        status=status.HTTP_200_OK)
-                    response.set_cookie('token', token)
-                    return response
-                else:
-                    return Response(response_json(False, serializer.validated_data, message='User account inactive'),
-                                    status=status.HTTP_400_BAD_REQUEST)
+            if user and user.is_active:
+                token = get_token(user)
+                serializer.validated_data.update({'token': token})
+                response = Response(
+                    response_json(True, serializer.validated_data, message='User successfully logged in'),
+                    status=status.HTTP_200_OK)
+                response.set_cookie('token', token)
+                return response
         return Response(response_json(False, serializer.data, message='Invalid credentials'),
                         status=status.HTTP_400_BAD_REQUEST)
 
 
-class Signup(generics.CreateAPIView):
+class SignupView(generics.CreateAPIView):
     """
     API: 'viewset_api/signup/'
 
     Method: 'POST'
 
     POST:
+    Function name: create
     Request Body: {
-        "csrfmiddlewaretoken": "token",
-        "username": "Username",
-        "password": "password",
-        "password2": "password",
-        "email": "Email Address",
-        "first_name": "First Name",
-        "last_name": "Last Name",
-        "userprofile.phone_number": "(+)123456789",
-        "userprofile.country": "AZ"(2 Digit code),
-        "userprofile.image": "upload image file",
-        "userprofile.address": "Address"
+        "username":"john_doe",
+        "password":"abcdefgh"
+        "password2":"abcdefgh",
+        "email": "john@doe.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "userprofile": {
+            "phone_number": "+923331234567",
+            "country": "US",
+            image": "UploadedFile:users/john.jpg"/null,
+            "address": "X House, Y Street, Brooklyn, NY 11229"
+        }
     }
 
-    Response Body: {
+    Response body: {
         "success": true,
-        "message": "User has been successfully created",
+        "message": "User successfully created",
         "response": {
-            "username": "Username",
-            "password": "Hashed Password",
-            "email": "Email Address",
-            "first_name": "First Name",
-            "last_name": "Last Name",
+            "username":"john_doe",
+            "password":"Hashed Password"
+            "email": "john@doe.com",
+            "first_name": "John",
+            "last_name": "Doe",
             "userprofile": {
-                "phone_number": "(+)123456789",
-                "country": "AZ",
-                "image": "users/image.jpg",
-                "address": "Address"
-            }
-            "token": "JWT Token"
+                "phone_number": "+923331234567",
+                "country": "US",
+                image": "users/john.jpg"/null,
+                "address": "X House, Y Street, Brooklyn, NY 11229"
+            },
+            "token": "JWT token"
         }
     }
     """
-    permission_classes = (AllowAny,)
     serializer_class = SignupSerializer
 
     def get_object(self, username):
@@ -233,25 +236,26 @@ class Signup(generics.CreateAPIView):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        response = super(Signup, self).create(request, *args, **kwargs)
+        response = super(SignupView, self).create(request, *args, **kwargs)
         token = get_token(self.get_object(response.data.get('username')))
         response.data.update({'token': token})
-        response = Response(response_json(True, response.data, message='User has been successfully created'),
+        response = Response(response_json(True, response.data, message='User successfully created'),
                             status=status.HTTP_200_OK)
         response.set_cookie('token', token)
         return response
 
 
-class Logout(APIView):
+class LogoutView(APIView):
     """
     API: 'generic_api/logout/'
 
     Method: 'GET'
 
     GET:
+    Function name: get
     Response body: {
         "success": true/false,
-        "message": "User has been successfully logged out.",
+        "message": "User successfully logged out.",
         "response": null
     }
    """
@@ -259,7 +263,7 @@ class Logout(APIView):
     authentication_classes = (JSONWebTokenAuthentication,)
 
     def get(self, request):
-        response = Response(response_json(True, None, message='User has been successfully logged out.'),
+        response = Response(response_json(True, None, message='User successfully logged out.'),
                             status=status.HTTP_204_NO_CONTENT)
         response.delete_cookie('token')
         return response
