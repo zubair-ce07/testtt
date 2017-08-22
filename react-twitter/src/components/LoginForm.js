@@ -1,6 +1,6 @@
 import React from "react";
 import {withRouter} from "react-router-dom";
-import {domain} from "../config";
+import {domain, getHeader} from "../config";
 
 
 class LoginForm extends React.Component {
@@ -14,44 +14,43 @@ class LoginForm extends React.Component {
         };
     }
 
-    handleChange = (e) => {
-        const name = e.target.name;
-        const value = e.target.value;
+    handleChange = (event) => {
+        const name = event.target.name;
+        const value = event.target.value;
         this.setState({
             [name]: value
         });
     };
 
-    loggingIn = (token) => {
-        this.setState({
-            token: token,
-        });
-        localStorage.setItem('user', JSON.stringify(this.state));
+    tryLogIn = (token) => {
+        if (token) {
+            this.setState({
+                token: token,
+            });
+            localStorage.setItem('user', JSON.stringify(this.state));
+        }
+        else {
+            alert("Username or password is incorrect!")
+        }
         this.props.history.push('/');
     };
 
-    handleSubmit = (e) => {
+    handleSubmit = (event) => {
         fetch(domain + '/news/auth/', {
             method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
+            headers: getHeader(),
             body: JSON.stringify({
                 username: this.state.username,
                 password: this.state.password,
-            })
+            }),
         })
-            .then((response) => response.json())
-            .then((responseJson) => {
-                if(responseJson.token)
-                    this.loggingIn(responseJson.token);
-            })
+            .then(response => response.json())
+            .then(responseJson => this.tryLogIn(responseJson.token))
             .catch((error) => {
-                console.error(error);
+                console.log(error);
             });
 
-        e.preventDefault();
+        event.preventDefault();
     };
 
     render() {

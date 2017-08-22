@@ -4,8 +4,14 @@ function getUserToken() {
     return localStorage.user ? JSON.parse(localStorage.user).token : null;
 }
 export function getHeader() {
-    return {
+    if (getUserToken()) {
+        return {
         Authorization: 'Token ' + getUserToken(),
         'Content-Type': 'application/json',
-    };
+        };
+    }
+    return {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    }
 }
