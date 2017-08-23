@@ -58,28 +58,6 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
-    def garment_requests(self, response, prodId, garment):
-        color_ids = self.product_color_ids(response)
-        requests = []
-        for colorid in color_ids:
-            requests.append(
-                FormRequest(
-                    url=self.product_api_url,
-                    formdata={
-                        'productId': prodId,
-                        'colorId': colorid['color'],
-                    },
-                    callback=self.parse_color_variants,
-                    dont_filter=True,
-                    meta={
-                        'garment': garment,
-                        'product_id': prodId,
-                        'color_id': colorid['color']
-                    }
-                )
-            )
-        return requests
-
     def parse_color_variants(self, response):
         garment = response.meta['garment']
         garment['image_urls'].extend(self.image_urls(response))
@@ -220,30 +198,27 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
         return temp
 
-    def parse_product_variants(self, response):
-        garment = response.meta['garment']
-        garment['skus'].update(self.skus(response))
-        return self.next_request_or_garment(garment)
-
-    # def skus(self, response):
-    #     skus = {}
-    #     body = str(response.request.body)
-    #     regex_color = re.compile('colorId=([a-zA-Z]+)')
-    #     regex_size = re.compile('selectedSize=([a-zA-Z0-9]+)')
-    #     color_id = regex_color.search(body).group(1)
-    #     size_id = regex_size.search(body).group(1)
-    #     sku_id = color_id + '_' + (size_id or '') + '_' + re.compile(
-    #         'productId=([\d]+)').search(body).group(1)
-    #     # TODO - get pricing right
-    #     price = 'price is not here for now'
-    #     skus = {
-    #         sku_id: {
-    #             'price': price,
-    #             'color': color_id,
-    #             'size': size_id
-    #         }
-    #     }
-    #     return skus
+    def garment_requests(self, response, prodId, garment):
+        color_ids = self.product_color_ids(response)
+        requests = []
+        for colorid in color_ids:
+            requests.append(
+                FormRequest(
+                    url=self.product_api_url,
+                    formdata={
+                        'productId': prodId,
+                        'colorId': colorid['color'],
+                    },
+                    callback=self.parse_color_variants,
+                    dont_filter=True,
+                    meta={
+                        'garment': garment,
+                        'product_id': prodId,
+                        'color_id': colorid['color']
+                    }
+                )
+            )
+        return requests
 
     def id_from_size(self, response):
         aq = response.css('.sizelist li a').extract()
@@ -276,15 +251,6 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
             if brand in name:
                 return brand
         return self.brands[-1]
-
-    # def product_fitting(self, response):
-    #     r = re.compile('>([\s\S]*)<')
-    #     fittings = [r.search(x).group(1).strip() for x in
-    #             response.css('.dimensionslist li a').extract() if 'stocklevel="0"' not in x]
-    #     if(len(fittings) == 0):
-    #         r = re.compile('id="([\d]+)"')
-    #         fittings = [r.search(x).group(1) for x in response.css('.sizelist li a').extract() if 'stocklevel="0"' not in x]
-    #     return fittings
 
     def product_sizes(self, response):
         sizes = response.css(".sizelist li a::text").extract()
