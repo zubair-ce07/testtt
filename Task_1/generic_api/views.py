@@ -11,7 +11,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from generic_api.serializers.auth_serializers import SignupSerializer, LoginSerializer
 from generic_api.serializers.user_serializers import UserSerializer
 from task1.permissions import IsOwnerOrReadOnly
-from task1.utils import get_token, response_json
+from task1.utils import get_token, response_json, get_object
 
 
 class UserListView(generics.ListAPIView):
@@ -160,7 +160,7 @@ class LoginView(generics.GenericAPIView):
 
     Response Body: {
         "success": true/false,
-        "message": "User successfully logged in"/"Invalid Credentials",
+        "message": "User successfully logged in"/"Invalid Credentials/User account inactive",
         "response": {
             "username": "john.doe",
             "password": "abcdefgh",
@@ -175,7 +175,7 @@ class LoginView(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             user = authenticate(username=serializer.validated_data.get('username'),
                                 password=serializer.validated_data.get('password'))
-            if user and user.is_active:
+            if user:
                 token = get_token(user)
                 serializer.validated_data.update({'token': token})
                 response = Response(
@@ -183,7 +183,7 @@ class LoginView(generics.GenericAPIView):
                     status=status.HTTP_200_OK)
                 response.set_cookie('token', token)
                 return response
-        return Response(response_json(False, serializer.data, message='Invalid credentials'),
+        return Response(response_json(False, serializer.data, message='Invalid credentials/User account inactive'),
                         status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -231,13 +231,10 @@ class SignupView(generics.CreateAPIView):
     """
     serializer_class = SignupSerializer
 
-    def get_object(self, username):
-        return User.objects.get(username=username)
-
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         response = super(SignupView, self).create(request, *args, **kwargs)
-        token = get_token(self.get_object(response.data.get('username')))
+        token = get_token(get_object(response.data.get('username')))
         response.data.update({'token': token})
         response = Response(response_json(True, response.data, message='User successfully created'),
                             status=status.HTTP_200_OK)

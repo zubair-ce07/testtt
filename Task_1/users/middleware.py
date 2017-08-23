@@ -12,7 +12,7 @@ class AuthenticationMiddleware(object):
 
     def get_user_profile(self, request):
         if not hasattr(request, '_cached_user_profile'):
-            request._cached_user_profile = UserProfile.objects.get(user__username=request.user.username)
+            request._cached_user_profile = UserProfile.objects.get(user=request.user)
         return request._cached_user_profile
 
     def __init__(self, get_response):

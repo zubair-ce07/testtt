@@ -9,9 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from task1.utils import get_token, response_json
 from api.serializers.auth_serializers import LoginSerializer, SignupSerializer
 from api.serializers.user_serializers import UserSerializer
-from task1.utils import get_token, response_json
 
 
 class UserListView(APIView):
@@ -268,7 +268,7 @@ class LoginView(APIView):
                 response.set_cookie('token', get_token(user))
                 return response
             else:
-                return Response({'serializer': serializer, 'errors': 'Incorrect username or password'},
+                return Response({'serializer': serializer, 'errors': 'Invalid Credentials/User account inactive'},
                                 status=status.HTTP_400_BAD_REQUEST)
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -278,8 +278,6 @@ class SignupView(APIView):
     template_name = 'api/signup.html'
 
     def get(self, request):
-        if request.user.is_authenticated:
-            return redirect('api:details')
         return Response({'serializer': SignupSerializer()}, status=status.HTTP_200_OK)
 
     @transaction.atomic

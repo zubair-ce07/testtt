@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from task1.permissions import IsOwnerOrReadOnly
-from task1.utils import response_json, get_token
+from task1.utils import response_json, get_token, get_object
 from viewset_api.serializers.auth_serializers import LoginSerializer, SignupSerializer
 from viewset_api.serializers.user_serializers import UserSerializer
 
@@ -154,7 +154,7 @@ class LoginViewSet(viewsets.GenericViewSet):
 
     Response Body: {
         "success": true/false,
-        "message": "User successfully logged in"/"Invalid Credentials",
+        "message": "User successfully logged in"/"Invalid Credentials/User account inactive",
         "response": {
             "username": "john.doe",
             "password": "abcdefgh",
@@ -170,7 +170,7 @@ class LoginViewSet(viewsets.GenericViewSet):
         if serializer.is_valid(raise_exception=True):
             user = authenticate(username=serializer.validated_data.get('username'),
                                 password=serializer.validated_data.get('password'))
-            if user and user.is_active:
+            if user:
                 token = get_token(user)
                 serializer.validated_data.update({'token': token})
                 response = Response(
@@ -178,7 +178,7 @@ class LoginViewSet(viewsets.GenericViewSet):
                     status=status.HTTP_200_OK)
                 response.set_cookie('token', token)
                 return response
-        return Response(response_json(False, serializer.data, message='Invalid credentials'),
+        return Response(response_json(False, serializer.data, message='Invalid credentials/User account inactive'),
                         status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -227,13 +227,10 @@ class SignupViewSet(CreateModelMixin, viewsets.GenericViewSet):
 
     serializer_class = SignupSerializer
 
-    def get_object(self, username):
-        return User.objects.get(username=username)
-
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         response = super(SignupViewSet, self).create(request, *args, **kwargs)
-        token = get_token(self.get_object(response.data.get('username')))
+        token = get_token(get_object(response.data.get('username')))
         response.data.update({'token': token})
         response = Response(response_json(True, response.data, message='User successfully created'),
                             status=status.HTTP_200_OK)

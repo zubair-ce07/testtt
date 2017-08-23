@@ -16,12 +16,12 @@ from users.models import UserProfile
 
 
 @login_required
-def DetailsView(request):
+def UserDetailView(request):
     return render(request, 'users/details.html', {'user': request.user})
 
 
 @login_required
-def EditView(request):
+def UserEditView(request):
     user = request.user
     user_profile = user.userprofile
     data = {'phone_number': user_profile.phone_number, 'address': user_profile.address,
@@ -80,7 +80,7 @@ def LogoutView(request):
     return HttpResponseRedirect(redirect_to=reverse('users:login'))
 
 
-class ListView(LoginRequiredMixin, View):
+class UserListView(LoginRequiredMixin, View):
     template_name = 'users/users_list.html'
 
     def get(self, request, *args, **kwargs):

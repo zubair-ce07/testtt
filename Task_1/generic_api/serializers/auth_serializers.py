@@ -35,9 +35,9 @@ class SignupSerializer(UserSerializer):
         return user
 
     def validate(self, attrs):
-        password1 = attrs.get('password')
+        password = attrs.get('password')
         password2 = attrs.pop('password2')
-        if password1 and password2 and password1 != password2:
+        if password and password2 and password != password2:
             raise ValidationError({'password': 'The passwords do not match'})
-        validate_password(password=password1)
+        validate_password(password=password)
         return super(SignupSerializer, self).validate(attrs)
