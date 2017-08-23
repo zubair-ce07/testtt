@@ -9,9 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from task1.utils import get_token, response_json
 from api.serializers.auth_serializers import LoginSerializer, SignupSerializer
 from api.serializers.user_serializers import UserSerializer
+from task1.utils import get_token, response_json
 
 
 class UserListView(APIView):
@@ -58,29 +58,10 @@ class CreateUserView(APIView):
     """
     API: 'api/user_create/'
 
-    Methods: 'GET, PUT, DELETE'
+    Method: 'POST'
 
-    GET:
-    Function name: get
-    Response body: {
-        "success": true,
-        "message": null,
-        "response": {
-            "username": "",
-            "email": "",
-            "first_name": "",
-            "last_name": "",
-            "userprofile": {
-                "phone_number": "",
-                "country": null,
-                "image": null,
-                "address": ""
-            }
-        }
-    }
-
-    PUT:
-    Function name: put
+    POST:
+    Function name: post
     Request Body: {
         "username":"john_doe",
         "password":"abcdefgh"
@@ -116,12 +97,8 @@ class CreateUserView(APIView):
     }
     """
 
-    def get(self, request):
-        serializer = SignupSerializer()
-        return Response(response_json(True, serializer.data, message=None), status=status.HTTP_200_OK)
-
     @transaction.atomic
-    def put(self, request):
+    def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.save()

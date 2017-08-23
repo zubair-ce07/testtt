@@ -46,8 +46,8 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'users',
     'api',
-    'generic_api'
-
+    'generic_api',
+    'viewset_api'
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
