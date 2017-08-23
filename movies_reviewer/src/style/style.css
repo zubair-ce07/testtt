@@ -1,0 +1,45 @@
+body {
+    background:
+    linear-gradient(
+      rgba(53, 104, 109, 0.15),
+      rgba(83, 134, 139, 0.15)
+    ) fixed,
+    url("../images/bg.jpeg") fixed;
+}
+.center-aligned {
+    display: flex;
+    justify-content: center;
+    margin: 160px 0 0 0;
+}
+.page-title {
+    z-index: 10;
+    padding: 60px 0 40px 0;
+    top: -35px;
+    text-align: center;
+    background-color: cadetblue;
+    color: white;
+    border-radius: 40px;
+    position: fixed;
+    width:98%;
+
+}
+.item {
+    background-color: white;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    padding: 10px 10px 10px 20px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+a:link {
+    text-decoration: none;
+}
+.item:hover {
+    cursor: pointer;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.35), 0 10px 10px rgba(0,0,0,0.32);
+
+}
+.youtube {
+    width: 40%;
+    height: 400px;
+}
