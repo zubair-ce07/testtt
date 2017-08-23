@@ -10,3 +10,5 @@ THE_NEWS = 'The News'
 DAWN_NEWS = 'Dawn News'
 SPIDER_NAMES = {THE_NEWS: slugify(THE_NEWS),
                 DAWN_NEWS: slugify(DAWN_NEWS)}
+
+SCRAPY_RUNNING = False
