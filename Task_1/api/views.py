@@ -64,7 +64,7 @@ class CreateUserView(APIView):
     Function name: post
     Request Body: {
         "username":"john_doe",
-        "password":"abcdefgh"
+        "password":"abcdefgh",
         "password2":"abcdefgh",
         "email": "john@doe.com",
         "first_name": "John",
@@ -72,7 +72,7 @@ class CreateUserView(APIView):
         "userprofile": {
             "phone_number": "+923331234567",
             "country": "US",
-            image": "UploadedFile:users/john.jpg"/null,
+            "image": "UploadedFile:users/john.jpg"/null,
             "address": "X House, Y Street, Brooklyn, NY 11229"
         }
     }
@@ -82,14 +82,14 @@ class CreateUserView(APIView):
         "message": "User successfully created",
         "response": {
             "username":"john_doe",
-            "password":"abcdefgh"
+            "password":"abcdefgh",
             "email": "john@doe.com",
             "first_name": "John",
             "last_name": "Doe",
             "userprofile": {
                 "phone_number": "+923331234567",
                 "country": "US",
-                image": "users/john.jpg"/null,
+                "image": "users/john.jpg"/null,
                 "address": "X House, Y Street, Brooklyn, NY 11229"
             },
             "token": "JWT token"
@@ -104,11 +104,10 @@ class CreateUserView(APIView):
             user = serializer.save()
             token = get_token(user)
             serializer.validated_data.update({'token': token})
-            response = Response(response_json(True, serializer.validated_data, 'User succesfully created'),
+            response = Response(response_json(True, serializer.validated_data, 'User successfully created'),
                                 status=status.HTTP_200_OK)
             response.set_cookie('token', token)
             return response
-        return Response(response_json(False, None, message=serializer.errors), status=status.HTTP_400_BAD_REQUEST)
 
 
 class RetrieveUpdateDeleteUserView(APIView):
@@ -145,7 +144,7 @@ class RetrieveUpdateDeleteUserView(APIView):
         "userprofile": {
             "phone_number": "+923331234567",
             "country": "US",
-            image": "UploadedFile:users/john.jpg"/null,
+            "image": "UploadedFile:users/john.jpg"/null,
             "address": "X House, Y Street, Brooklyn, NY 11229"
         }
     }
@@ -170,7 +169,7 @@ class RetrieveUpdateDeleteUserView(APIView):
     Function name: delete
     Response body: {
         "success": true,
-        "message": "User succesfully deleted",
+        "message": "User successfully deleted",
         "response": null
     }
     """
@@ -189,12 +188,56 @@ class RetrieveUpdateDeleteUserView(APIView):
             serializer.save()
             return Response(response_json(True, serializer.validated_data, 'User successfully updated'),
                             status=status.HTTP_200_OK)
-        return Response(response_json(False, None, message=serializer.errors), status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         request.user.delete()
-        return Response(response_json(True, None, message='User succesfully deleted'),
-                        status=status.HTTP_204_NO_CONTENT)
+        response = Response(response_json(True, None, message='User successfully deleted'),
+                            status=status.HTTP_204_NO_CONTENT)
+        response.delete_cookie('token')
+        return response
+
+
+class SearchUserView(APIView):
+    """
+    API: 'api/users/search/?first_name=john&last_name=doe'
+
+    Method: 'GET'
+
+    GET:
+    Function name: get
+    Response Body: {
+        "success": true,
+        "message": "The search returned n results",
+        "response": [
+            {
+                "username": "john_doe",
+                "email": "john@doe.com",
+                "first_name": "John",
+                "last_name": "Doe",
+                "userprofile": {
+                    "phone_number": "+923331234567",
+                    "country": "US",
+                    "image": "users/john.jpg"/null,
+                    "address": "X House, Y Street, Brooklyn, NY 11229"
+                }
+            },
+            {
+                ....
+            }
+            ....
+        ]
+    }
+    """
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JSONWebTokenAuthentication,)
+
+    def get(self, request, *args, **kwargs):
+        first_name = request.query_params.get('first_name', "")
+        last_name = request.query_params.get('last_name', "")
+        queryset = User.objects.filter(first_name__icontains=first_name, last_name__icontains=last_name)
+        serializer = UserSerializer(queryset, many=True)
+        return Response(response_json(True, serializer.data, 'The search returned {} results'.format(queryset.count())),
+                        status=status.HTTP_200_OK)
 
 
 class UserProfileDetailView(APIView):
@@ -244,9 +287,8 @@ class LoginView(APIView):
                 response = redirect('api:details')
                 response.set_cookie('token', get_token(user))
                 return response
-            else:
-                return Response({'serializer': serializer, 'errors': 'Invalid Credentials/User account inactive'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            return Response({'serializer': serializer, 'errors': 'Invalid Credentials/User account inactive'},
+                            status=status.HTTP_400_BAD_REQUEST)
         return Response({'serializer': serializer}, status=status.HTTP_400_BAD_REQUEST)
 
 

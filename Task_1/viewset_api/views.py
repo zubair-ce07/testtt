@@ -38,7 +38,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     "image": "users/john.jpg"/null,
                     "address": "X House, Y Street, Brooklyn, NY 11229"
                 }
-            }
+            },
             {
                 ....
             }
@@ -80,7 +80,7 @@ class UserViewSet(viewsets.ModelViewSet):
         "userprofile": {
             "phone_number": "+923331234567",
             "country": "US",
-            image": "UploadedFile:users/john.jpg"/null,
+            "image": "UploadedFile:users/john.jpg"/null,
             "address": "X House, Y Street, Brooklyn, NY 11229"
         }
     }
@@ -139,6 +139,54 @@ class UserViewSet(viewsets.ModelViewSet):
         return response
 
 
+class SearchUserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API: 'viewset_api/users/search/?first_name=john&last_name=doe'
+
+    Method: 'GET'
+
+    GET:
+    Function name: list
+    Response Body: {
+        "success": true,
+        "message": "The search returned n results",
+        "response": [
+            {
+                "url": "viewset_api/users/<user_id>/",
+                "username": "john_doe",
+                "email": "john@doe.com",
+                "first_name": "John",
+                "last_name": "Doe",
+                "userprofile": {
+                    "phone_number": "+923331234567",
+                    "country": "US",
+                    "image": "users/john.jpg"/null,
+                    "address": "X House, Y Street, Brooklyn, NY 11229"
+                }
+            },
+            {
+                ....
+            }
+            ....
+        ]
+    }
+    """
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JSONWebTokenAuthentication,)
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        first_name = self.request.query_params.get('first_name', "")
+        last_name = self.request.query_params.get('last_name', "")
+        return User.objects.filter(first_name__icontains=first_name, last_name__icontains=last_name)
+
+    def list(self, request, *args, **kwargs):
+        response = super(SearchUserViewSet, self).list(request, *args, **kwargs)
+        return Response(
+            response_json(True, response.data, 'The search returned {} results'.format(self.get_queryset().count())),
+            status=status.HTTP_200_OK)
+
+
 class LoginViewSet(viewsets.GenericViewSet):
     """
     API: 'viewset_api/login/'
@@ -149,7 +197,7 @@ class LoginViewSet(viewsets.GenericViewSet):
     Function name: post
     Request Body: {
         "username": "john.doe",
-        "password": "abcdefgh",
+        "password": "abcdefgh"
     }
 
     Response Body: {
@@ -192,7 +240,7 @@ class SignupViewSet(CreateModelMixin, viewsets.GenericViewSet):
     Function name: create
     Request Body: {
         "username":"john_doe",
-        "password":"abcdefgh"
+        "password":"abcdefgh",
         "password2":"abcdefgh",
         "email": "john@doe.com",
         "first_name": "John",
@@ -200,7 +248,7 @@ class SignupViewSet(CreateModelMixin, viewsets.GenericViewSet):
         "userprofile": {
             "phone_number": "+923331234567",
             "country": "US",
-            image": "UploadedFile:users/john.jpg"/null,
+            "image": "UploadedFile:users/john.jpg"/null,
             "address": "X House, Y Street, Brooklyn, NY 11229"
         }
     }
@@ -217,7 +265,7 @@ class SignupViewSet(CreateModelMixin, viewsets.GenericViewSet):
             "userprofile": {
                 "phone_number": "+923331234567",
                 "country": "US",
-                image": "users/john.jpg"/null,
+                "image": "users/john.jpg"/null,
                 "address": "X House, Y Street, Brooklyn, NY 11229"
             },
             "token": "JWT token"

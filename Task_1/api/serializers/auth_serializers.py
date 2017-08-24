@@ -8,7 +8,7 @@ from api.serializers.user_serializers import UserSerializer, UserProfileSerializ
 
 
 class LoginSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True, validators=[])
+    username = serializers.CharField()
     password = serializers.CharField(style={'input_type': 'password'})
 
     class Meta:
