@@ -1,9 +1,7 @@
-import re
-
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy import FormRequest
-
+from urllib.parse import parse_qsl
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
 
@@ -30,8 +28,9 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
         'Woolrich'
     ]
 
-    genders = [
-        'men', 'women'
+    gender_map = [
+        ('Men', 'men'),
+        ('Women', 'women')
     ]
 
     def parse(self, response):
@@ -53,18 +52,19 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
-    def parse_color_variants(self, response):
+    def parse_color(self, response):
         garment = response.meta['garment']
-        garment['image_urls'].extend(self.image_urls(response))
-        garment['meta']['requests_queue'].extend(self.size_requests(response))
+        garment['image_urls'] += self.image_urls(response)
+        garment['meta']['requests_queue'] += self.size_requests(response)
         return self.next_request_or_garment(garment)
 
-    def parse_size_variants(self, response):
+    def parse_size(self, response):
         garment = response.meta['garment']
-        garment['meta']['requests_queue'].extend(self.fitting_requests(response))
+        garment['meta']['requests_queue'] += self.fitting_requests(response)
+        garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
-    def parse_fitting_variants(self, response):
+    def parse_fitting(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
@@ -75,30 +75,18 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
             if fitting_sel.css('[stocklevel="0"]'):
                 continue
             sku_id = clean(fitting_sel.css('::attr(id)'))[0]
-            form_data = {
-                'productId': response.meta['garment']['retailer_sku'],
-                'colorId': response.meta['color_id'],
-                'selectedSize': response.meta['size'],
-                'skuId': sku_id
-            }
-            meta = {
-                'garment': response.meta['garment'],
-                'color': response.meta['color'],
-                'size': response.meta['size'],
-                'sku_id': sku_id,
-                'fit': clean(fitting_sel.css('::text'))[0]
-            }
+            form_data = dict(parse_qsl(response.request.body.decode()))
+            form_data.update({'skuId': sku_id})
             requests.append(
-                self.form_request(
-                    meta=meta,
-                    callback=self.parse_fitting_variants,
+                self.variant_request(
+                    callback=self.parse_fitting,
                     form_data=form_data
                 )
             )
         return requests
 
-    def form_request(self, callback, form_data, meta):
-        return FormRequest(url=self.product_api_url, callback=callback, dont_filter=True, formdata=form_data, meta=meta)
+    def variant_request(self, callback, form_data):
+        return FormRequest(url=self.product_api_url, callback=callback, dont_filter=True, formdata=form_data)
 
     def color_requests(self, response, garment):
         requests = []
@@ -110,65 +98,52 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
                 'productId': garment['retailer_sku'],
                 'colorId': color_id
             }
-            meta = {
-                'garment': garment,
-                'color_id': color_id,
-                'color': clean(color_sel.css('::attr(title)'))[0]
-            }
             requests.append(
-                self.form_request(callback=self.parse_color_variants, form_data=form_data, meta=meta)
+                self.variant_request(callback=self.parse_color, form_data=form_data)
             )
         return requests
 
     def size_requests(self, response):
+
         requests = []
         for size_selector in response.css('.sizelist a'):
             if size_selector.css('[stocklevel="0"]'):
                 continue
-            size_id = clean(size_selector.css('::attr(id)'))[0]
             size = clean(size_selector.css('::text'))[0]
-            form_data = {
-                'productId': response.meta['garment']['retailer_sku'],
-                'colorId': response.meta['color_id'],
-                'selectedSize': size,
-            }
-            meta = {
-                'garment': response.meta['garment'],
-                'color_id': response.meta['color_id'],
-                'color': response.meta['color'],
-                'size': size
-            }
-            callback = self.parse_size_variants
-            if size_id.isdigit() and not size_id == size:
-                form_data.update({'skuId': size_id})
-                meta.update({'sku_id': size_id})
-                callback = self.parse_fitting_variants
+            form_data = dict(parse_qsl(response.request.body.decode()))
+            form_data.update({'selectedSize': size})
+            sku_id_size = clean(size_selector.css('::attr(id)'))[0]
+            if not sku_id_size == size:
+                form_data.update({'skuId': sku_id_size})
             requests.append(
-                self.form_request(form_data=form_data, meta=meta,
-                                  callback=callback,)
+                self.variant_request(form_data=form_data, callback=self.parse_size)
             )
         return requests
 
     def skus(self, response):
-        sku = {}
-        color = response.meta['color']
-        size = response.meta['size']
-        sku_id = response.meta['sku_id']
-        sku[sku_id] = {
-                'color': color,
-                'size': size,
-        }
-
-        if 'fit' in response.meta:
-            sku[sku_id].update({'fit': response.meta['fit']})
+        skus = {}
         pricing = self.product_pricing_common_new(response)
-        sku[sku_id].update(pricing)
-        return sku
+        color = clean(response.css('.selected.link::attr(title)'))[0]
+        size = clean(response.css('.sizelist .selected::text'))[0]
+        size = self.one_size if size == 'EA' else size
+        fit = ('/'+clean(response.css('.selected.childDimensions::text'))[0] if response.css('.selected.childDimensions') else '')
+        sku_id = clean(response.css('.sizelist .selected::attr(id)'))[0]
+        if sku_id == size and response.css('.selected.childDimensions'):
+            sku_id = clean(response.css('.selected.childDimensions::attr(id)'))[0]
+        elif sku_id == size:
+            return skus
+        size += fit
+        skus[sku_id] = {
+            'color': color,
+            'size': size,
+        }
+        skus[sku_id].update(pricing)
+        return skus
 
     def image_urls(self, response):
-        main_image = clean(response.css('[itemprop="image"]::attr(src)'))
-        main_image.extend(clean(response.css('#prod-detail__slider-nav img::attr(src)')))
-        return main_image
+        image_urls = clean(response.css('[itemprop="image"]::attr(src)'))
+        image_urls += clean(response.css('#prod-detail__slider-nav img::attr(src)'))
+        return image_urls
 
     def product_category(self, response):
         return clean(response.css('.wrap.breadcrumb a::text'))[1:]
@@ -182,16 +157,15 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
         for brand in self.brands:
             if brand in name:
                 return brand
-        return self.brands[-1]
+        return 'Woolrich'
 
     def product_name(self, response):
         name = self.raw_name(response)
-        name = clean(name.replace(self.product_brand(response), ''))
-        return name
+        return clean(name.replace(self.product_brand(response), ''))
 
     def product_description(self, response):
         description = clean(response.css('[itemprop="description"]::text'))
-        description.extend([x for x in clean(response.css('.row .span4 li::text')) if not self.care_criteria_simplified(x)])
+        description += [x for x in clean(response.css('.row .span4 li::text')) if not self.care_criteria_simplified(x)]
         return description
 
     def product_id(self, response):
@@ -199,8 +173,8 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, response):
         name = self.raw_name(response)
-        for gender in self.genders:
-            if gender in name.lower():
+        for gender_str, gender in self.gender_map:
+            if gender_str in name:
                 return gender
         return 'unisex-adults'
 
@@ -213,15 +187,14 @@ class WoolrichCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = WoolrichParseSpider()
 
     listing_css = [
-        '.dropdown.yamm-fw a.upper',
+        '.nav.navbar-nav .upper',
         '.nav.nav-list.nav-',
-        # pagination-css
         '.clear.addMore'
     ]
-    product_css = '.span3.element.productCard a'
+    product_css = '.productCard .hover_img [title="View Details"]'
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, tags=('div', 'a'), attrs=('nextpage', 'href')),
-             follow=True, callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css,), follow=True, callback='parse_item')
+             callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css,), callback='parse_item')
     )
