@@ -7,7 +7,7 @@ const ActorItem = ({person}) => {
     const imageUrl = getImageUrl(person.profile_path, 'w185');
     return (
       <div className="mas-item text-center" key={person.credit_id}>
-        <img width="185" src={imageUrl}/><hr/>
+        <img width="100" src={imageUrl}/><hr/>
           <Link to={`/actors/${person.id}`}><h4>{person.name}</h4></Link>
           <h5>As <b>{person.character}</b></h5>
       </div>

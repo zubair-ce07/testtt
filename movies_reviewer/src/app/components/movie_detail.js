@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
+import { Link } from 'react-router-dom';
 
 import {fetchMovie} from '../actions/index';
 import ActorItem from './actor_item';
@@ -45,6 +46,7 @@ class MovieDetail extends Component {
                     <h6><b>Genres: </b>{MovieDetail.renderList(movie.genres)}</h6>
                     <h6><b>Production Countries: </b>{MovieDetail.renderList(movie.production_countries)}</h6>
                     <h6><b>Production Companies: </b>{MovieDetail.renderList(movie.production_companies)}</h6>
+                    <Link className="btn btn-primary" to={`/movies/${movie.id}/reviews`}>Add Review</Link>
                   </div>
                 </div>
               </div>
@@ -57,7 +59,7 @@ class MovieDetail extends Component {
 
     renderCredits() {
         return this.props.movie.credits.cast.map(person => {
-            return <ActorItem person={person}/>;
+            return <ActorItem person={person} key={person.credit_id}/>;
         });
     }
 }

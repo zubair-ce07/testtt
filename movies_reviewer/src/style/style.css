@@ -54,7 +54,7 @@ a:link {
 }
 .masonry {
     margin-top: 30px;
-    column-count: 4;
+    column-count: 8;
     column-gap: 1em;
 }
 .mas-item {

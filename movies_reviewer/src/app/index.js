@@ -10,6 +10,7 @@ import App from './components/app';
 import MoviesIndex from './components/movies_index';
 import MovieDetail from './components/movie_detail';
 import ActorDetail from './components/actor_detail';
+import NewReview from './components/add_review'
 
 const createStoreWithMiddleware = applyMiddleware(
   promise
@@ -21,6 +22,7 @@ ReactDOM.render(
             <App>
                 <Switch>
                     <Route exact path="/" component={MoviesIndex}/>
+                    <Route exact path="/movies/:movie_id/reviews" component={NewReview}/>
                     <Route path="/movies/:id" component={MovieDetail}/>
                     <Route path="/actors/:id" component={ActorDetail}/>
                 </Switch>
