@@ -9,8 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from api.serializers.auth_serializers import LoginSerializer, SignupSerializer
-from api.serializers.user_serializers import UserSerializer
+from api.serializers import UserSerializer, LoginSerializer, SignupSerializer
 from task1.utils import get_token, response_json
 
 

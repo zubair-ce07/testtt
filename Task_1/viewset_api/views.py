@@ -10,8 +10,8 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from task1.permissions import IsOwnerOrReadOnly
 from task1.utils import response_json, get_token, get_object
-from viewset_api.serializers.auth_serializers import LoginSerializer, SignupSerializer
-from viewset_api.serializers.user_serializers import UserSerializer
+from users.serializers.auth_serializers import LoginSerializer, SignupSerializer
+from viewset_api.serializers import UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):

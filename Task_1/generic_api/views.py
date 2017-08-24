@@ -8,10 +8,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from generic_api.serializers.auth_serializers import SignupSerializer, LoginSerializer
-from generic_api.serializers.user_serializers import UserSerializer
+from generic_api.serializers import UserSerializer
 from task1.permissions import IsOwnerOrReadOnly
 from task1.utils import get_token, response_json, get_object
+from users.serializers.auth_serializers import SignupSerializer, LoginSerializer
 
 
 class UserListView(generics.ListAPIView):

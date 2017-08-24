@@ -5,6 +5,7 @@ from task1.router import ListReadOnlyRouter
 from viewset_api import views
 
 app_name = 'viewset'
+
 router = DefaultRouter()
 search_router = ListReadOnlyRouter()
 search_router.register(r'users/search', views.SearchUserViewSet, base_name='search')
