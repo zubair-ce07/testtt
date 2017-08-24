@@ -12,7 +12,7 @@ Verdan Mahmood
 1. Rayyan Khalid
 
 
-##How to run
+## How to run
 
 - Install all packages mentioned in requirements.txt
 - Run Django Server 
