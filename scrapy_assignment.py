@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from scrapy.contrib.spiders import Rule
+from scrapy.contrib.spiders import CrawlSpider
+from scrapy.contrib.linkextractors import LinkExtractor
 
 
-class QuoteSpider(scrapy.Spider):
-    name = 'spider3'
+class QuoteSpider(CrawlSpider):
+    name = 'spiders2'
     start_urls = ['http://www.orsay.com/de-de/']
+    rules = (
+    Rule(LinkExtractor(allow_domains=('orsay.com'), restrict_css=('div.nav-container'))),
+    Rule(LinkExtractor(allow_domains=('orsay.com'), restrict_css=('div.category-products')),
+                  callback='parse_product_data'),)
 
-    def collect_product_data(self, response):
-        id, retailer_sku = self.product_id(response)
+    def parse_product_data(self, response):
+
+        product_id, retailer_sku = self.product_id(response)
         brand = self.get_brand(response)
         care = self.get_care(response)
         image_urls = self.get_img_url(response)
@@ -15,16 +23,13 @@ class QuoteSpider(scrapy.Spider):
         product_name = self.get_product_name(response)
         price = self.get_price(response)
         color = self.get_color(response)
-        url = self.get_url(response)
-        size_available, size_unAvailable = self.get_size_of_product(response)
-        skus = self.product_details(size_available,
-                                    size_unAvailable,
-                                    color, price, id)
+        product_url = self.get_url(response)
+        skus = self.get_skus(response, color, price, product_id)
         product = scrapy.Field(brand=brand, care=care,
                                description=description, gender='Women',
                                image_url=image_urls, name=product_name,
                                retailer_sku=retailer_sku, skus=skus,
-                               url=url, origional_url=url)
+                               url=product_url, origional_url=url)
         yield product
 
     def get_color(self, response):
@@ -34,10 +39,10 @@ class QuoteSpider(scrapy.Spider):
 
     def get_url(self, response):
         quotes = response.css('div.page')
-        url = quotes.css('li.store-hu_HU'
+        product_url = quotes.css('li.store-hu_HU'
                          ' a::attr(href)').extract_first()
-        url = (url.split('?'))[0]
-        return url
+        product_url = (url.split('?'))[0]
+        return product_url
 
     def get_brand(self, response):
         quotes = response.css('div.page')
@@ -75,12 +80,12 @@ class QuoteSpider(scrapy.Spider):
 
     def product_id(self, response):
         quotes = response.css('div.page')
-        id = quotes.css('li.store-hu_HU a::attr(href)').extract()
-        id = id[0].split('.html')
-        id = id[0].split('-')
-        id = id[len(id) - 1]
-        retailer_sku = (id[:6])
-        return (id, retailer_sku)
+        product_id = quotes.css('li.store-hu_HU a::attr(href)').extract()
+        product_id = product_id[0].split('.html')
+        product_id = product_id[0].split('-')
+        product_id = product_id[len(product_id) - 1]
+        retailer_sku = (product_id[:6])
+        return (product_id, retailer_sku)
 
     def get_size_of_product(self, response):
         quotes = response.css('div.page')
@@ -92,21 +97,7 @@ class QuoteSpider(scrapy.Spider):
         size_unAvailable = map(str, size_unAvailable)
         size_available, size_unAvailable = self.clean_char(size_available,
                                                            size_unAvailable)
-        return(size_available, size_unAvailable)
-
-    def parse(self, response):
-        for href in response.css('li.level0 '
-                                 'a.level-top::attr(href)').extract():
-            yield scrapy.Request(url=href, callback=self.parse_next_urls)
-
-    def parse_next_urls(self, response):
-        for href in response.css('.category-products a::attr(href)').extract():
-            yield scrapy.Request(href, callback=self.collect_product_data)
-        next_page_url = response.css('li.arrow '
-                                     'a.next::attr(href)').extract_first()
-        next_page_url = response.urljoin(next_page_url)
-        yield scrapy.Request(url=next_page_url,
-                             callback=self.parse_next_urls)
+        return (size_available, size_unAvailable)
 
     def clean_char(self, size_avail, size_unavail):
         avaiable = []
@@ -128,9 +119,9 @@ class QuoteSpider(scrapy.Spider):
             attr.append(attr1)
         return attr
 
-    def product_details(self, size_available,
-                        sizeun_available, colors, prices, product_id):
+    def get_skus(self, response, colors, prices, product_id):
         data = []
+        size_available, sizeun_available = self.get_size_of_product(response)
         for i in range(len(size_available)):
             id_size = '{}_{}'.format(product_id, size_available[i])
             product_info_available = scrapy.Field(color=colors,
