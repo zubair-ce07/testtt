@@ -11,3 +11,14 @@ Verdan Mahmood
 1. Luqman-Ud-Din Muhammad
 1. Rayyan Khalid
 
+
+##How to run
+
+- Install all packages mentioned in requirements.txt
+- Run Django Server 
+  - python manage.py runserver
+- Run 'memcached' for Django Caching framework by typing in terminal 'memcached'
+- Run RabbitMQ service
+- Run Celery 
+  - celery -A newsroom worker --beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
