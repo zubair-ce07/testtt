@@ -65,5 +65,3 @@ media/
 # npm and webpack genrated files
 dist/
 node_modules/
-package-lock.json
-

@@ -19,7 +19,10 @@ let config = {
                 query: { presets: ["react", "es2015", "stage-1"] }
             }
         ]
-    }
+    },
+    devServer: {
+        historyApiFallback: true
+  }
 };
 
 module.exports = config;

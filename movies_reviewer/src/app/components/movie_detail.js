@@ -1,46 +1,77 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import {fetchMovie} from '../actions/index';
-import {Link} from 'react-router-dom';
 
-import Video from './video'
+import {fetchMovie} from '../actions/index';
+import ActorItem from './actor_item';
 
 class MovieDetail extends Component {
     componentWillMount() {
-        const {id} = this.props.match.params;
-        this.props.fetchMovie(id);
+        this.props.fetchMovie(this.props.match.params.id);
+    }
+
+    static renderList(list) {
+        return list.map(item => {
+            return item.name + ', ';
+        });
     }
 
     render() {
         const {movie} = this.props;
+        if (!movie)
+            return <h3 className="text-center">Loading...</h3>;
 
-        if (!movie) {
-            return <div>Loading...</div>;
-        }
-        console.log(movie);
-        let tube_key = null;
-        if(movie.videos)
-            tube_key = movie.videos.results[0].key;
+        const imageUrl = getImageUrl(movie.backdrop_path, 'w780');
+        const posterUrl = getImageUrl(movie.poster_path, 'w342');
+        const divBg = {
+            background:`linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(\"${imageUrl}\") top left / cover`
+        };
+
         return (
             <div>
-                <h1 className="page-title">{movie.title}</h1>
-                <Link to="/">Back To Index</Link>
-                <div className="center-aligned">
-                    <Video videos={movie.videos}/>
+              <h1 className="page-title">{movie.title}</h1>
+              <div style={divBg} className="movie-detail top-element">
+                <div className="row">
+                  <div className="col-md-4 text-center">
+                    <img src={posterUrl}/>
+                  </div>
+                  <div className="col-md-8 content">
+                    <br/><h5 className="text-center">{movie.tagline}</h5>
+                    <br/><h4>Overview</h4>
+                    <p>{movie.overview}</p><br/>
+                    <h6><b>Status: </b>{movie.status}</h6>
+                    <h6><b>Rating: </b>{movie.vote_average}/10 By {movie.vote_count} People</h6>
+                    <h6><b>Runtime: </b>{movie.runtime} Mins</h6>
+                    <br/><h6><b>Budget: </b>{movie.budget}$</h6>
+                    <h6><b>Genres: </b>{MovieDetail.renderList(movie.genres)}</h6>
+                    <h6><b>Production Countries: </b>{MovieDetail.renderList(movie.production_countries)}</h6>
+                    <h6><b>Production Companies: </b>{MovieDetail.renderList(movie.production_companies)}</h6>
+                  </div>
                 </div>
+              </div>
+              <div className="masonry">
+                  {this.renderCredits()}
+              </div>
             </div>
         );
+    }
+
+    renderCredits() {
+        return this.props.movie.credits.cast.map(person => {
+            return <ActorItem person={person}/>;
+        });
     }
 }
 
 function mapStateToProps(state, ownProps) {
-    const requested_id = ownProps.match.params.id;
-
-    if(!state.detailed_movie) {
-        return {movie: state.movies[requested_id]};
-    }
-    const movie = state.detailed_movie.id === Number(requested_id)? state.detailed_movie: state.movies[requested_id];
-    return {movie: movie};
+    const props = {movie: null};
+    if(state.detailed_movie && state.detailed_movie.id === Number(ownProps.match.params.id))
+        props["movie"] = state.detailed_movie;
+    return props;
 }
 
-export default connect(mapStateToProps, {fetchMovie})(MovieDetail)
+
+export const getImageUrl = (path, size) => {
+    return path ? `http://image.tmdb.org/t/p/${size}${path}` : '/images/no-img.png';
+};
+
+export default connect(mapStateToProps, {fetchMovie})(MovieDetail);

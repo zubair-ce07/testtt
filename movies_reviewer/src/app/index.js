@@ -7,8 +7,9 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom';
 
 import reducers from './reducers';
 import App from './components/app';
-import MoviesIndex from './components/movies_index'
-import MovieDetail from './components/movie_detail'
+import MoviesIndex from './components/movies_index';
+import MovieDetail from './components/movie_detail';
+import ActorDetail from './components/actor_detail';
 
 const createStoreWithMiddleware = applyMiddleware(
   promise
@@ -21,6 +22,7 @@ ReactDOM.render(
                 <Switch>
                     <Route exact path="/" component={MoviesIndex}/>
                     <Route path="/movies/:id" component={MovieDetail}/>
+                    <Route path="/actors/:id" component={ActorDetail}/>
                 </Switch>
             </App>
         </BrowserRouter>
