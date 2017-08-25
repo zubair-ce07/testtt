@@ -22,7 +22,6 @@ class ChildrenPlacePipeline(object):
         variation_item = VariationItem()
         size_item = SizeItem()
         sizes =[]
-
         for item_filed in item:
             if item_filed is not 'variations':
                 product_item[item_filed]=item[item_filed]
@@ -47,9 +46,7 @@ class ChildrenPlacePipeline(object):
             session.commit()
         except:
             session.rollback()
-            raise
         finally:
             session.close()
-
         return item
 

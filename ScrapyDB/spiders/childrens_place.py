@@ -10,8 +10,9 @@ class ChildrensPlaceSpider(CrawlSpider):
     allowed_domains = ['childrensplace.com']
     start_urls = ['http://www.childrensplace.com/shop/us/home']
     rules = (
-        Rule(LinkExtractor(allow=('childrensplace.com'), restrict_css=('div.navigation-container'))),
-        Rule(LinkExtractor(allow=('childrensplace.com'), restrict_css=('div.categoryContent')), callback="parse_item", follow=True)
+        Rule(LinkExtractor(allow_domains=('childrensplace.com'), restrict_css=('div.navigation-container'))),
+        Rule(LinkExtractor(allow_domains=('childrensplace.com'), restrict_css=('div[id="breadCrumb-viewall-right-top"]'))),
+        Rule(LinkExtractor(allow_domains=('childrensplace.com'), restrict_css=('div.categoryContent div[class="productRow name"]')), callback="parse_item", follow=True)
     )
 
     def parse_item(self, response):
@@ -23,8 +24,10 @@ class ChildrensPlaceSpider(CrawlSpider):
         item['brand'] = response.url
         item['description'] = response.css('div[class="product-description section-block"] li::text').extract()
         locale = response.css('ul[id="BVSEO_meta"] li[data-bvseo="cf"]::text').extract_first()
-        locale = locale.split(',')
-        item['locale'] = locale[0].strip('loc_')
+        if type(locale) == 'unicode':
+            locale = re.search(r"(loc_).*?(?=,)", locale).group(0)
+            locale = locale.strip('loc_')
+        item['locale'] = locale
         item['currency'] = response.css('span[itemprop="priceCurrency"]::text').extract_first()
         variation_item = VariationItem()
         variation_item['display_color_name'] = response.css('span[id="colorName"]::text').extract_first()
@@ -40,6 +43,7 @@ class ChildrensPlaceSpider(CrawlSpider):
         size_detail = size_detail.replace('},', '}},')
         size_detail = size_detail.split('},')
         regular_price = response.css('span.regular-price::text').extract_first()
+        regular_price = unicode.strip(regular_price)
         regular_price = regular_price.encode('utf-8')
         regular_price = regular_price.strip("Was:\xc2\xa0")
         sale_price = unicode.strip(response.css('span.sale-price::text').extract_first())
