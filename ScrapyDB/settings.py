@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = 'ScrapyDB.spiders'
 ITEM_PIPELINES = {'ScrapyDB.pipelines.ChildrenPlacePipeline': 300,}
 DATABASE = {
     'drivername': 'postgres',
-    'host': '127.0.0.1',
+    'host': 'localhost',
     'port': '5432',
     'username': 'postgres',
     'password': '',
