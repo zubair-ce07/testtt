@@ -1,11 +1,10 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
-import {Field, reduxForm} from 'redux-form';
-import Rating from 'react-rating';
 import _ from 'lodash';
+import Rating from 'react-rating';
+import {connect} from 'react-redux';
+import React, {Component} from 'react';
+import {Field, reduxForm} from 'redux-form';
 
 import {addReview, fetchReviews} from '../actions/index';
-
 
 class NewReview extends Component {
     componentWillMount() {
@@ -14,9 +13,7 @@ class NewReview extends Component {
 
     onSubmit(props) {
         props["movie_id"] = this.props.match.params.movie_id;
-        this.props.addReview(props, () => {
-            this.props.reset();
-        });
+        this.props.addReview(props, () => this.props.reset());
     }
 
     static renderField(field) {
@@ -27,17 +24,16 @@ class NewReview extends Component {
             <div className={`form-group ${field.meta.touched && field.meta.invalid ? 'has-danger' : ''}`}>
                 <label>{field.label}</label><br/>
                 {input}
-                <div className="text-help">
+                <div className="text-danger">
                     {field.meta.touched ? field.meta.error : ''}
                 </div>
             </div>
         );
     }
 
-    renderReviews(){
+    renderReviews() {
         const reviews = _.values(this.props.reviews).reverse();
-        console.log(reviews);
-        return reviews.map((review) =>{
+        return reviews.map((review) => {
             return (
                 <li className="list-group-item" key={review.id}>
                     <p>Rating: {review.rating}</p>
@@ -48,22 +44,20 @@ class NewReview extends Component {
     }
 
     render() {
-        const {handleSubmit} = this.props;
         return (
             <div>
                 <h1 className="page-title">Reviews</h1>
                 <div className=" row top-element">
                     <div className="col-md-4"/>
                     <div className="col-md-4">
-                        <form onSubmit={handleSubmit(this.onSubmit.bind(this))}>
-                            <Field label="Rating"
-                                   name="rating" component={NewReview.renderField}/>
-                            <Field label="Comment" type="text"
-                                   name="comment" component={NewReview.renderField}/>
+                        <form onSubmit={this.props.handleSubmit(this.onSubmit.bind(this))}>
+                            <Field label="Rating" name="rating" component={NewReview.renderField}/>
+                            <Field label="Comment" type="text" name="comment" component={NewReview.renderField}/>
                             <button type="submit" className="btn btn-primary">Add Review</button>
                         </form>
                     </div>
-                </div><br/>
+                </div>
+                <br/>
                 <div className="row">
                     <div className="col-md-4"/>
                     <div className="col-md-4">
@@ -71,7 +65,6 @@ class NewReview extends Component {
                     </div>
                 </div>
             </div>
-
         );
     }
 }
@@ -89,11 +82,11 @@ function validate(values) {
 
 function mapStateToProps({reviews}, ownProps) {
     const props = {reviews: {}};
-    if(reviews && reviews.movie_id === Number(ownProps.match.params.movie_id))
+    if (reviews && reviews.movie_id === Number(ownProps.match.params.movie_id))
         props["reviews"] = reviews.rev_list;
     return props;
 }
 
-export default reduxForm({form: 'PostsNewForm', validate})(
+export default reduxForm({form: 'ReviewsNewForm', validate})(
     connect(mapStateToProps, {addReview, fetchReviews})(NewReview)
 );

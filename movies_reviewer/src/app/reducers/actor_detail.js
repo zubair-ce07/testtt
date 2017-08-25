@@ -1,4 +1,4 @@
-import { FETCH_ACTOR} from '../actions/index';
+import {FETCH_ACTOR} from '../actions/index';
 
 export default function (state = null, action) {
     switch (action.type) {

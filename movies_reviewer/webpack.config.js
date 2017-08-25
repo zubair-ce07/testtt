@@ -16,13 +16,13 @@ let config = {
                 test: /\.js?/,
                 include: SRC_DIR,
                 loader: "babel-loader",
-                query: { presets: ["react", "es2015", "stage-1"] }
+                query: {presets: ["react", "es2015", "stage-1"]}
             }
         ]
     },
     devServer: {
         historyApiFallback: true
-  }
+    }
 };
 
 module.exports = config;

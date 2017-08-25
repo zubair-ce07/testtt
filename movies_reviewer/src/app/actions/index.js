@@ -6,12 +6,12 @@ export const FETCH_REVIEWS = 'FETCH_REVIEWS';
 export const FETCH_MOVIE = 'FETCH_MOVIE';
 export const FETCH_ACTOR = 'FETCH_ACTOR';
 export const CREATE_REVIEW = 'CREATE_REVIEW';
-const ROOT_URL = 'http://localhost:8000/';
 
+const ROOT_URL = 'http://localhost:8000';
 const MDB = new TheMovieDatabase('7b43db1b983b055bffd7534a06cafd6c');
 
 export function fetchMovies(term) {
-    const request = term === ''? MDB.movies.nowPlaying() : MDB.search.movies({query:term});
+    const request = term === '' ? MDB.movies.nowPlaying() : MDB.search.movies({query: term});
 
     return {
         type: FETCH_MOVIES,
@@ -39,10 +39,10 @@ export function fetchActor(id) {
 
 export function addReview(props, callback) {
     const request = axios.post(`${ROOT_URL}/reviews/`, props)
-    .then(res => {
-        callback();
-        return res;
-    });
+        .then(res => {
+            callback();
+            return res;
+        });
 
     return {
         type: CREATE_REVIEW,
