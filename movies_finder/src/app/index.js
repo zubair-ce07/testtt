@@ -18,18 +18,29 @@ class App extends Component {
             movies: [],
             selectedMovie: null
         };
+    }
+
+    componentDidMount() {
         this.movieSearch('');
     }
 
     movieSearch(term) {
-        if(term === '')
-            MDB.miscNowPlayingMovies({}, (err, res) => this.updateState(res.results, res.results[0]));
-        else
-            MDB.searchMovie({query: term},(err, res) => this.updateState(res.results, res.results[0]));
-    }
-
-    updateState(movies, selectedMovie){
-        this.setState({ movies, selectedMovie});
+        if(term === '') {
+            MDB.miscNowPlayingMovies({}, (err, {results}) => {
+                this.setState({
+                    movies: results,
+                    selectedMovie: results[0]
+                });
+            });
+        }
+        else {
+            MDB.searchMovie({query: term}, (err, {results}) => {
+                this.setState({
+                    movies: results,
+                    selectedMovie: results[0]
+                });
+            });
+        }
     }
 
     render() {

@@ -1,24 +1,21 @@
 import React from 'react';
+import {getImageUrl} from './movie_list_item'
 
 const MovieDetail = ({movie}) => {
     if (!movie) {
         return <div>Loading...</div>;
     }
 
-    let imageUrl = 'images/no-img.png';
-    let backdrop_url = 'images/no-img.png';
-    if (movie.poster_path)
-        imageUrl = `http://image.tmdb.org/t/p/w500${movie.poster_path}`;
-    if (movie.backdrop_path)
-        backdrop_url = `http://image.tmdb.org/t/p/w780${movie.backdrop_path}`;
+    const imageUrl = getImageUrl(movie.poster_path, 'w500');
+    const backdrop_url = getImageUrl(movie.backdrop_path, 'w780');
 
     return (
-        <div className="movie-detail col-md-9 ">
+        <div className="movie-detail-container col-md-9 ">
             <div className="row">
                 <div className="col-md-5">
                     <img className="img-thumbnail" width="450px" src={imageUrl}/>
                 </div>
-                <div className="col-md-6 details">
+                <div className="col-md-6 movie-details">
                     <img className="backdrop img-fluid" src={backdrop_url}/>
                     <br/>
                     <h2><u>{movie.title}</u></h2><br/>

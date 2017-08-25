@@ -12,7 +12,7 @@
     text-align: center;
 }
 
-.movie-detail {
+.movie-detail-container {
     overflow: hidden;
 }
 
@@ -33,7 +33,7 @@
     padding: 10px;
 }
 
-.details {
+.movie-details {
     border-radius: 20px;
     border: 1px solid #ddd;
 }

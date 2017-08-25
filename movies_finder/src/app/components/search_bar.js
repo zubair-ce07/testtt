@@ -11,14 +11,10 @@ class SearchBar extends Component {
             <div className="centered">
                 <input className="search-bar"
                        placeholder="Search ..."
-                       onKeyPress={event => this.onKeyPressed(event)}/>
+                       onKeyPress={event => {if(event.which === 13) this.props.onSearchTermChange(event.target.value);}}
+                />
             </div>
         );
-    }
-
-    onKeyPressed(event) {
-        if (event.which === 13)
-            this.props.onSearchTermChange(event.target.value);
     }
 }
 
