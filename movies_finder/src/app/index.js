@@ -25,22 +25,14 @@ class App extends Component {
     }
 
     movieSearch(term) {
-        if(term === '') {
-            MDB.miscNowPlayingMovies({}, (err, {results}) => {
-                this.setState({
-                    movies: results,
-                    selectedMovie: results[0]
-                });
+        const mdbEndpoint = (term === '' ? MDB.miscNowPlayingMovies : MDB.searchMovie).bind(MDB);
+
+        mdbEndpoint({query: term}, (err, {results}) => {
+            this.setState({
+                movies: results,
+                selectedMovie: results[0]
             });
-        }
-        else {
-            MDB.searchMovie({query: term}, (err, {results}) => {
-                this.setState({
-                    movies: results,
-                    selectedMovie: results[0]
-                });
-            });
-        }
+        });
     }
 
     render() {
