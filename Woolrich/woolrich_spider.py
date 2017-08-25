@@ -60,8 +60,10 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
     def parse_size(self, response):
         garment = response.meta['garment']
-        garment['meta']['requests_queue'] += self.fitting_requests(response)
-        garment['skus'].update(self.skus(response))
+        requests = self.fitting_requests(response)
+        garment['meta']['requests_queue'] += requests
+        if requests:
+            garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
     def parse_fitting(self, response):
@@ -109,7 +111,7 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
             form_data = dict(parse_qsl(response.request.body.decode()))
             form_data.update({'selectedSize': size})
             sku_id_size = clean(size_selector.css('::attr(id)'))[0]
-            if not sku_id_size == size:
+            if sku_id_size != size:
                 form_data.update({'skuId': sku_id_size})
             requests.append(
                 self.variant_request(form_data=form_data, callback=self.parse_size)
@@ -123,11 +125,8 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
         size = '/'.join(clean(response.css(css)))
         sku['size'] = self.one_size if 'EA' in size else size
         sku['colour'] = clean(response.css('.colorlist .selected::attr(title)'))[0]
-        sku_id = clean(response.css('.sizelist .selected::attr(id)'))[0]
-        if sku_id == size and response.css('.selected.childDimensions'):
-            sku_id = clean(response.css('.selected.childDimensions::attr(id)'))[0]
-        elif sku_id == size:
-            return skus
+        sku_id_css = '.selected.childDimensions::attr(id), .sizelist .selected::attr(id)'
+        sku_id = clean(response.css(sku_id_css))[0]
         skus[sku_id] = sku
         return skus
 
