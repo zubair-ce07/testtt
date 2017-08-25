@@ -71,9 +71,7 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
     def fitting_requests(self, response):
         requests = []
-        for fitting_sel in response.css('.dimensionslist a'):
-            if fitting_sel.css('[stocklevel="0"]'):
-                continue
+        for fitting_sel in response.css('.dimensionslist a:not([stocklevel="0"])'):
             sku_id = clean(fitting_sel.css('::attr(id)'))[0]
             form_data = dict(parse_qsl(response.request.body.decode()))
             form_data.update({'skuId': sku_id})
@@ -106,9 +104,7 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
     def size_requests(self, response):
 
         requests = []
-        for size_selector in response.css('.sizelist a'):
-            if size_selector.css('[stocklevel="0"]'):
-                continue
+        for size_selector in response.css('.sizelist a:not([stocklevel="0"])'):
             size = clean(size_selector.css('::text'))[0]
             form_data = dict(parse_qsl(response.request.body.decode()))
             form_data.update({'selectedSize': size})
@@ -122,27 +118,22 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
         skus = {}
-        pricing = self.product_pricing_common_new(response)
-        color = clean(response.css('.selected.link::attr(title)'))[0]
-        size = clean(response.css('.sizelist .selected::text'))[0]
-        size = self.one_size if size == 'EA' else size
-        fit = ('/'+clean(response.css('.selected.childDimensions::text'))[0] if response.css('.selected.childDimensions') else '')
+        sku = self.product_pricing_common_new(response)
+        css = '.sizelist option[selected] ::text, .dimensionslist option[selected] ::text'
+        size = '/'.join(clean(response.css(css)))
+        sku['size'] = self.one_size if 'EA' in size else size
+        sku['colour'] = clean(response.css('.colorlist .selected::attr(title)'))[0]
         sku_id = clean(response.css('.sizelist .selected::attr(id)'))[0]
         if sku_id == size and response.css('.selected.childDimensions'):
             sku_id = clean(response.css('.selected.childDimensions::attr(id)'))[0]
         elif sku_id == size:
             return skus
-        size += fit
-        skus[sku_id] = {
-            'color': color,
-            'size': size,
-        }
-        skus[sku_id].update(pricing)
+        skus[sku_id] = sku
         return skus
 
     def image_urls(self, response):
-        image_urls = clean(response.css('[itemprop="image"]::attr(src)'))
-        image_urls += clean(response.css('#prod-detail__slider-nav img::attr(src)'))
+        css = '[itemprop="image"]::attr(src), #prod-detail__slider-nav img::attr(src)'
+        image_urls = clean(response.css(css))
         return image_urls
 
     def product_category(self, response):
@@ -164,8 +155,8 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
         return clean(name.replace(self.product_brand(response), ''))
 
     def product_description(self, response):
-        description = clean(response.css('[itemprop="description"]::text'))
-        description += [x for x in clean(response.css('.row .span4 li::text')) if not self.care_criteria_simplified(x)]
+        css = '[itemprop="description"]::text, .pdp_specs li::text'
+        description = clean(response.css(css))
         return description
 
     def product_id(self, response):
@@ -191,7 +182,7 @@ class WoolrichCrawlSpider(BaseCrawlSpider, Mixin):
         '.nav.nav-list.nav-',
         '.clear.addMore'
     ]
-    product_css = '.productCard .hover_img [title="View Details"]'
+    product_css = '.productCard'
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, tags=('div', 'a'), attrs=('nextpage', 'href')),
