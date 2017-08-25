@@ -40,22 +40,42 @@ class Login(APIView):
                 user = User.objects.get(email=user)
                 token = Token.objects.get_or_create(user=user)
                 key = str(token[0])
-                return Response({'token': key})
+                response  = {
+                                'token': key,
+                                'first_name': user.first_name,
+                                'last_name':user.last_name,
+                                'id': user.id,
+                                'username':user.username
+                             }
+                return Response(response)
             else:
                 return HttpResponse("User name or password is not valid")
         return JsonResponse(login_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class Logout(APIView):
+class Logout(generics.CreateAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
+    def post(self, request,  *args, **kwargs):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
 
+class SignUp(generics.CreateAPIView):
+    authentication_classes = ()
+    permission_classes = (AllowAny,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
-class UserView(generics.CreateAPIView, generics.RetrieveUpdateAPIView):
+    def post(self, request, *args, **kwargs):
+        res = super(SignUp, self).post(request, *args, **kwargs)
+        user = User.objects.get(email=res.data['email'])
+        token = Token.objects.get_or_create(user=user)
+        res.data["token"] = str(token[0])
+        print (res.data)
+        return res;
+
+class UserView(generics.RetrieveUpdateAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     queryset = User.objects.all()
@@ -77,10 +97,7 @@ class CreateAndListCategory(generics.ListCreateAPIView):
     of current authentication token
     """
     def post(self, request, *args, **kwargs):
-        mutable = request.data._mutable
-        request.data._mutable = True
         request.data['user'] = request.user.id
-        request.data._mutable = mutable
         return super(CreateAndListCategory, self).post(request, *args, **kwargs)
 
 
@@ -113,10 +130,8 @@ class MemoryListView(generics.ListCreateAPIView, generics.RetrieveUpdateDestroyA
     of current authentication token
     """
     def post(self, request, *args, **kwargs):
-        mutable = request.data._mutable
-        request.data._mutable = True
+        print (request.data)
         request.data['user'] = request.user.id
-        request.data._mutable = mutable
         return super(MemoryListView, self).post(request, *args, **kwargs)
 
 
