@@ -43,6 +43,7 @@ CUSTOM_APPS = [
     'backend.categories.apps.CategoriesConfig',
     'backend.news.apps.NewsConfig',
     'backend.users.apps.UserConfig',
+    'backend.comments.apps.CommentsConfig',
 ]
 
 THIRD_PARTY_APPS = [
