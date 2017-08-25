@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import {Link} from 'react-router-dom';
 
 import ActorItem from './actor_item';
-import {fetchMovie} from '../actions/index';
+import {fetchMovie} from '../actions/movies_actions';
 
 class MovieDetail extends Component {
     componentWillMount() {

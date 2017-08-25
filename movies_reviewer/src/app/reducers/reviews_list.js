@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import {FETCH_REVIEWS, CREATE_REVIEW} from '../actions/index';
+import {FETCH_REVIEWS, CREATE_REVIEW} from '../actions/reviews_actions';
 
 export default function (state = {}, action) {
     switch (action.type) {

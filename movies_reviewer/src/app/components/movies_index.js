@@ -2,7 +2,7 @@ import _ from 'lodash';
 import {connect} from 'react-redux';
 import React, {Component} from 'react';
 
-import {fetchMovies} from '../actions/index';
+import {fetchMovies} from '../actions/movies_actions';
 import MovieItem from './movie_item';
 import SearchBar from './search_bar';
 

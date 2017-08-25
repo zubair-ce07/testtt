@@ -2,7 +2,7 @@ import {connect} from 'react-redux';
 import React, {Component} from 'react';
 
 import {getImageUrl} from './movie_detail';
-import {fetchActor} from '../actions/index';
+import {fetchActor} from '../actions/actors_actions';
 
 class ActorDetail extends Component {
     componentWillMount() {

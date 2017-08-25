@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import {FETCH_MOVIES} from '../actions/index';
+import {FETCH_MOVIES} from '../actions/movies_actions';
 
 export default function (state = {}, action) {
     switch (action.type) {

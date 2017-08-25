@@ -4,9 +4,15 @@ import {connect} from 'react-redux';
 import React, {Component} from 'react';
 import {Field, reduxForm} from 'redux-form';
 
-import {addReview, fetchReviews} from '../actions/index';
+import {addReview, fetchReviews} from '../actions/reviews_actions';
 
-class NewReview extends Component {
+class AddNewReview extends Component {
+
+    constructor(props) {
+        super(props);
+        this.onSubmit = this.onSubmit.bind(this);
+    }
+
     componentWillMount() {
         this.props.fetchReviews(this.props.match.params.movie_id);
     }
@@ -50,9 +56,9 @@ class NewReview extends Component {
                 <div className=" row top-element">
                     <div className="col-md-4"/>
                     <div className="col-md-4">
-                        <form onSubmit={this.props.handleSubmit(this.onSubmit.bind(this))}>
-                            <Field label="Rating" name="rating" component={NewReview.renderField}/>
-                            <Field label="Comment" type="text" name="comment" component={NewReview.renderField}/>
+                        <form onSubmit={this.props.handleSubmit(this.onSubmit)}>
+                            <Field label="Rating" name="rating" component={AddNewReview.renderField}/>
+                            <Field label="Comment" type="text" name="comment" component={AddNewReview.renderField}/>
                             <button type="submit" className="btn btn-primary">Add Review</button>
                         </form>
                     </div>
@@ -88,5 +94,5 @@ function mapStateToProps({reviews}, ownProps) {
 }
 
 export default reduxForm({form: 'ReviewsNewForm', validate})(
-    connect(mapStateToProps, {addReview, fetchReviews})(NewReview)
+    connect(mapStateToProps, {addReview, fetchReviews})(AddNewReview)
 );
