@@ -1,11 +1,17 @@
 from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import list_route, detail_route
+from rest_framework.response import Response
+from nltk.corpus import stopwords
 from backend.news.models import News
+from backend.comments.models import Comment
 from backend.categories.models import Category
 from backend.news.serializers.news import NewsSerializer
-from rest_framework.decorators import list_route
-from rest_framework.response import Response
+from backend.comments.serializers.comment import CommentSerializer
+from django.db import DatabaseError
 from django.db.models import Q
-from nltk.corpus import stopwords
 
 
 class NewsViewSet(ReadOnlyModelViewSet):
@@ -41,5 +47,34 @@ class NewsViewSet(ReadOnlyModelViewSet):
         searched_news = News.objects.filter(query).order_by('-published_date')
         serializer = NewsSerializer(searched_news, many=True)
         return Response(serializer.data)
+
+    @detail_route(
+                    permission_classes=[IsAuthenticated],
+                    authentication_classes=[TokenAuthentication],
+                    url_path='comments'
+                  )
+    def get_news_comments(self, request, pk=None):
+        news = self.get_object()
+        comments = Comment.objects.filter(news=news)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+    @detail_route(
+                    methods=['post'],
+                    permission_classes=[IsAuthenticated],
+                    authentication_classes=[TokenAuthentication],
+                    url_path='comment'
+                )
+    def post_news_comment(self, request, pk=None):
+        content = request.data.get('content','')
+        if content:
+            news = self.get_object()
+            user = request.user
+            comment = Comment.objects.create(user=user, news=news, content=content)
+            serializer = CommentSerializer(comment)
+            return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'content': 'this field can not be empty'})
+
+
 
 

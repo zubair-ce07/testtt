@@ -6,7 +6,7 @@ from backend.news.models import News
 class Comment(models.Model):
     user = models.ForeignKey(User)
     news = models.ForeignKey(News)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
 
     def __str__(self):
