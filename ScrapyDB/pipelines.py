@@ -4,17 +4,22 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from ScrapyDB.items import StackItem, VariationItem, SizeItem
-from models import Product_Variation, Product, db_connect, create_table, Product_Size
+from models import Product_Variation, Product, Product_Size
 
 
 class ChildrenPlacePipeline(object):
 
     def __init__(self):
-        engine = db_connect()
-        create_table(engine)
+        #engine = db_connect()
+        #create_table(engine)
+        #self.Session = sessionmaker(bind=engine)
+        engine = create_engine('sqlite:///ChildrensPlace.db')
+        #Base.metadata.bind = engine
         self.Session = sessionmaker(bind=engine)
+        session = self.Session()
 
     def process_item(self, item, spider):
         session = self.Session()
@@ -24,10 +29,12 @@ class ChildrenPlacePipeline(object):
         sizes =[]
         for item_filed in item:
             if item_filed is not 'variations':
+                item[item_filed] = str(item[item_filed])
                 product_item[item_filed]=item[item_filed]
             else:
                 for variation_filed in item['variations']:
                     if variation_filed is not 'sizes':
+                        item['variations'][variation_filed] = str(item['variations'][variation_filed])
                         variation_item[variation_filed] = item['variations'][variation_filed]
                     else:
                         sizes = item['variations']['sizes']
@@ -46,6 +53,7 @@ class ChildrenPlacePipeline(object):
             session.commit()
         except:
             session.rollback()
+            raise
         finally:
             session.close()
         return item
