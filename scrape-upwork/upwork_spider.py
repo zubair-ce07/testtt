@@ -72,8 +72,8 @@ class UpworkSpider(scrapy.Spider):
     def parse_test_info(self, profile_info):
         tests = profile_info['tests']
         tests_info = []
-        for test in tests:
-            if test:
+        if tests:
+            for test in tests:
                 tests_info.append({'name': test['name'], 'provider': test['provider'],
                                    'isPassed': test['isPassed'], 'score': test['score']})
         return tests_info
@@ -129,6 +129,3 @@ class UpworkSpider(scrapy.Spider):
         profile_item['title'] = self.parse_profile_title(profile_info)
         profile_item['workHistory'] = self.parse_work_history(profile_info)
         return profile_item
-
-
-
