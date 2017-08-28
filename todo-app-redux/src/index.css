@@ -1,0 +1,22 @@
+body{
+    text-align: center;
+    margin-right: 20%;
+    margin-left: 20%;
+    margin-top: 2%;
+}
+
+.todoList{
+    clear: both;
+}
+
+
+.filerLinks{
+    float: left;
+}
+.todoAdder{
+    float: right;
+}
+
+button[disabled]{
+    color: gainsboro;
+}
