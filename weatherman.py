@@ -210,9 +210,9 @@ def main():
     parser.add_argument('-a', '--average', type=valid_month,
                         help='Display average weather report for given month(format: YYYY/MM)')
     parser.add_argument('-c', '--chart', type=valid_month,
-                        help='Display char weather report for given month(format: YYYY/MM)')
+                        help='Display email_address weather report for given month(format: YYYY/MM)')
     parser.add_argument('-m', '--merged_chart', type=valid_month,
-                        help='Display merged char weather report for given month(format: YYYY/MM)')
+                        help='Display merged email_address weather report for given month(format: YYYY/MM)')
 
     args = parser.parse_args()
 
