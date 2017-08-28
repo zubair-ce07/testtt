@@ -1,14 +1,15 @@
+from urllib.parse import parse_qsl
+
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy import FormRequest
-from urllib.parse import parse_qsl
+
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
 
 class Mixin:
     retailer = 'woolrich-us'
     market = 'US'
-
     allowed_domains = ['woolrich.com']
     start_urls = ['http://www.woolrich.com/woolrich/?countryCode=US']
 
@@ -56,33 +57,34 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
         garment = response.meta['garment']
         garment['image_urls'] += self.image_urls(response)
         garment['meta']['requests_queue'] += self.size_requests(response)
+
         return self.next_request_or_garment(garment)
 
     def parse_size(self, response):
         garment = response.meta['garment']
         requests = self.fitting_requests(response)
         garment['meta']['requests_queue'] += requests
+
         if not requests:
             garment['skus'].update(self.skus(response))
+
         return self.next_request_or_garment(garment)
 
     def parse_fitting(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
+
         return self.next_request_or_garment(garment)
 
     def fitting_requests(self, response):
         requests = []
+
         for fitting_sel in response.css('.dimensionslist a:not([stocklevel="0"])'):
             sku_id = clean(fitting_sel.css('::attr(id)'))[0]
             form_data = dict(parse_qsl(response.request.body.decode()))
-            form_data.update({'skuId': sku_id})
-            requests.append(
-                self.variant_request(
-                    callback=self.parse_fitting,
-                    form_data=form_data
-                )
-            )
+            form_data['skuId'] = sku_id
+            requests += [self.variant_request(callback=self.parse_fitting,form_data=form_data)]
+
         return requests
 
     def variant_request(self, callback, form_data):
@@ -90,82 +92,92 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
 
     def color_requests(self, response, garment):
         requests = []
-        for color_sel in response.css('#productDetails .colorlist .link'):
-            if color_sel.css('.disabled'):
-                continue
+
+        for color_sel in response.css('#productDetails .colorlist .link:not(.disabled)'):
             color_id = clean(color_sel.css('img::attr(colorid)'))[0]
             form_data = {
                 'productId': garment['retailer_sku'],
                 'colorId': color_id
             }
-            requests.append(
-                self.variant_request(callback=self.parse_color, form_data=form_data)
-            )
+            requests += [self.variant_request(callback=self.parse_color, form_data=form_data)]
+
         return requests
 
     def size_requests(self, response):
-
         requests = []
+
         for size_selector in response.css('.sizelist a:not([stocklevel="0"])'):
             size = clean(size_selector.css('::text'))[0]
             form_data = dict(parse_qsl(response.request.body.decode()))
-            form_data.update({'selectedSize': size})
+            form_data['selectedSize'] = size
             sku_id_size = clean(size_selector.css('::attr(id)'))[0]
+
             if sku_id_size != size:
-                form_data.update({'skuId': sku_id_size})
-            requests.append(
-                self.variant_request(form_data=form_data, callback=self.parse_size)
-            )
+                form_data['skuId'] = sku_id_size
+
+            requests += [self.variant_request(form_data=form_data, callback=self.parse_size)]
+
         return requests
 
     def skus(self, response):
         skus = {}
-        sku = self.product_pricing_common_new(response)
-        css = '.sizelist option[selected] ::text, .dimensionslist option[selected] ::text'
-        size = '/'.join(clean(response.css(css)))
-        sku['size'] = self.one_size if 'EA' in size else size
-        sku['colour'] = clean(response.css('.colorlist .selected::attr(title)'))[0]
+        size_css = '.sizelist option[selected] ::text, .dimensionslist option[selected] ::text'
         sku_id_css = '.selected.childDimensions::attr(id), .sizelist .selected::attr(id)'
+        color_css = '.colorlist .selected::attr(title)'
+
+        size = '/'.join(clean(response.css(size_css)))
         sku_id = clean(response.css(sku_id_css))[-1]
+
+        sku = self.product_pricing_common_new(response)
+        sku['size'] = self.one_size if 'EA' in size else size
+        sku['colour'] = clean(response.css(color_css))[0]
+
         skus[sku_id] = sku
+
         return skus
 
     def image_urls(self, response):
         css = '[itemprop="image"]::attr(src), #prod-detail__slider-nav img::attr(src)'
-        image_urls = clean(response.css(css))
-        return image_urls
+
+        return clean(response.css(css))
 
     def product_category(self, response):
         return clean(response.css('.wrap.breadcrumb a::text'))[1:]
 
     def product_care(self, response):
         features = clean(response.css('.row .span4 li::text'))
+
         return [x for x in features if self.care_criteria_simplified(x)]
 
     def product_brand(self, response):
         name = self.raw_name(response)
+
         for brand in self.brands:
             if brand in name:
                 return brand
+
         return 'Woolrich'
 
     def product_name(self, response):
         name = self.raw_name(response)
+
         return clean(name.replace(self.product_brand(response), ''))
 
     def product_description(self, response):
         css = '[itemprop="description"]::text, .pdp_specs li::text'
-        description = clean(response.css(css))
-        return description
+
+        return clean(response.css(css))
 
     def product_id(self, response):
         return clean(response.css('[itemprop="productID"]::text'))[0]
 
     def product_gender(self, response):
         name = self.raw_name(response)
+
         for gender_str, gender in self.gender_map:
             if gender_str in name:
                 return gender
+
         return 'unisex-adults'
 
     def raw_name(self, response):
