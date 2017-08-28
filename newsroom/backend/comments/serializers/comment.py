@@ -1,16 +1,13 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from backend.comments.models import Comment
-from backend.users.serializers.user import UserSerializer
-from backend.news.serializers.news import NewsSerializer
 
 
 class CommentSerializer(ModelSerializer):
-    news_source_url = SerializerMethodField()
     username = SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ('username', 'news_source_url', 'content')
+        fields = ('username', 'date', 'content')
 
     def get_username(self, obj):
         return obj.user.username
