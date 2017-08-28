@@ -61,3 +61,8 @@ conf.py
 
 # media files
 media/
+
+# npm genrated files
+node_modules/
+dist/
+package-lock.json
