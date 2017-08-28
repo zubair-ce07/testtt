@@ -41,13 +41,14 @@ DJANGO_DEFAULT_APPS = [
 THIRD_PARTY_APPS = [
     'django_countries',
     'rest_framework',
+    'django_filters',
 ]
 
 LOCAL_APPS = [
     'users',
     'api',
     'generic_api',
-    'viewset_api'
+    'viewset_api',
 ]
 
 INSTALLED_APPS = DJANGO_DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -146,7 +147,7 @@ COUNTRIES_FIRST_BREAK = '--------'
 COUNTRIES_FIRST_SORT = True
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'task1.exceptions.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'task1.exceptions.custom_exception_handler',
 }
 
 JWT_AUTH = {

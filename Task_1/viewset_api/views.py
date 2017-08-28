@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db import transaction
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.mixins import CreateModelMixin
@@ -8,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from task1.filters import UserFilter
 from task1.permissions import IsOwnerOrReadOnly
 from task1.utils import response_json, get_token, get_object
 from users.serializers.auth_serializers import LoginSerializer, SignupSerializer
@@ -174,16 +176,14 @@ class SearchUserViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated,)
     authentication_classes = (JSONWebTokenAuthentication,)
     serializer_class = UserSerializer
-
-    def get_queryset(self):
-        first_name = self.request.query_params.get('first_name', "")
-        last_name = self.request.query_params.get('last_name', "")
-        return User.objects.filter(first_name__icontains=first_name, last_name__icontains=last_name)
+    queryset = User.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = UserFilter
 
     def list(self, request, *args, **kwargs):
         response = super(SearchUserViewSet, self).list(request, *args, **kwargs)
         return Response(
-            response_json(True, response.data, 'The search returned {} results'.format(self.get_queryset().count())),
+            response_json(True, response.data, 'The search returned {} result(s)'.format(len(response.data))),
             status=status.HTTP_200_OK)
 
 

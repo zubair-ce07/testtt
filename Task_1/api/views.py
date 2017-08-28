@@ -235,7 +235,7 @@ class SearchUserView(APIView):
         last_name = request.query_params.get('last_name', "")
         queryset = User.objects.filter(first_name__icontains=first_name, last_name__icontains=last_name)
         serializer = UserSerializer(queryset, many=True)
-        return Response(response_json(True, serializer.data, 'The search returned {} results'.format(queryset.count())),
+        return Response(response_json(True, serializer.data, 'The search returned {} result(s)'.format(queryset.count())),
                         status=status.HTTP_200_OK)
 
 
