@@ -12,13 +12,13 @@ class WoolWorthsSpider(CrawlSpider):
     name = 'woolworths'
     allowed_domains = ['woolworths.co.za']
     start_urls = ['http://www.woolworths.co.za', ]
-    size_url = "http://www.woolworths.co.za/store/fragments/product-common/ww/price.jsp?productItemId={0}&colourSKUId={1}&sizeSKUId={2}"
+    size_url_t = "http://www.woolworths.co.za/store/fragments/product-common/ww/price.jsp?productItemId={0}&colourSKUId={1}&sizeSKUId={2}"
     color_url = "http://www.woolworths.co.za/store/fragments/product-common/ww/product-item.jsp"
+    listings_css = ['nav.horizontal-menu.accordion--max-medium', 'ol.pagination__pages','ul.nav-list.nav-list--main']
     download_delay = 1
     rules = (
-        Rule(LinkExtractor(restrict_css=['nav.horizontal-menu.accordion--max-medium', 'ol.pagination__pages',
-                                         'ul.nav-list.nav-list--main', ]), follow=True),
-        Rule(LinkExtractor(deny_extensions=['.jsp', ], restrict_css=['div.product-list__list div.grid']),
+        Rule(LinkExtractor(restrict_css=listings_css), follow=True),
+        Rule(LinkExtractor(deny_extensions=['.jsp'], restrict_css=['div.product-list__list div.grid']),
              callback='parse_product'),
     )
 
@@ -56,7 +56,7 @@ class WoolWorthsSpider(CrawlSpider):
 
         if sizes:
             size = list(sizes)[0]
-            url = self.size_url.format(item['retailer_sku'], current_color_id, sizes[size])
+            url = self.size_url_t.format(item['retailer_sku'], current_color_id, sizes[size])
             del sizes[size]
             requirements = {"size": size, "colorid": current_color_id, "colormeta": item,
                             "next_color_urls": next_color_urls, "sizes": sizes}
@@ -77,7 +77,7 @@ class WoolWorthsSpider(CrawlSpider):
             sizes[size] = size_id
         if sizes:
             size = list(sizes)[0]
-            url = self.size_url.format(item['retailer_sku'], current_color_id, sizes[size])
+            url = self.size_url_t.format(item['retailer_sku'], current_color_id, sizes[size])
             del sizes[size]
             requirements = {"size": size, "colorid": current_color_id, "colormeta": item,
                             "next_color_urls": next_color_urls, "sizes": sizes}
@@ -94,10 +94,9 @@ class WoolWorthsSpider(CrawlSpider):
         return "/".join(response.css('ol.breadcrumb li a::text').extract())
 
     def parse_description(self, response):
-        description = response.xpath('//div[@class="accordion__segment--chrome"][1]/div/p[2]/text()').extract()
-        description += response.xpath(
-            '//div[@class="accordion__segment--chrome"][1]/div/ul[not(@class)]/li/text()').extract()
-        return "\n".join(description)
+        description = response.xpath('//div[@class="accordion__segment--chrome"][1]/div/p/text()').extract()
+        description += response.xpath('//div[@class="accordion__segment--chrome"][1]/div/ul/li/text()').extract()
+        return description
 
     def parse_gender(self, response):
         category = "/".join(response.css('ol.breadcrumb li a::text').extract())
@@ -164,7 +163,7 @@ class WoolWorthsSpider(CrawlSpider):
 
         if sizes:
             size = list(sizes)[0]
-            url = self.size_url.format(item['retailer_sku'], current_color_id, sizes[size])
+            url = self.size_url_t.format(item['retailer_sku'], current_color_id, sizes[size])
             del sizes[size]
             requirements = {"size": size, "colorid": current_color_id, "colormeta": item,
                             "next_color_urls": next_color_urls, "sizes": sizes}
@@ -180,9 +179,9 @@ class WoolWorthsSpider(CrawlSpider):
                     'pageSource': "",
                 }
                 formrequest = FormRequest(
-                    'http://www.woolworths.co.za/store/fragments/product-common/ww/product-item.jsp',
+                    self.color_url,
                     callback=self.parse_next_color_items,
-                    formdata=formdata, priority=0)
+                    formdata=formdata)
                 formrequest.meta['item'] = item
                 formrequest.meta['next_color_urls'] = next_color_urls
                 formrequest.meta['current_color_id'] = next_color_page_id
