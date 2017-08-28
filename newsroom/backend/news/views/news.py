@@ -10,7 +10,6 @@ from backend.comments.models import Comment
 from backend.categories.models import Category
 from backend.news.serializers.news import NewsSerializer
 from backend.comments.serializers.comment import CommentSerializer
-from django.db import DatabaseError
 from django.db.models import Q
 
 
@@ -55,7 +54,7 @@ class NewsViewSet(ReadOnlyModelViewSet):
                   )
     def get_news_comments(self, request, pk=None):
         news = self.get_object()
-        comments = Comment.objects.filter(news=news)
+        comments = Comment.objects.filter(news=news, parent=None)
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
@@ -66,15 +65,18 @@ class NewsViewSet(ReadOnlyModelViewSet):
                     url_path='comment'
                 )
     def post_news_comment(self, request, pk=None):
-        content = request.data.get('content','')
-        if content:
-            news = self.get_object()
-            user = request.user
-            comment = Comment.objects.create(user=user, news=news, content=content)
-            serializer = CommentSerializer(comment)
-            return Response(status=status.HTTP_201_CREATED, data=serializer.data)
-        return Response(status=status.HTTP_400_BAD_REQUEST, data={'content': 'this field can not be empty'})
-
-
-
-
+        try:
+            content = request.data.get('content', '')
+            parent = request.data.get('parent', None)
+            if parent:
+                parent = int(parent)
+                parent = Comment.objects.get(id=parent)
+            if content:
+                news = self.get_object()
+                user = request.user
+                comment = Comment.objects.create(user=user, news=news, content=content, parent=parent)
+                serializer = CommentSerializer(comment)
+                return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'content': 'this field can not be empty'})
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'something went wrong'})
