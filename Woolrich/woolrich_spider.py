@@ -44,7 +44,7 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
 
         garment['skus'] = {}
-        garment['image_urls'] = self.image_urls(response)
+        garment['image_urls'] = []
         garment['gender'] = self.product_gender(response)
 
         garment['meta'] = {
@@ -137,9 +137,9 @@ class WoolrichParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def image_urls(self, response):
-        css = '[itemprop="image"]::attr(src), #prod-detail__slider-nav img::attr(src)'
+        css = '.selected.link img::attr(src), #prod-detail__slider-nav img::attr(src)'
 
-        return clean(response.css(css))
+        return [x.replace('swatch', 'large') for x in clean(response.css(css))]
 
     def product_category(self, response):
         return clean(response.css('.wrap.breadcrumb a::text'))[1:]
