@@ -9,11 +9,14 @@ from news.models import News
 
 
 class NewsList(APIView):
-    permission_classes = (IsAuthenticated,)
     def get(self, request):
         news = News.objects.all()
         serializer = NewsSerializer(news, many=True)
         return Response(serializer.data)
+
+
+class NewsAdd(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         serializer = NewsSerializer(data=request.data)
@@ -24,8 +27,6 @@ class NewsList(APIView):
 
 
 class NewsDetail(APIView):
-    permission_classes = (IsAuthenticated,)
-
     def get(self, request, pk):
         news = get_object_or_404(News, pk=pk)
         serializer = NewsSerializer(news)
