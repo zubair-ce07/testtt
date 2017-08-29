@@ -11,6 +11,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+    'django.contrib.contenttypes',
     'django_celery_beat',
     'django_celery_results',
     'movies'
