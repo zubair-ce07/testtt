@@ -6,34 +6,48 @@ from classes.models import Student, Instructor, Course, Enrollment
 
 class EnrollmentSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
+    url = serializers.HyperlinkedIdentityField(view_name='enrollment-detail')
 
     class Meta:
         model = Enrollment
         fields = '__all__'
+        read_only_fields = ('updated_at', 'created_at')
+
+
+class EnrollmentUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = ['status']
 
 
 class CourseSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
+    url = serializers.HyperlinkedIdentityField(view_name='course-detail')
 
     class Meta:
         model = Course
         fields = '__all__'
+        read_only_fields = ('updated_at', 'created_at')
 
 
 class InstructorSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
+    url = serializers.HyperlinkedIdentityField(view_name='instructor-detail')
 
     class Meta:
         model = Instructor
         fields = '__all__'
+        read_only_fields = ('updated_at', 'created_at')
 
 
 class StudentSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
+    url = serializers.HyperlinkedIdentityField(view_name='student-detail')
 
     class Meta:
         model = Student
         fields = '__all__'
+        read_only_fields = ('updated_at', 'created_at')
 
 
 class UserSerializer(serializers.ModelSerializer):

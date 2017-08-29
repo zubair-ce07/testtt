@@ -73,9 +73,6 @@ WSGI_APPLICATION = 'EdxMini.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
 }
 
 DATABASES = {

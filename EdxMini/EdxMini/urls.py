@@ -31,6 +31,7 @@ router.register(r'instructors', classes_views.InstructorViewSet)
 router.register(r'users', classes_views.UserViewSet)
 
 urlpatterns = [
+
     url(r'^admin/', admin.site.urls),
     url(r'^', include(router.urls)),
     url(r'^schema/$', schema_view),

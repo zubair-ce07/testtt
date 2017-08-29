@@ -3,7 +3,7 @@ from rest_framework import viewsets, permissions
 
 from classes.models import Student, Course, Instructor, Enrollment
 from classes.permissions import IsOwnerOrReadOnly
-from classes.serializers import CourseSerializer, UserSerializer
+from classes.serializers import CourseSerializer, UserSerializer, EnrollmentUpdateSerializer
 from classes.serializers import EnrollmentSerializer
 from classes.serializers import InstructorSerializer
 from classes.serializers import StudentSerializer
@@ -47,6 +47,10 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        self.serializer_class = EnrollmentUpdateSerializer
+        return super(EnrollmentViewSet, self).update(request, *args, **kwargs)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
