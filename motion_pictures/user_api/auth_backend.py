@@ -10,8 +10,10 @@ class CustomAuthBackend(object):
         """
         Tries to look up user on provided identifier that can
         be either email or phone number.
+
         Arguments:
             email_or_phone (str): to identify user from
+
         Returns:
             user (User): user associated with provided email or phone
         """

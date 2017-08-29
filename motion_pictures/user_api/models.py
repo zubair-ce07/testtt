@@ -18,6 +18,7 @@ class CustomUserManager(BaseUserManager):
             email (str): email address
             password (str): password to be set
             phone (str): phone no of user
+
         Returns:
              user (User): user created with given attributes
         """
@@ -36,6 +37,7 @@ class CustomUserManager(BaseUserManager):
         Arguments:
             email (str): email address
             password (str): password to be set
+
         Returns:
             user (User): user created with given attributes
         """
@@ -103,8 +105,8 @@ class Profile(models.Model):
     """
     model to store additional data about user
     """
-    MALE = 'Male'
-    FEMALE = 'Female'
+    MALE = 'male'
+    FEMALE = 'female'
 
     GENDERS = (
         (MALE, 'Male'),

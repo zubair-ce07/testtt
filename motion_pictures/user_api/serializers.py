@@ -83,16 +83,18 @@ class UserSerializer(serializers.ModelSerializer):
         profile = getattr(user, 'profile', False)
         return ProfileSerializer(profile).data if profile else None
 
-    def get_token(self, obj):
+    def get_token(self, user):
         """
         Checks if requesting user is same as serializing object
         and if are same returns key of token
+
         Arguments:
-            obj (User): user being serialized
+            user (User): user being serialized
+
         Returns:
             token_key (str): key of token associated to user
         """
-        return None if obj != self.context['request'].user else obj.auth_token.key
+        return None if user != self.context['request'].user else user.auth_token.key
 
     def create(self, validated_data):
         serializer = AddressSerializer(data=self.initial_data.get('profile', {}).get('address', {}))
@@ -110,27 +112,27 @@ class UserSerializer(serializers.ModelSerializer):
         instance.email = validated_data.get('email', instance.email)
         password = validated_data.get('password', None)
         if password:
-            instance.set_password(validated_data.get('password'))
+            instance.set_password(password)
 
         # saving changes to profile model for the user
         profile = getattr(instance, 'profile', None)
         address = getattr(instance.profile, 'address', None) if profile else None
 
-        add_serializer = AddressSerializer(
+        address_serializer = AddressSerializer(
             address,
             self.initial_data.get('profile', {}).get('address', {}),
             partial=self.partial
         )
-        add_serializer.is_valid(raise_exception=True)
-        address = add_serializer.save()
+        address_serializer.is_valid(raise_exception=True)
+        address = address_serializer.save()
 
-        pro_serializer = ProfileSerializer(
+        profile_serializer = ProfileSerializer(
             profile,
             self.initial_data.get('profile', {}),
             partial=self.partial
         )
-        pro_serializer.is_valid(raise_exception=True)
-        pro_serializer.save(user=instance, address=address)
+        profile_serializer.is_valid(raise_exception=True)
+        profile_serializer.save(user=instance, address=address)
 
         instance.save()
         return instance

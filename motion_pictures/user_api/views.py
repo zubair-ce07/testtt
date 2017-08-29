@@ -16,23 +16,19 @@ class ObtainAuthToken(APIView):
         """
         Serialize email and password and after successful authentication
         returns token to be used as Auth header in further requests
+
         Arguments:
             request (Request): post request for obtaining token
+
         Returns:
             response (Response): Serialized User containing token
+
         Raises:
             AuthenticationFailed: If user can not be verified for some reason
         """
 
-        try:
-            email = request.data['email']
-        except KeyError:
-            email = None
-
-        try:
-            phone = request.data['phone']
-        except KeyError:
-            phone = None
+        email = request.data.get('email')
+        phone = request.data.get('phone')
 
         if not (email or phone):
             raise exceptions.ParseError('Email-Password or Phone-Password are required.')
