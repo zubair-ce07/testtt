@@ -56,9 +56,5 @@ target/
 # PyCharm
 .idea
 
-
-#node_modules
-reactassignment/node_modules/*
-
 #vscode
 .vscode/*
