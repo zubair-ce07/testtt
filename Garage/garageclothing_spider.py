@@ -57,7 +57,7 @@ class GarageclothingParseSpider(BaseParseSpider, Mixin):
         for size_sel in response.css(css):
             sku = deepcopy(response.meta['garment']['meta']['pricing'])
             sku['colour'] = colour
-            sku['size'] = clean(size_sel.css('::attr(size)'))[0]
+            sku['size'] = self.one_size if clean(size_sel.css('::attr(size)'))[0] == 'O/S' else clean(size_sel.css('::attr(size)'))[0]
 
             sku_id = clean(size_sel.css('::attr(skuid)'))[0]
             skus.update({sku_id: sku})
@@ -95,6 +95,7 @@ class GarageclothingParseSpider(BaseParseSpider, Mixin):
             requests += self.color_variants(form_data, colorname)
 
         return requests
+
 
     def product_id(self, response):
         id_css = '[name="productId"]::attr(value),' \
