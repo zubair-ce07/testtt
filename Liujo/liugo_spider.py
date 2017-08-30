@@ -40,15 +40,20 @@ class LiujoParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
         sku = deepcopy(self.product_pricing_common_new(response))
+        sku['currency'] = 'EUR'
         sizes = clean(response.css('#configurable_swatch_liujo_size [name]::attr(title)'))
 
         for color_sel in response.css('#configurable_swatch_color [name]'):
             sku_id = clean(color_sel.css('::attr(id)'))[0]
             sku['color'] = clean(color_sel.css('::attr(name)'))[0]
 
-            for size in sizes:
-                sku['size'] = size
-                skus[sku_id+'-'+size] = deepcopy(sku)
+            if sizes:
+                for size in sizes:
+                    sku['size'] = size
+                    skus[sku_id+'-'+size] = deepcopy(sku)
+            else:
+                sku['size'] = self.one_size
+                skus[sku_id] = deepcopy(sku)
 
         if skus:
             return skus
