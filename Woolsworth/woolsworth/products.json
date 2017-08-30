@@ -1,0 +1,55 @@
+[
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Kids/Boys/Underwear-Socks/Batman-Socks-3-Pack/_/A-503555910",
+    "name": "Batman Socks 3 Pack",
+    "retailer_id": "503555910",
+    "details": [
+      "Add some superhero fun to his sock drawer with these Batman themed, cotton rich socks.",
+      [
+        "80% cotton, 17% nylon, 3% elastane"
+      ]
+    ]
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Clothing/New-Arrivals/Metallic-Textured-Slip-Dress/_/A-503949756",
+    "name": "Metallic Textured Slip Dress",
+    "brand": "Edition",
+    "retailer_id": "503949756",
+    "details": [
+      "Rock the room in this high-shine metallic slip dress that features all the right on-trend touches for easy-chic flair that delivers on style and comfort.",
+      [
+        "100% polyester",
+        "Edition",
+        "Model wears 10/S",
+        "Height: 171 - 176cm",
+        "Bust: 81cm, 32A/B cup",
+        "Waist 61 - 69cm",
+        "Hips: 90 - 94cm"
+      ]
+    ]
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Kids/Boys/Bottoms/Adjustable-Bermuda-Shorts/_/A-503771730",
+    "name": "Adjustable Bermuda Shorts",
+    "brand": "(&US)",
+    "retailer_id": "503771730",
+    "details": [
+      "Perfect for endless summer days, these Bermuda shorts feature five pockets with a secure button fastener and an adjustable waistband for all-day comfort.",
+      [
+        "100% cotton",
+        "adjustable waistband",
+        "roll up cuffs",
+        "(&US)"
+      ]
+    ]
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Kids/Boys/Tops-Tees/Lightning-Knit/_/A-503777870",
+    "name": "Lightning Knit",
+    "brand": "Country Road",
+    "retailer_id": "503777870",
+    "details": [
+      "Let your little one bolt into those cooler months with comfort. This season we're all about soft tones and snug textures. 100% Cotton."
+    ]
+  }
+]
