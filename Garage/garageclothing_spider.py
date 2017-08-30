@@ -135,9 +135,5 @@ class GarageclothingCrawlSpider(BaseCrawlSpider, Mixin):
         yield Request(url='https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true', callback=self.parse_session_cookie)
 
     def parse_session_cookie(self, response):
-        jsession_id = ''
-        for value in response.headers['Set-Cookie'].decode().split(';'):
-            if 'JSESSIONID' in value:
-                jsession_id = value.replace('JSESSIONID=', '')
-
-        yield Request('https://www.garageclothing.com/ca/', cookies={'JSESSIONID': jsession_id})
+        jsession_id = [x.replace('JSESSIONID=', '') for x in response.headers['Set-Cookie'].decode().split(';') if 'JSESSIONID' in x]
+        yield Request('https://www.garageclothing.com/ca/', cookies={'JSESSIONID': jsession_id[0]})
