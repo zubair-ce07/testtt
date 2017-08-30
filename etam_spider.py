@@ -14,7 +14,7 @@ class Mixin:
     gender = 'women'
     allowed_domains = ['etam.com.cn']
     start_urls = ['http://www.etam.com.cn/']
-    download_delay = 1
+    custom_settings = {'DOWNLOAD_DELAY': 1}
 
 
 class EtamParseSpider(BaseParseSpider, Mixin):
@@ -27,17 +27,13 @@ class EtamParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
         self.boilerplate_normal(garment, response)
-        garment['categories'] = self.product_categories(response)
-        garment['gender'] = self.product_gender()
-        garment['lang'] = self.product_language()
         garment['skus'] = self.skus(response, garment)
-        garment['image_urls'] = self.product_images(response)
-        garment['merch_info'] = self.product_merch_info(response)
+        garment['image_urls'] = self.image_urls(response)
+        garment['merch_info'] = self.merch_info(response)
         return self.next_request_or_garment(garment)
 
     def skus(self, response, garment):
         skus = {}
-        out_of_stock_count = 0
         common = self.product_pricing_common_new(response)
         common['colour'] = ""
         sizes = {}
@@ -53,11 +49,8 @@ class EtamParseSpider(BaseParseSpider, Mixin):
             sku = common.copy()
             sku['size'] = variant_key
             if not json_stock[variant_value]["has_stock"]:
-                out_of_stock_count += 1
                 sku['out_of_stock'] = True
             skus[sku['size']] = sku
-        if out_of_stock_count == len(sizes):
-            garment['out_of_stock'] = True
         return skus
 
     def raw_brand_and_id(self, response):
@@ -79,21 +72,12 @@ class EtamParseSpider(BaseParseSpider, Mixin):
         return ""
 
     def product_category(self, response):
-        return clean(response.css('div.breadcrumbs a ::text'))[-1]
-
-    def product_categories(self, response):
         return clean(response.css('div.breadcrumbs a ::text'))
 
-    def product_gender(self):
-        return Mixin.gender
-
-    def product_language(self):
-        return Mixin.lang
-
-    def product_images(self, response):
+    def image_urls(self, response):
         return clean(response.css('a[id="zoomGalery"]::attr(href)'))
 
-    def product_merch_info(self, response):
+    def merch_info(self, response):
         return "".join(clean(response.css('div.member-price ::text')))
 
 
@@ -101,7 +85,7 @@ class EtamCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + "-crawl"
     parse_spider = EtamParseSpider()
 
-    products_css = 'ul.products-grid.clearfix.first.odd'
+    products_css = '.products-grid'
 
     deny = [
         '/vip',
@@ -110,8 +94,8 @@ class EtamCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     listing_css = [
-        'ul.main-navi-list',
-        'div.toolbar-bottom div.pages'
+        '.main-navi-list',
+        '.toolbar-bottom .pages'
     ]
 
     rules = (
