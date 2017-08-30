@@ -101,7 +101,7 @@ class GarageclothingParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))[0]
 
     def product_description(self, response):
-        css = '#descTab0Content::text, #descTab0Content ::text'
+        css = '#descTab0Content ::text'
         return clean(response.css(css))
 
     def product_care(self, response):
@@ -116,6 +116,7 @@ class GarageclothingParseSpider(BaseParseSpider, Mixin):
 class GarageclothingCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = GarageclothingParseSpider()
+    cookie_url = 'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true'
 
     handle_httpstatus_list = [404]
 
@@ -132,7 +133,7 @@ class GarageclothingCrawlSpider(BaseCrawlSpider, Mixin):
     )
 
     def start_requests(self):
-        yield Request(url='https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true', callback=self.parse_session_cookie)
+        yield Request(url=self.cookie_url, callback=self.parse_session_cookie)
 
     def parse_session_cookie(self, response):
         jsession_id = [x.replace('JSESSIONID=', '') for x in response.headers['Set-Cookie'].decode().split(';') if 'JSESSIONID' in x]
