@@ -10,13 +10,15 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean
 class Mixin:
     retailer = 'garageclothing-ca'
     market = 'CA'
+    allowed_domains = ['garageclothing.com', 'dynamiteclothing.com']
+    gender = 'women'
 
 
 class GarageclothingParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     size_api_url = 'https://www.garageclothing.com/ca/prod/include/productSizes.jsp'
     image_api_url = 'https://www.garageclothing.com/ca/prod/include/pdpImageDisplay.jsp'
-    price_css = '.prodPricePDP ::text, .prodPricePDP::text'
+    price_css = '.prodPricePDP ::text'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -28,10 +30,10 @@ class GarageclothingParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
 
         garment['skus'] = {}
-        garment['gender'] = self.product_gender(response)
+        garment['gender'] = self.gender
         garment['image_urls'] = []
         garment['meta'] = {
-            'requests_queue': self.img_clr_requests(response, garment),
+            'requests_queue': self.image_and_colour_requests(response, garment),
             'pricing': self.product_pricing_common_new(response)
         }
 
@@ -64,71 +66,50 @@ class GarageclothingParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-    def color_variants(self, form_data, colorname):
-        return [FormRequest(url=self.size_api_url,
-                            callback=self.parse_colour,
-                            dont_filter=True,
-                            formdata=form_data,
-                            meta={'colorname': colorname}),
-
-                FormRequest(url=self.image_api_url,
-                            callback=self.parse_images,
-                            dont_filter=True,
-                            formdata=form_data)]
-
-    def img_clr_requests(self, response, garment):
+    def image_and_colour_requests(self, response, garment):
         css = '#prodDetailSwatch [colourid]'
         product_id = garment['retailer_sku']
         requests = []
         original_style = clean(response.css('#originalStyle::attr(value)'))
 
+        form_data = {
+            'productId': product_id,
+        }
+
         for colour_sel in response.css(css):
-            form_data = {
-                'productId': product_id,
-                'colour': clean(colour_sel.css('::attr(colourid)'))[0]
-            }
+            form_data['colour'] = clean(colour_sel.css('::attr(colourid)'))[0]
 
             if original_style:
                 form_data['originalStyle'] = original_style[0]
 
             colorname = clean(colour_sel.css('::attr(colorname)'))[0]
-            requests += self.color_variants(form_data, colorname)
+            requests += [FormRequest(url=self.size_api_url, callback=self.parse_colour, dont_filter=True, formdata=form_data, meta={'colorname': colorname}),
+                         FormRequest(url=self.image_api_url, callback=self.parse_images, dont_filter=True, formdata=form_data)]
 
         return requests
 
-
     def product_id(self, response):
-        id_css = '[name="productId"]::attr(value),' \
-                 '#prodDetailInfo .prodStylePDP::text'
-
+        id_css = '[name="productId"]::attr(value)'
         return clean(response.css(id_css))[0].replace('Style # ', '')
 
     def image_urls(self, response):
         css = '#additionalViewsPDP .thumbImageSelectorPDP::attr(src)'
-
         return clean(response.css(css))
-
-    def product_gender(self, response):
-        return 'women'
 
     def product_name(self, response):
         css = '.prodName::text'
-
         return clean(response.css(css))[0]
 
     def product_description(self, response):
         css = '#descTab0Content::text, #descTab0Content ::text'
-
         return clean(response.css(css))
 
     def product_care(self, response):
         css = '#descTab1Content li::text'
-
         return [x for x in clean(response.css(css)) if self.care_criteria_simplified(x)]
 
     def product_category(self, response):
         css = '.shopParentCategory::text'
-
         return clean(response.css(css))[0].replace('>', '')
 
 
@@ -146,14 +127,17 @@ class GarageclothingCrawlSpider(BaseCrawlSpider, Mixin):
     product_css = '.prodListingImg .none'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css,)),
+        Rule(LinkExtractor(restrict_css=listing_css,), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css,), callback='parse_item'),
     )
 
     def start_requests(self):
-        yield Request(url='https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true', callback=self.parse_website)
+        yield Request(url='https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true', callback=self.parse_session_cookie)
 
-    def parse_website(self, response):
-        jsession_id = response.headers['Set-Cookie'].decode().split(';')[0].replace('JSESSIONID=', '')
+    def parse_session_cookie(self, response):
+        jsession_id = ''
+        for value in response.headers['Set-Cookie'].decode().split(';'):
+            if 'JSESSIONID' in value:
+                jsession_id = value.replace('JSESSIONID=', '')
 
         yield Request('https://www.garageclothing.com/ca/', cookies={'JSESSIONID': jsession_id})
