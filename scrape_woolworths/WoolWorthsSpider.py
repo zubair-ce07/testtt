@@ -1,20 +1,15 @@
 import re
-import scrapy
 from scrape_woolworths.items import WoolWorthsItem
+from scrapy.spiders import CrawlSpider
 from scrapy.http import Request
 
-DOWNLOAD_DELAY = 1
 
-
-class WoolWorthsSpider(scrapy.Spider):
+class WoolWorthsSpider(CrawlSpider):
     name = 'woolworths_spider'
     allowed_domains = ['woolworths.co.za']
     start_urls = ['http://www.woolworths.co.za']
 
-    def start_requests(self):
-        yield Request(self.start_urls[0], callback=self.parse_main_nav)
-
-    def parse_main_nav(self, response):
+    def parse_start_url(self, response):
         main_nav_links = response.css('ul.nav-list--main li a::attr(href)').extract()[1:5]
         for link in main_nav_links:
             yield Request(self.start_urls[0] + link, callback=self.parse_categories)
@@ -69,9 +64,8 @@ class WoolWorthsSpider(scrapy.Spider):
         return list_of_ids
 
     def make_product_url(self, product_id, color_id, size_id):
-        product_url = 'http://www.woolworths.co.za/store/fragments/product-common/ww/price.jsp?productItemId='\
-                       + product_id + '&colourSKUId=' + color_id + '&sizeSKUId=' + size_id
-        return product_url
+        return 'http://www.woolworths.co.za/store/fragments/product-common/' \
+               'ww/price.jsp?productItemId={}&colourSKUId={}&sizeSKUId={}'.format(product_id, color_id, size_id)
 
     def parse_price_and_currency_info(self, response):
         currency = response.css('span[itemprop="priceCurrency"]::attr(content)').extract_first()
@@ -86,10 +80,10 @@ class WoolWorthsSpider(scrapy.Spider):
     def request_another_sku_or_yield_item(self, woolworth_item, skus_urls_and_info):
         if skus_urls_and_info:
             sku_info = skus_urls_and_info.pop()
-            url = sku_info[2]
+            url = sku_info['product_sku_url']
             yield Request(url, callback=self.parse_price_and_currency_info, meta={
-                'woolworth_item': woolworth_item, 'size': sku_info[1],
-                'color': sku_info[0], 'skus_urls_and_info': skus_urls_and_info})
+                'woolworth_item': woolworth_item, 'size': sku_info['size'],
+                'color': sku_info['color'], 'skus_urls_and_info': skus_urls_and_info})
         else:
             yield woolworth_item
 
@@ -104,11 +98,13 @@ class WoolWorthsSpider(scrapy.Spider):
         skus_urls_and_info = []
         for color_index in range(len(colors)):
             for size_index in range(len(sizes)):
-                skus_urls_and_info.append([
-                    colors[color_index],
-                    sizes[size_index],
-                    self.make_product_url(product_id, color_ids[color_index], size_ids[size_index])
-                ])
+                skus_urls_and_info.append({
+                    'color': colors[color_index],
+                    'size': sizes[size_index],
+                    'product_sku_url': self.make_product_url(product_id,
+                                                             color_ids[color_index],
+                                                             size_ids[size_index])
+                })
         return self.request_another_sku_or_yield_item(woolworth_item, skus_urls_and_info)
 
     def check_if_string(self, variable):
@@ -118,9 +114,8 @@ class WoolWorthsSpider(scrapy.Spider):
         if self.check_if_string(attribute):
             return re.sub('\s+', ' ', attribute)
         else:
-            for index in range(len(attribute)):
-                attribute[index] = re.sub('\s+', ' ', attribute[index])
-            return attribute
+            clean_list_of_strings = [re.sub('\s+', ' ', string) for string in attribute]
+            return clean_list_of_strings
 
     def parse_woolworth_item(self, response):
         woolworth_item = WoolWorthsItem()
