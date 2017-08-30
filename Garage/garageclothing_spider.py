@@ -1,4 +1,5 @@
 from copy import deepcopy
+import re
 
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
@@ -117,7 +118,7 @@ class GarageclothingCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = GarageclothingParseSpider()
     cookie_url = 'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true'
-
+    session_regex = re.compile('JSESSIONID=([a-zA-Z0-9.]+);')
     handle_httpstatus_list = [404]
 
     listing_css = [
@@ -136,5 +137,6 @@ class GarageclothingCrawlSpider(BaseCrawlSpider, Mixin):
         yield Request(url=self.cookie_url, callback=self.parse_session_cookie)
 
     def parse_session_cookie(self, response):
-        jsession_id = [x.replace('JSESSIONID=', '') for x in response.headers['Set-Cookie'].decode().split(';') if 'JSESSIONID' in x]
-        yield Request('https://www.garageclothing.com/ca/', cookies={'JSESSIONID': jsession_id[0]})
+        jsession_id = self.session_regex.search(response.headers['Set-Cookie'].decode()).group(1)
+        yield Request('https://www.garageclothing.com/ca/', cookies={'JSESSIONID': jsession_id})
+
