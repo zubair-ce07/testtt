@@ -7,6 +7,12 @@ class Genre(models.Model):
     name = models.CharField(max_length=15)
 
 
+class Date(models.Model):
+    day = models.PositiveSmallIntegerField(null=True, blank=True)
+    month = models.PositiveSmallIntegerField(null=True, blank=True)
+    year = models.PositiveSmallIntegerField()
+
+
 class Image(models.Model):
     BACKDROP = 1
     POSTER = 2
@@ -44,8 +50,8 @@ class Person(models.Model):
 
     adult = models.NullBooleanField()
     biography = models.TextField(null=True, blank=True)
-    birthday = models.DateField(null=True, blank=True)
-    deathday = models.DateField(null=True, blank=True)
+    birthday = models.ForeignKey(Date, on_delete=models.CASCADE, null=True, blank=True, related_name='birthday')
+    deathday = models.ForeignKey(Date, on_delete=models.CASCADE, null=True, blank=True, related_name='deathday')
     gender = models.PositiveSmallIntegerField(choices=GENDERS)
     homepage = models.CharField(max_length=80, null=True, blank=True)
     tmdb_id = models.IntegerField(unique=True)
@@ -59,17 +65,17 @@ class Movie(models.Model):
     adult = models.BooleanField()
     budget = models.IntegerField()
     genres = models.ManyToManyField(Genre, related_name='movies')
-    homepage = models.CharField(max_length=80, null=True, blank=True)
+    homepage = models.TextField(null=True, blank=True)
     tmdb_id = models.IntegerField(unique=True)
     original_language = models.CharField(max_length=30)
     original_title = models.CharField(max_length=80)
     overview = models.TextField(null=True, blank=True)
     popularity = models.FloatField()
-    release_date = models.DateField(null=True, blank=True)
+    release_date = models.ForeignKey(Date, on_delete=models.CASCADE, null=True, blank=True)
     revenue = models.IntegerField()
     runtime = models.IntegerField()
     status = models.CharField(max_length=30, null=True, blank=True)
-    tag_line = models.CharField(max_length=80, null=True, blank=True)
+    tag_line = models.CharField(max_length=200, null=True, blank=True)
     title = models.CharField(max_length=80)
     vote_average = models.FloatField()
     vote_count = models.IntegerField()
@@ -81,7 +87,7 @@ class Movie(models.Model):
 class Role(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    character = models.CharField(max_length=80)
+    character = models.TextField()
     credit_id = models.CharField(max_length=40, unique=True)
     order = models.PositiveSmallIntegerField()
 

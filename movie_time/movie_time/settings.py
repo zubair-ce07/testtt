@@ -26,6 +26,8 @@ DATABASES = {
     }
 }
 
+ROOT_URLCONF = 'movie_time.urls'
+
 CELERY_RESULT_BACKEND = 'django-db'
 
 LANGUAGE_CODE = 'en-us'

@@ -10,6 +10,7 @@ app = Celery('movie_time')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.autodiscover_tasks()
+app.control.rate_limit('movies.tasks.get_new_movie', '230/m')
 
 # app.conf.beat_schedule = {
 #     'get_movie_every_minute': {
