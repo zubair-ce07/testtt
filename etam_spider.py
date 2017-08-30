@@ -1,5 +1,4 @@
 import json
-import pdb
 import re
 
 from scrapy.linkextractors import LinkExtractor
@@ -16,6 +15,7 @@ class Mixin:
     allowed_domains = ['etam.com.cn']
     start_urls = ['http://www.etam.com.cn/']
     download_delay = 1
+
 
 class EtamParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + "-parse"
@@ -93,7 +93,7 @@ class EtamParseSpider(BaseParseSpider, Mixin):
     def product_images(self, response):
         return clean(response.css('a[id="zoomGalery"]::attr(href)'))
 
-    def product_merch_info(self,response):
+    def product_merch_info(self, response):
         return "".join(clean(response.css('div.member-price ::text')))
 
 
