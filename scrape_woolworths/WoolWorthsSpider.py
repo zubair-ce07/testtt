@@ -1,7 +1,9 @@
-import re
 from scrape_woolworths.items import WoolWorthsItem
-from scrapy.spiders import CrawlSpider
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy.http import Request
+from urlparse import urljoin
+import re
 
 
 class WoolWorthsSpider(CrawlSpider):
@@ -9,23 +11,16 @@ class WoolWorthsSpider(CrawlSpider):
     allowed_domains = ['woolworths.co.za']
     start_urls = ['http://www.woolworths.co.za']
 
-    def parse_start_url(self, response):
-        main_nav_links = response.css('ul.nav-list--main li a::attr(href)').extract()[1:5]
-        for link in main_nav_links:
-            yield Request(self.start_urls[0] + link, callback=self.parse_categories)
-
-    def parse_categories(self, response):
-        all_categories = response.css('nav.horizontal-menu ul li a::attr(href)').extract()
-        for category in all_categories:
-            yield Request(self.start_urls[0] + category, callback=self.request_next_pages)
+    rules = (
+        Rule(LinkExtractor(restrict_css='ul.nav-list--main li', allow=['.+Kids.+', '.+Men.+', '.+Women.+', '.+Baby.+'])),
+        Rule(LinkExtractor(restrict_css='nav.horizontal-menu ul li'), callback='request_next_pages'),
+    )
 
     def request_next_pages(self, response):
         pages = response.css('.pagination__page a::attr(href)').extract()
-        for index in range(len(pages)):
-            pages[index] = self.start_urls[0] + pages[index]
         pages.append(response.url)
         for page in pages:
-            yield Request(page, callback=self.parse_listings, dont_filter=True)
+            yield Request(urljoin(self.start_urls[0], page), callback=self.parse_listings, dont_filter=True)
 
     def parse_listings(self, response):
         product_list_items = response.css('div.product-list__item')
