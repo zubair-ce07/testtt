@@ -8,8 +8,8 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean
 
 
 class Mixin:
-    retailer = 'liujo-it'
-    market = 'IT'
+    retailer = 'liujo-uk'
+    market = 'UK'
     allowed_domains = ['liujo.com']
     start_urls = ['http://www.liujo.com/gb/']
     gender = 'women'
@@ -40,7 +40,6 @@ class LiujoParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
         sku = deepcopy(self.product_pricing_common_new(response))
-        sku['currency'] = 'EUR'
         sizes = clean(response.css('#configurable_swatch_liujo_size [name]::attr(title)'))
 
         for color_sel in response.css('#configurable_swatch_color [name]'):
@@ -65,6 +64,9 @@ class LiujoParseSpider(BaseParseSpider, Mixin):
 
             skus[sku_id] = deepcopy(sku)
 
+        if not skus:
+            response.meta['garment'].update(self.product_pricing_common_new(response))
+            
         return skus
 
     def product_category(self, response):
