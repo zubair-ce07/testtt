@@ -1,45 +1,1830 @@
 [
   {
-    "url": "http://www.woolworths.co.za/store/prod/Gifts/Gifts-for-Him/Underwear-Socks/AKJP-Print-Socks/_/A-503821762",
-    "retailer_id": "503821762",
-    "name": "AKJP Print Socks",
+    "url": "http://www.woolworths.co.za/store/prod/Beauty/Accessories/Facial-Tools/MakeUp-Brush-Cleaners/Purifying-Cosmetic-Brush-Cleanser/_/A-503798022",
+    "retailer_id": "503798022",
+    "name": "Purifying Cosmetic Brush Cleanser",
+    "brand": "WBeauty",
     "details": [
-      "A perfect mix between style and warmth. These socks are made from soft cotton for comfort, with quirky and playful print.",
       [
-        "100% cotton",
-        "hand wash"
+        "Woolworths Purifying Cosmetic Brush Cleanser is formulated to clean, disinfect and condition natural and synthetic cosmetic brushes."
+      ],
+      [
+        "150ml",
+        "approved by Beauty Without Cruelty",
+        "approved by a toxicologust",
+        "paraben-free"
       ]
     ],
-    "care": "/images/attributes/43a.png",
     "image_urls": [
       {
-        "6009207100722": []
-      },
-      {
-        "6009207100715": []
-      },
-      {
-        "6009207100708": []
+        "6009207042831": [
+          "//images.woolworthsstatic.co.za/Purifying-Cosmetic-Brush-Cleanser-6009207042831.jpg?o=TbOSB4rDXYb56Zh4KRGNrzEUv04j&V=bWLw&w=700"
+        ]
       }
     ],
     "skus": {
-      "6009207100722": {
-        "color": "X WHITE",
+      "6009207042831": {
+        "color": "NO COLOUR",
         "currency": "ZAR",
-        "price": "R 29.00",
-        "original_price": "R 199.00"
+        "price": "R 89.95"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Beauty/Bath-Body/Soaps-Talc/Soaps/Extracts-From-Nature-Handmade-Soap/_/A-503895250",
+    "retailer_id": "503895250",
+    "name": "Extracts From Nature Handmade Soap",
+    "brand": "WBeauty",
+    "details": [
+      [
+        "Pamper your skin and senses with our range of deliciously scented soap bars. Handmade, inspired by nature, formulated to be gentle on your skin and kind to the environment."
+      ],
+      [
+        "100g",
+        "vegan-friendly",
+        "no parabens",
+        "sulphate-free",
+        "a product of our Good Beauty Journey",
+        "Extracts From Nature"
+      ]
+    ],
+    "image_urls": [
+      {
+        "6009207376387": [
+          "//images.woolworthsstatic.co.za/Extracts-From-Nature-Handmade-Soap-6009207376387.jpg?o=1bxXrg9zIpNbfG45Q4uL4RBwva0j&V=l0zq&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Extracts-From-Nature-Handmade-Soap-6009207376387.jpg?o=NOT4qnmSjuxiRsRQqTEVr7TiEBMj&V=l0zq&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Extracts-From-Nature-Handmade-Soap-6009207376387.jpg?o=x0o7FyNkTTcP4ED6WM5I0W26CFUj&V=l0zq&w=145&h=185"
+        ]
       },
-      "6009207100715": {
-        "color": "X BLUE",
+      {
+        "6009207376370": [
+          "//images.woolworthsstatic.co.za/Extracts-From-Nature-Handmade-Soap-6009207376370.jpg?o=VZVkliZ5RFbd4@XYnrg4yEKsTxMj&V=PdBb&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Extracts-From-Nature-Handmade-Soap-6009207376370.jpg?o=NOT4qnmSjuxiRsRQqTEVr7TiEBMj&V=PdBb&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Extracts-From-Nature-Handmade-Soap-6009207376370.jpg?o=x0o7FyNkTTcP4ED6WM5I0W26CFUj&V=PdBb&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009207376387": {
+        "color": "PINK",
         "currency": "ZAR",
-        "price": "R 29.00",
-        "original_price": "R 199.00"
+        "price": "R 39.95"
       },
-      "6009207100708": {
-        "color": "X BLACK",
+      "6009207376370": {
+        "color": "GREEN",
         "currency": "ZAR",
-        "price": "R 29.00",
-        "original_price": "R 199.00"
+        "price": "R 39.95"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Baby/Girls/Babygrow-Sleepwear/Navy-Gingham-Playsuit/_/A-503802660",
+    "retailer_id": "503802660",
+    "name": "Navy Gingham Playsuit",
+    "details": [
+      [
+        "Summer angels are extra adorable in this strappy sleeveless playsuit with popper buttons between the legs for easy on, easy off."
+      ],
+      [
+        "100% cotton",
+        "woolies babes"
+      ]
+    ],
+    "care": "/images/attributes/19f.png",
+    "image_urls": [
+      {
+        "6009207053936": [
+          "//images.woolworthsstatic.co.za/Navy-Gingham-Playsuit-6009207053936.jpg?o=Oh2MTdg6m$1uu@52bVP5L08qzZsj&V=eon6&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Navy-Gingham-Playsuit-6009207053936.jpg?o=0Tb1DsTqco@wQJosTas5p89CDDMj&V=eon6&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009207053936_6009207053905": {
+        "color": "NAVY",
+        "size": "1-3",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207053936_6009207053912": {
+        "color": "NAVY",
+        "size": "3-6",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207053936_6009207053929": {
+        "color": "NAVY",
+        "size": "6-12",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207053936_6009207053936": {
+        "color": "NAVY",
+        "size": "12-18",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207053936_6009207053899": {
+        "color": "NAVY",
+        "size": "NEWBORN",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Baby/Girls/New-Arrivals/Frilly-UV-Swimsuit-2-Piece/_/A-503767158",
+    "retailer_id": "503767158",
+    "name": "Frilly UV Swimsuit 2 Piece",
+    "details": [
+      [
+        "Building sandcastles in the sun is super fun in this swimsuit set with UV30 protection to minimise her exposure to harmful UV rays.The printed set includes a rash vest and swim shorts that are elasticised around the waist for easy on and easy off.",
+        "Our return policy on swimwear",
+        "Please note that in the interest of hygiene, swimwear may not be returned or exchanged. Should you have any questions, one of our managers will be happy to assist."
+      ],
+      [
+        "85% polyester, 15% Spandex",
+        "long sleeves",
+        "UPF30 protection",
+        "2-piece",
+        "woolies babes"
+      ]
+    ],
+    "care": "/images/attributes/11e.png",
+    "image_urls": [
+      {
+        "6009204945715": [
+          "//images.woolworthsstatic.co.za/Frilly-UV-Swimsuit-2-Piece-6009204945715.jpg?o=VQf1S88YvosdT2qbngPSFoqyEwYj&V=4T9w&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Frilly-UV-Swimsuit-2-Piece-6009204945715.jpg?o=UkaVUatYixYh9ccHa0U9Go4waagj&V=4T9w&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009204945715_6009204945692": {
+        "color": "AQUA",
+        "size": "1-3",
+        "currency": "ZAR",
+        "price": "R 150.00"
+      },
+      "6009204945715_6009204945708": {
+        "color": "AQUA",
+        "size": "3-6",
+        "currency": "ZAR",
+        "price": "R 150.00"
+      },
+      "6009204945715_6009204945715": {
+        "color": "AQUA",
+        "size": "6-12",
+        "currency": "ZAR",
+        "price": "R 150.00"
+      },
+      "6009204945715_6009204945722": {
+        "color": "AQUA",
+        "size": "12-18",
+        "currency": "ZAR",
+        "price": "R 150.00"
+      },
+      "6009204945715_6009204945739": {
+        "color": "AQUA",
+        "size": "18-24",
+        "currency": "ZAR",
+        "price": "R 150.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Features/Country-Road/Capsule/Belted-Pleat-Dress/_/A-503815950",
+    "retailer_id": "503815950",
+    "name": "Belted Pleat Dress",
+    "brand": "Country Road",
+    "details": [
+      [
+        "Designed as part of the limited CR Capsule collection, this statement piece is the perfect option for all your special events this season; from evening cocktail parties to spring weddings. Made in a permanently pleated fabric with a laser cut edge, this dress is reminiscent of traditional kimono styling with a fanned sleeve, V-neck and belted waist. Play with tonal hues by pairing it with our Soft Leather Tie Belt and a nude heel.",
+        "Model is 178cm tall and is wearing size XS/8.",
+        "100% Polyester."
+      ]
+    ],
+    "image_urls": [
+      {
+        "9321998809392": [
+          "//images.woolworthsstatic.co.za/Belted-Pleat-Dress-9321998809392.jpg?o=GPcp$0UuBdbEZs9OeWDalywpitEj&V=vB@3&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Belted-Pleat-Dress-9321998809392.jpg?o=l8G5nk9OlI$heLTkE1sCqPBkmOcj&V=vB@3&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Belted-Pleat-Dress-9321998809392.jpg?o=$ZoAXB6HLxdd4gca0qIdJigzvRIj&V=vB@3&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Belted-Pleat-Dress-9321998809392.jpg?o=P0P4Iyx70IY9jR2LQVq7EMsq5tMj&V=vB@3&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Belted-Pleat-Dress-9321998809392.jpg?o=hyfCLAI$EJGpTER8Zd9TJNcijRYj&V=vB@3&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Belted-Pleat-Dress-9321998809392.jpg?o=QD010gUNQ@gtbiPOgai7@ZV5S14j&V=vB@3&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "9321998809392_9321998809422": {
+        "color": "CHAMPAGNE",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 2,299.00"
+      },
+      "9321998809392_9321998809446": {
+        "color": "CHAMPAGNE",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 2,299.00"
+      },
+      "9321998809392_9321998809439": {
+        "color": "CHAMPAGNE",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 2,299.00"
+      },
+      "9321998809392_9321998809415": {
+        "color": "CHAMPAGNE",
+        "size": "10",
+        "currency": "ZAR",
+        "price": "R 2,299.00"
+      },
+      "9321998809392_9321998809392": {
+        "color": "CHAMPAGNE",
+        "size": "12",
+        "currency": "ZAR",
+        "price": "R 2,299.00"
+      },
+      "9321998809392_9321998809385": {
+        "color": "CHAMPAGNE",
+        "size": "14",
+        "currency": "ZAR",
+        "price": "R 2,299.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Beauty/Makeup/Eyes/Eye-Shadows/Stila-Perfect-Me-Perfect-Hue-Eye-Cheek-Palette/_/A-503586834",
+    "retailer_id": "503586834",
+    "name": "Stila Perfect Me, Perfect Hue Eye & Cheek Palette",
+    "brand": "Stila",
+    "details": [
+      [
+        "Add the perfect finishing touches with this long-wearing, one-sweep eye and cheek palette. Four distinct palettes are available, and include five eye shadows and two blushers in matte, shimmer and pearl finishes."
+      ],
+      [
+        "Stila"
+      ]
+    ],
+    "image_urls": [
+      {
+        "94800351387": [
+          "//images.woolworthsstatic.co.za/Stila-Perfect-Me-Perfect-Hue-Eye-Cheek-Palette-94800351387.jpg?o=BSj2cUXL3kDl97DNa7tuwA6a@eQj&V=151M&w=700"
+        ]
+      },
+      {
+        "94800351097": [
+          "//images.woolworthsstatic.co.za/Stila-Perfect-Me-Perfect-Hue-Eye-Cheek-Palette-94800351097.jpg?o=PrGCgzr1XJiJDNdIG@e3rKIduwEj&V=RVAH&w=700"
+        ]
+      },
+      {
+        "94800351073": [
+          "//images.woolworthsstatic.co.za/Stila-Perfect-Me-Perfect-Hue-Eye-Cheek-Palette-94800351073.jpg?o=8X2owQfVTVyQSSNCXIEZbv2jMyIj&V=1ZHS&w=700"
+        ]
+      }
+    ],
+    "skus": {
+      "94800351387": {
+        "color": "TAN DEEP",
+        "currency": "ZAR",
+        "price": "R 365.00"
+      },
+      "94800351097": {
+        "color": "MEDIUM TAN",
+        "currency": "ZAR",
+        "price": "R 365.00"
+      },
+      "94800351073": {
+        "color": "FAIR LIGHT",
+        "currency": "ZAR",
+        "price": "R 365.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Accessories/Leather/Cindy-Large-Pouch/_/A-503779316",
+    "retailer_id": "503779316",
+    "name": "Cindy Large Pouch",
+    "brand": "Country Road",
+    "details": [
+      [
+        "A take-everywhere piece that will keep your essentials close to hand, this large pouch has an organised interior and handy wristband.100% Leather."
+      ]
+    ],
+    "image_urls": [
+      {
+        "9321998657887": [
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=gnZTzx2TrWVQligpynGvqhLG7XMj&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=0RjxafanvEFNt2aA6jaKhW8KPfkj&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=WWi7MXfOIkXDLtwIkUyfd7hufscj&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=LmHqK4gis3Z@tVPrquvobdGpHZMj&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=bnM9JrEb3tzMjYlbBRGf$OOsvZMj&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=AUqnRQCotGudO6Wr5oza9ZikwG0j&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=3bJN1yABGBz0fEMiLU6u18E6L6Qj&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=CG1kimViLC8SJ5COBsjB9xtSM1Qj&V=4xze&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657887.jpg?o=2FF5SZVemunF1rSmD2a3MvfuaAUj&V=4xze&w=145&h=185"
+        ]
+      },
+      {
+        "9321998657870": [
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=vEs5U2phiWHtbJ1ookBg@8mrqR0j&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=0RjxafanvEFNt2aA6jaKhW8KPfkj&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=WWi7MXfOIkXDLtwIkUyfd7hufscj&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=LmHqK4gis3Z@tVPrquvobdGpHZMj&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=bnM9JrEb3tzMjYlbBRGf$OOsvZMj&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=AUqnRQCotGudO6Wr5oza9ZikwG0j&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=3bJN1yABGBz0fEMiLU6u18E6L6Qj&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=CG1kimViLC8SJ5COBsjB9xtSM1Qj&V=SYBv&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657870.jpg?o=2FF5SZVemunF1rSmD2a3MvfuaAUj&V=SYBv&w=145&h=185"
+        ]
+      },
+      {
+        "9321998657863": [
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=CDe6EvABIonD2wu5gDmICWgEUpAj&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=0RjxafanvEFNt2aA6jaKhW8KPfkj&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=WWi7MXfOIkXDLtwIkUyfd7hufscj&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=LmHqK4gis3Z@tVPrquvobdGpHZMj&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=bnM9JrEb3tzMjYlbBRGf$OOsvZMj&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=AUqnRQCotGudO6Wr5oza9ZikwG0j&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=3bJN1yABGBz0fEMiLU6u18E6L6Qj&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=CG1kimViLC8SJ5COBsjB9xtSM1Qj&V=c90L&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cindy-Large-Pouch-9321998657863.jpg?o=2FF5SZVemunF1rSmD2a3MvfuaAUj&V=c90L&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "9321998657887": {
+        "color": "BLACK",
+        "currency": "ZAR",
+        "price": "R 649.00"
+      },
+      "9321998657870": {
+        "color": "CARAMEL BROWN",
+        "currency": "ZAR",
+        "price": "R 649.00"
+      },
+      "9321998657863": {
+        "color": "RED",
+        "currency": "ZAR",
+        "price": "R 649.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Men/Accessories/Belts/Leather-Jeans-Belt/_/A-503795778",
+    "retailer_id": "503795778",
+    "name": "Leather Jeans Belt",
+    "brand": "RE:",
+    "details": [
+      [
+        "Bring a gentlemanly charm to your casual look with this leather jean belt, featuring a large metallic buckle."
+      ],
+      [
+        "genuine leather",
+        "RE:"
+      ]
+    ],
+    "image_urls": [
+      {
+        "6009207035208": [
+          "//images.woolworthsstatic.co.za/Leather-Jeans-Belt-6009207035208.jpg?o=L2IxCGAxHFiZFDQPfh3G1HjK91Uj&V=TXc4&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Leather-Jeans-Belt-6009207035208.jpg?o=6nSifraT8vSYN4PzYQMr9Tew6F8j&V=TXc4&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Leather-Jeans-Belt-6009207035208.jpg?o=iL@6RWKo2WpT0V@cuapsXeghemUj&V=TXc4&w=145&h=185"
+        ]
+      },
+      {
+        "6009207035123": [
+          "//images.woolworthsstatic.co.za/Leather-Jeans-Belt-6009207035123.jpg?o=$TvKvJXx3xQCXs4uc2VHnIFpMAIj&V=GE@y&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Leather-Jeans-Belt-6009207035123.jpg?o=6nSifraT8vSYN4PzYQMr9Tew6F8j&V=GE@y&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Leather-Jeans-Belt-6009207035123.jpg?o=iL@6RWKo2WpT0V@cuapsXeghemUj&V=GE@y&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009207035208_6009207035093": {
+        "color": "TAN",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035208_6009207035109": {
+        "color": "TAN",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035208_6009207035208": {
+        "color": "TAN",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035208_6009207035215": {
+        "color": "TAN",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035208_6009207035222": {
+        "color": "TAN",
+        "size": "XX LARGE",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035123_6009207035239": {
+        "color": "BLACK",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035123_6009207035116": {
+        "color": "BLACK",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035123_6009207035123": {
+        "color": "BLACK",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035123_6009207035130": {
+        "color": "BLACK",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009207035123_6009207035147": {
+        "color": "BLACK",
+        "size": "XX LARGE",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Men/Clothing/New-Arrivals/Cotton-Super-Slim-Fit-Trousers/_/A-503771798",
+    "retailer_id": "503771798",
+    "name": "Cotton Super Slim Fit Trousers",
+    "brand": "Studio. W",
+    "details": [
+      [
+        "Update your smart casual wardrobe with these updated super slim-fit trousers, made from stretch cotton for extra comfort and featuring all the right style touches."
+      ],
+      [
+        "97% cotton, 3% elastane",
+        "super slim-fit",
+        "stretch for comfort",
+        "2 side slant pockets",
+        "2 back pockets",
+        "machine washable",
+        "studio.w",
+        "Model wears 34/M",
+        "Height: 185 - 189cm",
+        "Chest: 91 - 101cm",
+        "Waist: 81 - 84cm"
+      ]
+    ],
+    "care": "/images/attributes/19a.png",
+    "image_urls": [
+      {
+        "6009207069562": [
+          "//images.woolworthsstatic.co.za/Cotton-Super-Slim-Fit-Trousers-6009207069562.jpg?o=ng04lQANZzdZ@q10RWWrtIStjT4j&V=avSg&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cotton-Super-Slim-Fit-Trousers-6009207069562.jpg?o=iO9P4H6jlX8LDELK6$SYL9$sY$Uj&V=avSg&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cotton-Super-Slim-Fit-Trousers-6009207069562.jpg?o=zhtnMsSNZPZUu1aUl9@KBLeYS6Uj&V=avSg&w=145&h=185"
+        ]
+      },
+      {
+        "6009204963597": [
+          "//images.woolworthsstatic.co.za/Cotton-Super-Slim-Fit-Trousers-6009204963597.jpg?o=TiihMc2cfWm8iiUgLaLQ@iWeLFgj&V=kgsn&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cotton-Super-Slim-Fit-Trousers-6009204963597.jpg?o=iO9P4H6jlX8LDELK6$SYL9$sY$Uj&V=kgsn&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Cotton-Super-Slim-Fit-Trousers-6009204963597.jpg?o=zhtnMsSNZPZUu1aUl9@KBLeYS6Uj&V=kgsn&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009207069562_6009207069623": {
+        "color": "NAVY",
+        "size": "71",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009207069562_6009207069562": {
+        "color": "NAVY",
+        "size": "76",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009207069562_6009207069579": {
+        "color": "NAVY",
+        "size": "81",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009207069562_6009207069586": {
+        "color": "NAVY",
+        "size": "87",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009207069562_6009207069593": {
+        "color": "NAVY",
+        "size": "92",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009207069562_6009207069609": {
+        "color": "NAVY",
+        "size": "97",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009207069562_6009207069616": {
+        "color": "NAVY",
+        "size": "102",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009204963597_6009204963603": {
+        "color": "MEDIUM GREY",
+        "size": "71",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009204963597_6009204963542": {
+        "color": "MEDIUM GREY",
+        "size": "76",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009204963597_6009204963559": {
+        "color": "MEDIUM GREY",
+        "size": "81",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009204963597_6009204963566": {
+        "color": "MEDIUM GREY",
+        "size": "87",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009204963597_6009204963573": {
+        "color": "MEDIUM GREY",
+        "size": "92",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009204963597_6009204963580": {
+        "color": "MEDIUM GREY",
+        "size": "97",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      },
+      "6009204963597_6009204963597": {
+        "color": "MEDIUM GREY",
+        "size": "102",
+        "currency": "ZAR",
+        "price": "R 499.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Shoes/New-Arrivals/Perforated-Cut-Out-Ankle-Boots/_/A-503879582",
+    "retailer_id": "503879582",
+    "name": "Perforated Cut Out Ankle Boots",
+    "details": [
+      [
+        "Make urban-chic your go-to style with these pointy ankle boots. They're crafted with a sturdy heel and have a faux leather upper with perforation and cut-outs on the sides."
+      ],
+      [
+        "manmade"
+      ]
+    ],
+    "image_urls": [
+      {
+        "6009207300955": [
+          "//images.woolworthsstatic.co.za/Perforated-Cut-Out-Ankle-Boots-6009207300955.jpg?o=c6bejhw7wUIhSw@HEr7X$42VAUkj&V=apft&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Perforated-Cut-Out-Ankle-Boots-6009207300955.jpg?o=OXvY9OAa2TUomVsaLzHBAcEefiEj&V=apft&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Perforated-Cut-Out-Ankle-Boots-6009207300955.jpg?o=lmhrG7CnLoAMnqI4mFD3zIg1coMj&V=apft&w=145&h=185"
+        ]
+      },
+      {
+        "6009207300894": [
+          "//images.woolworthsstatic.co.za/Perforated-Cut-Out-Ankle-Boots-6009207300894.jpg?o=DgCoFvhfY6XouWxdhs6Vufxaw3Aj&V=qgoR&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Perforated-Cut-Out-Ankle-Boots-6009207300894.jpg?o=OXvY9OAa2TUomVsaLzHBAcEefiEj&V=qgoR&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Perforated-Cut-Out-Ankle-Boots-6009207300894.jpg?o=lmhrG7CnLoAMnqI4mFD3zIg1coMj&V=qgoR&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009207300955_6009207300917": {
+        "color": "TAUPE",
+        "size": "3",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300955_6009207300924": {
+        "color": "TAUPE",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300955_6009207300931": {
+        "color": "TAUPE",
+        "size": "5",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300955_6009207300948": {
+        "color": "TAUPE",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300955_6009207300955": {
+        "color": "TAUPE",
+        "size": "7",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300955_6009207300962": {
+        "color": "TAUPE",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300955_6009207300979": {
+        "color": "TAUPE",
+        "size": "9",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300894_6009207300900": {
+        "color": "BLACK",
+        "size": "3",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300894_6009207300849": {
+        "color": "BLACK",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300894_6009207300856": {
+        "color": "BLACK",
+        "size": "5",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300894_6009207300863": {
+        "color": "BLACK",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300894_6009207300870": {
+        "color": "BLACK",
+        "size": "7",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300894_6009207300887": {
+        "color": "BLACK",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      },
+      "6009207300894_6009207300894": {
+        "color": "BLACK",
+        "size": "9",
+        "currency": "ZAR",
+        "price": "R 450.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Lingerie-Sleepwear/Shapewear/Magic-Seamless-Shapers/_/A-500575986",
+    "retailer_id": "500575986",
+    "name": "Magic Seamless Shapers",
+    "details": [
+      [
+        "This ingenious high-waist shaper glides on to form a super-slimming smooth fit that trims down lumps and bumps.",
+        "Our return policy on underwear",
+        "Please note that in the interest of hygiene, underwear (excluding bras) may not be returned or exchanged. Should you have any questions, one of our managers will be happy to assist."
+      ],
+      [
+        "78% nylon, 12% elastane, excluding trims",
+        "seamless",
+        "Magic"
+      ]
+    ],
+    "care": "/images/attributes/11a.png",
+    "image_urls": [
+      {
+        "6009189260650": [
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=CHJ5Maxo1Ylxt8nsmk37TQEFIxUj&V=CL8Z&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=Ysx7hp40EKAZyNoK56k@L8cUSCIj&V=CL8Z&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=hDueAEvnJTvXKiy7ME6@w@Xwz8Mj&V=CL8Z&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=FnfWMBCN@QafdBmS3CV64k9bTtwj&V=CL8Z&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=RoG43xZp4MZ4Djk3B2rWkthy7cAj&V=CL8Z&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=gBOc0vI0PCvfiqYdAvW5L7d$eK0j&V=CL8Z&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=hjmQGElO24ISBYIQ1wtILJwaD6Ij&V=CL8Z&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009189260650.jpg?o=fdVYTbNk$BRfL0G9yLj38HgU5CIj&V=CL8Z&w=145&h=185"
+        ]
+      },
+      {
+        "6009101372959": [
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=BjlP6sQaY0AqD7d3mv05QYZlP68j&V=pPcc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=Ysx7hp40EKAZyNoK56k@L8cUSCIj&V=pPcc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=hDueAEvnJTvXKiy7ME6@w@Xwz8Mj&V=pPcc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=FnfWMBCN@QafdBmS3CV64k9bTtwj&V=pPcc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=RoG43xZp4MZ4Djk3B2rWkthy7cAj&V=pPcc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=gBOc0vI0PCvfiqYdAvW5L7d$eK0j&V=pPcc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=hjmQGElO24ISBYIQ1wtILJwaD6Ij&V=pPcc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6009101372959.jpg?o=fdVYTbNk$BRfL0G9yLj38HgU5CIj&V=pPcc&w=145&h=185"
+        ]
+      },
+      {
+        "6008000635721": [
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=Q5PSsDVQRzImDJhUBomUDAtCKMMj&V=ah9W&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=Ysx7hp40EKAZyNoK56k@L8cUSCIj&V=ah9W&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=hDueAEvnJTvXKiy7ME6@w@Xwz8Mj&V=ah9W&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=FnfWMBCN@QafdBmS3CV64k9bTtwj&V=ah9W&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=RoG43xZp4MZ4Djk3B2rWkthy7cAj&V=ah9W&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=gBOc0vI0PCvfiqYdAvW5L7d$eK0j&V=ah9W&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=hjmQGElO24ISBYIQ1wtILJwaD6Ij&V=ah9W&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Magic-Seamless-Shapers-6008000635721.jpg?o=fdVYTbNk$BRfL0G9yLj38HgU5CIj&V=ah9W&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009189260650_6009189260674": {
+        "color": "NATURAL",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6009189260650_6009189260636": {
+        "color": "NATURAL",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6009189260650_6009189260643": {
+        "color": "NATURAL",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6009189260650_6009189260650": {
+        "color": "NATURAL",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 190.00"
+      },
+      "6009189260650_6009189260667": {
+        "color": "NATURAL",
+        "size": "XX LARGE",
+        "currency": "ZAR",
+        "price": "R 190.00"
+      },
+      "6009101372959_6009101372959": {
+        "color": "MOCHA",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6009101372959_6009101372928": {
+        "color": "MOCHA",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6009101372959_6009101372935": {
+        "color": "MOCHA",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6009101372959_6009101372942": {
+        "color": "MOCHA",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 190.00"
+      },
+      "6009101372959_6009182272599": {
+        "color": "MOCHA",
+        "size": "XX LARGE",
+        "currency": "ZAR",
+        "price": "R 190.00"
+      },
+      "6008000635721_6008000635707": {
+        "color": "BLACK",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6008000635721_6008000635714": {
+        "color": "BLACK",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6008000635721_6008000635721": {
+        "color": "BLACK",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 180.00"
+      },
+      "6008000635721_6008000635738": {
+        "color": "BLACK",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 190.00"
+      },
+      "6008000635721_6009182272575": {
+        "color": "BLACK",
+        "size": "XX LARGE",
+        "currency": "ZAR",
+        "price": "R 190.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Clothing/New-Arrivals/Embellished-Bermuda-Shorts/_/A-503762028",
+    "retailer_id": "503762028",
+    "name": "Embellished Bermuda Shorts",
+    "brand": "David Jones Classic Collection",
+    "details": [
+      [
+        "Sparkly diamante embellishments turn up the polish of these wardrobe classics: slim-fitting Bermuda shorts in a breathable cotton blend, with added stretch for comfort."
+      ],
+      [
+        "65% cotton, 33% polyester, 2% spandex",
+        "5 pockets",
+        "regular rise",
+        "David Jones",
+        "Model wears 10/S",
+        "Height: 177 - 179cm",
+        "Bust: 88cm, 34B",
+        "Waist: 64 - 69cm",
+        "Hips: 93 - 96cm"
+      ]
+    ],
+    "care": "/images/attributes/16c.png",
+    "image_urls": [
+      {
+        "6009204927810": [
+          "//images.woolworthsstatic.co.za/Embellished-Bermuda-Shorts-6009204927810.jpg?o=UQTErao8tK7NDu@d@5vFw7mnVlkj&V=Agr6&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Embellished-Bermuda-Shorts-6009204927810.jpg?o=l7nqYs57qsynt1TOFSVq0KaQ9ooj&V=Agr6&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Embellished-Bermuda-Shorts-6009204927810.jpg?o=7lCmuElVJIhwNsZ353wgXRFpdyoj&V=Agr6&w=145&h=185"
+        ]
+      },
+      {
+        "6009204927780": [
+          "//images.woolworthsstatic.co.za/Embellished-Bermuda-Shorts-6009204927780.jpg?o=msyV6IyY3x$M2c96tfL6PprjhOAj&V=@ucm&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Embellished-Bermuda-Shorts-6009204927780.jpg?o=l7nqYs57qsynt1TOFSVq0KaQ9ooj&V=@ucm&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Embellished-Bermuda-Shorts-6009204927780.jpg?o=7lCmuElVJIhwNsZ353wgXRFpdyoj&V=@ucm&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009204927810_6009204927797": {
+        "color": "DUSTY PINK",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927810_6009204927803": {
+        "color": "DUSTY PINK",
+        "size": "10",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927810_6009204927810": {
+        "color": "DUSTY PINK",
+        "size": "12",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927810_6009204927827": {
+        "color": "DUSTY PINK",
+        "size": "14",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927810_6009204927834": {
+        "color": "DUSTY PINK",
+        "size": "16",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927810_6009204927841": {
+        "color": "DUSTY PINK",
+        "size": "18",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      },
+      "6009204927810_6009204927858": {
+        "color": "DUSTY PINK",
+        "size": "20",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      },
+      "6009204927810_6009204927865": {
+        "color": "DUSTY PINK",
+        "size": "22",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      },
+      "6009204927810_6009204927872": {
+        "color": "DUSTY PINK",
+        "size": "24",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      },
+      "6009204927780_6009204927612": {
+        "color": "BLACK",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927780_6009204927629": {
+        "color": "BLACK",
+        "size": "10",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927780_6009204927636": {
+        "color": "BLACK",
+        "size": "12",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927780_6009204927643": {
+        "color": "BLACK",
+        "size": "14",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927780_6009204927742": {
+        "color": "BLACK",
+        "size": "16",
+        "currency": "ZAR",
+        "price": "R 379.00"
+      },
+      "6009204927780_6009204927759": {
+        "color": "BLACK",
+        "size": "18",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      },
+      "6009204927780_6009204927766": {
+        "color": "BLACK",
+        "size": "20",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      },
+      "6009204927780_6009204927773": {
+        "color": "BLACK",
+        "size": "22",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      },
+      "6009204927780_6009204927780": {
+        "color": "BLACK",
+        "size": "24",
+        "currency": "ZAR",
+        "price": "R 409.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Beauty/Clinique/Makeup/Lips/Lip-Gloss/Pop-Lacquer-Lip-Colour-Primer/_/A-503781784",
+    "retailer_id": "503781784",
+    "name": "Pop Lacquer Lip Colour & Primer",
+    "brand": "Clinique",
+    "details": [
+      [
+        "A luscious pop of liquid, high-shine colour in one, full-coverage coat. Luxurious yet lightweight formula with built-in primer glides on effortlessly, wears for up to 6 hours."
+      ],
+      [
+        "6ml",
+        "Clinique"
+      ]
+    ],
+    "image_urls": [
+      {
+        "20714802431": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802431.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=FIT7&w=700"
+        ]
+      },
+      {
+        "20714802424": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802424.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=q2Xj&w=700"
+        ]
+      },
+      {
+        "20714802417": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802417.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=YD4z&w=700"
+        ]
+      },
+      {
+        "20714802400": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802400.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=XLT@&w=700"
+        ]
+      },
+      {
+        "20714802394": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802394.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=FFhQ&w=700"
+        ]
+      },
+      {
+        "20714802387": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802387.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=LgU0&w=700"
+        ]
+      },
+      {
+        "20714802370": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802370.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=hJmF&w=700"
+        ]
+      },
+      {
+        "20714802363": [
+          "//images.woolworthsstatic.co.za/Pop-Lacquer-Lip-Colour-Primer-20714802363.jpg?o=f6Y1XQZ7y@XNwmfxCZZLg416MMMj&V=vsTh&w=700"
+        ]
+      }
+    ],
+    "skus": {
+      "20714802431": {
+        "color": "PEACE",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      },
+      "20714802424": {
+        "color": "GO GO",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      },
+      "20714802417": {
+        "color": "LOVE",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      },
+      "20714802400": {
+        "color": "WINK",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      },
+      "20714802394": {
+        "color": "SWEETIE",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      },
+      "20714802387": {
+        "color": "Happy",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      },
+      "20714802370": {
+        "color": "LAVA",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      },
+      "20714802363": {
+        "color": "COCOA",
+        "currency": "ZAR",
+        "price": "R 295.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Clothing/Tops-T-shirts/V-Neck-Cotton-Modal-T-Shirt/_/A-503826738",
+    "retailer_id": "503826738",
+    "name": "V-Neck Cotton Modal T-Shirt",
+    "brand": "Edition",
+    "details": [
+      [
+        "Slip into carefree casual mode with this V-neck tee made from a luxe cotton-modal blend with a relaxed cut for easy-chic flair."
+      ],
+      [
+        "50% cotton, 50% modal",
+        "V-neck",
+        "short sleeves",
+        "Edition",
+        "Model wears 10/S",
+        "Height: 171 - 176cm",
+        "Bust: 81cm, 32A/B cup",
+        "Waist 61 - 69cm",
+        "Hips: 90 - 94cm"
+      ]
+    ],
+    "care": "/images/attributes/16c.png",
+    "image_urls": [
+      {
+        "6009207115160": [
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115160.jpg?o=NpEWFV0k1Q8u1s4xlh9Zr6idXe4j&V=Itva&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115160.jpg?o=9HUTTvQM6jGVcjKvq3aYsxdyF2Ij&V=Itva&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115160.jpg?o=ROOzE6pz8f8NPIMHNIoYTnsqG9gj&V=Itva&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115160.jpg?o=2Rjx6qxM9nk714RTmPlGa$OUpbcj&V=Itva&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115160.jpg?o=CzMt1ESwZ$Y7brvWEPqit0P49foj&V=Itva&w=145&h=185"
+        ]
+      },
+      {
+        "6009207115108": [
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115108.jpg?o=uXMSMkht$Ly3xoRHv@l11ZPEJw4j&V=PX5X&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115108.jpg?o=9HUTTvQM6jGVcjKvq3aYsxdyF2Ij&V=PX5X&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115108.jpg?o=ROOzE6pz8f8NPIMHNIoYTnsqG9gj&V=PX5X&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115108.jpg?o=2Rjx6qxM9nk714RTmPlGa$OUpbcj&V=PX5X&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115108.jpg?o=CzMt1ESwZ$Y7brvWEPqit0P49foj&V=PX5X&w=145&h=185"
+        ]
+      },
+      {
+        "6009207115030": [
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115030.jpg?o=PT20eKBRxlpcFjQfsQVpT0MDpDIj&V=3m03&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115030.jpg?o=9HUTTvQM6jGVcjKvq3aYsxdyF2Ij&V=3m03&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115030.jpg?o=ROOzE6pz8f8NPIMHNIoYTnsqG9gj&V=3m03&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115030.jpg?o=2Rjx6qxM9nk714RTmPlGa$OUpbcj&V=3m03&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207115030.jpg?o=CzMt1ESwZ$Y7brvWEPqit0P49foj&V=3m03&w=145&h=185"
+        ]
+      },
+      {
+        "6009207114989": [
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114989.jpg?o=gL7YaBIZTuxD$rx7nLWhKgcKG7wj&V=dYCl&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114989.jpg?o=9HUTTvQM6jGVcjKvq3aYsxdyF2Ij&V=dYCl&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114989.jpg?o=ROOzE6pz8f8NPIMHNIoYTnsqG9gj&V=dYCl&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114989.jpg?o=2Rjx6qxM9nk714RTmPlGa$OUpbcj&V=dYCl&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114989.jpg?o=CzMt1ESwZ$Y7brvWEPqit0P49foj&V=dYCl&w=145&h=185"
+        ]
+      },
+      {
+        "6009207114958": [
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114958.jpg?o=hOqStdgTLec0Ql0uHPEfkZDfAf4j&V=q6bc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114958.jpg?o=9HUTTvQM6jGVcjKvq3aYsxdyF2Ij&V=q6bc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114958.jpg?o=ROOzE6pz8f8NPIMHNIoYTnsqG9gj&V=q6bc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114958.jpg?o=2Rjx6qxM9nk714RTmPlGa$OUpbcj&V=q6bc&w=145&h=185",
+          "//images.woolworthsstatic.co.za/V-Neck-Cotton-Modal-T-Shirt-6009207114958.jpg?o=CzMt1ESwZ$Y7brvWEPqit0P49foj&V=q6bc&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009207115160_6009207115122": {
+        "color": "DUCK EGG",
+        "size": "X SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115160_6009207115139": {
+        "color": "DUCK EGG",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115160_6009207115146": {
+        "color": "DUCK EGG",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115160_6009207115153": {
+        "color": "DUCK EGG",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115160_6009207115160": {
+        "color": "DUCK EGG",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115108_6009207115078": {
+        "color": "DARK PINK",
+        "size": "X SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115108_6009207115085": {
+        "color": "DARK PINK",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115108_6009207115092": {
+        "color": "DARK PINK",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115108_6009207115108": {
+        "color": "DARK PINK",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115108_6009207115115": {
+        "color": "DARK PINK",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115030_6009207115023": {
+        "color": "BLACK",
+        "size": "X SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115030_6009207115030": {
+        "color": "BLACK",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115030_6009207115047": {
+        "color": "BLACK",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115030_6009207115054": {
+        "color": "BLACK",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207115030_6009207115061": {
+        "color": "BLACK",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114989_6009207114972": {
+        "color": "WHITE",
+        "size": "X SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114989_6009207114989": {
+        "color": "WHITE",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114989_6009207114996": {
+        "color": "WHITE",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114989_6009207115009": {
+        "color": "WHITE",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114989_6009207115016": {
+        "color": "WHITE",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114958_6009207114927": {
+        "color": "MEDIUM BLUE",
+        "size": "X SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114958_6009207114934": {
+        "color": "MEDIUM BLUE",
+        "size": "SMALL",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114958_6009207114941": {
+        "color": "MEDIUM BLUE",
+        "size": "MEDIUM",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114958_6009207114958": {
+        "color": "MEDIUM BLUE",
+        "size": "LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      },
+      "6009207114958_6009207114965": {
+        "color": "MEDIUM BLUE",
+        "size": "X LARGE",
+        "currency": "ZAR",
+        "price": "R 120.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Lingerie-Sleepwear/Bras/Arum-White-Lace-DD-Underwire-Bra/_/A-503429926",
+    "retailer_id": "503429926",
+    "name": "Arum White Lace DD+ Underwire Bra",
+    "details": [
+      [
+        "Enjoy this lace bra that has soft lined cups for comfort and support. The seamed, multi-part cups ensures superior support and helps to keep breasts front and center for the perfect fit."
+      ],
+      [
+        "90% nylon, 10% elastane",
+        "available in B to F cup",
+        "underwire",
+        "adjustable shoulder straps",
+        "2-row, 3-column back hook-and-eye closure",
+        "Collections",
+        "Model wears 34/36/38DD",
+        "Height: 173cm",
+        "Bust: 90cm, 36DD",
+        "Waist: 70cm",
+        "Hips: 105cm"
+      ]
+    ],
+    "care": "/images/attributes/11e.png",
+    "image_urls": [
+      {
+        "6009195824235": [
+          "//images.woolworthsstatic.co.za/Arum-White-Lace-DD-Underwire-Bra-6009195824235.jpg?o=mkMQziCZo6LH0YHT7ohUSldxw0Mj&V=w$XK&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Arum-White-Lace-DD-Underwire-Bra-6009195824235.jpg?o=86l176kujSzLmhvraj6EJrnX7Jgj&V=w$XK&w=145&h=185",
+          "//images.woolworthsstatic.co.za/Arum-White-Lace-DD-Underwire-Bra-6009195824235.jpg?o=RWKOskRMLy2VsR7tEorahkUZ80kj&V=w$XK&w=145&h=185"
+        ]
+      }
+    ],
+    "skus": {
+      "6009195824235_6009195823900": {
+        "color": "WHITE",
+        "size": "34-B",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195823917": {
+        "color": "WHITE",
+        "size": "34-C",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195823924": {
+        "color": "WHITE",
+        "size": "34-D",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195823931": {
+        "color": "WHITE",
+        "size": "34-DD",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195823948": {
+        "color": "WHITE",
+        "size": "34-E",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195823955": {
+        "color": "WHITE",
+        "size": "34-F",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195823962": {
+        "color": "WHITE",
+        "size": "36-B",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195823979": {
+        "color": "WHITE",
+        "size": "36-C",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195823986": {
+        "color": "WHITE",
+        "size": "36-D",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195823993": {
+        "color": "WHITE",
+        "size": "36-DD",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824006": {
+        "color": "WHITE",
+        "size": "36-E",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824013": {
+        "color": "WHITE",
+        "size": "36-F",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824020": {
+        "color": "WHITE",
+        "size": "38-B",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824037": {
+        "color": "WHITE",
+        "size": "38-C",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824044": {
+        "color": "WHITE",
+        "size": "38-D",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824051": {
+        "color": "WHITE",
+        "size": "38-DD",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824068": {
+        "color": "WHITE",
+        "size": "38-E",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824075": {
+        "color": "WHITE",
+        "size": "38-F",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824082": {
+        "color": "WHITE",
+        "size": "40-B",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824099": {
+        "color": "WHITE",
+        "size": "40-C",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824105": {
+        "color": "WHITE",
+        "size": "40-D",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824112": {
+        "color": "WHITE",
+        "size": "40-DD",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824129": {
+        "color": "WHITE",
+        "size": "40-E",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824136": {
+        "color": "WHITE",
+        "size": "40-F",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824143": {
+        "color": "WHITE",
+        "size": "42-B",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824150": {
+        "color": "WHITE",
+        "size": "42-C",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824167": {
+        "color": "WHITE",
+        "size": "42-D",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824174": {
+        "color": "WHITE",
+        "size": "42-DD",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824181": {
+        "color": "WHITE",
+        "size": "42-E",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824198": {
+        "color": "WHITE",
+        "size": "42-F",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824204": {
+        "color": "WHITE",
+        "size": "44-B",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824211": {
+        "color": "WHITE",
+        "size": "44-C",
+        "currency": "ZAR",
+        "price": "R 299.00"
+      },
+      "6009195824235_6009195824228": {
+        "color": "WHITE",
+        "size": "44-D",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824235": {
+        "color": "WHITE",
+        "size": "44-DD",
+        "currency": "ZAR",
+        "price": "R 325.00"
+      },
+      "6009195824235_6009195824242": {
+        "color": "WHITE",
+        "size": "44-E",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      },
+      "6009195824235_6009195824259": {
+        "color": "WHITE",
+        "size": "44-F",
+        "currency": "ZAR",
+        "price": "R 350.00"
+      }
+    }
+  },
+  {
+    "url": "http://www.woolworths.co.za/store/prod/Women/Shoes/Pumps-Loafers/Leather-Slipper-Pumps/_/A-503946612",
+    "retailer_id": "503946612",
+    "name": "Leather Slipper Pumps",
+    "details": [
+      [
+        "Say hello to your new go-to flats: classic slipper-style pumps crafted with a supple leather upper and designed for all-day comfort and timeless flair."
+      ],
+      [
+        "uppers: genuine leather"
+      ]
+    ],
+    "image_urls": [
+      {
+        "6009207500980": [
+          "//images.woolworthsstatic.co.za/Leather-Slipper-Pumps-6009207500980.jpg?o=0Gn@8f$CMdxv2JaUg$4p2q4qYm0j&V=JTQQ&w=700"
+        ]
+      },
+      {
+        "6009207500935": [
+          "//images.woolworthsstatic.co.za/Leather-Slipper-Pumps-6009207500935.jpg?o=oBmH4@86lywZ0JZ$IqVX3kvJMCgj&V=7s4d&w=700"
+        ]
+      },
+      {
+        "6009207500850": [
+          "//images.woolworthsstatic.co.za/Leather-Slipper-Pumps-6009207500850.jpg?o=b5mhxIobqXQKDWxt7QPm9NwAJKMj&V=XJ9c&w=700"
+        ]
+      },
+      {
+        "6009207500690": [
+          "//images.woolworthsstatic.co.za/Leather-Slipper-Pumps-6009207500690.jpg?o=4eLplbvAdB7hd7h8rsVSXPkOfPoj&V=XMRt&w=700"
+        ]
+      },
+      {
+        "6009207500652": [
+          "//images.woolworthsstatic.co.za/Leather-Slipper-Pumps-6009207500652.jpg?o=8MvOVxmgo9g0PR9$lWtXvV3UuaMj&V=uL9w&w=700"
+        ]
+      }
+    ],
+    "skus": {
+      "6009207500980_6009207500959": {
+        "color": "TAN",
+        "size": "3",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500980_6009207500966": {
+        "color": "TAN",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500980_6009207500973": {
+        "color": "TAN",
+        "size": "5",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500980_6009207500980": {
+        "color": "TAN",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500980_6009207500997": {
+        "color": "TAN",
+        "size": "7",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500980_6009207501000": {
+        "color": "TAN",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500980_6009207501017": {
+        "color": "TAN",
+        "size": "9",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500935_6009207500881": {
+        "color": "RED",
+        "size": "3",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500935_6009207500898": {
+        "color": "RED",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500935_6009207500904": {
+        "color": "RED",
+        "size": "5",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500935_6009207500911": {
+        "color": "RED",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500935_6009207500928": {
+        "color": "RED",
+        "size": "7",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500935_6009207500935": {
+        "color": "RED",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500935_6009207500942": {
+        "color": "RED",
+        "size": "9",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500850_6009207500836": {
+        "color": "NAVY",
+        "size": "3",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500850_6009207500843": {
+        "color": "NAVY",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500850_6009207500850": {
+        "color": "NAVY",
+        "size": "5",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500850_6009207500867": {
+        "color": "NAVY",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500850_6009207500607": {
+        "color": "NAVY",
+        "size": "7",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500850_6009207500614": {
+        "color": "NAVY",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500850_6009207500874": {
+        "color": "NAVY",
+        "size": "9",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500690_6009207500690": {
+        "color": "DARK PINK",
+        "size": "3",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500690_6009207500706": {
+        "color": "DARK PINK",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500690_6009207500713": {
+        "color": "DARK PINK",
+        "size": "5",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500690_6009207500720": {
+        "color": "DARK PINK",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500690_6009207500737": {
+        "color": "DARK PINK",
+        "size": "7",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500690_6009207500744": {
+        "color": "DARK PINK",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500690_6009207500751": {
+        "color": "DARK PINK",
+        "size": "9",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500652_6009207500621": {
+        "color": "BLACK",
+        "size": "3",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500652_6009207500638": {
+        "color": "BLACK",
+        "size": "4",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500652_6009207500645": {
+        "color": "BLACK",
+        "size": "5",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500652_6009207500652": {
+        "color": "BLACK",
+        "size": "6",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500652_6009207500669": {
+        "color": "BLACK",
+        "size": "7",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500652_6009207500676": {
+        "color": "BLACK",
+        "size": "8",
+        "currency": "ZAR",
+        "price": "R 199.00"
+      },
+      "6009207500652_6009207500683": {
+        "color": "BLACK",
+        "size": "9",
+        "currency": "ZAR",
+        "price": "R 199.00"
       }
     }
   }

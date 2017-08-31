@@ -15,14 +15,18 @@ def clean_list(data):
     temp = []
     for item in data:
         temp.append(item.strip())
+    temp = list(filter(None, temp))
     return temp
 
 
 def create_color_ids(response):
     color_ids = []
-    color_funcs = response.css('img.colour::attr(onclick)').extract()
-    for color_id in color_funcs:
-        color_ids.append(re.search(r'(\d+)', color_id).group())
+    if response.css('img.colour::attr(onclick)'):
+        color_funcs = response.css('img.colour::attr(onclick)').extract()
+        for color_id in color_funcs:
+            color_ids.append(re.search(r'(\d+)', color_id).group())
+    elif response.css('input#catalogRefIds')[0].css('::attr(value)').extract_first():
+        color_ids.append(response.css('input#catalogRefIds')[0].css('::attr(value)').extract_first())
     return color_ids
 
 
@@ -38,25 +42,12 @@ class WoolsworthSpider(CrawlSpider):
     name = 'woolsworth'
     allowed_domains = ['www.woolworths.co.za']
 
-    # start_urls = [
-    #     'http://www.woolworths.co.za/store/cat/Kids/_/N-1z13s2t']
+    start_urls = [
+        'http://www.woolworths.co.za/store/cat/']
 
     rules = (
-        Rule(LinkExtractor(
-            restrict_xpaths='//span[@class="icon icon--right-dark"]/parent::a')),
-        Rule(LinkExtractor(
-            restrict_css="a.product-card__details"), callback="parse_product"),)
-
-    def start_requests(self):
-        start_urls = [
-            'http://www.woolworths.co.za/store/prod/Gifts/Gifts-for-Him/Underwear-Socks/AKJP-Print-Socks/_/A-503821762', ]
-        # 'http://www.woolworths.co.za/store/prod/Women/Clothing/New-Arrivals/Metallic-Textured-Slip-Dress/_/A-503949756',
-        # 'http://www.woolworths.co.za/store/prod/Kids/Boys/Underwear-Socks/Batman-Socks-3-Pack/_/A-503555910',
-        # 'http://www.woolworths.co.za/store/prod/Kids/Boys/Tops-Tees/Lightning-Knit/_/A-503777870',
-        # 'http://www.woolworths.co.za/store/prod/Kids/Boys/Bottoms/Adjustable-Bermuda-Shorts/_/A-503771730',
-        # 'http://www.woolworths.co.za/store/prod/Men/Clothing/Shirts/Broad-Stripe-Cotton-Shirt/_/A-503743208']
-        for url in start_urls:
-            yield scrapy.Request(url=url, callback=self.parse_product)
+        Rule(LinkExtractor(restrict_xpaths='//span[@class="icon icon--right-dark"]/parent::a')),
+        Rule(LinkExtractor(deny='/Food/', restrict_css="a.product-card__details"), callback="parse_product"),)
 
     def parse_product(self, response):
         product = Product()
@@ -74,13 +65,6 @@ class WoolsworthSpider(CrawlSpider):
             'productId': product['retailer_id'],
             'colourSKUId': current_color_id,
         }
-        size_formdata = {
-            'productItemId': product['retailer_id'],
-            'colourSKUId': current_color_id,
-        }
-        # yield scrapy.FormRequest(size_url, callback=self.parse_sku_sizes, formdata=size_formdata,
-        #                          meta={'product': product, 'color_ids': color_ids,
-        #                                'current_color_id': current_color_id})
         yield scrapy.FormRequest(color_url, callback=self.parse_sku_images, formdata=color_formdata,
                                  meta={'product': product, 'color_ids': color_ids,
                                        'current_color_id': current_color_id})
@@ -89,7 +73,10 @@ class WoolsworthSpider(CrawlSpider):
         product = response.meta.get('product')
         color_ids = response.meta.get('color_ids')
         current_color_id = response.meta.get('current_color_id')
-        product['image_urls'].append({current_color_id: response.css('a.pdp__thumb img::attr(src)').extract()})
+        if response.css('a.pdp__thumb'):
+            product['image_urls'].append({current_color_id: response.css('a.pdp__thumb img::attr(src)').extract()})
+        else:
+            product['image_urls'].append({current_color_id: response.css('img.img-responsive::attr(src)').extract()})
         size_formdata = {
             'productItemId': product['retailer_id'],
             'colourSKUId': current_color_id,
@@ -97,6 +84,7 @@ class WoolsworthSpider(CrawlSpider):
         yield scrapy.FormRequest(size_url, callback=self.parse_sku_sizes, formdata=size_formdata,
                                  meta={'product': product, 'color_ids': color_ids,
                                        'current_color_id': current_color_id})
+
     def parse_sku_sizes(self, response):
         product = response.meta.get('product')
         color_ids = response.meta.get('color_ids')
@@ -131,17 +119,6 @@ class WoolsworthSpider(CrawlSpider):
             yield scrapy.FormRequest(price_url, callback=self.parse_size_prices, formdata=price_formdata,
                                      meta={'product': product, 'sku_name': sku_name, 'color_ids': color_ids,
                                            'current_color_id': current_color_id})
-            # if color_ids:
-            #     current_color_id = color_ids.pop()
-            #     formdata = {
-            #         'productId': product['retailer_id'],
-            #         'colourSKUId': current_color_id,
-            #     }
-            #     yield scrapy.FormRequest(color_url, callback=self.parse_sku_images, formdata=formdata,
-            #                              meta={'product': product, 'color_ids': color_ids,
-            #                                    'current_color_id': current_color_id})
-            # else:
-            #     yield product
 
     def parse_size_prices(self, response):
         product = response.meta.get('product')
@@ -179,31 +156,9 @@ class WoolsworthSpider(CrawlSpider):
         else:
             yield product
 
-
-        # if color_ids:
-        #     current_color_id = color_ids.pop()
-        #     formdata = {
-        #         'productId': product['retailer_id'],
-        #         'colourSKUId': current_color_id,
-        #     }
-        #     yield scrapy.FormRequest(color_url, callback=self.parse_sku_images, formdata=formdata,
-        #                              meta={'product': product, 'color_ids': color_ids,
-        #                                    'current_color_id': current_color_id})
-        # else:
-        #     yield product
-
-    # def parse_sku(self, response):
-    #     product = response.meta.get('product')
-    #     color_ids = response.meta.get('color_ids')
-    #     if color_ids:
-    #         yield scrapy.FormRequest(color_url, callback=self.parse_sku_images,
-    #                                  meta={'product': product, 'color_ids': color_ids})
-
-
-
     @staticmethod
     def url(response, product):
-        product['url'] = response.url
+        product['url'] = response.url.split(';')[0]
 
     @staticmethod
     def product_name(response, product):
@@ -223,9 +178,9 @@ class WoolsworthSpider(CrawlSpider):
         details_div = response.css('h4.accordion__toggle--chrome + div')[0]
         details = []
         if details_div.css('p::text'):
-            details.append(details_div.css('p::text').extract_first().strip())
+            details.append(clean_list(details_div.css('p ::text').extract()))
         if details_div.css('ul:not([class])'):
-            details.append(clean_list(details_div.css('ul:not([class]) li::text').extract()))
+            details.append(clean_list(details_div.css('ul:not([class]) ::text').extract()))
         product['details'] = details
 
     @staticmethod
