@@ -67,6 +67,9 @@ class LiujoParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
+    def product_category(self, response):
+        return [x[0] for x in response.meta['trail'] if x[0]]
+
     def image_urls(self, response):
         return clean(response.css('.product-media-gallery img::attr(data-more-views)'))
 
