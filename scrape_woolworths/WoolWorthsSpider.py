@@ -3,6 +3,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.http import Request
 from urlparse import urljoin
+from urllib import urlencode
 import re
 
 
@@ -68,8 +69,23 @@ class WoolWorthsSpider(CrawlSpider):
         woolworth_item = response.meta['woolworth_item']
         size = response.meta['size']
         color = response.meta['color']
+        sku_info = response.meta['sku_info']
+        product_id = sku_info['productId']
+        color_id = sku_info['colorId']
         sku_id = '{}_{}'.format(color, size)
         woolworth_item['skus'][sku_id] = {'size': size, 'color': color, 'currency': currency, 'price': price}
+        yield Request('http://www.woolworths.co.za/store/fragments/product-common/ww/image-shots.jsp',
+                      body=urlencode({'productId': product_id, 'colourSKUId': color_id}),
+                      headers={'content-type': 'application/x-www-form-urlencoded'},
+                      meta={'woolworth_item': woolworth_item,
+                            'skus_urls_and_info': response.meta['skus_urls_and_info'],
+                            'sku_id': sku_id}, method='POST', callback=self.parse_image_urls, dont_filter=True)
+
+    def parse_image_urls(self, response):
+        image_url = response.css('div#productImgID .pdp__image img::attr(src)').extract()
+        woolworth_item = response.meta['woolworth_item']
+        sku_id = response.meta['sku_id']
+        woolworth_item['skus'][sku_id]['image_url'] = image_url
         return self.request_another_sku_or_yield_item(woolworth_item, response.meta['skus_urls_and_info'])
 
     def request_another_sku_or_yield_item(self, woolworth_item, skus_urls_and_info):
@@ -77,7 +93,7 @@ class WoolWorthsSpider(CrawlSpider):
             sku_info = skus_urls_and_info.pop()
             url = sku_info['product_sku_url']
             yield Request(url, callback=self.parse_price_and_currency_info, meta={
-                'woolworth_item': woolworth_item, 'size': sku_info['size'],
+                'woolworth_item': woolworth_item, 'size': sku_info['size'], 'sku_info': sku_info,
                 'color': sku_info['color'], 'skus_urls_and_info': skus_urls_and_info})
         else:
             yield woolworth_item
@@ -94,6 +110,8 @@ class WoolWorthsSpider(CrawlSpider):
         for color_index in range(len(colors)):
             for size_index in range(len(sizes)):
                 skus_urls_and_info.append({
+                    'productId':product_id,
+                    'colorId': color_ids[color_index],
                     'color': colors[color_index],
                     'size': sizes[size_index],
                     'product_sku_url': self.make_product_url(product_id,
