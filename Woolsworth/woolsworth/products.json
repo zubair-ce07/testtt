@@ -1,55 +1,46 @@
 [
   {
-    "url": "http://www.woolworths.co.za/store/prod/Kids/Boys/Underwear-Socks/Batman-Socks-3-Pack/_/A-503555910",
-    "name": "Batman Socks 3 Pack",
-    "retailer_id": "503555910",
+    "url": "http://www.woolworths.co.za/store/prod/Gifts/Gifts-for-Him/Underwear-Socks/AKJP-Print-Socks/_/A-503821762",
+    "retailer_id": "503821762",
+    "name": "AKJP Print Socks",
     "details": [
-      "Add some superhero fun to his sock drawer with these Batman themed, cotton rich socks.",
-      [
-        "80% cotton, 17% nylon, 3% elastane"
-      ]
-    ]
-  },
-  {
-    "url": "http://www.woolworths.co.za/store/prod/Women/Clothing/New-Arrivals/Metallic-Textured-Slip-Dress/_/A-503949756",
-    "name": "Metallic Textured Slip Dress",
-    "brand": "Edition",
-    "retailer_id": "503949756",
-    "details": [
-      "Rock the room in this high-shine metallic slip dress that features all the right on-trend touches for easy-chic flair that delivers on style and comfort.",
-      [
-        "100% polyester",
-        "Edition",
-        "Model wears 10/S",
-        "Height: 171 - 176cm",
-        "Bust: 81cm, 32A/B cup",
-        "Waist 61 - 69cm",
-        "Hips: 90 - 94cm"
-      ]
-    ]
-  },
-  {
-    "url": "http://www.woolworths.co.za/store/prod/Kids/Boys/Bottoms/Adjustable-Bermuda-Shorts/_/A-503771730",
-    "name": "Adjustable Bermuda Shorts",
-    "brand": "(&US)",
-    "retailer_id": "503771730",
-    "details": [
-      "Perfect for endless summer days, these Bermuda shorts feature five pockets with a secure button fastener and an adjustable waistband for all-day comfort.",
+      "A perfect mix between style and warmth. These socks are made from soft cotton for comfort, with quirky and playful print.",
       [
         "100% cotton",
-        "adjustable waistband",
-        "roll up cuffs",
-        "(&US)"
+        "hand wash"
       ]
-    ]
-  },
-  {
-    "url": "http://www.woolworths.co.za/store/prod/Kids/Boys/Tops-Tees/Lightning-Knit/_/A-503777870",
-    "name": "Lightning Knit",
-    "brand": "Country Road",
-    "retailer_id": "503777870",
-    "details": [
-      "Let your little one bolt into those cooler months with comfort. This season we're all about soft tones and snug textures. 100% Cotton."
-    ]
+    ],
+    "care": "/images/attributes/43a.png",
+    "image_urls": [
+      {
+        "6009207100722": []
+      },
+      {
+        "6009207100715": []
+      },
+      {
+        "6009207100708": []
+      }
+    ],
+    "skus": {
+      "6009207100722": {
+        "color": "X WHITE",
+        "currency": "ZAR",
+        "price": "R 29.00",
+        "original_price": "R 199.00"
+      },
+      "6009207100715": {
+        "color": "X BLUE",
+        "currency": "ZAR",
+        "price": "R 29.00",
+        "original_price": "R 199.00"
+      },
+      "6009207100708": {
+        "color": "X BLACK",
+        "currency": "ZAR",
+        "price": "R 29.00",
+        "original_price": "R 199.00"
+      }
+    }
   }
 ]
