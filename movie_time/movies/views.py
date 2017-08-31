@@ -4,8 +4,8 @@ from movies.utils import *
 
 
 def index(request):
-    #populate_genres()
-    for tmdb_id in range(301, 401):
+    # populate_genres()
+    for tmdb_id in range(10001, 15001):
         get_new_movie.delay(tmdb_id)
     # create_movie(386)
     return HttpResponse('OK')

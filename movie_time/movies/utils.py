@@ -89,7 +89,7 @@ def create_movie(tmdb_id):
 
 def get_date(date):
     result = None
-    if date is not None:
+    if date is not None and date != '':
         year, month, day = parse_date(date)
         result = Date.objects.create(day=day, month=month, year=year)
     return result
@@ -157,9 +157,11 @@ def create_images(images_data, content_type, object_id, img_type):
 
 def get_or_create_person(credit):
     person, created = Person.objects.get_or_create(
-        gender=credit.get('gender'),
         tmdb_id=credit.get('id'),
-        name=credit.get('name')
+        defaults={
+            'gender': credit.get('gender'),
+            'name': credit.get('name')
+        }
     )
     if credit.get('profile_path') and created:
         person.images.create(file_path=credit.get('profile_path'), type=Image.PROFILE)
