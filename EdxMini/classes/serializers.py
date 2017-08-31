@@ -1,12 +1,15 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from classes import views as class_views
 from classes.models import Student, Instructor, Course, Enrollment
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     url = serializers.HyperlinkedIdentityField(view_name='enrollment-detail')
+    course = serializers.StringRelatedField()
+    student = serializers.StringRelatedField()
 
     class Meta:
         model = Enrollment
@@ -23,6 +26,12 @@ class EnrollmentUpdateSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     url = serializers.HyperlinkedIdentityField(view_name='course-detail')
+    students = serializers.SerializerMethodField()
+    instructors = serializers.StringRelatedField(many=True)
+
+    def get_students(self, obj):
+        student_list = class_views.get_students_by_course_id(obj.id)
+        return student_list
 
     class Meta:
         model = Course
@@ -33,6 +42,10 @@ class CourseSerializer(serializers.ModelSerializer):
 class InstructorSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
     url = serializers.HyperlinkedIdentityField(view_name='instructor-detail')
+    fullname = serializers.SerializerMethodField()
+
+    def get_fullname(self, obj):
+        return '{} {}'.format(obj.first_name, obj.last_name)
 
     class Meta:
         model = Instructor
@@ -42,7 +55,10 @@ class InstructorSerializer(serializers.ModelSerializer):
 
 class StudentSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
-    url = serializers.HyperlinkedIdentityField(view_name='student-detail')
+    fullname = serializers.SerializerMethodField()
+
+    def get_fullname(self, obj):
+        return '{} {}'.format(obj.first_name, obj.last_name)
 
     class Meta:
         model = Student
