@@ -83,8 +83,8 @@ class GarageclothingParseSpider(BaseParseSpider, Mixin):
             if original_style:
                 form_data['originalStyle'] = original_style[0]
 
-            colorname = clean(colour_sel.css('::attr(colorname)'))[0]
-            requests += [FormRequest(url=self.size_api_url, callback=self.parse_colour, dont_filter=True, formdata=form_data, meta={'colorname': colorname}),
+            color_name = clean(colour_sel.css('::attr(colorname)'))[0]
+            requests += [FormRequest(url=self.size_api_url, callback=self.parse_colour, dont_filter=True, formdata=form_data, meta={'colorname': color_name}),
                          FormRequest(url=self.image_api_url, callback=self.parse_images, dont_filter=True, formdata=form_data)]
 
         return requests
