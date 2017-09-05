@@ -56,4 +56,5 @@ target/
 # PyCharm
 .idea
 /node_modules
+/public
 
