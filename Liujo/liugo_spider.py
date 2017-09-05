@@ -1,8 +1,8 @@
-from copy import deepcopy
+import re
+import json
 
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
-from scrapy import Request
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
@@ -18,6 +18,7 @@ class Mixin:
 class LiujoParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     price_css = '.product-main-info .price::text'
+    regex_sku = re.compile('Product.Config\((.*)\)')
 
     def parse(self, response):
 
@@ -34,43 +35,39 @@ class LiujoParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
+    def create_sku(self, data, code, type, raw_skus):
+        if code in data['attributes']:
+            for element in data['attributes'][code]['options']:
+                for product in element['products']:
+                    raw_skus.setdefault(product, {})[type] = element['label']
+
+    def create_raw_skus(self, data):
+        raw_skus = {}
+
+        self.create_sku(data, '92', 'color', raw_skus)
+        self.create_sku(data, '179', 'size', raw_skus)
+
+        return raw_skus
+
     def skus(self, response):
-        common = deepcopy(self.product_pricing_common_new(response))
-        colors = response.css('#configurable_swatch_color [name]')
-        sizes = response.css('#configurable_swatch_liujo_size [name]')
-        sku_ids = [color_sel.css('::attr(id)') for color_sel in colors] if colors else [size_sel.css('::attr(id)') for size_sel in sizes]
+        common = self.product_pricing_common_new(response)
+        if self.regex_sku.search(response.text):
+            data = json.loads(self.regex_sku.search(response.text).group(1))
+            raw_skus = self.create_raw_skus(data)
 
-        skus = {}
+            for sku in raw_skus:
+                raw_skus[sku].update(common)
 
-        if not sku_ids:
+        else:
             common['size'] = self.one_size
-            skus[self.one_size] = common
-            return skus
+            return {
+                self.one_size: common
+            }
 
-        for color_sel in colors:
-            sku = deepcopy(common)
-            sku_id = clean(color_sel.css('::attr(id)'))[0]
-            sku['color'] = clean(color_sel.css('::attr(name)'))[0]
-
-            if sizes:
-                for size_sel in sizes:
-                    size = clean(size_sel.css('::attr(title)'))[0]
-                    sku['size'] = size
-                    skus[sku_id + '-' + size] = deepcopy(sku)
-            else:
-                sku['size'] = self.one_size
-                skus[sku_id] = sku
-
-        if not skus:
-            for size_sel in sizes:
-                sku_id = clean(size_sel.css('::attr(id)'))[0]
-                skus[sku_id] = deepcopy(common)
-                skus[sku_id]['size'] = clean(size_sel.css('::attr(title)'))[0]
-
-        return skus
+        return raw_skus
 
     def product_category(self, response):
-        return [t for t, _ in response.meta['trail'] if t] if response.meta['trail'] else ''
+        return [t for t, _ in response.meta['trail'] if t] if 'trail' in response.meta else ''
 
     def image_urls(self, response):
         return clean(response.css('.product-media-gallery img::attr(data-more-views)'))
@@ -95,24 +92,13 @@ class LiujoCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = LiujoParseSpider()
 
-    listing_css = '.second-level [target="_self"]'
-
-    pagination_css = '[rel="next"]'
+    listing_css = ['.second-level [target="_self"]', '[rel="next"]']
 
     product_css = '.product-image'
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css),
              callback='parse'),
-        Rule(LinkExtractor(restrict_css=pagination_css),
-             callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css),
              callback='parse_item')
     )
-    #
-    # def paging_request(self, response):
-    #     for request in self.parse(response):
-    #         yield request
-    #
-    #     if response.css(self.pagination_css):
-    #         yield Request(url=clean(response.css(self.pagination_css))[0], callback=self.paging_request)
