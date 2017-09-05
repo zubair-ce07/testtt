@@ -22,7 +22,6 @@ def clean_list(data):
 class WoolsworthSpider(CrawlSpider):
     name = 'woolsworth'
     allowed_domains = ['www.woolworths.co.za']
-
     start_urls = ['http://www.woolworths.co.za/store/cat']
 
     rules = (
@@ -93,11 +92,11 @@ class WoolsworthSpider(CrawlSpider):
         size_ids = response.meta.get('size_ids', None)
         color_ids = response.meta.get('color_ids')
         current_color_id = response.meta.get('current_color_id')
-        product['skus'][sku_name].update({'currency': response.css('span.currency::attr(content)').extract_first(),
-                                          'price': response.css('span.price::attr(content)').extract_first()})
-        if response.css('span.price--original'):
+        product['skus'][sku_name].update({'currency': response.css('.currency::attr(content)').extract_first(),
+                                          'price': response.css('.price::attr(content)').extract_first()})
+        if response.css('.price--original'):
             product['skus'][sku_name].update(
-                {'original_price': response.css('span.price--original::text').extract_first()})
+                {'original_price': response.css('.price--original::text').extract_first()})
 
         if size_ids:
             current_size_id = size_ids.pop()
