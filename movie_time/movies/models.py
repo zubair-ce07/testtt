@@ -25,7 +25,7 @@ class Image(models.Model):
     )
 
     aspect_ratio = models.FloatField(blank=True, null=True)
-    file_path = models.CharField(max_length=40)
+    file_path = models.CharField(max_length=40, unique=True)
     height = models.IntegerField(blank=True, null=True)
     width = models.IntegerField(blank=True, null=True)
     iso_639_1 = models.CharField(max_length=2, blank=True, null=True)
@@ -50,8 +50,8 @@ class Person(models.Model):
 
     adult = models.NullBooleanField()
     biography = models.TextField(null=True, blank=True)
-    birthday = models.ForeignKey(Date, on_delete=models.CASCADE, null=True, blank=True, related_name='birthday')
-    deathday = models.ForeignKey(Date, on_delete=models.CASCADE, null=True, blank=True, related_name='deathday')
+    birthday = models.OneToOneField(Date, on_delete=models.CASCADE, null=True, blank=True, related_name='birthday')
+    deathday = models.OneToOneField(Date, on_delete=models.CASCADE, null=True, blank=True, related_name='deathday')
     gender = models.PositiveSmallIntegerField(choices=GENDERS)
     homepage = models.CharField(max_length=200, null=True, blank=True)
     tmdb_id = models.IntegerField(unique=True)
@@ -62,26 +62,27 @@ class Person(models.Model):
 
 
 class Movie(models.Model):
-    adult = models.BooleanField()
-    budget = models.IntegerField()
+    adult = models.BooleanField(default=False)
+    budget = models.BigIntegerField(default=0)
     genres = models.ManyToManyField(Genre, related_name='movies')
     homepage = models.TextField(null=True, blank=True)
     tmdb_id = models.IntegerField(unique=True)
     original_language = models.CharField(max_length=30)
     original_title = models.CharField(max_length=200)
     overview = models.TextField(null=True, blank=True)
-    popularity = models.FloatField()
-    release_date = models.ForeignKey(Date, on_delete=models.CASCADE, null=True, blank=True)
-    revenue = models.IntegerField()
-    runtime = models.IntegerField()
+    popularity = models.FloatField(default=0)
+    release_date = models.OneToOneField(Date, on_delete=models.CASCADE, null=True, blank=True)
+    revenue = models.BigIntegerField(default=0)
+    runtime = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=30, null=True, blank=True)
     tag_line = models.CharField(max_length=300, null=True, blank=True)
     title = models.CharField(max_length=200)
-    vote_average = models.FloatField()
-    vote_count = models.IntegerField()
+    vote_average = models.FloatField(default=0)
+    vote_count = models.IntegerField(default=0)
     images = GenericRelation(Image, related_query_name='movie')
     cast = models.ManyToManyField(Person, through='Role', related_name='roles')
     crew = models.ManyToManyField(Person, through='Job', related_name='jobs')
+    recommendations = models.ManyToManyField('Movie', related_name='recommended', symmetrical=False)
 
 
 class Role(models.Model):
