@@ -2,14 +2,9 @@ import React from "react";
 import {Nav, Navbar, NavItem} from "react-bootstrap";
 import SearchInput from 'react-search-input'
 import {Link, withRouter} from "react-router-dom";
-import {filters, setSearchText, setUser, setVisibilityFilter} from "../actions/index";
 import {connect} from "react-redux";
-
-const event = {
-    LOGIN: 1,
-    ADD_NEWS: 2,
-    LOGOUT: 2.3,
-};
+import {setSearchText, setUser, setVisibilityFilter} from "../actions/storeAction";
+import {filters, events} from "../config";
 
 let Header = (props) => {
 
@@ -24,14 +19,14 @@ let Header = (props) => {
     const authOrNonAuthNav = localStorage.authToken ? (
             <Nav pullRight onSelect={props.handleNavBarSelect}>
                 {searchBar}
-                <NavItem>{props.user.username}</NavItem>
-                <NavItem eventKey={event.ADD_NEWS}>Add News</NavItem>
-                <NavItem eventKey={event.LOGOUT}>Logout</NavItem>
+                <NavItem>{localStorage.username}</NavItem>
+                <NavItem eventKey={events.ADD_NEWS}>Add News</NavItem>
+                <NavItem eventKey={events.LOGOUT}>Logout</NavItem>
             </Nav>
         ) :
         <Nav pullRight onSelect={props.handleNavBarSelect}>
             {searchBar}
-            <NavItem eventKey={event.LOGIN}>LOGIN</NavItem>
+            <NavItem eventKey={events.LOGIN}>LOGIN</NavItem>
         </Nav>;
 
 
@@ -62,13 +57,16 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     return {
         handleNavBarSelect: (eventKey) => {
             switch (eventKey) {
-                case event.LOGOUT:
+                case events.LOGOUT:
                     localStorage.clear();
                     dispatch(setUser(null));
                     ownProps.history.push('/');
                     return;
-                case event.LOGIN:
+                case events.LOGIN:
                     ownProps.history.push('/login');
+                    return;
+                case events.ADD_NEWS:
+                    ownProps.history.push('/addNews');
             }
         },
         handleSearchBar: (searchText) => {

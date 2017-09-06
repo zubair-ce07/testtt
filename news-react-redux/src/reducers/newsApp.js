@@ -1,6 +1,6 @@
 import {combineReducers} from "redux";
-import {actions, filters} from "../actions/index";
 import { reducer as reduxFormReducer } from 'redux-form';
+import {actions, filters} from "../config";
 
 const news = (state = [], action) => {
     switch (action.type) {
@@ -12,6 +12,7 @@ const news = (state = [], action) => {
                     title: action.title,
                     content: action.content,
                     image_url: action.image_url,
+                    image:action.image,
                     pub_date: action.pub_date,
                     publisher: action.publisher,
                 },

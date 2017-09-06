@@ -2,9 +2,10 @@ import React from "react";
 import {Media} from "react-bootstrap";
 import PropTypes from 'prop-types'
 import {getVisibleNews} from "./VisibleNewsList";
-import {filters, setDetailedNewsId, setVisibilityFilter} from "../actions/index";
-import {loadNewsFromAPI} from "../config";
 import {connect} from "react-redux";
+import {setDetailedNewsId, setVisibilityFilter} from "../actions/storeAction";
+import {loadNewsFromAPI} from "../actions/index";
+import {filters} from "../config";
 
 let NewsDetailedCard = ({news}) => {
     return news ? (
@@ -16,7 +17,7 @@ let NewsDetailedCard = ({news}) => {
                 </Media.Left>
                 <Media.Body>
                     <p dangerouslySetInnerHTML={{__html: news.content}}/>
-                    <p>{news.pub_date}</p>
+                    <p className="pub_date">{news.pub_date}</p>
                 </Media.Body>
             </Media>
         </div>
@@ -25,7 +26,6 @@ let NewsDetailedCard = ({news}) => {
 
 
 const mapStateToProps = (state) => {
-    console.log(state);
     return {news: getVisibleNews(state)};
 };
 

@@ -1,6 +1,6 @@
-import {filters} from "../actions/index";
 import NewsList from "./NewsList";
 import {connect} from "react-redux";
+import {filters} from "../config";
 
 const getVisibleNews = ({
                             news,

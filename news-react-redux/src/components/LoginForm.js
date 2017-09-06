@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from 'prop-types'
 import {withRouter} from "react-router-dom";
-import {domain, getRequestHeader} from "../config";
-import {setUser} from "../actions/index";
-
+import {domain} from "../config";
+import {setUser} from "../actions/storeAction";
+import {getRequestHeader} from "../actions/index";
 
 class LoginForm extends React.Component {
     static isPrivate = false;

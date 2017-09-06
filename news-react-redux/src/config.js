@@ -1,49 +1,25 @@
-import {addNews} from "./actions/index";
-
 //_______________________Application constants____________________________
 
 const domain = "http://127.0.0.1:8000/api";
-
-// ______________________Configure functions__________________________
-
-function getRequestHeader() {
-    if (localStorage.authToken) {
-        return {
-            Authorization: 'Token ' + localStorage.authToken,
-            'Content-Type': 'application/json',
-        };
-    }
-    return {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-    }
-}
-
-
-const updateStoreState = (store, newsJson) => {
-    if (Array.isArray(newsJson)) {
-        newsJson.forEach((news) => {
-            store.dispatch(addNews(news));
-        });
-    } else {
-        store.dispatch(addNews(newsJson));
-    }
+const actions = {
+    ADD_NEWS: "ADD_NEWS",
+    SET_VISIBILITY_FILTER: "SET_VISIBILITY_FILTER",
+    USER_LOGOUT: 'USER_LOGOUT',
+    REFRESH_STATE: 'REFRESH_STATE',
+    SET_DETAILED_NEWS_ID: 'SET_DETAILED_NEWS_ID',
+    SET_SEARCH_TEXT: 'SET_SEARCH_TEXT',
+    SET_USER: 'SET_USER',
+};
+const filters = {
+    SHOW_ALL: "SHOW_ALL",
+    SHOW_BY_SEARCH: "SHOW_BY_SEARCH",
+    SHOW_BY_ID: "SHOW_BY_ID",
+};
+const events = {
+    LOGIN: 1,
+    ADD_NEWS: 2,
+    LOGOUT: 2.3,
 };
 
-const loadNewsFromAPI = (store, id) => {
-    let link = domain + '/news/';
-    link += id ? id : '';
-    return fetch(link, {
-        method: 'GET',
-        headers: getRequestHeader()
-    })
-        .then((response) => response.json())
-        .then((newsJson) => {
-            updateStoreState(store, newsJson)
-        })
-        .catch((error) => {
-            console.error(error);
-        });
-};
 
-export {domain, getRequestHeader, loadNewsFromAPI};
+export {domain, actions, filters, events};

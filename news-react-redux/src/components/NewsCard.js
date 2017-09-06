@@ -17,7 +17,7 @@ const NewsCard = (props) => {
                         </Link>
                     </Media.Heading>
                     <p dangerouslySetInnerHTML={{__html: news.content.slice(0, 350) + '...'}}/>
-                    <p>{news.pub_date}</p>
+                    <p className="pub_date">{news.pub_date}</p>
                 </Media.Body>
             </Media>
             <div>

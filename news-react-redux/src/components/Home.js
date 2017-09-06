@@ -1,8 +1,8 @@
 import React from "react";
-import {loadNewsFromAPI} from "../config";
-import {refreshState, setUser} from "../actions/index";
 import PropTypes from 'prop-types'
 import VisibleNewsList from "./VisibleNewsList";
+import {refreshState, setUser} from "../actions/storeAction";
+import {loadNewsFromAPI} from "../actions/index";
 
 
 class Home extends React.Component {

@@ -1,67 +1,61 @@
-//_______________________Application constants____________________________
-const actions = {
-    ADD_NEWS: "ADD_NEWS",
-    SET_VISIBILITY_FILTER: "SET_VISIBILITY_FILTER",
-    USER_LOGOUT: 'USER_LOGOUT',
-    REFRESH_STATE: 'REFRESH_STATE',
-    SET_DETAILED_NEWS_ID: 'SET_DETAILED_NEWS_ID',
-    SET_SEARCH_TEXT: 'SET_SEARCH_TEXT',
-    SET_USER: 'SET_USER',
-};
-const filters = {
-    SHOW_ALL: "SHOW_ALL",
-    SHOW_BY_SEARCH: "SHOW_BY_SEARCH",
-    SHOW_BY_ID: "SHOW_BY_ID",
-};
+import {domain} from "../config";
+import {addNews} from "./storeAction";
 
-const refreshState = () => {
-    return {
-        type: actions.REFRESH_STATE,
-    };
-};
 
-const setVisibilityFilter = (visibilityFilter) => {
+function getRequestHeader() {
     return {
-        type: actions.SET_VISIBILITY_FILTER,
-        visibilityFilter,
-    };
-};
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    }
+}
 
-const setSearchText = (searchText) => {
-    return {
-        type: actions.SET_SEARCH_TEXT,
-        searchText,
-    };
-};
 
-const setUser = (username, token) => {
-    return {
-        type: actions.SET_USER,
-        username,
-        token,
+const updateStoreState = (store, newsJson) => {
+    if (Array.isArray(newsJson)) {
+        newsJson.forEach((news) => {
+            store.dispatch(addNews(news));
+        });
+    } else {
+        store.dispatch(addNews(newsJson));
     }
 };
 
-const setDetailedNewsId = (id) =>{
-    return{
-        type:actions.SET_DETAILED_NEWS_ID,
-        id,
-    }
-};
-const addNews = (news) => {
-    return {
-        type: actions.ADD_NEWS,
-        id: news.id,
-        title: news.title,
-        content: news.content,
-        image_url: news.image_url,
-        publisher: news.publisher,
-        pub_date: news.pub_date,
-    };
+const loadNewsFromAPI = (store, id) => {
+    let link = domain + '/news/';
+    link += id ? id : '';
+    fetch(link, {
+        method: 'GET',
+        headers: getRequestHeader(),
+
+    })
+        .then((response) => response.json())
+        .then((newsJson) => {
+            updateStoreState(store, newsJson)
+        })
+        .catch((error) => {
+            console.error(error);
+        });
 };
 
-export {
-    actions, filters, refreshState, addNews,
-    setVisibilityFilter, setSearchText, setUser,
-    setDetailedNewsId,
+const addNewsInAPI = (news, redirect) => {
+    const link = domain + '/news/add/';
+    let data = new FormData();
+    data.append('title', news.title);
+    data.append('content', news.content);
+    data.append('image', news.image);
+    fetch(link, {
+        method: 'POST',
+        headers: {
+            Authorization: 'Token ' + localStorage.authToken,
+        },
+        body: data,
+    }).then(response =>{
+            if (response.ok)
+                redirect('/');
+            else
+                alert(response.statusText +"\ntry again");
+        }
+    );
 };
+
+export {getRequestHeader, loadNewsFromAPI, addNewsInAPI};

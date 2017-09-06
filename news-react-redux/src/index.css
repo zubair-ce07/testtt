@@ -3,7 +3,7 @@ body {
     font-family: sans-serif;
 }
 
-div.loginForm {
+div.loginForm{
     text-align: center;
 
 }
@@ -12,7 +12,7 @@ div.loginForm input {
     border-radius: 25px;
 }
 
-h1,h2,h3{
+h1,h2{
     text-align: center;
 }
 
@@ -26,4 +26,8 @@ div.news-card img{
 }
 div.search-input {
     color: black;
+}
+
+p.pub_date {
+    color: red;
 }
