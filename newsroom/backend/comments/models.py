@@ -8,12 +8,12 @@ class Comment(models.Model):
     user = models.ForeignKey(User)
     news = models.ForeignKey(News)
     parent = models.ForeignKey('Comment', null=True, blank=True, related_name='replies')
-    date = models.DateTimeField(auto_now_add=True)
+    post_date = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
 
     class Meta:
-        ordering = ['-date']
+        ordering = ['-post_date']
 
     def __str__(self):
-        return "{} | {} | {}".format(self.user, str(self.date), self.news)
+        return "{} | {} | {}".format(self.user, str(self.post_date), self.news)
 

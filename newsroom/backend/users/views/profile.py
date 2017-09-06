@@ -26,18 +26,16 @@ class UserProfileAPIView(APIView):
             return Response(status=status.HTTP_402_PAYMENT_REQUIRED)
 
     def post(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            try:
-                User.objects.update_or_create(email=request.user.email,
-                                              defaults=request.data)
-                return Response(request.data, status=status.HTTP_200_OK)
-            except KeyError:
-                return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
-            except DatabaseError:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            except:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            User.objects.update_or_create(email=request.user.email,
+                                          defaults=request.data)
+            return Response(request.data, status=status.HTTP_200_OK)
+        except KeyError:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+        except DatabaseError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 for user in User.objects.all():
     Token.objects.get_or_create(user=user)

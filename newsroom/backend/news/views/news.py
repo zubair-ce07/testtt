@@ -37,8 +37,8 @@ class NewsViewSet(ReadOnlyModelViewSet):
     @list_route(url_path='search')
     def get_search_news(self, request):
         search_string = request.GET.get('query', "")
-        keywords = search_string.split(' ')
-        filtered_words = [word for word in keywords if word.lower() not in stopwords.words('english')]
+        filtered_words = [word.lower() for word in search_string if word.lower() not in stopwords.words('english')]
+
         queries = [Q(detail__icontains=keyword) for keyword in filtered_words]
         query = queries.pop()
         for condition in queries:

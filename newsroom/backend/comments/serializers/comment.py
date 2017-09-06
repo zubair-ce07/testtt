@@ -14,10 +14,7 @@ class CommentSerializer(ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'username', 'date', 'content', 'replies')
+        fields = ('id', 'username', 'post_date', 'content', 'replies')
 
     def get_username(self, obj):
         return obj.user.username
-
-    def get_news_source_url(self, obj):
-        return obj.news.source_url

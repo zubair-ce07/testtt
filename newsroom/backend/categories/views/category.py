@@ -16,6 +16,6 @@ class CategoryViewSet(ReadOnlyModelViewSet):
     def get_category_news(self, request, name=None):
         category = self.get_object()
         category_news = News.objects.filter(category__name=category.name).order_by('-published_date')
-        serializer = NewsSerializer(category_news, many=True)
-        return Response(serializer.data)
+        news_serializer = NewsSerializer(category_news, many=True)
+        return Response(news_serializer.data)
 
