@@ -17,8 +17,6 @@ class Mixin:
 class LiujoParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     price_css = '.product-main-info .price::text'
-    regex_sku = 'Product.Config\((.*)\)'
-    xpath_sku = '//script[contains(text(), "Product.Config")]/text()'
 
     def parse(self, response):
 
@@ -35,30 +33,44 @@ class LiujoParseSpider(BaseParseSpider, Mixin):
 
         return garment
 
-    def create_raw_skus(self, response):
-        raw_skus = {}
-        raw_product = json.loads(response.xpath(self.xpath_sku).re(self.regex_sku)[0])
+    def raw_skus(self, response):
+        xpath_sku = '//script[contains(text(), "Product.Config")]/text()'
+        regex_sku = 'Product.Config\((.*)\)'
 
-        for key, value in raw_product['attributes'].items():
-            for option in value['options']:
+        raw_product = response.xpath(xpath_sku).re(regex_sku)
+
+        if not raw_product:
+            return {}
+
+        valid_color_size = {
+            'color': 'colour',
+            'liujo_size': 'size'
+        }
+
+        raw_product = json.loads(raw_product[0])
+        raw_skus = {}
+        for attribute_key, attribute_value in raw_product['attributes'].items():
+            for option in attribute_value['options']:
                 for product in option['products']:
-                    raw_skus.setdefault(product, {})[value['code']] = option['label']
+                    raw_skus.setdefault(product, {})[valid_color_size[attribute_value['code']]] = option['label']
 
         return raw_skus
 
     def skus(self, response):
         common = self.product_pricing_common_new(response)
 
-        if not response.xpath(self.xpath_sku):
+        raw_skus = self.raw_skus(response)
+
+        skus = {}
+
+        if not raw_skus:
             common['size'] = self.one_size
-            return {
-                self.one_size: common
-            }
+            skus[self.one_size] = common
+            return skus
 
-        raw_skus = self.create_raw_skus(response)
-
-        for sku in raw_skus:
-            raw_skus[sku].update(common)
+        for sku_key, sku_value in raw_skus.items():
+            sku_value.update(common)
+            skus[sku_key] = sku_value
 
         return raw_skus
 
