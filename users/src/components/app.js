@@ -1,7 +1,7 @@
 import React from 'react';
 import UserList from '../containers/user-list'
 import User from '../containers/user'
-import AddUser from '../containers/addUser'
+import AddUser from '../containers/add-user'
 
 const App =  function(){
     return (
