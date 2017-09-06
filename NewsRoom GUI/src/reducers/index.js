@@ -8,6 +8,7 @@ import InterestsReducer from './reducer_user_interests';
 import CategoriesReducer from './reducer_all_categories';
 import { reducer as formReducer } from 'redux-form';
 
+
 const rootReducer = combineReducers({
   top_news: TopNewsReducer,
   selected_news: DetailNewsReducer,

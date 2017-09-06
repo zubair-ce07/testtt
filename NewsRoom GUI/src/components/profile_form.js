@@ -44,8 +44,8 @@ class ProfileForm extends Component {
 
     render() {
         const handleSubmit = this.props.handleSubmit;
-        let dis = this.toggleDisplay(this.state.read_only);
-        let dis1 = this.toggleDisplay(!this.state.read_only);;
+        let updateButton = this.toggleDisplay(this.state.read_only);
+        let editButton = this.toggleDisplay(!this.state.read_only);;
         return (
             <div>
             <form onSubmit={ handleSubmit(this.onSubmit.bind(this))}>
@@ -70,9 +70,9 @@ class ProfileForm extends Component {
                     read_value={this.state.read_only}
                     component={ this.renderField }
                 />
-                <button type="submit" className="btn btn-primary" style={{display:dis1}}>Update</button>
+                <button type="submit" className="btn btn-primary" style={{display:updateButton}}>Update</button>
             </form>
-            <button onClick={this.onEdit.bind(this)} className="btn btn-primary" style={{display:dis}}>Edit</button>
+            <button onClick={this.onEdit.bind(this)} className="btn btn-primary" style={{display:editButton}}>Edit</button>
             </div>
         );
     }

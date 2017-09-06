@@ -32,7 +32,7 @@ class Login extends Component {
     }
 
     onSubmit(values) {
-        this.props.loginUser(values).then(({payload:{data:{token}}}) => {
+        this.props.loginUser(values).then(({ payload: { data: { token } } }) => {
             reactLocalStorage.set('token', token);
             this.props.history.push('/profile');
         });
