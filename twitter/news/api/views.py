@@ -11,7 +11,7 @@ from news.models import News
 class NewsList(APIView):
     def get(self, request):
         news = News.objects.all()
-        serializer = NewsSerializer(news, many=True)
+        serializer = NewsSerializer(news, many=True, context={"request": request})
         return Response(serializer.data)
 
 
@@ -19,7 +19,7 @@ class NewsAdd(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        serializer = NewsSerializer(data=request.data)
+        serializer = NewsSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -29,5 +29,5 @@ class NewsAdd(APIView):
 class NewsDetail(APIView):
     def get(self, request, pk):
         news = get_object_or_404(News, pk=pk)
-        serializer = NewsSerializer(news)
+        serializer = NewsSerializer(news, context={"request": request})
         return Response(serializer.data)
