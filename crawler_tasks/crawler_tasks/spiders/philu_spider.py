@@ -1,40 +1,18 @@
-import re
 import json
-from urllib.parse import unquote
+import re
+from itertools import dropwhile
 
 from scrapy import Selector
-from scrapy.selector import XPathSelector
-from scrapy.spiders import Spider
 from scrapy.http import Request
-from w3lib.url import add_or_replace_parameter, url_query_parameter, url_query_cleaner
+from w3lib.url import add_or_replace_parameter, url_query_parameter
 
 from crawler_tasks.items import PhiluCourse
+from .philu_base import BaseSpider, clean, _course_id
 
 
-def _sanitize(input_val):
-    """ Shorthand for sanitizing results, removing unicode whitespace and normalizing end result"""
-    if isinstance(input_val, XPathSelector):
-        # caller obviously wants clean extracted version
-        to_clean = input_val.extract()
-    else:
-        to_clean = input_val
-
-    return re.sub('\s+', ' ', to_clean.replace('\xa0', ' ')).strip()
-
-
-def clean(lst_or_str):
-    """ Shorthand for sanitizing results in an iterable, dropping ones which would end empty """
-    if not isinstance(lst_or_str, str) and getattr(lst_or_str, '__iter__', False):  # if iterable and not a string like
-        return [x for x in (_sanitize(y) for y in lst_or_str if y is not None) if x]
-    return _sanitize(lst_or_str)
-
-
-class PhiluSpider(Spider):
+class PhiluSpider(BaseSpider):
     name = 'philu'
-    allowed_domains = [
-        'novoed.com', 'cloudfront.net',
-        'philanthropyuniversity.novoed.com'
-    ]
+
     custom_settings = {
         'ITEM_PIPELINES': {
             'crawler_tasks.pipelines.PhiluItemPipeline': 1,
@@ -44,7 +22,8 @@ class PhiluSpider(Spider):
         'HTTPCACHE_ENABLED': True,
         'HTTPCACHE_DIR': 'httpcache',
         'HTTPCACHE_STORAGE': 'scrapy.extensions.httpcache.FilesystemCacheStorage',
-        'RETRY_TIMES': 1
+        'RETRY_TIMES': 1,
+        'DOWNLOAD_TIMEOUT': 9999999999
     }
 
     pdf_url_t = '{}attachments/{}/view'
@@ -65,74 +44,19 @@ class PhiluSpider(Spider):
             'unit_links': []
         }
 
-    def csrf_token(self, response):
-        for cookie in response.headers.getlist('Set-Cookie'):
-            match = re.match('XSRF-TOKEN=(.*);', cookie.decode())
-            if match:
-                return unquote(match.group(1))
-
     def strip_text_items(self, items):
         return [i.strip() for i in items if i.strip()]
 
-    def __init__(self):
-        super().__init__()
-        self.email = 'muhammad.zeeshan@arbisoft.com'
-        self.password = 'CfR-c9C-Jh8-B7o'
-
-    def start_requests(self):
-        url = 'https://app.novoed.com/my_account.json'
-        meta = {
-            'handle_httpstatus_list': [401],
-            'dont_cache': True
-        }
-        return [Request(url, callback=self.sign_in_request, meta=meta)]
-
-    def sign_in_request(self, response):
-        payload = {
-            'user': {
-                'email': self.email,
-                'password': self.password
-            },
-            'catalog_id': 'philanthropy-initiative'
-        }
-        url = 'https://app.novoed.com/users/sign_in.json'
-        headers = {
-            'Content-Type': 'application/json;charset=utf-8',
-            'X-XSRF-TOKEN': self.csrf_token(response),
-            'dont_cache': True
-        }
-        return Request(
-            url, callback=self.request_home_page, method='POST',
-            body=json.dumps(payload), headers=headers)
-
-    def request_home_page(self, response):
-        url = 'https://philanthropyuniversity.novoed.com/philanthropy-initiative/oe/#!/home'
-        meta = {
-            'sign_in_response': response
-        }
-        return Request(url, meta=meta, callback=self.courses_menu)
-
-    def courses_menu(self, response):
-        urls = ['https://philanthropyuniversity.novoed.com/capacity-2016-4/home',
-                'https://philanthropyuniversity.novoed.com/scale-2017-1/home',
-                'https://philanthropyuniversity.novoed.com/entrepreneurship-2017-1/home',
-                'https://philanthropyuniversity.novoed.com/strategy-2017-1/home',
-                'https://philanthropyuniversity.novoed.com/financial-modeling-2017-1/home',
-                'https://philanthropyuniversity.novoed.com/leadership-2017-1/home',
-                'https://philanthropyuniversity.novoed.com/fundraising-2017-1/home',
-                'https://philanthropyuniversity.novoed.com/fundraising-2017-2/home'
-                ]
-        course_urls = response.css('.courses_menu ::attr(href)').extract()
-        for url in course_urls:
-            yield Request(urls[7], meta=response.meta, callback=self.parse_course)
-            return
+    def start_crawl(self, response):
+        for url in self.courses:
+            yield Request(url, callback=self.parse_course)
 
     def parse_course(self, response):
-        # return
         course = PhiluCourse()
+        course['course_id'] = _course_id(response.url)
         course['lectures'] = []
+        course['project'] = []
         course['assignments'] = []
-        course['discussions'] = {}
         course['url'] = response.url
         course['course_title'] = response.css(
             '.program-breadcrumbs a:not([href])::text'
@@ -157,8 +81,6 @@ class PhiluSpider(Spider):
             self.request_lectures_section(response),
             self.request_assignments_section(response),
             self.request_course_announcements(response),
-            self.request_forums(response),
-            self.request_discussions(response),
             self.request_exercises(response)
 
         ]
@@ -167,34 +89,12 @@ class PhiluSpider(Spider):
         }
         return self.next_request_or_course(course)
 
-    def parse_forum(self, response):
-        course = response.meta['course']
-        course['forums'] = json.loads(response.text)['result']
-        return self.next_request_or_course(course)
-
-    def parse_discussions(self, response):
-        course = response.meta['course']
-        disc = json.loads(response.text)['result']
-        if disc:
-            for d_id, dis in disc.items():
-                sel = Selector(text=dis['body'])
-                dis['image_urls'] = []
-                course['meta']['request_queue'] += self.request_redirected_discussion_img_url(sel, d_id)
-                if not dis['num_posts']:
-                    continue
-                course['meta']['request_queue'] += [self.request_discussion_comments(response, d_id)]
-
-            course['discussions'].update(disc)
-
-            min_weight = min([d['trending_weight'] for d in disc.values()])
-            filt_disc = [k for k, d in disc.items() if min_weight == d['trending_weight'] and not d['highlighted']]
-            filt_disc = filt_disc or [k for k, d in disc.items() if min_weight == d['trending_weight']]
-            min_key = min(filt_disc or [20])
-            course['meta']['request_queue'] += [self.request_discussions(response, min_key)]
-        return self.next_request_or_course(course)
-
     def parse_course_champs(self, response):
         course = response.meta['course']
+        course['course_champions'] = course_champions = {'champs': {}}
+        xpath = '//*[contains(@class, "lecture-page-component")][1]//text()'
+        course_champions['text'] = clean(response.xpath(xpath))
+
         for champ_s in response.css('.table.table-bordered td'):
             champ = {}
             name = champ_s.css('a ::attr(alt)').extract_first()
@@ -206,32 +106,36 @@ class PhiluSpider(Spider):
             champ['img'] = champ_s.css('a ::attr(src)').extract_first()
             champ['from'] = clean(champ_s.css('::text'))[-2]
             champ['post'] = clean(champ_s.css('::text'))[-1]
-            course['course_champions'].update({name: champ})
+            course['course_champions']['champs'].update({name: champ})
         return self.next_request_or_course(course)
 
     def parse_course_info(self, response):
         course = response.meta['course']
-        faqs = []
+        faqs = {'title': clean(response.css('.full-padding::text'))[0], 'faqs': []}
         for faq_s in response.css('.lecture-page-component .span12'):
-            faq = {}
-            faqs += [faq]
-            faq['title'] = clean(faq_s.css('div h3::text'))[0]
-            faq['questions'] = []
-            for q_s, a_s in zip(faq_s.xpath('.//p[contains(., "Q. ")]'), faq_s.xpath('.//p[contains(., "A. ")]')):
-                question = {}
-                question['question'] = clean(q_s.css(' ::text'))[0]
-                question['answer'] = clean(a_s.css(' ::text'))[0]
-                question['answer_html'] = a_s.extract()
-                faq['questions'] += [question]
+            question = {}
+            for f_s in faq_s.xpath('.//p[contains(., "Q. ")] | .//p[contains(., "A. ")] | .//div[h3] | .//p'):
+                text = " ".join(clean(f_s.css(' ::text')))
+                if "Q. " in text:
+                    question = {}
+                    question['question'] = text
+
+                elif "A. " in text:
+                    question['answer'] = text
+                    question['answer_html'] = f_s.extract()
+                    faq['questions'] += [question]
+                    question = {}
+
+                elif f_s.xpath('.//h3'):
+                    faq = {}
+                    faqs['faqs'] += [faq]
+                    faq['title'] = clean(f_s.css(' h3::text'))[0]
+                    faq['info'] = []
+                    faq['questions'] = []
+                elif clean(text):
+                    faq['info'] += [clean(text)]
 
         course['faqs'] = faqs
-        return self.next_request_or_course(course)
-
-    def parse_discussion_comments(self, response):
-        course = response.meta['course']
-        did = response.meta['id']
-        posts = json.loads(response.text)['result']['posts']
-        course['discussions'][did]['posts'] = posts
         return self.next_request_or_course(course)
 
     def parse_exercises(self, response):
@@ -314,20 +218,6 @@ class PhiluSpider(Spider):
 
         return req
 
-    def request_redirected_discussion_img_url(self, sel, d_id):
-        req = []
-        for url in sel.css('img::attr(src)').extract():
-            req += [Request(url, self.redirected_discussion_img_url, meta={'id': d_id}, dont_filter=True)]
-
-        return req
-
-    def redirected_discussion_img_url(self, response):
-        course = response.meta['course']
-        did = response.meta['id']
-        course['discussions'][did]['image_urls'] += [response.url]
-        course['discussions'][did]['image_urls'] = list(set(course['discussions'][did]['image_urls']))
-        return self.next_request_or_course(course)
-
     def redirected_submission_img_url(self, response):
         course = response.meta['course']
         if response.status == 403:
@@ -359,70 +249,19 @@ class PhiluSpider(Spider):
 
     def request_course_announcements(self, response):
         url = response.urljoin('announcements')
-        sign_in_response = response.meta['sign_in_response']
-        headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json, text/plain, */*',
-            'X-CSRF-TOKEN': self.csrf_token(sign_in_response)
-        }
-        return Request(url, headers=headers, callback=self.parse_instructor_message)
-
-    def request_discussion_comments(self, response, did):
-        url = url_query_cleaner(response.url) + '/' + str(did) + '/posts'
-        sign_in_response = response.meta['sign_in_response']
-        headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json, text/plain, */*',
-            'X-CSRF-TOKEN': self.csrf_token(sign_in_response)
-        }
-        return Request(url, headers=headers, meta={'id': did}, callback=self.parse_discussion_comments,
-                       dont_filter=True)
-
-    def request_forums(self, response):
-        url = response.url.replace('/home', '/forums')
-        sign_in_response = response.meta['sign_in_response']
-        headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json, text/plain, */*',
-            'X-CSRF-TOKEN': self.csrf_token(sign_in_response)
-        }
-        return Request(url, headers=headers, callback=self.parse_forum)
-
-    def request_discussions(self, response, last_topic=''):
-        if '/topics' in response.url:
-            url = add_or_replace_parameter(response.url, 'last_topic_id', last_topic)
-        else:
-            url = response.url.replace('/home', '/topics?order=trending_weight')
-        sign_in_response = response.meta['sign_in_response']
-        headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json, text/plain, */*',
-            'X-CSRF-TOKEN': self.csrf_token(sign_in_response)
-        }
-        return Request(url, headers=headers, meta=response.meta, callback=self.parse_discussions)
+        return Request(url, headers=self.headers_with_cookies, callback=self.parse_instructor_message)
 
     def request_exercises(self, response):
         url = response.url.replace('/home', '/exercises/featureable_exercises.json')
-        sign_in_response = response.meta['sign_in_response']
-        headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json, text/plain, */*',
-            'X-CSRF-TOKEN': self.csrf_token(sign_in_response)
-        }
-        return Request(url, headers=headers, meta=response.meta, callback=self.parse_exercises)
+        return Request(url, headers=self.headers_with_cookies, meta=response.meta, callback=self.parse_exercises)
 
     def request_submissions(self, response, exercise):
         url = response.url.replace('/exercises/featureable_exercises.json', '/reports/all/')
         reqs = []
         for ex in exercise:
             ex_url = url + str(ex) + '?order=trending&page=1&query='
-            sign_in_response = response.meta['sign_in_response']
-            headers = {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json, text/plain, */*',
-                'X-CSRF-TOKEN': self.csrf_token(sign_in_response)
-            }
-            reqs += [Request(ex_url, headers=headers, meta=response.meta, callback=self.parse_submission)]
+            reqs += [Request(ex_url, headers=self.headers_with_cookies,
+                             meta=response.meta, callback=self.parse_submission)]
 
         return reqs
 
@@ -453,13 +292,8 @@ class PhiluSpider(Spider):
     def request_next_submissions(self, response):
         page = int(url_query_parameter(response.url, 'page'))
         url = add_or_replace_parameter(response.url, 'page', page + 1)
-        sign_in_response = response.meta['sign_in_response']
-        headers = {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json, text/plain, */*',
-            'X-CSRF-TOKEN': self.csrf_token(sign_in_response)
-        }
-        return Request(url, headers=headers, meta=response.meta, callback=self.parse_submission)
+        return Request(url, headers=self.headers_with_cookies,
+                       meta=response.meta, callback=self.parse_submission)
 
     def request_course_modules(self, response):
         module_urls = response.css('.lecture-page-navigation')[0] \
@@ -472,23 +306,69 @@ class PhiluSpider(Spider):
             module_requests.append(
                 Request(url, callback=self.parse_course_module, dont_filter=True)
             )
+
+        xpath = '//*[contains(@class, "lecture-page-navigation") and contains(., "Final Project")]//@href'
+        project_urls = clean(response.xpath(xpath))
+        for project_url in project_urls:
+            url = response.urljoin(project_url)
+            # url = 'https://philanthropyuniversity.novoed.com/capacity-2016-4/lecture_pages/844796'
+            module_requests.append(
+                Request(url, callback=self.parse_course_project, dont_filter=True)
+            )
             # break
         champ_url = response.xpath('//a[contains(., "Meet Your Course Champions")]//@href').extract_first()
         info_url = response.xpath('//a[contains(., "Frequently Asked Questions")]//@href').extract_first()
+        info_url = info_url or response.xpath('//a[contains(., "FAQs")]//@href').extract_first()
         if champ_url:
             module_requests.append(
                 Request(response.urljoin(champ_url), callback=self.parse_course_champs, dont_filter=True)
             )
 
-        if champ_url:
+        if info_url:
             module_requests.append(
                 Request(response.urljoin(info_url), callback=self.parse_course_info, dont_filter=True)
             )
 
         course = response.meta['course']
-        info_x = '//*[contains(@class, "lecture-page-navigation") and contains(., "Course Information")]/li//text()'
-        course['course_info'] = clean(response.xpath(info_x))[1:]
+        course['course_info'] = sum((clean(l.css('li ::text')) for l in response.css('.lecture-page-navigation')[1:]),
+                                    [])
+        course['course_info'] = [c for c in course['course_info'] if c != 'Course Information' and c != 'New Section']
+        c_in = [c for c in dropwhile(lambda x: x != 'Course Overview', course['course_info'])]
+        course['course_info'] = c_in or [c for c in
+                                         dropwhile(lambda x: x != 'How to Form a Team', course['course_info'])]
         course['meta']['request_queue'] += module_requests
+        return self.next_request_or_course(course)
+
+    def parse_course_project(self, response):
+        selector = response.css('#lecture-components-list')
+        nodes = selector.css(
+            '[href^="#step"], a[href*="soundcloud"], img[src],'
+            '[class=muted], [class="title-video-text"],'
+            ':not(h2):not([class="muted"]):not([href^="#step"])::text,'
+            '[href*=".pdf"], [href*="#attached-file"], [href], [src*="youtube"]'
+        )
+        module = self.parse_html_nodes(nodes, selector, response)
+
+        course = response.meta['course']
+        course['project'].append(module)
+
+        module_index = course['project'].index(module)
+        course['meta']['request_queue'] += \
+            self.module_transcript_requests(module, module_index, is_project=True)
+
+        image_url = module.get('module_image')
+        if image_url:
+            meta = {
+                'module_index': module_index,
+                'is_project': True
+            }
+            course['meta']['request_queue'] += [
+                # a course will not be scrapped if its module
+                # image gets filtered by duplicate request filter.
+                Request(image_url, meta=meta, dont_filter=True,
+                        callback=self.redirected_module_img_url)
+            ]
+
         return self.next_request_or_course(course)
 
     def parse_course_module(self, response):
@@ -525,10 +405,13 @@ class PhiluSpider(Spider):
     def redirected_module_img_url(self, response):
         course = response.meta['course']
         module_index = response.meta['module_index']
-        course['lectures'][module_index]['module_image'] = response.url
+        if response.meta.get('is_project', False):
+            course['project'][module_index]['module_image'] = response.url
+        else:
+            course['lectures'][module_index]['module_image'] = response.url
         return self.next_request_or_course(course)
 
-    def module_transcript_requests(self, module, module_index):
+    def module_transcript_requests(self, module, module_index, is_project=False):
         transcript_requests = []
         for unit_index, unit in enumerate(module['units']):
             for video_index, video in enumerate(unit['unit_video']):
@@ -537,9 +420,10 @@ class PhiluSpider(Spider):
                     'module_index': module_index,
                     'unit_index': unit_index,
                     'video_index': video_index,
+                    'is_project': is_project,
                 }
                 transcript_requests.append(
-                    Request(url, meta=meta, callback=self.redirected_module_transcript_url)
+                    Request(url, meta=meta, callback=self.redirected_module_transcript_url, dont_filter=True)
                 )
 
         return transcript_requests
@@ -549,8 +433,10 @@ class PhiluSpider(Spider):
         module_index = response.meta['module_index']
         unit_index = response.meta['unit_index']
         video_index = response.meta['video_index']
-
-        units = course['lectures'][module_index]['units']
+        if response.meta.get('is_project', False):
+            units = course['project'][module_index]['units']
+        else:
+            units = course['lectures'][module_index]['units']
         video = units[unit_index]['unit_video'][video_index]
         video['transcript'] = response.url
 

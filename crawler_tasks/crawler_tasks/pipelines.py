@@ -51,13 +51,14 @@ class PhiluItemPipeline(object):
         #                 file_urls += [url + '?name=' + name]
         #             else:
         #                 file_urls += [url]
-
-                # for video in unit['unit_video']:
-                #     file_urls += [
-                #         video['url'], video['transcript']
-                #     ]
-
-        item['file_urls'] = file_urls
+        # for project in item['project']:
+        #     for unit in project['units']:
+        #         for video in unit['unit_video']:
+        #             file_urls += [
+        #                 video['url'], video['transcript']
+        #             ]
+        #
+        # item['file_urls'] = file_urls
         return item
 
 

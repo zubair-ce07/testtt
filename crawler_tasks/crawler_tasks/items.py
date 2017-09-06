@@ -76,6 +76,7 @@ class JelmoliProduct(scrapy.Item):
 class PhiluCourse(scrapy.Item):
     url = scrapy.Field()
     course_title = scrapy.Field()
+    course_id = scrapy.Field()
     course_image = scrapy.Field()
     course_welcome_text = scrapy.Field()
     course_welcome_raw_html = scrapy.Field()
@@ -88,9 +89,23 @@ class PhiluCourse(scrapy.Item):
     file_urls = scrapy.Field()
     files = scrapy.Field()
     meta = scrapy.Field()
-    forums = scrapy.Field()
-    discussions = scrapy.Field()
     exercises = scrapy.Field()
     course_champions = scrapy.Field()
     course_info = scrapy.Field()
     faqs = scrapy.Field()
+    project = scrapy.Field()
+
+
+class PhiluProgram(scrapy.Item):
+    url = scrapy.Field()
+    is_program = scrapy.Field()
+    course_id = scrapy.Field()
+    course_title = scrapy.Field()
+    course_roles = scrapy.Field()
+    discussion_likes = scrapy.Field()
+    post_likes = scrapy.Field()
+    file_urls = scrapy.Field()
+    files = scrapy.Field()
+    meta = scrapy.Field()
+    forums = scrapy.Field()
+    discussions = scrapy.Field()
