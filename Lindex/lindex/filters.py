@@ -1,0 +1,15 @@
+from scrapy.dupefilters import RFPDupeFilter
+
+data_url = 'https://www.lindex.com/WebServices/ProductService.asmx/GetProductData'
+
+
+class Filter(RFPDupeFilter):
+    def __getid(self, url):
+        return url
+
+    def request_seen(self, request):
+        fp = self.__getid(request.url)
+        if fp != data_url:
+            if fp in self.fingerprints:
+                return True
+            self.fingerprints.add(fp)
