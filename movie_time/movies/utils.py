@@ -2,11 +2,11 @@ from django.db import transaction
 from requests.exceptions import HTTPError
 import tmdbsimple as tmdb
 from datetime import datetime
-from movie_time.settings import TMDB_API_KEY
+from django.conf import settings
 from movies.models import *
 
 
-tmdb.API_KEY = TMDB_API_KEY
+tmdb.API_KEY = settings.TMDB_API_KEY
 
 
 def populate_genres():

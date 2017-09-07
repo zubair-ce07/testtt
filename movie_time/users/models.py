@@ -1,8 +1,15 @@
 import os
 import time
 from uuid import uuid4
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+from rest_framework.authtoken.models import Token
 
 
 class UserManager(BaseUserManager):
@@ -95,6 +102,18 @@ class User(AbstractBaseUser):
         return self.is_admin
 
 
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(instance=None, created=False, **kwargs):
+    """
+    if a new user is created then create a new token for that user
+    Arguments:
+         instance (User): Newly created user instance
+         created (bool): weather user is newly created or just saved
+    """
+    if created:
+        Token.objects.create(user=instance)
+
+
 class FollowRequest(models.Model):
     NEW = 1
     ACCEPTED = 2
@@ -106,6 +125,40 @@ class FollowRequest(models.Model):
         (BLOCKED, 'Blocked')
     )
 
-    from_user = models.ForeignKey(User, on_delete=models.CASCADE)
-    to_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
     status = models.PositiveSmallIntegerField(choices=STATUSES)
+
+
+@receiver(post_save, sender=FollowRequest)
+def create_auth_token(instance=None, created=False, **kwargs):
+    """
+    if a new request is created then create a notification for that target user
+    Arguments:
+         instance (FollowRequest): Newly created request instance
+         created (bool): weather request is newly created or just saved
+    """
+    if created:
+        Notification.objects.create(
+            recipient=instance.to_user,
+            actor=instance.from_user,
+            verb=Notification.FOLL0W_REQUEST,
+            action_object=instance
+        )
+
+
+class Notification(models.Model):
+    MOVIE_RELEASED = 1
+    FOLL0W_REQUEST = 2
+    ACTIONS = (
+        (MOVIE_RELEASED, 'Movie Released'),
+        (FOLL0W_REQUEST, 'Follow Request')
+    )
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    actor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    verb = models.PositiveSmallIntegerField(choices=ACTIONS)
+    timestamp = models.DateTimeField(default=timezone.now)
+    deleted = models.BooleanField(default=False)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    action_object = GenericForeignKey()

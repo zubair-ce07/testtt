@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from movies.models import Movie, Person
+from movies.models import Movie, Role
 from users.models import User
 
 
@@ -14,9 +14,10 @@ class WatchListItem(models.Model):
     )
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='watchlist')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watchlist')
+    removed = models.BooleanField(default=False)
     is_watched = models.BooleanField(default=False)
     rating = models.PositiveSmallIntegerField(choices=RATINGS, null=True, blank=True)
-    best_actor = models.ForeignKey(Person, on_delete=models.CASCADE)
+    best_actor = models.ForeignKey(Role, on_delete=models.CASCADE, null=True)
     is_recommended = models.BooleanField(default=False)
 
 

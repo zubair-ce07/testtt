@@ -66,3 +66,4 @@ media/
 node_modules/
 dist/
 package-lock.json
+unavailable_ids.txt

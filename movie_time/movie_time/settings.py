@@ -16,12 +16,21 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django_celery_beat',
     'django_celery_results',
+    'rest_framework',
+    'rest_framework.authtoken',
     'movies',
     'users',
     'watchlists',
 ]
 
 WSGI_APPLICATION = 'movie_time.wsgi.application'
+
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    )
+}
 
 DATABASES = {
     'default': {
@@ -31,6 +40,10 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = 'users.User'
+
+AUTHENTICATION_BACKENDS = (
+    'users.auth_backend.CustomAuthBackend',
+)
 
 ROOT_URLCONF = 'movie_time.urls'
 

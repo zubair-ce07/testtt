@@ -3,6 +3,7 @@ from celery import shared_task
 from django.utils import timezone
 from celery.utils.log import get_task_logger
 from movies.models import Movie
+from users.models import Notification
 
 
 @shared_task(bind=True, default_retry_delay=10, max_retries=None)
@@ -18,8 +19,11 @@ def notify_about_newly_released(self):
         ).prefetch_related('watchlist')
         for movie in movies:
             for item in movie.watchlist:
-                user = item.user
-                # notify user
+                Notification.objects.create(
+                    recipient=item.user,
+                    verb=Notification.MOVIE_RELEASED,
+                    action_object=movie
+                )
     except Exception as e:
         logger.info('Notify process failed.')
         raise self.retry(exc=e)
