@@ -12,14 +12,6 @@ import AddMem from '../containers/AddMem';
 import EditProfile from '../containers/EditProfile';
 import EditMem from '../containers/EditMem';
 
-/*import '../assets/css/bootstrap.css';
-import '../assets/css/font-awesome.css';
-import '../assets/js/morris/morris-0.4.3.min.css';
-import '../assets/css/custom-styles.css';
-import '../assets/materialize/css/materialize.min.css'
-
-import $ from 'jquery';
-*/
 
 
 
