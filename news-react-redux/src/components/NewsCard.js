@@ -1,6 +1,7 @@
 import React from "react";
 import {Media} from "react-bootstrap";
 import {Link} from "react-router-dom";
+import Moment from 'react-moment';
 
 const NewsCard = (props) => {
     const news = props.news;
@@ -17,7 +18,7 @@ const NewsCard = (props) => {
                         </Link>
                     </Media.Heading>
                     <p dangerouslySetInnerHTML={{__html: news.content.slice(0, 350) + '...'}}/>
-                    <p className="pub_date">{news.pub_date}</p>
+                    <p className="pub_date"><Moment fromNow>{news.pub_date}</Moment></p>
                 </Media.Body>
             </Media>
             <div>

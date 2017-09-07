@@ -6,6 +6,7 @@ import {connect} from "react-redux";
 import {setDetailedNewsId, setVisibilityFilter} from "../actions/storeAction";
 import {loadNewsFromAPI} from "../actions/index";
 import {filters} from "../config";
+import Moment from "react-moment";
 
 let NewsDetailedCard = ({news}) => {
     return news ? (
@@ -17,7 +18,9 @@ let NewsDetailedCard = ({news}) => {
                 </Media.Left>
                 <Media.Body>
                     <p dangerouslySetInnerHTML={{__html: news.content}}/>
-                    <p className="pub_date">{news.pub_date}</p>
+                    <p className="pub_date">
+                        <Moment fromNow>{news.pub_date}</Moment>
+                    </p>
                 </Media.Body>
             </Media>
         </div>

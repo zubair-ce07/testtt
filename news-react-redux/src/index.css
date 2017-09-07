@@ -31,3 +31,9 @@ div.search-input {
 p.pub_date {
     color: red;
 }
+
+img.addNews  {
+    height: inherit;
+    width: inherit;
+    border-radius: inherit;
+}

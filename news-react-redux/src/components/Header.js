@@ -4,7 +4,7 @@ import SearchInput from 'react-search-input'
 import {Link, withRouter} from "react-router-dom";
 import {connect} from "react-redux";
 import {setSearchText, setUser, setVisibilityFilter} from "../actions/storeAction";
-import {filters, events} from "../config";
+import {events, filters} from "../config";
 
 let Header = (props) => {
 
@@ -47,10 +47,12 @@ let Header = (props) => {
 };
 
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
+    debugger;
     return {
         user: state.user,
-        displaySearchBar: !(state.visibilityFilter === filters.SHOW_BY_ID),
+        displaySearchBar:
+            (ownProps.history.location.pathname === "/"),
     }
 };
 const mapDispatchToProps = (dispatch, ownProps) => {
