@@ -2,39 +2,36 @@ import React, {Component} from 'react';
 import fusioncharts from 'fusioncharts';
 import charts from 'fusioncharts/fusioncharts.charts';
 import ReactFC from 'react-fusioncharts';
-// Pass fusioncharts as a dependency of charts
 charts(fusioncharts)
-
 
 class  WeitherChart extends Component {
     getTemperature(cityData){
-
         const temperatures = cityData.list.map(data=>{ return data.main.temp;});
-        let sum=0;
+        let sum = 0;
         for (let temperature of temperatures) {
             sum += temperature;
         }
         return Math.ceil(sum/temperatures.length);
-
     };
+
     getPressure(cityData){
        const pressures = cityData.list.map(data=>{ return data.main.pressure;});
-        let sum=0;
+        let sum = 0;
         for (let pressure of pressures) {
             sum += pressure;
         }
        return Math.ceil(sum/pressures.length)
-
     };
+
     getHumadity(cityData){
        const humadities = cityData.list.map(data=>{ return data.main.humidity;});
-       let sum=0;
+       let sum = 0;
         for (let humadity of humadities) {
             sum += humadity;
         }
-
         return Math.ceil(sum/humadities.length)+ '%';
     };
+
     render(){
         var myDataSource = {
         chart: {
