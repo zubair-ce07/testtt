@@ -80,11 +80,8 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         return "AEROPOSTALE"
 
     def product_gender(self, garment):
-        gender = "women"
-        for raw_gender in garment['category']:
-            if "Guys" in raw_gender:
-                gender = "men"
-        return gender
+        raw_gender = " ".join(garment['category']).lower()
+        return "men" if "guys" in raw_gender else "women"
 
     def image_urls(self, response):
         return response.css('.product-primary-image  a::attr(href)').extract()
