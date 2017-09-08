@@ -36,12 +36,12 @@ class TestUserAPIView(TestCase):
                              'username': self.user.username,
                              'password': 'user12345'
                          }
-                         )
+                     )
         token = Token.objects.get(user__username=self.user.username)
         self.assertEqual(response.data['token'],
                          token.key,
                          msg='user authentication to get token'
-                         )
+                     )
     def test_user_get_interests(self):
         self.__set_client_credentials(self.user)
         response = self.client.get('/api/v1/users/interests/')
@@ -49,7 +49,7 @@ class TestUserAPIView(TestCase):
         self.assertEqual(response.data[0]['category']['name'],
                          self.user_interests.category.name,
                          msg='get user interests'
-                         )
+                     )
 
     def test_user_update_interests(self):
         user_interest = Category.objects.create(name='test category 2')
@@ -57,12 +57,13 @@ class TestUserAPIView(TestCase):
         response = self.client.post('/api/v1/users/interests/',
                                    {
                                        'interests': [user_interest.name]
-                                   })
+                                   }
+                                )
         self.client.credentials()
         self.assertEqual(response.status_code,
                          status.HTTP_201_CREATED,
                          msg='update user interests'
-                         )
+                     )
 
     def test_user_create(self):
         email = 'qwerty@gmail.com'
@@ -76,11 +77,12 @@ class TestUserAPIView(TestCase):
                             'first_name': first_name,
                             'last_name': last_name,
                             'password': password
-                         })
+                         }
+                    )
         self.assertEqual(response.status_code,
                          status.HTTP_201_CREATED,
                          msg='creating user'
-                         )
+                     )
 
     def test_user_get_profile(self):
         self.__set_client_credentials(self.user)
@@ -89,7 +91,7 @@ class TestUserAPIView(TestCase):
         self.assertEqual(response.data['username'],
                          self.user.username,
                          msg='get user profile'
-                         )
+                     )
 
     def test_user_update_profile(self):
         self.__set_client_credentials(self.user)
@@ -100,7 +102,8 @@ class TestUserAPIView(TestCase):
                                         'email': self.user.email,
                                         'first_name': first_name,
                                         'last_name': self.user.last_name
-                                    })
+                                    }
+                                )
         self.client.credentials()
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK,

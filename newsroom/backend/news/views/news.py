@@ -37,15 +37,17 @@ class NewsViewSet(ReadOnlyModelViewSet):
     @list_route(url_path='search')
     def get_search_news(self, request):
         search_string = request.GET.get('query', "")
-        filtered_words = [word.lower() for word in search_string if word.lower() not in stopwords.words('english')]
+        if search_string:
+            filtered_words = [word.lower() for word in search_string if word.lower() not in stopwords.words('english')]
 
-        queries = [Q(detail__icontains=keyword) for keyword in filtered_words]
-        query = queries.pop()
-        for condition in queries:
-            query |= condition
-        searched_news = News.objects.filter(query).order_by('-published_date')
-        serializer = NewsSerializer(searched_news, many=True)
-        return Response(serializer.data)
+            queries = [Q(detail__icontains=keyword) for keyword in filtered_words]
+            query = queries.pop()
+            for condition in queries:
+                query |= condition
+            searched_news = News.objects.filter(query).order_by('-published_date')
+            serializer = NewsSerializer(searched_news, many=True)
+            return Response(serializer.data)
+        return Response(data={'query': 'this field is required'}, status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(
                     permission_classes=[IsAuthenticated],
