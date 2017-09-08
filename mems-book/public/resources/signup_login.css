@@ -102,3 +102,9 @@ body {
 	margin-bottom: 15px;
 }
 
+.active-form {
+	display: block;
+}
+.unactive-form {
+	display: none;
+}

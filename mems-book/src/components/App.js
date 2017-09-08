@@ -1,24 +1,20 @@
-import React from 'react'
-import {Router, Route} from 'react-router';
-import LoginSignup from '../containers/LoginSignup';
-import Home from './home'
-import { browserHistory} from 'react-router';
-import UserMems from '../containers/UserMems';
-import PublicMems from '../containers/PublicMems';
-import Activities from '../containers/Activities';
-import UserProfile from '../containers/UserProfile';
-import AddCategory from '../containers/AddCategory';
-import AddMem from '../containers/AddMem';
-import EditProfile from '../containers/EditProfile';
-import EditMem from '../containers/EditMem';
-
-
-
+import React from "react";
+import {browserHistory, Route, Router} from "react-router";
+import LoginSignup from "../containers/LoginSignup";
+import Home from "./home";
+import UserMems from "../containers/UserMems";
+import PublicMems from "../containers/PublicMems";
+import Activities from "../containers/Activities";
+import UserProfile from "../containers/UserProfile";
+import AddCategory from "../containers/AddCategory";
+import AddMem from "../containers/AddMem";
+import EditProfile from "../containers/EditProfile";
+import EditMem from "../containers/EditMem";
 
 const App = function () {
-    return(
+    return (
         <Router history={browserHistory}>
-          <div>
+            <div>
                 <Route exact path="/" component={LoginSignup}/>
                 <Route path="/" component={Home}>
                     <Route path="/home" component={UserMems}/>
@@ -30,9 +26,8 @@ const App = function () {
                     <Route path="/editprofile:id" component={EditProfile}/>
                     <Route path="/editmem:id" component={EditMem}/>
                 </Route>
-          </div>
-    </Router>
-
+            </div>
+        </Router>
     );
-}
+};
 export default App;
