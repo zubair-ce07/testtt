@@ -44,9 +44,7 @@ class FigLeavesParseSpider(BaseParseSpider, Mixin):
         return self.raw_description(response)[-1]
 
     def product_description(self, response):
-        raw_description = self.raw_description(response)
-        raw_description.pop()
-        return [rd for rd in raw_description if not self.care_criteria(rd)]
+        return [rd for rd in self.raw_description(response)[:-1] if not self.care_criteria(rd)]
 
     def product_care(self, response):
         return [rd for rd in self.raw_description(response) if self.care_criteria(rd)]
