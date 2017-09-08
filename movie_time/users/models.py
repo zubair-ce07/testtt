@@ -127,7 +127,7 @@ class FollowRequest(models.Model):
 
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
-    status = models.PositiveSmallIntegerField(choices=STATUSES)
+    status = models.PositiveSmallIntegerField(choices=STATUSES, default=NEW)
 
 
 @receiver(post_save, sender=FollowRequest)

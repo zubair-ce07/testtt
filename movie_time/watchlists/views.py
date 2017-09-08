@@ -1,17 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import ParseError, NotFound
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from watchlists.models import WatchListItem
+from watchlists.models import WatchListItem, Activity
 from movies.models import Movie, Role
 
 
-def get_movie(data):
-    movie_id = data.get('movie_id')
-    if not movie_id:
-        raise ParseError()
-
+def get_movie(movie_id):
     try:
         return Movie.objects.get(movie_id)
     except ObjectDoesNotExist:
@@ -25,66 +21,89 @@ def get_watchlist_item(user, movie):
         raise NotFound()
 
 
-def update_watchlist(data, user, update_type):
-    movie = get_movie(data)
-
-    status = data.get('status')
-    if not status:
-        raise ParseError()
-
-    watchlist_item = get_watchlist_item(user, movie)
-
-    if update_type == 'watched':
-        watchlist_item.is_watched = True if status == 'add' else False
-    elif update_type == 'recommended':
-        watchlist_item.is_recommended = True if status == 'add' else False
-    elif update_type == 'rating':
-        watchlist_item.rating = WatchListItem.LIKED if status == 'liked' else WatchListItem.DISLIKED
-    watchlist_item.save()
+def create_activity(watchlist_item, activity_type):
+    Activity.objects.get_or_create(watchlist=watchlist_item, type=activity_type)
 
 
-@api_view(http_method_names=['POST'])
+def delete_activity(watchlist_item, activity_type):
+    try:
+        Activity.objects.get(watchlist=watchlist_item, type=activity_type).delete()
+    except ObjectDoesNotExist:
+        pass
+
+
+# URL: <host>/movies/<movie_id>/watchlist/
+@api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def add_or_remove_from_watchlist(request):
-    movie = get_movie(request.data)
-
-    status = request.data.get('status')
-    if not status:
-        raise ParseError()
+def add_or_remove_from_watchlist(request, movie_id):
+    movie = get_movie(movie_id)
 
     try:
         watchlist_item = get_watchlist_item(request.user, movie)
-        watchlist_item.removed = False if status == 'add' else True
+        watchlist_item.removed = False if request.method == 'PUT' else True
         watchlist_item.save()
     except NotFound:
-        if status == 'add':
-            WatchListItem.objects.create(movie=movie, user=request.user)
+        if request.method == 'PUT':
+            watchlist_item = WatchListItem.objects.create(movie=movie, user=request.user)
         else:
             raise
 
-    response = 'Added' if status == 'add' else 'Removed'
+    if request.method == 'PUT':
+        response = 'Added'
+        create_activity(watchlist_item, Activity.ADDED)
+    else:
+        response = 'Removed'
+        delete_activity(watchlist_item, Activity.ADDED)
+
     return Response({'status': response})
 
 
-@api_view(http_method_names=['POST'])
+# URL: <host>/movies/<movie_id>/<action_type[watched or recommended]>/
+@api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def changed_watchlist_status(request, status_type):
-    if status_type == 'watched':
-        update_watchlist(request.data, request.user, 'watched')
-    elif status_type == 'recommended':
-        update_watchlist(request.data, request.user, 'recommended')
-    elif status_type == 'rating':
-        update_watchlist(request.data, request.user, 'rating')
+def changed_watchlist_status(request, movie_id, action_type):
+    movie = get_movie(movie_id)
+    watchlist_item = get_watchlist_item(request.user, movie)
+
+    if action_type == 'watched':
+
+        if request.method == 'PUT':
+            watchlist_item.is_watched = True
+            create_activity(watchlist_item, Activity.WATCHED)
+        else:
+            watchlist_item.is_watched = False
+            delete_activity(watchlist_item, Activity.WATCHED)
+
+    elif action_type == 'recommended':
+
+        if request.method == 'PUT':
+            watchlist_item.is_recommended = True
+            create_activity(watchlist_item, Activity.RECOMMENDED)
+        else:
+            watchlist_item.is_recommended = False
+            delete_activity(watchlist_item, Activity.RECOMMENDED)
+
+    watchlist_item.save()
+
     return Response({'status': 'Saved'})
 
 
-@api_view(http_method_names=['POST'])
-@permission_classes(IsAuthenticated)
-def change_best_actor_vote(request):
-    role_id = request.data('role_id')
-    if not role_id:
-        raise ParseError()
+# URL: <host>/movies/<movie_id>/ratings/<action[liked or disliked]>/
+@api_view(http_method_names=['PUT'])
+@permission_classes([IsAuthenticated])
+def rate_movie(request, movie_id, action):
+    movie = get_movie(movie_id)
+    watchlist_item = get_watchlist_item(request.user, movie)
+    watchlist_item.rating = WatchListItem.LIKED if action == 'liked' else WatchListItem.DISLIKED
+    create_activity(watchlist_item, Activity.RATED)
+    watchlist_item.save()
+    return Response({'status': 'Saved'})
 
+
+# URL: <host>/roles/<role_id>/vote-up/
+@api_view(http_method_names=['PUT'])
+@permission_classes(IsAuthenticated)
+def change_best_actor_vote(request, role_id):
     try:
         role = Role.objects.get(role_id)
     except ObjectDoesNotExist:
@@ -92,5 +111,6 @@ def change_best_actor_vote(request):
 
     watchlist_item = get_watchlist_item(request.user, role.movie)
     watchlist_item.best_actor = role
+    create_activity(watchlist_item, Activity.VOTED_ACTOR)
     watchlist_item.save()
     return Response({'status': 'Saved'})

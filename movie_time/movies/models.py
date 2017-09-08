@@ -75,7 +75,7 @@ class Movie(models.Model):
     revenue = models.BigIntegerField(default=0)
     runtime = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=30, null=True, blank=True)
-    tag_line = models.CharField(max_length=300, null=True, blank=True)
+    tag_line = models.TextField(null=True, blank=True)
     title = models.CharField(max_length=200)
     vote_average = models.FloatField(default=0)
     vote_count = models.IntegerField(default=0)

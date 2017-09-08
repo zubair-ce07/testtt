@@ -135,7 +135,7 @@ def create_or_update_credits(credits_data, movie):
 
 def create_or_update_videos(videos_data, movie):
     for video in videos_data:
-        if video.get('key') is not None:
+        if video.get('key') and len(video.get('key')) <= 40:
             Video.objects.update_or_create(
                 tmdb_id=video.get('id'),
                 defaults={
