@@ -11,7 +11,7 @@ class Mixin:
     allowed_domains = ['aeropostale.com']
 
     start_urls = [
-        'http://www.aeropostale.com']
+        'http://www.aeropostale.com/textured-crew-tee/81431109.html']
 
     brands = [
         'AERO',
@@ -22,7 +22,8 @@ class Mixin:
 
 class AeropostaleParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + "-parse"
-    price_css = '.product-detail .product-price ::text'
+    price_css = '.product-detail .product-price .price-msrp::text,' \
+                '.product-detail .product-price .price-sale::text '
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -35,23 +36,20 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         garment['gender'] = self.product_gender(garment)
 
         garment['brand'] = self.product_brand(response)
-        garment['image_urls'] = self.image_urls(response)
+        garment['image_urls'] = []
 
-        garment['skus'] = self.skus(response)
-        colour_urls, colour_requests = self.colour_requests(response)
-        garment['meta'] = {'requests_queue': self.size_requests(response) + colour_requests}
-
-        garment['meta']['colour_urls'] = colour_urls
+        garment['skus'] = {}
+        garment['meta'] = {'requests_queue': self.colour_requests(response)}
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
         return clean(response.css('span[itemprop="productID"] ::text'))[0]
 
     def raw_description(self, response):
-        return clean(response.css('.product-info ::text'))
+        return clean(response.css('.tabs :not(:contains("Review"))::text'))
 
     def product_description(self, response):
-        return self.clean_description([rd for rd in self.raw_description(response) if not self.care_criteria(rd)])
+        return [rd for rd in self.raw_description(response) if not self.care_criteria(rd)]
 
     def product_care(self, response):
         return [rd for rd in self.raw_description(response) if self.care_criteria(rd)]
@@ -70,14 +68,6 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
                 return brand
         return "AEROPOSTALE"
 
-    def clean_description(self, description):
-        index = None
-        for line in description:
-            if "Review" in line:
-                index = description.index(line)
-
-        return description[:index - 1]
-
     def product_gender(self, garment):
         gender = "women"
         for raw_gender in garment['category']:
@@ -91,14 +81,12 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
         sku = {'colour': response.css('.selected-value ::text').extract_first()}
-        size = clean(response.css('.variation-select option[selected]::text'))
-        if size:
-            sku['size'] = size[0]
-        else:
-            sku['size'] = self.one_size
 
-        sku.update(self.product_pricing_common_new(response, post_process=self.post_process))
-        if 'not' in clean(response.css('span[itemprop="availability"]'))[0]:
+        size = clean(response.css('.variation-select option[selected]::text'))
+        sku['size'] = size[0] if size else self.one_size
+
+        sku.update(self.product_pricing_common_new(response))
+        if 'not available' in clean(response.css('span[itemprop="availability"]'))[0]:
             sku['out_of_stock'] = True
 
         skus[sku['colour'] + "_" + sku['size']] = sku
@@ -107,13 +95,6 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
     def parse_size(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
-
-        for colour in clean(response.css('li[class="selectable"] ::attr(href)')):
-            if colour not in garment['meta']['colour_urls']:
-                garment['meta']['colour_urls'].append(colour)
-                garment['meta']['requests_queue'].append(
-                    Request(colour, dont_filter=True, callback=self.parse_colour))
-
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
@@ -128,10 +109,11 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
 
     def colour_requests(self, response):
         colours = clean(response.css('li[class="selectable"] ::attr(href)'))
-        return colours, [Request(colour, callback=self.parse_colour) for colour in colours]
+        return [Request(colour, callback=self.parse_colour) for colour in colours]
 
-    def post_process(self, money_strs):
-        return money_strs[1:]
+
+def process_value(value):
+    return value.split('?')[0]
 
 
 class AeropostaleCrawlSpider(BaseCrawlSpider, Mixin):
@@ -153,5 +135,5 @@ class AeropostaleCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=listing_css, tags=tags, attrs=attributes),
              callback='parse'),
 
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=products_css, process_value=process_value), callback='parse_item'),
     )
