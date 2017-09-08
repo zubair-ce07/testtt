@@ -18,22 +18,41 @@ def clean_list(data):
 class LindeSpider(CrawlSpider):
     name = 'lindex'
     # allowed_domains = ['www.lindex.com/']
-    start_urls = ['https://www.lindex.com/eu/women/tops/#!/page1/only']
+    start_urls = ['https://www.lindex.com/eu/women/tops/']
     base_url = 'https://www.lindex.com'
     data_url = 'https://www.lindex.com/WebServices/ProductService.asmx/GetProductData'
+    pagination_url = 'https://www.lindex.com/eu/SiteV3/Category/GetProductGridPage'
     request_payload = {"productIdentifier": None, "colorId": None, "isMainProductCard": True, "nodeId": 0,
                        "primaryImageType": 0}
+    pageIndex = 0
+    formdata = {'pageIndex': str(self.pageIndex), 'nodeID': str(0)}
 
     def start_requests(self):
         for url in self.start_urls:
-            yield scrapy.Request(url, callback=self.parses)
+            yield scrapy.Request(url, callback=self.parse_pages)
+
+    def parse_pages(self, response):
+        page_id = response.css('body::attr(data-page-id)').extract_first()
+        self.formdata.update({'nodeID': str(page_id)})
+        yield scrapy.FormRequest(self.pagination_url, formdata=self.formdata, callback=self.parse_urls,
+                                 dont_filter=True)
+
+    def parse_urls(self, response):
+        self.pageIndex += 1
+        urls = ['{}{}'.format(self.base_url, url) for url in
+                response.css('p.info a.productCardLink::attr(href)').extract()]
+        for url in urls:
+            yield scrapy.Request(url, callback=self.parse_product)
+        yield scrapy.FormRequest(self.pagination_url, formdata=self.formdata)
 
     # rules = (
     #     Rule(LinkExtractor(restrict_css='p.info a.productCardLink'), callback="parse_product"),)
-    def parses(self, response):
-        urls = response.css('p.info a.productCardLink::attr(href)').extract()
-        for url in urls:
-            yield scrapy.Request(url='{}{}'.format(self.base_url, url), callback=self.parse_product)
+
+    # def parses(self, response):
+    #     urls = ['{}/eu/{}'.format(self.base_url, url) for url in
+    #             response.css('p.info a.productCardLink::attr(href)').extract()]
+    #     for url in urls:
+    #         yield scrapy.Request(url, callback=self.parse_product)
 
     def parse_product(self, response):
         product = Product()
@@ -45,26 +64,24 @@ class LindeSpider(CrawlSpider):
         currency = response.css('span.price')[0].css('::text').extract_first().strip()
         color_ids = response.css('ul.colors')[0].css('a::attr(data-colorid)').extract()
         self.request_payload.update({'productIdentifier': retailer_id, 'colorId': color_ids.pop()})
-        print(self.request_payload)
-        print(json.dumps(self.request_payload))
         yield scrapy.Request(url=self.data_url, method='POST', body=json.dumps(self.request_payload),
                              headers={'content-type': 'application/json'}, callback=self.parse_color,
-                             meta={'product': product, 'currency': currency, 'color_ids': color_ids}, dont_filter=True)
+                             meta={'product': product, 'currency': currency, 'color_ids': color_ids, 'first': True})
 
     def parse_color(self, response):
         data = json.loads(response.body.decode("utf-8"))['d']
         product = response.meta.get('product')
         currency = response.meta.get('currency')
         color_ids = response.meta.get('color_ids')
-        self.product_name(data, product)
-        self.details(data, product)
+        if response.meta.get('first'):
+            self.product_name(data, product)
+            self.details(data, product)
         self.image_urls(data, product)
         self.skus(currency, data, product)
         if color_ids:
-            self.request_payload.update({'colorId': color_ids.pop()})
+            self.request_payload.update({"productIdentifier": product['retailer_id'], 'colorId': color_ids.pop()})
             yield scrapy.Request(url=self.data_url, method='POST', body=json.dumps(self.request_payload),
-                                 headers={'content-type': 'application/json'},
-                                 callback=self.parse_color,
+                                 headers={'content-type': 'application/json'}, callback=self.parse_color,
                                  meta={'product': product, 'currency': currency, 'color_ids': color_ids})
         else:
             yield product
@@ -96,9 +113,7 @@ class LindeSpider(CrawlSpider):
         for image in data['Images']:
             product['image_urls'].append(image['XLarge'])
 
-    @staticmethod
-    def skus(currency, data, product):
-
+    def skus(self, currency, data, product):
         for i in range(1, len(data['SizeInfo'])):
             size_text = data['SizeInfo'][i]['Text']
             size_name = re.search(r'(?P<size>.+)\(', size_text)
@@ -111,7 +126,8 @@ class LindeSpider(CrawlSpider):
                     size_name = size_name.group('size')
                     out_of_stock = True
             product['skus'].update(
-                {'{}_{}'.format(data['SKU'], size_name): {'size': size_name, 'currency': currency,
+                {'{}_{}'.format(data['SKU'], size_name): {'relative_url': self.base_url + data['RelativeGenericUrl'],
+                                                          'size': size_name, 'currency': currency,
                                                           'sale_price': data['Price'],
                                                           'regular_price': data.get('NormalPrice', data['Price']),
                                                           'color': data['Color'], 'out_of_stock': out_of_stock}})
