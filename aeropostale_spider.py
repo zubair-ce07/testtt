@@ -23,7 +23,7 @@ class Mixin:
 
 class AeropostaleParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + "-parse"
-    price_css = '.product-detail .product-price :not(:contains("not"))::text'
+    price_css = '.product-detail .product-price > span::text'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -40,24 +40,27 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
 
         garment['skus'] = {}
         garment['meta'] = {'requests_queue': self.colour_requests(response)}
+
         return self.next_request_or_garment(garment)
 
     def parse_size(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
+
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
         garment = response.meta['garment']
         garment['image_urls'] += self.image_urls(response)
         garment['meta']['requests_queue'] += self.size_requests(response)
+
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
         return clean(response.css('span[itemprop="productID"] ::text'))[0]
 
     def raw_description(self, response):
-        return clean(response.css('.tabs :not(:contains("Review"))::text'))
+        return clean(response.xpath('//div[@class="tab" and not(contains(.,"Review"))]/descendant::text()'))
 
     def product_description(self, response):
         return [rd for rd in self.raw_description(response) if not self.care_criteria(rd)]
@@ -77,6 +80,7 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         for brand in self.brands:
             if brand in raw_brand:
                 return brand
+
         return "AEROPOSTALE"
 
     def product_gender(self, garment):
@@ -93,6 +97,7 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         sku['size'] = size[0] if size else self.one_size
 
         sku.update(self.product_pricing_common_new(response))
+
         if 'not available' in clean(response.css('span[itemprop="availability"]'))[0]:
             sku['out_of_stock'] = True
 
