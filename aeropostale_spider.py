@@ -42,6 +42,17 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         garment['meta'] = {'requests_queue': self.colour_requests(response)}
         return self.next_request_or_garment(garment)
 
+    def parse_size(self, response):
+        garment = response.meta['garment']
+        garment['skus'].update(self.skus(response))
+        return self.next_request_or_garment(garment)
+
+    def parse_colour(self, response):
+        garment = response.meta['garment']
+        garment['image_urls'] += self.image_urls(response)
+        garment['meta']['requests_queue'] += self.size_requests(response)
+        return self.next_request_or_garment(garment)
+
     def product_id(self, response):
         return clean(response.css('span[itemprop="productID"] ::text'))[0]
 
@@ -61,7 +72,7 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('a.breadcrumb-element ::text'))
 
     def product_brand(self, response):
-        raw_brand = "".join([self.product_name(response)] + self.product_category(response)).upper()
+        raw_brand = " ".join([self.product_name(response)] + self.product_category(response)).upper()
 
         for brand in self.brands:
             if brand in raw_brand:
@@ -79,7 +90,6 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         return response.css('.product-primary-image  a::attr(href)').extract()
 
     def skus(self, response):
-        skus = {}
         sku = {'colour': response.css('.selected-value ::text').extract_first()}
 
         size = clean(response.css('.variation-select option[selected]::text'))
@@ -89,19 +99,7 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         if 'not available' in clean(response.css('span[itemprop="availability"]'))[0]:
             sku['out_of_stock'] = True
 
-        skus[sku['colour'] + "_" + sku['size']] = sku
-        return skus
-
-    def parse_size(self, response):
-        garment = response.meta['garment']
-        garment['skus'].update(self.skus(response))
-        return self.next_request_or_garment(garment)
-
-    def parse_colour(self, response):
-        garment = response.meta['garment']
-        garment['image_urls'] += self.image_urls(response)
-        garment['meta']['requests_queue'] += self.size_requests(response)
-        return self.next_request_or_garment(garment)
+        return {sku['colour'] + "_" + sku['size']: sku}
 
     def size_requests(self, response):
         sizes = clean(response.css('.variation-select ::attr(value)'))
@@ -127,12 +125,8 @@ class AeropostaleCrawlSpider(BaseCrawlSpider, Mixin):
         '.infinite-scroll-placeholder'
     ]
 
-    tags = ['div', 'a']
-
-    attributes = ['data-grid-url', 'href']
-
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css, tags=tags, attrs=attributes),
+        Rule(LinkExtractor(restrict_css=listing_css, tags=['div', 'a'], attrs=['data-grid-url', 'href']),
              callback='parse'),
 
         Rule(LinkExtractor(restrict_css=products_css, process_value=process_value), callback='parse_item'),
