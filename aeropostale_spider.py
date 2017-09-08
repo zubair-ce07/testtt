@@ -1,6 +1,7 @@
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from w3lib.url import url_query_cleaner
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
@@ -22,8 +23,7 @@ class Mixin:
 
 class AeropostaleParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + "-parse"
-    price_css = '.product-detail .product-price .price-msrp::text,' \
-                '.product-detail .product-price .price-sale::text '
+    price_css = '.product-detail .product-price :not(:contains("not"))::text'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -103,12 +103,8 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
         return [Request(size, dont_filter=True, callback=self.parse_size) for size in sizes]
 
     def colour_requests(self, response):
-        colours = clean(response.css('li[class="selectable"] ::attr(href)'))
+        colours = clean(response.css('li.selectable ::attr(href)'))
         return [Request(colour, callback=self.parse_colour) for colour in colours]
-
-
-def process_value(value):
-    return value.split('?')[0]
 
 
 class AeropostaleCrawlSpider(BaseCrawlSpider, Mixin):
@@ -126,5 +122,5 @@ class AeropostaleCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=listing_css, tags=['div', 'a'], attrs=['data-grid-url', 'href']),
              callback='parse'),
 
-        Rule(LinkExtractor(restrict_css=products_css, process_value=process_value), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=products_css, process_value=url_query_cleaner), callback='parse_item'),
     )
