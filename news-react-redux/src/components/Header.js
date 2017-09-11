@@ -48,7 +48,6 @@ let Header = (props) => {
 
 
 const mapStateToProps = (state, ownProps) => {
-    debugger;
     return {
         user: state.user,
         displaySearchBar:
