@@ -9,14 +9,18 @@ from news.models import News
 
 
 class NewsList(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return []
+        return super().get_permissions()
+
     def get(self, request):
         news = News.objects.all()
         serializer = NewsSerializer(news, many=True, context={"request": request})
         return Response(serializer.data)
 
-
-class NewsAdd(APIView):
-    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         serializer = NewsSerializer(data=request.data, context={"request": request})

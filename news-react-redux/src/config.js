@@ -1,6 +1,6 @@
 //_______________________Application constants____________________________
 
-const domain = "http://atweeter.herokuapp.com/api";
+const domain = "http://127.0.0.1:8000/api";
 const actions = {
     ADD_NEWS: "ADD_NEWS",
     SET_VISIBILITY_FILTER: "SET_VISIBILITY_FILTER",

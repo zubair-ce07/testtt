@@ -38,7 +38,7 @@ const loadNewsFromAPI = (store, id) => {
 };
 
 const addNewsInAPI = (news, redirect) => {
-    const link = domain + '/news/add/';
+    const link = domain + '/news/';
     let data = new FormData();
     data.append('title', news.title);
     data.append('content', news.content);
