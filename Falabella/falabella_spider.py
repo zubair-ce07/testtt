@@ -8,6 +8,19 @@ from scrapy.spiders import Request
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
 
+def listing_x(xpath_t, categories):
+    main_categories = [
+        '//div[@data-menu-panel>=5]',
+        '//div[@class="fb-hero-subnav--nav__block"]',  # sub brands
+        'link[rel="next"]'
+    ]
+    sub_categories = [xpath_t.format(panel_id=obj['id'], sub_category=sub_category)
+                      for obj in categories
+                      for sub_category in obj['categories']]
+
+    return main_categories + sub_categories
+
+
 class Mixin:
     retailer = 'falabella-cl'
     lang = 'es'
@@ -20,13 +33,13 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     image_id_re = 'Falabella/([\d]+_[\d])'
 
-    gender_map = {
-        'mujer': 'women',
-        'hombre': 'men',
-        'niño': 'boys',
-        'niña': 'girls',
-        'unisex': 'unisex'
-    }
+    gender_map = [
+        ('mujer', 'women'),
+        ('hombre', 'men'),
+        ('niño', 'boys'),
+        ('niña', 'girls'),
+        ('unisex', 'unisex')
+    ]
 
     raw_product_re = 'fbra_browseMainProductConfig = (.*);'
 
@@ -68,9 +81,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, response):
         image_ids = set(re.findall(self.image_id_re, response.text))
-        image_urls = [self.image_url_t.format(image_id=image_id) for image_id in image_ids]
-
-        return image_urls
+        return [self.image_url_t.format(image_id=image_id) for image_id in image_ids]
 
     def image_requests(self, raw_product):
         visited_colors = set()
@@ -90,17 +101,16 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return requests
 
     def product_price(self, response, raw_sku):
-        raw_price = [[p['originalPrice'], p['symbol']] for p in raw_sku['price'] if p['label'] != 'CMR Puntos']
-
-        raw_price = [item for price in raw_price for item in price]
-        return super().product_pricing_common_new(response, money_strs=raw_price)
+        raw_pricing = sum([[p['originalPrice'], p['symbol']] for p in raw_sku['price'] if p['label'] != 'CMR Puntos'],
+                          [])
+        return super().product_pricing_common_new(response, money_strs=raw_pricing)
 
     def skus(self, raw_product, response):
         skus = {}
 
         for raw_sku in raw_product['skus']:
             sku = self.product_price(response, raw_sku)
-            sku['size'] = raw_sku['size'] if 'size' in raw_sku else self.one_size
+            sku['size'] = raw_sku.get('size', self.one_size)
 
             if 'color' in raw_sku:
                 sku['colour'] = raw_sku['color']
@@ -110,23 +120,22 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def raw_description(self, response):
+        specification_css = '.fb-product-information__specification__table__row-data'
         description = clean(response.css('section[data-panel="longDescription"] ::text'))
-        return description + [' '.join(clean(x.css(' ::text'))) for
-                              x in response.css('.fb-product-information__specification__table__row-data')]
+        specification = [' '.join(clean(x.css(' ::text'))) for x in response.css(specification_css)]
+        return description + specification
 
     def product_description(self, response):
-        return [description for description in self.raw_description(response)
-                if not self.care_criteria_simplified(description)]
+        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
-        return [description for description in self.raw_description(response)
-                if self.care_criteria_simplified(description)]
+        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
 
     def product_gender(self, response):
-        gender_xpath = '//section[@data-panel="longDescription"]//li[contains(text(), "Género")]/text() | ' \
+        xpath = '//section[@data-panel="longDescription"]//li[contains(text(), "Género")]/text() | ' \
                        '//th[contains(text(), "Género")]/../td/text()'
-        soup = clean(response.xpath(gender_xpath))[0]
-        for gender_key, gender in self.gender_map.items():
+        soup = clean(response.xpath(xpath))[0]
+        for gender_key, gender in self.gender_map:
             if gender_key in soup.lower():
                 return gender
 
@@ -152,29 +161,17 @@ class FalabellaCrawlSpider(BaseCrawlSpider, Mixin):
         },
         {
             'id': '4',  # Children
-            'categories': ['Vestuario']  # Locker Rom
+            'categories': ['Vestuario']  # Locker Room
         }
     ]
 
-    subcategory_xpath_t = '//*[@data-menu-panel={panel_id}]//h4[contains(text(), "{sub_category}")]/ancestor::li[1]'
+    categories_xpath_t = '//*[@data-menu-panel={panel_id}]//h4[contains(text(), "{sub_category}")]/ancestor::li[1]'
 
-    listing_xpath = [
-        '//div[@data-menu-panel>=5]',
-        '//div[@class="fb-hero-subnav--nav__block"]',  # sub brands
-        'link[rel="next"]'
-    ]
-
-    product_css = '#fbra_browseProductList .fb-pod__header-link'
+    product_css = '#fbra_browseProductList'
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=listing_xpath, tags=('link', 'a')),
+        Rule(LinkExtractor(restrict_xpaths=listing_x(categories_xpath_t, categories), tags=('link', 'a')),
              callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css),
              callback='parse_item'),
     )
-
-    def start_requests(self):
-        self.listing_xpath += [self.subcategory_xpath_t.format(panel_id=obj['id'], sub_category=sub_category)
-                               for obj in self.categories
-                               for sub_category in obj['categories']]
-        return super().start_requests()
