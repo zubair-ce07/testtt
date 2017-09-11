@@ -10,13 +10,20 @@ from news.models import News
 
 class NewsList(APIView):
     permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return []
+        return super().get_permissions()
+
     def get(self, request):
         news = News.objects.all()
-        serializer = NewsSerializer(news, many=True)
+        serializer = NewsSerializer(news, many=True, context={"request": request})
         return Response(serializer.data)
 
+
     def post(self, request):
-        serializer = NewsSerializer(data=request.data)
+        serializer = NewsSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -24,9 +31,7 @@ class NewsList(APIView):
 
 
 class NewsDetail(APIView):
-    permission_classes = (IsAuthenticated,)
-
     def get(self, request, pk):
         news = get_object_or_404(News, pk=pk)
-        serializer = NewsSerializer(news)
+        serializer = NewsSerializer(news, context={"request": request})
         return Response(serializer.data)

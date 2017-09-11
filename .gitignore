@@ -63,3 +63,16 @@ target/
 #Project Files
 twitter/db.sqlite3
 poll_site/db.sqlite3
+
+
+
+dawn_scraper/dawn_scraper/__init__.py
+dawn_scraper/dawn_scraper/middlewares.py
+dawn_scraper/
+kith_scraper/
+node_modules/
+package-lock.json
+react-twitter/
+todo-app-redux/.gitignore
+todo-app-redux/README.md
+twitter/media/
