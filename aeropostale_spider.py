@@ -12,7 +12,7 @@ class Mixin:
     allowed_domains = ['aeropostale.com']
 
     start_urls = [
-        'http://www.aeropostale.com/textured-crew-tee/81431109.html']
+        'http://www.aeropostale.com']
 
     brands = [
         'AERO',
@@ -34,8 +34,6 @@ class AeropostaleParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
         garment['gender'] = self.product_gender(garment)
-
-        garment['brand'] = self.product_brand(response)
         garment['image_urls'] = []
 
         garment['skus'] = {}
