@@ -6,7 +6,7 @@ import redis
 import scrapy
 
 
-class QuotesSpider(scrapy.Spider):
+class ProducerSpider(scrapy.Spider):
     name = "producer"
     allowed_domains = ["brainyquote.com"]
     start_urls = ['https://www.brainyquote.com/']
