@@ -17,42 +17,49 @@ def clean_list(data):
 
 class LindeSpider(CrawlSpider):
     name = 'lindex'
-    # allowed_domains = ['www.lindex.com/']
-    start_urls = ['https://www.lindex.com/eu/women/tops/']
+    start_urls = ['https://www.lindex.com/m/eu/']
     base_url = 'https://www.lindex.com'
     data_url = 'https://www.lindex.com/WebServices/ProductService.asmx/GetProductData'
     pagination_url = 'https://www.lindex.com/eu/SiteV3/Category/GetProductGridPage'
-    request_payload = {"productIdentifier": None, "colorId": None, "isMainProductCard": True, "nodeId": 0,
-                       "primaryImageType": 0}
-    pageIndex = 0
-    formdata = {'pageIndex': str(self.pageIndex), 'nodeID': str(0)}
+    product_ids = []
+    request_payload = {
+        "productIdentifier": None,
+        "colorId": None,
+        "isMainProductCard": True,
+        "nodeId": 0,
+        "primaryImageType": 0
+    }
 
     def start_requests(self):
         for url in self.start_urls:
-            yield scrapy.Request(url, callback=self.parse_pages)
+            yield scrapy.Request(url, callback=self.get_all_categories)
 
-    def parse_pages(self, response):
-        page_id = response.css('body::attr(data-page-id)').extract_first()
-        self.formdata.update({'nodeID': str(page_id)})
-        yield scrapy.FormRequest(self.pagination_url, formdata=self.formdata, callback=self.parse_urls,
-                                 dont_filter=True)
-
-    def parse_urls(self, response):
-        self.pageIndex += 1
-        urls = ['{}{}'.format(self.base_url, url) for url in
-                response.css('p.info a.productCardLink::attr(href)').extract()]
+    def get_all_categories(self, response):
+        categories = response.xpath('//nav/ul/li[@class="nonPage"]')[1:].xpath(
+            'span/following-sibling::*[1][self::ul]/li/ul/li[1][not(./ul)]/a/@href').extract()[:-1]
+        urls = []
+        for category in categories:
+            url = re.search(r'/m(?P<url>.+)', category).group('url')
+            urls.append('{}{}'.format(self.base_url, url))
         for url in urls:
-            yield scrapy.Request(url, callback=self.parse_product)
-        yield scrapy.FormRequest(self.pagination_url, formdata=self.formdata)
+            yield scrapy.Request(url, callback=self.parse_category)
 
-    # rules = (
-    #     Rule(LinkExtractor(restrict_css='p.info a.productCardLink'), callback="parse_product"),)
+    def parse_category(self, response):
+        node_id = response.css('body::attr(data-page-id)').extract_first()
+        formdata = {'nodeID': str(node_id), 'pageIndex': str(0)}
+        return scrapy.FormRequest(self.pagination_url, formdata=formdata, callback=self.parse_page,
+                                  meta={'formdata': formdata}, dont_filter=True)
 
-    # def parses(self, response):
-    #     urls = ['{}/eu/{}'.format(self.base_url, url) for url in
-    #             response.css('p.info a.productCardLink::attr(href)').extract()]
-    #     for url in urls:
-    #         yield scrapy.Request(url, callback=self.parse_product)
+    def parse_page(self, response):
+        if response.css('p.info'):
+            urls = ['{}{}'.format(self.base_url, url) for url in
+                    response.css('p.info a.productCardLink::attr(href)').extract()]
+            for url in urls:
+                yield scrapy.Request(url, callback=self.parse_product)
+            formdata = response.meta.get('formdata')
+            formdata['pageIndex'] = str(int(formdata['pageIndex']) + 1)
+            yield scrapy.FormRequest(self.pagination_url, formdata=formdata, callback=self.parse_page,
+                                     meta={'formdata': formdata}, dont_filter=True)
 
     def parse_product(self, response):
         product = Product()
@@ -83,7 +90,8 @@ class LindeSpider(CrawlSpider):
             yield scrapy.Request(url=self.data_url, method='POST', body=json.dumps(self.request_payload),
                                  headers={'content-type': 'application/json'}, callback=self.parse_color,
                                  meta={'product': product, 'currency': currency, 'color_ids': color_ids})
-        else:
+        elif product['retailer_id'] not in self.product_ids:
+            self.product_ids.append(product['retailer_id'])
             yield product
 
     @staticmethod
