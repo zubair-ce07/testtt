@@ -1,0 +1,194 @@
+from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule
+
+from .base import BaseParseSpider, BaseCrawlSpider, clean
+
+
+class Mixin:
+    retailer = "shoecarnival-us"
+    market = 'US'
+    allowed_domains = ['shoecarnival.com']
+
+    start_urls = [
+        'http://www.shoecarnival.com']
+
+    colour_req_t = "http://www.shoecarnival.com/browse/gadgets/pickerContents.jsp?_DARGS=/browse/gadgets/pickerContents.jsp.colorsizerefreshform" \
+                   "&_dyncharset=UTF-8&_dynSessConf=-4196040722391773449&productId={0}&categoryId={1}&selectedColor={2}"
+
+    size_req_t = "http://www.shoecarnival.com/browse/gadgets/pickerContents.jsp?_DARGS=/browse/gadgets/pickerContents.jsp.colorsizerefreshform" \
+                 "&_dyncharset=UTF-8&_dynSessConf=-4196040722391773449&productId={0}&categoryId={1}&selectedColor={2}&selectedWidth=&selectedSize={3}"
+
+    image_url_t = "https://i1.adis.ws/i/scvl/{0}_1"
+
+    gender = [
+        'Women',
+        'Men',
+        'Girls',
+        'Boys'
+    ]
+
+    brands = [
+        'ADIDAS', 'ADIDAS NEO', 'ANCHORS EDGE BAY', 'ARIAT', 'ANNE KLEIN SPORT', 'ASICS', 'AXXIOM', 'BABY GIRL',
+        'BABY PHAT', 'BANDOLINO', 'BARETRAPS', 'BEARPAW', 'BEAVER CREEK', 'BEBE SPORT', 'BIRKENSTOCK', 'BLOWFISH',
+        'B.O.C.', 'BOBS', 'BODY GLOVE', 'BOGS FOOTWEAR', 'BONE COLLECTOR', 'BORN', 'BUENO OF CALIFORNIA', 'BZEES',
+        'CAPELLI NEW YORK', 'CAROLINA BOOTS', 'CATERPILLAR', 'CEJON ACCESSORIES', 'CLARKS', 'CIRCUS BY SAM EDELMAN',
+        'CITY CLASSIFIED', 'CLIFFS', 'COBIAN', 'COCONUTS', 'COLE HAAN', 'COLLECTION 18', 'COLUMBIA', 'CONVERSE',
+        'CROCS',
+        'DC', 'DAVID AARON', 'DEARFOAMS', 'DEER STAGS', 'DELICIOUS', 'DISNEY', 'DOCKERS', 'DR.MARTENS',
+        'DR.MARTENS INDUSTRIAL',
+        'DV BY DOLCE VITA', 'DURANGO', 'EARTH ORIGINS', 'EASTLAND', 'EASY SPIRIT', 'EASY STREET', 'EMERIL LAGASSE',
+        'EUROSOFT',
+        'FILA', 'FLORSHEIM', 'FOUR SEASONS HANDBAGS', 'FREEMAN', 'FRENCH SHRINER', 'FRENCH TOAST', 'G BY GUESS', 'GBX',
+        'GIORGIO BRUTINI', 'GOTCHA', 'GRASSHOPPERS', 'HEELYS', 'HI - TEC', 'IMPO', 'INNOCENCE', 'IRISH SETTER',
+        'ITALIAN SHOEMAKERS',
+        'ITASCA SONOMA', 'JBU BY JAMBU', 'JANSPORT SPORTBAGS', 'JELLYPOP', 'JESSICA SIMPSON', 'J RENEE', 'JUSTIN BOOTS',
+        'K - SWISS',
+        'KEDS', 'KEEN UTILITY', 'KENNETH COLE REACTION', 'KENSIE HANDBAGS', 'KHOMBU', 'KOOLABURRA BY UGG', 'L.A.GEAR',
+        'LEVIS', 'LIFESTRIDE', 'LLORRAINE',
+        'LONDON UNDERGROUND', 'LUGZ', 'MADDEN', 'MADDEN GIRL', 'MADELINE STUART', 'MADISON AVE.', 'MAGNUM', 'MAKALU',
+        'MARGARITAVILLE', 'MERRELL', 'MIA',
+        'MODA SPANA', 'NAUTICA', 'NEW BALANCE', 'NICKELODEON', 'NICOLE', 'NICOLE MILLER', 'NIKE', 'NINE WEST',
+        'NO PARKING', 'NORTHSIDE', 'NUNNBUSH',
+        'PAPRIKA', 'PARIS BLUES', 'PATRIZIA', 'PERRY ELLIS', 'PUMA', 'QUIKSILVER', 'RAINBOW SANDALS', 'RAMPAGE',
+        'REALTREE', 'REEBOK', 'REEF', 'REPORT',
+        'RIALTO', 'ROBERT WAYNE', 'ROCK AND CANDY', 'ROCKET DOG', 'ROCKPORT', 'ROCKY', 'ROSETTI HANDBAGS', 'ROXY',
+        'RYKA', 'SAS', 'SAUCONY', 'SELF ESTEEM',
+        'SEVEN DIALS', 'SHAQ', 'SKECHERS', 'SKECHERS CALI', 'SKECHERS GO', 'SKECHERS STREET', 'SKECHERS WORK', 'SODA',
+        'SOF SOLE LACES', 'SOLANZ',
+        'SPERRY', 'STACY ADAMS', 'STEVE MADDEN', 'STONE CANYON', 'STRIDE RITE', 'SUGAR', 'SUNS', 'TEVA', 'TIMBERLAND',
+        'TIMBERLAND PRO', 'TOMMY HILFIGER',
+        'TOUCH OF NINA', 'UNISA', 'UNLISTED', 'UNR8ED', 'US POLO ASSN', 'VANS', 'VOLATILE', 'WHITE MOUNTAIN',
+        'WOLVERINE', 'YELLOW BOX', 'Y - NOT'
+    ]
+
+
+class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
+    name = Mixin.retailer + "-parse"
+    price_css = '.product-price span:not([class="item-price-meta-save"])::text'
+
+    def parse(self, response):
+        product_id = self.product_id(response)
+        garment = self.new_unique_garment(product_id)
+
+        if not garment:
+            return
+
+        self.boilerplate_normal(garment, response)
+        garment['gender'] = self.product_gender(response)
+        garment['image_urls'] = self.image_urls(response)
+
+        garment['skus'] = {}
+        garment['meta'] = {'requests_queue': self.colour_requests(response) + self.size_requests(response)}
+
+        return self.next_request_or_garment(garment)
+
+    def parse_colour(self, response):
+        garment = response.meta['garment']
+
+        garment['image_urls'] += self.image_urls(response)
+        garment['meta']['requests_queue'] += self.size_requests(response)
+
+        return self.next_request_or_garment(garment)
+
+    def parse_size(self, response):
+        garment = response.meta['garment']
+        garment['skus'].update(self.skus(response))
+
+        return self.next_request_or_garment(garment)
+
+    def product_id(self, response):
+        return response.css('span.atg_store_pickerLabel::text').extract_first().split('# ')[1]
+
+    def raw_name(self, response):
+        return clean(response.css('.pdp-name::text'))[0]
+
+    def product_brand(self, response):
+        for brand in self.brands:
+            if brand in self.raw_name(response).upper():
+                return brand
+
+    def product_name(self, response):
+        raw_name = self.raw_name(response).upper()
+
+        for brand in self.brands:
+            raw_name = raw_name.replace(brand, "")
+
+        return raw_name.lower()
+
+    def product_category(self, response):
+        return clean(response.css('div[id="atg_store_breadcrumbs"] a::text'))
+
+    def product_gender(self, response):
+        gender_u = " ".join(self.product_category(response) + [self.product_name(response)])
+
+        for raw_gender in self.gender:
+            if raw_gender in gender_u:
+                return raw_gender.lower()
+
+    def raw_description(self, response):
+        return clean(response.css('section[id="product-description"] ::text'))
+
+    def product_description(self, response):
+        return [rd for rd in self.raw_description(response) if not self.care_criteria(rd)]
+
+    def product_care(self, response):
+        return [rd for rd in self.raw_description(response) if self.care_criteria(rd)]
+
+    def image_urls(self, response):
+        colour_id = response.css('div[class="swatch active"] a::attr(data-image-id)').extract_first()
+        return [self.image_url_t.format(colour_id)]
+
+    def skus(self, response):
+        sku = {'colour': response.css('div.atg_store_pickerLabel span::text').extract_first()}
+        sku['size'] = response.css('option.charcoal.size_chart[selected]::attr(value)').extract_first()
+        sku.update(self.product_pricing_common_new(response))
+
+        return {sku['colour'] + "_" + sku['size']: sku}
+
+    def category_id(self, response):
+        return response.css('input[name="categoryId"]::attr(value)').extract_first()
+
+    def colour_requests(self, response):
+        color_requests = []
+        colours = response.css('div[class="swatch "] a::attr(data-color-name)').extract()
+
+        for colour in colours:
+            colour = colour.replace("/", "%2F").replace(" ", "%20")
+            colour_url = self.colour_req_t.format(self.product_id(response), self.category_id(response), colour)
+            color_requests.append(Request(colour_url, callback=self.parse_colour))
+
+        return color_requests
+
+    def size_requests(self, response):
+        size_requests = []
+
+        colour = response.css('div[class="swatch active"] a::attr(data-color-name)').extract_first()
+        sizes = response.css('option.charcoal.size_chart:not(disabled)::attr(value)').extract()
+
+        for size in sizes:
+            size = size.replace("&#39;s ","%26%2339%3Bs%20").replace(" / ","%20%2F%20")
+            size = size.replace(" ","%20")
+            size_url = self.size_req_t.format(self.product_id(response), self.category_id(response), colour, size)
+            size_requests.append(Request(size_url, callback=self.parse_size))
+
+        return size_requests
+
+
+class ShoecarnivalCrawlSpider(BaseCrawlSpider, Mixin):
+    name = Mixin.retailer + "-crawl"
+    parse_spider = ShoecarnivalParseSpider()
+
+    products_css = '.grid.grid-three'
+
+    listing_css = [
+        '.inline-list',
+        '.hawk-arrowRight.hawk-pageLink'
+    ]
+
+    rules = (
+        Rule(LinkExtractor(restrict_css=listing_css, deny=('/company')),
+             callback='parse'),
+
+        Rule(LinkExtractor(restrict_css=products_css, deny=('/global')), callback='parse_item'),
+    )
