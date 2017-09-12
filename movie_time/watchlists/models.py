@@ -12,12 +12,12 @@ class WatchListItem(models.Model):
         (LIKED, 'Like'),
         (DISLIKED, 'Disliked')
     )
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='watchlist')
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='watchlist_items')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watchlist')
     removed = models.BooleanField(default=False)
     is_watched = models.BooleanField(default=False)
     rating = models.PositiveSmallIntegerField(choices=RATINGS, null=True, blank=True)
-    best_actor = models.ForeignKey(Role, on_delete=models.CASCADE, null=True)
+    best_actor = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, related_name='votes')
     is_recommended = models.BooleanField(default=False)
 
 
@@ -39,3 +39,6 @@ class Activity(models.Model):
     watchlist = models.ForeignKey(WatchListItem, on_delete=models.CASCADE)
     created_at = models.DateTimeField(default=timezone.now)
     type = models.PositiveSmallIntegerField(choices=TYPES)
+
+    class Meta:
+        ordering = ['-created_at']

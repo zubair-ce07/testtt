@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from users.models import User
+from users.models import User, Notification
+from movies.serializers import MovieSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,7 +26,8 @@ class UserSerializer(serializers.ModelSerializer):
         Returns:
             token_key (str): key of token associated to user
         """
-        return None if user != self.context['request'].user else user.auth_token.key
+        if self.context.get('request'):
+            return None if user != self.context.get('request').user else user.auth_token.key
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
@@ -42,3 +44,22 @@ class UserSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+
+    def get_verb(self):
+        return self.instance.get_verb_display()
+
+    def get_action_object(self, notification):
+        if notification.verb == Notification.FOLL0W_REQUEST:
+            return notification.object_id
+        elif notification.verb == Notification.MOVIE_RELEASED:
+            return MovieSerializer(notification.action_object).data
+
+    verb = serializers.SerializerMethodField()
+    action_object = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = ['recipient', 'actor', 'verb', 'timestamp', 'action_object']

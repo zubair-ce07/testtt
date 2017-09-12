@@ -12,6 +12,9 @@ class Date(models.Model):
     month = models.PositiveSmallIntegerField(null=True, blank=True)
     year = models.PositiveSmallIntegerField()
 
+    def __str__(self):
+        return '{y}-{m}-{d}'.format(y=self.year, m=self.month, d=self.day)
+
 
 class Image(models.Model):
     BACKDROP = 1
@@ -33,7 +36,7 @@ class Image(models.Model):
     vote_count = models.IntegerField(blank=True, null=True)
     type = models.PositiveSmallIntegerField(choices=TYPES)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField(db_index=True)
     content_object = GenericForeignKey()
 
 
@@ -114,7 +117,7 @@ class Video(models.Model):
         (FEATURETTE, 'Featurette'),
     )
 
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='videos')
     tmdb_id = models.CharField(max_length=40, unique=True)
     iso_639_1 = models.CharField(max_length=2)
     iso_3166_1 = models.CharField(max_length=2)

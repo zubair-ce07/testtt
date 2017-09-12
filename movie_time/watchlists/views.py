@@ -4,12 +4,13 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from watchlists.models import WatchListItem, Activity
+from watchlists.serializers import ActivitySerializer
 from movies.models import Movie, Role
 
 
 def get_movie(movie_id):
     try:
-        return Movie.objects.get(movie_id)
+        return Movie.objects.get(id=movie_id)
     except ObjectDoesNotExist:
         raise NotFound()
 
@@ -102,10 +103,10 @@ def rate_movie(request, movie_id, action):
 
 # URL: <host>/roles/<role_id>/vote-up/
 @api_view(http_method_names=['PUT'])
-@permission_classes(IsAuthenticated)
+@permission_classes([IsAuthenticated])
 def change_best_actor_vote(request, role_id):
     try:
-        role = Role.objects.get(role_id)
+        role = Role.objects.get(id=role_id)
     except ObjectDoesNotExist:
         raise NotFound()
 
@@ -114,3 +115,12 @@ def change_best_actor_vote(request, role_id):
     create_activity(watchlist_item, Activity.VOTED_ACTOR)
     watchlist_item.save()
     return Response({'status': 'Saved'})
+
+
+# URL: <host>/activities/
+@api_view(http_method_names=['GET'])
+@permission_classes([IsAuthenticated])
+def get_activities(request):
+    following_users = request.user.follows.all()
+    activities = Activity.objects.filter(watchlist__user__in=following_users)
+    return Response(ActivitySerializer(activities, many=True).data)

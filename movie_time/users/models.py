@@ -3,7 +3,7 @@ import time
 from uuid import uuid4
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save
@@ -97,6 +97,12 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.email
 
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label    ):
+        return True
+
     @property
     def is_staff(self):
         return self.is_admin
@@ -114,6 +120,23 @@ def create_auth_token(instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+class Notification(models.Model):
+    MOVIE_RELEASED = 1
+    FOLL0W_REQUEST = 2
+    ACTIONS = (
+        (MOVIE_RELEASED, 'Movie Released'),
+        (FOLL0W_REQUEST, 'Follow Request')
+    )
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    actor = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    verb = models.PositiveSmallIntegerField(choices=ACTIONS)
+    timestamp = models.DateTimeField(default=timezone.now)
+    deleted = models.BooleanField(default=False)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField(db_index=True)
+    action_object = GenericForeignKey()
+
+
 class FollowRequest(models.Model):
     NEW = 1
     ACCEPTED = 2
@@ -128,6 +151,7 @@ class FollowRequest(models.Model):
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
     status = models.PositiveSmallIntegerField(choices=STATUSES, default=NEW)
+    notification = GenericRelation(Notification, related_query_name='request')
 
 
 @receiver(post_save, sender=FollowRequest)
@@ -145,20 +169,3 @@ def create_auth_token(instance=None, created=False, **kwargs):
             verb=Notification.FOLL0W_REQUEST,
             action_object=instance
         )
-
-
-class Notification(models.Model):
-    MOVIE_RELEASED = 1
-    FOLL0W_REQUEST = 2
-    ACTIONS = (
-        (MOVIE_RELEASED, 'Movie Released'),
-        (FOLL0W_REQUEST, 'Follow Request')
-    )
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    actor = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    verb = models.PositiveSmallIntegerField(choices=ACTIONS)
-    timestamp = models.DateTimeField(default=timezone.now)
-    deleted = models.BooleanField(default=False)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    action_object = GenericForeignKey()

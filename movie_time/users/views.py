@@ -3,9 +3,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, permissions, exceptions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from users.models import User, FollowRequest
+from users.models import User, FollowRequest, Notification
 from users.permissions import IsOwnerOrReadOnly
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, NotificationSerializer
 
 
 @api_view(http_method_names=['POST'])
@@ -54,7 +54,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 # URL: <host>/users/<receiver_id>/send-request/
 @api_view(['POST'])
-@permission_classes(permissions.IsAuthenticated)
+@permission_classes([permissions.IsAuthenticated])
 def send_follow_request(request, receiver_id):
     try:
         receiver = User.objects.get(receiver_id)
@@ -70,7 +70,7 @@ def send_follow_request(request, receiver_id):
 
 # URL: <host>/requests/<request_id>/<action[accept or block]>/
 @api_view(['PUT'])
-@permission_classes(permissions.IsAuthenticated)
+@permission_classes([permissions.IsAuthenticated])
 def accept_or_block_request(request, request_id, action):
     try:
         request = FollowRequest.objects.get(id=request_id, to_user=request.user)
@@ -78,4 +78,27 @@ def accept_or_block_request(request, request_id, action):
         raise exceptions.NotFound()
 
     request.status = FollowRequest.ACCEPTED if action == 'accept' else FollowRequest.BLOCKED
+    request.save()
     return Response({'status': 'saved'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_notifications(request):
+    return Response(NotificationSerializer(Notification.objects.filter(
+        recipient=request.user,
+        deleted=False
+    ), many=True).data)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_notification(request, notification_id):
+    try:
+        notification = Notification.objects.get(id=notification_id, recipient=request.user)
+    except ObjectDoesNotExist:
+        raise exceptions.NotFound()
+
+    notification.deleted = True
+    notification.save()
+    return Response({'status': 'deleted'})

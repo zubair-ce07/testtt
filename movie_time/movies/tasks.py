@@ -1,10 +1,10 @@
 from __future__ import absolute_import, unicode_literals
-from celery import shared_task
-from django.utils import timezone
 from datetime import timedelta
+from celery import shared_task
+from celery.utils.log import get_task_logger
+from django.utils import timezone
 from movies.utils import create_or_update_movie
 from movies.utils import get_changed_movies_ids
-from celery.utils.log import get_task_logger
 
 
 @shared_task(bind=True, default_retry_delay=10, max_retries=None)

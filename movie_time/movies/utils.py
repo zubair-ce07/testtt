@@ -1,8 +1,8 @@
+from datetime import datetime
+from django.conf import settings
 from django.db import transaction
 from requests.exceptions import HTTPError
 import tmdbsimple as tmdb
-from datetime import datetime
-from django.conf import settings
 from movies.models import *
 
 

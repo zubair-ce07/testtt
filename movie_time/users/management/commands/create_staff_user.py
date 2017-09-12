@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core import exceptions
 from django.core.management.base import BaseCommand
 from django.utils.encoding import force_str
+from rest_framework.authtoken.models import Token
 
 
 class Command(BaseCommand):
@@ -52,7 +53,8 @@ class Command(BaseCommand):
             self.stderr.write("\nOperation cancelled.")
             sys.exit(1)
 
-        self.UserModel.objects.create_staff_user(email, password, is_admin, is_moderator)
+        user = self.UserModel.objects.create_staff_user(email, password, is_admin, is_moderator)
+        Token.objects.create(user=user)
         self.stdout.write("User created successfully.")
 
     def get_input_data(self, field, message, default=None):

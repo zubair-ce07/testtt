@@ -12,12 +12,17 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.sessions',
+    'django.contrib.staticfiles',
     'django_celery_beat',
     'django_celery_results',
     'rest_framework',
     'rest_framework.authtoken',
+    'debug_toolbar',
     'movies',
     'users',
     'watchlists',
@@ -26,11 +31,20 @@ INSTALLED_APPS = [
 WSGI_APPLICATION = 'movie_time.wsgi.application'
 
 REST_FRAMEWORK = {
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 20,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     )
 }
+
+MIDDLEWARE = [
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
+
+INTERNAL_IPS = ('127.0.0.1', )
 
 DATABASES = {
     'default': {
@@ -39,10 +53,27 @@ DATABASES = {
     }
 }
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
 AUTH_USER_MODEL = 'users.User'
 
 AUTHENTICATION_BACKENDS = (
     'users.auth_backend.CustomAuthBackend',
+    'django.contrib.auth.backends.ModelBackend'
 )
 
 ROOT_URLCONF = 'movie_time.urls'
@@ -58,6 +89,11 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+STATIC_URL = '/static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = join(dirname(dirname(abspath(__file__))), 'media')
 
 if os.path.isfile(join(dirname(abspath(__file__)), 'conf.py')):
     from movie_time.conf import *
