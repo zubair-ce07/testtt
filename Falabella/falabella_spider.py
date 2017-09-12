@@ -76,11 +76,16 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
         for raw_sku in raw_product['skus']:
             colour = raw_sku.get('color', 'default')
+
             if colour in visited_colors:
                 continue
 
+            media_asset_id = raw_sku['mediaAssetId']
+            if 'color' not in raw_sku:
+                media_asset_id = raw_product['mediaAssetId']
+
             visited_colors.add(colour)
-            url = self.image_request_url_t.format(product_id=raw_sku['mediaAssetId'])
+            url = self.image_request_url_t.format(product_id=media_asset_id)
 
             requests += [Request(url=url, callback=self.parse_image)]
 
@@ -121,7 +126,8 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
     def product_gender(self, response):
         xpath = '//*[contains(text(), "Género")]/parent::*[th or li]//text()'
 
-        soup = clean(response.xpath(xpath)) + [trail for trail, url in response.meta.get('trail') or []]
+        soup = clean(response.xpath(xpath)) + [trail for trail, url in response.meta.get('trail', [])]
+        soup += self.product_category(response)
         soup = ' '.join(soup).lower()
 
         for gender_key, gender in self.gender_map:
@@ -145,22 +151,20 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 def listing_x(categories):
     xpath_t = '//*[@data-menu-panel={panel_id}]//h4[contains(text(), "{sub_category}")]/ancestor::li[1]'
 
-    main_categories = [
-        '//div[@data-menu-panel>=5]',
-        '//div[@class="fb-hero-subnav--nav__block"]',  # sub brands
-        'link[rel="next"]'
-    ]
-
-    sub_categories = [xpath_t.format(panel_id=obj['id'], sub_category=sub_category)
-                      for obj in categories
-                      for sub_category in obj['categories']]
-
-    return main_categories + sub_categories
+    return [xpath_t.format(panel_id=obj['id'], sub_category=sub_category)
+            for obj in categories
+            for sub_category in obj['categories']]
 
 
 class FalabellaCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = FalabellaParseSpider()
+
+    main_categories = [
+        '//div[@data-menu-panel>=5]',
+        '//div[@class="fb-hero-subnav--nav__block"]',  # sub brands
+        'link[rel="next"]'
+    ]
 
     categories = [
         {
@@ -177,7 +181,7 @@ class FalabellaCrawlSpider(BaseCrawlSpider, Mixin):
     product_css = '#fbra_browseProductList'
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=listing_x(categories), tags=('link', 'a')),
+        Rule(LinkExtractor(restrict_xpaths=main_categories+listing_x(categories), tags=('link', 'a')),
              callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css),
              callback='parse_item'),
