@@ -1,3 +1,4 @@
+import pdb
 import urllib.parse
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
@@ -12,7 +13,7 @@ class Mixin:
     allowed_domains = ['shoecarnival.com']
 
     start_urls = [
-        'http://www.shoecarnival.com']
+        'http://www.shoecarnival.com/womens-sas-freetime-comfort-w/black/11148.scp']
 
     colour_req_t = "http://www.shoecarnival.com/browse/gadgets/pickerContents.jsp?_DARGS=/browse/gadgets/pickerContents.jsp.colorsizerefreshform" \
                    "&_dyncharset=UTF-8&_dynSessConf=-4196040722391773449&productId={0}&categoryId={1}&selectedColor={2}"
@@ -151,7 +152,7 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
 
     def colour_requests(self, response):
         color_requests = []
-        colours = response.css('div[class="swatch "] a::attr(data-color-name)').extract()
+        colours = response.css('.color-wrapper div:not([class="swatch active"]) a::attr(data-color-name)').extract()
 
         for colour in colours:
             colour = urllib.parse.quote(colour).replace("/","%2F")
