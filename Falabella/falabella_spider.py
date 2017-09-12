@@ -38,10 +38,10 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         ('hombre', 'men'),
         ('niño', 'boys'),
         ('niña', 'girls'),
-        ('unisex', 'unisex')
+        ('unisex', 'unisex-adults')
     ]
 
-    raw_product_re = 'fbra_browseMainProductConfig = (.*);'
+    raw_product_re = 'fbra_browseMainProductConfig\s=\s(.*);'
 
     image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}'
     image_request_url_t = 'http://falabella.scene7.com/is/image/Falabella/{product_id}/?req=set,json&id=PDP'
@@ -59,7 +59,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
         garment['name'] = raw_product['displayName']
         garment['brand'] = raw_product['brand']
-        garment['gender'] = self.product_gender(response)
+        garment['gender'] = self.product_gender(response, garment)
         garment['description'] = self.product_description(response)
         garment['care'] = self.product_care(response)
         garment['skus'] = self.skus(raw_product, response)
@@ -103,7 +103,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
     def product_price(self, response, raw_sku):
         raw_pricing = sum([[p['originalPrice'], p['symbol']] for p in raw_sku['price'] if p['label'] != 'CMR Puntos'],
                           [])
-        return super().product_pricing_common_new(response, money_strs=raw_pricing)
+        return self.product_pricing_common_new(response, money_strs=raw_pricing)
 
     def skus(self, raw_product, response):
         skus = {}
@@ -131,18 +131,33 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
     def product_care(self, response):
         return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
 
-    def product_gender(self, response):
+    def product_gender(self, response, garment):
         xpath = '//section[@data-panel="longDescription"]//li[contains(text(), "Género")]/text() | ' \
-                       '//th[contains(text(), "Género")]/../td/text()'
-        soup = clean(response.xpath(xpath))[0]
-        for gender_key, gender in self.gender_map:
-            if gender_key in soup.lower():
+                       '//th[contains(text(), "Género")]/parent::tr/td/text()'
+        soup = clean(response.xpath(xpath))[0] if response.xpath(xpath) else ''
+        gender = self.gender_from_soup(soup)
+        return gender or self.gender_from_trail(garment)
+
+    def gender_from_trail(self, garment):
+        if not garment['trail']:
+            return 'unisex-adults'
+
+        for trail, url in garment['trail']:
+            gender = self.gender_from_soup(trail)
+            if gender:
                 return gender
 
         return 'unisex-adults'
 
+    def gender_from_soup(self, soup):
+        for gender_key, gender in self.gender_map:
+            if gender_key in soup.lower():
+                return gender
+        return None
+
     def product_category(self, response):
-        return [cat.replace('/ ', '') for cat in clean(response.css('.fb-masthead__breadcrumb__links ::text'))]
+        return [cat.replace('/ ', '') for cat in clean(response.css('.fb-masthead__breadcrumb__links ::text'))
+                if 'home' not in cat.lower()]
 
     def raw_product(self, response):
         raw_product = response.xpath('//script[contains(text(), "skus")]').re(self.raw_product_re)[0]
