@@ -1,3 +1,4 @@
+import urllib.parse
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -34,16 +35,16 @@ class Mixin:
         'B.O.C.', 'BOBS', 'BODY GLOVE', 'BOGS FOOTWEAR', 'BONE COLLECTOR', 'BORN', 'BUENO OF CALIFORNIA', 'BZEES',
         'CAPELLI NEW YORK', 'CAROLINA BOOTS', 'CATERPILLAR', 'CEJON ACCESSORIES', 'CLARKS', 'CIRCUS BY SAM EDELMAN',
         'CITY CLASSIFIED', 'CLIFFS', 'COBIAN', 'COCONUTS', 'COLE HAAN', 'COLLECTION 18', 'COLUMBIA', 'CONVERSE',
-        'CROCS',
+        'CROCS', 'CARTERS',
         'DC', 'DAVID AARON', 'DEARFOAMS', 'DEER STAGS', 'DELICIOUS', 'DISNEY', 'DOCKERS', 'DR.MARTENS',
         'DR.MARTENS INDUSTRIAL',
         'DV BY DOLCE VITA', 'DURANGO', 'EARTH ORIGINS', 'EASTLAND', 'EASY SPIRIT', 'EASY STREET', 'EMERIL LAGASSE',
         'EUROSOFT',
         'FILA', 'FLORSHEIM', 'FOUR SEASONS HANDBAGS', 'FREEMAN', 'FRENCH SHRINER', 'FRENCH TOAST', 'G BY GUESS', 'GBX',
-        'GIORGIO BRUTINI', 'GOTCHA', 'GRASSHOPPERS', 'HEELYS', 'HI - TEC', 'IMPO', 'INNOCENCE', 'IRISH SETTER',
+        'GIORGIO BRUTINI', 'GOTCHA', 'GRASSHOPPERS', 'HEELYS', 'HI-TEC', 'IMPO', 'INNOCENCE', 'IRISH SETTER',
         'ITALIAN SHOEMAKERS',
         'ITASCA SONOMA', 'JBU BY JAMBU', 'JANSPORT SPORTBAGS', 'JELLYPOP', 'JESSICA SIMPSON', 'J RENEE', 'JUSTIN BOOTS',
-        'K - SWISS',
+        'K-SWISS',
         'KEDS', 'KEEN UTILITY', 'KENNETH COLE REACTION', 'KENSIE HANDBAGS', 'KHOMBU', 'KOOLABURRA BY UGG', 'L.A.GEAR',
         'LEVIS', 'LIFESTRIDE', 'LLORRAINE',
         'LONDON UNDERGROUND', 'LUGZ', 'MADDEN', 'MADDEN GIRL', 'MADELINE STUART', 'MADISON AVE.', 'MAGNUM', 'MAKALU',
@@ -59,7 +60,7 @@ class Mixin:
         'SPERRY', 'STACY ADAMS', 'STEVE MADDEN', 'STONE CANYON', 'STRIDE RITE', 'SUGAR', 'SUNS', 'TEVA', 'TIMBERLAND',
         'TIMBERLAND PRO', 'TOMMY HILFIGER',
         'TOUCH OF NINA', 'UNISA', 'UNLISTED', 'UNR8ED', 'US POLO ASSN', 'VANS', 'VOLATILE', 'WHITE MOUNTAIN',
-        'WOLVERINE', 'YELLOW BOX', 'Y - NOT'
+        'WOLVERINE', 'YELLOW BOX', 'Y-NOT'
     ]
 
 
@@ -104,15 +105,14 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.pdp-name::text'))[0]
 
     def product_brand(self, response):
+        raw_name = self.raw_name(response).upper()
         for brand in self.brands:
-            if brand in self.raw_name(response).upper():
+            if brand in raw_name:
                 return brand
 
     def product_name(self, response):
         raw_name = self.raw_name(response).upper()
-
-        for brand in self.brands:
-            raw_name = raw_name.replace(brand, "")
+        raw_name = raw_name.replace(self.product_brand(response), "")
 
         return raw_name.lower()
 
@@ -154,7 +154,8 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         colours = response.css('div[class="swatch "] a::attr(data-color-name)').extract()
 
         for colour in colours:
-            colour = colour.replace("/", "%2F").replace(" ", "%20")
+            colour = urllib.parse.quote(colour).replace("/","%2F")
+
             colour_url = self.colour_req_t.format(self.product_id(response), self.category_id(response), colour)
             color_requests.append(Request(colour_url, callback=self.parse_colour))
 
@@ -167,8 +168,8 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         sizes = response.css('option.charcoal.size_chart:not(disabled)::attr(value)').extract()
 
         for size in sizes:
-            size = size.replace("&#39;s ","%26%2339%3Bs%20").replace(" / ","%20%2F%20")
-            size = size.replace(" ","%20")
+            size = urllib.parse.quote(size).replace("/","%2F")
+
             size_url = self.size_req_t.format(self.product_id(response), self.category_id(response), colour, size)
             size_requests.append(Request(size_url, callback=self.parse_size))
 
