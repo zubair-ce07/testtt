@@ -1,0 +1,312 @@
+<!DOCTYPE html> {% load static %}
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <!-- This file has been downloaded from Bootsnipp.com. Enjoy! -->
+    <title>Dropdown Login &amp; Register - Bootsnipp.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.serializeJSON/2.8.1/jquery.serializejson.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="{% static 'js/user/blogs.js' %}"></script>
+    <script src="{% static 'js/user/login.js' %}"></script>
+    <script src="{% static 'js/user/logout.js' %}"></script>
+    <script src="{% static 'js/user/register.js' %}"></script>
+    <script src="{% static 'js/user/profile.js' %}"></script>
+    <script src="{% static 'js/blog/blog-list.js' %}"></script>
+    <script src="{% static 'js/blog/blog-view.js' %}"></script>
+    <script src="{% static 'js/blog/blog-new.js' %}"></script>
+    <script src="{% static 'js/blog/blog-edit.js' %}"></script>
+    <script src="{% static 'js/blog/blog-delete.js' %}"></script>
+    <script src="{% static 'js/comment/comment-new.js' %}"></script>
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://cdn.phpoll.com/css/animate.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <script>
+        window.drf = {
+            csrfHeaderName: "X-CSRFTOKEN",
+            csrfCookieName: "csrftoken"
+        };
+
+    </script>
+    <script src="{% static 'js/includes/csrf.js' %}"></script>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			</button>
+                <a class="navbar-brand" href="">Project Name</a>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="">Home</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown dropdown-logout" style="display:none">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span>
+                            <strong class="username"></strong>
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <div class="navbar-login navbar-login-session">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <a href="#" class="btn btn-danger btn-block button-logout">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown dropdown-register">
+                        <a href="http://phpoll.com/register" class="dropdown-toggle" data-toggle="dropdown">Register <span class="caret"></span></a>
+                        <ul class="dropdown-menu dropdown-lr animated flipInX" role="menu">
+                            <div class="col-lg-12">
+                                <div class="text-center">
+                                    <h3><b>Register</b></h3>
+                                </div>
+                                <form id="ajax-register-form" action="" method="post" role="form" autocomplete="off">
+                                    <div class="form-group">
+                                        <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="email" name="email" id="email" tabindex="1" class="form-control" placeholder="Email Address" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password" name="password" id="password" tabindex="2" class="form-control" placeholder="Password">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password" name="password2" id="confirm-password" tabindex="2" class="form-control" placeholder="Confirm Password">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="date" name="profile[date_of_birth]" tabindex="1" class="form-control" placeholder="Date of Birth" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="text" name="profile[phone_number]" tabindex="1" class="form-control" placeholder="Phone" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="text" name="profile[address]" tabindex="1" class="form-control" placeholder="Address" value="">
+                                    </div>
+                                    <span id="invalid-signup" class="error"></span>
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-xs-6 col-xs-offset-3">
+                                                <input type="submit" name="register-submit" id="register-submit" tabindex="4" class="form-control btn btn-info" value="Register Now">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </ul>
+                    </li>
+                    <li class="dropdown dropdown-login">
+                        <a class="dropdown-toggle" data-toggle="dropdown">Log In <span class="caret"></span></a>
+                        <ul class="dropdown-menu dropdown-lr animated slideInRight" role="menu">
+                            <div class="col-lg-12">
+                                <div class="text-center">
+                                    <h3><b>Log In</b></h3>
+                                </div>
+                                <form id="ajax-login-form" action="" method="post" role="form" autocomplete="off">
+                                    <div class="form-group">
+                                        <label for="username">Username</label>
+                                        <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value="" autocomplete="off">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="password">Password</label>
+                                        <input type="password" name="password" id="password" tabindex="2" class="form-control" placeholder="Password" autocomplete="off">
+                                    </div>
+                                    <span id="invalid-credentials" class="error"></span>
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-xs-6 col-xs-offset-3">
+                                                <input type="submit" name="login-submit" id="login-submit" tabindex="4" class="form-control btn btn-success" value="Log In">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <h1>
+        <div class="alert alert-success alert-login" role="alert" hidden="hidden">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+            <strong>Success!</strong> You have been signed in successfully!
+        </div>
+        <div class="alert alert-success alert-signup" role="alert" hidden="hidden">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+            <strong>Success!</strong> You have been signed up successfully!
+        </div>
+        <div class="alert alert-danger alert-request" role="alert" hidden="hidden">
+            <button type="button" class="close" data-hide="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+            <strong>Fail!</strong> Please login to view details.
+        </div>
+    </h1>
+
+    <main>
+
+        <input class="no-radio-check" id="tab1" type="radio" name="tabs" checked>
+        <label class="tab recommended" for="tab1">Recommended</label>
+
+        <input class="no-radio-check" id="tab2" type="radio" name="tabs">
+        <label class="tab all-blogs" for="tab2">Create New</label>
+
+        <input class="no-radio-check" id="tab3" type="radio" name="tabs">
+        <label class="tab new-blog" for="tab3">My Blogs</label>
+
+        <section id="content1">
+            <p class="lead">
+                <a class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-refresh pull-right"></span></a>
+            </p>
+            <div class="blog-list">
+                <div class="blog-post" hidden="hidden">
+                    <p class="lead">
+                        <span class="blog-title"></span> by
+                        <a class="author" href="#"></a>
+                    </p>
+                    <!-- Date/Time -->
+                    <p class="blog-post-time"><span class="glyphicon glyphicon-time"></span></p>
+                    <!-- Post Content -->
+                    <p class="blog-summary"></p>
+
+                    <div class="span4 collapse-group">
+                        <div class="collapse blog-content">
+                            <p class="blog-text"></p>
+                            <!--                            <div class="comment-section">-->
+                            <!-- Comments Form -->
+                            <div class="card my-4">
+                                <h5 class="card-header">Leave a Comment:</h5>
+                                <div class="card-body">
+                                    <form class="comment-new">
+                                        <input type="hidden" name="comment_for:number" class="comment-for">
+                                        <div class="form-group">
+                                            <textarea class="form-control" name="text" rows="3"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <!-- Comments List -->
+                            <div class="comment-list">
+
+                                <div class="comment" hidden="hidden">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <strong class="created-by"></strong> <span class="text-muted created-on"></span>
+                                        </div>
+                                        <div class="panel-body text">
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <p>
+                            <a href="" class="btn view-more" data-toggle="collapse" data-target=".blog-content">View details...</a>
+                        </p>
+                    </div>
+                    <hr>
+                </div>
+            </div>
+        </section>
+
+        <section id="content2">
+            <form class="form submit-blog" role="form">
+                <h3>Add New Blog</h3>
+                <fieldset>
+                    <input placeholder="Blog Title" type="text" tabindex="1" name="title" required autofocus>
+                </fieldset>
+                <fieldset>
+                    <textarea placeholder="Type your blog here...." tabindex="5" name="text" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <textarea placeholder="Type your blog summary here...." tabindex="5" name="summary" required></textarea>
+                </fieldset>
+                <label for="primary" class="btn btn-primary">Published <input type="checkbox" name="is_published:boolean" id="primary" class="badgebox"><span class="badge">&check;</span></label>
+                <label for="info" class="btn btn-info">Public <input type="checkbox" name="is_public:boolean" id="info" class="badgebox"><span class="badge">&check;</span></label>
+                <label for="warning" class="btn btn-warning">Comments<input name="comment_allowed:boolean" type="checkbox" id="warning" class="badgebox"><span class="badge">&check;</span></label>
+                <div class="action-buttons pull-right">
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="content3">
+
+            <div class="blog-list">
+                <div class="blog-post" hidden="hidden">
+                    <p class="lead">
+                        <span class="blog-title"></span> by
+                        <a class="author" href="#"></a>
+                    </p>
+                    <!-- Date/Time -->
+                    <form class="delete-blog" name="delete-form">
+                        <input type="hidden" class="blog-slug" name='blog-slug'>
+                        <button type="submit" class="btn btn-danger pull-right delete-blog">Delete</button>
+                    </form>
+                    <p class="blog-post-time"><span class="glyphicon glyphicon-time"></span></p>
+<!--                    glyphicon glyphicon-edit-->
+                    <!-- Post Content -->
+                    <form class="edit-blog-form">
+                        <input type="hidden" name="created_by" class="created-by">
+                        <input type="hidden" name="slug" class="slug">
+                        <input type="hidden" name="title" class="title">
+                        <a href="#" class="edit-blog"><span class="glyphicon glyphicon-edit pull-right"></span></a>
+                        <p><textarea type="" class="blog-summary" name="summary" readonly></textarea></p>
+                        <div class="span4 collapse-group">
+                            <p><textarea class="collapse blog-text" name="text" readonly></textarea></p>
+                            <p><a class="btn view-more" data-toggle="collapse" data-target=".blog-text">View details...</a></p>
+                        </div>
+                        <!-- Setting Buttons -->
+                        <div class="setting-buttons">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-primary is-published"> Published
+                                <input type="checkbox" name="is_published:boolean" autocomplete="off" checked>
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </label>
+                                <label class="btn btn-info is-public"> Public
+                                <input type="checkbox" name="is_public:boolean" autocomplete="off" checked>
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </label>
+                                <label class="btn btn-warning comments-allowed"> Comments Allowed
+                                <input type="checkbox" name="comments_allowed:boolean" autocomplete="off" checked>
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </label>
+                            </div>
+                            <div class="action-buttons pull-right">
+                                <button type="submit" class="btn btn-success">Save</button>
+                            </div>
+                        </div>
+                    </form>
+                    <hr>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+</body>
+
+</html>
