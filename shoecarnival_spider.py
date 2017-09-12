@@ -209,3 +209,4 @@ class ShoecarnivalCrawlSpider(BaseCrawlSpider, Mixin):
 
         Rule(LinkExtractor(restrict_css=products_css, deny=('/global')), callback='parse_item'),
     )
+
