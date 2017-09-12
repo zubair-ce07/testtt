@@ -1,5 +1,7 @@
-import pdb
+import json
 import urllib.parse
+
+import re
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -10,10 +12,10 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean
 class Mixin:
     retailer = "shoecarnival-us"
     market = 'US'
-    allowed_domains = ['shoecarnival.com']
+    allowed_domains = ['shoecarnival.com', 'i1.adis.ws']
 
     start_urls = [
-        'http://www.shoecarnival.com/womens-sas-freetime-comfort-w/black/11148.scp']
+        'http://www.shoecarnival.com/']
 
     colour_req_t = "http://www.shoecarnival.com/browse/gadgets/pickerContents.jsp?_DARGS=/browse/gadgets/pickerContents.jsp.colorsizerefreshform" \
                    "&_dyncharset=UTF-8&_dynSessConf=-4196040722391773449&productId={0}&categoryId={1}&selectedColor={2}"
@@ -21,7 +23,7 @@ class Mixin:
     size_req_t = "http://www.shoecarnival.com/browse/gadgets/pickerContents.jsp?_DARGS=/browse/gadgets/pickerContents.jsp.colorsizerefreshform" \
                  "&_dyncharset=UTF-8&_dynSessConf=-4196040722391773449&productId={0}&categoryId={1}&selectedColor={2}&selectedWidth=&selectedSize={3}"
 
-    image_url_t = "https://i1.adis.ws/i/scvl/{0}_1"
+    image_url_t = "http://i1.adis.ws/s/scvl/{0}.js?&v=1&deep=true&timestamp=962277038988&arg=%{0}%27&func=amp.jsonReturn"
 
     gender = [
         'Women',
@@ -78,24 +80,31 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
         garment['gender'] = self.product_gender(response)
-        garment['image_urls'] = self.image_urls(response)
+        garment['image_urls'] = []
 
         garment['skus'] = {}
-        garment['meta'] = {'requests_queue': self.colour_requests(response) + self.size_requests(response)}
+
+        garment['meta'] = {
+            'requests_queue': self.image_requests(response) + self.colour_requests(response) + self.size_requests(
+                response)}
 
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
         garment = response.meta['garment']
-
-        garment['image_urls'] += self.image_urls(response)
-        garment['meta']['requests_queue'] += self.size_requests(response)
+        garment['meta']['requests_queue'] += self.size_requests(response) + self.image_requests(response)
 
         return self.next_request_or_garment(garment)
 
     def parse_size(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
+
+        return self.next_request_or_garment(garment)
+
+    def parse_images(self, response):
+        garment = response.meta['garment']
+        garment['image_urls'] += self.image_urls(response)
 
         return self.next_request_or_garment(garment)
 
@@ -137,8 +146,14 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         return [rd for rd in self.raw_description(response) if self.care_criteria(rd)]
 
     def image_urls(self, response):
-        colour_id = response.css('div[class="swatch active"] a::attr(data-image-id)').extract_first()
-        return [self.image_url_t.format(colour_id)]
+        raw_images = "{" + re.findall('MSET",(.*)\);', response.text)[0]
+        raw_images = json.loads(raw_images)["items"]
+
+        return [img['src'] for img in raw_images]
+
+    def image_requests(self, response):
+        colour_id = response.css('div[class="swatch active"] a::attr(data-set)').extract_first()
+        return [Request(self.image_url_t.format(colour_id), callback=self.parse_images)]
 
     def skus(self, response):
         sku = {'colour': response.css('div.atg_store_pickerLabel span::text').extract_first()}
@@ -155,7 +170,7 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         colours = response.css('.color-wrapper div:not([class="swatch active"]) a::attr(data-color-name)').extract()
 
         for colour in colours:
-            colour = urllib.parse.quote(colour).replace("/","%2F")
+            colour = urllib.parse.quote(colour).replace("/", "%2F")
 
             colour_url = self.colour_req_t.format(self.product_id(response), self.category_id(response), colour)
             color_requests.append(Request(colour_url, callback=self.parse_colour))
@@ -169,7 +184,7 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         sizes = response.css('option.charcoal.size_chart:not(disabled)::attr(value)').extract()
 
         for size in sizes:
-            size = urllib.parse.quote(size).replace("/","%2F")
+            size = urllib.parse.quote(size).replace("/", "%2F")
 
             size_url = self.size_req_t.format(self.product_id(response), self.category_id(response), colour, size)
             size_requests.append(Request(size_url, callback=self.parse_size))
@@ -194,4 +209,3 @@ class ShoecarnivalCrawlSpider(BaseCrawlSpider, Mixin):
 
         Rule(LinkExtractor(restrict_css=products_css, deny=('/global')), callback='parse_item'),
     )
-
