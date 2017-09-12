@@ -151,10 +151,6 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
 
         return [img['src'] for img in raw_images]
 
-    def image_requests(self, response):
-        colour_id = response.css('div[class="swatch active"] a::attr(data-set)').extract_first()
-        return [Request(self.image_url_t.format(colour_id), callback=self.parse_images)]
-
     def skus(self, response):
         sku = {'colour': response.css('div.atg_store_pickerLabel span::text').extract_first()}
         sku['size'] = response.css('option.charcoal.size_chart[selected]::attr(value)').extract_first()
@@ -190,6 +186,10 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
             size_requests.append(Request(size_url, callback=self.parse_size))
 
         return size_requests
+
+    def image_requests(self, response):
+        colour_id = response.css('div[class="swatch active"] a::attr(data-set)').extract_first()
+        return [Request(self.image_url_t.format(colour_id), callback=self.parse_images)]
 
 
 class ShoecarnivalCrawlSpider(BaseCrawlSpider, Mixin):
