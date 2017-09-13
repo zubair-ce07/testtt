@@ -181,24 +181,7 @@ class ChildrensalonUKCrawlSpider(ChildrensalonCrawlSpider, MixinUK):
     def start_requests(self):
         yield Request(
             'https://www.childrensalon.com/',
-            cookies={"__country": "pk", "store": "en", "__sst": "5", "currency": "GBP",
-                     "CACHED_FRONT_FORM_KEY": "K3MbcrGTKvG0hbV1",
-                     "visid_incap_1061443": "vTCYSv3ZTjGqCfx3jd7UNIskuVkAAAAAQUIPAAAAAACMhNXbgTEhXlI5zXn+j51e",
-                     "nlbi_1061443": "HsTdQTKY+xRQ8m6Qtm9sWgAAAAC2VqG95mTzDOkZJ0pC01J5",
-                     "incap_ses_165_1061443": "DZZlJMfMqwJ8XjwsSjNKAoskuVkAAAAA3mD1iwY5aSyB2ec4noX8Og==",
-                     "csc": "notified", "_tuid": "Pbuvmu",
-                     "visid_incap_1066729": "aFqxAWVxRbyxUabJv0p35o4kuVkAAAAAQUIPAAAAAADAFTrSZducUXAMFDh6ZQOW",
-                     "incap_ses_165_1066729": "JHCoBRueZiGxZzwsSjNKAo4kuVkAAAAAniujhpHbNa4XyxGLQ91ULw==",
-                     "_pk_id.1.bc18": "0e11c7ffc0cee25d.1505305743.1.1505305743.1505305743.", "_pk_ses.1.bc18": "*",
-                     "_ga": "GA1.3.774733996.1505305743", "_gid": "GA1.3.1999098295.1505305743",
-                     "tracker.events": "%5B%5D", "mf_9f4efc1c-a53a-4a5f-a26f-9b3ecf252563": "-1",
-                     "PAPVisitorId": "9afacef0a19d0dd72ed063bc2752zkWE",
-                     "_et_id.356aa0f27af215f4.undefined": "34921668e674cfb1.1505305745.1.1505305745.1505305745.0",
-                     "_et_ses.356aa0f27af215f4.undefined": "*", "__osp_check": "1",
-                     "frontend": "2v56ba9jrfhudeh0lhtlsnlt64",
-                     "ometria": "2_cid%3DwCkRsjk8BSomivSq%26nses%3D1%26osts%3D1505305746%26sid%3Dab804d45nAfZyCIqmMzT%26npv%3D1%26slt%3D1505305746",
-                     "__cs_storage_liveChatStatus": "1505305747970"},
-
+            cookies={"store": "en", "currency": "GBP"},
             callback=self.parse_outlet)
 
     def parse_outlet(self, response):
@@ -216,24 +199,7 @@ class ChildrensalonDECrawlSpider(ChildrensalonCrawlSpider, MixinDE):
     def start_requests(self):
         yield Request(
             'https://www.childrensalon.com/store-switcher/switch/store/code/de/?referer_url=https%3A%2F%2Fwww.childrensalon.com%2F',
-            cookies={"__country": "pk", "store": "de", "__sst": "5", "currency": "EUR",
-                     "CACHED_FRONT_FORM_KEY": "K3MbcrGTKvG0hbV1",
-                     "visid_incap_1061443": "vTCYSv3ZTjGqCfx3jd7UNIskuVkAAAAAQUIPAAAAAACMhNXbgTEhXlI5zXn+j51e",
-                     "nlbi_1061443": "HsTdQTKY+xRQ8m6Qtm9sWgAAAAC2VqG95mTzDOkZJ0pC01J5",
-                     "incap_ses_165_1061443": "DZZlJMfMqwJ8XjwsSjNKAoskuVkAAAAA3mD1iwY5aSyB2ec4noX8Og==",
-                     "csc": "notified", "_tuid": "Pbuvmu",
-                     "visid_incap_1066729": "aFqxAWVxRbyxUabJv0p35o4kuVkAAAAAQUIPAAAAAADAFTrSZducUXAMFDh6ZQOW",
-                     "incap_ses_165_1066729": "JHCoBRueZiGxZzwsSjNKAo4kuVkAAAAAniujhpHbNa4XyxGLQ91ULw==",
-                     "_pk_id.1.bc18": "0e11c7ffc0cee25d.1505305743.1.1505305743.1505305743.", "_pk_ses.1.bc18": "*",
-                     "_ga": "GA1.3.774733996.1505305743", "_gid": "GA1.3.1999098295.1505305743",
-                     "tracker.events": "%5B%5D", "mf_9f4efc1c-a53a-4a5f-a26f-9b3ecf252563": "-1",
-                     "PAPVisitorId": "9afacef0a19d0dd72ed063bc2752zkWE",
-                     "_et_id.356aa0f27af215f4.undefined": "34921668e674cfb1.1505305745.1.1505305745.1505305745.0",
-                     "_et_ses.356aa0f27af215f4.undefined": "*", "__osp_check": "1",
-                     "frontend": "2v56ba9jrfhudeh0lhtlsnlt64",
-                     "ometria": "2_cid%3DwCkRsjk8BSomivSq%26nses%3D1%26osts%3D1505305746%26sid%3Dab804d45nAfZyCIqmMzT%26npv%3D1%26slt%3D1505305746",
-                     "__cs_storage_liveChatStatus": "1505305747970"},
-
+            cookies={"store": "de", "currency": "EUR"},
             callback=self.parse_outlet)
 
     def parse_outlet(self, response):
@@ -255,24 +221,7 @@ class ChildrensalonFRCrawlSpider(ChildrensalonCrawlSpider, MixinFR):
     def start_requests(self):
         yield Request(
             'https://www.childrensalon.com/store-switcher/switch/store/code/fr/?referer_url=https%3A%2F%2Fwww.childrensalon.com%2F',
-            cookies={"__country": "pk", "store": "fr", "__sst": "5", "currency": "EUR",
-                     "CACHED_FRONT_FORM_KEY": "K3MbcrGTKvG0hbV1",
-                     "visid_incap_1061443": "vTCYSv3ZTjGqCfx3jd7UNIskuVkAAAAAQUIPAAAAAACMhNXbgTEhXlI5zXn+j51e",
-                     "nlbi_1061443": "HsTdQTKY+xRQ8m6Qtm9sWgAAAAC2VqG95mTzDOkZJ0pC01J5",
-                     "incap_ses_165_1061443": "DZZlJMfMqwJ8XjwsSjNKAoskuVkAAAAA3mD1iwY5aSyB2ec4noX8Og==",
-                     "csc": "notified", "_tuid": "Pbuvmu",
-                     "visid_incap_1066729": "aFqxAWVxRbyxUabJv0p35o4kuVkAAAAAQUIPAAAAAADAFTrSZducUXAMFDh6ZQOW",
-                     "incap_ses_165_1066729": "JHCoBRueZiGxZzwsSjNKAo4kuVkAAAAAniujhpHbNa4XyxGLQ91ULw==",
-                     "_pk_id.1.bc18": "0e11c7ffc0cee25d.1505305743.1.1505305743.1505305743.", "_pk_ses.1.bc18": "*",
-                     "_ga": "GA1.3.774733996.1505305743", "_gid": "GA1.3.1999098295.1505305743",
-                     "tracker.events": "%5B%5D", "mf_9f4efc1c-a53a-4a5f-a26f-9b3ecf252563": "-1",
-                     "PAPVisitorId": "9afacef0a19d0dd72ed063bc2752zkWE",
-                     "_et_id.356aa0f27af215f4.undefined": "34921668e674cfb1.1505305745.1.1505305745.1505305745.0",
-                     "_et_ses.356aa0f27af215f4.undefined": "*", "__osp_check": "1",
-                     "frontend": "2v56ba9jrfhudeh0lhtlsnlt64",
-                     "ometria": "2_cid%3DwCkRsjk8BSomivSq%26nses%3D1%26osts%3D1505305746%26sid%3Dab804d45nAfZyCIqmMzT%26npv%3D1%26slt%3D1505305746",
-                     "__cs_storage_liveChatStatus": "1505305747970"},
-
+            cookies={"store": "fr", "currency": "EUR"},
             callback=self.parse_outlet)
 
     def parse_outlet(self, response):
