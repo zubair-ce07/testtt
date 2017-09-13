@@ -4,35 +4,36 @@ import { connect } from 'react-redux';
 class SelectedArticle extends Component{
 
     render(){
-        if (!this.props.selectedArticle){
+        let selectedArticle = this.props.selectedArticle;
+
+        if (!selectedArticle){
             return <h1> Select Article To View Detail. </h1>
         }
-
         return(
             <div>
                 <h1 className="h1">
-                    {this.props.selectedArticle.title}
+                    {selectedArticle.title}
                 </h1>
                 <div>
                     <strong>Category Name: </strong>
-                    {this.props.selectedArticle.category_name}
+                    {selectedArticle.category_name}
                 </div>
                 <div>
                     <strong>Category Source: </strong>
-                    {this.props.selectedArticle.category_source}
+                    {selectedArticle.category_source}
                 </div>
                 <div>
                     <strong>Publication date: </strong>
-                    {this.props.selectedArticle.publication_date}
+                    {selectedArticle.publication_date}
                 </div>
                 <div>
                     <strong>Tags: </strong>
-                    {this.props.selectedArticle.tags}
+                    {selectedArticle.tags}
                 </div>
                 <br/>
                 <div>
                     <strong>Detail: </strong>
-                    {this.props.selectedArticle.detail}
+                    {selectedArticle.detail}
                 </div>
             </div>
         );
@@ -49,4 +50,3 @@ function mapStateToProp(state){
 }//function
 
 export default connect (mapStateToProp)(SelectedArticle);
-

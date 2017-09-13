@@ -4,6 +4,7 @@ from datetime import datetime
 
 from user import models
 
+USER_MODEL = get_user_model()
 
 class Command(BaseCommand):
     help = 'Insert dummy users into database'
@@ -19,7 +20,7 @@ class Command(BaseCommand):
             user_data = user.split()
             if user_data:
                 try:
-                    user = get_user_model().objects.create_user(
+                    user = USER_MODEL.objects.create_user(
                         username=user_data[0],
                         first_name=user_data[1],
                         last_name=user_data[2],

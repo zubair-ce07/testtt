@@ -21,12 +21,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'user.apps.UserConfig',
-    'articles.apps.ArticlesConfig',
-    'djcelery',
     'rest_framework',
     'rest_framework.authtoken',
+    'djcelery',
     'corsheaders',
+    'user.apps.UserConfig',
+    'articles.apps.ArticlesConfig',
 ]
 
 MIDDLEWARE = [
@@ -97,6 +97,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
+    'PAGE_SIZE': 20
 }
 
 LANGUAGE_CODE = 'en-us'

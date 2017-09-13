@@ -9,6 +9,8 @@ from forms.messages import ErrorMessages
 from user.models import UserProfile, Product
 from forms.custom_exceptions import InvalidNameInputError
 
+USER = get_user_model()
+
 
 class RegistrationForm(forms.ModelForm):
     """Class for Registration form, extended from ModelForm for user's model"""
@@ -24,7 +26,7 @@ class RegistrationForm(forms.ModelForm):
     gender = forms.ChoiceField(choices=GENDER_CHOICE)
 
     class Meta:
-        model = get_user_model()
+        model = USER
         fields = [
             'first_name', 'last_name', 'username',
             'email', 'password', 'gender'
@@ -64,7 +66,7 @@ class RegistrationForm(forms.ModelForm):
         :raises ValidationError
         """
         username = self.cleaned_data.get('username').lower()
-        if get_user_model().objects.filter(username=username).exists():
+        if USER.objects.filter(username=username).exists():
             raise forms.ValidationError(ErrorMessages.USERNAME_EXISTS)
         return username
 
@@ -75,7 +77,7 @@ class RegistrationForm(forms.ModelForm):
         :raises ValidationError
         """
         email = self.cleaned_data['email'].lower()
-        if get_user_model().objects.filter(email=email).exists():
+        if USER.objects.filter(email=email).exists():
             raise forms.ValidationError(ErrorMessages.EMAIL_EXISTS)
         return email
 
@@ -98,7 +100,7 @@ class RegistrationForm(forms.ModelForm):
         :raises ValidationError
         """
         gender = self.cleaned_data.get('gender')
-        if gender == '':
+        if not gender:
             raise forms.ValidationError(ErrorMessages.GENDER_NOT_SELECTED)
         return gender
 
@@ -119,7 +121,7 @@ class LoginForm(forms.ModelForm):
     current_user = None
 
     class Meta:
-        model = get_user_model()
+        model = USER
         fields = ['username', 'password']
         widgets = {
             'password': forms.PasswordInput(),

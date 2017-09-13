@@ -43,7 +43,7 @@ class NewsArticleSpider(scrapy.Spider):
         article['category_name'] = " ".join(category_name).strip()
         article['category_source'] = " ".join(category_source).strip()
         article['publication_date'] = " ".join(date).strip()
-        article['tags'] = ",".join(tags).strip()
+        article['tags'] = ", ".join(tags).strip()
         article['detail'] = " ".join(details).strip()
 
         yield article

@@ -6,22 +6,26 @@ import { selectArticle, getArticleList } from '../actions/index'
 
 class ArticleList extends Component{
 
-    constructor(props){
+    constructor(props) {
         super(props);
         this.props.getArticleList();
-
     }
 
     renderArticleList(){
-        return this.props.articles.map(article =>{
+        if (!this.props.articles.results){
             return(
-              <li
-                  onClick={() => this.props.selectArticle(article)}
-                  key={article.id}
-                  className="list-group-item "
-              >
-                  {article.title}
-              </li>
+                <div/>
+            )
+        }
+        return this.props.articles.results.map(article =>{
+            return(
+                <li
+                    onClick={() => this.props.selectArticle(article)}
+                    key={article.id}
+                    className="list-group-item "
+                >
+                    {article.title}
+                </li>
             );
         });
     }//renderList
@@ -50,12 +54,11 @@ function mapStateToProp(state){
 function mapDispatchToProp(dispatch) {
     return bindActionCreators (
         {
-            selectArticle:selectArticle,
-            getArticleList:getArticleList
+            selectArticle,
+            getArticleList
         },
         dispatch
     );
 }//mapDispatchToProp
 
 export default connect (mapStateToProp, mapDispatchToProp)(ArticleList);
-

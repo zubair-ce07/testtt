@@ -31,9 +31,6 @@ class App extends Component{
                     onVideoSelection={selectedVideo => this.setState({selectedVideo})}
                     videosList={this.state.videosList}
                 />
-
-
-
             </div>
         );
     }//render
@@ -49,5 +46,4 @@ class App extends Component{
 
 }//class
 
-//insert this component's generated HTML into DOM
 ReactDOM.render(<App />, document.querySelector('.container'));

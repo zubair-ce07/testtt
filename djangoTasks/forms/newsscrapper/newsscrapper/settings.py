@@ -12,7 +12,9 @@ NEWSPIDER_MODULE = 'newsscrapper.spiders'
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
-sys.path.append('/home/mubtada/Documents/training_projects/django_training/forms')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+sys.path.append(BASE_DIR)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'forms.settings'
 
 django.setup()

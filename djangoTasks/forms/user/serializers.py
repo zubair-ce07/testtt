@@ -7,10 +7,11 @@ from django.contrib.auth import get_user_model
 from forms.messages import ErrorMessages
 from user import models
 
+USER = get_user_model()
 
 class MyUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model()
+        model = USER
         exclude = ['groups', 'user_permissions']
         write_only_fields = ('password', )
         read_only_fields = (
@@ -28,7 +29,7 @@ class MyUserSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError(ErrorMessages.INVALID_NAME_ERROR)
 
     def validate_email(self, value):
-        if get_user_model().objects.filter(email=value).exists():
+        if USER.objects.filter(email=value).exists():
             raise serializers.ValidationError(ErrorMessages.EMAIL_EXISTS)
         return value
 
@@ -60,7 +61,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = get_user_model().objects.create(**user_data)
+        user = USER.objects.create(**user_data)
         user.set_password(user_data['password'])
         user.save()
         profile = models.UserProfile.objects.create(

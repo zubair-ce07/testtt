@@ -21,10 +21,6 @@ class VideosList extends Component{
         );
     }//render
 
-    onSelection(video){
-        this.props.onVideoSelection(video);
-    }
-
 }//class
 
 export default VideosList;

@@ -1,6 +1,7 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 
+USER = get_user_model()
 
 class EmailAuthenticationBackend(ModelBackend):
     """
@@ -16,16 +17,16 @@ class EmailAuthenticationBackend(ModelBackend):
         :raises: DoesNotExit: raise an exception if user not found
         """
         try:
-            user = get_user_model().objects.get(username=username)
+            user = USER.objects.get(username=username)
             if user.check_password(password):
                 return user
-        except get_user_model().DoesNotExist:
+        except USER.DoesNotExist:
             pass
         try:
-            user = get_user_model().objects.get(email=username)
+            user = USER.objects.get(email=username)
             if user.check_password(password):
                 return user
-        except get_user_model().DoesNotExist:
+        except USER.DoesNotExist:
             pass
         return None
 
@@ -45,7 +46,7 @@ class WithoutPasswordAuthenticationBackend(ModelBackend):
         """
         try:
             if not password:
-                user = get_user_model().objects.get(username=username)
+                user = USER.objects.get(username=username)
                 return user
-        except get_user_model().DoesNotExist:
+        except USER.DoesNotExist:
                 return None

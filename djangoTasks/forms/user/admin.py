@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from user import models
 from user import forms
 
+USER = get_user_model()
+
 
 class ProductPriceFilter(admin.SimpleListFilter):
 
@@ -21,12 +23,20 @@ class ProductPriceFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
 
-        if self.value() is '1':
-            return queryset.filter(price__gte=1, price__lte=360)
-        if self.value() is '2':
-            return queryset.filter(price__gte=361, price__lte=660)
-        if self.value() is '3':
-            return queryset.filter(price__gte=661, price__lte=960)
+        lower_limit = 1
+        higher_limit = 960
+
+        if self.value() == '1':
+            lower_limit = 1
+            higher_limit = 360
+        if self.value() == '2':
+            lower_limit = 1
+            higher_limit = 360
+        if self.value() == '3':
+            lower_limit = 1
+            higher_limit = 360
+
+        return queryset.filter(price__gte=lower_limit, price__lte=higher_limit)
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -69,6 +79,6 @@ class MyUserAdmin(admin.ModelAdmin):
         'is_active', 'is_superuser'
     )
 
-admin.site.register(get_user_model(), MyUserAdmin)
+admin.site.register(USER, MyUserAdmin)
 admin.site.register(models.Product, ProductAdmin)
 admin.site.register(models.UserProfile, UserProfileAdmin)

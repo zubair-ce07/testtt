@@ -31,7 +31,7 @@ class ResultList extends Component{
 
     renderTable(data){
 
-        const cityName = data.city.name;
+        const city = data.city;
         const temp = data.list.map(listData => listData.main.temp);
         const pressure = data.list.map(listData => listData.main.pressure);
         const humidity = data.list.map(listData => listData.main.humidity);
@@ -39,8 +39,8 @@ class ResultList extends Component{
         const windSpeed = data.list.map(listData => listData.wind.speed);
 
         return(
-            <tr key={data.city.id}>
-                <td><b> {cityName} </b></td>
+            <tr key={city.id}>
+                <td><b> {city.name} </b></td>
                 <td><Chart data={temp} color="red" units="K" /></td>
                 <td><Chart data={pressure} color="blue" units="hPa" /></td>
                 <td><Chart data={humidity} color="green" units="%" /></td>

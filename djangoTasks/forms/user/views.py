@@ -18,6 +18,8 @@ from user.serializers import *
 from user.decorators import is_super_user, is_unauthenticated_user
 from forms.permissions import IsOwner
 
+USER = get_user_model()
+
 
 @method_decorator(is_unauthenticated_user, 'dispatch')
 class IndexView(View):
@@ -112,7 +114,7 @@ class ViewProductsView(LoginRequiredMixin, View):
         retrieves all user's list and render
         view_product template along user's list
         """
-        users = get_user_model().objects.all()
+        users = USER.objects.all()
         context = {"item_list": [], "user_list": users, "user": None}
         return render(request, 'view_products.html', context)
 
@@ -122,13 +124,13 @@ class ViewProductsView(LoginRequiredMixin, View):
         product list of selected user and
         selected user's object
         """
-        user_list = get_user_model().objects.all()
+        user_list = USER.objects.all()
         user = None
         products = []
         try:
             u_id = int(request.POST.get('user_id'))
             if u_id is not 0:
-                user = get_user_model().objects.get(id=u_id)
+                user = USER.objects.get(id=u_id)
                 products = user.products.all()
         except IndexError:
             pass
@@ -170,14 +172,14 @@ class ProductDetailView(LoginRequiredMixin, generic.DetailView):
         :returns context with owner's user object
         """
         context = super(ProductDetailView, self).get_context_data(**kwargs)
-        owner = get_user_model().objects.get(id=self.get_object().owner_id)
+        owner = USER.objects.get(id=self.get_object().owner_id)
         context['owner'] = owner
         return context
 
 
 class UserProfileView(LoginRequiredMixin, generic.DetailView):
     """Generic Detail View to show user's detail"""
-    model = get_user_model()
+    model = USER
     template_name = 'user_profile.html'
 
 
@@ -192,7 +194,7 @@ class SignoutView(View):
 @method_decorator(is_super_user, 'dispatch')
 class UserListView(generic.ListView):
     """Generic List View to display all users list."""
-    model = get_user_model()
+    model = USER
     template_name = 'users_list.html'
 
 
@@ -210,7 +212,7 @@ class WithoutPasswordAuthticationView(View):
 
 class UserListAPI(rest_generic.ListAPIView):
     """retrieves users list"""
-    queryset = get_user_model().objects.all()
+    queryset = USER.objects.all()
     serializer_class = MyUserSerializer
     permission_classes = (permissions.IsAuthenticated, )
 
@@ -291,6 +293,12 @@ class SignoutAPI(APIView):
         try:
             request.user.auth_token.delete()
             logout(request)
-            return Response({"detail": "Successfully logged out."},)
+            return Response({
+                "detail": "Successfully logged out.",
+                "status": True
+            },)
         except ObjectDoesNotExist:
-            return Response({"detail": "Object Does Not Exist"},)
+            return Response({
+                "detail": "Object Does Not Exist",
+                "status": False
+            },)
