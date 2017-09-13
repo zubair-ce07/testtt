@@ -80,10 +80,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
             if colour in visited_colors:
                 continue
 
-            media_asset_id = raw_sku['mediaAssetId']
-            if 'color' not in raw_sku:
-                media_asset_id = raw_product['mediaAssetId']
-
+            media_asset_id = raw_sku['mediaAssetId'] if 'color' in raw_sku else raw_product['mediaAssetId']
             visited_colors.add(colour)
             url = self.image_request_url_t.format(product_id=media_asset_id)
 
