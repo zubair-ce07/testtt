@@ -13,7 +13,13 @@ class Mixin:
     lang = 'es'
     market = 'CL'
     allowed_domains = ['falabella.com', 'falabella.scene7.com']
-    start_urls = ['http://www.falabella.com/falabella-cl/']
+    start_urls = [
+        'http://www.falabella.com/falabella-cl/category/cat6930003/Hombre?id=cat6930003',
+        'http://www.falabella.com/falabella-cl/category/cat6930168/Mujer?id=cat6930168',
+        'http://www.falabella.com/falabella-cl/category/cat6930347/Ninos?id=cat6930347',
+        'http://www.falabella.com/falabella-cl/category/cat4320009/Ver-Todo-Zapatillas',
+        'http://www.falabella.com/falabella-cl/category/cat5620004/Vestuario',
+    ]
 
 
 class FalabellaParseSpider(BaseParseSpider, Mixin):
@@ -30,7 +36,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
     raw_product_re = 'fbra_browseMainProductConfig\s*=\s*(.*);'
 
-    image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}'
+    image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}/?$producto308$&wid=924&hei=924'
     image_request_url_t = 'http://falabella.scene7.com/is/image/Falabella/{product_id}/?req=set,json&id=PDP'
 
     def parse(self, response):
@@ -52,7 +58,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = self.skus(raw_product, response)
         garment['category'] = self.product_category(response)
 
-        garment['image_urls'] = []
+        garment['image_urls'] = self.main_image(response)
 
         garment['meta'] = {
             'requests_queue': self.image_requests(raw_product)
@@ -62,9 +68,12 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
     def parse_image(self, response):
         garment = response.meta.get('garment')
-        garment['image_urls'] += self.image_urls(response)
+        garment['image_urls'] += [img for img in self.image_urls(response) if img != garment['image_urls'][0]]
 
         return self.next_request_or_garment(garment)
+
+    def main_image(self, response):
+        return [clean(response.css('[data-content-type="image"]::attr(src)'))[0].replace('472', '924')]
 
     def image_urls(self, response):
         image_ids = set(re.findall(self.image_id_re, response.text))
@@ -107,18 +116,22 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-    def raw_description(self, response):
+    def raw_specifications(self, response):
         css = '.fb-product-information__specification__table__row-data'
-        raw_description = clean(response.css('section[data-panel="longDescription"] ::text'))
-        raw_description += [' '.join(clean(x.css(' ::text'))) for x in response.css(css)]
 
-        return raw_description
+        return [' '.join(clean(x.css(' ::text'))) for x in response.css(css)]
 
     def product_description(self, response):
-        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
+        xpath = '//section[@data-panel="longDescription"]//ul[1]//text() |' \
+                ' //section[@data-panel="longDescription"]//ul[3]//text()'
+        description = clean(response.xpath(xpath))
+
+        return description + [rd for rd in self.raw_specifications(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
-        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
+        care = clean(response.css('.fb-product-information-tab__copy ul:nth-of-type(2) li::text'))
+
+        return [rc for rc in self.raw_specifications(response) if self.care_criteria_simplified(rc)] + care
 
     def product_gender(self, response):
         xpath = '//*[contains(text(), "Género")]/parent::*[th or li]//text()'
@@ -145,41 +158,19 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return json.loads(raw_product)['state']['product']
 
 
-def listing_x(categories):
-    xpath_t = '//*[@data-menu-panel={panel_id}]//h4[contains(text(), "{sub_category}")]/ancestor::li[1]'
-
-    return [xpath_t.format(panel_id=obj['id'], sub_category=sub_category)
-            for obj in categories
-            for sub_category in obj['categories']]
-
-
 class FalabellaCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = FalabellaParseSpider()
 
-    main_categories = [
+    listing_xpath = [
         '//div[@data-menu-panel>=5]',
-        '//div[@class="fb-hero-subnav--nav__block"]',  # sub brands
-        'link[rel="next"]'
+        '//*[@rel="next"]'
     ]
 
-    categories = [
-        {
-            'id': '3',  # SPORTS
-            'categories': ['Hombre', 'Mujer', 'Niños', 'Zapatillas']
-            # Men, Women, Children, Sneakers
-        },
-        {
-            'id': '4',  # Children
-            'categories': ['Vestuario']  # Locker Room
-        }
-    ]
-
-    product_css = '#fbra_browseProductList'
+    product_css = '#fbra_browseProductList .fb-pod-group__item'
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=main_categories+listing_x(categories), tags=('link', 'a')),
-             callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css),
+        Rule(LinkExtractor(restrict_xpaths=listing_xpath, tags=('link', 'a',)), callback='parse'),
+        Rule(LinkExtractor(restrict_css=product_css, deny=Mixin.start_urls),
              callback='parse_item'),
     )
