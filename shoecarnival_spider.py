@@ -32,40 +32,6 @@ class Mixin:
         'Boys'
     ]
 
-    brands = [
-        'ADIDAS', 'ADIDAS NEO', 'ANCHORS EDGE BAY', 'ARIAT', 'ANNE KLEIN SPORT', 'ASICS', 'AXXIOM', 'BABY GIRL',
-        'BABY PHAT', 'BANDOLINO', 'BARETRAPS', 'BEARPAW', 'BEAVER CREEK', 'BEBE SPORT', 'BIRKENSTOCK', 'BLOWFISH',
-        'B.O.C.', 'BOBS', 'BODY GLOVE', 'BOGS FOOTWEAR', 'BONE COLLECTOR', 'BORN', 'BUENO OF CALIFORNIA', 'BZEES',
-        'CAPELLI NEW YORK', 'CAROLINA BOOTS', 'CATERPILLAR', 'CEJON ACCESSORIES', 'CLARKS', 'CIRCUS BY SAM EDELMAN',
-        'CITY CLASSIFIED', 'CLIFFS', 'COBIAN', 'COCONUTS', 'COLE HAAN', 'COLLECTION 18', 'COLUMBIA', 'CONVERSE',
-        'CROCS', 'CARTERS',
-        'DC', 'DAVID AARON', 'DEARFOAMS', 'DEER STAGS', 'DELICIOUS', 'DISNEY', 'DOCKERS', 'DR.MARTENS',
-        'DR.MARTENS INDUSTRIAL',
-        'DV BY DOLCE VITA', 'DURANGO', 'EARTH ORIGINS', 'EASTLAND', 'EASY SPIRIT', 'EASY STREET', 'EMERIL LAGASSE',
-        'EUROSOFT',
-        'FILA', 'FLORSHEIM', 'FOUR SEASONS HANDBAGS', 'FREEMAN', 'FRENCH SHRINER', 'FRENCH TOAST', 'G BY GUESS', 'GBX',
-        'GIORGIO BRUTINI', 'GOTCHA', 'GRASSHOPPERS', 'HEELYS', 'HI-TEC', 'IMPO', 'INNOCENCE', 'IRISH SETTER',
-        'ITALIAN SHOEMAKERS',
-        'ITASCA SONOMA', 'JBU BY JAMBU', 'JANSPORT SPORTBAGS', 'JELLYPOP', 'JESSICA SIMPSON', 'J RENEE', 'JUSTIN BOOTS',
-        'K-SWISS',
-        'KEDS', 'KEEN UTILITY', 'KENNETH COLE REACTION', 'KENSIE HANDBAGS', 'KHOMBU', 'KOOLABURRA BY UGG', 'L.A.GEAR',
-        'LEVIS', 'LIFESTRIDE', 'LLORRAINE',
-        'LONDON UNDERGROUND', 'LUGZ', 'MADDEN', 'MADDEN GIRL', 'MADELINE STUART', 'MADISON AVE.', 'MAGNUM', 'MAKALU',
-        'MARGARITAVILLE', 'MERRELL', 'MIA',
-        'MODA SPANA', 'NAUTICA', 'NEW BALANCE', 'NICKELODEON', 'NICOLE', 'NICOLE MILLER', 'NIKE', 'NINE WEST',
-        'NO PARKING', 'NORTHSIDE', 'NUNNBUSH',
-        'PAPRIKA', 'PARIS BLUES', 'PATRIZIA', 'PERRY ELLIS', 'PUMA', 'QUIKSILVER', 'RAINBOW SANDALS', 'RAMPAGE',
-        'REALTREE', 'REEBOK', 'REEF', 'REPORT',
-        'RIALTO', 'ROBERT WAYNE', 'ROCK AND CANDY', 'ROCKET DOG', 'ROCKPORT', 'ROCKY', 'ROSETTI HANDBAGS', 'ROXY',
-        'RYKA', 'SAS', 'SAUCONY', 'SELF ESTEEM',
-        'SEVEN DIALS', 'SHAQ', 'SKECHERS', 'SKECHERS CALI', 'SKECHERS GO', 'SKECHERS STREET', 'SKECHERS WORK', 'SODA',
-        'SOF SOLE LACES', 'SOLANZ',
-        'SPERRY', 'STACY ADAMS', 'STEVE MADDEN', 'STONE CANYON', 'STRIDE RITE', 'SUGAR', 'SUNS', 'TEVA', 'TIMBERLAND',
-        'TIMBERLAND PRO', 'TOMMY HILFIGER',
-        'TOUCH OF NINA', 'UNISA', 'UNLISTED', 'UNR8ED', 'US POLO ASSN', 'VANS', 'VOLATILE', 'WHITE MOUNTAIN',
-        'WOLVERINE', 'YELLOW BOX', 'Y-NOT'
-    ]
-
 
 class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + "-parse"
@@ -115,10 +81,7 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.pdp-name::text'))[0]
 
     def product_brand(self, response):
-        raw_name = self.raw_name(response).upper()
-        for brand in self.brands:
-            if brand in raw_name:
-                return brand
+        return response.css('.pdp-logo img::attr(alt)').extract_first()
 
     def product_name(self, response):
         raw_name = self.raw_name(response).upper()
@@ -135,6 +98,7 @@ class ShoecarnivalParseSpider(BaseParseSpider, Mixin):
         for raw_gender in self.gender:
             if raw_gender in gender_u:
                 return raw_gender.lower()
+        return "unisex-adults"
 
     def raw_description(self, response):
         return clean(response.css('section[id="product-description"] ::text'))
