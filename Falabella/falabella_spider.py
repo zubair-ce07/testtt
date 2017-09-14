@@ -36,14 +36,12 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
     raw_product_re = 'fbra_browseMainProductConfig\s*=\s*(.*);'
 
-    image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}/?$producto308$&wid=924&hei=924'
+    image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}?$producto308$&wid=924&hei=924'
     image_request_url_t = 'http://falabella.scene7.com/is/image/Falabella/{product_id}/?req=set,json&id=PDP'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
-
-        product_id = raw_product['id']
-        garment = self.new_unique_garment(product_id)
+        garment = self.new_unique_garment(raw_product['id'])
 
         if not garment:
             return
@@ -68,16 +66,17 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
     def parse_image(self, response):
         garment = response.meta.get('garment')
-        garment['image_urls'] += [img for img in self.image_urls(response) if img != garment['image_urls'][0]]
+        garment['image_urls'] = self.image_urls(response, garment['image_urls'])
 
         return self.next_request_or_garment(garment)
 
     def main_image(self, response):
         return [clean(response.css('[data-content-type="image"]::attr(src)'))[0].replace('472', '924')]
 
-    def image_urls(self, response):
+    def image_urls(self, response, main_image):
         image_ids = set(re.findall(self.image_id_re, response.text))
-        return [self.image_url_t.format(image_id=image_id) for image_id in image_ids]
+        image_urls = main_image + [self.image_url_t.format(image_id=image_id) for image_id in image_ids]
+        return sorted(set(image_urls), key=image_urls.index)
 
     def image_requests(self, raw_product):
         visited_colors = set()
@@ -116,22 +115,21 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-    def raw_specifications(self, response):
-        css = '.fb-product-information__specification__table__row-data'
+    def raw_description(self, response):
+        product_xpath = '//h2[contains(text(), "PRODUCTO")]/following-sibling::ul[1]//text()'
+        information_xpath = '//h2[contains(text(), "Adicional")]/following-sibling::ul//text()'
+        specification_css = '.fb-product-information__specification__table__row-data'
 
-        return [' '.join(clean(x.css(' ::text'))) for x in response.css(css)]
+        raw_description = clean(response.xpath(product_xpath)) + clean(response.xpath(information_xpath))
+        return raw_description + [' '.join(clean(x.css(' ::text'))) for x in response.css(specification_css)]
 
     def product_description(self, response):
-        xpath = '//section[@data-panel="longDescription"]//ul[1]//text() |' \
-                ' //section[@data-panel="longDescription"]//ul[3]//text()'
-        description = clean(response.xpath(xpath))
-
-        return description + [rd for rd in self.raw_specifications(response) if not self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
-        care = clean(response.css('.fb-product-information-tab__copy ul:nth-of-type(2) li::text'))
+        care = clean(response.xpath('//h2[contains(text(), "cuidar")]/following-sibling::ul[1]//text()'))
 
-        return [rc for rc in self.raw_specifications(response) if self.care_criteria_simplified(rc)] + care
+        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)] + care
 
     def product_gender(self, response):
         xpath = '//*[contains(text(), "Género")]/parent::*[th or li]//text()'
