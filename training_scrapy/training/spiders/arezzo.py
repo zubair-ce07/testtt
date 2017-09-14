@@ -1,5 +1,5 @@
-# from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
-from scrapy.linkextractor import LinkExtractor
+from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from scrapy.spiders import CrawlSpider
 import datetime
@@ -16,16 +16,19 @@ class ArezzoSpider(CrawlSpider):
     merch_info_regex = '(\s*\[PRE VENDA\]\s*\-?\s*)'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['.arz-nav'],),),
-        Rule(
-            LinkExtractor(restrict_css=['.arz-home-sliders .arz-cover-link'],),
-            callback='parse_product',
-        ),
+        Rule(LinkExtractor(restrict_css=['.arz-cover-link'], ), callback='parse_product', ),
+        Rule(LinkExtractor(restrict_css=['.arz-nav'], ), callback='request_next'),
     )
 
     start_urls = [
         'https://www.arezzo.com.br',
     ]
+
+    def request_next(self, response):
+        url = self.next_page_url(response)
+        if url:
+            yield Request(url=url)
+
 
     def parse_product(self, response):
         product = {}
@@ -144,3 +147,23 @@ class ArezzoSpider(CrawlSpider):
             if not sku.get('out_of_stock', False):
                 return False
         return True
+
+    def page_category(self, response):
+        category_css = '#breadcrumb a::text'
+        categories = response.css(category_css).extract()
+        if categories:
+            categories.pop(0)
+        return categories
+
+    def next_page_url(self, response):
+        url = 'https://www.arezzo.com.br/c/{category}?q=%3Arelevance%3A&sort=creation-time&page={number}&text='
+        next_page_css = '.arz-pagination .active span::text'
+
+        next_page = response.css(next_page_css).extract_first()
+
+        categories = self.page_category(response)
+        page_category = '/'.join(categories)
+
+        if next_page and page_category:
+            return url.format(category=page_category.lower(), number=next_page)
+        return None
