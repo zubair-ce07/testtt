@@ -116,11 +116,10 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def raw_description(self, response):
-        product_xpath = '//h2[contains(text(), "PRODUCTO")]/following-sibling::ul[1]//text()'
-        information_xpath = '//h2[contains(text(), "Adicional")]/following-sibling::ul//text()'
+        raw_description_xpath = '//h2[not(contains(text(), "cuidar"))]/following-sibling::ul[1]'
         specification_css = '.fb-product-information__specification__table__row-data'
 
-        raw_description = clean(response.xpath(product_xpath)) + clean(response.xpath(information_xpath))
+        raw_description = clean(response.xpath(raw_description_xpath))
         return raw_description + [' '.join(clean(x.css(' ::text'))) for x in response.css(specification_css)]
 
     def product_description(self, response):
