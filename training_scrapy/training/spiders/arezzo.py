@@ -5,6 +5,7 @@ from scrapy.spiders import CrawlSpider
 import datetime
 from training.utils import clean_price, currency_name
 
+
 class ArezzoSpider(CrawlSpider):
     name = 'arrezo-br'
     gender = 'women'
@@ -70,7 +71,8 @@ class ArezzoSpider(CrawlSpider):
                 'size': size,
                 'currency': currency,
                 'price': price,
-                'color': color
+                'color': color,
+                'care': self.product_care(response)
             }
             skus.append(sku)
 
@@ -144,6 +146,11 @@ class ArezzoSpider(CrawlSpider):
     def product_color(self, response):
         raw_information = self.product_raw_information(response)
         return self.product_information('Cor:', raw_information)
+
+    def product_care(self, response):
+        care = ['Material']
+        raw_information = self.product_raw_information(response)
+        return [information.strip() for information in raw_information for key in care if key in information]
 
     def product_retailer_sku(self, response):
         return response.url.split('/')[-1]
