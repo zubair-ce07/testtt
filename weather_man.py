@@ -30,7 +30,7 @@ def weather_man_report(path,year_month,report_type):
 
     if reading_files.__len__()>0:
         file_parser = WeatherManFileParser()
-        weather_readings = file_parser.populate_weather_readings(reading_files)
+        weather_readings = file_parser.populate_weather_man_readings(reading_files)
 
         weather_readings_calculator=WeatherManResultCalculator()
         weather_results = weather_readings_calculator.compute_result(weather_readings, report_type)
