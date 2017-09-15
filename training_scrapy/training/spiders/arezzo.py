@@ -3,20 +3,18 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from scrapy.spiders import CrawlSpider
 import datetime
-import re
-
+from training.utils import clean_price, currency_name
 
 class ArezzoSpider(CrawlSpider):
     name = 'arrezo-br'
     gender = 'women'
     language = 'pt'
-    currency = 'BRL'
 
-    brand_regex = '(\s*Disney x Arezzo\s*\|\s*)'
-    merch_info_regex = '(\s*\[PRE VENDA\]\s*\-?\s*)'
+    visited_references = dict()
 
     rules = (
         Rule(LinkExtractor(restrict_css=['.arz-nav'], ), callback='request_next_page'),
+        Rule(LinkExtractor(restrict_css=['.arz-product-wrapper .arz-cover-link'], ), callback='parse_product'),
     )
 
     start_urls = [
@@ -24,90 +22,96 @@ class ArezzoSpider(CrawlSpider):
     ]
 
     def request_next_page(self, response):
-        links = self.multiple_products(response)
-        if links:
-            url = self.next_page_url(response)
-            if url:
-                links.append(Request(url=url, callback=self.request_next_page))
-            return links
+        yield from self.parse(response)
 
-    def multiple_products(self, response):
-        links = []
-        product_links = self.product_links(response)
-        for link in product_links:
-            links.append(Request(url=link.url, callback=self.parse_product))
-        return links
-
-    def product_links(self, response):
-        product_link_css = '.arz-product-wrapper .arz-cover-link'
-        link_extractor = LinkExtractor(restrict_css=[product_link_css], )
-        return link_extractor.extract_links(response)
+        url = self.next_page_url(response)
+        yield Request(url=url, callback=self.request_next_page) if url else None
 
     def parse_product(self, response):
-        product = {}
-        product['crawl_start_time'] = datetime.datetime.now()
+        if self.visited(response):
+            return
 
-        raw_product_name = self.product_raw_name(response)
-        raw_information = self.product_raw_information(response)
-        size_list = self.product_size(response)
-        price = self.product_price(response)
-
-        color = self.product_color(raw_information)
-
-        product['name'] = self.product_name(raw_product_name)
-        product['brand'] = self.product_brand(raw_product_name)
-        product['merch_info'] = self.merch_info(raw_product_name)
-        product['retailer_sku'] = self.product_retailer_sku(raw_information)
-        product['category'] = self.product_category(response)
-        product['image_urls'] = self.product_image_urls(response)
-        product['description'] = self.product_description(response)
-        product['sku'] = self.product_skus(color, size_list, price)
+        product = {
+            'crawl_start_time': datetime.datetime.now(),
+            'name': self.product_name(response),
+            'brand': self.product_brand(response),
+            'merch_info': self.merch_info(response),
+            'retailer_sku': self.product_retailer_sku(response),
+            'category': self.product_category(response),
+            'image_urls': self.product_image_urls(response),
+            'description': self.product_description(response),
+            'sku': self.product_skus(response),
+            'gender': self.gender,
+            'spider_name': self.name,
+            'lang': self.language,
+            'url': response.url,
+            'url_original': response.url
+        }
         product['out_of_stock'] = self.product_out_of_stock(product['sku'])
-        product['gender'] = self.gender
-        product['spider_name'] = self.name
-        product['lang'] = self.language
-        product['url'] = response.url
-        product['url_original'] = response.url
 
         return product
 
-    def product_skus(self, color, size_list, price):
-        sku_list = []
-        for size, available in size_list:
-            sku = {}
-            sku['out_of_stock'] = not available
-            sku['sku_id'] = '{color}_{size}'.format(color=color, size=size)
-            sku['size'] = size
-            sku['currency'] = self.currency
-            sku['price'] = price
-            sku_list.append(sku)
-        return sku_list
+    def visited(self, response):
+        if self.visited_references.get(self.product_retailer_sku(response), False):
+            return True
+        self.visited_references[self.product_retailer_sku(response)] = True
+        return False
 
-    def product_name(self, values):
-        name = ' '.join(values)
-        name = re.sub(self.merch_info_regex, '', name)
-        return re.sub(self.brand_regex, '', name)
+    def product_skus(self, response):
+        product_size = self.product_size(response)
+        price, currency = self.product_price_and_currency(response)
+        color = self.product_color(response)
+
+        skus = []
+        for size, available in product_size.items():
+            sku = {
+                'out_of_stock': not available,
+                'sku_id': '{color}_{size}'.format(color=color, size=size),
+                'size': size,
+                'currency': currency,
+                'price': price,
+                'color': color
+            }
+            skus.append(sku)
+
+        return skus
+
+    def product_name(self, response):
+        remove_string = ['Disney x Arezzo', '[PRE VENDA]', '-']
+        name = self.product_raw_name(response)
+        for string in remove_string:
+            if string in name:
+                name = name.replace(string, '')
+        return name.strip()
 
     def product_category(self, response):
         category_css = '#breadcrumb a::text'
         categories = response.css(category_css).extract()
-        if categories:
-            categories.pop(0)
-            categories.pop()
-        return categories
+        return categories[1:-1] if categories else None
 
-    def product_brand(self, name):
-        name = ' '.join(name)
-        brand = re.search(self.brand_regex, name)
-        if brand:
-            return 'Disney x Arezzo'
+    def product_brand(self, response):
+        brands = ['Disney x Arezzo', 'Arezzo']
+        name = self.product_raw_name(response)
+        for brand in brands:
+            if brand in name:
+                return brand
         return 'Arezzo'
 
-    def product_information(self, regex, raw_information_list):
-        for raw_information in raw_information_list:
-            status = re.search(regex, raw_information)
-            if status:
-                return re.sub(regex, '', raw_information)
+    def merch_info(self, response):
+        tags = {
+            '[PRE VENDA]': 'PRE-SALE'
+        }
+        merch_info_tags = list()
+        name = self.product_raw_name(response)
+        for key, value in tags.items():
+            if key in name:
+                merch_info_tags.append(value)
+        return merch_info_tags
+
+    def product_information(self, key, raw_information):
+        for information in raw_information:
+            if key in information:
+                return information.replace(key, '').strip()
         return None
 
     def product_size(self, response):
@@ -116,14 +120,8 @@ class ArezzoSpider(CrawlSpider):
 
         available_size = response.css(size_available_css).extract()
         not_available_size = response.css(size_not_available_css).extract()
-        return [(size, True) for size in available_size] + [(size, False) for size in not_available_size]
 
-    def merch_info(self, name):
-        name = ' '.join(name)
-        status = re.search(self.merch_info_regex, name)
-        if status:
-            return ['PRE-SALE']
-        return []
+        return {**{size: True for size in available_size}, **{size: False for size in not_available_size}}
 
     def product_image_urls(self, response):
         images_url_css = '.arz-product-gallery-thumb img::attr(data-original)'
@@ -133,27 +131,30 @@ class ArezzoSpider(CrawlSpider):
         description_css = '.arz-description p:nth-child(2)::text'
         return response.css(description_css).extract()
 
-    def product_price(self, response):
-        price_regex = '\s*R\s*\$\s*'
-        price_css = '.arz-product-detail .arz-product-price::text'
-        raw_price = response.css(price_css).extract()
-        return self.product_information(price_regex, raw_price)
+    def product_price_and_currency(self, response):
+        price_css = ['.arz-product-detail .arz-product-price .arz-new-price::text',
+                     '.arz-product-detail .arz-product-price::text']
+        for css in price_css:
+            price = response.css(css).extract_first()
+            if price:
+                currency =  currency_name(price)
+                return (clean_price(price), currency)
+        return (None, None)
 
-    def product_color(self, raw_information):
-        color_regex = '\A\s*Cor\s*:\s*'
-        return self.product_information(color_regex, raw_information)
+    def product_color(self, response):
+        raw_information = self.product_raw_information(response)
+        return self.product_information('Cor:', raw_information)
 
-    def product_retailer_sku(self, raw_information):
-        retailer_sku_regex = '\A\s*Referência\s*:\s*'
-        return self.product_information(retailer_sku_regex, raw_information)
+    def product_retailer_sku(self, response):
+        return response.url.split('/')[-1]
 
     def product_raw_name(self, response):
         title_css = '.arz-product-detail .arz-product-title span::text'
-        return response.css(title_css).extract()
+        return response.css(title_css).extract_first()
 
     def product_raw_information(self, response):
-        information_css = '.arz-product-description-fix ::text'
-        return response.css(information_css).extract()
+        information_css = '.arz-product-description-fix :not([class])::text'
+        return [value.strip() for value  in response.css(information_css).extract() if value.strip()]
 
     def product_out_of_stock(self, skus):
         for sku in skus:
@@ -164,9 +165,7 @@ class ArezzoSpider(CrawlSpider):
     def page_category(self, response):
         category_css = '#breadcrumb a::text'
         categories = response.css(category_css).extract()
-        if categories:
-            categories.pop(0)
-        return categories
+        return categories[1:] if categories else None
 
     def next_page_url(self, response):
         url = 'https://www.arezzo.com.br/c/{category}?q=%3Arelevance%3A&sort=creation-time&page={number}&text='
