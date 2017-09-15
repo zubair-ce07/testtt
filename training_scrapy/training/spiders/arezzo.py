@@ -14,14 +14,13 @@ class ArezzoSpider(CrawlSpider):
 
     visited_references = dict()
 
-    # rules = (
-    #     Rule(LinkExtractor(restrict_css=['.arz-nav'], ), callback='request_next_page'),
-    #     Rule(LinkExtractor(restrict_css=['.arz-product-wrapper .arz-cover-link'], ), callback='parse_product'),
-    # )
+    rules = (
+        Rule(LinkExtractor(restrict_css=['.arz-nav'], ), callback='request_next_page'),
+        Rule(LinkExtractor(restrict_css=['.arz-product-wrapper .arz-cover-link'], ), callback='parse_product'),
+    )
 
     start_urls = [
-        'https://www.arezzo.com.br/bolsas/bolsa-satchel-persona-me-vinho/p/5001301710004U',
-        # 'https://www.arezzo.com.br',
+        'https://www.arezzo.com.br',
     ]
 
     def request_next_page(self, response):
@@ -31,7 +30,7 @@ class ArezzoSpider(CrawlSpider):
         if url:
             yield Request(url=url, callback=self.request_next_page)
 
-    def parse(self, response):
+    def parse_product(self, response):
         retailer_sku = self.product_retailer_sku(response)
         if retailer_sku in self.visited_references:
             return
