@@ -120,9 +120,13 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
         raw_skus = self.raw_skus(response)
+
         skus = {}
         previous_price = self.previous_price(response)
         pricing = self.product_pricing_common_new(response, money_strs=previous_price)
+
+        if not raw_skus:
+            raw_skus[self.one_size] = {'size': self.one_size}
 
         for key, raw_sku in raw_skus.items():
             sku = deepcopy(pricing)
