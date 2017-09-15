@@ -131,18 +131,18 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-    def raw_skus_from_attributes(self, colour, sizes):
+    def raw_skus_from_attributes(self, colours, sizes):
         raw_skus = {}
-        if not colour or not sizes:
-            key = 'colour' if colour else 'size'
-            for element in colour or sizes:
-                raw_skus[element] = {key: element}
-                raw_skus[element]['size'] = element if sizes else self.one_size
+        if colours and sizes:
+            for colour, size in list(product(colours, sizes)):
+                raw_skus[colour+'__'+size] = {'colour': colour, 'size': size}
 
             return raw_skus
 
-        for colour, size in list(product(colour, sizes)):
-            raw_skus[colour+'__'+size] = {'colour': colour, 'size': size}
+        key = 'colour' if colours else 'size'
+        for element in colours or sizes:
+            raw_skus[element] = {key: element}
+            raw_skus[element]['size'] = element if sizes else self.one_size
 
         return raw_skus
 
