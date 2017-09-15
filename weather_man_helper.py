@@ -1,20 +1,18 @@
 import sys
 import enum
-from collections import OrderedDict
 from datetime import datetime
+from collections import OrderedDict
 
 
 class ReportType(enum.Enum):
-    """
 
-    """
-    Year = 1
-    YearMonth = 2
-    TwoBarCharts = 3
+    Year, YearMonth, TwoBarCharts = range(1, 4)
 
 
 class WeatherManFileParser:
+
     """
+    WeatherManFileParser takes the weather files and read values of specific parameters/filters provided.
 
     """
 
@@ -27,17 +25,20 @@ class WeatherManFileParser:
             "Mean Humidity"
         ]
 
-    def populate_weather_readings(self,weather_files):
-        """
+    def populate_weather_readings(self, weather_files):
 
+        """
+        populate_weather_readings takes weather files path and extract specific weather readings.
         :param weather_files:
         :return:
+
         """
+
         for weather_file in weather_files:
             reading_columns = []
             readings = []
             weather_reading = OrderedDict()
-            with open(weather_file,'r') as f:
+            with open(weather_file, 'r') as f:
                 for line in f:
 
                     current_weather_reading=line.split(",")
@@ -75,10 +76,13 @@ class WeatherManFileParser:
         return self.__weather_readings
 
     def weather_man_readings(self):
+
+        """
+        weather_man_readings return readings extracted from weather files
+        :return:
+
         """
 
-        :return:
-        """
         return self.__weather_readings
 
     def __del__(self):
@@ -87,7 +91,9 @@ class WeatherManFileParser:
 
 
 class WeatherManResultCalculator:
+
     """
+    WeatherManResultCalculator handles calculation performs on weather readings
 
     """
 
@@ -95,13 +101,16 @@ class WeatherManResultCalculator:
         self.__results = OrderedDict()
 
     def read_filtered_weather_readings(self, weather_readings, reading_filter):
+
+        """
+        read_filtered_weather_readings read readings based on the filter provided
+        :param weather_readings:
+        :param reading_filter:
+        :return:
+        :return:
+
         """
 
-        :param weather_readings:
-        :param filter_:
-        :return:
-        :return:
-        """
         filtered_readings = OrderedDict()
         for reading in weather_readings[""+reading_filter+""]:
             for reading_parameter, reading_value in reading.items():
@@ -109,12 +118,15 @@ class WeatherManResultCalculator:
         return filtered_readings
 
     def calculate_highest_reading(self, max_readings, reading_filter):
-        """
 
+        """
+        calculate_highest_reading calculates highest reading value based on provided filter
         :param max_readings:
         :param reading_filter:
         :return:
+
         """
+
         reading_values = list(max_readings.values())
         reading_dates = list(max_readings.keys())
 
@@ -134,11 +146,13 @@ class WeatherManResultCalculator:
         return max_reading_value_with_day
 
     def calculate_lowest_reading(self, min_readings, reading_filter):
-        """
 
+        """
+        calculate_lowest_reading calculates lowest reading value based on provided filter
         :param min_readings:
         :param reading_filter:
         :return:
+
         """
 
         reading_values = list(min_readings.values())
@@ -161,12 +175,15 @@ class WeatherManResultCalculator:
         return min_reading_value_with_day
 
     def calculate_weather_readings_average(self, readings, reading_filter):
-        """
 
+        """
+        calculate_weather_readings_average calculates average reading value based on provided filter
         :param readings:
         :param reading_filter:
         :return:
+
         """
+
         reading_values = list(readings.values())
         average_of_reading= sum(reading_values)/float(len(reading_values))
         if reading_filter == "Temperature":
@@ -178,11 +195,13 @@ class WeatherManResultCalculator:
         return average_of_reading
 
     def compute_result(self, weather_readings, result_type):
-        """
 
+        """
+        compute_result compute provided types of result of weather readings
         :param weather_readings:
         :param result_type:
         :return:
+
         """
 
         if result_type == ReportType.Year:
@@ -231,27 +250,36 @@ class WeatherManResultCalculator:
 
 
 class WeatherManReportGenerator:
-    """
 
+    """
+    WeatherManReportGenerator manage and populate reports based on weather readings
+    
     """
 
     def populate_report(self, weather_man_results):
-        """
 
+        """
+        populate_report takes weather readings result and populate it's report to the user
         :param weather_man_results:
         :return:
+
         """
+
         for reading_parameter, reading_value in weather_man_results.items():
             print(reading_parameter + ": " + reading_value)
 
     def populate_bar_chart_report(self, weather_man_results, year, month):
+
         """
+        populate_bar_chart_report takes weather readings result and populate it's bar chart report to the user
 
         :param weather_man_results:
         :param year:
         :param month:
         :return:
+
         """
+
         weather_man_low_temperature = weather_man_results.popitem()
         weather_man_high_temperature = weather_man_results.popitem()
         print(month + " " + year)
@@ -278,18 +306,22 @@ class WeatherManReportGenerator:
         sys.stdout.write("\033[1;30m")  # black color
 
     def generate_report(self, weather_man_results, report_type, year="", month=""):
+
         """
+        generate_report generate report for weather readings
+        and give generate report to appropriate populate method to show report
 
         :param weather_man_results:
         :param report_type:
         :param year:
         :param month:
         :return:
+
         """
 
         if report_type == ReportType.TwoBarCharts:
             print("\n\n")
-            self.populate_bar_chart_report(weather_man_results,year,month)
+            self.populate_bar_chart_report(weather_man_results, year, month)
         else:
             print("\n\n")
             self.populate_report(weather_man_results)
