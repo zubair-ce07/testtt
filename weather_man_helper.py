@@ -20,6 +20,12 @@ class WeatherManFileParser:
 
     def __init__(self):
         self.__weather_readings = OrderedDict()
+        self.__weather_reading_filters = [
+            "Max TemperatureC",
+            "Min TemperatureC",
+            "Max Humidity",
+            "Mean Humidity"
+        ]
 
     def populate_weather_readings(self,weather_files):
         """
@@ -44,10 +50,7 @@ class WeatherManFileParser:
                 for key_index in range(0, reading_columns.__len__()):
                     for value_row_index in range(0, readings.__len__()):
                         for value_clm_index in range(key_index, key_index+1):
-                            if reading_columns[key_index].strip() == "Max TemperatureC"\
-                                    or reading_columns[key_index].strip() == "Min TemperatureC"\
-                                    or reading_columns[key_index].strip() == "Max Humidity"\
-                                    or reading_columns[key_index].strip() == "Mean Humidity":
+                            if reading_columns[key_index].strip() in self.__weather_reading_filters:
 
                                     if reading_columns[key_index] in self.__weather_readings:
                                         try:
@@ -79,7 +82,8 @@ class WeatherManFileParser:
         return self.__weather_readings
 
     def __del__(self):
-        self.__weather_readings.clear()
+        self.__weather_readings.clear()  # clear readings data on readings fetched
+        self.__weather_reading_filters.clear()  # clear filters when readings fetched
 
 
 class WeatherManResultCalculator:
@@ -108,7 +112,7 @@ class WeatherManResultCalculator:
         """
 
         :param max_readings:
-        :param filter_:
+        :param reading_filter:
         :return:
         """
         reading_values = list(max_readings.values())
@@ -133,7 +137,7 @@ class WeatherManResultCalculator:
         """
 
         :param min_readings:
-        :param filter_:
+        :param reading_filter:
         :return:
         """
 
@@ -160,7 +164,7 @@ class WeatherManResultCalculator:
         """
 
         :param readings:
-        :param filter_:
+        :param reading_filter:
         :return:
         """
         reading_values = list(readings.values())
@@ -225,6 +229,7 @@ class WeatherManResultCalculator:
     def __del__(self):
         self.__results.clear()
 
+
 class WeatherManReportGenerator:
     """
 
@@ -236,7 +241,6 @@ class WeatherManReportGenerator:
         :param weather_man_results:
         :return:
         """
-
         for reading_parameter, reading_value in weather_man_results.items():
             print(reading_parameter + ": " + reading_value)
 
