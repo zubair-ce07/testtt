@@ -16,19 +16,32 @@ class ArezzoSpider(CrawlSpider):
     merch_info_regex = '(\s*\[PRE VENDA\]\s*\-?\s*)'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['.arz-cover-link'], ), callback='parse_product', ),
-        Rule(LinkExtractor(restrict_css=['.arz-nav'], ), callback='request_next'),
+        Rule(LinkExtractor(restrict_css=['.arz-nav'], ), callback='request_next_page'),
     )
 
     start_urls = [
         'https://www.arezzo.com.br',
     ]
 
-    def request_next(self, response):
-        url = self.next_page_url(response)
-        if url:
-            yield Request(url=url)
+    def request_next_page(self, response):
+        links = self.multiple_products(response)
+        if links:
+            url = self.next_page_url(response)
+            if url:
+                links.append(Request(url=url, callback=self.request_next_page))
+            return links
 
+    def multiple_products(self, response):
+        links = []
+        product_links = self.product_links(response)
+        for link in product_links:
+            links.append(Request(url=link.url, callback=self.parse_product))
+        return links
+
+    def product_links(self, response):
+        product_link_css = '.arz-product-wrapper .arz-cover-link'
+        link_extractor = LinkExtractor(restrict_css=[product_link_css], )
+        return link_extractor.extract_links(response)
 
     def parse_product(self, response):
         product = {}
