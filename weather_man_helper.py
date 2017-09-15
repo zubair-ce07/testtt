@@ -25,7 +25,46 @@ class WeatherManFileParser:
             "Mean Humidity"
         ]
 
-    def populate_weather_readings(self, weather_files):
+    def read_weather_man_readings(self, reading_columns, readings):
+
+        """
+        read_weather_man_readings reads reading based on provided column found in weather man file
+        :param reading_columns:
+        :param readings:
+        :return:
+
+        """
+
+        weather_reading = OrderedDict()
+        for key_index in range(0, reading_columns.__len__()):
+            for value_row_index in range(0, readings.__len__()):
+                for value_clm_index in range(key_index, key_index + 1):
+                    if reading_columns[key_index].strip() in self.__weather_reading_filters:
+
+                        if reading_columns[key_index] in self.__weather_readings:
+                            try:
+                                weather_reading[readings[value_row_index][0]] = float(
+                                    readings[value_row_index][value_clm_index])
+
+                                self.__weather_readings[reading_columns[key_index].strip()].append(weather_reading)
+                            except ValueError:
+                                weather_reading[readings[value_row_index][0]] = 0.0
+
+                                self.__weather_readings[reading_columns[key_index].strip()].append(weather_reading)
+                        else:
+                            try:
+                                weather_reading[readings[value_row_index][0]] = float(
+                                    readings[value_row_index][value_clm_index])
+
+                                self.__weather_readings[reading_columns[key_index].strip()] = [weather_reading]
+                            except ValueError:
+                                weather_reading[readings[value_row_index][0]] = 0.0
+
+                                self.__weather_readings[reading_columns[key_index].strip()] = [weather_reading]
+
+                        weather_reading = OrderedDict()
+
+    def populate_weather_man_readings(self, weather_files):
 
         """
         populate_weather_readings takes weather files path and extract specific weather readings.
@@ -37,7 +76,6 @@ class WeatherManFileParser:
         for weather_file in weather_files:
             reading_columns = []
             readings = []
-            weather_reading = OrderedDict()
             with open(weather_file, 'r') as f:
                 for line in f:
 
@@ -48,31 +86,8 @@ class WeatherManFileParser:
                     else:
                         readings.append(current_weather_reading)
 
-                for key_index in range(0, reading_columns.__len__()):
-                    for value_row_index in range(0, readings.__len__()):
-                        for value_clm_index in range(key_index, key_index+1):
-                            if reading_columns[key_index].strip() in self.__weather_reading_filters:
+                    self.read_weather_man_readings(reading_columns,readings)
 
-                                    if reading_columns[key_index] in self.__weather_readings:
-                                        try:
-                                            weather_reading[readings[value_row_index][0]] = float(readings[value_row_index][value_clm_index])
-
-                                            self.__weather_readings[reading_columns[key_index].strip()].append(weather_reading)
-                                        except ValueError:
-                                            weather_reading[readings[value_row_index][0]] = 0.0
-
-                                            self.__weather_readings[reading_columns[key_index].strip()].append(weather_reading)
-                                    else:
-                                        try:
-                                            weather_reading[readings[value_row_index][0]] = float(readings[value_row_index][value_clm_index])
-
-                                            self.__weather_readings[reading_columns[key_index].strip()]=[weather_reading]
-                                        except ValueError:
-                                            weather_reading[readings[value_row_index][0]] = 0.0
-
-                                            self.__weather_readings[reading_columns[key_index].strip()] = [weather_reading]
-
-                                    weather_reading=OrderedDict()
         return self.__weather_readings
 
     def weather_man_readings(self):
@@ -253,7 +268,7 @@ class WeatherManReportGenerator:
 
     """
     WeatherManReportGenerator manage and populate reports based on weather readings
-    
+
     """
 
     def populate_report(self, weather_man_results):
