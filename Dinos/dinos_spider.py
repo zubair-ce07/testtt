@@ -104,7 +104,8 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         skus = {
             self.one_size: {'size': self.one_size}
         }
-        skus.update(self.product_pricing_common_new(response, post_process=self.clean_money))
+        skus[self.one_size].update(self.product_pricing_common_new(response, post_process=self.clean_money))
+
         return skus
 
     def skus(self, response):
@@ -119,7 +120,9 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         if resp['data'][0]['zaiko'] == '売り切れ':
             sku['out_of_stock'] = True
+
         sku.update(response.meta['garment']['meta']['pricing'])
+
         return {colour+'_'+size: sku}
 
     def size_requests(self, response):
@@ -188,6 +191,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
     def product_gender(self, response):
         soup = self.raw_name(response) + ' '.join(self.product_category(response)) + \
                ' '.join(self.product_trail(response))
+
         for gender_key, gender in self.gender_map:
             if gender_key in soup:
                 return gender
@@ -247,7 +251,7 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
     product_css = '.picPreview'
 
     rules = (
-        Rule(LinkExtractor(restrict_xpaths=pagination_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=pagination_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css),
              callback='parse_item'),
     )
