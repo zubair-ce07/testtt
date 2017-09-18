@@ -104,7 +104,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         skus = {
             self.one_size: {'size': self.one_size}
         }
-        skus.update(self.product_pricing_common_new(response))
+        skus.update(self.product_pricing_common_new(response, post_process=self.clean_money))
         return skus
 
     def skus(self, response):
