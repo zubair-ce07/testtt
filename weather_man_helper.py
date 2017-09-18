@@ -1,5 +1,6 @@
 import sys
 import enum
+import csv
 from datetime import datetime
 from collections import OrderedDict
 
@@ -10,14 +11,13 @@ class ReportType(enum.Enum):
 
 
 class WeatherManFileParser:
-
     """
     WeatherManFileParser takes the weather files and read values of specific parameters/filters provided.
 
     """
 
     def __init__(self):
-        self.__weather_readings = OrderedDict()
+        self.__weather_readings = list()
         self.__weather_reading_filters = [
             "Max TemperatureC",
             "Min TemperatureC",
@@ -25,79 +25,17 @@ class WeatherManFileParser:
             "Mean Humidity"
         ]
 
-    def read_weather_man_readings(self, reading_columns, readings):
+    def read_weather_man_file(self, weather_file):
 
-        """
-        read_weather_man_readings reads reading based on provided column found in weather man file
-        :param reading_columns:
-        :param readings:
-        :return:
-
-        """
-
-        weather_reading = OrderedDict()
-        for key_index in range(0, reading_columns.__len__()):
-            for value_row_index in range(0, readings.__len__()):
-                for value_clm_index in range(key_index, key_index + 1):
-                    if reading_columns[key_index].strip() in self.__weather_reading_filters:
-
-                        if reading_columns[key_index] in self.__weather_readings:
-                            try:
-                                weather_reading[readings[value_row_index][0]] = float(
-                                    readings[value_row_index][value_clm_index])
-
-                                self.__weather_readings[reading_columns[key_index].strip()].append(weather_reading)
-                            except ValueError:
-                                weather_reading[readings[value_row_index][0]] = 0.0
-
-                                self.__weather_readings[reading_columns[key_index].strip()].append(weather_reading)
-                        else:
-                            try:
-                                weather_reading[readings[value_row_index][0]] = float(
-                                    readings[value_row_index][value_clm_index])
-
-                                self.__weather_readings[reading_columns[key_index].strip()] = [weather_reading]
-                            except ValueError:
-                                weather_reading[readings[value_row_index][0]] = 0.0
-
-                                self.__weather_readings[reading_columns[key_index].strip()] = [weather_reading]
-
-                        weather_reading = OrderedDict()
+        with open(weather_file, 'r') as file:
+            reader = csv.DictReader(file)
+            for line in reader:
+                self.__weather_readings.append(line)
 
     def populate_weather_man_readings(self, weather_files):
 
-        """
-        populate_weather_readings takes weather files path and extract specific weather readings.
-        :param weather_files:
-        :return:
-
-        """
-
         for weather_file in weather_files:
-            reading_columns = []
-            readings = []
-            with open(weather_file, 'r') as f:
-                for line in f:
-
-                    current_weather_reading=line.split(",")
-
-                    if current_weather_reading and (not reading_columns):  # clm name in file, serve as key in code
-                        reading_columns = current_weather_reading
-                    else:
-                        readings.append(current_weather_reading)
-
-                    self.read_weather_man_readings(reading_columns,readings)
-
-        return self.__weather_readings
-
-    def weather_man_readings(self):
-
-        """
-        weather_man_readings return readings extracted from weather files
-        :return:
-
-        """
-
+            self.read_weather_man_file(weather_file)
         return self.__weather_readings
 
     def __del__(self):
@@ -106,44 +44,30 @@ class WeatherManFileParser:
 
 
 class WeatherManResultCalculator:
-
     """
     WeatherManResultCalculator handles calculation performs on weather readings
-
     """
 
     def __init__(self):
         self.__results = OrderedDict()
 
     def read_filtered_weather_readings(self, weather_readings, reading_filter):
-
-        """
-        read_filtered_weather_readings read readings based on the filter provided
-        :param weather_readings:
-        :param reading_filter:
-        :return:
-        :return:
-
-        """
-
         filtered_readings = OrderedDict()
-        for reading in weather_readings[""+reading_filter+""]:
-            for reading_parameter, reading_value in reading.items():
-                filtered_readings[reading_parameter] = reading_value
+        filtered_reading_values = list()
+        filtered_reading_parameters = list()
+
+        for weather_reading in weather_readings:
+            filtered_reading_parameters.append(weather_reading["PKT"])
+            value = weather_reading.get(""+reading_filter+"", 0.0)
+            filtered_reading_values.append(float(value) if value else 0.0)
+
+        filtered_readings = OrderedDict(zip(filtered_reading_parameters,filtered_reading_values))
         return filtered_readings
 
-    def calculate_highest_reading(self, max_readings, reading_filter):
+    def calculate_highest_reading(self, readings, reading_filter):
 
-        """
-        calculate_highest_reading calculates highest reading value based on provided filter
-        :param max_readings:
-        :param reading_filter:
-        :return:
-
-        """
-
-        reading_values = list(max_readings.values())
-        reading_dates = list(max_readings.keys())
+        reading_values = list(readings.values())
+        reading_dates = list(readings.keys())
 
         max_reading_value = max(reading_values)
 
@@ -161,13 +85,11 @@ class WeatherManResultCalculator:
         return max_reading_value_with_day
 
     def calculate_lowest_reading(self, min_readings, reading_filter):
-
         """
         calculate_lowest_reading calculates lowest reading value based on provided filter
         :param min_readings:
         :param reading_filter:
         :return:
-
         """
 
         reading_values = list(min_readings.values())
@@ -190,17 +112,15 @@ class WeatherManResultCalculator:
         return min_reading_value_with_day
 
     def calculate_weather_readings_average(self, readings, reading_filter):
-
         """
         calculate_weather_readings_average calculates average reading value based on provided filter
         :param readings:
         :param reading_filter:
         :return:
-
         """
 
         reading_values = list(readings.values())
-        average_of_reading= sum(reading_values)/float(len(reading_values))
+        average_of_reading = sum(reading_values)/float(len(reading_values))
         if reading_filter == "Temperature":
             average_of_reading = str(round(average_of_reading))+"C"
         elif reading_filter == "Humidity":
@@ -210,17 +130,14 @@ class WeatherManResultCalculator:
         return average_of_reading
 
     def compute_result(self, weather_readings, result_type):
-
         """
         compute_result compute provided types of result of weather readings
         :param weather_readings:
         :param result_type:
         :return:
-
         """
 
         if result_type == ReportType.Year:
-
             filtered_readings = self.read_filtered_weather_readings(weather_readings, "Max TemperatureC")
             max_temp_with_day = self.calculate_highest_reading(filtered_readings, "Temperature")
 
@@ -265,26 +182,22 @@ class WeatherManResultCalculator:
 
 
 class WeatherManReportGenerator:
-
     """
     WeatherManReportGenerator manage and populate reports based on weather readings
-
     """
 
     def populate_report(self, weather_man_results):
-
         """
         populate_report takes weather readings result and populate it's report to the user
         :param weather_man_results:
         :return:
-
         """
 
         for reading_parameter, reading_value in weather_man_results.items():
             print(reading_parameter + ": " + reading_value)
 
-    def populate_bar_chart_report(self, weather_man_results, year, month):
 
+    def populate_bar_chart_report(self, weather_man_results, year, month):
         """
         populate_bar_chart_report takes weather readings result and populate it's bar chart report to the user
 
@@ -292,7 +205,6 @@ class WeatherManReportGenerator:
         :param year:
         :param month:
         :return:
-
         """
 
         weather_man_low_temperature = weather_man_results.popitem()
@@ -321,7 +233,6 @@ class WeatherManReportGenerator:
         sys.stdout.write("\033[1;30m")  # black color
 
     def generate_report(self, weather_man_results, report_type, year="", month=""):
-
         """
         generate_report generate report for weather readings
         and give generate report to appropriate populate method to show report
@@ -331,7 +242,6 @@ class WeatherManReportGenerator:
         :param year:
         :param month:
         :return:
-
         """
 
         if report_type == ReportType.TwoBarCharts:
@@ -340,5 +250,3 @@ class WeatherManReportGenerator:
         else:
             print("\n\n")
             self.populate_report(weather_man_results)
-
-
