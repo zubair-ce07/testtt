@@ -38,10 +38,10 @@ class DinosParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     stock_api_url = 'https://www.dinos.co.jp/defaultMall/sitemap/XHRGetZaikoInfo.jsp' \
-                    '?GOODS_NO=&MOSHBG={mosh}&CLS1CD={colour}&CLS2CD={size}'
+                    '?GOODS_NO=&MOSHBG={request_id}&CLS1CD={colour}&CLS2CD={size}'
 
     size_api_url = 'https://www.dinos.co.jp/defaultMall/sitemap/XHRGetGoodsCls2.jsp' \
-                   '?CATNO=900&MOSHBG={mosh}&CLS1CD={colour}'
+                   '?CATNO=900&MOSHBG={request_id}&CLS1CD={colour}'
 
     gender_map = [
         ('ガールズ', 'girls'),
@@ -76,15 +76,16 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = {}
         garment['gender'] = self.product_gender(response)
 
-        requests = self.color_requests(response)
+        requests = self.color_requests(response) or self.size_only_product_requests(response)
 
-        if requests:
-            garment['meta'] = {
-                'requests_queue': requests,
-                'pricing': self.product_pricing_common_new(response, post_process=self.clean_money)
-            }
-        else:
+        if not requests:
             garment['skus'] = self.sku(response)
+            return garment
+
+        garment['meta'] = {
+            'requests_queue': requests,
+            'pricing': self.product_pricing_common_new(response, post_process=self.clean_money)
+        }
 
         return self.next_request_or_garment(garment)
 
@@ -109,7 +110,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def skus(self, response):
-        resp = json.loads(clean(response.text))['Result']
+        raw_sku = json.loads(clean(response.text))['Result']
 
         size = response.meta.get('size', self.one_size)
         colour = response.meta.get('colour', '')
@@ -118,7 +119,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         if colour:
             sku['colour'] = colour
 
-        if resp['data'][0]['zaiko'] == '売り切れ':
+        if raw_sku['data'][0]['zaiko'] == '売り切れ':
             sku['out_of_stock'] = True
 
         sku.update(response.meta['garment']['meta']['pricing'])
@@ -128,8 +129,8 @@ class DinosParseSpider(BaseParseSpider, Mixin):
     def size_requests(self, response):
         sizes = json.loads(clean(response.text))['Result']
         colour = response.meta.get('colour')
-        colour_q = response.meta.get('colour_q')
-        mosh = response.meta.get('mosh')
+        colour_query_parameter = response.meta.get('colour_query_parameter')
+        request_id = response.meta.get('request_id')
         meta = {
             'colour': colour
         }
@@ -138,59 +139,60 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         for size in sizes['cls2']:
             size_q = urllib.parse.quote(size['namec2']).replace('%', '%25')
             meta['size'] = size['valuec2']
-            url = self.stock_api_url.format(mosh=mosh, colour=colour_q, size=size_q)
+            url = self.stock_api_url.format(request_id=request_id, colour=colour_query_parameter, size=size_q)
             requests += [FormRequest(url=url, meta=meta, callback=self.parse_size, dont_filter=True)]
 
         return requests
 
     def size_only_product_requests(self, response):
-        moshbg = clean(response.css('[name="MOSHBG"]::attr(value)'))[0]
+        requests = []
+
+        if response.css('.color li'):
+            return requests
+
+        request_id = clean(response.css('[name="MOSHBG"]::attr(value)'))[0]
         sizes = clean(response.css('.size li [type="radio"]::attr(value)'))
 
-        requests = []
         for size in sizes:
             size_q = urllib.parse.quote(size).replace('%', '%25')
             meta = {'size': size}
-            url = self.stock_api_url.format(mosh=moshbg, colour='', size=size_q)
+            url = self.stock_api_url.format(request_id=request_id, colour='', size=size_q)
 
             requests += [FormRequest(url=url, meta=meta, callback=self.parse_size, dont_filter=True)]
 
         return requests
 
     def color_requests(self, response):
-        moshbg = clean(response.css('[name="MOSHBG"]::attr(value)'))[0]
+        request_id = clean(response.css('[name="MOSHBG"]::attr(value)'))[0]
         colours = response.css('.color li')
         sizes = clean(response.css('.size li [type="radio"]::attr(value)'))
         requests = []
 
-        callback = self.parse_size if not sizes or not colours else self.parse_colour
-
-        if not colours:
-            requests += self.size_only_product_requests(response)
+        callback = self.parse_size if not sizes else self.parse_colour
 
         for colour_sel in colours:
-            colour_name, colour_q = self.colour_name_and_q(colour_sel)
-            meta = {'colour': colour_name, 'mosh': moshbg, 'colour_q': colour_q}
+            colour_name, colour_query_parameter = self.colour_name_and_query_parameter(colour_sel)
+            meta = {'colour': colour_name, 'request_id': request_id, 'colour_query_parameter': colour_query_parameter}
 
-            url = self.size_api_url.format(mosh=moshbg, colour=colour_q)
+            url = self.size_api_url.format(request_id=request_id, colour=colour_query_parameter)
 
             if not sizes:
-                url = self.stock_api_url.format(mosh=moshbg, colour=colour_q, size='')
+                url = self.stock_api_url.format(request_id=request_id, colour=colour_query_parameter, size='')
 
             requests += [FormRequest(url=url, meta=meta, callback=callback, dont_filter=True)]
 
         return requests
 
-    def colour_name_and_q(self, colour_selector):
+    def colour_name_and_query_parameter(self, colour_selector):
         colour_name = clean(colour_selector.css('::attr(title)'))[0]
         colour_value = clean(colour_selector.css(' [type="radio"]::attr(value)'))[0]
-        colour_q = urllib.parse.quote(colour_value).replace('%', '%25')
+        colour_query_parameter = urllib.parse.quote(colour_value).replace('%', '%25')
 
-        return colour_name, colour_q
+        return colour_name, colour_query_parameter
 
     def product_gender(self, response):
         soup = self.raw_name(response) + ' '.join(self.product_category(response)) + \
-               ' '.join(self.product_trail(response))
+               ' '.join(self.product_trail(response)) + response.url
 
         for gender_key, gender in self.gender_map:
             if gender_key in soup:
@@ -199,7 +201,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return 'unisex-adults'
 
     def product_trail(self, response):
-        return [url for t, url in response.meta.get('trail', [('', response.url)])]
+        return [url for t, url in response.meta.get('trail', [])]
 
     def image_urls(self, response):
         return clean(response.css('#dpvThumb li::attr(data-dpv-expand-url)'))
@@ -234,7 +236,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         css = '.itemD_itemGuide ::text, [itemprop="description"] ::text'
         description = clean(response.css(css))
 
-        return description + [x for x in self.raw_description(response) if not self.care_criteria_simplified(x)]
+        return description + [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
         care = clean(response.css('.itemD_featureBox ::text'))
