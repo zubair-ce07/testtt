@@ -1,179 +1,103 @@
-import sys
 import enum
 import csv
-from datetime import datetime
-from collections import OrderedDict
+from dateutil import parser
+# from collections import OrderedDict
 
 
 class ReportType(enum.Enum):
+    YEAR, YEAR_MONTH, TWO_BAR_CHART = range(1,4)
 
-    Year, YearMonth, TwoBarCharts = range(1, 4)
+
+class ChartType(enum.Enum):
+    ONE_LINE, TWO_LINE = range(1,3)
+
+
+# model to store weather readings(required)
+class Weather:
+    max_temp = 0
+    min_temp = 0
+    max_humidity = 0
+    mean_humidity = 0
+    date = ""
 
 
 class WeatherManFileParser:
-    """
-    WeatherManFileParser takes the weather files and read values of specific parameters/filters provided.
-
-    """
 
     def __init__(self):
         self.__weather_readings = list()
-        self.__weather_reading_filters = [
-            "Max TemperatureC",
-            "Min TemperatureC",
-            "Max Humidity",
-            "Mean Humidity"
-        ]
 
-    def read_weather_man_file(self, weather_file):
+    def read_weather_file(self, weather_file):
 
         with open(weather_file, 'r') as file:
-            reader = csv.DictReader(file)
+            reader = csv.DictReader(file, skipinitialspace=True)  # skip space in keys
             for line in reader:
-                self.__weather_readings.append(line)
 
-    def populate_weather_man_readings(self, weather_files):
+                # if required readings are not empty from file, then store readings else ignore
+                if line["Max TemperatureC"] and line["Min TemperatureC"] and line["Max Humidity"] and line["Mean Humidity"]:
+                    weather = Weather()
+                    weather.date = line.get("PKT", line.get("PKST"))  # if keys are different
+                    weather.max_temp = float(line["Max TemperatureC"])
+                    weather.min_temp = float(line["Min TemperatureC"])
+                    weather.max_humidity = float(line["Max Humidity"])
+                    weather.mean_humidity = float(line["Mean Humidity"])
+                    self.__weather_readings.append(weather)
+
+    def populate_weather_readings(self, weather_files):
 
         for weather_file in weather_files:
-            self.read_weather_man_file(weather_file)
+            self.read_weather_file(weather_file)
         return self.__weather_readings
-
-    def __del__(self):
-        self.__weather_readings.clear()  # clear readings data on readings fetched
-        self.__weather_reading_filters.clear()  # clear filters when readings fetched
 
 
 class WeatherManResultCalculator:
-    """
-    WeatherManResultCalculator handles calculation performs on weather readings
-    """
 
     def __init__(self):
-        self.__results = OrderedDict()
+        self.__results = dict()
 
-    def read_filtered_weather_readings(self, weather_readings, reading_filter):
-        filtered_readings = OrderedDict()
-        filtered_reading_values = list()
-        filtered_reading_parameters = list()
+    def calculate_highest_temperature(self, readings):
+        high_temp_reading = max(readings, key=lambda x: x.max_temp)
+        return high_temp_reading
 
-        for weather_reading in weather_readings:
-            filtered_reading_parameters.append(weather_reading["PKT"])
-            value = weather_reading.get(""+reading_filter+"", 0.0)
-            filtered_reading_values.append(float(value) if value else 0.0)
+    def calculate_lowest_temperature(self, readings):
+        low_temp_reading = min(readings, key=lambda x: x.min_temp)
+        return low_temp_reading
 
-        filtered_readings = OrderedDict(zip(filtered_reading_parameters,filtered_reading_values))
-        return filtered_readings
+    def calculate_highest_humidity(self, readings):
+        high_humid_reading = max(readings, key=lambda x: x.max_humidity)
+        return high_humid_reading
 
-    def calculate_highest_reading(self, readings, reading_filter):
+    def calculate_average_high_temp(self, readings):
+        temp_sum = sum(c.max_temp for c in readings)
+        temp_length = len(readings)
+        avg_temp = round(temp_sum/temp_length)
+        return avg_temp
 
-        reading_values = list(readings.values())
-        reading_dates = list(readings.keys())
+    def calculate_average_low_temp(self, readings):
+        temp_sum = sum(c.min_temp for c in readings)
+        temp_length = len(readings)
+        avg_temp = round(temp_sum / temp_length)
+        return avg_temp
 
-        max_reading_value = max(reading_values)
-
-        reading_date = reading_dates[reading_values.index(max_reading_value)]
-
-        reading_day = datetime(year=int(reading_date.split('-')[0]), month=int(reading_date.split('-')[1]),
-                               day=int(reading_date.split('-')[2]))
-        if reading_filter == "Temperature":
-            max_reading_value_with_day = str(round(max_reading_value)) + "C on " + reading_day.strftime("%b %d")
-        elif reading_filter == "Humidity":
-            max_reading_value_with_day = str(round(max_reading_value)) + "% on " + reading_day.strftime("%b %d")
-        else:
-            max_reading_value_with_day = str(round(max_reading_value)) + reading_day.strftime("%b %d")
-
-        return max_reading_value_with_day
-
-    def calculate_lowest_reading(self, min_readings, reading_filter):
-        """
-        calculate_lowest_reading calculates lowest reading value based on provided filter
-        :param min_readings:
-        :param reading_filter:
-        :return:
-        """
-
-        reading_values = list(min_readings.values())
-        reading_dates = list(min_readings.keys())
-
-        min_reading_value = min(reading_values)
-
-        reading_date = reading_dates[reading_values.index(min_reading_value)]
-
-        reading_day = datetime(year=int(reading_date.split('-')[0]), month=int(reading_date.split('-')[1]),
-                               day=int(reading_date.split('-')[2]))
-
-        if reading_filter == "Temperature":
-            min_reading_value_with_day = str(round(min_reading_value)) + "C on " + reading_day.strftime("%b %d")
-        elif reading_filter == "Humidity":
-            min_reading_value_with_day = str(round(min_reading_value)) + "% on " + reading_day.strftime("%b %d")
-        else:
-            min_reading_value_with_day = str(round(min_reading_value)) + reading_day.strftime("%b %d")
-
-        return min_reading_value_with_day
-
-    def calculate_weather_readings_average(self, readings, reading_filter):
-        """
-        calculate_weather_readings_average calculates average reading value based on provided filter
-        :param readings:
-        :param reading_filter:
-        :return:
-        """
-
-        reading_values = list(readings.values())
-        average_of_reading = sum(reading_values)/float(len(reading_values))
-        if reading_filter == "Temperature":
-            average_of_reading = str(round(average_of_reading))+"C"
-        elif reading_filter == "Humidity":
-            average_of_reading = str(round(average_of_reading))+"%"
-        else:
-            average_of_reading = str(round(average_of_reading))
-        return average_of_reading
+    def calculate_average_mean_humidity(self, readings):
+        humid_sum = sum(c.mean_humidity for c in readings)
+        humid_length = len(readings)
+        avg_humid = round(humid_sum / humid_length)
+        return avg_humid
 
     def compute_result(self, weather_readings, result_type):
-        """
-        compute_result compute provided types of result of weather readings
-        :param weather_readings:
-        :param result_type:
-        :return:
-        """
 
-        if result_type == ReportType.Year:
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Max TemperatureC")
-            max_temp_with_day = self.calculate_highest_reading(filtered_readings, "Temperature")
+        if result_type == ReportType.YEAR:
+            self.__results["Highest"] = self.calculate_highest_temperature(weather_readings)
+            self.__results["Humidity"] = self.calculate_highest_humidity(weather_readings)
+            self.__results["Lowest"] = self.calculate_lowest_temperature(weather_readings)
 
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Min TemperatureC")
-            min_temp_with_day = self.calculate_lowest_reading(filtered_readings, "Temperature")
-
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Max Humidity")
-            max_humidity_with_day = self.calculate_highest_reading(filtered_readings, "Humidity")
-
-            self.__results["Highest"] = max_temp_with_day
-            self.__results["Lowest"] = min_temp_with_day
-            self.__results["Humidity"] = max_humidity_with_day
-
-        elif result_type == ReportType.YearMonth:
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Max TemperatureC")
-            highest_average = self.calculate_weather_readings_average(filtered_readings, "Temperature")
-
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Min TemperatureC")
-            lowest_average = self.calculate_weather_readings_average(filtered_readings, "Temperature")
-
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Mean Humidity")
-            average_mean_humidity = self.calculate_weather_readings_average(filtered_readings, "Humidity")
-
-            self.__results["Highest Average"] = highest_average
-            self.__results["Lowest Average"] = lowest_average
-            self.__results["Average Mean Humidity"] = average_mean_humidity
+        elif result_type == ReportType.YEAR_MONTH:
+            self.__results["Highest Average"] = self.calculate_average_high_temp(weather_readings)
+            self.__results["Lowest Average"] = self.calculate_average_low_temp(weather_readings)
+            self.__results["Average Mean Humidity"] = self.calculate_average_mean_humidity(weather_readings)
 
         else:
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Max TemperatureC")
-            highest_temperature_with_day = filtered_readings
-
-            filtered_readings = self.read_filtered_weather_readings(weather_readings, "Min TemperatureC")
-            lowest_temperature_with_day = filtered_readings
-
-            self.__results["Highest Temperature Each Day"] = highest_temperature_with_day
-            self.__results["Lowest Temperature Each Day"] = lowest_temperature_with_day
+            self.__results = weather_readings
 
         return self.__results
 
@@ -182,71 +106,80 @@ class WeatherManResultCalculator:
 
 
 class WeatherManReportGenerator:
-    """
-    WeatherManReportGenerator manage and populate reports based on weather readings
-    """
 
-    def populate_report(self, weather_man_results):
-        """
-        populate_report takes weather readings result and populate it's report to the user
-        :param weather_man_results:
-        :return:
-        """
+    BLACK = "\033[1;30m"
+    BLUE = "\033[1;34m"
+    PINK = "\033[1;35m"
+    RED = "\033[1;31m"
 
-        for reading_parameter, reading_value in weather_man_results.items():
-            print(reading_parameter + ": " + reading_value)
+    def draw_chart(self, temperature_readings, chart_type):
 
+        for temperature in temperature_readings:
 
-    def populate_bar_chart_report(self, weather_man_results, year, month):
-        """
-        populate_bar_chart_report takes weather readings result and populate it's bar chart report to the user
+            # capture day from date(yyyy-mm-d)
+            day = temperature.date.split('-')[2]
 
-        :param weather_man_results:
-        :param year:
-        :param month:
-        :return:
-        """
+            high_temp_point = round(abs(temperature.max_temp))
+            high_temp_value = str(round(temperature.max_temp))
 
-        weather_man_low_temperature = weather_man_results.popitem()
-        weather_man_high_temperature = weather_man_results.popitem()
+            low_temp_point = round(abs(temperature.min_temp))
+            low_temp_value = str(round(temperature.min_temp))
+
+            high_temp_line = self.RED + "" + "+" * high_temp_point
+            low_temp_line = self.BLUE + "" + "+" * low_temp_point
+
+            if chart_type == ChartType.TWO_LINE:
+
+                print(self.PINK + day + " " + high_temp_line + self.PINK + " " + high_temp_value + "C")
+                print(self.PINK + day + " " + low_temp_line + self.PINK + " " + low_temp_value + "C")
+
+            else:
+                print(self.PINK + day + " " + low_temp_line + high_temp_line + " "
+                      + self.PINK + low_temp_value + "C" + "-" + high_temp_value + "C")
+
+    def populate_year_report(self, weather_man_results):
+
+        max_temp = weather_man_results["Highest"]
+        min_temp = weather_man_results["Lowest"]
+        max_humid = weather_man_results["Humidity"]
+
+        print("Highest: "+str(max_temp.max_temp)+"C on "+ parser.parse(max_temp.date).strftime("%b %d"))
+        print("Lowest: " + str(min_temp.min_temp) + "C on " + parser.parse(min_temp.date).strftime("%b %d"))
+        print("Humidity: " + str(max_humid.max_humidity) + "% on " + parser.parse(max_humid.date).strftime("%b %d"))
+
+    def populate_year_month_report(self, weather_man_results):
+        avg_highest_temp = weather_man_results["Highest Average"]
+        avg_lowest_temp = weather_man_results["Lowest Average"]
+        avg_mean_humid = weather_man_results["Average Mean Humidity"]
+
+        print("Highest Average: "+str(avg_highest_temp)+"C")
+        print("Lowest Average: " + str(avg_lowest_temp) + "C")
+        print("Average Mean Humidity: " + str(avg_mean_humid) + "%")
+
+    def populate_bar_chart_report(self, temperature_readings, year, month):
+
+        print("\nTwo Line Bar Chart:-\n")
         print(month + " " + year)
-        for key, value in weather_man_high_temperature[1].items():
-            print("\033[1;35m" + key.split('-')[2] + "\033[1;31m" + " " + "+" * round(
-                weather_man_high_temperature[1][key]) + "\033[1;35m" + " " + str(
-                round(weather_man_high_temperature[1][key])) + "C")
-            print("\033[1;35m" + key.split('-')[2] + "\033[1;34m" + " " + "+" * round(
-                weather_man_low_temperature[1][key]) + "\033[1;35m" + " " + str(
-                round(weather_man_low_temperature[1][key])) + "C")
-        # reset color
-        sys.stdout.write("\033[1;30m")  # black color
-        print("\n\n\nBonus Task:-\n\n")
-        # Bonus task
-        print(month + " " + year)
-        for key, value in weather_man_high_temperature[1].items():
-            sys.stdout.write("\033[1;35m" + key.split('-')[2] + "\033[1;34m" + " " + "+" * round(
-                weather_man_low_temperature[1][key]) + "\033[1;31m" + (
-                             "+" * round(weather_man_high_temperature[1][key])) + " " +
-                             "\033[1;35m" + str(round(weather_man_low_temperature[1][key])) + "C" + "-" +
-                             str(round(weather_man_high_temperature[1][key])) + "C" + "\n")  # red color
 
-        # reset color
-        sys.stdout.write("\033[1;30m")  # black color
+        self.draw_chart(temperature_readings,ChartType.TWO_LINE)
+
+        print("\nSingle Line Bar Chart:-\n\n")
+        print(month + " " + year)
+
+        self.draw_chart(temperature_readings, ChartType.ONE_LINE)
 
     def generate_report(self, weather_man_results, report_type, year="", month=""):
-        """
-        generate_report generate report for weather readings
-        and give generate report to appropriate populate method to show report
 
-        :param weather_man_results:
-        :param report_type:
-        :param year:
-        :param month:
-        :return:
-        """
-
-        if report_type == ReportType.TwoBarCharts:
+        if report_type == ReportType.TWO_BAR_CHART:
             print("\n\n")
             self.populate_bar_chart_report(weather_man_results, year, month)
+        elif report_type == ReportType.YEAR:
+            print("\n\n")
+            self.populate_year_report(weather_man_results)
         else:
             print("\n\n")
-            self.populate_report(weather_man_results)
+            self.populate_year_month_report(weather_man_results)
+
+
+
+
