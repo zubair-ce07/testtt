@@ -1,7 +1,6 @@
 import enum
 import csv
 from dateutil import parser
-# from collections import OrderedDict
 
 
 class ReportType(enum.Enum):
@@ -12,7 +11,6 @@ class ChartType(enum.Enum):
     ONE_LINE, TWO_LINE = range(1,3)
 
 
-# model to store weather readings(required)
 class Weather:
     max_temp = 0
     min_temp = 0
@@ -26,24 +24,24 @@ class WeatherManFileParser:
     def __init__(self):
         self.__weather_readings = list()
 
+    def read_weather_values(self, line):
+        if line["Max TemperatureC"] and line["Min TemperatureC"] and line["Max Humidity"] and line["Mean Humidity"]:
+            weather = Weather()
+            weather.date = line.get("PKT", line.get("PKST"))
+            weather.max_temp = float(line["Max TemperatureC"])
+            weather.min_temp = float(line["Min TemperatureC"])
+            weather.max_humidity = float(line["Max Humidity"])
+            weather.mean_humidity = float(line["Mean Humidity"])
+            self.__weather_readings.append(weather)
+
     def read_weather_file(self, weather_file):
 
         with open(weather_file, 'r') as file:
-            reader = csv.DictReader(file, skipinitialspace=True)  # skip space in keys
+            reader = csv.DictReader(file, skipinitialspace=True)
             for line in reader:
-
-                # if required readings are not empty from file, then store readings else ignore
-                if line["Max TemperatureC"] and line["Min TemperatureC"] and line["Max Humidity"] and line["Mean Humidity"]:
-                    weather = Weather()
-                    weather.date = line.get("PKT", line.get("PKST"))  # if keys are different
-                    weather.max_temp = float(line["Max TemperatureC"])
-                    weather.min_temp = float(line["Min TemperatureC"])
-                    weather.max_humidity = float(line["Max Humidity"])
-                    weather.mean_humidity = float(line["Mean Humidity"])
-                    self.__weather_readings.append(weather)
+                self.read_weather_values(line)
 
     def populate_weather_readings(self, weather_files):
-
         for weather_file in weather_files:
             self.read_weather_file(weather_file)
         return self.__weather_readings
@@ -116,7 +114,6 @@ class WeatherManReportGenerator:
 
         for temperature in temperature_readings:
 
-            # capture day from date(yyyy-mm-d)
             day = temperature.date.split('-')[2]
 
             high_temp_point = round(abs(temperature.max_temp))
