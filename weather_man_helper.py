@@ -11,7 +11,7 @@ class ChartType(enum.Enum):
     ONE_LINE, TWO_LINE = range(1,3)
 
 
-class Weather:
+class WeatherModel:
     max_temp = 0
     min_temp = 0
     max_humidity = 0
@@ -26,7 +26,7 @@ class WeatherManFileParser:
 
     def read_weather_values(self, line):
         if line["Max TemperatureC"] and line["Min TemperatureC"] and line["Max Humidity"] and line["Mean Humidity"]:
-            weather = Weather()
+            weather = WeatherModel()
             weather.date = line.get("PKT", line.get("PKST"))
             weather.max_temp = float(line["Max TemperatureC"])
             weather.min_temp = float(line["Min TemperatureC"])
@@ -50,7 +50,7 @@ class WeatherManFileParser:
 class WeatherManResultCalculator:
 
     def __init__(self):
-        self.__results = dict()
+        self.__results = {}
 
     def calculate_highest_temperature(self, readings):
         high_temp_reading = max(readings, key=lambda x: x.max_temp)
@@ -114,7 +114,7 @@ class WeatherManReportGenerator:
 
         for temperature in temperature_readings:
 
-            day = temperature.date.split('-')[2]
+            day = parser.parse(temperature.date).strftime("%d")
 
             high_temp_point = round(abs(temperature.max_temp))
             high_temp_value = str(round(temperature.max_temp))
@@ -176,7 +176,3 @@ class WeatherManReportGenerator:
         else:
             print("\n\n")
             self.populate_year_month_report(weather_man_results)
-
-
-
-
