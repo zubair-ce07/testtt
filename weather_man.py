@@ -1,10 +1,8 @@
+import os
+import glob  # allows pattern matching on file_names
+
 import argparse
 import datetime
-
-from validator import validate_path
-from validator import validate_date
-from validator import validate_year_and_month
-from validator import verify_year_month_weather_readings_exist_and_read_file_paths
 
 from weather_man_helper import ReportType
 from weather_man_helper import WeatherManFileParser
@@ -12,72 +10,131 @@ from weather_man_helper import WeatherManResultCalculator
 from weather_man_helper import WeatherManReportGenerator
 
 
-def change_month_to_month_name(month):
-    """
-    :param month:
-    :return:
-    """
-    current_date = datetime.datetime.now()
-    month = current_date.replace(month=month).strftime("%b")
-    return month
+class WeatherMan:
 
+    def __init__(self):
+        self.__weather_yearly_readings = list()
+        self.__weather_monthly_readings = list()
 
-def weather_man_report(path, year_month, report_type):
-    """
-    :param path:
-    :param year_month:
-    :param report_type:
-    :return:
-    """
-    if isinstance(year_month,int):  # it is year
-        reading_files = verify_year_month_weather_readings_exist_and_read_file_paths(path, str(year_month))
-    else:  # it is year month
+    def validate_path(self, path):
+        is_directory_exist = os.path.isdir(path)
+        if is_directory_exist:
+            return path
+        else:
+            return False
+
+    def month_to_month_name(self, month):
+        current_date = datetime.datetime.now()
+        month = current_date.replace(month=month).strftime("%b")
+        return month
+
+    def read_monthly_files(self, path, year_month):
         year = year_month.split('/')[0]
         month = year_month.split('/')[1]
-        month = change_month_to_month_name(int(month))
-        reading_files = verify_year_month_weather_readings_exist_and_read_file_paths(path, str(year), month)
+        month = self.month_to_month_name(int(month))
+        return self.weather_files(path, str(year), month)
 
-    if reading_files.__len__()>0:
+    def weather_files(self, path, year, month="*"):
+        file_paths = list()
+        file_path = path + "/*" + year + "_" + month + ".txt"
+        for file_path_ in glob.glob(file_path):
+            file_paths.append(file_path_)
+        return file_paths
+
+    def read_yearly_readings(self, reading_files):
         file_parser = WeatherManFileParser()
-        weather_readings = file_parser.populate_weather_man_readings(reading_files)
+        return file_parser.populate_weather_readings(reading_files)
 
-        weather_readings_calculator = WeatherManResultCalculator()
-        weather_results = weather_readings_calculator.compute_result(weather_readings, report_type)
+    def read_monthly_readings(self, readings, year, month):
+        monthly_readings = list()
+        for reading in readings:
+            if year + "-" + month + "-" in reading.date:
+                monthly_readings.append(reading)
+        return monthly_readings
 
-        weather_readings_report_generator = WeatherManReportGenerator()
-        if report_type == ReportType.TwoBarCharts:
-            weather_readings_report_generator.generate_report(weather_results, report_type, year, month)
+    def weather_chart_report(self, readings_report_generator, year_month, weather_results, report_type):
+        year = year_month.split('/')[0]
+        month = year_month.split('/')[1]
+        month = self.month_to_month_name(int(month))
+        readings_report_generator.generate_report(weather_results, report_type, year, month)
+
+    def weather_man_report(self, path, year_month, report_type):
+
+        readings = list()
+        reading_files = list()
+
+        if self.__weather_yearly_readings:  # if year readings saved
+            readings = self.__weather_yearly_readings
+        else:  # else read readings from path
+            if isinstance(year_month, int):  # it is year
+                reading_files = self.weather_files(path, str(year_month))
+            else:  # it is year month
+                reading_files = self.read_monthly_files(path,year_month)
+
+        if self.__weather_monthly_readings:  # if monthly readings saved
+            readings = self.__weather_monthly_readings
+
+        if reading_files or readings:  # if saved readings or reading path (in case of readings are not saved)
+
+            if reading_files:  # means readings are not saved (if true), and read readings from path
+                readings = self.read_yearly_readings(reading_files)
+
+            # fetch monthly readings from saved readings on condition true
+            if not report_type == ReportType.YEAR and not self.__weather_monthly_readings and self.__weather_yearly_readings:
+                # filter monthly data from self___weather_man_readings=
+                year = (year_month.split('/')[0])
+                month = str(int(year_month.split('/')[1]))
+                readings=self.read_monthly_readings(readings,year,month)
+
+            if report_type == ReportType.YEAR:
+                # store readings to use in future if multiple reports requested (yearly readings)
+                self.__weather_yearly_readings = readings
+            else:
+                # store readings to use in future if again monthly report/chart request (monthly readings)
+                self.__weather_monthly_readings = readings
+
+            readings_calculator = WeatherManResultCalculator()
+            weather_results = readings_calculator.compute_result(readings, report_type)
+
+            readings_report_generator = WeatherManReportGenerator()
+            if report_type == ReportType.TWO_BAR_CHART:
+                self.weather_chart_report(readings_report_generator, year_month, weather_results, report_type)
+            else:
+                readings_report_generator.generate_report(weather_results, report_type)
         else:
-            weather_readings_report_generator.generate_report(weather_results, report_type)
+            print("Weather readings not exist")
 
-    else:
-        print("Weather readings not exist")
+    def __del__(self):
+        self.__weather_yearly_readings.clear()
+        self.__weather_monthly_readings.clear()
 
 
+weatherman = WeatherMan()
 #  Script parameters by argparse lib
-
 parser = argparse.ArgumentParser(description='Weatherman data analysis')
 
-parser.add_argument('path', type=validate_path, help='Enter weather files directory path')
+parser.add_argument('path', type=weatherman.validate_path, help='Enter weather files directory path')
 
-parser.add_argument('-c', type=validate_year_and_month, default=None,
+parser.add_argument('-c', type=str, default=None,
                     help='(usage: -c yyyy/mm) To see two horizontal bar charts on the console'
-                         ' for the highest and lowest temperature on each day. Highest in red and lowest in blue.')
-parser.add_argument('-e', type=validate_date, default=None,
+                         ' for the highest and lowest temperature on each day.')
+
+parser.add_argument('-e', type=int, default=None,
                     help='(usage: -e yyyy) To see highest temperature and day,'
                          ' lowest temperature and day, most humid day and humidity')
-parser.add_argument('-a', type=validate_year_and_month, default=None,
+
+parser.add_argument('-a', type=str, default=None,
                     help='(usage: -a yyyy/m) To see average highest temperature,'
                          ' average lowest temperature, average mean humidity.')
+
 
 #  inputs from Script parameters
 input_ = parser.parse_args()
 
 if input_.e:
-    weather_man_report(input_.path, input_.e, ReportType.Year)
-elif input_.a:
-    weather_man_report(input_.path, input_.a, ReportType.YearMonth)
-elif input_.c:
-    weather_man_report(input_.path, input_.c, ReportType.TwoBarCharts)
-else:
-    print("Invalid year/month")
+    weatherman.weather_man_report(input_.path, input_.e, ReportType.YEAR)
+if input_.a:
+    weatherman.weather_man_report(input_.path, input_.a, ReportType.YEAR_MONTH)
+if input_.c:
+    weatherman.weather_man_report(input_.path, input_.c, ReportType.TWO_BAR_CHART)
+
