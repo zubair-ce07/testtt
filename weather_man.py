@@ -1,5 +1,5 @@
 import os
-import glob  # allows pattern matching on file_names
+import glob
 
 import argparse
 import datetime
@@ -63,34 +63,30 @@ class WeatherMan:
         readings = list()
         reading_files = list()
 
-        if self.__weather_yearly_readings:  # if year readings saved
+        if self.__weather_yearly_readings:
             readings = self.__weather_yearly_readings
-        else:  # else read readings from path
-            if isinstance(year_month, int):  # it is year
+        else:
+            if isinstance(year_month, int):
                 reading_files = self.weather_files(path, str(year_month))
-            else:  # it is year month
+            else:
                 reading_files = self.read_monthly_files(path,year_month)
 
-        if self.__weather_monthly_readings:  # if monthly readings saved
+        if self.__weather_monthly_readings:
             readings = self.__weather_monthly_readings
 
-        if reading_files or readings:  # if saved readings or reading path (in case of readings are not saved)
+        if reading_files or readings:
 
-            if reading_files:  # means readings are not saved (if true), and read readings from path
+            if reading_files:
                 readings = self.read_yearly_readings(reading_files)
 
-            # fetch monthly readings from saved readings on condition true
             if not report_type == ReportType.YEAR and not self.__weather_monthly_readings and self.__weather_yearly_readings:
-                # filter monthly data from self___weather_man_readings=
                 year = (year_month.split('/')[0])
                 month = str(int(year_month.split('/')[1]))
-                readings=self.read_monthly_readings(readings,year,month)
+                readings = self.read_monthly_readings(readings, year, month)
 
             if report_type == ReportType.YEAR:
-                # store readings to use in future if multiple reports requested (yearly readings)
                 self.__weather_yearly_readings = readings
             else:
-                # store readings to use in future if again monthly report/chart request (monthly readings)
                 self.__weather_monthly_readings = readings
 
             readings_calculator = WeatherManResultCalculator()
@@ -110,7 +106,7 @@ class WeatherMan:
 
 
 weatherman = WeatherMan()
-#  Script parameters by argparse lib
+
 parser = argparse.ArgumentParser(description='Weatherman data analysis')
 
 parser.add_argument('path', type=weatherman.validate_path, help='Enter weather files directory path')
@@ -127,8 +123,6 @@ parser.add_argument('-a', type=str, default=None,
                     help='(usage: -a yyyy/m) To see average highest temperature,'
                          ' average lowest temperature, average mean humidity.')
 
-
-#  inputs from Script parameters
 input_ = parser.parse_args()
 
 if input_.e:
