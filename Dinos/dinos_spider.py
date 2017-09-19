@@ -241,7 +241,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
     def product_care(self, response):
         care = clean(response.css('.itemD_featureBox ::text'))
 
-        return care + [x for x in self.raw_description(response) if self.care_criteria_simplified(x)]
+        return care + [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
 
 class DinosCrawlSpider(BaseCrawlSpider, Mixin):
