@@ -13,15 +13,13 @@ from weather_man_helper import WeatherManReportGenerator
 class WeatherMan:
 
     def __init__(self):
-        self.__weather_yearly_readings = list()
-        self.__weather_monthly_readings = list()
+        self.__weather_yearly_readings = []
+        self.__weather_monthly_readings = []
 
     def validate_path(self, path):
         is_directory_exist = os.path.isdir(path)
         if is_directory_exist:
             return path
-        else:
-            return False
 
     def month_to_month_name(self, month):
         current_date = datetime.datetime.now()
@@ -29,13 +27,12 @@ class WeatherMan:
         return month
 
     def read_monthly_files(self, path, year_month):
-        year = year_month.split('/')[0]
-        month = year_month.split('/')[1]
+        year, month = year_month.split('/')
         month = self.month_to_month_name(int(month))
         return self.weather_files(path, str(year), month)
 
     def weather_files(self, path, year, month="*"):
-        file_paths = list()
+        file_paths = []
         file_path = path + "/*" + year + "_" + month + ".txt"
         for file_path_ in glob.glob(file_path):
             file_paths.append(file_path_)
@@ -46,15 +43,14 @@ class WeatherMan:
         return file_parser.populate_weather_readings(reading_files)
 
     def read_monthly_readings(self, readings, year, month):
-        monthly_readings = list()
+        monthly_readings = []
         for reading in readings:
             if year + "-" + month + "-" in reading.date:
                 monthly_readings.append(reading)
         return monthly_readings
 
     def weather_chart_report(self, readings_report_generator, year_month, weather_results, report_type):
-        year = year_month.split('/')[0]
-        month = year_month.split('/')[1]
+        year, month = year_month.split('/')
         month = self.month_to_month_name(int(month))
         readings_report_generator.generate_report(weather_results, report_type, year, month)
 
@@ -80,9 +76,8 @@ class WeatherMan:
                 readings = self.read_yearly_readings(reading_files)
 
             if not report_type == ReportType.YEAR and not self.__weather_monthly_readings and self.__weather_yearly_readings:
-                year = (year_month.split('/')[0])
-                month = str(int(year_month.split('/')[1]))
-                readings = self.read_monthly_readings(readings, year, month)
+                year, month = year_month.split('/')
+                readings = self.read_monthly_readings(readings, year, str(int(month)))
 
             if report_type == ReportType.YEAR:
                 self.__weather_yearly_readings = readings
@@ -131,4 +126,3 @@ if input_.a:
     weatherman.weather_man_report(input_.path, input_.a, ReportType.YEAR_MONTH)
 if input_.c:
     weatherman.weather_man_report(input_.path, input_.c, ReportType.TWO_BAR_CHART)
-
