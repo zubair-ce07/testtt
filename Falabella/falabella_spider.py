@@ -24,7 +24,7 @@ class Mixin:
 
 class FalabellaParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    image_id_re = 'Falabella/(\d+_\d)'
+    main_image_re = re.compile('(=\d+)')
 
     gender_map = [
         ('mujer', 'women'),
@@ -34,7 +34,9 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         ('unisex', 'unisex-adults')
     ]
 
+    image_id_re = 'Falabella/(\d+_\d)'
     raw_product_re = 'fbra_browseMainProductConfig\s*=\s*(.*);'
+    color_re = 'Color:\s*(.*)'
 
     image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}?$producto308$&wid=924&hei=924'
     image_request_url_t = 'http://falabella.scene7.com/is/image/Falabella/{product_id}/?req=set,json&id=PDP'
@@ -50,7 +52,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
         garment['name'] = raw_product['displayName']
         garment['brand'] = raw_product['brand']
-        garment['gender'] = self.product_gender(response)
+        garment['gender'] = self.product_gender(response, garment['name'])
         garment['description'] = self.product_description(response)
         garment['care'] = self.product_care(response)
         garment['skus'] = self.skus(raw_product, response)
@@ -71,7 +73,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def main_image(self, response):
-        return [clean(response.css('[data-content-type="image"]::attr(src)'))[0].replace('472', '924')]
+        return [self.main_image_re.sub('=924', clean(response.css('[data-content-type="image"]::attr(src)'))[0])]
 
     def image_urls(self, response, main_image):
         image_ids = set(re.findall(self.image_id_re, response.text))
@@ -103,38 +105,45 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, raw_product, response):
         skus = {}
-
+        visitied_variants = set()
         for raw_sku in raw_product['skus']:
             sku = self.product_price(response, raw_sku)
             sku['size'] = raw_sku.get('size', self.one_size)
+            sku['size'] = self.one_size if sku['size'] == 'TU' else sku['size']
 
-            if 'color' in raw_sku:
-                sku['colour'] = raw_sku['color']
+            if (raw_sku.get('color', ''), sku['size']) in visitied_variants:
+                continue
+
+            visitied_variants.add((raw_sku.get('color', ''), sku['size']))
+
+            if 'color' in raw_sku or self.color_from_description(response):
+                sku['colour'] = raw_sku.get('color', self.color_from_description(response)[0])
 
             skus[raw_sku['skuId']] = sku
 
         return skus
 
+    def color_from_description(self, response):
+        xpath = '//*[@data-panel="longDescription"]//li[contains(text(), "Color")]/text()'
+        return clean(response.xpath(xpath).re(self.color_re))
+
     def raw_description(self, response):
-        raw_description_xpath = '//h2[not(contains(text(), "cuidar"))]/following-sibling::ul[1]//text()'
+        css = '[data-panel="longDescription"] li::text, [data-panel="longDescription"] h4::text'
         specification_css = '.fb-product-information__specification__table__row-data'
 
-        raw_description = clean(response.xpath(raw_description_xpath))
+        raw_description = clean(response.css(css))
         return raw_description + [' '.join(clean(x.css(' ::text'))) for x in response.css(specification_css)]
 
     def product_description(self, response):
         return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
-        care = clean(response.xpath('//h2[contains(text(), "cuidar")]/following-sibling::ul[1]//text()'))
+        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
 
-        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)] + care
-
-    def product_gender(self, response):
+    def product_gender(self, response, name):
         xpath = '//*[contains(text(), "Género")]/parent::*[th or li]//text()'
 
-        soup = clean(response.xpath(xpath)) + [trail for trail, url in response.meta.get('trail', [])]
-        soup += self.product_category(response)
+        soup = clean(response.xpath(xpath)) + [name]
         soup = ' '.join(soup).lower()
 
         for gender_key, gender in self.gender_map:
