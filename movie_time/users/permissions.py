@@ -35,7 +35,9 @@ class IsCreateOrIsAuthenticated(permissions.BasePermission):
             return False
 
     def has_object_permission(self, request, view, obj):
-        if view.action in ['retrieve', 'update', 'partial_update']:
+        if view.action == 'retrieve':
+            return request.user.is_authenticated()
+        elif view.action in ['update', 'partial_update']:
             return request.user.is_authenticated() and (obj == request.user or request.user.is_admin)
         elif view.action == 'destroy':
             return request.user.is_authenticated() and request.user.is_admin

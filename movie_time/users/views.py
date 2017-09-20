@@ -60,19 +60,19 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 # URL: <host>/users/<receiver_id>/send-request/
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([permissions.IsAuthenticated])
 def send_follow_request(request, receiver_id):
     try:
-        receiver = User.objects.get(receiver_id)
+        receiver = User.objects.get(id=receiver_id)
     except ObjectDoesNotExist:
         raise exceptions.NotFound()
 
-    request, created = FollowRequest.objects.get_or_create(from_user=request.user, to_user=receiver)
+    follow_request, created = FollowRequest.objects.get_or_create(from_user=request.user, to_user=receiver)
     if not created:
         raise exceptions.ValidationError('Follow request is already sent.')
 
-    return Response({'status': 'sent'})
+    return Response(UserSerializer(receiver, context={'request': request}).data)
 
 
 # URL: <host>/requests/<request_id>/<action[accept or block]>/
