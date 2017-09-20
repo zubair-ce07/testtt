@@ -40,7 +40,7 @@ class BoohooSpider(CrawlSpider):
     care = ['material', 'cotton', 'polyester', 'elastane', 'viskose']
 
     site_id = 'df08ca30-5d22-4ab2-978a-cf3dbbd6a9a5'
-    listing_url = 'http://fsm2.attraqt.com/zones-js.aspx?version=17.4.3' \
+    listing_url_t = 'http://fsm2.attraqt.com/zones-js.aspx?version=17.4.3' \
                   '&siteId={site_id}&referrer=&sitereferrer=&pageurl={url}&zone0=prod_list_prods' \
                   '&currency=EUR&config_categorytree={config_categorytree}' \
                   '&config_parentcategorytree={config_parentcategorytree}&config_currency=EUR'
@@ -53,25 +53,21 @@ class BoohooSpider(CrawlSpider):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css,
-                           process_value=clean_url),
-             callback='parse_pagination'),
-        Rule(LinkExtractor(restrict_css=[product_css],
-                           process_value=clean_url),
-             callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=listing_css, process_value=clean_url), callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css=[product_css], process_value=clean_url), callback='parse_product'),
     )
 
     def parse_pagination(self, response):
         categories = response.url.replace('http://de.boohoo.com/', '').split('/')
         category_tree = '%2F'.join(categories)
         parent_category_tree = '%2F'.join(categories[:-1])
-        product_store_url = self.listing_url.format(
+        listing_url = self.listing_url_t.format(
             site_id=self.site_id,
             config_parentcategorytree=parent_category_tree,
             config_categorytree=category_tree,
             url=quote_plus(response.url)
         )
-        return Request(url=product_store_url,
+        return Request(url=listing_url,
                        callback=self.parse_listing)
 
     def parse_listing(self, response):
@@ -111,24 +107,25 @@ class BoohooSpider(CrawlSpider):
 
     def product_skus(self, response):
         price_css = '.price-info .price::text'
+        price_regex = '\d+\.?\d*|$'
         raw_product = self.raw_product(response)
         skus = {}
 
-        product_size = {product_id: size['label']
+        product_sizes = {product_id: size['label']
                         for size in raw_product['attributes']['1113']['options']
                         for product_id in size['products']}
 
-        for size_id in product_size:
+        for size_id in product_sizes:
             for color in raw_product['attributes']['92']['options']:
                 out_of_stock = False
-                if id not in color['products']:
+                if size_id not in color['products']:
                     out_of_stock = True
-                sku_id = '{color}_{size}'.format(color=color['label'], size=product_size[size_id])
-                sku = pricing(response, price_css)
+                sku_id = '{color}_{size}'.format(color=color['label'], size=product_sizes[size_id])
+                sku = pricing(response, price_css, price_regex)
                 sku.update(
                     {
                         'sku_id': sku_id,
-                        'size': product_size[size_id],
+                        'size': product_sizes[size_id],
                         'color': color['label']
                     }
                 )
@@ -136,15 +133,16 @@ class BoohooSpider(CrawlSpider):
                     sku['out_of_stock'] = out_of_stock
                 skus[sku_id] = sku
 
-	return skus
+        return skus
 
     def product_name(self, response):
         name_css = '.product-shop .product-name h1::text'
         return response.css(name_css).extract_first()
 
     def product_brand(self, response):
-        for brand in response.url.split('/'):
-            if brand in self.brands:
+        splitted_url = response.url.split('/')
+        for brand in self.brands:
+            if brand in splitted_url:
                 return self.brands[brand]
         return 'boohoo'
 
@@ -157,9 +155,9 @@ class BoohooSpider(CrawlSpider):
         gender_css = '.main script::text'
 
         raw_gender = response.url.split('/') + response.css(gender_css).re(gender_regex)
-        for gender in self.gender_map:
-            if gender[0] in raw_gender:
-                return gender[1]
+        for gender_str, gender in self.gender_map:
+            if gender_str in raw_gender:
+                return gender
         return 'unisex-adults'
 
     def product_raw_description(self, response):
@@ -168,13 +166,13 @@ class BoohooSpider(CrawlSpider):
 
     def product_description(self, response):
         raw_description = self.product_raw_description(response)
-        return [information.strip() for information in raw_description
-                if not is_care(self.care, information) and information.strip()]
+        return [rd.strip() for rd in raw_description
+                if not is_care(self.care, rd) and rd.strip()]
 
     def product_care(self, response):
         raw_description = self.product_raw_description(response)
-        return [information.strip() for information in raw_description
-                if is_care(self.care, information) and information.strip()]
+        return [rd.strip() for rd in raw_description
+                if is_care(self.care, rd) and rd.strip()]
 
     def product_retailer_sku(self, response):
         retailer_sku_css = '#prodSKU::text'
