@@ -1,10 +1,12 @@
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, permissions, exceptions
+from rest_framework.generics import ListAPIView
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from users.models import User, FollowRequest, Notification
-from users.permissions import IsOwnerOrReadOnly
+from users.permissions import IsCreateOrIsAuthenticated
 from users.serializers import UserSerializer, NotificationSerializer
 
 
@@ -49,7 +51,12 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    parser_classes = (JSONParser, MultiPartParser, FormParser,)
+    permission_classes = (IsCreateOrIsAuthenticated, )
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        self.request.user = user
 
 
 # URL: <host>/users/<receiver_id>/send-request/
@@ -73,22 +80,26 @@ def send_follow_request(request, receiver_id):
 @permission_classes([permissions.IsAuthenticated])
 def accept_or_block_request(request, request_id, action):
     try:
-        request = FollowRequest.objects.get(id=request_id, to_user=request.user)
+        follow_request = FollowRequest.objects.get(id=request_id, to_user=request.user)
     except ObjectDoesNotExist:
         raise exceptions.NotFound()
 
-    request.status = FollowRequest.ACCEPTED if action == 'accept' else FollowRequest.BLOCKED
-    request.save()
-    return Response({'status': 'saved'})
+    follow_request.status = FollowRequest.ACCEPTED if action == 'accept' else FollowRequest.BLOCKED
+    if action == 'accept':
+        follow_request.from_user.follows.add(request.user)
+    notification = follow_request.notification.first()
+    notification.deleted = True
+    notification.save()
+    follow_request.save()
+    return Response({'id': follow_request.id, 'status': follow_request.get_status_display()})
 
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def get_notifications(request):
-    return Response(NotificationSerializer(Notification.objects.filter(
-        recipient=request.user,
-        deleted=False
-    ), many=True).data)
+class GetNotifications(ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get_queryset(self):
+        return Notification.objects.filter( recipient=self.request.user, deleted=False ).order_by('-timestamp')
 
 
 @api_view(['DELETE'])
@@ -101,4 +112,4 @@ def delete_notification(request, notification_id):
 
     notification.deleted = True
     notification.save()
-    return Response({'status': 'deleted'})
+    return Response({'id': notification.id})

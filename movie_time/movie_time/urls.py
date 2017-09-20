@@ -10,10 +10,10 @@ router.register(r'users', views.UserViewSet)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^', include('movies.urls')),
-    url(r'^', include('users.urls')),
-    url(r'^', include('watchlists.urls')),
-    url(r'^', include(router.urls)),
+    url(r'^api/', include('movies.urls')),
+    url(r'^api/', include('users.urls')),
+    url(r'^api/', include('watchlists.urls')),
+    url(r'^api/', include(router.urls)),
 ]
 
 urlpatterns += static.static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

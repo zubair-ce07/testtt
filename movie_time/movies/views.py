@@ -27,7 +27,11 @@ def search_movies(request):
 
     filtered_words = [word.lower() for word in search_string.split() if word.lower() not in stopwords.words('english')]
 
-    queries = [Q(title__icontains=keyword) for keyword in filtered_words]
+    queries = [Q(title__iregex=r'[[:<:]]{0}[[:>:]]'.format(keyword)) for keyword in filtered_words]
+
+    if len(queries) == 0:
+        return Response([])
+
     query = queries.pop()
     for condition in queries:
         query |= condition
@@ -53,13 +57,13 @@ class GetGenresMovies(ListAPIView):
         except ObjectDoesNotExist:
             raise NotFound()
 
-        return Movie.objects.filter(genres=genre).order_by('-popularity').select_related(
-            'release_date').prefetch_related('genres', 'images', 'watchlist_items')
+        return Movie.objects.filter(genres=genre).select_related('release_date')\
+            .prefetch_related('genres', 'images', 'watchlist_items').order_by('-popularity')
 
 
 class GetGenres(ListAPIView):
     serializer_class = GenreSerializer
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('name')
 
 
 class GetMoviesReleasedOnDate(ListAPIView):

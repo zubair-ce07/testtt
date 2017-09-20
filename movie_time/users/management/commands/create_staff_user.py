@@ -54,7 +54,6 @@ class Command(BaseCommand):
             sys.exit(1)
 
         user = self.UserModel.objects.create_staff_user(email, password, is_admin, is_moderator)
-        Token.objects.create(user=user)
         self.stdout.write("User created successfully.")
 
     def get_input_data(self, field, message, default=None):

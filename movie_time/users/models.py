@@ -100,7 +100,7 @@ class User(AbstractBaseUser):
     def has_perm(self, perm, obj=None):
         return True
 
-    def has_module_perms(self, app_label    ):
+    def has_module_perms(self, app_label):
         return True
 
     @property
@@ -155,7 +155,7 @@ class FollowRequest(models.Model):
 
 
 @receiver(post_save, sender=FollowRequest)
-def create_auth_token(instance=None, created=False, **kwargs):
+def create_notification(instance=None, created=False, **kwargs):
     """
     if a new request is created then create a notification for that target user
     Arguments:

@@ -77,20 +77,13 @@ class WatchListItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WatchListItem
-        fields = ['is_watched', 'is_recommended', 'removed', 'best_actor', 'rating']
+        fields = ['movie', 'is_watched', 'is_recommended', 'removed', 'best_actor', 'rating']
 
 
 class MetaMovieSerializer(serializers.ModelSerializer):
-    def __init__(self, *args, **kwargs):
-        super(MetaMovieSerializer, self).__init__(*args, **kwargs)
-        request = self.context.get('request')
-
-        if not request or request.user.is_anonymous:
-            self.fields.pop('user_statuses')
-
     def get_max_vote_avg_images(self, movie):
-        max_vote_avg_for_poster = 0
-        max_vote_avg_for_backdrop = 0
+        max_vote_avg_for_poster = -1
+        max_vote_avg_for_backdrop = -1
         best_backdrop = None
         best_poster = None
 
@@ -98,9 +91,11 @@ class MetaMovieSerializer(serializers.ModelSerializer):
             if image.type == Image.POSTER:
                 if image.vote_average > max_vote_avg_for_poster:
                     best_poster = image
+                    max_vote_avg_for_poster = image.vote_average
             elif image.type == Image.BACKDROP:
                 if image.vote_average > max_vote_avg_for_backdrop:
                     best_backdrop = image
+                    max_vote_avg_for_backdrop = image.vote_average
 
         return best_poster, best_backdrop
 
@@ -110,11 +105,12 @@ class MetaMovieSerializer(serializers.ModelSerializer):
         backdrop_path = best_backdrop.file_path if best_backdrop else None
         return {'poster': poster_path, 'backdrop': backdrop_path}
 
-    def get_watchlist_statuses(self, movie):
+    def get_user_statuses(self, movie):
         request = self.context.get('request')
         if request and not request.user.is_anonymous:
-            watchlist_item = movie.watchlist_items.filter(user=request.user).first()
-            return WatchListItemSerializer(watchlist_item).data if watchlist_item else None
+            for watchlist_item in movie.watchlist_items.all():
+                if watchlist_item.user.id is request.user.id:
+                    return WatchListItemSerializer(watchlist_item).data if watchlist_item else None
 
     @staticmethod
     def get_counts(movie):

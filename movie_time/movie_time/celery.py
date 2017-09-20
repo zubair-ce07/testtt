@@ -11,13 +11,13 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.autodiscover_tasks()
 
-app.conf.beat_schedule = {
-    'get_changes_every_day': {
-        'task': 'movies.tasks.updates_in_movies',
-        'schedule': crontab(minute=0, hour=6)
-    },
-    'notify_users_every_day': {
-        'task': 'watchlist.tasks.notify_about_newly_released',
-        'schedule': crontab(minute=0, hour=6)
-    }
-}
+# app.conf.beat_schedule = {
+#     'get_changes_every_day': {
+#         'task': 'movies.tasks.updates_in_movies',
+#         'schedule': crontab(minute=0, hour=6)
+#     },
+#     'notify_users_every_day': {
+#         'task': 'watchlist.tasks.notify_about_newly_released',
+#         'schedule': crontab(minute=0, hour=6)
+#     }
+# }

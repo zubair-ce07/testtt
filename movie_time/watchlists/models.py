@@ -9,7 +9,7 @@ class WatchListItem(models.Model):
     DISLIKED = 2
 
     RATINGS = (
-        (LIKED, 'Like'),
+        (LIKED, 'Liked'),
         (DISLIKED, 'Disliked')
     )
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='watchlist_items')
@@ -19,6 +19,7 @@ class WatchListItem(models.Model):
     rating = models.PositiveSmallIntegerField(choices=RATINGS, null=True, blank=True)
     best_actor = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, related_name='votes')
     is_recommended = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Activity(models.Model):

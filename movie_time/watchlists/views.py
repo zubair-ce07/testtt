@@ -1,10 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from watchlists.models import WatchListItem, Activity
 from watchlists.serializers import ActivitySerializer
+from movies.serializers import WatchListItemSerializer, MovieSerializer
 from movies.models import Movie, Role
 
 
@@ -23,7 +26,10 @@ def get_watchlist_item(user, movie):
 
 
 def create_activity(watchlist_item, activity_type):
-    Activity.objects.get_or_create(watchlist=watchlist_item, type=activity_type)
+    activity, created = Activity.objects.get_or_create(watchlist=watchlist_item, type=activity_type)
+    if not created:
+        activity.created_at = timezone.now()
+        activity.save()
 
 
 def delete_activity(watchlist_item, activity_type):
@@ -50,13 +56,11 @@ def add_or_remove_from_watchlist(request, movie_id):
             raise
 
     if request.method == 'PUT':
-        response = 'Added'
         create_activity(watchlist_item, Activity.ADDED)
     else:
-        response = 'Removed'
         delete_activity(watchlist_item, Activity.ADDED)
 
-    return Response({'status': response})
+    return Response(WatchListItemSerializer(watchlist_item).data)
 
 
 # URL: <host>/movies/<movie_id>/<action_type[watched or recommended]>/
@@ -65,6 +69,9 @@ def add_or_remove_from_watchlist(request, movie_id):
 def changed_watchlist_status(request, movie_id, action_type):
     movie = get_movie(movie_id)
     watchlist_item = get_watchlist_item(request.user, movie)
+
+    if action_type not in ['watched', 'recommended']:
+        raise NotFound()
 
     if action_type == 'watched':
 
@@ -86,19 +93,25 @@ def changed_watchlist_status(request, movie_id, action_type):
 
     watchlist_item.save()
 
-    return Response({'status': 'Saved'})
+    return Response(WatchListItemSerializer(watchlist_item).data)
 
 
 # URL: <host>/movies/<movie_id>/ratings/<action[liked or disliked]>/
-@api_view(http_method_names=['PUT'])
+@api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def rate_movie(request, movie_id, action):
     movie = get_movie(movie_id)
     watchlist_item = get_watchlist_item(request.user, movie)
-    watchlist_item.rating = WatchListItem.LIKED if action == 'liked' else WatchListItem.DISLIKED
-    create_activity(watchlist_item, Activity.RATED)
+
+    if request.method == 'PUT':
+        watchlist_item.rating = WatchListItem.LIKED if action == 'Liked' else WatchListItem.DISLIKED
+        create_activity(watchlist_item, Activity.RATED)
+    else:
+        watchlist_item.rating = None
+        delete_activity(watchlist_item, Activity.RATED)
+
     watchlist_item.save()
-    return Response({'status': 'Saved'})
+    return Response(WatchListItemSerializer(watchlist_item).data)
 
 
 # URL: <host>/roles/<role_id>/vote-up/
@@ -114,13 +127,41 @@ def change_best_actor_vote(request, role_id):
     watchlist_item.best_actor = role
     create_activity(watchlist_item, Activity.VOTED_ACTOR)
     watchlist_item.save()
-    return Response({'status': 'Saved'})
+    return Response(WatchListItemSerializer(watchlist_item).data)
 
 
-# URL: <host>/activities/
-@api_view(http_method_names=['GET'])
-@permission_classes([IsAuthenticated])
-def get_activities(request):
-    following_users = request.user.follows.all()
-    activities = Activity.objects.filter(watchlist__user__in=following_users)
-    return Response(ActivitySerializer(activities, many=True).data)
+class GetActivities(ListAPIView):
+    serializer_class = ActivitySerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self):
+        following_users = self.request.user.follows.all()
+        return WatchListItem.objects.filter(user__in=following_users, removed=False).order_by('-updated_at')\
+            .select_related('movie__release_date').prefetch_related('activity_set', 'movie__genres', 'movie__images')
+
+
+class GetToWatchList(ListAPIView):
+    serializer_class = MovieSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self):
+        return Movie.objects.filter(watchlist_items__user=self.request.user, watchlist_items__is_watched=False,
+                                    status='Released', watchlist_items__removed=False).order_by('title')
+
+
+class GetWatchedList(ListAPIView):
+    serializer_class = MovieSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self):
+        return Movie.objects.filter(watchlist_items__user=self.request.user, watchlist_items__removed=False,
+                                    watchlist_items__is_watched=True).order_by('title')
+
+
+class GetUpcomingList(ListAPIView):
+    serializer_class = MovieSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self):
+        return Movie.objects.filter(watchlist_items__user=self.request.user, watchlist_items__is_watched=False,
+                                    watchlist_items__removed=False).exclude(status='Released').order_by('title')
