@@ -136,7 +136,7 @@ class BoohooSpider(CrawlSpider):
                     sku['out_of_stock'] = out_of_stock
                 skus[sku_id] = sku
 
-            return skus
+	return skus
 
     def product_name(self, response):
         name_css = '.product-shop .product-name h1::text'
