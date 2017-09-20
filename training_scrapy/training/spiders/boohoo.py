@@ -1,23 +1,28 @@
 import datetime
 import json
-import re
 from urllib.parse import quote_plus
+
 from scrapy import Request
+from scrapy.http import HtmlResponse
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
-from scrapy.http import HtmlResponse
-from training.utils import clean_and_convert_price, currency_information
+
+from training.utils import pricing, is_care
 
 
-def modify_product_url(url):
+def clean_url(url):
     return url.replace("http://fsm2.attraqt.com", "http://de.boohoo.com")
 
 
 class BoohooSpider(CrawlSpider):
     name = 'boohoo-de'
     language = 'de'
-    genders = ['girls', 'boys']
-    visited = set()
+    gender_map = [('girls', 'girls'),
+                  ('boys', 'boys'),
+                  ('Männlich', 'men'),
+                  ('Weiblich', 'women'),
+                  ]
+    visited_products = set()
 
     brands = {
         'boohoo-night-herren': 'boohooMAN Night',
@@ -32,45 +37,44 @@ class BoohooSpider(CrawlSpider):
         'premium-collection': 'boohoo Premium'
     }
 
-    care = ['Material', 'Cotton', 'Polyester', 'Elastane', 'Viskose']
+    care = ['material', 'cotton', 'polyester', 'elastane', 'viskose']
 
     site_id = 'df08ca30-5d22-4ab2-978a-cf3dbbd6a9a5'
-    product_store_url = 'http://fsm2.attraqt.com/zones-js.aspx?version=17.4.3' \
-                        '&siteId={site_id}&referrer=&sitereferrer=&pageurl={url}&zone0=prod_list_prods' \
-                        '&currency=EUR&config_categorytree={config_categorytree}' \
-                        '&config_parentcategorytree={config_parentcategorytree}&config_currency=EUR'
+    listing_url = 'http://fsm2.attraqt.com/zones-js.aspx?version=17.4.3' \
+                  '&siteId={site_id}&referrer=&sitereferrer=&pageurl={url}&zone0=prod_list_prods' \
+                  '&currency=EUR&config_categorytree={config_categorytree}' \
+                  '&config_parentcategorytree={config_parentcategorytree}&config_currency=EUR'
 
-    mega_menu_css = '.nav-primary'
-    pagination_css = '.pagnNext'
-    product_link_css = '.prod-search-results .js-quickBuyDetails'
-
-    rules = (
-        Rule(LinkExtractor(restrict_css=[mega_menu_css, pagination_css],
-                           process_value=modify_product_url),
-             callback='crawl_pages'),
-        Rule(LinkExtractor(restrict_css=[product_link_css],
-                           process_value=modify_product_url),
-            callback='parse_product'),
-    )
+    listing_css = ['.nav-primary', '.pagnNext']
+    product_css = '.prod-search-results .js-quickBuyDetails'
 
     start_urls = [
         'http://de.boohoo.com',
     ]
 
-    def crawl_pages(self, response):
+    rules = (
+        Rule(LinkExtractor(restrict_css=listing_css,
+                           process_value=clean_url),
+             callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css=[product_css],
+                           process_value=clean_url),
+             callback='parse_product'),
+    )
+
+    def parse_pagination(self, response):
         categories = response.url.replace('http://de.boohoo.com/', '').split('/')
         category_tree = '%2F'.join(categories)
         parent_category_tree = '%2F'.join(categories[:-1])
-        product_store_url = self.product_store_url.format(
+        product_store_url = self.listing_url.format(
             site_id=self.site_id,
             config_parentcategorytree=parent_category_tree,
             config_categorytree=category_tree,
             url=quote_plus(response.url)
         )
         return Request(url=product_store_url,
-                       callback=self.modify_product_store_response)
+                       callback=self.parse_listing)
 
-    def modify_product_store_response(self, response):
+    def parse_listing(self, response):
         response = HtmlResponse(url=response.url,
                                 status=response.status,
                                 headers=response.headers,
@@ -81,17 +85,17 @@ class BoohooSpider(CrawlSpider):
 
     def parse_product(self, response):
         retailer_sku = self.product_retailer_sku(response)
-        if retailer_sku in self.visited:
+        if retailer_sku in self.visited_products:
             return
-        self.visited.add(retailer_sku)
+        self.visited_products.add(retailer_sku)
 
         product = {
             'crawl_start_time': datetime.datetime.now(),
             'name': self.product_name(response),
             'brand': self.product_brand(response),
-            'merch_info': self.merch_info(response),
+            'merch_info': [],
             'retailer_sku': retailer_sku,
-            'category': self.product_category(response),
+            'category': [],
             'image_urls': self.product_image_urls(response),
             'description': self.product_description(response),
             'skus': self.product_skus(response),
@@ -106,106 +110,77 @@ class BoohooSpider(CrawlSpider):
         return product
 
     def product_skus(self, response):
-        raw_product = self.product_raw(response)
+        price_css = '.price-info .price::text'
+        raw_product = self.raw_product(response)
         skus = {}
-        for color in raw_product['attributes']['92']['options']:
-            for size in raw_product['attributes']['1113']['options']:
-                out_of_stock = False
-                if not set(color['products']).intersection(size['products']):
-                    out_of_stock = True
 
-                price, currency = self.product_price_and_currency(response)
-                sku_id = '{color}_{size}'.format(color=color['label'], size=size['label'])
-                sku = {
-                    'sku_id': sku_id,
-                    'size': size['label'],
-                    'currency': currency,
-                    'price': price[0],
-                    'previous_price': price[1:],
-                    'color': color['label']
-                }
+        product_size = {product_id: size['label']
+                        for size in raw_product['attributes']['1113']['options']
+                        for product_id in size['products']}
+
+        for size_id in product_size:
+            for color in raw_product['attributes']['92']['options']:
+                out_of_stock = False
+                if id not in color['products']:
+                    out_of_stock = True
+                sku_id = '{color}_{size}'.format(color=color['label'], size=product_size[size_id])
+                sku = pricing(response, price_css)
+                sku.update(
+                    {
+                        'sku_id': sku_id,
+                        'size': product_size[size_id],
+                        'color': color['label']
+                    }
+                )
                 if out_of_stock:
                     sku['out_of_stock'] = out_of_stock
                 skus[sku_id] = sku
 
-        return list(skus.values())
+            return skus
 
     def product_name(self, response):
         name_css = '.product-shop .product-name h1::text'
         return response.css(name_css).extract_first()
 
-    def product_category(self, response):
-        return []
-
     def product_brand(self, response):
-        return self.brands.get(response.url.split('/')[-2], 'boohoo')
+        for brand in response.url.split('/'):
+            if brand in self.brands:
+                return self.brands[brand]
+        return 'boohoo'
 
     def product_image_urls(self, response):
         image_urls_css = '.gallery-image:not(#default-gallery-image) img::attr(src)'
         return response.css(image_urls_css).extract()
 
-    def merch_info(self, response):
-        return []
-
     def product_gender(self, response):
         gender_regex = '\(\"pdxtgender\"\,\"(.*?)\"\)|$'
         gender_css = '.main script::text'
 
-        splited_url = response.url.split('/')
-        if 'kids' in splited_url:
-            for gender in self.genders:
-                if gender in splited_url:
-                    return gender
-
-        gender = re.findall(gender_regex, response.css(gender_css).extract_first())[0]
-        if gender == 'Weiblich':
-            product_gender = 'women'
-        if gender == 'Männlich':
-            product_gender = 'men'
-        return product_gender or 'unisex-adults'
-
-    def product_price_and_currency(self, response):
-        price_css = '.price-info .price::text'
-        product_price = response.css(price_css).extract()
-        if product_price:
-            currency = currency_information(product_price[0])
-            price = [clean_and_convert_price(price, currency[1]) for price in product_price]
-            price.sort(key=int)
-            return (price, currency[0])
+        raw_gender = response.url.split('/') + response.css(gender_css).re(gender_regex)
+        for gender in self.gender_map:
+            if gender[0] in raw_gender:
+                return gender[1]
+        return 'unisex-adults'
 
     def product_raw_description(self, response):
         description_css = '.toggle-content .collateral-accordion ::text'
         return response.css(description_css).extract()
 
     def product_description(self, response):
-        description = list()
         raw_description = self.product_raw_description(response)
-        for information in raw_description:
-            is_care = False
-            for care in self.care:
-                if care in information:
-                    is_care = True
-                    break
-            if not is_care and information.strip():
-                description.append(information.strip())
-        return description
+        return [information.strip() for information in raw_description
+                if not is_care(self.care, information) and information.strip()]
 
     def product_care(self, response):
-        description = self.product_raw_description(response)
-        care_description = list()
-        for information in description:
-            for care in self.care:
-                if care in information:
-                    care_description.append(information.strip())
-        return care_description
+        raw_description = self.product_raw_description(response)
+        return [information.strip() for information in raw_description
+                if is_care(self.care, information) and information.strip()]
 
     def product_retailer_sku(self, response):
         retailer_sku_css = '#prodSKU::text'
         return response.css(retailer_sku_css).extract_first()
 
-    def product_raw(self, response):
+    def raw_product(self, response):
         config_regex = 'new Product.Config\((.*?)\)|$'
-        config_css = '#product-options-wrapper > script:nth-child(2)::text'
-        config = response.css(config_css).extract_first()
-        config = re.findall(config_regex, config)[0]
-        return json.loads(config)
+        config_css = '#product-options-wrapper > script::text'
+        return json.loads(response.css(config_css).re(config_regex)[0])
