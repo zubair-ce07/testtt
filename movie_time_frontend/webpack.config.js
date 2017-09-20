@@ -17,8 +17,20 @@ let config = {
                 include: SRC_DIR,
                 loader: "babel-loader",
                 query: {presets: ["react", "es2015", "stage-1"]}
+            },
+            {
+                test: /\.css$/,
+                loader: "style-loader"
+            },
+            {
+                test: /\.css$/,
+                loader: "css-loader"
+            },
+            {
+                test: /\.(gif|ttf|eot|svg|woff2?)$/,
+                loader: 'url-loader?name=[name].[ext]'
             }
-        ]
+        ],
     },
     devServer: {
         historyApiFallback: true

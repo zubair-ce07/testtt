@@ -1,8 +1,27 @@
-import React from 'react';
+import React, {Component} from 'react';
+import {withRouter} from "react-router-dom";
 
+import NavigationBar from './navigation_bar/navigation_bar';
+import SideNav from './navigation_bar/side_nav';
 
-const App = props => {
-    return <div>{props.children}</div>;
-};
+class App extends Component {
+    constructor (props, context){
+        super(props, context);
+    }
 
-export default App;
+    onFocusSearch() {
+        this.props.history.push('/search/');
+    }
+
+    render() {
+        return (
+            <div>
+                <NavigationBar/>
+                <SideNav onFocusOnSearchBar={() => this.onFocusSearch()}/>
+                {this.props.children}
+            </div>
+        );
+    }
+}
+
+export default withRouter(App);
