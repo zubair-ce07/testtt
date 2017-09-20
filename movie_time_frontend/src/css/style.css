@@ -282,3 +282,13 @@ body {
     font-size: 20px;
     float: right;
 }
+.profile-card {
+    margin-left: 0;
+    margin-right: 0;
+    background-color: #073642;
+    padding: 20px;
+}
+.update-btn {
+    margin-top: 5px;
+    width: 120px;
+}

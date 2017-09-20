@@ -13,8 +13,10 @@ import GenresReducer from './genres_reducer';
 import GenreMoviesReducer from './genre_movies_reducer';
 import ActivePageReducer from './active_page_reducer';
 import MovieReducer from './movie_reducer';
+import UserProfileReducer from './user_profile_reducer';
 
 const rootReducer = combineReducers({
+    user_profile: UserProfileReducer,
     movie_detail: MovieReducer,
     active_page: ActivePageReducer,
     genre_movies_list: GenreMoviesReducer,

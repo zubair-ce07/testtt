@@ -21,5 +21,8 @@ export const FETCHING_MOVIE = 'FETCHING_MOVIE';
 export const UPDATE_WATCHLIST = 'UPDATE_WATCHLIST';
 export const RATE_MOVIE = 'RATE_MOVIE';
 export const VOTE_ACTOR = 'VOTE_ACTOR';
+export const FETCH_USER = 'FETCH_USER';
+export const SEND_FOLLOW_REQUEST = 'SEND_FOLLOW_REQUEST';
+export const UPDATE_USER = 'UPDATE_USER';
 
 export const ROOT_URL = 'http://localhost:8000';
