@@ -25,6 +25,7 @@ class Mixin:
 class FalabellaParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     main_image_re = re.compile('(=\d+)')
+    image_id_re = re.compile('Falabella/(\d+_\d)')
 
     gender_map = [
         ('mujer', 'women'),
@@ -34,9 +35,8 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         ('unisex', 'unisex-adults')
     ]
 
-    image_id_re = 'Falabella/(\d+_\d)'
     raw_product_re = 'fbra_browseMainProductConfig\s*=\s*(.*);'
-    color_re = 'Color:\s*(.*)'
+    colour_re = 'Color:\s*(.*)'
 
     image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}?$producto308$&wid=924&hei=924'
     image_request_url_t = 'http://falabella.scene7.com/is/image/Falabella/{product_id}/?req=set,json&id=PDP'
@@ -58,7 +58,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = self.skus(raw_product, response)
         garment['category'] = self.product_category(response)
 
-        garment['image_urls'] = self.main_image(response)
+        garment['image_urls'] = [self.main_image(response)]
 
         garment['meta'] = {
             'requests_queue': self.image_requests(raw_product)
@@ -67,16 +67,17 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def parse_image(self, response):
-        garment = response.meta.get('garment')
+        garment = response.meta['garment']
         garment['image_urls'] = self.image_urls(response, garment['image_urls'])
 
         return self.next_request_or_garment(garment)
 
     def main_image(self, response):
-        return [self.main_image_re.sub('=924', clean(response.css('[data-content-type="image"]::attr(src)'))[0])]
+        image = clean(response.css('[data-content-type="image"]::attr(src)'))[0]
+        return self.main_image_re.sub('=924', image)
 
     def image_urls(self, response, main_image):
-        image_ids = set(re.findall(self.image_id_re, response.text))
+        image_ids = set(self.image_id_re.findall(response.text))
         image_urls = main_image + [self.image_url_t.format(image_id=image_id) for image_id in image_ids]
         return sorted(set(image_urls), key=image_urls.index)
 
@@ -106,6 +107,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
     def skus(self, raw_product, response):
         skus = {}
         visitied_variants = set()
+        color_from_description = self.color_from_description(response)
         for raw_sku in raw_product['skus']:
             sku = self.product_price(response, raw_sku)
             sku['size'] = raw_sku.get('size', self.one_size)
@@ -116,8 +118,8 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
             visitied_variants.add((raw_sku.get('color', ''), sku['size']))
 
-            if 'color' in raw_sku or self.color_from_description(response):
-                sku['colour'] = raw_sku.get('color', self.color_from_description(response)[0])
+            if 'color' in raw_sku or color_from_description:
+                sku['colour'] = raw_sku.get('color', color_from_description)
 
             skus[raw_sku['skuId']] = sku
 
@@ -125,7 +127,8 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
     def color_from_description(self, response):
         xpath = '//*[@data-panel="longDescription"]//li[contains(text(), "Color")]/text()'
-        return clean(response.xpath(xpath).re(self.color_re))
+        colour = response.xpath(xpath).re(self.colour_re)
+        return clean(colour)[0] if colour else colour
 
     def raw_description(self, response):
         css = '[data-panel="longDescription"] li::text, [data-panel="longDescription"] h4::text'
@@ -138,7 +141,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
-        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
+        return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
     def product_gender(self, response, name):
         xpath = '//*[contains(text(), "Género")]/parent::*[th or li]//text()'
