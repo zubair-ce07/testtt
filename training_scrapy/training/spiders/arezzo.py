@@ -1,14 +1,16 @@
-from scrapy import Request
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule
-from scrapy.spiders import CrawlSpider
 import datetime
 import re
+
+from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider
+from scrapy.spiders import Rule
+
 from training.utils import pricing
 
 
 class ArezzoSpider(CrawlSpider):
-    name = 'arrezo-br'
+    name = 'arezzo-br'
     gender = 'women'
     language = 'pt'
 
@@ -92,7 +94,7 @@ class ArezzoSpider(CrawlSpider):
     def product_name(self, response):
         remove_string_regex = '(\s*Disney x Arezzo\s*|\s*\[PRE VENDA\]\s*-\s*|\|)+'
         name = self.product_raw_name(response)
-        return re.sub(remove_string_regex,'',name).strip()
+        return re.sub(remove_string_regex, '', name).strip()
 
     def product_category(self, response):
         category_css = '#breadcrumb a::text'
@@ -115,9 +117,9 @@ class ArezzoSpider(CrawlSpider):
         return response.css(description_css).extract()
 
     def pricing(self, response):
-        css = '.arz-product-price .arz-new-price::text,.arz-product-price .arz-old-price::text,.arz-product-price::text'
-        regex = '\d+[\.\d+]*\,?\d*|$'
-        return pricing(prices=response.css(css).extract(), regex=regex, comma=',', point='.')
+        css = '.arz-product-price .arz-new-price::text,' \
+              '.arz-product-price .arz-old-price::text,.arz-product-price::text'
+        return pricing(response, css)
 
     def product_color(self, response):
         characteristics = self.product_characteristics(response)
@@ -138,7 +140,7 @@ class ArezzoSpider(CrawlSpider):
 
     def product_characteristics(self, response):
         information_css = '.arz-product-description-fix :not([class])::text'
-        return [value.strip() for value  in response.css(information_css).extract() if value.strip()]
+        return [value.strip() for value in response.css(information_css).extract() if value.strip()]
 
     def product_out_of_stock(self, response):
         out_of_stock_css = '.arz-product-available-info .arz-product-line span::text'
@@ -147,7 +149,7 @@ class ArezzoSpider(CrawlSpider):
     def page_category(self, response):
         category_css = '#breadcrumb a::text'
         categories = response.css(category_css).extract()
-        return categories[1:] if categories else None
+        return categories[1:] if categories else []
 
     def next_page_url(self, response):
         url = 'https://www.arezzo.com.br/c/{category}?q=%3Arelevance%3A&sort=creation-time&page={number}&text='
