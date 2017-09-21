@@ -24,7 +24,7 @@ def currency_information(amount):
 
 def pricing(prices, regex, comma, point):
     if prices:
-        price = sorted([currency_unit(clean_price(price, regex).replace(comma, ''), '.') for price in prices])
+        price = sorted([currency_unit(clean_price(price, regex).replace(comma, ''), point) for price in prices])
         return {
             'price': price[0],
             'previous_price': price[1:],
@@ -32,5 +32,5 @@ def pricing(prices, regex, comma, point):
         }
 
 
-def is_care(care, string):
-    return any(c in string.lower() for c in care)
+def is_care(care, senetence):
+    return any(c in senetence for c in care)

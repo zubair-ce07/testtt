@@ -46,7 +46,7 @@ class BoohooSpider(CrawlSpider):
                   '&config_parentcategorytree={config_parentcategorytree}&config_currency=EUR'
 
     listing_css = ['.nav-primary', '.pagnNext']
-    product_css = '.prod-search-results .js-quickBuyDetails'
+    product_css = ['.prod-search-results .js-quickBuyDetails']
 
     start_urls = [
         'http://de.boohoo.com',
@@ -54,7 +54,7 @@ class BoohooSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, process_value=clean_url), callback='parse_pagination'),
-        Rule(LinkExtractor(restrict_css=[product_css], process_value=clean_url), callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=product_css, process_value=clean_url), callback='parse_product'),
     )
 
     def parse_pagination(self, response):
@@ -165,7 +165,7 @@ class BoohooSpider(CrawlSpider):
     def product_description(self, response):
         raw_description = self.product_raw_description(response)
         return [rd.strip() for rd in raw_description
-                if not is_care(self.care, rd) and rd.strip()]
+                if not is_care(self.care, rd.lower()) and rd.strip()]
 
     def pricing(self, response):
         css = '.price-info .price::text'
@@ -175,7 +175,7 @@ class BoohooSpider(CrawlSpider):
     def product_care(self, response):
         raw_description = self.product_raw_description(response)
         return [rd.strip() for rd in raw_description
-                if is_care(self.care, rd) and rd.strip()]
+                if is_care(self.care, rd.lower()) and rd.strip()]
 
     def product_retailer_sku(self, response):
         retailer_sku_css = '#prodSKU::text'
