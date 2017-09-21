@@ -82,17 +82,17 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return sorted(set(image_urls), key=image_urls.index)
 
     def image_requests(self, raw_product):
-        visited_colors = set()
+        visited_colours = set()
         requests = []
 
         for raw_sku in raw_product['skus']:
             colour = raw_sku.get('color', 'default')
 
-            if colour in visited_colors:
+            if colour in visited_colours:
                 continue
 
             media_asset_id = raw_sku['mediaAssetId'] if 'color' in raw_sku else raw_product['mediaAssetId']
-            visited_colors.add(colour)
+            visited_colours.add(colour)
             url = self.image_request_url_t.format(product_id=media_asset_id)
 
             requests += [Request(url=url, callback=self.parse_image)]
@@ -107,7 +107,7 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
     def skus(self, raw_product, response):
         skus = {}
         visitied_variants = set()
-        color_from_description = self.color_from_description(response)
+        product_colour = self.product_colour(response)
         for raw_sku in raw_product['skus']:
             sku = self.product_price(response, raw_sku)
             sku['size'] = raw_sku.get('size', self.one_size)
@@ -118,14 +118,14 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
             visitied_variants.add((raw_sku.get('color', ''), sku['size']))
 
-            if 'color' in raw_sku or color_from_description:
-                sku['colour'] = raw_sku.get('color', color_from_description)
+            if 'color' in raw_sku or product_colour:
+                sku['colour'] = raw_sku.get('color', product_colour)
 
             skus[raw_sku['skuId']] = sku
 
         return skus
 
-    def color_from_description(self, response):
+    def product_colour(self, response):
         xpath = '//*[@data-panel="longDescription"]//li[contains(text(), "Color")]/text()'
         colour = response.xpath(xpath).re(self.colour_re)
         return clean(colour)[0] if colour else colour
