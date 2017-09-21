@@ -9,7 +9,11 @@ currency = {
 
 def clean_price(raw_price, price_regex):
     price = re.findall(price_regex, raw_price)[0]
-    return int(float(price) * 100)
+    return price
+
+
+def currency_unit(price, point):
+    return int(float(price.replace(point, '.')) * 100)
 
 
 def currency_information(amount):
@@ -18,15 +22,13 @@ def currency_information(amount):
             return name
 
 
-def pricing(response, price_css, price_regex):
-    product_price = response.css(price_css).extract()
-    if product_price:
-        currency = currency_information(product_price[0])
-        price = sorted([clean_price(price, price_regex) for price in product_price])
+def pricing(prices, regex, comma, point):
+    if prices:
+        price = sorted([currency_unit(clean_price(price, regex).replace(comma, ''), '.') for price in prices])
         return {
             'price': price[0],
             'previous_price': price[1:],
-            'currency': currency
+            'currency': currency_information(prices[0])
         }
 
 

@@ -106,8 +106,6 @@ class BoohooSpider(CrawlSpider):
         return product
 
     def product_skus(self, response):
-        price_css = '.price-info .price::text'
-        price_regex = '\d+\.?\d*|$'
         raw_product = self.raw_product(response)
         skus = {}
 
@@ -121,7 +119,7 @@ class BoohooSpider(CrawlSpider):
                 if size_id not in color['products']:
                     out_of_stock = True
                 sku_id = '{color}_{size}'.format(color=color['label'], size=product_sizes[size_id])
-                sku = pricing(response, price_css, price_regex)
+                sku = self.pricing(response)
                 sku.update(
                     {
                         'sku_id': sku_id,
@@ -168,6 +166,11 @@ class BoohooSpider(CrawlSpider):
         raw_description = self.product_raw_description(response)
         return [rd.strip() for rd in raw_description
                 if not is_care(self.care, rd) and rd.strip()]
+
+    def pricing(self, response):
+        css = '.price-info .price::text'
+        regex = '\d+[\,\d+]*\.?\d*|$'
+        return pricing(prices=response.css(css).extract(), regex=regex, comma=',', point='.')
 
     def product_care(self, response):
         raw_description = self.product_raw_description(response)
