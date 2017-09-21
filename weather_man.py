@@ -10,11 +10,7 @@ from dateutil import parser
 
 
 class ReportType(enum.Enum):
-    YEAR, YEAR_MONTH, TWO_BAR_CHART = range(1,4)
-
-
-class ChartType(enum.Enum):
-    ONE_LINE, TWO_LINE = range(1,3)
+    YEAR, YEAR_MONTH, BAR_CHART = range(1,4)
 
 
 class WeatherModel:
@@ -177,15 +173,15 @@ class WeatherMan:
 
     def generate_report(self, weather_man_results, report_type, year="", month=""):
 
-        if report_type == ReportType.TWO_BAR_CHART:
+        if report_type == ReportType.BAR_CHART:
             print("\n\n")
             self.populate_bar_chart_report(weather_man_results, year, month)
-        elif report_type == ReportType.YEAR:
-            print("\n\n")
-            self.populate_year_report(weather_man_results)
-        else:
+        elif report_type == ReportType.YEAR_MONTH:
             print("\n\n")
             self.populate_year_month_report(weather_man_results)
+        else:
+            print("\n\n")
+            self.populate_year_report(weather_man_results)
 
     def yearly_weather_report(self, path, year):
 
@@ -237,10 +233,10 @@ class WeatherMan:
             if reading_files:
                 readings = self.populate_weather_readings(reading_files)
 
-            weather_results = self.compute_result(readings, ReportType.TWO_BAR_CHART)
+            weather_results = self.compute_result(readings, ReportType.BAR_CHART)
 
             month = self.month_to_month_name(int(month))
-            self.generate_report(weather_results, ReportType.TWO_BAR_CHART, year, month)
+            self.generate_report(weather_results, ReportType.BAR_CHART, year, month)
 
             self.weather_monthly_readings = readings
         else:
