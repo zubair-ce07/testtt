@@ -250,11 +250,14 @@ body {
     margin-top: -23px;
     padding: 5px 10px 0 10px;
     margin-bottom: 0;
+    line-height: 1.1;
 }
 
 .actor-character {
     padding: 3px 10px 0 10px;
     margin-bottom: 0;
+    line-height: 1.1;
+    font-size: 12px;
 }
 
 .actor-img {

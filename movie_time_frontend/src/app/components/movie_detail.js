@@ -59,12 +59,12 @@ class MovieDetail extends Component {
                             </div>
                         </div>
                     </div>
-                    <h3 className="mt-5">Cast</h3>
+                    <h3 className="mt-5 mb-3">Cast</h3>
                     <div className="horizontal-scroll mb-5">{this.renderCast()}</div>
-                    <h3 className="mt-5">Images</h3>
-                    <div className="horizontal-scroll mb-5">{this.renderImages()}</div>
                     <h3 className="mt-5">Videos</h3>
                     <div className="mb-5 row">{this.renderVideos()}</div>
+                    <h3 className="mt-5 mb-3">Images</h3>
+                    <div className="horizontal-scroll mb-5">{this.renderImages()}</div>
                 </div>
                 }
             </div>
@@ -73,9 +73,11 @@ class MovieDetail extends Component {
 
     renderVideos() {
         const {videos} = this.props.movie_detail.movie;
-        return _.map(videos, video => {
-            return <div className="col-md-6"><iframe key={video.key} width="640" height="360"
-                                src={`https://www.youtube.com/embed/${video.key}`}/></div>
+        return _.map(videos, (video, index) => {
+            return <div key={video.key} className="col-md-6 mt-3">
+                <iframe className={index % 2 === 0 ? 'float-right' : ''} width="480" height="270"
+                        src={`https://www.youtube.com/embed/${video.key}`} allowFullScreen={true}/>
+            </div>
         });
     }
 
@@ -83,14 +85,18 @@ class MovieDetail extends Component {
         const {images} = this.props.movie_detail.movie;
         return _.map(images, image => {
             return <a key={image.file_path} href={getImageUrl(image.file_path, 'original')}>
-                <img src={getImageUrl(image.file_path, 'w342')} height={192}/>
+                <img src={getImageUrl(image.file_path, 'w342')} height={252}/>
             </a>;
         });
     }
 
     renderCast() {
         const {cast} = this.props.movie_detail.movie;
-        const bestActor = this.props.movie_detail.movie.user_statuses.best_actor;
+
+        let bestActor = 0;
+        if(this.props.movie_detail.movie.user_statuses !== null)
+            bestActor = this.props.movie_detail.movie.user_statuses.best_actor;
+
         return _.map(cast, role => {
             return <ActorItem role={role} key={role.id} bestActor={bestActor}
                               onVotedActor={(role_id) => this.props.voteActor(role_id)}/>;
@@ -112,7 +118,10 @@ class MovieDetail extends Component {
 }
 
 
-function mapStateToProps({movie_detail}) {
+function mapStateToProps({movie_detail}, ownProps) {
+    if (movie_detail.movie === null || movie_detail.movie.id.toString() !== ownProps.match.params.movie_id)
+        movie_detail.isFetching = true;
+
     return {movie_detail};
 }
 
