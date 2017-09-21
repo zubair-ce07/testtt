@@ -7,13 +7,15 @@ currency = {
 }
 
 
-def clean_price(raw_price, price_regex):
-    price = re.findall(price_regex, raw_price)[0]
-    return price
+def clean_price(raw_price):
+    regex = '(\d[\d\.\,]*)|$'
+    raw_price = re.findall(regex, raw_price)[0]
+    return '{decimal}{fraction}'.format(decimal=re.sub('[,.]', '', re.split('[,.]\d\d$',raw_price)[0]),
+                                        fraction=re.findall('[,.]?\d\d$|$',raw_price)[0].replace(',','.'))
 
 
-def currency_unit(price, point):
-    return int(float(price.replace(point, '.')) * 100)
+def currency_unit(price):
+    return int(float(price) * 100)
 
 
 def currency_information(amount):
@@ -22,16 +24,19 @@ def currency_information(amount):
             return name
 
 
-def pricing(prices, regex, comma, point):
+def pricing(response, css):
+    prices = response.css(css).extract()
     if prices:
-        prices = [clean_price(price, regex).replace(comma, '') for price in prices if price.strip()]
-        price_in_min_unit = sorted([currency_unit(price, point) for price in prices if price.strip()])
+        currency = currency_information(prices[0])
+        prices = [clean_price(price) for price in prices if price.strip()]
+        price_in_min_unit = sorted([currency_unit(price) for price in prices if price and price.strip()])
         return {
             'price': price_in_min_unit[0],
             'previous_price': price_in_min_unit[1:],
-            'currency': currency_information(prices[0])
+            'currency': currency
         }
 
 
 def is_care(care, senetence):
-    return any(c in senetence for c in care)
+    senetence_lower = senetence.lower()
+    return any(c in senetence_lower for c in care)

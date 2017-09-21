@@ -165,17 +165,16 @@ class BoohooSpider(CrawlSpider):
     def product_description(self, response):
         raw_description = self.product_raw_description(response)
         return [rd.strip() for rd in raw_description
-                if not is_care(self.care, rd.lower()) and rd.strip()]
+                if not is_care(self.care, rd) and rd.strip()]
 
     def pricing(self, response):
         css = '.price-info .price::text'
-        regex = '\d+[\,\d+]*\.?\d*|$'
-        return pricing(prices=response.css(css).extract(), regex=regex, comma=',', point='.')
+        return pricing(response, css)
 
     def product_care(self, response):
         raw_description = self.product_raw_description(response)
         return [rd.strip() for rd in raw_description
-                if is_care(self.care, rd.lower()) and rd.strip()]
+                if is_care(self.care, rd) and rd.strip()]
 
     def product_retailer_sku(self, response):
         retailer_sku_css = '#prodSKU::text'
