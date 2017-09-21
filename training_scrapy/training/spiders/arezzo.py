@@ -4,7 +4,7 @@ from scrapy.spiders import Rule
 from scrapy.spiders import CrawlSpider
 import datetime
 import re
-from training.utils import clean_and_convert_price, currency_information
+from training.utils import pricing
 
 
 class ArezzoSpider(CrawlSpider):
@@ -12,30 +12,34 @@ class ArezzoSpider(CrawlSpider):
     gender = 'women'
     language = 'pt'
 
-    visited_references = dict()
+    care = 'Material'
+    visited_products = set()
+
+    listing_css = ['.arz-nav']
+    product_css = ['.arz-product-wrapper .arz-cover-link']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['.arz-nav'], ), callback='request_next_page'),
-        Rule(LinkExtractor(restrict_css=['.arz-product-wrapper .arz-cover-link'], ), callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=listing_css, ), callback='parse_listing'),
+        Rule(LinkExtractor(restrict_css=product_css, ), callback='parse_product'),
     )
 
     start_urls = [
         'https://www.arezzo.com.br',
     ]
 
-    def request_next_page(self, response):
+    def parse_listing(self, response):
         yield from self.parse(response)
 
         url = self.next_page_url(response)
         if url:
-            yield Request(url=url, callback=self.request_next_page)
+            yield Request(url=url, callback=self.parse_listing)
 
     def parse_product(self, response):
         retailer_sku = self.product_retailer_sku(response)
-        if retailer_sku in self.visited_references:
+        if retailer_sku in self.visited_products:
             return
+        self.visited_products.add(retailer_sku)
 
-        self.visited_references[retailer_sku] = True
         product = {
             'crawl_start_time': datetime.datetime.now(),
             'name': self.product_name(response),
@@ -61,25 +65,22 @@ class ArezzoSpider(CrawlSpider):
 
     def product_skus(self, response):
         size_css = '.arz-btn-secondary.arz-sm'
-        size_unavailable_css = '.arz-disabled span::text'
-        size_available_css = ':not(.arz-disabled) span::text'
+        size_unavailable_css = '.arz-disabled'
         skus = []
-        price, currency = self.product_price_and_currency(response)
         color = self.product_color(response)
-        for selector in response.css(size_css):
+        for size_s in response.css(size_css):
             out_of_stock = False
-            if selector.css(size_unavailable_css):
+            if size_s.css(size_unavailable_css):
                 out_of_stock = True
-                size = selector.css(size_unavailable_css).extract_first().strip()
-            else:
-                size = selector.css(size_available_css).extract_first().strip()
-            sku = {
-                'sku_id': '{color}_{size}'.format(color=color, size=size),
-                'size': size,
-                'currency': currency,
-                'price': price,
-                'color': color,
-            }
+            size = size_s.css('span::text').extract_first().strip()
+            sku = self.pricing(response)
+            sku.update(
+                {
+                    'sku_id': '{color}_{size}'.format(color=color, size=size),
+                    'size': size,
+                    'color': color,
+                }
+            )
 
             if out_of_stock:
                 sku['out_of_stock'] = out_of_stock
@@ -99,19 +100,11 @@ class ArezzoSpider(CrawlSpider):
         return categories[1:-1] if categories else []
 
     def product_brand(self, response):
-        brands = ['Disney x Arezzo', 'Arezzo']
-        name = self.product_raw_name(response)
-        return brands[0] if brands[0] in name else brands[1]
+        return 'Disney x Arezzo' if 'Disney x Arezzo' in self.product_raw_name(response) else 'Arezzo'
 
     def merch_info(self, response):
         name = self.product_raw_name(response)
         return ['PRE-SALE'] if '[PRE VENDA]' in name else []
-
-    def product_information(self, key, raw_information):
-        for information in raw_information:
-            if key in information:
-                return information.replace(key, '').strip()
-        return None
 
     def product_image_urls(self, response):
         images_url_css = '.arz-product-gallery-thumb img::attr(data-original)'
@@ -121,27 +114,20 @@ class ArezzoSpider(CrawlSpider):
         description_css = '.arz-description p:nth-child(2)::text'
         return response.css(description_css).extract()
 
-    def product_price_and_currency(self, response):
-        price_css = ['.arz-product-detail .arz-product-price .arz-new-price::text',
-                     '.arz-product-detail .arz-product-price::text']
-        for css in price_css:
-            price = response.css(css).extract_first()
-            if price:
-                currency = currency_information(price)
-                return (clean_and_convert_price(price, currency[1]), currency[0])
-        return (None, None)
+    def pricing(self, response):
+        css = '.arz-product-price .arz-new-price::text,.arz-product-price .arz-old-price::text,.arz-product-price::text'
+        regex = '\d+[\.\d+]*\,?\d*|$'
+        return pricing(prices=response.css(css).extract(), regex=regex, comma=',', point='.')
 
     def product_color(self, response):
         characteristics = self.product_characteristics(response)
         for characteristic in characteristics:
             if 'Cor:' in characteristic:
                 return characteristic.replace('Cor:', '').strip()
-        return None
 
     def product_care(self, response):
-        care = 'Material'
         characteristics = self.product_characteristics(response)
-        return [characteristic.strip() for characteristic in characteristics if care in characteristic]
+        return [characteristic.strip() for characteristic in characteristics if self.care in characteristic]
 
     def product_retailer_sku(self, response):
         return response.url.split('/')[-1]
