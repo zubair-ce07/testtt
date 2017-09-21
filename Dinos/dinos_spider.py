@@ -142,7 +142,10 @@ class DinosParseSpider(BaseParseSpider, Mixin):
     def size_variants(self, response):
         sizes = clean(response.css('.size li [type="radio"]::attr(value)'))
 
-        return sizes or [size['namec2'] for size in json.loads(clean(response.text))['Result'].get('cls2', [])]
+        if response.css('.size, .color'):
+            return sizes
+
+        return [size['namec2'] for size in json.loads(clean(response.text))['Result'].get('cls2', [])]
 
     def size_requests(self, response):
         requests = []
@@ -166,7 +169,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return requests
 
     def colour_selectors(self, response):
-        return response.css('.color li')
+        return response.css('.color li, .color option:not([value=""])')
 
     def colour_requests(self, response):
         request_id = self.request_id(response)
@@ -175,7 +178,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         requests = []
 
-        if not sizes:
+        if not sizes and not response.css('.size'):
             return requests
 
         for colour_sel in colours:
@@ -203,8 +206,8 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return requests
 
     def colour_name_and_query_parameter(self, colour_selector):
-        colour_name = clean(colour_selector.css('::attr(title)'))[0]
-        colour_value = clean(colour_selector.css(' [type="radio"]::attr(value)'))[0]
+        colour_name = clean(colour_selector.css('::attr(title),::text'))[0]
+        colour_value = clean(colour_selector.css(' [type="radio"]::attr(value),::attr(value)'))[0]
         colour_query_parameter = urllib.parse.quote(colour_value).replace('%', '%25')
 
         return colour_name, colour_query_parameter
