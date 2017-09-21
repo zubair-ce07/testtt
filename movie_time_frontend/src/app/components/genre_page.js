@@ -2,10 +2,11 @@ import _ from 'lodash';
 import React, {Component} from 'react';
 import {connect} from "react-redux";
 import {Link} from "react-router-dom";
+import Waypoint from 'react-waypoint';
 
 import {MovieList} from './movies_list';
 import {addToWatchlist, removeFromWatchlist} from "../actions/watchlist_actions";
-import {fetchGenreMovies, fetchGenres, requestingWithGenre} from '../actions/explore_actions';
+import {fetchGenreMovies, fetchGenres, requestingWithGenre, loadingMore, fetchMore} from '../actions/explore_actions';
 import {setActivePage} from '../actions/active_page_actions';
 import {EXPLORE} from "../utils/page_types";
 
@@ -35,14 +36,21 @@ class GenrePage extends Component {
         }
     }
 
+    loadMore() {
+        if(this.props.genre_movies_list.next !== null) {
+            this.props.loadingMore();
+            this.props.fetchMore(this.props.genre_movies_list.next);
+        }
+    }
+
     render() {
         return <div className="page-content row">
             <div className="col-md-1"/>
             <div className="col-md-8">
-                {this.props.genre_movies_list.isFetching? <div className="text-center">Loading...</div>
-                : this.props.genre_movies_list.movies.length === 0? <div className="text-center">No Results Found</div>
-                : <MovieList movies={this.props.genre_movies_list.movies} addToWatchlist={this.props.addToWatchlist}
-                           removeFromWatchlist={this.props.removeFromWatchlist}/>}
+                <MovieList movies={this.props.genre_movies_list.movies} addToWatchlist={this.props.addToWatchlist}
+                           removeFromWatchlist={this.props.removeFromWatchlist}/>
+                {this.props.genre_movies_list.isFetching? <h4 className="text-center my-5">Loading...</h4>
+                    : <Waypoint onEnter={this.loadMore.bind(this)} bottomOffset="-100%"/>}
             </div>
             <div className="col-md-1"/>
             <div className="col-md-2 mt-4">
@@ -73,5 +81,7 @@ export default connect(mapStateToProps, {
     fetchGenreMovies,
     fetchGenres,
     requestingWithGenre,
-    setActivePage
+    setActivePage,
+    loadingMore,
+    fetchMore
 })(GenrePage);

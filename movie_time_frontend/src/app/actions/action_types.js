@@ -24,5 +24,7 @@ export const VOTE_ACTOR = 'VOTE_ACTOR';
 export const FETCH_USER = 'FETCH_USER';
 export const SEND_FOLLOW_REQUEST = 'SEND_FOLLOW_REQUEST';
 export const UPDATE_USER = 'UPDATE_USER';
+export const LOADING_MORE = 'LOADING_MORE';
+export const LOADED_MORE = 'LOADED_MORE';
 
 export const ROOT_URL = 'http://localhost:8000';
