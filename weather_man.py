@@ -10,7 +10,7 @@ from dateutil import parser
 
 
 class ReportType(enum.Enum):
-    YEAR, YEAR_MONTH, BAR_CHART = range(1,4)
+    YEAR, YEAR_MONTH, One_Line_CHART, Two_Line_Chart = range(1, 5)
 
 
 class WeatherModel:
@@ -33,6 +33,7 @@ class WeatherMan:
     def __init__(self):
         self.weather_yearly_readings = []
         self.weather_monthly_readings = []
+        self.single_chart_monthly_readings = []
 
     def validate_path(self, path):
         if os.path.isdir(path):
@@ -110,28 +111,23 @@ class WeatherMan:
         return avg_humid
 
     def compute_result(self, weather_readings, result_type):
-
         results = {}
-
         if result_type == ReportType.YEAR:
             results["Highest"] = self.calculate_highest_temperature(weather_readings)
             results["Humidity"] = self.calculate_highest_humidity(weather_readings)
             results["Lowest"] = self.calculate_lowest_temperature(weather_readings)
-
         elif result_type == ReportType.YEAR_MONTH:
             results["Highest Average"] = self.calculate_average_high_temp(weather_readings)
             results["Lowest Average"] = self.calculate_average_low_temp(weather_readings)
             results["Average Mean Humidity"] = self.calculate_average_mean_humidity(weather_readings)
-
         else:
             results = weather_readings
 
         return results
 
-    def draw_chart(self, temperature_readings):
+    def draw_one_line_chart(self, temperature_readings):
 
         for temperature in temperature_readings:
-
             day = parser.parse(temperature.date).strftime("%d")
 
             high_temp_point = round(abs(temperature.max_temp))
@@ -146,13 +142,30 @@ class WeatherMan:
             print(self.PINK + day + " " + low_temp_line + high_temp_line + " "
                   + self.PINK + low_temp_value + "C" + "-" + high_temp_value + "C")
 
+    def draw_two_line_chart(self, temperature_readings):
+
+        for temperature in temperature_readings:
+            day = parser.parse(temperature.date).strftime("%d")
+
+            high_temp_point = round(abs(temperature.max_temp))
+            high_temp_value = str(round(temperature.max_temp))
+
+            low_temp_point = round(abs(temperature.min_temp))
+            low_temp_value = str(round(temperature.min_temp))
+
+            high_temp_line = self.RED + "" + "+" * high_temp_point
+            low_temp_line = self.BLUE + "" + "+" * low_temp_point
+
+            print(self.PINK + day + " " + high_temp_line + self.PINK + high_temp_value + "C")
+            print(self.PINK + day + " " + low_temp_line + self.PINK + low_temp_value + "C")
+
     def populate_year_report(self, weather_man_results):
 
         max_temp = weather_man_results["Highest"]
         min_temp = weather_man_results["Lowest"]
         max_humid = weather_man_results["Humidity"]
 
-        print("Highest: "+str(max_temp.max_temp)+"C on "+ parser.parse(max_temp.date).strftime("%b %d"))
+        print("Highest: " + str(max_temp.max_temp) + "C on " + parser.parse(max_temp.date).strftime("%b %d"))
         print("Lowest: " + str(min_temp.min_temp) + "C on " + parser.parse(min_temp.date).strftime("%b %d"))
         print("Humidity: " + str(max_humid.max_humidity) + "% on " + parser.parse(max_humid.date).strftime("%b %d"))
 
@@ -161,30 +174,37 @@ class WeatherMan:
         avg_lowest_temp = weather_man_results["Lowest Average"]
         avg_mean_humid = weather_man_results["Average Mean Humidity"]
 
-        print("Highest Average: "+str(avg_highest_temp)+"C")
+        print("Highest Average: " + str(avg_highest_temp) + "C")
         print("Lowest Average: " + str(avg_lowest_temp) + "C")
         print("Average Mean Humidity: " + str(avg_mean_humid) + "%")
 
-    def populate_bar_chart_report(self, temperature_readings, year, month):
-
+    def populate_one_line_bar_chart_report(self, temperature_readings, year, month):
+        print("One line Bar Chart:-\n")
         print(month + " " + year)
+        self.draw_one_line_chart(temperature_readings)
 
-        self.draw_chart(temperature_readings)
+    def populate_two_line_bar_chart_report(self, temperature_readings, year, month):
+        print("Two line Bar Chart:-\n")
+        print(month + " " + year)
+        self.draw_two_line_chart(temperature_readings)
 
     def generate_report(self, weather_man_results, report_type, year="", month=""):
-
-        if report_type == ReportType.BAR_CHART:
+        if report_type == ReportType.YEAR:
             print("\n\n")
-            self.populate_bar_chart_report(weather_man_results, year, month)
+            self.populate_year_report(weather_man_results)
         elif report_type == ReportType.YEAR_MONTH:
             print("\n\n")
             self.populate_year_month_report(weather_man_results)
-        else:
+        elif report_type == ReportType.Two_Line_Chart:
             print("\n\n")
-            self.populate_year_report(weather_man_results)
+            self.populate_two_line_bar_chart_report(weather_man_results, year, month)
+        elif report_type==ReportType.One_Line_CHART:
+            print("\n\n")
+            self.populate_one_line_bar_chart_report(weather_man_results, year, month)
+        else:
+            print("No Report to print")
 
     def yearly_weather_report(self, path, year):
-
         reading_files = self.read_weather_files(path, str(year))
         if reading_files:
             readings = self.populate_weather_readings(reading_files)
@@ -213,52 +233,81 @@ class WeatherMan:
         else:
             print("Weather readings not exist")
 
-    def chart_weather_report(self, path, year_month):
-        readings = []
+    def one_line_chart_weather_report(self, path, year_month):
+        year, month = year_month.split('/')
+        month = str(int(month))
+        month_to_search = "-" + month + "-"
+
+        readings, reading_files = self.saved_month_from_saved_readings(path, month_to_search, year_month, year, month)
+        if reading_files or readings:
+            if reading_files:
+                readings = self.populate_weather_readings(reading_files)
+            weather_results = self.compute_result(readings, ReportType.One_Line_CHART)
+            month = self.month_to_month_name(int(month))
+            self.generate_report(weather_results, ReportType.One_Line_CHART, year, month)
+
+            self.single_chart_monthly_readings = readings
+        else:
+            print("Weather readings not exist")
+
+    def two_line_chart_weather_report(self, path, year_month):
         reading_files = []
         year, month = year_month.split('/')
         month = str(int(month))
+        month_to_search = "-"+month+"-"
 
-        check_saved_month_from_monthly_readings = any(month in x.date for x in self.weather_monthly_readings )
+        check_month_from_monthly_one_chart_readings = any(month_to_search in x.date for x in self.single_chart_monthly_readings)
+        if check_month_from_monthly_one_chart_readings:
+            readings = self.single_chart_monthly_readings
+        else:
+            readings, reading_files = self.saved_month_from_saved_readings(path, month_to_search, year_month, year, month)
+
+        if reading_files or readings:
+            if reading_files:
+                readings = self.populate_weather_readings(reading_files)
+            weather_results = self.compute_result(readings, ReportType.Two_Line_Chart)
+            month = self.month_to_month_name(int(month))
+            self.generate_report(weather_results, ReportType.Two_Line_Chart, year, month)
+        else:
+            print("Weather readings not exist")
+
+    def saved_month_from_saved_readings(self, path, month_to_search, year_month, year, month):
+        readings = []
+        reading_files = []
+        check_saved_month_from_monthly_readings = any(month_to_search in x.date for x in self.weather_monthly_readings)
         if check_saved_month_from_monthly_readings:
             readings = self.weather_monthly_readings
         else:
-            check_saved_month_from_yearly_readings = any(month in x.date for x in self.weather_yearly_readings)
-            if check_saved_month_from_yearly_readings:
+            check_saved_year_from_yearly_readings = any(year in x.date for x in self.weather_yearly_readings)
+            if check_saved_year_from_yearly_readings:
                 readings = self.read_monthly_readings_from_saved_readings(self.weather_yearly_readings, year, month)
             else:
                 reading_files = self.read_monthly_files(path, year_month)
-        if reading_files or readings:
-
-            if reading_files:
-                readings = self.populate_weather_readings(reading_files)
-
-            weather_results = self.compute_result(readings, ReportType.BAR_CHART)
-
-            month = self.month_to_month_name(int(month))
-            self.generate_report(weather_results, ReportType.BAR_CHART, year, month)
-
-            self.weather_monthly_readings = readings
-        else:
-            print("Weather readings not exist")
+        return [readings, reading_files]
 
 
 weatherman = WeatherMan()
 arg_parser = argparse.ArgumentParser(description='Weatherman data analysis')
 arg_parser.add_argument('path', type=weatherman.validate_path, help='Enter weather files directory path')
-arg_parser.add_argument('-c', type=str, default=None,
-                        help='(usage: -c yyyy/mm) To see two horizontal bar charts on the console'
-                             ' for the highest and lowest temperature on each day.')
 arg_parser.add_argument('-e', type=int, default=None,
                         help='(usage: -e yyyy) To see highest temperature and day,'
                              ' lowest temperature and day, most humid day and humidity')
 arg_parser.add_argument('-a', type=str, default=None,
                         help='(usage: -a yyyy/m) To see average highest temperature,'
                              ' average lowest temperature, average mean humidity.')
+arg_parser.add_argument('-s', type=str, default=None,
+                        help='(usage: -s yyyy/mm) To see one line horizontal bar charts on the console'
+                             ' for the highest and lowest temperature on each day.')
+arg_parser.add_argument('-c', type=str, default=None,
+                        help='(usage: -c yyyy/mm) To see two line horizontal bar charts on the console'
+                             ' for the highest and lowest temperature on each day.')
+
 input_ = arg_parser.parse_args()
 if input_.e:
     weatherman.yearly_weather_report(input_.path, input_.e)
 if input_.a:
     weatherman.monthly_weather_report(input_.path, input_.a)
+if input_.s:
+    weatherman.one_line_chart_weather_report(input_.path, input_.s)
 if input_.c:
-    weatherman.chart_weather_report(input_.path, input_.c)
+    weatherman.two_line_chart_weather_report(input_.path, input_.c)
