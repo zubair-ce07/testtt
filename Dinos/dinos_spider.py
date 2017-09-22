@@ -74,11 +74,13 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
 
-        garment['image_urls'] = self.image_urls(response)
         garment['skus'] = {}
+        garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(response)
 
-        requests = self.colour_requests(response) or self.colour_stock_requests(response) or self.size_requests(response)
+        requests = self.colour_requests(response) or \
+            self.colour_stock_requests(response) or \
+            self.size_requests(response)
 
         if not requests:
             garment['skus'] = self.one_size_skus(response)
@@ -87,7 +89,8 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         garment['meta'] = {
             'requests_queue': requests,
-            'pricing': self.product_pricing_common_new(response, post_process=self.clean_money)
+            'pricing': self.product_pricing_common_new(
+                response, post_process=self.clean_money)
         }
 
         return self.next_request_or_garment(garment)
@@ -113,14 +116,16 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         skus = {
             self.one_size: {'size': self.one_size}
         }
-        skus[self.one_size].update(self.product_pricing_common_new(response, post_process=self.clean_money))
+        skus[self.one_size].update(
+            self.product_pricing_common_new(
+                response, post_process=self.clean_money))
 
         return skus
 
     def skus(self, response):
         raw_sku = json.loads(clean(response.text))['Result']
 
-        size = response.meta.get('size', self.one_size)
+        size = response.meta.get('size') or self.one_size
         colour = response.meta.get('colour', '')
         sku = {'size': size}
 
@@ -135,17 +140,24 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return {colour+'_'+size: sku}
 
     def request_id(self, response):
-        request_id = clean(response.css('[name="MOSHBG"]::attr(value)'))
+        css = '[name="MOSHBG"]::attr(value)'
+        request_id = clean(response.css(css))
 
-        return response.meta.get('request_id', request_id[0] if request_id else '')
+        url = urllib.parse.urlparse(response.url)
+        url_query = dict(urllib.parse.parse_qsl(url.query))
+
+        return url_query.get('MOSHBG') or request_id[0]
 
     def size_variants(self, response):
-        sizes = clean(response.css('.size li [type="radio"]::attr(value)'))
+        css = '.size li [type="radio"]::attr(value)'
+        sizes = clean(response.css(css))
 
-        if response.css('.size, .color'):
+        if response.css('#itemD_mainWrap'):
             return sizes
 
-        return [size['namec2'] for size in json.loads(clean(response.text))['Result'].get('cls2', [])]
+        sizes = json.loads(clean(response.text))['Result'].get('cls2', [])
+
+        return [size['namec2'] for size in sizes]
 
     def size_requests(self, response):
         requests = []
@@ -157,35 +169,46 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         if colour:
             meta['colour'] = colour
 
-        colour_query_parameter = response.meta.get('colour_query_parameter', '')
+        url = urllib.parse.urlparse(response.url)
+        url_query = dict(urllib.parse.parse_qsl(url.query))
+
+        colour_query_parameter = url_query.get('CLS1CD', '').replace('%', '%25')
 
         for size in sizes:
-            size_query_parameter = urllib.parse.quote(size).replace('%', '%25')
             meta['size'] = size
+            size_query_parameter = urllib.parse.quote(size).replace('%', '%25')
+
             url = self.stock_api_url.format(
-                request_id=self.request_id(response), colour=colour_query_parameter, size=size_query_parameter)
+                request_id=self.request_id(response),
+                colour=colour_query_parameter,
+                size=size_query_parameter)
+
             requests += [FormRequest(url=url, meta=meta, callback=self.parse_sku)]
 
         return requests
 
     def colour_selectors(self, response):
-        return response.css('.color li, .color option:not([value=""])')
+        css = '.color li, .color option:not([value=""])'
+        
+        return response.css(css)
 
     def colour_requests(self, response):
         request_id = self.request_id(response)
         colours = self.colour_selectors(response)
-        sizes = self.size_variants(response)
 
         requests = []
 
-        if not sizes and not response.css('.size'):
+        if not response.css('.size'):
             return requests
 
         for colour_sel in colours:
             colour_name, colour_query_parameter = self.colour_name_and_query_parameter(colour_sel)
-            meta = {'colour': colour_name, 'request_id': request_id, 'colour_query_parameter': colour_query_parameter}
+            meta = {'colour': colour_name}
 
-            url = self.colour_request_url.format(request_id=request_id, colour=colour_query_parameter)
+            url = self.colour_request_url.format(
+                request_id=request_id,
+                colour=colour_query_parameter)
+
             requests += [FormRequest(url=url, meta=meta, callback=self.parse_colour)]
 
         return requests
@@ -198,23 +221,32 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         for colour_sel in colours:
             colour_name, colour_query_parameter = self.colour_name_and_query_parameter(colour_sel)
-            meta = {'colour': colour_name, 'request_id': request_id, 'colour_query_parameter': colour_query_parameter}
 
-            url = self.stock_api_url.format(request_id=request_id, colour=colour_query_parameter, size='')
+            meta = {'colour': colour_name}
+
+            url = self.stock_api_url.format(
+                request_id=request_id,
+                colour=colour_query_parameter,
+                size='')
+            
             requests += [FormRequest(url=url, meta=meta, callback=self.parse_colour)]
 
         return requests
 
     def colour_name_and_query_parameter(self, colour_selector):
-        colour_name = clean(colour_selector.css('::attr(title),::text'))[0]
-        colour_value = clean(colour_selector.css(' [type="radio"]::attr(value),::attr(value)'))[0]
-        colour_query_parameter = urllib.parse.quote(colour_value).replace('%', '%25')
+        name_css = '::attr(title),::text'
+        value_css = ' [type="radio"]::attr(value),::attr(value)'
+
+        colour_name = clean(colour_selector.css(name_css))[0]
+
+        colour_code = clean(colour_selector.css(value_css))[0]
+        colour_query_parameter = urllib.parse.quote(colour_code).replace('%', '%25')
 
         return colour_name, colour_query_parameter
 
     def product_gender(self, response):
         soup = [self.raw_name(response) + response.url] + self.product_category(response)
-        soup += [url for t, url in response.meta.get('trail', [])]
+        soup += [url for _, url in response.meta.get('trail', [])]
         soup = ' '.join(soup)
 
         for gender_key, gender in self.gender_map:
@@ -224,19 +256,30 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return 'unisex-adults'
 
     def image_urls(self, response):
-        return clean(response.css('#dpvThumb li::attr(data-dpv-expand-url)'))
+        css = '#dpvThumb li::attr(data-dpv-expand-url)'
+
+        return clean(response.css(css))
 
     def clean_money(self, money_strs):
-        return sum([self.previous_price_re.findall(money_str) for money_str in money_strs], [])
+        nested_prev_prices = [self.previous_price_re.findall(money_str)
+                              for money_str in money_strs]
+
+        return sum(nested_prev_prices, [])
 
     def product_id(self, response):
-        return clean(response.css('#vs-product-id::attr(value)'))[0]
+        css = '#vs-product-id::attr(value)'
+
+        return clean(response.css(css))[0]
 
     def raw_name(self, response):
-        return clean(response.css('[itemprop="name"] ::text'))[0]
+        css = '[itemprop="name"] ::text'
+
+        return clean(response.css(css))[0]
 
     def product_category(self, response):
-        return clean(response.css('[itemprop="category"] [itemprop="title"]::text'))[1:]
+        css = '[itemprop="category"] [itemprop="title"]::text'
+
+        return clean(response.css(css))[1:]
 
     def product_brand(self, response):
         brand = self.brand_re.findall(self.raw_name(response))
@@ -244,21 +287,33 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return brand[0] if brand else 'Dinos'
 
     def product_name(self, response):
-        return self.raw_name(response).replace(self.product_brand(response)+'/', '')
+        raw_name = self.raw_name(response)
+        brand = self.product_brand(response)+'/'
+
+        return raw_name.replace(brand, '')
 
     def raw_description(self, response):
-        return clean(response.xpath('//*[contains(@id, "itemtable")]/tbody/tr[1]/td/text()'))
+        xpath = '//*[contains(@id, "itemtable")]/tbody/tr[1]/td/text()'
+
+        return clean(response.xpath(xpath))
 
     def product_description(self, response):
         css = '.itemD_itemGuide ::text, [itemprop="description"] ::text'
         description = clean(response.css(css))
 
-        return description + [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
+        description += [rd for rd in self.raw_description(response)
+                        if not self.care_criteria_simplified(rd)]
+
+        return description
 
     def product_care(self, response):
-        care = clean(response.css('.itemD_featureBox ::text'))
+        css = '.itemD_featureBox ::text'
+        care = clean(response.css(css))
 
-        return care + [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
+        care += [rd for rd in self.raw_description(response)
+                 if self.care_criteria_simplified(rd)]
+
+        return care
 
 
 class DinosCrawlSpider(BaseCrawlSpider, Mixin):
@@ -271,6 +326,5 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(restrict_css=pagination_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=product_css),
-             callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
