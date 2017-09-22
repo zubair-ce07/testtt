@@ -8,7 +8,7 @@ export const getImageUrl = (path, size) => {
 };
 
 export const getUserPhoto = (path) => {
-    return path !== null ? `${ROOT_URL}${path}` : '/images/avatar.jpg';
+    return path !== null ? path : '/images/avatar.jpg';
 };
 
 export const cutString = (string, no_of_characters, hard=false) => {
@@ -35,6 +35,15 @@ export const updateUserStatusesForMovie = (state, action, remove=false) => {
             movie.user_statuses = action.payload.data;
             if (remove) newState.pop()
         }
+    });
+    return newState;
+};
+
+export const updateUserStatusesInActivities = (state, action) => {
+    const newState = [];
+    _.map(state, activity => {
+        if (activity.movie.id === action.payload.data.movie) activity.movie.user_statuses = action.payload.data;
+        newState.push(activity);
     });
     return newState;
 };

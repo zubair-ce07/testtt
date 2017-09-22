@@ -37,18 +37,21 @@ class ActionPanel extends Component {
                 <i className="fa fa-plus-square"/>
             </div>
             <div onClick={() => this.updateWatchlist('watched')} id={`${movie_id}-watch`}
-                 className={`action-btn ${isAdded(stats) ? '' : 'disabled-action'} ${isWatched(stats) ? 'active-action' : ''}`}>
-                <i className="fa fa-eye"/>
+                 className={`action-btn ${isAdded(stats) ? '' :
+                     'disabled-action'} ${isWatched(stats) ? 'active-action' : ''}`}><i className="fa fa-eye"/>
             </div>
             <div onClick={() => this.updateWatchlist('recommended')} id={`${movie_id}-recommend`}
-                 className={`action-btn ${isWatched(stats) ? '' : 'disabled-action'} ${isRecommended(stats) ? 'active-action' : ''}`}>
+                 className={`action-btn ${isWatched(stats) ? '' :
+                     'disabled-action'} ${isRecommended(stats) ? 'active-action' : ''}`}>
                 <i className="fa fa-reply"/></div>
             <div onClick={() => this.rateMovie('Liked')} id={`${movie_id}-like`}
-                 className={`action-btn ${isWatched(stats) ? '' : 'disabled-action'} ${isRated('Liked', stats) ? 'active-action' : ''}`}>
+                 className={`action-btn ${isWatched(stats) ? '' :
+                     'disabled-action'} ${isRated('Liked', stats) ? 'active-action' : ''}`}>
                 <i className="fa fa-thumbs-up"/>
             </div>
             <div onClick={() => this.rateMovie('Disliked')} id={`${movie_id}-dislike`}
-                 className={`action-btn ${isWatched(stats) ? '' : 'disabled-action'} ${isRated('Disliked', stats) ? 'active-action' : ''}`}>
+                 className={`action-btn ${isWatched(stats) ? '' :
+                     'disabled-action'} ${isRated('Disliked', stats) ? 'active-action' : ''}`}>
                 <i className="fa fa-thumbs-down"/>
             </div>
             <UncontrolledTooltip target={`${movie_id}-add`} placement="left">

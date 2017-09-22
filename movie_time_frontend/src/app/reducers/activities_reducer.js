@@ -1,24 +1,26 @@
-import _ from 'lodash';
-import {FETCH_ACTIVITIES, ADD_TO_WATCHLIST, REMOVE_FROM_WATCHLIST} from '../actions/action_types';
+import {updateUserStatusesInActivities} from '../utils/utils';
+import {FETCH_ACTIVITIES, ADD_TO_WATCHLIST, REMOVE_FROM_WATCHLIST, LOADED_MORE, LOADING_MORE} from '../actions/action_types';
 
 
-export default function (state = [], action) {
-    const newState = [];
+export default function (state = {activities: [], isFetching: true, next: null}, action) {
+    let isFetching = false;
     switch (action.type) {
         case FETCH_ACTIVITIES:
-            return action.payload.data.results;
+            return {activities: action.payload.data.results, isFetching: false, next: action.payload.data.next};
+        case LOADING_MORE:
+            if (state.next === action.payload) isFetching = true;
+            return {activities: state.activities, isFetching: isFetching, next: state.next};
+        case LOADED_MORE:
+            if (state.next === action.payload.config.url)
+                return {
+                    activities: state.activities.concat(action.payload.data.results),
+                    isFetching: false,
+                    next: action.payload.data.next
+                };
+            return state;
         case ADD_TO_WATCHLIST:
-            _.map(state, activity => {
-                if(activity.movie.id === action.payload.data.movie) activity.movie.user_statuses = action.payload.data;
-                newState.push(activity);
-            });
-            return newState;
         case REMOVE_FROM_WATCHLIST:
-            _.map(state, activity => {
-                if(activity.movie.id === action.payload.data.movie) activity.movie.user_statuses = action.payload.data;
-                newState.push(activity);
-            });
-            return newState;
+            return {activities: updateUserStatusesInActivities(state.activities, action), isFetching: false, next: state.next};
         default:
             return state;
     }

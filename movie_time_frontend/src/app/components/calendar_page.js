@@ -1,9 +1,11 @@
 import React, {Component} from 'react';
 import {connect} from "react-redux";
 import DayPicker from 'react-day-picker';
+import Waypoint from 'react-waypoint';
 import 'react-day-picker/lib/style.css';
 
 import {MovieList} from './movies_list';
+import {fetchMore} from '../actions/more_content_actions';
 import {addToWatchlist, removeFromWatchlist} from "../actions/watchlist_actions";
 import {fetchReleasedOn, requestingWithReleaseDate} from '../actions/explore_actions';
 import {setActivePage} from '../actions/active_page_actions';
@@ -32,16 +34,22 @@ class CalendarPage extends Component {
         this.props.requestingWithReleaseDate();
     }
 
+    loadMore() {
+        if(this.props.released_on_list.next !== null) {
+            this.props.fetchMore(this.props.released_on_list.next);
+        }
+    }
+
     render() {
         return <div className="page-content row">
             <div className="col-md-1"/>
             <div className="col-md-8">
-                {this.props.released_on_list.isFetching? <div className="text-center">Loading...</div> :
-                this.props.released_on_list.movies.length !== 0?
-                    <MovieList movies={this.props.released_on_list.movies} addToWatchlist={this.props.addToWatchlist}
-                           removeFromWatchlist={this.props.removeFromWatchlist}/> :
-                    <div className="text-center">No Results Found</div>
-                }
+                {!this.props.released_on_list.isFetching && this.props.released_on_list.movies.length === 0 &&
+                <h4 className="text-center my-5">No Result Found</h4>}
+                <MovieList movies={this.props.released_on_list.movies} addToWatchlist={this.props.addToWatchlist}
+                           removeFromWatchlist={this.props.removeFromWatchlist}/>
+                {this.props.released_on_list.isFetching? <h4 className="text-center my-5">Loading...</h4>
+                    : <Waypoint onEnter={this.loadMore.bind(this)} bottomOffset="-100%"/>}
             </div>
             <div className="col-md-3">
                 <DayPicker selectedDays={this.state.day} onDayClick={this.onDaySelected.bind(this)}/>
@@ -59,5 +67,6 @@ export default connect(mapStateToProps, {
     removeFromWatchlist,
     fetchReleasedOn,
     requestingWithReleaseDate,
-    setActivePage
+    setActivePage,
+    fetchMore
 })(CalendarPage);

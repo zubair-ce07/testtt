@@ -6,14 +6,12 @@ import {
     GET_GENRES,
     REQUESTING_WITH_DATE,
     REQUESTING_WITH_GENRE,
-    ROOT_URL,
-    LOADING_MORE,
-    LOADED_MORE
+    ROOT_URL
 } from './action_types'
 
 
 export function fetchReleasedOn(day, month, year) {
-    const request = axios.get(`${ROOT_URL}/api/movies/released-on/?day=${day}&month=${month}&year=${year}`);
+    const request = axios.get(`${ROOT_URL}/api/movies/released-on/?day=${day}&month=${month}&year=${year}&limit=3`);
     return {
         type: EXPLORE_WITH_DATE,
         payload: request
@@ -40,21 +38,6 @@ export function requestingWithGenre() {
         type: REQUESTING_WITH_GENRE,
         payload: 'fetching'
     }
-}
-
-export function loadingMore() {
-    return {
-        type: LOADING_MORE,
-        payload: 'fetching'
-    }
-}
-
-export function fetchMore(next_page) {
-    const request = axios.get(next_page);
-    return {
-        type: LOADED_MORE,
-        payload: request
-    };
 }
 
 export function fetchGenres() {

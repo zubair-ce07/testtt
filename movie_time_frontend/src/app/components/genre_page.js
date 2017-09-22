@@ -6,7 +6,8 @@ import Waypoint from 'react-waypoint';
 
 import {MovieList} from './movies_list';
 import {addToWatchlist, removeFromWatchlist} from "../actions/watchlist_actions";
-import {fetchGenreMovies, fetchGenres, requestingWithGenre, loadingMore, fetchMore} from '../actions/explore_actions';
+import {fetchMore} from '../actions/more_content_actions';
+import {fetchGenreMovies, fetchGenres, requestingWithGenre} from '../actions/explore_actions';
 import {setActivePage} from '../actions/active_page_actions';
 import {EXPLORE} from "../utils/page_types";
 
@@ -38,7 +39,6 @@ class GenrePage extends Component {
 
     loadMore() {
         if(this.props.genre_movies_list.next !== null) {
-            this.props.loadingMore();
             this.props.fetchMore(this.props.genre_movies_list.next);
         }
     }
@@ -47,6 +47,8 @@ class GenrePage extends Component {
         return <div className="page-content row">
             <div className="col-md-1"/>
             <div className="col-md-8">
+                {!this.props.genre_movies_list.isFetching && this.props.genre_movies_list.movies.length === 0 &&
+                <h4 className="text-center my-5">No Result Found</h4>}
                 <MovieList movies={this.props.genre_movies_list.movies} addToWatchlist={this.props.addToWatchlist}
                            removeFromWatchlist={this.props.removeFromWatchlist}/>
                 {this.props.genre_movies_list.isFetching? <h4 className="text-center my-5">Loading...</h4>
@@ -82,6 +84,5 @@ export default connect(mapStateToProps, {
     fetchGenres,
     requestingWithGenre,
     setActivePage,
-    loadingMore,
     fetchMore
 })(GenrePage);

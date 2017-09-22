@@ -4,6 +4,7 @@ import {NavItem, Nav, NavDropdown, DropdownItem, DropdownToggle, DropdownMenu} f
 
 import NotificationDropDown from './notifications_dorpdown';
 import RequestsDropDown from './requests_dropdown';
+import {getUserPhoto} from '../../utils/utils';
 import {logout} from '../../actions/auth_actions';
 import {Link} from "react-router-dom";
 
@@ -45,7 +46,7 @@ class RightNavBar extends Component {
         return (
             <NavDropdown isOpen={this.state.isOpen} toggle={this.toggle}>
                 <DropdownToggle nav><img className="rounded-circle"
-                                         src={user.photo === null ? '/images/avatar.jpg' : user.photo} width={27}
+                                         src={getUserPhoto(user.photo)} width={27}
                                          height={27}/> {user.first_name} {user.last_name} <i
                     className="fa fa-chevron-circle-down"/></DropdownToggle>
                 <DropdownMenu right>

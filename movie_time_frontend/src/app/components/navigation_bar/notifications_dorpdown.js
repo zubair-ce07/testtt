@@ -6,6 +6,7 @@ import {NavDropdown, DropdownToggle, DropdownMenu} from 'reactstrap'
 import Notification from './notification_item';
 import {fetchNotifications, deleteNotification} from '../../actions/notification_actions';
 
+
 class NotificationDropDown extends Component {
     constructor(props) {
         super(props);

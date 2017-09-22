@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 
 import UserUpdateModal from './user_update_modal';
+import {getUserPhoto} from '../utils/utils';
 import {fetchUser, sendFollowRequest} from '../actions/user_actions';
 
 
@@ -22,7 +23,7 @@ class ProfilePage extends Component {
                 <div className="col-md-6">
                     <div className="profile-card row">
                         <div className="col-md-4 p-0">
-                            <img src={user_profile.photo} height={200} width={180}
+                            <img src={getUserPhoto(user_profile.photo)} height={200} width={180}
                                  className="float-right rounded-circle"/>
                         </div>
                         <div className="col-md-5 mt-auto mb-3">

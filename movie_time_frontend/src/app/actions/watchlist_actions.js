@@ -3,40 +3,23 @@ import axios from 'axios';
 import {
     ADD_TO_WATCHLIST,
     REMOVE_FROM_WATCHLIST,
-    GET_TO_WATCH_LIST,
+    GET_WATCHLIST,
     VOTE_ACTOR,
-    GET_WATCHED_LIST,
-    GET_UPCOMING_LIST,
     UPDATE_WATCHLIST,
     RATE_MOVIE,
-    ROOT_URL
+    ROOT_URL,
+    FETCHING_WATCHLIST
 } from './action_types';
 
 
-export function fetchToWatchList() {
-    const request = axios.get(`${ROOT_URL}/api/to-watch/`);
-
-    return {
-        type: GET_TO_WATCH_LIST,
-        payload: request
-    };
-}
-
-export function fetchWatchedList() {
-    const request = axios.get(`${ROOT_URL}/api/watched/`);
-
-    return {
-        type: GET_WATCHED_LIST,
-        payload: request
-    };
-}
-
-export function fetchUpcomingList() {
-    const request = axios.get(`${ROOT_URL}/api/upcoming/`);
-
-    return {
-        type: GET_UPCOMING_LIST,
-        payload: request
+export function fetchWatchList(filter) {
+    return dispatch => {
+        dispatch({type: FETCHING_WATCHLIST});
+        const request = axios.get(`${ROOT_URL}/api/${filter}/?limit=3`);
+        dispatch({
+           type: GET_WATCHLIST,
+            payload: request
+        });
     };
 }
 
