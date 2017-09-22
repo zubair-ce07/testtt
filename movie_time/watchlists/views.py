@@ -132,36 +132,40 @@ def change_best_actor_vote(request, role_id):
 
 class GetActivities(ListAPIView):
     serializer_class = ActivitySerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         following_users = self.request.user.follows.all()
-        return WatchListItem.objects.filter(user__in=following_users, removed=False).order_by('-updated_at')\
-            .select_related('movie__release_date').prefetch_related('activity_set', 'movie__genres', 'movie__images')
+        return WatchListItem.objects.filter(user__in=following_users, removed=False).order_by(
+            '-updated_at').select_related('movie__release_date', 'user', 'user__auth_token').prefetch_related(
+            'activity_set', 'movie__genres', 'movie__images', 'movie__watchlist_items__user')
 
 
 class GetToWatchList(ListAPIView):
     serializer_class = MovieSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Movie.objects.filter(watchlist_items__user=self.request.user, watchlist_items__is_watched=False,
-                                    status='Released', watchlist_items__removed=False).order_by('title')
+                                    status='Released', watchlist_items__removed=False).select_related(
+            'release_date').prefetch_related('watchlist_items__user', 'images', 'genres').order_by('title')
 
 
 class GetWatchedList(ListAPIView):
     serializer_class = MovieSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Movie.objects.filter(watchlist_items__user=self.request.user, watchlist_items__removed=False,
-                                    watchlist_items__is_watched=True).order_by('title')
+                                    watchlist_items__is_watched=True).select_related(
+            'release_date').prefetch_related('watchlist_items__user', 'images', 'genres').order_by('title')
 
 
 class GetUpcomingList(ListAPIView):
     serializer_class = MovieSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Movie.objects.filter(watchlist_items__user=self.request.user, watchlist_items__is_watched=False,
-                                    watchlist_items__removed=False).exclude(status='Released').order_by('title')
+                                    watchlist_items__removed=False).exclude(status='Released').select_related(
+            'release_date').prefetch_related('watchlist_items__user', 'images', 'genres').order_by('title')

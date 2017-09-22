@@ -99,7 +99,7 @@ class GetNotifications(ListAPIView):
     permission_classes = (permissions.IsAuthenticated, )
 
     def get_queryset(self):
-        return Notification.objects.filter( recipient=self.request.user, deleted=False ).order_by('-timestamp')
+        return Notification.objects.filter(recipient=self.request.user, deleted=False).order_by('-timestamp')
 
 
 @api_view(['DELETE'])

@@ -15,6 +15,9 @@ class Date(models.Model):
     def __str__(self):
         return '{y}-{m}-{d}'.format(y=self.year, m=self.month, d=self.day)
 
+    class Meta:
+        index_together = ['day', 'month', 'year']
+
 
 class Image(models.Model):
     BACKDROP = 1
@@ -73,7 +76,7 @@ class Movie(models.Model):
     original_language = models.CharField(max_length=30)
     original_title = models.CharField(max_length=200)
     overview = models.TextField(null=True, blank=True)
-    popularity = models.FloatField(default=0)
+    popularity = models.FloatField(default=0, db_index=True)
     release_date = models.OneToOneField(Date, on_delete=models.CASCADE, null=True, blank=True)
     revenue = models.BigIntegerField(default=0)
     runtime = models.IntegerField(null=True, blank=True)

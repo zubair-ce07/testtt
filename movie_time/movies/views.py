@@ -1,6 +1,4 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
-from nltk.corpus import stopwords
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ParseError, NotFound
 from rest_framework.generics import ListAPIView
@@ -25,17 +23,7 @@ def search_movies(request):
     if not search_string:
         raise ParseError
 
-    filtered_words = [word.lower() for word in search_string.split() if word.lower() not in stopwords.words('english')]
-
-    queries = [Q(title__iregex=r'[[:<:]]{0}[[:>:]]'.format(keyword)) for keyword in filtered_words]
-
-    if len(queries) == 0:
-        return Response([])
-
-    query = queries.pop()
-    for condition in queries:
-        query |= condition
-    search_results = Movie.objects.filter(query).order_by('-popularity').select_related(
+    search_results = Movie.objects.filter(title__search=search_string).order_by('-popularity').select_related(
         'release_date').prefetch_related('genres', 'images', 'watchlist_items')[:10]
 
     serializer = MetaMovieSerializer(
@@ -57,7 +45,7 @@ class GetGenresMovies(ListAPIView):
         except ObjectDoesNotExist:
             raise NotFound()
 
-        return Movie.objects.filter(genres=genre).select_related('release_date')\
+        return Movie.objects.filter(genres=genre, popularity__gte=5).select_related('release_date')\
             .prefetch_related('genres', 'images', 'watchlist_items').order_by('-popularity')
 
 
