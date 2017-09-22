@@ -38,8 +38,11 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
     raw_product_re = 'fbra_browseMainProductConfig\s*=\s*(.*);'
     colour_re = 'Color:\s*(.*)'
 
-    image_url_t = 'http://falabella.scene7.com/is/image/Falabella/{image_id}?$producto308$&wid=924&hei=924'
-    image_request_url_t = 'http://falabella.scene7.com/is/image/Falabella/{product_id}/?req=set,json&id=PDP'
+    image_url_t = 'http://falabella.scene7.com/is/image/Falabella/' \
+                  '{image_id}?$producto308$&wid=924&hei=924'
+
+    image_request_url_t = 'http://falabella.scene7.com/is/image/Falabella/' \
+                          '{product_id}/?req=set,json&id=PDP'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -50,13 +53,13 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate(garment, response)
 
-        garment['name'] = raw_product['displayName']
         garment['brand'] = raw_product['brand']
-        garment['gender'] = self.product_gender(response, garment['name'])
-        garment['description'] = self.product_description(response)
+        garment['name'] = raw_product['displayName']
         garment['care'] = self.product_care(response)
         garment['skus'] = self.skus(raw_product, response)
         garment['category'] = self.product_category(response)
+        garment['description'] = self.product_description(response)
+        garment['gender'] = self.product_gender(response, garment['name'])
 
         garment['image_urls'] = [self.main_image(response)]
 
@@ -73,12 +76,17 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def main_image(self, response):
-        image = clean(response.css('[data-content-type="image"]::attr(src)'))[0]
+        css = '[data-content-type="image"]::attr(src)'
+        image = clean(response.css(css))[0]
+
         return self.main_image_re.sub('=924', image)
 
     def image_urls(self, response, main_image):
         image_ids = set(self.image_id_re.findall(response.text))
-        image_urls = main_image + [self.image_url_t.format(image_id=image_id) for image_id in image_ids]
+
+        image_urls = main_image + [self.image_url_t.format(image_id=image_id)
+                                   for image_id in image_ids]
+
         return sorted(set(image_urls), key=image_urls.index)
 
     def image_requests(self, raw_product):
@@ -91,25 +99,30 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
             if colour in visited_colours:
                 continue
 
-            media_asset_id = raw_sku['mediaAssetId'] if 'color' in raw_sku else raw_product['mediaAssetId']
             visited_colours.add(colour)
+            media_asset_id = raw_sku['mediaAssetId'] if 'color' in raw_sku else raw_product['mediaAssetId']
             url = self.image_request_url_t.format(product_id=media_asset_id)
 
             requests += [Request(url=url, callback=self.parse_image)]
 
         return requests
 
-    def product_price(self, response, raw_sku):
-        raw_pricing = sum([[p['originalPrice'], p['symbol']]
-                           for p in raw_sku['price'] if p['label'] != 'CMR Puntos'], [])
+    def clean_product_pricing(self, response, raw_sku):
+        nested_raw_pricing = [[price_soup['originalPrice'], price_soup['symbol']]
+                              for price_soup in raw_sku['price']
+                              if price_soup['label'] != 'CMR Puntos']
+
+        raw_pricing = sum(nested_raw_pricing, [])
+
         return self.product_pricing_common_new(response, money_strs=raw_pricing)
 
     def skus(self, raw_product, response):
         skus = {}
         visitied_variants = set()
         product_colour = self.product_colour(response)
+
         for raw_sku in raw_product['skus']:
-            sku = self.product_price(response, raw_sku)
+            sku = self.clean_product_pricing(response, raw_sku)
             sku['size'] = raw_sku.get('size', self.one_size)
             sku['size'] = self.one_size if sku['size'] == 'TU' else sku['size']
 
@@ -126,22 +139,38 @@ class FalabellaParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_colour(self, response):
-        xpath = '//*[@data-panel="longDescription"]//li[contains(text(), "Color")]/text()'
+        xpath = '//*[@data-panel="longDescription"]' \
+                '//li[contains(text(), "Color")]/text()'
         colour = response.xpath(xpath).re(self.colour_re)
+
         return clean(colour)[0] if colour else colour
 
     def raw_description(self, response):
-        css = '[data-panel="longDescription"] li::text, [data-panel="longDescription"] h4::text'
+        css = '[data-panel="longDescription"] li::text,' \
+              ' [data-panel="longDescription"] h4::text'
+
         specification_css = '.fb-product-information__specification__table__row-data'
 
         raw_description = clean(response.css(css))
-        return raw_description + [' '.join(clean(x.css(' ::text'))) for x in response.css(specification_css)]
+
+        raw_description = [desc for desc in raw_description
+                           if 'Atención al Cliente al' not in desc]
+
+        raw_description += [self.merge_column_text(specification_row_sel)
+                            for specification_row_sel in response.css(specification_css)]
+
+        return raw_description
+
+    def merge_column_text(self, row_sel):
+        return ' '.join(clean(row_sel.css(' ::text')))
 
     def product_description(self, response):
-        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response)
+                if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
-        return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response)
+                if self.care_criteria_simplified(rd)]
 
     def product_gender(self, response, name):
         xpath = '//*[contains(text(), "Género")]/parent::*[th or li]//text()'
