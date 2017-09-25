@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets, permissions, exceptions
 from rest_framework.generics import ListAPIView
@@ -113,3 +114,31 @@ def delete_notification(request, notification_id):
     notification.deleted = True
     notification.save()
     return Response({'id': notification.id})
+
+
+class GetFollows(ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return self.request.user.follows.all()
+
+
+class GetFollowedBy(ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return self.request.user.followed_by.all()
+
+
+class SearchUser(ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get_queryset(self):
+        query = self.request.GET.get('q', "")
+        if not query:
+            raise exceptions.ParseError
+        return User.objects.filter(
+            Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query))
