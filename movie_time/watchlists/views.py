@@ -141,6 +141,17 @@ class GetActivities(ListAPIView):
             'activity_set', 'movie__genres', 'movie__images', 'movie__watchlist_items__user')
 
 
+class GetUserActivities(ListAPIView):
+    serializer_class = ActivitySerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user.follows.all().filter(id=self.kwargs['user_id'])
+        return WatchListItem.objects.filter(user=user, removed=False).order_by(
+            '-updated_at').select_related('movie__release_date', 'user', 'user__auth_token').prefetch_related(
+            'activity_set', 'movie__genres', 'movie__images', 'movie__watchlist_items__user')
+
+
 class GetToWatchList(ListAPIView):
     serializer_class = MovieSerializer
     permission_classes = (IsAuthenticated,)
