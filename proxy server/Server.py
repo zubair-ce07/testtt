@@ -1,11 +1,11 @@
+import json
 from http.server import BaseHTTPRequestHandler
 from crawler_stats import CrawlerStatsProxy
-import json
-
-crawler = CrawlerStatsProxy('ahmed.sufian@arbisoft.com', 'ahmed@arbisoft')
 
 
-class S(BaseHTTPRequestHandler):
+class Server(BaseHTTPRequestHandler):
+    crawler = CrawlerStatsProxy('ahmed.sufian@arbisoft.com', 'ahmed@arbisoft')
+
     def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
@@ -13,7 +13,7 @@ class S(BaseHTTPRequestHandler):
 
     def do_GET(self):
         self._set_headers()
-        response = crawler._scrape_daily_stats()
+        response = self.crawler._scrape_daily_stats()
         self.wfile.write(bytearray(json.dumps(response), 'utf8'))
 
     def do_HEAD(self):
