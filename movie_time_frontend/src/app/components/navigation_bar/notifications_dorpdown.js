@@ -22,6 +22,8 @@ class NotificationDropDown extends Component {
     }
 
     toggle() {
+        if (!this.state.isOpen) this.props.fetchNotifications();
+
         this.setState({
             isOpen: !this.state.isOpen
         });

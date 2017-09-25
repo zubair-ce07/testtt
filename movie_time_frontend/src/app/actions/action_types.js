@@ -28,5 +28,7 @@ export const LOADED_MORE = 'LOADED_MORE';
 export const GET_NETWORK = 'GET_FOLLOWS';
 export const FETCHING_NETWORK = 'FETCHING_NETWORK';
 export const SEARCH_USER = 'SEARCH_USER';
+export const FETCH_USER_ACTIVITIES = 'FETCH_USER_ACTIVITIES';
+export const FETCHING_ACTIVITIES = 'FETCHING_ACTIVITIES';
 
 export const ROOT_URL = 'http://localhost:8000';

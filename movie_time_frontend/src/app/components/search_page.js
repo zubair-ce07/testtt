@@ -23,7 +23,7 @@ class SearchPage extends Component{
                     : this.props.search_results.type === 'movies'?
                         <MovieList movies={this.props.search_results.results} addToWatchlist={this.props.addToWatchlist}
                                removeFromWatchlist={this.props.removeFromWatchlist}/>
-                        : <div className="col-md-8"><UserList users={this.props.search_results.results}/></div>
+                        : <div className="col-md-9"><UserList users={this.props.search_results.results}/></div>
                 }
             </div>
         </div>

@@ -1,10 +1,13 @@
 import {updateUserStatusesInActivities} from '../utils/utils';
-import {FETCH_ACTIVITIES, ADD_TO_WATCHLIST, REMOVE_FROM_WATCHLIST, LOADED_MORE, LOADING_MORE} from '../actions/action_types';
+import {FETCH_ACTIVITIES, FETCH_USER_ACTIVITIES, FETCHING_ACTIVITIES, ADD_TO_WATCHLIST, REMOVE_FROM_WATCHLIST, LOADED_MORE, LOADING_MORE} from '../actions/action_types';
 
 
 export default function (state = {activities: [], isFetching: true, next: null}, action) {
     let isFetching = false;
     switch (action.type) {
+        case FETCHING_ACTIVITIES:
+            return{activities: [], isFetching: true, next: null};
+        case FETCH_USER_ACTIVITIES:
         case FETCH_ACTIVITIES:
             return {activities: action.payload.data.results, isFetching: false, next: action.payload.data.next};
         case LOADING_MORE:
