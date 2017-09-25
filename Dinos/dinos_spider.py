@@ -188,7 +188,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return requests
 
     def colour_selectors(self, response):
-        css = '.color li, .color option:not([value=""])'
+        css = '.color li, .color select [value]:not([value=""])'
         
         return response.css(css)
 
