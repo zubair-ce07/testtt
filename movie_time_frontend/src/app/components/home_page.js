@@ -37,7 +37,7 @@ class HomePage extends Component {
             <div className="col-md-2"/>
             <div className="col-md-8">
                 {!this.props.activity_list.isFetching && this.props.activity_list.activities.length === 0 &&
-                <h4 className="text-center my-5">No Result Found</h4>}
+                <h4 className="text-center my-5">Create your network to view activity here</h4>}
                 {this.renderActivities()}
                 {this.props.activity_list.isFetching ? <h4 className="text-center my-5">Loading...</h4>
                     : <Waypoint onEnter={this.loadMore.bind(this)} bottomOffset="-100%"/>}

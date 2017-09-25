@@ -5,7 +5,7 @@ export const SET_CURRENT_USER = 'SET_CURRENT_USER';
 export const ADD_TO_WATCHLIST = 'ADD_TO_WATCHLIST';
 export const REMOVE_FROM_WATCHLIST = 'REMOVE_FROM_WATCHLIST';
 export const SEARCH_MOVIE = 'SEARCH_MOVIE';
-export const SEARCHING_MOVIE = 'SEARCHING_MOVIE';
+export const SEARCHING = 'SEARCHING';
 export const GET_WATCHLIST = 'GET_WATCHLIST';
 export const FETCHING_WATCHLIST = 'FETCHING_WATCHLIST';
 export const EXPLORE_WITH_DATE = 'EXPLORE_WITH_DATE';
@@ -25,5 +25,8 @@ export const SEND_FOLLOW_REQUEST = 'SEND_FOLLOW_REQUEST';
 export const UPDATE_USER = 'UPDATE_USER';
 export const LOADING_MORE = 'LOADING_MORE';
 export const LOADED_MORE = 'LOADED_MORE';
+export const GET_NETWORK = 'GET_FOLLOWS';
+export const FETCHING_NETWORK = 'FETCHING_NETWORK';
+export const SEARCH_USER = 'SEARCH_USER';
 
 export const ROOT_URL = 'http://localhost:8000';

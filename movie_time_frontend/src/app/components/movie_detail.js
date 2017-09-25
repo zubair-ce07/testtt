@@ -62,7 +62,7 @@ class MovieDetail extends Component {
                     <h3 className="mt-5 mb-3">Cast</h3>
                     <div className="horizontal-scroll mb-5">{this.renderCast()}</div>
                     <h3 className="mt-5">Videos</h3>
-                    <div className="mb-5 row">{this.renderVideos()}</div>
+                    <div className="mb-5 row videos-pane">{this.renderVideos()}</div>
                     <h3 className="mt-5 mb-3">Images</h3>
                     <div className="horizontal-scroll mb-5">{this.renderImages()}</div>
                 </div>
@@ -108,7 +108,8 @@ class MovieDetail extends Component {
         return <h6>
             <i className="fa fa-calendar counters"> {movie.release_date}</i>
             <i className="fa fa-cog counters"> {movie.status}</i>
-            <i className="fa fa-clock-o counters"> {movie.runtime} Minutes</i>
+            <i className="fa fa-clock-o counters" id="runtime"> {movie.runtime} Minutes</i>
+            <UncontrolledTooltip placement="top" target={"runtime"}>Runtime</UncontrolledTooltip>
             <i className="fa fa-dollar counters" id="budget"> {nFormatter(movie.budget, 3)}</i>
             <UncontrolledTooltip placement="top" target={"budget"}>Budget</UncontrolledTooltip>
             <i className="fa fa-dollar counters" id="revenue"> {nFormatter(movie.revenue, 3)}</i>

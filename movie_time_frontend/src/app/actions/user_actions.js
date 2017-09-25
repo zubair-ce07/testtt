@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import axios from 'axios';
 
-import {ROOT_URL, FETCH_USER, SEND_FOLLOW_REQUEST} from './action_types';
+import {ROOT_URL, FETCH_USER, SEND_FOLLOW_REQUEST, GET_NETWORK, FETCHING_NETWORK} from './action_types';
 import {setCurrentUser} from './auth_actions';
 import setAuthorizationToken from '../utils/setAuthorizationToken';
 
@@ -49,5 +49,16 @@ export function sendFollowRequest(receiver_id) {
     return {
         type: SEND_FOLLOW_REQUEST,
         payload: request
+    };
+}
+
+export function fetchNetwork(type) {
+    return dispatch => {
+        dispatch({type: FETCHING_NETWORK});
+        const request = axios.get(`${ROOT_URL}/api/${type}/?limit=3`);
+        dispatch({
+           type: GET_NETWORK,
+            payload: request
+        });
     };
 }

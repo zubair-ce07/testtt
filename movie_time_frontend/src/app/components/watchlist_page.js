@@ -51,7 +51,7 @@ class WatchlistPage extends Component {
             <div className="col-md-2"/>
             <div className="col-md-8">
                 {!this.props.movie_watchlist.isFetching && this.props.movie_watchlist.movies.length === 0 &&
-                <h4 className="text-center my-5">No Result Found</h4>}
+                <h4 className="text-center my-5">Nothing to be displayed in this section</h4>}
                 <MovieList movies={this.props.movie_watchlist.movies} addToWatchlist={this.props.addToWatchlist}
                            removeFromWatchlist={this.props.removeFromWatchlist}/>
                 {this.props.movie_watchlist.isFetching ? <h4 className="text-center my-5">Loading...</h4>

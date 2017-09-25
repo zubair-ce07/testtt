@@ -15,6 +15,7 @@ import SignupPage from './components/signup/signup_page';
 import ProfilePage from './components/profile_page';
 import MovieDetail from './components/movie_detail';
 import WatchListPage from './components/watchlist_page';
+import NetworkPage from './components/network_page';
 import CalendarPage from './components/calendar_page';
 import GenresPage from './components/genre_page';
 import setAuthorizationToken from './utils/setAuthorizationToken';
@@ -36,6 +37,7 @@ ReactDOM.render(
         <BrowserRouter>
             <App>
                 <Switch>
+                    <Route path="/network/:type" component={NetworkPage}/>
                     <Route path="/movies/:movie_id" component={MovieDetail}/>
                     <Route path="/users/:user_id" component={ProfilePage}/>
                     <Route path="/watchlist/:status" component={WatchListPage}/>

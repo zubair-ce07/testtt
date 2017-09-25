@@ -295,3 +295,12 @@ body {
     margin-top: 5px;
     width: 120px;
 }
+.videos-pane {
+    background-color: #073642;
+    padding-top: 15px;
+    padding-bottom: 29px;
+}
+.search-type-select {
+    font-family: 'FontAwesome', serif;
+    padding: 0;
+}

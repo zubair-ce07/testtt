@@ -5,3 +5,5 @@ export const UPCOMING = 'UPCOMING';
 export const SEARCH = 'SEARCH';
 export const CALENDAR = 'CALENDAR';
 export const EXPLORE = 'EXPLORE';
+export const FOLLOWS = 'FOLLOWS';
+export const FOLLOWED_BY = 'FOLLOWED_BY';
