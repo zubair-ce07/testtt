@@ -1,9 +1,9 @@
 import re
 import xml.etree.ElementTree as Etree
 
+from scrapy import FormRequest
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
-from scrapy import FormRequest
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
@@ -23,9 +23,9 @@ class LindexParseSpider(BaseParseSpider, Mixin):
     category_re = re.compile('(\s*›)')
     size_re = re.compile('([0-9a-zA-Z]+)\s*\(.*\)')
 
-    product_data_url = 'https://www.lindex.com/WebServices/ProductService.asmx/GetProductData'
     xml_tag_prefix = '{http://lindex.com/WebServices}'
     image_url_p = 'https://lindex-static.akamaized.net'
+    product_data_url = 'https://www.lindex.com/WebServices/ProductService.asmx/GetProductData'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -126,10 +126,10 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         xpath = '{0}SizeInfo//{0}SizeInfo/{0}Text'.format(self.xml_tag_prefix)
 
         sizes_xml = xml_response.findall(xpath)
-        nested_size_list = [self.size_re.findall(size.text)
+        nested_sizes = [self.size_re.findall(size.text)
                             for size in sizes_xml]
 
-        return sum(nested_size_list, [])
+        return sum(nested_sizes, [])
 
     def product_colour_ids(self, response):
         css = '.product .colors ::attr(data-colorid)'
