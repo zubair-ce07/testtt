@@ -21,7 +21,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
     price_css = '#ProductPage .price ::text'
 
     category_re = re.compile('(\s*›)')
-    size_re = re.compile('([0-9a-zA-Z]+)\s*\(.*\)')
+    size_re = re.compile('([0-9a-zA-Z]+)\s*[-\(]?.*')
 
     xml_tag_prefix = '{http://lindex.com/WebServices}'
     image_url_p = 'https://lindex-static.akamaized.net'
@@ -103,7 +103,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def color_stock_status(self, xml_response):
-        xpath = '{0}IsSoldOut'.format(self.xml_tag_prefix)
+        xpath = '{0}HasStock'.format(self.xml_tag_prefix)
         colour_stock = xml_response.findall(xpath)
 
         return 'true' in colour_stock[0].text
