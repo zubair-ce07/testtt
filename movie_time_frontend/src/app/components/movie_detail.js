@@ -59,9 +59,17 @@ class MovieDetail extends Component {
                             </div>
                         </div>
                     </div>
-                    <h3 className="mt-5 mb-3">Cast</h3>
-                    <div className="horizontal-scroll mb-5">{this.renderCast()}</div>
-                    <h3 className="mt-5">Videos</h3>
+                    <div className="row">
+                        <div className="col-md-2">
+                            <h3 className="mt-5 mb-3">Top Actor</h3>
+                            <div className="mb-5">{this.renderTopActor()}</div>
+                        </div>
+                        <div className="col-md-10">
+                            <h3 className="mt-5 mb-3">Cast</h3>
+                            <div className="horizontal-scroll mb-5">{this.renderCast()}</div>
+                        </div>
+                    </div>
+                    <h3>Videos</h3>
                     <div className="mb-5 row videos-pane">{this.renderVideos()}</div>
                     <h3 className="mt-5 mb-3">Images</h3>
                     <div className="horizontal-scroll mb-5">{this.renderImages()}</div>
@@ -88,6 +96,14 @@ class MovieDetail extends Component {
                 <img src={getImageUrl(image.file_path, 'w342')} height={252}/>
             </a>;
         });
+    }
+
+    renderTopActor(){
+        const {cast} = this.props.movie_detail.movie;
+        const top = cast.slice().sort((a, b) => {return b.votes - a.votes})[0];
+        if(top.votes === 0) return <h4>No data available. Be the first to vote</h4>;
+        return <div><img src={getImageUrl(top.person.profile, 'w185')} width="100%"/>
+            <p className="votes-counter">{top.votes} {top.votes > 1 ? 'votes' : 'vote'}</p></div>
     }
 
     renderCast() {
