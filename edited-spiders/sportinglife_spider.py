@@ -70,7 +70,7 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         one_size = [{'size': self.one_size}]
         raw_sku = json.loads(response.text)
         for size in raw_sku.get('sizes', one_size):
-            sku = response.meta['pricing']
+            sku = response.meta['pricing'].copy()
             sku['size'] = size['size']
 
             if response.meta['color']:
