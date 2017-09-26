@@ -135,7 +135,6 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
     def sku_key(self, raw_sku_s):
         css = '[itemprop="sku"]::attr(content)'
-
         return clean(raw_sku_s.css(css))[0]
 
 
