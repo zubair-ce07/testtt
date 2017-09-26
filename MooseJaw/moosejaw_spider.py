@@ -25,15 +25,18 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     image_re = re.compile('\?(.*)')
+    colour_re = re.compile('(.*),.*$')
+    size_re = re.compile('.*,\s*(.*)$')
+
+    price_css = '[itemprop="price"]::attr(content),' \
+                '[itemprop="priceCurrency"]::attr(content)'
 
     gender_map = [
-        ('Baby, Kids', 'unisex-children'),
+        ('Baby', 'unisex-children'),
         ('Mens', 'men'),
         ('Womens', 'women'),
-        ('Boys, Kids', 'boys'),
         ('Boys', 'boys'),
         ('Girls', 'girls'),
-        ('Kids, Girls', 'girls'),
     ]
 
     def parse(self, response):
@@ -64,7 +67,7 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
             }
 
             sku.update(
-                self.sku_pricing(response, sku_s, original_price))
+                self.product_pricing_common_new(sku_s, money_strs=original_price))
 
             skus[self.sku_key(sku_s)] = sku
 
@@ -72,34 +75,23 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
     def colour_variant(self, raw_sku_s):
         css = '[itemprop="color"]::attr(content)'
-        raw_colour_variant = clean(raw_sku_s.css(css))[0]
 
-        return raw_colour_variant.split(', ')
+        return clean(raw_sku_s.css(css))[0]
 
     def sku_size(self, raw_sku_s):
         raw_colour_variant = self.colour_variant(raw_sku_s)
 
-        return raw_colour_variant[1]
+        return self.size_re.findall(raw_colour_variant)[0]
 
     def sku_colour(self, raw_sku_s):
         raw_colour_variant = self.colour_variant(raw_sku_s)
 
-        return raw_colour_variant[0]
+        return self.colour_re.findall(raw_colour_variant)[0]
 
     def original_price(self, response):
         css = '#adwordsTotalValue::attr(value)'
 
         return clean(response.css(css))
-
-    def sku_pricing(self, response, raw_sku_s, original_price):
-        price_css = '[itemprop="price"]::attr(content)'
-        currency_css = '[itemprop="priceCurrency"]::attr(content)'
-
-        pricing = clean(raw_sku_s.css(price_css))
-        pricing += clean(raw_sku_s.css(currency_css))
-        pricing += original_price
-
-        return self.product_pricing_common_new(response, money_strs=pricing)
 
     def product_gender(self, response):
         raw_gender = self.raw_gender(response) + self.raw_name(response)
@@ -168,12 +160,12 @@ class MooseJawCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = MooseJawParseSpider()
 
-    pagination_css = '[title="Next Page"]'
+    listing_css = '[title="Next Page"]'
 
     product_css = '.prod-item .pdpLink'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=pagination_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
