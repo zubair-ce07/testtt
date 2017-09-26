@@ -72,10 +72,8 @@ class LiebeskindParseSpider(Mixin, BaseParseSpider):
     def price_requests(self, response, product_id):
         price_requests = []
         trimmed_pid = '.'.join(product_id.split('.')[:-2])
-        colors = self.sku_colors(response)
-        sizes = self.product_size(response)
-        for color_name, color_code in colors:
-            for size in sizes:
+        for color_name, color_code in self.sku_colors(response):
+            for size in self.product_size(response):
                 size_key = "1" if size == self.one_size else size
                 price_url = self.price_request_url_t.format(trimmed_pid=trimmed_pid,
                                                             product_id=product_id,
