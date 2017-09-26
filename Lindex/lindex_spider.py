@@ -227,3 +227,4 @@ class LindexCrawlSpider(BaseCrawlSpider, Mixin):
         css = ' ::attr(data-page-id)'
 
         return clean(response.css(css))[0]
+
