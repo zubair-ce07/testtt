@@ -3,7 +3,6 @@ import re
 
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
-from scrapy.loader.processors import TakeFirst
 from scrapy.spiders import Rule
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean, remove_jsession
@@ -28,7 +27,6 @@ class Mixin:
 
 
 class SportingLifeParseSpider(BaseParseSpider, Mixin):
-    take_first = TakeFirst()
     name = Mixin.retailer + '-parse'
     price_css = '#priceDisplay span::text'
 
@@ -82,6 +80,8 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
             sku_id = '{color}_{size}'.format(color=response.meta['color'], size=size['size'])
             skus[sku_id] = sku
 
+        if 'out_of_stock' in response.meta['pricing']:
+            skus['out_of_stock'] = True
         return skus
 
     def product_id(self, response):
@@ -90,10 +90,11 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         return re.sub('productID|[:"\s]', '', response.css(css).re(regex)[0])
 
     def product_name(self, response):
-        return self.take_first(clean(response.css('.product-detail-container h2::text')))
+        return clean(response.css('.product-detail-container h2::text'))[0]
 
     def product_brand(self, response):
-        return self.take_first(clean(response.css('.product-detail-container strong::text'))) or 'SportingLife'
+        brand = clean(response.css('.product-detail-container strong::text'))
+        return brand[0] if brand else 'SportingLife'
 
     def product_category(self, response):
         return clean(response.css('.breadcrumb li a::text'))[1:]
@@ -117,7 +118,7 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         for color in self.product_color(response):
             color_requests.append(Request(url=self.color_request_url_t.format(product_id=product_id, color=color),
                                           callback=self.parse_skus,
-                                          meta={'pricing': self.product_pricing_common_new(response),
+                                          meta={'pricing': self.pricing(response),
                                                 'color': color
                                                 }))
         return color_requests
@@ -150,6 +151,12 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
                 return gender
 
         return 'unisex-adults'
+
+    def pricing(self, response):
+        try:
+            return self.product_pricing_common_new(response)
+        except IndexError:
+            return {'out_of_stock': True}
 
 
 class SportingLifeCrawlSpider(BaseCrawlSpider, Mixin):
