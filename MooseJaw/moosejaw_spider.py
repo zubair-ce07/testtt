@@ -8,7 +8,6 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean
 
 class Mixin:
     retailer = 'moosejaw-us'
-    lang = 'en'
     market = 'US'
     allowed_domains = ['moosejaw.com']
     start_urls = [
@@ -25,18 +24,16 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     image_re = re.compile('\?(.*)')
-    colour_re = re.compile('(.*),.*$')
-    size_re = re.compile('.*,\s*(.*)$')
 
     price_css = '[itemprop="price"]::attr(content),' \
                 '[itemprop="priceCurrency"]::attr(content)'
 
     gender_map = [
-        ('Baby', 'unisex-children'),
-        ('Mens', 'men'),
-        ('Womens', 'women'),
-        ('Boys', 'boys'),
-        ('Girls', 'girls'),
+        ('baby', 'unisex-children'),
+        ('mens', 'men'),
+        ('womens', 'women'),
+        ('boys', 'boys'),
+        ('girls', 'girls'),
     ]
 
     def parse(self, response):
@@ -62,8 +59,8 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
         for sku_s in raw_skus_s:
             sku = {
-                'size': self.sku_size(sku_s),
-                'colour': self.sku_colour(sku_s)
+                'size': self.colour_variant(sku_s)[1],
+                'colour': self.colour_variant(sku_s)[0],
             }
 
             sku.update(
@@ -75,26 +72,17 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
     def colour_variant(self, raw_sku_s):
         css = '[itemprop="color"]::attr(content)'
+        colour_variant = clean(raw_sku_s.css(css))[0]
 
-        return clean(raw_sku_s.css(css))[0]
-
-    def sku_size(self, raw_sku_s):
-        raw_colour_variant = self.colour_variant(raw_sku_s)
-
-        return self.size_re.findall(raw_colour_variant)[0]
-
-    def sku_colour(self, raw_sku_s):
-        raw_colour_variant = self.colour_variant(raw_sku_s)
-
-        return self.colour_re.findall(raw_colour_variant)[0]
+        return colour_variant.split(', ')
 
     def original_price(self, response):
         css = '#adwordsTotalValue::attr(value)'
-
         return clean(response.css(css))
 
     def product_gender(self, response):
         raw_gender = self.raw_gender(response) + self.raw_name(response)
+        raw_gender = raw_gender.lower()
 
         for gender_key, gender in self.gender_map:
             if gender_key in raw_gender:
@@ -104,7 +92,6 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
     def raw_gender(self, response):
         xpath = '//*[contains(text(), "Gender")]/following-sibling::td/text()'
-
         return clean(response.xpath(xpath))[0]
 
     def image_urls(self, response):
@@ -115,22 +102,18 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
     def product_id(self, response):
         css = '#adwordsProdId::attr(value)'
-
         return clean(response.css(css))[0]
 
     def raw_name(self, response):
         css = '[itemprop="name"]::text'
-
         return clean(response.css(css))[0]
 
     def product_category(self, response):
         css = '#breadcrumb [itemprop="title"]::text'
-
         return clean(response.css(css))[1:]
 
     def product_brand(self, response):
         css = '[itemprop="brand"]::attr(content)'
-
         return clean(response.css(css))[0]
 
     def product_name(self, response):
