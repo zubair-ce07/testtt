@@ -54,6 +54,18 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def parse_skus(self, response):
+        garment = response.meta['garment']
+        garment['skus'].update(self.skus(response))
+
+        return self.next_request_or_garment(garment)
+
+    def parse_image(self, response):
+        garment = response.meta['garment']
+        garment['image_urls'] += self.image_urls(response)
+
+        return self.next_request_or_garment(garment)
+
+    def skus(self, response):
         skus = {}
         one_size = [{'size': self.one_size}]
         raw_sku = json.loads(response.text)
@@ -64,28 +76,18 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
             if response.meta['color']:
                 sku['color'] = response.meta['color']
 
-            if not (size.get('enabled') or self.is_product_out_of_stock(raw_sku)):
+            if self.out_of_stock(raw_sku, size):
                 sku['out_of_stock'] = True
 
-            sku_id = '{color}_{size}'.format(color=response.meta['color'], size=size['size']).lower()
+            sku_id = '{color}_{size}'.format(color=response.meta['color'], size=size['size'])
             skus[sku_id] = sku
 
-        garment = response.meta['garment']
-        garment['skus'].update(skus)
-
-        return self.next_request_or_garment(garment)
-
-    def parse_image(self, response):
-        garment = response.meta['garment']
-        garment['image_urls'] += self.image_urls(response)
-
-        return self.next_request_or_garment(garment)
+        return skus
 
     def product_id(self, response):
-        css = 'head > [type="application/ld+json"]::text'
-        raw_product = re.sub(',\s*,', ',', self.take_first(clean(response.css(css))))
-        raw_product = json.loads(raw_product)
-        return raw_product['productID']
+        regex = '\"productID\": \"\d+\"|$'
+        css = 'head [type="application/ld+json"]::text'
+        return re.sub('productID|[:"\s]', '', response.css(css).re(regex)[0])
 
     def product_name(self, response):
         return self.take_first(clean(response.css('.product-detail-container h2::text')))
@@ -94,7 +96,7 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         return self.take_first(clean(response.css('.product-detail-container strong::text'))) or 'SportingLife'
 
     def product_category(self, response):
-        return clean(response.css('.breadcrumb li ::text'))[1:-1]
+        return clean(response.css('.breadcrumb li a::text'))[1:]
 
     def product_color(self, response):
         return clean(response.css('.swatches img::attr(title)')) or ['']
@@ -120,8 +122,8 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
                                                 }))
         return color_requests
 
-    def is_product_out_of_stock(self, raw_sku):
-        return raw_sku.get('singleSku', {'enabled': False})['enabled']
+    def out_of_stock(self, raw_sku, raw_size):
+        return not (raw_size.get('enabled') or raw_sku.get('singleSku', {'enabled': False})['enabled'])
 
     def raw_description(self, response):
         return clean(response.css('#tabs-details ::text'))
@@ -155,7 +157,7 @@ class SportingLifeCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = SportingLifeParseSpider()
 
     listing_css = [
-        '.parent .small-padding',
+        '.parent .small-padding:not(.product-card)',
         '.pagination',
     ]
     products_css = '.product-card .image-container'
@@ -166,6 +168,7 @@ class SportingLifeCrawlSpider(BaseCrawlSpider, Mixin):
                ]
 
     rules = (
+        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re, process_value=remove_jsession),
+             callback='parse', ),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item', ),
-        Rule(LinkExtractor(restrict_css=listing_css, deny=deny_re, process_value=remove_jsession), callback='parse', ),
     )
