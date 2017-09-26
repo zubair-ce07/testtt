@@ -1,5 +1,6 @@
 import json
 
+from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.loader.processors import TakeFirst
 from scrapy.spiders import Rule
@@ -22,6 +23,11 @@ class LiebeskindParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + '-parse'
     price_x = "//p[contains(@class,'product-price')]//text()"
 
+    price_request_url_t = 'https://de.liebeskind-berlin.com/on/demandware.store/Sites-liebeskindDE-Site/de_DE' \
+                          '/SPV-Dispatch?dwvar_{trimmed_pid}_variantColor={color_code}' \
+                          '&dwvar_{trimmed_pid}_variantSize={size}&brandName=liebeskind&pid={product_id}' \
+                          '&dwfrm_spvdispatch_loadvariant=dwfrm_spvdispatch_loadvariant'
+
     def parse(self, response):
         pid = self.product_id(response)
         garment = self.new_unique_garment(pid)
@@ -33,35 +39,52 @@ class LiebeskindParseSpider(Mixin, BaseParseSpider):
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
+        garment['meta'] = {'requests_queue': self.price_requests(response, pid), }
 
         return self.next_request_or_garment(garment)
 
-    def parse_colors(self, response):
+    def parse_price(self, response):
+        sku_id = response.meta['sku_id']
         garment = response.meta['garment']
-
-        garment['image_urls'] += self.image_urls(response)
-        garment['skus'].update(self.skus(response))
+        garment['skus'][sku_id].update(self.product_pricing_common_new(response))
 
         return self.next_request_or_garment(garment)
 
     def skus(self, response):
         skus = {}
         skus_json = self.skus_json(response)
+        sizes = self.product_size(response)
 
-        sizes = clean(response.xpath("//li[contains(@class,'size jsSizeVariant')]//text()")) or [self.one_size]
         for color in skus_json:
             for size in sizes:
                 size_key = "1" if size == self.one_size else size
-                sku = self.product_pricing_common_new(response)
-                sku['size'] = size
-                sku['colour'] = color
+                sku = {
+                    'size': size,
+                    'colour': color
+                }
 
-                # Watches do not have valid data in sku json so we dont know their oos status
                 if size_key not in skus_json[color]:
                     sku['out_of_stock'] = True
-                skus[color + '_' + size] = sku
+                skus[self.sku_id(color, size)] = sku
 
         return skus
+
+    def price_requests(self, response, product_id):
+        price_requests = []
+        trimmed_pid = '.'.join(product_id.split('.')[:-2])
+        colors = self.sku_colors(response)
+        sizes = self.product_size(response)
+        for color_name, color_code in colors:
+            for size in sizes:
+                size_key = "1" if size == self.one_size else size
+                price_url = self.price_request_url_t.format(trimmed_pid=trimmed_pid,
+                                                            product_id=product_id,
+                                                            color_code=color_code,
+                                                            size=size_key)
+                price_requests.append(Request(url=price_url,
+                                              callback=self.parse_price,
+                                              meta={'sku_id': self.sku_id(color_name, size)}))
+        return price_requests
 
     def product_brand(self, response):
         return 'Liebeskind'
@@ -113,6 +136,12 @@ class LiebeskindParseSpider(Mixin, BaseParseSpider):
         xpath_color = "//select[contains(@class,'jsColorInputSelect')]//option"
         return [(clean(color.xpath('text()'))[0], clean(color.xpath('@value'))[0])
                 for color in response.xpath(xpath_color)]
+
+    def sku_id(self, color, size):
+        return '{color}_{size}'.format(color=color, size=size)
+
+    def product_size(self, response):
+        return clean(response.xpath("//li[contains(@class,'size jsSizeVariant')]//text()")) or [self.one_size]
 
 
 class LiebeskindCrawlSpider(BaseCrawlSpider, Mixin):
