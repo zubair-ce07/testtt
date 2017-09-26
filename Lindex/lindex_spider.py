@@ -1,5 +1,6 @@
 import re
 import xml.etree.ElementTree as Etree
+from urllib.parse import urljoin
 
 from scrapy import FormRequest
 from scrapy.spiders import Rule
@@ -21,7 +22,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
     price_css = '#ProductPage .price ::text'
 
     category_re = re.compile('(\s*›)')
-    size_re = re.compile('([0-9a-zA-Z]+)\s*[-\(]?.*')
+    size_re = re.compile('([0-9a-zA-Z]+).*')
 
     xml_tag_prefix = '{http://lindex.com/WebServices}'
     image_url_p = 'https://lindex-static.akamaized.net'
@@ -47,6 +48,17 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
+    def parse_colour(self, response):
+        garment = response.meta['garment']
+
+        xml_response = Etree.fromstring(response.text)
+
+        garment['image_urls'] += self.image_urls(xml_response)
+        garment['skus'].update(
+            self.skus(xml_response, garment['meta']['pricing']))
+
+        return self.next_request_or_garment(garment)
+
     def colour_requests(self, response):
         requests = []
 
@@ -65,26 +77,15 @@ class LindexParseSpider(BaseParseSpider, Mixin):
             requests += [FormRequest(
                 url=self.product_data_url,
                 formdata=form_data,
-                callback=self.parse_colour_data
+                callback=self.parse_colour
             )]
 
         return requests
 
-    def parse_colour_data(self, response):
-        garment = response.meta['garment']
-
-        xml_response = Etree.fromstring(response.text)
-
-        garment['image_urls'] += self.image_urls(xml_response)
-        garment['skus'].update(
-            self.skus(xml_response, garment['meta']['pricing']))
-
-        return self.next_request_or_garment(garment)
-
     def skus(self, xml_response, pricing):
         skus = {}
 
-        sizes = self.colour_sizes(xml_response)
+        sizes = self.size_variants(xml_response)
         colour = self.product_colour(xml_response)
         is_sold_out = self.color_stock_status(xml_response)
 
@@ -110,10 +111,9 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, xml_response):
         xpath = '{0}Images//{0}Image/{0}XLarge'.format(self.xml_tag_prefix)
-
         image_urls = xml_response.findall(xpath)
 
-        return [self.image_url_p + img.text
+        return [urljoin(self.image_url_p, img.text)
                 for img in image_urls]
 
     def product_colour(self, xml_response):
@@ -122,39 +122,34 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
         return colour[0].text
 
-    def colour_sizes(self, xml_response):
+    def size_variants(self, xml_response):
         xpath = '{0}SizeInfo//{0}SizeInfo/{0}Text'.format(self.xml_tag_prefix)
 
         sizes_xml = xml_response.findall(xpath)
         nested_sizes = [self.size_re.findall(size.text)
-                            for size in sizes_xml]
+                        for size in sizes_xml]
 
         return sum(nested_sizes, [])
 
     def product_colour_ids(self, response):
         css = '.product .colors ::attr(data-colorid)'
-
         return clean(response.css(css))
 
     def product_page_id(self, response):
         css = ' ::attr(data-page-id)'
-
         return clean(response.css(css))[0]
 
     def product_brand(self, response):
         css = '#ProductPage ' \
               '::attr(data-product-brand)'
-
         return clean(response.css(css))[0]
 
     def product_gender(self, response):
         gender = 'unisex-kids' if 'kids' in response.url else 'women'
-
         return gender
 
     def product_id(self, response):
         css = '.product_id::text'
-
         return clean(response.css(css))[0]
 
     def product_category(self, response):
@@ -168,12 +163,10 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
     def product_name(self, response):
         css = '.name::text'
-
         return clean(response.css(css))[0]
 
     def raw_description(self, response):
         css = '.description ::text'
-
         return clean(response.css(css))
 
     def product_description(self, response):
@@ -234,4 +227,3 @@ class LindexCrawlSpider(BaseCrawlSpider, Mixin):
         css = ' ::attr(data-page-id)'
 
         return clean(response.css(css))[0]
-
