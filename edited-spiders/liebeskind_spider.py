@@ -1,10 +1,9 @@
 import json
 
-from scrapy.http import Request
-from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.loader.processors import TakeFirst
-from w3lib.url import add_or_replace_parameter, url_query_cleaner
+from scrapy.spiders import Rule
+from w3lib.url import url_query_cleaner
 
 from .base import BaseParseSpider, BaseCrawlSpider
 from .base import clean
@@ -34,7 +33,6 @@ class LiebeskindParseSpider(Mixin, BaseParseSpider):
         garment['gender'] = self.product_gender(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
-        garment['meta'] = {'requests_queue': self.color_requests(response)}
 
         return self.next_request_or_garment(garment)
 
@@ -46,45 +44,22 @@ class LiebeskindParseSpider(Mixin, BaseParseSpider):
 
         return self.next_request_or_garment(garment)
 
-    def color_requests(self, response):
-        requests = []
-        xpath = "//li[contains(@class,'ta_color jsColorVariant') and @data-loaded='false']//@data-product"
-        color_ids = clean(response.xpath(xpath))
-
-        for color_id in color_ids:
-            url = add_or_replace_parameter(response.url, 'sku', color_id)
-            # These urls are available on listings pages as well so use dont_filter
-            requests += [Request(url, dont_filter=True, callback=self.parse_colors)]
-
-        return requests
-
     def skus(self, response):
         skus = {}
         skus_json = self.skus_json(response)
 
-        if skus_json:
-            sizes = clean(response.xpath("//li[contains(@class,'size jsSizeVariant')]//text()")) or [self.one_size]
-            previous_price, price, currency = self.product_pricing(response)
+        sizes = clean(response.xpath("//li[contains(@class,'size jsSizeVariant')]//text()")) or [self.one_size]
+        for color in skus_json:
+            for size in sizes:
+                size_key = "1" if size == self.one_size else size
+                sku = self.product_pricing_common_new(response)
+                sku['size'] = size
+                sku['colour'] = color
 
-            for color in skus_json.keys():
-                for size in sizes:
-                    size_key = "1" if size == self.one_size else size
-
-                    sku = {
-                        'price': price,
-                        'currency': currency,
-                        'size': size,
-                        'colour': color,
-                    }
-
-                    # Watches do not have valid data in sku json so we dont know their oos status
-                    if size_key not in list(skus_json[color].keys()):
-                        sku['out_of_stock'] = True
-
-                    if previous_price:
-                        sku['previous_prices'] = [previous_price]
-
-                    skus[color + '_' + size] = sku
+                # Watches do not have valid data in sku json so we dont know their oos status
+                if size_key not in skus_json[color]:
+                    sku['out_of_stock'] = True
+                skus[color + '_' + size] = sku
 
         return skus
 
@@ -135,13 +110,9 @@ class LiebeskindParseSpider(Mixin, BaseParseSpider):
         return raw_sku
 
     def sku_colors(self, response):
-        xpath_color = "//div[@class='select']//select[@class='jsColorInputSelect']//option"
-        sku_colors = []
-        for color in response.xpath(xpath_color):
-            color_id = clean(color.xpath('@value'))
-            if color_id:
-                sku_colors.append((clean(color.xpath('text()'))[0], color_id[0]))
-        return sku_colors
+        xpath_color = "//select[contains(@class,'jsColorInputSelect')]//option"
+        return [(clean(color.xpath('text()'))[0], clean(color.xpath('@value'))[0])
+                for color in response.xpath(xpath_color)]
 
 
 class LiebeskindCrawlSpider(BaseCrawlSpider, Mixin):
