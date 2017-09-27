@@ -13,39 +13,34 @@ class PuketSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=('#topMenu a', '.shelf-category-list a', 'a.next')), follow=True),
         Rule(LinkExtractor(restrict_css=('a.shelf-url',)), callback='parse_product'),
     )
+
     puket_skus = {}
 
-    def product_skus(self):
-        skus = {}
-        for sku in self.puket_skus["skus"]:
-            sku_id = sku['sku']
-            skus[sku_id] = {
-                'price': sku['bestPrice'],
-                'previous_prices': sku['listPrice'],
-                'currency': sku['currency'],
-                'colour': sku['udas']['COR'],
-                'size': sku['udas']['TAMANHO']
-            }
-        return skus
+    def parse_product(self, response):
 
-    def product_care(self):
-        care = self.puket_skus.get('udasProd').get('composicao', None)
-        if care:
-            cares = care.split('<br>')
-            care = list(filter(None, cares))
-        return care
+        garment = {}
+        self.puket_skus = self.read_puket_skus(response)
 
-    def product_gender(self):
-        return self.puket_skus.get('udasProd').get('google_gender', None)
-
-    def product_brand(self):
-        return self.puket_skus.get('udasProd').get('marca', None)
+        garment['retailer_sku'] = self.puket_skus['productId']
+        garment['care'] = self.product_care()
+        garment['skus'] = self.product_skus()
+        garment['brand'] = self.product_brand()
+        garment['gender'] = self.product_gender()
+        garment['trail'] = self.product_trail(response)
+        garment['url'] = self.product_url(response)
+        garment['lang'] = self.product_language(response)
+        garment['name'] = self.product_name(response)
+        garment['price'] = self.product_price(response)
+        garment['currency'] = self.product_currency(response)
+        garment['category'] = self.product_categories(response)
+        garment['image_urls'] = self.product_image_urls(response)
+        return garment
 
     def read_puket_skus(self, response):
         puket_skus_response = response.css('script[xml\:space="preserve"]::text').extract_first()
-        puket_skus_json = re.search("(?s)var\s+skuJson\s*=\s*(\{.*?\});", puket_skus_response)
-        puket_skus_json = puket_skus_json.group(1)
-        self.puket_skus = json.loads(puket_skus_json)
+        puket_skus_json = re.findall("(?s)var\s+skuJson\s*=\s*(\{.*?\});", puket_skus_response)
+        puket_skus_json = json.loads(puket_skus_json[0])
+        return puket_skus_json
 
     def product_trail(self, response):
         trail = []
@@ -75,23 +70,28 @@ class PuketSpider(CrawlSpider):
     def product_image_urls(self, response):
         return response.css('.list-thumbs a::attr(href)').extract()
 
-    def parse_product(self, response):
+    def product_skus(self):
+        skus = {}
+        for sku in self.puket_skus["skus"]:
+            sku_id = sku['sku']
+            skus[sku_id] = {
+                'price': sku['bestPrice'],
+                'previous_prices': sku['listPrice'],
+                'currency': sku['currency'],
+                'colour': sku['udas']['COR'],
+                'size': sku['udas']['TAMANHO']
+            }
+        return skus
 
-        garment = {}
+    def product_care(self):
+        care = self.puket_skus.get('udasProd').get('composicao', None)
+        if care:
+            cares = care.split('<br>')
+            care = list(filter(None, cares))
+        return care
 
-        self.read_puket_skus(response)
+    def product_gender(self):
+        return self.puket_skus.get('udasProd').get('google_gender', None)
 
-        garment['retailer_sku'] = self.puket_skus['productId']
-        garment['care'] = self.product_care()
-        garment['skus'] = self.product_skus()
-        garment['brand'] = self.product_brand()
-        garment['gender'] = self.product_gender()
-        garment['trail'] = self.product_trail(response)
-        garment['url'] = self.product_url(response)
-        garment['lang'] = self.product_language(response)
-        garment['name'] = self.product_name(response)
-        garment['price'] = self.product_price(response)
-        garment['currency'] = self.product_currency(response)
-        garment['category'] = self.product_categories(response)
-        garment['image_urls'] = self.product_image_urls(response)
-        return garment
+    def product_brand(self):
+        return self.puket_skus.get('udasProd').get('marca', None)
