@@ -225,11 +225,9 @@ class LindexCrawlSpider(BaseCrawlSpider, Mixin):
 
     def total_pages(self, response):
         css = ' ::attr(data-page-count)'
-
         return int(clean(response.css(css))[0])
 
     def category_id(self, response):
         css = ' ::attr(data-page-id)'
-
         return clean(response.css(css))[0]
 
