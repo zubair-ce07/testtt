@@ -23,6 +23,7 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.onInputChange = this.onInputChange.bind(this);
+        this.onVideoSelect = this.onVideoSelect.bind(this);
         this.state = {
             videos: [],
             selectedVideo: null,
@@ -35,19 +36,25 @@ class App extends Component {
         YTSearch({key: API_KEY, term: this.state.term}, (videos) => this.setState({videos: videos}));
     }
 
+    onVideoSelect(selectedVideo){
+        this.setState({selectedVideo: selectedVideo})
+    }
+
     render() {
         return (
             <div>
                 <div>
                     <SearchBar value={this.state.term} onChange={this.onInputChange}/>
                 </div>
+                {this.state.selectedVideo &&
                 <div>
                     <VideoComponent.VideoDetail video={ this.state.selectedVideo }/>
                 </div>
+                }
                 <div>
                     <VideoComponent.VideoList
                         videos={ this.state.videos }
-                        onSelect={(selectedVideo) => this.setState({selectedVideo: selectedVideo})}
+                        onSelect={ this.onVideoSelect }
                     />
                 </div>
             </div>

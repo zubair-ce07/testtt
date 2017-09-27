@@ -2,7 +2,7 @@ import React from 'react';
 
 
 function VideoListItem(props){
-    const video = props.video;
+    const { video } = props;
     const imageUrl = video.snippet.thumbnails.default.url;
     return (
         <li>
@@ -21,30 +21,20 @@ function VideoListItem(props){
 }
 
 function VideoList(props){
-    const Items = props.videos.map((video) => {
-        return (
-            <VideoListItem
-                onSelect={props.onSelect}
-                key={ video.id.videoId }
-                video={ video } />
-        );
-    });
-
     return (
         <ul>
-            {Items}
+            {props.videos.map((video) => { return (
+                    <VideoListItem onSelect={props.onSelect} key={ video.id.videoId } video={ video } />
+                );}
+            )}
         </ul>
     );
 
 }
 
 function VideoDetail(props){
-    const video = props.video;
-    if (!video) {
-        return null;
-    }
-    const videoId = video.id.videoId;
-    const video_url = "https://www.youtube.com/embed/" + videoId;
+    const { video } = props;
+    const video_url = "https://www.youtube.com/embed/" + video.id.videoId;
 
     return (
         <div>
