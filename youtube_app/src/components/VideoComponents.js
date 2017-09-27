@@ -33,12 +33,12 @@ function VideoList(props){
 
 function VideoDetail(props){
     const { video } = props;
-    const video_url = "https://www.youtube.com/embed/" + video.id.videoId;
+    const videoUrl = "https://www.youtube.com/embed/" + video.id.videoId;
 
     return (
         <div>
             <div>
-                <iframe src={ video_url } title={ video.snippet.title }></iframe>
+                <iframe src={ videoUrl } title={ video.snippet.title }></iframe>
             </div>
             <div>
                 <div>
