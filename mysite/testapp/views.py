@@ -2,15 +2,52 @@
 from __future__ import unicode_literals
 
 from django.http import JsonResponse
+from django.db.models import Q
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
 from .models import *
 from .serializers import *
 
-class UserListCreate(APIView):
+
+
+class CustomObtainAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        response = super(CustomObtainAuthToken, self).post(request, *args, **kwargs)
+        token = Token.objects.get(key=response.data['token'])
+        return Response({'token': token.key, 'id': token.user_id})
+
+class UserList(APIView):
+
+	authentication_classes = (TokenAuthentication,)
+	permission_classes = (IsAuthenticated,)
+
+	def get(self, request, format=None):
+		
+		user = request.user
+
+
+		users = User.objects.all().exclude(pk=user.id)
+ 
+		user_serializer = UserSerializer(users , many=True)
+		users_data = user_serializer.data
+
+		friends_ids = user.friends.all().values_list("user_id", flat=True)
+		print(friends_ids)
+		for u in users_data:
+			if u["id"] in friends_ids:
+				u["is_friend"] = True
+			else:
+				u["is_friend"] = False
+
+		return JsonResponse(users_data, safe=False)
+
+class UserCreate(APIView):
 
 	
 	"""
@@ -21,11 +58,6 @@ class UserListCreate(APIView):
 	#permission_classes = (IsAuthenticated,)
 	serializer_class = UserSerializer
 
-	def get(self, request, format=None):
-		
-		users = User.objects.all()
-		user_serializer = UserSerializer(users , many=True)
-		return JsonResponse(user_serializer.data, safe=False)
 
 	def post(self, request, format=None):
 		username = request.POST.get('username')
@@ -46,7 +78,7 @@ class UserListCreate(APIView):
 		return JsonResponse({"status": "Some Params are missing"}, safe=False)
 
 
-class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+class UserDetail(APIView):
 	
 	"""
 
@@ -56,8 +88,32 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 	authentication_classes = (TokenAuthentication,)
 	permission_classes = (IsAuthenticated,)
 
-	queryset = User.objects.all()
-	serializer_class = UserSerializer
+	def get(self, request, user_id, format=None):
+
+		user = request.user
+		if(user_id == "self"):
+			user_serializer = UserSerializer(user)
+			return JsonResponse(user_serializer.data,safe=False)
+
+		try:
+			user2 = User.objects.get(pk=user_id)
+		except:
+			return JsonResponse({"status_message": "User not found"}, 
+									status=status.HTTP_404_NOT_FOUND)
+
+		user_serializer = UserSerializer(user2)
+		user_data = user_serializer.data
+		
+		friends_ids = user.friends.all().values_list("user_id",flat=True)
+		
+		if user2.id in friends_ids:
+			user_data["is_friend"] = True
+		else:
+			user_data["is_friend"] = False
+
+		return JsonResponse(user_data,safe=False)
+
+
 
 
 class FriendList(APIView):
@@ -108,9 +164,47 @@ class FriendCreate(APIView):
 		except:
 			return JsonResponse({"status_message": "already friend"}, 
 								status=status.HTTP_200_OK)
+		user_serializer = UserSerializer(friend)
+		return JsonResponse({"user": user_serializer.data}, 
+							status=status.HTTP_200_OK)
 
-		return JsonResponse({"status_message": "Friends made"}, 
-									status=status.HTTP_200_OK)
+class UpdatePost(APIView):
+
+	"""
+	Updates a post.
+	"""
+
+	authentication_classes = (TokenAuthentication,)
+	permission_classes = (IsAuthenticated,)
+
+	def post(self, request, format=None):
+
+		user = request.user
+		print(request)
+
+		privacy = request.POST.get('privacy')
+		post_id = request.POST.get('post_id')
+
+		if privacy not in ("public","friends","only_me"):
+			return JsonResponse({"error": "privacy setting is invalid."},
+							status=status.HTTP_400_BAD_REQUEST,safe=False,)
+		
+
+		try:
+			post = Post.objects.get(pk=post_id)
+		except:
+			return JsonResponse({"status_message": "Post not found"}, 
+									status=status.HTTP_404_NOT_FOUND)
+
+
+		post.privacy = privacy
+		post.save()
+
+		post_serializer = PostSerializer(post)
+
+		return JsonResponse({post_id: post_serializer.data},safe=False)
+
+
 
 class PostListCreate(APIView):
 
@@ -127,37 +221,70 @@ class PostListCreate(APIView):
 		post_type = request.GET.get('post_type','all')
 		user = request.user
 		posts = []
+		friend_posts = []
+
+		friend_ids = user.friends.all().values_list('user_id', flat=True)
 
 		if post_type == 'all':
-			posts = Post.objects.filter(user=user)
+			posts = Post.objects.filter(Q(user=user) | Q(user__in=friend_ids, privacy__in=("public","friends"))).order_by("-posted_at")
 		elif post_type == 'audio':
-			posts = Post.objects.filter(user=user).instance_of(Audio)
+			posts = Post.objects.filter(Q(user=user) | Q(user__in=friend_ids, privacy__in=("public","friends"))).instance_of(Audio).order_by("-posted_at")
 		elif post_type == 'video':
-			posts = Post.objects.filter(user=user).instance_of(Video)
+			posts = Post.objects.filter(Q(user=user) | Q(user__in=friend_ids, privacy__in=("public","friends"))).instance_of(Video).order_by("-posted_at")
 		elif post_type == 'image':
-			posts = Post.objects.filter(user=user).instance_of(Image)
+			posts = Post.objects.filter(Q(user=user) | Q(user__in=friend_ids, privacy__in=("public","friends"))).instance_of(Image).order_by("-posted_at")
 
 		posts_count = posts.count()
 		post_serializer = PostSerializer(posts,many=True)
-		resp = {"posts": post_serializer.data , "posts_count": posts_count}
+		posts_data = post_serializer.data
+
+		user_like_post_ids = user.like_set.all().values_list('post_id',flat=True)
+		#user_post_ids = user.post_set.all().values_list("id",flat=True)
+
+		for post in posts_data:
+			if post["id"] in user_like_post_ids:
+				post["is_liked"] = True
+			else:
+				post["is_liked"] = False
+
+
+
+
+		resp = {"posts": posts_data , "posts_count": posts_count}
 		return JsonResponse(resp,safe=False)
+
+	
+
 
 	def post(self, request, format=None):
 
 		caption = request.POST.get('caption')
 		file_type = request.POST.get('file_type')
-		file = request.data['file']
+		file = request.FILES.get('file')
+		privacy = request.POST.get('privacy')
+		print("here")
+		if privacy not in ("public","friends","only_me"):
+			return JsonResponse({"error": "privacy setting is invalid."},
+							status=status.HTTP_400_BAD_REQUEST,safe=False,)
+
 		user = request.user
-
+		post = None
 		if file_type == 'audio':
-			Audio(caption=caption, user=user, audio_file=file).save()
+			post = Audio(caption=caption, user=user, audio_file=file, privacy=privacy)
+			post.save()
+			post = Post.objects.get(Q(Audio___id=post.id))
 		elif file_type == 'video':
-			Video(caption=caption, user=user, video_file=file).save()
+			post = Video(caption=caption, user=user, video_file=file, privacy=privacy)
+			post.save()
+			post = Post.objects.get(Q(Video___id=post.id))
 		elif file_type == 'image':
-			Image(caption=caption, user=user, image_file=file).save()
+			post = Image(caption=caption, user=user, image_file=file, privacy=privacy)
+			post.save()
+			post = Post.objects.get(Q(Image___id=post.id))
 
-		return JsonResponse({"status_message": "file saved"}, 
-									status=status.HTTP_200_OK)
+		post_serializer = PostSerializer(post)
+		return JsonResponse({"post": post_serializer.data}, 
+									safe=False)
 
 class CommentListCreate(APIView):
 
@@ -180,7 +307,9 @@ class CommentListCreate(APIView):
 		comments = post.comment_set.all()
 		comment_serializer = CommentSerializer(comments,many=True)
 
-		return JsonResponse(comment_serializer.data, safe=False, 
+		commentsByPost = {post_id: comment_serializer.data}
+
+		return JsonResponse(commentsByPost, safe=False, 
 										status=status.HTTP_200_OK)
 
 	def post(self, request, post_id, format=None):
@@ -198,7 +327,7 @@ class CommentListCreate(APIView):
 		comment.save()
 		comment_serializer = CommentSerializer(comment)
 
-		return JsonResponse(comment_serializer.data, safe=False, 
+		return JsonResponse({post_id: comment_serializer.data}, safe=False, 
 										status=status.HTTP_200_OK)
 
 class LikeListCreate(APIView):
@@ -222,7 +351,7 @@ class LikeListCreate(APIView):
 		likes = post.like_set.all()
 		like_serializer = LikeSerializer(likes,many=True)
 
-		return JsonResponse(like_serializer.data,safe=False, 
+		return JsonResponse({post_id: like_serializer.data},safe=False, 
 								status=status.HTTP_200_OK)
 
 	def post(self, request, post_id, format=None):
@@ -242,5 +371,5 @@ class LikeListCreate(APIView):
 																		 safe=False)
 		like_serializer = LikeSerializer(like)
 
-		return JsonResponse(like_serializer.data, safe=False, 
+		return JsonResponse({post_id: like_serializer.data}, safe=False, 
 										status=status.HTTP_200_OK)

@@ -6,7 +6,11 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserM
 from django.utils import timezone
 from polymorphic.models import PolymorphicModel
 
-
+PRIVACY_SETTINGS = (
+	('public', 'public'),
+	('friends', 'friends'),
+	('only_me', 'only_me')
+)
 # Create your models here.
 
 class User(AbstractBaseUser,PermissionsMixin):
@@ -19,7 +23,6 @@ class User(AbstractBaseUser,PermissionsMixin):
 	address = models.CharField(max_length=100)
 	email = models.CharField(max_length=30, unique=True)
 	password = models.CharField(max_length=150,blank=False)
-	token = models.CharField(max_length=100)
 
 	date_joined = models.DateTimeField(default=timezone.now)
 	is_active   = models.BooleanField(default=True)
@@ -59,6 +62,7 @@ class Post(PolymorphicModel):
 	caption = models.CharField(max_length=200)
 	posted_at = models.DateTimeField(auto_now_add=True, blank=True)
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
+	privacy = models.CharField(max_length=10, choices=PRIVACY_SETTINGS, default="public")
 
 	def __str__(self):
 		return str(self.id)

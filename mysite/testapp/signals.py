@@ -6,5 +6,11 @@ from rest_framework.authtoken.models import Token
 
 @receiver(post_save, sender=User)
 def generate_token(sender, instance, **kwargs):
-	if not instance.token:
+	token = None
+	try:
+		token = instance.auth_token.key
+	except:
+		pass
+		
+	if not token:
 		Token.objects.create(user=instance)
