@@ -66,7 +66,7 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
             sku['colour'], sku['size'] = colour_variant.split(', ')
 
             sku.update(
-                self.product_pricing_common_new(sku_s, money_strs=original_price))
+                self.product_pricing_common_new(sku_s, money_strs=original_price.copy()))
 
             skus[self.sku_key(sku_s)] = sku
 
