@@ -23,9 +23,8 @@ function VideoListItem(props){
 function VideoList(props){
     return (
         <ul>
-            {props.videos.map((video) => { return (
+            {props.videos.map((video) =>
                     <VideoListItem onSelect={props.onSelect} key={ video.id.videoId } video={ video } />
-                );}
             )}
         </ul>
     );
