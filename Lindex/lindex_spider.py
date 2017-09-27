@@ -22,7 +22,8 @@ class LindexParseSpider(BaseParseSpider, Mixin):
     price_css = '#ProductPage .price ::text'
 
     category_re = re.compile('(\s*›)')
-    size_re = re.compile('([0-9a-zA-Z]+).*')
+    size_re = re.compile('([0-9a-zA-Z/]+).*')
+    size_stock_re = re.compile('.*[-(](.*)')
 
     xml_tag_prefix = '{http://lindex.com/WebServices}'
     image_url_p = 'https://lindex-static.akamaized.net'
@@ -87,27 +88,20 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
         sizes = self.size_variants(xml_response)
         colour = self.product_colour(xml_response)
-        is_sold_out = self.color_stock_status(xml_response)
 
-        for size in sizes:
+        for size, out_of_stock in sizes:
             sku = {
                 'size': size if size != '0' else self.one_size,
                 'colour': colour
             }
 
-            if is_sold_out:
+            if out_of_stock:
                 sku['out_of_stock'] = True
 
             sku.update(pricing)
             skus[colour+'_'+size] = sku
 
         return skus
-
-    def color_stock_status(self, xml_response):
-        xpath = '{0}HasStock'.format(self.xml_tag_prefix)
-        colour_stock = xml_response.findall(xpath)
-
-        return 'true' in colour_stock[0].text
 
     def image_urls(self, xml_response):
         xpath = '{0}Images//{0}Image/{0}XLarge'.format(self.xml_tag_prefix)
@@ -126,10 +120,16 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         xpath = '{0}SizeInfo//{0}SizeInfo/{0}Text'.format(self.xml_tag_prefix)
 
         sizes_xml = xml_response.findall(xpath)
-        nested_sizes = [self.size_re.findall(size.text)
-                        for size in sizes_xml]
+        raw_sizes = [size.text for size in sizes_xml]
 
-        return sum(nested_sizes, [])
+        sizes = [self.size_and_stock(size)
+                 for size in raw_sizes[1:]]
+
+        return sizes
+
+    def size_and_stock(self, size):
+        return (self.size_re.findall(size)[0],
+                True if 'out of stock' in size else False)
 
     def product_colour_ids(self, response):
         css = '.product .colors ::attr(data-colorid)'
@@ -187,27 +187,32 @@ class LindexCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = LindexParseSpider()
 
-    listing_css = '.mainMenu'
-
-    pagination_css = '.aside.nav'
+    listing_css = ['.mainMenu', '.aside.nav']
 
     product_css = '.gridPage .img_wrapper .productCardLink'
 
     page_api_url = 'https://www.lindex.com/uk/SiteV3/Category/GetProductGridPage'
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
-        Rule(LinkExtractor(restrict_css=pagination_css), callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_pagination'),
     )
 
     def parse_pagination(self, response):
-        return self.paging_requests(response)
+        for request in self.parse(response):
+            yield request
+
+        for request in self.paging_requests(response):
+            yield request
 
     def paging_requests(self, response):
         requests = []
-        pages = self.total_pages(response)
-        category_id = self.category_id(response)
+
+        try:
+            pages = self.total_pages(response)
+            category_id = self.category_id(response)
+        except IndexError:
+            return requests
 
         form_data = {'nodeId': category_id}
 
