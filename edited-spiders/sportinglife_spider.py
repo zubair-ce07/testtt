@@ -28,12 +28,14 @@ class Mixin:
 
 class SportingLifeParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    price_css = '#priceDisplay span::text'
+    price_css = 'span::text'
 
     color_request_url_t = 'https://www.sportinglife.ca/json/sizePickerReloadResponse.jsp' \
                           '?productId={product_id}&colour={color}'
     image_url_t = 'https://www.sportinglife.ca/include/productDetailImage.jsp' \
                   '?prdId={product_id}&colour={color}'
+    price_url_t = 'https://www.sportinglife.ca/include/skuListingPriceDisplay.jsp' \
+                  '?skuId={sku_id}&productId={product_id}'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -46,7 +48,7 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = []
         garment['skus'] = {}
         garment['meta'] = {
-            'requests_queue': self.sku_requests(response) + self.image_requests(response),
+            'requests_queue': self.sku_requests(response) + self.image_requests(response)
         }
 
         return self.next_request_or_garment(garment)
@@ -54,6 +56,10 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
     def parse_skus(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
+
+        product_id = response.meta['garment']['retailer_sku']
+        garment['meta'].setdefault('requests_queue', [])
+        garment['meta']['requests_queue'] += self.price_requests(response, product_id)
 
         return self.next_request_or_garment(garment)
 
@@ -63,26 +69,65 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
+    def parse_price(self, response):
+        garment = response.meta['garment']
+        sku_id = response.meta['sku_id']
+        garment['skus'][sku_id].update(self.product_pricing_common_new(response))
+
+        return self.next_request_or_garment(garment)
+
+    def image_requests(self, response):
+        product_id = self.product_id(response)
+        colors = self.product_color(response)
+        return [Request(url=self.image_url_t.format(product_id=product_id, color=color), callback=self.parse_image)
+                for color in colors]
+
+    def sku_requests(self, response):
+        product_id = self.product_id(response)
+        color_requests = []
+        for color in self.product_color(response):
+            color_requests.append(Request(url=self.color_request_url_t.format(product_id=product_id, color=color),
+                                          callback=self.parse_skus,
+                                          meta={'color': color}))
+        return color_requests
+
+    def price_requests(self, response, product_id):
+        price_requests = []
+        raw_sizes = self.product_raw_size(response)
+        for raw_size in raw_sizes:
+            price_url = self.price_url_t.format(sku_id=raw_size['skuId'], product_id=product_id)
+            price_requests.append(Request(url=price_url,
+                                          callback=self.parse_price,
+                                          meta={'sku_id': raw_size['skuId']}))
+        return price_requests
+
     def skus(self, response):
         skus = {}
-        one_size = [{'size': self.one_size}]
-        raw_sku = json.loads(response.text)
-        for size in raw_sku.get('sizes', one_size):
-            sku = response.meta['pricing'].copy()
-            sku['size'] = size['size']
+        raw_sku = self.raw_sku(response)
+        color = response.meta['color']
+        for size in self.product_raw_size(response):
+            size_key = size['size']
+            sku = {'size': size_key}
 
-            if response.meta['color']:
-                sku['color'] = response.meta['color']
+            if color:
+                sku['color'] = color
 
             if self.out_of_stock(raw_sku, size):
                 sku['out_of_stock'] = True
 
-            sku_id = '{color}_{size}'.format(color=response.meta['color'], size=size['size'])
-            skus[sku_id] = sku
+            skus[size['skuId']] = sku
 
-        if 'out_of_stock' in response.meta['pricing']:
-            skus['out_of_stock'] = True
         return skus
+
+    def product_raw_size(self, response):
+        raw_sku = self.raw_sku(response)
+
+        if 'sizes' in raw_sku:
+            return raw_sku['sizes']
+        return [{'size': self.one_size, 'skuId': raw_sku['singleSku']['skuId']}]
+
+    def raw_sku(self, response):
+        return json.loads(response.text)
 
     def product_id(self, response):
         regex = '\"productID\": \"\d+\"|$'
@@ -102,26 +147,9 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
     def product_color(self, response):
         return clean(response.css('.swatches img::attr(title)')) or ['']
 
-    def image_requests(self, response):
-        product_id = self.product_id(response)
-        colors = self.product_color(response)
-        return [Request(url=self.image_url_t.format(product_id=product_id, color=color), callback=self.parse_image)
-                for color in colors]
-
     def image_urls(self, response, ):
         css = 'svg::attr(href)'
         return [response.urljoin(url) for url in clean(response.css(css))]
-
-    def sku_requests(self, response):
-        product_id = self.product_id(response)
-        color_requests = []
-        for color in self.product_color(response):
-            color_requests.append(Request(url=self.color_request_url_t.format(product_id=product_id, color=color),
-                                          callback=self.parse_skus,
-                                          meta={'pricing': self.pricing(response),
-                                                'color': color
-                                                }))
-        return color_requests
 
     def out_of_stock(self, raw_sku, raw_size):
         return not (raw_size.get('enabled') or raw_sku.get('singleSku', {'enabled': False})['enabled'])
@@ -151,12 +179,6 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
                 return gender
 
         return 'unisex-adults'
-
-    def pricing(self, response):
-        try:
-            return self.product_pricing_common_new(response)
-        except IndexError:
-            return {'out_of_stock': True}
 
 
 class SportingLifeCrawlSpider(BaseCrawlSpider, Mixin):
