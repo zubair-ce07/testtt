@@ -17,6 +17,8 @@ class Mixin:
     start_urls = [
         'https://www.dinos.co.jp/c2/002003/',
         'https://www.dinos.co.jp/c2/002009/',
+        'https://www.dinos.co.jp/c3/002003011/1a1/',
+        'https://www.dinos.co.jp/c3/002010003/1a1/',
         'https://www.dinos.co.jp/c4/002010025005/1a2/',
         'https://www.dinos.co.jp/c4/002010025009/1a2/',
         'https://www.dinos.co.jp/c4/002010025010/1a2/',
@@ -58,7 +60,38 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         ('002010025018', 'unisex-kids'),
     ]
 
-    brand_re = re.compile('(.*)/')
+    brands_map = [
+        ('ポロ・ラルフローレン', 'Polo · Ralph Lauren'),
+        ('miki HOUSE', 'MIKI HOUSE double B'),
+        ('miki HOUSE/ミキハウス ダブルB', 'MIKI HOUSE double B'),
+        ('ミキハウス ダブルB', 'MIKI HOUSE double B'),
+        ('Tom Chris', 'Tom Chris'),
+        ('ハロルル', 'hellolulu'),
+        ('hellolulu', 'hellolulu'),
+        ('インビクタ', 'INVISTA'),
+        ('ロゴス', 'LOGOS'),
+        ('LOGOS', 'LOGOS'),
+        ('adidas', 'Adidas'),
+        ('アディダス', 'Adidas'),
+        ('VARCO', 'VARCO'),
+        ('WATER ZERO', 'WATER ZERO'),
+        ('NEOPRO RED', 'NEOPRO RED'),
+        ('A. L. I & CORDURA®', 'A. L. I & CORDURA®'),
+        ('MIZUNO', 'MIZUNO'),
+        ('ミズノ', 'MIZUNO'),
+        ('MIZUNO', 'MIZUNO'),
+        ('ace', 'ace'),
+        ('Champion', 'Champion'),
+        ('PEANUTS・SNOOPY', 'PEANUTS・SNOOPY'),
+        ('BENETTON', 'BENETTON'),
+        ('REEBOK', 'REEBOK'),
+        ('Mizutori of Buddha', 'Mizutori of Buddha'),
+        ('Miki House DoubleB', 'Miki House DoubleB'),
+        ('レッシグ', 'Laessig'),
+        ('Laessig', 'Laessig')
+    ]
+
+    brand_re = re.compile('([［］/.])')
 
     price_css = '#itemD_mwControl .pMedium::text, .priceB::text'
     previous_price_re = re.compile('(¥.*)')
@@ -282,15 +315,21 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))[1:]
 
     def product_brand(self, response):
-        brand = self.brand_re.findall(self.raw_name(response))
+        raw_name = clean(self.raw_name(response))
 
-        return brand[0] if brand else 'Dinos'
+        for brand_key, brand in self.brands_map:
+            if brand_key in raw_name:
+                return brand
+
+        return 'Dinos'
 
     def product_name(self, response):
         raw_name = self.raw_name(response)
-        brand = self.product_brand(response)+'/'
 
-        return raw_name.replace(brand, '')
+        for brand_key, brand in self.brands_map:
+            raw_name = raw_name.replace(brand_key, '')
+
+        return self.brand_re.sub('', raw_name)
 
     def raw_description(self, response):
         xpath = '//*[contains(@id, "itemtable")]/tbody/tr[1]/td/text()'
