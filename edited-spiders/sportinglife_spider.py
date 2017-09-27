@@ -94,7 +94,7 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
     def price_requests(self, response, product_id):
         price_requests = []
         raw_sizes = self.product_raw_size(response)
-        for raw_size in raw_sizes:
+        for raw_size in raw_sizes or []:
             price_url = self.price_url_t.format(sku_id=raw_size['skuId'], product_id=product_id)
             price_requests.append(Request(url=price_url,
                                           callback=self.parse_price,
@@ -103,17 +103,13 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
         skus = {}
-        raw_sku = self.raw_sku(response)
         color = response.meta['color']
-        for size in self.product_raw_size(response):
+        for size in self.product_raw_size(response) or []:
             size_key = size['size']
             sku = {'size': size_key}
 
             if color:
                 sku['color'] = color
-
-            if self.out_of_stock(raw_sku, size):
-                sku['out_of_stock'] = True
 
             skus[size['skuId']] = sku
 
@@ -123,8 +119,10 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         raw_sku = self.raw_sku(response)
 
         if 'sizes' in raw_sku:
-            return raw_sku['sizes']
-        return [{'size': self.one_size, 'skuId': raw_sku['singleSku']['skuId']}]
+            return [raw_size for raw_size in raw_sku['sizes'] if raw_size['enabled']]
+
+        if raw_sku['singleSku']['enabled']:
+            return [{'size': self.one_size, 'skuId': raw_sku['singleSku']['skuId']}]
 
     def raw_sku(self, response):
         return json.loads(response.text)
