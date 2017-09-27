@@ -77,8 +77,10 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def product_gender(self, response):
-        raw_gender = self.raw_gender(response) + self.raw_name(response)
-        raw_gender = raw_gender.lower()
+        xpath = '//*[contains(text(), "Gender")]/following-sibling::td/text()'
+
+        raw_gender = clean(response.xpath(xpath)) + [self.raw_name(response)]
+        raw_gender = ' '.join(raw_gender).lower()
 
         for gender_key, gender in self.gender_map:
             if gender_key in raw_gender:
@@ -86,15 +88,10 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
         return 'unisex-adults'
 
-    def raw_gender(self, response):
-        xpath = '//*[contains(text(), "Gender")]/following-sibling::td/text()'
-        return clean(response.xpath(xpath))[0]
-
     def image_urls(self, response):
         css = '.alt-color-img-box img::attr(src)'
 
-        return [self.image_re.sub('?$product1000$', img)
-                for img in clean(response.css(css))]
+        return [self.image_re.sub('?$product1000$', img) for img in clean(response.css(css))]
 
     def product_id(self, response):
         css = '#adwordsProdId::attr(value)'
@@ -118,16 +115,19 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
         return clean(raw_name.replace(brand, ''))
 
+    def raw_description(self, response):
+        css = '.pdp-specifications tr'
+        return [' '.join(clean(row_s.css(' ::text'))) for row_s in response.css(css)]
+
     def product_description(self, response):
         css = '[itemprop="description"] p::text'
-        return clean(response.css(css))
+        description = clean(response.css(css))
+        description += [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
+
+        return description
 
     def product_care(self, response):
-        css = '.pdp-specifications td::text'
-        raw_care = clean(response.css(css))
-
-        return [rc for rc in raw_care
-                if self.care_criteria_simplified(rc)]
+        return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
     def sku_key(self, raw_sku_s):
         css = '[itemprop="sku"]::attr(content)'
