@@ -55,13 +55,15 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
         skus = {}
         raw_skus_s = response.css('[itemprop="offers"]')
 
+        sku_variants_css = '[itemprop="color"]::attr(content)'
+
         original_price = self.original_price(response)
 
         for sku_s in raw_skus_s:
-            sku = {
-                'size': self.colour_variant(sku_s)[1],
-                'colour': self.colour_variant(sku_s)[0],
-            }
+            sku = {}
+
+            colour_variant = clean(sku_s.css(sku_variants_css))[0]
+            sku['colour'], sku['size'] = colour_variant.split(', ')
 
             sku.update(
                 self.product_pricing_common_new(sku_s, money_strs=original_price))
@@ -69,12 +71,6 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
             skus[self.sku_key(sku_s)] = sku
 
         return skus
-
-    def colour_variant(self, raw_sku_s):
-        css = '[itemprop="color"]::attr(content)'
-        colour_variant = clean(raw_sku_s.css(css))[0]
-
-        return colour_variant.split(', ')
 
     def original_price(self, response):
         css = '#adwordsTotalValue::attr(value)'
