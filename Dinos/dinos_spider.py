@@ -329,7 +329,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         for brand_key, brand in self.brands_map:
             raw_name = raw_name.replace(brand_key, '')
 
-        return self.brand_re.sub('', raw_name)
+        return clean(self.brand_re.sub('', raw_name))
 
     def raw_description(self, response):
         xpath = '//*[contains(@id, "itemtable")]/tbody/tr[1]/td/text()'
