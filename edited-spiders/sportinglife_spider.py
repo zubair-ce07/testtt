@@ -48,7 +48,8 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = []
         garment['skus'] = {}
         garment['meta'] = {
-            'requests_queue': self.sku_requests(response) + self.image_requests(response)
+            'requests_queue': self.sku_requests(response) + self.image_requests(response),
+            'pricing': self.product_pricing(response)
         }
 
         return self.next_request_or_garment(garment)
@@ -60,6 +61,10 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         product_id = response.meta['garment']['retailer_sku']
         garment['meta'].setdefault('requests_queue', [])
         garment['meta']['requests_queue'] += self.price_requests(response, product_id)
+
+        if self.out_of_stock(garment):
+            garment['out_of_stock'] = True
+            garment.update(garment['meta']['pricing'])
 
         return self.next_request_or_garment(garment)
 
@@ -94,7 +99,7 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
     def price_requests(self, response, product_id):
         price_requests = []
         raw_sizes = self.product_raw_size(response)
-        for raw_size in raw_sizes or []:
+        for raw_size in raw_sizes:
             price_url = self.price_url_t.format(sku_id=raw_size['skuId'], product_id=product_id)
             price_requests.append(Request(url=price_url,
                                           callback=self.parse_price,
@@ -104,7 +109,7 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
         color = response.meta['color']
-        for size in self.product_raw_size(response) or []:
+        for size in self.product_raw_size(response):
             size_key = size['size']
             sku = {'size': size_key}
 
@@ -116,16 +121,13 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def product_raw_size(self, response):
-        raw_sku = self.raw_sku(response)
+        raw_sku = json.loads(response.text)
 
         if 'sizes' in raw_sku:
             return [raw_size for raw_size in raw_sku['sizes'] if raw_size['enabled']]
-
         if raw_sku['singleSku']['enabled']:
             return [{'size': self.one_size, 'skuId': raw_sku['singleSku']['skuId']}]
-
-    def raw_sku(self, response):
-        return json.loads(response.text)
+        return []
 
     def product_id(self, response):
         regex = '\"productID\": \"\d+\"|$'
@@ -149,8 +151,8 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
         css = 'svg::attr(href)'
         return [response.urljoin(url) for url in clean(response.css(css))]
 
-    def out_of_stock(self, raw_sku, raw_size):
-        return not (raw_size.get('enabled') or raw_sku.get('singleSku', {'enabled': False})['enabled'])
+    def out_of_stock(self, garment):
+        return not garment['meta'].get('requests_queue') and not garment['skus']
 
     def raw_description(self, response):
         return clean(response.css('#tabs-details ::text'))
@@ -177,6 +179,14 @@ class SportingLifeParseSpider(BaseParseSpider, Mixin):
                 return gender
 
         return 'unisex-adults'
+
+    def product_pricing(self, response):
+        css = '#priceDisplay span::text'
+        try:
+            return self.product_pricing_common_new(response=None,
+                                                   money_strs=clean(response.css(css)))
+        except:
+            return {}
 
 
 class SportingLifeCrawlSpider(BaseCrawlSpider, Mixin):
