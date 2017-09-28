@@ -24,7 +24,7 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     image_re = re.compile('\?(.*)')
-    previous_prices_re = re.compile(':(\d+):[$\d.]+:(\$[.\d]+):')
+    previous_prices_re = re.compile(':(\d+):\$[\d.]+:(\$[.\d]+):')
 
     price_css = '[itemprop="price"]::attr(content),' \
                 '[itemprop="priceCurrency"]::attr(content)'
@@ -58,7 +58,7 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
         sku_variants_css = '[itemprop="color"]::attr(content)'
 
-        skus_previous_price = self.skus_previous_price(response)
+        skus_previous_price = self.previous_price_map(response)
 
         for sku_s in raw_skus_s:
             sku = {}
@@ -75,7 +75,7 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
         return skus
 
-    def skus_previous_price(self, response):
+    def previous_price_map(self, response):
         xpath = '//script[contains(text(), "itemPriceSku")]/text()'
         price_script_text = clean(response.xpath(xpath))[0]
 
