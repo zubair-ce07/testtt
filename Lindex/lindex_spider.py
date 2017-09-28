@@ -71,7 +71,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
         colour_ids = self.product_colour_ids(response)
 
-        for colour_id in colour_ids:
+        for colour_id in colour_ids or ['0']:
             form_data['colorId'] = colour_id
 
             requests += [FormRequest(
@@ -179,7 +179,7 @@ class LindexCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = LindexParseSpider()
 
-    download_delay = 0.6
+    download_delay = 5
     custom_settings = {'CONCURRENT_REQUESTS': 2}
 
     listing_css = ['.mainMenu', '.aside.nav']
