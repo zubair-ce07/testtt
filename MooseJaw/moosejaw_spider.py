@@ -24,16 +24,17 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     image_re = re.compile('\?(.*)')
+    previous_prices_re = '{sku_id}:.*:(\$[.\d]+):'
 
     price_css = '[itemprop="price"]::attr(content),' \
                 '[itemprop="priceCurrency"]::attr(content)'
 
     gender_map = [
-        ('baby', 'unisex-children'),
-        ('mens', 'men'),
         ('womens', 'women'),
+        ('mens', 'men'),
         ('boys', 'boys'),
         ('girls', 'girls'),
+        ('baby', 'unisex-children'),
     ]
 
     def parse(self, response):
@@ -57,24 +58,26 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
 
         sku_variants_css = '[itemprop="color"]::attr(content)'
 
-        original_price = self.original_price(response)
+        product_prices = self.previous_prices(response)
 
         for sku_s in raw_skus_s:
             sku = {}
+            sku_key = self.sku_key(sku_s)
+
+            sku_prices = self.sku_previous_prices(product_prices, sku_key)
 
             colour_variant = clean(sku_s.css(sku_variants_css))[0]
             sku['colour'], sku['size'] = colour_variant.split(', ')
 
-            sku.update(
-                self.product_pricing_common_new(sku_s, money_strs=original_price.copy()))
+            sku.update(self.product_pricing_common_new(sku_s, money_strs=sku_prices))
 
-            skus[self.sku_key(sku_s)] = sku
+            skus[sku_key] = sku
 
         return skus
 
-    def original_price(self, response):
-        css = '#adwordsTotalValue::attr(value)'
-        return clean(response.css(css))
+    def previous_prices(self, response):
+        xpath = '//script[contains(text(), "itemPriceSku")]/text()'
+        return clean(response.xpath(xpath))[0]
 
     def product_gender(self, response):
         xpath = '//*[contains(text(), "Gender")]/following-sibling::td/text()'
@@ -132,6 +135,12 @@ class MooseJawParseSpider(BaseParseSpider, Mixin):
     def sku_key(self, raw_sku_s):
         css = '[itemprop="sku"]::attr(content)'
         return clean(raw_sku_s.css(css))[0]
+
+    def sku_previous_prices(self, sku_prices, sku_key):
+        price_re = re.compile(self.previous_prices_re.format(sku_id=sku_key))
+        price = price_re.findall(sku_prices)
+
+        return price
 
 
 class MooseJawCrawlSpider(BaseCrawlSpider, Mixin):
