@@ -44,11 +44,9 @@ class BooksApp extends React.Component {
     }
 
     searchBook(event){
-        console.log(event.target.value);
         BooksAPI.search(event.target.value, 20).then(searchResults => {
             this.setState({searchResults})
         });
-        console.log(this.state.searchResults)
     }
 
     listBooks = () => (
