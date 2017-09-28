@@ -73,6 +73,7 @@ const mapDispatchToProps = (dispatch) => {
 	        })
 	        .catch(function(error){
 	            console.log(error)
+	            alert("Post not created.")
 	        })
 
 	        caption.value = ''
