@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-function VideoListItem(props){
+export function VideoListItem(props){
     const { video } = props;
     const imageUrl = video.snippet.thumbnails.default.url;
     return (
@@ -20,7 +20,7 @@ function VideoListItem(props){
     );
 }
 
-function VideoList(props){
+export function VideoList(props){
     return (
         <ul>
             {props.videos.map((video) =>
@@ -31,7 +31,7 @@ function VideoList(props){
 
 }
 
-function VideoDetail(props){
+export function VideoDetail(props){
     const { video } = props;
     const videoUrl = "https://www.youtube.com/embed/" + video.id.videoId;
 
@@ -56,8 +56,5 @@ function VideoDetail(props){
     );
 }
 
-export { VideoDetail };
-export { VideoList };
-export { VideoListItem };
 
 
