@@ -23,7 +23,6 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 
     category_re = re.compile('(\s*›)')
     size_re = re.compile('([0-9a-zA-Z/]+).*')
-    size_stock_re = re.compile('.*[-(](.*)')
 
     xml_tag_prefix = '{http://lindex.com/WebServices}'
     image_url_p = 'https://lindex-static.akamaized.net'
@@ -107,8 +106,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         xpath = '{0}Images//{0}Image/{0}XLarge'.format(self.xml_tag_prefix)
         image_urls = xml_response.findall(xpath)
 
-        return [urljoin(self.image_url_p, img.text)
-                for img in image_urls]
+        return [urljoin(self.image_url_p, img.text) for img in image_urls]
 
     def product_colour(self, xml_response):
         xpath = '{0}Color'.format(self.xml_tag_prefix)
@@ -122,14 +120,12 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         sizes_xml = xml_response.findall(xpath)
         raw_sizes = [size.text for size in sizes_xml]
 
-        sizes = [self.size_and_stock(size)
-                 for size in raw_sizes[1:]]
+        sizes = [self.size_and_stock(size) for size in raw_sizes[1:]]
 
         return sizes
 
     def size_and_stock(self, size):
-        return (self.size_re.findall(size)[0],
-                True if 'out of stock' in size else False)
+        return self.size_re.findall(size)[0], True if 'out of stock' in size else False
 
     def product_colour_ids(self, response):
         css = '.product .colors ::attr(data-colorid)'
@@ -140,8 +136,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))[0]
 
     def product_brand(self, response):
-        css = '#ProductPage ' \
-              '::attr(data-product-brand)'
+        css = '#ProductPage ::attr(data-product-brand)'
         return clean(response.css(css))[0]
 
     def product_gender(self, response):
@@ -156,8 +151,7 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         css = '#breadcrumbs ::text'
         category = clean(response.css(css))[1:]
 
-        category = [self.category_re.sub('', cat)
-                    for cat in category]
+        category = [self.category_re.sub('', cat) for cat in category]
 
         return clean(category)
 
@@ -170,15 +164,13 @@ class LindexParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def product_description(self, response):
-        return [rd for rd in self.raw_description(response)
-                if not self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
         css = '.more_info ::text'
         care = clean(response.css(css))
 
-        care += [rd for rd in self.raw_description(response)
-                 if self.care_criteria_simplified(rd)]
+        care += [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
         return care
 
@@ -186,6 +178,9 @@ class LindexParseSpider(BaseParseSpider, Mixin):
 class LindexCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = LindexParseSpider()
+
+    download_delay = 0.6
+    custom_settings = {'CONCURRENT_REQUESTS': 2}
 
     listing_css = ['.mainMenu', '.aside.nav']
 
@@ -199,8 +194,7 @@ class LindexCrawlSpider(BaseCrawlSpider, Mixin):
     )
 
     def parse_pagination(self, response):
-        for request in self.parse(response):
-            yield request
+        yield from self.parse(response)
 
         for request in self.paging_requests(response):
             yield request
@@ -208,26 +202,27 @@ class LindexCrawlSpider(BaseCrawlSpider, Mixin):
     def paging_requests(self, response):
         requests = []
 
-        try:
-            pages = self.total_pages(response)
-            category_id = self.category_id(response)
-        except IndexError:
-            return requests
+        pages = self.total_pages(response)
+        category_id = self.category_id(response)
 
         form_data = {'nodeId': category_id}
 
         for page in range(1, pages):
             form_data['pageIndex'] = str(page)
 
-            requests += [FormRequest(url=self.page_api_url,
-                                     formdata=form_data)]
+            requests += [FormRequest(url=self.page_api_url, formdata=form_data)]
+
         return requests
 
     def total_pages(self, response):
         css = ' ::attr(data-page-count)'
-        return int(clean(response.css(css))[0])
+        total_pages = clean(response.css(css))
+
+        return int(total_pages[0]) if total_pages else 0
 
     def category_id(self, response):
         css = ' ::attr(data-page-id)'
-        return clean(response.css(css))[0]
+        category = clean(response.css(css))
+
+        return category[0] if category else ''
 
