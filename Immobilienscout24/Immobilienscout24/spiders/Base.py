@@ -1,7 +1,7 @@
 class BaseClass:
-    cities_mini = ["Aachen",  "Berlin",  "Bonn", "Zwickau"]
+    cities = ["Aachen", "Berlin", "Bonn", "Zwickau"]
 
-    cities = ["Aachen", "Amberg (Bayern)", "Amberg (Bayern)", "Ansbach", "Aschaffenburg", "Augsburg", "Baden-Baden",
+    cities_full = ["Aachen", "Amberg (Bayern)", "Amberg (Bayern)", "Ansbach", "Aschaffenburg", "Augsburg", "Baden-Baden",
               "Bamberg", "Bayreuth", "Berlin", "Bielefeld", "Bochum", "Bonn", "Bottrop", "Brandenburg an der Havel",
               "Brandenburg an der Havel", "Brandenburg an der Havel", "Brandenburg an der Havel", "Braunschweig",
               "Bremen", "Bremerhaven", "Chemnitz", "Coburg", "Cottbus", "Darmstadt", "Delmenhorst",
@@ -48,10 +48,11 @@ class BaseClass:
         "TRADE_SITE_RENT",
         "GARAGE_RENT",
         "ASSISTED_LIVING",
-        "SENIOR_CARE",
+        "SENIOR_CARE"
     ]
 
     rent_types = [
+        "SHORT_TERM_ACCOMMODATION",
         "APARTMENT_RENT",
-        "HOUSE_RENT",
-         ]
+        "HOUSE_RENT"
+    ]
