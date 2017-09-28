@@ -262,29 +262,28 @@ class PostListCreate(APIView):
 		file_type = request.POST.get('file_type')
 		file = request.FILES.get('file')
 		privacy = request.POST.get('privacy')
-		print("here")
-		if privacy not in ("public","friends","only_me"):
-			return JsonResponse({"error": "privacy setting is invalid."},
-							status=status.HTTP_400_BAD_REQUEST,safe=False,)
+		
+		if caption and file_type and file:
+			user = request.user
+			post = None
+			if file_type == 'audio':
+				post = Audio(caption=caption, user=user, audio_file=file, privacy=privacy)
+				post.save()
+				post = Post.objects.get(Q(Audio___id=post.id))
+			elif file_type == 'video':
+				post = Video(caption=caption, user=user, video_file=file, privacy=privacy)
+				post.save()
+				post = Post.objects.get(Q(Video___id=post.id))
+			elif file_type == 'image':
+				post = Image(caption=caption, user=user, image_file=file, privacy=privacy)
+				post.save()
+				post = Post.objects.get(Q(Image___id=post.id))
 
-		user = request.user
-		post = None
-		if file_type == 'audio':
-			post = Audio(caption=caption, user=user, audio_file=file, privacy=privacy)
-			post.save()
-			post = Post.objects.get(Q(Audio___id=post.id))
-		elif file_type == 'video':
-			post = Video(caption=caption, user=user, video_file=file, privacy=privacy)
-			post.save()
-			post = Post.objects.get(Q(Video___id=post.id))
-		elif file_type == 'image':
-			post = Image(caption=caption, user=user, image_file=file, privacy=privacy)
-			post.save()
-			post = Post.objects.get(Q(Image___id=post.id))
-
-		post_serializer = PostSerializer(post)
-		return JsonResponse({"post": post_serializer.data}, 
-									safe=False)
+			post_serializer = PostSerializer(post)
+			return JsonResponse({"post": post_serializer.data}, 
+										safe=False)
+		return JsonResponse({"status_message": "Some Parameters are missing"},
+							status=status.HTTP_400_BAD_REQUEST)
 
 class CommentListCreate(APIView):
 
