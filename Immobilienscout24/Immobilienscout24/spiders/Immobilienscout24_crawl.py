@@ -3,6 +3,7 @@ import copy
 import datetime
 import json
 import re
+import string
 
 import scrapy
 from scrapy.http import FormRequest, Request
@@ -100,9 +101,8 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
                                   meta={'item': item}, headers=self.headers)
 
     def parse_property(self, response):
-
-        item = response.meta["item"]
-
+        # item = response.meta["item"]
+        item = Immobilienscout24Item()
         item["url"] = response.url
         item['crawl_datetime'] = datetime.datetime.utcnow()
 
@@ -123,10 +123,11 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
         css = 'script:contains("projectData")::text'
         agent_info_json = response.css(css).re_first(self.agent_ingo_typ2_re)
         if agent_info_json:
-            agent_info_json = agent_info_json.replace('\\"','\"')
+            agent_info_json = agent_info_json.replace('\\"', '\"')
+
             agent_info_json = json.loads(agent_info_json)
 
-        agent["phoneNumbers"] = self.agent_contact_number(response,agent_info_json)
+        agent["phoneNumbers"] = self.agent_contact_number(response, agent_info_json)
         agent['realtorInformation'] = self.agent_company_info(response, agent_info_json)
 
         return agent
@@ -152,3 +153,7 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
             company_info['realtorHomepage'] = response.css('.homepage-url ::attr(href)').extract_first()
 
         return company_info
+
+    def remove_non_ascii_characters(self, to_remove):
+        to_remove = [c for c in to_remove if c in string.printable]
+        return "".join(to_remove)
