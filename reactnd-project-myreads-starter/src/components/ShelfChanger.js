@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types'
 
 function ShelfChanger(props) {
 
@@ -15,4 +16,10 @@ function ShelfChanger(props) {
     );
 
 }
+
+ShelfChanger.PropTypes = {
+    onShelfChange: PropTypes.func,
+    value: PropTypes.string
+};
+
 export default ShelfChanger;

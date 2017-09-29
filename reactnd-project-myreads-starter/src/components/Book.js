@@ -1,5 +1,6 @@
 import React from 'react';
 import ShelfChanger from './ShelfChanger.js'
+import PropTypes from 'prop-types'
 
 function Book(props){
     const {book} = props;
@@ -14,5 +15,9 @@ function Book(props){
             <div className="book-authors">{ book.authors }</div>
         </div>
     )}
+
+Book.PropTypes = {
+  book: PropTypes.object
+};
 
 export default Book;

@@ -1,5 +1,6 @@
 import React from 'react';
 import Book from './Book'
+import PropTypes from 'prop-types'
 
 function BookShelf(props){
     return(
@@ -15,5 +16,10 @@ function BookShelf(props){
         </div>
 
     )}
+
+BookShelf.PropTypes = {
+    books: PropTypes.array,
+    onShelfChange: PropTypes.func
+};
 
 export default BookShelf;
