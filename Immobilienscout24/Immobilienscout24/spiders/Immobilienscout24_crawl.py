@@ -3,7 +3,6 @@ import copy
 import datetime
 import json
 import re
-import string
 
 import scrapy
 from scrapy.http import FormRequest, Request
@@ -22,7 +21,15 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
     location_url_t = "https://www.immobilienscout24.de/geoautocomplete/v3/locations.json?i={}"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     agent_info_re = re.compile(r'contactData: *(\{.*\}),')
-    agent_ingo_typ2_re = re.compile(r'JSON\.parse\(\'(\{.*\}?)\'\)')
+    agent_info_typ2_re = re.compile(r'JSON\.parse\(\'(\{.*\}?)\'\)')
+    listing_re = re.compile(r'onTopProduct\s*:\s*\'(\w+)\',')
+
+    listing_map = {
+        'XL': 'XL',
+        'L': 'L',
+        'M': 'M',
+        '': 'Basic'
+    }
 
     def parse(self, response):
         for city in self.cities:
@@ -74,7 +81,7 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
         body = copy.deepcopy(response.meta["body"])
         result_count_res = json.loads(response.text)
         if not result_count_res["error"]:
-            item["property_count"] = result_count_res["count"]
+            item["property_count_in_city"] = result_count_res["count"]
 
             yield FormRequest(url=self.property_listing_url, method="POST", callback=self.parse_property_redirect_url,
                               headers=self.headers, meta={'item': item}, formdata=body)
@@ -89,6 +96,7 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
 
     def parse_property_listing(self, response):
         item = response.meta["item"]
+
         items_extractor = LinkExtractor(restrict_css=".result-list__listing", deny="Suche")
 
         for link in items_extractor.extract_links(response):
@@ -101,17 +109,35 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
                                   meta={'item': item}, headers=self.headers)
 
     def parse_property(self, response):
-        # item = response.meta["item"]
-        item = Immobilienscout24Item()
+        item = response.meta["item"]
         item["url"] = response.url
         item['crawl_datetime'] = datetime.datetime.utcnow()
+        item['property_name'] = self.property_name(response)
+        item['property_address'] = self.property_address(response)
+        item['category'] = self.item_category(response)
+        item['type_of_listing'] = self.item_property_listing_type(response)
 
         css = 'script:contains("contactData")::text'
         product = response.css(css).re_first(self.agent_info_re)
 
         if product:
             product = json.loads(product)
+            if product.get('realtorInformation').get('realtorHomepage'):
+                product['realtorInformation']['Homepage'] = product['realtorInformation']['realtorHomepage']
+
+            del product['realtorInformation']['privateOffer']
+
+            if product.get('realtorInformation').get('realtorLogo'):
+                del product['realtorInformation']['realtorLogo']
+
+            if product.get('realtorInformation').get('realtorHomepage'):
+                del product['realtorInformation']['realtorHomepage']
+
             del product['contactButton']
+
+            product['companyInformation'] = product['realtorInformation']
+
+            del product['realtorInformation']
             item['agent'] = product
         else:
             item['agent'] = self.item_agent(response)
@@ -121,14 +147,14 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
     def item_agent(self, response):
         agent = dict()
         css = 'script:contains("projectData")::text'
-        agent_info_json = response.css(css).re_first(self.agent_ingo_typ2_re)
+        agent_info_json = response.css(css).re_first(self.agent_info_typ2_re)
         if agent_info_json:
             agent_info_json = agent_info_json.replace('\\"', '\"')
 
             agent_info_json = json.loads(agent_info_json)
 
         agent["phoneNumbers"] = self.agent_contact_number(response, agent_info_json)
-        agent['realtorInformation'] = self.agent_company_info(response, agent_info_json)
+        agent['companyInformation'] = self.agent_company_info(response, agent_info_json)
 
         return agent
 
@@ -150,10 +176,29 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
             company_info['companyName'] = response.css('h2.grid-item ::text').extract_first()
         else:
             company_info['companyName'] = response.css('.homepage-url ::text').extract_first()
-            company_info['realtorHomepage'] = response.css('.homepage-url ::attr(href)').extract_first()
+            company_info['Homepage'] = response.css('.homepage-url ::attr(href)').extract_first()
 
         return company_info
 
-    def remove_non_ascii_characters(self, to_remove):
-        to_remove = [c for c in to_remove if c in string.printable]
-        return "".join(to_remove)
+    def property_name(self, response):
+        css = '[property="og:title"] ::attr(content)'
+        return response.css(css).extract_first()
+
+    def property_address(self, response):
+        address = dict()
+        address['address'] = response.css('#expose-title ::text').extract_first()
+        address['zipcode'] = response.css('.zip-region-and-country ::text').extract_first()
+
+        return address
+
+    def item_category(self, response):
+        css = '.is24-linklist ::text, .breadcrumb__link ::text'
+        return self.clean(response.css(css).extract())
+
+    def item_property_listing_type(self, response):
+        css = 'script:contains("onTopProduct")::text'
+        listing_type = response.css(css).re_first(self.listing_re)
+        if not listing_type:
+            listing_type = ''
+
+        return self.listing_map[listing_type]
