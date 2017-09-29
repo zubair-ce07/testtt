@@ -1,22 +1,26 @@
 class BaseClass:
-    cities = ["Aachen", "Berlin", "Bonn", "Zwickau"]
-
-    cities_full = ["Aachen", "Amberg (Bayern)", "Amberg (Bayern)", "Ansbach", "Aschaffenburg", "Augsburg", "Baden-Baden",
-              "Bamberg", "Bayreuth", "Berlin", "Bielefeld", "Bochum", "Bonn", "Bottrop", "Brandenburg an der Havel",
+    cities = ["Aachen", "Amberg (Bayern)", "Amberg (Bayern)", "Ansbach", "Aschaffenburg", "Augsburg",
+              "Baden-Baden",
+              "Bamberg", "Bayreuth", "Berlin", "Bielefeld", "Bochum", "Bonn", "Bottrop",
+              "Brandenburg an der Havel",
               "Brandenburg an der Havel", "Brandenburg an der Havel", "Brandenburg an der Havel", "Braunschweig",
               "Bremen", "Bremerhaven", "Chemnitz", "Coburg", "Cottbus", "Darmstadt", "Delmenhorst",
               "Dessau-Ro\u00dflau", "Dessau-Ro\u00dflau", "Dortmund", "Dresden", "Duisburg", "D\u00fcsseldorf",
               "Eisenach (Th\u00fcringen)", "Eisenach (Th\u00fcringen)", "Emden (Niedersachsen)",
               "Emden (Niedersachsen)", "Erfurt", "Erlangen", "Essen", "Flensburg", "Frankenthal (Pfalz)",
-              "Frankenthal (Pfalz)", "Frankfurt (Oder)", "Frankfurt (Oder)", "Frankfurt am Main", "Frankfurt am Main",
+              "Frankenthal (Pfalz)", "Frankfurt (Oder)", "Frankfurt (Oder)", "Frankfurt am Main",
+              "Frankfurt am Main",
               "Frankfurt am Main", "Freiburg im Breisgau", "Freiburg im Breisgau", "Freiburg im Breisgau",
               "F\u00fcrth (Bayern)", "F\u00fcrth (Bayern)", "Gelsenkirchen", "Gera", "Greifswald", "G\u00f6rlitz",
               "Hagen (Nordrhein-Westfalen)", "Hagen (Nordrhein-Westfalen)", "Hagen (Nordrhein-Westfalen)",
-              "Halle (Saale)", "Halle (Saale)", "Hamburg", "Hamm (Nordrhein-Westfalen)", "Hamm (Nordrhein-Westfalen)",
+              "Halle (Saale)", "Halle (Saale)", "Hamburg", "Hamm (Nordrhein-Westfalen)",
+              "Hamm (Nordrhein-Westfalen)",
               "Hamm (Nordrhein-Westfalen)", "Hannover", "Heidelberg", "Heilbronn", "Herne", "Hof (Bayern)",
               "Hof (Bayern)", "Hoyerswerda", "Ingolstadt", "Jena", "Kaiserslautern", "Karlsruhe", "Kassel",
-              "Kaufbeuren", "Kempten (Allg\u00e4u)", "Kempten (Allg\u00e4u)", "Kiel", "Koblenz", "Krefeld", "K\u00f6ln",
-              "Landau in der Pfalz", "Landau in der Pfalz", "Landau in der Pfalz", "Landau in der Pfalz", "Landshut",
+              "Kaufbeuren", "Kempten (Allg\u00e4u)", "Kempten (Allg\u00e4u)", "Kiel", "Koblenz", "Krefeld",
+              "K\u00f6ln",
+              "Landau in der Pfalz", "Landau in der Pfalz", "Landau in der Pfalz", "Landau in der Pfalz",
+              "Landshut",
               "Leipzig", "Leverkusen", "Ludwigshafen am Rhein", "Ludwigshafen am Rhein", "Ludwigshafen am Rhein",
               "L\u00fcbeck", "Magdeburg", "Mainz", "Mannheim", "Memmingen", "M\u00f6nchengladbach",
               "M\u00fclheim an der Ruhr", "M\u00fclheim an der Ruhr", "M\u00fclheim an der Ruhr",
@@ -29,12 +33,13 @@ class BaseClass:
               "Oldenburg (Oldenburg)", "Osnabr\u00fcck", "Passau", "Pforzheim", "Pirmasens", "Plauen", "Potsdam",
               "Regensburg", "Remscheid", "Rosenheim", "Rostock", "Salzgitter", "Schwabach", "Schweinfurt",
               "Schwerin (Mecklenburg-Vorpommern)", "Schwerin (Mecklenburg-Vorpommern)",
-              "Schwerin (Mecklenburg-Vorpommern)", "Solingen", "Speyer", "Stralsund", "Straubing", "Stuttgart", "Suhl",
+              "Schwerin (Mecklenburg-Vorpommern)", "Solingen", "Speyer", "Stralsund", "Straubing", "Stuttgart",
+              "Suhl",
               "Trier", "Ulm", "Weiden in der Oberpfalz", "Weiden in der Oberpfalz", "Weiden in der Oberpfalz",
               "Weiden in der Oberpfalz", "Weimar", "Wiesbaden", "Wilhelmshaven", "Wismar", "Wolfsburg", "Worms",
               "Wuppertal", "W\u00fcrzburg", "Zweibr\u00fccken", "Zwickau"]
 
-    rent_types_full = [
+    rent_types = [
         "APARTMENT_RENT",
         "HOUSE_RENT",
         "SHORT_TERM_ACCOMMODATION",
@@ -50,9 +55,19 @@ class BaseClass:
         "ASSISTED_LIVING",
         "SENIOR_CARE"
     ]
+    sale_types = [
+        "APARTMENT_BUY",
+        "HOUSE_BUY",
+        "OFFICE_BUY",
+        "INDUSTRY_BUY",
+        "STORE_BUY",
+        "GASTRONOMY_BUY",
+        "SPECIAL_PURPOSE_BUY",
+        "LIVING_BUY_SITE",
+        "TRADE_SITE_BUY",
+        "GARAGE_BUY",
+        "INVESTMENT",
+        "COMPULSORY_AUCTION",
+        "HOUSE_TYPE"
 
-    rent_types = [
-        "SHORT_TERM_ACCOMMODATION",
-        "APARTMENT_RENT",
-        "HOUSE_RENT"
     ]

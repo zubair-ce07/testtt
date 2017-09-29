@@ -16,3 +16,5 @@ class Immobilienscout24Item(scrapy.Item):
     property_type = scrapy.Field()
     property_subtype = scrapy.Field()
     city = scrapy.Field()
+    crawl_datetime = scrapy.Field()
+    agent = scrapy.Field()
