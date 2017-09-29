@@ -186,14 +186,14 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
 
     def property_address(self, response):
         address = dict()
-        address['address'] = response.css('#expose-title ::text').extract_first()
+        address['address'] = "".join(response.css('.address-block :first-child ::text').extract())
         address['zipcode'] = response.css('.zip-region-and-country ::text').extract_first()
 
         return address
 
     def item_category(self, response):
         css = '.is24-linklist ::text, .breadcrumb__link ::text'
-        return self.clean(response.css(css).extract())
+        return response.css(css).extract()
 
     def item_property_listing_type(self, response):
         css = 'script:contains("onTopProduct")::text'
