@@ -53,6 +53,9 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         ('002003005', 'men'),
         ('002009016', 'men'),
 
+        ('002003011', 'women'),
+        ('002010003', 'women'),
+
         ('002010025005', 'unisex-kids'),
         ('002010025009', 'unisex-kids'),
         ('002010025010', 'unisex-kids'),
@@ -88,7 +91,15 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         ('Mizutori of Buddha', 'Mizutori of Buddha'),
         ('Miki House DoubleB', 'Miki House DoubleB'),
         ('レッシグ', 'Laessig'),
-        ('Laessig', 'Laessig')
+        ('Laessig', 'Laessig'),
+        ('マリ･クレール', 'Marie Claire'),
+        ('ワンピース', 'One Piece'),
+        ('［JILLSTUART］', 'JILLSTUART'),
+        ('JILLSTUART', 'JILLSTUART'),
+        ('［FILA/フィラ］', 'FILA Filler'),
+        ('FILA', 'FILA Filler'),
+        ('MEEKAT/', 'MEEKAT'),
+        ('マリア・ケント社', 'MALHIA KENT')
     ]
 
     brand_re = re.compile('([［］/.])')
