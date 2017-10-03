@@ -38,13 +38,15 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
 
-        garment['brand'] = 'Oodji'
         garment['gender'] = self.product_gender(response)
 
         garment['skus'] = self.skus(response)
         garment['image_urls'] = self.image_urls(response)
 
         return garment
+
+    def product_brand(self, response):
+        return 'Oodji'
 
     def skus(self, response):
         skus = {}
@@ -54,7 +56,9 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
         for colour_code, colour in zip(colours_codes[0::2], colours_codes[1::2]):
             for size_height in self.product_size_heights(colour_code, response) or ['']:
                 for size_s in self.colour_variant_selectors(colour_code, size_height, response):
-                    sku_id, size = clean(size_s.css('::attr(value), ::text'))
+
+                    sku_id = clean(size_s.css('::attr(value)'))[0]
+                    size = clean(size_s.css(' ::text'))[0]
 
                     skus[sku_id] = {
                         'colour': colour,
