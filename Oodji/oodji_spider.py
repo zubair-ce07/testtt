@@ -49,45 +49,27 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         skus = {}
 
-        for colour_s in response.css('.catalog-section-item-colors a'):
-            _skus = self.skus_with_growth(colour_s, response)
+        colours_codes = self.colours_and_codes(response)
 
-            if not _skus:
-                _skus = self.skus_with_size(colour_s, growth='', response=response)
+        for colour_code, colour in zip(colours_codes[0::2], colours_codes[1::2]):
+            for size_height in self.product_size_heights(colour_code, response) or ['']:
+                for size_s in self.colour_variant_selectors(colour_code, size_height, response):
+                    sku_id, size = clean(size_s.css('::attr(value), ::text'))
 
-            skus.update(_skus)
+                    skus[sku_id] = {
+                        'colour': colour,
+                        'size': size + ('/' + size_height if size_height else '')
+                    }
 
-        return skus
-
-    def skus_with_size(self, colour_s, growth, response):
-        skus = {}
-        colour_code, colour = self.colour_and_code(colour_s)
-
-        for size_s in self.colour_variant_selectors(colour_code, growth, response):
-            sku_id, size = clean(size_s.css('::attr(value), ::text'))
-
-            skus[sku_id] = {
-                'colour': colour,
-                'size': size + ('/' + growth if growth else '')
-            }
-
-            skus[sku_id].update(
-                self.product_pricing_common_new(size_s, money_strs=[self.currency_symbol])
-            )
+                    skus[sku_id].update(
+                        self.product_pricing_common_new(size_s, money_strs=[self.currency_symbol])
+                    )
 
         return skus
 
-    def skus_with_growth(self, colour_s, response):
-        skus = {}
-        colour_code, colour = self.colour_and_code(colour_s)
-
-        for growth in self.product_growths(colour_code, response):
-            skus.update(self.skus_with_size(colour_s, growth, response))
-
-        return skus
-
-    def colour_and_code(self, colour_s):
-        return clean(colour_s.css('::attr(data-color),::attr(title)'))
+    def colours_and_codes(self, response):
+        css = '.catalog-section-item-colors ::attr(data-color), .catalog-section-item-colors ::attr(title)'
+        return clean(response.css(css))
 
     def colour_variant_selectors(self, colour_code, growth, response):
         css_t = '#s{colour_code}{h}{growth} label'
@@ -95,7 +77,7 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
 
         return response.css(css)
 
-    def product_growths(self, colour_code, response):
+    def product_size_heights(self, colour_code, response):
         css_t = '#allh{colour_code} [name="height"]::attr(value)'
         return clean(response.css(css_t.format(colour_code=colour_code)))
 
@@ -127,18 +109,20 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
         css = '[itemprop="name"] ::text'
         return clean(response.css(css))[0]
 
+    def raw_description(self, response):
+        xpath = '//*[@class="item-description"]//p'
+        return clean([self.paragraph_text(d) for d in response.xpath(xpath)])
+
     def product_description(self, response):
-        xpath = '//*[@class="item-description"]//p[not(descendant-or-self::*[contains(text(), "Состав")])]'
-        return clean([self.paragraph_text(description_s) for description_s in response.xpath(xpath)])
+        return [d for d in self.raw_description(response)
+                if not self.care_criteria_simplified(d) and "Состав" not in d]
 
     def paragraph_text(self, para_s):
         return ' '.join(clean(para_s.css(' ::text')))
 
     def product_care(self, response):
-        xpath = '//*[contains(text(), "Состав")]/parent::*//text()'
-        care = clean(response.xpath(xpath))
-
-        return [' '.join(care)]
+        return [d for d in self.raw_description(response)
+                if self.care_criteria_simplified(d) or "Состав" in d]
 
 
 class DinosCrawlSpider(BaseCrawlSpider, Mixin):
