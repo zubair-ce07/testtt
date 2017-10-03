@@ -22,6 +22,8 @@ class Mixin:
         'https://www.dinos.co.jp/c3/002010003/1a1/',
         'https://www.dinos.co.jp/c3/002003001/1a1/',
         'https://www.dinos.co.jp/c3/002003024/1a1/',
+        'https://www.dinos.co.jp/c3/002003005/1a1/',
+        'https://www.dinos.co.jp/c3/002009016/1a1/',
         'https://www.dinos.co.jp/c4/002003001017/1a2/',
         'https://www.dinos.co.jp/c4/002010025005/1a2/',
         'https://www.dinos.co.jp/c4/002010025009/1a2/',
@@ -29,15 +31,10 @@ class Mixin:
         'https://www.dinos.co.jp/c4/002010025011/1a2/',
         'https://www.dinos.co.jp/c4/002010025018/1a2/',
         'https://www.dinos.co.jp/c4/002003024001/1a2/',
-        'https://www.dinos.co.jp/c3/002003005/1a1/',
-        'https://www.dinos.co.jp/c3/002009016/1a1/',
         'https://www.dinos.co.jp/c4/002010025005/1a2/',
-        'https://www.dinos.co.jp/c4/002010025009/1a2/',
         'https://www.dinos.co.jp/c4/002010025010/1a2/',
         'https://www.dinos.co.jp/c4/002010025011/1a2/',
         'https://www.dinos.co.jp/c4/002010025018/1a2/',
-        'https://www.dinos.co.jp/p/1367100493/?id=002010025009___1513545',
-        'https://www.dinos.co.jp/p/1367100492/?id=002010025009___1513544'
     ]
 
 
@@ -379,7 +376,7 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = DinosParseSpider()
 
-    pagination_css = ['.btn.next', '.c3']
+    pagination_css = '.btn.next'
 
     product_css = '.picPreview'
 
@@ -388,3 +385,6 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
+    def parse_item(self, response):
+        with open('dinos_withoutC3.txt', 'a') as file:
+            file.write(response.url+'\n')
