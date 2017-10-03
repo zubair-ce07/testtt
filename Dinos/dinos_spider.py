@@ -385,6 +385,3 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
 
-    def parse_item(self, response):
-        with open('dinos_withoutC3.txt', 'a') as file:
-            file.write(response.url+'\n')
