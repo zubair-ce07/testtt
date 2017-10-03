@@ -58,6 +58,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         ('002003011', 'women'),
         ('002010003', 'women'),
         ('002003001', 'women'),
+        ('002003009', 'women'),
         ('002003024001', 'women'),
         ('002003024', 'women'),
         ('002003001017', 'women'),
