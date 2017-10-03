@@ -45,7 +45,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
                     '?GOODS_NO=&MOSHBG={request_id}&CLS1CD={colour}&CLS2CD={size}'
 
     colour_request_url = 'https://www.dinos.co.jp/defaultMall/sitemap/XHRGetGoodsCls2.jsp' \
-                        '?CATNO=900&MOSHBG={request_id}&CLS1CD={colour}'
+                         '?CATNO=900&MOSHBG={request_id}&CLS1CD={colour}'
 
     gender_map = [
         ('ガールズ', 'girls'),
