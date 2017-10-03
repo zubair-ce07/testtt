@@ -3,7 +3,7 @@ import {connect} from 'react-redux'
 import {addLikeApi} from '../../actions/like'
 
 const AddLike = ({postId, isLiked, token, addLikeHandler}) => (
-	(isLiked === true)
+	(isLiked)
 		? <button 
 				className="btn btn-default" 
 				disabled>

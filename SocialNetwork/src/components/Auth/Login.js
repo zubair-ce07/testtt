@@ -87,7 +87,7 @@ const mapDispatchToProps = (dispatch) => ({
 })
 
 const LoginHandler = connect(
-  undefined,
+  null,
   mapDispatchToProps
 )(LoginForm)
 

@@ -1,3 +1,5 @@
+import { LIST_POSTS, ADD_POST, POST_LIKED, PRIVACY_CHANGED} from '../actions/actions'
+
 const defaultState = {
 	posts: [],
 	posts_count: 0,
@@ -5,44 +7,40 @@ const defaultState = {
 };
 export default function postReducer(state = defaultState, action) { 
 	switch(action.type){
-		case("LIST_POSTS"):
+		case LIST_POSTS:
 			return Object.assign({}, state, { 
               posts: action.posts,
               posts_count: action.posts_count,
               likes_count: action.likes_count,
             });
-        case("ADD_POST"):
+        case ADD_POST:
         	return Object.assign({}, state, {
         		posts: [
                   action.post,
         			...state.posts,
         		]
       		})
-        case("POST_LIKED"):
+        case POST_LIKED:
             return {
               ...state,
-              posts: [
-                  ...state.posts.map(post => {
+              posts: state.posts.map(post => {
                       return (
                         post["id"] === action.postId
                         ? {...post, is_liked: true}
                         : post
                       );
                   })
-              ]
             }
-        case("PRIVACY_CHANGED"):
+        case PRIVACY_CHANGED:
             return {
               ...state,
-              posts: [
-                  ...state.posts.map(post => {
+              posts: state.posts.map(post => {
                       return (
                         post["id"] === action.postId
                         ? {...post, privacy: action.privacy}
                         : post
                       );
                   })
-              ]
             }
         default:
           return state;

@@ -1,25 +1,26 @@
 import axios from 'axios'
+import { LIST_FRIENDS, UPDATE_FRIENDS} from './actions'
 import {friendAdded} from './user'
 
 
 export const listFriends = (friends) => ({
-	type: "LIST_FRIENDS",
+	type: LIST_FRIENDS,
 	friends,
 });
 
 export const updateFriends = (friend) => ({
-	type: "UPDATE_FRIENDS",
+	type: UPDATE_FRIENDS,
 	friend
 });
 
 export const addFriendApi = (id, token, addFriendProfile) => (
 	function(dispatch){
 		axios({
-			method: 'post',
-      url: 'http://localhost:8000/testapp/user/friend/'+id,
-      headers: {
-      Authorization: 'Token ' + token,
-      },
+		  method: 'post',
+	      url: 'http://localhost:8000/testapp/user/friend/'+id,
+	      headers: {
+	      Authorization: 'Token ' + token,
+	      },
 		})
 		.then(response => {
 			dispatch(friendAdded(response.data.user))
@@ -28,7 +29,7 @@ export const addFriendApi = (id, token, addFriendProfile) => (
 				addFriendProfile()
 			}
 		})
-		.then(function(err) {
+		.catch(function(err) {
             alert("Something Went Wrong")
 		})
 	}

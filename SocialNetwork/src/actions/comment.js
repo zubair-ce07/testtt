@@ -1,12 +1,14 @@
 import axios from 'axios';
+import { LIST_COMMENTS, ADD_COMMENT} from './actions'
+
 
 export const listComments = (comments) => ({
-	type: "LIST_COMMENTS",
+	type: LIST_COMMENTS,
 	comments,
 });
 
 export const addComment = (comment) => ({
-	type: "ADD_COMMENT",
+	type: ADD_COMMENT,
 	comment
 });
 

@@ -6,6 +6,39 @@ import {connect} from 'react-redux';
 import {fetchComments} from '../../actions/comment'
 import {fetchLikes} from '../../actions/like'
 
+
+const VideoEmbed = ({file}) => (
+  <video 
+    width="320" 
+    height="240"  
+    controls>
+    <source 
+      src={"http://localhost:8000"+file} 
+      type="video/mp4">
+    </source>
+    Your browser does not support the video tag.
+  </video>
+)
+
+const AudioEmbed = ({file}) => (
+  <audio controls>
+    <source 
+      src={"http://localhost:8000"+file} 
+      type="audio/mpeg">
+    </source>
+    Your browser does not support the video tag.
+  </audio>
+)
+
+const ImageEmbed = ({file}) => (
+  <img 
+    width="320" 
+    height="240" 
+    src={"http://localhost:8000"+file} 
+    alt="post">
+  </img>
+)
+
 class Post extends Component{
 	constructor(props){
 		super(props)
@@ -144,37 +177,17 @@ class Post extends Component{
 		let postEmbed;
 		if(fileType === "video"){
 			postEmbed = ( 
-				<video 
-					width="320" 
-					height="240"  
-					controls>
-	  			<source 
-	  				src={"http://localhost:8000"+file} 
-	  				type="video/mp4">
-	  			</source>
-		  		Your browser does not support the video tag.
-				</video>
+				<VideoEmbed file={file} />
 			);
 		}
 		else if (fileType === "audio" ){
 			postEmbed = ( 
-				<audio controls>
-  				<source 
-	  				src={"http://localhost:8000"+file} 
-	  				type="audio/mpeg">
-	  			</source>
-	  			Your browser does not support the video tag.
-				</audio>
+				<AudioEmbed file={file} />
 			);	
 		}
 		else{
 			postEmbed = ( 
-				<img 
-					width="320" 
-					height="240" 
-					src={"http://localhost:8000"+file} 
-					alt="post">
-				</img>
+				<ImageEmbed file={file} />
 			);
 		}
 

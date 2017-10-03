@@ -1,14 +1,15 @@
 import axios from 'axios';
+import { LIST_LIKES, ADD_LIKE} from './actions'
 import {postLiked} from './post'
 
 
 export const listLikes = (likes) => ({
-	type: "LIST_LIKES",
+	type: LIST_LIKES,
 	likes,
 });
 
 export const addLike = (like) => ({
-	type: "ADD_LIKE",
+	type: ADD_LIKE,
 	like
 });
 

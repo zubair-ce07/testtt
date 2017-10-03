@@ -1,17 +1,19 @@
+import { LIST_COMMENTS, ADD_COMMENT} from '../actions/actions'
+
 const defaultState = {
 	comments: [],
 
 };
 export default function commentReducer(state = defaultState, action) { 
 	switch(action.type){
-		case("LIST_COMMENTS"):
+		case LIST_COMMENTS:
 			return Object.assign({}, state, {
         		comments: [
         			...state.comments,
           		action.comments
         		]
       		})
-      	case("ADD_COMMENT"):
+      	case ADD_COMMENT:
       		return {
       			...state,
       			comments: [

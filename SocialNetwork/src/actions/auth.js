@@ -1,15 +1,16 @@
 import axios from 'axios';
+import { LOGIN, LOGOUT} from './actions'
 
 
 export const loginSuccess = (username, token, id) => ({
-  type: 'LOGIN',
+  type: LOGIN,
   username,
   token,
   id
 });
  
 export const logout = () => ({
-  type: 'LOGOUT'
+  type: LOGOUT
 });
 
 export const login = (username, password) => (

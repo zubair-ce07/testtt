@@ -1,24 +1,26 @@
 import axios from 'axios'
+import { LIST_POSTS, ADD_POST, POST_LIKED, PRIVACY_CHANGED} from './actions'
+
 
 export const listPost = (posts,posts_count,likes_count) => ({
-	type: "LIST_POSTS",
+	type: LIST_POSTS,
 	posts,
 	posts_count,
 	likes_count,
 });
 
 export const addPost = (post) => ({
-	type: "ADD_POST",
+	type: ADD_POST,
 	post
 });
 
 export const postLiked = (id) => ({
-	type: "POST_LIKED",
+	type: POST_LIKED,
 	postId: id
 });
 
 export const privacyChanged = (id, privacy) => ({
-	type: "PRIVACY_CHANGED",
+	type: PRIVACY_CHANGED,
 	postId: id,
 	privacy
 });

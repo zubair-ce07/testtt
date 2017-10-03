@@ -1,17 +1,19 @@
+import { LIST_LIKES, ADD_LIKE} from '../actions/actions'
+
 const defaultState = {
 	likes: [],
 
 };
 export default function likeReducer(state = defaultState, action) { 
 	switch(action.type){
-		case("LIST_LIKES"):
+		case LIST_LIKES:
 			return Object.assign({}, state, {
         		likes: [
         			...state.likes,
           		action.likes
         		]
       		})
-      	case("ADD_LIKE"):
+      	case ADD_LIKE:
       		return {
       			...state,
       			likes: [

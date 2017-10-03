@@ -1,12 +1,13 @@
 import axios from 'axios'
+import { LIST_USERS, FRIEND_ADDED} from './actions'
 
 export const listUsers = (users) => ({
-	type: "LIST_USERS",
+	type: LIST_USERS,
 	users,
 });
 
 export const friendAdded = (friend) => ({
-	type: "FRIEND_ADDED",
+	type: FRIEND_ADDED,
 	friend
 });
 
