@@ -17,13 +17,18 @@ class Mixin:
     start_urls = [
         'https://www.dinos.co.jp/c2/002003/',
         'https://www.dinos.co.jp/c2/002009/',
+        'https://www.dinos.co.jp/c3/002003009/1a1/',
         'https://www.dinos.co.jp/c3/002003011/1a1/',
         'https://www.dinos.co.jp/c3/002010003/1a1/',
+        'https://www.dinos.co.jp/c3/002003001/1a1/',
+        'https://www.dinos.co.jp/c3/002003024/1a1/',
+        'https://www.dinos.co.jp/c4/002003001017/1a2/',
         'https://www.dinos.co.jp/c4/002010025005/1a2/',
         'https://www.dinos.co.jp/c4/002010025009/1a2/',
         'https://www.dinos.co.jp/c4/002010025010/1a2/',
         'https://www.dinos.co.jp/c4/002010025011/1a2/',
         'https://www.dinos.co.jp/c4/002010025018/1a2/',
+        'https://www.dinos.co.jp/c4/002003024001/1a2/',
         'https://www.dinos.co.jp/c3/002003005/1a1/',
         'https://www.dinos.co.jp/c3/002009016/1a1/',
         'https://www.dinos.co.jp/c4/002010025005/1a2/',
@@ -55,6 +60,10 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         ('002003011', 'women'),
         ('002010003', 'women'),
+        ('002003001', 'women'),
+        ('002003024001', 'women'),
+        ('002003024', 'women'),
+        ('002003001017', 'women'),
 
         ('002010025005', 'unisex-kids'),
         ('002010025009', 'unisex-kids'),
@@ -370,7 +379,7 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = DinosParseSpider()
 
-    pagination_css = '.btn.next'
+    pagination_css = ['.btn.next', '.c3']
 
     product_css = '.picPreview'
 
@@ -378,3 +387,4 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=pagination_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
+
