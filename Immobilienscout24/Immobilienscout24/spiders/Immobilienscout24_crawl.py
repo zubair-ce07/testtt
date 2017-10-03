@@ -3,6 +3,7 @@ import copy
 import datetime
 import json
 import re
+import string
 
 import scrapy
 from scrapy.http import FormRequest, Request
@@ -18,6 +19,7 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
     start_urls = ['https://www.immobilienscout24.de/']
     property_listing_url = "https://www.immobilienscout24.de/Suche/controller/oneStepSearch/form.html"
     result_count_url = "https://www.immobilienscout24.de/Suche/controller/oneStepSearch/resultCount.json"
+    cities_url_t = "https://www.immobilienscout24.de/geoautocomplete/v3/locations.json?i={}&t=city"
     location_url_t = "https://www.immobilienscout24.de/geoautocomplete/v3/locations.json?i={}"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     agent_info_re = re.compile(r'contactData: *(\{.*\}),')
@@ -32,49 +34,43 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
     }
 
     def parse(self, response):
-        for city in self.cities:
+        for alphabet in string.ascii_lowercase:
+            url = self.cities_url_t.format(alphabet)
+            yield Request(url=url, callback=self.parse_cities, headers=self.headers)
+
+    def parse_cities(self, response):
+        cities = json.loads(response.text)
+        common_body = dict()
+        common_body['world'] = 'LIVING'
+        common_body['geographicalEntityType'] = 'city'
+        for city in cities:
             item = Immobilienscout24Item()
-            body = {
-                'world': 'LIVING',
-                'location': city,
-                'region': city,
-                'city': city,
-                'geographicalEntityType': 'city'
-            }
+            body = common_body.copy()
+            current_city = city['entity']['label']
+            item['city'] = current_city
+            print("city name ", current_city)
+            body['location'] = current_city
+            body['region'] = current_city
+            body['city'] = current_city
+            body["gacId"] = city['entity']['id']
+            body["geoCodeId"] = body["gacId"]
 
-            item["city"] = city
-            url = self.location_url_t.format(city)
-            yield Request(url=url, callback=self.parse_location, meta={'item': copy.deepcopy(item), 'body': body})
-
-    def parse_location(self, response):
-        item = copy.deepcopy(response.meta["item"])
-        body = copy.deepcopy(response.meta["body"])
-
-        location = json.loads(response.text)
-        location_id = [l["entity"]["id"] for l in location if l["entity"]["type"] == "city"]
-        location_id = location_id[0] or None
-        if not location_id:
-            return
-
-        body["gacId"] = location_id
-        body["geoCodeId"] = location_id
-
-        # Rent
-        for rent_type in self.rent_types:
-            item["property_type"] = "Rent"
-            item["property_subtype"] = rent_type
-            body['realEstateType'] = rent_type
-            yield FormRequest(method="POST", url=self.result_count_url, callback=self.parse_property_count,
-                              formdata=body, headers=self.headers,
-                              meta={'item': copy.deepcopy(item), 'body': copy.deepcopy(body)})
-        # Sale
-        for sale_type in self.sale_types:
-            item["property_type"] = "Sale"
-            item["property_subtype"] = sale_type
-            body['realEstateType'] = sale_type
-            yield FormRequest(method="POST", url=self.result_count_url, callback=self.parse_property_count,
-                              formdata=body, headers=self.headers,
-                              meta={'item': copy.deepcopy(item), 'body': copy.deepcopy(body)})
+            # Rent
+            for rent_type in self.rent_types:
+                item["property_type"] = "Rent"
+                item["property_subtype"] = rent_type
+                body['realEstateType'] = rent_type
+                yield FormRequest(method="POST", url=self.result_count_url, callback=self.parse_property_count,
+                                  formdata=body, headers=self.headers,
+                                  meta={'item': copy.deepcopy(item), 'body': copy.deepcopy(body)})
+            # Sale
+            for sale_type in self.sale_types:
+                item["property_type"] = "Sale"
+                item["property_subtype"] = sale_type
+                body['realEstateType'] = sale_type
+                yield FormRequest(method="POST", url=self.result_count_url, callback=self.parse_property_count,
+                                  formdata=body, headers=self.headers,
+                                  meta={'item': copy.deepcopy(item), 'body': copy.deepcopy(body)})
 
     def parse_property_count(self, response):
         item = copy.deepcopy(response.meta["item"])
@@ -111,6 +107,10 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
     def parse_property(self, response):
         item = response.meta["item"]
         item["url"] = response.url
+        if 'expose' in response.url:
+            item['id'] = response.url.split('expose/')[-1]
+        else:
+            item['id'] = response.url.split('/')[-1].split('.')[0]
         item['crawl_datetime'] = datetime.datetime.utcnow()
         item['property_name'] = self.property_name(response)
         item['property_address'] = self.property_address(response)
@@ -150,6 +150,8 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
         agent_info_json = response.css(css).re_first(self.agent_info_typ2_re)
         if agent_info_json:
             agent_info_json = agent_info_json.replace('\\"', '\"')
+            if '\\' in agent_info_json:
+                agent_info_json = agent_info_json.replace('\\', '')
 
             agent_info_json = json.loads(agent_info_json)
 
@@ -192,8 +194,8 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
         return address
 
     def item_category(self, response):
-        css = '.is24-linklist ::text, .breadcrumb__link ::text'
-        return response.css(css).extract()
+        category = response.css('.flex-item--center > ::text').extract()
+        return self.clean(category)
 
     def item_property_listing_type(self, response):
         css = 'script:contains("onTopProduct")::text'
