@@ -12,19 +12,19 @@ class UserProfile extends Component {
 	}
 	componentDidMount(){
 		axios({
-                method: 'get',
-                url: 'http://localhost:8000/testapp/user/'+this.props.match.params.id+'/',
-                headers: {
-                Authorization: 'Token ' + this.props.token,
-                },
-	        })
-	        .then(response => {
-	        	const {id , username, email, is_friend} = response.data
-	            this.setState({id: id , username: username, email: email, is_friend: is_friend})
-	        })
-	        .catch(function(error){
-	            console.log(error)
-	        })		
+	    method: 'get',
+	    url: 'http://localhost:8000/testapp/user/'+this.props.match.params.id+'/',
+	    headers: {
+	    Authorization: 'Token ' + this.props.token,
+		  },
+    })
+    .then(response => {
+    	const {id , username, email, is_friend} = response.data
+      this.setState({id: id , username: username, email: email, is_friend: is_friend})
+    })
+    .catch(function(error){
+      console.log(error)
+    })		
 	}
 
 	addFriendClicked(){
@@ -36,7 +36,13 @@ class UserProfile extends Component {
 	render(){
 		let is_user_himself;
 		if(this.props.id !== this.state.id){
-			is_user_himself = <AddFriend  isFriend={this.state.is_friend} userId={this.state.id} addFriendProfile={this.addFriendClicked}/>
+			is_user_himself = (
+				<AddFriend  
+					isFriend={this.state.is_friend} 
+					userId={this.state.id} 
+					addFriendProfile={this.addFriendClicked}
+				/>
+			);
 		}
 		if (this.state.id === ''){
 			return <h1>User not found</h1>
@@ -54,12 +60,10 @@ class UserProfile extends Component {
 	}
 }
 
-const mapStateToProps =(state) => {
-	return{
-		token: state.authReducer.token,
-		id: state.authReducer.id
-	};
-}
+const mapStateToProps =(state) => ({
+	token: state.authReducer.token,
+	id: state.authReducer.id
+})
 
 
 export default connect(mapStateToProps)(UserProfile);

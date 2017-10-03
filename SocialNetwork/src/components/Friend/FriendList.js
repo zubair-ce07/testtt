@@ -1,66 +1,46 @@
 import React, {Component} from 'react';
 import { connect } from 'react-redux';
-import { listFriend } from '../../actions/friend'
-import axios from 'axios'
+import { fetchUserFriendsApi } from '../../actions/friend'
 import '../StyleSheets/PostList.css'
 
 
 class FriendList extends Component{
 	 
-	 componentDidMount(){
-        /* getting user friends */
-        axios({
-                method: 'get',
-                url: 'http://localhost:8000/testapp/user/friends',
-                headers: {
-                Authorization: 'Token '+this.props.token,
-                }
-        })
-        .then(response => {
-            this.props.listFriends(response.data)
+	componentDidMount(){
+		/* getting user friends */
+		this.props.fetchUserFriends(this.props.token)
+  }
 
-        })
-        .catch(function(error){
-            console.log(error)
-        })
-
-        
-
-    }
-
-    render(){
-    	const {friends} = this.props
+  render(){
+  	const {friends} = this.props
 		return (
 			<div>
-				{
-					friends.map( friend => {
-						return(
+			{
+				friends.map( friend => {
+					return(
 						<div className="postwell" key={friend.user.id}>
-							<p>{friend.user.username}</p>
+							<p>
+								{friend.user.username}
+							</p>
 						</div>
-						);
-
-					})
-				}
+					);
+				})
+			}
 			</div>
 		);
 	}
 }
 
-const mapStateToProps = (state) => {
-    return {
-        token: state.authReducer.token,
-        friends: state.friendReducer.friends
-    };
-}
+const mapStateToProps = (state) => ({
+  token: state.authReducer.token,
+  friends: state.friendReducer.friends
+})
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        listFriends: (friends) => {
-            dispatch(listFriend(friends))
-        },
-    }
-}
+const mapDispatchToProps = (dispatch) => ({
+  fetchUserFriends: (token) => {
+    dispatch(fetchUserFriendsApi(token))
+  }
+})
 
 export default connect(
 	mapStateToProps,

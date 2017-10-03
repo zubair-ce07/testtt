@@ -7,8 +7,8 @@ export default function likeReducer(state = defaultState, action) {
 		case("LIST_LIKES"):
 			return Object.assign({}, state, {
         		likes: [
-          			...state.likes,
-	          		action.likes
+        			...state.likes,
+          		action.likes
         		]
       		})
       	case("ADD_LIKE"):

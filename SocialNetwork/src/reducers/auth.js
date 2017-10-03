@@ -1,27 +1,33 @@
+import { saveState } from '../localStorage'
+
 const defaultState = {
-    isLoggedIn: false,
-    username: '',
-    token: '',
-    id: ''
+  isLoggedIn: false,
+  username: '',
+  token: '',
+  id: ''
 };
  
 export default function authReducer(state = defaultState, action) {
-    switch (action.type) {
-        case 'LOGIN':
-            return Object.assign({}, state, { 
-                isLoggedIn: true,
-                username: action.username,
-                token: action.token,
-                id: action.id
-            });
-        case 'LOGOUT':
-            return Object.assign({}, state, { 
-                isLoggedIn: false,
-                username: '',
-                token: '',
-                id: ''
-            });
-        default:
-            return state;
-    }
+  switch (action.type) {
+    case 'LOGIN':
+      const {username, token, id} = action
+      const auth_state = {isLoggedIn: true, username: username, token: token, id: id}
+      saveState(auth_state)
+      return Object.assign({}, state, { 
+        isLoggedIn: true,
+        username: username,
+        token: token,
+        id: id
+      });
+    case 'LOGOUT':
+      saveState(defaultState)
+      return Object.assign({}, state, { 
+        isLoggedIn: false,
+        username: '',
+        token: '',
+        id: ''
+      });
+    default:
+      return state;
+  }
 }

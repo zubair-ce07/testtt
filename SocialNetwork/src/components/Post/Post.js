@@ -3,9 +3,8 @@ import CommentList from '../Comment/CommentList';
 import LikeList from '../Like/LikeList'
 import AddLike from '../Like/AddLike'
 import {connect} from 'react-redux';
-import axios from 'axios';
-import {listComment} from '../../actions/comment'
-import {listLike} from '../../actions/like'
+import {fetchComments} from '../../actions/comment'
+import {fetchLikes} from '../../actions/like'
 
 class Post extends Component{
 	constructor(props){
@@ -31,21 +30,9 @@ class Post extends Component{
 
 		if (has_fetched === false)
 		{
-			axios({
-	                method: 'get',
-	                url: 'http://localhost:8000/testapp/comment/'+e.target.id+'/',
-	                headers: {
-	                Authorization: 'Token '+this.props.token,
-	                }
-	        })
-	        .then(response => {
-	            this.props.listComments(response.data)
-
-	        })
-	        .catch(function(error){
-	            console.log(error)
-	        })
+			this.props.fetchPostComments(e.target.id, this.props.token)
         }
+        
 		this.setState({showComments: true})
 		
 	}
@@ -65,20 +52,7 @@ class Post extends Component{
 		})
 		if (has_fetched === false)
 		{
-			axios({
-	                method: 'get',
-	                url: 'http://localhost:8000/testapp/like/'+e.target.id+'/',
-	                headers: {
-	                Authorization: 'Token '+this.props.token,
-	                }
-	        })
-	        .then(response => {
-	            this.props.listLikes(response.data)
-
-	        })
-	        .catch(function(error){
-	            console.log(error)
-	        })
+			this.props.fetchPostLikes(e.target.id, this.props.token)
         }
 		this.setState({showLikes: true})
 		
@@ -113,42 +87,95 @@ class Post extends Component{
 
 		/*** Conditions for show or hide comments ***/
 		if(this.state.showComments === true){
-			hidn_n_show_comment = <div>
-			<button id={id} className="btn btn-primary" onClick={ this.hideComments } >Hide Comments</button>
-			<CommentList comments={post_realted_comments} postId={id} />
-			</div>
+			hidn_n_show_comment = ( 
+				<div>
+					<button 
+						id={id} 
+						className="btn btn-primary" 
+						onClick={ this.hideComments } >
+						Hide Comments
+					</button>
+					<CommentList 
+						comments={post_realted_comments} 
+						postId={id}
+					/>
+				</div>
+			);
 		}
 		else{
-			hidn_n_show_comment = <button id={id} className="btn btn-primary" onClick={ this.showComments } >Show Comments</button>						
+			hidn_n_show_comment = ( 
+				<button 
+					id={id} 
+					className="btn btn-primary" 
+					onClick={ this.showComments }>
+					Show Comments
+				</button>
+			);						
 		}
 
 		/*** Conditions for show or hide likes ***/
 		if(this.state.showLikes === true){
-			hidn_n_show_likes = <div>
-			<button id={id} className="btn btn-primary" onClick={ this.hideLikes } >Hide Likes</button>
-			<LikeList likes={post_realted_likes} />
-			</div>
+			hidn_n_show_likes = ( 
+				<div>
+					<button 
+						id={id} 
+						className="btn btn-primary" 
+						onClick={ this.hideLikes }>
+						Hide Likes
+					</button>
+					<LikeList 
+						likes={post_realted_likes} 
+					/>
+				</div>
+			);
 		}
 		else{
-			hidn_n_show_likes = <button id={id} className="btn btn-primary" onClick={ this.showLikes } >Show Likes</button>
+			hidn_n_show_likes = (
+				<button 
+					id={id} 
+					className="btn btn-primary" 
+					onClick={ this.showLikes }>
+					Show Likes
+				</button>
+			);
 		}
 
 		/*** Conditions for post type ***/
 		let postEmbed;
 		if(fileType === "video"){
-			postEmbed = <video width="320" height="240"  controls>
-				  			<source src={"http://localhost:8000"+file} type="video/mp4"></source>
-				  			Your browser does not support the video tag.
-						</video>
+			postEmbed = ( 
+				<video 
+					width="320" 
+					height="240"  
+					controls>
+	  			<source 
+	  				src={"http://localhost:8000"+file} 
+	  				type="video/mp4">
+	  			</source>
+		  		Your browser does not support the video tag.
+				</video>
+			);
 		}
 		else if (fileType === "audio" ){
-			postEmbed = <audio controls>
-			  				<source src={"http://localhost:8000"+file} type="audio/mpeg"></source>
-				  			Your browser does not support the video tag.
-						</audio>	
+			postEmbed = ( 
+				<audio controls>
+  				<source 
+	  				src={"http://localhost:8000"+file} 
+	  				type="audio/mpeg">
+	  			</source>
+	  			Your browser does not support the video tag.
+				</audio>
+			);	
 		}
 		else{
-			postEmbed = <img width="320" height="240" src={"http://localhost:8000"+file} alt="post" ></img>
+			postEmbed = ( 
+				<img 
+					width="320" 
+					height="240" 
+					src={"http://localhost:8000"+file} 
+					alt="post">
+				</img>
+			);
 		}
 
 		return (
@@ -160,17 +187,16 @@ class Post extends Component{
 				<p>Posted by { postedBy }</p><br />
 				<div className="row">
 					<div className="col-lg-4">
-						{
-							hidn_n_show_comment
-						}
+						{hidn_n_show_comment}
 					</div>
 					<div className="col-lg-4">
-						{
-							hidn_n_show_likes
-						}
+						{hidn_n_show_likes}
 					</div>
 					<div className="col-lg-4">
-						<AddLike isLiked={isLiked} postId={id}/>
+						<AddLike 
+							isLiked={isLiked} 
+							postId={id}
+						/>
 					</div>
 				</div>
 			</div>
@@ -179,29 +205,24 @@ class Post extends Component{
 }
 
 
-const mapStateToProps = (state) => {
-    return {
-        isLoggedIn: state.authReducer.isLoggedIn,
-        username: state.authReducer.username,
-        token: state.authReducer.token,
-        comments: state.commentReducer.comments,
-        likes: state.likeReducer.likes,
-    };
-}
+const mapStateToProps = (state) => ({
+  isLoggedIn: state.authReducer.isLoggedIn,
+  username: state.authReducer.username,
+  token: state.authReducer.token,
+  comments: state.commentReducer.comments,
+  likes: state.likeReducer.likes,
+})
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        listComments: (comments) => {
-            dispatch(listComment(comments))
-        },
-
-        listLikes: (likes) => {
-        	dispatch(listLike(likes))
-        }
-    }
-}
+const mapDispatchToProps = (dispatch) => ({
+  fetchPostComments: (postId, token) => {
+  	dispatch(fetchComments(postId, token))
+  },
+  fetchPostLikes: (postId, token) => {
+  	dispatch(fetchLikes(postId, token))
+  }
+})
 
 export default connect(
-    mapStateToProps,
-    mapDispatchToProps
+  mapStateToProps,
+  mapDispatchToProps
 )(Post);

@@ -7,8 +7,8 @@ export default function commentReducer(state = defaultState, action) {
 		case("LIST_COMMENTS"):
 			return Object.assign({}, state, {
         		comments: [
-          			...state.comments,
-	          		action.comments
+        			...state.comments,
+          		action.comments
         		]
       		})
       	case("ADD_COMMENT"):
@@ -30,6 +30,6 @@ export default function commentReducer(state = defaultState, action) {
       			]
       		}
         default:
-            return state;
+          return state;
 	}
 }

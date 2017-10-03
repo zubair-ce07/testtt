@@ -8,12 +8,12 @@ import userReducer from './user'
 
  
 const rootReducer = combineReducers({
-    authReducer,
-    postReducer,
-    commentReducer,
-    friendReducer,
-    userReducer,
-    likeReducer,
+  authReducer,
+  postReducer,
+  commentReducer,
+  friendReducer,
+  userReducer,
+  likeReducer,
 });
  
 export default rootReducer;
