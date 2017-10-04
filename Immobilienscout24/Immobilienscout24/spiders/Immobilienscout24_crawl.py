@@ -41,14 +41,12 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
     def parse_cities(self, response):
         cities = json.loads(response.text)
         common_body = dict()
-        common_body['world'] = 'LIVING'
         common_body['geographicalEntityType'] = 'city'
         for city in cities:
             item = Immobilienscout24Item()
             body = common_body.copy()
             current_city = city['entity']['label']
             item['city'] = current_city
-            print("city name ", current_city)
             body['location'] = current_city
             body['region'] = current_city
             body['city'] = current_city
@@ -56,21 +54,50 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
             body["geoCodeId"] = body["gacId"]
 
             # Rent
-            for rent_type in self.rent_types:
-                item["property_type"] = "Rent"
-                item["property_subtype"] = rent_type
-                body['realEstateType'] = rent_type
-                yield FormRequest(method="POST", url=self.result_count_url, callback=self.parse_property_count,
-                                  formdata=body, headers=self.headers,
-                                  meta={'item': copy.deepcopy(item), 'body': copy.deepcopy(body)})
+            # for rent_type in self.rent_types:
+            #     item["property_type"] = "Rent"
+            #     item["property_subtype"] = rent_type
+            #     body['realEstateType'] = rent_type
+            #     body['world'] = 'LIVING'
+            #     yield self.property_request(item, body)
+
+            # Business Rent
+            for rent_type in self.business_rent_type:
+                item['property_type'] = 'Business_rent'
+                item['property_subtype'] = rent_type
+
+                marketing_type = rent_type.split('_')
+                body['realEstateType'] = marketing_type[0]
+                body['marketingType'] = marketing_type[1]
+                body['realEstateAndMarketingType'] = rent_type
+                body['world'] = 'COMMERCIAL'
+                yield self.property_request(item, body)
+
             # Sale
-            for sale_type in self.sale_types:
-                item["property_type"] = "Sale"
-                item["property_subtype"] = sale_type
-                body['realEstateType'] = sale_type
-                yield FormRequest(method="POST", url=self.result_count_url, callback=self.parse_property_count,
-                                  formdata=body, headers=self.headers,
-                                  meta={'item': copy.deepcopy(item), 'body': copy.deepcopy(body)})
+            # for sale_type in self.sale_types:
+            #     item["property_type"] = "Sale"
+            #     item["property_subtype"] = sale_type
+            #     body['realEstateType'] = sale_type
+            #     body['world'] = 'LIVING'
+            #     yield self.property_request(item, body)
+
+            # business sale
+            for sale_type in self.business_sale_type:
+                item['property_type'] = 'Business_sale'
+                item['property_subtype'] = sale_type
+
+                marketing_type = sale_type.split('_')
+                body['realEstateType'] = marketing_type[0]
+                body['marketingType'] = marketing_type[1]
+                body['realEstateAndMarketingType'] = sale_type
+                body['world'] = 'COMMERCIAL'
+                print(body)
+                yield self.property_request(item, body)
+
+    def property_request(self, item, body):
+        return FormRequest(method="POST", url=self.result_count_url, callback=self.parse_property_count,
+                           formdata=body, headers=self.headers,
+                           meta={'item': copy.deepcopy(item), 'body': copy.deepcopy(body)})
 
     def parse_property_count(self, response):
         item = copy.deepcopy(response.meta["item"])

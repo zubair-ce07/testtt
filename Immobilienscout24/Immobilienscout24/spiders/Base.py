@@ -34,6 +34,24 @@ class BaseClass:
         "HOUSE_TYPE"
 
     ]
+    business_rent_type = [
+        "OFFICE_RENT",
+        "INDUSTRY_RENT",
+        "STORE_RENT",
+        "GASTRONOMY_RENT",
+        "TRADE_SITE_RENT",
+        "SPECIAL_PURPOSE_RENT"
+    ]
+
+    business_sale_type = [
+        "OFFICE_BUY",
+        "INDUSTRY_BUY",
+        "STORE_BUY",
+        "GASTRONOMY_BUY",
+        "TRADE_SITE_BUY",
+        "SPECIAL_PURPOSE_BUY",
+        "COMPULSORY_AUCTION_BUSINESS"
+    ]
 
     def clean(self, to_clean):
         if isinstance(to_clean, str):

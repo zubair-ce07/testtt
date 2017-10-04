@@ -1,4 +1,6 @@
 */cmd-main.py
 .idea
 *.pyc
-*.json
+*/*.json
+Immobilienscout24/out.json
+Immobilienscout24/*.json

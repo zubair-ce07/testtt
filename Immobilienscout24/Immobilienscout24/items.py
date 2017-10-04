@@ -11,6 +11,7 @@ import scrapy
 class Immobilienscout24Item(scrapy.Item):
     # define the fields for your item here like:
     name = scrapy.Field()
+    id = scrapy.Field()
     url = scrapy.Field()
     property_count_in_city = scrapy.Field()
     property_type = scrapy.Field()
