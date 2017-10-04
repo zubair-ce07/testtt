@@ -111,22 +111,22 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))[0]
 
     def raw_description(self, response):
+        def format_description(para_s):
+            return ' '.join(clean(para_s.css(' ::text')))
+
         xpath = '//*[@class="item-description"]//p'
-        return clean([self.format_description(d) for d in response.xpath(xpath)])
+        return clean([format_description(d) for d in response.xpath(xpath)])
 
     def care_criteria_simplified(self, copy_line):
         return super().care_criteria_simplified(copy_line) or "Состав" in copy_line
 
     def product_description(self, response):
         return [d for d in self.raw_description(response)
-                if not self.care_criteria_simplified(d) and "Состав" not in d]
-
-    def format_description(self, para_s):
-        return ' '.join(clean(para_s.css(' ::text')))
+                if not self.care_criteria_simplified(d)]
 
     def product_care(self, response):
         return [d for d in self.raw_description(response)
-                if self.care_criteria_simplified(d) or "Состав" in d]
+                if self.care_criteria_simplified(d)]
 
 
 class DinosCrawlSpider(BaseCrawlSpider, Mixin):
