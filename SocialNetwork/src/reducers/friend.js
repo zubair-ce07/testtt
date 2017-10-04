@@ -6,14 +6,14 @@ const defaultState = {
 export default function friendReducer(state = defaultState, action) { 
 	switch(action.type){
 		case LIST_FRIENDS:
-			return Object.assign({}, state, { 
-              friends: action.friends,
-            });
-        case UPDATE_FRIENDS:
-        	return Object.assign({}, state, {
-        		friends: state.friends.concat(action.friend)
-      		})
-        default:
-          return state;
+			return{ 
+        friends: action.friends,
+      });
+    case UPDATE_FRIENDS:
+    	return{
+    		friends: state.friends.concat(action.friend)
+  		})
+    default:
+      return state;
 	}
 }
