@@ -91,7 +91,6 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
                 body['marketingType'] = marketing_type[1]
                 body['realEstateAndMarketingType'] = sale_type
                 body['world'] = 'COMMERCIAL'
-                print(body)
                 yield self.property_request(item, body)
 
     def property_request(self, item, body):
