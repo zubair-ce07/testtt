@@ -25,8 +25,8 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
     currency_symbol = '₽'
 
     gender_map = [
-        ('Женская', 'women'),
-        ('Мужская', 'men'),
+        ('женская', 'women'),
+        ('мужская', 'men'),
     ]
 
     def parse(self, response):
@@ -52,23 +52,20 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
         skus = {}
 
         colours_codes = self.colours_and_codes(response)
+        currency_symbols = [self.currency_symbol]
 
         for colour_code, colour in zip(colours_codes[0::2], colours_codes[1::2]):
             for size_height in self.product_size_heights(colour_code, response) or ['']:
                 for size_s in self.colour_variant_selectors(colour_code, size_height, response):
+                    sku = self.product_pricing_common_new(size_s, money_strs=currency_symbols.copy())
 
                     sku_id = clean(size_s.css('::attr(value)'))[0]
                     size = clean(size_s.css(' ::text'))[0]
 
-                    skus[sku_id] = {
-                        'colour': colour,
-                        'size': size + ('/' + size_height if size_height else '')
-                    }
+                    sku['size'] = size + ('/' + size_height if size_height else '')
+                    sku['colour'] = colour
 
-                    skus[sku_id].update(
-                        self.product_pricing_common_new(size_s, money_strs=[self.currency_symbol])
-                    )
-
+                    skus[sku_id] = sku
         return skus
 
     def colours_and_codes(self, response):
@@ -87,7 +84,7 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, response):
         soup = self.product_category(response)
-        soup = ' '.join(soup)
+        soup = ' '.join(soup).lower()
 
         for gender_key, gender in self.gender_map:
             if gender_key in soup:
@@ -115,13 +112,16 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
 
     def raw_description(self, response):
         xpath = '//*[@class="item-description"]//p'
-        return clean([self.paragraph_text(d) for d in response.xpath(xpath)])
+        return clean([self.format_description(d) for d in response.xpath(xpath)])
+
+    def care_criteria_simplified(self, copy_line):
+        return super().care_criteria_simplified(copy_line) or "Состав" in copy_line
 
     def product_description(self, response):
         return [d for d in self.raw_description(response)
                 if not self.care_criteria_simplified(d) and "Состав" not in d]
 
-    def paragraph_text(self, para_s):
+    def format_description(self, para_s):
         return ' '.join(clean(para_s.css(' ::text')))
 
     def product_care(self, response):
