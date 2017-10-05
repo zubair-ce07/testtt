@@ -20,9 +20,9 @@ def main():
 
     options = args[1:]
     while len(options)>1:
-        files_data = FileReader().read_files_from_path(dir, options[1])
-        weathers_info = [MonthlyWeatherInfo(filedata) for filedata in files_data.values()]
-        report_generator = ReportGeneratorFactory().get_report_generator(options[0])
+        files_data = FileReader.read_files_from_path(dir, options[1])
+        weathers_info = [MonthlyWeatherInfo(filedata) for filedata in files_data]
+        report_generator = ReportGeneratorFactory.get_report_generator(options[0])
         report_generator.generate_report(weathers_info)
         options = options[2:]
         print("-"*20)

@@ -28,7 +28,7 @@ class BReportGenerator(ReportGenerator):
         for month_data in self.year_data:
             print(month_data.get_display_month())
             for data in month_data.daily_weathers_info:
-                self.print_min_max(data)
+                BReportGenerator.print_min_max(data)
 
     @staticmethod
     def print_min_max(data):

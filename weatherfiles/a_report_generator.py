@@ -1,6 +1,5 @@
 import sys
 
-from date_utils import DateUtils
 from report_generator import ReportGenerator
 
 MAX_AVG_TEMP = "max_avg_temp"
@@ -37,7 +36,6 @@ class AReportGenerator(ReportGenerator):
         print('Lowest Average: %dC' % (min_temp))
         print('Average Mean Humidity: %d%%' % (max_humidity))
 
-
     def record_average_max_temp(self):
         max_counter = 0
         non_null_value_counter = 0
@@ -45,7 +43,7 @@ class AReportGenerator(ReportGenerator):
             if value.max_temp:
                 max_counter += value.max_temp
                 non_null_value_counter += 1
-        self.recorder[MAX_AVG_TEMP] = max_counter/non_null_value_counter
+        self.recorder[MAX_AVG_TEMP] = max_counter / non_null_value_counter
 
     def record_average_min_temp(self):
         min_counter = 0
@@ -54,7 +52,7 @@ class AReportGenerator(ReportGenerator):
             if value.max_temp:
                 min_counter += value.min_temp
                 non_null_value_counter += 1
-        self.recorder[MIN_AVG_TEMP] = min_counter/non_null_value_counter
+        self.recorder[MIN_AVG_TEMP] = min_counter / non_null_value_counter
 
     def record_average_mean_humidity(self):
         min_counter = 0
@@ -63,4 +61,4 @@ class AReportGenerator(ReportGenerator):
             if value.mean_humidity:
                 min_counter += value.mean_humidity
                 non_null_value_counter += 1
-        self.recorder[MAX_AVG_HUMIDITY] = min_counter/non_null_value_counter
+        self.recorder[MAX_AVG_HUMIDITY] = min_counter / non_null_value_counter

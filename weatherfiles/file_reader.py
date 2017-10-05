@@ -23,20 +23,22 @@ class FileReader:
                 filenames.append(filename)
         return filenames
 
-    def read_files(self, filenames):
-        filesdata = {}
+    @staticmethod
+    def read_files(filenames):
+        filesdata = []
         for filename in filenames:
             filedata = open(filename, 'rU').readlines()
-            filesdata[filename] = filedata
+            filesdata.append(filedata)
         return filesdata
 
-    def read_files_from_path(self, dir, year):
+    @staticmethod
+    def read_files_from_path(dir, year):
         try:
             if "/" in year:
-                filenames = self.get_month_file_name(dir, year)
+                filenames = FileReader.get_month_file_name(dir, year)
             else:
-                filenames = self.get_filenames_from_dir_for_year(dir, year)
-            filesdata = self.read_files(filenames)
+                filenames = FileReader.get_filenames_from_dir_for_year(dir, year)
+            filesdata = FileReader.read_files(filenames)
             return filesdata
         except OSError:
             sys.stderr.write("Unable to locate directory\n")
