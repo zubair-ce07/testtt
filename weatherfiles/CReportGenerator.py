@@ -21,14 +21,15 @@ class CReportGenerator(ReportGenerator):
             print(Colors.RED + "No data recorded for this time period" + Colors.RESET)
             sys.exit(0)
 
-        for data in data_list:
-            self.year_data = self.year_data + data.daily_weathers_info
+        self.year_data = data_list
         self.print_report()
 
     def print_report(self):
-        for data in self.year_data:
-            self.print_max(data)
-            self.print_min(data)
+        for month_data in self.year_data:
+            print(month_data.get_display_month())
+            for data in month_data.daily_weathers_info:
+                self.print_max(data)
+                self.print_min(data)
 
     @staticmethod
     def print_max(data):
