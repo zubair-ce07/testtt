@@ -35,7 +35,7 @@ class EReportGenerator(ReportGenerator):
 
         print('Highest: %dC on %s' % (max_temp[0], DateUtils.get_month_and_day(max_temp[1])))
         print('Lowest: %dC on %s' % (min_temp[0], DateUtils.get_month_and_day(min_temp[1])))
-        print('Humidity: %dC on %s' % (max_humidity[0], DateUtils.get_month_and_day(max_humidity[1])))
+        print('Humidity: %d%% on %s' % (max_humidity[0], DateUtils.get_month_and_day(max_humidity[1])))
 
     def record_max(self, key, value, date):
         max = self.recorder.get(key, (0,))[0]
