@@ -140,7 +140,7 @@ class Immobilienscout24CrawlSpider(scrapy.Spider, BaseClass):
         item['crawl_datetime'] = datetime.datetime.utcnow()
         item['property_name'] = self.property_name(response)
         item['property_address'] = self.property_address(response)
-        item['category'] = self.item_category(response)
+        # item['category'] = self.item_category(response)
         item['type_of_listing'] = self.item_property_listing_type(response)
 
         css = 'script:contains("contactData")::text'
