@@ -39,7 +39,6 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
 
         garment['gender'] = self.product_gender(response)
-
         garment['skus'] = self.skus(response)
         garment['image_urls'] = self.image_urls(response)
 
@@ -73,14 +72,14 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
         return clean(response.css(css))
 
     def colour_variant_selectors(self, colour_code, growth, response):
-        css_t = '#s{colour_code}{h}{growth} label'
-        css = css_t.format(colour_code=colour_code, h='h' if growth else '', growth=growth)
+        height = 'h' if growth else ''
+        css = f'#s{colour_code}{height}{growth} label'
 
         return response.css(css)
 
     def product_size_heights(self, colour_code, response):
-        css_t = '#allh{colour_code} [name="height"]::attr(value)'
-        return clean(response.css(css_t.format(colour_code=colour_code)))
+        css = f'#allh{colour_code} [name="height"]::attr(value)'
+        return clean(response.css(css))
 
     def product_gender(self, response):
         soup = self.product_category(response)
