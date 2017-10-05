@@ -1,8 +1,8 @@
 import sys
 
-from FileReader import FileReader
-from MonthlyWeatherInfo import MonthlyWeatherInfo
-from ReportGeneratorFactory import ReportGeneratorFactory
+from file_reader import FileReader
+from monthly_weather_info import MonthlyWeatherInfo
+from report_generator_factory import ReportGeneratorFactory
 
 
 def main():
