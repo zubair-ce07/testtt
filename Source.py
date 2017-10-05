@@ -1,6 +1,6 @@
 import sys
 import os
-from weatherman.weather_man import WeatherReport
+from weather_man import WeatherReport
 
 
 def parse_arguments(argv):
@@ -20,6 +20,8 @@ def main():
         WeatherReport().get_yearly_insights(my_argv['-e'], path)
     if '-a' in my_argv:
         WeatherReport().get_monthly_insights(my_argv['-a'], path)
+    if '-c' in my_argv:
+        WeatherReport().get_days_insights(my_argv['-c'], path)
 
 
 if __name__ == "__main__":

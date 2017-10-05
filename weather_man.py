@@ -1,6 +1,6 @@
 import csv
-
-from weatherman.weather import Weather
+from termcolor import colored
+from dailyweather import DailyWeather
 
 
 class WeatherReport:
@@ -40,11 +40,14 @@ class WeatherReport:
         return self.months_complete_name[self.months[int(month_number)]]
 
     def __get_day_weather(self, day_data):
-        day_weather = Weather()
+        day_weather = DailyWeather()
         day_weather.set_weather(day_data)
         return day_weather
 
     def __compute_average(self, data):
+        """
+        This is not completed yet, Print is to be implemented
+        """
         average_max_temperature = sum(int(line.weather['Max TemperatureC']) for line in data)/len(data)
         average_min_temperature = sum(int(line.weather['Min TemperatureC']) for line in data)/len(data)
         average_mean_humidity = sum(int(line.weather['Mean Humidity']) for line in data)/len(data)
@@ -85,9 +88,16 @@ class WeatherReport:
                     if data['Max TemperatureC'] and data['Min TemperatureC'] and data['Max Humidity']:
                         month_data.append(self.__get_day_weather(data))
         month_name = self.months_complete_name[self.months[int(month)]]
-        return month_name, month_data
+        return year, month_name, month_data
 
-    def print_dayily_data(self, month_name, month_data):
+    def print_dayily_data(self, year, month_name, month_data):
+        print(month_name + ' ' + year)
+        for i in range(len(month_data)):
+            max_temp = month_data[i].weather['Max TemperatureC']
+            min_temp = month_data[i].weather['Min TemperatureC']
+            print(str(i+1) + ' ' +
+                  colored('+'*int(max_temp), 'red') + colored('+' * int(min_temp), 'blue')
+                  + ' ' + max_temp + 'C - ' + min_temp + 'C')
         return None
 
     def get_yearly_insights(self, year, files_path):
@@ -105,10 +115,10 @@ class WeatherReport:
         return None
 
     def get_monthly_insights(self, year_and_month, files_path):
-        month_name, month_data = self.get_month_data(year_and_month, files_path)
+        year, month_name, month_data = self.get_month_data(year_and_month, files_path)
         self.__compute_average(month_data)
 
     def get_days_insights(self, year_and_month, files_path):
-        month_name, month_data = self.get_month_data(year_and_month, files_path)
-        self.print_dayily_data(month_name, month_data)
+        year, month_name, month_data = self.get_month_data(year_and_month, files_path)
+        self.print_dayily_data(year, month_name, month_data)
         return None

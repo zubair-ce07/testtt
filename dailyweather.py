@@ -1,4 +1,4 @@
-class Weather:
+class DailyWeather:
 
     weather = {}
 
