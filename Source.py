@@ -16,10 +16,10 @@ def parse_arguments(argv):
 def main():
     my_argv, path = parse_arguments(sys.argv)
     os.system("ls " + path + " > files_names")
-    if my_argv['e']:
+    if '-e' in my_argv:
         WeatherReport().get_yearly_insights(my_argv['-e'], path)
-    if my_argv['-a']:
-        None
+    if '-a' in my_argv:
+        WeatherReport().get_monthly_insights(my_argv['-a'], path)
 
 
 if __name__ == "__main__":
