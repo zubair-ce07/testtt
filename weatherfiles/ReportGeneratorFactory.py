@@ -1,4 +1,5 @@
 from AReportGenerator import AReportGenerator
+from BReportGenerator import BReportGenerator
 from CReportGenerator import CReportGenerator
 from EReportGenerator import EReportGenerator
 
@@ -11,3 +12,5 @@ class ReportGeneratorFactory:
             return AReportGenerator()
         elif option == '-c':
             return CReportGenerator()
+        elif option == '-b':
+            return BReportGenerator()
