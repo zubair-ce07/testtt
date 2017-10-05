@@ -1,3 +1,4 @@
+from DateUtils import DateUtils
 
 
 class DailyWeatherInfo:
@@ -10,6 +11,12 @@ class DailyWeatherInfo:
         self.max_humidity = get_int(weather_info[7])
         self.mean_humidity = get_int(weather_info[8])
         self.min_humidity = get_int(weather_info[9])
+
+    def get_day(self):
+        return DateUtils.get_day(self.date)
+
+    def get_day_as_string(self):
+        return str(self.get_day())
 
 
 def get_int(string):

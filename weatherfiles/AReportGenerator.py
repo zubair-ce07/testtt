@@ -18,7 +18,7 @@ class AReportGenerator(ReportGenerator):
 
     def generate_report(self, data_list):
         if len(data_list) == 0:
-            print("No data recorded for this year")
+            print("No data recorded for this time period")
             sys.exit(0)
 
         for data in data_list:
