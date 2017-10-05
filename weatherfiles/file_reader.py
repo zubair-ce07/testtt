@@ -2,6 +2,8 @@ import fnmatch
 import os
 from datetime import datetime
 
+import sys
+
 
 class FileReader:
 
@@ -29,9 +31,13 @@ class FileReader:
         return filesdata
 
     def read_files_from_path(self, dir, year):
-        if "/" in year:
-            filenames = self.get_month_file_name(dir, year)
-        else:
-            filenames = self.get_filenames_from_dir_for_year(dir, year)
-        filesdata = self.read_files(filenames)
-        return filesdata
+        try:
+            if "/" in year:
+                filenames = self.get_month_file_name(dir, year)
+            else:
+                filenames = self.get_filenames_from_dir_for_year(dir, year)
+            filesdata = self.read_files(filenames)
+            return filesdata
+        except OSError:
+            sys.stderr.write("Unable to locate directory\n")
+            sys.exit(1)
