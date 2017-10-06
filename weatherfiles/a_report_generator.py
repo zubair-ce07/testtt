@@ -20,7 +20,8 @@ class AReportGenerator(ReportGenerator):
             print("No data recorded for this time period")
             sys.exit(0)
 
-        self.year_data = [day_data for month_list in data_list for day_data in month_list.daily_weathers_info]
+        for data in data_list:
+            self.year_data = self.year_data + data.daily_weathers_info
 
         self.record_average_max_temp()
         self.record_average_min_temp()
