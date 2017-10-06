@@ -7,16 +7,18 @@ from e_report_generator import EReportGenerator
 
 
 class ReportGeneratorFactory:
+
+    __report_generator_dict = {
+        '-e': EReportGenerator(),
+        '-a': AReportGenerator(),
+        '-c': CReportGenerator(),
+        '-b': BReportGenerator(),
+    }
+
     @staticmethod
     def get_report_generator(option):
-        if option == '-e':
-            return EReportGenerator()
-        elif option == '-a':
-            return AReportGenerator()
-        elif option == '-c':
-            return CReportGenerator()
-        elif option == '-b':
-            return BReportGenerator()
-        else:
+        try:
+            return ReportGeneratorFactory.__report_generator_dict[option]
+        except KeyError:
             sys.stderr.write("Invalid command option\n")
             sys.exit(1)

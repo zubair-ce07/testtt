@@ -17,7 +17,7 @@ class EReportGenerator(ReportGenerator):
         self.recorder = {}
 
     def generate_report(self, data_list):
-        if len(data_list) == 0:
+        if not data_list:
             print("No data recorded for this time period")
             sys.exit(0)
 
@@ -48,13 +48,10 @@ class EReportGenerator(ReportGenerator):
             self.recorder[key] = (value, date)
 
     def record_max_temp_with_date(self):
-        for value in self.year_data:
-            self.record_max(MAX_TEMP, value.max_temp, value.date)
+        [self.record_max(MAX_TEMP, value.max_temp, value.date) for value in self.year_data]
 
     def record_min_temp_with_date(self):
-        for value in self.year_data:
-            self.record_min(MIN_TEMP, value.min_temp, value.date)
+        [self.record_min(MIN_TEMP, value.min_temp, value.date) for value in self.year_data]
 
     def record_max_humidity_with_date(self):
-        for value in self.year_data:
-            self.record_max(MAX_HUMIDITY, value.max_humidity, value.date)
+        [self.record_max(MAX_HUMIDITY, value.max_humidity, value.date) for value in self.year_data]

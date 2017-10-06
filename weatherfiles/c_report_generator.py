@@ -17,7 +17,7 @@ class CReportGenerator(ReportGenerator):
         self.recorder = {}
 
     def generate_report(self, data_list):
-        if len(data_list) == 0:
+        if not data_list:
             print(Colors.RED + "No data recorded for this time period" + Colors.RESET)
             sys.exit(0)
 

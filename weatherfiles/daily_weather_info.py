@@ -20,6 +20,5 @@ class DailyWeatherInfo:
 
 
 def get_int(string):
-    if (string):
+    if string:
         return int(string)
-    return None

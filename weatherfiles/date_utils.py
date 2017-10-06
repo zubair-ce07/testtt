@@ -5,6 +5,7 @@ OUTPUT_MONTH_DAY_FORMAT = '%B %d'
 NUMBER_DAY_FORMAT = '%d'
 MONTH_YEAR_FORMAT = '%B %Y'
 
+
 class DateUtils:
     @staticmethod
     def get_date(date):
