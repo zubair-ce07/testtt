@@ -7,7 +7,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 
-class AnswerfinencialCrawlSpider(CrawlSpider, Base):
+class AnswerfinencialCrawlSpider(CrawlSpider):
     name = 'answerfinencial_crawl'
     allowed_domains = ['answerfinancial.com', 'api.bazaarvoice.com']
     start_urls = ['https://www.answerfinancial.com/']
