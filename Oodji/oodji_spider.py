@@ -128,7 +128,7 @@ class OodjiParseSpider(BaseParseSpider, Mixin):
                 if self.care_criteria_simplified(d)]
 
 
-class DinosCrawlSpider(BaseCrawlSpider, Mixin):
+class OodjiCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = OodjiParseSpider()
 
