@@ -6,8 +6,6 @@ from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
-from .Base import Base
-
 
 class AnswerfinencialCrawlSpider(CrawlSpider, Base):
     name = 'answerfinencial_crawl'
@@ -56,7 +54,7 @@ class AnswerfinencialCrawlSpider(CrawlSpider, Base):
         if reviews_offset == self.DEFAULT_OFFSET:
             product_key = item['product_id']
 
-            for page in range(self.DEFAULT_OFFSET + 30,int(total_reviews), 30):
+            for page in range(self.DEFAULT_OFFSET + 30, int(total_reviews), 30):
                 url = self.api_url_t.format(product_key, page)
                 yield Request(url=url, callback=self.parse_reviews_api, meta={'item': item})
 
