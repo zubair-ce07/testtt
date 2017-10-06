@@ -13,26 +13,28 @@ class HunkemollerProductSpider(CrawlSpider):
     LANG = 'de'
     MARKET = 'DE'
 
-    visited_urls = set()
+    visited_items = set()
 
     rules = [Rule(LinkExtractor(restrict_css='.nav-container'),
-                  callback='parse_pagination', follow=True),
+                  callback='parse', follow=True),
              Rule(LinkExtractor(
                  restrict_css='.category-products'),
                  callback='parse_item')
              ]
 
-    def parse_pagination(self, response):
+    def parse(self, response):
+        yield from super(HunkemollerProductSpider, self).parse(response)
         next_url_css = ".pages .next::attr(href)"
         next_url = response.css(next_url_css).extract_first()
         if next_url:
             yield response.follow(
                 next_url,
-                callback=self.parse_pagination
+                callback=self.parse
             )
 
     def parse_item(self, response):
-        if self.is_visited(response.url):
+        retailer_sku = self.item_retailer_sku(response)
+        if self.is_visited(retailer_sku):
             return
         item = HunkemollerItem()
         item['brand'] = self.BRAND
@@ -42,17 +44,17 @@ class HunkemollerProductSpider(CrawlSpider):
         item['gender'] = self.GENDER
         item['image_urls'] = self.item_image_urls(response)
         item['name'] = self.item_product_name(response)
-        item['retailer_sku'] = self.item_retailer_sku(response)
+        item['retailer_sku'] = retailer_sku
         item['lang'] = self.LANG
         item['market'] = self.MARKET
         item['url'] = response.url
         item['skus'] = self.item_skus(response)
         return item
 
-    def is_visited(self, url):
-        if url in self.visited_urls:
+    def is_visited(self, retailer_sku):
+        if retailer_sku in self.visited_items:
             return True
-        self.visited_urls.add(url)
+        self.visited_items.add(retailer_sku)
         return False
 
     def item_care(self, response):
@@ -99,11 +101,11 @@ class HunkemollerProductSpider(CrawlSpider):
     def item_skus(self, response):
         skus = {}
         colour = self.item_active_color(response)
-        for color_id, size in self.item_sizes(response).items():
+        for size_selector, size in self.item_sizes(response).items():
             temp_skus = {}
             temp_skus['colour'] = colour
             temp_skus['currency'] = 'EUR'
             temp_skus['price'] = self.item_price(response)
             temp_skus['size'] = size
-            skus[color_id] = temp_skus
+            skus[size_selector] = temp_skus
         return skus
