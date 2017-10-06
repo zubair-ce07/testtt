@@ -31,9 +31,7 @@ class WeatherReport:
         return self.MONTHS_NAMES[self.MONTHS_KEY_MAP[int(month_number)]]
 
     def __get_day_weather(self, day_data):
-        day_weather = DayWeather()
-        day_weather.set_weather(day_data)
-        return day_weather
+        return DayWeather(day_data)
 
     def __compute_average(self, data):
         average_max_temperature = sum(int(line.max_temperature) for line in data) // len(data)

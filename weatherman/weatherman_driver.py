@@ -5,7 +5,7 @@ from weatherman import WeatherReport
 
 
 def parse_arguments(argv):
-    if len(argv) > 3 and len(argv)%2 == 0:
+    if len(argv) > 3 and len(argv) % 2 == 0:
         path = argv[1]
         opts = {}  # Empty dictionary to store actions to perform.
         while argv:  # While there are arguments left to parse.
@@ -33,8 +33,8 @@ def main():
         except FileNotFoundError:
             print('Files path is incorrect')
     else:
-        print("Commandline arguments missing Select Option from ['-a', '-c', '-e']\n"
-              "eg: weatherman.py /path/to/files-dir -e 2002")
+        print("usage: weatherman.py /path/to/files-dir [option] [year/month] \n"
+              "Options:\n-e\tYearly Report\n-a\tMonthly Report\n-c\tDaily Report")
 
 
 if __name__ == "__main__":
