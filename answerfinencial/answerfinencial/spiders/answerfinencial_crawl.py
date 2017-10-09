@@ -13,7 +13,7 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
     start_urls = ['https://www.answerfinancial.com/']
     api_url_t = 'https://api.bazaarvoice.com/data/batch.json?passkey=u22jmac9b0y5a4g20u67tooka&apiversion=5.5&' \
                 'resource.q0=reviews&filter.q0=productid:eq:{}&limit.q0=30&offset.q0={}'
-    DEFAULT_OFFSET = 8
+    DEFAULT_OFFSET = 0
     product_id_re = re.compile(r'productId:\s+\"(.*)\"')
 
     rules = (
@@ -55,7 +55,7 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
         if reviews_offset == self.DEFAULT_OFFSET:
             product_key = item['product_id']
 
-            for page in range(self.DEFAULT_OFFSET + 30, int(total_reviews), 30):
+            for page in range(30, int(total_reviews), 30):
                 url = self.api_url_t.format(product_key, page)
                 yield Request(url=url, callback=self.parse_reviews_api, meta={'item': item})
 
