@@ -19,7 +19,7 @@ class HunkemollerProductSpider(CrawlSpider):
                   callback='parse', follow=True),
              Rule(LinkExtractor(
                  restrict_css='.category-products'),
-                 callback='parse_item')
+                 callback='parse_item'),
              ]
 
     def parse(self, response):
@@ -89,23 +89,22 @@ class HunkemollerProductSpider(CrawlSpider):
         return int(float(price.strip()) * 100)
 
     def item_sizes(self, response):
-        size_css = ".product-options option[data-products]::text"
-        sizes = response.css(size_css).extract()[1:]
-        sizes = [size.strip() for size in sizes if size.strip()]
-
-        c_id_css = ".product-options option[data-products]::attr(data-products)"
-        c_ids = response.css(c_id_css).extract()
-        c_ids = [i[2:-2] for i in c_ids]
-        return dict(zip(c_ids, sizes))
+        sizes_dict = {}
+        size_selector = response.css(".product-options option[data-products]")
+        for selector in size_selector:
+            size = selector.css('::text').extract_first().strip()
+            c_id = selector.css('::attr(data-products)').extract_first()[2:-2]
+            sizes_dict[c_id] = size
+        return sizes_dict
 
     def item_skus(self, response):
         skus = {}
         colour = self.item_active_color(response)
-        for size_selector, size in self.item_sizes(response).items():
+        for s_id, size in self.item_sizes(response).items():
             temp_skus = {}
             temp_skus['colour'] = colour
             temp_skus['currency'] = 'EUR'
             temp_skus['price'] = self.item_price(response)
             temp_skus['size'] = size
-            skus[size_selector] = temp_skus
+            skus[s_id] = temp_skus
         return skus
