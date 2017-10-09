@@ -7,7 +7,7 @@ class WoolRichSpider(CrawlSpider):
 
     name = 'woolrich'
     allowed_domains = ['woolrich.com']
-    start_urls = ['http://www.woolrich.com/woolrich/details/women-s-literary-rex-eskimo-john-rich-bros/_/R-WW1058']
+    start_urls = ['http://www.woolrich.com/woolrich']
     skus_url = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
     navigation_css = ['.mobile-menu-list', '.nav-list nav-', '.addMore']
     product_css = '.hover_img'
