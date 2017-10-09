@@ -29,15 +29,16 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
         name = response.css('.inner-title-main ::text').extract_first() or \
                response.css('.partner-view b:contains("About") ::text').extract_first()
         name = name.replace('About ', '')
-        item['Carrier_name'] = name
+        item['carrier_name'] = name
         if reviews_url:
             yield Request(url=reviews_url, callback=self.parse_reviews, meta={'item': item})
 
     def parse_reviews(self, response):
         item = response.meta['item']
         product_key = self.product_key(response)
-
         item['product_id'] = product_key
+        item['carrier_rating'] = self.carrier_rating(response)
+        item['url'] = response.url
         api_url = self.api_url_t.format(product_key, self.DEFAULT_OFFSET)
         yield Request(url=api_url, meta={'item': item}, callback=self.parse_reviews_api)
 
@@ -59,27 +60,48 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
                 yield Request(url=url, callback=self.parse_reviews_api, meta={'item': item})
 
     def parse_item(self, item, response):
-        item['SubmissionTime'] = response['SubmissionTime']
-        item['user'] = dict()
-        item['user']['name'] = response['UserNickname'] or ''
+        item['submission_time'] = response['SubmissionTime']
+        item['user_name'] = response['UserNickname'] or ''
+        item['user_ratings'] = self.item_user_ratings(response)
         if response['UserLocation']:
-            if ',' in response['UserLocation']:
-                item['user']['city'] = response['UserLocation'].split(',')[0]
-                item['user']['state'] = response['UserLocation'].split(',')[1]
-            else:
-                item['user']['state'] = response['UserLocation']
+            item['user_address'] = self.item_address(response)
         item['description'] = response['ReviewText']
+        item['title'] = response['Title']
 
-        item['SecondaryRatings'] = dict()
+        item['secondary_ratings'] = dict()
         for key in response['SecondaryRatings'].keys():
-            item['SecondaryRatings'][key] = dict()
-            item['SecondaryRatings'][key]['value'] = response['SecondaryRatings'][key]['Value']
-            item['SecondaryRatings'][key]['ValueRange'] = response['SecondaryRatings'][key]['ValueRange']
+            item['secondary_ratings'][key.lower()] = dict()
+            item['secondary_ratings'][key.lower()]['value'] = response['SecondaryRatings'][key]['Value']
+            item['secondary_ratings'][key.lower()]['ValueRange'] = response['SecondaryRatings'][key]['ValueRange']
 
         # item['raw_json'] = response
 
         return item
 
+    def carrier_rating(self, response):
+        ratings = dict()
+        ratings['value'] = response.css('[itemprop="ratingValue"] ::text').extract_first()
+        ratings['value_range'] = response.css('[itemprop="bestRating"] ::text').extract_first()
+        return ratings
+
     def product_key(self, response):
         css = 'script:contains("productId")::text'
         return response.css(css).re_first(self.product_id_re)
+
+    def item_address(self, response):
+        address = dict()
+        if ',' in response['UserLocation']:
+            address['city'] = response['UserLocation'].split(',')[0]
+            address['state'] = response['UserLocation'].split(',')[1]
+        else:
+            address['state'] = response['UserLocation']
+
+        return address
+
+    def item_user_ratings(self, response):
+        user_ratings = dict()
+        user_ratings['value'] = response['Rating']
+        user_ratings['value_range'] = response['RatingRange']
+
+        return user_ratings
+
