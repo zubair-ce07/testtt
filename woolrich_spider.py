@@ -1,5 +1,4 @@
 from scrapy import FormRequest
-from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -8,28 +7,19 @@ class WoolRichSpider(CrawlSpider):
 
     name = 'woolrich'
     allowed_domains = ['woolrich.com']
-    start_urls = ['http://www.woolrich.com/woolrich/']
+    start_urls = ['http://www.woolrich.com/woolrich/details/women-s-literary-rex-eskimo-john-rich-bros/_/R-WW1058']
     skus_url = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
-    woolrich_garment = []
-    skus_request = []
+    navigation_css = ['.mobile-menu-list', '.nav-list nav-', '.addMore']
+    product_css = '.hover_img'
     rules = (
-        Rule(LinkExtractor(restrict_css=('.menu-bar',)),),
-        Rule(LinkExtractor(restrict_css=('.cats',)), callback='parse_garments')
+        Rule(LinkExtractor(restrict_css=(navigation_css), tags=('a', 'div'), attrs=('href', 'nextpage')),),
+        Rule(LinkExtractor(restrict_css=(product_css,)), callback='parse_product'),
     )
-
-    def parse_garments(self, response):
-        product_urls = self.product_urls(response)
-        for product_url in product_urls:
-            product_url = response.urljoin(product_url)
-            yield Request(url=product_url, callback=self.parse_product)
-        scroll_page = self.product_scroll_url(response)
-        if scroll_page:
-            product_api_url = response.urljoin(scroll_page)
-            yield Request(url=product_api_url, callback=self.parse_garments)
 
     def parse_product(self, response):
         garment = {}
         garment['skus'] = {}
+        garment['requests'] = []
         garment['name'] = self.product_name(response)
         garment['description'] = self.product_description(response)
         garment['retailer_sku'] = self.product_retailer_sku(response)
@@ -41,74 +31,51 @@ class WoolRichSpider(CrawlSpider):
         garment['care'] = self.product_care(response)
         garment['trail'] = self.product_trail(response)
         garment['image_urls'] = self.porduct_image_urls(response)
-        color_sort = self.product_color_sort(response)
-        color_sort_sale_map = self.product_color_sort_sale_map(response)
-        has_colors = self.product_color_ids(response)
-        if has_colors:
-            return self.parse_color(response, garment, color_sort, color_sort_sale_map)
+        colors = self.product_color_ids(response)
+        if colors:
+            return self.parse_color(response, garment, colors)
         else:
             return garment
 
-    def parse_color(self, response, garment, color_sort, color_sort_sale_map):
-        color_ids = self.product_color_ids(response)
+    def parse_color(self, response, garment, colors):
+        color_ids = colors
         color_names = self.product_color_names(response)
         selected_size = self.product_selected_size(response)
-        if selected_size:
-            for color_id, color_name in zip(color_ids, color_names):
-                data = {
-                    'productId': garment['retailer_sku'],
-                    'colorId': color_id,
-                    'colorDisplayName': color_name,
-                    'size': selected_size,
-                    "colorSort": color_sort,
-                    "colorSortSaleMap": color_sort_sale_map
-                }
-                self.skus_request.append(FormRequest(url=self.skus_url, formdata=data,
-                                                     callback=self.parse_size,
-                                                     meta={'garment': garment, 'color_sort': color_sort,
-                                                           'color_sort_sale_map': color_sort_sale_map}))
-        else:
-            for color_id, color_name in zip(color_ids, color_names):
-                data = {
-                    'productId': garment['retailer_sku'],
-                    'colorId': color_id,
-                    'colorDisplayName': color_name,
-                    "colorSort": color_sort,
-                    "colorSortSaleMap": color_sort_sale_map
-                }
-                self.skus_request.append(FormRequest(url=self.skus_url, formdata=data,
-                                                     callback=self.parse_size,
-                                                     meta={'garment': garment, 'color_sort': color_sort,
-                                                           'color_sort_sale_map': color_sort_sale_map}))
-        return self.skus_request
+        if not selected_size:
+            selected_size = ""
+        for color_id, color_name in zip(color_ids, color_names):
+            product_id = garment['retailer_sku']
+            data = {
+                'productId': product_id,
+                'colorId': color_id,
+                'colorDisplayName': color_name,
+                'size': selected_size
+            }
+            garment['requests'].append(FormRequest(url=self.skus_url, formdata=data,
+                                                   callback=self.parse_size,
+                                                   meta={'garment': garment}))
+
+        return garment['requests']
 
     def parse_size(self, response):
-        if self.skus_request:
-            self.skus_request.pop(0)
+        self.remove_processed_request(response)
         color_id = self.product_selected_color_id(response)
         color_display_name = self.product_selected_color_name(response)
         sku_ids = self.product_sku_ids(response, selector="sizelist")
         dimensions = self.product_dimensions(response)
-        stocked_dimensions = self.product_stocked_dimensions(response)
-        if stocked_dimensions:
+        if dimensions:
             for size in sku_ids:
                 data = {
                     'productId': response.meta['garment']['retailer_sku'],
                     'colorId': color_id,
                     'colorDisplayName': color_display_name,
                     'skuId': "",
-                    'selectedSize': size,
-                    'selectedDimension': "",
-                    "colorSort": response.meta['color_sort'],
-                    "colorSortSaleMap": response.meta['color_sort_sale_map']
+                    'selectedSize': size
                 }
-                self.skus_request.append(FormRequest(url=self.skus_url, formdata=data,
-                                                     callback=self.parse_fit,
-                                                     meta={'garment': response.meta['garment'],
-                                                           'color_sort': response.meta['color_sort'],
-                                                           'color_sort_sale_map': response.meta[
-                                                               'color_sort_sale_map']}))
-        if not dimensions:
+                response.meta['garment']['requests'].append(FormRequest(url=self.skus_url, formdata=data,
+                                                                        callback=self.parse_fit,
+                                                                        meta={'garment': response.meta['garment']}))
+        else:
             for sku_id in sku_ids:
                 selected_size = self.product_selected_size(response, sku_id)
                 data = {
@@ -116,46 +83,39 @@ class WoolRichSpider(CrawlSpider):
                     'colorId': color_id,
                     'colorDisplayName': color_display_name,
                     'skuId': sku_id,
-                    'selectedSize': selected_size,
-                    'selectedDimension': "",
-                    "colorSort": response.meta['color_sort'],
-                    "colorSortSaleMap": response.meta['color_sort_sale_map']
+                    'selectedSize': selected_size
                 }
-                self.skus_request.append(FormRequest(url=self.skus_url, formdata=data,
-                                                     callback=self.parse_skus,
-                                                     meta={'garment': response.meta['garment']}))
-        return self.skus_request
+                response.meta['garment']['requests'].append(FormRequest(url=self.skus_url, formdata=data,
+                                                                        callback=self.parse_skus,
+                                                                        meta={'garment': response.meta['garment']}))
+
+        return response.meta['garment']['requests']
 
     def parse_fit(self, response):
-        if self.skus_request:
-            self.skus_request.pop(0)
-        color_id = self.product_color_id(response)
-        selected_size = self.product_selected_size(response)
+        self.remove_processed_request(response)
         sku_ids = self.product_sku_ids(response, selector="dimensionslist")
         dimensions = self.product_stocked_dimensions(response)
+        color_id = self.product_color_id(response)
+        selected_size = self.product_selected_size(response)
         for sku_id, selected_dimension in zip(sku_ids, dimensions):
             data = {
                 'productId': response.meta['garment']['retailer_sku'],
                 'colorId': color_id,
                 'skuId': sku_id,
                 'selectedSize': selected_size,
-                'selectedDimension': selected_dimension,
-                "colorSort": response.meta['color_sort'],
-                "colorSortSaleMap": response.meta['color_sort_sale_map']
+                'selectedDimension': selected_dimension
             }
-            self.skus_request.append(FormRequest(url=self.skus_url, formdata=data,
-                                                 callback=self.parse_skus,
-                                                 meta={'garment': response.meta['garment']}))
-        return self.skus_request
+            response.meta['garment']['requests'].append(FormRequest(url=self.skus_url, formdata=data,
+                                                                    callback=self.parse_skus,
+                                                                    meta={'garment': response.meta['garment']}))
+        return response.meta['garment']['requests']
 
     def parse_skus(self, response):
-        if self.skus_request:
-            self.skus_request.pop(0)
+        self.remove_processed_request(response)
         size = ""
         dimension = ""
         currency = self.sku_currency(response)
         price = self.sku_price(response)
-        seller = self.sku_seller(response)
         color = self.sku_color(response)
         sku_id = self.sku_id(response, selector="dimensionslist")
         if sku_id:
@@ -168,16 +128,12 @@ class WoolRichSpider(CrawlSpider):
         response.meta['garment']['skus'][sku_id] = {
             "currency": currency,
             "price": price,
-            "colour": color,
-            "size": size,
-            "brand": seller
+            "color": color,
+            "size": size
         }
-        product_id = response.meta['garment']['retailer_sku']
-        product_available = any(product_id in garment['retailer_sku'] for garment in self.woolrich_garment)
-        if not product_available:
-            self.woolrich_garment.append(response.meta['garment'])
-        if not self.skus_request:
-            return self.woolrich_garment
+        if not response.meta['garment']['requests']:
+            del response.meta['garment']['requests']
+            return response.meta['garment']
 
     def product_urls(self, response):
         return response.css(".hover_img > a::attr(href)").extract()
@@ -189,11 +145,8 @@ class WoolRichSpider(CrawlSpider):
         return response.css('.pdp_title [itemprop="name"]::text').extract_first().strip()
 
     def product_description(self, response):
-        description = response.css('span[itemprop="description"]::text').extract_first()
-        if description:
-            return description.strip()
-        else:
-            return response.css('span[itemprop="description"] li::text').extract()
+        description_css = 'span[itemprop="description"]::text, span[itemprop="description"] li::text'
+        return response.css(description_css).extract()
 
     def product_retailer_sku(self, response):
         return response.css('.pdp::attr(productid)').extract_first()
@@ -210,12 +163,6 @@ class WoolRichSpider(CrawlSpider):
     def product_currency(self, response):
         return response.css('[itemprop="priceCurrency"]::text').extract_first()
 
-    def product_color_sort(self, response):
-        return response.css('#pdpDetails::attr(colorsort)').extract_first()
-
-    def product_color_sort_sale_map(self, response):
-        return response.css('#pdpDetails::attr(colorsortsalemap)').extract_first()
-
     def product_categories(self, response):
         return response.css('#breadcrumbs a::text').extract()[1:]
 
@@ -228,17 +175,13 @@ class WoolRichSpider(CrawlSpider):
         return price
 
     def product_trail(self, response):
-        trail = []
         trail_urls = response.css('#breadcrumbs a::attr(href)').extract()
-        for trail_url in trail_urls:
-            trail.append(response.urljoin(trail_url))
+        trail = [response.urljoin(trail_url) for trail_url in trail_urls]
         return trail
 
     def porduct_image_urls(self, response):
-        urls = []
         image_urls = response.css('#prod-detail__slider-nav img::attr(src)').extract()
-        for image_url in image_urls:
-            urls.append(response.urljoin(image_url))
+        urls = [response.urljoin(image_url) for image_url in image_urls]
         if urls:
             return urls
         else:
@@ -257,7 +200,7 @@ class WoolRichSpider(CrawlSpider):
         if sku_id:
             return response.css('#' + sku_id + '::attr(title)').extract_first()
         else:
-            return response.css(".sizelist a[class~='selected']::attr(title)").extract_first()
+            return response.css('.sizelist a[class~="selected"]::attr(title)').extract_first()
 
     def product_selected_color_id(self, response):
         return response.css(".colorlist a[class~='selected'] img::attr(colorid)").extract_first()
@@ -283,9 +226,6 @@ class WoolRichSpider(CrawlSpider):
     def sku_price(self, response):
         return response.css('[itemprop="price"]::attr(content)').extract_first()
 
-    def sku_seller(self, response):
-        return response.css('[itemprop="seller"]::attr(content)').extract_first()
-
     def sku_color(self, response):
         return response.css('.colorName::text').extract_first().strip()
 
@@ -294,3 +234,6 @@ class WoolRichSpider(CrawlSpider):
 
     def sku_dimension(self, response):
         return response.css('.dimensionslist a[class~="selected"]::text').extract_first().strip()
+
+    def remove_processed_request(self, response):
+        response.meta['garment']['requests'].remove(response.request)
