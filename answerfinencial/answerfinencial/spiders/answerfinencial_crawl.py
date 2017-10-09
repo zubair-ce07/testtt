@@ -22,6 +22,12 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
         Rule(LinkExtractor(restrict_css=".partners-logo "), callback='parse_items_listing'),
 
     )
+    secondry_ratings_map = {
+        "Competitiveness": "Competitiveness of value",
+        "Comfort": "Discounts offered",
+        "Appearance1": "Quality of customer service",
+        "Quality": "Quality of claims service"
+    }
 
     def parse_items_listing(self, response):
         item = {}
@@ -64,15 +70,16 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
         item['user_name'] = response['UserNickname'] or ''
         item['user_ratings'] = self.item_user_ratings(response)
         if response['UserLocation']:
-            item['user_address'] = self.item_address(response)
+            item['user_address'] = response['UserLocation']
         item['description'] = response['ReviewText']
         item['title'] = response['Title']
 
         item['secondary_ratings'] = dict()
         for key in response['SecondaryRatings'].keys():
-            item['secondary_ratings'][key.lower()] = dict()
-            item['secondary_ratings'][key.lower()]['value'] = response['SecondaryRatings'][key]['Value']
-            item['secondary_ratings'][key.lower()]['ValueRange'] = response['SecondaryRatings'][key]['ValueRange']
+            key_rating = self.secondry_ratings_map[key]
+            item['secondary_ratings'][key_rating] = dict()
+            item['secondary_ratings'][key_rating]['value'] = response['SecondaryRatings'][key]['Value']
+            item['secondary_ratings'][key_rating]['ValueRange'] = response['SecondaryRatings'][key]['ValueRange']
 
         # item['raw_json'] = response
 
@@ -88,20 +95,9 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
         css = 'script:contains("productId")::text'
         return response.css(css).re_first(self.product_id_re)
 
-    def item_address(self, response):
-        address = dict()
-        if ',' in response['UserLocation']:
-            address['city'] = response['UserLocation'].split(',')[0]
-            address['state'] = response['UserLocation'].split(',')[1]
-        else:
-            address['state'] = response['UserLocation']
-
-        return address
-
     def item_user_ratings(self, response):
         user_ratings = dict()
         user_ratings['value'] = response['Rating']
         user_ratings['value_range'] = response['RatingRange']
 
         return user_ratings
-
