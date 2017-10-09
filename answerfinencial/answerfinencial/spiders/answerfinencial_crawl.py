@@ -42,8 +42,8 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
     def parse_reviews(self, response):
         item = response.meta['item']
         product_key = self.product_key(response)
-        item['product_id'] = product_key
-        item['carrier_rating'] = self.carrier_rating(response)
+        item['carrier_id'] = product_key
+        item['carrier_rating_overall'] = self.carrier_rating(response)
         item['url'] = response.url
         api_url = self.api_url_t.format(product_key, self.DEFAULT_OFFSET)
         yield Request(url=api_url, meta={'item': item}, callback=self.parse_reviews_api)
@@ -57,9 +57,8 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
             yield self.parse_item(item, review)
 
         reviews_offset = int(reviews['BatchedResults']['q0']['Offset'])
-        print(reviews_offset)
         if reviews_offset == self.DEFAULT_OFFSET:
-            product_key = item['product_id']
+            product_key = item['carrier_id']
 
             for page in range(30, int(total_reviews), 30):
                 url = self.api_url_t.format(product_key, page)
@@ -80,9 +79,6 @@ class AnswerfinencialCrawlSpider(CrawlSpider):
             item['secondary_ratings'][key_rating] = dict()
             item['secondary_ratings'][key_rating]['value'] = response['SecondaryRatings'][key]['Value']
             item['secondary_ratings'][key_rating]['ValueRange'] = response['SecondaryRatings'][key]['ValueRange']
-
-        # item['raw_json'] = response
-
         return item
 
     def carrier_rating(self, response):
