@@ -1,109 +1,141 @@
+import calendar
 import csv
 
 from termcolor import colored
 
-from day_weather import DayWeather
+from day_weather import DayWeatherRecord
 
 
 class WeatherReport:
-    files_names = []
+    weather_record_file_names = []
 
-    MONTHS_KEY_MAP = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep",
-                      10: "Oct", 11: "Nov", 12: "Dec"}
+    def __init__(self, file_names):
+        self.weather_record_file_names = file_names
 
-    MONTHS_NAMES = {"Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April", "May": "May",
-                    "Jun": "June", "Jul": "July", "Aug": "August", "Sep": "September", "Oct": "October",
-                    "Nov": "November", "Dec": "December"}
+    def __read_month_weather(self, month_weather_record_file_path):
+        month_weather_record = []
 
-    def __init__(self):
-        with open('files_names') as file_:
-            self.files_names = file_.read().split('\n')[:-1]
+        with open(month_weather_record_file_path) as csv_weather_file:
+            raw_weather_record = csv.DictReader(csv_weather_file)
+            for day_weather_record in raw_weather_record:
+                month_weather_record.append(day_weather_record)
 
-    def __read_month_weather(self, file_path):
-        month_data = []
-        with open(file_path) as csv_file:
-            reader = csv.DictReader(csv_file)
-            for row in reader:
-                month_data.append(row)
-        return month_data
+        return month_weather_record
 
-    def __get_month_name(self, month_number):
-        return self.MONTHS_NAMES[self.MONTHS_KEY_MAP[int(month_number)]]
+    def __get_filtered_day_weather(self, raw_day_weather):
+        return DayWeatherRecord(raw_day_weather)
 
-    def __get_day_weather(self, day_data):
-        return DayWeather(day_data)
+    def __compute_average_weather(self, month_weather_record):
+        max_temperature_sum = sum(
+            int(day_weather_record.max_temperature) for day_weather_record in month_weather_record)
+        min_temperature_sum = sum(
+            int(day_weather_record.min_temperature) for day_weather_record in month_weather_record)
+        mean_humidity_sum = sum(
+            int(day_weather_record.mean_humidity) for day_weather_record in month_weather_record)
 
-    def __compute_average(self, data):
-        average_max_temperature = sum(int(line.max_temperature) for line in data) // len(data)
-        average_min_temperature = sum(int(line.min_temperature) for line in data) // len(data)
-        average_mean_humidity = sum(int(line.mean_humidity) for line in data) // len(data)
-        print('Highest Average: ' + str(average_max_temperature) + 'C')
-        print('Lowest Average: ' + str(average_min_temperature) + 'C')
-        print('Average Mean Humidity: ' + str(average_mean_humidity) + '%')
-        return None
+        total_days = len(month_weather_record)
 
-    def get_required_day(self, data, option):
+        average_max_temperature = max_temperature_sum // total_days
+        average_min_temperature = min_temperature_sum // total_days
+        average_mean_humidity = mean_humidity_sum // total_days
+
+        monthly_average_record = '{}: {}{}'
+
+        print(monthly_average_record.format('Highest Average',
+                                            average_max_temperature,
+                                            'C'))
+        print(monthly_average_record.format('Lowest Average',
+                                            average_min_temperature,
+                                            'C'))
+        print(monthly_average_record.format('Average Mean Humidity',
+                                            average_mean_humidity,
+                                            '%'))
+
+    def get_required_day(self, month_weather_record, option):
         if option == 1:
-            return max(data, key=lambda x: int(x.max_temperature))
+            return max(month_weather_record, key=lambda day_weather_record: int(day_weather_record.max_temperature))
+
         if option == 2:
-            return min(data, key=lambda x: int(x.min_temperature))
+            return min(month_weather_record, key=lambda day_weather_record: int(day_weather_record.min_temperature))
+
         if option == 3:
-            return max(data, key=lambda x: int(x.max_humidity))
-        return data[0]
+            return max(month_weather_record, key=lambda day_weather_record: int(day_weather_record.max_humidity))
+        return month_weather_record[0]
 
     def print_yearly_report(self, highest_temp_day, lowest_temp_day, highest_humidity_day):
+        yearly_report = '{}: {}{} on {} {}'
 
-        print('Highest: ' + highest_temp_day.max_temperature + 'c on '
-              + self.__get_month_name(highest_temp_day.get_month())
-              + ' ' + highest_temp_day.get_day())
+        print(yearly_report.format('Highest',
+                                   highest_temp_day.max_temperature,
+                                   'C',
+                                   calendar.month_name[highest_temp_day.get_month_number()],
+                                   highest_temp_day.get_day_number()))
 
-        print('Lowest: ' + lowest_temp_day.min_temperature + 'c on '
-              + self.__get_month_name(lowest_temp_day.get_month())
-              + ' ' + lowest_temp_day.get_day())
+        print(yearly_report.format('Lowest',
+                                   lowest_temp_day.min_temperature,
+                                   'C',
+                                   calendar.month_name[lowest_temp_day.get_month_number()],
+                                   lowest_temp_day.get_day_number()))
 
-        print('Humidity: ' + highest_humidity_day.max_humidity + '% on '
-              + self.__get_month_name(highest_humidity_day.get_month())
-              + ' ' + highest_humidity_day.get_day())
+        print(yearly_report.format('Humidity',
+                                   highest_humidity_day.max_humidity,
+                                   '%',
+                                   calendar.month_name[highest_humidity_day.get_month_number()],
+                                   highest_humidity_day.get_day_number()))
 
-    def get_month_data(self, year_and_month, files_path, location):
-        month_data = []
+    def get_month_weather_record(self, year_and_month, files_path):
+        month_weather_record = []
         year = year_and_month.split('/')[0]
         month = year_and_month.split('/')[1]
-        complete_file_path = files_path + '/' + location + '_weather_' + year \
-                             + '_' + self.MONTHS_KEY_MAP[int(month)] + '.txt'
-        file_data = self.__read_month_weather(complete_file_path)
-        for data in file_data:
-            if data['Max TemperatureC'] and data['Min TemperatureC'] and data[' Mean Humidity']:
-                month_data.append(self.__get_day_weather(data))
-        month_name = self.__get_month_name(month)
-        return year, month_name, month_data
 
-    def print_dayily_data(self, year, month_name, month_data):
+        complete_weather_file_path = '{}/Murree_weather_{}_{}.txt'.format(files_path,
+                                                                          year,
+                                                                  calendar.month_name[int(month)][:3])
+
+        raw_month_weather_record = self.__read_month_weather(complete_weather_file_path)
+        for raw_day_weather_record in raw_month_weather_record:
+            if raw_day_weather_record['Max TemperatureC'] and \
+                    raw_day_weather_record['Min TemperatureC'] and \
+                    raw_day_weather_record[' Mean Humidity']:
+                month_weather_record.append(self.__get_filtered_day_weather(raw_day_weather_record))
+
+        month_name = calendar.month_name[int(month)]
+
+        return year, month_name, month_weather_record
+
+    def print_dayily_weather_record(self, year, month_name, month_weather_record):
         print(month_name + ' ' + year)
-        for i in range(len(month_data)):
-            max_temp = month_data[i].max_temperature
-            min_temp = month_data[i].min_temperature
-            print(str(i + 1) + ' ' +
-                  colored('+' * int(max_temp), 'red') + colored('+' * int(min_temp), 'blue')
-                  + ' ' + max_temp + 'C - ' + min_temp + 'C')
+        for i in range(len(month_weather_record)):
+            max_temp = month_weather_record[i].max_temperature
+            min_temp = month_weather_record[i].min_temperature
+            day_record = '{} {} {}C - {}C'
+            print(day_record.format(i + 1,
+                                    colored('+' * int(max_temp), 'red') + colored('+' * int(min_temp), 'blue'),
+                                    max_temp,
+                                    min_temp))
 
-    def get_yearly_insights(self, year, files_path):
-        year_data = []
-        for file_name in self.files_names:
+    def get_yearly_weather_insights(self, year, files_path):
+        year_weather_record = []
+
+        for file_name in self.weather_record_file_names:
+            month_weather_record = self.__read_month_weather(files_path + '/' + file_name)
             if year == file_name.split('_')[2]:
-                month_data = self.__read_month_weather(files_path + '/' + file_name)
-                for data in month_data:
-                    if data['Max TemperatureC'] and data['Min TemperatureC'] and data['Max Humidity']:
-                        year_data.append(self.__get_day_weather(data))
-        highest_temperature_day = self.get_required_day(year_data, 1)
-        lowest_temperature_day = self.get_required_day(year_data, 2)
-        highest_humidity_day = self.get_required_day(year_data, 3)
+                for raw_day_weather_record in month_weather_record:
+                    if raw_day_weather_record['Max TemperatureC'] and \
+                            raw_day_weather_record['Min TemperatureC'] and \
+                            raw_day_weather_record['Max Humidity']:
+                        year_weather_record.append(self.__get_filtered_day_weather(raw_day_weather_record))
+
+        highest_temperature_day = self.get_required_day(year_weather_record, 1)
+        lowest_temperature_day = self.get_required_day(year_weather_record, 2)
+        highest_humidity_day = self.get_required_day(year_weather_record, 3)
+
         self.print_yearly_report(highest_temperature_day, lowest_temperature_day, highest_humidity_day)
 
-    def get_monthly_insights(self, year_and_month, files_path, location):
-        year, month_name, month_data = self.get_month_data(year_and_month, files_path, location)
-        self.__compute_average(month_data)
+    def get_monthly_weather_insights(self, year_and_month, files_path):
+        year, month_name, month_weather_record = self.get_month_weather_record(year_and_month, files_path)
+        self.__compute_average_weather(month_weather_record)
 
-    def get_days_insights(self, year_and_month, files_path, location):
-        year, month_name, month_data = self.get_month_data(year_and_month, files_path, location)
-        self.print_dayily_data(year, month_name, month_data)
+    def get_days_weather_insights(self, year_and_month, files_path):
+        year, month_name, month_weather_record = self.get_month_weather_record(year_and_month, files_path)
+        self.print_dayily_weather_record(year, month_name, month_weather_record)
