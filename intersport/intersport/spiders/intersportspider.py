@@ -44,58 +44,51 @@ class IntersportSpider(CrawlSpider):
         item['gender'] = self.item_gender(product_name)
         item['retailer_sku'] = retailer_sku
         item['url'] = response.url
-        color_urls = response.css(".colors-slider .product-image a::attr(name)").extract()
-        color_urls = [c_url for c_url in color_urls if c_url not in response.url]
-
         item['skus'] = self.item_skus(response, retailer_sku)
-        img_request_urls = [self.item_image_request_url(response, retailer_sku)]
-        item['request_queue'] = []
-        if not color_urls:
-            item['request_queue'].append(Request(url=img_request_urls.pop(), callback=self.parse_item_image_urls,
-                                                 meta={'item': item, 'img_request_urls': img_request_urls}))
-        else:
-            item['request_queue'].append(Request(url=self.BASE_URL + color_urls.pop(), callback=self.parse_item_skus,
-                                                 meta={'item': item, 'color_urls': color_urls,
-                                                       'img_request_urls': img_request_urls}))
-        self.next_request_or_item(item)
+        color_urls = response.css(".colors-slider .product-image a::attr(name)").extract()
+
+        image_requests = self.item_image_requests(color_urls, item)
+        color_urls = [c_url for c_url in color_urls if c_url not in response.url]
+        color_requests = self.item_color_request(color_urls, item)
+
+        item['request_queue'] = color_requests + image_requests
+        yield self.next_request_or_item(item)
 
     def next_request_or_item(self, item):
         request_queue = item.get('request_queue')
         if request_queue:
-            yield request_queue.pop()
+            return request_queue.pop()
         else:
-            yield item
+            del item['request_queue']
+            return item
+
+    def item_color_request(self, color_urls, item):
+        color_request = []
+        for url in color_urls:
+            color_request.append(Request(url=self.BASE_URL + url, callback=self.parse_item_skus, meta={'item': item}))
+        return color_request
+
+    def item_image_requests(self, color_urls, item):
+        img_requests = []
+        for c_url in color_urls:
+            retailer_id = c_url[:-1].split('-')[-1]
+            url = self.item_image_request_url(retailer_id)
+            img_requests.append(Request(url, callback=self.parse_item_image_urls,meta={'item': item}))
+        return img_requests
 
     def parse_item_skus(self, response):
         item = response.meta['item']
         item_skus = item.get('skus', {})
-        img_request_urls = response.meta.get('img_request_urls', [])
-
         retailer_id = self.item_retailer_sku(response)
         item_skus.update(self.item_skus(response, retailer_id))
-        img_request_urls.append(self.item_image_request_url(response, retailer_id))
-
         item['skus'] = item_skus
-        color_urls = response.meta['color_urls']
-
-        if not color_urls:
-            item['request_queue'].append(Request(url=img_request_urls.pop(), callback=self.parse_item_image_urls,
-                                                 meta={'item': item, 'img_request_urls': img_request_urls}))
-        else:
-            item['request_queue'].append(Request(url=self.BASE_URL + color_urls.pop(), callback=self.parse_item_skus,
-                                                 meta={'item': item, 'color_urls': color_urls,
-                                                       'img_request_urls': img_request_urls}))
-        self.next_request_or_item(item)
+        yield self.next_request_or_item(item)
 
     def parse_item_image_urls(self, response):
         item = response.meta['item']
-        img_request_urls = response.meta['img_request_urls']
         image_urls = item.get('image_urls', [])
         item['image_urls'] = self.item_image_urls(response, image_urls)
-        if img_request_urls:
-            item['request_queue'].append(Request(url=img_request_urls.pop(), callback=self.parse_item_image_urls,
-                                                 meta={'item': item, 'img_request_urls': img_request_urls}))
-        self.next_request_or_item(item)
+        yield self.next_request_or_item(item)
 
     def is_visited(self, retailer_sku):
         if retailer_sku in self.visited_items:
@@ -170,8 +163,8 @@ class IntersportSpider(CrawlSpider):
             skus[sku_id] = sku
         return skus
 
-    def item_image_request_url(self, response, retailer_id):
-        return self.IMAGE_REQUEST_URL.format(retailer_id=retailer_id.replace(" ", "_"))
+    def item_image_request_url(self, retailer_id):
+        return self.IMAGE_REQUEST_URL.format(retailer_id=retailer_id.replace("~", "_"))
 
     def item_image_urls(self, response, image_urls):
         url_list = response.css('i::attr(n)').extract()
