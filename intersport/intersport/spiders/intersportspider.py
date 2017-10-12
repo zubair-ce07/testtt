@@ -49,7 +49,7 @@ class IntersportSpider(CrawlSpider):
 
         image_requests = self.item_image_requests(color_urls, item)
         color_urls = [c_url for c_url in color_urls if c_url not in response.url]
-        color_requests = self.item_color_request(color_urls, item)
+        color_requests = self.item_color_request(color_urls, item, response)
 
         item['request_queue'] = color_requests + image_requests
         yield self.next_request_or_item(item)
@@ -57,23 +57,25 @@ class IntersportSpider(CrawlSpider):
     def next_request_or_item(self, item):
         request_queue = item.get('request_queue')
         if request_queue:
-            return request_queue.pop()
+            request = request_queue.pop()
+            request.meta['item'] = item
+            return request
         else:
             del item['request_queue']
             return item
 
-    def item_color_request(self, color_urls, item):
+    def item_color_request(self, color_urls, item, response):
         color_request = []
         for url in color_urls:
-            color_request.append(Request(url=self.BASE_URL + url, callback=self.parse_item_skus, meta={'item': item}))
+            color_request.append(Request(response.urljoin(url), callback=self.parse_item_skus, ))
         return color_request
 
     def item_image_requests(self, color_urls, item):
         img_requests = []
         for c_url in color_urls:
-            retailer_id = c_url[:-1].split('-')[-1]
-            url = self.item_image_request_url(retailer_id)
-            img_requests.append(Request(url, callback=self.parse_item_image_urls,meta={'item': item}))
+            color_id = c_url[:-1].split('-')[-1]
+            url = self.IMAGE_REQUEST_URL.format(retailer_id=color_id.replace("~", "_"))
+            img_requests.append(Request(url, callback=self.parse_item_image_urls, ))
         return img_requests
 
     def parse_item_skus(self, response):
@@ -115,32 +117,31 @@ class IntersportSpider(CrawlSpider):
         return [d.strip() for d in description if d.strip()]
 
     def item_gender(self, product_name):
-        gender = 'unisex'
         for gender_str, gender in self.GENDER_MAP.items():
             if gender_str in product_name.lower():
-                gender = gender
-                break
-        return gender
+                return gender
+        return 'unisex-adults'
 
     def item_brand(self, response):
         return response.css("a[class=link] a::text").extract_first()
 
-    def item_previous_prices(self, response):
-        previous_prices = "".join(response.css('.old-price ::text').extract()[:2])
-        if previous_prices:
-            return previous_prices.replace(previous_prices[2], "").strip()
-
     def item_price(self, response):
-        price = "".join(response.css('.current-price ::text').extract()[:2])
-        return price.replace(price[2], "").strip()
+        dollars = response.css('.prix-produit div::text').extract()
+        dollars = [p.strip() for p in dollars if p.strip()]
+        cents = response.css('.prix-produit sup::text').extract()
+        curreny_sign = cents[0][0]
+        cents = [c[1:].strip() for c in cents]
+        prices = [int(p + c) for p, c in list(zip(dollars, cents))]
+        prices.sort()
+        return [curreny_sign, prices]
 
     def item_sizes(self, response):
         sizes = {}
         size_selector = response.css(".tailles-produit button")
-        for selector in size_selector:
+        for s_size in size_selector:
             out_of_stock = False
-            size = selector.css("::text").extract_first().strip()
-            if selector.css('button[disabled]'):
+            size = s_size.css("::text").extract_first().strip()
+            if s_size.css('button[disabled]'):
                 out_of_stock = True
             sizes[size] = out_of_stock
         return sizes
@@ -152,19 +153,17 @@ class IntersportSpider(CrawlSpider):
             sku = {}
             sku['size'] = size
             sku['colour'] = colour
-            sku['currency'] = self.CURRENCY
-            sku['price'] = self.item_price(response)
-            previous_prices = self.item_previous_prices(response)
-            if previous_prices is not None:
-                sku['previous_prices'] = previous_prices
+            curreny_sign, prices = self.item_price(response)
+            if curreny_sign == '€':
+                sku['currency'] = self.CURRENCY
+            sku['price'] = prices[0]
+            if len(prices) > 1:
+                sku['previous_prices'] = prices[1]
             if out_of_stock is True:
                 sku['out_of_stock'] = out_of_stock
-            sku_id = retailer_id.replace(" ", "") + size
+            sku_id = (colour + size).replace(" ", "")
             skus[sku_id] = sku
         return skus
-
-    def item_image_request_url(self, retailer_id):
-        return self.IMAGE_REQUEST_URL.format(retailer_id=retailer_id.replace("~", "_"))
 
     def item_image_urls(self, response, image_urls):
         url_list = response.css('i::attr(n)').extract()
