@@ -1,0 +1,33 @@
+<div class=dashboard-page>
+    <div class=container-fluid>
+        <div class=row>
+            <div class="col-sm-12 col-md-12 main">
+                <div>
+                    <snap-dragger></snap-dragger>
+                    <snap-content snap-opt-tap-to-close="false">
+
+                        <a ui-sref="query" snap-toggle="left">
+                            <span class="menutoggle">
+                                <i class="fa fa-times fa-2x" ></i>
+                            </span>
+                        </a>
+
+                        <div class="fr">
+                        <h2><small>Report Details</small></h2>
+                        </div>
+                        <div class="jumbotron" style="background:white">
+                            <div class="container">
+                                <canvas id="line" class="chart chart-bar" chart-data="data"
+                                    chart-labels="labels" chart-series="series" chart-options="options"
+                                    chart-colors="colors"
+                                    chart-dataset-override="datasetOverride" chart-click="onClick">
+                                </canvas>
+
+                            </div>
+                        </div>
+                    </snap-content>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
