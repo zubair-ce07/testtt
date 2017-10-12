@@ -13,3 +13,4 @@ class IntersportItem(scrapy.Item):
     url = scrapy.Field()
     skus = scrapy.Field()
     lang = scrapy.Field()
+    request_queue = scrapy.Field()
