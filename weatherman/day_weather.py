@@ -5,8 +5,6 @@ class DayWeather:
         self.min_temperature = int(day_weather['Min TemperatureC'])
         self.max_humidity = int(day_weather['Max Humidity'])
         self.mean_humidity = int(day_weather[' Mean Humidity'])
-        if self.max_temperature:
-            self.max_temperature = int(self.max_temperature)
 
     def get_day_number(self):
         return int(self.date.split('-')[2])
