@@ -42,14 +42,13 @@ class IntersportSpider(CrawlSpider):
         item['category'] = self.item_category(response)
         item['description'] = self.item_description(response)
         item['name'] = product_name
-        item['gender'] = self.item_gender(product_name)
+        item['gender'] = self.item_gender(product_name.lower())
         item['retailer_sku'] = retailer_sku
         item['url'] = response.url
         item['skus'] = self.item_skus(response, retailer_sku)
-        color_urls = response.css(".colors-slider .product-image a::attr(name)").extract()
 
-        image_requests = self.item_image_requests(color_urls)
-        color_requests = self.item_color_request(color_urls, response)
+        image_requests = self.item_image_requests(response)
+        color_requests = self.item_color_request(response)
 
         item['request_queue'] = color_requests + image_requests
         yield self.next_request_or_item(item)
@@ -64,15 +63,17 @@ class IntersportSpider(CrawlSpider):
             del item['request_queue']
             return item
 
-    def item_color_request(self, color_urls, response):
+    def item_color_request(self, response):
         color_request = []
+        color_urls = response.css(".colors-slider .product-image a::attr(name)").extract()
         color_urls = [c_url for c_url in color_urls if c_url not in response.url]
         for url in color_urls:
             color_request.append(Request(response.urljoin(url), callback=self.parse_item_skus))
         return color_request
 
-    def item_image_requests(self, color_urls):
+    def item_image_requests(self, response):
         img_requests = []
+        color_urls = response.css(".colors-slider .product-image a::attr(name)").extract()
         for c_url in color_urls:
             color_id = c_url[:-1].split('-')[-1]
             url = self.IMAGE_REQUEST_URL.format(retailer_id=color_id.replace("~", "_"))
@@ -119,7 +120,7 @@ class IntersportSpider(CrawlSpider):
 
     def item_gender(self, product_name):
         for gender_str, gender in self.GENDER_MAP.items():
-            if gender_str in product_name.lower():
+            if gender_str in product_name:
                 return gender
         return 'unisex-adults'
 
@@ -127,7 +128,7 @@ class IntersportSpider(CrawlSpider):
         return response.css("a[class=link] a::text").extract_first()
 
     def integer_price(self, price_text):
-        price =  ''.join(re.findall('\d+', price_text))
+        price = ''.join(re.findall('\d+', price_text))
         if price:
             return int(price)
         return price
