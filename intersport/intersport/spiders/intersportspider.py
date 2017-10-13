@@ -48,9 +48,8 @@ class IntersportSpider(CrawlSpider):
         item['skus'] = self.item_skus(response, retailer_sku)
         color_urls = response.css(".colors-slider .product-image a::attr(name)").extract()
 
-        image_requests = self.item_image_requests(color_urls, item)
-        color_urls = [c_url for c_url in color_urls if c_url not in response.url]
-        color_requests = self.item_color_request(color_urls, item, response)
+        image_requests = self.item_image_requests(color_urls)
+        color_requests = self.item_color_request(color_urls, response)
 
         item['request_queue'] = color_requests + image_requests
         yield self.next_request_or_item(item)
@@ -65,18 +64,19 @@ class IntersportSpider(CrawlSpider):
             del item['request_queue']
             return item
 
-    def item_color_request(self, color_urls, item, response):
+    def item_color_request(self, color_urls, response):
         color_request = []
+        color_urls = [c_url for c_url in color_urls if c_url not in response.url]
         for url in color_urls:
-            color_request.append(Request(response.urljoin(url), callback=self.parse_item_skus, ))
+            color_request.append(Request(response.urljoin(url), callback=self.parse_item_skus))
         return color_request
 
-    def item_image_requests(self, color_urls, item):
+    def item_image_requests(self, color_urls):
         img_requests = []
         for c_url in color_urls:
             color_id = c_url[:-1].split('-')[-1]
             url = self.IMAGE_REQUEST_URL.format(retailer_id=color_id.replace("~", "_"))
-            img_requests.append(Request(url, callback=self.parse_item_image_urls, ))
+            img_requests.append(Request(url, callback=self.parse_item_image_urls))
         return img_requests
 
     def parse_item_skus(self, response):
@@ -126,15 +126,21 @@ class IntersportSpider(CrawlSpider):
     def item_brand(self, response):
         return response.css("a[class=link] a::text").extract_first()
 
+    def integer_price(self, price_text):
+        price =  ''.join(re.findall('\d+', price_text))
+        if price:
+            return int(price)
+        return price
+
     def item_price(self, response):
-        integer_prices = response.css('.prix-produit div::text').extract()
-        integer_prices = [''.join(re.findall('\d+', p.strip())) for p in integer_prices if p.strip()]
-        fractional_prices = response.css('.prix-produit sup::text').extract()
-        curreny_sign = fractional_prices[0][0]
-        fractional_prices = [c[1:].strip() for c in fractional_prices]
-        prices = [int(p + c) for p, c in list(zip(integer_prices, fractional_prices))]
+        price = "".join(response.css('.current-price ::text').extract())
+        if '€' in price:
+            curreny_sign = self.CURRENCY
+        previous_price = "".join(response.css('.prix-produit .old-price ::text').extract())
+        prices = [price, previous_price]
+        prices = [self.integer_price(p.strip()) for p in prices if p.strip()]
         prices.sort()
-        return [curreny_sign, prices]
+        return prices[0], prices[1:], curreny_sign
 
     def item_sizes(self, response):
         sizes = {}
@@ -154,12 +160,10 @@ class IntersportSpider(CrawlSpider):
             sku = {}
             sku['size'] = size
             sku['colour'] = colour
-            curreny_sign, prices = self.item_price(response)
-            if curreny_sign == '€':
-                sku['currency'] = self.CURRENCY
-            sku['price'] = prices[0]
-            if len(prices) > 1:
-                sku['previous_prices'] = prices[1]
+            price, previous_prices, curreny_sign = self.item_price(response)
+            sku['currency'] = curreny_sign
+            sku['price'] = price
+            sku['previous_prices'] = previous_prices
             if out_of_stock is True:
                 sku['out_of_stock'] = out_of_stock
             sku_id = (colour + size).replace(" ", "")
