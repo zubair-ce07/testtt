@@ -1,3 +1,4 @@
+import re
 from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.selector import Selector
@@ -126,12 +127,12 @@ class IntersportSpider(CrawlSpider):
         return response.css("a[class=link] a::text").extract_first()
 
     def item_price(self, response):
-        dollars = response.css('.prix-produit div::text').extract()
-        dollars = [p.strip() for p in dollars if p.strip()]
-        cents = response.css('.prix-produit sup::text').extract()
-        curreny_sign = cents[0][0]
-        cents = [c[1:].strip() for c in cents]
-        prices = [int(p + c) for p, c in list(zip(dollars, cents))]
+        integer_prices = response.css('.prix-produit div::text').extract()
+        integer_prices = [''.join(re.findall('\d+', p.strip())) for p in integer_prices if p.strip()]
+        fractional_prices = response.css('.prix-produit sup::text').extract()
+        curreny_sign = fractional_prices[0][0]
+        fractional_prices = [c[1:].strip() for c in fractional_prices]
+        prices = [int(p + c) for p, c in list(zip(integer_prices, fractional_prices))]
         prices.sort()
         return [curreny_sign, prices]
 
