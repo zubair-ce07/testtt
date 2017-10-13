@@ -6,13 +6,18 @@ import re
 from weatherman import WeatherReport
 
 
-def validate_year_and_month(year_and_month):
+def validate_month(year_and_month):
     month = int(year_and_month.split('/')[1].replace('0', ''))
+    if month < 13:
+        return True
+
+
+def validate_year_and_month(year_and_month):
     pattern = re.compile('\d{4}/\d{1,2}$')
-    if not pattern.match(year_and_month) or month > 12:
-        raise argparse.ArgumentTypeError('{} is an invalid year/month value'.format(year_and_month))
-    else:
+    if pattern.match(year_and_month) and validate_month(year_and_month):
         return year_and_month
+    else:
+        raise argparse.ArgumentTypeError('{} is an invalid year/month value'.format(year_and_month))
 
 
 def validate_year(year):
@@ -25,27 +30,21 @@ def validate_year(year):
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-dir', '--path')
-    parser.add_argument('-e', default=None, required=False, type=validate_year)
-    parser.add_argument('-c', default=None, required=False, type=validate_year_and_month)
-    parser.add_argument('-a', default=None, required=False, type=validate_year_and_month)
-    parser.add_argument('-b', default=None, required=False, type=validate_year_and_month)
+    parser.add_argument('-dir', '--path', required=True)
+    parser.add_argument('-e', help="Year", type=validate_year)
+    parser.add_argument('-c', help="Year/month", type=validate_year_and_month)
+    parser.add_argument('-a', help="Year/month", type=validate_year_and_month)
+    parser.add_argument('-b', help="Year/month", type=validate_year_and_month)
     args = parser.parse_args()
     if args.a or args.b or args.c or args.e:
         args.path = args.path.split('-')[0]
         return args
+    else:
+        parser.exit(parser.print_help())
 
 
 def main():
     args = parse_arguments()
-    if not args:
-        print("usage: weatherman.py -dir /path/to/files [-option] [year/month] \n"
-              "Options:\n"
-              "e\tannual Report\n"
-              "a\tMonthly Report\n"
-              "c\tDaily Report\n"
-              "b\tBonus")
-        return
     try:
         os.chdir(args.path)
         files_pattern = 'Murree_weather_*.txt'
