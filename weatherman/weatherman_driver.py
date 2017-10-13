@@ -1,46 +1,52 @@
+import argparse
+import glob
 import os
-import sys
 
 from weatherman import WeatherReport
 
 
 def parse_arguments():
-    argv = sys.argv
-    if len(argv) > 3 and len(argv):
-        path_to_files = argv[1]
-        options = {}
-        while argv:
-            if argv[0][0] == '-':
-                options[argv[0]] = argv[1]
-            argv = argv[1:]
-        return options, path_to_files.split('-')[0]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-dir', '--path')
+    parser.add_argument('-e', default=None, required=False)
+    parser.add_argument('-c', default=None, required=False)
+    parser.add_argument('-a', default=None, required=False)
+    parser.add_argument('-b', default=None, required=False)
+    args = parser.parse_args()
+    if args.a or args.b or args.c or args.e:
+        args.path = args.path.split('-')[0]
+        return args
     else:
-        return None, None
+        return None
 
 
 def main():
-    actions_to_perform, path_to_files = parse_arguments()
-    if actions_to_perform and path_to_files:
+    args = parse_arguments()
+    if args:
         try:
-            for root, dirs, file_names in os.walk(path_to_files):
-                pass
-            file_names.remove('.DS_Store')
+            os.chdir(args.path)
+            files_pattern = 'Murree_weather_*.txt'
+            file_names = glob.glob(files_pattern)
+            os.chdir("..")
             weather_report = WeatherReport(file_names)
-            if '-e' in actions_to_perform:
-                weather_report.get_yearly_weather_insights(actions_to_perform['-e'], path_to_files)
-            if '-a' in actions_to_perform:
-                weather_report.get_monthly_weather_insights(actions_to_perform['-a'], path_to_files)
-            if '-c' in actions_to_perform:
-                weather_report.get_days_weather_insights(actions_to_perform['-c'], path_to_files)
+            if args.e:
+                weather_report.execute_first_task(args.e, args.path)
+            if args.a:
+                weather_report.execute_second_task(args.a, args.path)
+            if args.c:
+                weather_report.execute_third_task(args.c, args.path)
+            if args.b:
+                weather_report.execute_bonus_task(args.b, args.path)
 
         except FileNotFoundError:
             print('Files path is incorrect')
     else:
-        print("usage: weatherman.py /path/to/files-dir [option] [year/month] \n"
+        print("usage: weatherman.py -dir /path/to/files [-option] [year/month] \n"
               "Options:\n"
-              "-e\tYearly Report\n"
-              "-a\tMonthly Report\n"
-              "-c\tDaily Report")
+              "e\tannual Report\n"
+              "a\tMonthly Report\n"
+              "c\tDaily Report\n"
+              "b\tBonus")
 
 
 if __name__ == "__main__":
