@@ -25,7 +25,7 @@ class WeatherReport:
                 month_weather.append(day_weather)
         return month_weather
 
-    def print_annual_report(self, annual_weather):
+    def __print_annual_report(self, annual_weather):
         report_pattern = '{}: {}{} on {} {}'
 
         max_temp_day = annual_weather['max_temperature']
@@ -61,11 +61,7 @@ class WeatherReport:
         print(report_pattern.format('Highest Average', average_max_temperature, 'C'))
         print(report_pattern.format('Lowest Average', average_min_temperature, 'C'))
 
-    def print_daily_weather_bonus(self, year_and_month, files_path):
-        month_weather_details = self.get_month_weather_details(year_and_month, files_path)
-        if not month_weather_details:
-            print('Given month is not in the files')
-            return
+    def __print_daily_weather_bonus(self, month_weather_details):
 
         year, month_name, month_weather = month_weather_details
         print(month_name + ' ' + year)
@@ -80,11 +76,7 @@ class WeatherReport:
             report_pattern = '{} {}{} {}C - {}C'
             print(report_pattern.format(i + 1, red_plus, blue_plus, max_temp, min_temp))
 
-    def print_daily_weather(self, year_and_month, files_path):
-        month_weather_details = self.get_month_weather_details(year_and_month, files_path)
-        if not month_weather_details:
-            print('Given month is not in the files')
-            return
+    def __print_daily_weather(self, month_weather_details):
 
         year, month_name, month_weather = month_weather_details
         print(month_name + ' ' + year)
@@ -117,12 +109,12 @@ class WeatherReport:
 
         return average_weather
 
-    def validate_month_day(self, day_weather):
+    def __validate_month_day(self, day_weather):
         if day_weather['Max TemperatureC'] and day_weather['Min TemperatureC'] \
                 and day_weather[' Mean Humidity']:
             return True
 
-    def validate_year_day(self, day_weather):
+    def __validate_year_day(self, day_weather):
         if day_weather['Max TemperatureC'] and day_weather['Min TemperatureC'] \
                 and day_weather['Max Humidity']:
             return True
@@ -140,7 +132,7 @@ class WeatherReport:
             return
 
         for day_weather in raw_month_weather:
-            if self.validate_month_day(day_weather):
+            if self.__validate_month_day(day_weather):
                 month_weather.append(DayWeather(day_weather))
 
         month_name = calendar.month_name[int(month)]
@@ -148,12 +140,12 @@ class WeatherReport:
 
     def get_annual_weather_insights(self, year, files_path):
         year_weather = []
-        required_file_names = [weather_file for weather_file in self.weather_files if year in weather_file]
+        year_files = [weather_file for weather_file in self.weather_files if year in weather_file]
 
-        for file_name in required_file_names:
+        for file_name in year_files:
             month_weather = self.__read_month_weather(files_path + '/' + file_name)
             for day_weather in month_weather:
-                if self.validate_year_day(day_weather):
+                if self.__validate_year_day(day_weather):
                     year_weather.append(DayWeather(day_weather))
 
         if not year_weather:
@@ -183,7 +175,7 @@ class WeatherReport:
         annual_weather = self.get_annual_weather_insights(year, files_path)
 
         if annual_weather:
-            self.print_annual_report(annual_weather)
+            self.__print_annual_report(annual_weather)
         else:
             print('Given year is not in record files')
 
@@ -196,7 +188,17 @@ class WeatherReport:
             print('Given month is not in the files')
 
     def execute_third_task(self, year_and_month, files_path):
-        self.print_daily_weather(year_and_month, files_path)
+        month_weather_details = self.get_month_weather_details(year_and_month, files_path)
+
+        if month_weather_details:
+            self.__print_daily_weather(month_weather_details)
+        else:
+            print('Given month is not in the files')
 
     def execute_bonus_task(self, year_and_month, files_path):
-        self.print_daily_weather_bonus(year_and_month, files_path)
+        month_weather_details = self.get_month_weather_details(year_and_month, files_path)
+
+        if month_weather_details:
+            self.__print_daily_weather_bonus(month_weather_details)
+        else:
+            print('Given month is not in the files')

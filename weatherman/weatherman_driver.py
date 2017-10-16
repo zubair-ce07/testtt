@@ -6,6 +6,19 @@ import re
 from weatherman import WeatherReport
 
 
+def get_file_names(files_path):
+    try:
+        os.chdir(files_path)
+        files_pattern = 'Murree_weather_*.txt'
+        file_names = glob.glob(files_pattern)
+        os.chdir("..")
+        return file_names
+
+    except FileNotFoundError:
+        print('Files path is incorrect')
+        return
+
+
 def validate_month(year_and_month):
     month = int(year_and_month.split('/')[1].replace('0', ''))
     if month < 13:
@@ -45,13 +58,8 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    try:
-        os.chdir(args.path)
-        files_pattern = 'Murree_weather_*.txt'
-        file_names = glob.glob(files_pattern)
-        os.chdir("..")
-    except FileNotFoundError:
-        print('Files path is incorrect')
+    file_names = get_file_names(args.path)
+    if not file_names:
         return
 
     weather_report = WeatherReport(file_names)
