@@ -16,7 +16,6 @@ def get_file_names(files_path):
 
     except FileNotFoundError:
         print('Files path is incorrect')
-        return
 
 
 def validate_month(year_and_month):
