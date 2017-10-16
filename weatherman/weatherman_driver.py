@@ -20,8 +20,7 @@ def get_file_names(files_path):
 
 def validate_month(year_and_month):
     month = int(year_and_month.split('/')[1].replace('0', ''))
-    if month < 13:
-        return True
+    return month < 13
 
 
 def validate_year_and_month(year_and_month):

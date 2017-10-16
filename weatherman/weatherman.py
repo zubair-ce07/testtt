@@ -110,14 +110,12 @@ class WeatherReport:
         return average_weather
 
     def __validate_month_day(self, day_weather):
-        if day_weather['Max TemperatureC'] and day_weather['Min TemperatureC'] \
-                and day_weather[' Mean Humidity']:
-            return True
+        return day_weather['Max TemperatureC'] and day_weather['Min TemperatureC'] \
+                and day_weather[' Mean Humidity']
 
     def __validate_year_day(self, day_weather):
-        if day_weather['Max TemperatureC'] and day_weather['Min TemperatureC'] \
-                and day_weather['Max Humidity']:
-            return True
+        return day_weather['Max TemperatureC'] and day_weather['Min TemperatureC'] \
+                and day_weather['Max Humidity']
 
     def get_month_weather_details(self, year_and_month, files_path):
         month_weather = []
