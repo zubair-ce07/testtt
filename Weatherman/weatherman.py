@@ -20,9 +20,7 @@ def main():
 
     if args.c:
         month_bars(args)
-    else:
-        print 'Invalid parameters'
-
+    
 
 
 main()
