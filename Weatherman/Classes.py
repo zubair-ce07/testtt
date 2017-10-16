@@ -1,5 +1,6 @@
 import calendar
 
+
 class Weather:
 
     def __init__(self, info):
@@ -48,6 +49,17 @@ class Weather:
 
         return month + " " + day
 
+    def get_month_year(self):
+        date_list = str(self.pkt).split('-')
+        month = calendar.month_name[int(date_list[1])]
+        year = date_list[0]
+
+        return month + ' ' + year
+
+    def get_day(self):
+        date_list = str(self.pkt).split('-')
+        return date_list[2]
+
 
 class YearlyWeatherReport:
 
@@ -67,6 +79,7 @@ class YearlyWeatherReport:
         print 'Highest: {0}C on {1}'.format(self.highest_temp,self.highest_temp_day)
         print 'Lowest: {0}C on {1}'.format(self.lowest_temp, self.lowest_temp_day)
         print 'Humidity: {0}% on {1}'.format(self.highest_humidity, self.highest_humidity_day)
+        print ' '
 
 
 class MonthlyReport:
@@ -84,4 +97,6 @@ class MonthlyReport:
         print 'Highest Average: {0}C'.format(self.total_max_temp / self.days_count)
         print 'Lowest Average: {0}C'.format(self.total_min_temp / self.days_count)
         print 'Average Mean Humidity: {0}%'.format(self.total_mean_humidity / self.days_count)
+        print ' '
+
 

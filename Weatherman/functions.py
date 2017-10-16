@@ -1,5 +1,7 @@
-from FIleGetters import get_file_names, get_file_names_one
+import sys
+from FIleGetters import get_file_names, get_file_names_one,get_file_names_two
 from Classes import Weather , YearlyWeatherReport, MonthlyReport
+
 
 def year(args):
 
@@ -8,7 +10,6 @@ def year(args):
 
     yearly_report = YearlyWeatherReport()
     count = 0
-    first_min_temp = 0
 
     for index in range(0, weather_files_count):
 
@@ -23,8 +24,8 @@ def year(args):
 
         while line:
 
-            splitted_line = line.split(',')
-            weather = Weather(splitted_line)
+            split_line = line.split(',')
+            weather = Weather(split_line)
 
             if weather.max_temp and int(weather.max_temp) > yearly_report.highest_temp:
                 yearly_report.highest_temp = int(weather.max_temp)
@@ -50,7 +51,6 @@ def year(args):
 
 def month(args):
 
-
     files_list = get_file_names_one(args)
 
     monthly_report = MonthlyReport()
@@ -59,15 +59,11 @@ def month(args):
 
     line = f.readline()
     line = f.readline()
-    first = line.split(',')
-
-
 
     while line:
 
-        splited_line = line.split(',')
-        weather = Weather(splited_line)
-
+        split_line = line.split(',')
+        weather = Weather(split_line)
 
         monthly_report.days_count = monthly_report.days_count + 1
 
@@ -83,3 +79,60 @@ def month(args):
         line = f.readline()
 
     monthly_report.results()
+
+
+def month_bars(args):
+
+    flag = False
+    max_temp_list = []
+    min_temp_list = []
+    day = []
+
+    file_name = get_file_names_two(args)
+
+
+    f = open(file_name[0], "r")
+
+    line = f.readline()
+    line = f.readline()
+
+    while line:
+
+        split_line = line.split(',')
+        weather = Weather(split_line)
+
+        max_temp_list.append(weather.max_temp)
+        min_temp_list.append(weather.min_temp)
+        day.append(weather.get_day())
+
+        line = f.readline()
+
+    print(weather.get_month_year())
+
+    for index in range(0,len(day)):
+
+        sys.stdout.write('\033[1;30m' + day[index] + ' ')
+        if max_temp_list[index]:
+            printer(int(max_temp_list[index]),1)
+        else:
+            print('N/A')
+
+        sys.stdout.write(day[index] +' ')
+        if min_temp_list[index]:
+            printer(int(min_temp_list[index]),0)
+        else:
+            print('N/A')
+
+def printer(temp_value, color):
+
+    if color:
+        for i in range(0 , temp_value):
+
+            sys.stdout.write('\033[1;31m+')
+    else:
+
+        for i in range(0, temp_value):
+            sys.stdout.write('\033[1;34m+')
+    sys.stdout.write('\033[1;30m ' + str(temp_value) +'C')
+    sys.stdout.write('\n')
+
