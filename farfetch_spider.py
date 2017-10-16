@@ -8,29 +8,34 @@ from scrapy.spiders import CrawlSpider, Rule
 class FarFetchSpider(CrawlSpider):
 
     name = "farfetch"
-    start_urls = ["https://www.farfetch.com/uk"]
+    start_urls = ["https://www.farfetch.com/uk/"]
     product_api_url = "https://www.farfetch.com/uk/product/GetDetailState?productId={0}&storeId={1}&categoryId={2}&designerId={3}"
     main_menu_css = ['#header-tabs-container a']
     section_menu_css = ['#tab_248 li.js-asyncMenuChild a']
     product_css = '.ab-available-sizes-product-card a.listing-item-content'
-    product_page = 1
+
     rules = (
         Rule(LinkExtractor(restrict_css=main_menu_css),),
         Rule(LinkExtractor(restrict_css=section_menu_css), callback='parse_products'),
     )
 
     def parse_products(self, response):
+        product_page = 1
         product_urls = response.css(self.product_css+"::attr(href)").extract()
         for product_url in product_urls:
             yield Request(response.urljoin(product_url), callback=self.parse_product)
 
         next_page_disabled = self.product_next_page(response)
         if next_page_disabled:
-            self.product_page = 1
+            if response.meta.get('product_page'):
+                response.meta['product_page'] = 1
         else:
-            self.product_page += 1
-            ajax_url = response.urljoin('?page=' + str(self.product_page))
-            yield Request(url=ajax_url, method='GET', callback=self.parse_products)
+            if response.meta.get('product_page'):
+                product_page = response.meta['product_page'] + 1
+            else:
+                product_page += 1
+            ajax_url = response.urljoin('?page=' + str(product_page))
+            yield Request(url=ajax_url, callback=self.parse_products, meta={'product_page': product_page})
 
     def parse_product(self, response):
         garment = self.product_info(response)
@@ -45,8 +50,7 @@ class FarFetchSpider(CrawlSpider):
         product_json = response.css('script::text').extract()[3]
         product_json = re.findall('window.universal_variable.product = ({.*?})', product_json)
         product_json = json.loads(product_json[0])
-        filtered_product_info = {parameter: value for (parameter, value) in product_json.items() if
-                                 not "_" in parameter}
+        filtered_product_info = {parameter: value for (parameter, value) in product_json.items() if "_" not in parameter}
         filtered_product_info['url'] = response.urljoin(filtered_product_info['url'])
         return filtered_product_info
 
