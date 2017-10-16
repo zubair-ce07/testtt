@@ -109,19 +109,30 @@ def month_bars(args):
 
     print(weather.get_month_year())
 
-    for index in range(0,len(day)):
+    if len(args.c) == 7:
+        for index in range(0,len(day)):
 
-        sys.stdout.write('\033[1;30m' + day[index] + ' ')
-        if max_temp_list[index]:
-            printer(int(max_temp_list[index]),1)
-        else:
-            print('N/A')
+            sys.stdout.write('\033[1;30m' + day[index] + ' ')
+            if max_temp_list[index]:
+                printer(int(max_temp_list[index]),1)
+            else:
+                print('N/A')
 
-        sys.stdout.write(day[index] +' ')
-        if min_temp_list[index]:
-            printer(int(min_temp_list[index]),0)
-        else:
-            print('N/A')
+            sys.stdout.write(day[index] +' ')
+            if min_temp_list[index]:
+                printer(int(min_temp_list[index]),0)
+            else:
+                print('N/A')
+
+    else:
+        for index in range(0, len(day)):
+
+            sys.stdout.write('\033[1;30m' + day[index] + ' ')
+            if max_temp_list[index]:
+                printer_two(int(max_temp_list[index]), int(min_temp_list[index]) )
+            else:
+                print 'N/A'
+
 
 def printer(temp_value, color):
 
@@ -133,6 +144,17 @@ def printer(temp_value, color):
 
         for i in range(0, temp_value):
             sys.stdout.write('\033[1;34m+')
-    sys.stdout.write('\033[1;30m ' + str(temp_value) +'C')
+    sys.stdout.write('\033[1;30m ' + str(temp_value) + 'C')
     sys.stdout.write('\n')
 
+
+def printer_two(max_temp_value, min_temp_value) :
+
+    for i in range(0 , min_temp_value):
+
+        sys.stdout.write('\033[1;34m+')
+
+    for i in range(0, max_temp_value):
+            sys.stdout.write('\033[1;31m+')
+    sys.stdout.write('\033[1;30m  ' + str(min_temp_value) + "C - " + str(max_temp_value) + 'C')
+    sys.stdout.write('\n')
