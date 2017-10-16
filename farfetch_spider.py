@@ -1,5 +1,6 @@
 import re
 import json
+from urllib.parse import urlparse, parse_qs
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
@@ -13,29 +14,24 @@ class FarFetchSpider(CrawlSpider):
     main_menu_css = ['#header-tabs-container a']
     section_menu_css = ['#tab_248 li.js-asyncMenuChild a']
     product_css = '.ab-available-sizes-product-card a.listing-item-content'
-
     rules = (
         Rule(LinkExtractor(restrict_css=main_menu_css),),
         Rule(LinkExtractor(restrict_css=section_menu_css), callback='parse_products'),
     )
 
     def parse_products(self, response):
-        product_page = 1
+
         product_urls = response.css(self.product_css+"::attr(href)").extract()
         for product_url in product_urls:
             yield Request(response.urljoin(product_url), callback=self.parse_product)
 
+        is_next_page = self.is_next_page(response)
         next_page_disabled = self.product_next_page(response)
-        if next_page_disabled:
-            if response.meta.get('product_page'):
-                response.meta['product_page'] = 1
-        else:
-            if response.meta.get('product_page'):
-                product_page = response.meta['product_page'] + 1
-            else:
-                product_page += 1
-            ajax_url = response.urljoin('?page=' + str(product_page))
-            yield Request(url=ajax_url, callback=self.parse_products, meta={'product_page': product_page})
+        if is_next_page and not next_page_disabled:
+            page_no = parse_qs(urlparse(response.url).query).get('page')
+            page_no = int(page_no[0]) if page_no else 1
+            ajax_url = response.urljoin('?page=' + str(page_no+1))
+            yield Request(url=ajax_url, callback=self.parse_products)
 
     def parse_product(self, response):
         garment = self.product_info(response)
@@ -86,6 +82,9 @@ class FarFetchSpider(CrawlSpider):
 
     def product_next_page(self, response):
         return response.css('.js-lp-pagination-next.pagination-disabled').extract_first()
+
+    def is_next_page(self, response):
+        return response.css('.js-lp-pagination-next').extract_first()
 
     def request_or_garment(self, garment):
         if garment['requests']:
