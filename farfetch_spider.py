@@ -1,6 +1,6 @@
 import re
 import json
-from urllib.parse import urlparse, parse_qs
+from w3lib.url import url_query_parameter, add_or_replace_parameter
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
@@ -25,12 +25,11 @@ class FarFetchSpider(CrawlSpider):
         for product_url in product_urls:
             yield Request(response.urljoin(product_url), callback=self.parse_product)
 
-        is_next_page = self.is_next_page(response)
         next_page_disabled = self.product_next_page(response)
-        if is_next_page and not next_page_disabled:
-            page_no = parse_qs(urlparse(response.url).query).get('page')
-            page_no = int(page_no[0]) if page_no else 1
-            ajax_url = response.urljoin('?page=' + str(page_no+1))
+        if product_urls and not next_page_disabled:
+            page_no = url_query_parameter(response.url, 'page', 1)
+            new_value = int(page_no)+1
+            ajax_url = add_or_replace_parameter(response.url, 'page', str(new_value))
             yield Request(url=ajax_url, callback=self.parse_products)
 
     def parse_product(self, response):
@@ -58,18 +57,18 @@ class FarFetchSpider(CrawlSpider):
         json_response = json.loads(response.body.decode())
         trail = [response.meta['garment']['url'] if trail_url =="#" else response.urljoin(trail_url) for trail_url in re.findall('href=\"(.*?)\"', json_response['ProductBreadCrumb'])]
         response.meta['garment']['trail'] = trail
-        response.meta['garment']['skus'] = self.product_skus(json_response)
+        response.meta['garment']['skus'] = self.product_sku(json_response)
         return self.request_or_garment(response.meta['garment'])
 
-    def product_skus(self, garment_meta):
-        skus = {}
+    def product_sku(self, garment_meta):
+        sku = {}
         for size in garment_meta['SizesInformationViewModel']['AvailableSizes']:
             sku_id = size['SizeId']
-            skus[sku_id] = {
+            sku[sku_id] = {
                 'size': size['Description'],
                 'price': size['PriceInfo']['Price']
             }
-        return skus
+        return sku
 
     def product_care(self, response):
         return response.css('[data-tstid="Content_Composition&Care"] dd::text').extract()
@@ -82,9 +81,6 @@ class FarFetchSpider(CrawlSpider):
 
     def product_next_page(self, response):
         return response.css('.js-lp-pagination-next.pagination-disabled').extract_first()
-
-    def is_next_page(self, response):
-        return response.css('.js-lp-pagination-next').extract_first()
 
     def request_or_garment(self, garment):
         if garment['requests']:
