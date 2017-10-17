@@ -21,43 +21,60 @@ class SurfStitch(CrawlSpider):
 
     def parse_product(self, response):
         garment = {}
+        result = None
         garment['requests'] = []
         garment['skus'] = {}
         garment['name'] = self.product_name(response)
         garment['brand'] = self.product_brand(response)
         garment['image_urls'] = self.product_image_urls(response)
         garment['features'] = self.product_features(response)
-        color_urls = response.css('li.attribute:first-child a::attr(href)').extract()
-        garment['requests'] += self.color_request(response,garment, color_urls)
-        return self.request_or_garment(garment)
+        selected_color_url, unselected_color_urls = self.selected_unselected_color(response)
+        if selected_color_url:
+            response.meta['garment'] = garment
+            self.size_or_sku(response)
+        if unselected_color_urls:
+            garment['requests'] += self.color_request(garment, unselected_color_urls)
+            result = self.request_or_garment(garment)
+        return result if result else self.request_or_garment(garment)
 
-    def color_request(self,response, garment, color_urls):
-        sizes = response.css('.selectable.variation-group-value a::attr(href)').extract()
-        if sizes:
-            return self.product_requests(urls=color_urls, callback_=self.parse_size, garment=garment)
-        else:
-            return self.product_requests(urls=color_urls, callback_=self.parse_skus, garment=garment)
+    def color_request(self, garment, unselected_color_urls):
+        requests = []
+        for url in unselected_color_urls:
+            requests.append(Request(url=url, callback=self.parse_color, meta={'garment': garment}))
+        return requests
 
-    def size_request(self, response):
-        size_urls = response.css('.selectable.variation-group-value a::attr(href)').extract()
-        return self.product_requests(urls=size_urls, callback_=self.parse_skus, garment=response.meta['garment'])
+    def parse_color(self, response):
+        return self.size_or_sku(response)
+
+    def size_request(self, garment, unselected_size_urls):
+        requests = []
+        for url in unselected_size_urls:
+            requests.append(Request(url=url, callback=self.parse_size, meta={'garment': garment}))
+        return requests
 
     def parse_size(self, response):
-        response.meta['garment']['requests'] += self.size_request(response)
-        return self.request_or_garment(response.meta['garment'])
+        return self.update_sku(response)
 
-    def parse_skus(self, response):
-        selected_color = response.css('ul.swatches.swatchcolour .selected-value::text').extract_first().strip()
-        selected_size = response.css('ul.swatches.size .selected-value::text').extract_first()
-        price = response.css('.product-price .price-standard::text').extract_first().strip()
+    def size_or_sku(self, response):
+        result = None
+        selected_size_url, unselected_size_urls = self.selected_unselected_size(response)
+        if selected_size_url:
+            result = self.update_sku(response)
+        if unselected_size_urls:
+            response.meta['garment']['requests'] += self.size_request(response.meta['garment'], unselected_size_urls)
+            result = self.request_or_garment(response.meta['garment'])
+        return result if result else self.update_sku(response)
+
+    def update_sku(self, response):
+        selected_color, selected_size, price_standard, price_sales = self.sku_values(response)
         if selected_size:
-            sku_id = selected_color + "_" + selected_size
+            sku_id = selected_color.strip() + "_" + selected_size.strip()
         else:
-            sku_id = selected_color
+            sku_id = selected_color.strip() + "_" + "ONE_SIZE"
         response.meta['garment']['skus'][sku_id] = {
             'size': selected_size,
-            'color': selected_color,
-            'price': price
+            'color': selected_color.strip(),
+            'price': price_sales.strip() if price_sales else price_standard.strip()
         }
 
         return self.request_or_garment(response.meta['garment'])
@@ -79,8 +96,21 @@ class SurfStitch(CrawlSpider):
             return garment['requests'].pop()
         return garment
 
-    def product_requests(self, urls, callback_, garment):
-        requests = []
-        for url in urls:
-            requests.append(Request(url=url, callback=callback_, meta={'garment': garment}))
-        return requests
+    def selected_unselected_color(self, response):
+        selected_color_url = response.css('li.selectable.selected.swiper-slide a::attr(href)').extract()
+        unselected_color_urls = response.css('li.selectable.swiper-slide a::attr(href)').extract()
+        unselected_color_urls = set(unselected_color_urls) - set(selected_color_url)
+        return selected_color_url, unselected_color_urls
+
+    def selected_unselected_size(self, response):
+        selected_size_url = response.css('.selectable.selected.variation-group-value a::attr(href)').extract()
+        unselected_size_urls = response.css('.selectable.variation-group-value a::attr(href)').extract()
+        unselected_size_urls = set(unselected_size_urls) - set(selected_size_url)
+        return selected_size_url, unselected_size_urls
+
+    def sku_values(self, response):
+        selected_color = response.css('ul.swatches.swatchcolour .selected-value::text').extract_first()
+        selected_size = response.css('ul.swatches.size .selected-value::text').extract_first()
+        price_standard = response.css('.product-price .price-standard::text').extract_first()
+        price_sales = response.css('.product-price .price-sales::text').extract_first()
+        return selected_color, selected_size, price_standard, price_sales
