@@ -59,12 +59,12 @@ class SelectedParseSpider(BaseParseSpider, Mixin):
         curreny = self.curreny(response)
         for color, c_code in zip(self.product_colors(response), self.color_codes(response)):
             for size in self.product_sizes(response, c_code):
-                temp_sku = {}
-                temp_sku['color'] = color
-                temp_sku['currency'] = curreny
-                temp_sku['price'] = self.product_price(response, c_code)
-                temp_sku['size'] = size
-                skus[color + size] = temp_sku
+                sku = {}
+                sku['color'] = color
+                sku['currency'] = curreny
+                sku['price'] = self.product_price(response, c_code)
+                sku['size'] = size
+                skus[color + size] = sku
         return skus
 
     def color_codes(self, response):
