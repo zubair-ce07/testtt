@@ -2,7 +2,7 @@ import json
 import scrapy
 
 
-class CarrierReviews(scrapy.Spider):
+class NavabiProducts(scrapy.Spider):
     name = "navabi-uk-crawl"
 
     start_urls = ['https://www.navabi.co.uk/']
