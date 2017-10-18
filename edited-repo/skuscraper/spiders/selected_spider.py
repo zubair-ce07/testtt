@@ -13,9 +13,9 @@ class Mixin:
     lang = 'zh'
     market = 'CN'
     page_size = 40
-    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    url_regex = 'url = "(.+)";'
     pagination_base_url = "=&pageSize=40&beginIndex={starting_index}&orderBy=5&categoryId="
-    images_base_url = "http://img1.selected.com.cn/slt/product/"
+    image_url_t = "http://img1.selected.com.cn/slt/product/{p_id}/{c_code}/{c_code}{i_name}"
     start_urls_with_meta = [
         ('http://www.selected.com.cn/cn/sltstore/quanbunanzhuang.html', {'gender': 'men'}),
         ('http://www.selected.com.cn/cn/sltstore/quanbunvzhuang.html', {'gender': 'women'}),
@@ -46,8 +46,7 @@ class SelectedParseSpider(BaseParseSpider, Mixin):
         p_id = self.product_id(response)
         for code in color_codes:
             for name in img_names:
-                image_urls.append("{b_url}{p_id}/{c_code}/{c_code}{i_name}".format(b_url=self.images_base_url,
-                                                                                   p_id=p_id, c_code=code, i_name=name))
+                image_urls.append(self.image_url_t.format(p_id=p_id, c_code=code, i_name=name))
         return image_urls
 
     def skus(self, response):
@@ -106,7 +105,7 @@ class SelectedCrawlSpider(BaseCrawlSpider, Mixin):
         last_page = int(clean(response.css('.listFbfeet li:nth-last-child(2) a::text'))[0])
         if current_page == last_page:
             return
-        base_url = response.xpath('//body//script[contains(text(),"pageSize = 40")]').re(self.url_regex)[0]
+        base_url = response.xpath('//script[contains(text(),"pageSize")]').re(self.url_regex)[0]
         pagination_url = self.pagination_base_url.format(starting_index=current_page * self.page_size)
         response.meta['trail'] = self.add_trail(response)
         yield Request(base_url + pagination_url, meta=response.meta, callback=self.parse)
