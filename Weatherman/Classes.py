@@ -1,64 +1,72 @@
-import calendar
+import datetime
 
 
-class Weather:
+class WeatherReadings:
 
-    def __init__(self, info):
+    def __init__(self, row):
 
-        self.pkt = info[0]
+        if row.get('PKST'):
+            self.pkt = row.get('PKST')
 
-        self.max_temp = info[1]
-        self.mean_temp = info[2]
-        self.min_temp = info[3]
+        if row.get('PKT'):
+            self.pkt = row.get('PKT')
 
-        self.dew_point = info[4]
-        self.mean_dew_point = info[5]
-        self.min_dew_point = info[6]
+        self.max_temp = row.get('Max TemperatureC')
+        self.mean_temp = row.get('Mean TemperatureC')
+        self.min_temp = row.get('Min TemperatureC')
 
-        self.max_humidity = info[7]
-        self.mean_humidity = info[8]
-        self.min_humidity = info[9]
+        self.dew_point = row.get('Dew PointC')
+        self.mean_dew_point = row.get('MeanDew PointC')
+        self.min_dew_point = row.get('Min DewpointC')
 
-        self.max_sea_level_pressure = info[10]
-        self.mean_Sea_Level_Pressure = info[11]
-        self.min_Sea_Level_Pressure = info[12]
+        self.max_humidity = row.get('Max Humidity')
+        self.mean_humidity = row.get(' Mean Humidity')
+        self.min_humidity = row.get(' Min Humidity')
 
-        self.max_visibility = info[13]
-        self.mean_visibility = info[14]
-        self.min_visibility = info[15]
+        self.max_sea_level_pressure = row.get(' Max Sea Level PressurehPa')
+        self.mean_Sea_Level_Pressure = row.get(' Mean Sea Level PressurehPa')
+        self.min_Sea_Level_Pressure = row.get(' Min Sea Level PressurehPa')
 
-        self.max_wind_speed = info[16]
-        self.mean_wind_Speed = info[17]
+        self.max_visibility = row.get(' Max VisibilityKm')
+        self.mean_visibility = row.get(' Mean VisibilityKm')
+        self.min_visibility = row.get(' Min VisibilityKm')
 
-        self.max_gust_speed = info[18]
+        self.max_wind_speed = row.get(' Max Wind SpeedKm/h')
+        self.mean_wind_Speed = row.get(' Mean Wind SpeedKm/h')
 
-        self.precipitation = info[19]
+        self.max_gust_speed = row.get(' Max Gust SpeedKm/h')
 
-        self.cloud_cover = info[20]
+        self.precipitation = row.get('Precipitationmm')
 
-        self.events = info[21]
+        self.cloud_cover = row.get(' CloudCover')
 
-        self.wind_dir_degrees = info[22]
+        self.events = row.get(' Events')
+
+        self.wind_dir_degrees = row.get('WindDirDegrees')
 
     def get_month_day(self):
 
-        date_list = str(self.pkt).split('-')
+        date_values = self.pkt.split('-')
 
-        month = calendar.month_abbr[int(date_list[1])]
-        day = date_list[2]
+        month_date = datetime.date(int(date_values[0]) , int(date_values[1]) , int(date_values[2]))
 
-        return month + " " + day
+        return month_date.strftime("%B %d")                 # print(mydate.strftime("%A %d. %b %Y"))
 
     def get_month_year(self):
-        date_list = str(self.pkt).split('-')
-        month = calendar.month_name[int(date_list[1])]
-        year = date_list[0]
 
-        return month + ' ' + year
+        date_values = self.pkt.split('-')
+
+        month_date = datetime.date(int(date_values[0]), int(date_values[1]), int(date_values[2]))
+
+        return month_date.strftime("%B %Y")
 
     def get_day(self):
-        date_list = str(self.pkt).split('-')
-        return date_list[2]
+
+        date_values = self.pkt.split('-')
+
+        day = datetime.date(int(date_values[0]), int(date_values[1]), int(date_values[2]))
+
+        return day.strftime("%d")
 
 
 class YearlyWeatherReport:
@@ -98,5 +106,4 @@ class MonthlyReport:
         print 'Lowest Average: {0}C'.format(self.total_min_temp / self.days_count)
         print 'Average Mean Humidity: {0}%'.format(self.total_mean_humidity / self.days_count)
         print ' '
-
 

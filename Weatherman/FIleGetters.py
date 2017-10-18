@@ -1,51 +1,24 @@
-import os,calendar
+import os
+import calendar
+import re
 
 
-def get_file_names(args):
+def get_file_names(filename,args):
 
-    directory_files = os.listdir(args.filename)
-    file_names_list = []
+    directory_files = os.listdir(filename)
+    file_names = []
+    if re.match("^\d{4}$", args):
+        for file_name_row in directory_files:
 
-    for file_name in range(0, len(directory_files)):
-
-        if args.e in directory_files[file_name]:
-            file_names_list.append(args.filename + '/' + directory_files[file_name])
-
-    return file_names_list
-
-
-def get_file_names_one(args):
-
-    directory_files = os.listdir(args.filename)
-    file_names_list = []
-
-    if len(args.a) == 6:
-        month = int(args.a[5:6])
+            if str(args) in file_name_row:
+                file_names.append(os.path.join(filename,file_name_row))
+        return file_names
     else:
-        month = int(args.a[5:7])
+        arg_values = args.split('/')
+        for file_name in range(0, len(directory_files)):
 
-    for file_name in range(0, len(directory_files)):
+            if arg_values[0] in directory_files[file_name] and calendar.month_abbr[int(arg_values[1])] in directory_files[file_name]:
+                file_names.append(os.path.join(filename, directory_files[file_name]))
+                break
 
-        if args.a[0:4] in directory_files[file_name] and calendar.month_abbr[month] in directory_files[file_name]:
-
-            file_names_list.append(args.filename + '/' + directory_files[file_name])
-
-    return file_names_list
-
-
-def get_file_names_two(args):
-
-    directory_files = os.listdir(args.filename)
-    file_names_list = []
-
-    month = int(args.c[5:7])
-
-    for file_name in range(0, len(directory_files)):
-
-        if args.c[0:4] in directory_files[file_name] and calendar.month_abbr[month] in directory_files[file_name]:
-            file_names_list.append(args.filename + '/' + directory_files[file_name])
-            break
-
-    return file_names_list
-
-
+        return file_names

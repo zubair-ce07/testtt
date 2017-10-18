@@ -1,140 +1,152 @@
 import sys
-from FIleGetters import get_file_names, get_file_names_one,get_file_names_two
-from Classes import Weather , YearlyWeatherReport, MonthlyReport
+import csv
+from FIleGetters import get_file_names
+from Classes import WeatherReadings , YearlyWeatherReport, MonthlyReport
 
 
-def year(args):
+def get_yearly_record(filename, args):
 
-    weather_files = get_file_names(args)
+    weather_files = get_file_names(filename,args)
     weather_files_count = len(weather_files)
+    flag = False
 
-    yearly_report = YearlyWeatherReport()
-    count = 0
+    if weather_files:
 
-    for index in range(0, weather_files_count):
+        yearly_report = YearlyWeatherReport()
 
-        f = open(weather_files[index], "r")
+        for index in range(0, weather_files_count):
 
-        line = f.readline()
-        line = f.readline()
+            input_file = csv.DictReader(open(weather_files[index]))
 
-        first_line = line.split(',')
+            for row in input_file:
 
-        first_min_temp = int(first_line[3])
+                weather = WeatherReadings(row)
 
-        while line:
+                if weather.max_temp and int(weather.max_temp) > yearly_report.highest_temp:
+                    yearly_report.highest_temp = int(weather.max_temp)
+                    yearly_report.highest_temp_day = weather.get_month_day()
 
-            split_line = line.split(',')
-            weather = Weather(split_line)
-
-            if weather.max_temp and int(weather.max_temp) > yearly_report.highest_temp:
-                yearly_report.highest_temp = int(weather.max_temp)
-                yearly_report.highest_temp_day = weather.get_month_day()
-
-            if count >= 1:
-                    if weather.min_temp and int(weather.max_temp) < yearly_report.lowest_temp:
-                        yearly_report.lowest_temp = int(weather.max_temp)
+                if flag:
+                        if weather.min_temp and int(weather.max_temp) < yearly_report.lowest_temp:
+                            yearly_report.lowest_temp = int(weather.max_temp)
+                            yearly_report.lowest_temp_day = weather.get_month_day()
+                else:
                         yearly_report.lowest_temp_day = weather.get_month_day()
-            else:
-                    yearly_report.lowest_temp_day = weather.get_month_day()
-                    yearly_report.lowest_temp = first_min_temp
+                        yearly_report.lowest_temp = row.get('Min TemperatureC')
+                        flag = True
 
-            if weather.max_humidity and int(weather.max_humidity) > yearly_report.highest_humidity:
-                yearly_report.highest_humidity = int(weather.max_humidity)
-                yearly_report.highest_humidity_day = weather.get_month_day()
+                if weather.max_humidity and int(weather.max_humidity) > yearly_report.highest_humidity:
+                    yearly_report.highest_humidity = int(weather.max_humidity)
+                    yearly_report.highest_humidity_day = weather.get_month_day()
 
-            count = count + 1
-            line = f.readline()
+        yearly_report.results()
 
-    yearly_report.results()
+    else:
+        error_msg(args.e)
 
 
-def month(args):
+def get_monthly_average(filename,args):
 
-    files_list = get_file_names_one(args)
+    file_name = get_file_names(filename,args)
 
     monthly_report = MonthlyReport()
 
-    f = open(files_list[0], "r")
+    if file_name:
 
-    line = f.readline()
-    line = f.readline()
+        input_file = csv.DictReader(open(file_name[0]))
 
-    while line:
+        for row in input_file:
 
-        split_line = line.split(',')
-        weather = Weather(split_line)
+            weather = WeatherReadings(row)
 
-        monthly_report.days_count = monthly_report.days_count + 1
+            monthly_report.days_count = monthly_report.days_count + 1
 
-        if weather.max_temp:
-            monthly_report.total_max_temp = monthly_report.total_max_temp + int(weather.max_temp)
+            if weather.max_temp:
+                monthly_report.total_max_temp = monthly_report.total_max_temp + int(weather.max_temp)
 
-        if weather.min_temp:
-            monthly_report.total_min_temp = monthly_report.total_min_temp + int(weather.min_temp)
+            if weather.min_temp:
+                monthly_report.total_min_temp = monthly_report.total_min_temp + int(weather.min_temp)
 
-        if weather.mean_humidity:
-            monthly_report.total_mean_humidity = monthly_report.total_mean_humidity + int(weather.mean_humidity)
+            if weather.mean_humidity:
+                monthly_report.total_mean_humidity = monthly_report.total_mean_humidity + int(weather.mean_humidity)
 
-        line = f.readline()
-
-    monthly_report.results()
-
-
-def month_bars(args):
-
-    flag = False
-    max_temp_list = []
-    min_temp_list = []
-    day = []
-
-    file_name = get_file_names_two(args)
-
-
-    f = open(file_name[0], "r")
-
-    line = f.readline()
-    line = f.readline()
-
-    while line:
-
-        split_line = line.split(',')
-        weather = Weather(split_line)
-
-        max_temp_list.append(weather.max_temp)
-        min_temp_list.append(weather.min_temp)
-        day.append(weather.get_day())
-
-        line = f.readline()
-
-    print(weather.get_month_year())
-
-    if len(args.c) == 7:
-        for index in range(0,len(day)):
-
-            sys.stdout.write('\033[1;30m' + day[index] + ' ')
-            if max_temp_list[index]:
-                printer(int(max_temp_list[index]),1)
-            else:
-                print('N/A')
-
-            sys.stdout.write(day[index] +' ')
-            if min_temp_list[index]:
-                printer(int(min_temp_list[index]),0)
-            else:
-                print('N/A')
+        monthly_report.results()
 
     else:
-        for index in range(0, len(day)):
+        error_msg(args.a)
 
-            sys.stdout.write('\033[1;30m' + day[index] + ' ')
-            if max_temp_list[index]:
-                printer_two(int(max_temp_list[index]), int(min_temp_list[index]) )
+
+def get_monthly_record_bars(filename, args):
+
+    max_temp_values = []
+    min_temp_values = []
+    days = []
+
+    file_name = get_file_names(filename,args)
+
+    if file_name:
+
+        input_file = csv.DictReader(open(file_name[0]))
+
+        for row in input_file:
+
+                weather = WeatherReadings(row)
+                max_temp_values.append(weather.max_temp)
+                min_temp_values.append(weather.min_temp)
+                days.append(weather.get_day())
+
+        print(weather.get_month_year())
+
+        for index in range(0,len(days)):
+
+            sys.stdout.write('\033[1;30m' + days[index] + ' ')
+            if max_temp_values[index]:
+                printer_bars_charts(int(max_temp_values[index]),1)
+            else:
+                print('N/A')
+
+            sys.stdout.write(days[index] +' ')
+            if min_temp_values[index]:
+                printer_bars_charts(int(min_temp_values[index]),0)
+            else:
+                print('N/A')
+    else:
+        error_msg(args.c)
+
+
+def get_monthly_single_line_bars(filename, args):
+
+    max_temp_values = []
+    min_temp_values = []
+    days = []
+
+    file_name = get_file_names(filename,args)
+
+    if file_name:
+
+        input_file = csv.DictReader(open(file_name[0]))
+
+        for row in input_file:
+
+                weather = WeatherReadings(row)
+                max_temp_values.append(weather.max_temp)
+                min_temp_values.append(weather.min_temp)
+                days.append(weather.get_day())
+
+        print(weather.get_month_year())
+
+        for index in range(0, len(days)):
+
+            sys.stdout.write('\033[1;30m' + days[index] + ' ')
+            if max_temp_values[index]:
+                printer_single_line_chart(int(max_temp_values[index]), int(min_temp_values[index]) )
             else:
                 print 'N/A'
+    else:
+        error_msg(args.d)
 
 
-def printer(temp_value, color):
+def printer_bars_charts(temp_value, color):
 
     if color:
         for i in range(0 , temp_value):
@@ -148,7 +160,7 @@ def printer(temp_value, color):
     sys.stdout.write('\n')
 
 
-def printer_two(max_temp_value, min_temp_value) :
+def printer_single_line_chart(max_temp_value, min_temp_value) :
 
     for i in range(0 , min_temp_value):
 
@@ -158,3 +170,8 @@ def printer_two(max_temp_value, min_temp_value) :
             sys.stdout.write('\033[1;31m+')
     sys.stdout.write('\033[1;30m  ' + str(min_temp_value) + "C - " + str(max_temp_value) + 'C')
     sys.stdout.write('\n')
+
+
+def error_msg(arg):
+    print "File Not Found For Argument {}".format(arg)
+    print "Enter Year Between 2004 to 2016 \n"
