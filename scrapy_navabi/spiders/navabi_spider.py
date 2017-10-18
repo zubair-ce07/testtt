@@ -7,30 +7,29 @@ class CarrierReviews(scrapy.Spider):
 
     start_urls = ['https://www.navabi.co.uk/']
 
-    care_words = ['bleach', 'day', 'iron', 'clean', 'cycle']
+    care_words = ['bleach', 'dry', 'iron', 'clean', 'cycle']
 
     def is_care(self, sentence):
         sentence_lower = sentence.lower()
-
         return any(c in sentence_lower for c in self.care_words)
 
     def parse(self, response):
         trail_1st_page = ['landing_page', response.url]
-        parameters = {'trail': [trail_1st_page], 'visited': False}
+        parameters = {'trail': [trail_1st_page], 'first_visit': True}
 
         new_products_link = response.css('ul.mainnav__ul a::attr(href)').extract_first()
         yield response.follow(url=new_products_link, callback=self.parse_products, meta=parameters)
 
     def parse_products(self, response):
         product_trail = response.meta['trail']
-        is_first_hit = response.meta['visited']
+        is_first_visit = response.meta['first_visit']
 
-        if not is_first_hit:
+        if is_first_visit:
             trail_page_name = response.css('ul.mainnav__ul span::text').extract_first()
             trail_current_page = [trail_page_name, response.url]
             product_trail.append(trail_current_page)
 
-        parameters = {'trail': product_trail, 'visited': True}
+        parameters = {'trail': product_trail, 'first_visit': False}
 
         for next_product in response.css('a.ProductLink::attr(href)'):
             if next_product:
