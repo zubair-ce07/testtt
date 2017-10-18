@@ -98,14 +98,12 @@ class SurfStitch(CrawlSpider):
 
     def selected_unselected_color(self, response):
         selected_color_url = response.css('li.selectable.selected.swiper-slide a::attr(href)').extract()
-        unselected_color_urls = response.css('li.selectable.swiper-slide a::attr(href)').extract()
-        unselected_color_urls = set(unselected_color_urls) - set(selected_color_url)
+        unselected_color_urls = response.css('li.selectable:not(.selected).swiper-slide a::attr(href)').extract()
         return selected_color_url, unselected_color_urls
 
     def selected_unselected_size(self, response):
         selected_size_url = response.css('.selectable.selected.variation-group-value a::attr(href)').extract()
-        unselected_size_urls = response.css('.selectable.variation-group-value a::attr(href)').extract()
-        unselected_size_urls = set(unselected_size_urls) - set(selected_size_url)
+        unselected_size_urls = response.css('.selectable:not(.selected).variation-group-value a::attr(href)').extract()
         return selected_size_url, unselected_size_urls
 
     def sku_values(self, response):
