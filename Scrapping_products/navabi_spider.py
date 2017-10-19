@@ -10,7 +10,7 @@ class NavabiGarments(CrawlSpider):
 
     start_urls = ['https://www.navabi.co.uk/']
 
-    visited_products = set()
+    visited_garments = set()
 
     product_css = ['.ProductLink']
     listing_css = ['#mainnav', '.pagination--next']
@@ -25,17 +25,17 @@ class NavabiGarments(CrawlSpider):
     def parse_garment(self, response):
         retailer_sku = self.get_retailer_sku(response)
 
-        if retailer_sku in self.visited_products:
+        if retailer_sku in self.visited_garments:
             return
 
-        self.visited_products.add(retailer_sku)
+        self.visited_garments.add(retailer_sku)
 
         brand = self.get_brand(response)
         name = self.get_garment_name(response)
         description = self.get_garment_description(response)
         care = self.get_garment_care(response)
         category = self.get_garment_category(response)
-        currency = self.get_product_currency(response)
+        currency = self.get_garment_currency(response)
         price = self.get_garment_price(response)
 
         garment = {
@@ -68,24 +68,25 @@ class NavabiGarments(CrawlSpider):
 
         skus_images_info = json.loads(response.text)
 
-        color_codes = skus_images_info['colors'].keys()
-        color_names = [skus_images_info['colors'][colors_code]['name'] for colors_code in color_codes]
+        color = skus_images_info['color']
 
         garment_sizes = skus_images_info['measurementInfo'].keys()
         size_color_detail = list()
 
-        for color in color_names:
-            for size in garment_sizes:
-                size_detail = {
-                    'price': garment['price'],
-                    'color': color,
-                    'size': size,
-                    'currency': garment['currency'],
-                    'sku_id': color + '_' + size
-                }
-                if float(skus_images_info['saleprice']):
-                    size_detail['previous_prices'] = [skus_images_info['price']]
-                size_color_detail.append(size_detail)
+        size_detail = {
+            'currency': garment['currency'],
+            'price': garment['price'],
+            'color': color,
+            'size': '',
+            'sku_id': ''
+        }
+
+        for size in garment_sizes:
+            size_detail['size'] = size
+            size_detail['sku_id'] = color + '_' + size
+            if float(skus_images_info['saleprice']):
+                size_detail['previous_prices'] = [skus_images_info['price']]
+            size_color_detail.append(size_detail.copy())
 
         garment['skus'] = size_color_detail
 
@@ -130,7 +131,7 @@ class NavabiGarments(CrawlSpider):
         category_css = '.breadcrumb a ::text'
         return response.css(category_css).extract()[2:]
 
-    def get_product_currency(self, response):
+    def get_garment_currency(self, response):
         currency_css = 'span[itemprop="priceCurrency"]::attr(content)'
         return response.css(currency_css).extract_first()
 
@@ -146,5 +147,5 @@ class NavabiGarments(CrawlSpider):
         sentence_lower = sentence.lower()
         return any(care_word in sentence_lower for care_word in self.care_words)
 
-    def remove_empty_entries(self, contents):
-        return [content.strip() for content in contents if content.strip()]
+    def remove_empty_entries(self, content):
+        return [entry.strip() for entry in content if entry.strip()]
