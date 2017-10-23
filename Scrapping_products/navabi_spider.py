@@ -59,18 +59,20 @@ class NavabiGarments(CrawlSpider):
         garment_sizes = raw_skus['measurementInfo'].keys()
         size_color_detail = list()
 
-        size_detail = {
+        sku_template = {
             'currency': garment['currency'],
             'price': garment['price'],
             'color': color
         }
 
         for size in garment_sizes:
+            size_detail = sku_template.copy()
             size_detail['size'] = size
             size_detail['sku_id'] = color + '_' + size
             if float(raw_skus['saleprice']):
                 size_detail['previous_prices'] = [raw_skus['price']]
-            size_color_detail.append(size_detail.copy())
+
+            size_color_detail.append(size_detail)
 
         return size_color_detail
 
@@ -86,28 +88,29 @@ class NavabiGarments(CrawlSpider):
         return response.css(retailer_sku_css).extract_first()
 
     def get_brand(self, response):
-        brand_css = '.col-12 h2 span a::text'
+        brand_css = 'a[itemprop="brand"]::text'
         return response.css(brand_css).extract_first()
 
     def get_garment_name(self, response):
-        name_css = '.col-12 h3::text'
+        name_css = 'h3[itemprop="name"]::text'
         return response.css(name_css).extract_first()
 
     def get_garment_details(self, response):
         details_css = '.details li::text'
         details = response.css(details_css).extract()
-        fabric_css = '#materials p ::text'
+        fabric_css = '#materials p:first-of-type::text'
         garment_fabric = self.remove_empty_entries(response.css(fabric_css).extract())
-        details += [garment_fabric[0]] if garment_fabric else []
+        details += garment_fabric
         return details
 
     def get_garment_description(self, response):
-        description_css = '.more-details__accordion-content p::text'
-        description = [response.css(description_css).extract_first()]
+        description_css = '.left-arrow p::text, #orig_description::text, #descr_more::text'
+        description = self.remove_empty_entries(response.css(description_css).extract())
         garment_details = self.get_garment_details(response)
-        description += [garment_detail for garment_detail in garment_details
-                        if not self.is_care(garment_detail)]
-        return description
+        detail_description = [garment_detail for garment_detail in garment_details
+                              if not self.is_care(garment_detail)]
+
+        return description + detail_description
 
     def get_garment_care(self, response):
         garment_details = self.get_garment_details(response)
@@ -115,7 +118,7 @@ class NavabiGarments(CrawlSpider):
                 if self.is_care(garment_detail)]
 
     def get_garment_category(self, response):
-        category_css = '.breadcrumb li:not(.back)  a ::text'
+        category_css = '.breadcrumb li:not(.back) a ::text'
         return response.css(category_css).extract()[1:]
 
     def get_garment_currency(self, response):
