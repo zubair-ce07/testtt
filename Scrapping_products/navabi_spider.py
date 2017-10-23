@@ -29,20 +29,20 @@ class NavabiGarments(CrawlSpider):
         garment['category'] = self.get_garment_category(response)
         garment['description'] = self.get_garment_description(response)
         garment['care'] = self.get_garment_care(response)
-        garment['url_original'] = response.url
         garment['currency'] = self.get_garment_currency(response)
         garment['price'] = self.get_garment_price(response)
+        garment['url_original'] = response.url
         garment['spider_name'] = 'navabi-uk-crawl'
         garment['retailer'] = 'navabi-uk'
         garment['gender'] = 'women'
         garment['market'] = 'UK'
 
-        meta = {'garment': garment}
+        meta_data = {'garment': garment}
         color_code = self.get_garment_color(response)
         garment_link_pattern = 'https://www.navabi.co.uk/product-information/?item-id={}-{}'
         garment_info_link = garment_link_pattern.format(garment['retailer_sku'], color_code)
 
-        return scrapy.Request(url=garment_info_link, callback=self.parse_skus_images, meta=meta)
+        return scrapy.Request(url=garment_info_link, callback=self.parse_skus_images, meta=meta_data)
 
     def parse_skus_images(self, response):
         garment = response.meta['garment']
@@ -57,7 +57,7 @@ class NavabiGarments(CrawlSpider):
         color = raw_skus['color']
 
         garment_sizes = raw_skus['measurementInfo'].keys()
-        size_color_detail = list()
+        skus = list()
 
         sku_template = {
             'currency': garment['currency'],
@@ -66,22 +66,23 @@ class NavabiGarments(CrawlSpider):
         }
 
         for size in garment_sizes:
-            size_detail = sku_template.copy()
-            size_detail['size'] = size
-            size_detail['sku_id'] = color + '_' + size
+            sku = sku_template.copy()
+            sku['size'] = size
+            sku['sku_id'] = color + '_' + size
             if float(raw_skus['saleprice']):
-                size_detail['previous_prices'] = [raw_skus['price']]
+                sku['previous_prices'] = [raw_skus['price']]
 
-            size_color_detail.append(size_detail)
+            skus.append(sku)
 
-        return size_color_detail
+        return skus
 
     def parse_images(self, response):
         raw_images = json.loads(response.text)
         product_gallery = raw_images['galleryImages']
         images_base_url = 'https://www.navabi.co.uk{}'
-        return [images_base_url.format(image_url['big'])
-                for image_url in product_gallery]
+        image_urls = [images_base_url.format(image_url['big'])
+                      for image_url in product_gallery]
+        return image_urls
 
     def get_retailer_sku(self, response):
         retailer_sku_css = '.mainContent input::attr(value)'
@@ -114,8 +115,9 @@ class NavabiGarments(CrawlSpider):
 
     def get_garment_care(self, response):
         garment_details = self.get_garment_details(response)
-        return [garment_detail for garment_detail in garment_details
+        care = [garment_detail for garment_detail in garment_details
                 if self.is_care(garment_detail)]
+        return care
 
     def get_garment_category(self, response):
         category_css = '.breadcrumb li:not(.back) a ::text'
