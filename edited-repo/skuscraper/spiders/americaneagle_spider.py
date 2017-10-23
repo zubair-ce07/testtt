@@ -24,7 +24,7 @@ class Mixin:
         ('AEO', 'American Eagle Outfitters'),
         ('AE', 'aerie'),
     ]
-    image_url_re = 'catMainLarge":"\/\/(.+?)"}'
+    image_url_re = 'catMainLarge":"(.*?)"}'
     pagination_url = "{b_url}&pp={page_no}&sort=00"
     start_urls = ['http://www.aeo.jp/top/CSfTop.jsp?cd=1']
 
@@ -44,6 +44,7 @@ class AmericanEagleParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = self.skus(response)
         garment['image_urls'] = self.image_urls(response)
         garment['merch_info'] = self.merch_info(response)
+        garment['url'] = response.url
         return garment
 
     def skus(self, response):
@@ -73,13 +74,18 @@ class AmericanEagleParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.pdp-about-txt .pdp-about-cs ::text'))[0]
 
     def product_name(self, response):
-        return clean(response.css('.psp-product-txt .psp-product-name::text'))[0]
+        p_name =  clean(response.css('.psp-product-txt .psp-product-name::text'))[0]
+        for brand_string, brand in self.brand_map:
+            if brand_string in p_name:
+                return p_name.replace(brand_string, "")
+        return p_name
 
     def product_description(self, response):
         return clean(response.css('.pdp-about-info-txt .pdp-about-copy-specifics::text'))
 
     def image_urls(self, response):
-        return response.xpath('//script[contains(text(),"catMainLarge")]').re(self.image_url_re)
+        image_urls =  clean(response.xpath('//script[contains(text(),"catMainLarge")]').re(self.image_url_re))
+        return ["http:{}".format(url) for url in image_urls]
 
     def merch_info(self, response):
         return clean(response.css('.psp-product-yousave ::text'))
@@ -92,7 +98,7 @@ class AmericanEagleParseSpider(BaseParseSpider, Mixin):
         return 'unisex-adults'
 
     def product_brand(self, response):
-        name = self.product_name(response)
+        name = clean(response.css('.psp-product-txt .psp-product-name::text'))[0]
         for brand_string, brand in self.brand_map:
             if brand_string in name:
                 return brand
@@ -115,8 +121,10 @@ class AmericanEagleCrawlSpider(BaseCrawlSpider, Mixin):
         yield from super(AmericanEagleCrawlSpider, self).parse(response)
         if url_query_parameter(response.url, "pp"):
             return
-        total_items = clean(response.css('.CategoryContentsWrap span[id="totalCount"]::text'))[0]
-        total_pages = int(total_items) // self.page_size + 1
+        total_items = clean(response.css('.CategoryContentsWrap span[id="totalCount"]::text'))
+        if not total_items:
+            return
+        total_pages = int(total_items[0]) // self.page_size + 1
         for p_no in range(2, total_pages + 1):
             url = self.pagination_url.format(b_url=response.url, page_no=p_no)
             response.meta['trail'] = self.add_trail(response)
