@@ -25,14 +25,14 @@ class TescoGarments(CrawlSpider):
             super().parse(response)
             return
 
-        base_url = 'https://www.tesco.com/direct/blocks/catalog/productlisting/infiniteBrowse.jsp?' \
-                   'catId={}&currentPageType=Category&imagePreset=imagePreset-portrait&' \
-                   'lazyload=true&pageViewType=grid&segmentCount=3&sortBy=1&view=grid&offset={}'
+        category_url_pattern = 'https://www.tesco.com/direct/blocks/catalog/productlisting/infiniteBrowse.jsp?' \
+                               'catId={}&currentPageType=Category&imagePreset=imagePreset-portrait&' \
+                               'lazyload=true&pageViewType=grid&segmentCount=3&sortBy=1&view=grid&offset={}'
 
         total_garments = self.get_garments_count(response)
         offset = 0
         while offset <= total_garments:
-            url = base_url.format(category_id, offset)
+            url = category_url_pattern.format(category_id, offset)
             yield scrapy.Request(url=url, callback=self.parse_category)
             offset += 20
 
@@ -48,13 +48,15 @@ class TescoGarments(CrawlSpider):
 
     def parse_garment(self, response):
         raw_garment = self.get_raw_garment(response)
-        gender = raw_garment.get('dynamicAttributes', {'gender': ''})['gender']
 
         retailer_sku = self.get_retailer_sku(response)
         if retailer_sku in self.visited_garments:
             return
 
         self.visited_garments.append(retailer_sku)
+
+        gender = raw_garment.get('dynamicAttributes', {'gender': ''})['gender']
+        price = raw_garment['prices'].get('price')
 
         garment = dict()
 
@@ -65,7 +67,7 @@ class TescoGarments(CrawlSpider):
         garment['category'] = self.get_garment_category(response)
         garment['description'] = self.get_garment_description(response)
         garment['url_original'] = response.url
-        garment['price'] = raw_garment['prices'].get('price')
+        garment['price'] = self.get_converted_price(price)
         garment['gender'] = gender
         garment['currency'] = 'GBP'
         garment['spider_name'] = 'tescoff-uk-crawl'
@@ -117,14 +119,14 @@ class TescoGarments(CrawlSpider):
         return description.replace('<p>', '').replace('</p>', '').split('.')
 
     def parse_skus(self, raw_garment):
-        price = raw_garment['prices'].get('price', 'N/A')
+        price = raw_garment['prices'].get('price')
         previous_price = raw_garment['prices'].get('was', '')
         raw_skus = raw_garment['links']
 
         size_color_detail = []
         skus = {
             'currency': 'GBP',
-            'price': price,
+            'price': self.get_converted_price(price),
             'previous_price': [previous_price] if previous_price else []
         }
 
@@ -174,6 +176,10 @@ class TescoGarments(CrawlSpider):
     def get_garment_sku(self, response):
         sku_css = '#skuIdVal::attr(value)'
         return response.css(sku_css).extract_first()
+
+    def get_converted_price(self, price):
+        if price:
+            return int(float(price)*100)
 
     def remove_empty_entries(self, content):
         return [entry.strip() for entry in content if entry.strip()]
