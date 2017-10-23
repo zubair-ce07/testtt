@@ -47,13 +47,12 @@ class TescoGarments(CrawlSpider):
             yield response.follow(url=garment_link, callback=self.parse_garment)
 
     def parse_garment(self, response):
-        raw_garment = self.get_raw_garment(response)
-
         retailer_sku = self.get_retailer_sku(response)
         if retailer_sku in self.visited_garments:
             return
 
         self.visited_garments.append(retailer_sku)
+        raw_garment = self.get_raw_garment(response)
 
         gender = raw_garment.get('dynamicAttributes', {'gender': ''})['gender']
         price = raw_garment['prices'].get('price')
@@ -86,7 +85,7 @@ class TescoGarments(CrawlSpider):
         garment['image_urls'] = self.parse_images(response)
         garment['care'] = self.parse_care(response)
         if not garment['gender']:
-            garment['gender'] = self.parse_gender(response)[0]
+            garment['gender'] = self.parse_gender(response)
         if not garment['description']:
             garment['description'] = self.parse_description(response)
         return garment
@@ -101,14 +100,16 @@ class TescoGarments(CrawlSpider):
     def parse_gender(self, response):
         raw_gender = json.loads(response.text)
         gender_detail = raw_gender['specification'].get('Key Information', [])
-        return [gender['description'] for gender in gender_detail if gender['attr'] == 'gender']
+        gender = [gender['description'] for gender in gender_detail if gender['attr'] == 'gender']
+        if gender:
+            return gender[0]
 
     def parse_care(self, response):
         raw_care = json.loads(response.text)
         care_details = raw_care['specification'].get('Material', [])
         care = []
         for care_detail in care_details:
-            if care_detail.get('attr', '') != 'material':
+            if care_detail.get('attr') != 'material':
                 continue
             care.append(care_detail.get('description'))
         return care
@@ -124,19 +125,20 @@ class TescoGarments(CrawlSpider):
         raw_skus = raw_garment['links']
 
         size_color_detail = []
-        skus = {
+        sku_template = {
             'currency': 'GBP',
             'price': self.get_converted_price(price),
-            'previous_price': [previous_price] if previous_price else []
         }
+        if previous_price:
+            sku_template['previous_price'] = [previous_price]
 
         for raw_sku in raw_skus:
             if raw_sku['type'] != 'sku':
                 continue
-            skus['sku_id'] = raw_sku['id']
-            skus['color'] = raw_sku['options']['primary']
-            skus['size'] = raw_sku['options']['secondary']
-            size_color_detail.append(skus.copy())
+            sku_template['sku_id'] = raw_sku['id']
+            sku_template['color'] = raw_sku['options'].get('primary')
+            sku_template['size'] = raw_sku['options'].get('secondary')
+            size_color_detail.append(sku_template.copy())
 
         return size_color_detail
 
