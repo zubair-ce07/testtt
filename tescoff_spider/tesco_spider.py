@@ -9,13 +9,13 @@ from scrapy.spiders import CrawlSpider, Rule
 class TescoGarments(CrawlSpider):
     name = "tescoff-uk-crawl"
 
-    start_urls = ['https://www.tesco.com/direct/ff-cat-halloween-costume/679-3208.prd']
+    start_urls = ['https://www.tesco.com/direct/clothing']
 
     listing_css = '.products'
 
-    # rules = (
-    #     Rule(LinkExtractor(restrict_css=listing_css), callback='parse_listing'),
-    # )
+    rules = (
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_listing'),
+    )
 
     def parse_listing(self, response):
         category_id = self.get_category_id(response)
@@ -55,7 +55,7 @@ class TescoGarments(CrawlSpider):
         css = '.thumbnail::attr(href)'
         return response.css(css).extract()
 
-    def parse(self, response):
+    def parse_garment(self, response):
         retailer_sku = self.get_retailer_sku(response)
         raw_garment = self.get_raw_garment(response)
 
