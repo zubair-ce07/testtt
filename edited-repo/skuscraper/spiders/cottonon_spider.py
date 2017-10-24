@@ -1,8 +1,7 @@
-import re
-
 from scrapy import Request
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
+from w3lib.url import url_query_cleaner
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
@@ -82,7 +81,7 @@ class CottononParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, response):
         img_urls = clean(response.css('.product-thumbnails img::attr(src)'))
-        return [re.findall("(.+)?sw=", url)[0] for url in img_urls]
+        return [url_query_cleaner(url, ()) for url in img_urls]
 
     def product_brand(self, response):
         return clean(response.xpath('//div[contains(@class,"product-col-2")]/div[1]/text()'))[0]
