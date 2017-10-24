@@ -23,19 +23,19 @@ class NavabiGarments(CrawlSpider):
     def parse_garment(self, response):
         garment = dict()
 
-        garment['retailer_sku'] = self.get_retailer_sku(response)
-        garment['brand'] = self.get_brand(response)
-        garment['name'] = self.get_garment_name(response)
-        garment['category'] = self.get_garment_category(response)
-        garment['description'] = self.get_garment_description(response)
-        garment['care'] = self.get_garment_care(response)
-        garment['currency'] = self.get_garment_currency(response)
-        garment['price'] = self.get_garment_price(response)
-        garment['url_original'] = response.url
-        garment['spider_name'] = 'navabi-uk-crawl'
-        garment['retailer'] = 'navabi-uk'
-        garment['gender'] = 'women'
         garment['market'] = 'UK'
+        garment['gender'] = 'women'
+        garment['retailer'] = 'navabi-uk'
+        garment['spider_name'] = 'navabi-uk-crawl'
+        garment['url_original'] = response.url
+        garment['brand'] = self.get_brand(response)
+        garment['care'] = self.get_garment_care(response)
+        garment['name'] = self.get_garment_name(response)
+        garment['price'] = self.get_garment_price(response)
+        garment['retailer_sku'] = self.get_retailer_sku(response)
+        garment['category'] = self.get_garment_category(response)
+        garment['currency'] = self.get_garment_currency(response)
+        garment['description'] = self.get_garment_description(response)
 
         meta_data = {'garment': garment}
         color_code = self.get_garment_color(response)
