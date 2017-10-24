@@ -64,17 +64,17 @@ class TescoGarments(CrawlSpider):
 
         garment = dict()
 
+        garment['name'] = raw_garment['displayName']
+        garment['brand'] = raw_garment['brand']
         garment['retailer_sku'] = retailer_sku
         garment['url_original'] = response.url
         garment['gender'] = gender
-        garment['brand'] = raw_garment['brand']
-        garment['name'] = raw_garment['displayName']
         garment['market'] = 'UK'
         garment['currency'] = 'GBP'
         garment['retailer'] = 'tescoff-uk'
         garment['spider_name'] = 'tescoff-uk-crawl'
         garment['skus'] = self.parse_skus(raw_garment)
-        garment['price'] = self.get_converted_price(price)
+        garment['price'] = self.get_min_units(price)
         garment['category'] = self.get_garment_category(response)
 
         meta_data = {'garment': garment}
@@ -103,10 +103,11 @@ class TescoGarments(CrawlSpider):
         skus = {}
         sku_template = {
             'currency': 'GBP',
-            'price': self.get_converted_price(price)
+            'price': self.get_min_units(price)
         }
         if previous_price:
-            sku_template['previous_price'] = [previous_price]
+            converted_price = self.get_min_units(previous_price)
+            sku_template['previous_price'] = [converted_price]
 
         for raw_sku in raw_skus:
             if raw_sku['type'] != 'sku':
@@ -122,7 +123,8 @@ class TescoGarments(CrawlSpider):
 
     def get_garment_category(self, response):
         category_css = '#breadcrumb-v2 a ::text'
-        return self.remove_empty_entries(response.css(category_css).extract())[1:-1]
+        category = self.remove_empty_entries(response.css(category_css).extract())[1:-1]
+        return category
 
     def get_garment_sku(self, response):
         sku_css = '#skuIdVal::attr(value)'
@@ -131,12 +133,11 @@ class TescoGarments(CrawlSpider):
     def parse_garment_detail(self, response):
         garment = response.meta['garment']
         raw_garment_details = json.loads(response.text)
-        garment['image_urls'] = self.parse_images(raw_garment_details)
         garment['care'] = self.parse_care(raw_garment_details)
+        garment['image_urls'] = self.parse_images(raw_garment_details)
+        garment['description'] = self.parse_description(raw_garment_details)
         if not garment['gender']:
             garment['gender'] = self.parse_gender(raw_garment_details)
-
-        garment['description'] = self.parse_description(raw_garment_details)
 
         return garment
 
@@ -162,7 +163,7 @@ class TescoGarments(CrawlSpider):
         description = Selector(text=raw_description)
         return self.remove_empty_entries(description.css('::text').extract())
 
-    def get_converted_price(self, price):
+    def get_min_units(self, price):
         return int(float(price)*100) if price else None
 
     def remove_empty_entries(self, content):
