@@ -31,9 +31,11 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
         garment = self.new_unique_garment(product_id)
         if not garment:
             return
+
         self.boilerplate_normal(garment, response)
         garment['skus'] = {}
         garment['image_urls'] = self.image_urls(response)
+
         if self.homeware(garment):
             garment['industry'] = 'homeware'
         else:
@@ -93,6 +95,7 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
         if response_json['productPrice'] == "N/A" or not response_json['inStock']:
             return
         raw_skus = response_json['productVariations']
+
         for sku_key in raw_skus:
             sku = raw_skus[sku_key]
             if sku['salePrice'] == "N/A" or sku['listPrice'] == "N/A":
@@ -108,22 +111,25 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
                 "previous_prices": [previous_prices],
                 'out_of_stock': sku["inStock"]
             }
+            
         return skus
 
     def clean_json(self, json):
         return json.replace('//this is temporary until the feature is supported in the backoffice','')
 
     def homeware(self, garment):
-        return garment.get('industry') or 'Homeware' in garment['category']
+        return 'Homeware' in garment['category']
 
 
 class WhiteStuffCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = WhiteStuffParseSpider()
     listing_css = ['#js-header-navbar']
+    deny_paths = ['explore/.*', 'kitchen/.*']
     products_url = "https://fsm.attraqt.com/zones-js.aspx?siteId={0}&pageurl={1}&zone0=banner&zone1=category&culture={2}&currency={3}&language={4}&config_categorytree={5}&config_category={6}&config_region={7}"
+
     rules = (
-            Rule(LinkExtractor(restrict_css=listing_css), callback='parse_products'),
+            Rule(LinkExtractor(restrict_css=listing_css, deny=deny_paths), callback='parse_products'),
     )
 
     def parse_products(self, response):
@@ -144,12 +150,15 @@ class WhiteStuffCrawlSpider(BaseCrawlSpider, Mixin):
     def parse_products_list(self, response):
         products_html = self.raw_products_response(response)
         product_urls = products_html.css('.product-tile__title a::attr(href)').extract()
+
         for product_url in product_urls:
             url = urljoin(self.start_urls[0],product_url)
             yield Request(url, callback=self.parse_spider.parse, dont_filter=True)
+
         page_next_off = clean(products_html.css('.pagnNext-off'))
         if page_next_off:
             return
+
         page_url = url_query_parameter(response.url, 'pageurl')
         current_page = url_query_parameter(page_url, 'esp_pg', '1')
         page_url = add_or_replace_parameter(page_url, 'esp_pg', str(int(current_page) + 1))
