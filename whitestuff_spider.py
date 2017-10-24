@@ -14,11 +14,11 @@ class Mixin:
     allowed_domains = ['whitestuff.com']
     start_urls = ['https://www.whitestuff.com']
     gender_map = [
-        ('womens', 'women'),
-        ('mens', 'men'),
-        ('boys', 'boys'),
-        ('girls', 'girls'),
-        ('kids', 'unisex-kids')
+        ('women', 'women'),
+        ('men', 'men'),
+        ('boy', 'boys'),
+        ('girl', 'girls'),
+        ('kid', 'unisex-kids')
     ]
 
 
@@ -33,7 +33,10 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
         garment['skus'] = {}
         garment['image_urls'] = self.image_urls(response)
-        garment['gender'] = self.product_gender(garment)
+        if self.homeware(garment):
+            garment['industry'] = 'homeware'
+        else:
+            garment['gender'] = self.product_gender(garment)
         request_url = clean(response.css('.product-form script::attr(src)'))[0]
         request = self.skus_request(request_url)
         garment['meta'] = {'requests_queue': request}
@@ -42,8 +45,39 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
     def skus_request(self, request_url):
         return [Request(request_url, self.parse_skus, dont_filter=True)]
 
+    def extract_skus(self, response):
+        skus = {}
+        response_json = re.findall('({.*})', response.text, flags=re.DOTALL)
+        response_json = self.clean_json(response_json[0])
+        response_json = re.sub(r"(?<!\\)\\'", "'", response_json)
+        response_json = json.loads(response_json)
+        if response_json['productPrice'] == "N/A" or not response_json['inStock']:
+            return
+        raw_skus = response_json['productVariations']
+        for sku_key in raw_skus:
+            sku = raw_skus[sku_key]
+            if sku['salePrice'] == "N/A" or sku['listPrice'] == "N/A":
+                continue
+            currency, price = CurrencyParser.currency_and_price(sku['salePrice'])
+            _, previous_prices = CurrencyParser.currency_and_price(sku['listPrice'])
+            sku_id = sku['productSKU']
+            skus[sku_id] = {
+                'colour': sku['colour'],
+                'size': sku['size'],
+                'currency': currency,
+                'price': price,
+                "previous_prices": [previous_prices],
+                'out_of_stock': sku["inStock"]
+            }
+        return skus
+
     def parse_skus(self, response):
-        garment = self.extract_skus(response)
+        skus = self.extract_skus(response)
+        garment = response.meta['garment']
+        if skus:
+            garment['skus'] = skus
+        else:
+            garment['out_of_stock'] = True
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
@@ -78,32 +112,8 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
     def clean_json(self, json):
         return json.replace('//this is temporary until the feature is supported in the backoffice','')
 
-    def extract_skus(self, response):
-        garment = response.meta['garment']
-        response_json = re.findall('({.*})', response.text, flags=re.DOTALL)
-        response_json = self.clean_json(response_json[0])
-        response_json = re.sub(r"(?<!\\)\\'", "'", response_json)
-        response_json = json.loads(response_json)
-        if response_json['productPrice'] == "N/A" or not response_json['inStock']:
-            garment['out_of_stock'] = True
-            return garment
-        raw_skus = response_json['productVariations']
-        for sku_key in raw_skus:
-            sku = raw_skus[sku_key]
-            if sku['salePrice'] == "N/A" or sku['listPrice'] == "N/A":
-                return garment
-            currency, price = CurrencyParser.currency_and_price(sku['salePrice'])
-            _, previous_prices = CurrencyParser.currency_and_price(sku['listPrice'])
-            sku_id = sku['productSKU']
-            garment['skus'][sku_id] = {
-                'colour': sku['colour'],
-                'size': sku['size'],
-                'currency': currency,
-                'price': price,
-                "previous_prices": [previous_prices],
-                'out_of_stock': sku["inStock"]
-            }
-        return garment
+    def homeware(self, garment):
+        return garment.get('industry') or 'Homeware' in garment['category']
 
 
 class WhiteStuffCrawlSpider(BaseCrawlSpider, Mixin):
@@ -113,5 +123,5 @@ class WhiteStuffCrawlSpider(BaseCrawlSpider, Mixin):
     products_css = ['.seoworkaround']
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
     )
