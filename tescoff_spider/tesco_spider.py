@@ -9,13 +9,13 @@ from scrapy.spiders import CrawlSpider, Rule
 class TescoGarments(CrawlSpider):
     name = "tescoff-uk-crawl"
 
-    start_urls = ['https://www.tesco.com/direct/clothing']
+    start_urls = ['https://www.tesco.com/direct/ff-cat-halloween-costume/679-3208.prd']
 
     listing_css = '.products'
 
-    rules = (
-        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_listing'),
-    )
+    # rules = (
+    #     Rule(LinkExtractor(restrict_css=listing_css), callback='parse_listing'),
+    # )
 
     def parse_listing(self, response):
         category_id = self.get_category_id(response)
@@ -33,12 +33,12 @@ class TescoGarments(CrawlSpider):
             yield Request(url=url, callback=self.parse_category)
 
     def get_category_id(self, response):
-        category_id_css = '.products-wrapper::attr(data-endecaid)'
-        return response.css(category_id_css).extract_first()
+        css = '.products-wrapper::attr(data-endecaid)'
+        return response.css(css).extract_first()
 
     def get_garments_count(self, response):
-        garments_count_css = '.filter-productCount b::text'
-        return int(response.css(garments_count_css).extract_first())
+        css = '.filter-productCount b::text'
+        return int(response.css(css).extract_first())
 
     def parse_category(self, response):
         raw_garments = json.loads(response.text).get('products')
@@ -52,48 +52,54 @@ class TescoGarments(CrawlSpider):
             yield response.follow(url=garment_link, callback=self.parse_garment)
 
     def get_garment_links(self, response):
-        garment_links_css = '.thumbnail::attr(href)'
-        return response.css(garment_links_css).extract()
+        css = '.thumbnail::attr(href)'
+        return response.css(css).extract()
 
-    def parse_garment(self, response):
+    def parse(self, response):
         retailer_sku = self.get_retailer_sku(response)
         raw_garment = self.get_raw_garment(response)
 
-        gender = raw_garment.get('dynamicAttributes', {'gender': 'unisex'})['gender']
         price = raw_garment['prices'].get('price')
 
         garment = dict()
+        garment['market'] = 'UK'
+        garment['currency'] = 'GBP'
+        garment['retailer'] = 'tescoff-uk'
+        garment['spider_name'] = 'tescoff-uk-crawl'
 
         garment['name'] = raw_garment['displayName']
         garment['brand'] = raw_garment['brand']
         garment['retailer_sku'] = retailer_sku
         garment['url_original'] = response.url
-        garment['gender'] = gender
-        garment['market'] = 'UK'
-        garment['currency'] = 'GBP'
-        garment['retailer'] = 'tescoff-uk'
-        garment['spider_name'] = 'tescoff-uk-crawl'
+
+        garment['gender'] = self.get_gender(raw_garment)
         garment['skus'] = self.parse_skus(raw_garment)
-        garment['price'] = self.get_min_units(price)
+        garment['price'] = self.pounds_to_pennies(price)
         garment['category'] = self.get_garment_category(response)
 
-        meta_data = {'garment': garment}
+        return self.sku_request(response, garment)
+
+    def sku_request(self, response, garment):
+        meta = {'garment': garment}
         sku_code = self.get_garment_sku(response)
         garment_sku_base_link = 'https://www.tesco.com//direct/rest/content/catalog/sku/{}'
         garment_sku_link = garment_sku_base_link.format(sku_code)
 
-        return Request(url=garment_sku_link, callback=self.parse_garment_detail, meta=meta_data)
+        return Request(url=garment_sku_link, callback=self.parse_garment_detail, meta=meta)
 
     def get_retailer_sku(self, response):
-        retailer_sku_css = 'meta[property="og:upc"]::attr(content)'
-        return response.css(retailer_sku_css).extract_first()
+        css = 'meta[property="og:upc"]::attr(content)'
+        return response.css(css).extract_first()
 
     def get_raw_garment(self, response):
-        garment_css = '#ssb_block_10 script::text'
-        raw_garment = response.css(garment_css).extract_first()
-        garment = re.findall('product\s*=\s*{[.\s\S]*}\s*}\s*\]\s*}',
-                             raw_garment)
-        return json.loads(garment[0].replace('product =', ''))
+        css = '#ssb_block_10 script::text'
+        raw_garment = response.css(css).extract_first()
+        regex = re.compile('product =\s*({.*}),\s*sku', re.DOTALL)
+        garment = re.findall(regex, raw_garment)[0]
+        return json.loads(garment)
+
+    def get_gender(self, raw_garment):
+        return raw_garment.get('dynamicAttributes', {'gender': 'unisex'})['gender']
 
     def parse_skus(self, raw_garment):
         price = raw_garment['prices'].get('price')
@@ -103,10 +109,10 @@ class TescoGarments(CrawlSpider):
         skus = {}
         sku_template = {
             'currency': 'GBP',
-            'price': self.get_min_units(price)
+            'price': self.pounds_to_pennies(price)
         }
         if previous_price:
-            converted_price = self.get_min_units(previous_price)
+            converted_price = self.pounds_to_pennies(previous_price)
             sku_template['previous_price'] = [converted_price]
 
         for raw_sku in raw_skus:
@@ -122,13 +128,14 @@ class TescoGarments(CrawlSpider):
         return list(skus.values())
 
     def get_garment_category(self, response):
-        category_css = '#breadcrumb-v2 a ::text'
-        category = self.remove_empty_entries(response.css(category_css).extract())[1:-1]
+        css = '#breadcrumb-v2 a ::text'
+        raw_category = response.css(css).extract()
+        category = self.remove_empty_entries(raw_category)[1:]
         return category
 
     def get_garment_sku(self, response):
-        sku_css = '#skuIdVal::attr(value)'
-        return response.css(sku_css).extract_first()
+        css = '#skuIdVal::attr(value)'
+        return response.css(css).extract_first()
 
     def parse_garment_detail(self, response):
         garment = response.meta['garment']
@@ -163,7 +170,7 @@ class TescoGarments(CrawlSpider):
         description = Selector(text=raw_description)
         return self.remove_empty_entries(description.css('::text').extract())
 
-    def get_min_units(self, price):
+    def pounds_to_pennies(self, price):
         return int(float(price)*100) if price else None
 
     def remove_empty_entries(self, content):
