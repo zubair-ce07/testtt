@@ -1,6 +1,6 @@
 import json
 
-import scrapy
+from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -21,6 +21,8 @@ class NavabiGarments(CrawlSpider):
     care_words = ['bleach', 'dry', 'iron', 'clean', 'cycle', '%']
 
     def parse_garment(self, response):
+        price = self.get_garment_price(response)
+
         garment = dict()
 
         garment['market'] = 'UK'
@@ -29,9 +31,9 @@ class NavabiGarments(CrawlSpider):
         garment['spider_name'] = 'navabi-uk-crawl'
         garment['url_original'] = response.url
         garment['brand'] = self.get_brand(response)
+        garment['price'] = self.get_min_units(price)
         garment['care'] = self.get_garment_care(response)
         garment['name'] = self.get_garment_name(response)
-        garment['price'] = self.get_garment_price(response)
         garment['retailer_sku'] = self.get_retailer_sku(response)
         garment['category'] = self.get_garment_category(response)
         garment['currency'] = self.get_garment_currency(response)
@@ -42,7 +44,7 @@ class NavabiGarments(CrawlSpider):
         garment_link_pattern = 'https://www.navabi.co.uk/product-information/?item-id={}-{}'
         garment_info_link = garment_link_pattern.format(garment['retailer_sku'], color_code)
 
-        return scrapy.Request(url=garment_info_link, callback=self.parse_skus_images, meta=meta_data)
+        return Request(url=garment_info_link, callback=self.parse_skus_images, meta=meta_data)
 
     def parse_skus_images(self, response):
         garment = response.meta['garment']
@@ -70,7 +72,8 @@ class NavabiGarments(CrawlSpider):
             sku['size'] = size
             sku['sku_id'] = color + '_' + size
             if float(raw_skus['saleprice']):
-                sku['previous_prices'] = [raw_skus['price']]
+                previous_price = self.get_min_units(raw_skus['price'])
+                sku['previous_prices'] = [previous_price]
 
             skus.append(sku)
 
@@ -134,6 +137,9 @@ class NavabiGarments(CrawlSpider):
     def get_garment_color(self, response):
         color_css = '#current_colorcode::attr(value)'
         return response.css(color_css).extract_first()
+
+    def get_min_units(self, price):
+        return int(float(price) * 100) if price else None
 
     def is_care(self, sentence):
         sentence_lower = sentence.lower()
