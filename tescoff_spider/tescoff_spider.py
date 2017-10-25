@@ -67,8 +67,8 @@ class TescoGarments(CrawlSpider):
         garment['retailer'] = 'tescoff-uk'
         garment['spider_name'] = 'tescoff-uk-crawl'
 
-        garment['name'] = raw_garment['displayName']
-        garment['brand'] = raw_garment['brand']
+        garment['name'] = raw_garment.get('displayName')
+        garment['brand'] = raw_garment.get('brand')
         garment['retailer_sku'] = retailer_sku
         garment['url_original'] = response.url
 
@@ -80,8 +80,12 @@ class TescoGarments(CrawlSpider):
         return self.sku_request(response, garment)
 
     def sku_request(self, response, garment):
-        meta = {'garment': garment}
         sku_code = self.get_garment_sku(response)
+        if not sku_code:
+            garment['out_of_stock'] = True
+            return garment
+
+        meta = {'garment': garment}
         garment_sku_base_link = 'https://www.tesco.com//direct/rest/content/catalog/sku/{}'
         garment_sku_link = garment_sku_base_link.format(sku_code)
 
@@ -99,12 +103,12 @@ class TescoGarments(CrawlSpider):
         return json.loads(garment)
 
     def get_gender(self, raw_garment):
-        return raw_garment.get('dynamicAttributes', {'gender': 'unisex'})['gender']
+        return raw_garment.get('dynamicAttributes', {}).get('gender')
 
     def parse_skus(self, raw_garment):
-        price = raw_garment['prices'].get('price')
-        previous_price = raw_garment['prices'].get('was', '')
-        raw_skus = raw_garment['links']
+        price = raw_garment.get('prices', {}).get('price')
+        previous_price = raw_garment.get('prices', {}).get('was')
+        raw_skus = raw_garment.get('links')
 
         skus = {}
         sku_template = {
@@ -121,8 +125,9 @@ class TescoGarments(CrawlSpider):
 
             sku = sku_template.copy()
             sku['sku_id'] = raw_sku['id']
-            sku['color'] = raw_sku['options'].get('primary')
-            sku['size'] = raw_sku['options'].get('secondary')
+            sku['color'] = raw_sku.get('options', {}).get('primary')
+            size = raw_sku.get('options', {}).get('secondary')
+            sku['size'] = size if size else 'one size'
             skus[raw_sku['id']] = sku
 
         return list(skus.values())
@@ -140,6 +145,7 @@ class TescoGarments(CrawlSpider):
     def parse_garment_detail(self, response):
         garment = response.meta['garment']
         raw_garment_details = json.loads(response.text)
+
         garment['care'] = self.parse_care(raw_garment_details)
         garment['image_urls'] = self.parse_images(raw_garment_details)
         garment['description'] = self.parse_description(raw_garment_details)
@@ -149,24 +155,24 @@ class TescoGarments(CrawlSpider):
         return garment
 
     def parse_images(self, raw_garment_details):
-        product_gallery = raw_garment_details['mediaAssets']['skuMedia']
+        product_gallery = raw_garment_details.get('mediaAssets', {}).get('skuMedia')
         image_url_attr = '{}&wid=1400&hei=2000'
         image_urls = [image_url_attr.format(image_url['src'].split('$')[0])
                       for image_url in product_gallery if image_url.get('mediaType') == 'Large']
         return image_urls
 
     def parse_care(self, raw_garment_details):
-        care_details = raw_garment_details['specification'].get('Material', [])
+        care_details = raw_garment_details.get('specification', {}).get('Material', [])
         care = [care.get('description') for care in care_details if care.get('attr') == 'material']
         return care
 
     def parse_gender(self, raw_garment_details):
-        garment_detail = raw_garment_details['specification'].get('Key Information', [])
-        gender = [gender['description'] for gender in garment_detail if gender['attr'] == 'gender']
+        garment_detail = raw_garment_details.get('specification', {}).get('Key Information', [])
+        gender = [gender.get('description') for gender in garment_detail if gender.get('attr') == 'gender']
         return gender[0] if gender else 'unisex'
 
     def parse_description(self, raw_garment_details):
-        raw_description = raw_garment_details['longDescription']
+        raw_description = raw_garment_details.get('longDescription')
         description = Selector(text=raw_description)
         return self.remove_empty_entries(description.css('::text').extract())
 
