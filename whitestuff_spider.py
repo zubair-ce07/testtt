@@ -94,38 +94,19 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
         if response_json['productPrice'] == "N/A" or not response_json['inStock']:
             return
         raw_skus = response_json['productVariations']
-
         for sku_key in raw_skus:
             sku = raw_skus[sku_key]
             if sku['salePrice'] == "N/A" or sku['listPrice'] == "N/A":
                 continue
             price = self.product_pricing_common_new(response, [sku.get('salePrice'), sku.get('listPrice')])
             sku_id = sku['productSKU']
-            if price.get('previous_prices'):
-                skus[sku_id] = self.update_sku_with_previous_prices(sku, price)
-            else:
-                skus[sku_id] = self.update_sku_without_previous_prices(sku, price)
-
+            skus[sku_id] = {
+                'colour': sku['colour'],
+                'size': sku['size'],
+                'price': price,
+                'out_of_stock': sku["inStock"]
+            }
         return skus
-
-    def update_sku_with_previous_prices(self, sku, price):
-        return {
-            'colour': sku['colour'],
-            'size': sku['size'],
-            'currency': price['currency'],
-            'price': price['price'],
-            "previous_prices": price['previous_prices'],
-            'out_of_stock': sku["inStock"]
-        }
-
-    def update_sku_without_previous_prices(self, sku, price):
-        return {
-            'colour': sku['colour'],
-            'size': sku['size'],
-            'currency': price['currency'],
-            'price': price['price'],
-            'out_of_stock': sku["inStock"]
-        }
 
     def clean_json(self, json):
         return json.replace('//this is temporary until the feature is supported in the backoffice','')
