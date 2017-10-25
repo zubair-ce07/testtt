@@ -177,7 +177,7 @@ class TescoGarments(CrawlSpider):
         return self.remove_empty_entries(description.css('::text').extract())
 
     def pounds_to_pennies(self, price):
-        return int(float(price)*100) if price else None
+        return int(float(price) * 100) if price else None
 
     def remove_empty_entries(self, content):
         return [entry.strip() for entry in content if entry.strip()]
