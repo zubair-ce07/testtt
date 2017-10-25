@@ -3,10 +3,9 @@ import json
 from scrapy import Selector
 from scrapy.http import Request
 from scrapy.spiders import Rule
-from w3lib.url import url_query_cleaner, url_query_parameter, add_or_replace_parameter, urljoin
 from scrapy.linkextractors import LinkExtractor
 from .base import BaseParseSpider, BaseCrawlSpider, clean
-from ..parsers.currencyparser import CurrencyParser
+from w3lib.url import url_query_cleaner, url_query_parameter, add_or_replace_parameter, urljoin
 
 
 class Mixin:
@@ -100,19 +99,33 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
             sku = raw_skus[sku_key]
             if sku['salePrice'] == "N/A" or sku['listPrice'] == "N/A":
                 continue
-            currency, price = CurrencyParser.currency_and_price(sku['salePrice'])
-            _, previous_prices = CurrencyParser.currency_and_price(sku['listPrice'])
+            price = self.product_pricing_common_new(response, [sku.get('salePrice'), sku.get('listPrice')])
             sku_id = sku['productSKU']
-            skus[sku_id] = {
-                'colour': sku['colour'],
-                'size': sku['size'],
-                'currency': currency,
-                'price': price,
-                "previous_prices": [previous_prices],
-                'out_of_stock': sku["inStock"]
-            }
-            
+            if price.get('previous_prices'):
+                skus[sku_id] = self.update_sku_with_previous_prices(sku, price)
+            else:
+                skus[sku_id] = self.update_sku_without_previous_prices(sku, price)
+
         return skus
+
+    def update_sku_with_previous_prices(self, sku, price):
+        return {
+            'colour': sku['colour'],
+            'size': sku['size'],
+            'currency': price['currency'],
+            'price': price['price'],
+            "previous_prices": price['previous_prices'],
+            'out_of_stock': sku["inStock"]
+        }
+
+    def update_sku_without_previous_prices(self, sku, price):
+        return {
+            'colour': sku['colour'],
+            'size': sku['size'],
+            'currency': price['currency'],
+            'price': price['price'],
+            'out_of_stock': sku["inStock"]
+        }
 
     def clean_json(self, json):
         return json.replace('//this is temporary until the feature is supported in the backoffice','')
