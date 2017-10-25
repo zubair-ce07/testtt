@@ -43,7 +43,7 @@ class CottononParseSpider(BaseParseSpider, Mixin):
 
     def colour_request(self, response):
         colour_requests = []
-        requests_urls = clean(response.css('.color li:not([class*="selected"]) a[title*="Colour"]::attr(href)'))
+        requests_urls = clean(response.css('.color li:not(.selected) a[title*="Colour"]::attr(href)'))
         for r_url in requests_urls:
             colour_requests.append(Request(r_url, callback=self.parse_colour))
         return colour_requests
@@ -81,7 +81,7 @@ class CottononParseSpider(BaseParseSpider, Mixin):
 
     def image_urls(self, response):
         img_urls = clean(response.css('.product-thumbnails img::attr(src)'))
-        return [url_query_cleaner(url, ()) for url in img_urls]
+        return [url_query_cleaner(url) for url in img_urls]
 
     def product_brand(self, response):
         return clean(response.xpath('//div[contains(@class,"product-col-2")]/div[1]/text()'))[0]
@@ -91,15 +91,9 @@ class CottononCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = CottononParseSpider()
     products_css = '.search-result-items'
+    listing_css = '.show-for-large .pagination .page-next'
 
     rules = (
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
-
-    def parse(self, response):
-        yield from super(CottononCrawlSpider, self).parse(response)
-        next_url = clean(response.css('.show-for-large .pagination .page-next::attr(href)'))
-        if not next_url:
-            return
-        response.meta['trail'] = self.add_trail(response)
-        yield Request(next_url[0], meta=response.meta, callback=self.parse)
