@@ -98,14 +98,10 @@ class WhiteStuffParseSpider(BaseParseSpider, Mixin):
             sku = raw_skus[sku_key]
             if sku['salePrice'] == "N/A" or sku['listPrice'] == "N/A":
                 continue
-            price = self.product_pricing_common_new(response, [sku.get('salePrice'), sku.get('listPrice')])
             sku_id = sku['productSKU']
-            skus[sku_id] = {
-                'colour': sku['colour'],
-                'size': sku['size'],
-                'price': price,
-                'out_of_stock': sku["inStock"]
-            }
+            skus[sku_id] = {'colour': sku['colour'], 'size': sku['size'], 'out_of_stock': sku["inStock"]}
+            price = self.product_pricing_common_new(response, [sku.get('salePrice'), sku.get('listPrice')])
+            skus[sku_id].update(price)
         return skus
 
     def clean_json(self, json):
