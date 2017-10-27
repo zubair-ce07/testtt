@@ -1,10 +1,8 @@
 import argparse
 import re
 import datetime
-from functions import get_yearly_record
-from functions import get_monthly_average
-from functions import get_monthly_record_bars
-from functions import get_monthly_single_line_bars
+
+from functions import read_files_for_arguments
 
 
 def validate_args(value):
@@ -51,20 +49,20 @@ args = parser.parse_args()
 def main():
 
     if args.e:
-        arg_e = argument_values(args.e)
-        get_yearly_record(args.filename,arg_e)
+        args.e = argument_values(args.e)
 
     if args.a:
-        arg_a = argument_values(args.a)
-        get_monthly_average(args.filename,arg_a)
+        args.a = argument_values(args.a)
 
     if args.c:
-        arg_c = argument_values(args.c)
-        get_monthly_record_bars(args.filename,arg_c)
+        args.c = argument_values(args.c)
 
     if args.d:
-        arg_d = argument_values(args.d)
-        get_monthly_single_line_bars(args.filename,arg_d)
+        args.d = argument_values(args.d)
+
+    read_files_for_arguments(args.filename, args.e, args.a , args.c ,args.d)
+
+
 
 
 if __name__ == '__main__':

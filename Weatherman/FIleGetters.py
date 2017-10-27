@@ -1,22 +1,32 @@
 import os
+import re
+import csv
+
+from Classes import WeatherReading
 
 
-def get_file_names(directory_path,args):
+def get_file_names( directory_path, args):
 
     directory_files = os.listdir(directory_path)
-    file_names = []
+    regex = str(args.get('year')) + "_" +str(args.get('month'))
+
     if not args.get('month'):
-        for file_name_row in directory_files:
-
-            if args['year'] in file_name_row:
-
-                file_names.append(os.path.join(directory_path,file_name_row))
-        return file_names
+        required_files = [os.path.join(directory_path, file_name) for file_name in directory_files if re.findall(args.get('year'), file_name)]
     else:
-        for file_name in directory_files:
+        required_files = [os.path.join(directory_path, file_name) for file_name in directory_files if re.findall(regex, file_name)]
 
-            if args["year"] in file_name and args['month'] in file_name:
-                file_names.append(os.path.join(directory_path, file_name))
-                break
+    return read_files(required_files)
 
-        return file_names
+
+def read_files(files_to_read):
+
+    list_of_rows = []
+
+    for files in files_to_read:
+        input_file = csv.DictReader(open(files))
+
+        for row in input_file:
+            weather = WeatherReading(row)
+            list_of_rows.append(weather)
+
+    return list_of_rows
