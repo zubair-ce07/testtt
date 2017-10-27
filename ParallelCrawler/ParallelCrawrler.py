@@ -1,8 +1,10 @@
 import concurrent.futures
 import urllib.request
 import re
+
 from bs4 import BeautifulSoup
 from time import sleep
+
 
 class ParallelCrawler():
 
@@ -24,8 +26,8 @@ class ParallelCrawler():
                 return conn.read()
 
         # We can use a with statement to ensure threads are cleaned up promptly
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
         # Start the load operations and mark each future with its URL
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
             for index in range(self.request_count, self.url_limit):
                 future_to_url = {executor.submit(load_url, self.urls[index], 60): self.urls[index]}
 

@@ -1,7 +1,9 @@
 import asyncio
 import aiohttp
 import re
+
 from parsel import Selector
+
 
 class ConcurrentCrawler(object):
 
@@ -43,9 +45,7 @@ class ConcurrentCrawler(object):
 
     async def get_results(self, url, thread_id):
 
-
         if self.request_count <= self.url_limit:
-  #          print(self.request_count , self.url_limit)
             print('Thread {} Requesting'.format(thread_id))
             html = await self.get_url_body(url)
             print('Thread {} Parsing URLs'.format(thread_id))
