@@ -1,5 +1,6 @@
 import scrapy
 import re
+from tutorial.items import Item
 
 
 class OrseySpider(scrapy.Spider):
@@ -9,7 +10,7 @@ class OrseySpider(scrapy.Spider):
     # list of allowed domains
     allowed_domains = ['orsay.com']
     # starting url
-    start_urls = ['http://www.orsay.com/de-de']
+    start_urls = ['http://www.orsay.com/de-de/']
     # location of csv file
     custom_settings = {'FEED_URI': 'tmp/orsay.json'}
 
@@ -33,26 +34,37 @@ class OrseySpider(scrapy.Spider):
     def parse_product_page(self, response):
         # Extract product information
 
-        product = {}
+        product = Item()
         product['brand'] = 'Orsay'
         product['description'] = self.get_product_description(response)
         product['url'] = response.url
         product['gender'] = 'girls'
         product['name'] = self.get_product_name(response)
         product['category'] = self.get_product_category(response)
-
-        # skus
-        product['price'] = self.get_product_price(response)
-        product['currency'] = 'EUR'
-        product['sizes'] = self.get_product_sizes(response)
-        product['colors'] = self.get_product_colors(response)
-        # product['availability'] =
-
+        product['skus'] = self.get_skus(response)
         product['image_urls'] = self.get_product_images(response)
         product['care'] = self.get_product_care(response)
         product['id'] = self.get_product_id(response)
 
         yield product
+
+    def get_skus(self, response):
+        skus = {}
+        sizes = self.get_product_sizes(response)
+        colors = self.get_product_colors(response)
+        availability = self.get_product_availabilty(response)
+
+        for item in zip(sizes, availability):
+            for color in colors:
+                key = color + '_' + item[0]
+                skus[key] = {}
+                skus[key]['color'] = color
+                skus[key]['price'] = self.get_product_price(response)
+                skus[key]['size'] = item[0]
+                skus[key]['currency'] = 'EUR'
+                skus[key]['availability'] = item[1]
+
+        return skus
 
     def get_product_name(self, response):
         name = response.css('.product-name::text').extract_first().strip()
@@ -88,26 +100,28 @@ class OrseySpider(scrapy.Spider):
     def get_product_sizes(self, response):
         ul = response.css('.sizebox-wrapper > ul')
         sizes = ul.css('li::text').extract()
-        # availability = ul.css('li::attr(class)').extract()
+        size = []
+        for s in sizes:
+            if s.strip() == "":
+                pass
+            else:
+                size.append(s.strip())
 
-        for index in range(len(sizes)):
-            sizes[index] = sizes[index].strip()
+        return size
 
-        return sizes
+    def get_product_availabilty(self, response):
+        ul = response.css('.sizebox-wrapper > ul')
+        availability = ul.css('li::attr(class)').extract()
+        avail = []
+        for a in availability:
+            boolean_value = 'unavailable' in a
+            avail.append(not boolean_value)
+
+        return avail
 
     def get_product_colors(self, response):
         color_info = response.css('.product-colors')
-        # color_urls = color_info.css('a::attr(href)').extract()
-        colors = color_info.css('img::attr(title)').extract()
+        colors = response.css('ul.product-colors > li > a > img::attr(title)').extract()
+        color_urls = color_info.css('a::attr(href)').extract()
+        # colors = color_info.css('img::attr(title)').extract()
         return colors
-
-
-
-
-
-
-
-
-
-
-
