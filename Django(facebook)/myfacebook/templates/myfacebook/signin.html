@@ -1,0 +1,7 @@
+<form method="post">
+    <h1>{{ error }}</h1>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="signin" />
+</form>
+<a href="{% url 'myfacebook:signup' %}"> Signup </a>

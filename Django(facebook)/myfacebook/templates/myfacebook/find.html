@@ -1,0 +1,5 @@
+{% for user in users %}
+    <li>
+        <a href='{% url 'myfacebook:detail' user.id %}'>{{ user.first_name }} {{ ' ' }} {{ user.last_name }}</a>
+    </li>
+{% endfor %}

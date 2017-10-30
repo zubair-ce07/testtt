@@ -1,0 +1,19 @@
+<label>Welcome..</label>
+<label>{{ user.first_name }}</label><br>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update Status</button>
+</form>
+<label>{{ message }}</label>
+{% for status in statuses %}
+    <li>
+        {{ status.status_text }}
+    </li>
+{% endfor %}
+<br>
+<a href="{% url 'myfacebook:logout' %}"> Logout </a>
+<br>
+<a href="{% url 'myfacebook:home' %}"> Home Feed </a>
+<br>
+<a href="{% url 'myfacebook:find' %}"> People I may know </a>

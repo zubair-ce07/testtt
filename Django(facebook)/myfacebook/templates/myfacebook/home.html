@@ -1,0 +1,6 @@
+{% for status in statuses %}
+  <li>
+        {{ status.status_text }}
+        <a href='{% url 'myfacebook:detail' status.status_author.id %}'>{{ status.status_author.first_name}}</a>
+  </li>
+{% endfor %}

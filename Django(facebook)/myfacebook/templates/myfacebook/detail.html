@@ -1,0 +1,15 @@
+<h2>{{ user.first_name }}</h2><br>
+<label>{{ message }}</label>
+{% for status in statuses %}
+    <li>
+        {{ status.status_text }}
+    </li>
+{% endfor %}
+<br>
+{% if is_following %}
+    <label>Following</label>
+{% else %}
+    <a href='{% url 'myfacebook:follow' user.id %}'>Follow</a>
+{% endif %}
+<br>
+<a href="{% url 'myfacebook:profile' %}"> My Profile </a>
