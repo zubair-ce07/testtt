@@ -11,7 +11,6 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean
 class Mixin:
     retailer = 'tesco-uk'
     market = 'UK'
-    currency = '£'
     allowed_domains = ['tesco.com']
     start_urls = ['https://www.tesco.com/direct/clothing/']
     gender_map = [
@@ -33,30 +32,30 @@ class TescoParseSpider(BaseParseSpider, Mixin):
         if product_json['prices'].get('error'):
             return
         product_id = self.product_id(product_json)
-
         garment = self.new_unique_garment(product_id)
         if not garment:
             return
         self.boilerplate_normal(garment, response)
-
-        requests = []
         garment['skus'] = {}
         garment['image_urls'] = self.image_urls(product_sku_json)
+        garment['skus'].update(self.sku(response, product_json, product_sku_json))
+        garment['meta'] = {'requests_queue': self.color_request(response, product_json, product_sku_json)}
+
         if self.homeware(garment):
             garment['industry'] = 'homeware'
         else:
             garment['gender'] = self.product_gender(garment)
 
+        return self.next_request_or_garment(garment)
+
+    def color_request(self, response, product_json, product_sku_json):
+        requests = []
         product_sku_ids = self.product_sku_ids(product_json, product_sku_json['id'])
-        garment['skus'].update(self.sku(response, product_json, product_sku_json))
 
         for sku_id in product_sku_ids:
             product_sku_url = add_or_replace_parameter(response.url, 'skuId', sku_id)
-            requests.append(Request(product_sku_url, self.parse_color, dont_filter=True))
-
-        garment['meta'] = {'requests_queue': requests}
-
-        return self.next_request_or_garment(garment)
+            requests.append(Request(product_sku_url, self.parse_color))
+        return requests
 
     def parse_color(self, response):
         garment = response.meta['garment']
@@ -95,11 +94,7 @@ class TescoParseSpider(BaseParseSpider, Mixin):
         return 'unisex-adults'
 
     def image_urls(self, product_sku_json):
-        image_urls = []
-        for media in product_sku_json['mediaAssets']['skuMedia']:
-            if media["mediaType"] == "Large":
-                image_urls.append(media['src'])
-        return image_urls
+        return [media['src'] for media in product_sku_json['mediaAssets']['skuMedia'] if media['mediaType'] == "Large"]
 
     def homeware(self, garment):
         return garment.get('industry') or 'Homeware' in garment['category']
@@ -112,8 +107,8 @@ class TescoParseSpider(BaseParseSpider, Mixin):
     def sku(self, response, product_json, product_sku_json):
         sku = {}
         sku_prices, product_prices = product_sku_json['prices'], product_json['prices']
-        price_string = self.currency + sku_prices.get('price', sku_prices.get('fromPrice'))
-        pprice_string = self.currency + sku_prices.get('was', product_prices.get('price', product_prices.get('toPrice')))
+        price_string = self.currency(response) + sku_prices.get('price', sku_prices.get('fromPrice'))
+        pprice_string = self.currency(response) + sku_prices.get('was', product_prices.get('price', product_prices.get('toPrice')))
 
         prices = self.product_pricing_common_new(response, [price_string, pprice_string])
 
@@ -132,12 +127,15 @@ class TescoParseSpider(BaseParseSpider, Mixin):
     def product_sku_ids(self, product_json, current_product_sku_id):
         remaining_product_sku_ids = []
         for link in product_json['links']:
-            if link['type'] == "sku" and link['rel'] == "childSku":
-                if link['id'] != current_product_sku_id:
-                    remaining_product_sku_ids.append(link['id'])
-
+            if link['type'] == "sku" and link['rel'] == "childSku" and link['id'] != current_product_sku_id:
+                remaining_product_sku_ids.append(link['id'])
         return remaining_product_sku_ids
 
+    def currency(self, response):
+        price_script = clean(response.css('#product-price-view-template::text'))[0]
+        price_script_html = Selector(text=price_script)
+        currency_string = clean(price_script_html.css('[itemprop="priceCurrency"]::attr(content)'))[0]
+        return currency_string
 
 
 class TescoCrawlSpider(BaseCrawlSpider, Mixin):
@@ -146,7 +144,7 @@ class TescoCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = TescoParseSpider()
     product_category_css = '.product'
 
-    STANDARD_PRODUCT_RANGE = 20
+    PAGE_SIZE = 20
 
     pagination_url = "https://www.tesco.com/direct/blocks/catalog/productlisting/infiniteBrowse.jsp?catId={0}&offset={1}"
 
@@ -164,10 +162,10 @@ class TescoCrawlSpider(BaseCrawlSpider, Mixin):
         requests = []
         total_products = int(total_products[0])
 
-        for offset in range(0, total_products, self.STANDARD_PRODUCT_RANGE):
+        for offset in range(0, total_products, self.PAGE_SIZE):
             category_id = clean(response.css(category_id_css))[0]
             pagination_url = self.pagination_url.format(category_id, offset)
-            requests.append(Request(pagination_url, self.parse_products, dont_filter=True))
+            requests.append(Request(pagination_url, self.parse_products))
         return requests
 
     def parse_products(self, response):
@@ -177,5 +175,5 @@ class TescoCrawlSpider(BaseCrawlSpider, Mixin):
         products_html = Selector(text=products_json)
 
         for product_url in clean(products_html.css(product_card_css)):
-            requests.append(Request(response.urljoin(product_url), self.parse_spider.parse, dont_filter=True))
+            requests.append(Request(response.urljoin(product_url), self.parse_item))
         return requests
