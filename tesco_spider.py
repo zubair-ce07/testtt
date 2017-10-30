@@ -29,13 +29,10 @@ class TescoParseSpider(BaseParseSpider, Mixin):
 
     def parse(self, response):
 
-        product_json, product_sku_json = self.raw_product(response)
+        product_json, product_sku_json = self.product_json(response)
         if product_json['prices'].get('error'):
             return
         product_id = self.product_id(product_json)
-
-        current_product_sku_id = self.product_sku_id(product_sku_json)
-        remaining_product_sku_ids = self.remaining_product_sku_ids(product_json, current_product_sku_id)
 
         garment = self.new_unique_garment(product_id)
         if not garment:
@@ -44,58 +41,37 @@ class TescoParseSpider(BaseParseSpider, Mixin):
 
         requests = []
         garment['skus'] = {}
-        garment['image_urls'] = []
+        garment['image_urls'] = self.image_urls(product_sku_json)
         if self.homeware(garment):
             garment['industry'] = 'homeware'
         else:
             garment['gender'] = self.product_gender(garment)
 
-        garment['skus'], garment['image_urls'] = self.default_sku(response, product_json, product_sku_json)
+        product_sku_ids = self.product_sku_ids(product_json, product_sku_json['id'])
+        garment['skus'].update(self.sku(response, product_json, product_sku_json))
 
-        for sku_id in remaining_product_sku_ids:
+        for sku_id in product_sku_ids:
             product_sku_url = add_or_replace_parameter(response.url, 'skuId', sku_id)
-            requests.append(Request(product_sku_url, self.parse_skus, dont_filter=True))
+            requests.append(Request(product_sku_url, self.parse_color, dont_filter=True))
 
         garment['meta'] = {'requests_queue': requests}
 
         return self.next_request_or_garment(garment)
 
-    def parse_skus(self, response):
+    def parse_color(self, response):
         garment = response.meta['garment']
-        product_json, product_sku_json = self.raw_product(response)
+        product_json, product_sku_json = self.product_json(response)
+
         if not product_sku_json.get('prices'):
             return self.next_request_or_garment(garment)
 
-        price_string, pprice_string = self.sku_prices(product_json, product_sku_json)
-        prices = self.product_pricing_common_new(response, [price_string, pprice_string])
-        sku_id = product_sku_json['id']
-        garment['skus'][sku_id] = {
-            "merch_info": "Earn " + str(product_sku_json['prices']["clubcardPoints"]) + " Clubcard points"
-        }
-        garment['skus'][sku_id].update(prices)
-        if product_sku_json['attributes'].get('colour'):
-            garment['skus'][sku_id].update({'colour': product_sku_json['attributes']['colour']})
-            garment['skus'][sku_id].update({'size': product_sku_json['attributes']['size']})
-
-        for media in product_sku_json['mediaAssets']['skuMedia']:
-            if media["mediaType"] == "Large":
-                garment['image_urls'].append(media['src'].replace("?$[preset]$", "/"))
+        garment['skus'].update(self.sku(response, product_json, product_sku_json))
+        garment['image_urls'] += self.image_urls(product_sku_json)
 
         return self.next_request_or_garment(garment)
 
     def product_id(self, product_json):
         return product_json.get('id')
-
-    def product_sku_id(self, product_sku_json):
-        return product_sku_json.get('id')
-
-    def remaining_product_sku_ids(self, product_json, current_product_sku_id):
-        current_product_sku_ids = []
-        for link in product_json['links']:
-            if link['type'] == "sku" and link['rel'] == "childSku":
-                current_product_sku_ids.append(link['id'])
-
-        return list(set(current_product_sku_ids) - set([current_product_sku_id]))
 
     def product_name(self, response):
         return clean(response.css('[itemprop="name"]::text'))[0]
@@ -118,25 +94,29 @@ class TescoParseSpider(BaseParseSpider, Mixin):
 
         return 'unisex-adults'
 
+    def image_urls(self, product_sku_json):
+        image_urls = []
+        for media in product_sku_json['mediaAssets']['skuMedia']:
+            if media["mediaType"] == "Large":
+                image_urls.append(media['src'])
+        return image_urls
+
     def homeware(self, garment):
         return garment.get('industry') or 'Homeware' in garment['category']
 
-    def raw_product(self, response):
-        raw_product = response.css('script').extract()
-        raw_product = ''.join(raw_product)
-        raw_product = re.findall('product =\n({.*}),\nsku =\n({.*}),\nassetData', raw_product, flags=re.DOTALL)[0]
-        return json.loads(raw_product[0]) , json.loads(raw_product[1])
+    def product_json(self, response):
+        product_script = clean(response.css('#ssb_block_10 > script:first-child::text'))
+        product_json = re.findall('product = ({.*}), sku = ({.*}), assetData', product_script[0], flags=re.DOTALL)[0]
+        return json.loads(product_json[0]), json.loads(product_json[1])
 
-    def default_sku(self, response, product_json, product_sku_json):
-        if not product_sku_json.get('prices'):
-            return
-        price_string, pprice_string = self.sku_prices(product_json, product_sku_json)
-        prices = self.product_pricing_common_new(response, [price_string, pprice_string])
-        return self.read_default_sku(product_sku_json, prices)
-
-    def read_default_sku(self, product_sku_json, prices):
+    def sku(self, response, product_json, product_sku_json):
         sku = {}
-        image_urls = []
+        sku_prices, product_prices = product_sku_json['prices'], product_json['prices']
+        price_string = self.currency + sku_prices.get('price', sku_prices.get('fromPrice'))
+        pprice_string = self.currency + sku_prices.get('was', product_prices.get('price', product_prices.get('toPrice')))
+
+        prices = self.product_pricing_common_new(response, [price_string, pprice_string])
+
         sku_id = product_sku_json['id']
         sku[sku_id] = {
             "merch_info": "Earn " + str(product_sku_json['prices']["clubcardPoints"]) + " Clubcard points"
@@ -147,61 +127,55 @@ class TescoParseSpider(BaseParseSpider, Mixin):
         if product_sku_json['attributes'].get('size'):
             sku[sku_id].update({'size': product_sku_json['attributes']['size']})
 
-        for media in product_sku_json['mediaAssets']['skuMedia']:
-            if media["mediaType"] == "Large":
-                image_urls.append(media['src'])
+        return sku
 
-        return sku, image_urls
+    def product_sku_ids(self, product_json, current_product_sku_id):
+        remaining_product_sku_ids = []
+        for link in product_json['links']:
+            if link['type'] == "sku" and link['rel'] == "childSku":
+                if link['id'] != current_product_sku_id:
+                    remaining_product_sku_ids.append(link['id'])
 
-    def sku_prices(self, product_json, product_sku_json):
-        prices = product_sku_json['prices']
-        product_prices = product_json['prices']
+        return remaining_product_sku_ids
 
-        price_string = self.currency + prices.get('price', prices.get('fromPrice'))
-        pprice_string = self.currency + prices.get('was', product_prices.get('price', product_prices.get('toPrice')))
-        return price_string, pprice_string
 
 
 class TescoCrawlSpider(BaseCrawlSpider, Mixin):
 
     name = Mixin.retailer + '-crawl'
     parse_spider = TescoParseSpider()
+    product_category_css = '.product'
 
-    PRODUCT_CATEGORY_CSS = '.product'
     STANDARD_PRODUCT_RANGE = 20
 
     pagination_url = "https://www.tesco.com/direct/blocks/catalog/productlisting/infiniteBrowse.jsp?catId={0}&offset={1}"
 
     rules = (
-        Rule(LinkExtractor(restrict_css=PRODUCT_CATEGORY_CSS), callback='parse_products'),
+        Rule(LinkExtractor(restrict_css=product_category_css), callback='parse_listing'),
     )
 
-    def parse_products(self, response):
-        data_count = response.css('#listing::attr(data-maxcount)').extract_first()
-        if not data_count:
+    def parse_listing(self, response):
+        product_count_css = '#listing::attr(data-maxcount)'
+        category_id_css = '.products-wrapper::attr(data-endecaid)'
+        total_products = clean(response.css(product_count_css))
+
+        if not total_products:
             return
         requests = []
-        product_count = int(data_count)
-        for offset in range(0, product_count, self.STANDARD_PRODUCT_RANGE):
-            category_id = response.css('.products-wrapper::attr(data-endecaid)').extract_first()
+        total_products = int(total_products[0])
+
+        for offset in range(0, total_products, self.STANDARD_PRODUCT_RANGE):
+            category_id = clean(response.css(category_id_css))[0]
             pagination_url = self.pagination_url.format(category_id, offset)
-            requests.append(Request(pagination_url, self.parse_pagination_products, dont_filter=True))
+            requests.append(Request(pagination_url, self.parse_products, dont_filter=True))
         return requests
 
-    def parse_pagination_products(self, response):
+    def parse_products(self, response):
         requests = []
-        for product_url in self.product_urls(response):
+        product_card_css = '.image-container .thumbnail::attr(href)'
+        products_json = json.loads(response.text)['products']
+        products_html = Selector(text=products_json)
+
+        for product_url in clean(products_html.css(product_card_css)):
             requests.append(Request(response.urljoin(product_url), self.parse_spider.parse, dont_filter=True))
         return requests
-
-    def product_urls(self, response):
-        product_card_css = '.image-container .thumbnail::attr(href)'
-        product_urls = clean(response.css(product_card_css))
-        if product_urls:
-            return product_urls
-        products_html = response.text.replace('\n', '').replace('\\', '')
-        products_html = Selector(text=products_html)
-        product_urls = clean(products_html.css(product_card_css))
-        if product_urls:
-            return product_urls
-        return []
