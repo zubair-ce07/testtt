@@ -1,0 +1,113 @@
+import scrapy
+import re
+
+
+class OrseySpider(scrapy.Spider):
+    # name of spider
+    name = 'orsay'
+
+    # list of allowed domains
+    allowed_domains = ['orsay.com']
+    # starting url
+    start_urls = ['http://www.orsay.com/de-de']
+    # location of csv file
+    custom_settings = {'FEED_URI': 'tmp/orsay.json'}
+
+    def parse(self, response):
+        nav_urls = response.css('li.level1 > a::attr(href)').extract()
+
+        for url in nav_urls:
+            yield scrapy.Request(url=url, callback=self.parse_category_page)
+
+    def parse_category_page(self, response):
+        product_urls = response.css('.product-image-wrapper > a::attr(href)').extract()
+
+        for url in product_urls:
+            yield scrapy.Request(url=url, callback=self.parse_product_page)
+
+        next_page_url = response.css('li.next > a::attr(href)')
+        if next_page_url:
+            next_page_url = response.urljoin(next_page_url)
+            yield scrapy.Request(url=next_page_url, callback=self.parse_category_page)
+
+    def parse_product_page(self, response):
+        # Extract product information
+
+        product = {}
+        product['brand'] = 'Orsay'
+        product['description'] = self.get_product_description(response)
+        product['url'] = response.url
+        product['gender'] = 'girls'
+        product['name'] = self.get_product_name(response)
+        product['category'] = self.get_product_category(response)
+
+        # skus
+        product['price'] = self.get_product_price(response)
+        product['currency'] = 'EUR'
+        product['sizes'] = self.get_product_sizes(response)
+        product['colors'] = self.get_product_colors(response)
+        # product['availability'] =
+
+        product['image_urls'] = self.get_product_images(response)
+        product['care'] = self.get_product_care(response)
+        product['id'] = self.get_product_id(response)
+
+        yield product
+
+    def get_product_name(self, response):
+        name = response.css('.product-name::text').extract_first().strip()
+        return name
+
+    def get_product_description(self, response):
+        description = response.css('.description::text').extract_first().strip().split(sep='.')
+        return description
+
+    def get_product_category(self, response):
+        breadcrumbs = response.css('ul.breadcrumbs')
+        category = breadcrumbs.css('a::text').extract()
+        return category
+
+    def get_product_id(self, response):
+        # id = response.css('.sku::text').extract()
+        id_url = re.search(".*(\d{8}).html", response.url)
+        id = id_url.group(1)
+        return id
+
+    def get_product_images(self, response):
+        images = response.css('[data-zoom-id=mainZoom]::attr(href)').extract()
+        return images
+
+    def get_product_care(self, response):
+        care = response.css('.material::text').extract()
+        return care
+
+    def get_product_price(self, response):
+        price = response.css('.price::text').extract_first()
+        return price
+
+    def get_product_sizes(self, response):
+        ul = response.css('.sizebox-wrapper > ul')
+        sizes = ul.css('li::text').extract()
+        # availability = ul.css('li::attr(class)').extract()
+
+        for index in range(len(sizes)):
+            sizes[index] = sizes[index].strip()
+
+        return sizes
+
+    def get_product_colors(self, response):
+        color_info = response.css('.product-colors')
+        # color_urls = color_info.css('a::attr(href)').extract()
+        colors = color_info.css('img::attr(title)').extract()
+        return colors
+
+
+
+
+
+
+
+
+
+
+
