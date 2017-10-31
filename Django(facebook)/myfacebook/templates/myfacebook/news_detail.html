@@ -1,0 +1,20 @@
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+<div class="container">
+    <a href= {{ news.link }}><h3>{{ news.title }}</h3></a>
+    <br>
+    <img class="img-rounded" src={{ news.image_url }}>
+    <br><br>
+    <label>Author: <span>{{ news.author }}</span></label>
+    <br>
+    <label>Date Published: <span>{{ news.date|date:"M d, Y" }}</span></label>
+    <br><br>
+    <label>Details:</label>
+    <p>
+        {{ news.detail }}
+    </p><br>
+</div>

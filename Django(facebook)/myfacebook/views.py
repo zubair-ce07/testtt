@@ -4,18 +4,23 @@ from django.contrib.auth import (
     authenticate, login as django_login,
     logout as django_logout
 )
+from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.views import View
 
 from .forms import SigninForm, SignupForm, StatusForm
-from .models import UserStatus, UserFollowers
+from .models import UserStatus, UserFollowers, News
 
 
 class SignIn(View):
     template_name = 'myfacebook/signin.html'
 
     def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('myfacebook:profile')
+
         form = SigninForm(None)
         context = {
             'form': form
@@ -44,6 +49,9 @@ class Signup(View):
     template_name = 'myfacebook/signup.html'
 
     def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('myfacebook:profile')
+
         context = {
             'form': SignupForm(None)
         }
@@ -117,7 +125,7 @@ class FindPeople(View):
     def get(self, request):
         user = request.user
         if user.is_authenticated:
-            users = User.objects.exclude(id=user.id)
+            users = User.objects.exclude(Q(id=user.id) | Q(is_superuser=1))
             context = {
                 'users': users
             }
@@ -132,7 +140,14 @@ class UserDetails(View):
     def get(self, request, user_id):
         current_user = request.user
         if current_user.is_authenticated:
-            user = User.objects.get(id=user_id)
+            if int(user_id) == current_user.id:
+                return redirect('myfacebook:profile')
+
+            try:
+                user = User.objects.get(id=user_id)
+            except ObjectDoesNotExist:
+                return redirect('myfacebook:profile')
+
             statuses = UserStatus.objects.filter(status_author=user)
             is_following = UserFollowers.objects.filter(followee=user, follower=current_user).count()
             context = {
@@ -148,7 +163,11 @@ class UserDetails(View):
 def follow(request, user_id):
     current_user = request.user
     if current_user.is_authenticated:
-        user = User.objects.get(id=user_id)
+        try:
+            user = User.objects.get(id=user_id)
+        except ObjectDoesNotExist:
+            return redirect('myfacebook:profile')
+
         user_follow = UserFollowers(followee=user, follower=current_user)
         user_follow.save()
         return redirect('myfacebook:detail', user_id)
@@ -173,3 +192,30 @@ class HomePage(View):
             return render(request, self.template_name, context)
 
         return redirect('myfacebook:signin')
+
+
+class NewsFeed(View):
+    template_name = 'myfacebook/news.html'
+
+    def get(self, request):
+        latest_news = News.objects.only('id', 'title')
+
+        context = {
+            'latest_news': latest_news
+        }
+        return render(request, self.template_name, context)
+
+
+class NewsDetail(View):
+    template_name = 'myfacebook/news_detail.html'
+
+    def get(self, request, news_id):
+        try:
+            news = News.objects.get(id=news_id)
+        except ObjectDoesNotExist:
+            return redirect('myfacebook:latest')
+
+        context = {
+            'news': news
+        }
+        return render(request, self.template_name, context)

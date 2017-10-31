@@ -1,6 +1,14 @@
-{% for status in statuses %}
-  <li>
-        {{ status.status_text }}
-        <a href='{% url 'myfacebook:detail' status.status_author.id %}'>{{ status.status_author.first_name}}</a>
-  </li>
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+<div class="container">
+    {% for status in statuses %}
+      <li style="font-size: 1.25em">
+            <span style="font-size: 1.5em">{{ status.status_text }}</span>
+            <a href='{% url 'myfacebook:detail' status.status_author.id %}'>{{ status.status_author.first_name}}</a>
+      </li>
 {% endfor %}
+</div>

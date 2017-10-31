@@ -1,19 +1,40 @@
-<label>Welcome..</label>
-<label>{{ user.first_name }}</label><br>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Update Status</button>
-</form>
-<label>{{ message }}</label>
-{% for status in statuses %}
-    <li>
-        {{ status.status_text }}
-    </li>
-{% endfor %}
-<br>
-<a href="{% url 'myfacebook:logout' %}"> Logout </a>
-<br>
-<a href="{% url 'myfacebook:home' %}"> Home Feed </a>
-<br>
-<a href="{% url 'myfacebook:find' %}"> People I may know </a>
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">myfacebook</a>
+    </div>
+    <ul class="nav navbar-nav">
+        <li> <a href="{% url 'myfacebook:home' %}"> Home Feed </a> </li>
+        <li> <a href="{% url 'myfacebook:find' %}"> People I may know </a> </li>
+        <li> <a href="{% url 'myfacebook:latest' %}"> Latest News </a> </li>
+    </ul>
+      <ul class="nav navbar-nav navbar-right">
+          <li> <a href="{% url 'myfacebook:logout' %}"> <span class="glyphicon glyphicon-log-out"></span> Logout </a> </li>
+      </ul>
+  </div>
+</nav>
+
+<div class="container">
+    <h3>Welcome {{ user.first_name }}</h3><br>
+    <div style="width:50%">
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button class="btn btn-primary" style="width: 50%" type="submit">Update Status</button>
+        </form>
+        <label>{{ message }}</label>
+        {% for status in statuses %}
+            <li style="font-size: 1.5em">
+                {{ status.status_text }}
+            </li>
+        {% endfor %}
+    </div>
+
+</div>

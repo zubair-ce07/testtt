@@ -1,5 +1,13 @@
-{% for user in users %}
-    <li>
-        <a href='{% url 'myfacebook:detail' user.id %}'>{{ user.first_name }} {{ ' ' }} {{ user.last_name }}</a>
-    </li>
-{% endfor %}
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+<div class="container">
+    {% for user in users %}
+        <li style="font-size: 1.5em">
+            <a href='{% url 'myfacebook:detail' user.id %}'>{{ user.username }}</a>
+        </li>
+    {% endfor %}
+</div>

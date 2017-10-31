@@ -1,7 +1,24 @@
-<form method="post">
-    <h1>{{ error }}</h1>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="signin" />
-</form>
-<a href="{% url 'myfacebook:signup' %}"> Signup </a>
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+
+<div class="container">
+    <h2>Sign In</h2>
+    <div style="width:40%">
+        <form method="post">
+            <h1>{{ error }}</h1>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type="submit" class="btn btn-primary" style="width: 100%">
+                Signin
+            </button>
+          {% endbuttons %}
+        </form>
+        <label>Don't have an account signup now</label><br>
+        <a class="btn btn-primary" style="width:100%" href="{% url 'myfacebook:signup' %}"> Signup </a>
+    </div>
+</div>

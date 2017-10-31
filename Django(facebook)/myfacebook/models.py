@@ -19,3 +19,12 @@ class UserFollowers(models.Model):
         unique_together = ('followee', 'follower')
         verbose_name_plural = "UserFollowers"
 
+
+class News(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
+    date = models.DateTimeField('date published')
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=200)
+    link = models.CharField(max_length=200)
+    detail = models.TextField(max_length=2000)
+    image_url = models.CharField(max_length=200)
