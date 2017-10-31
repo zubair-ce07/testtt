@@ -13,9 +13,9 @@ class Mixin:
     allowed_domains = ['tesco.com']
     lang = 'en'
     market = 'UK'
-    s_availability_url_t = "https://www.tesco.com/direct/rest/inventory/product/{c_code}?format=standard"
-    s_price_url_t = "https://www.tesco.com/direct/rest/price/product/{c_code}?format=standard"
-    s_text_url_t = "https://www.tesco.com/direct/rest/content/catalog/product/{c_code}?format=standard"
+    currency = '£'
+    stock_url_t = "https://www.tesco.com/direct/rest/inventory/product/{c_code}?format=standard"
+    colour_url_t = "https://www.tesco.com/direct/rest/content/catalog/product/{c_code}?format=standard"
     pagination_url_t = ("https://www.tesco.com/direct/blocks/catalog/productlisting/infiniteBrowse.jsp?catId={"
                         "cat_id}&currentPageType=Category&offset={offset}")
 
@@ -35,73 +35,80 @@ class TescoParseSpider(BaseParseSpider, Mixin):
         if not garment:
             return
 
-        self.boilerplate_normal(garment, response)
+        raw_sku = response.xpath('//script[contains(text(), "window.Data.PDP")]').extract_first()
+        self.boilerplate(garment, response)
+        garment['care'] = []
         garment['skus'] = {}
-        garment['image_urls'] = self.image_urls(response)
-        garment['meta'] = {'requests_queue': self.skus_requests(response)}
+        garment['name'] = self.product_name(response, raw_sku)
+        garment['brand'] = self.product_brand(raw_sku)
+        garment['description'] = self.product_description(response)
+        garment['category'] = self.product_category(response)
+        garment['image_urls'] = self.image_urls(response, raw_sku)
+        garment['meta'] = {'requests_queue': self.skus_requests(response, raw_sku)}
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
         garment = response.meta['garment']
-        garment['skus'].update(self.skus(response))
+        garment['skus'].update(self.skus_colour(response))
         return self.next_request_or_garment(garment)
 
-    def colours_map(self, response):
-        c_map = {}
-        script_text = response.xpath('//script[contains(text(), "window.Data.PDP")]').extract_first()
-        for c_sku_json in json.loads(re.findall('links" : (?s)(.+)},\nsku ', script_text)[0]):
-            if c_sku_json.get("rel") in ["colourAssociation", "self"]:
-                if c_sku_json.get('options'):
-                    c_map[c_sku_json["id"]] = c_sku_json['options']['primary']
-                else:
-                    c_map[c_sku_json["id"]] = self.detect_colour_from_name(response)
-        return c_map
+    def parse_stock(self, response):
+        garment = response.meta['garment']
+        garment['skus'].update(self.skus_stock(response))
+        return self.next_request_or_garment(garment)
 
-    def skus_requests(self, response):
-        requests = []
-        for c_code, c_name in self.colours_map(response).items():
-            response.meta['colour'] = c_name
-            requests.append(Request(self.s_text_url_t.format(c_code=c_code), meta=response.meta,
-                                    callback=self.parse_colour))
-            requests.append(Request(self.s_availability_url_t.format(c_code=c_code), meta=response.meta,
-                                    callback=self.parse_colour))
-            requests.append(Request(self.s_price_url_t.format(c_code=c_code), meta=response.meta,
-                                    callback=self.parse_colour))
-        return requests
-
-    def skus(self, response):
+    def skus_colour(self, response):
         skus = response.meta['garment']['skus']
-        common = {'currency': 'GBP'}
-        common['colour'] = response.meta['colour']
         res_json = json.loads(response.text)
-        skus_json = res_json['links'] if res_json.get('links') else res_json['products'][0]['skus']
-
-        for sku_json in skus_json:
-            if not sku_json.get('id'):
+        price_strings = self.sku_prices(res_json)
+        common = self.product_pricing_common_new(None, money_strs=price_strings)
+        common['colour'] = response.meta['colour']
+        for sku_json in res_json['links']:
+            if sku_json.get('rel') != "childSku":
                 continue
-            if sku_json.get('rel') and not sku_json.get('rel') == "childSku":
-                continue
-            sku = skus.get("{}_{}".format(common['colour'], sku_json['id']), common.copy())
-
-            if sku_json.get('rel'):
-                sku['size'] = sku_json['options']['secondary'] if sku_json.get('options') else sku_json['id']
-            if sku_json.get('price'):
-                sku['price'] = int(sku_json.get('price').replace(".", ""))
-                if sku_json.get('was'):
-                    sku['previous_prices'] = [int(sku_json.get('was').replace(".", ""))]
-            # for out-of-stock products
-            if not sku.get('price') and res_json.get('prices'):
-                sku['price'] = int(res_json.get('prices').get('price').replace(".", ""))
-                if res_json.get('prices').get('was'):
-                    sku['previous_prices'] = [int(res_json.get('prices').get('was').replace(".", ""))]
-
-            if sku_json.get('available') is False:
-                sku['out_of_stock'] = True
-            skus["{}_{}".format(sku['colour'], sku_json['id'])] = sku
+            sku = skus.get(sku_json['id'], common.copy())
+            sku['size'] = sku_json['options']['secondary'] if sku_json.get('options') else sku_json['id']
+            skus[sku_json['id']] = sku
         return skus
 
-    def product_care(self, response):
-        return []
+    def sku_prices(self, res_json):
+        price_json = res_json.get('prices')
+        price_string = price_json.get('price') + self.currency
+        if price_json.get('was'):
+            p_price_string = price_json['was'] + self.currency
+            return price_string, p_price_string
+        return price_string
+
+    def skus_stock(self, response):
+        skus = response.meta['garment']['skus']
+        res_json = json.loads(response.text)
+        for sku_json in res_json['products'][0]['skus']:
+            sku = skus.get(sku_json['id'], {})
+            if not sku_json.get('available', True):
+                sku['out_of_stock'] = True
+            skus[sku_json['id']] = sku
+        return skus
+
+    def colours_map(self, response, raw_sku):
+        c_map = {}
+        for c_sku_json in json.loads(re.findall('links" : (?s)(.+)},\nsku ', raw_sku)[0]):
+            if c_sku_json.get("rel") not in ["colourAssociation", "self"]:
+                continue
+            if c_sku_json.get('options'):
+                c_map[c_sku_json["id"]] = c_sku_json['options']['primary']
+            else:
+                c_map[c_sku_json["id"]] = self.detect_colour(self.product_name(response, raw_sku))
+        return c_map
+
+    def skus_requests(self, response, raw_sku):
+        requests = []
+        for c_code, c_name in self.colours_map(response, raw_sku).items():
+            response.meta['colour'] = c_name
+            requests.append(Request(self.stock_url_t.format(c_code=c_code), meta=response.meta,
+                                    callback=self.parse_stock))
+            requests.append(Request(self.colour_url_t.format(c_code=c_code), meta=response.meta,
+                                    callback=self.parse_colour))
+        return requests
 
     def product_category(self, response):
         return clean(response.css('div#breadcrumb-v2 li:not(.first) span::text'))
@@ -111,22 +118,22 @@ class TescoParseSpider(BaseParseSpider, Mixin):
             return clean(response.css('.product-description-block .style-ref::text'))[0].split('Ref: ')[1][:-2]
         return clean(response.css('.catalogue-id::text'))[0]
 
-    def product_name(self, response):
-        brand = self.product_brand(response)
+    def product_name(self, response, raw_sku):
+        brand = self.product_brand(raw_sku)
         return clean(response.css('.product-title-text::text'))[0].replace(brand, "")
 
     def product_description(self, response):
         return clean(response.css('div[itemprop="description"] ::text'))
 
-    def image_urls(self, response):
+    def image_urls(self, response, raw_sku):
         urls = []
-        img_urls = list(set(response.xpath('//script[contains(text(), "window.Data.PDP")]').re('src" : "(.+)\?')))
-        for c_code in list(self.colours_map(response).keys()):
+        img_urls = set(re.findall('src" : "(.+)\?', raw_sku))
+        for c_code in self.colours_map(response, raw_sku).keys():
             urls += [re.sub('(\d+-\d+)', c_code, url) for url in img_urls]
         return urls
 
-    def product_brand(self, response):
-        return response.xpath('//script[contains(text(), "window.Data.PDP")]').re('brand" : "(.+)",')[0]
+    def product_brand(self, raw_sku):
+        return re.findall('brand" : "(.+)",', raw_sku)[0]
 
 
 class TescoCrawlSpider(BaseCrawlSpider, Mixin):
