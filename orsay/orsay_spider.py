@@ -3,6 +3,7 @@ import re
 from tutorial.items import Item
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from collections import deque
 
 
 class OrseySpider(CrawlSpider):
@@ -35,23 +36,67 @@ class OrseySpider(CrawlSpider):
         product['care'] = self.get_product_care(response)
         product['id'] = self.get_product_id(response)
 
-        yield product
+        color_urls = self.get_color_urls(response)
+        queue = deque(color_urls)
+        queue.popleft()
+
+        if queue:
+            next_url = queue[0]
+            request = scrapy.Request(url=next_url, callback=self.parse_color)
+            request.meta['product'] = product
+            request.meta['color_urls'] = queue
+            yield request
+        else:
+            yield product
+
+    def parse_color(self, response):
+        product = response.meta['product']
+
+        product['skus'] = self.add_skus(response, 'skus', product)
+
+        queue = response.meta['color_urls']
+        queue.popleft()
+        if queue:
+            next_url = queue[0]
+            request = scrapy.Request(url=next_url, callback=self.parse_color)
+            request.meta['product'] = product
+            request.meta['color_urls'] = queue
+            yield request
+        else:
+            yield product
+
+    def add_skus(self, response, key, product):
+        skus = product[key]
+        sizes = self.get_product_sizes(response)
+        color = self.get_product_color(response)
+        availability = self.get_product_availabilty(response)
+
+        for item in zip(sizes, availability):
+            key = color + '_' + item[0]
+            skus[key] = {}
+            skus[key]['color'] = color
+            skus[key]['price'] = self.get_product_price(response)
+            skus[key]['size'] = item[0]
+            skus[key]['currency'] = 'EUR'
+            skus[key]['availability'] = item[1]
+
+        return skus
+
 
     def get_skus(self, response):
         skus = {}
         sizes = self.get_product_sizes(response)
-        colors = self.get_product_colors(response)
+        color = self.get_product_color(response)
         availability = self.get_product_availabilty(response)
 
         for item in zip(sizes, availability):
-            for color in colors:
-                key = color + '_' + item[0]
-                skus[key] = {}
-                skus[key]['color'] = color
-                skus[key]['price'] = self.get_product_price(response)
-                skus[key]['size'] = item[0]
-                skus[key]['currency'] = 'EUR'
-                skus[key]['availability'] = item[1]
+            key = color + '_' + item[0]
+            skus[key] = {}
+            skus[key]['color'] = color
+            skus[key]['price'] = self.get_product_price(response)
+            skus[key]['size'] = item[0]
+            skus[key]['currency'] = 'EUR'
+            skus[key]['availability'] = item[1]
 
         return skus
 
@@ -108,9 +153,12 @@ class OrseySpider(CrawlSpider):
 
         return avail
 
-    def get_product_colors(self, response):
-        color_info = response.css('.product-colors')
-        colors = response.css('ul.product-colors > li > a > img::attr(title)').extract()
-        color_urls = color_info.css('a::attr(href)').extract()
+    def get_product_color(self, response):
+        color = response.css('ul.product-colors > li > a > img::attr(title)').extract_first()
         # colors = color_info.css('img::attr(title)').extract()
-        return colors
+        return color
+
+    def get_color_urls(self, response):
+        color_info = response.css('.product-colors')
+        color_urls = color_info.css('a::attr(href)').extract()
+        return color_urls
