@@ -2,7 +2,7 @@ import re
 import json
 from scrapy import Selector, Request
 from scrapy.spiders import Rule
-from w3lib.url import add_or_replace_parameter,url_query_parameter
+from w3lib.url import add_or_replace_parameter
 from scrapy.linkextractors import LinkExtractor
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
@@ -24,30 +24,40 @@ class Mixin:
         ('kid', 'unisex-kids')
     ]
 
+    def product_json(self, response, key, regex):
+        product_script = clean(response.css('#cdnHint + script + script::text'))
+        if not product_script:
+            return
+        product_json = re.findall(regex, product_script[0], flags=re.DOTALL)
+        return json.loads(product_json[0]).get(key) if product_json else None
+
 
 class WalmartParseSpider(BaseParseSpider, Mixin):
 
     name = Mixin.retailer + '-parse'
-    product_jsn = None
 
     def parse(self, response):
         prod_regex = '__WML_REDUX_INITIAL_STATE__ = ({.*});\};'
         product_json = self.product_json(response, key='product', regex=prod_regex)
         if not product_json:
             return
-        self.product_jsn = product_json
         product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
         if not garment:
             return
-        self.boilerplate_normal(garment, response)
+        self.boilerplate(garment, response)
+        garment['brand'] = self.retailer
+        garment['name'] = self.product_name(response)
+        garment['description'] = self.product_description(product_json)
+        garment['care'] = self.product_care(product_json)
+        garment['image_urls'] = self.image_urls(product_json)
+        garment['category'] = self.product_category(response)
+        garment['skus'] = self.skus(response, product_json)
         if self.homeware(garment):
             garment['industry'] = 'homeware'
         else:
             garment['gender'] = self.product_gender(garment)
 
-        garment['image_urls'] = self.image_urls(product_json)
-        garment['skus'] = self.skus(response, product_json)
         if garment['skus']:
             return self.next_request_or_garment(garment)
 
@@ -57,8 +67,7 @@ class WalmartParseSpider(BaseParseSpider, Mixin):
     def product_name(self, response):
         return clean(response.css('.ProductTitle div::text'))[0]
 
-    def product_description(self, response):
-        product_json = self.product_jsn
+    def product_description(self, product_json):
         description = list(product_json['idmlMap'].values())
         if not description:
             return
@@ -66,8 +75,7 @@ class WalmartParseSpider(BaseParseSpider, Mixin):
         description = Selector(text=description)
         return clean(description.css('div::text, p::text'))
 
-    def product_care(self, response):
-        product_json = self.product_jsn
+    def product_care(self, product_json):
         care = list(product_json['idmlMap'].values())
         if not care:
             return
@@ -93,13 +101,6 @@ class WalmartParseSpider(BaseParseSpider, Mixin):
 
     def homeware(self, garment):
         return 'Home' in garment['category']
-
-    def product_json(self, response, key, regex):
-        product_script = clean(response.css('#cdnHint + script + script::text'))
-        if not product_script:
-            return
-        product_json = re.findall(regex, product_script[0], flags=re.DOTALL)
-        return json.loads(product_json[0]).get(key) if product_json else None
 
     def skus(self,response, product_json):
         skus = {}
@@ -144,7 +145,8 @@ class WalmartCrawlSpider(BaseCrawlSpider, Mixin):
     )
 
     def parse_products(self, response):
-        products_json = self.parse_spider.product_json(response, key='preso', regex='__WML_REDUX_INITIAL_STATE__ = ({.*});')
+        prods_regex = '__WML_REDUX_INITIAL_STATE__ = ({.*});'
+        products_json = self.product_json(response, key='preso', regex=prods_regex)
         if not products_json:
             return
         for product in products_json['items']:
@@ -154,6 +156,6 @@ class WalmartCrawlSpider(BaseCrawlSpider, Mixin):
         next_page = products_json['pagination'].get('next', {}).get('url')
         if not next_page:
             return
-        page_no = url_query_parameter("?"+next_page, 'page', 1)
+        page_no = re.findall('page=(\d+)', next_page)[0]
         pagination_url = add_or_replace_parameter(response.url, 'page', page_no)
         return Request(pagination_url, callback=self.parse_products)
