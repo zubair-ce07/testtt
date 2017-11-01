@@ -1,6 +1,8 @@
 import scrapy
 import re
 from tutorial.items import Item
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
 
 class OrseySpider(scrapy.Spider):
@@ -13,6 +15,30 @@ class OrseySpider(scrapy.Spider):
     start_urls = ['http://www.orsay.com/de-de/']
     # location of csv file
     custom_settings = {'FEED_URI': 'tmp/orsay.json'}
+
+    rules = [
+        Rule(
+            LinkExtractor(
+                canonicalize=True,
+                unique=True,
+                restrict_css="li.level1",
+                tags="a",
+                attrs="href"
+            ),
+            follow=True,
+            callback="parse_category_page"
+        ),
+        Rule(
+            LinkExtractor(
+                canonicalize=True,
+                unique=True,
+                restrict_css=".product-image-wrapper",
+                tags="a",
+                attrs="href"
+            ),
+            callback="parse_product_page"
+        )
+    ]
 
     def parse(self, response):
         nav_urls = response.css('li.level1 > a::attr(href)').extract()
