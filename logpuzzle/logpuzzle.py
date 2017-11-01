@@ -4,6 +4,7 @@ import sys
 import urllib
 
 def read_urls(filename):
+
   server = re.search(r'_\w+\.\w+\.\w+', filename).group()[1:]
   f = open(filename, 'rU')
   text = f.read()
@@ -11,7 +12,8 @@ def read_urls(filename):
   fullmatches = ["http://"+server+match for match in matches]
   return fullmatches
 
-def download_images(img_urls, dest_dir):
+def download_images(img_urls, dest_dir): # This function did not work; images kept getting replaced somehow.
+
   for img in img_urls:
     urllib.urlretrieve(img, dest_dir)
   return

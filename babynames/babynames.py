@@ -2,6 +2,7 @@ import sys
 import re
 
 def extract_names(filename):
+
   f = open(filename, 'rU')
   text = f.read()
   year = re.search(r'"\d\d\d\d"', text).group()[1:5]
@@ -18,10 +19,9 @@ def extract_names(filename):
 
   return finallist
 
-
 def main():
-  args = sys.argv[1:]
 
+  args = sys.argv[1:]
   if not args:
     print 'usage: [--summaryfile] file [file ...]'
 

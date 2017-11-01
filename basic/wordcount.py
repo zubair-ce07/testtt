@@ -1,6 +1,7 @@
 import sys
 
 def make_dict(filename):
+
   f = open(filename, 'rU')
   dict = {}
   for line in f:
@@ -14,11 +15,13 @@ def make_dict(filename):
   return dict
 
 def print_words(filename):
+
   dict = make_dict(filename)
   for key in sorted(dict.keys()):
     print key+" "+str(dict[key])
 
 def print_top(filename):
+
   dict = make_dict(filename)
   count = 0
   dictReverse = sorted(dict.keys(), key = dict.get, reverse=True)
@@ -30,6 +33,7 @@ def print_top(filename):
       break
 
 def main():
+
   if len(sys.argv) != 3:
     print 'usage: ./wordcount.py {--count | --topcount} file'
     sys.exit(1)
