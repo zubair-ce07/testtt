@@ -1,7 +1,7 @@
 import json
+import datetime
 
 from django.core.management.base import BaseCommand
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from myfacebook.models import News
 
@@ -27,11 +27,12 @@ class Command(BaseCommand):
                 if created:
                     author.set_password(news['author'] + '123')
                     author.save()
-
+                raw_date = news.get('date').split(' ')[0]
+                date = datetime.datetime.strptime(raw_date, '%Y-%m-%d')
                 details = self._clean_details(news['details'])
                 news = News(author=author,
                             title=news.get('title', 'News'),
-                            date=news.get('date', 'N/A'),
+                            date=date.strftime('%Y-%m-%d'),
                             link=news['link'],
                             description=news['description'],
                             detail=details,

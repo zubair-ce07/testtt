@@ -27,7 +27,7 @@
         <form method="post">
             {% csrf_token %}
             {% bootstrap_form form %}
-            <button class="btn btn-primary" style="width: 50%" type="submit">Update Status</button>
+            <button class="btn btn-primary" style="width: 50%" type="submit">New Status</button>
         </form>
         <label>{{ message }}</label>
         {% for status in statuses %}
