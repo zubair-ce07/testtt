@@ -5,7 +5,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 
-class OrseySpider(scrapy.Spider):
+class OrseySpider(CrawlSpider):
     # name of spider
     name = 'orsay'
 
@@ -16,46 +16,9 @@ class OrseySpider(scrapy.Spider):
     # location of csv file
     custom_settings = {'FEED_URI': 'tmp/orsay.json'}
 
-    rules = [
-        Rule(
-            LinkExtractor(
-                canonicalize=True,
-                unique=True,
-                restrict_css="li.level1",
-                tags="a",
-                attrs="href"
-            ),
-            follow=True,
-            callback="parse_category_page"
-        ),
-        Rule(
-            LinkExtractor(
-                canonicalize=True,
-                unique=True,
-                restrict_css=".product-image-wrapper",
-                tags="a",
-                attrs="href"
-            ),
-            callback="parse_product_page"
-        )
-    ]
-
-    def parse(self, response):
-        nav_urls = response.css('li.level1 > a::attr(href)').extract()
-
-        for url in nav_urls:
-            yield scrapy.Request(url=url, callback=self.parse_category_page)
-
-    def parse_category_page(self, response):
-        product_urls = response.css('.product-image-wrapper > a::attr(href)').extract()
-
-        for url in product_urls:
-            yield scrapy.Request(url=url, callback=self.parse_product_page)
-
-        next_page_url = response.css('li.next > a::attr(href)')
-        if next_page_url:
-            next_page_url = response.urljoin(next_page_url)
-            yield scrapy.Request(url=next_page_url, callback=self.parse_category_page)
+    rules = [Rule(LinkExtractor(restrict_css=".nav-container"), follow=True),
+             Rule(LinkExtractor(restrict_css="li.next"), follow=True),
+             Rule(LinkExtractor(restrict_css=".product-image-wrapper"), callback="parse_product_page")]
 
     def parse_product_page(self, response):
         # Extract product information
