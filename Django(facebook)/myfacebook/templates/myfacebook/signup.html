@@ -10,9 +10,11 @@
     <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
     <link rel="stylesheet" href="/resources/demos/style.css" />
 </head>
+<div class="jumbotron text-center">
+    <h1><strong>Sign Up</strong></h1>
+</div>
 
 <div class="container">
-    <h2 style="text-align: center">Sign In</h2>
     <div style="width:40%; margin-left: 30%">
       <form method="post">
         {% csrf_token %}
@@ -32,7 +34,7 @@
     $( ".datepicker" ).datepicker({
       changeMonth: true,
       changeYear: true,
-      yearRange: "1900:2017",
+      yearRange: "1900:2010",
     });
   });
 </script>

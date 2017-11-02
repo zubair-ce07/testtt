@@ -3,14 +3,15 @@ import datetime
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+
 from myfacebook.models import News
 
 
 class Command(BaseCommand):
 
-    def _clean_details(self, raw_description):
-        cleaned_description = ''.join(description + ' ' for description in raw_description)
-        return cleaned_description
+    def _clean_details(self, raw_detail):
+        cleaned_detail = ''.join(detail + ' ' for detail in raw_detail)
+        return cleaned_detail
 
     def add_arguments(self, parser):
         parser.add_argument('file_name')

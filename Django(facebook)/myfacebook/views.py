@@ -9,8 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.views import View
+from django.contrib.auth.forms import AuthenticationForm
 
-from .forms import SigninForm, SignupForm, StatusForm
+from .forms import StatusForm, UserCreationFormExtended
 from .models import UserStatus, UserFollowers, News
 
 
@@ -21,7 +22,7 @@ class SignIn(View):
         if request.user.is_authenticated:
             return redirect('myfacebook:profile')
 
-        form = SigninForm(None)
+        form = AuthenticationForm(None)
         context = {
             'form': form
         }
@@ -29,7 +30,7 @@ class SignIn(View):
 
     def post(self, request):
         message = ''
-        form = SigninForm(request.POST)
+        form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
@@ -37,10 +38,11 @@ class SignIn(View):
             if user:
                 django_login(request, user)
                 return redirect('myfacebook:profile')
-            else:
-                message += 'SignIn failed'
+
+            message += 'SignIn failed'
         context = {
-            'error': message
+            'error': message,
+            'form': form
         }
         return render(request, self.template_name, context)
 
@@ -53,25 +55,24 @@ class Signup(View):
             return redirect('myfacebook:profile')
 
         context = {
-            'form': SignupForm(None)
+            'form': UserCreationFormExtended(None)
         }
         return render(request, self.template_name, context)
 
     def post(self, request):
         message = ''
-        form = SignupForm(request.POST)
+        form = UserCreationFormExtended(data=request.POST)
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
+            password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=password)
             if user:
                 django_login(request, user)
                 return redirect('myfacebook:profile')
             else:
                 message += '\nSignIn failed'
-        else:
-            message += '\nForm not valid'
+
         context = {
             'form': form,
             'error': message
@@ -91,7 +92,7 @@ class Profile(View):
     def get(self, request):
         user = request.user
         if user.is_authenticated:
-            statuses = UserStatus.objects.filter(status_author=user)
+            statuses = UserStatus.objects.filter(status_author=user).order_by('-pub_date')
             context = {
                 'user': user,
                 'statuses': statuses,
@@ -148,7 +149,7 @@ class UserDetails(View):
             except ObjectDoesNotExist:
                 return redirect('myfacebook:profile')
 
-            statuses = UserStatus.objects.filter(status_author=user)
+            statuses = UserStatus.objects.filter(status_author=user).order_by('-pub_date')
             is_following = UserFollowers.objects.filter(followee=user, follower=current_user).count()
             context = {
                 'user': user,
@@ -185,7 +186,7 @@ class HomePage(View):
             statuses = []
             for following in followings:
                 statuses += UserStatus.objects.filter(status_author=following.followee)
-
+            statuses = sorted(statuses, key=lambda status: status.pub_date, reverse=True)
             context = {
                 'statuses': statuses
             }
