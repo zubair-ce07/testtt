@@ -89,12 +89,13 @@ class CtshirtsParseSpider(BaseParseSpider, Mixin):
             custom_length_price = float(clean(response.css('a.js-custom-sleeve-option::attr(data-price)'))[0][1:])
 
         size = size.replace("\"", "")
+        sku_id = size + ("_" + length if length else "")
+
         size = size + ("/" + length if length else "")
         price, currency = float(response.meta['garment']['meta']['price'][1:]), response.meta['garment']['meta']['price'][0]
         price_str = currency + str(round(price + custom_length_price, 2))
         prices = self.product_pricing_common_new(response, [price_str])
 
-        sku_id = size + ("_" + length if length else "")
         sku[sku_id] = {'colour': colour, 'size': size}
         sku[sku_id].update(prices)
         return sku
