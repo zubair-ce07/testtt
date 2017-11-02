@@ -28,11 +28,8 @@ class Record:
         self.wind_direction_degree = 0
 
     def add(self, dict):
-        for key in dict:
-            if key == 'PKT':
-                self.date = dict['PKT']
-            elif key == 'PKST':
-                self.date = dict['PKST']
+
+        self.date = dict.get('PKT') or dict.get('PKST')
 
         if dict['Max TemperatureC']:
             self.max_temp = int(dict['Max TemperatureC'])
@@ -87,10 +84,10 @@ class Record:
     def get_min_humidity(self):
         return self.min_humidity
 
-    def displayDate(self):
+    def display_date(self):
         print("Date: {}".format(self.date))
 
-    def displayTemp(self):
+    def display_temp(self):
         print("Temperature : {}".format(self.max_temp))
 
 

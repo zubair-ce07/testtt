@@ -1,7 +1,7 @@
 import glob
 import csv
 from record import Record
-from list import RecordList
+from record_list import RecordList
 import argparse
 
 
@@ -21,20 +21,19 @@ def parse_populate(path):
 
 # Function to print out the stored calculations
 def print_result(result):
-    print('Highest: {}C on {}'.format(result[0], result[1]))
-    print('Lowest: {}C on {}'.format(result[2], result[3]))
-    print('Highest Humidity: {}% on {} \n'.format(result[4], result[5]))
+    print('Highest: {}C on {}'.format(result['Max Temp'], result['Max Temp Date']))
+    print('Lowest: {}C on {}'.format(result['Min Temp'], result['Min Temp Date']))
+    print('Highest Humidity: {}% on {} \n'.format(result['Max Humidity'], result['Max Humidity Date']))
 
 
 # Function to print the Mean Averages
 def print_mean_result(mean_result):
-    print('Highest Average: {}C '.format(mean_result[0]))
-    print('Lowest Average: {}C'.format(mean_result[1]))
-    print('Average Mean Humidity: {} \n'.format(mean_result[2]))
-
-if __name__ == "__main__":
+    print('Highest Average: {}C '.format(mean_result['Max Average Temp']))
+    print('Lowest Average: {}C'.format(mean_result['Max Temp Date']))
+    print('Average Mean Humidity: {} \n'.format(mean_result['Max Humidity']))
 
 
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('dir')
     parser.add_argument('-e', action="store", dest='date_minmax')
@@ -60,4 +59,5 @@ if __name__ == "__main__":
         query_data.generate_bar_chart()
 
 
-
+if __name__ == "__main__":
+    main()
