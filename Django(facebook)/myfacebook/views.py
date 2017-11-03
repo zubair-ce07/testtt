@@ -4,15 +4,18 @@ from django.contrib.auth import (
     authenticate, login as django_login,
     logout as django_logout
 )
-from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views import View
-from django.contrib.auth.forms import AuthenticationForm
+from rest_framework import generics
+from rest_framework import viewsets
 
 from .forms import StatusForm, UserCreationFormExtended
 from .models import UserStatus, UserFollowers, News
+from .serializers import NewsSerializer
 
 
 class SignIn(View):
@@ -220,3 +223,18 @@ class NewsDetail(View):
             'news': news
         }
         return render(request, self.template_name, context)
+
+
+class NewsListAPI(generics.ListAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+
+
+class NewsDetailAPI(generics.RetrieveAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+
+
+class NewsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer

@@ -1,8 +1,8 @@
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
-from django.contrib.auth.models import User
 from django.dispatch import receiver
-from django.conf import settings
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -11,28 +11,31 @@ def create_user_profile(sender, instance, created, **kwargs):
         UserProfile.objects.create(user=instance)
 
 
-class UserManager(models.Manager):
-    def save_user(self, kwargs):
-        user = User(username=kwargs['username'],
-                    first_name=kwargs['first_name'],
-                    last_name=kwargs['last_name'])
-        user.set_password(kwargs['password'])
+class UserProfileManager(models.Manager):
+    def create_user(self, **cleaned_data):
+        user = User(username=cleaned_data['username'],
+                    first_name=cleaned_data['first_name'],
+                    last_name=cleaned_data['last_name'])
+        user.set_password(cleaned_data['password1'])
 
         post_save.disconnect(create_user_profile, sender=User)
         user.save()
         post_save.connect(create_user_profile, sender=User)
 
         user_profile = UserProfile(user=user,
-                                   gender=kwargs['gender'],
-                                   date_of_birth=kwargs['date_of_birth'])
+                                   gender=cleaned_data['gender'],
+                                   date_of_birth=cleaned_data['date_of_birth'])
         user_profile.save()
 
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name="user_profile")
     date_of_birth = models.DateField('date of birth', null=True)
-    gender = models.CharField(max_length=20)
-    objects = UserManager()
+    gender_choices = (
+        ('Male', u"Male"),
+        ('Female', u"Female"),)
+    gender = models.CharField(max_length=20, choices=gender_choices)
+    objects = UserProfileManager()
 
 
 class UserStatus(models.Model):
@@ -50,7 +53,6 @@ class UserFollowers(models.Model):
 
     class Meta:
         unique_together = ('followee', 'follower')
-        verbose_name_plural = "UserFollowers"
 
 
 class News(models.Model):
@@ -58,6 +60,6 @@ class News(models.Model):
     date = models.DateField('date published')
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=200)
-    detail = models.TextField(max_length=2000)
+    detail = models.TextField(max_length=3000)
     link = models.URLField(max_length=200)
     image_url = models.URLField(max_length=200)
