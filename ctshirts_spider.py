@@ -10,6 +10,7 @@ class Mixin:
     market = 'UK'
     allowed_domains = ['ctshirts.com']
     start_urls = ['http://www.ctshirts.com/uk/homepage']
+    gender = 'men'
 
 
 class CtshirtsParseSpider(BaseParseSpider, Mixin):
@@ -28,17 +29,16 @@ class CtshirtsParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
         garment['skus'] = {}
-        garment['gender'] = self.product_gender()
         garment['image_urls'] = self.image_urls(response)
 
-        price = self.product_price(response)
+        pprice, price = self.product_price(response)
         colour = self.detect_colour(garment['name'])
 
         requests = self.size_requests(response)
-        garment['meta'] = {'requests_queue': requests, 'price': price, 'colour': colour}
+        garment['meta'] = {'requests_queue': requests, 'pprice':pprice, 'price': price, 'colour': colour}
 
         if not requests:
-            garment['skus'].update(self.sku(response, price, colour))
+            garment['skus'].update(self.sku(response, pprice, price, colour))
 
         return self.next_request_or_garment(garment)
 
@@ -70,40 +70,48 @@ class CtshirtsParseSpider(BaseParseSpider, Mixin):
         garment['skus'].update(self.sku(response))
         return self.next_request_or_garment(garment)
 
-    def sku(self, response, sku_price=None, prod_colour=None):
+    def sku(self, response, prod_pprice=None, prod_price=None, prod_colour=None):
         sku = {}
-        custom_length_price = 0
+        colour, size, length, custom_length = self.sku_color_size(response)
 
-        slctd_colour_css = '.colour-swatching .swatch--name::text'
-        slctd_size_css = '.attribute__variants-group:first-child .attribute__swatch--selected .swatchanchor::text'
-        slctd_len_css = '.attribute__variants-group:first-child + li .attribute__swatch--selected .swatchanchor::text'
-        slctd_cus_len_css = '.js-custom-option-swatch.attribute__swatch--selected::attr(data-value)'
-
-        colour = clean(response.css(slctd_colour_css))
-        size = clean(response.css(slctd_size_css))
-        length = clean(response.css(slctd_len_css))
-        custom_length = clean(response.css(slctd_cus_len_css))
-
-        colour = colour[0] if colour else prod_colour if prod_colour else response.meta['garment']['meta']['colour']
+        colour = colour[0] if colour else prod_colour if prod_colour else response.meta.get('garment', {}).get('meta', {}).get('colour', "")
         length = length[0] if length else custom_length[0] if custom_length else ""
         size = size[0] if size else self.one_size
-
-        if custom_length:
-            custom_length_price = float(clean(response.css('a.js-custom-sleeve-option::attr(data-price)'))[0][1:])
 
         size = size.replace("\"", "")
         sku_id = size + ("_" + length if length else "")
         size = size + ("/" + length if length else "")
 
-        sk_price = sku_price if sku_price else response.meta['garment']['meta']['price']
-        price, currency = float(sk_price[1:]), sk_price[0]
-        price_str = currency + str(round(price + custom_length_price, 2))
+        prices = self.sku_price(response, custom_length, prod_pprice, prod_price)
 
-        prices = self.product_pricing_common_new(response, [price_str])
-
-        sku[sku_id] = {'colour': colour, 'size': size}
+        sku[sku_id] = {'size': size}
         sku[sku_id].update(prices)
+        if colour:
+            sku[sku_id].update({'colour': colour})
         return sku
+
+    def sku_price(self, response, custom_length, prod_pprice ,prod_price):
+        custom_length_price = 0
+        if custom_length:
+            custom_length_price = float(clean(response.css('a.js-custom-sleeve-option::attr(data-price)'))[0][1:])
+        price_str = prod_price if prod_price else response.meta['garment']['meta']['price']
+        pprice_str = prod_pprice if prod_pprice else response.meta['garment']['meta']['pprice']
+        price, currency = float(price_str[1:]), price_str[0]
+        price_str = currency + str(round(price + custom_length_price, 2))
+        return self.product_pricing_common_new(response, [price_str, pprice_str])
+
+    def sku_color_size(self, response):
+        selected_colour_css = '.colour-swatching .swatch--name::text'
+        selected_size_css = '.attribute__variants-group:first-child .attribute__swatch--selected ::text'
+        selected_length_css = '.attribute__variants-group:first-child + li .attribute__swatch--selected ::text'
+        selected_custom_length_css = '.js-custom-option-swatch.attribute__swatch--selected::attr(data-value)'
+
+        colour = clean(response.css(selected_colour_css))
+        size = clean(response.css(selected_size_css))
+        length = clean(response.css(selected_length_css))
+        custom_length = clean(response.css(selected_custom_length_css))
+
+        return colour, size, length, custom_length
 
     def product_id(self, response):
         return clean(response.css('[itemprop="productID"]::text'))[0]
@@ -120,16 +128,14 @@ class CtshirtsParseSpider(BaseParseSpider, Mixin):
     def product_category(self, response):
         return clean(response.css('.breadcrumb__link a::text, .breadcrumb__link::text'))[1:]
 
-    def product_gender(self):
-        return 'Men'
-
     def image_urls(self, response):
         return clean(response.css('.pdp-main__image_thumbnail::attr(src)'))
 
     def product_price(self, response):
-        price = clean(response.css('#productNowPrice::attr(value)'))[0]
         currency = clean(response.css('#productPriceCurrency::attr(value)'))[0]
-        return currency + price
+        price = clean(response.css('#productNowPrice::attr(value)'))[0]
+        pprice = clean(response.css('#productWasPrice::attr(value)'))[0]
+        return currency + price, currency + pprice
 
 
 class CtshirtsCrawlSpider(BaseCrawlSpider, Mixin):
@@ -138,22 +144,25 @@ class CtshirtsCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = CtshirtsParseSpider()
 
     menu_css = ['.js-maincat']
+    category_css = ['#category-level-1']
+    product_css = ['.product-image.tile__image']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=menu_css, attrs=('data-link'), tags=('span'), deny='sale'), callback='parse_products'),
+        Rule(LinkExtractor(restrict_css=menu_css, tags=('span'), attrs=('data-link'), deny='sale'), callback='parse'),
+        Rule(LinkExtractor(restrict_css=category_css, tags=('a'), attrs=('search-link')), callback='parse_pagination'),
+        Rule(LinkExtractor(restrict_css=product_css, ), callback='parse_item')
     )
 
-    def parse_products(self, response):
+    def parse_pagination(self, response):
+
+        yield from self.parse(response)
+
         product_css = '.product-image.tile__image a.thumb-link::attr(href)'
         pagination_css = '.infinite-scroll-placeholder[data-loading-state="unloaded"]::attr(data-grid-url)'
-
         product_urls = clean(response.css(product_css))
-        for product_url in product_urls:
-            yield Request(product_url, callback=self.parse_item, dont_filter=True)
 
         if not product_urls:
             return
 
         pagination_url = clean(response.css(pagination_css))[0]
-        yield Request(pagination_url, callback=self.parse_products, dont_filter=True)
-
+        yield Request(pagination_url, callback=self.parse_pagination)
