@@ -1,0 +1,20 @@
+{% extends 'myfacebook/base.html' %}
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+
+{% block content %}
+    <div style="width: 60%; margin-left: 20%" class="list-group">
+
+        {% for status in statuses %}
+            <a class="list-group-item" href='{% url 'myfacebook:detail' status.status_author.id %}'>
+                <h3 class="list-group-item-heading">{{ status.status_text }}</h3>
+                <span class="badge">{{ status.pub_date|date:"M d, Y H:i" }}</span>
+                <p class="list-group-item-paragraph">{{ status.status_author.first_name}}</p>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}

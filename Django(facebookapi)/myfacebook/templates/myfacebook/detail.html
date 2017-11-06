@@ -1,0 +1,31 @@
+{% extends 'myfacebook/base.html' %}
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+{% block content %}
+    <br>
+
+    {% if is_following %}
+        <label class="btn btn-success disabled" style="width: 20%" >Following</label>
+    {% else %}
+        <a class="btn btn-primary" style="width: 24%" href='{% url 'myfacebook:follow' user.id %}'>Follow</a>
+    {% endif %}
+
+
+
+    <h3>{{ user.username }}</h3>
+    <div style="width:50%">
+        <label>{{ message }}</label>
+        <div class="list-group">
+            {% for status in statuses %}
+                <li class="list-group-item">
+                    <span class="badge">{{ status.pub_date|date:"M d, Y H:i" }}</span>
+                    <h3 class="list-group-item-heading">{{ status.status_text }}</h3>
+                </li>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
