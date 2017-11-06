@@ -11,12 +11,11 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views import View
 from django.http.response import HttpResponse, JsonResponse
-from rest_framework import generics, status
-from rest_framework import viewsets
-from rest_framework import permissions
+from rest_framework import status, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 
 from .forms import StatusForm, UserCreationForm
 from .models import UserStatus, UserFollowers, News
@@ -230,37 +229,33 @@ class NewsDetail(View):
         return render(request, self.template_name, context)
 
 
-class NewsListAPI(generics.CreateAPIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    authentication_classes = (TokenAuthentication,)
-    queryset = News.objects.all()
-    serializer_class = NewsSerializer
+@api_view(['GET'])
+@permission_classes(permissions.IsAuthenticated, )
+@authentication_classes(TokenAuthentication, )
+def user_news_view(request, pk):
+    news = News.objects.filter(author_id=pk)
+    news_serializer = NewsSerializer(news.all(), many=True)
+    return Response(news_serializer.data)
 
-    def create(self, request, *args, **kwargs):
-        news = {
-            'author_id': request.user.id, 'title': request.data['title'],
-            'description': request.data['description'], 'detail': request.data['detail'],
-            'link': request.data['link'], 'image_url': request.data['image_url'],
-            'date': request.data['date']
-        }
 
+class NewsAPI(APIView):
+    authentication_classes = (TokenAuthentication, SessionAuthentication, )
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request, pk):
+        news = News.objects.filter(author_id=pk)
+        news_serializer = NewsSerializer(news.all(), many=True)
+        if news:
+            return Response(news_serializer.data)
+
+        return HttpResponse('Requested user has no news', status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request):
+        news = request.POST.copy()
+        news['author_id'] = request.user.id
         news_serializer = NewsSerializer(data=news)
-
         if news_serializer.is_valid():
             news_serializer.save()
             return JsonResponse(news_serializer.data)
 
         return HttpResponse([news_serializer.errors], status=status.HTTP_400_BAD_REQUEST)
-
-
-class NewsDetailAPI(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated,)
-    authentication_classes = (TokenAuthentication,)
-    queryset = News.objects.all()
-    serializer_class = NewsSerializer
-
-    @detail_route(methods=['get'])
-    def user_news(self, request, pk):
-        news = News.objects.filter(author_id=pk)
-        news_serializer = NewsSerializer(news.all(), many=True)
-        return Response(news_serializer.data)

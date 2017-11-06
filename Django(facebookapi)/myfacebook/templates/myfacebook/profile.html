@@ -8,7 +8,10 @@
 
 {% block content %}
 
-    <h3>Welcome {{ user.first_name }}</h3><br>
+    <h3>
+        Welcome! {{ user.first_name }}
+                 {{ user.last_name }}
+    </h3><br>
     <div style="width:50%">
         <form method="post">
             {% csrf_token %}
