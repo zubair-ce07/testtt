@@ -14,7 +14,7 @@ class FirstscrapytaskItem(scrapy.Item):
     pass
 
 
-class ProductInfo(scrapy.Item):
+class HypedcItem(scrapy.Item):
 
     name = scrapy.Field()
     brand = scrapy.Field()
