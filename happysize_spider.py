@@ -80,7 +80,7 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
 
         return self.next_request_or_garment(garment)
 
-    def type_or_size_request(self, response, product_id, store_id, type_or_sizes, request_type):
+    def type_or_size_request(self, response, product_id, store_id, type_or_sizes, filter):
         if not type_or_sizes:
             return []
 
@@ -89,7 +89,7 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
 
         color_id = url_query_parameter(response.url, 'colorId')
         type = url_query_parameter(response.url, 'attrId')
-        callback = self.parse_type if request_type == "Type" else self.parse_size
+        callback = self.parse_type if filter == "Type" else self.parse_size
 
         if not color_id:
             color_id = response.css('input[name="colorId"]::attr(value)').extract_first()
@@ -97,9 +97,11 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
             type_or_size_request_url = add_or_replace_parameter(type_or_size_request_url, 'colorId', color_id)
             type_or_size_request_url.replace('%2B', '+')
 
+        url = type_or_size_request_url
+
         for type_or_size in type_or_sizes:
-            type_or_size_request_url = add_or_replace_parameter(type_or_size_request_url, 'attrId', type_or_size if request_type == "Type" else type if type else "")
-            type_or_size_request_url = add_or_replace_parameter(type_or_size_request_url, 'sizeId', type_or_size if request_type == "Size" else "")
+            url = add_or_replace_parameter(url, 'attrId', type_or_size if filter == "Type" else type if type else "")
+            url = add_or_replace_parameter(url, 'sizeId', type_or_size if filter == "Size" else "")
             requests.append(reset_cookies(FormRequest(url=type_or_size_request_url, callback=callback,
                                                       formdata={'productId': product_id, 'storeId': store_id},
                                                       dont_filter=True)))
