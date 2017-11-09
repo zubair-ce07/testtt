@@ -22,7 +22,6 @@ class Mixin:
 class HappySizeParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     ajax_api_url = 'AjaxProductDescription?colorId={0}&isAjaxCall=true'
-    OUT_OF_STOCK_VALUE = 3
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -34,8 +33,9 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
 
         requests = []
         garment['skus'] = {}
-        garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(garment)
+        garment['image_urls'] = self.product_images(response)
+        garment['trail'] = self.product_trail(response, garment['name'])
 
         store_id, types, sizes = self.product_meta(response)
 
@@ -147,11 +147,16 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
 
         return 'unisex-adults'
 
-    def image_urls(self, response):
+    def product_images(self, response):
         return [url_query_cleaner(url).strip('/') for url in clean(response.css('.productThumbNail::attr(src)'))]
+
+    def product_trail(self, response, name):
+        trail_part = [(clean(name), response.url)]
+        return response.meta.get('trail', []) + trail_part
 
     def sku(self, response):
         sku = {}
+        out_of_stock_value = 3
         color, size = self.sku_color_size(response)
         prices = self.sku_prices(response)
 
@@ -161,7 +166,7 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
 
         sku_stock = clean(response.css('input[name="available"]::attr(value)'))
         if sku_stock:
-            sku_stock = False if sku_stock == self.OUT_OF_STOCK_VALUE else True
+            sku_stock = False if sku_stock == out_of_stock_value else True
         else:
             sku_stock = False
 
@@ -214,8 +219,8 @@ class HappySizeCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = HappySizeParseSpider()
 
-    category_css = ['.categoryNavList']
-    product_css = ['.catEntryDisplayLink']
+    category_css = '.categoryNavList'
+    product_css = '.catEntryDisplayLink'
 
     rules = (
         Rule(LinkExtractor(restrict_css=category_css), callback='parse_pagination'),
@@ -226,10 +231,12 @@ class HappySizeCrawlSpider(BaseCrawlSpider, Mixin):
 
         yield from self.parse(response)
 
-        pagination_regex = '.loadMoreCatEntriesContainer + script + script::text'
-        pagination_text = clean(response.css(pagination_regex))
+        meta = {'trail': self.add_trail(response)}
+
+        pagination_xpath = '//script[contains(text(), "catalogAjaxURL")]/text()'
+        pagination_text = clean(response.xpath(pagination_xpath))
         if not pagination_text:
             return
 
         pagination_url = re.findall('catalogAjaxURL = \"(.*)\";', pagination_text[0])[0]
-        yield reset_cookies(FormRequest(pagination_url, callback=self.parse_pagination, dont_filter=True))
+        yield reset_cookies(FormRequest(pagination_url, callback=self.parse_pagination, meta=meta))
