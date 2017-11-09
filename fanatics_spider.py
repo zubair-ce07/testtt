@@ -21,6 +21,8 @@ class Mixin:
 
 class FanaticsParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
+    raw_product_xpath = '//script[contains(text(), "__platform_data__")]/text()'
+    raw_product_regex = re.compile('var __platform_data__=({.*})')
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -31,7 +33,9 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate(garment, response)
+
         garment['skus'] = self.skus(raw_product)
+        garment['trail'] = self.product_trail(response)
         garment['name'] = self.product_name(raw_product)
         garment['care'] = self.product_care(raw_product)
         garment['brand'] = self.product_brand(raw_product)
@@ -39,7 +43,6 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         garment['category'] = self.product_category(raw_product)
         garment['image_urls'] = self.product_images(raw_product)
         garment['description'] = self.product_description(raw_product)
-        garment['trail'] = self.product_trail(garment['name'], response)
 
         return garment
 
@@ -77,13 +80,13 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
         return [img['image']['src'].replace('//', '') for img in images]
 
-    def product_trail(self, name, response):
-        trail_part = [(clean(name), response.url)]
+    def product_trail(self, response):
+        trail_part = [(clean(response.meta.get('link_text', '')), response.url)]
         return response.meta.get('trail', []) + trail_part
 
     def raw_product(self, response):
-        raw_product_text = clean(response.xpath('//script[contains(text(), "__platform_data__")]/text()'))[0]
-        raw_product = re.findall('var __platform_data__=({.*})', raw_product_text)
+        raw_product_text = clean(response.xpath(self.raw_product_xpath))[0]
+        raw_product = re.findall(self.raw_product_regex, raw_product_text)
         return json.loads(raw_product[0])['pdp-data']['pdp']
 
     def skus(self, raw_product):
