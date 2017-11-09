@@ -35,7 +35,6 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         self.boilerplate(garment, response)
 
         garment['skus'] = self.skus(raw_product)
-        garment['trail'] = self.product_trail(response)
         garment['name'] = self.product_name(raw_product)
         garment['care'] = self.product_care(raw_product)
         garment['brand'] = self.product_brand(raw_product)
@@ -62,7 +61,7 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         return raw_product['details']
 
     def product_brand(self, raw_product):
-        return raw_product['brand'] if raw_product['brand'] else self.retailer
+        return raw_product['brand'] or self.retailer
 
     def product_gender(self, raw_product):
         gender_text = raw_product['genderAgeGroup']
@@ -80,10 +79,6 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
         return [img['image']['src'].replace('//', '') for img in images]
 
-    def product_trail(self, response):
-        trail_part = [(clean(response.meta.get('link_text', '')), response.url)]
-        return response.meta.get('trail', []) + trail_part
-
     def raw_product(self, response):
         raw_product_text = clean(response.xpath(self.raw_product_xpath))[0]
         raw_product = re.findall(self.raw_product_regex, raw_product_text)
@@ -94,19 +89,21 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         for raw_sku in raw_product['sizes']:
             sku = {}
             sku_id = raw_sku['itemId']
-            sku_stock = raw_sku['available']
             sku_color = self.detect_colour(raw_product['title'])
             sku_size = self.one_size if raw_sku['size'] == "No Size" else raw_sku['size']
 
             price = raw_sku['price']['sale']['money']['value']
-            pprice = raw_sku['price']['regular']['money']['value']
+            previous_price = raw_sku['price']['regular']['money']['value']
             currency = raw_sku['price']['sale']['money']['currency']
 
-            prices = self.product_pricing_common_new(None, [price, pprice, currency])
+            prices = self.product_pricing_common_new(None, [price, previous_price, currency])
 
-            sku[sku_id] = {'size': sku_size, 'color': sku_color, 'in_stock': sku_stock}
-
+            sku[sku_id] = {'color': sku_color, 'size': sku_size}
             sku[sku_id].update(prices)
+
+            if not raw_sku['available']:
+                sku[sku_id].update({'out_of_stock': True})
+
             skus.update(sku)
 
         return skus
@@ -136,4 +133,4 @@ class FanaticsCrawlSpider(BaseCrawlSpider, Mixin):
 
         if next_page:
             next_page = next_page[0].replace('/?', '?')
-            yield Request(url=next_page, callback=self.parse_pagination, meta=meta)
+            yield Request(url=next_page, callback=self.parse_pagination, meta=meta.copy())
