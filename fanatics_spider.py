@@ -83,22 +83,23 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         skus = {}
         for sku_json in product_json['sizes']:
             if sku_json['available']:
-                skus.update(self.sku(sku_json))
+                skus.update(self.sku(sku_json, product_json['title']))
 
         return skus
 
-    def sku(self, sku_json):
+    def sku(self, sku_json, title):
         sku = {}
 
         sku_id = sku_json['itemId']
         sku_size = sku_json['size']
+        sku_color = self.detect_colour(title)
 
         pprice = sku_json['price']['regular']['money']['value'] + self.CURRENCY
         price = sku_json['price']['sale']['money']['value'] + self.CURRENCY
 
         prices = self.product_pricing_common_new(None, [price, pprice])
 
-        sku[sku_id] = {'size': self.one_size if sku_size == "No Size" else sku_size}
+        sku[sku_id] = {'color': sku_color, 'size': self.one_size if sku_size == "No Size" else sku_size}
         sku[sku_id].update(prices)
 
         return sku
