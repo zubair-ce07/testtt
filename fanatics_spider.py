@@ -21,102 +21,101 @@ class Mixin:
 
 class FanaticsParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    CURRENCY = '$'
 
     def parse(self, response):
-        product_json = self.product_json(response)
-        product_id = self.product_id(product_json)
+        raw_product = self.raw_product(response)
+        product_id = self.product_id(raw_product)
         garment = self.new_unique_garment(product_id)
 
         if not garment:
             return
 
         self.boilerplate(garment, response)
+        garment['skus'] = self.skus(raw_product)
+        garment['name'] = self.product_name(raw_product)
+        garment['care'] = self.product_care(raw_product)
+        garment['brand'] = self.product_brand(raw_product)
+        garment['gender'] = self.product_gender(raw_product)
+        garment['category'] = self.product_category(raw_product)
+        garment['image_urls'] = self.product_images(raw_product)
+        garment['description'] = self.product_description(raw_product)
+        garment['trail'] = self.product_trail(garment['name'], response)
 
-        garment['name'] = self.product_name(product_json)
-        garment['care'] = self.product_care(product_json)
-        garment['skus'] = self.product_skus(product_json)
-        garment['brand'] = self.product_brand(product_json)
-        garment['gender'] = self.product_gender(product_json)
-        garment['category'] = self.product_category(product_json)
-        garment['image_urls'] = self.product_images(product_json)
-        garment['description'] = self.product_description(product_json)
+        return garment
 
-        return self.next_request_or_garment(garment)
+    def product_id(self, raw_product):
+        return raw_product['productId']
 
-    def product_id(self, product_json):
-        return product_json['productId']
+    def product_name(self, raw_product):
+        return raw_product['title']
 
-    def product_name(self, product_json):
-        return product_json['title']
+    def product_description(self, raw_product):
+        return raw_product['description']
 
-    def product_description(self, product_json):
-        return product_json['description']
+    def product_category(self, raw_product):
+        return [category['name'] for category in raw_product['breadcrumb']]
 
-    def product_category(self, product_json):
-        return [category['name'] for category in product_json['breadcrumb']]
+    def product_care(self, raw_product):
+        return raw_product['details']
 
-    def product_care(self, product_json):
-        return product_json['details']
+    def product_brand(self, raw_product):
+        return raw_product['brand'] if raw_product['brand'] else self.retailer
 
-    def product_brand(self, product_json):
-        return product_json['brand'] if product_json['brand'] else self.retailer
+    def product_gender(self, raw_product):
+        gender_text = raw_product['genderAgeGroup']
 
-    def product_gender(self, product_json):
-        gender_text = product_json['genderAgeGroup']
         if not gender_text:
             return 'unisex-adults'
 
-        gender_text = gender_text[0].lower()
-
         for gender_string, gender in self.gender_map:
-            if gender_text == gender_string:
+            if gender_string == gender_text:
                 return gender
 
         return 'unisex-adults'
 
-    def product_images(self, product_json):
-        images = product_json['imageSelector']['additionalImages'] or [product_json['imageSelector']['defaultImage']]
+    def product_images(self, raw_product):
+        images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
         return [img['image']['src'].replace('//', '') for img in images]
 
-    def product_skus(self, product_json):
+    def product_trail(self, name, response):
+        trail_part = [(clean(name), response.url)]
+        return response.meta.get('trail', []) + trail_part
+
+    def raw_product(self, response):
+        raw_product_text = clean(response.xpath('//script[contains(text(), "__platform_data__")]/text()'))[0]
+        raw_product = re.findall('var __platform_data__=({.*})', raw_product_text)
+        return json.loads(raw_product[0])['pdp-data']['pdp']
+
+    def skus(self, raw_product):
         skus = {}
-        for sku_json in product_json['sizes']:
-            if sku_json['available']:
-                skus.update(self.sku(sku_json, product_json['title']))
+        for raw_sku in raw_product['sizes']:
+            sku = {}
+            sku_id = raw_sku['itemId']
+            sku_stock = raw_sku['available']
+            sku_color = self.detect_colour(raw_product['title'])
+            sku_size = self.one_size if raw_sku['size'] == "No Size" else raw_sku['size']
+
+            price = raw_sku['price']['sale']['money']['value']
+            pprice = raw_sku['price']['regular']['money']['value']
+            currency = raw_sku['price']['sale']['money']['currency']
+
+            prices = self.product_pricing_common_new(None, [price, pprice, currency])
+
+            sku[sku_id] = {'size': sku_size, 'color': sku_color, 'in_stock': sku_stock}
+
+            sku[sku_id].update(prices)
+            skus.update(sku)
 
         return skus
-
-    def sku(self, sku_json, title):
-        sku = {}
-
-        sku_id = sku_json['itemId']
-        sku_size = sku_json['size']
-        sku_color = self.detect_colour(title)
-
-        pprice = sku_json['price']['regular']['money']['value'] + self.CURRENCY
-        price = sku_json['price']['sale']['money']['value'] + self.CURRENCY
-
-        prices = self.product_pricing_common_new(None, [price, pprice])
-
-        sku[sku_id] = {'color': sku_color, 'size': self.one_size if sku_size == "No Size" else sku_size}
-        sku[sku_id].update(prices)
-
-        return sku
-
-    def product_json(self, response):
-        product_json_text = clean(response.css('.layout-row[data-trk-id="r1"] + script::text'))[0]
-        product_json_text = re.findall('var __platform_data__=({.*})', product_json_text)
-        return json.loads(product_json_text[0])['pdp-data']['pdp']
 
 
 class FanaticsCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = FanaticsParseSpider()
 
-    menu_css = ['.top-nav-dropdown-content']
-    product_css = ['.product-image-container']
-    department_css = ['.dept-card-container-black-strip']
+    menu_css = '.top-nav-dropdown-content'
+    product_css = '.product-image-container'
+    department_css = '.dept-card-container-black-strip'
 
     rules = (
         Rule(LinkExtractor(restrict_css=menu_css), callback='parse'),
@@ -129,6 +128,9 @@ class FanaticsCrawlSpider(BaseCrawlSpider, Mixin):
         yield from self.parse(response)
 
         next_page = clean(response.css('[rel="next"]::attr(href)'))
+
+        meta = {'trail': self.add_trail(response)}
+
         if next_page:
             next_page = next_page[0].replace('/?', '?')
-            yield Request(next_page, self.parse_pagination)
+            yield Request(url=next_page, callback=self.parse_pagination, meta=meta)
