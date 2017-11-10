@@ -26,46 +26,50 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
 
     def parse(self, response):
         raw_product = self.raw_product(response)
-        product_id = self.product_id(raw_product)
+        product_id = raw_product['productId']
         garment = self.new_unique_garment(product_id)
-
         if not garment:
             return
 
         self.boilerplate(garment, response)
-
-        garment['skus'] = self.skus(raw_product)
-        garment['name'] = self.product_name(raw_product)
-        garment['care'] = self.product_care(raw_product)
-        garment['brand'] = self.product_brand(raw_product)
+        garment['name'] = raw_product['title']
+        garment['care'] = raw_product['details']
+        garment['description'] = raw_product['description']
+        garment['brand'] = raw_product['brand'] or self.retailer
+        garment['skus'] = self.skus(response, raw_product)
         garment['gender'] = self.product_gender(raw_product)
         garment['category'] = self.product_category(raw_product)
         garment['image_urls'] = self.product_images(raw_product)
-        garment['description'] = self.product_description(raw_product)
 
         return garment
 
-    def product_id(self, raw_product):
-        return raw_product['productId']
+    def skus(self, response, raw_product):
+        skus = {}
+        for raw_sku in raw_product['sizes']:
+            sku = self.sku_prices(raw_sku)
+            sku['colour'] = self.sku_colour(response, raw_product)
+            sku['size'] = self.one_size if raw_sku['size'] == "No Size" else raw_sku['size']
+            if not raw_sku['available']:
+                sku['out_of_stock'] = True
 
-    def product_name(self, raw_product):
-        return raw_product['title']
+            skus[raw_sku['itemId']] = sku
+        return skus
 
-    def product_description(self, raw_product):
-        return raw_product['description']
+    def sku_prices(self, raw_sku):
+        raw_price = raw_sku['price']
+        price = raw_price['sale']['money']['value']
+        currency = raw_price['sale']['money']['currency']
+        previous_price = raw_price['regular']['money']['value']
+        return self.product_pricing_common_new(None, [price, previous_price, currency])
 
-    def product_category(self, raw_product):
-        return [category['name'] for category in raw_product['breadcrumb']]
-
-    def product_care(self, raw_product):
-        return raw_product['details']
-
-    def product_brand(self, raw_product):
-        return raw_product['brand'] or self.retailer
+    def sku_colour(self, response, raw_product):
+        sku_colour = response.css('.color-selector-value::text').extract_first()
+        if not sku_colour:
+            sku_colour = self.detect_colour(raw_product['title'])
+        return sku_colour
 
     def product_gender(self, raw_product):
         gender_text = raw_product['genderAgeGroup']
-
         if not gender_text:
             return 'unisex-adults'
 
@@ -79,34 +83,13 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
         return [img['image']['src'].replace('//', '') for img in images]
 
+    def product_category(self, raw_product):
+        return [category['name'] for category in raw_product['breadcrumb']]
+
     def raw_product(self, response):
         raw_product_text = clean(response.xpath(self.raw_product_xpath))[0]
         raw_product = re.findall(self.raw_product_regex, raw_product_text)
         return json.loads(raw_product[0])['pdp-data']['pdp']
-
-    def skus(self, raw_product):
-        skus = {}
-        for raw_sku in raw_product['sizes']:
-            sku = {}
-            sku_id = raw_sku['itemId']
-            sku_color = self.detect_colour(raw_product['title'])
-            sku_size = self.one_size if raw_sku['size'] == "No Size" else raw_sku['size']
-
-            price = raw_sku['price']['sale']['money']['value']
-            previous_price = raw_sku['price']['regular']['money']['value']
-            currency = raw_sku['price']['sale']['money']['currency']
-
-            prices = self.product_pricing_common_new(None, [price, previous_price, currency])
-
-            sku[sku_id] = {'color': sku_color, 'size': sku_size}
-            sku[sku_id].update(prices)
-
-            if not raw_sku['available']:
-                sku[sku_id].update({'out_of_stock': True})
-
-            skus.update(sku)
-
-        return skus
 
 
 class FanaticsCrawlSpider(BaseCrawlSpider, Mixin):
@@ -124,13 +107,10 @@ class FanaticsCrawlSpider(BaseCrawlSpider, Mixin):
     )
 
     def parse_pagination(self, response):
-
         yield from self.parse(response)
-
         next_page = clean(response.css('[rel="next"]::attr(href)'))
-
         meta = {'trail': self.add_trail(response)}
-
-        if next_page:
-            next_page = next_page[0].replace('/?', '?')
-            yield Request(url=next_page, callback=self.parse_pagination, meta=meta.copy())
+        if not next_page:
+            return
+        next_page = next_page[0].replace('/?', '?')
+        yield Request(url=next_page, callback=self.parse_pagination, meta=meta.copy())
