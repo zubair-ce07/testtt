@@ -22,7 +22,7 @@ class Mixin:
 
 class HappySizeParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
-    ajax_api_url = 'AjaxProductDescription?colorId={0}&isAjaxCall=true'
+    ajax_api_url_t = 'AjaxProductDescription?colorId={0}&isAjaxCall=true'
     price_css = 'span.price::text'
 
     def parse(self, response):
@@ -32,47 +32,43 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
             return
 
         self.boilerplate_normal(garment, response)
-
         garment['skus'] = {}
         garment['gender'] = self.product_gender(garment)
         garment['image_urls'] = self.product_images(response)
-
         store_id = clean(response.css('input[name="storeId"]::attr(value)'))[0]
-
         size_type_requests = self.size_type_requests(response, product_id, store_id)
         size_requests = self.size_requests(response, product_id, store_id)
-
         requests = size_type_requests or size_requests
         if not requests:
             garment['skus'].update(self.sku(response))
 
-        requests += self.color_requests(response, product_id, store_id)
-
+        requests += self.colour_requests(response, product_id, store_id)
         if requests:
             garment['meta'] = {'requests_queue': requests}
 
         return self.next_request_or_garment(garment)
 
-    def color_requests(self, response, product_id, store_id):
+    def colour_requests(self, response, product_id, store_id):
         requests = []
-        colors = response.css('.color:not(.selected)::attr(title)').extract()
-        for color_id in colors:
-            color_request_url = response.urljoin(self.ajax_api_url.format(color_id.replace(' ', '+')))
-            requests.append(reset_cookies(FormRequest(url=color_request_url, callback=self.parse_color,
-                                                      formdata={'productId': product_id, 'storeId': store_id},
-                                                      dont_filter=True)))
+        colours = response.css('.color:not(.selected)::attr(title)').extract()
+        color_request_formdata = {'productId': product_id, 'storeId': store_id}
+        for colour_id in colours:
+            colour_request_url = response.urljoin(self.ajax_api_url_t.format(colour_id.replace(' ', '+')))
+
+            requests.append(reset_cookies(FormRequest(dont_filter=True,
+                                                      url=colour_request_url,
+                                                      callback=self.parse_colour,
+                                                      formdata=color_request_formdata
+                                                      )))
         return requests
 
-    def parse_color(self, response):
-        product_id = self.product_id_from_request(response)
-        store_id = self.store_id_from_request(response)
-
+    def parse_colour(self, response):
         garment = response.meta['garment']
-
+        product_id = re.findall('productId=(\d+)', str(response.request.body))[0]
+        store_id = re.findall('storeId=(\d+)', str(response.request.body))[0]
         size_type_requests = self.size_type_requests(response, product_id, store_id)
         size_requests = self.size_requests(response, product_id, store_id)
         requests = size_type_requests or size_requests
-
         if requests:
             garment['meta']['requests_queue'] += requests
         else:
@@ -87,16 +83,19 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
 
         requests = []
         size_type_url = response.url
-        color_id = url_query_parameter(response.url, 'colorId')
+        colour_id = url_query_parameter(response.url, 'colorId')
+        if not colour_id:
+            size_type_url = self.url_with_colour_id(response)
 
-        if not color_id:
-            size_type_url = self.url_with_color_id(response)
-
+        size_type_request_formdata = {'productId': product_id, 'storeId': store_id}
         for attr_id in size_types:
             size_type_url = add_or_replace_parameter(size_type_url, 'attrId', attr_id)
-            requests.append(reset_cookies(FormRequest(url=size_type_url, callback=self.parse_size_type,
-                                                      formdata={'productId': product_id, 'storeId': store_id},
-                                                      dont_filter=True)))
+
+            requests.append(reset_cookies(FormRequest(dont_filter=True,
+                                                      url=size_type_url,
+                                                      callback=self.parse_size_type,
+                                                      formdata=size_type_request_formdata
+                                                      )))
         return requests
 
     def size_requests(self, response, product_id, store_id):
@@ -106,25 +105,30 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
 
         requests = []
         size_url = response.url
+        colour_id = url_query_parameter(response.url, 'colorId')
+        if not colour_id:
+            size_url = self.url_with_colour_id(response)
 
-        color_id = url_query_parameter(response.url, 'colorId')
-        attr_id = url_query_parameter(response.url, 'attrId', "")
+        attr_id = url_query_parameter(response.url, 'attrId')
+        if not attr_id:
+            attr_id = response.css('#attrId::attr(value)').extract_first() or ""
 
-        if not color_id:
-            size_url = self.url_with_color_id(response)
-
+        size_request_formdata = {'productId': product_id, 'storeId': store_id}
         for size_id in sizes:
             size_url = add_or_replace_parameter(size_url, 'attrId', attr_id)
             size_url = add_or_replace_parameter(size_url, 'sizeId', size_id)
-            requests.append(reset_cookies(FormRequest(url=size_url, callback=self.parse_size,
-                                                      formdata={'productId': product_id, 'storeId': store_id},
-                                                      dont_filter=True)))
+
+            requests.append(reset_cookies(FormRequest(url=size_url,
+                                                      dont_filter=True,
+                                                      callback=self.parse_size,
+                                                      formdata=size_request_formdata
+                                                      )))
         return requests
 
     def parse_size_type(self, response):
-        product_id = self.product_id_from_request(response)
-        store_id = self.store_id_from_request(response)
         garment = response.meta['garment']
+        product_id = re.findall('productId=(\d+)', str(response.request.body))[0]
+        store_id = re.findall('storeId=(\d+)', str(response.request.body))[0]
         garment['meta']['requests_queue'] += self.size_requests(response, product_id, store_id)
         return self.next_request_or_garment(garment)
 
@@ -165,57 +169,43 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
         return [url_query_cleaner(url).strip('/') for url in clean(response.css('.productThumbNail::attr(src)'))]
 
     def sku(self, response):
-        sku = {}
+        out_of_stock = False
+        sku = self.sku_prices(response)
+        sku['size'] = self.sku_size(response)
+        sku['colour'] = clean(response.css('input[name="selectedColor"]::attr(value)'))[0]
+        stock_status = clean(response.css('input[name="available"]::attr(value)'))
+        if stock_status:
+            out_of_stock = stock_status[0] == self.out_of_stock_value
+        if out_of_stock:
+            sku['out_of_stock'] = out_of_stock
 
-        color = clean(response.css('input[name="selectedColor"]::attr(value)'))[0]
+        sku_id = "{0}_{1}".format(sku['colour'], sku['size'])
+        return {sku_id: sku}
+
+    def sku_prices(self, response):
+        previous_price_text = clean(response.css('span.price.crossedOut::text'))
+        price_text = clean(response.css('span.price.reduced::text'))
+
+        if previous_price_text and price_text:
+            previous_price_text = previous_price_text[0]
+            price_text = price_text[0]
+        else:
+            previous_price_text = ""
+            price_text = clean(response.css(self.price_css))[0]
+
+        return self.product_pricing_common_new(response, [price_text, previous_price_text])
+
+    def sku_size(self, response):
         size = clean(response.css('input[name="selectedSize"]::attr(value)'))
         if not size:
             size = clean(response.css('.sizeSelect option[selected]::attr(value)'))
-        size = size[0] if size else self.one_size
+        return size[0] if size else self.one_size
 
-        prices = self.sku_prices(response)
-
-        merch_info = clean(response.css('.salePercentage::text'))
-
-        sku_id = "{0}_{1}".format(color, size)
-
-        sku_stock = clean(response.css('input[name="available"]::attr(value)'))
-        if sku_stock:
-            sku_stock = False if not sku_stock else False if sku_stock[0] == self.out_of_stock_value else True
-
-        sku[sku_id] = {'color': color, 'size': size, 'in_stock': sku_stock}
-        sku[sku_id].update(prices)
-        if merch_info:
-            sku[sku_id].update({'merch_info': merch_info[0]})
-
-        return sku
-
-    def sku_prices(self, response):
-        pprice_string = clean(response.css('span.price.crossedOut::text'))
-        price_string = clean(response.css('span.price.reduced::text'))
-
-        if pprice_string and price_string:
-            pprice_string = pprice_string[0]
-            price_string = price_string[0]
-        else:
-            pprice_string = ""
-            price_string = clean(response.css(self.price_css))[0]
-
-        return self.product_pricing_common_new(response, [price_string, pprice_string])
-
-    def url_with_color_id(self, response):
-        color_id = response.css('input[name="colorId"]::attr(value)').extract_first()
-        url_color_id = urljoin(response.url, self.ajax_api_url)
-        url_color_id = add_or_replace_parameter(url_color_id, 'colorId', color_id)
-        return url_color_id.replace('%2B', '+')
-
-    def store_id_from_request(self, response):
-        regex = 'storeId=(\d+)'
-        return re.findall(regex, str(response.request.body))[0]
-
-    def product_id_from_request(self, response):
-        regex = 'productId=(\d+)'
-        return re.findall(regex, str(response.request.body))[0]
+    def url_with_colour_id(self, response):
+        colour_id = response.css('input[name="colorId"]::attr(value)').extract_first()
+        url_colour_id = urljoin(response.url, self.ajax_api_url_t)
+        url_colour_id = add_or_replace_parameter(url_colour_id, 'colorId', colour_id)
+        return url_colour_id.replace('%2B', '+')
 
 
 class HappySizeCrawlSpider(BaseCrawlSpider, Mixin):
@@ -230,18 +220,14 @@ class HappySizeCrawlSpider(BaseCrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(restrict_css=category_css), callback='parse_pagination'),
-        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_item')
     )
 
     def parse_pagination(self, response):
-
         yield from self.parse(response)
-
         meta = {'trail': self.add_trail(response)}
-
         pagination_text = clean(response.xpath(self.pagination_xpath))
         if not pagination_text:
             return
-
         pagination_url = re.findall(self.pagination_regex, pagination_text[0])[0]
         yield reset_cookies(FormRequest(pagination_url, callback=self.parse_pagination, meta=meta.copy()))
