@@ -34,7 +34,6 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
 
         garment['skus'] = {}
-        garment['trail'] = self.product_trail(response)
         garment['gender'] = self.product_gender(garment)
         garment['image_urls'] = self.product_images(response)
 
@@ -165,10 +164,6 @@ class HappySizeParseSpider(BaseParseSpider, Mixin):
     def product_images(self, response):
         return [url_query_cleaner(url).strip('/') for url in clean(response.css('.productThumbNail::attr(src)'))]
 
-    def product_trail(self, response):
-        trail_part = [(clean(response.meta.get('link_text', '')), response.url)]
-        return response.meta.get('trail', []) + trail_part
-
     def sku(self, response):
         sku = {}
 
@@ -249,4 +244,4 @@ class HappySizeCrawlSpider(BaseCrawlSpider, Mixin):
             return
 
         pagination_url = re.findall(self.pagination_regex, pagination_text[0])[0]
-        yield reset_cookies(FormRequest(pagination_url, callback=self.parse_pagination, meta=meta))
+        yield reset_cookies(FormRequest(pagination_url, callback=self.parse_pagination, meta=meta.copy()))
