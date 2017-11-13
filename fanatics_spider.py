@@ -69,8 +69,13 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
 
     def product_images(self, raw_product):
         images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
+        image_urls = []
 
-        return [img['image']['mainImageSrc'].replace('//', '') for img in images]
+        for image in images:
+            image_url = image['image']['mainImageSrc'] if image['image'].get('mainImageSrc') else image['image']['src']
+            image_urls.append(image_url.replace('//', ''))
+
+        return image_urls
 
     def skus(self, response, raw_product):
         skus = {}
