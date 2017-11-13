@@ -114,8 +114,8 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         return json.loads(raw_product[0])['pdp-data']['pdp']
 
     def raw_description(self, raw_product):
-        raw_description = clean(raw_product['description'].split('.'))
-        raw_description += clean('.'.join(clean(raw_product['details'])).split('.'))
+        raw_description = clean(raw_product['details'])
+        raw_description += clean(raw_product['description']).split('.') if raw_product['description'] else []
 
         return raw_description
 
