@@ -41,10 +41,22 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         garment['description'] = self.product_description(raw_product)
 
         garment['gender'] = self.product_gender(raw_product)
-        garment['image_urls'] = self.product_images(raw_product)
+        garment['image_urls'] = self.product_images(response)
         garment['skus'] = self.skus(response, raw_product)
 
         return garment
+
+    def raw_product(self, response):
+        raw_product_text = clean(response.xpath(self.raw_product_xpath))[0]
+        raw_product = re.findall(self.raw_product_regex, raw_product_text)
+
+        return json.loads(raw_product[0])['pdp-data']['pdp']
+
+    def raw_description(self, raw_product):
+        raw_description = clean(raw_product['details'])
+        raw_description += clean(raw_product['description']).split('.') if raw_product['description'] else []
+
+        return raw_description
 
     def product_category(self, raw_product):
         return [category['name'] for category in raw_product['breadcrumb']]
@@ -67,30 +79,8 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
 
         return 'unisex-adults'
 
-    def product_images(self, raw_product):
-        images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
-        image_urls = []
-
-        for image in images:
-            image_url = image['image']['mainImageSrc'] if image['image'].get('mainImageSrc') else image['image']['src']
-            image_urls.append(image_url.replace('//', ''))
-
-        return image_urls
-
-    def skus(self, response, raw_product):
-        skus = {}
-
-        for raw_sku in raw_product['sizes']:
-            sku = self.sku_prices(raw_sku, raw_product['potentialDiscount'])
-            sku['colour'] = self.sku_colour(response, raw_product)
-            sku['size'] = self.one_size if raw_sku['size'] == "No Size" else raw_sku['size']
-
-            if not raw_sku['available']:
-                sku['out_of_stock'] = True
-
-            skus[raw_sku['itemId']] = sku
-
-        return skus
+    def product_images(self, response):
+        return [image.replace('//', '') for image in clean(response.css('.carousel-image::attr(src)'))]
 
     def sku_prices(self, raw_sku, raw_discount):
         raw_price = raw_sku['price']
@@ -112,17 +102,20 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
 
         return sku_colour
 
-    def raw_product(self, response):
-        raw_product_text = clean(response.xpath(self.raw_product_xpath))[0]
-        raw_product = re.findall(self.raw_product_regex, raw_product_text)
+    def skus(self, response, raw_product):
+        skus = {}
 
-        return json.loads(raw_product[0])['pdp-data']['pdp']
+        for raw_sku in raw_product['sizes']:
+            sku = self.sku_prices(raw_sku, raw_product['potentialDiscount'])
+            sku['colour'] = self.sku_colour(response, raw_product)
+            sku['size'] = self.one_size if raw_sku['size'] == "No Size" else raw_sku['size']
 
-    def raw_description(self, raw_product):
-        raw_description = clean(raw_product['details'])
-        raw_description += clean(raw_product['description']).split('.') if raw_product['description'] else []
+            if not raw_sku['available']:
+                sku['out_of_stock'] = True
 
-        return raw_description
+            skus[raw_sku['itemId']] = sku
+
+        return skus
 
 
 class FanaticsCrawlSpider(BaseCrawlSpider, Mixin):
