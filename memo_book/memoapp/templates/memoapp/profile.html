@@ -1,0 +1,34 @@
+{% extends "memoapp/base.html" %}
+{% block page_title %}Memo Book{% endblock page_title %}
+{% load static %}
+{% block body %}
+    <!-- Body contents are starting from here -->
+  <div class="container">
+        <div class="row">
+			<div class="col-md-6 col-md-offset-3">
+
+            <div class="well well-sm">
+                <div class="row">
+                    <div class="col-sm-6 col-md-4">
+                        <img src="{% get_media_prefix %}{{  user.image  }}" alt="" class="img-rounded img-responsive" />
+                    </div>
+                    <div class="col-sm-6 col-md-8">
+                        <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                        <small><cite title="San Francisco, USA">{{ user.username }} <i class="glyphicon glyphicon-map-marker">
+                        </i></cite></small>
+                        <p>
+                            <i class="glyphicon glyphicon-envelope"></i>{{ user.email }}
+                            <br />
+                            <i class="glyphicon glyphicon-gift"></i>{{ user.date_joined }}</p>
+                        <!-- Split button -->
+                        <div class="btn-group">
+                            <button type="button" onclick="window.location.href='/editprofile'" class="btn btn-primary"> Edit Profile </button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+  </div>
+{% endblock body %}
