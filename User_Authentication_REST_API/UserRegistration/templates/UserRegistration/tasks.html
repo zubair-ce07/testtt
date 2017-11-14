@@ -1,0 +1,55 @@
+{% extends "UserRegistration/base.html" %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Tasks {% endblock %}</title>
+</head>
+<body>
+{% block heading %}
+    Tasks
+{% endblock %}
+{% block content %}
+    <p><b>Username: </b> {{ user.username }}</p>
+    <table style="width: 100%">
+        <tr style="text-align: left">
+            <th>Task</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th></th>
+            <th></th>
+        </tr>
+        {% for task in tasks %}
+            <tr>
+                <td>{{ task.name }}</td>
+                <td>{{ task.dated|date:"c" }}</td>
+                {% if task.status %}
+                    <td>Completed</td>
+                {% else %}
+                    <td>Incomplete</td>
+                {% endif %}
+                <td><a href="{% url 'users:delete_task' %}?task_name={{ task.name }}">Delete</a></td>
+                <td><a href="{% url 'users:edit_task' %}?task_name={{ task.name }}">Edit</a></td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td>No tasks.</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% if user.is_superuser %}
+        <p><a href="{% url "users:add_task" %}">Add New</a></p>
+    {% else %}
+        <p><a href="{% url "users:add_user_task" %}">Add New</a></p>
+    {% endif %}
+    <p><a href="{% url "users:profile" %}">Back to Profile</a> </p>
+{% endblock %}
+{% block form_to_submit %}
+    {% if user.is_superuser %}
+        <form method="get" action="{% url 'users:show_all_task' %}">
+            <p>Filter: <input type="text" name="filter"/></p>
+            <p><input type="submit" name="submit" value="submit"/></p>
+        </form>
+    {% endif %}
+{% endblock %}
+</body>
+</html>
