@@ -1,7 +1,10 @@
+amqp==2.2.1
 asn1crypto==0.22.0
 attrs==17.2.0
 Automat==0.6.0
+billiard==3.5.0.3
 breadability==0.1.20
+celery==4.1.0
 certifi==2017.7.27.1
 cffi==1.10.0
 chardet==3.0.4
@@ -9,12 +12,17 @@ constantly==15.1.0
 cryptography==2.0.2
 cssselect==1.0.1
 Django==1.11.3
+django-celery-beat==1.0.1
+django-celery-results==1.0.1
+django-common-helpers==0.9.1
+django-cors-headers==2.1.0
 djangorestframework==3.6.3
 docopt==0.6.2
 hyperlink==17.3.0
 idna==2.5
 incremental==17.5.0
 isort==4.2.15
+kombu==4.1.0
 lxml==3.8.0
 nltk==3.2.4
 numpy==1.13.1
@@ -25,6 +33,9 @@ pyasn1==0.3.1
 pyasn1-modules==0.0.10
 pycparser==2.18
 PyDispatcher==2.0.5
+pylibmc==1.5.2
+python-memcached==1.58
+python3-memcached==1.51
 pyOpenSSL==17.2.0
 pytz==2017.2
 queuelib==1.4.2
@@ -35,6 +46,7 @@ six==1.10.0
 sumy==0.7.0
 Twisted==17.5.0
 urllib3==1.22
+vine==1.1.4
 w3lib==1.17.0
 yarg==0.1.9
 zope.interface==4.4.2

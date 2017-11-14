@@ -38,6 +38,8 @@ class News(models.Model):
     news_source = models.ForeignKey(NewsSource, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     newspaper = models.ForeignKey(Newspaper, on_delete=models.CASCADE)
+    sentiment = models.NullBooleanField(default=None)
+
 
     class Meta:
         verbose_name_plural = "News"
