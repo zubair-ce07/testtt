@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}
+    Load Products
+{% endblock title %}
+{% block heading %}
+    Load Products into DB
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-6">
+            <form action="" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Load" class="btn btn-primary"/>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
