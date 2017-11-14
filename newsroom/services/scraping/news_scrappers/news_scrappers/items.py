@@ -5,7 +5,6 @@
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/items.html
 import scrapy
-from scrapy.loader.processors import Join
 
 from services.scraping.news_scrappers.news_scrappers.processors import CleanDate, StripString, StripStringTakeFirst
 
