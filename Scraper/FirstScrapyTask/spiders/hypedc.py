@@ -1,6 +1,5 @@
-from scrapy.spiders import Rule
-from scrapy.spiders import CrawlSpider
-from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor
+from scrapy.spiders import Rule , CrawlSpider
+from scrapy.linkextractors import LinkExtractor
 
 from FirstScrapyTask.items import HypedcItem
 
@@ -11,16 +10,14 @@ class HypeDcSpider(CrawlSpider):
 
     rules = (
         # Extract links matching 'item.php' and parse them with the spider's method parse_item
-        Rule(LxmlLinkExtractor(
-            allow=['sneakers/', 'slides', 'casual', 'dress', 'boots', 'shoe-care', 'sandals', 'platforms', 'flats'
-                , 'grade-school', 'youth', 'infant', 'baby'], deny=['pid'])),
+        Rule(LinkExtractor(
+            allow=('accessories', 'footwear/\D.*'), deny=['pid', 'collections', 'sale', 'shoe-care', 'socks'])),
 
-
-        Rule(LxmlLinkExtractor(
+        Rule(LinkExtractor(
             allow=['.html' ]), callback='parse_urls_of_products'),
 
-        Rule(LxmlLinkExtractor(
-            restrict_css='div.next.col-xs-4')),
+        Rule(LinkExtractor(
+            restrict_css='.next')),
 
     )
 
@@ -31,24 +28,21 @@ class HypeDcSpider(CrawlSpider):
     def parse_urls_of_products(self, response):
 
         product = HypedcItem()
-        product['name'] = response.css('h1.product-name::text').extract_first()
-        product['desc'] = response.css('div.product-description.std::text').extract_first().strip()
+        product['name'] = response.css('.product-name::text').extract_first()
+        product['desc'] = response.css('.product-description.std::text').extract_first().strip()
 
-        category_info = response.css('ul.breadcrumb a::attr(title)').extract()
+        category_info = response.css('.breadcrumb a::attr(title)').extract()
         product['category'] = ' / '
         product['category'] = product['category'].join(category_info[1:4])
 
-        product['brand'] = response.css('h2.product-manufacturer::text').extract_first()
-        product['color'] = response.css('h3.h4.product-colour::text').extract_first().strip()
-        product['product_code'] = response.css('div.product-code::text').extract_first()
+        product['brand'] = response.css('.product-manufacturer::text').extract_first()
+        product['color'] = response.css('.product-colour::text').extract_first().strip()
+        product['product_code'] = response.css('.product-code::text').extract_first()
 
         product['url'] = response.url
-        product['image_urls'] = response.css(
-            'div.slider-inner.col-sm-13.col-sm-offset-11 img::attr(data-src)').extract()
+        product['image_urls'] = response.css('.col-sm-offset-11 img::attr(data-src)').extract()
         product['sizes_info'] = self.get_sizes(response)
-        price_currency = self.get_price_currency(response)
-        product['currency'] = price_currency[1]
-        product['price_final'] = price_currency[0]
+        product['price_final'],product['currency'] = self.get_price_currency(response)
 
         yield product
 
@@ -62,13 +56,13 @@ class HypeDcSpider(CrawlSpider):
             price = str(response.css('p.special-price span.price::text').extract_first())
             price = price.strip()
             currency = price[0:1]
-            return [price, currency]
+            return price, currency
 
         # For Original Sale Price
         else:
             currency = price_in_dollars[0:1]
             price = price_in_dollars + price_in_cents
-            return [price, currency]
+            return price, currency
 
     def get_sizes(self ,response):
         size_categories = response.css('ul#size-selector-desktop-tabs li a::text').extract()
