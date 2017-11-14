@@ -27,3 +27,18 @@ class HypedcItem(scrapy.Item):
     currency = scrapy.Field()
     image_urls = scrapy.Field()
     sizes_info = scrapy.Field()
+
+class SkechersItem(scrapy.Item):
+
+    Name = scrapy.Field()
+    Brand = scrapy.Field()
+    Category = scrapy.Field()
+    URL = scrapy.Field()
+    Product_Code = scrapy.Field()
+    Price_Final = scrapy.Field()
+    Desc = scrapy.Field()
+    Color = scrapy.Field()
+    Currency = scrapy.Field()
+    Image_Urls = scrapy.Field()
+    Sizes_Info = scrapy.Field()
+    More_Details = scrapy.Field()
