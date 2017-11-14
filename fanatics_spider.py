@@ -2,6 +2,7 @@ import re
 import json
 from scrapy.spiders import Rule
 from scrapy.http import Request
+from w3lib.url import add_or_replace_parameter
 from scrapy.linkextractors import LinkExtractor
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
@@ -41,7 +42,7 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
         garment['description'] = self.product_description(raw_product)
 
         garment['gender'] = self.product_gender(raw_product)
-        garment['image_urls'] = self.product_images(response)
+        garment['image_urls'] = self.product_images(raw_product)
         garment['skus'] = self.skus(response, raw_product)
 
         return garment
@@ -79,8 +80,10 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
 
         return 'unisex-adults'
 
-    def product_images(self, response):
-        return [image.replace('//', '') for image in clean(response.css('.carousel-image::attr(src)'))]
+    def product_images(self, raw_product):
+        images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
+
+        return [add_or_replace_parameter(img['image']['src'].replace('//', ''), 'w', 600) for img in images]
 
     def sku_prices(self, raw_sku, raw_discount):
         raw_price = raw_sku['price']
