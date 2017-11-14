@@ -1,0 +1,20 @@
+div.btn-group {
+    margin-top: 20px;
+}
+
+.error {
+    font-weight: bold;
+    color: red;
+}
+
+div span.glyphicon-arrow-left {
+    margin-right: 10px;
+}
+
+div span.glyphicon-arrow-right {
+    margin-left: 10px;
+}
+
+h3.not-found {
+    font-weight: bold;
+}
