@@ -83,7 +83,7 @@ class FanaticsParseSpider(BaseParseSpider, Mixin):
     def product_images(self, raw_product):
         images = raw_product['imageSelector']['additionalImages'] or [raw_product['imageSelector']['defaultImage']]
 
-        return [add_or_replace_parameter(img['image']['src'].replace('//', ''), 'w', 600) for img in images]
+        return [add_or_replace_parameter(img['image']['src'].replace('//', ''), 'w', 2000) for img in images]
 
     def sku_prices(self, raw_sku, raw_discount):
         raw_price = raw_sku['price']
