@@ -1,5 +1,7 @@
 import re
 import json
+import urllib.parse
+import string
 
 import scrapy
 
@@ -7,6 +9,10 @@ from FirstScrapyTask.items import SkechersItem
 
 
 class SkechersSpider(scrapy.Spider):
+
+    image_url_t = '{}_{}.jpg'
+    base_url = 'https://www.skechers.com'
+    gender_mapping = {'M': 'Men', 'W': 'Women', 'B': 'Boys','G': 'Girls', 'U': 'Men/Women/Accessories'}
 
     name = 'skechers'
     start_urls = ['https://www.skechers.com/en-us/accessories?category=/accessories/watches',
@@ -23,80 +29,74 @@ class SkechersSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        heading = 'https://www.skechers.com'
         product_urls = response.css('div::attr(data-clicked-style-url)').extract()
         api = self.get_api(response)
-    #    api = 'https://www.skechers.com/en-us/api/html/products/apparel?bookmark='
         bookmark = self.get_bookmarks(response)
 
-        for row in product_urls:
-            url = '{}{}'.format(heading , row)
-            request = scrapy.Request(url=url, callback=self.parse_three)
+        for url in product_urls:
+            url = urllib.parse.urljoin(self.base_url , url)
+            request = scrapy.Request(url=url, callback=self.parse_style_info)
             yield request
 
         if bookmark:
-            url = '{}{}'.format(api , bookmark)
-            request = scrapy.Request(url=url, callback=self.parse_two , meta={'api' : api})
+            parse_result = urllib.parse.urlparse(api)
+            url = urllib.parse.urlunparse((parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + bookmark, ''))
+            request = scrapy.Request(url=url, callback=self.parse_style_urls , meta={'api' : api})
             yield request
 
-    def parse_two(self, response):
-        heading = 'https://www.skechers.com'
+    def parse_style_urls(self, response):
         api = response.meta['api']
-        #api = 'https://www.skechers.com/en-us/api/html/products/apparel?bookmark='
         response_result = json.loads(response.text)
         product_urls = re.findall('\/en-us.*\s' ,response_result['stylesHtml'])
 
-        for row in product_urls:
-            url = '{}{}'.format(heading , row.split('"')[0])
-            request = scrapy.Request(url=url, callback=self.parse_three)
+        for url in product_urls:
+            url = urllib.parse.urljoin(self.base_url , re.search('/en.*?(?=")' , url).group(0))
+            request = scrapy.Request(url=url, callback=self.parse_style_info)
             yield request
 
         if response_result['bookmark']:
-            url = '{}{}'.format(api , response_result['bookmark'])
-            request = scrapy.Request(url=url, callback=self.parse_two , meta={'api' : api})
+            parse_result = urllib.parse.urlparse(api)
+            url = urllib.parse.urlunparse((parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + response_result['bookmark'], ''))
+            request = scrapy.Request(url=url, callback=self.parse_style_urls , meta={'api' : api})
             yield request
 
-    def parse_three(self, response):
+    def parse_style_info(self, response):
 
         product = SkechersItem()
+        product_style_id = response.css('.pull-right.product-label::text').extract_first()
+        product_style_color = response.css('.js-color-code::text').extract_first()
+        id_number = int(re.search('\d.*(?= )', product_style_id).group(0))
 
-        product['Style_Name'] = response.css('h1.product-title::text').extract_first()
-        product['Style_URL'] = response.url
-        product['Style_Price_Final'] = response.css('ins.price-final::text').extract_first()
-        product['Style_Currency'] = product['Style_Price_Final'][0]
-        product['Style_Color'] = response.css('div.product-label.js-color::text').extract_first()
-        product['Style_Brand'] = 'Skechers'
-        product['Style_Desc'] = response.css('div.toggle-expand.toggle-description div::text').extract_first()
-        product['Style_More_Details'] = response.css('div.toggle-expand.toggle-description li::text').extract()
-        product_style_one = response.css('span.pull-right.product-label::text').extract_first()
-        product_style_two = response.css('span.js-color-code::text').extract_first()
-        product['Style_Product_Code'] = '{}{}'.format(product_style_one , product_style_two)
+        product['name'] = response.css('.product-title::text').extract_first()
+        product['url'] = response.url
+        product['gender'] = self.get_gender(response)
+        product['brand'] = 'Skechers'
+        product['description'] = response.css('.toggle-expand.toggle-description div::text').extract_first()
+        product['product_id'] = '{}{}'.format(product_style_id, product_style_color)
+        product['category'] = product['name'].split('-')
+        product['category'].append(product['gender'])
+        product['image_urls'] = self.get_image_urls(response)
+        product['skus'] = {}
+        price_final = response.css('.price-final::text').extract_first()
+        currency = price_final[0]
+        color = response.css('.product-label.js-color::text').extract_first()
 
-        product['Style_Category'] = self.get_category(response)
-        product['Style_Image_Urls'] = self.get_image_urls(response)
-        product['Style_Sizes_Info'] = self.get_size(response)
+        sizes_info = self.get_size(response)
+        for size in sizes_info:
+            product['skus'][str(id_number)] = {'currency': currency, 'size' : size, 'price' : price_final , 'color':color}
+            id_number = id_number + 1
 
         yield product
 
     def get_bookmarks(self , response):
 
         script_tag = response.css('div.js-listing.listing.droplet.styles-droplet.clearfix script').extract_first()
-
-        bookmark_tag = re.findall('bookmark.*\s', str(script_tag))
-
-        bookmark_tag = bookmark_tag[0]
-
-        position = []
-
-        for index, char in enumerate(bookmark_tag):
-            if char == '\'':
-                position.append(index)
-
-        return bookmark_tag[position[0] + 1: position[1]]
+        bookmark = re.search('g1AAAA.*(?=\')', script_tag).group(0)
+        return bookmark
 
     def get_image_urls(self, response):
 
-        image_urls = response.css('img.responsiveImg::attr(src)').extract()
+        image_urls = response.css('.responsiveImg::attr(src)').extract()
         image_path = image_urls[0].replace('.jpg' , '')
         product_info = self.get_json(response)
 
@@ -104,37 +104,28 @@ class SkechersSpider(scrapy.Spider):
         if img_count > 6:
             img_count = 6
 
-        char_value = 66
+        character = iter(string.ascii_uppercase)
+        next(character)
         while img_count != 1:
-            image_urls.append('{}{}{}{}'.format(image_path , '_' , chr(char_value) , '.jpg'))
+            image_urls.append(self.image_url_t.format(image_path ,next(character)))
             img_count = img_count - 1
-            char_value = char_value + 1
 
         return image_urls
 
-    def get_category(self , response):
+    def get_gender(self , response):
 
         product_info = self.get_json(response)
         gender = product_info['gender']
 
-        if gender == 'M':
-            return 'Men'
-        elif gender == 'W':
-            return 'Women'
-        elif gender == 'B':
-            return 'Boys'
-        elif gender == 'G':
-            return 'Girls'
-        else:
-            return 'Men/Women/Accessories'
+        return self.gender_mapping[gender]
 
     def get_size(self, response):
 
         product_info = self.get_json(response)
         sizes = []
 
-        for row in product_info['products'][0]['sizes']:
-            sizes.append('{}{}{}{}'.format('Size: ' , row['size'] , ' In_Stock: ' , str(row['instock'])))
+        for size in product_info['products'][0]['sizes']:
+            sizes.append(size['size'])
 
         if sizes:
             return sizes
@@ -143,8 +134,8 @@ class SkechersSpider(scrapy.Spider):
 
     def get_json(self , response):
 
-        product_info = re.findall('{"stylecode.*\;', response.text)
-        return json.loads(product_info[0].replace(';',''))
+        product_info = re.search('{"stylecode.*(?=;)', response.text).group(0)
+        return json.loads(product_info)
 
     def get_api(self , response):
 
