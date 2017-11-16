@@ -4,41 +4,37 @@ import urllib.parse
 import string
 
 import scrapy
+from scrapy.spiders import Rule , CrawlSpider
+from scrapy.linkextractors import LinkExtractor
 
 from FirstScrapyTask.items import SkechersItem
 
 
-class SkechersSpider(scrapy.Spider):
+class SkechersSpider(CrawlSpider):
 
-    max_image_count = 6
+    max_image_limit = 6
     image_url_t = '{}_{}.jpg'
     base_url = 'https://www.skechers.com'
     gender_mapping = {'M': 'Men', 'W': 'Women', 'B': 'Boys','G': 'Girls', 'U': 'Men/Women/Accessories'}
-    api_mapping = {'wom': 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=W&bookmark=',
-                   'men': 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=M&bookmark=',
-                   'kids': 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=G,B&bookmark=',
-                   'apparel': 'https://www.skechers.com/en-us/api/html/products/apparel?bookmark=',
-                   'socks': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/socks&bookmark=',
-                   'bags': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/bags&bookmark=',
-                   'watches': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/watches&bookmark=',
-                   'sunglasses': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/sunglasses&bookmark=',
-                   'care-products': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/care-products&bookmark='}
+    base_api = 'https://www.skechers.com/en-us/api/html/products'
+
+    api_accessories_t = '{}{}?category={}&bookmark='
+    api_apparel_t = '{}{}?bookmark='
+    api_gender_t = '{}{}?genders={}&bookmark='
+
 
     name = 'skechers'
-    start_urls = ['https://www.skechers.com/en-us/accessories?category=/accessories/watches',
-                  'https://www.skechers.com/en-us/accessories?category=/accessories/bags',
-                  'https://www.skechers.com/en-us/accessories?category=/accessories/sunglasses',
-                  'https://www.skechers.com/en-us/accessories?category=/accessories/care-products',
-                  'https://www.skechers.com/en-us/accessories?category=/accessories/socks',
-                  'https://www.skechers.com/en-us/apparel',
-                  'https://www.skechers.com/en-us/kids/all',
-                  'https://www.skechers.com/en-us/women/all',
-                  'https://www.skechers.com/en-us/men/all']
+    start_urls = ['https://www.skechers.com/en-us/']
+    rules = (
+
+        Rule(LinkExtractor(allow=('all$', 'apparel$','accessories')) , callback='parse_start_page_urls'),
+    )
+
     custom_settings = {
         'DOWNLOAD_DELAY': 1
     }
 
-    def parse(self, response):
+    def parse_start_page_urls(self, response):
         product_urls = response.css('div::attr(data-clicked-style-url)').extract()
         api = self.get_api(response)
         bookmark = self.get_bookmarks(response)
@@ -88,7 +84,8 @@ class SkechersSpider(scrapy.Spider):
         product['image_urls'] = self.get_image_urls(response)
         product['skus'] = {}
         price_final = response.css('.price-final::text').extract_first()
-        currency = price_final[0]
+        script_currency = response.css('script:contains("skx_currency_code")').extract_first()
+        currency = re.search('\'[A-Z]{3}\'', script_currency).group(0)
         color = response.css('.product-label.js-color::text').extract_first()
 
         sizes_info = self.get_size(response)
@@ -100,7 +97,7 @@ class SkechersSpider(scrapy.Spider):
 
     def get_bookmarks(self , response):
 
-        script_tag = response.css('div.js-listing.listing.droplet.styles-droplet.clearfix script').extract_first()
+        script_tag = response.css('script:contains("if (Skx.refinement)")').extract_first()
         bookmark = re.search('g1AAAA.*(?=\')', script_tag).group(0)
         return bookmark
 
@@ -111,13 +108,13 @@ class SkechersSpider(scrapy.Spider):
         product_info = self.get_json(response)
 
         img_count = int(product_info['products'][0]['numimages'])
-        if img_count > self.max_image_count:
-            img_count = self.max_image_count
+        if img_count > self.max_image_limit:
+            img_count = self.max_image_limit
 
-        character = iter(string.ascii_uppercase)
-        while img_count:
-            image_urls.append(self.image_url_t.format(image_path ,next(character)))
-            img_count = img_count - 1
+        image_characters = string.ascii_uppercase[:img_count]
+
+        for character in image_characters:
+            image_urls.append(self.image_url_t.format(image_path, character))
 
         return image_urls
 
@@ -143,11 +140,20 @@ class SkechersSpider(scrapy.Spider):
 
     def get_json(self , response):
 
-        product_info = re.search('{"stylecode.*(?=;)', response.text).group(0)
+        script_tag = response.css('script:contains("Skx.style ")').extract_first()
+        product_info = re.search('{"stylecode.*(?=;)', script_tag).group(0)
         return json.loads(product_info)
 
     def get_api(self , response):
 
-        for key in self.api_mapping:
-            if key in response.url:
-                return self.api_mapping[key]
+        script_tag = response.css('script:contains("if (Skx.refinement)")').extract_first()
+        base_api_attributes = json.loads(re.search('{"genders.*(?=;)', script_tag).group(0))
+        if base_api_attributes['genders']:
+            gender = ','.join(base_api_attributes['genders'])
+            return self.api_gender_t.format(self.base_api , base_api_attributes['page'] , gender)
+
+        else:
+            if base_api_attributes['category'] == 'null':
+                return self.api_apparel_t.format(self.base_api , base_api_attributes['page'])
+            else:
+                return self.api_accessories_t.format(self.base_api, base_api_attributes['page'] , base_api_attributes['category'])
