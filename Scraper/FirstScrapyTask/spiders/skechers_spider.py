@@ -10,9 +10,19 @@ from FirstScrapyTask.items import SkechersItem
 
 class SkechersSpider(scrapy.Spider):
 
+    max_image_count = 6
     image_url_t = '{}_{}.jpg'
     base_url = 'https://www.skechers.com'
     gender_mapping = {'M': 'Men', 'W': 'Women', 'B': 'Boys','G': 'Girls', 'U': 'Men/Women/Accessories'}
+    api_mapping = {'wom': 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=W&bookmark=',
+                   'men': 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=M&bookmark=',
+                   'kids': 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=G,B&bookmark=',
+                   'apparel': 'https://www.skechers.com/en-us/api/html/products/apparel?bookmark=',
+                   'socks': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/socks&bookmark=',
+                   'bags': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/bags&bookmark=',
+                   'watches': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/watches&bookmark=',
+                   'sunglasses': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/sunglasses&bookmark=',
+                   'care-products': 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/care-products&bookmark='}
 
     name = 'skechers'
     start_urls = ['https://www.skechers.com/en-us/accessories?category=/accessories/watches',
@@ -65,7 +75,7 @@ class SkechersSpider(scrapy.Spider):
         product = SkechersItem()
         product_style_id = response.css('.pull-right.product-label::text').extract_first()
         product_style_color = response.css('.js-color-code::text').extract_first()
-        id_number = int(re.search('\d.*(?= )', product_style_id).group(0))
+        product_id_number = int(re.search('\d.*(?= )', product_style_id).group(0))
 
         product['name'] = response.css('.product-title::text').extract_first()
         product['url'] = response.url
@@ -83,8 +93,8 @@ class SkechersSpider(scrapy.Spider):
 
         sizes_info = self.get_size(response)
         for size in sizes_info:
-            product['skus'][str(id_number)] = {'currency': currency, 'size' : size, 'price' : price_final , 'color':color}
-            id_number = id_number + 1
+            product['skus'][str(product_id_number)] = {'currency': currency, 'size' : size, 'price' : price_final , 'color':color}
+            product_id_number = product_id_number + 1
 
         yield product
 
@@ -96,17 +106,16 @@ class SkechersSpider(scrapy.Spider):
 
     def get_image_urls(self, response):
 
-        image_urls = response.css('.responsiveImg::attr(src)').extract()
-        image_path = image_urls[0].replace('.jpg' , '')
+        image_urls = []
+        image_path = response.css('.responsiveImg::attr(src)').extract_first().replace('.jpg' , '')
         product_info = self.get_json(response)
 
         img_count = int(product_info['products'][0]['numimages'])
-        if img_count > 6:
-            img_count = 6
+        if img_count > self.max_image_count:
+            img_count = self.max_image_count
 
         character = iter(string.ascii_uppercase)
-        next(character)
-        while img_count != 1:
+        while img_count:
             image_urls.append(self.image_url_t.format(image_path ,next(character)))
             img_count = img_count - 1
 
@@ -139,31 +148,6 @@ class SkechersSpider(scrapy.Spider):
 
     def get_api(self , response):
 
-        if 'women' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=W&bookmark='
-
-        elif 'men' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=M&bookmark='
-
-        elif 'apparel' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/apparel?bookmark='
-
-        elif 'kids' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/styles/listing?genders=G,B&bookmark='
-
-        elif 'socks' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/socks&bookmark='
-
-        elif 'bags' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/bags&bookmark='
-
-        elif 'watches' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/watches&bookmark='
-
-        elif 'sunglasses' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/sunglasses&bookmark='
-
-        elif 'care-products' in response.url:
-            return 'https://www.skechers.com/en-us/api/html/products/accessories?category=/accessories/care-products&bookmark='
-        else:
-            return ''
+        for key in self.api_mapping:
+            if key in response.url:
+                return self.api_mapping[key]
