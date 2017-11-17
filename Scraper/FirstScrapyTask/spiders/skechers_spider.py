@@ -41,7 +41,6 @@ class SkechersSpider(CrawlSpider):
     def parse_start_page_urls(self, response):
         product_urls = response.css('div::attr(data-clicked-style-url)').extract()
         api = self.get_api(response)
-        print(api)
         bookmark = self.get_bookmarks(response)
         for url in product_urls:
             url = urllib.parse.urljoin(self.base_url , url)
@@ -49,20 +48,20 @@ class SkechersSpider(CrawlSpider):
             yield request
 
         if bookmark:
-            self.request_for_next_page(api=api , bookmark= bookmark)
+            yield self.request_for_next_page(api=api , bookmark= bookmark)
 
     def parse_style_urls(self, response):
         api = response.meta['api']
         response_result = json.loads(response.text)
-        product_urls = re.findall('\/en-us.*\s' ,response_result['stylesHtml'])
+        product_urls = re.findall('\/en-us.*\s',response_result['stylesHtml'])
 
         for url in product_urls:
-            url = urllib.parse.urljoin(self.base_url , re.search('/en.*?(?=")' , url).group(0))
+            url = urllib.parse.urljoin(self.base_url , re.match('(.*?)\"', url).group(1))
             request = Request(url=url, callback=self.parse_style_info)
             yield request
 
         if response_result['bookmark']:
-            self.request_for_next_page(api=api, bookmark=response_result['bookmark'])
+            yield self.request_for_next_page(api=api, bookmark=response_result['bookmark'])
 
     def parse_style_info(self, response):
 
@@ -146,7 +145,6 @@ class SkechersSpider(CrawlSpider):
     def request_for_next_page(self , api , bookmark):
 
         parse_result = urllib.parse.urlparse(api)
-        url = urllib.parse.urlunparse(
-            (parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + bookmark, ''))
+        url = urllib.parse.urlunparse((parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + bookmark, ''))
         pagination_request = Request(url=url, callback=self.parse_style_urls, meta={'api': api})
-        yield pagination_request
+        return pagination_request
