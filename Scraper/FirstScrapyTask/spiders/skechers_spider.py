@@ -41,8 +41,8 @@ class SkechersSpider(CrawlSpider):
     def parse_start_page_urls(self, response):
         product_urls = response.css('div::attr(data-clicked-style-url)').extract()
         api = self.get_api(response)
+        print(api)
         bookmark = self.get_bookmarks(response)
-
         for url in product_urls:
             url = urllib.parse.urljoin(self.base_url , url)
             request = Request(url=url, callback=self.parse_style_info)
@@ -86,8 +86,7 @@ class SkechersSpider(CrawlSpider):
         product['category'].append(product['gender'])
 
         price_final = response.css('.price-final::text').extract_first()
-        script_currency = response.css('script:contains("skx_currency_code")').extract_first()
-        currency = re.search('\'[A-Z]{3}\'', script_currency).group(0)
+        currency = response.css('script').re_first('skx_currency_code: \'(.+)\'')
         color = response.css('.product-label.js-color::text').extract_first()
 
         sizes_info = self.get_size(product_info['products'][0]['sizes'])
@@ -102,7 +101,7 @@ class SkechersSpider(CrawlSpider):
 
     def get_bookmarks(self , response):
 
-        return response.css('script').re_first('bookmark\s=\s\s\'(.+)(?=\')')
+        return response.css('script').re_first('bookmark =  \'(.+)\'')
 
     def get_image_urls(self, image_path , img_count):
 
@@ -129,12 +128,11 @@ class SkechersSpider(CrawlSpider):
 
     def get_json(self , response):
 
-        return json.loads(response.css('script').re_first('Skx.style\s\=\s(\{.+)(?=;)'))
+        return json.loads(response.css('script').re_first('Skx.style = ({.+})'))
 
     def get_api(self , response):
 
-        script_tag = response.css('script:contains("if (Skx.refinement)")').extract_first()
-        base_api_attributes = json.loads(re.search('{"genders.*(?=;)', script_tag).group(0))
+        base_api_attributes = json.loads(response.css('script').re_first('Skx.refinement.values = ({.+})'))
         if base_api_attributes['genders']:
             gender = ','.join(base_api_attributes['genders'])
             return self.api_gender_t.format(self.base_api , base_api_attributes['page'] , gender)
