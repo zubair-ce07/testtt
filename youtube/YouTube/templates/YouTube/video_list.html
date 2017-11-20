@@ -1,0 +1,16 @@
+<html><body>
+<h1>Videos</h1>
+<ul>
+    {% for video in videos %}
+    <li><a href="{% url 'video-detail' pk=video.pk %}">{{ video.name }}</a></li>
+    {% endfor %}
+
+</ul>
+
+<form action="{% url 'video-list' %}" method="POST">
+    {% csrf_token %}
+    Name: <input type = "text" name = "name" value = "">
+    <input type = "submit" value ="Add New Video">
+</form>
+
+</body></html>
