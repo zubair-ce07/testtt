@@ -12,14 +12,8 @@ class SweatybettySpiderSpider(CrawlSpider):
     custom_settings = {'FEED_URI': 'tmp/sweatybetty.json'}
 
     rules = [Rule(LinkExtractor(restrict_css='.megadrop', deny='mailto')),
-             Rule(LinkExtractor(restrict_css='.next'), callback='pagination'),
+             Rule(LinkExtractor(restrict_css='.next')),
              Rule(LinkExtractor(restrict_css='.prodlink'), callback='parse_item')]
-
-    def pagination(self, response):
-        urls = response.css('.prodlink > a::attr(href)').extract()
-        domain_url = 'http://www.sweatybetty.com/'
-        for url in urls:
-            yield scrapy.Request(url=domain_url+url, callback=self.parse_item)
 
     def parse_item(self, response):
         product = SweatybettyItem()
@@ -33,7 +27,6 @@ class SweatybettySpiderSpider(CrawlSpider):
         product['url'] = response.url
         product['video_url'] = self.video_url(response)
         product['skus'] = self.get_skus(response)
-
         yield product
 
     def get_skus(self, response):
@@ -71,7 +64,7 @@ class SweatybettySpiderSpider(CrawlSpider):
                 key = color + '_' + item[0]
                 skus[key] = {}
                 skus[key]['color'] = color
-                skus[key]['sizes'] = item[0]
+                skus[key]['size'] = item[0]
                 skus[key]['price'] = response.css('.cont-prodprice::text').extract_first()
                 skus[key]['currency'] = 'GBP'
                 skus[key]['availability'] = item[1]
@@ -98,9 +91,9 @@ class SweatybettySpiderSpider(CrawlSpider):
     def video_url(self, response):
         return response.xpath("//video[@id='videoId']//@src").extract_first()
 
-    def clean_list(self, list):
+    def clean_list(self, dirty_list):
         value_list = []
-        for value in list:
+        for value in dirty_list:
             value = value.strip()
             if value and value not in value_list:
                 value_list.append(value)
