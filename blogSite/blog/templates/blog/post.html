@@ -1,0 +1,37 @@
+
+    <h1> {{ post.title }} </h1> <br>
+
+    <h2> Author : {{ post.author }} </h2>
+
+    <p>
+        {{ post.body }}
+    </p>
+
+    <p>Current Vote: {{ like_post }}</p>
+    <form action="" method="post">
+        {% csrf_token %}
+        <input name="vote" type="submit" value="up_vote" />
+        <input name="vote" type="submit" value="down_vote" />
+    </form>
+
+    <h2> Comments :</h2>
+
+    {% for comment, comment_likes in comments %}
+        <li>
+            {{ comment.body }}
+        </li>
+
+        <p>Current Vote: {{ comment_likes }}</p>
+
+        <form action="" method="post">
+            {% csrf_token %}
+            <input name="comment_id" type="hidden" value={{ comment.id }} />
+            <input name="commentvote" type="submit" value="up_vote" />
+            <input name="commentvote" type="submit" value="down_vote" />
+        </form>
+
+        <p>     </p>
+
+    {% endfor %}
+
+
