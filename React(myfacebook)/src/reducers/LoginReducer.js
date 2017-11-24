@@ -6,10 +6,10 @@ const INITIAL_STATE = {
 export default function(state=INITIAL_STATE, action)
 {
     switch (action.type){
-        case "NEWS_DETAIL":
+        case "USER_LOGIN":
             return {
                 news: [],
-                selectedNews: action.payload
+                selectedNews: []
             };
         default:
             return state;

@@ -1,12 +1,17 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { browserHistory, Link } from 'react-router';
 import { connect } from 'react-redux';
+import Navbar from '../components/Navbar'
 import { RetrieveNews } from '../actions/RetrieveNews';
 import _ from "lodash";
 
 class NewsList extends React.Component {
     componentWillMount(){
-        this.props.RetrieveNews();
+        if (!localStorage.getItem('token')){
+            browserHistory.push('/');
+        }
+        else
+            this.props.RetrieveNews();
     }
 
     displayNewsList = (news) => {
@@ -49,7 +54,7 @@ class NewsList extends React.Component {
         if(_.isEmpty(this.props.news)){
             return <h1>Loading...</h1>
         }
-        return <div>{this.displayNewsList(this.props.news)}</div>
+        return <div><Navbar/>{this.displayNewsList(this.props.news)}</div>
 
     }
 
