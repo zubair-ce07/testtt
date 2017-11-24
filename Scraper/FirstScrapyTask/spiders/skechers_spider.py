@@ -15,11 +15,13 @@ class SkechersSpider(CrawlSpider):
     max_image_limit = 6
     image_url_t = '{}_{}.jpg'
     base_url = 'https://www.skechers.com'
-    gender_mapping = {'M': 'Men',
-                      'W': 'Women',
-                      'B': 'Boys',
-                      'G': 'Girls',
-                      'U': 'Men/Women/Accessories'}
+    gender_mapping = {
+        'M': 'Men',
+        'W': 'Women',
+        'B': 'Boys',
+        'G': 'Girls',
+        'U': 'Men/Women/Accessories'
+    }
     base_api = 'https://www.skechers.com/en-us/api/html/products'
     api_accessories_t = '{}{}?category={}&bookmark='
     api_apparel_t = '{}{}?bookmark='
@@ -39,20 +41,19 @@ class SkechersSpider(CrawlSpider):
         if sub_category:
             category.append(sub_category)
         product_urls = response.css('div::attr(data-clicked-style-url)').extract()
-        api = self.get_api(response)
-        bookmark = response.css('script').re_first('bookmark =  \'(.+)\'')
         meta={'category' : category}
         for url in product_urls:
             url = urllib.parse.urljoin(self.base_url , url)
             request = Request(url=url, callback=self.parse_style_info , meta=meta)
             yield request
 
+        api = self.get_api(response)
+        bookmark = response.css('script').re_first('bookmark =  \'(.+)\'')
         if bookmark:
             yield self.pagination_request(api=api, bookmark=bookmark, category=category)
 
     def parse_style_urls(self, response):
         category = response.meta['category']
-        api = response.meta['api']
         response_result = json.loads(response.text)
         product_urls = re.findall('\/en-us.*\s',response_result['stylesHtml'])
         meta = {'category': category}
@@ -60,7 +61,7 @@ class SkechersSpider(CrawlSpider):
             url = urllib.parse.urljoin(self.base_url , re.match('(.*?)\"', url).group(1))
             request = Request(url=url, callback=self.parse_style_info , meta=meta)
             yield request
-
+        api = response.meta['api']
         if response_result['bookmark']:
             yield self.pagination_request(api=api, bookmark=response_result['bookmark'], category=category)
 
@@ -69,47 +70,44 @@ class SkechersSpider(CrawlSpider):
         product_style_id = response.css('.pull-right.product-label::text').extract_first()
         product_style_color = response.css('.js-color-code::text').extract_first()
         product_id_number = int(re.search('\d.*(?= )', product_style_id).group(0))
+        product_info = json.loads(response.css('script').re_first('Skx.style = ({.+})'))
+        image_path = response.css('.responsiveImg::attr(src)').extract_first().replace('.jpg', '')
+
         product['name'] = response.css('.product-title::text').extract_first()
         product['url'] = response.url
         product['brand'] = 'Skechers'
         product['description'] = response.css('.toggle-expand.toggle-description div::text').extract_first()
         product['product_id'] = '{}{}'.format(product_style_id, product_style_color)
-        product_info = json.loads(response.css('script').re_first('Skx.style = ({.+})'))
-        image_path = response.css('.responsiveImg::attr(src)').extract_first().replace('.jpg' , '')
         product['gender'] = self.gender_mapping[product_info['gender']]
         product['image_urls'] = self.get_image_urls(image_path , product_info['products'][0]['numimages'])
         product['category'] = response.meta['category']
-        price_final = response.css('.price-final::text').extract_first()
+
+        yield self.create_skus(response, product , product_id_number , product_info['products'][0]['sizes'])
+
+    def create_skus(self, response , product , product_id , product_sizes):
+        sizes = set ()
+        price = response.css('.price-final::text').extract_first()
         currency = response.css('script').re_first('skx_currency_code: \'(.+)\'')
         color = response.css('.product-label.js-color::text').extract_first()
-        skus_info = {'product': product, 'price': price_final, 'currency': currency, 'product_code': product_id_number,
-                     'color': color , 'product_sizes_info':product_info['products'][0]['sizes']}
-        yield self.create_skus(skus_info)
-
-    def create_skus(self, skus_info):
-        sizes = set ()
-        currency = skus_info['currency']
-        price = skus_info['price']
-        color = skus_info['color']
-        product_sizes_info = skus_info['product_sizes_info']
-        product_id_number = skus_info['product_code']
-        product = skus_info['product']
+        product_sizes_info = product_sizes
+        product_id_number = product_id
+        product = product
         product['skus'] = {}
 
         for row in product_sizes_info:
             sizes.add(row['size'])
         for size in sizes:
-            product['skus'][str(product_id_number)] = {'currency': currency,'size' : size,
-                                                       'price' : price ,'color':color}
+            product['skus'][str(product_id_number)] = {
+                'currency': currency,'size' : size,
+                'price' : price ,'color':color
+            }
             product_id_number = product_id_number + 1
         return product
 
     def get_image_urls(self, image_path , img_count):
-        image_urls = []
         img_count = min(int(img_count), self.max_image_limit)
-        for character in string.ascii_uppercase[:img_count]:
-            image_urls.append(self.image_url_t.format(image_path, character))
-        return image_urls
+        letters = string.ascii_uppercase[:img_count]
+        return [self.image_url_t.format(image_path, letter) for letter in letters]
 
     def get_api(self , response):
         base_api_attributes = json.loads(response.css('script').re_first('Skx.refinement.values = ({.+})'))
@@ -125,6 +123,7 @@ class SkechersSpider(CrawlSpider):
     def pagination_request(self , api , bookmark, category):
         parse_result = urllib.parse.urlparse(api)
         url = urllib.parse.urlunparse((parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + bookmark, ''))
-        pagination_request = Request(url=url, callback=self.parse_style_urls, meta={'api': api , 'category':category})
+        meta = {'api': api , 'category':category}
+        pagination_request = Request(url=url, callback=self.parse_style_urls, meta=meta)
         return pagination_request
 
