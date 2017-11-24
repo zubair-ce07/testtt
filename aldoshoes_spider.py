@@ -12,6 +12,7 @@ class AldoshoesSpiderSpider(scrapy.Spider):
 
     def start_requests(self):
         yield scrapy.Request("https://www.aldoshoes.com/uk/en_UK", callback=self.parse)
+        yield scrapy.Request("https://www.aldoshoes.com/us/en_US", callback=self.parse)
 
     def parse(self, response):
         nav_urls = response.xpath("//nav[contains(@class, 'c-navigation--primary')]"
@@ -31,7 +32,7 @@ class AldoshoesSpiderSpider(scrapy.Spider):
         product = AldoshoesItem()
         product['category_names'] = self.get_categorynames(response)
         product['brand'] = self.get_brand(response)
-        product['currency'] = 'GBP'
+        product['currency'] = self.get_currency(response)
         product['url'] = response.url
         product['title'] = self.get_title(response)
         product['language_code'] = self.get_languagecode(response)
@@ -116,7 +117,7 @@ class AldoshoesSpiderSpider(scrapy.Spider):
                 count_sizes -= 1
             return available, size_info
         else:
-            return None, None
+            return True, "One Size"
 
     def get_categorynames(self, response):
         return response.xpath("//div[contains(@class,'c-product-detail__info')]//li/a/text()").extract()
@@ -149,12 +150,21 @@ class AldoshoesSpiderSpider(scrapy.Spider):
         return re.search('.*p.(\d+)-(\d+)', response.url).group(2)
 
     def get_oldprice(self, response):
-        return response.xpath("//span[contains(@class, 'price--original')]/text()").extract_first()
+        old_price = response.xpath("//span[contains(@class, 'price--original')]/text()").extract_first()
+        if not old_price:
+            old_price = response.xpath("//span[contains(@class,'c-product-price')]/text()").extract_first()
+        return old_price
 
     def get_newprice(self, response):
-        return response.xpath("//span[contains(@class, 'price--is-reduced')]/text()").extract_first()
+        new_price =  response.xpath("//span[contains(@class, 'price--is-reduced')]/text()").extract_first()
+        if not new_price:
+            new_price = response.xpath("//span[contains(@class,'c-product-price')]/text()").extract_first()
+        return new_price
 
     def get_imageurls(self, response):
         image_urls = response.xpath("//div[@class='c-carousel__product-tile']//picture[contains(@class, 'c-picture')]"
                                     "//@data-srcset").extract()
         return image_urls
+
+    def get_currency(self, response):
+        return response.xpath("//meta[contains(@property,'price:currency')]/@content").extract_first()
