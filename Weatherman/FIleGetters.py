@@ -20,13 +20,13 @@ def get_file_names( directory_path, args):
 
 def read_files(files_to_read):
 
-    list_of_rows = []
+    file_rows = []
 
     for files in files_to_read:
         input_file = csv.DictReader(open(files))
 
         for row in input_file:
             weather = WeatherReading(row)
-            list_of_rows.append(weather)
+            file_rows.append(weather)
 
-    return list_of_rows
+    return file_rows
