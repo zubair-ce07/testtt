@@ -44,27 +44,33 @@ class SkechersSpider(CrawlSpider):
         meta={'category' : category}
         for url in product_urls:
             url = urllib.parse.urljoin(self.base_url , url)
-            yield Request(url=url, callback=self.parse_style_info , meta=meta)
+            yield Request(url=url, callback=self.parse_product , meta=meta)
 
         api = self.get_api(response)
         bookmark = response.css('script').re_first('bookmark =  \'(.+)\'')
         if bookmark:
             yield self.pagination_request(api=api, bookmark=bookmark, category=category)
 
-    def parse_style_urls(self, response):
+    def parse_product_urls(self, response):
         category = response.meta['category']
         response_result = json.loads(response.text)
         product_urls = re.findall('\/en-us.*\s',response_result['stylesHtml'])
         meta = {'category': category}
         for url in product_urls:
             url = urllib.parse.urljoin(self.base_url , re.match('(.*?)\"', url).group(1))
-            yield Request(url=url, callback=self.parse_style_info , meta=meta)
+            yield Request(url=url, callback=self.parse_product , meta=meta)
 
         api = response.meta['api']
         if response_result['bookmark']:
             yield self.pagination_request(api=api, bookmark=response_result['bookmark'], category=category)
+    
+    def pagination_request(self , api , bookmark, category):
+        parse_result = urllib.parse.urlparse(api)
+        url = urllib.parse.urlunparse((parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + bookmark, ''))
+        meta = {'api': api , 'category':category}
+        return Request(url=url, callback=self.parse_product_urls, meta=meta)
 
-    def parse_style_info(self, response):
+    def parse_product(self, response):
         product = SkechersItem()
         product_style_id = response.css('.pull-right.product-label::text').extract_first()
         product_style_color = response.css('.js-color-code::text').extract_first()
@@ -89,7 +95,9 @@ class SkechersSpider(CrawlSpider):
         currency = response.css('script').re_first('skx_currency_code: \'(.+)\'')
         color = response.css('.product-label.js-color::text').extract_first()
         skus = dict()
-        for index, size in enumerate(product_sizes):
+        for row in product_sizes:
+            sizes.add(row['size'])
+        for index, size in enumerate(sizes):
             skus[str(product_id + index)] = {
                 'currency': currency,
                 'size': size,
@@ -97,7 +105,7 @@ class SkechersSpider(CrawlSpider):
                 'color': color
             }
         return skus
-
+    
     def get_image_urls(self, image_path , img_count):
         img_count = min(int(img_count), self.max_image_limit)
         letters = string.ascii_uppercase[:img_count]
@@ -113,9 +121,3 @@ class SkechersSpider(CrawlSpider):
                 return self.api_apparel_t.format(self.base_api , base_api_attributes['page'])
             else:
                 return self.api_accessories_t.format(self.base_api, base_api_attributes['page'] , base_api_attributes['category'])
-
-    def pagination_request(self , api , bookmark, category):
-        parse_result = urllib.parse.urlparse(api)
-        url = urllib.parse.urlunparse((parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + bookmark, ''))
-        meta = {'api': api , 'category':category}
-        return Request(url=url, callback=self.parse_style_urls, meta=meta)
