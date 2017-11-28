@@ -29,7 +29,7 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
-    post = models.ForeignKey(Post)
+    post = models.ForeignKey(Post, related_name="comments")
     body = models.TextField()
     created_at = models.DateTimeField()
     user = models.ForeignKey(User)

@@ -28,7 +28,7 @@ class view_post(DetailView):
     def get_context_data(self, **kwargs):
         context = super(view_post, self).get_context_data(**kwargs)
         post = context['post']
-        comment_body = models.Comment.objects.filter(post=post)
+        comment_body = post.comments.all()
         comment_likes = [likes for _, likes in post.comment_likes().items()]
         comment = zip(comment_body, comment_likes)
         context['comments'] = comment
@@ -51,4 +51,4 @@ class view_post(DetailView):
             vote = vote_choice[vote]
             models.Like_comment.objects.create(created_at=datetime.datetime.now(), comment_id=comment_id, user_id=1, vote=vote)
 
-        return redirect('http://127.0.0.1:8000/blog/post/id/{}/'.format(post_id))
+        return redirect('/blog/post/id/{}/'.format(post_id))
