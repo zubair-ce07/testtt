@@ -34,6 +34,7 @@ class SkechersSpider(CrawlSpider):
     custom_settings = {
         'DOWNLOAD_DELAY': 1
     }
+
     def parse_start_page_urls(self, response):
         category = response.css('.js-page-title::text').extract()
         sub_category = response.css('.selected::text').extract_first()
@@ -88,14 +89,13 @@ class SkechersSpider(CrawlSpider):
         currency = response.css('script').re_first('skx_currency_code: \'(.+)\'')
         color = response.css('.product-label.js-color::text').extract_first()
         skus = dict()
-        for row in product_sizes:
-            sizes.add(row['size'])
-        for size in sizes:
-            skus[str(product_id)] = {
-                'currency': currency, 'size': size,
-                'price': price, 'color': color
+        for index, size in enumerate(product_sizes):
+            skus[str(product_id + index)] = {
+                'currency': currency,
+                'size': size,
+                'price': price,
+                'color': color
             }
-            product_id = product_id + 1
         return skus
 
     def get_image_urls(self, image_path , img_count):
@@ -118,4 +118,4 @@ class SkechersSpider(CrawlSpider):
         parse_result = urllib.parse.urlparse(api)
         url = urllib.parse.urlunparse((parse_result.scheme, parse_result.netloc, parse_result.path, '', parse_result.query + bookmark, ''))
         meta = {'api': api , 'category':category}
-        yield Request(url=url, callback=self.parse_style_urls, meta=meta)
+        return Request(url=url, callback=self.parse_style_urls, meta=meta)
