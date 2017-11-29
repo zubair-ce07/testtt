@@ -45,7 +45,6 @@ class SkechersSpider(CrawlSpider):
         for url in product_urls:
             url = urllib.parse.urljoin(self.base_url , url)
             yield Request(url=url, callback=self.parse_product , meta=meta)
-
         api = self.get_api(response)
         bookmark = response.css('script').re_first('bookmark =  \'(.+)\'')
         if bookmark:
@@ -59,7 +58,6 @@ class SkechersSpider(CrawlSpider):
         for url in product_urls:
             url = urllib.parse.urljoin(self.base_url , re.match('(.*?)\"', url).group(1))
             yield Request(url=url, callback=self.parse_product , meta=meta)
-
         api = response.meta['api']
         if response_result['bookmark']:
             yield self.pagination_request(api=api, bookmark=response_result['bookmark'], category=category)
@@ -90,14 +88,12 @@ class SkechersSpider(CrawlSpider):
         yield product
 
     def create_skus(self, response, product_id, product_sizes):
-        sizes = set()
+        unique_sizes = set (size['size'] for size in product_sizes)
         price = response.css('.price-final::text').extract_first()
         currency = response.css('script').re_first('skx_currency_code: \'(.+)\'')
         color = response.css('.product-label.js-color::text').extract_first()
         skus = dict()
-        for row in product_sizes:
-            sizes.add(row['size'])
-        for index, size in enumerate(sizes):
+        for index, size in enumerate(unique_sizes):
             skus[str(product_id + index)] = {
                 'currency': currency,
                 'size': size,
