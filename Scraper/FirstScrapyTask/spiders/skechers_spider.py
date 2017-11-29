@@ -4,7 +4,7 @@ import urllib.parse
 import string
 
 from scrapy import Request
-from scrapy.spiders import Rule , CrawlSpider
+from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
 
 from FirstScrapyTask.items import SkechersItem
