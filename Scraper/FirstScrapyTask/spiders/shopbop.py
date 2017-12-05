@@ -32,6 +32,10 @@ class ShopBopSpider(Spider):
                         meta = {'product_category': product_category}
                         yield self.make_request(url,meta)
 
+    def make_request(self, url, meta):
+        url = urllib.parse.urljoin(self.base_url, url)
+        return Request(url=url, callback=self.parse_product_urls, meta=meta)
+
     def parse_product_urls(self, response):
         products = response.css('.products.flex-flow-inline .photo::attr(href)').extract()
         for url in products:
@@ -40,10 +44,6 @@ class ShopBopSpider(Spider):
         pagination = response.css('.next::attr(data-next-link)').extract_first()
         if pagination:
             yield self.make_request(pagination, response.meta)
-
-    def make_request(self, url, meta):
-        url = urllib.parse.urljoin(self.base_url, url)
-        return Request(url=url, callback=self.parse_product_urls, meta=meta)
 
     def parse_products(self , response):
         product_json = json.loads(response.css('script').re_first('{"product.+'))
