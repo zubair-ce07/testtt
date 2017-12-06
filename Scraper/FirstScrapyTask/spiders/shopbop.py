@@ -62,7 +62,8 @@ class ShopBopSpider(Spider):
             colors.append(color['color']['label'])
             colors_sizes.append(color['styleColorSizes'])
             colors_prices.append(color['prices'])
-            variation_item.append({'code': color['color']['code'], 'image_urls': color['images'], 'sizes': []})
+            image_urls = [image_url['url'] for image_url in color['images']]
+            variation_item.append({'code': color['color']['code'], 'image_urls': image_urls, 'sizes': []})
 
         variation_item = self.create_variation_item(colors_sizes, colors_prices, variation_item)
         for index,color in enumerate(colors):
