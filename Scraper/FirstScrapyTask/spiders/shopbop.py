@@ -56,26 +56,21 @@ class ShopBopSpider(Spider):
         product['description'] = list(filter(None, product_json['product']['longDescription'].split('<br>')))
         product['product_id'] = product_json['product']['styleNumber']
         product['variations'] = {}
-        colors, color_codes, image_urls, colors_sizes, colors_prices = [], [], [], [], []
-        for row in product_json['product']['styleColors']:
-            color_codes.append(row['color']['code'])
-            colors.append(row['color']['label'])
-            image_urls.append(row['images'])
-            colors_sizes.append(row['styleColorSizes'])
-            colors_prices.append(row['prices'])
+        colors, colors_sizes, colors_prices = [], [], []
+        variation_item = []
+        for color in product_json['product']['styleColors']:
+            colors.append(color['color']['label'])
+            colors_sizes.append(color['styleColorSizes'])
+            colors_prices.append(color['prices'])
+            variation_item.append({'code': color['color']['code'], 'image_urls': color['images'], 'sizes': []})
 
-        sizes = self.create_size_item(colors_sizes , colors_prices)
+        variation_item = self.create_variation_item(colors_sizes , colors_prices, variation_item)
         for index,color in enumerate(colors):
-            variation_info = {
-                'color_name': '/'.join(color_code for color_code in (colors[index], color_codes[index])),
-                'image_urls': image_urls[index],
-                'sizes' : sizes[index]
-            }
-            product['variations'][slugify(color)] = variation_info
+            product['variations'][slugify(color)] = variation_item[index]
         yield product
 
-    def create_size_item(self , colors_sizes , colors_prices):
-        size_info, final_sizes, final_prices = [], [], []
+    def create_variation_item(self , colors_sizes , colors_prices, variation_item):
+        final_prices = []
         for per_color_price in colors_prices:
             for price in per_color_price:
                 final_prices.append({
@@ -85,12 +80,10 @@ class ShopBopSpider(Spider):
                 })
         for index,per_color_size in enumerate(colors_sizes):
             for size in per_color_size:
-                size_info.append({
+                variation_item[index]['sizes'].append({
                     'size' : size['size']['label'],
                     'is_available' : size['inStock'] ,
                     'price': final_prices[index]['sale_price'],
                     'discounted_price': final_prices[index]['discounted_price'],
                     'is_discounted': final_prices[index]['is_discounted']})
-            final_sizes.append(size_info)
-            size_info = []
-        return final_sizes
+        return variation_item
