@@ -59,6 +59,7 @@ class WeatherMan:
             year = report_month.split('/')[0]
             month = report_month.split('/')[1]
             weather = parser.parse(path, year, int(month))
+            
             if (weather is not None):
                 report = MonthlyBarReport()
                 report.print(weather, year)
