@@ -9,8 +9,8 @@ from FirstScrapyTask.items import ShopBopItem
 
 class ShopBopSpider(Spider):
 
-    required_links = ['Clothing' , 'Shoes' , 'Bags' , 'Accessories' , 'Jewelry']
-    ignore_links = ['All Clothing' , 'All Shoes' , 'All Bags' , 'All Jewelry & Accessories']
+    required_links = ['Clothing', 'Shoes', 'Bags', 'Accessories', 'Jewelry']
+    ignore_links = ['All Clothing', 'All Shoes', 'All Bags', 'All Jewelry & Accessories']
     base_url = 'https://www.shopbop.com'
     name = 'shopbop'
     start_urls = ['https://www.shopbop.com']
@@ -45,7 +45,7 @@ class ShopBopSpider(Spider):
         if pagination:
             yield self.make_request(pagination, response.meta)
 
-    def parse_products(self , response):
+    def parse_products(self, response):
         product_json = json.loads(response.css('script').re_first('{"product.+'))
         product = ShopBopItem()
         product['category'] = response.meta['product_category']
@@ -64,12 +64,12 @@ class ShopBopSpider(Spider):
             colors_prices.append(color['prices'])
             variation_item.append({'code': color['color']['code'], 'image_urls': color['images'], 'sizes': []})
 
-        variation_item = self.create_variation_item(colors_sizes , colors_prices, variation_item)
+        variation_item = self.create_variation_item(colors_sizes, colors_prices, variation_item)
         for index,color in enumerate(colors):
             product['variations'][slugify(color)] = variation_item[index]
         yield product
 
-    def create_variation_item(self , colors_sizes , colors_prices, variation_item):
+    def create_variation_item(self, colors_sizes, colors_prices, variation_item):
         final_prices = []
         for per_color_price in colors_prices:
             for price in per_color_price:
@@ -81,9 +81,10 @@ class ShopBopSpider(Spider):
         for index,per_color_size in enumerate(colors_sizes):
             for size in per_color_size:
                 variation_item[index]['sizes'].append({
-                    'size' : size['size']['label'],
-                    'is_available' : size['inStock'] ,
+                    'size': size['size']['label'],
+                    'is_available': size['inStock'] ,
                     'price': final_prices[index]['sale_price'],
                     'discounted_price': final_prices[index]['discounted_price'],
-                    'is_discounted': final_prices[index]['is_discounted']})
+                    'is_discounted': final_prices[index]['is_discounted']
+                })
         return variation_item
