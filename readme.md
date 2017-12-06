@@ -1,8 +1,10 @@
-#The Weather Man
+The Weather Man
+---------------
+---------------
 
 A python console application that parses weather files and displays information reports based on year or month
-
-##Command Example
+ 
+## Command Example
 weatherman.py /path/to/files-dir -e 2002
 
 Highest: 45C on June 23
