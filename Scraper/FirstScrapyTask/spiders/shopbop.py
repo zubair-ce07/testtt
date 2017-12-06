@@ -15,7 +15,8 @@ class ShopBopSpider(Spider):
     name = 'shopbop'
     start_urls = ['https://www.shopbop.com']
     custom_settings = {
-        'DOWNLOAD_DELAY': 1
+        'DOWNLOAD_DELAY': 1,
+        'ITEM_PIPELINES': {'FirstScrapyTask.pipelines.ValidationPipeline': 100},
     }
 
     def parse(self, response):
