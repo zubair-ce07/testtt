@@ -8,19 +8,27 @@ A python console application that parses weather files and displays information 
 weatherman.py /path/to/files-dir -e 2002
 
 Highest: 45C on June 23
+
 Lowest: 01C on December 22
+
 Humidity: 95% on August 14
+
 
 weatherman.py /path/to/files-dir -a 2005/6
 
 Highest Average: 39C
+
 Lowest Average: 18C
+
 Average Mean Humidity: 71%
+
 
 weatherman.py /path/to/files-dir -c 2011/3
 
 March 2011
+
 01 ++++++++++++++++++++++++++++++++++++ 11C - 25C
+
 02 ++++++++++++++++++++++++++++++ 08C - 22C
 
 Copyright (C) <2017>, <Lareb Syed>
