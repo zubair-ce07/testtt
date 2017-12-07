@@ -25,10 +25,13 @@ class ValidationPipeline(object):
             if item[field]:
                 if field == 'variations':
                     for color in item[field]:
-                        for size in item[field][color]['sizes']:
-                            if not size['discounted_price']:
-                                del size['discounted_price']
-                continue
+                        if not item[field][color]['code']:
+                            del item[field][color]['code']
+                        if not item[field][color]['image_urls']:
+                            del item[field][color]['image_urls']
+                        if not item[field][color]['sizes']:
+                            del item[field][color]['sizes']
+                    continue
             else:
                 del item[field]
         return item

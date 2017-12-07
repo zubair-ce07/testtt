@@ -17,6 +17,8 @@ class ShopBopSpider(Spider):
     custom_settings = {
         'DOWNLOAD_DELAY': 1,
         'ITEM_PIPELINES': {'FirstScrapyTask.pipelines.ValidationPipeline': 100},
+        'DOWNLOADER_MIDDLEWARES': {'FirstScrapyTask.middlewares.UserAgentMiddleware': 500,
+                                   'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None}
     }
 
     def parse(self, response):
