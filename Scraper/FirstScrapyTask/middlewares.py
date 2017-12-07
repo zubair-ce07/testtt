@@ -54,5 +54,5 @@ class FirstscrapytaskSpiderMiddleware(object):
 class UserAgentMiddleware(object):
 
     def process_request(self, request, spider):
-        request.headers['User-Agent'] = 'Umer-Nadeem'
+        request.headers['User-Agent'] = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0'
         return None
