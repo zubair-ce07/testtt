@@ -41,10 +41,12 @@ class ForecastReport:
         for file in glob.glob(file_name):
             f = open(file, "r")
             file_data = f.readlines()
+            f.close()
             for line in file_data:
                 words = line.split(",")
                 if words[1] != "" and words[1] != "Max TemperatureC":
                     max = int(words[1])
+                    hum = int(words[7])
                     if max > self.max_temp:
                         self.max_temp = max
                         self.max_date = words[0]
@@ -54,7 +56,6 @@ class ForecastReport:
                         self.min_temp = min
                         self.min_date = words[0]
                 if words[7] != "" and words[7] != "Max Humidity":
-                    hum = int(words[7])
                     if hum > self.max_hum:
                         self.max_hum = hum
                         self.hum_date = words[0]
@@ -69,6 +70,7 @@ class ForecastReport:
         for file in glob.glob(file_name):
             f = open(file,"r")
             file_data = f.readlines()
+            f.close()
             for line in file_data:
                 words = line.split(",")
                 if words[1] != "" and words[1] != "Max TemperatureC":
@@ -88,8 +90,9 @@ class ForecastReport:
         black = '\033[30m'
         for file in glob.glob(file_name):
             f = open(file, "r")
-            daynum = 0
+            day_num = 0
             file_data = f.readlines()
+            f.close()
             for line in file_data:
                 words = line.split(",")
                 if words[1] != "" and words[1] != "Max TemperatureC":
@@ -100,7 +103,7 @@ class ForecastReport:
                         barchart += "+"
                         i += 1
                     R = '\033[31m'
-                    print(str(daynum)+" "+R+barchart+" "+black+str(maxtemp)+"C")
+                    print(str(day_num)+" "+R+barchart+" "+black+str(maxtemp)+"C")
                 if words[3] != "" and words[3] != "Min TemperatureC":
                     mintemp = int(words[3])
                     i = 0
@@ -109,15 +112,16 @@ class ForecastReport:
                         barchart += "+"
                         i += 1
                     B = '\033[34m'
-                    print(str(daynum)+" "+B+barchart+" "+black+str(mintemp)+"C")
-                daynum += 1
-
+                    print(str(day_num)+" "+B+barchart+" "+black+str(mintemp)+"C")
+                day_num += 1
+        print("")
     def report_bonus(self, file_name):
         black = '\033[30m'
         for file in glob.glob(file_name):
             f = open(file, "r")
-            daynum = 0
+            day_num = 0
             file_data = f.readlines()
+            f.close()
             for line in file_data:
                 words = line.split(",")
                 barchartmin = ""
@@ -140,24 +144,26 @@ class ForecastReport:
                         i += 1
                     B = '\033[34m'
                     barchartmin = B+barchartmin
-                if daynum > 0 and words[3] != "" and words[1] != "":
-                    print(black+str(daynum)+" "+barchartmin+barchartmax+" "+black+str(mintemp)+"C-"+str(maxtemp)+"C")
-                daynum += 1
-
+                if day_num > 0 and words[3] != "" and words[1] != "":
+                    print(black+str(day_num)+" "+barchartmin+barchartmax+" "+black+str(mintemp)+"C-"+str(maxtemp)+"C")
+                day_num += 1
+        print("")
     def print_max(self):
         black = '\033[30m'
-        mydatemax = datetime.datetime.strptime(self.max_date, '%Y-%m-%d')
-        mydatemin = datetime.datetime.strptime(self.min_date, '%Y-%m-%d')
-        mydatehum = datetime.datetime.strptime(self.hum_date, '%Y-%m-%d')
-        print(black+"Higest:" + str(self.max_temp) + "C on " + mydatemax.strftime('%B %d'))
-        print(black+"Lowest:" + str(self.min_temp) + "C on " + mydatemin.strftime('%B %d'))
-        print(black+"Humidity:" + str(self.max_hum) + "% on " + mydatehum.strftime('%B %d'))
+        mydate_max = datetime.datetime.strptime(self.max_date, '%Y-%m-%d')
+        mydate_min = datetime.datetime.strptime(self.min_date, '%Y-%m-%d')
+        mydate_hum = datetime.datetime.strptime(self.hum_date, '%Y-%m-%d')
+        print(black+"Higest:" + str(self.max_temp) + "C on " + mydate_max.strftime('%B %d'))
+        print(black+"Lowest:" + str(self.min_temp) + "C on " + mydate_min.strftime('%B %d'))
+        print(black+"Humidity:" + str(self.max_hum) + "% on " + mydate_hum.strftime('%B %d'))
+        print("")
 
     def print_average(self):
         black = '\033[30m'
         print(black+"Highest Avergae:"+str(self.max_mean)+"C")
         print(black+"Lowest Avergae:" + str(self.min_mean) + "C")
         print(black+"Avergae Mean Humidity:" + str(self.avg_hum) + "%")
+        print("")
 
 report = ForecastReport()
 i = 0
