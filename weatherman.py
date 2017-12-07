@@ -7,7 +7,6 @@ from Parsers.weatherparser import WeatherParser
 
 
 class WeatherMan:
-
     @staticmethod
     def main():
 
@@ -21,9 +20,6 @@ class WeatherMan:
                                 help='Print Monthly Bar Report for given year')
         arg_list = arg_parser.parse_args()
 
-        parser = WeatherParser()
-        report = Report()
-
         if len(sys.argv) < 2:
             print("Incomplete arguments")
             return
@@ -33,9 +29,9 @@ class WeatherMan:
             if len(report_year.split('/')) != 1:
                 print(f"Argument {report_year} is invalid for option -e.")
             date = datetime.datetime.strptime(report_year, '%Y').date()
-            weather = parser.parse(arg_list.path, date, True)
-            if(weather is not None):
-                report.print_yearly(weather)
+            weather = WeatherParser.parse_year(arg_list.path, date)
+            if weather is not None:
+                Report.print_yearly(weather)
 
         for report_month in arg_list.a:
 
@@ -43,9 +39,9 @@ class WeatherMan:
                 print(f"Argument {report_month} is invalid for option -a.")
                 continue
             date = datetime.datetime.strptime(report_month, '%Y/%m').date()
-            weather = parser.parse(arg_list.path, date)
-            if (weather is not None):
-                report.print_monthly(weather)
+            weather = WeatherParser.parse_month(arg_list.path, date)
+            if weather is not None:
+                Report.print_monthly(weather)
 
         for report_month in arg_list.c:
 
@@ -53,13 +49,13 @@ class WeatherMan:
                 print(f"Argument {report_month} is invalid for option -c.")
                 continue
             date = datetime.datetime.strptime(report_month, '%Y/%m').date()
-            weather = parser.parse(arg_list.path, date)
+            weather = WeatherParser.parse_month(arg_list.path, date)
 
-            if (weather is not None):
-                report.print_monthly_bar_graph(weather, date.year)
+            if weather is not None:
+                Report.print_monthly_bar_graph(weather, date.year)
 
         return
 
+
 if __name__ == "__main__":
     WeatherMan.main()
-

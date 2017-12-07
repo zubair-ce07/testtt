@@ -12,6 +12,9 @@ class DailyWeather:
     def day(self):
         return self._date.day
 
+    def month_name(self):
+        return self._date.strftime('%B')
+
     def highest_temperature(self):
         return self._highest_temperature
 
@@ -21,5 +24,5 @@ class DailyWeather:
     def max_humidity(self):
         return self._max_humidity
 
-    def get_mean_humidity(self):
+    def mean_humidity(self):
         return self._mean_humidity
