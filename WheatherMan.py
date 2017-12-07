@@ -115,6 +115,7 @@ class ForecastReport:
                     print(str(day_num)+" "+B+barchart+" "+black+str(mintemp)+"C")
                 day_num += 1
         print("")
+
     def report_bonus(self, file_name):
         black = '\033[30m'
         for file in glob.glob(file_name):
@@ -148,6 +149,7 @@ class ForecastReport:
                     print(black+str(day_num)+" "+barchartmin+barchartmax+" "+black+str(mintemp)+"C-"+str(maxtemp)+"C")
                 day_num += 1
         print("")
+
     def print_max(self):
         black = '\033[30m'
         mydate_max = datetime.datetime.strptime(self.max_date, '%Y-%m-%d')
