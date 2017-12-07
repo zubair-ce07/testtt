@@ -4,23 +4,12 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
-import re
 
 
 class ValidationPipeline(object):
 
     def process_item(self, item, spider):
-        required_fields = [
-            'category',
-            'title',
-            'product_url',
-            'locale',
-            'currency',
-            'description',
-            'product_id',
-            'variations'
-        ]
-        item['description'] = [re.sub('<.*?>', ' ', row) for row in item['description']]
+        required_fields = [key for key in item.keys()]
         for field in required_fields:
             if item[field]:
                 if field == 'variations':
