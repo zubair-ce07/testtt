@@ -4,80 +4,112 @@ def mean(_list):
 
 class MonthlyWeather(object):
 
-    def __init__(self, month):
-        self.month = month
+    def __init__(self, date):
+        self._date = date
         self.daily_weathers = list()
-        self.hottest_day = None
-        self.coolest_day = None
-        self.most_humid_day = None
+        self._hottest_day = None
+        self._coolest_day = None
+        self._humid_day = None
 
     def add_daily_weather(self, weather):
-
-        if self.hottest_day is None:
-            self.hottest_day = weather
-        else:
-            highest_temperature = self.hottest_day.get_highest_temperature()
-            new_temperature = weather.get_highest_temperature()
-
-            if highest_temperature < new_temperature:
-                self.hottest_day = weather
-
-        if self.coolest_day is None:
-            self.coolest_day = weather
-        else:
-            lowest_temperature = self.coolest_day.get_lowest_temperature()
-            new_temperature = weather.get_lowest_temperature()
-
-            if lowest_temperature > new_temperature:
-                self.coolest_day = weather
-
-        if self.most_humid_day is None:
-            self.most_humid_day = weather
-        else:
-            highest_humidity = self.most_humid_day.get_max_humidity()
-            new_humidity = weather.get_max_humidity()
-
-            if highest_humidity < new_humidity:
-                self.most_humid_day = weather
-
         self.daily_weathers.append(weather)
 
-    def get_month_name(self):
-        month_names = ["January", "February", "March", "April",
-                       "May", "June", "July",
-                       "August", "September", "October",
-                       "November", "December"]
-        return month_names[self.month-1]
+    def month(self):
+        return self._date.month
 
-    def get_highest_average_temperature(self):
+    def month_name(self):
+            return self._date.strftime('%B')
 
-        return mean([weather.get_highest_temperature()
-                     for weather in self.daily_weathers])
+    def highest_average_temperature(self):
 
-    def get_lowest_average_temperature(self):
+        return mean([weather.highest_temperature()
+                     for weather in self.daily_weathers
+                     if weather.highest_temperature() is not None])
 
-        return mean([weather.get_lowest_temperature()
-                     for weather in self.daily_weathers])
+    def lowest_average_temperature(self):
 
-    def get_average_mean_humidity(self):
+        return mean([weather.lowest_temperature()
+                     for weather in self.daily_weathers
+                     if weather.lowest_temperature() is not None])
+
+    def average_mean_humidity(self):
 
         return mean([weather.get_mean_humidity()
-                     for weather in self.daily_weathers])
+                     for weather in self.daily_weathers
+                     if weather.get_mean_humidity() is not None])
 
-    def get_highest_temperature(self):
-        return self.hottest_day.get_highest_temperature()
+    def highest_temperature(self):
 
-    def get_hottest_day(self):
-        return self.hottest_day.get_day()
+        if self._hottest_day is None:
+            self._hottest_day=self._find_hottest();
 
-    def get_lowest_temperature(self):
-        return self.coolest_day.get_lowest_temperature()
+        return self._hottest_day.highest_temperature()
 
-    def get_coolest_day(self):
-        return self.coolest_day.get_day()
+    def hottest_day(self):
+        if self._hottest_day is None:
+            self._hottest_day=self._find_hottest();
 
-    def get_most_humid_day(self):
-        return self.most_humid_day.get_day()
+        return self._hottest_day.day()
 
-    def get_max_humidity(self):
-        return self.most_humid_day.get_max_humidity()
+    def lowest_temperature(self):
+        if self._coolest_day is None:
+            self._coolest_day=self._find_coolest();
+
+        return self._coolest_day.lowest_temperature()
+
+    def coolest_day(self):
+        if self._coolest_day is None:
+            self._coolest_day=self._find_coolest();
+
+        return self._coolest_day.day()
+
+    def most_humid_day(self):
+        if self._humid_day is None:
+            self._humid_day=self._find_humid();
+
+        return self._humid_day.day()
+
+    def max_humidity(self):
+        if self._humid_day is None:
+            self._humid_day=self._find_humid();
+
+        return self._humid_day.max_humidity()
+
+    def _find_hottest(self):
+        hottest_day=None
+        for weather in self.daily_weathers:
+                if hottest_day is None:
+                    hottest_day = weather
+                else:
+                    highest_temperature = hottest_day.highest_temperature()
+                    new_temperature = weather.highest_temperature()
+
+                    if new_temperature is not None and highest_temperature < new_temperature:
+                        hottest_day = weather
+        return hottest_day
+
+    def _find_coolest(self):
+        coolest_day=None
+        for weather in self.daily_weathers:
+                if coolest_day is None:
+                    coolest_day = weather
+                else:
+                    lowest_temperature = coolest_day.lowest_temperature()
+                    new_temperature = weather.lowest_temperature()
+
+                    if new_temperature is not None and lowest_temperature > new_temperature:
+                        coolest_day = weather
+        return coolest_day
+
+    def _find_humid(self):
+        humid_day=None
+        for weather in self.daily_weathers:
+                if humid_day is None:
+                    humid_day = weather
+                else:
+                    highest_humidity = humid_day.max_humidity()
+                    new_humidity = weather.max_humidity()
+
+                    if new_humidity is not None and highest_humidity < new_humidity:
+                        humid_day = weather
+        return humid_day

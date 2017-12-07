@@ -1,25 +1,25 @@
 class DailyWeather:
 
-    def __init__(self):
-        self.day = ''
-        self.highest_temperature = 0
-        self.mean_temperature = 0
-        self.lowest_temperature = 0
-        self.max_humidity = 1
-        self.mean_humidity = 1
-        self.min_humidity = 1
+    def __init__(self, date, max_temp, mean_temp, min_temp, max_humidity, mean_humidity, min_humidity):
+        self._date = date
+        self._highest_temperature = max_temp
+        self._mean_temperature = mean_temp
+        self._lowest_temperature = min_temp
+        self._max_humidity = max_humidity
+        self._mean_humidity = mean_humidity
+        self._min_humidity = min_humidity
 
-    def get_day(self):
-        return self.day
+    def day(self):
+        return self._date.day
 
-    def get_highest_temperature(self):
-        return self.highest_temperature
+    def highest_temperature(self):
+        return self._highest_temperature
 
-    def get_lowest_temperature(self):
-        return self.lowest_temperature
+    def lowest_temperature(self):
+        return self._lowest_temperature
 
-    def get_max_humidity(self):
-        return self.max_humidity
+    def max_humidity(self):
+        return self._max_humidity
 
     def get_mean_humidity(self):
-        return self.mean_humidity
+        return self._mean_humidity

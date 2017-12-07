@@ -1,9 +1,8 @@
 import sys
 import argparse
+import datetime
 
-from Reports.yearlyreport import YearlyReport
-from Reports.monthlyreport import MonthlyReport
-from Reports.monthlybarreport import MonthlyBarReport
+from Reports.report import Report
 from Parsers.weatherparser import WeatherParser
 
 
@@ -23,6 +22,7 @@ class WeatherMan:
         arg_list = arg_parser.parse_args()
 
         parser = WeatherParser()
+        report = Report()
 
         if len(sys.argv) < 2:
             print("Incomplete arguments")
@@ -31,39 +31,32 @@ class WeatherMan:
         for report_year in arg_list.e:
 
             if len(report_year.split('/')) != 1:
-                print("Argument " + report_year + " is invalid for option -e.")
-
-            weather = parser.parse(path, report_year)
+                print(f"Argument {report_year} is invalid for option -e.")
+            date = datetime.datetime.strptime(report_year, '%Y').date()
+            weather = parser.parse(arg_list.path, date, True)
             if(weather is not None):
-                report = YearlyReport()
-                report.print(weather)
+                report.print_yearly(weather)
 
         for report_month in arg_list.a:
 
             if len(report_month.split('/')) != 2:
-                print("Argument " + report_month + " is invalid for option -a.")
+                print(f"Argument {report_month} is invalid for option -a.")
                 continue
-
-            year = report_month.split('/')[0]
-            month = report_month.split('/')[1]
-            weather = parser.parse(path, year, int(month))
+            date = datetime.datetime.strptime(report_month, '%Y/%m').date()
+            weather = parser.parse(arg_list.path, date)
             if (weather is not None):
-                report = MonthlyReport()
-                report.print(weather)
+                report.print_monthly(weather)
 
         for report_month in arg_list.c:
 
             if len(report_month.split('/')) != 2:
-                print("Argument " + report_month + " is invalid for option -c.")
+                print(f"Argument {report_month} is invalid for option -c.")
                 continue
-
-            year = report_month.split('/')[0]
-            month = report_month.split('/')[1]
-            weather = parser.parse(path, year, int(month))
+            date = datetime.datetime.strptime(report_month, '%Y/%m').date()
+            weather = parser.parse(arg_list.path, date)
 
             if (weather is not None):
-                report = MonthlyBarReport()
-                report.print(weather, year)
+                report.print_monthly_bar_graph(weather, date.year)
 
         return
 
