@@ -1,4 +1,5 @@
 import re
+import csv
 from os import listdir
 from pathlib import Path
 from os.path import isfile, join
@@ -9,17 +10,12 @@ from Weathers.dailyweather import DailyWeather
 
 
 class WeatherParser:
-    line_format = re.compile('''(?P<year>.*?)-(?P<month>.*?)-(?P<day>.*?),
-                                (?P<maxTemp>.*?),(?P<meanTemp>.*?),
-                                (?P<minTemp>.*?),(?P<maxDew>.*?),(?P<meanDew>.*?),
-                                (?P<minDew>.*?),(?P<maxHumidity>.*?),
-                                (?P<meanHumidity>.*?),(?P<minHumidity>.*?),''', re.IGNORECASE | re.VERBOSE)
     weather_list = []
 
     def parse(self, dir_path, year, month=-1):
 
         cached = self._get_cached_result(year, month)
-        if cached is not None:
+        if cached:
             return cached
 
         self._parse_files(dir_path, year, month)
@@ -45,57 +41,52 @@ class WeatherParser:
             self._parse(file)
 
     def _parse(self, file):
-        with open(file) as open_file_object:
-            for line in open_file_object:
-                matches = re.finditer(self.line_format, line)
+        input_file = csv.DictReader(open(file))
+        for row in input_file:
+            dateSplit = row["PKT"].split('-')
+            yearly_weathers = [
+                    weather for weather
+                    in self.weather_list
+                    if weather.year == dateSplit[0]]
+            if len(yearly_weathers) == 0:
+                    yearly_weather = YearlyWeather(dateSplit[0])
+                    monthly_weather = MonthlyWeather(int(dateSplit[1]))
+                    monthly_weather.add_daily_weather(
+                        self._create_daily_weather(dateSplit[2], row))
+                    yearly_weather.monthly_weathers.append(monthly_weather)
+                    self.weather_list.append(yearly_weather)
+            else:
+                yearly_weather = yearly_weathers[0]
+                monthly_weathers = [
+                    weather for weather
+                    in yearly_weather.monthly_weathers
+                    if weather.month == int(dateSplit[1])]
+                if len(monthly_weathers) == 0:
+                    monthly_weather = MonthlyWeather(
+                        int(dateSplit[1]))
+                    monthly_weather.add_daily_weather(
+                        self._create_daily_weather(dateSplit[2], row))
+                    yearly_weather.monthly_weathers.append(
+                        monthly_weather)
+                else:
+                    monthly_weather = monthly_weathers[0]
+                    monthly_weather.add_daily_weather(self._create_daily_weather(dateSplit[2], row))
 
-                for matchNum, match in enumerate(matches):
-
-                    groups = match.groupdict()
-                    yearly_weathers = [
-                        weather for weather
-                        in self.weather_list
-                        if weather.year == groups["year"]]
-                    if len(yearly_weathers) == 0:
-                        yearly_weather = YearlyWeather(groups["year"])
-                        monthly_weather = MonthlyWeather(int(groups["month"]))
-                        monthly_weather.add_daily_weather(
-                            self._create_daily_weather(groups))
-                        yearly_weather.monthly_weathers.append(monthly_weather)
-                        self.weather_list.append(yearly_weather)
-                    else:
-                        yearly_weather = yearly_weathers[0]
-                        monthly_weathers = [
-                            weather for weather
-                            in yearly_weather.monthly_weathers
-                            if weather.month == int(groups["month"])]
-                        if len(monthly_weathers) == 0:
-                            monthly_weather = MonthlyWeather(
-                                int(groups["month"]))
-                            monthly_weather.add_daily_weather(
-                                self._create_daily_weather(groups))
-                            yearly_weather.monthly_weathers.append(
-                                monthly_weather)
-                        else:
-                            monthly_weather = monthly_weathers[0]
-                            monthly_weather.add_daily_weather(
-                                self._create_daily_weather(groups))
-
-    def _create_daily_weather(self, parsed_dictionary):
+    def _create_daily_weather(self, day, row):
         daily_weather = DailyWeather()
-        daily_weather.day = parsed_dictionary["day"]
-        max_temp = int(parsed_dictionary["maxTemp"]) if parsed_dictionary[
-            "maxTemp"] != '' else -100
-        mean_temp = int(parsed_dictionary["meanTemp"])if parsed_dictionary[
-            "meanTemp"] != '' else 0
-        min_temp = int(parsed_dictionary["minTemp"]) if parsed_dictionary[
-            "minTemp"] != '' else 100
-        max_humidity = int(parsed_dictionary["maxHumidity"]) if parsed_dictionary[
-            "maxHumidity"] != '' else 0
-        mean_humidity = int(parsed_dictionary["meanHumidity"]) if parsed_dictionary[
-            "meanHumidity"] != '' else 50
-        min_humidity = int(parsed_dictionary["minHumidity"]) if parsed_dictionary[
-            "minHumidity"] != '' else 100
+        daily_weather.day = day
+        max_temp = int(row["Max TemperatureC"]) if row[
+            "Max TemperatureC"] != '' else -100
+        mean_temp = int(row["Mean TemperatureC"])if row[
+            "Mean TemperatureC"] != '' else 0
+        min_temp = int(row["Min TemperatureC"]) if row[
+            "Min TemperatureC"] != '' else 100
+        max_humidity = int(row["Max Humidity"]) if row[
+            "Max Humidity"] != '' else 0
+        mean_humidity = int(row[" Mean Humidity"]) if row[
+            " Mean Humidity"] != '' else 50
+        min_humidity = int(row[" Min Humidity"]) if row[
+            " Min Humidity"] != '' else 100
 
         daily_weather.highest_temperature = max_temp
         daily_weather.mean_temperature = mean_temp

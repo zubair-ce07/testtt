@@ -47,7 +47,7 @@ class MonthlyWeather(object):
                        "May", "June", "July",
                        "August", "September", "October",
                        "November", "December"]
-        return month_names[self.month]
+        return month_names[self.month-1]
 
     def get_highest_average_temperature(self):
 
