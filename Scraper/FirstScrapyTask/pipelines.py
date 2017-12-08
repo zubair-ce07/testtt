@@ -9,18 +9,16 @@
 class ValidationPipeline(object):
 
     def process_item(self, item, spider):
-        required_fields = [key for key in item.keys()]
+        required_fields = list(item.keys())
         for field in required_fields:
             if item[field]:
                 if field == 'variations':
                     for color in item[field]:
-                        if not item[field][color]['code']:
-                            del item[field][color]['code']
-                        if not item[field][color]['image_urls']:
-                            del item[field][color]['image_urls']
-                        if not item[field][color]['sizes']:
-                            del item[field][color]['sizes']
-                    continue
+                        variation_item_keys = list(item[field][color].keys())
+                        for key in variation_item_keys:
+                            if not item[field][color][key]:
+                                del item[field][color][key]
+                continue
             else:
                 del item[field]
         return item

@@ -60,26 +60,23 @@ class ShopBopSpider(Spider):
         product['currency'] = response.css('body#top::attr(data-currency)').extract_first()
         product['description'] = self.get_description(product_json)
         product['product_id'] = product_json['product']['styleNumber']
-        product['variations'], colors_prices = {} , {}
+        product['variations'] = {}
         colors_sizes = []
         for color in product_json['product']['styleColors']:
             image_urls = [image_url['url'] for image_url in color['images']]
-            for per_color_price in color['prices']:
-                color_prices = {
-                    'is_discounted': per_color_price['onSale'],
-                    'sale_price': per_color_price['retailAmount'],
-                    'discounted_price': per_color_price['saleAmount'] if per_color_price['onSale'] else ''
-                }
-            for per_color_size in color['styleColorSizes']:
+            for color_size in color['styleColorSizes']:
                 colors_sizes.append({
-                    'size': per_color_size['size']['label'],
-                    'is_available': per_color_size['inStock'],
-                    'price': color_prices['sale_price'],
-                    'discounted_price': color_prices['discounted_price'],
-                    'is_discounted': color_prices['is_discounted']
+                    'size': color_size['size']['label'],
+                    'is_available': color_size['inStock'],
+                    'price': color['prices'][0]['retailAmount'],
+                    'discounted_price': color['prices'][0]['saleAmount'],
+                    'is_discounted': color['prices'][0]['onSale']
                 })
-            code_images_sizes = {'code': color['color']['code'], 'image_urls': image_urls, 'sizes': colors_sizes}
-            product['variations'][slugify(color['color']['label'])] = code_images_sizes
+            product['variations'][slugify(color['color']['label'])] = {
+                'code': color['color']['code'],
+                'image_urls': image_urls,
+                'sizes': colors_sizes
+            }
             colors_sizes = []
         yield product
 
