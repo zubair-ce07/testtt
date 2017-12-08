@@ -2,6 +2,7 @@ import glob
 import datetime
 import calendar
 import argparse
+import csv
 
 
 class ForecastReport:
@@ -55,25 +56,26 @@ class ForecastReport:
         maximum_mean = 0
         minimum_mean = 0
         average_humidity = 0
-        file_data = self.extract_data(file_name)
-        del file_data[0]
-        for line in file_data:
-            words = line.split(",")
-            try:
-                maximum_mean += int(words[1])
-            except ValueError:
-                maximum_mean += 0
-            try:
-                minimum_mean += int(words[3])
-            except ValueError:
-                minimum_mean = 0
-            try:
-                average_humidity += int(words[8])
-            except ValueError:
-                average_humidity = 0
-        self.maximum_temperature_mean = int(maximum_mean/len(file_data))
-        self.minimum_temperature_mean = int(minimum_mean/len(file_data))
-        self.average_humidity = int(average_humidity/len(file_data))
+        total_days = 1
+        with open(file_name) as csv_file:
+            reader = csv.DictReader(csv_file)
+            for row in reader:
+                try:
+                    maximum_mean += int(row['Max TemperatureC'])
+                except ValueError:
+                    maximum_mean += 0
+                try:
+                    minimum_mean += int(row['Min TemperatureC'])
+                except ValueError:
+                    minimum_mean += 0
+                try:
+                    average_humidity += int(row['Max Humidity'])
+                except ValueError:
+                    average_humidity += 0
+                total_days += 1
+        self.maximum_temperature_mean = int(maximum_mean/total_days)
+        self.minimum_temperature_mean = int(minimum_mean/total_days)
+        self.average_humidity = int(average_humidity/total_days)
 
     def report_barchart(self, file_name):
         red = '\033[31m'
