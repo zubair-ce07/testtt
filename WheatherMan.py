@@ -1,180 +1,200 @@
 import glob
-import os
 import datetime
 import calendar
-import sys
+import argparse
 
 
 class ForecastReport:
-    max_temp = 0
-    min_temp = 0
-    max_hum = 0
-    max_date = ""
-    min_date = ""
-    hum_date = ""
-    max_mean = 0
-    min_mean = 0
-    avg_hum = 0
-    file_path = ""
+    maximum_temperature = 0
+    minimum_temperature = 0
+    maximum_humidity = 0
+    maximum_temperature_date = ""
+    minimum_temperature_date = ""
+    maximum_humidity_date = ""
+    maximum_temperature_mean = 0
+    minimum_temperature_mean = 0
+    average_humidity = 0
+    barchart = []
+    barchart_bonus = []
 
-    def save_file_path(self, file_path):
-        file_path += "Murree_weather_"
-        self.file_path=file_path
-
-    def generate_report(self, report_type, year_month):
-        lst_yearmon = year_month.split("/")
-        if report_type == "-e":
-            file_name = self.file_path+lst_yearmon[0]+"_*.txt"
-            self.find_max_temp(file_name)
-            self.print_max()
-        elif report_type == "-a":
-            mon = calendar.month_name[int(lst_yearmon[1])]
-            mon = mon[0:3]
-            file_name = self.file_path+lst_yearmon[0]+"_"+mon+".txt"
-            self.report_mean(file_name)
-            self.print_average()
-        elif report_type == "-c":
-            mon = calendar.month_name[int(lst_yearmon[1])]
-            mon = mon[0:3]
-            file_name = self.file_path + lst_yearmon[0] + "_" + mon + ".txt"
-            self.report_barchart(file_name)
-            self.report_bonus(file_name)
+    @staticmethod
+    def extract_data(file_name):
+        with open(file_name, "r") as f:
+            file_data = f.readlines()
+            return file_data
 
     def find_max_temp(self, file_name):
         for file in glob.glob(file_name):
-            f = open(file, "r")
-            file_data = f.readlines()
-            f.close()
+            file_data = self.extract_data(file)
+            del file_data[0]
             for line in file_data:
                 words = line.split(",")
-                if words[1] != "" and words[1] != "Max TemperatureC":
-                    max = int(words[1])
-                    hum = int(words[7])
-                    if max > self.max_temp:
-                        self.max_temp = max
-                        self.max_date = words[0]
-                if words[3] != "" and words[3] != "Min TemperatureC":
-                    min = int(words[3])
-                    if min < self.min_temp:
-                        self.min_temp = min
-                        self.min_date = words[0]
-                if words[7] != "" and words[7] != "Max Humidity":
-                    if hum > self.max_hum:
-                        self.max_hum = hum
-                        self.hum_date = words[0]
+                try:
+                    maximum = int(words[1])
+                except ValueError:
+                    maximum = 0
+                if maximum > self.maximum_temperature:
+                    self.maximum_temperature = maximum
+                    self.maximum_temperature_date = words[0]
+                try:
+                    minimum = int(words[3])
+                except ValueError:
+                    minimum = 0
+                if minimum < self.minimum_temperature:
+                    self.minimum_temperature = minimum
+                    self.minimum_temperature_date = words[0]
+                try:
+                    humidity = int(words[7])
+                except ValueError:
+                    humidity = 0
+                if humidity > self.maximum_humidity:
+                    self.maximum_humidity = humidity
+                    self.maximum_humidity_date = words[0]
 
     def report_mean(self, file_name):
-        maxmean = 0
-        minmean = 0
-        avghum = 0
-        total_element_max = 0
-        total_element_min = 0
-        total_element_hum = 0
-        for file in glob.glob(file_name):
-            f = open(file,"r")
-            file_data = f.readlines()
-            f.close()
-            for line in file_data:
-                words = line.split(",")
-                if words[1] != "" and words[1] != "Max TemperatureC":
-                    maxmean += int(words[1])
-                    total_element_max += 1
-                if words[3] != "" and words[3] != "Min TemperatureC":
-                    minmean += int(words[3])
-                    total_element_min += 1
-                if words[8] != "" and words[8] != " Mean Humidity":
-                    avghum += int(words[8])
-                    total_element_hum += 1
-        self.max_mean = int(maxmean/total_element_max)
-        self.min_mean = int(minmean/total_element_min)
-        self.avg_hum = int(avghum/total_element_hum)
+        maximum_mean = 0
+        minimum_mean = 0
+        average_humidity = 0
+        file_data = self.extract_data(file_name)
+        del file_data[0]
+        for line in file_data:
+            words = line.split(",")
+            try:
+                maximum_mean += int(words[1])
+            except ValueError:
+                maximum_mean += 0
+            try:
+                minimum_mean += int(words[3])
+            except ValueError:
+                minimum_mean = 0
+            try:
+                average_humidity += int(words[8])
+            except ValueError:
+                average_humidity = 0
+        self.maximum_temperature_mean = int(maximum_mean/len(file_data))
+        self.minimum_temperature_mean = int(minimum_mean/len(file_data))
+        self.average_humidity = int(average_humidity/len(file_data))
 
     def report_barchart(self, file_name):
+        red = '\033[31m'
+        blue = '\033[34m'
         black = '\033[30m'
-        for file in glob.glob(file_name):
-            f = open(file, "r")
-            day_num = 0
-            file_data = f.readlines()
-            f.close()
-            for line in file_data:
-                words = line.split(",")
-                if words[1] != "" and words[1] != "Max TemperatureC":
-                    maxtemp = int(words[1])
-                    i = 0
-                    barchart = ""
-                    while i< maxtemp:
-                        barchart += "+"
-                        i += 1
-                    R = '\033[31m'
-                    print(str(day_num)+" "+R+barchart+" "+black+str(maxtemp)+"C")
-                if words[3] != "" and words[3] != "Min TemperatureC":
-                    mintemp = int(words[3])
-                    i = 0
-                    barchart = ""
-                    while i< mintemp:
-                        barchart += "+"
-                        i += 1
-                    B = '\033[34m'
-                    print(str(day_num)+" "+B+barchart+" "+black+str(mintemp)+"C")
-                day_num += 1
-        print("")
+        file_data = self.extract_data(file_name)
+        del file_data[0]
+        index = 1
+        for line in file_data:
+            day_num = str(index)
+            words = line.split(",")
+            try:
+                maximum_temp = int(words[1])
+            except ValueError:
+                maximum_temp = 0
+            barchart_maximum = '+' * maximum_temp
+            self.barchart.append(day_num.zfill(2) + " " + red+barchart_maximum + " " + black + str(maximum_temp) + "C")
+            try:
+                minimum_temp = int(words[3])
+            except ValueError:
+                minimum_temp = 0
+            barchart_minimum = '+' * minimum_temp
+            self.barchart.append(day_num.zfill(2) + " " + blue+barchart_minimum + " " + black + str(minimum_temp) + "C")
+            index += 1
+
+    def process_data(self, file_data):
+        red = '\033[31m'
+        blue = '\033[34m'
+        black = '\033[30m'
+        index = 1
+        del file_data[0]
+        for line in file_data:
+            words = line.split(",")
+            try:
+                max_temp = int(words[1])
+            except ValueError:
+                max_temp = 0
+            barchart_maximum = "+" * max_temp
+            try:
+                min_temp = int(words[3])
+            except ValueError:
+                min_temp = 0
+            barchart_minimum = "+" * min_temp
+            day_num = str(index)
+            self.barchart_bonus.append(day_num.zfill(2)+" " + blue + barchart_minimum
+                                       + red + barchart_maximum + black +
+                                       str(min_temp) + "C -" + str(max_temp) + "C")
+            index += 1
 
     def report_bonus(self, file_name):
-        black = '\033[30m'
-        for file in glob.glob(file_name):
-            f = open(file, "r")
-            day_num = 0
-            file_data = f.readlines()
-            f.close()
-            for line in file_data:
-                words = line.split(",")
-                barchartmin = ""
-                barchartmax = ""
-                maxtemp = 0
-                mintemp = 0
-                if words[1] != "" and words[1] != "Max TemperatureC":
-                    maxtemp = int(words[1])
-                    i = 0
-                    while i < maxtemp:
-                        barchartmax += "+"
-                        i += 1
-                    R = '\033[31m'
-                    barchartmax = R+barchartmax
-                if words[3] != "" and words[3] != "Min TemperatureC":
-                    mintemp = int(words[3])
-                    i = 0
-                    while i< mintemp:
-                        barchartmin += "+"
-                        i += 1
-                    B = '\033[34m'
-                    barchartmin = B+barchartmin
-                if day_num > 0 and words[3] != "" and words[1] != "":
-                    print(black+str(day_num)+" "+barchartmin+barchartmax+" "+black+str(mintemp)+"C-"+str(maxtemp)+"C")
-                day_num += 1
-        print("")
+        file_data = self.extract_data(file_name)
+        self.process_data(file_data)
+        self.print_barchart_bonus()
 
     def print_max(self):
         black = '\033[30m'
-        mydate_max = datetime.datetime.strptime(self.max_date, '%Y-%m-%d')
-        mydate_min = datetime.datetime.strptime(self.min_date, '%Y-%m-%d')
-        mydate_hum = datetime.datetime.strptime(self.hum_date, '%Y-%m-%d')
-        print(black+"Higest:" + str(self.max_temp) + "C on " + mydate_max.strftime('%B %d'))
-        print(black+"Lowest:" + str(self.min_temp) + "C on " + mydate_min.strftime('%B %d'))
-        print(black+"Humidity:" + str(self.max_hum) + "% on " + mydate_hum.strftime('%B %d'))
+        mydate_max = datetime.datetime.strptime(self.maximum_temperature_date, '%Y-%m-%d')
+        mydate_min = datetime.datetime.strptime(self.minimum_temperature_date, '%Y-%m-%d')
+        mydate_hum = datetime.datetime.strptime(self.maximum_humidity_date, '%Y-%m-%d')
+        print(black+"Higest:" + str(self.maximum_temperature) + "C on " + mydate_max.strftime('%B %d'))
+        print(black+"Lowest:" + str(self.minimum_temperature) + "C on " + mydate_min.strftime('%B %d'))
+        print(black+"Humidity:" + str(self.maximum_humidity) + "% on " + mydate_hum.strftime('%B %d'))
         print("")
 
     def print_average(self):
         black = '\033[30m'
-        print(black+"Highest Avergae:"+str(self.max_mean)+"C")
-        print(black+"Lowest Avergae:" + str(self.min_mean) + "C")
-        print(black+"Avergae Mean Humidity:" + str(self.avg_hum) + "%")
+        print(black+"Highest Avergae:"+str(self.maximum_temperature_mean)+"C")
+        print(black+"Lowest Avergae:" + str(self.minimum_temperature_mean) + "C")
+        print(black+"Avergae Mean Humidity:" + str(self.average_humidity) + "%")
         print("")
 
-report = ForecastReport()
-i = 0
-report.save_file_path(sys.argv[1])
-print(sys.argv)
-while i< len(sys.argv):
-    if i > 1:
-        report.generate_report(sys.argv[i],sys.argv[i+1])
-    i += 2
+    def print_barchart(self):
+        for bar in self.barchart:
+            print(bar)
+
+    def print_barchart_bonus(self):
+        for bar in self.barchart_bonus:
+            print(bar)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path", help="path to files")
+    parser.add_argument('-e', metavar='N', nargs='+')
+    parser.add_argument('-a', metavar='N', nargs='+')
+    parser.add_argument('-c', metavar='N', nargs='+')
+
+    list_parameters = parser.parse_args()
+    path = list_parameters.path + "Murree_weather_"
+    report = ForecastReport()
+
+    if list_parameters.e is not None:
+        year = list_parameters.e[0]
+        file_name = path + year + "_*.txt"
+        report.find_max_temp(file_name)
+        report.print_max()
+
+    if list_parameters.a is not None:
+        file_name = ""
+        for arguments in list_parameters.a:
+            year_month = arguments.split('/')
+            year = year_month[0]
+            month = year_month[1]
+            month = calendar.month_name[int(month)]
+            month = month[0:3]
+            file_name = path + year + "_" + month + ".txt"
+        report.report_mean(file_name)
+        report.print_average()
+
+    if list_parameters.c is not None:
+        file_name = ""
+        for arguments in list_parameters.a:
+            year_month = arguments.split('/')
+            year = year_month[0]
+            month = year_month[1]
+            month = calendar.month_name[int(month)]
+            month = month[0:3]
+            file_name = path + year + "_" + month + ".txt"
+        report.report_barchart(file_name)
+        report.print_barchart()
+        report.report_bonus(file_name)
+
+if __name__ == '__main__':
+    main()
