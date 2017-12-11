@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from . import models
 
@@ -19,7 +20,7 @@ class list_posts(ListView):
     template_name = 'blog/listDisplay.html'
 
 
-class view_post(DetailView):
+class view_post(LoginRequiredMixin, DetailView):
 
     model = models.Post
     template_name = 'blog/post.html'
