@@ -52,3 +52,15 @@ class ShopBopItem(scrapy.Item):
     currency = scrapy.Field()
     variations = scrapy.Field()
 
+
+class MarcJacobsItem(scrapy.Item):
+
+    product_url = scrapy.Field()
+    product_id = scrapy.Field()
+    title = scrapy.Field()
+    category = scrapy.Field()
+    description = scrapy.Field()
+    locale = scrapy.Field()
+    currency = scrapy.Field()
+    variations = scrapy.Field()
+
