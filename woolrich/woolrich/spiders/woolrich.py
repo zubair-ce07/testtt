@@ -12,9 +12,9 @@ class WoolRich(CrawlSpider):
     start_urls = ["http://www.woolrich.com/"]
     product_api_url = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
     rules = (
-        Rule(LinkExtractor(restrict_xpaths='//div[@class="menu-bar"]', tags="a", attrs="href"),),
-        Rule(LinkExtractor(restrict_xpaths='.//div[@class="clear addMore"]', tags='div', attrs='next_page'),),
-        Rule(LinkExtractor(restrict_xpaths='.//div[@class="hover_img "]', tags='a', attrs='href'),
+        Rule(LinkExtractor(restrict_xpaths='//div[@class="menu-bar"]'),),
+        Rule(LinkExtractor(restrict_xpaths='.//div[@class="clear addMore"]', attrs='next_page'),),
+        Rule(LinkExtractor(restrict_xpaths='.//div[@class="hover_img "]'),
              callback='parse_product')
     )
 
@@ -34,15 +34,10 @@ class WoolRich(CrawlSpider):
         return "Woolrich"
 
     def retailer_sku(self, response):
-        return response.xpath('.//div[@class="pdp "]/@productid').extract_first()
+        return response.css('.pdp::attr(productid)').extract_first()
 
     def product_description(self, response):
-        description = response.xpath('.//span[@itemprop="description"]/text()').extract()
-        if description:
-            return description
-        else:
-            description = response.xpath('.//span[@itemprop="description"]/text()').extract()
-            return description
+        return response.xpath('.//span[@itemprop="description"]/text()').extract()
 
     def product_care(self, response):
         return response.xpath('.//div[@class="text"]//li/text()').extract()
@@ -87,30 +82,29 @@ class WoolRich(CrawlSpider):
         return fitting.strip()
 
     def size_skus(self, response):
-        skus = {}
+        sku = {}
         sku_id = self.sku_id(response)
-        skus[sku_id] = {}
-        skus[sku_id]["size"] = self.sku_size(response)
-        skus[sku_id]["color"] = self.sku_color(response)
-        skus[sku_id]["price"] = self.sku_price(response)
-        skus[sku_id]["currency"] = self.sku_currency(response)
-        skus[sku_id]["old_price"] = self.sku_old_price(response)
-        return skus
+        sku["size"] = self.sku_size(response)
+        sku["color"] = self.sku_color(response)
+        sku["price"] = self.sku_price(response)
+        sku["currency"] = self.sku_currency(response)
+        sku["old_price"] = self.sku_old_price(response)
+        return {sku_id: sku}
 
     def fit_skus(self, response):
-        skus = {}
+        sku = {}
         fit_sku_id = self.fit_sku_id(response)
         size = self.sku_size(response)
-        skus[fit_sku_id] = {}
-        skus[fit_sku_id]["color"] = self.sku_color(response)
-        skus[fit_sku_id]["price"] = self.sku_price(response)
-        skus[fit_sku_id]["currency"] = self.sku_currency(response)
-        skus[fit_sku_id]["old_price"] = self.sku_old_price(response)
-        skus[fit_sku_id]["size"] = size+"/"+self.sku_fitting(response)
-        return skus
+        sku["color"] = self.sku_color(response)
+        sku["price"] = self.sku_price(response)
+        sku["currency"] = self.sku_currency(response)
+        sku["old_price"] = self.sku_old_price(response)
+        sku["size"] = size+"/"+self.sku_fitting(response)
+        return {fit_sku_id: sku}
 
     def parse_product(self, response):
         item = WoolRichItem()
+        garments = {}
         item["skus"] = {}
         item["url_original"] = response.url
         item["url"] = self.product_url(response)
@@ -122,10 +116,11 @@ class WoolRich(CrawlSpider):
         item["care"] = self.product_care(response)
         item["category"] = self.product_category(response)
         item["currency"] = self.product_currency(response)
-        item["requests"] = self.color_requests(response, item)
-        return self.request_or_item(item)
+        garments["requests"] = []
+        garments["requests"] += self.color_requests(response, item, garments)
+        return self.request_or_item(item, garments)
 
-    def color_requests(self, response, item):
+    def color_requests(self, response, item, garments):
         color_requests = []
         product_id = response.xpath('.//span[@itemprop="productID"]/text()').extract_first()
         color_ids = response.xpath('.//ul[@class="colorlist"]//a//img/@colorid').extract()
@@ -136,14 +131,16 @@ class WoolRich(CrawlSpider):
                 'colorId': c_id,
                 'colorDisplayName': name,
             }
-            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
-                                         dont_filter=True, callback=self.parse_color)
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
+                                         meta={"item": item, "garments": garments},
+                                         dont_filter=True, callback=self.size_requests)
             color_requests.append(request)
         return color_requests
 
-    def parse_color(self, response):
+    def size_requests(self, response):
         size_requests = []
         item = response.meta["item"]
+        garments = response.meta["garments"]
         form_data = dict(parse_qsl(response.request.body.decode()))
         sizes = response.xpath('.//ul[@class="sizelist"]//a[@stocklevel!="0"]/@title').extract()
         sku_ids = response.xpath('.//ul[@class="sizelist"]//a[@stocklevel!="0"]/@id').extract()
@@ -151,12 +148,13 @@ class WoolRich(CrawlSpider):
             form_data["selectedSize"] = size
             form_data["skuId"] = s_id
             request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
-                                         meta={"item": item}, dont_filter=True, callback=self.parse_size)
+                                         meta={"item": item, 'garments': garments},
+                                         dont_filter=True, callback=self.parse_size)
             size_requests.append(request)
-        item["requests"] += size_requests
-        return self.request_or_item(item)
+        garments["requests"] += size_requests
+        return self.request_or_item(item, garments)
 
-    def fit_requests(self, response, item, form_data):
+    def fit_requests(self, response, item, form_data, garments):
         fit_requests = []
         is_fit_exist = response.css('.dimensionslist').extract()
         if is_fit_exist:
@@ -165,29 +163,30 @@ class WoolRich(CrawlSpider):
             for fit, s_id in zip(available_fits, sku_ids):
                 form_data["skuId"] = s_id
                 form_data["selectedDimension"] = fit
-                request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
+                request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
+                                             meta={"item": item, 'garments': garments},
                                              dont_filter=True, callback=self.parse_fitting)
                 fit_requests.append(request)
         return fit_requests
 
     def parse_size(self, response):
+        garments = response.meta["garments"]
         form_data = dict(parse_qsl(response.request.body.decode()))
         item = response.meta["item"]
-        if self.fit_requests(response, item, form_data):
-            item["requests"] += self.fit_requests(response, item, form_data)
-            return self.request_or_item(item)
-        else:
-            item["skus"].update(self.size_skus(response))
-            return self.request_or_item(item)
+        if self.fit_requests(response, item, form_data, garments):
+            garments["requests"] += self.fit_requests(response, item, form_data, garments)
+            return self.request_or_item(item, garments)
+        item["skus"].update(self.size_skus(response))
+        return self.request_or_item(item, garments)
 
     def parse_fitting(self, response):
+        garments = response.meta["garments"]
         item = response.meta["item"]
         item["skus"].update(self.fit_skus(response))
-        return self.request_or_item(item)
+        return self.request_or_item(item, garments)
 
-    def request_or_item(self, item):
-        if item["requests"]:
-            return item["requests"].pop()
+    def request_or_item(self, item, garments):
+        if garments["requests"]:
+            return garments["requests"].pop()
         else:
-            del item['requests']
             return item

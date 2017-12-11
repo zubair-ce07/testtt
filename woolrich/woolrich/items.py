@@ -8,7 +8,6 @@ class WoolRichItem(scrapy.Item):
     url = scrapy.Field()
     description = scrapy.Field()
     brand_name = scrapy.Field()
-    requests = scrapy.Field()
     category = scrapy.Field()
     currency = scrapy.Field()
     care = scrapy.Field()
