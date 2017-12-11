@@ -68,8 +68,8 @@ class WeatherReports:
 
         for data_row in csv_parser.data_set:
             current_date = data_row.date.strftime('%d')
-            red_chart = colored('+' * data_row.max_temp, 'blue')
-            blue_chart = colored('+' * data_row.min_temp, 'red')
+            red_chart = colored('+' * data_row.max_temp, 'red')
+            blue_chart = colored('+' * data_row.min_temp, 'blue')
             charts = blue_chart + red_chart
             print(current_date,
                   charts,
