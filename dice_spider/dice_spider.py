@@ -1,4 +1,5 @@
 from scrapy.loader import ItemLoader
+from scrapy.loader.processors import Compose, Join, TakeFirst
 from items import Job
 import scrapy
 
@@ -23,21 +24,26 @@ class DiceSpider(scrapy.Spider):
     def parse_job(self, response):
         try:
             job = ItemLoader(item=Job(), response=response)
+            job.default_output_processor = TakeFirst()
             categories = response.xpath('//div[@itemprop="skills"]/text()')\
                 .extract_first().replace('\n', '').replace('\t', '')
+            job.categories_out = Compose()
             job.add_value('categories',categories)
             job.add_xpath('company', '//span[@itemprop="name"]/text()')
             company_url = "https://www.dice.com"+response\
                 .xpath('//a[@id="companyNameLink"]/@href').extract_first()
             job.add_value('company_url', company_url)
-            job.add_xpath('description', '//div[@id="jobdescSec"]//p/text()')
+            job.description_out = Join()
+            job.add_xpath('description', '//div[@id="jobdescSec"]//text()')
             job.add_xpath('external_id', '//meta[@name="jobId"]/@content')
             job.add_xpath('job_date', '//li[@class="posted hidden-xs"]/text()')
+            job.job_types_out = Compose()
             job.add_xpath('job_types', '//meta[@itemprop="employmentType"]'
                                        '/preceding-sibling::span/text()')
             job.add_xpath('location', '//input[@id="location"]/@value')
-            logo_url = "https:" + response.xpath('//img[@class="h-logo"]/@src')\
-                .extract_first()
+            logo_url = "https:" + response\
+                .xpath('//img[@class="h-logo"]/@src').extract_first()
+            job.logo_urls_out = Compose()
             job.add_value('logo_urls', logo_url)
             job.add_value('provider', 'dice')
             job.add_xpath('salary', '//span[@itemprop="baseSalary"]'
