@@ -43,9 +43,16 @@ class Presentation:
         red = '\033[31m'
         blue = '\033[34m'
         black = '\033[30m'
+        template = "{day} {barchart_max} {max_temp}C\n"
+        template += "{day} {barchart_min} {min_temp}C\n"
         for bar in report.barchart:
-            day_num = str(bar.chart_date)
-            day = day_num.split('-')
-            day = day[2].zfill(2)
-            print(day + " " + red + bar.bar_max + " " + black + str(bar.max_temp) + 'C')
-            print(day + " " + blue + bar.bar_min + " " + black + str(bar.min_temp) + 'C')
+            my_date = str(bar.chart_date)
+            day_num = my_date.split('-')
+            final_report = template.format(
+                day=black + day_num[2].zfill(2),
+                barchart_max=red + bar.bar_max,
+                max_temp=black + str(bar.max_temp),
+                barchart_min=blue+bar.bar_min,
+                min_temp=black + str(bar.min_temp),
+            )
+            print(final_report)
