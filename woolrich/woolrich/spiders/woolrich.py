@@ -104,7 +104,6 @@ class WoolRich(CrawlSpider):
 
     def parse_product(self, response):
         item = WoolRichItem()
-        garments = {}
         item["skus"] = {}
         item["url_original"] = response.url
         item["url"] = self.product_url(response)
@@ -116,11 +115,12 @@ class WoolRich(CrawlSpider):
         item["care"] = self.product_care(response)
         item["category"] = self.product_category(response)
         item["currency"] = self.product_currency(response)
-        garments["requests"] = []
-        garments["requests"] += self.color_requests(response, item, garments)
-        return self.request_or_item(item, garments)
+        item["meta"] = {
+            'requests': self.color_requests(response, item),
+        }
+        return self.request_or_item(item)
 
-    def color_requests(self, response, item, garments):
+    def color_requests(self, response, item):
         color_requests = []
         product_id = response.xpath('.//span[@itemprop="productID"]/text()').extract_first()
         color_ids = response.xpath('.//ul[@class="colorlist"]//a//img/@colorid').extract()
@@ -131,8 +131,7 @@ class WoolRich(CrawlSpider):
                 'colorId': c_id,
                 'colorDisplayName': name,
             }
-            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
-                                         meta={"item": item, "garments": garments},
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
                                          dont_filter=True, callback=self.size_requests)
             color_requests.append(request)
         return color_requests
@@ -140,21 +139,19 @@ class WoolRich(CrawlSpider):
     def size_requests(self, response):
         size_requests = []
         item = response.meta["item"]
-        garments = response.meta["garments"]
         form_data = dict(parse_qsl(response.request.body.decode()))
         sizes = response.xpath('.//ul[@class="sizelist"]//a[@stocklevel!="0"]/@title').extract()
         sku_ids = response.xpath('.//ul[@class="sizelist"]//a[@stocklevel!="0"]/@id').extract()
         for size, s_id in zip(sizes, sku_ids):
             form_data["selectedSize"] = size
             form_data["skuId"] = s_id
-            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
-                                         meta={"item": item, 'garments': garments},
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
                                          dont_filter=True, callback=self.parse_size)
             size_requests.append(request)
-        garments["requests"] += size_requests
-        return self.request_or_item(item, garments)
+        item["meta"]["requests"] += size_requests
+        return self.request_or_item(item)
 
-    def fit_requests(self, response, item, form_data, garments):
+    def fit_requests(self, response, item, form_data):
         fit_requests = []
         is_fit_exist = response.css('.dimensionslist').extract()
         if is_fit_exist:
@@ -163,30 +160,27 @@ class WoolRich(CrawlSpider):
             for fit, s_id in zip(available_fits, sku_ids):
                 form_data["skuId"] = s_id
                 form_data["selectedDimension"] = fit
-                request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
-                                             meta={"item": item, 'garments': garments},
+                request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
                                              dont_filter=True, callback=self.parse_fitting)
                 fit_requests.append(request)
         return fit_requests
 
     def parse_size(self, response):
-        garments = response.meta["garments"]
         form_data = dict(parse_qsl(response.request.body.decode()))
         item = response.meta["item"]
-        if self.fit_requests(response, item, form_data, garments):
-            garments["requests"] += self.fit_requests(response, item, form_data, garments)
-            return self.request_or_item(item, garments)
+        if self.fit_requests(response, item, form_data):
+            item["meta"]["requests"] += self.fit_requests(response, item, form_data)
+            return self.request_or_item(item)
         item["skus"].update(self.size_skus(response))
-        return self.request_or_item(item, garments)
+        return self.request_or_item(item)
 
     def parse_fitting(self, response):
-        garments = response.meta["garments"]
         item = response.meta["item"]
         item["skus"].update(self.fit_skus(response))
-        return self.request_or_item(item, garments)
+        return self.request_or_item(item)
 
-    def request_or_item(self, item, garments):
-        if garments["requests"]:
-            return garments["requests"].pop()
-        else:
-            return item
+    def request_or_item(self, item):
+        if item["meta"]["requests"]:
+            return item["meta"]["requests"].pop()
+        del item["meta"]
+        return item
