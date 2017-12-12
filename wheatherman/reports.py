@@ -24,7 +24,7 @@ class Reports:
                                   weather.maximum_humidity is not None]
 
         maximum_temperature_object = max(maximum_termperatures, key=lambda x: x.maximum_temperature)
-        minimum_temperature_object = max(minimum_termperatures, key=lambda x: x.minimum_temperature)
+        minimum_temperature_object = min(minimum_termperatures, key=lambda x: x.minimum_temperature)
         maximum_humidity_object = max(humidity_termperatures, key=lambda x: x.maximum_humidity)
         self.maximum_temperature = maximum_temperature_object.maximum_temperature
         self.maximum_temperature_date = maximum_temperature_object.tempetaure_date
