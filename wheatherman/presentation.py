@@ -48,11 +48,33 @@ class Presentation:
         for bar in report.barchart:
             my_date = str(bar.chart_date)
             day_num = my_date.split('-')
+            bar_maximum = '+' * bar.max_temp
+            bar_minimum = '+' * bar.min_temp
             final_report = template.format(
                 day=black + day_num[2].zfill(2),
-                barchart_max=red + bar.bar_max,
+                barchart_max=red + bar_maximum,
                 max_temp=black + str(bar.max_temp),
-                barchart_min=blue+bar.bar_min,
+                barchart_min=blue+bar_minimum,
+                min_temp=black + str(bar.min_temp),
+            )
+            print(final_report)
+
+    @staticmethod
+    def barchart_bonus(report):
+        red = '\033[31m'
+        blue = '\033[34m'
+        black = '\033[30m'
+        template = "{day} {barchart_min}{barchart_max} {min_temp}C-{max_temp}C\n"
+        for bar in report.barchart:
+            my_date = str(bar.chart_date)
+            day_num = my_date.split('-')
+            bar_maximum = '+' * bar.max_temp
+            bar_minimum = '+' * bar.min_temp
+            final_report = template.format(
+                day=black + day_num[2].zfill(2),
+                barchart_max=red + bar_maximum,
+                max_temp=black + str(bar.max_temp),
+                barchart_min=blue+bar_minimum,
                 min_temp=black + str(bar.min_temp),
             )
             print(final_report)

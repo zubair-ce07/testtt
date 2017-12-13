@@ -1,7 +1,6 @@
 import csv
 import glob
-
-from wheatherman.forcast import Forecast
+from wheatherman.forcast import Wheather
 
 
 class DataReader:
@@ -38,6 +37,8 @@ class DataReader:
             maximum_humidity = int(row['Max Humidity'])
         if row[' Mean Humidity']:
             average_humidity = int(row[' Mean Humidity'])
-        daily_weather = Forecast(
-            row['PKT'], maximum_temperature, minimum_temperature, maximum_humidity, average_humidity)
+
+        daily_weather = Wheather(tempetaure_date=row['PKT'], maximum_temperature=maximum_temperature,
+                                 minimum_temperature=minimum_temperature, maximum_humidity=maximum_humidity,
+                                 average_humidity=average_humidity)
         return daily_weather
