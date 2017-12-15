@@ -32,15 +32,15 @@ class WeatherReport:
 
             if self.output_type == self.type_specifier["year"]:
                 weather_date = self.getDate(self.calculated_weather_values[WeatherReport.MAX_TEMPERATURE_DATE])
-                print("\nHighest: %sC on %s" % (self.calculated_weather_values[WeatherReport.MAX_TEMPERATURE],
+                print("\nHighest: {}C on {}".format(self.calculated_weather_values[WeatherReport.MAX_TEMPERATURE],
                                                 weather_date.strftime('%B %Y')))
 
                 weather_date = self.getDate(self.calculated_weather_values[WeatherReport.MIN_TEMPERATURE_DATE])
-                print("Lowest: %sC on %s" % (self.calculated_weather_values[WeatherReport.MIN_TEMPERATURE],
+                print("Lowest: {}C on {}".format(self.calculated_weather_values[WeatherReport.MIN_TEMPERATURE],
                                              weather_date.strftime('%B %Y')))
 
                 weather_date = self.getDate(self.calculated_weather_values[WeatherReport.MAX_HUMIDITY_DATE])
-                print("Humidity: %s%% on %s" % (self.calculated_weather_values[WeatherReport.MAX_HUMIDITY],
+                print("Humidity: {}% on {}".format(self.calculated_weather_values[WeatherReport.MAX_HUMIDITY],
                                                 weather_date.strftime('%B %Y')))
             elif self.output_type == self.type_specifier["chart"]:
 
@@ -50,12 +50,12 @@ class WeatherReport:
                     count = 0
                     print("\n")
                     for value in min_temp_list:
-                        print("%02d" % (count + 1), end=" ")
+                        print("{:02d}".format(count + 1), end=" ")
                         print("\033[0;36;2m+" * value, end="")
                         print("\033[0;31;2m+" * max_temp_list[count], end="")
                         print("\033[0;30;2m {}C - {}C".format(value, max_temp_list[count]))
                         count += 1
             else:
-                print("\nHighest Average: %dC" % self.calculated_weather_values[WeatherReport.AVERAGE_MAX_TEMPERATURE])
-                print("Lowest Average: %dC" % self.calculated_weather_values[WeatherReport.AVERAGE_MIN_TEMPERATURE])
-                print("Average Mean Humidity: %d%%" % self.calculated_weather_values[WeatherReport.AVERAGE_MEAN_HUMIDITY])
+                print("\nHighest Average: {}C".format(int(self.calculated_weather_values[WeatherReport.AVERAGE_MAX_TEMPERATURE])))
+                print("Lowest Average: {}C".format(int(self.calculated_weather_values[WeatherReport.AVERAGE_MIN_TEMPERATURE])))
+                print("Average Mean Humidity: {}%".format(int(self.calculated_weather_values[WeatherReport.AVERAGE_MEAN_HUMIDITY])))

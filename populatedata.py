@@ -12,11 +12,10 @@ class PopulateWeatherData:
 
     # Populates the list of weather dictionaries from a specified path.
     def populate(self):
-
-        for file in glob.glob('%s/*_%s_%s.txt' % (self.directory_path, self.year, self.month)):
+        for file in glob.glob('{}/*{}*{}.txt'.format(self.directory_path, self.year, self.month)):
             with open(file) as csvfile:
                 weather_details = csv.DictReader(csvfile)
-                dict = {}
+
                 for row in weather_details:
                     dict = self.verify_data(row)
                     self.list_of_weather_details.append(dict)
@@ -29,4 +28,3 @@ class PopulateWeatherData:
                 weather_dictionary[item] = None
 
         return weather_dictionary
-

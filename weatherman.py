@@ -124,11 +124,10 @@ class ComputeWeather:
 
     def __init__(self, args):
         self.args = args
-        self.directory_path = "../..{}".format(self.args.directory_path)
         self.type_specifier = {"year": "-e", "month": "-a", "chart": "-c"}
 
     # Populates weather data from files and calculates temperatures according to specified type
-    def calculate_and_print(self, directory_path, type, year = "*", month = "*"):
+    def calculate_and_print(self, directory_path, type, year, month = "*"):
 
         populate_data = PopulateWeatherData(directory_path, year, month)
         populate_data.populate()
@@ -143,7 +142,7 @@ class ComputeWeather:
     def compute(self):
         if self.args.year:
             year = self.args.year
-            self.calculate_and_print(self.directory_path, self.type_specifier["year"], year)
+            self.calculate_and_print(self.args.directory_path, self.type_specifier["year"], year)
 
         if self.args.month:
             input = str(self.args.month).split('/')
@@ -155,7 +154,7 @@ class ComputeWeather:
                     raise ValueError
                 else:
                     month = calendar.month_abbr[int(input[1])]
-                    self.calculate_and_print(self.directory_path, self.type_specifier["month"], year, month)
+                    self.calculate_and_print(self.args.directory_path, self.type_specifier["month"], year, month)
             except ValueError:
                 print("{} is not a month".format(input[1]))
 
@@ -169,7 +168,7 @@ class ComputeWeather:
                     raise ValueError
                 else:
                     month = calendar.month_abbr[int(input[1])]
-                    self.calculate_and_print(self.directory_path, self.type_specifier["chart"], year, month)
+                    self.calculate_and_print(self.args.directory_path, self.type_specifier["chart"], year, month)
 
             except ValueError:
                 print("{} is not a month".format(input[1]))
@@ -178,6 +177,7 @@ class ComputeWeather:
 def main():
 
     parser = argparse.ArgumentParser()
+
     parser.add_argument("directory_path", type=str, help="Directory path of weather files")
     parser.add_argument("-e", "--year", help="input year value only")
     parser.add_argument("-a", "--month", help="input year and month value only")
