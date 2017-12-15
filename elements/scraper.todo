@@ -1,0 +1,15 @@
+ ☐ Write a python application that recursively crawls a website 1) concurrently and 2) in parallel. 
+
+ ☐ The user should be able to specify the number of concurrent requests that can be made. The user should also be able to specify a download_delay that each worked will respect when making the requests. Also provide the ability to specify the maximum number of urls to visit.
+
+ ☐ You can use parsel for extracting urls from html. For simplicity just follow anchor tags <a>.
+
+ ☐ In the end report the total number of requests made, total bytes downloaded and the average size of a page.​
+
+ ☐ Use python's async/await to code the concurrent spider. Use concurrent.futures and its process pool executor for the parallel spider. See requests for doing all http stuff.
+ ☐ ​Before writing​ the code think about how to approach the problem and develop an algorithm.
+
+ name: Petersfield
+ price: "$2,740 - $4,800/mo"
+ address: 301 E 21st St, Manhattan, NY 10010 (Gramercy Park) 
+ description: Studio - 2 Bedrooms 1 full Bathroom 99 days on Trulia 
