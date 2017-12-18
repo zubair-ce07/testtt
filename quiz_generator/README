@@ -1,0 +1,7 @@
+The main function of the program is to generate a quiz
+with random questions read from a file
+and then display the result after user has answered them
+
+how to run:
+
+python3 source.py
