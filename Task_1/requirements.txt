@@ -1,0 +1,7 @@
+Django==1.11.4
+django-countries==4.6.1
+django-filter==1.0.4
+djangorestframework==3.6.3
+djangorestframework-jwt==1.11.0
+Pillow==4.2.1
+psycopg2==2.7.3
