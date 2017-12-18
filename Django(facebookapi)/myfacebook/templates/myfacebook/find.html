@@ -1,0 +1,20 @@
+{% extends 'myfacebook/base.html' %}
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% bootstrap_messages %}
+{% block content %}
+    <div style="width: 60%; margin-left: 20%" class="list-group">
+        {% for user in users %}
+            <a class="list-group-item" href='{% url 'myfacebook:detail' user.id %}'>
+            <span class="badge">
+                {{ user.first_name }}
+                {{ user.last_name }}
+            </span>
+                <h3 class="list-group-item-heading">{{ user.username }}</h3>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}
