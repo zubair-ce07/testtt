@@ -1,4 +1,6 @@
 import argparse
+import calendar
+import os
 
 from termcolor import colored
 
@@ -12,7 +14,7 @@ class WeatherReports:
         self.results_dict = {}
 
     @staticmethod
-    def extreme_weather(file_dir, year, month=0):
+    def extreme_weather(file_dir, year, month=None):
         """print extreme weather report"""
         weather = ComputeResult()
         weather.compute_extreme_weather(file_dir, year, month)
@@ -45,7 +47,7 @@ class WeatherReports:
         print('Avg Mean Humidity : {0}%'.format(weather.results_dict['mean_humidity']))
 
     @staticmethod
-    def weather_charts(file_dir, year, month=0):
+    def weather_charts(file_dir, year, month=None):
         """print weather charts """
         csv_parser = CsvParser(file_dir, year, month)
 
@@ -62,19 +64,29 @@ class WeatherReports:
                   )
 
     @staticmethod
-    def weather_charts_merged(file_dir, year, month=0):
+    def weather_charts_merged(file_dir, year, month=None):
         """BONUS TASK: print weather charts on same line"""
         csv_parser = CsvParser(file_dir, year, month)
 
         for data_row in csv_parser.data_set:
             current_date = data_row.date.strftime('%d')
-            red_chart = colored('+' * data_row.max_temp, 'red')
-            blue_chart = colored('+' * data_row.min_temp, 'blue')
+            red_chart = colored('+' * data_row.max_temp, 'blue')
+            blue_chart = colored('+' * data_row.min_temp, 'red')
             charts = blue_chart + red_chart
             print(current_date,
                   charts,
                   '{0}C - {1}C'.format(data_row.max_temp, data_row.min_temp)
                   )
+
+
+def validate_date(date_str):
+    year, month = date_str('/')
+    year = int(year)
+    if month in range(1, len(calendar.month_name)):
+        month = calendar.month_abbr[int(month)]
+    else:
+        raise ValueError('Month number not valid')
+    return [year, month]
 
 
 def main():
@@ -99,19 +111,23 @@ def main():
                         help='Directory to files, use relative path like dir/to/files')
 
     args = parser.parse_args()
+    if os.path.isdir(args.files_dir) is not None:
+        raise FileNotFoundError('The directory doesn\'t exist')
+
     if args.extreme:
-        WeatherReports.extreme_weather(args.file_dir, args.extreme)
+        year = int(args.extreme)
+        WeatherReports.extreme_weather(args.file_dir, year)
 
     if args.average:
-        year, month = args.average.split('/')
+        year, month = validate_date(args.average)
         WeatherReports.average_weather(args.file_dir, year, month)
 
     if args.charts:
-        year, month = args.charts.split('/')
+        year, month = validate_date(args.charts)
         WeatherReports.weather_charts(args.file_dir, year, month)
 
     if args.bonus:
-        year, month = args.bonus.split('/')
+        year, month = validate_date(args.bonus)
         WeatherReports.weather_charts_merged(args.file_dir, year, month)
 
 
