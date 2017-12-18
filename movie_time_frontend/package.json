@@ -1,0 +1,52 @@
+{
+  "name": "movie_time",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run build",
+    "build": "webpack -d && webpack-dev-server --content-base src/ --inline --hot",
+    "build:prod": "webpack -p"
+  },
+  "author": "Hamza Pervez",
+  "license": "ISC",
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-1": "^6.24.1",
+    "loader": "^2.1.1",
+    "webpack": "^3.5.6",
+    "webpack-dev-server": "^2.7.1"
+  },
+  "dependencies": {
+    "axios": "^0.16.2",
+    "bootstrap": "^4.0.0-beta",
+    "css-loader": "^0.28.7",
+    "file-loader": "^0.11.2",
+    "jquery": "^3.2.1",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1",
+    "popper.js": "^1.12.5",
+    "react": "^15.6.1",
+    "react-addons-css-transition-group": "^15.6.0",
+    "react-addons-transition-group": "^15.6.0",
+    "react-day-picker": "^6.1.0",
+    "react-dom": "^15.6.1",
+    "react-redux": "^5.0.6",
+    "react-router-dom": "^4.2.2",
+    "react-waypoint": "^7.1.0",
+    "react-widgets": "^4.0.0",
+    "react-widgets-moment": "^4.0.0",
+    "reactstrap": "^4.8.0",
+    "redux": "^3.7.2",
+    "redux-form": "^7.0.4",
+    "redux-promise": "^0.5.3",
+    "redux-thunk": "^2.2.0",
+    "style-loader": "^0.18.2",
+    "url-loader": "^0.5.9"
+  }
+}
