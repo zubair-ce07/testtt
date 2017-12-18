@@ -1,0 +1,27 @@
+<div>
+    Select a topic:
+    <select ng-model="type">
+        <option value="">
+        <option value="A">A
+        <option value="C">C
+        <option value="E">E
+    </select>
+    Select year:
+    <input type="number" ng-model="year">
+    Select month:
+    <input type="number" ng-model="month">
+</div>
+
+
+<button ng-click="move()">Fetch Report</button>
+
+<div ng-if="reportAvailable" style="margin-top: 10px; max-width: 1000px; max-height: 700px;">
+
+    <canvas id="bar" class="chart chart-bar"
+        chart-colors="colors"
+        chart-data="data"
+        chart-click="onClick"
+        chart-hover="onHover"
+        chart-labels="labels" chart-series="series">
+    </canvas>
+</div>

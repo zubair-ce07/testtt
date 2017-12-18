@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="no-js">
+
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'forecast/css/font-awesome.min.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'forecast/css/angular-snap.min.css' %}" />
+
+    <link rel="stylesheet" type="text/css" href="{% static 'forecast/theme/css/main.css' %}" />
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+
+    <script type="text/javascript" src="{% static 'forecast/lib/es5-shim.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/json3.min.js' %}" ></script>
+
+
+    <script type="text/javascript" src="{% static 'forecast/lib/jquery-3.2.1.min.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/angular.min.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/angular-mocks.min.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/angular-ui-router.min.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/angular-route.min.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/angular-animate.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/snap.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/angular-snap.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/chart.min.js' %}" ></script>
+    <script type="text/javascript" src="{% static 'forecast/lib/angular-chart.min.js' %}" ></script>
+
+    <script type="text/javascript" src="{% static 'forecast/js/app.js' %}" ></script>
+
+</head>
+<body ng-app="app">
+
+    <div class="">
+      <div ui-view ></div>
+    </div>
+
+</body>
+</html>
