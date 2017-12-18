@@ -1,0 +1,40 @@
+{% extends 'users/base_layout.html' %}
+{% block content %}
+    <h3>User Detail: </h3>
+    <ul class="errors" id="error_list">
+
+    </ul>
+    <p id="success"></p>
+    <div id="details">
+        <img id="photo" src="" height="250px" width="300px">
+        <form method="post">
+            <label>
+                First Name:
+                <input id="f_name" type="text">
+            </label>
+            <label>
+                Last Name:
+                <input id="l_name" type="text">
+            </label><br/>
+            <label>
+                Date Of Birth:
+                <input id="dob" type="date">
+            </label><br/>
+            <label>
+                Email:
+                <input id="email" type="email" required>
+            </label>
+
+            {% csrf_token %}
+            <br/>
+            <input id="update_user" type="button" value="Update user">
+            <input id="delete" type="button" value="Delete User">
+        </form>
+    </div>
+{% endblock %}
+
+{% load staticfiles %}
+{% block scripts %}
+    <script src="{% static 'users/js/user.js' %}"></script>
+    <script src="{% static 'users/js/update_user.js' %}"></script>
+{% endblock %}

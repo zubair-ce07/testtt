@@ -62,13 +62,3 @@ conf.py
 # media files
 media/
 
-# npm genrated files
-node_modules/
-dist/
-package-lock.json
-unavailable_ids.txt
-fonts/
-bootstrap.css
-bootstrap.min.css
-font-awesome.min.css
-font-awesome.css
