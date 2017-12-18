@@ -8,7 +8,7 @@ from parsel import Selector
 
 
 class ParallelSpider:
-    def __init__(self, base_url, max_urls=50, concurrent_req=20, delay=0):
+    def __init__(self, base_url, max_urls, concurrent_req, delay):
         self.base_url = base_url
         self.max_urls = max_urls
         self.concurrent_req = concurrent_req
@@ -22,8 +22,6 @@ class ParallelSpider:
         sel = Selector(text=text)
         links = sel.css('a[href^=http]').xpath('@href').extract()
         del links[self.max_urls:]
-        # print(len(links))
-        # print(links)
         return links
 
     async def spider_worker(self, loop, links):
@@ -33,7 +31,7 @@ class ParallelSpider:
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.concurrent_req) as executor:
             for i in range(self.concurrent_req):
-                futures.append(loop.run_in_executor(None, requests.get, links.pop(0)))
+                futures.append(loop.run_in_executor(executor, requests.get, links.pop(0)))
 
             for response in await asyncio.gather(*futures):
                 await asyncio.sleep(self.delay)
@@ -79,11 +77,15 @@ def main():
                         help='Base url to crawl')
 
     args = parser.parse_args()
-    max_urls = int(args.maxurls) if args.maxurls else 50
-    con_req = int(args.conreq) if args.conreq else 20
-    delay = int(args.delay) if args.delay else 0
-    base_url = args.base_url if args.base_url \
-        else r'https://en.wikipedia.org/wiki/Python_(programming_language)'
+    default_max_urls = 50
+    default_con_req = 20
+    default_delay = 0
+    default_base_url = r'https://en.wikipedia.org/wiki/Python_(programming_language)'
+
+    max_urls = int(args.maxurls) if args.maxurls else default_max_urls
+    con_req = int(args.conreq) if args.conreq else default_con_req
+    delay = int(args.delay) if args.delay else default_delay
+    base_url = args.base_url if args.base_url else default_base_url
 
     spider = ParallelSpider(base_url, max_urls, con_req, delay)
     spider.run_spider()
@@ -91,5 +93,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
