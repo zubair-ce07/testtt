@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% load user_detail %}
+{% block title %}User's List{% endblock %}
+
+{% block content %}
+
+    <div align="right">
+        <form action="/user/logout">
+            <a href="{{ request.user.get_absolute_url }}">
+                {{ request.user|details|linebreaks}}
+            </a>
+            <input class="btn btn-default" name="logout" type="submit" id="logout" value="Log out">
+        </form>
+    </div>
+
+    <div align="center">
+        <h1> All Users </h1>
+            {% for user in myuser_list %}
+               <p>
+                   <a href="{{ user.get_url_for_authentication }}"> {{ user.get_full_name}}</a>
+               </p>
+                {% empty %}
+                <li>No User Registered</li>
+            {% endfor %}
+    </div>
+{% endblock %}
