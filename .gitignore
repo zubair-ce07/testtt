@@ -61,7 +61,3 @@ conf.py
 
 # media files
 media/
-
-# npm and webpack genrated files
-dist/
-node_modules/
