@@ -1,0 +1,91 @@
+body {
+    background: linear-gradient(
+            rgba(53, 104, 109, 0.15),
+            rgba(83, 134, 139, 0.15)
+    ) fixed,
+    url("../images/bg.jpeg") fixed;
+}
+
+a:link {
+    text-decoration: none;
+}
+
+.page-title {
+    z-index: 10;
+    padding: 60px 0 40px 0;
+    top: -35px;
+    text-align: center;
+    background-color: cadetblue;
+    color: white;
+    border-radius: 40px;
+    position: fixed;
+    width: 98%;
+}
+
+.movie-item {
+    background-color: white;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    padding: 10px 10px 10px 20px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.movie-item:hover {
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35), 0 10px 10px rgba(0, 0, 0, 0.32);
+
+}
+
+.top-element {
+    margin-top: 150px;
+}
+
+.movie-detail {
+    color: white;
+    width: 100%;
+    min-height: 500px;
+}
+
+.actor-detail {
+    color: white;
+    width: 80%;
+    margin-right: auto;
+    margin-left: auto;
+    max-height: 400px;
+    background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65));
+}
+
+.movie-meta {
+    padding-right: 40px;
+}
+
+.masonry {
+    margin-top: 30px;
+    column-count: 8;
+    column-gap: 1em;
+}
+
+.masonry-item {
+    padding: 20px 0;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+    background-color: #fff;
+    display: inline-block;
+    margin: 0 0 1em;
+    width: 100%;
+}
+
+.search-bar {
+    height: 50px;
+    text-align: center;
+    width: 100%;
+    border-radius: 15px;
+    border: 1px solid #555;
+    font-size: 25px;
+}
+
+.loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 45%;
+}

@@ -17,8 +17,11 @@ from django.conf.urls import url, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from reviews.views import ReviewViewSet
 
 urlpatterns = [
+    url(r'reviews/$', ReviewViewSet.as_view({'post': 'create'})),
+    url(r'reviews/(?P<movie_id>\d+)$', ReviewViewSet.as_view({'get': 'list'})),
     url(r'^admin/', admin.site.urls),
     url(r'^crawler/', include('url_crawler.urls')),
     url(r'^tz_detect/', include('tz_detect.urls')),
