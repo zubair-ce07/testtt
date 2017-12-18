@@ -1,0 +1,16 @@
+{% extends 'users/base_layout.html' %}
+{% block content %}
+    <h3>Users: </h3>
+    <ul class="errors" id="error_list">
+
+    </ul>
+    <input id="loader" type="button" value="Load Users">
+    <ul id="users" class="list">
+
+    </ul>
+{% endblock %}
+
+{% load staticfiles %}
+{% block scripts %}
+    <script src="{% static 'users/js/user_list.js' %}"></script>
+{% endblock %}

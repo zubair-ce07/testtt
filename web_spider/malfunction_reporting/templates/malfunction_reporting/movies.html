@@ -1,0 +1,9 @@
+{% extends 'url_crawler/base_layout.html' %}
+
+{% block title %}Movies{% endblock %}
+
+{% block content %}
+    {% for movie in movies %}
+        <p>{{ movie }}</p>
+    {% endfor %}
+{% endblock %}

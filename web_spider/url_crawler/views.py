@@ -62,7 +62,7 @@ class Login(views.View):
             user = authenticate(request, email=email, password=password)
             if user:
                 login(request, user)
-                response = redirect('index')
+                response = redirect('url_crawler:index')
             else:
                 context['error'] = 'Email/Password is incorrect'
         if not response:
@@ -86,7 +86,7 @@ class SignUp(views.View):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            response = redirect('index')
+            response = redirect('url_crawler:index')
         else:
             response = render(request, 'url_crawler/signup.html', {'form': form})
 
@@ -95,4 +95,4 @@ class SignUp(views.View):
 
 def logout_user(request):
     logout(request)
-    return redirect('login')
+    return redirect('url_crawler:login')

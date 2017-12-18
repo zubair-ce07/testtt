@@ -1,12 +1,21 @@
 .header, .footer{
     width: 100%;
     height: 20px;
-    background-color: darkslategrey;
-    color: white;
+    background-color: antiquewhite;
+    color: brown;
 }
 a:link, a:visited {
-    color: white;
+    color: brown;
 }
 .right{
     float: right;
+}
+a:link.list, a:visited.list{
+    color: blue;
+}
+.errors{
+    color: red;
+}
+#success{
+    color: green;
 }

@@ -1,0 +1,27 @@
+{% extends 'users/base_layout.html' %}
+{%  block content %}
+    <h3>Login: </h3>
+    <ul class="errors" id="error_list">
+
+    </ul>
+    <p id="success"></p>
+    <form method="post">
+        <label>
+            Email:
+            <input id="email" type="email" required>
+        </label><br/>
+         <label>
+            Password:
+            <input id="password" type="password" required>
+        </label>
+        {% csrf_token %}
+        <br/>
+        <input id="login" type="submit" value="Login">
+    </form>
+{% endblock %}
+
+{% load staticfiles %}
+{% block scripts %}
+    <script src="{% static 'users/js/login.js' %}"></script>
+    <script src="{% static 'users/js/user_login.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'url_crawler/base_layout.html' %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+    <h2>My Dashboard</h2>
+    <p>Total No. of Safety concerns in every month reported in this year.</p>
+    {% load tz %}
+    {% if not reports or reports.count == 0 %}
+        <p>No reports found.</p>
+    {% endif %}
+    {% for report in reports %}
+        <p><b>{{ report.month|localtime|date:'F' }} :</b> {{ report.count }}</p>
+    {% endfor %}
+    <h2>Count statuses of reports for every month: </h2>
+    {% if not statuses or statuses.count == 0 %}
+        <p>No reports found.</p>
+    {% endif %}
+    {% for status in statuses %}
+        <p>Status:
+            {% if status.task__status == 0 %}
+                Pending
+            {% elif  status.task__status == 1 %}
+                Started
+            {% elif  status.task__status == 2 %}
+                Completed
+            {% endif %}
+        - {{ status.month|localtime|date:'F' }} : {{ status.count }}</p>
+    {% endfor %}
+{% endblock %}
