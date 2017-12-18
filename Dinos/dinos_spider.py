@@ -17,22 +17,24 @@ class Mixin:
     start_urls = [
         'https://www.dinos.co.jp/c2/002003/',
         'https://www.dinos.co.jp/c2/002009/',
+        'https://www.dinos.co.jp/c3/002003009/1a1/',
         'https://www.dinos.co.jp/c3/002003011/1a1/',
         'https://www.dinos.co.jp/c3/002010003/1a1/',
-        'https://www.dinos.co.jp/c4/002010025005/1a2/',
-        'https://www.dinos.co.jp/c4/002010025009/1a2/',
-        'https://www.dinos.co.jp/c4/002010025010/1a2/',
-        'https://www.dinos.co.jp/c4/002010025011/1a2/',
-        'https://www.dinos.co.jp/c4/002010025018/1a2/',
+        'https://www.dinos.co.jp/c3/002003001/1a1/',
+        'https://www.dinos.co.jp/c3/002003024/1a1/',
         'https://www.dinos.co.jp/c3/002003005/1a1/',
         'https://www.dinos.co.jp/c3/002009016/1a1/',
+        'https://www.dinos.co.jp/c4/002003001017/1a2/',
         'https://www.dinos.co.jp/c4/002010025005/1a2/',
         'https://www.dinos.co.jp/c4/002010025009/1a2/',
         'https://www.dinos.co.jp/c4/002010025010/1a2/',
         'https://www.dinos.co.jp/c4/002010025011/1a2/',
         'https://www.dinos.co.jp/c4/002010025018/1a2/',
-        'https://www.dinos.co.jp/p/1367100493/?id=002010025009___1513545',
-        'https://www.dinos.co.jp/p/1367100492/?id=002010025009___1513544'
+        'https://www.dinos.co.jp/c4/002003024001/1a2/',
+        'https://www.dinos.co.jp/c4/002010025005/1a2/',
+        'https://www.dinos.co.jp/c4/002010025010/1a2/',
+        'https://www.dinos.co.jp/c4/002010025011/1a2/',
+        'https://www.dinos.co.jp/c4/002010025018/1a2/',
     ]
 
 
@@ -43,7 +45,7 @@ class DinosParseSpider(BaseParseSpider, Mixin):
                     '?GOODS_NO=&MOSHBG={request_id}&CLS1CD={colour}&CLS2CD={size}'
 
     colour_request_url = 'https://www.dinos.co.jp/defaultMall/sitemap/XHRGetGoodsCls2.jsp' \
-                        '?CATNO=900&MOSHBG={request_id}&CLS1CD={colour}'
+                         '?CATNO=900&MOSHBG={request_id}&CLS1CD={colour}'
 
     gender_map = [
         ('ガールズ', 'girls'),
@@ -55,6 +57,11 @@ class DinosParseSpider(BaseParseSpider, Mixin):
 
         ('002003011', 'women'),
         ('002010003', 'women'),
+        ('002003001', 'women'),
+        ('002003009', 'women'),
+        ('002003024', 'women'),
+        ('002003024001', 'women'),
+        ('002003001017', 'women'),
 
         ('002010025005', 'unisex-kids'),
         ('002010025009', 'unisex-kids'),
@@ -93,13 +100,27 @@ class DinosParseSpider(BaseParseSpider, Mixin):
         ('レッシグ', 'Laessig'),
         ('Laessig', 'Laessig'),
         ('マリ･クレール', 'Marie Claire'),
-        ('ワンピース', 'One Piece'),
         ('［JILLSTUART］', 'JILLSTUART'),
         ('JILLSTUART', 'JILLSTUART'),
-        ('［FILA/フィラ］', 'FILA Filler'),
+        ('［FILA/フィラ］', 'FILA'),
         ('FILA', 'FILA Filler'),
         ('MEEKAT/', 'MEEKAT'),
-        ('マリア・ケント社', 'MALHIA KENT')
+        ('マリア・ケント社', 'MALHIA KENT'),
+        ('JIMMY TAVERNITI/', 'JIMMY TAVERNITI'),
+        ('VICOLO TRIVELLI/', 'VICOLO TRIVELLI'),
+        ('la petite francaise', 'la petite francaise'),
+        ('RED CARD', 'RED CARD'),
+        ('YUMI', 'YUMI'),
+        ('Yumi', 'YUMI'),
+        ('A.L.I＆CORDURA®', 'A.L.I＆CORDURA®'),
+        ('NEOPRO', 'NEOPRO'),
+        ('Q&Q SmileSolar/', 'Q&Q SmileSolar'),
+        ('Q&Q', 'Q&Q'),
+        ('A.L.I GLAID', 'A.L.I GLAID'),
+        ('UCON ACROBATICS', 'UCON ACROBATICS'),
+        ('PAOLO PERINI/', 'PAOLO PERINI'),
+        ('ROBERTA NERI/', 'ROBERTA NERI'),
+        ('morgano/', 'morgano'),
     ]
 
     brand_re = re.compile('([［］/.])')
@@ -378,3 +399,4 @@ class DinosCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=pagination_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
     )
+
