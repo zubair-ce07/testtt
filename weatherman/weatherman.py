@@ -82,6 +82,7 @@ class WeatherReports:
 def validate_date(date_str):
     year, month = date_str('/')
     year = int(year)
+    month = int(month)
     if month in range(1, len(calendar.month_name)):
         month = calendar.month_abbr[int(month)]
     else:
