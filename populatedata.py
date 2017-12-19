@@ -10,21 +10,16 @@ class PopulateWeatherData:
         self.month = month
         self.list_of_weather_details = []
 
-    # Populates the list of weather dictionaries from a specified path.
     def populate(self):
         for file in glob.glob('{}/*{}*{}.txt'.format(self.directory_path, self.year, self.month)):
             with open(file) as csvfile:
                 weather_details = csv.DictReader(csvfile)
-
                 for row in weather_details:
-                    dict = self.verify_data(row)
-                    self.list_of_weather_details.append(dict)
+                    weather_record = self.verify_data(row)
+                    self.list_of_weather_details.append(weather_record)
 
-    # This methods add None value to key which has no value
-    def verify_data(self, weather_dictionary):
-
-        for item in weather_dictionary:
-            if not weather_dictionary[item]:
-                weather_dictionary[item] = None
-
-        return weather_dictionary
+    def verify_data(self, weather_records):
+        for weather_record in weather_records:
+            if not weather_records[weather_record]:
+                weather_records[weather_record] = None
+        return weather_records
