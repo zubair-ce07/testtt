@@ -16,14 +16,15 @@ class Post(models.Model):
     category = models.ForeignKey(Category)
 
     def post_likes(self):
-        post_likes = Like_post.objects.filter(post_id=self.id).values('post_id').annotate(count=Sum('vote'))
+        post_likes = self.likes.values('post_id').annotate(count=Sum('vote'))
         return post_likes.get()['count']
 
     def comment_likes(self):
-        comment_likes = Like_comment.objects.filter(comment__post_id=self.id).values('comment_id').annotate(count=Sum('vote'))
+        comments = self.comments.all()
         c_likes = {}
-        for comment in comment_likes:
-            c_likes[comment['comment_id']] = comment['count']
+        for comment in comments:
+            likes = comment.likes.values('comment_id').annotate(count=Sum('vote'))
+            c_likes[likes[0]['comment_id']] = likes[0]['count']
 
         return c_likes
 
@@ -35,7 +36,7 @@ class Comment(models.Model):
     user = models.ForeignKey(User)
 
 
-class Like_comment(models.Model):
+class LikeComment(models.Model):
     vote_choice = (
         (1, 'up_vote'),
         (-1, 'down_vote'),
@@ -43,16 +44,16 @@ class Like_comment(models.Model):
 
     vote = models.IntegerField(vote_choice, default=-1)
     user = models.ForeignKey(User)
-    comment = models.ForeignKey(Comment)
+    comment = models.ForeignKey(Comment, related_name='likes')
     created_at = models.DateTimeField()
 
 
-class Like_post(models.Model):
+class LikePost(models.Model):
     vote_choice = (
         (1, 'up_vote'),
         (-1, 'down_vote'),
     )
     vote = models.IntegerField(vote_choice, default=-1)
     user = models.ForeignKey(User)
-    post = models.ForeignKey(Post)
+    post = models.ForeignKey(Post, related_name='likes')
     created_at = models.DateTimeField()

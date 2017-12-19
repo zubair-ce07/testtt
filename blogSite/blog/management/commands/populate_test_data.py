@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from blog.models import User, Post, Category, Comment, Like_comment, Like_post
+from blog.models import User, Post, Category, Comment, LikeComment, LikePost
 from datetime import datetime
 
 class Command(BaseCommand):
@@ -7,55 +7,56 @@ class Command(BaseCommand):
     help = 'our help string comes here'
 
     def _populate_data(self):
-        a_record = User(id=2, username="test_user_1", password='abc123456')
+        md = User(username="Md", password='abc123456')
+        md.save()
+
+        hamza = User(username="hamza", password='abc123456')
+        hamza.save()
+
+        politics = Category(category='politics')
+        politics.save()
+
+        sports = Category(category='sports')
+        sports.save()
+
+        politics_post = Post(title="Pakistani_politics", modified_at=datetime.now(),
+                             body='corrupt', author=hamza, category=politics)
+        politics_post.save()
+
+        sports_post = Post(title="e-sports", modified_at=datetime.now(), body='dota', author=md, category=sports)
+        sports_post.save()
+
+        comment_1 = Comment(post=sports_post, body='comment_1', user=md, created_at=datetime.now())
+        comment_1.save()
+
+        comment_2 = Comment(post=sports_post, body='comment_2', user=md, created_at=datetime.now())
+        comment_2.save()
+
+        comment_3 = Comment(post=politics_post, body='comment_3', user=md, created_at=datetime.now())
+        comment_3.save()
+
+        a_record = LikeComment(comment=comment_1, user=md, vote=1, created_at=datetime.now())
         a_record.save()
 
-        a_record = User(id=3, username="test_user_2", password='abc123456')
+        a_record = LikeComment(comment=comment_1, user=md, vote=1, created_at=datetime.now())
         a_record.save()
 
-        a_record = Category(id=1, category='politics')
+        a_record = LikeComment(comment=comment_1, user=hamza, vote=-1, created_at=datetime.now())
         a_record.save()
 
-        a_record = Category(id=2, category='sports')
+        a_record = LikeComment(comment=comment_2, user=md, vote=1, created_at=datetime.now())
         a_record.save()
 
-        a_record = Post(id=1, title="post_1", modified_at=datetime.now(), body='curvy', author_id=1, category_id=1)
+        a_record = LikeComment(comment=comment_3, user=hamza, vote=-1, created_at=datetime.now())
         a_record.save()
 
-        a_record = Post(id=2, title="post_2", modified_at=datetime.now(), body='body_2', author_id=2, category_id=2)
+        a_record = LikePost(post=politics_post, user=md, vote=1, created_at=datetime.now())
         a_record.save()
 
-        a_record = Comment(id=1, post_id=1, body='comment_1', user_id=3, created_at=datetime.now())
+        a_record = LikePost(post=politics_post, user=hamza, vote=1, created_at=datetime.now())
         a_record.save()
 
-        a_record = Comment(id=2, post_id=1, body='comment_2', user_id=3, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Comment(id=3, post_id=2, body='comment_3', user_id=3, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_comment(comment_id=1, user_id=3, vote=1, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_comment(comment_id=1, user_id=3, vote=1, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_comment(comment_id=1, user_id=3, vote=-1, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_comment(comment_id=2, user_id=3, vote=1, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_comment(comment_id=3, user_id=3, vote=-1, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_post(post_id=1, user_id=3, vote=1, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_post(post_id=1, user_id=3, vote=1, created_at=datetime.now())
-        a_record.save()
-
-        a_record = Like_post(post_id=2, user_id=3, vote=-1, created_at=datetime.now())
+        a_record = LikePost(post=sports_post, user=md, vote=-1, created_at=datetime.now())
         a_record.save()
 
     def handle(self, *args, **options):

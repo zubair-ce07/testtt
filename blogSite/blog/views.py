@@ -17,17 +17,17 @@ class list_posts(ListView):
     model = models.Post
     context_object_name = 'posts'
     queryset = models.Post.objects.all()
-    template_name = 'blog/listDisplay.html'
+    template_name = 'blog/list_display.html'
 
 
-class view_post(LoginRequiredMixin, DetailView):
+class ViewPost(LoginRequiredMixin, DetailView):
 
     model = models.Post
     template_name = 'blog/post.html'
     context_object_name = 'post'
 
     def get_context_data(self, **kwargs):
-        context = super(view_post, self).get_context_data(**kwargs)
+        context = super(ViewPost, self).get_context_data(**kwargs)
         post = context['post']
         comment_body = post.comments.all()
         comment_likes = [likes for _, likes in post.comment_likes().items()]
@@ -44,12 +44,12 @@ class view_post(LoginRequiredMixin, DetailView):
         if request.POST.get('vote'):
             vote = request.POST.get('vote')
             vote = vote_choice[vote]
-            models.Like_post.objects.create(created_at=datetime.datetime.now(), post_id=post_id, user_id=1, vote=vote)
+            models.LikePost.objects.create(created_at=datetime.datetime.now(), post_id=post_id, user_id=1, vote=vote)
 
         else:
             vote = request.POST.get('commentvote')
             comment_id = request.POST.get('comment_id')
             vote = vote_choice[vote]
-            models.Like_comment.objects.create(created_at=datetime.datetime.now(), comment_id=comment_id, user_id=1, vote=vote)
+            models.LikeComment.objects.create(created_at=datetime.datetime.now(), comment_id=comment_id, user_id=1, vote=vote)
 
         return redirect('/blog/post/id/{}/'.format(post_id))
