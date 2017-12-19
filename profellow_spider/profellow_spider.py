@@ -49,8 +49,7 @@ class ProFellowSpider(scrapy.Spider):
         fellowship.add_value('crawled_at', time_now)
         fellowship.add_xpath('deadline', '//span[@class="_start"]/text()')
         description = "".join(response.xpath('//div[@class="entry-content"]'
-                                             '//text()').extract()).lstrip()\
-            .rstrip()
+                                             '//text()').extract()).strip()
         fellowship.add_value('description', description)
         disciplines = response.xpath('//div[@id="fellowship-discipline"]'
                                      '/text()[2]').extract_first()\
