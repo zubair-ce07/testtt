@@ -3,6 +3,7 @@ from threading import Lock
 
 
 class Scheduler:
+
     def __init__(self, spider, max_request_count, executor=None):
         self.executor = executor
         self.spider = spider

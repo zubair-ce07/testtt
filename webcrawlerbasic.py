@@ -5,8 +5,10 @@ from spider import Spider
 
 
 class WebCrawlerBasic:
+
     def __init__(self, download_delay, max_request_count, concurrent_request_count):
-        self.executor = futures.ThreadPoolExecutor(max_workers=concurrent_request_count)
+        self.executor = futures.ThreadPoolExecutor(
+            max_workers=concurrent_request_count)
         self.spider = Spider(download_delay)
         self.max_request_count = max_request_count
         self.request_count = 0
@@ -22,6 +24,3 @@ class WebCrawlerBasic:
             url = self.spider.crawlable_url.get()
             self.spider.crawl(url)
             self.request_count += 1
-
-
-

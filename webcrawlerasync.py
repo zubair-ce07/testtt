@@ -4,7 +4,8 @@ import time
 
 
 class WebCrawlerAsync:
-    def __init__(self, download_delay, max_request_count,max_concurrent_request):
+
+    def __init__(self, download_delay, max_request_count, max_concurrent_request):
         self.spider = Spider(download_delay)
         self.spider.last_request_time = time.time()
         self.scheduler = Scheduler(self.spider, max_request_count)
