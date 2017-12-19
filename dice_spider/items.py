@@ -1,4 +1,7 @@
 import scrapy
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import Compose, Join, TakeFirst
+
 
 class Job(scrapy.Item):
     categories = scrapy.Field()
@@ -14,3 +17,12 @@ class Job(scrapy.Item):
     salary = scrapy.Field()
     title = scrapy.Field()
     url = scrapy.Field()
+
+
+class JobLoader(ItemLoader):
+    default_item_class = Job
+    default_output_processor = TakeFirst()
+    categories_out = Compose()
+    description_out = Join()
+    job_types_out = Compose()
+    logo_urls_out = Compose()
