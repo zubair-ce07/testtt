@@ -1,10 +1,12 @@
 import argparse
 from parserfactory import ParserFactory
 import time
+import asyncio
+
 
 class Scraper:
     @staticmethod
-    def main():
+    async def main():
         arg_parser = argparse.ArgumentParser(description='Crawl Web')
         arg_parser.add_argument("type", help="Parser Type")
         arg_parser.add_argument('-d', metavar='N', nargs='+', type=int,
@@ -27,14 +29,15 @@ class Scraper:
         crawler = ParserFactory.get_parser(arg_list.type, download_delay, max_request, concurrent_request_count)
 
         start = time.time()
-        crawler.crawl("https://www.trulia.com/for_rent/New_York,NY")
+        await crawler.crawl("https://www.trulia.com/for_rent/New_York,NY")
         end = time.time()
 
         print("Total Time Taken = " + str(end - start))
-        print("Total Bytes Downloaded = " + str(crawler.total_bytes_downloaded))
-        print("Total Request = " + str(crawler.request_count))
-        print("Average Size of a Page = " + str(crawler.total_bytes_downloaded / crawler.request_count))
+        print("Total Bytes Downloaded = " + str(crawler.bytes_downloaded()))
+        print("Total Request = " + str(crawler.request_count()))
+        print("Average Size of a Page = " + str(crawler.bytes_downloaded() / crawler.request_count()))
 
 
 if __name__ == "__main__":
-    Scraper.main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(Scraper.main())
