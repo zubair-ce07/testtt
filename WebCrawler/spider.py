@@ -1,4 +1,6 @@
+import requests
 from linkfinder import LinkFinder
+from lxml import html
 
 
 class Spider:
@@ -17,10 +19,24 @@ class Spider:
         Spider.add_links_to_queue(Spider.gather_links(page_url))
 
     @staticmethod
-    def gather_links(page_url):
+    def gather_links(url):
+        source = Spider.source_code(url)
         finder = LinkFinder()
-        finder.findlinks(page_url)
-        return finder.page_links()
+        finder.findlinks(source)
+        return finder.links
+
+    @staticmethod
+    def gather_links_category(url):
+        source = Spider.source_code(url)
+        finder = LinkFinder()
+        finder.find_links_category(source)
+        return finder.links
+
+    @staticmethod
+    def source_code(url):
+        source_code = requests.get(url)
+        source_element = html.fromstring(source_code.content)
+        return source_element
 
     @staticmethod
     def add_links_to_queue(links):
@@ -33,9 +49,6 @@ class Spider:
     def crawl_category(thread_name, url):
         if url not in Spider.crawled:
             print(thread_name + ' now crawling ' + url)
-            finder = LinkFinder()
-            finder.find_links_category(url, Spider.queue)
-            Spider.add_links_to_queue(finder.page_links())
+            Spider.add_links_to_queue(Spider.gather_links_category(url))
             Spider.queue.remove(url)
             Spider.crawled.add(url)
-            Spider.products += finder.products
