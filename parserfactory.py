@@ -10,8 +10,6 @@ class ParserFactory:
             "async": WebCrawlerAsync,
             "concurrent": WebCrawlerConcurrent,
             "basic": WebCrawlerBasic,
-        }.get(parser_type)
-        if not class_alias:
-            class_alias = WebCrawlerBasic
+        }.get(parser_type, WebCrawlerBasic)
 
         return class_alias(download_delay, max_request, concurrent_request_count)

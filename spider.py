@@ -61,16 +61,15 @@ class Spider:
         for detail in property_details:
             item = {}
             heading_xpath = ".//span[contains(@class,'headingDoubleSuper')]/text()"
-            item.update({"name": detail.xpath(heading_xpath)})
+            item["name"] = detail.xpath(heading_xpath)
             address_xpath = ".//span[contains(@class,'headlineDoubleSub')]/span/text()|/a/text()"
             address = {'address': ' '.join(detail.xpath(address_xpath))}
-            item.update(address)
+            item["address"] = address
             details_xpath = ".//ul[contains(@class,'listingDetails')]/li/text()"
             details = ' '.join(detail.xpath(details_xpath))
             property_detail = {'property_details': details}
-            item.update(property_detail)
+            item["property_details"] = property_detail
             print()
-            for attribute in item.values():
-                print(attribute)
+            print(item)
             print()
             self.items.append(item)
