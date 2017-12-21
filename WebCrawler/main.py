@@ -1,14 +1,14 @@
 import threading
 from queue import Queue
 from spider import Spider
+import argparse
 
 homepage = "https://www.ginatricot.com/eu/en/start"
-no_of_threads = 20
 queue = Queue()
 spider = Spider(homepage)
 
 
-def create_workers():
+def create_workers(no_of_threads):
     for _ in range(no_of_threads):
         t = threading.Thread(target=work)
         t.daemon = True
@@ -31,7 +31,7 @@ def create_jobs():
 
 def crawl():
     queued_links = spider.queue
-    if len(queued_links) > 0:
+    if queued_links:
         print(str(len(queued_links)) + ' links in the queue')
         create_jobs()
     else:
@@ -39,7 +39,11 @@ def crawl():
 
 
 def main():
-    create_workers()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("no_of_threads", help="Enter number of workers you want to create")
+    parameters = parser.parse_args()
+    no_of_threads = int(parameters.no_of_threads)
+    create_workers(no_of_threads)
     crawl()
 
 if __name__ == '__main__':
