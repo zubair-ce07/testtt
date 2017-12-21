@@ -7,7 +7,7 @@ from scrapy.    spiders import CrawlSpider, Rule
 
 
 class JosephSpider(CrawlSpider):
-    name = 'joseph_spider'
+    name = "joseph_spider"
     allowed_domains = ['joseph-fashion.com']
     start_urls = ["http://www.joseph-fashion.com/en-us/home"]
 
