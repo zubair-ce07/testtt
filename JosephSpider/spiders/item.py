@@ -2,7 +2,7 @@ import scrapy
 
 
 class ItemSpider(scrapy.Spider):
-    name = 'item'
+    name = 'item_spider'
     allowed_domains = ['joseph-fashion.com']
     start_urls = ['http://joseph-fashion.com/']
 
