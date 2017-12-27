@@ -1,10 +1,9 @@
-import copy
-
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
-from .mixin import Mixin
-from .parse import ParseSpider
+# from .mixin import Mixin
+from JosephSpider.spiders.parse import ParseSpider
+from JosephSpider.spiders.mixin import Mixin
 
 
 class JosephSpider(CrawlSpider):
@@ -18,15 +17,12 @@ class JosephSpider(CrawlSpider):
         Rule(LinkExtractor(
             restrict_css='a[class*="navigation__link"]'), callback='parse'),
         Rule(LinkExtractor(restrict_css='.search-result-content .thumb-link'),
-             callback=parse_spider.parse_product),
+             callback=parse_spider.parse),
     )
 
     def parse(self, response):
-
         for request in super().parse(response):
-            data = response.meta.get('data') or dict()
-            data = copy.deepcopy(data)
-            data['trail'] = data.get('trail') or list()
-            data['trail'].append(request.url)
-            request.meta['data'] = data
+            trail = response.meta.get('trail', list())
+            trail.append(response.url)
+            request.meta['trail'] = trail
             yield request

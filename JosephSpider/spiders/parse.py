@@ -2,7 +2,7 @@ from urllib.parse import urlparse
 
 import scrapy
 
-from .mixin import Mixin
+from JosephSpider.spiders.mixin import Mixin
 
 
 class ParseSpider(scrapy.Spider):
@@ -12,34 +12,45 @@ class ParseSpider(scrapy.Spider):
     start_urls = mixin.start_urls
 
     def parse(self, response):
-        product = response.meta["product"]
-        data_catalogue = product["skus"]
-        data_catalogue.update(self.item_catalogue(response))
-        return product
+        product = response.meta.get('product') or dict()
+        trail = response.meta.get('trail', list())
+        trail.append(response.url)
 
-    def parse_product(self, response):
-        data = response.meta.get('data') or dict()
-        data['trail'] = data.get('trail') or list()
-        data["trail"].append(response.url)
-        referrer = data['trail'][0]
-        data["category"] = self.category(referrer)
-        data["gender"] = self.gender(referrer)     
-        data["description"] = self.descriptions(response)
-        data["care"] = self.cares(response)
-        data["retailer_sku"] = self.retailer(response)
-        data["image_urls"] = self.images(response)
-        data["name"] = self.item_name(response)
-        data["brand"] = self.brand(response)
-        data["market"] = "US"
-        data["retailer"] = "joseph-us"
+        product["category"] = self.category(response)
+        product["gender"] = self.gender(response)
+        product["description"] = self.descriptions(response)
+        product["care"] = self.cares(response)
+        product["retailer_sku"] = self.retailer(response)
+        product["image_urls"] = self.images(response)
+        product["name"] = self.item_name(response)
+        product["brand"] = self.brand(response)
+        product["market"] = "US"
+        product["retailer"] = "joseph-us"
+        product["url"] = response.ul
 
-        return self.skus_requests(response, data)
+        return self.skus_requests(response, product)
 
-    def gender(self, referrer):
-        return "women" if "women" in referrer else "men"
+    def parse_color(self, response):
+        product = response.meta.get("product")
+        skus = product["skus"]
+        trail = response.meta["trail"]
+        trail.append(response.url)
+        remaining_colors = response.meta.get("remaining-colors")
+        skus.update(self.product_skus(response))
 
-    def category(self, referrer):
-        return urlparse(referrer).path.split('/')[-2]
+        if remaining_colors:
+            return self.next_requests(response, remaining_colors)
+        else:
+            return product
+
+    def gender(self, response):
+        parent_url = response.meta.get('trail')[0]
+        return "women" if "women" in parent_url else "men"
+
+    def category(self, response):
+
+        parent_url = response.meta.get('trail')[1]
+        return urlparse(parent_url).path.split('/')[-2]
 
     def descriptions(self, response):
         descriptions_xpath = "//div[./label[@for='tab-1']]/div[@class='tab-content']/text()"
@@ -65,41 +76,67 @@ class ParseSpider(scrapy.Spider):
         brand_xpath = "//meta[@itemprop='brand']/@content"
         return response.xpath(brand_xpath).extract_first()
 
-    def skus_requests(self, response, data):
+    def price(self, response):
+        price = response.xpath("//meta[@itemprop='og:price:amount']/@content")
+        if price.extract_first():
+            return price.extract_first()
+        else:
+            price = response.xpath("//meta[@itemprop='price']/@content")
+            return price.extract_first()
 
-        data["skus"] = {}
+    def currency(self, response):
+        currency = response.xpath("//meta[@itemprop='og:price:currency']/@content")
+        if currency.extract_first():
+            return currency.extract_first()
+        else:
+            currency = response.xpath("//meta[@itemprop='priceCurrency']/@content")
+            return currency.extract_first()
+
+    def color(self, response):
+        color = "//ul[contains(@class, 'color')]//li[contains(@class, 'selected')]//img/@alt"
+        return response.xpath(color).extract_first()
+
+    def size(self, response):
+        size = response.xpath(".//a/@title")
+        return size.extract_first().strip("Select Size: ")
+
+    def skus_requests(self, response, product):
+
+        product["skus"] = {}
         colors = response.xpath("//ul[contains(@class, 'color')]//a")
-        for color in colors:
-            request = response.follow(
-                color, self.parse)
-            request.meta["product"] = data
-            yield request
+        color = colors.pop()
+        request = response.follow(
+            color, self.parse_color)
+        request.meta["product"] = product
+        request.meta["trail"] = response.meta.get("trail")
+        request.meta["remaining-colors"] = colors
+        yield request
 
-    def item_catalogue(self, response):
-        items = dict()
+    def next_requests(self, response, remaining_colors):
+        color = remaining_colors.pop()
+        request = response.follow(
+            color, self.parse_color)
+        request.meta["product"] = response.meta.get('product')
+        request.meta["trail"] = response.meta.get('trail')
+        request.meta["remaining-colors"] = remaining_colors
+        yield request
+
+    def product_skus(self, response):
+        products = dict()
         product = response.meta["product"]
-        product["trail"].append(response.url)
         sizes = response.xpath(
             "//ul[contains(@class, 'size')]//li")
         for size in sizes:
-            details = self.item_size(response, size)
+            details = dict()
+            details["price"] = self.price(response)
+            details["currency"] = self.currency(response)
+            details["colour"] = self.color(response)
+            details["size"] = self.size(size)
+
             if size.xpath("self::node()[contains(@class, 'unselectable')]"):
                 details["out_of_stock"] = True
 
             item_key = f'{details["colour"]}_{details["size"]}'
-            items[item_key] = details
+            products[item_key] = details
 
-        return items
-
-    def item_size(self, response, item):
-        details = dict()
-        price = response.xpath("//meta[@itemprop='price']/@content")
-        currency = response.xpath("//meta[@itemprop='priceCurrency']/@content")
-        color = response.xpath(
-            "//ul[contains(@class, 'color')]//li[contains(@class, 'selected')]//img/@alt")
-        size = item.xpath("//a/@title").extract_first().strip("Select Size: ")
-        details["colour"] = color.extract_first()
-        details["currency"] = currency.extract_first()
-        details["price"] = price.extract_first()
-        details["size"] = size
-        return details
+        return products
