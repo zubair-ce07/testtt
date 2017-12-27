@@ -26,7 +26,7 @@ class ParseSpider(scrapy.Spider):
         product["brand"] = self.brand(response)
         product["market"] = "US"
         product["retailer"] = "joseph-us"
-        product["url"] = response.ul
+        product["url"] = response.url
 
         return self.skus_requests(response, product)
 
@@ -85,11 +85,13 @@ class ParseSpider(scrapy.Spider):
             return price.extract_first()
 
     def currency(self, response):
-        currency = response.xpath("//meta[@itemprop='og:price:currency']/@content")
+        currency = response.xpath(
+            "//meta[@itemprop='og:price:currency']/@content")
         if currency.extract_first():
             return currency.extract_first()
         else:
-            currency = response.xpath("//meta[@itemprop='priceCurrency']/@content")
+            currency = response.xpath(
+                "//meta[@itemprop='priceCurrency']/@content")
             return currency.extract_first()
 
     def color(self, response):
