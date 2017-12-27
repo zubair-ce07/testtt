@@ -5,19 +5,13 @@ import scrapy
 from JosephSpider.spiders.mixin import Mixin
 
 
-class ParseSpider(scrapy.Spider):
+class ParseSpider(scrapy.Spider, Mixin):
     name = 'item_spider'
-    mixin = Mixin()
-    allowed_domains = mixin.allowed_domains
-    start_urls = mixin.start_urls
 
     def parse(self, response):
         product = response.meta.get('product') or dict()
-        trail = response.meta.get('trail', list())
-        trail.append(response.url)
-
-        product["category"] = self.category(response)
-        product["gender"] = self.gender(response)
+        product["category"] = self.category(product)
+        product["gender"] = self.gender(product)
         product["description"] = self.descriptions(response)
         product["care"] = self.cares(response)
         product["retailer_sku"] = self.retailer(response)
@@ -32,25 +26,24 @@ class ParseSpider(scrapy.Spider):
 
     def parse_color(self, response):
         product = response.meta.get("product")
-        skus = product["skus"]
-        trail = response.meta["trail"]
-        trail.append(response.url)
-        remaining_colors = response.meta.get("remaining-colors")
-        skus.update(self.product_skus(response))
+        skus = product.get("skus")
+        trail = product.get("trail")
+        remaining_colors = product.get("remaining-colors")
+        skus.update(self.skus(response))
 
         if remaining_colors:
             return self.next_requests(response, remaining_colors)
         else:
             return product
 
-    def gender(self, response):
-        parent_url = response.meta.get('trail')[0]
+    def gender(self, product):
+        parent_url = product.get('trail')[0]
         return "women" if "women" in parent_url else "men"
 
-    def category(self, response):
+    def category(self, product):
 
-        parent_url = response.meta.get('trail')[1]
-        return urlparse(parent_url).path.split('/')[-2]
+        parent_url = product.get('trail')[0]
+        return urlparse(parent_url).path.split('/')[-1]
 
     def descriptions(self, response):
         descriptions_xpath = "//div[./label[@for='tab-1']]/div[@class='tab-content']/text()"
@@ -105,37 +98,31 @@ class ParseSpider(scrapy.Spider):
     def skus_requests(self, response, product):
 
         product["skus"] = {}
-        colors = response.xpath("//ul[contains(@class, 'color')]//a")
-        color = colors.pop()
-        request = response.follow(
-            color, self.parse_color)
-        request.meta["product"] = product
-        request.meta["trail"] = response.meta.get("trail")
-        request.meta["remaining-colors"] = colors
-        yield request
+        response.meta["product"] = product
+        remaining_colors = response.xpath("//ul[contains(@class, 'color')]//a")
+        return self.next_requests(response, remaining_colors)
 
     def next_requests(self, response, remaining_colors):
+        product = response.meta.get('product')
         color = remaining_colors.pop()
+        product["remaining-colors"] = remaining_colors
         request = response.follow(
             color, self.parse_color)
         request.meta["product"] = response.meta.get('product')
-        request.meta["trail"] = response.meta.get('trail')
-        request.meta["remaining-colors"] = remaining_colors
         yield request
 
-    def product_skus(self, response):
+    def skus(self, response):
         products = dict()
-        product = response.meta["product"]
-        sizes = response.xpath(
+        skus = response.xpath(
             "//ul[contains(@class, 'size')]//li")
-        for size in sizes:
+        for sku in skus:
             details = dict()
             details["price"] = self.price(response)
             details["currency"] = self.currency(response)
             details["colour"] = self.color(response)
-            details["size"] = self.size(size)
+            details["size"] = self.size(sku)
 
-            if size.xpath("self::node()[contains(@class, 'unselectable')]"):
+            if sku.xpath("self::node()[contains(@class, 'unselectable')]"):
                 details["out_of_stock"] = True
 
             item_key = f'{details["colour"]}_{details["size"]}'

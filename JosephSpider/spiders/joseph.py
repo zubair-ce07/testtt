@@ -1,3 +1,4 @@
+import copy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -6,11 +7,8 @@ from JosephSpider.spiders.parse import ParseSpider
 from JosephSpider.spiders.mixin import Mixin
 
 
-class JosephSpider(CrawlSpider):
+class JosephSpider(CrawlSpider, Mixin):
     name = 'joseph_spider'
-    mixin = Mixin()
-    allowed_domains = mixin.allowed_domains
-    start_urls = mixin.start_urls
     parse_spider = ParseSpider()
 
     rules = (
@@ -22,7 +20,9 @@ class JosephSpider(CrawlSpider):
 
     def parse(self, response):
         for request in super().parse(response):
-            trail = response.meta.get('trail', list())
-            trail.append(response.url)
-            request.meta['trail'] = trail
+            product = response.meta.get('product', dict())
+            new_product = copy.deepcopy(product)
+            new_product['trail'] = product.get('trail', list())
+            new_product['trail'].append(response.url)
+            request.meta['product'] = new_product
             yield request
