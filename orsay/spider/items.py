@@ -2,7 +2,7 @@
 import scrapy
 
 
-class OrsayDeProduct(scrapy.Item):
+class OrsayProduct(scrapy.Item):
     retailer_sku = scrapy.Field()
     name = scrapy.Field()
     gender = scrapy.Field()
@@ -10,10 +10,8 @@ class OrsayDeProduct(scrapy.Item):
     price = scrapy.Field()
     currency = scrapy.Field()
     category = scrapy.Field()
-
     material = scrapy.Field()
     care = scrapy.Field()
-
     img_urls = scrapy.Field()
     skus = scrapy.Field()
 
