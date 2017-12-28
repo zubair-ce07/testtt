@@ -34,8 +34,8 @@ class LinkFinder:
 
     @staticmethod
     def color(source):
-        description = source.xpath(
-            "//div[contains(@class, 'product-description-box')]/text()") or []
+        xpath = "//div[contains(@class, 'product-description-box')]/text()"
+        description = source.xpath(xpath) or []
         for color in description:
             if 'Colour' in color:
                 return "".join(e for e in color if e.isalnum())
@@ -43,18 +43,18 @@ class LinkFinder:
 
     @staticmethod
     def name(source):
-        name = source.xpath(
-            "//div[contains(@class, 'prod-name')]//h1/text()") or ['']
+        xpath = "//div[contains(@class, 'prod-name')]//h1/text()"
+        name = source.xpath(xpath) or ['']
         return name[0]
 
     @staticmethod
     def price(source):
-        price = source.xpath(
-            "//div[contains(@id, 'productPrice')]/text()") or ['']
+        xpath = "//div[contains(@id, 'productPrice')]/text()"
+        price = source.xpath(xpath) or ['']
         return "".join(e for e in price[0] if e.isalnum())
 
     @staticmethod
     def sizes(source):
-        sizes = source.xpath(
-            "//li[contains(@class, 'size-select')]//a/text()") or []
+        xpath = "//li[contains(@class, 'size-select')]//a/text()"
+        sizes = source.xpath(xpath) or []
         return ','.join(sizes)
