@@ -12,7 +12,7 @@ class OrsaySpiderSpider(scrapy.Spider):
     def parse(self, response):
         product_categories = response.css('#nav > .level0')
         for category in product_categories:
-            category_links = category.css('.level0 > .level1 > a[href]::attr(href)').get()
+            category_links = category.css('.level0 > .level1 > a[href]::attr(href)').getall()
             if category_links:
                 for link in category_links:
                     yield response.follow(link, self.parse_category)
