@@ -14,15 +14,26 @@ class JosephSpider(CrawlSpider, Mixin):
     rules = (
         Rule(LinkExtractor(
             restrict_css='a[class*="navigation__link"]'), callback='parse'),
-        Rule(LinkExtractor(restrict_css='.search-result-content .thumb-link'),
+        Rule(LinkExtractor(
+            restrict_css='.navigation__item2 a.desktop-media'),
+            callback='parse'),
+        Rule(LinkExtractor(
+            restrict_css='.infinite-scroll-placeholder',
+            tags=["div"], attrs=["data-grid-url"]),
+            callback='parse'),
+        Rule(LinkExtractor(restrict_css='.product-image .thumb-link'),
              callback=parse_spider.parse),
     )
 
     def parse(self, response):
+        current_url = response.url
         for request in super().parse(response):
             product = response.meta.get('product', dict())
             new_product = copy.deepcopy(product)
             new_product['trail'] = product.get('trail', list())
-            new_product['trail'].append(response.url)
+            trail = new_product.get('trail')
+            exist = [url for url in trail if url == current_url]
+            if not exist:
+                trail.append(response.url)
             request.meta['product'] = new_product
             yield request
