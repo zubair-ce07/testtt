@@ -22,9 +22,7 @@ class SafeAutoSpider(scrapy.Spider):
     def parse_reviews(self, response):
         api_data = json.loads(response.text)
         next_page_url = api_data['paging']['next_page_url']
-        print(next_page_url)
         next_page_url.replace('paging.size=10', 'paging.size=25')
-        print(next_page_url)
         yield scrapy.Request(url=response.urljoin(next_page_url), headers=self.headers, callback=self.parse_reviews)
         for review in api_data['results'][0]['reviews']:
             item = {
