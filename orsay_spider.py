@@ -10,12 +10,9 @@ class OrsaySpiderSpider(scrapy.Spider):
     start_urls = ['http://orsay.de/']
 
     def parse(self, response):
-        product_categories = response.css('#nav > .level0')
-        for category in product_categories:
-            category_links = category.css('.level0 > .level1 > a[href]::attr(href)').getall()
-            if category_links:
-                for link in category_links:
-                    yield response.follow(link, self.parse_category)
+        product_categories = response.css('#nav > .level0 > .level0 > .level1 > a[href]::attr(href)').getall()
+        for category_link in product_categories:
+            yield response.follow(category_link, self.parse_category)
 
     def parse_category(self, response):
         products_links = response.css('#products-list > .item .product-image-wrapper > a[href]::attr(href)').getall()
@@ -32,83 +29,113 @@ class OrsaySpiderSpider(scrapy.Spider):
 
         if product_colors_links:
             url = product_colors_links.pop()
-            yield response.follow(url, callback=self.parse_product_color,
+            yield response.follow(url, callback=self.parse_product_color_skus,
                                   meta={'product': product_info, 'product_colors_links': product_colors_links})
         else:
-            color_info = self.product_color_info(response)
-            product_info['skus'] = color_info
+            product_info['skus'] = self.product_color_skus(response)
             product_info['date'] = datetime.datetime.now()
             yield product_info
 
     def product_info(self, response):
-        currency = response.css('#product-options-wrapper .sizebox-wrapper::attr(data-currency)').get()
-
-        if currency == '\u20ac':
-            currency = "EUR"
-        else:
-            currency = None
-
         product = {
-            'crawl_start_time': datetime.datetime.now(),
-            'name': response.css('#product_main .product-name::text').get(),
-            'price': response.css('#product_main .regular-price > .price::text').get(),
-            'description': response.css('.product-info-and-care .description::text').getall(),
-            'lang': response.css('html[lang]::attr(lang)').get(),
-            'url': response.url,
-            'brand': response.css('.branding a[title]::attr(title)').get(),
-            'retailer_sk': response.css('#product_main > .product-main-info > .sku::text').get(),
-            'image_urls': response.css('#product_media > .product-image-gallery-thumbs'
-                                       ' > a[href]::attr(href)').getall(),
-            'care': response.css('.product-info-and-care .product-care > .material::text').getall() + \
-                    response.css('.product-info-and-care .product-care > .caresymbols'
-                                 ' img[src]::attr(src)').getall(),
-            'currency': currency,
+            'crawl_start_time': self.get_current_date(),
+            'name': self.get_product_name(response),
+            'price': self.get_product_price(response),
+            'description': self.get_product_description(response),
+            'lang': self.get_product_language(response),
+            'url': self.get_product_link(response),
+            'brand': self.get_product_brand(response),
+            'retailer_sk': self.get_article_code(response),
+            'image_urls': self.get_product_images(response),
+            'care': self.get_product_care_info(response),
+            'currency': self.get_product_currency(response),
             'gender': 'women',
+            'skus' : {}
         }
 
         return product
 
-    def parse_product_color(self, response):
-        product = response.meta['product']
-        product_colors_links = response.meta['product_colors_links']
-        color_info = self.product_color_info(response)
-
-        if 'skus' in product:
-            product['skus'].update(color_info)
-        else:
-            product['skus'] = color_info
-
-        if product_colors_links:
-            url = product_colors_links.pop()
-            yield response.follow(url, callback=self.parse_product_color,
-                                  meta={'product': product, 'product_colors_links': product_colors_links})
-        else:
-            product['date'] = datetime.datetime.now()
-            yield product
-
-    def product_color_info(self, response):
-        product_color_info = {}
-        product_id = response.css('#product_addtocart_form > .no-display > input[name="product"]::attr(value)').get()
+    def get_product_currency(self, response):
         currency = response.css('#product-options-wrapper .sizebox-wrapper::attr(data-currency)').get()
-
         if currency == '\u20ac':
             currency = "EUR"
         else:
             currency = None
+        return currency
+
+    def get_product_care_info(self, response):
+        return response.css('.product-info-and-care .product-care > .material::text').getall() + \
+               response.css('.product-info-and-care .product-care > .caresymbols'
+                            ' img[src]::attr(src)').getall()
+
+    def get_product_images(self, response):
+        return response.css('#product_media > .product-image-gallery-thumbs'
+                            ' > a[href]::attr(href)').getall()
+
+    def get_article_code(self, response):
+        return response.css('#product_main > .product-main-info > .sku::text').get()
+
+    def get_product_brand(self, response):
+        return response.css('.branding a[title]::attr(title)').get()
+
+    def get_product_link(self, response):
+        return response.url
+
+    def get_product_language(self, response):
+        return response.css('html[lang]::attr(lang)').get()
+
+    def get_product_description(self, response):
+        return response.css('.product-info-and-care .description::text').getall()
+
+    def get_product_price(self, response):
+        return response.css('#product_main .regular-price > .price::text').get()
+
+    def get_product_name(self, response):
+        return response.css('#product_main .product-name::text').get()
+
+    def get_current_date(self):
+        return datetime.datetime.now()
+
+    def get_product_stock_status(self, response):
+        return True if response.css('li[data-qty = "0"]').get() else False
+
+    def get_product_size(self, response):
+        return response.css('li::text').get().strip()
+
+    def get_product_color(self, response):
+        return response.css('#product_addtocart_form > .no-display > input[name="color"]::attr(value)').get()
+
+    def get_product_id(self, response):
+        return response.css('#product_addtocart_form > .no-display > input[name="product"]::attr(value)').get()
+
+    def parse_product_color_skus(self, response):
+        product = response.meta['product']
+        product_colors_links = response.meta['product_colors_links']
+        product['skus'].update(self.product_color_skus(response))
+
+        if product_colors_links:
+            url = product_colors_links.pop()
+            yield response.follow(url, callback=self.parse_product_color_skus,
+                                  meta={'product': product, 'product_colors_links': product_colors_links})
+        else:
+            product['date'] = self.get_current_date()
+            yield product
+
+    def product_color_skus(self, response):
+        product_color_info = {}
+        product_id = self.get_product_id(response)
+        product_color = self.get_product_color(response)
+        product_price = self.get_product_price(response)
+        product_currency_code = self.get_product_currency(response)
 
         for size_detail in response.css('#product-options-wrapper .sizebox-wrapper > ul:first-child > li'):
-            out_of_stock = "False"
-            product_out_of_stock = size_detail.css('li[data-qty = "0"]').get()
-            if product_out_of_stock:
-                out_of_stock = "True"
-
-            product_size = size_detail.css('li::text').get().strip()
+            product_size = self.get_product_size(size_detail)
             color_info = {
-                'price': response.css('#product_main .regular-price > .price::text').get(),
-                'colour': response.css('#product_addtocart_form > .no-display > input[name="color"]::attr(value)').get(),
-                'out_of_stock': out_of_stock,
+                'price': product_price,
+                'colour': product_color,
+                'out_of_stock': self.get_product_stock_status(size_detail),
                 'size': product_size,
-                'currency': currency
+                'currency': product_currency_code
             }
             color_info_key = '{}_{}'.format(product_id, product_size)
             product_color_info[color_info_key] = color_info
