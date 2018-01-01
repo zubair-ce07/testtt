@@ -1,27 +1,26 @@
 # -*- coding: utf-8 -*-
-import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule, CrawlSpider
 import datetime
 
 
-class OrsaySpiderSpider(scrapy.Spider):
+class OrsaySpiderSpider(CrawlSpider):
     name = 'orsay_spider'
     allowed_domains = ['orsay.de',
                        'orsay.com']
-    start_urls = ['http://orsay.de/']
+    start_urls = ['http://www.orsay.com/de-de/']
 
-    def parse(self, response):
-        product_categories = response.css('#nav > .level0 > .level0 > .level1 > a[href]::attr(href)').getall()
-        for category_link in product_categories:
-            yield response.follow(category_link, self.parse_category)
-
-    def parse_category(self, response):
-        products_links = response.css('#products-list > .item .product-image-wrapper > a[href]::attr(href)').getall()
-        for product_link in products_links:
-            yield response.follow(product_link, self.parse_product)
-
-        next_page = response.css('.toolbar-top ul.pagination .next.i-next::attr(href)').get()
-        if next_page:
-            yield scrapy.Request(next_page, self.parse_category)
+    rules = (
+                Rule(LinkExtractor(restrict_css=
+                                   '#nav > .level0 > .level0 > .level1'),
+                     follow=True),
+                Rule(LinkExtractor(restrict_css=
+                                   '.toolbar-top ul.pagination .next.i-next'),
+                      follow=True),
+                Rule(LinkExtractor(restrict_css=
+                                   '#products-list > .item .product-image-wrapper'),
+                     callback='parse_product', follow=True),
+            )
 
     def parse_product(self, response):
         product_info = self.product_info(response)
@@ -38,7 +37,7 @@ class OrsaySpiderSpider(scrapy.Spider):
 
     def product_info(self, response):
         product = {
-            'crawl_start_time': self.get_current_date(),
+            'crawl_start_time': datetime.datetime.now(),
             'name': self.get_product_name(response),
             'price': self.get_product_price(response),
             'description': self.get_product_description(response),
@@ -93,9 +92,6 @@ class OrsaySpiderSpider(scrapy.Spider):
     def get_product_name(self, response):
         return response.css('#product_main .product-name::text').get()
 
-    def get_current_date(self):
-        return datetime.datetime.now()
-
     def get_product_stock_status(self, response):
         return True if response.css('li[data-qty = "0"]').get() else False
 
@@ -118,7 +114,7 @@ class OrsaySpiderSpider(scrapy.Spider):
             yield response.follow(url, callback=self.parse_product_color_skus,
                                   meta={'product': product, 'product_colors_links': product_colors_links})
         else:
-            product['date'] = self.get_current_date()
+            product['date'] = datetime.datetime.now()
             yield product
 
     def product_color_skus(self, response):
