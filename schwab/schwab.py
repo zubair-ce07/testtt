@@ -12,11 +12,11 @@ class Schwab(scrapy.Spider):
     sub_categories_api = "https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID="
 
     def parse(self, response):
-        sub_categories_content = response.xpath('//script[contains(text(),"window.general.navi.cacheID")]/text()')\
+        sub_categories_content = response.xpath('//script[contains(text(),"window.general.navi.cacheID")]/text()') \
             .extract_first()
         sub_categories_id = re.search("\d[0-9]{9}", sub_categories_content)
         sub_categories_id = sub_categories_id.group()
-        content_url = self.sub_categories_api+sub_categories_id
+        content_url = self.sub_categories_api + sub_categories_id
         yield scrapy.Request(url=content_url, callback=self.sub_categories_urls)
 
     def sub_categories_urls(self, response):
@@ -142,15 +142,12 @@ class Schwab(scrapy.Spider):
 
     def anids(self, response):
         json_content = response.xpath('//script[contains(text(),"articlesString")]/text()').extract_first()
-        anid_content = re.findall(r'\b\d+\b.\b\d+\b.[A-Za-z0-9]+\S[A-Za-z0-9]+', json_content)
+        anid_content = re.findall('\d+\|\d+\|[A-Za-z0-9]+\|(?:[A-Za-z0-9]+,[A-Za-z0-9]+|[A-Za-z0-9]+)', json_content)
         parent_id = self.parent_id(response)
         anids = []
         for i in anid_content:
             anids.append((parent_id+"-"+i.split('|')[1])+"-"+(i.split('|')[3])+"-"+(i.split('|')[2]))
         return anids
-
-    def artnumsofsizes(self, response):
-        return response.xpath('//input[@class="js-artnumsofsizes"]/@value').extract_first()
 
     def art_nr(self, response):
         art_nr = []
@@ -163,8 +160,6 @@ class Schwab(scrapy.Spider):
             './/div[@class="c-colorspots colorspots--inlist"]//a/@data-varselid').extract()
         if available_colors:
             return available_colors
-        else:
-            return response.xpath('.//input[@name="varselid[1]"]/@value').extract()
 
     def size_ids(self, response):
         available_sizes = response.xpath('.//div[@class="l-outsp-bot-5"]//button/@data-varselid').extract()
@@ -178,18 +173,27 @@ class Schwab(scrapy.Spider):
 
     def fit_exist_or_not(self, response):
         return response.xpath('//select[@class="variants js-variantSelector js-moreinfo-variant js-sh-dropdown "]'
-                              '/option[@selected="selected"]/text()').extract()
+                              '/option/@value').extract()[1:]
 
-    def size_color_content(self, response):
+    def size_color_fit_content(self, response):
         if self.fit_exist_or_not(response):
-            sizes = len(self.color_ids(response))*len(self.product_fits(response))
-            if sizes:
-                available_sizes = len(self.anids(response))/sizes
-                colors = self.color_ids(response) * len(self.product_fits(response)) * int(available_sizes)
-                fits = self.product_fits(response) * len(self.color_ids(response)) * int(available_sizes)
-                return colors, fits
-        else:
             if self.color_ids(response):
+                sizes = len(self.color_ids(response))*len(self.product_fits(response))
+                if sizes:
+                    available_sizes = len(self.anids(response))/sizes
+                    colors = self.color_ids(response) * len(self.product_fits(response)) * int(available_sizes)
+                    fits = self.product_fits(response) * len(self.color_ids(response)) * int(available_sizes)
+                    return colors, fits
+            else:
+                if self.size_ids(response):
+                    available_sizes = len(self.anids(response))/len(self.product_fits(response))
+                    fits = self.product_fits(response)*int(available_sizes)
+                    return fits
+
+                else:
+                    return self.fit_exist_or_not(response)
+        if self.color_ids(response):
+            if self.size_ids(response):
                 available_sizes = float(len(self.anids(response))/len(self.color_ids(response)))
                 return self.color_ids(response) * int(available_sizes)
 
@@ -209,6 +213,16 @@ class Schwab(scrapy.Spider):
     def varselid_value(self, response):
         return response.xpath('//input[@class="js-varselid-COLOR js-varselid"]/@value').extract_first()
 
+    def special_anids(self, response):
+        anids = []
+        for i in self.anids(response):
+            garbage_value = i.split('-')[2]
+            if garbage_value == '0':
+                anids.append(self.parent_id(response)+"-"+i.split('-')[1]+"-"+i.split('-')[3])
+            else:
+                anids.append((self.parent_id(response)+"-"+i.split('-')[1])+"-"+(i.split('-')[3])+"-"+(i.split('-')[2]))
+        return anids
+
     def forced_sizes(self, response):
         forced_sizes = []
         for size in self.available_sizes(response):
@@ -221,98 +235,157 @@ class Schwab(scrapy.Spider):
                                                    '//option[@data-noa-size="'+size+'"]/@value').extract_first())
         return forced_sizes
 
+    def fit_size_requests(self, response, item):
+        multiple_requests = []
+        for anid, size, fit in zip(self.anids(response), self.fit_exist_or_not(response),
+                                   self.size_color_fit_content(response)):
+            form_data = {
+                self.fit_key(response): fit,
+                self.varselid_key(response): self.varselid_value(response),
+                'cl': self.form_data_cl(response),
+                'forcedSize': size,
+                'varselid[0]': size,
+                'econdapath': self.econdapath(response),
+                'anid': anid,
+            }
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
+                                         meta={"item": item},
+                                         callback=self.parse_main_request, dont_filter=True)
+            multiple_requests.append(request)
+        return multiple_requests
+
+    def fit_request(self, response, item):
+        multiple_requests = []
+        for anid, size in zip(self.anids(response), self.fit_exist_or_not(response)):
+            form_data = {
+                self.varselid_key(response): self.varselid_value(response),
+                'cl': self.form_data_cl(response),
+                'forcedSize': size,
+                'varselid[0]': size,
+                'econdapath': self.econdapath(response),
+                'anid': anid,
+            }
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data,
+                                         meta={"item": item},
+                                         callback=self.parse_main_request, dont_filter=True)
+            multiple_requests.append(request)
+        return multiple_requests
+
+    def color_size__fit_requests(self, response, item):
+        multiple_requests = []
+        color, fits = self.size_color_fit_content(response)
+        for anid, color, fit, size, promo, artnr in zip(self.anids(response), color, fits,
+                                                        self.forced_sizes(response), self.promo(response),
+                                                        self.art_nr(response)):
+            form_data = {
+                self.varselid_key(response): color,
+                self.fit_key(response): fit,
+                'cl': self.form_data_cl(response),
+                'econdapath': self.econdapath(response),
+                'anid': anid,
+                'aid': anid,
+                'forcedSize': size,
+                'varselid[0]': size,
+                'actcontrol': self.actcontrol(response),
+                'parentid': self.parent_id(response),
+                'artName': self.art_name(response),
+                'artNr': artnr,
+                'lang': self.language(response),
+                'promo': promo,
+            }
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
+                                         dont_filter=True, callback=self.parse_main_request)
+            multiple_requests.append(request)
+        return multiple_requests
+
+    def color_size_request(self, response, item):
+        multiple_requests = []
+        for anid, color, size, promo, artnr in zip(self.anids(response), self.size_color_fit_content(response),
+                                                   self.forced_sizes(response), self.promo(response),
+                                                   self.art_nr(response)):
+            form_data = {
+                self.varselid_key(response): color,
+                'cl': self.form_data_cl(response),
+                'econdapath': self.econdapath(response),
+                'artnumsofsizes': artnr,
+                'anid': anid,
+                'aid': anid,
+                'forcedSize': size,
+                'varselid[0]': size,
+                'actcontrol': self.actcontrol(response),
+                'parentid': self.parent_id(response),
+                'artName': self.art_name(response),
+                'artNr': artnr,
+                'lang': self.language(response),
+                'promo': promo,
+            }
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
+                                         callback=self.parse_main_request, dont_filter=True)
+            multiple_requests.append(request)
+        return multiple_requests
+
+    def size_requests(self, response, item):
+        multiple_requests = []
+        for anid, size, promo, artnr in zip(self.anids(response), self.forced_sizes(response),
+                                            self.promo(response), self.art_nr(response)):
+            form_data = {
+                self.varselid_key(response): self.varselid_value(response),
+                'cl': self.form_data_cl(response),
+                'econdapath': self.econdapath(response),
+                'anid': anid,
+                'aid': anid,
+                'forcedSize': size,
+                'varselid[0]': size,
+                'actcontrol': self.actcontrol(response),
+                'parentid': self.parent_id(response),
+                'artName': self.art_name(response),
+                'artNr': artnr,
+                'lang': self.language(response),
+                'promo': promo,
+            }
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
+                                         callback=self.parse_main_request, dont_filter=True)
+            multiple_requests.append(request)
+        return multiple_requests
+
+    def color_requests(self, response, item):
+        multiple_requests = []
+        for anid, color in zip(self.special_anids(response), self.color_ids(response)):
+            form_data = {
+                self.varselid_key(response): color,
+                'cl': self.form_data_cl(response),
+                'ajaxdetails': 'adsColorChange',
+                'econdapath': self.econdapath(response),
+                'anid': anid,
+                'loadDataPartially': 'true'
+            }
+            request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
+                                         callback=self.parse_main_request, dont_filter=True)
+            multiple_requests.append(request)
+        return multiple_requests
+
     def main_request(self, response, item):
-        if self.size_color_content(response):
-            if isinstance(self.size_color_content(response), list):
-                multiple_requests = []
-                for anid, color, size, promo, artnr in zip(self.anids(response), self.size_color_content(response),
-                                                           self.forced_sizes(response), self.promo(response),
-                                                           self.art_nr(response)):
-                    form_data = {
-                        self.varselid_key(response): color,
-                        'cl': self.form_data_cl(response),
-                        'econdapath': self.econdapath(response),
-                        'anid': anid,
-                        'aid': anid,
-                        'forcedSize': size,
-                        'varselid[0]': size,
-                        'actcontrol': self.actcontrol(response),
-                        'parentid': self.parent_id(response),
-                        'artName': self.art_name(response),
-                        'artNr': artnr,
-                        'lang': self.language(response),
-                        'promo': promo,
-                    }
-                    request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
-                                                 callback=self.parse_main_request)
-                    multiple_requests.append(request)
-                return multiple_requests
+        if self.size_color_fit_content(response):
+            if self.fit_exist_or_not(response):
+                if isinstance(self.size_color_fit_content(response), list):
+                    if self.size_ids(response):
+
+                        return self.fit_size_requests(response, item)
+                    else:
+
+                        return self.fit_request(response, item)
+
+                elif isinstance(self.size_color_fit_content(response), tuple):
+                    
+                    return self.color_size__fit_requests(response, item)
             else:
-                color, fits = self.size_color_content(response)
-                multiple_requests = []
-                for anid, color, fit, size, promo, artnr in zip(self.anids(response), color, fits,
-                                                                self.forced_sizes(response), self.promo(response),
-                                                                self.art_nr(response)):
-                    form_data = {
-                        self.varselid_key(response): color,
-                        self.fit_key(response): fit,
-                        'cl': self.form_data_cl(response),
-                        'econdapath': self.econdapath(response),
-                        'anid': anid,
-                        'aid': anid,
-                        'forcedSize': size,
-                        'varselid[0]': size,
-                        'actcontrol': self.actcontrol(response),
-                        'parentid': self.parent_id(response),
-                        'artName': self.art_name(response),
-                        'artNr': artnr,
-                        'lang': self.language(response),
-                        'promo': promo,
-                    }
-                    request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
-                                                 callback=self.parse_main_request)
-                    multiple_requests.append(request)
-                return multiple_requests
+                return self.color_size_request(response, item)
 
         elif self.size_ids(response):
-            multiple_requests = []
-            for anid, size, promo, artnr in zip(self.anids(response), self.forced_sizes(response),
-                                                self.promo(response), self.art_nr(response)):
-                form_data = {
-                    self.varselid_key(response): self.varselid_value(response),
-                    'cl': self.form_data_cl(response),
-                    'econdapath': self.econdapath(response),
-                    'anid': anid,
-                    'aid': anid,
-                    'forcedSize': size,
-                    'varselid[0]': size,
-                    'actcontrol': self.actcontrol(response),
-                    'parentid': self.parent_id(response),
-                    'artName': self.art_name(response),
-                    'artNr': artnr,
-                    'lang': self.language(response),
-                    'promo': promo,
-                }
-                request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
-                                             callback=self.parse_main_request)
-                multiple_requests.append(request)
-            return multiple_requests
+            return self.size_requests(response, item)
 
         elif self.color_ids(response):
-            multiple_requests = []
-            for anid, color in zip(self.anids(response), self.color_ids(response)):
-                form_data = {
-                    self.varselid_key(response): color,
-                    'cl': self.form_data_cl(response),
-                    'ajaxdetails': 'adsColorChange',
-                    'econdapath': self.econdapath(response),
-                    'anid': anid,
-                }
-                request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
-                                             callback=self.parse_main_request)
-                multiple_requests.append(request)
-            return multiple_requests
-
+            return self.color_requests(response, item)
         else:
             item['skus'].update(self.skus(response))
 
