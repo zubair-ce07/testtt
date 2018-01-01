@@ -13,7 +13,7 @@ BOT_NAME = 'jeniespider'
 
 SPIDER_MODULES = ['jeniespider.spiders']
 NEWSPIDER_MODULE = 'jeniespider.spiders'
-
+DOWNLOAD_TIMEOUT = 360
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'jeniespider (+http://www.yourdomain.com)'

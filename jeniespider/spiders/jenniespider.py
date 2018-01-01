@@ -1,21 +1,27 @@
-import scrapy
-from jeniespider.items import JeniespiderItem
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+import json
+import re
 from copy import deepcopy
 from scrapy import Request
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+
+from items import JeniespiderItem
 
 
 class JanieSpider(CrawlSpider):
     skus = []
     name = "janiespider"
-    allowed_domains = ["janieandjack.com"]
+    allowed_domains = ["janieandjack.com", "i1.adis.ws"]
     start_urls = (
         'http://www.janieandjack.com/',
     )
     rules = (
         Rule(LinkExtractor(
             restrict_css='.desktop-only .subcategory')),
+        Rule(LinkExtractor(
+            restrict_css='.infinite-scroll-placeholder-down',
+            tags=['div'], attrs=['data-grid-url'])
+        ),
         Rule(LinkExtractor(restrict_css='.product-image .thumb-link'),
              callback='parse_product'),
 
@@ -23,17 +29,45 @@ class JanieSpider(CrawlSpider):
 
     def parse_product(self, response):
         product = JeniespiderItem()
+        product['product_id'] = self.product_id(response)
         product['url'] = response.url
         product['title'] = self.title(response)
         product['market'] = 'US'
         product['brand'] = 'Janie And Jack'
         product['retailer'] = 'janieandjack-us'
         product['description'] = self.description(response)
-        product['image_urls'] = self.image_urls(response)
         product['category'] = self.category(response)
         product['skus'] = list()
         response.meta['product'] = product
-        yield from self.skus_parse(response)
+        yield from self.image_urls(response)
+
+    @staticmethod
+    def product_id(response):
+        xpath = "//div[@class='product-number']//span[@class='visually-hidden']/text()"
+        return response.xpath(xpath).extract_first()
+
+    def image_urls(self, response):
+        xpath = "//a[@class='swatchanchor ']/@href"
+        sizes = response.xpath(xpath).extract()
+        meta = deepcopy(response.meta)
+        product_id = response.meta['product']._values['product_id']
+        meta['size_url'] = sizes
+        url = "http://i1.adis.ws/s/janieandjack/" + product_id + "_SET.js"
+        yield Request(url,
+                      meta=meta,
+                      callback=self.image)
+
+    def image(self, response):
+        product = response.meta['product']
+        body = response.body_as_unicode()
+        body = re.search(r'imgSet\(({.+})\)', body).group(1)
+        image_src = json.loads(body)
+        product["image_urls"] = [img.get('src') for img in image_src.get('items')]
+        meta = deepcopy(response.meta)
+        url = meta['size_url'].pop()
+        yield Request(url,
+                      meta=meta,
+                      callback=self.parse_sizes)
 
     @staticmethod
     def title(response):
@@ -47,26 +81,10 @@ class JanieSpider(CrawlSpider):
         return description
 
     @staticmethod
-    def image_urls(response):
-        xpath = "//div[@class='amp-zoomed-container']//img/@src"
-        url = response.xpath(xpath).extract()
-        return url
-
-    @staticmethod
     def category(response):
         xpath = "//span//a//span[contains(@itemprop, 'name')]/text()"
         category = response.xpath(xpath).extract()
         return category[len(category) - 1]
-
-    def skus_parse(self, response):
-        xpath = "//a[@class='swatchanchor ']/@href"
-        sizes = response.xpath(xpath).extract()
-        meta = deepcopy(response.meta)
-        meta['size_url'] = sizes
-        url = meta['size_url'].pop()
-        yield Request(url,
-                      meta=meta,
-                      callback=self.parse_sizes)
 
     def parse_sizes(self, response):
         product = response.meta['product']

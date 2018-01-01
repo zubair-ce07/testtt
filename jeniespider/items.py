@@ -9,6 +9,7 @@ import scrapy
 
 
 class JeniespiderItem(scrapy.Item):
+    product_id = scrapy.Field()
     url = scrapy.Field()
     title = scrapy.Field()
     description = scrapy.Field()
