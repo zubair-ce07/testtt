@@ -28,8 +28,6 @@ class WoolsWorthSpider(CrawlSpider):
         item['categories'] = self.get_categories(response)
         item['details'] = self.get_details(response)
         item['image_urls'] = self.get_image_urls(response)
-        item['price'] = self.get_price_static(response)
-        item['currency'] = self.get_currency_static(response)
 
         colour_list = self.get_colour_list(response)
         colour_ids = self.extract_colour_ids(colour_list)
@@ -46,6 +44,11 @@ class WoolsWorthSpider(CrawlSpider):
         if request_list:
             yield request_list.pop(0)
         else:
+            item['skus'] = {
+                'size': '1 size',
+                'price': self.get_price_static(response),
+                'currency': self.get_currency_static(response)
+            }
             yield item
 
     def parse_colours(self, response):
