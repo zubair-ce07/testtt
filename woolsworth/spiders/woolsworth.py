@@ -28,6 +28,8 @@ class WoolsWorthSpider(CrawlSpider):
         item['categories'] = self.get_categories(response)
         item['details'] = self.get_details(response)
         item['image_urls'] = self.get_image_urls(response)
+        item['price'] = self.get_price_static(response)
+        item['currency'] = self.get_currency_static(response)
 
         colour_list = self.get_colour_list(response)
         colour_ids = self.extract_colour_ids(colour_list)
@@ -41,35 +43,45 @@ class WoolsWorthSpider(CrawlSpider):
                 meta={'item': item,
                       'colour_id': colour_id,
                       'request_list': request_list}))
-        yield request_list.pop(0)
+        if request_list:
+            yield request_list.pop(0)
+        else:
+            yield item
 
     def parse_colours(self, response):
         item = response.meta['item']
         request_list = response.meta['request_list']
         colour_id = response.meta['colour_id']
-        colour = self.get_colour(colour_id, response)
-        size_list = self.get_size_list(response)
-        size_ids = self.extract_size_ids(size_list)
+        colour = self.get_colour(item['retailer_sku'], response)
+        size_dict = self.get_size_dict(response)
+        size_ids = size_dict.keys()
         for size_id in size_ids:
             meta_data = {
+                'size_dict': size_dict,
                 'size_id': size_id,
                 'colour': colour,
+                'colour_id': colour_id,
                 'item': item,
                 'request_list': request_list
             }
             request_list.append(
                 scrapy.Request(url=self.price_url.format(item['retailer_sku'], colour_id, size_id),
-                               callback=self.parse_size, meta=meta_data))
-        yield request_list.pop(0)
+                               callback=self.parse_size,
+                               meta=meta_data))
+        if request_list:
+            yield request_list.pop(0)
+        else:
+            yield item
 
     def parse_size(self, response):
         price = self.get_price(response)
         item = response.meta['item']
         colour = response.meta['colour']
         size_id = response.meta['size_id']
-        sku_key = colour + '_' + size_id
+        size_dict = response.meta['size_dict']
+        sku_key = (colour + '_' + size_dict[size_id]).replace(' ', '_')
         sku_data = {
-            'size_id': size_id,
+            'size': size_dict[size_id],
             'colour': colour,
             'price': price
         }
@@ -92,6 +104,21 @@ class WoolsWorthSpider(CrawlSpider):
     def get_size_list(self, response):
         return response.css('a.product-size::attr(onclick)').extract()
 
+    def get_currency_static(self, response):
+        return response.css('span.currency::attr(content)').extract_first()
+
+    def get_price_static(self, response):
+        return response.css('span.price[itemprop="price"]::text').extract_first()
+
+    def get_size_dict(self, response):
+        size_nodes = response.css('a.product-size')
+        size_dict = {}
+        for size_node in size_nodes:
+            size_key = size_node.css('::attr(onclick)').extract_first()
+            size_key = size_key.split(',')[1]
+            size_dict[size_key] = size_node.css('::text').extract_first().strip()
+        return size_dict
+
     def get_colour_list(self, response):
         return response.css('img.colour::attr(onclick)').extract()
 
@@ -109,8 +136,8 @@ class WoolsWorthSpider(CrawlSpider):
     def get_brand(self, response):
         return response.css('meta[itemprop="brand"]::attr(content)').extract_first()
 
-    def get_colour(self, colour_id, response):
-        return response.css('input#colour_' + colour_id + '::attr(value)').extract_first()
+    def get_colour(self, product_id, response):
+        return response.css('input#colour_' + product_id + '::attr(value)').extract_first().strip()
 
     def get_retailer_sku(self, response):
         return response.css('input#gtmProductId::attr(value)').extract_first()
@@ -121,9 +148,4 @@ class WoolsWorthSpider(CrawlSpider):
     def extract_colour_ids(self, selector_list):
         selector_list = [self.extract_id_string(x) for x in selector_list]
         ids_list = [x.split(',')[0] for x in selector_list]
-        return ids_list
-
-    def extract_size_ids(self, selector_list):
-        selector_list = [self.extract_id_string(x) for x in selector_list]
-        ids_list = [x.split(',')[1] for x in selector_list]
         return ids_list
