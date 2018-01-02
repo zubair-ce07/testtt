@@ -46,11 +46,11 @@ class SkuSpider(scrapy.Spider, Mixin):
     def articles(self, response):
         text = response.xpath(
             '//script[contains(text(),"articlesString")]/text()').extract_first()
-        articles = re.findall(
+        articles_ids = re.findall(
             r'\b\d+\b.\b\d+\b.[A-Za-z0-9]+\S[A-Za-z0-9,]+', text)
         parent_id = self.product_id(response)
         articles = []
-        for i in anid_content:
+        for i in articles_ids:
             codes = i.split('|')
             article = dict()
             article.update({"colour": codes[1]})
