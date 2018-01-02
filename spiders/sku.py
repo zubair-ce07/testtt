@@ -44,10 +44,10 @@ class SkuSpider(scrapy.Spider, Mixin):
         return response.xpath('.//input[@name="parentid"]/@value').extract_first()
 
     def articles(self, response):
-        json_content = response.xpath(
+        text = response.xpath(
             '//script[contains(text(),"articlesString")]/text()').extract_first()
-        anid_content = re.findall(
-            r'\b\d+\b.\b\d+\b.[A-Za-z0-9]+\S[A-Za-z0-9,]+', json_content)
+        articles = re.findall(
+            r'\b\d+\b.\b\d+\b.[A-Za-z0-9]+\S[A-Za-z0-9,]+', text)
         parent_id = self.product_id(response)
         articles = []
         for i in anid_content:
