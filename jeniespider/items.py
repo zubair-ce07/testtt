@@ -11,6 +11,7 @@ import scrapy
 class JeniespiderItem(scrapy.Item):
     product_id = scrapy.Field()
     url = scrapy.Field()
+    gender = scrapy.Field()
     title = scrapy.Field()
     description = scrapy.Field()
     brand = scrapy.Field()
