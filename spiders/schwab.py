@@ -7,6 +7,8 @@ from scrapy.spiders import CrawlSpider, Rule
 
 from SchwabSpider.spiders.mixin import Mixin
 from SchwabSpider.spiders.product import ProductSpider
+from SchwabSpider.items import SchwabProduct
+
 
 
 class SchwabSpider(CrawlSpider, Mixin):
@@ -16,32 +18,28 @@ class SchwabSpider(CrawlSpider, Mixin):
     rules = (
         Rule(LinkExtractor(
             restrict_css='.js-next'),
-            callback='parse_links'),
+            callback='parse_categories'),
         Rule(LinkExtractor(
             restrict_css='.js-pl-product'),
             callback=productSpider.parse),
     )
 
-    def parse(self, response):
-        if response.url == self.start_urls[0]:
-            jsonresponse = response.body_as_unicode()
-            for url in self.url_regex.findall(jsonresponse):
-                yield Request(url=url, callback=self.parse)
+    def start_requests(self):
+        for start_url in self.start_urls:
+            yield Request(start_url, callback=self.parse_menu)
 
-        requests = super().parse(response)
-        for request in requests:
-            yield request
+    def parse_menu(self, response):
+        jsonresponse = response.body_as_unicode()
+        for url in self.url_regex.findall(jsonresponse):
+            yield Request(url=url, callback=self.parse)
 
-    def parse_links(self, response):
+    def parse_categories(self, response):
         current_url = response.url
         for request in super().parse(response):
-            product = response.meta.get('product', dict())
-            new_product = copy.deepcopy(product)
-            new_product['trail'] = product.get('trail', list())
-            trail = new_product.get('trail')
+            trail = response.meta.get('trail', list())
             exist = [url for url in trail if url == current_url]
             if not exist:
                 trail.append(response.url)
-            request.meta['product'] = new_product
+            request.meta['trail'] = trail
 
             yield request
