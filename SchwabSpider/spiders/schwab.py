@@ -1,4 +1,3 @@
-import copy
 import re
 
 from scrapy.http import Request
@@ -7,8 +6,6 @@ from scrapy.spiders import CrawlSpider, Rule
 
 from SchwabSpider.spiders.mixin import Mixin
 from SchwabSpider.spiders.product import ProductSpider
-from SchwabSpider.items import SchwabProduct
-
 
 
 class SchwabSpider(CrawlSpider, Mixin):
