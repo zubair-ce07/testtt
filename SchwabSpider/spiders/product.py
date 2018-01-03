@@ -11,18 +11,19 @@ class ProductSpider(scrapy.Spider, Mixin):
     name = 'schwab-parse'
     item_info_url = "https://www.schwab.de/request/itemservice.php?fnc=getItemInfos"
     product_api_url = "https://www.schwab.de/index.php?"
-    parsed = list()
+    seen_ids = list()
 
     def parse(self, response):
-        if [product for product in self.parsed if self.product_retailer(response) == product]:
+        retailer_id = self.product_retailer(response)
+        if [product_id for product_id in self.seen_ids if retailer_id == product_id]:
             return self.next_action(response)
 
-        self.parsed.append(self.product_retailer(response))
+        self.seen_ids.append(retailer_id)
         product = SchwabProduct()
         product["category"] = self.product_category(response)
         product["description"] = self.product_descriptions(response)
         product["care"] = self.product_cares(response)
-        product["retailer_sku"] = self.product_retailer(response)
+        product["retailer_sku"] = retailer_id
         product["image_urls"] = self.product_images(response)
         product["name"] = self.product_name(response).strip()
         product["brand"] = self.product_brand(response)
@@ -45,9 +46,8 @@ class ProductSpider(scrapy.Spider, Mixin):
     def parse_skus(self, response):
         product = response.meta.get("product")
         skus = product.get("skus")
-        current_sku = self.sku(response)
-        product_key = f'{current_sku["colour"]}_{current_sku["size"]}_{self.current_variant_name(response)}'
-        skus[product_key] = current_sku
+        key, current_sku = self.sku(response)
+        skus[key] = current_sku
         response.meta["remaining_request"].append(
             self.create_image_request(response))
         return self.next_action(response)
@@ -60,7 +60,8 @@ class ProductSpider(scrapy.Spider, Mixin):
         sku["size"] = self.product_current_size_name(response)
         if not self.product_available(response):
             sku["out_of_stock"] = True
-        return sku
+        key = f'{sku["colour"]}_{sku["size"]}_{self.current_variant_name(response)}'
+        return key, sku
 
     def parse_images(self, response):
         product = response.meta.get("product")
@@ -73,7 +74,8 @@ class ProductSpider(scrapy.Spider, Mixin):
         request = scrapy.Request(self.item_info_url,
                                  method="POST",
                                  body=request_body,
-                                 headers={'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                                 headers={
+                                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
                                  callback=self.parse_info)
         return request
 
@@ -106,7 +108,8 @@ class ProductSpider(scrapy.Spider, Mixin):
         return request
 
     def product_category(self, response):
-        catogories = response.css('.breadcrumb [itemprop="name"]::text').extract()
+        catogories = response.css(
+            '.breadcrumb [itemprop="name"]::text').extract()
         return [category.strip() for category in catogories]
 
     def product_descriptions(self, response):
@@ -161,16 +164,13 @@ class ProductSpider(scrapy.Spider, Mixin):
         article_ids = articles_string.split(';')
         parent_id = self.product_id(response)
         articles = []
-        for i in article_ids:
-            codes = i.split('|')
-            article = dict()
-            article["colour"] = codes[1]
-            article["version"] = codes[2]
-            article["size"] = codes[3]
-            article_number = (parent_id + "-" +
-                              codes[1]) + "-" + codes[3] + "-" + codes[2]
-            article["number"] = article_number
-            articles.append(article)
+        for _id in article_ids:
+            item = dict()
+            item["colour"], item["version"], item["size"] = _id.split('|')[
+                1:]
+            item_number = f'{parent_id}-{item["colour"]}-{item["size"]}-{item["version"]}'
+            item["number"] = item_number
+            articles.append(item)
         return articles
 
     def product_available(self, response):
