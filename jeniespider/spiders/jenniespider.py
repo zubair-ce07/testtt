@@ -1,15 +1,12 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from spiders.parse import Parse
+from spiders.parse import Parser
+from spiders.mixin import Mixin
 
 
-class JanieSpider(CrawlSpider):
+class JanieSpider(CrawlSpider, Mixin):
     name = "janiespider"
-    parser = Parse()
-    allowed_domains = ["janieandjack.com", "i1.adis.ws"]
-    start_urls = (
-        'http://www.janieandjack.com/',
-    )
+    parser = Parser()
     rules = (
         Rule(LinkExtractor(
             restrict_css='.desktop-only .subcategory')),
@@ -18,6 +15,6 @@ class JanieSpider(CrawlSpider):
             tags=['div'], attrs=['data-grid-url'])
         ),
         Rule(LinkExtractor(restrict_css='.product-image .thumb-link'),
-             callback=parser.parse_product),
+             callback=parser.parse),
 
     )

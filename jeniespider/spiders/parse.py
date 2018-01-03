@@ -1,21 +1,28 @@
 import json
 import re
+import scrapy
 from copy import deepcopy
 from scrapy import Request
 from items import JeniespiderItem
+from spiders.mixin import Mixin
 
 
-class Parse:
+class Parser(scrapy.Spider, Mixin):
     product_ids = []
+    name = 'product_spider'
+    gender_map = [
+        'Girl', 'Baby Girl',
+        'Boy', 'Baby Boy'
+    ]
 
-    def parse_product(self, response):
+    def parse(self, response):
         product = JeniespiderItem()
         product_id = self.product_id(response)
         if product_id not in self.product_ids:
-            self.product_ids += product_id
+            self.product_ids.append(product_id)
             product['product_id'] = product_id
             product['url'] = response.url
-            product['gender'] = "unisex-kids"
+            product['gender'] = self.gender(response)
             product['title'] = self.title(response)
             product['market'] = 'US'
             product['brand'] = 'Janie And Jack'
@@ -25,6 +32,14 @@ class Parse:
             product['skus'] = list()
             response.meta['product'] = product
             return self.requests_image_urls(response)
+
+    def gender(self, response):
+        xpath = "//span//a//span[contains(@itemprop, 'name')]/text()"
+        category = response.xpath(xpath).extract()
+        a = [x for x in self.gender_map if x in category]
+        if a:
+            return a[0]
+        return "unisex-kids"
 
     @staticmethod
     def product_id(response):
