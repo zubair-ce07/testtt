@@ -11,15 +11,17 @@ class ProductSpider(scrapy.Spider, Mixin):
     name = 'schwab-parse'
     item_info_url = "https://www.schwab.de/request/itemservice.php?fnc=getItemInfos"
     product_api_url = "https://www.schwab.de/index.php?"
+    parsed = list()
 
     def parse(self, response):
+        if [product for product in self.parsed if self.product_retailer(response) == product]:
+            return self.next_action(response)
+
+        self.parsed.append(self.product_retailer(response))
         product = SchwabProduct()
-        product["category"] = [category
-                               for category in self.product_category(response)]
-        product["description"] = [desc.strip()
-                                  for desc in self.product_descriptions(response)]
-        product["care"] = [care.strip()
-                           for care in self.product_cares(response)]
+        product["category"] = self.product_category(response)
+        product["description"] = self.product_descriptions(response)
+        product["care"] = self.product_cares(response)
         product["retailer_sku"] = self.product_retailer(response)
         product["image_urls"] = self.product_images(response)
         product["name"] = self.product_name(response).strip()
@@ -40,10 +42,17 @@ class ProductSpider(scrapy.Spider, Mixin):
         response.meta["information"] = jsonresponse
         return self.next_action(response)
 
-    def parse_product(self, response):
+    def parse_skus(self, response):
         product = response.meta.get("product")
         skus = product.get("skus")
+        current_sku = self.sku(response)
+        product_key = f'{current_sku["colour"]}_{current_sku["size"]}_{self.current_variant_name(response)}'
+        skus[product_key] = current_sku
+        response.meta["remaining_request"].append(
+            self.create_image_request(response))
+        return self.next_action(response)
 
+    def sku(self, response):
         sku = dict()
         sku["price"] = self.product_price(response)
         sku["currency"] = self.product_currency(response)
@@ -51,11 +60,7 @@ class ProductSpider(scrapy.Spider, Mixin):
         sku["size"] = self.product_current_size_name(response)
         if not self.product_available(response):
             sku["out_of_stock"] = True
-        product_key = f'{sku["colour"]}_{sku["size"]}_{self.current_variant_name(response)}'
-        skus[product_key] = sku
-        response.meta["remaining_request"].append(
-            self.create_image_request(response))
-        return self.next_action(response)
+        return sku
 
     def parse_images(self, response):
         product = response.meta.get("product")
@@ -81,7 +86,7 @@ class ProductSpider(scrapy.Spider, Mixin):
                 'ajaxdetails': 'ajaxdetailsPage',
             }
             request = scrapy.FormRequest(
-                url=self.product_api_url, formdata=form_data, callback=self.parse_product)
+                url=self.product_api_url, formdata=form_data, callback=self.parse_skus)
             multiple_requests.append(request)
         return multiple_requests
 
@@ -101,22 +106,25 @@ class ProductSpider(scrapy.Spider, Mixin):
         return request
 
     def product_category(self, response):
-        return response.css('.breadcrumb [itemprop="name"]::text').extract()
+        catogories = response.css('.breadcrumb [itemprop="name"]::text').extract()
+        return [category.strip() for category in catogories]
 
     def product_descriptions(self, response):
         descriptions_xpath = ".//div[@itemprop='description']/text()"
-        return response.xpath(descriptions_xpath).extract()
+        descriptions = response.xpath(descriptions_xpath).extract()
+        return [description.strip() for description in descriptions]
 
     def product_cares(self, response):
         care_xpath = './/ul[@class="l-outsp-bot-5"]//li/text()'
-        return response.xpath(care_xpath).extract()
+        cares = response.xpath(care_xpath).extract()
+        return [care.strip() for care in cares]
 
     def product_retailer(self, response):
         return response.xpath('.//input[@name="parentid"]/@value').extract_first()
 
     def product_images(self, response):
         images_xpath = './/a[@id="magic"]/@href'
-        return ["http:"+url for url in response.xpath(images_xpath).extract()]
+        return ["http:" + url for url in response.xpath(images_xpath).extract()]
 
     def product_name(self, response):
         name_xpath = ".//span[@itemprop='name']/text()"
@@ -136,7 +144,7 @@ class ProductSpider(scrapy.Spider, Mixin):
         return response.xpath('.//meta[@itemprop="priceCurrency"]/@content').extract_first()
 
     def product_form_data_cl(self, response):
-        return response.xpath('.//input[@name="cl"]/@value').extract()[3]
+        return response.css('#detailsMain input[name="cl"]::attr(value)').extract_first()
 
     def product_id(self, response):
         return response.xpath('.//input[@name="parentid"]/@value').extract_first()
@@ -150,19 +158,18 @@ class ProductSpider(scrapy.Spider, Mixin):
 
     def product_articles(self, response):
         articles_string = self.article_string(response)[0]
-        articles_ids = articles_string.split(';')
+        article_ids = articles_string.split(';')
         parent_id = self.product_id(response)
         articles = []
-        for i in articles_ids:
+        for i in article_ids:
             codes = i.split('|')
             article = dict()
-            article.update({"colour": codes[1]})
-            article.update({"version": codes[2]})
-
-            article.update({"size": codes[3]})
+            article["colour"] = codes[1]
+            article["version"] = codes[2]
+            article["size"] = codes[3]
             article_number = (parent_id + "-" +
                               codes[1]) + "-" + codes[3] + "-" + codes[2]
-            article.update({"number": article_number})
+            article["number"] = article_number
             articles.append(article)
         return articles
 
