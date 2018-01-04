@@ -20,6 +20,7 @@ class ProductSpider(scrapy.Spider, Mixin):
 
         self.seen_ids.append(retailer_id)
         product = SchwabProduct()
+        product["gender"] = self.product_gender(response)
         product["category"] = self.product_category(response)
         product["description"] = self.product_descriptions(response)
         product["care"] = self.product_cares(response)
@@ -60,7 +61,11 @@ class ProductSpider(scrapy.Spider, Mixin):
         sku["size"] = self.product_current_size_name(response)
         if not self.product_available(response):
             sku["out_of_stock"] = True
-        key = f'{sku["colour"]}_{sku["size"]}_{self.current_variant_name(response)}'
+        variant = self.current_variant_name(response)
+        if variant:
+            key = f'{sku["colour"]}_{sku["size"]}_{variant}'
+        else:
+            key = f'{sku["colour"]}_{sku["size"]}'
         return key, sku
 
     def parse_images(self, response):
@@ -106,6 +111,18 @@ class ProductSpider(scrapy.Spider, Mixin):
         request = scrapy.FormRequest(
             url=self.product_api_url, method="GET", formdata=form_data, callback=self.parse_images)
         return request
+
+    def product_gender(self, response):
+        catogories = self.product_category(response)
+        if [category for category in catogories if "Damen" in category]:
+            return "women"
+        if [category for category in catogories if "Herren" in category]:
+            return "men"
+        if [category for category in catogories if "Madchen" in category]:
+            return "girl"
+        if [category for category in catogories if "Jungen" in category]:
+            return "boy"
+        return "other"
 
     def product_category(self, response):
         catogories = response.css(
