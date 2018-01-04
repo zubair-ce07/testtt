@@ -19,7 +19,11 @@ class JeniespiderItem(scrapy.Item):
     care = scrapy.Field()
     image_urls = scrapy.Field()
     category = scrapy.Field()
-    skus = scrapy.Field(type='list')
+    skus = scrapy.Field(dict())
     market = scrapy.Field()
     brand = scrapy.Field()
     retailer = scrapy.Field()
+    size_urls = scrapy.Field()
+
+
+

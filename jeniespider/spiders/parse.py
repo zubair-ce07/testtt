@@ -11,34 +11,34 @@ class Parser(scrapy.Spider, Mixin):
     product_ids = []
     name = 'product_spider'
     gender_map = [
-        'Girl', 'Baby Girl',
-        'Boy', 'Baby Boy'
+        'Girl',
+        'Boy'
     ]
 
     def parse(self, response):
         product = JeniespiderItem()
         product_id = self.product_id(response)
-        if product_id not in self.product_ids:
-            self.product_ids.append(product_id)
-            product['product_id'] = product_id
-            product['url'] = response.url
-            product['gender'] = self.gender(response)
-            product['title'] = self.title(response)
-            product['market'] = 'US'
-            product['brand'] = 'Janie And Jack'
-            product['retailer'] = 'janieandjack-us'
-            product['description'] = self.description(response)
-            product['category'] = self.category(response)
-            product['skus'] = list()
-            response.meta['product'] = product
-            return self.requests_image_urls(response)
+        if product_id in self.product_ids:
+            return
+        self.product_ids.append(product_id)
+        product['product_id'] = product_id
+        product['url'] = response.url
+        product['gender'] = self.gender(response)
+        product['title'] = self.title(response)
+        product['market'] = 'US'
+        product['brand'] = 'Janie And Jack'
+        product['retailer'] = 'janieandjack-us'
+        product['description'] = self.description(response)
+        product['category'] = self.category(response)
+        product['skus'] = {}
+        return self.requests_image_urls(response, product)
 
     def gender(self, response):
         xpath = "//span//a//span[contains(@itemprop, 'name')]/text()"
         category = response.xpath(xpath).extract()
-        a = [x for x in self.gender_map if x in category]
-        if a:
-            return a[0]
+        for gender in self.gender_map:
+            if gender in category:
+                return gender
         return "unisex-kids"
 
     @staticmethod
@@ -46,20 +46,25 @@ class Parser(scrapy.Spider, Mixin):
         xpath = "//div[@class='product-number']//span[@class='visually-hidden']/text()"
         return response.xpath(xpath).extract_first(default='')
 
-    def requests_image_urls(self, response):
-        xpath = "//a[@class='swatchanchor ']/@href"
-        sizes = response.xpath(xpath).extract()
+    def requests_image_urls(self, response, product):
+        link = "http://i1.adis.ws/s/janieandjack/"
+        sizes = self.size_urls(response)
         pending_requests = []
         for size in sizes:
             pending_requests.append(Request(size,
                                             callback=self.parse_sizes))
+        product['size_urls'] = pending_requests
+        url = "{}{}_SET.js".format(link, product['product_id'])
+        response.meta['product'] = product
         meta = deepcopy(response.meta)
-        product_id = response.meta['product']._values['product_id']
-        meta['size_url'] = pending_requests
-        url = "http://i1.adis.ws/s/janieandjack/" + product_id + "_SET.js"
         return Request(url,
                        meta=meta,
                        callback=self.parse_image)
+
+    @staticmethod
+    def size_urls(response):
+        xpath = "//a[@class='swatchanchor ']/@href"
+        return response.xpath(xpath).extract()
 
     def parse_image(self, response):
         product = response.meta['product']
@@ -68,7 +73,7 @@ class Parser(scrapy.Spider, Mixin):
 
     @staticmethod
     def image_src(response):
-        body = response.body_as_unicode()
+        body = response.text
         body = re.search(r'imgSet\(({.+})\)', body).group(1)
         image_src = json.loads(body)
         img_src = [img.get('src') for img in image_src.get('items')]
@@ -83,8 +88,7 @@ class Parser(scrapy.Spider, Mixin):
     def description(response):
         xpath = "//div[contains(@class, 'longDescription')]//ul//li/text()"
         description = response.xpath(xpath).extract()
-        description = [descript.strip() for descript in description]
-        return description
+        return [descript.strip() for descript in description]
 
     @staticmethod
     def category(response):
@@ -102,16 +106,15 @@ class Parser(scrapy.Spider, Mixin):
         size = self.size(response)
         item['colour'] = colour
         item['size'] = size
-        item['sku_id'] = str(colour) + "_" + str(size)
-        product['skus'].append(item)
+        sku_id = "{}_{}".format(colour, size)
+        product['skus'].update({sku_id: item})
         return self.next_action(response, product)
 
     @staticmethod
     def next_action(response, product):
-        size_url = response.meta['size_url']
-        if size_url:
-            request = size_url.pop()
-            request.meta['size_url'] = response.meta['size_url']
+        product_size = response.meta['product']
+        if product_size['size_urls']:
+            request = product_size['size_urls'].pop()
             request.meta['product'] = response.meta['product']
             return request
         else:
