@@ -1,7 +1,7 @@
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-from spiders.parse import Parser
-from spiders.mixin import Mixin
+from jeniespider.spiders.parse import Parser
+from jeniespider.spiders.mixin import Mixin
 
 
 class JanieSpider(CrawlSpider, Mixin):

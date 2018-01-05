@@ -3,8 +3,8 @@ import re
 import scrapy
 from copy import deepcopy
 from scrapy import Request
-from items import JeniespiderItem
-from spiders.mixin import Mixin
+from jeniespider.items import JeniespiderItem
+from jeniespider.spiders.mixin import Mixin
 
 
 class Parser(scrapy.Spider, Mixin):
