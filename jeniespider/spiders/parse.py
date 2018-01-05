@@ -11,8 +11,8 @@ class Parser(scrapy.Spider, Mixin):
     product_ids = []
     name = 'product_spider'
     gender_map = [
-        'Girl',
-        'Boy'
+        ('Girl', 'girl'),
+        ('Boy', 'boy')
     ]
 
     def parse(self, response):
@@ -36,9 +36,9 @@ class Parser(scrapy.Spider, Mixin):
     def gender(self, response):
         xpath = "//span//a//span[contains(@itemprop, 'name')]/text()"
         category = response.xpath(xpath).extract()
-        for gender in self.gender_map:
+        for gender, l_gender in self.gender_map:
             if gender in category:
-                return gender
+                return l_gender
         return "unisex-kids"
 
     @staticmethod
@@ -98,6 +98,10 @@ class Parser(scrapy.Spider, Mixin):
 
     def parse_sizes(self, response):
         product = response.meta['product']
+        product['skus'].update(self.skus_items(response))
+        return self.next_action(response, product)
+
+    def skus_items(self, response):
         item = dict()
         item['price'] = self.price(response)
         item['currency'] = 'USD'
@@ -107,8 +111,7 @@ class Parser(scrapy.Spider, Mixin):
         item['colour'] = colour
         item['size'] = size
         sku_id = "{}_{}".format(colour, size)
-        product['skus'].update({sku_id: item})
-        return self.next_action(response, product)
+        return {sku_id: item}
 
     @staticmethod
     def next_action(response, product):
@@ -141,7 +144,7 @@ class Parser(scrapy.Spider, Mixin):
                 "and contains(@class, 'selected')]" \
                 "//a[@class='swatchanchor ']/text()"
         size = response.xpath(xpath).extract()
-        return "".join(e for e in size[len(size) - 1] if e.isalnum())
+        return "".join(e for e in size[-1] if e.isalnum())
 
     @staticmethod
     def previous_prices(response):

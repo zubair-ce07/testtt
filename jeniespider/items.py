@@ -21,9 +21,5 @@ class JeniespiderItem(scrapy.Item):
     category = scrapy.Field()
     skus = scrapy.Field(dict())
     market = scrapy.Field()
-    brand = scrapy.Field()
     retailer = scrapy.Field()
     size_urls = scrapy.Field()
-
-
-
