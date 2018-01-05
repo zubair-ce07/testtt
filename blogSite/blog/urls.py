@@ -6,5 +6,7 @@ urlpatterns = [
 
     url(r'^post/id/(?P<pk>[0-9]+)/$', views.ViewPost.as_view(), name='post'),
 
-    url(r'^post/listposts/$', views.list_posts.as_view(), name='all_posts'),
+    url(r'^post/listposts/$', views.ListPosts.as_view(), name='all_posts'),
+
+    url(r'^post/createpost/$', views.CreatePost.as_view(), name='create_post'),
 ]

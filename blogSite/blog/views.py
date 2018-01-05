@@ -4,6 +4,7 @@ from django.shortcuts import redirect
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from datetime import datetime
 
 from . import models
 
@@ -12,12 +13,38 @@ def index(request):
     return HttpResponse("Hello, world. You're at the blog index.")
 
 
-class list_posts(ListView):
+class ListPosts(ListView):
 
     model = models.Post
     context_object_name = 'posts'
-    queryset = models.Post.objects.all()
+    # queryset = models.Post.objects.all()
     template_name = 'blog/list_display.html'
+
+    def get_queryset(self):
+        filter_on = self.request.GET.get('search')
+        if filter_on:
+            new_context = models.Post.objects.filter(
+                title=filter_on,
+            )
+        else:
+            new_context = models.Post.objects.all()
+
+        return new_context
+
+
+class CreatePost(LoginRequiredMixin, ListView):
+
+    model = models.Category
+    context_object_name = 'categories'
+    queryset = models.Category.objects.all()
+    template_name = 'blog/create_post.html'
+
+    def post(self, request, *args, **kwargs):
+        post = models.Post(title=request.POST.get('title'), body=request.POST.get('body'), author=request.user,
+                           modified_at=datetime.now(), category_id=request.POST.get('category'))
+        post.save()
+
+        return redirect('/blog/post/listposts/')
 
 
 class ViewPost(LoginRequiredMixin, DetailView):
@@ -44,7 +71,7 @@ class ViewPost(LoginRequiredMixin, DetailView):
         if request.POST.get('vote'):
             vote = request.POST.get('vote')
             vote = vote_choice[vote]
-            models.LikePost.objects.create(created_at=datetime.datetime.now(), post_id=post_id, user_id=1, vote=vote)
+            models.LikePost.objects.create(created_at=datetime.now(), post_id=post_id, user_id=1, vote=vote)
 
         else:
             vote = request.POST.get('commentvote')

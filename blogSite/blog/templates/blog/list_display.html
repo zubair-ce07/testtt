@@ -1,3 +1,11 @@
+
+<form method="get" action=".">
+    <p>Search: <input type="text" value="search" name="search"/></p>
+    <p><input type="submit" name="okay" value="okay"/></p>
+</form>
+
+<br>
+
 <ul>
     {% for post in posts %}
         <li><a href="../id/{{ post.id }}">{{ post.title }}</a></li>
@@ -10,3 +18,4 @@
         <li><a href="{% url 'login'%}">Login</a></li>
     {% endif %}
 </ul>
+

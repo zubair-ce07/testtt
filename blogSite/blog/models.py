@@ -17,7 +17,7 @@ class Post(models.Model):
 
     def post_likes(self):
         post_likes = self.likes.values('post_id').annotate(count=Sum('vote'))
-        return post_likes.get()['count']
+        return post_likes.get()['count'] if post_likes else 0
 
     def comment_likes(self):
         comments = self.comments.all()
