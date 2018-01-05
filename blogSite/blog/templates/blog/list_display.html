@@ -1,3 +1,5 @@
+{% load staticfiles %}
+<link href={% static 'tellme/feedback.min.css' %} rel="stylesheet">
 
 <form method="get" action=".">
     <p>Search: <input type="text" value="search" name="search"/></p>
@@ -19,3 +21,9 @@
     {% endif %}
 </ul>
 
+<br>
+<button type="button" id="feedback-btn" class="btn btn-info vertical-right-aligned">
+    Feedback <span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
+</button>
+
+{%  include 'tellme/js_inc.html' %}
