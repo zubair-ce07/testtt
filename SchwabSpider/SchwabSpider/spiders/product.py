@@ -43,7 +43,6 @@ class ProductSpider(scrapy.Spider, Mixin):
     def parse_info(self, response):
         jsonresponse = json.loads(response.text)
         response.meta["information"] = jsonresponse
-        response.meta["product"]["information"] = jsonresponse
         return self.next_action(response)
 
     def parse_skus(self, response):
