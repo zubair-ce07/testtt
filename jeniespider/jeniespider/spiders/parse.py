@@ -63,7 +63,7 @@ class Parser(scrapy.Spider, Mixin):
 
     @staticmethod
     def size_urls(response):
-        xpath = "//a[@class='swatchanchor ']/@href"
+        xpath = "//ul[@class='swatches size']//li//a[contains(@class, 'swatchanchor ')]/@href"
         return response.xpath(xpath).extract()
 
     def parse_image(self, response):
@@ -94,7 +94,7 @@ class Parser(scrapy.Spider, Mixin):
     def category(response):
         xpath = "//span//a//span[contains(@itemprop, 'name')]/text()"
         category = response.xpath(xpath).extract()
-        return category[-1]
+        return category
 
     def parse_sizes(self, response):
         product = response.meta['product']
@@ -107,8 +107,8 @@ class Parser(scrapy.Spider, Mixin):
         item['currency'] = 'USD'
         item['previous_prices'] = self.previous_prices(response)
         colour = self.colour(response)
-        size = self.size(response)
         item['colour'] = colour
+        size = self.size(response)
         item['size'] = size
         sku_id = "{}_{}".format(colour, size)
         return {sku_id: item}
@@ -128,7 +128,7 @@ class Parser(scrapy.Spider, Mixin):
         xpath = "//span[@class='price-sales']/text()"
         price = response.xpath(xpath).extract_first()
         price = price.replace('$', '')
-        price = str(round(float(price) * 100))
+        price = int(round(float(price) * 100))
         return price
 
     @staticmethod
@@ -142,12 +142,19 @@ class Parser(scrapy.Spider, Mixin):
     def size(response):
         xpath = "//li[contains(@class, 'selectable') " \
                 "and contains(@class, 'selected')]" \
-                "//a[@class='swatchanchor ']/text()"
+                "//a[contains(@class,'swatchanchor ') " \
+                "and contains(@title,'Select Size')]/text()"
         size = response.xpath(xpath).extract()
-        return "".join(e for e in size[-1] if e.isalnum())
+        if size:
+            return size[-1].strip()
 
     @staticmethod
     def previous_prices(response):
         xpath = "//span[@class='price-standard']/text()"
         previous_prices = response.xpath(xpath).extract()
-        return previous_prices
+        prices = []
+        for price in previous_prices:
+            price = price.replace('$', '')
+            previous_price = int(round(float(price) * 100))
+            prices.append(previous_price)
+        return prices
