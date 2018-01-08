@@ -12,6 +12,7 @@ class SheegoSpider(CrawlSpider):
     start_urls = ['https://www.sheego.de']
     color_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}'
     size_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}&varselid%5B1%5D={}'
+    length_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}&varselid%5B1%5D={}&varselid%5B2%5D={}'
 
     rules = (
         Rule(LinkExtractor(restrict_css=
@@ -54,19 +55,46 @@ class SheegoSpider(CrawlSpider):
         else:
             yield product
 
-    def parse_product_sizes(self, response):
+    def parse_product_length(self, response):
         product = response.meta['product']
         skus_collection = response.meta['skus_collection']
         color = self.get_product_color(response)
         product['image_urls'] += self.get_product_images(response)
+        product_lengths = self.get_product_length(response)
+
+        if product_lengths:
+            self.insert_length_requests(product_lengths, color, response)
+        else:
+            product_sizes = self.get_product_sizes(response)
+            if product_sizes:
+                self.insert_size_requests(product_sizes, color, response)
+
+            else:
+                out_of_stock = self.get_product_availability(response)
+                product_skus = {
+                    '{}_{}'.format(color, None) : self.get_product_info(response, color, out_of_stock = out_of_stock)
+                }
+                product['skus'].update(product_skus)
+
+        if skus_collection:
+            yield skus_collection.pop()
+        else:
+            yield product
+
+    def parse_product_sizes(self, response):
+        product = response.meta['product']
+        skus_collection = response.meta['skus_collection']
+        length = response.meta['length']
+        color = response.meta['color']
         product_sizes = self.get_product_sizes(response)
 
         if product_sizes:
-            self.insert_size_requests(product_sizes, color, response)
+            self.insert_sku_requests(product_sizes, color, length, response)
 
         else:
+            out_of_stock = self.get_product_availability(response)
             product_skus = {
-                '{}_{}'.format(color, None) : self.get_product_info(response, color, out_of_stock=False)
+                '{}_{}'.format(color, length) : self.get_product_info(response, color, length = length, out_of_stock = out_of_stock)
             }
             product['skus'].update(product_skus)
 
@@ -75,8 +103,12 @@ class SheegoSpider(CrawlSpider):
         else:
             yield product
 
+
     def get_product_sizes(self, response):
         return response.css('.js-variantSelector.size .sizespots__item::attr(data-varselid)').getall()
+
+    def get_product_length(self, response):
+        return response.css('.js-groessentyp option::attr(value)').getall()
 
     def get_product_color_ids(self, response):
         return response.css('.colorspots__wrapper > .colorspots__item::attr(data-varselid)').getall()
@@ -98,7 +130,6 @@ class SheegoSpider(CrawlSpider):
         if product_code:
             results = re.search(r'([^\s]\d+)', product_code)
             return results.group(1)
-
         return product_code
 
     def get_product_brand(self, response):
@@ -142,9 +173,10 @@ class SheegoSpider(CrawlSpider):
         skus_collection = response.meta['skus_collection']
         product_size = self.get_product_size(response)
         color = response.meta['color']
+        length = response.meta['length']
         out_of_stock = self.get_product_availability(response)
         product_sku = {
-            '{}_{}'.format(color, product_size): self.get_product_info(response, color, product_size, out_of_stock)
+            '{}_{}_{}'.format(color, length, product_size): self.get_product_info(response, color, product_size, length, out_of_stock)
         }
         product['skus'].update(product_sku)
 
@@ -153,17 +185,18 @@ class SheegoSpider(CrawlSpider):
         else:
             yield product
 
-    def get_product_info(self, response, color = None, product_size = None, out_of_stock = True):
+    def get_product_info(self, response, color = None, product_size = None, length = None, out_of_stock = True):
         product_info = {
             'price': self.get_product_price(response),
-            'colour': color,
+            'color': color,
             'currency': self.get_product_currency(response),
             'size': product_size,
+            'length' : length,
             'out_of_stock' : out_of_stock,
         }
         return product_info
 
-    def insert_size_requests(self, product_sizes, color, response):
+    def insert_size_requests(self, product_sizes, color, response, length = None):
         product = response.meta['product']
         color_id = response.meta['color_id']
         skus_collection = response.meta['skus_collection']
@@ -175,6 +208,42 @@ class SheegoSpider(CrawlSpider):
                 meta={
                     'product': product,
                     'color': color,
+                    'length' : length,
+                    'skus_collection': skus_collection
+                }
+            ))
+
+    def insert_sku_requests(self, product_sizes, color, length, response):
+        product = response.meta['product']
+        color_id = response.meta['color_id']
+        skus_collection = response.meta['skus_collection']
+
+        for size in product_sizes:
+            skus_collection.append(scrapy.Request(
+                url=self.length_link.format(product['retailer_sk'], color_id, length, size),
+                callback=self.product_skus,
+                meta={
+                    'product': product,
+                    'color': color,
+                    'length' : length,
+                    'skus_collection': skus_collection
+                }
+            ))
+
+    def insert_length_requests(self, product_lengths, color, response):
+        product = response.meta['product']
+        color_id = response.meta['color_id']
+        skus_collection = response.meta['skus_collection']
+
+        for length in product_lengths:
+            skus_collection.append(scrapy.Request(
+                url=self.size_link.format(product['retailer_sk'], color_id, length),
+                callback=self.parse_product_sizes,
+                meta={
+                    'product': product,
+                    'color': color,
+                    'color_id' : color_id,
+                    'length' : length,
                     'skus_collection': skus_collection
                 }
             ))
@@ -183,7 +252,7 @@ class SheegoSpider(CrawlSpider):
         for color_id in color_ids:
             skus_collection.append(scrapy.Request(
                 url=self.color_link.format(product['retailer_sk'], color_id),
-                callback=self.parse_product_sizes,
+                callback=self.parse_product_length,
                 meta={
                     'product': product,
                     'color_id': color_id,
@@ -203,4 +272,3 @@ class SheegoSpider(CrawlSpider):
             return re.sub(r'[\n\t\s]*', '', input)
         else:
             return [re.sub(r'[\n\t\s]*', '', i) for i in input]
-
