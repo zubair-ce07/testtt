@@ -11,8 +11,10 @@ class SheegoSpider(CrawlSpider):
     allowed_domains = ['sheego.de']
     start_urls = ['https://www.sheego.de']
     color_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}'
-    size_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}&varselid%5B1%5D={}'
-    length_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}&varselid%5B1%5D={}&varselid%5B2%5D={}'
+    size_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}&' \
+                'varselid%5B1%5D={}'
+    length_link = 'https://www.sheego.de/index.php?anid={}&cl=oxwarticledetails&varselid%5B0%5D={}' \
+                  '&varselid%5B1%5D={}&varselid%5B2%5D={}'
 
     rules = (
         Rule(LinkExtractor(restrict_css=
@@ -108,7 +110,8 @@ class SheegoSpider(CrawlSpider):
         return response.css('.js-variantSelector.size .sizespots__item::attr(data-varselid)').getall()
 
     def get_product_length(self, response):
-        return response.css('.js-groessentyp option::attr(value)').getall()
+        lengths = response.css('.js-groessentyp option::attr(value)').getall()
+        return [length for length in lengths if length]
 
     def get_product_color_ids(self, response):
         return response.css('.colorspots__wrapper > .colorspots__item::attr(data-varselid)').getall()
@@ -175,6 +178,7 @@ class SheegoSpider(CrawlSpider):
         color = response.meta['color']
         length = response.meta['length']
         out_of_stock = self.get_product_availability(response)
+
         product_sku = {
             '{}_{}_{}'.format(color, length, product_size): self.get_product_info(response, color, product_size, length, out_of_stock)
         }
@@ -269,6 +273,6 @@ class SheegoSpider(CrawlSpider):
 
     def clean_data(self, input):
         if type(input) is str:
-            return re.sub(r'[\n\t\s]*', '', input)
+            return re.sub(r'[\n\t\s]+', ' ', input)
         else:
-            return [re.sub(r'[\n\t\s]*', '', i) for i in input]
+            return [re.sub(r'[\n\t\s]+', ' ', i) for i in input]
