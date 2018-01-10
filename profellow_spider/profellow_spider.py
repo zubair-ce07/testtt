@@ -6,7 +6,7 @@ import scrapy
 import time
 
 class ProFellowSpider(scrapy.Spider):
-    name = "profellow_spider"
+    name = 'profellow_spider'
     start_urls = [
         'https://www.profellow.com/profile/login/',
     ]
@@ -27,7 +27,7 @@ class ProFellowSpider(scrapy.Spider):
         }
 
         return FormRequest(
-            url="https://www.profellow.com/wp-admin/admin-ajax.php",
+            url='https://www.profellow.com/wp-admin/admin-ajax.php',
             formdata=form_data,
             callback=self.on_login)
 

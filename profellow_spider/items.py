@@ -3,7 +3,7 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Compose, TakeFirst
 
 def make_list(result):
-    return result[0].strip().split(",")
+    return result[0].strip().split(',')
 
 
 def process_description(result):
