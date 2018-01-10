@@ -1,7 +1,19 @@
 import scrapy
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Compose, Join, TakeFirst
+from urlparse import urljoin
 
+
+def process_str(result):
+    if result:
+        return result[0].strip().replace(' ', '').split(',')
+
+def process_company_url(result):
+    return urljoin('https://www.dice.com', result[0])
+
+def process_logo_url(result):
+    if result:
+        return urljoin('https:', result[0])
 
 class Job(scrapy.Item):
     categories = scrapy.Field()
@@ -22,7 +34,8 @@ class Job(scrapy.Item):
 class JobLoader(ItemLoader):
     default_item_class = Job
     default_output_processor = TakeFirst()
-    categories_out = Compose()
+    categories_out = Compose(process_str)
+    company_url_out = Compose(process_company_url)
     description_out = Join()
-    job_types_out = Compose()
-    logo_urls_out = Compose()
+    job_types_out = Compose(process_str)
+    logo_urls_out = Compose(process_logo_url)
