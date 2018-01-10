@@ -1,7 +1,6 @@
-from items import Fellowship
+from items import FellowshipLoader
 from scrapy.http import FormRequest
-from scrapy.loader import ItemLoader
-from scrapy.loader.processors import Compose, TakeFirst
+from urlparse import urljoin
 import datetime
 import scrapy
 import time
@@ -13,16 +12,16 @@ class ProFellowSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        id = response.xpath('//input[@id="unique_id"]/@value').extract_first()
+        unique_id = response.xpath('//input[@id="unique_id"]/@value').extract_first()
         nonce = response.xpath('//input[@id="_myuserpro_nonce"]/@value')\
             .extract_first()
         form_data = {
-                'force_redirect_uri-' + id: '0',
-                'redirect_uri-' + id: '',
+                '{}{}'.format('force_redirect_uri-', unique_id): '0',
+                '{}{}'.format('redirect_uri-', unique_id): '',
                 '_myuserpro_nonce': nonce,
-                'unique_id': id,
-                'username_or_email-' + id: 'rabiaalam',
-                'user_pass-' + id: 'l!f3isbeautiful',
+                'unique_id': unique_id,
+                '{}{}'.format('username_or_email-', unique_id): 'rabiaalam',
+                '{}{}'.format('user_pass-', unique_id): 'l!f3isbeautiful',
                 'action': 'userpro_process_form',
                 'template': 'login',
         }
@@ -39,38 +38,24 @@ class ProFellowSpider(scrapy.Spider):
 
     def after_login(self, response):
         for href in response.xpath('//h2/a/@href').extract():
-            yield response.follow(href, self.parse_fellowship)
+            yield scrapy.Request(urljoin('https://www.profellow.com', href)
+                                 , self.parse_fellowship)
 
     def parse_fellowship(self, response):
-        fellowship = ItemLoader(item=Fellowship(), response=response)
-        fellowship.default_output_processor = TakeFirst()
+        fellowship = FellowshipLoader(selector=response)
         time_now = datetime.datetime.now().fromtimestamp(time.time())\
             .strftime('%Y-%m-%d %H:%M:%S.%f')
         fellowship.add_value('crawled_at', time_now)
         fellowship.add_xpath('deadline', '//span[@class="_start"]/text()')
-        description = "".join(response.xpath('//div[@class="entry-content"]'
-                                             '//text()').extract()).strip()
-        fellowship.add_value('description', description)
-        disciplines = response.xpath('//div[@id="fellowship-discipline"]'
-                                     '/text()[2]').extract_first()\
-            .replace(" ", "").split(",")
-        fellowship.disciplines_out = Compose()
-        fellowship.add_value('disciplines', disciplines)
+        fellowship.add_xpath('description', '//div[@class="entry-content"]//text()')
+        fellowship.add_xpath('disciplines', '//div[@id="fellowship-discipline"]/text()[2]')
         fellowship.add_xpath('experience', '//div[@id="fellowship-details"]/ul'
                                            '/li[2]/text()')
         fellowship.add_xpath('external_id', '//a[@href="#"]/@data-postid')
-        fellowship_organization = response.xpath('//h2[@class="fellowship'
-                                                 '-organization"]/text()')\
-            .extract_first().lstrip().rstrip()
-        fellowship.add_value('fellowship_organization',
-                             fellowship_organization)
+        fellowship.add_xpath('fellowship_organization','//h2[@class="fellowship-organization"]/text()')
         fellowship.add_xpath('fellowship_url', '//a[@class="btn btn-apply"]'
                                                '/@href')
-        keywords = response.xpath('//div[@id="fellowship-keywords"]'
-                                  '/text()[2]').extract_first()\
-            .replace(" ", "").replace("\n", "").split(",")
-        fellowship.keywords_out = Compose()
-        fellowship.add_value('keywords', keywords)
+        fellowship.add_xpath('keywords', '//div[@id="fellowship-keywords"]/text()[2]')
         fellowship.add_xpath('location', '//div[@id="fellowship-details"]/ul'
                                          '/li[3]/text()')
         fellowship.add_value('provider', 'profellow')
