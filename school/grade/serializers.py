@@ -55,3 +55,10 @@ class GradeSerializer(serializers.ModelSerializer):
         model = Grade
         fields = ('id', 'name', 'courses', 'students', 'teachers', )
 
+class GradeListSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Grade
+        fields = ('id', 'name', )
+
+

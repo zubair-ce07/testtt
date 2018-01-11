@@ -1,12 +1,12 @@
 from rest_framework import generics
 from grade.models import Grade, GradeCourse, GradeTeacher, GradeStudent
-from grade.serializers import GradeSerializer, GradeCourseSerializer, GradeTeacherSerializer, GradeStudentSerializer
+from grade.serializers import GradeSerializer, GradeCourseSerializer, GradeTeacherSerializer, GradeStudentSerializer, GradeListSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 class GradeList(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Grade.objects.all()
-    serializer_class = GradeSerializer
+    serializer_class = GradeListSerializer
     
 
 class GradeDetail(generics.RetrieveUpdateDestroyAPIView):
