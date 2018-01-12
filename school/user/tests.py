@@ -22,4 +22,27 @@ class UserTestCase(TestCase):
             user_data,
             format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+    # def test_create_student(self):
+        
+    #     user_data = self.user_fixture.get_user_data()
+    #     response = self.client.post(
+    #         reverse('user-detail', kwargs={'group_id': create_response.data['id']}),
+    #         user_data,
+    #         format="json")
+    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    
+    
+    # def test_create_teacher(self):
+        
+    #     user_data = self.user_fixture.get_user_data()
+    #     response = self.client.post(
+    #         reverse('user-detail', kwargs={'group_id': create_response.data['id']}),
+    #         user_data,
+    #         format="json")
+    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
     

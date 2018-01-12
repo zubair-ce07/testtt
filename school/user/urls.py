@@ -7,11 +7,7 @@ urlpatterns = [
         views.UserList.as_view(),
         name='user-create'
     ),
-    url(
-        r'^group/(?P<group_id>[0-9]+)/users/$',
-        views.UserList.as_view(),
-        name='user-list'
-    ),
+    
     url(
         r'^users/(?P<user_id>[0-9]+)/$',
         views.UserDetail.as_view(),
@@ -22,4 +18,9 @@ urlpatterns = [
         views.UserDetail.as_view(),
         name='user-detail'
     ),
+    url(
+        r'^group/(?P<group_id>[0-9]+)/users/$',
+        views.UserList.as_view(),
+        name='user-list'
+    )
 ]
