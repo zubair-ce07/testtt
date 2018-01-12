@@ -11,7 +11,7 @@ import scrapy
 class GluesProduct(scrapy.Item):
     brand = scrapy.Field()
     care = scrapy.Field()
-    genders = scrapy.Field()
+    gender = scrapy.Field()
     category = scrapy.Field()
     description = scrapy.Field()
     image_urls = scrapy.Field()

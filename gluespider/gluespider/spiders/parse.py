@@ -1,6 +1,4 @@
 import json
-from urllib.parse import urlparse
-
 import scrapy
 
 from gluespider.spiders.mixin import Mixin
@@ -14,12 +12,11 @@ class ParseSpider(scrapy.Spider, Mixin):
 
     def parse(self, response):
         retailer_id = self.product_retailer(response)
-        if self.is_seen(retailer_id):
-            return self.next_action(response)
+        if retailer_id in self.seen_ids:
+            return
 
         self.seen_ids.append(retailer_id)
         product = GluesProduct()
-        product["genders"] = set()
         product["category"] = self.product_category(response)
         product["description"] = self.product_descriptions(response)
         product["care"] = self.product_cares(response)
@@ -31,11 +28,10 @@ class ParseSpider(scrapy.Spider, Mixin):
         product["url"] = response.url
         product["skus"] = dict()
         response.meta["product"] = product
-        self.product_genders(response)
+        product["gender"] = self.product_gender(response)
         response.meta["remaining_request"] = list()
         response.meta[
-            "remaining_request"] += self.create_sku_requests(response)
-        response.meta["remaining_request"].append(self.parse_skus(response))
+            "remaining_request"] += self.create_sku_requests(response) + self.parse_skus(response)
 
         return self.next_action(response)
 
@@ -43,71 +39,101 @@ class ParseSpider(scrapy.Spider, Mixin):
         if(response.text):
             sizes = json.loads(response.text)
             product = response.meta.get("product")
-            sku = response.meta.get("sku")
             skus = product.get("skus")
             for size in sizes:
-                product_sku = dict()
-                product_sku["price"] = sku.get("price")
-                product_sku["currency"] = sku.get("currency")
-                product_sku["colour"] = sku.get("colour")
-                product_sku["size"] = size.get("size")
-                if 0 == size.get("qty"):
-                    product_sku["out_of_stock"] = True
-                key = f'{product_sku["colour"]}_{product_sku["size"]}_{sku["product_id"]}'
-                skus[key] = product_sku
+                key, details = self.product_sku_details(size, response)
+                skus[key] = details
         return self.next_action(response)
 
     def parse_skus(self, response):
-        self.product_sku_images(response)
-        self.product_genders(response)
-        product_sku = dict()
-        product_sku["price"] = self.product_price(response)
-        product_sku["currency"] = self.product_currency(response)
-        product_sku["colour"] = self.product_current_colour_name(response)
-        product_sku["product_id"] = self.product_retailer(response)
-        request = self.create_size_request(response)
-        request.meta["sku"] = product_sku
-        remaining_request = response.meta.get("remaining_request")
-        remaining_request.append(request)
-        response.meta["remaining_request"] = remaining_request
-        return self.next_action(response)
+        product = response.meta.get("product")
+        product["image_urls"] = self.product_sku_images(response)
+        product["category"] += self.product_category(response)
+        product["gender"] = self.product_gender(response)
+        if self.product_size_exist(response):
+            product_sku = dict()
+            product_sku["price"] = self.product_price(response)
+            product_sku["currency"] = self.product_currency(response)
+            product_sku["colour"] = self.product_current_colour_name(response)
+            product_sku["product_id"] = self.product_retailer(response)
+            request = self.create_size_request(response)
+            request.meta["sku"] = product_sku
+            remaining_request = response.meta.get("remaining_request")
+            remaining_request.append(request)
+            response.meta["remaining_request"] = remaining_request
+            return [self.next_action(response)]
+        else:
+            skus = product.get("skus")
+            product_sku = dict()
+            product_sku["price"] = self.product_price(response)
+            product_sku["currency"] = self.product_currency(response)
+            if self.product_out_of_stock(response):
+                product_sku["out_of_stock"] = True
+            key = f'{self.product_retailer(response)}'
+            skus[key] = product_sku
+            return list()
 
     def create_sku_requests(self, response):
-        multiple_requests = set()
-        for next_page in response.css('#colors .product-color > a'):
-            multiple_requests.add(response.follow(next_page, self.parse_skus))
-        return multiple_requests
+        colour_Request = [response.follow(
+            c, self.parse_skus) for c in response.css('#colors .product-color > a')]
+        return colour_Request
 
     def create_size_request(self, response):
         product_id = self.product_retailer(response)
         content_type = 'application/x-www-form-urlencoded; charset=UTF-8'
-        request = scrapy.Request(self.product_api+product_id,
+        request = scrapy.Request(self.product_api + product_id,
                                  headers={
                                      'Content-Type': content_type},
                                  callback=self.parse_sizes)
         return request
 
+    def product_out_of_stock(self, response):
+        out_of_stock_css = '.out-of-stock'
+        stock = response.css(out_of_stock_css).extract_first()
+        return stock
+
+    def product_sku_details(self, size, response):
+        sku = response.meta.get("sku")
+        product_sku = dict()
+        product_sku["price"] = sku.get("price")
+        product_sku["currency"] = sku.get("currency")
+        product_sku["colour"] = sku.get("colour")
+        product_sku["size"] = size.get("size")
+        if not size.get("qty"):
+            product_sku["out_of_stock"] = True
+        key = f'{product_sku["colour"]}_{product_sku["size"]}_{sku["product_id"]}'
+        return key, product_sku
+
     def product_sku_images(self, response):
         product = response.meta.get("product")
         images = product.get("image_urls", list())
-        images = list(set().union(images, self.product_images(response)))
-        product["image_urls"] = images
+        images = images + self.product_images(response)
+        return images
 
-    def product_genders(self, response):
+    def product_size_exist(self, response):
+        size_css = '.input-box.sizes'
+        sizes = response.css(size_css).extract()
+        return sizes
+
+    def product_gender(self, response):
+        product = response.meta.get("product")
+        gender = product.get("gender")
         catogories = self.product_category(response)
         name = self.product_name(response)
-        if "Unisex" in name:
-            response.meta["product"]["genders"].add("unisex-adults")
-        elif "Women" in name:
-            response.meta["product"]["genders"].add("women")
-        elif "Men" in name:
-            response.meta["product"]["genders"].add("men")
-        elif [category for category in catogories if "Unisex" in category]:
-            response.meta["product"]["genders"].add("unisex-adults")
-        elif [category for category in catogories if "Women" in category]:
-            response.meta["product"]["genders"].add("women")
-        elif [category for category in catogories if "Men" in category]:
-            response.meta["product"]["genders"].add("men")
+        in_women_category = [cat for cat in catogories if "Women" in cat]
+        in_mens_category = [cat for cat in catogories if "Men" in cat]
+        if "unisex-adults" == gender:
+            return gender
+        if "Unisex" in name or "Unisex" in catogories:
+            return "unisex-adults"
+        if "men" == gender and ("Women" in name or in_women_category):
+            return "unisex-adults"
+        if "women" == gender and ("Men" in name or in_mens_category):
+            return "unisex-adults"
+        if "Women" in name or in_women_category:
+            return "women"
+        if "Men" in name or in_mens_category:
+            return "men"
 
     def product_category(self, response):
         catogories = response.css(
@@ -138,7 +164,12 @@ class ParseSpider(scrapy.Spider, Mixin):
 
     def product_brand(self, response):
         brand_css = ".product-view-brand::attr(alt)"
-        return response.css(brand_css).extract_first()
+        brand = response.css(brand_css).extract_first()
+        if brand:
+            return brand
+        else:
+            brand_css = ".static-links a::text"
+            return response.css(brand_css).extract_first()
 
     def product_price(self, response):
         price_xpath = './/meta[@property="og:price:amount"]/@content'
@@ -155,9 +186,6 @@ class ParseSpider(scrapy.Spider, Mixin):
         current_colour = response.css(selector).extract_first()
         return current_colour
 
-    def is_seen(self, _id):
-        [product_id for product_id in self.seen_ids if _id == product_id]
-
     def remove_duplicates(self, items):
         no_dupes = set(items)
         return list(no_dupes)
@@ -169,7 +197,6 @@ class ParseSpider(scrapy.Spider, Mixin):
 
         request = sub_requests.pop()
         request.meta["product"] = response.meta.get("product")
-        request.meta["information"] = response.meta.get("information")
         request.meta["remaining_request"] = response.meta.get(
             "remaining_request")
         return request

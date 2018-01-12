@@ -11,21 +11,16 @@ class GlueSpider(CrawlSpider, Mixin):
 
     rules = (
         Rule(LinkExtractor(
-            restrict_css='.level-3'), callback='parse'),
+            restrict_css=['.level-3', '.pageselectorlink']), callback='parse'),
         Rule(LinkExtractor(
             restrict_xpaths='//*[contains(@class,"sli_grid_product")]/a'),
-            callback=parseSpider.parse),
-        Rule(LinkExtractor(
-            restrict_css='.pageselectorlink'),
-            callback='parse'),
-    )
+            callback=parseSpider.parse)
+        )
 
     def parse(self, response):
         current_url = response.url
         for request in super().parse(response):
             trail = response.meta.get('trail', list())
-            exist = [url for url in trail if url == current_url]
-            if not exist:
-                trail.append(response.url)
+            trail.append(response.url)
             request.meta['trail'] = trail
             yield request
