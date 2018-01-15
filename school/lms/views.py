@@ -1,6 +1,6 @@
 from rest_framework import generics
 from lms.models import Book, Author
-from lms.serializers import BookSerializer, BookListSerializer, AuthorSerializer
+from lms.serializers import BookSerializer, AuthorSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 class AuthorList(generics.ListCreateAPIView):
@@ -19,7 +19,7 @@ class AuthorDetail(generics.RetrieveUpdateDestroyAPIView):
 class BookList(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Book.objects.all()
-    serializer_class = BookListSerializer
+    serializer_class = BookSerializer
     
 
 class BookDetail(generics.RetrieveUpdateDestroyAPIView):

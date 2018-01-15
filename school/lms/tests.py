@@ -72,8 +72,41 @@ class BookTestCase(TestCase):
             reverse('book-list'),
             data,
             format="json")
-        print ("======response.data===========", response.data)
-        # self.assertEqual(response.data['title'], data['title'])
-        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        result = response.data
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            [result['title'], result['description'], result['summary'], result['authors']],
+            [data['title'], data['description'], data['summary'], authors]
+        )
+    
+    def test_update_author(self):
+
+        authors = self.create_book_authors()
+        
+        data = self.book_fixture.generate_data()
+
+        data['authors'] = authors
+        
+        response = self.client.post(
+            reverse('book-list'),
+            data,
+            format="json")
+        
+        book_created = response.data
+        
+        response = self.client.put(
+            reverse('book-detail', kwargs={'book_id': book_created['id']}),
+            data,
+            format="json")
+
+        result = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [result['title'], result['description'], result['summary'], result['authors']],
+            [data['title'], data['description'], data['summary'], authors]
+        )
+
+        
     
     
