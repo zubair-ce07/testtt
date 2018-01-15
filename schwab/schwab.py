@@ -188,13 +188,15 @@ class SchwabCrawler(CrawlSpider):
             request = scrapy.FormRequest(url=self.product_api_url, formdata=form_data, meta={"item": item},
                                          callback=self.parse_sku_request, dont_filter=True)
             multiple_requests.append(request)
-        item["meta"] = {"sku_request": multiple_requests}
-        return self.request_or_item(item)
+
+        response.meta["sku_request"] = multiple_requests
+        response.meta["item"] = item
+        return self.request_or_item(response)
 
     def parse_sku_request(self, response):
         item = response.meta["item"]
         item["skus"].update(self.skus(response))
-        return self.request_or_item(item)
+        return self.request_or_item(response)
 
     def clean_list(self, my_list):
         final_list = []
@@ -204,9 +206,12 @@ class SchwabCrawler(CrawlSpider):
                 final_list.append(entry)
         return final_list
 
-    def request_or_item(self, item):
-        if item["meta"]["sku_request"]:
-            return item["meta"]["sku_request"].pop()
+    def request_or_item(self, response):
+        sub_requests = response.meta.get("sku_request")
+        if sub_requests:
+            request = sub_requests.pop()
+            request.meta["item"] = response.meta.get("item")
+            request.meta["sku_request"] = response.meta.get("sku_request")
+            return request
         else:
-            del item["meta"]
-            return item
+            return response.meta.get("item")
