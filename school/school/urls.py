@@ -24,4 +24,5 @@ urlpatterns = [
     url(r'^', include('grade.urls')),
     url(r'^', include('course.urls')),
     url(r'^', include('user.urls')),
+    url(r'^', include('lms.urls')),
 ]
