@@ -17,13 +17,13 @@ class AuthorDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class BookList(generics.ListCreateAPIView):
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    # permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     
 
 class BookDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    # permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     lookup_url_kwarg = 'book_id'

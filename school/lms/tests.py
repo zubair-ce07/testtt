@@ -80,7 +80,7 @@ class BookTestCase(TestCase):
             [data['title'], data['description'], data['summary'], authors]
         )
     
-    def test_update_author(self):
+    def test_update_book(self):
 
         authors = self.create_book_authors()
         
@@ -95,16 +95,19 @@ class BookTestCase(TestCase):
         
         book_created = response.data
         
+        updated_data = self.book_fixture.generate_data()
+        updated_data['authors'] = authors
+
         response = self.client.put(
             reverse('book-detail', kwargs={'book_id': book_created['id']}),
-            data,
+            updated_data,
             format="json")
 
         result = response.data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             [result['title'], result['description'], result['summary'], result['authors']],
-            [data['title'], data['description'], data['summary'], authors]
+            [updated_data['title'], updated_data['description'], updated_data['summary'], authors]
         )
 
         
