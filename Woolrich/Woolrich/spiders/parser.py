@@ -1,38 +1,42 @@
-from Woolrich.spiders.mixin import Mixin
 import scrapy.spider
-from Woolrich.items import WoolrichItem
+
 from scrapy import FormRequest
-from urllib.parse import urljoin
-from urllib.parse import parse_qsl
-import re
+
+from urllib.parse import urljoin, parse_qsl
+
+from Woolrich.spiders.mixin import Mixin
+
+from Woolrich.spiders.general import WoolGeneral
 
 
 class Parser(scrapy.Spider, Mixin):
-    name = 'product_spider'
+    name = 'woolrich-parser'
     url_api = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
-    product_ids = []
     gender_map = [
         ('Women', 'women'),
         ('Men', 'men')
 
     ]
 
+    def __init__(self):
+        self.generic = WoolGeneral()
+        self.xpath_productid = "//span[@itemprop='productID']/text()"
+        self.xpath_price = "//span[@itemprop='price']/@content"
+        self.xpath_previous_price = "//span[contains(@class, 'strikethrough')]/text()"
+
     def parse_product(self, response):
-        product = WoolrichItem()
-        product_id = self.product_id(response)
-        if product_id in self.product_ids:
+        product = self.generic.product(response, self.xpath_productid)
+        if not product:
             return
-        self.product_ids.append(product_id)
-        product['product_id'] = product_id
         product['title'] = self.title(response)
         product['url'] = response.url
-        product['img_urls'] = self.img_urls(response)
+        product['img_urls'] = self.image_urls(response)
         product['category'] = self.category(response)
         product['gender'] = self.gender(response)
         product['care'] = self.care(response)
         product['skus'] = {}
-        product['pending_requests'] = self.request_colors(product, response)
-        return self.next_action(product)
+        product['pending_requests'] = self.colors_request(product, response)
+        return self.generic.next_action(product)
 
     @staticmethod
     def title(response):
@@ -41,16 +45,10 @@ class Parser(scrapy.Spider, Mixin):
         return title.strip()
 
     @staticmethod
-    def product_id(response):
-        xpath = "//span[@itemprop='productID']/text()"
-        productid = response.xpath(xpath).extract_first()
-        return productid
-
-    @staticmethod
-    def img_urls(response):
+    def image_urls(response):
         xpath = "//div[@id='prod-detail__slider-nav']//img/@src"
-        img_urls = response.xpath(xpath).extract()
-        return [urljoin('http:', url) for url in img_urls]
+        image_urls = response.xpath(xpath).extract()
+        return [response.urljoin(u) for u in image_urls]
 
     @staticmethod
     def category(response):
@@ -73,106 +71,89 @@ class Parser(scrapy.Spider, Mixin):
         cares = response.xpath(xpath).extract()
         return [care.strip() for care in cares]
 
-    def request_size(self, response):
-        pendin_requests = []
+    def size_request(self, response):
+        size_requests = []
         xpath = "//ul[@class='sizelist']//a[@stocklevel != 0]"
         for size_itrator in response.xpath(xpath):
             form_data = dict(parse_qsl(response.request.body.decode()))
             size = size_itrator.xpath("text()").extract_first()
             form_data['selectedSize'] = size
-            skuidid = size_itrator.xpath("@id").extract_first()
-            if id != size:
-                form_data['skuId'] = skuidid
-            pendin_requests += [FormRequest(url=self.url_api,
-                                            formdata=form_data,
-                                            callback=self.parse_size,
-                                            dont_filter=True
-                                            )]
-        return pendin_requests
+            skuid = size_itrator.xpath("@id").extract_first()
+            if skuid != size:
+                form_data['skuId'] = skuid
+            size_requests += [FormRequest(url=self.url_api,
+                                          formdata=form_data,
+                                          callback=self.parse_size,
+                                          dont_filter=True
+                                          )]
+        return size_requests
 
-    def request_colors(self, product, response):
-        pending_requests = []
-        xpath = "//div[@id='productDetails']//li//a[not(@disabled)]//img/@colorid"
+    def colors_request(self, product, response):
+        colour_requests = []
+        xpath = "//div[@id='productDetails']//a[not(@disabled)]//img/@colorid"
         for colorid in response.xpath(xpath).extract():
             if colorid:
                 form_data = {
                     'productId': product['product_id'],
                     'colorId': colorid
                 }
-                pending_requests += [FormRequest(url=self.url_api,
-                                                 formdata=form_data,
-                                                 callback=self.parse_colors,
-                                                 dont_filter=True
-                                                 )]
-        return pending_requests
+                colour_requests += [FormRequest(url=self.url_api,
+                                                formdata=form_data,
+                                                callback=self.parse_colors,
+                                                dont_filter=True
+                                                )]
+        return colour_requests
 
-    def request_fittings(self, response):
-        pending_requests = []
+    def fitting_request(self, response):
+        fitting_requests = []
         xpath = "//ul[@class='dimensionslist']//a[@stocklevel != 0]/@id"
-        for fiting in response.xpath(xpath).extract():
+        for fitting in response.xpath(xpath).extract():
             form_data = dict(parse_qsl(response.request.body.decode()))
-            form_data['skuId'] = fiting
-            pending_requests.append(FormRequest(url=self.url_api,
+            form_data['skuId'] = fitting
+            fitting_requests.append(FormRequest(url=self.url_api,
                                                 formdata=form_data,
                                                 callback=self.parse_fittings,
                                                 dont_filter=True))
-        return pending_requests
+        return fitting_requests
 
     def parse_colors(self, response):
         product = response.meta['product']
-        product['img_urls'].append(self.color_img(response))
-        product['pending_requests'] += self.request_size(response)
-        return self.next_action(product)
+        product['img_urls'].append(self.color_image_urls(response))
+        product['pending_requests'] += self.size_request(response)
+        return self.generic.next_action(product)
 
     @staticmethod
-    def color_img(response):
+    def color_image_urls(response):
         xpath = "//a[contains(@class,'selected')and contains(@class,' link  ')]//img/@src"
         img_url = response.xpath(xpath).extract_first(default='')
         if img_url:
             return urljoin('http:', img_url)
 
-    @staticmethod
-    def next_action(product):
-        if product['pending_requests']:
-            request = product['pending_requests'].pop()
-            request.meta['product'] = product
-            return request
-        return product
-
     def parse_size(self, response):
         product = response.meta['product']
-        requests = self.request_fittings(response)
+        requests = self.fitting_request(response)
         product['pending_requests'] += requests
         if not requests:
             product['skus'].update(self.skus(response))
-        return self.next_action(product)
+        return self.generic.next_action(product)
 
     def parse_fittings(self, response):
         product = response.meta['product']
         product['skus'].update(self.skus(response))
-        return self.next_action(product)
+        return self.generic.next_action(product)
 
     def skus(self, response):
-        item = dict()
-        item['previous_price'] = self.previous_prices(response)
+        sku = dict()
+        sku['previous_price'] = self.generic.previous_prices(response, self.xpath_previous_price)
         size = self.size(response)
         colour = self.colour(response)
         fit = self.fitting(response)
         sku_id = "{}_{}".format(colour, size)
-        item['size'] = "{}/{}".format(size, fit)
-        item['colour'] = colour
-        item['price'] = self.price(response)
-        item['Currency'] = self.currency(response)
-        return {sku_id: item}
-
-    @staticmethod
-    def previous_prices(response):
-        xpath = "//span[contains(@class, 'strikethrough')]/text()"
-        price = response.xpath(xpath).extract_first()
-        if price:
-            price = price.replace(',', '')
-            return int(round(float(re.search(r'\d+.\d+', price).group(0)) * 100))
-        return ''
+        sku['size'] = "{}/{}".format(size, fit)
+        sku['colour'] = colour
+        sku['price'] = self.generic.price(response, self.xpath_price)
+        sku['Currency'] = self.currency(response)
+        return {sku_id: sku}
 
     @staticmethod
     def colour(response):
@@ -188,12 +169,6 @@ class Parser(scrapy.Spider, Mixin):
     def fitting(response):
         xpath = "//select[contains(@class, 'dimensionslist')]//option[@selected]/text()"
         return response.xpath(xpath).extract_first(default='').strip()
-
-    @staticmethod
-    def price(response):
-        xpath = "//span[@itemprop='price']/@content"
-        price = response.xpath(xpath).extract_first(default='').replace(',', '')
-        return int(round(float(price) * 100))
 
     @staticmethod
     def currency(response):
