@@ -32,4 +32,9 @@ class BookissueList(generics.ListCreateAPIView):
     # permission_classes = (IsAuthenticatedOrReadOnly, )
     queryset = Bookissue.objects.all()
     serializer_class = BookissueSerializer
-    
+
+class BookissueDetail(generics.RetrieveUpdateDestroyAPIView):
+    # permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = Bookissue.objects.all()
+    serializer_class = BookissueSerializer
+    lookup_url_kwarg = 'bookissue_id'

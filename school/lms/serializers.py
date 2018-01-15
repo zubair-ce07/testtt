@@ -9,20 +9,22 @@ class AuthorSerializer(serializers.ModelSerializer):
         model = Author
         fields = ('id', 'name', )
 
+
+# BookIssue
+class BookissueSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Bookissue
+        fields = ('user', 'book', 'issue_date', 'returned_date')
+        
+
 # Book
 class BookSerializer(serializers.ModelSerializer):
     author_detail = AuthorSerializer(many=True, read_only=True, source='authors')
     
     class Meta:
         model = Book
-        fields = ('id', 'title', 'description', 'summary', 'authors', 'issued_to', 'author_detail' )
-
-# BookIssue
-class BookissueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Bookissue
-        fields = ('user', 'book', 'issue_date', 'returned_date')
-        
+        fields = ('id', 'title', 'description', 'summary', 'authors', 'author_detail', 'issued_to' )
 
 
 
