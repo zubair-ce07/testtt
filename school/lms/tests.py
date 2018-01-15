@@ -72,7 +72,7 @@ class BookTestCase(TestCase):
             reverse('book-list'),
             data,
             format="json")
-        # print ("======response.data===========", response.data)
+        print ("======response.data===========", response.data)
         # self.assertEqual(response.data['title'], data['title'])
         # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
     
