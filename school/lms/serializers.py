@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from lms.models import Book, Author
+from lms.models import Book, Author, Bookissue
 from user.serializers import UserDetailSerializer
 
 
@@ -16,6 +16,12 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = ('id', 'title', 'description', 'summary', 'authors', 'issued_to', 'author_detail' )
+
+# BookIssue
+class BookissueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookissue
+        fields = ('user', 'book', 'issue_date', 'returned_date')
         
 
 

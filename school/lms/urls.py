@@ -22,5 +22,10 @@ urlpatterns = [
         views.BookDetail.as_view(),
         name='book-detail'
     ),
+    url(
+        r'^book_issue/$',
+        views.BookissueList.as_view(),
+        name='book-list'
+    ),
     
 ]
