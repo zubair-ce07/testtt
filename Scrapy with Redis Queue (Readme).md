@@ -3,9 +3,9 @@ Scrapy with Redis Queue
 
 ## Prerequisites:
 
-1.Python 3.5 should be installed
-1.Scrapy should be installed
-1.Scutils should be installed
+1. Python 3.5 should be installed.
+2. Scrapy should be installed.
+3. Scutils should be installed.
 
 
 
@@ -13,9 +13,9 @@ Scrapy with Redis Queue
 
 Steps:
 
-1.Install **Redis** using this [link](http://grainier.net/how-to-install-redis-in-ubuntu/)
-1.After installing check that Redis server is up and running using command: **redis-cli ping** which must respond with **PONG**
-1.In application, to import Redis use: **import Redis**
+1. Install **Redis** using this [link](http://grainier.net/how-to-install-redis-in-ubuntu/).
+2. After installing check that Redis server is up and running using command: **redis-cli ping** which must respond with **PONG**.
+3. In application, to import Redis use: **import Redis**.
 
 To create a connection with Redis:
 redis_conn = Redis()
