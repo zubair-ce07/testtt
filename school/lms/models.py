@@ -25,3 +25,6 @@ class Bookissue(models.Model):
     issue_date = models.DateTimeField()
     returned_date = models.DateTimeField(null=True, blank=True)
 
+
+    
+

@@ -60,7 +60,7 @@ class BookTestCase(TestCase):
         
         return response
 
-    def test_create_author(self):
+    def test_create_book(self):
 
         authors = self.create_book_authors()
         
@@ -74,6 +74,7 @@ class BookTestCase(TestCase):
             format="json")
         
         result = response.data
+        print ("=======result=======", result, "=======response=======", response)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             [result['title'], result['description'], result['summary'], result['authors']],
