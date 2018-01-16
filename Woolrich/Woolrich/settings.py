@@ -66,7 +66,7 @@ ROBOTSTXT_OBEY = True
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'Woolrich.pipelines.WoolrichPipeline': 300,
-    'Woolrich.pipelines.ValidationPipeline': 300,
+    'Woolrich.pipelines.ValidationPipeline': 400,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

@@ -3,7 +3,7 @@ import re
 from Woolrich.items import WoolrichItem
 
 
-class WoolGeneral:
+class BaseParseSpider:
     product_ids = []
 
     def product(self, response, xpath):

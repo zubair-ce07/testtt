@@ -6,10 +6,10 @@ from urllib.parse import urljoin, parse_qsl
 
 from Woolrich.spiders.mixin import Mixin
 
-from Woolrich.spiders.general import WoolGeneral
+from Woolrich.spiders.general import BaseParseSpider
 
 
-class Parser(scrapy.Spider, Mixin):
+class Parser(scrapy.Spider, Mixin, BaseParseSpider):
     name = 'woolrich-parser'
     url_api = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
     gender_map = [
@@ -19,13 +19,12 @@ class Parser(scrapy.Spider, Mixin):
     ]
 
     def __init__(self):
-        self.generic = WoolGeneral()
         self.xpath_productid = "//span[@itemprop='productID']/text()"
         self.xpath_price = "//span[@itemprop='price']/@content"
         self.xpath_previous_price = "//span[contains(@class, 'strikethrough')]/text()"
 
     def parse_product(self, response):
-        product = self.generic.product(response, self.xpath_productid)
+        product = self.product(response, self.xpath_productid)
         if not product:
             return
         product['title'] = self.title(response)
@@ -36,7 +35,7 @@ class Parser(scrapy.Spider, Mixin):
         product['care'] = self.care(response)
         product['skus'] = {}
         product['pending_requests'] = self.colors_request(product, response)
-        return self.generic.next_action(product)
+        return self.next_action(product)
 
     @staticmethod
     def title(response):
@@ -120,7 +119,7 @@ class Parser(scrapy.Spider, Mixin):
         product = response.meta['product']
         product['img_urls'].append(self.color_image_urls(response))
         product['pending_requests'] += self.size_request(response)
-        return self.generic.next_action(product)
+        return self.next_action(product)
 
     @staticmethod
     def color_image_urls(response):
@@ -135,23 +134,23 @@ class Parser(scrapy.Spider, Mixin):
         product['pending_requests'] += requests
         if not requests:
             product['skus'].update(self.skus(response))
-        return self.generic.next_action(product)
+        return self.next_action(product)
 
     def parse_fittings(self, response):
         product = response.meta['product']
         product['skus'].update(self.skus(response))
-        return self.generic.next_action(product)
+        return self.next_action(product)
 
     def skus(self, response):
         sku = dict()
-        sku['previous_price'] = self.generic.previous_prices(response, self.xpath_previous_price)
+        sku['previous_price'] = self.previous_prices(response, self.xpath_previous_price)
         size = self.size(response)
         colour = self.colour(response)
         fit = self.fitting(response)
         sku_id = "{}_{}".format(colour, size)
         sku['size'] = "{}/{}".format(size, fit)
         sku['colour'] = colour
-        sku['price'] = self.generic.price(response, self.xpath_price)
+        sku['price'] = self.price(response, self.xpath_price)
         sku['Currency'] = self.currency(response)
         return {sku_id: sku}
 
