@@ -5,16 +5,14 @@ import json
 from sfera.items import SferaItem
 
 
-class Sfera(scrapy.Spider):
-    name = "sfera_crawler"
+class SferaParser(scrapy.Spider):
     start_urls = ["https://www.sfera.com/es/"]
     product_details_api = "https://www.sfera.com/one/mod/_lista_carga.php"
-
-    def parse(self, response):
-        categories_content = response.xpath('//div[@class="mac_obj_enlace"]/@onclick').extract()
-        for sub_category_content in categories_content:
-            sub_category_url = urljoin(response.url, re.search('\(.+\'', sub_category_content).group()[2:-1])
-            yield scrapy.Request(url=sub_category_url, dont_filter=True, callback=self.parse_sub_categories)
+    genders = {
+        "Mujer": "Women",
+        "Hombre": "Men",
+        "Niños & Bebés": "Baby Boys",
+    }
 
     def form_data_detials(self, response):
         return response.xpath('//script[contains(text(),"fil1=new Array()")]/text()').extract_first()
@@ -30,80 +28,63 @@ class Sfera(scrapy.Spider):
 
     def form_data_fil_id2(self, response):
         fil4b_details = self.form_data_detials(response)
-        return re.search('fil4b=\d+', fil4b_details).group()[6:]
+        return re.findall('fil4b=\d+', fil4b_details)[0][6:]
 
     def form_data_fil_id1(self, response):
         fil4a_details = self.form_data_detials(response)
-        return re.search('fil4a=\d+', fil4a_details).group()[6:]
+        return re.findall('fil4a=\d+', fil4a_details)[0][6:]
 
     def form_data_num_id(self, response):
         num_details = self.form_data_detials(response)
-        return re.search('mite=\'\d+', num_details).group()[6:]
+        return re.findall('mite=\'\d+', num_details)[0][6:]
 
     def language(self, response):
         lang_details = self.form_data_detials(response)
-        return re.search('lis_n1=\'\w+', lang_details).group()[8:]
+        return re.findall('lis_n1=\'\w+', lang_details)[0][8:]
 
     def gender(self, response):
-        category = response.xpath('//div[@id="cab_texto"]//h2/a/text()').extract_first()
-        genders = {
-            "Mujer": "Women",
-            "Hombre": "Men",
-            "Niños & Bebés": "Baby Boys",
-        }
-        try:
-            return genders[category]
-        except KeyError:
-            return "Adults"
+        categories = response.xpath('//div[@id="cab_texto"]//h2/a/text()').extract()
+        for category in categories:
+            return self.genders.get(category) or 'Adults'
 
     def brand(self, response):
-        brand = response.xpath('//title/text()').extract_first().split('|')
-        return brand[-1]
+        return response.xpath('//div[@id="cab_ic_inicio"]//img/@alt').extract_first()
 
-    def categories(self, response, item_details):
-        return item_details["categorias"]
+    def categories(self, raw_product):
+        return raw_product["categorias"]
 
-    def map_urlc(self, response, item_details):
-        return item_details["mapa_urlc"].strip()[4:]
+    def map_urlc(self, raw_product):
+        return raw_product["mapa_urlc"].strip()[4:]
 
-    def url_code(self, response, item_details):
-        return item_details["urlc"].strip()
+    def url_code(self, raw_product):
+        return raw_product["urlc"].strip()
 
-    def original_url(self, response, item_details):
-        refer_code = item_details["reference_code"].strip()
-        return '%s%s%s/%s' % (self.start_urls[0], self.map_urlc(response, item_details),
-                              self.url_code(response, item_details), refer_code)
+    def original_url(self, raw_product):
+        refer_code = raw_product["reference_code"].strip()
+        return '%s%s%s/%s' % (self.start_urls[0], self.map_urlc(raw_product),
+                              self.url_code(raw_product), refer_code)
 
-    def price(self, response, item_details):
-        price = item_details["precio"]
+    def price(self, raw_product):
+        price = raw_product["precio"]
         return int(price.replace('.', ''))
 
-    def images(self, response, item_details):
-        images_detail = item_details["lista_imgs"]
-        return images_detail.split(',')
-
-    def previous_price(self, response, item_details):
-        previous_price = item_details["precio_ant"]
+    def previous_price(self, raw_product):
+        previous_price = raw_product["precio_ant"]
         return int(previous_price.replace('.', ''))
 
-    def stock_exist_or_not(self, response, item_details):
-        if item_details["stock"] == "1":
-            return "available"
-        else:
-            return "out_of_stock"
+    def stock_exist_or_not(self, raw_product):
+        return "available" if raw_product["stock"] == "1" else "out_of_stock"
 
-    def color(self, response, item_details):
-        return item_details["nomref"]
+    def color(self, raw_product):
+        return raw_product["nomref"]
 
-    def available_sizes(self, response, item_details):
-        sizes = item_details["tallas"]
-        if sizes:
-            return sizes.split(',')
-        return ["none"]
+    def available_sizes(self, raw_product):
+        sizes = raw_product["tallas"]
+        return sizes.split(',') if raw_product["tallas"] else ["one_size"]
 
-    def trails(self, response, item_details):
-        return [["", self.start_urls[0]], [self.categories(response, item_details)[1],
-                                           '%s%s' % (self.start_urls[0], self.map_urlc(response, item_details))]]
+    def trails(self, raw_product):
+        return [["", self.start_urls[0]], [self.categories(raw_product)[1],
+                                           '%s%s' % (self.start_urls[0], self.map_urlc(raw_product))]]
 
     def parse_sub_categories(self, response):
         item = SferaItem()
@@ -126,35 +107,42 @@ class Sfera(scrapy.Spider):
         yield scrapy.FormRequest(url=self.product_details_api, meta={"item": item}, formdata=form_data,
                                  dont_filter=True, callback=self.parse_product)
 
-    def skus(self, response, item_details):
+    def skus(self, raw_product):
         skus = []
-        for size in self.available_sizes(response, item_details):
+        for size in self.available_sizes(raw_product):
             skus_details = {}
             skus_details["size"] = size
-            skus_details["price"] = self.price(response, item_details)
-            skus_details["previous_price"] = self.previous_price(response, item_details)
-            skus_details["stock"] = self.stock_exist_or_not(response, item_details)
-            skus_details["color"] = self.color(response, item_details)
-            skus_details["sku_id"] = self.color(response, item_details)
+            skus_details["price"] = self.price(raw_product)
+            skus_details["previous_price"] = self.previous_price(raw_product)
+            skus_details["stock"] = self.stock_exist_or_not(raw_product)
+            skus_details["color"] = self.color(raw_product)
+            skus_details["sku_id"] = raw_product["id"]
             skus_details["currency"] = "EUR"
             skus.append(skus_details)
         return skus
-        
+
     def parse_product(self, response):
         item = response.meta["item"]
         products_text = response.xpath('//script[contains(text(),"lrefsver.push")]/text()').extract()
         for product_text in products_text:
             json_content = re.search('({.+})', product_text).group()
-            item_details = json.loads(json_content)
-            item["description"] = item_details["descripcion"]
-            item["title"] = item_details["nombre"]
-            item["images"] = self.images(response, item_details)
-            item["categories"] = self.categories(response, item_details)
-            item["url_original"] = self.original_url(response, item_details)
-            item["skus"] = self.skus(response, item_details)
-            item["trails"] = self.trails(response, item_details)
-            item["retailer_sku"] = item_details["id"]
+            raw_product = json.loads(json_content)
+            item["description"] = raw_product["descripcion"]
+            item["title"] = raw_product["nombre"]
+            item["images"] = raw_product["lista_imgs"].split(',')
+            item["categories"] = self.categories(raw_product)
+            item["url_original"] = self.original_url(raw_product)
+            item["skus"] = self.skus(raw_product)
+            item["trails"] = self.trails(raw_product)
+            item["retailer_sku"] = raw_product["id"]
             yield item
 
 
+class SferaCrawler(SferaParser):
+    name = "sfera_crawler"
 
+    def parse(self, response):
+        categories_content = response.xpath('//div[@class="mac_obj_enlace"]/@onclick').extract()
+        for sub_category_content in categories_content:
+            sub_category_url = response.urljoin(re.findall('\(.+\'', sub_category_content)[0][2:-1])
+            yield scrapy.Request(url=sub_category_url, dont_filter=True, callback=self.parse_sub_categories)
