@@ -45,7 +45,7 @@ class AirBlueCrawler:
         response = self.agent_login()
         response = self.parse_agent_main(response, trip_data)
         response = self.book_search_result(response, trip_data)
-        response = self.parse_itinerary(response, trip_data)
+        response = self.parse_itinerary(response)
         response = self.parse_passenger_info(response, user)
         response = self.parse_additional_items(response)
         booking_item = self.parse_view_reservation(response, trip_data, user)
@@ -81,7 +81,7 @@ class AirBlueCrawler:
         logger.info('making cancel booking request......', )
         cancel_response_object = self.session.post(url=booking_tracking_url,
                                                    data=cancel_form_data,
-                                                   headers=self.headers,)
+                                                   headers=self.headers, )
         logger.info('cancel booking response {0}'.format(cancel_response_object.status_code))
         if cancel_response_object.status_code == 200:
             logger.info('booking canceled of booking_id : {0}'.format(booking_id))
@@ -120,7 +120,7 @@ class AirBlueCrawler:
         logger.info('making email booking request......')
         cancel_response_object = self.session.post(url=booking_tracking_url,
                                                    data=email_form_data,
-                                                   headers=self.headers,)
+                                                   headers=self.headers, )
         logger.info('email response {0}'.format(cancel_response_object.status_code))
         if cancel_response_object.status_code == 200:
             logger.info('booking mailed at {0} :'.format(email))
@@ -199,7 +199,7 @@ class AirBlueCrawler:
             'AM': search_data['arrival_month'],
             'AD': search_data['arrival_day'],
             'FL': 'on',
-            'CC': '',
+            'CC': search_data['cabin'],
             'CD': '',
             'PA': search_data['passenger_adult'],
             'PC': search_data['passenger_child'],
@@ -226,12 +226,14 @@ class AirBlueCrawler:
             route = ' '.join(route)
             standard = {
                 'type': 'standard',
-                'price': self.get_standard_price(current_flight),
+                'total_amount': self.get_total_amount_standard(current_flight),
+                'price_per_seat': self.get_standard_price(current_flight),
                 'currency': self.get_standard_currency(current_flight),
             }
             premium = {
                 'type': 'premium',
-                'price': self.get_premium_price(current_flight),
+                'total_amount': self.get_total_amount_premium(current_flight),
+                'price_per_seat': self.get_premium_price(current_flight),
                 'currency': self.get_premium_currency(current_flight),
             }
 
@@ -239,9 +241,11 @@ class AirBlueCrawler:
             trip_list = []
             for flight_type in flight_types:
                 item = {}
-                item['price_per_seat'] = flight_type['price'].replace(',', '')
+                item['price_per_seat'] = flight_type['price_per_seat'].replace(',', '')
+                item['total_amount'] = flight_type['total_amount'].replace(',', '')
                 item['currency'] = flight_type['currency']
 
+                item['cabin'] = search_data['cabin']
                 item['flight'] = flight
                 item['flight_type'] = flight_type['type']
                 item['route'] = route
@@ -272,19 +276,24 @@ class AirBlueCrawler:
             flight = self.get_flight_number(current_flight)
             depart = self.get_departure_time(current_flight)
             standard = {
-                'price': self.get_standard_price(current_flight),
+                'total_amount': self.get_total_amount_standard(current_flight),
+                'price_per_seat': self.get_standard_price(current_flight),
                 'currency': self.get_standard_currency(current_flight),
                 'trip_key': self.get_trip_ket_standard(current_flight),
             }
             premium = {
-                'price': self.get_premium_price(current_flight),
+                'total_amount': self.get_total_amount_premium(current_flight),
+                'price_per_seat': self.get_premium_price(current_flight),
                 'currency': self.get_premium_currency(current_flight),
                 'trip_key': self.get_trip_key_premium(current_flight),
             }
             input_data = trip_data
+            price = standard['price_per_seat'].replace(',', '')
+            if input_data['flight_type'] == 'premium':
+                price = premium['price_per_seat'].replace(',', '')
             if (flight == input_data['flight']) and (
                     depart == input_data['departure_time']) and (
-                    standard['price'].replace(',', '') == input_data['price_per_seat']):
+                    price == input_data['price_per_seat']):
                 return True
             else:
                 return self.parse_search_result(response, trip_data)
@@ -298,12 +307,14 @@ class AirBlueCrawler:
             flight = self.get_flight_number(current_flight)
             depart = self.get_departure_time(current_flight)
             standard = {
-                'price': self.get_standard_price(current_flight),
+                'total_amount': self.get_total_amount_standard(current_flight),
+                'price_per_seat': self.get_standard_price(current_flight),
                 'currency': self.get_standard_currency(current_flight),
                 'trip_key': self.get_trip_ket_standard(current_flight),
             }
             premium = {
-                'price': self.get_premium_price(current_flight),
+                'total_amount': self.get_total_amount_premium(current_flight),
+                'price_per_seat': self.get_premium_price(current_flight),
                 'currency': self.get_premium_currency(current_flight),
                 'trip_key': self.get_trip_key_premium(current_flight),
             }
@@ -321,6 +332,7 @@ class AirBlueCrawler:
         next_url = 'https://www.airblue.com/agents/bookings/flight_selection.aspx?'
         if trip_key:
             logger.info('making itinerary request.....')
+
             itinerary_response_object = self.session.post(url=next_url,
                                                           data=form_data,
                                                           headers=self.headers)
@@ -328,9 +340,7 @@ class AirBlueCrawler:
             itinerary_response = Selector(itinerary_response_object.text)
             return itinerary_response
 
-    def parse_itinerary(self, response, trip_data):
-        amount_due = self.get_amount_due(response)
-        trip_data['total_amount_due'] = amount_due
+    def parse_itinerary(self, response):
         next_url = 'https://www.airblue.com/agents/bookings/view_itinerary.aspx'
         logger.info('making passenger_info request.....')
         passenger_response_object = self.session.post(url=next_url,
@@ -418,7 +428,6 @@ class AirBlueCrawler:
         departure_time = response.css('td.flight-time span.leaving::text').extract_first()
         arrival_time = response.css('td.flight-time span.landing::text').extract_first()
         flight_number = response.css('td.flight-number span::text').extract_first()
-        amount_due = float(trip_data['price_per_seat']) * len(user['passengers'])
         item = {
             'trip_data': trip_data,
             'user': user
@@ -426,7 +435,6 @@ class AirBlueCrawler:
         if (trip_data['flight'] == flight_number) and (
                 trip_data['departure_time'] == departure_time) and (
                 trip_data['arrival_time'] == arrival_time) and (
-                float(trip_data['total_amount_due']) == amount_due) and (
                 flight_date == parsed_date):
             item['booking_id'] = booking_id
         else:
@@ -517,20 +525,31 @@ class AirBlueCrawler:
     def get_flight_table_id(self, response):
         return response.css('li.current-date label::attr(for)').extract_first()
 
+    def get_total_amount_premium(self, current_flight):
+        total_amount = current_flight.css('td.family-EP label::attr(data-title)').extract_first().strip()
+        return total_amount.split(' ')[-1]
+
+    def get_total_amount_standard(self, current_flight):
+        total_amount = current_flight.css('td.family-ES label ::attr(data-title)').extract_first().strip()
+        return total_amount.split(' ')[-1]
+
 
 search_data = {
+    'cabin': 'C',  # C = Business, Y = Economy
     'departure_city': 'KHI',
     'arrival_city': 'ISB',
     'arrival_month': '2018-01',
     'arrival_day': '29',
-    'passenger_adult': '1',
+    'passenger_adult': '2',
     'passenger_child': '0',
     'passenger_infant': '0',
 }
 trip_data = {
     'price_per_seat': '9403',
+    'total_amount': '18806',
     'currency': 'PKR',
 
+    'cabin': 'C',  # C = Business, Y = Economy
     'flight': 'PA-200',
     'flight_type': 'standard',
     'route': 'Nonstop A320',
