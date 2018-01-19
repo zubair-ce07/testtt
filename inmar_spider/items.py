@@ -1,6 +1,11 @@
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Compose, TakeFirst
 import scrapy
+import re
+
+
+def strip_tags(s):
+    return re.search(r'>(.+)<',s[0]).group(1)
 
 
 class Job(scrapy.Item):
@@ -20,3 +25,4 @@ class JobLoader(ItemLoader):
     default_item_class = Job
     default_output_processor = TakeFirst()
     locations_out = Compose()
+    title_out = Compose(strip_tags)
