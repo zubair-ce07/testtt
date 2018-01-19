@@ -3,6 +3,9 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Compose, Join, TakeFirst
 
 
+def process_categories(result):
+    return filter(None, map(lambda s: s.strip(), result))[1:]
+
 class Course(scrapy.Item):
     author = scrapy.Field()
     basic_price = scrapy.Field()
@@ -23,5 +26,5 @@ class Course(scrapy.Item):
 class CourseLoader(ItemLoader):
     default_item_class = Course
     default_output_processor = TakeFirst()
-    categories_out = Compose()
+    categories_out = Compose(process_categories)
     description_out = Join()

@@ -1,5 +1,6 @@
 from items import CourseLoader
 from lxml import html
+from urlparse import urljoin
 import datetime
 import re
 import requests
@@ -7,7 +8,7 @@ import scrapy
 import time
 
 
-def concatenate_urls(a, b):
+def concatenate_strings(a, b):
     if b == None:
         return None
     else:
@@ -23,7 +24,7 @@ class LyndaSpider(scrapy.Spider):
     def parse(self, response):
         for href in response.xpath('//div[@class="text-details"]//@href')\
                 .extract():
-            yield scrapy.Request(concatenate_urls('https://www.lynda.com',
+            yield scrapy.Request(urljoin('https://www.lynda.com',
                                                   href), self.category)
 
     def category(self, response):
@@ -31,8 +32,8 @@ class LyndaSpider(scrapy.Spider):
                                   'id').extract_first()
         page = 1
         while True:
-            res = requests.get(concatenate_urls(concatenate_urls(
-                concatenate_urls('https://www.lynda.com/ajax/category/'
+            res = requests.get(concatenate_strings(concatenate_strings(
+                concatenate_strings('https://www.lynda.com/ajax/category/'
                                  ,category),'/courses?page='),page))
             data = res.json()['html']
             if "role" in data:
@@ -44,15 +45,11 @@ class LyndaSpider(scrapy.Spider):
             page += 1
 
     def parse_course(self, response):
-        print "here"
         course = CourseLoader(selector=response)
         course.add_xpath('author', '//cite[@data-ga-label="author-name"]'
                                    '/text()')
-        categories = filter(None , map(lambda s: s.strip(), response
-                                       .xpath('//div[@class="tags subject-tags'
-                                              ' software-tags"]//text()')
-                                       .extract()))[1:]
-        course.add_value('categories', categories)
+        course.add_xpath('categories', '//div[@class="tags subject-tags '
+                                       'software-tags"]//text()')
         course.add_xpath('course_url', '//div[@id="embed-share-url"]'
                                        '/@data-course-url')
         time_now = datetime.datetime.now().fromtimestamp(time.time()) \
@@ -69,7 +66,7 @@ class LyndaSpider(scrapy.Spider):
         price_page =  response.xpath('//a[@class="btn tracking btn-action ga"'
                                      ' and @data-track-button="course-top-'
                                      'banner"]/@href').extract_first()
-        price_page_tree = html.fromstring((requests.get(concatenate_urls(
+        price_page_tree = html.fromstring((requests.get(urljoin(
             'https://www.lynda.com',price_page))).content)
         premium_price = price_page_tree.xpath('//span[@class="premium"]'
                                               '/text()')[0][6:]
