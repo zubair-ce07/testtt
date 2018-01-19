@@ -1,4 +1,4 @@
-# define all the column headers from file here
+# Constant module
 
 EVENTS = ' Events'
 MEAN_WIND_SPEED_KM_H = ' Mean Wind SpeedKm/h'
@@ -7,7 +7,7 @@ MEAN_SEA_LEVEL_PRESSUREH_PA = ' Mean Sea Level PressurehPa'
 MAX_SEA_LEVEL_PRESUUREH_PA = ' Max Sea Level PressurehPa'
 MIN_SEA_LEVEL_PRESUUREH_PA = ' Min Sea Level PressurehPa'
 MIN_TEMPERATURE_C = 'Min TemperatureC'
-MAX_TEMPRATURE_C = 'Max TemperatureC'
+MAX_TEMPERATURE_C = 'Max TemperatureC'
 MEAN_HUMIDITY = ' Mean Humidity'
 MIN_HUMIDITY = ' Min Humidity'
 MAX_HUMIDITY = 'Max Humidity'
@@ -26,3 +26,4 @@ CLOUD_COVER = ' CloudCover'
 YEAR = "year"
 MONTH = "month"
 MONTHCHART = "monthchart"
+BONUS_MONTHCHART = "bonuschart"

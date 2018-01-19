@@ -7,12 +7,17 @@ import constants
 
 
 class Populatedata:
-    def __init__(self, year, month = "", filedir_path = ""):
+    """class take file directory path year and month(option)
+    and populate data form the file directory form
+    the files according to specified year"""
+
+    def __init__(self, filedir_path, year, month = ""):
         self.filedir_path = filedir_path
         self.year = year
         self.month = month
         self.datalist = []
 
+    # method to populate data from files
     def populatedata(self):
         for filename in glob.glob(
                 os.path.join(
@@ -23,13 +28,3 @@ class Populatedata:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
                     self.datalist.append(row)
-
-    def printdatalist(self):
-        count = 0
-        if not self.datalist.__len__():
-            print("no record for month of this year exist you provide")
-        for data in self.datalist:
-            print(data)
-            if data[constants.CLOUD_COVER]:
-                count += 1
-        print(self.datalist.__len__(),count)
