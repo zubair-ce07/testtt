@@ -1,6 +1,5 @@
 import datetime
 import urllib.parse
-import jsonlines
 import logging
 import requests
 from parsel import Selector
@@ -12,6 +11,11 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+credentials = {
+    'username': 'HASSANALIAHMED',
+    'password': 'Sasta129'
+}
+
 
 class AirBlueCrawler:
     start_url = 'https://www.airblue.com/agents/default.asp'
@@ -20,20 +24,37 @@ class AirBlueCrawler:
                       '(KHTML, like Gecko) Chrome/63.0.3239.108 Safari/537.36',
         'Content-Type': 'application/x-www-form-urlencoded',
     }
+    input_keys = {
+        'economy': 'Y',
+        'business': 'C',
+    }
     session = None
 
+    def swap_input_keys(self, input_data):
+        """swap input values in air blue form-data"""
+        input_data['cabin'] = self.input_keys[input_data['cabin']]
+
     def session_manager(self):
+        """create new session for every task e.g, booking or searching trips"""
         self.session = requests.session()
 
     def search_trips(self, search_data):
+        """:returns trips for given input date and passengers"""
         self.session_manager()
+        self.swap_input_keys(search_data)
         response = self.agent_login()
         response = self.parse_agent_main(response, search_data)
         searched_trips = self.parse_search_result(response, search_data)
         return searched_trips
 
     def live_check(self, trip_data):
+        """check for given trip:
+            :returns (True, None) if trip exists
+            :returns (True, Updated trip) if trip exists but have updated
+            :returns (False, new trips) if trip doesn't exists
+        """
         self.session_manager()
+        self.swap_input_keys(trip_data)
         response = self.agent_login()
         response = self.parse_agent_main(response, trip_data)
         compare_result = self.compare_search_result(response, trip_data)
@@ -41,7 +62,9 @@ class AirBlueCrawler:
         return compare_result
 
     def book_trip(self, trip_data, user):
+        """take passengers info and reserves seats"""
         self.session_manager()
+        self.swap_input_keys(trip_data)
         response = self.agent_login()
         response = self.parse_agent_main(response, trip_data)
         response = self.book_search_result(response, trip_data)
@@ -53,6 +76,7 @@ class AirBlueCrawler:
         return booking_item
 
     def cancel_reservation(self, booking_id):
+        """take pnr and cancel reservation"""
         self.session_manager()
         booking_tracking_url = 'https://www.airblue.com/agents/bookings/view_reservation.aspx'
         form_data = {
@@ -89,6 +113,7 @@ class AirBlueCrawler:
         return False
 
     def email_reservation(self, booking_id, name, email, email_text):
+        """take pnr and email info and mail the reservation"""
         self.session_manager()
         booking_tracking_url = 'https://www.airblue.com/agents/bookings/view_reservation.aspx'
         form_data = {
@@ -127,48 +152,50 @@ class AirBlueCrawler:
             return True
         return False
 
-    def issue_ticket(self, booking_id):
-        self.session_manager()
-        booking_tracking_url = 'https://www.airblue.com/agents/bookings/view_reservation.aspx'
-        form_data = {
-            'passengerName': '',
-            'PNR': booking_id,
-            'x': '0',
-            'y': '0',
-        }
-        response = self.agent_login()
-        logger.info('making view reservation request......')
-        response_object = self.session.post(url=booking_tracking_url,
-                                            data=form_data,
-                                            headers=self.headers)
-        logger.info('view reservation response {0}'.format(response_object.status_code))
-        response = Selector(response_object.text)
-        pnr_ref = self.get_pnr_ref(response)
-        pnr_cc_ref = self.get_pnr_cc_ref(response)
-        currency = self.get_currency(response)
-        payment_method = self.get_payment_method(response)
-        amount_paid = self.get_amount_paid(response)
-        ticket_form_data = {
-            'pnr': booking_id,
-            'pnrRef': pnr_ref,
-            'pnrCCRef': pnr_cc_ref,
-            'currency': currency,
-            'payment_method': payment_method,
-            'password': 'SHAH200',
-            'amount_paid': amount_paid,
-            'action': 'Issue E-Tickets'
-        }
-        logger.info('making issue ticket request......')
-        cancel_response_object = self.session.post(url=booking_tracking_url,
-                                                   data=ticket_form_data,
-                                                   headers=self.headers)
-        logger.info('issue ticket response {0}'.format(cancel_response_object.status_code))
-        if cancel_response_object.status_code == 200:
-            logger.info('ticket issued of booking_id {0} :'.format(booking_id))
-            return True
-        return False
+    # def issue_ticket(self, booking_id):
+    #     """take pnr and purchases ticket"""
+    #     self.session_manager()
+    #     booking_tracking_url = 'https://www.airblue.com/agents/bookings/view_reservation.aspx'
+    #     form_data = {
+    #         'passengerName': '',
+    #         'PNR': booking_id,
+    #         'x': '0',
+    #         'y': '0',
+    #     }
+    #     response = self.agent_login()
+    #     logger.info('making view reservation request......')
+    #     response_object = self.session.post(url=booking_tracking_url,
+    #                                         data=form_data,
+    #                                         headers=self.headers)
+    #     logger.info('view reservation response {0}'.format(response_object.status_code))
+    #     response = Selector(response_object.text)
+    #     pnr_ref = self.get_pnr_ref(response)
+    #     pnr_cc_ref = self.get_pnr_cc_ref(response)
+    #     currency = self.get_currency(response)
+    #     payment_method = self.get_payment_method(response)
+    #     amount_paid = self.get_amount_paid(response)
+    #     ticket_form_data = {
+    #         'pnr': booking_id,
+    #         'pnrRef': pnr_ref,
+    #         'pnrCCRef': pnr_cc_ref,
+    #         'currency': currency,
+    #         'payment_method': payment_method,
+    #         'password': 'SHAH200',
+    #         'amount_paid': amount_paid,
+    #         'action': 'Issue E-Tickets'
+    #     }
+    #     logger.info('making issue ticket request......')
+    #     cancel_response_object = self.session.post(url=booking_tracking_url,
+    #                                                data=ticket_form_data,
+    #                                                headers=self.headers)
+    #     logger.info('issue ticket response {0}'.format(cancel_response_object.status_code))
+    #     if cancel_response_object.status_code == 200:
+    #         logger.info('ticket issued of booking_id {0} :'.format(booking_id))
+    #         return True
+    #     return False
 
     def agent_login(self):
+        """login on air blue with given agent credentials"""
         logger.info('making start request......')
         response_object = self.session.get(url=self.start_url)
         logger.info('start response {0}'.format(response_object.status_code))
@@ -177,8 +204,8 @@ class AirBlueCrawler:
         form_data = {
             'ta_login_action': 'dologin',
             'email_password': '',
-            'login': 'HASSANALIAHMED',
-            'password': 'Sasta129',
+            'login': credentials['username'],
+            'password': credentials['password'],
             'imagecheck': image_check,
             'x': '0',
             'y': '0',
@@ -191,6 +218,7 @@ class AirBlueCrawler:
         return login_response
 
     def parse_agent_main(self, response, search_data):
+        """parse agent dashboard page and do search request"""
         search_url = 'https://www.airblue.com/agents/bookings/flight_selection.aspx?'
         form_data = {
             'TT': 'OW',
@@ -215,6 +243,11 @@ class AirBlueCrawler:
         return search_response
 
     def parse_search_result(self, response, search_data):
+        """parse search page and return trips"""
+        available = response.css('li.current-date label span::text').extract_first()
+        logger.info('available {0}'.format(available))
+        if available is None:
+            return False
         flight_table_id = self.get_flight_table_id(response)
         table_selector = 'table#{0} '.format(flight_table_id)
         all_flights = response.css(table_selector + 'tbody')
@@ -240,26 +273,23 @@ class AirBlueCrawler:
             flight_types = [standard, premium]
             trip_list = []
             for flight_type in flight_types:
-                item = {}
-                item['price_per_seat'] = flight_type['price_per_seat'].replace(',', '')
-                item['total_amount'] = flight_type['total_amount'].replace(',', '')
-                item['currency'] = flight_type['currency']
-
-                item['cabin'] = search_data['cabin']
-                item['flight'] = flight
-                item['flight_type'] = flight_type['type']
-                item['route'] = route
-
-                item['departure_city'] = search_data['departure_city']
-                item['arrival_city'] = search_data['arrival_city']
-                item['arrival_month'] = search_data['arrival_month']
-                item['arrival_day'] = search_data['arrival_day']
-                item['departure_time'] = departure_time
-                item['arrival_time'] = arrival_time
-
-                item['passenger_adult'] = search_data['passenger_adult']
-                item['passenger_child'] = search_data['passenger_child']
-                item['passenger_infant'] = search_data['passenger_infant']
+                item = {
+                    'price_per_seat': flight_type['price_per_seat'].replace(',', ''),
+                    'total_amount': flight_type['total_amount'].replace(',', ''),
+                    'currency': flight_type['currency'],
+                    'cabin': search_data['cabin'],
+                    'flight': flight,
+                    'flight_type': flight_type['type'],
+                    'route': route,
+                    'departure_city': search_data['departure_city'],
+                    'arrival_city': search_data['arrival_city'],
+                    'arrival_month': search_data['arrival_month'],
+                    'arrival_day': search_data['arrival_day'],
+                    'departure_time': departure_time,
+                    'arrival_time': arrival_time,
+                    'passenger_adult': search_data['passenger_adult'],
+                    'passenger_child': search_data['passenger_child'],
+                    'passenger_infant': search_data['passenger_infant']}
 
                 logger.info(item)
                 trip_list.append(item)
@@ -268,7 +298,7 @@ class AirBlueCrawler:
             return trip_list
 
     def compare_search_result(self, response, trip_data):
-        trip_key = None
+        """compare search result with given trip"""
         flight_table_id = self.get_flight_table_id(response)
         table_selector = 'table#{0} '.format(flight_table_id)
         all_flights = response.css(table_selector + 'tbody')
@@ -294,11 +324,16 @@ class AirBlueCrawler:
             if (flight == input_data['flight']) and (
                     depart == input_data['departure_time']) and (
                     price == input_data['price_per_seat']):
-                return True
+                return True, trip_data
             else:
-                return self.parse_search_result(response, trip_data)
+                updated_trip = self.parse_search_result(response, trip_data)
+                if updated_trip is not None:
+                    return True, updated_trip
+                else:
+                    return False, None
 
     def book_search_result(self, response, trip_data):
+        """double check search result before reservation"""
         trip_key = None
         flight_table_id = self.get_flight_table_id(response)
         table_selector = 'table#{0} '.format(flight_table_id)
@@ -341,6 +376,7 @@ class AirBlueCrawler:
             return itinerary_response
 
     def parse_itinerary(self, response):
+        """parse itinerary page and make next request"""
         next_url = 'https://www.airblue.com/agents/bookings/view_itinerary.aspx'
         logger.info('making passenger_info request.....')
         passenger_response_object = self.session.post(url=next_url,
@@ -389,6 +425,7 @@ class AirBlueCrawler:
         return additional_response
 
     def parse_additional_items(self, response):
+        """parse additional page and make next page request"""
         pnr = self.get_pnr(response)
         current_segment = self.get_current_segment(response)
         next_segment = self.get_next_segment(response)
@@ -419,6 +456,7 @@ class AirBlueCrawler:
         return reservation_response
 
     def parse_view_reservation(self, response, trip_data, user):
+        """page reservation page and return item"""
         booking_id = self.get_booking_id(response)  # pnr
         flight_date = self.get_flight_date(response)
         flight_date = datetime.datetime.strptime(flight_date, '%d %b %Y').date()
@@ -532,71 +570,3 @@ class AirBlueCrawler:
     def get_total_amount_standard(self, current_flight):
         total_amount = current_flight.css('td.family-ES label ::attr(data-title)').extract_first().strip()
         return total_amount.split(' ')[-1]
-
-
-search_data = {
-    'cabin': 'C',  # C = Business, Y = Economy
-    'departure_city': 'KHI',
-    'arrival_city': 'ISB',
-    'arrival_month': '2018-01',
-    'arrival_day': '29',
-    'passenger_adult': '2',
-    'passenger_child': '0',
-    'passenger_infant': '0',
-}
-trip_data = {
-    'price_per_seat': '9403',
-    'total_amount': '18806',
-    'currency': 'PKR',
-
-    'cabin': 'C',  # C = Business, Y = Economy
-    'flight': 'PA-200',
-    'flight_type': 'standard',
-    'route': 'Nonstop A320',
-
-    'departure_city': 'KHI',
-    'arrival_city': 'ISB',
-    'arrival_month': '2018-01',
-    'arrival_day': '29',
-    'departure_time': '7:30 AM',
-    'arrival_time': '9:40 AM',
-
-    'passenger_adult': '2',
-    'passenger_child': '0',
-    'passenger_infant': '0',
-}
-user = {
-    'passengers': [
-        {
-            'type': 'ADT',
-            'code': 'ADT',
-            'gender': '0',
-            'title': 'Mr',
-            'first_name': 'aaa',
-            'last_name': 'aaa',
-            'dob_year': '20',
-            'dob_month': 'Mar',
-            'dob_day': '1980',
-        },
-        {
-            'type': 'ADT',
-            'code': 'ADT',
-            'gender': '0',
-            'title': 'Mr',
-            'first_name': 'bbb',
-            'last_name': 'bbb',
-            'dob_year': '21',
-            'dob_month': 'Mar',
-            'dob_day': '1970',
-        }
-    ],
-    'email': 'ahmad24013@gmail.com',
-    'country_code': '+92',
-    'mobile': '3049896759',
-}
-agent = AirBlueCrawler()
-# agent.search_trips(search_data)
-# agent.live_check(trip_data)
-# agent.book_trip(trip_data, user)
-# agent.cancel_reservation('ISGPWN')
-# agent.email_reservation('ISGPWN', 'ahmad', 'ahmad24013@gmail.com', 'testing from spider.....')
