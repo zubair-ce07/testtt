@@ -402,7 +402,7 @@ class AirBlueCrawler:
             form_data.append(('PX[]', index))
             form_data.append(('PX[{0}].paxType'.format(index), passenger['type']))
             form_data.append(('PX[{0}].paxCode'.format(index), passenger['code']))
-            form_data.append(('PX[{0}].gender'.format(index), passenger['gender']))
+            form_data.append(('PX[{0}].gender'.format(index), '0'))
             form_data.append(('PX[{0}].title'.format(index), passenger['title']))
             form_data.append(('PX[{0}].firstName'.format(index), passenger['first_name']))
             form_data.append(('PX[{0}].lastName'.format(index), passenger['last_name']))
