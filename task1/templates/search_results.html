@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Word Search</title>
+    </head>
+    <body>
+        <p>You searched for: <strong>{{ query }}</strong></p>
+
+        {% if result_list %}
+            <p>Found {{ result_list|length }}.</p>
+            <ul>
+                {% for result in result_list %}
+                <li>{{ result }}</li>
+                {% endfor %}
+            </ul>
+            <p>Lines</p>
+            <ul>
+                {% for line in lines %}
+                <li>{{ line }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results matched your search criteria.</p>
+        {% endif %}
+    </body>
+</html>
