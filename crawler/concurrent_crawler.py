@@ -32,7 +32,6 @@ class Asnyccrawler:
             print("EXception occured")
             raise ex
 
-
     async def get_html(self, url):
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=30) as response:
@@ -43,9 +42,9 @@ class Asnyccrawler:
     async def get_results(self, url):
         html = await self.get_html(url)
         urls = self.__parseresults(url, str(html))
-        return (sys.getsizeof(html),urls)
+        return sys.getsizeof(html), urls
 
-    async def tasks_handler(self, task_id,work_queue):
+    async def tasks_handler(self, task_id, work_queue):
         while not work_queue.empty():
             url = await work_queue.get()
             try:
@@ -54,12 +53,12 @@ class Asnyccrawler:
                 self.avg_page_size += task_status[0]
                 self.page_count += 1
             except Exception as ex:
-                print("Error Ocured for {} :".format(url),ex)
+                print("Error Ocured for {} :".format(url), ex)
             time.sleep(self.delay)
 
     def eventloop(self):
         q = asyncio.Queue()
-        [q.put_nowait(url) for url,task_id in zip(self.urls,range(self.no_of_request))]
+        [q.put_nowait(url) for url, task_id in zip(self.urls, range(self.no_of_request))]
         loop = asyncio.get_event_loop()
         tasks = [self.tasks_handler(task_id, q, ) for task_id in range(self.max_threads)]
         loop.run_until_complete(asyncio.wait(tasks))

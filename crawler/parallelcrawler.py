@@ -5,6 +5,7 @@ import time
 import requests
 import sys
 
+
 class Parallelcrawler:
     def __init__(self, urls, no_of_request, delay=0, max_threads=5):
         self.urls = urls
@@ -28,7 +29,7 @@ class Parallelcrawler:
         except requests.RequestException as ex:
             raise ex
 
-    def __parseresults(self, url, html_text):
+    def __parseresults(self, html_text):
         try:
             selector = Selector(text=html_text)
             urls = selector.xpath('//a/@href').extract()
@@ -40,12 +41,12 @@ class Parallelcrawler:
     def wrapper(self, url):
         time.sleep(self.delay)
         html_text = self.__makerequest(url)
-        urls = self.__parseresults(url, html_text)
-        return (sys.getsizeof(html_text),urls)
+        urls = self.__parseresults(html_text)
+        return sys.getsizeof(html_text), urls
 
     def run(self):
-        with ThreadPoolExecutor(max_workers=min(self.no_of_request,self.max_threads)) as Executor:
-            jobs = [Executor.submit(self.wrapper, url) for url,t_id in zip(self.urls,range(self.no_of_request))]
+        with ThreadPoolExecutor(max_workers=min(self.no_of_request, self.max_threads)) as Executor:
+            jobs = [Executor.submit(self.wrapper, url) for url, t_id in zip(self.urls, range(self.no_of_request))]
             counter = 0
             for job in concurrent.futures.as_completed(jobs):
                 result = job.result()
