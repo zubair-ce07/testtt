@@ -44,7 +44,7 @@ class Parallelcrawler:
         return (sys.getsizeof(html_text),urls)
 
     def run(self):
-        with ThreadPoolExecutor(max_workers=min(len(self.urls),self.max_threads)) as Executor:
+        with ThreadPoolExecutor(max_workers=min(self.no_of_request,self.max_threads)) as Executor:
             jobs = [Executor.submit(self.wrapper, url) for url,t_id in zip(self.urls,range(self.no_of_request))]
             counter = 0
             for job in concurrent.futures.as_completed(jobs):
@@ -52,5 +52,6 @@ class Parallelcrawler:
                 self.avg_page_size += result[0]
                 self.results.append(result[1])
                 counter += 1
-            self.avg_page_size = int(self.avg_page_size/counter)
+            if counter > 0:
+                self.avg_page_size = int(self.avg_page_size/counter)
             self.download_size = sys.getsizeof(self.results)

@@ -7,18 +7,20 @@ import time
 
 class Asnyccrawler:
 
-    def __init__(self, urls, no_of_request, delay=0):
+    def __init__(self, urls, no_of_request, delay=0, max_threads=5):
 
         self.urls = urls
         self.results = []
         self.no_of_request = no_of_request
         self.delay = delay
+        self.max_threads = max_threads
         self.page_count = 0
         self.avg_page_size = 0
         self.download_size = 0
 
     def calculate_size(self):
-        self.avg_page_size = int(self.avg_page_size/self.page_count)
+        if self.page_count > 0:
+            self.avg_page_size = int(self.avg_page_size/self.page_count)
         self.download_size = sys.getsizeof(self.results)
 
     def __parseresults(self, url, html_text):
@@ -43,7 +45,9 @@ class Asnyccrawler:
         urls = self.__parseresults(url, str(html))
         return (sys.getsizeof(html),urls)
 
-    async def tasks_handler(self, task_id, url):
+    async def tasks_handler(self, task_id,work_queue):
+        while not work_queue.empty():
+            url = await work_queue.get()
             try:
                 task_status = await self.get_results(url)
                 self.results.append(task_status[1])
@@ -54,8 +58,10 @@ class Asnyccrawler:
             time.sleep(self.delay)
 
     def eventloop(self):
+        q = asyncio.Queue()
+        [q.put_nowait(url) for url,task_id in zip(self.urls,range(self.no_of_request))]
         loop = asyncio.get_event_loop()
-        tasks = [self.tasks_handler(task_id, url, ) for task_id,url in zip(range(self.no_of_request),self.urls)]
+        tasks = [self.tasks_handler(task_id, q, ) for task_id in range(self.max_threads)]
         loop.run_until_complete(asyncio.wait(tasks))
         loop.close()
         self.calculate_size()
