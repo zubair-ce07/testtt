@@ -61,6 +61,7 @@ class Asnyccrawler:
         [q.put_nowait(url) for url, task_id in zip(self.urls, range(self.no_of_request))]
         loop = asyncio.get_event_loop()
         tasks = [self.tasks_handler(task_id, q, ) for task_id in range(self.max_threads)]
+        print(tasks)
         loop.run_until_complete(asyncio.wait(tasks))
         loop.close()
         self.calculate_size()
