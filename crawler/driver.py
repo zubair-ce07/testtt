@@ -1,11 +1,11 @@
 import requests
 from parsel import Selector
-import concurrent_crawler
-import parallelcrawler
+from concurrent_crawler import AsnycCrawler
+from parallel_crawler import ParallelCrawler
 import sys
 
 
-class Extacturls:
+class ExtactUrls:
 
     def __init__(self, url):
         self.baseurl = url
@@ -30,7 +30,7 @@ class Extacturls:
 
 def main():
     baseurl = "https://en.wikipedia.org"
-    driver = Extacturls(baseurl)
+    driver = ExtactUrls(baseurl)
     print(" max urls to visit : {}".format(driver.no_of_urls))
     while True:
         try:
@@ -53,10 +53,10 @@ def main():
         else:
             break
 
-    c_crawl = concurrent_crawler.Asnyccrawler(driver.urls, no_of_requets, download_delay)
+    c_crawl = AsnycCrawler(driver.urls, no_of_requets, download_delay)
     c_crawl.eventloop()
 
-    p_crawl = parallelcrawler.Parallelcrawler(driver.urls, no_of_requets, download_delay)
+    p_crawl = ParallelCrawler(driver.urls, no_of_requets, download_delay)
     p_crawl.run()
 
     download_size = c_crawl.download_size + p_crawl.download_size + sys.getsizeof(driver.urls)

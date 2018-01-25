@@ -5,7 +5,7 @@ import sys
 import time
 
 
-class Asnyccrawler:
+class AsnycCrawler:
 
     def __init__(self, urls, no_of_request, delay=0, max_threads=5):
 
