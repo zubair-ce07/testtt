@@ -4,27 +4,21 @@ from urllib.parse import urlencode
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import urllib.parse
-import json
-from vans.items import VansItem
 import re
+from vans.spiders.vans_parser import VansParser
 
 
-class VansSpider(CrawlSpider):
+class VansCrawler(CrawlSpider):
     name = "vans_crawler"
     start_urls = ["https://www.vans.co.uk/"]
+    parser = VansParser()
     base_url = "https://www.vans.co.uk/"
     products_api = "https://fsm-vfc.attraqt.com/zones-js.aspx?"
-    skus_api = "https://www.vans.co.uk/webapp/wcs/stores/servlet/VFAjaxProductAvailabilityView?"
 
     rules = [
         Rule(LinkExtractor(restrict_xpaths='.//a[@class="sub-category-header"]'),
              callback='parse_sub_categories')
     ]
-    genders = {
-        "WOMEN": "Women",
-        "MEN": "Men",
-        "KIDS": "Kids",
-    }
 
     def form_data_details(self, response):
         return response.xpath('//script[contains(text(),"categorytree")]/text()').extract_first()
@@ -96,86 +90,10 @@ class VansSpider(CrawlSpider):
             return
         for product_url in product_urls:
             yield scrapy.Request(url=urllib.parse.urljoin(self.base_url, product_url), dont_filter=True,
-                                 callback=self.parse_product)
+                                 callback=self.parser.parse_product)
         next_page_url = new_response.xpath('//a[@title="Go to next page"]/@href').extract_first()
         if not next_page_url:
             return
         form_data["pageurl"] = urllib.parse.urljoin(self.base_url, next_page_url)
         request_url = self.products_api+urlencode(form_data)
         yield scrapy.Request(url=request_url, dont_filter=True, meta={"form_data": form_data}, callback=self.next_pages)
-
-    def product_id(self, response):
-        return response.xpath('//div[@id="product-imgs"]/@data-product-id').extract_first()
-
-    def attribute_id(self, response):
-        return response.xpath('//section/@data-attribute-id').extract_first()
-
-    def product_info(self, response):
-        product_info = response.xpath('//script[contains(text(),"itemPrices")]/text()').extract_first()
-        return json.loads(re.findall('Prices = (.+);', product_info)[0])
-
-    def available_color(self, response):
-        return response.css('.attr-selected-color-js ::text').extract_first()
-
-    def sku_ids_url(self, response):
-        params = {
-            'storeId': self.store_id(response),
-            'langId': self.language_id(response),
-            'productId': self.product_id(response),
-            'requesttype': 'ajax',
-        }
-        return self.skus_api+urlencode(params)
-
-    def skus(self, response):
-        size_ids = response.xpath('//option/@data-attribute-value').extract()
-        skus = {}
-        sku = self.product_info(response)[self.product_id(response)]["pricing"][self.attribute_id(response)]
-        for size_id in size_ids:
-            sku_id = sku[size_id]["sku"][0]
-            skus[sku_id] = {
-                "price": sku[size_id]["lowPrice"],
-                "previous_price": sku[size_id]["highPrice"],
-                "color": self.available_color(response),
-                "size": size_id,
-            }
-        return skus
-
-    def gender(self, response):
-        gender_info = response.xpath('//script[contains(text(),"pageName")]/text()').extract_first()
-        category = re.findall('Name":"[A-Z]+', gender_info)[0][7:]
-        return self.genders.get(category) or 'Adults'
-
-    def parse_product(self, response):
-        item = VansItem()
-        item["title"] = response.xpath('//h1[@class="product-info-js"]/text()').extract()
-        item["description"] = response.css('.desc-container::text').extract()[0]
-        item["composition"] = response.css('.desc-container::text').extract()[1:]
-        item["retailer_id"] = self.product_id(response)
-        item["url"] = response.url
-        item["images_url"] = response.css('.selected-view-js img::attr(src)').extract()
-        item["gender"] = self.gender(response)
-
-        yield scrapy.Request(url=self.sku_ids_url(response), meta={"item": item, "skus": self.skus(response)},
-                             dont_filter=True, callback=self.parse_sku_ids)
-
-    def parse_sku_ids(self, response):
-        item = response.meta["item"]
-        skus = response.meta["skus"]
-        available_sku_ids = []
-        if response.text:
-            sku_ids_content = json.loads(response.text)
-            available_stock = sku_ids_content["stock"]
-            if available_stock:
-                for sku_key, sku_value in available_stock.items():
-                    if sku_value != 0:
-                        available_sku_ids.append(sku_key)
-                for sku_id in skus:
-                    if str(sku_id) in available_sku_ids:
-                        skus[sku_id].update({"stock": "available"})
-                    else:
-                        skus[sku_id].update({"stock": "out_of_stock"})
-        item["skus"] = skus
-        yield item
-
-
-
