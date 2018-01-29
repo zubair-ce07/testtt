@@ -90,11 +90,8 @@ class ComputingSubTaskResults:
             result_data.max_humidity = max(save_humid_data)
             result_data.max_humidity_date = data.get('%s' % result_data.max_humidity)
 
-        # high_date_converted = datetime.strptime(data.get('%s' % result_data.highest_temperature), '%Y-%m-%d')
         high_date_converted = datetime.strptime(result_data.highest_temperature_date, '%Y-%m-%d')
-        # low_date_converted = datetime.strptime(data.get('%s' % result_data.lowest_temperature), '%Y-%m-%d')
         low_date_converted = datetime.strptime(result_data.lowest_temperature_date, '%Y-%m-%d')
-        # humid_date_converted = datetime.strptime(data.get('%s' % result_data.max_humidity), '%Y-%m-%d')
         humid_date_converted = datetime.strptime(result_data.max_humidity_date, '%Y-%m-%d')
 
         print('\nHighest: %sC on %s %d' % (result_data.highest_temperature, high_date_converted.strftime("%B"),
@@ -126,15 +123,12 @@ class ComputingSubTaskResults:
                             mean_humidity_date.append(int(b.mean_humidity))
 
         if high_temp_data.__len__():
-            # max_value = int(sum(high_temp_data) / high_temp_data.__len__())
             result_data.avg_high_temp = int(sum(high_temp_data) / high_temp_data.__len__())
 
         if low_temp_data.__len__():
-            # min_value = int(sum(low_temp_data) / low_temp_data.__len__())
             result_data.low_avg_temp = int(sum(low_temp_data) / low_temp_data.__len__())
 
         if mean_humidity_date.__len__():
-            # mean_value = int(sum(mean_humidity_date) / mean_humidity_date.__len__())
             result_data.avg_mean_humidity = int(sum(mean_humidity_date) / mean_humidity_date.__len__())
 
         print('\nHighest Average: %sC' % result_data.avg_high_temp)
@@ -245,7 +239,6 @@ class ReadData:
 
     def read_data_yearly(self, year):
         read_again = ReadData()
-        # files_yearly = numpy.ndarray((7,), dtype=numpy.object)
         files_count = 0
         read_requested_data = glob.glob('/home/abdullah/weatherfiles/weatherfiles/*%s*.txt' % year)
         files_yearly = numpy.ndarray((read_requested_data.__len__(),), dtype=numpy.object)
@@ -262,7 +255,6 @@ class ReadData:
 
     def read_data_monthly(self,year, month):
         read_again = ReadData()
-        # files_yearly = numpy.ndarray((7,), dtype=numpy.object)
         files_count = 0
         read_requested_data = glob.glob('/home/abdullah/weatherfiles/weatherfiles/*%s*%s**.txt' % (year, month))
         files_yearly = numpy.ndarray((read_requested_data.__len__(),), dtype=numpy.object)
@@ -288,8 +280,6 @@ class Reports:
 
         hightemp = ComputingSubTaskResults()
         hightemp.high_low_temp_and_day(files_yearly)
-        # hightemp.low_temp_day(files_yearly)
-        # hightemp.humidity_and_day(files_yearly)
 
     # Calculates avg high temp, avg low temp
     # and avg mean humidity
