@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load form_tags %}
+{% block content %}
+<div class="banner_1">
+	<div class="container">
+		<div id="search_wrapper1">
+			<div id="search_form" class="clearfix">
+				<h1>Start your job search</h1>
+				<p>
+					<input type="text" class="text" placeholder=" " value="Enter Keyword(s)" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Enter Keyword(s)';}">
+					<input type="text" class="text" placeholder=" " value="Location" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Location';}">
+					<label class="btn2 btn-2 btn2-1b"><input type="submit" value="Find Jobs"></label>
+				</p>
+			</div>
+		</div>
+	</div> 
+</div>	
+<div class="container">
+	<div class="single">  
+		<div class="row">
+			<div class="col-md-offset-10 col-md-2">
+				<a href="#" class="btn btn-primary btn-default btn-lg" data-bind="click: function(){ toggleEdit(this); }"><i class="fa fa-edit"></i></a>
+			</div>
+		<div class="box_1">
+			<h3>What we do</h3>
+			<!-- <div class="col-md-5">
+				<img src="images/1.png" class="img-responsive" alt=""/>
+			</div> -->
+			<div class="col-md-12 service_box1">
+				<div class="row">
+					<div data-bind='visible: !edit()'>
+						<div class="col-md-10"><h5 data-bind="init, text: heading.value"></h5> </div>
+					</div>
+					<div data-bind='visible: edit()'>
+						<div class="col-md-10 editable"><h5 class="display-inline" contenteditable="true" data-bind="contenteditable: heading.value"></h5> </div>
+					</div>
+				</div>
+				<div class="row">
+					<div data-bind='visible: !edit()'>
+						<div class="col-md-10">
+							<p data-bind="init, text: description.value"></p>
+						</div>
+					</div>
+					<div data-bind='visible: edit()'>
+						<br/>
+						<div class="col-md-10 editable">
+							<p contenteditable="true" data-bind="contenteditable: description.value"></p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="clearfix"> </div>
+		</div>
+		<div class="box_2">
+			<h3>Tags</h3>
+			<div data-bind="foreach: services">
+				<div class="col-md-4 icon-service">
+						<div class="icon"  data-bind="visible: !$parent.edit()">
+							<i data-bind="attr: {'class': icon }" class="fa fa-calendar"></i>
+						</div>
+				
+						<div class="icon-box-body">
+							<div class="row">
+								<div data-bind='visible: !$parent.edit()'>
+									<div class="col-md-offset-1 col-md-8">
+										<h4 data-bind="text:heading.value">Content here</h4>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+
+								<div data-bind='visible: !$parent.edit()'>
+									<div class="col-md-offset-1 col-md-8">
+										<p data-bind="text:description.value">The standard chunk of Lorem Ipsum used since the 1500s</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row" data-bind='visible: $parent.edit()'>
+							<div class="col-md-2">
+								<button class="btn btn-primary" role="iconpicker" data-iconset="fontawesome" data-header="false"  
+								data-bind="visible:$parent.edit(), attr: { 'data-icon': iconId }, event:{change: iconChange}"
+								onclick = ""
+								></button>
+							</div>
+							<div class="col-md-10">
+								<div class="row">
+									<div data-bind='visible: $parent.edit()'>
+										<div class="col-md-offset-1 col-md-8 editable">
+											<h4 contenteditable="true" data-bind="contenteditable :heading.value">Content here</h4>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div data-bind='visible: $parent.edit()'>
+										<div class="col-md-offset-1 col-md-8 editable">
+											<p contenteditable="true" data-bind="contenteditable:description.value">The standard chunk of Lorem Ipsum used since the 1500s</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div> 
+			</div>
+			<div class="clearfix"> </div>
+		</div>
+	</div>
+</div>
+<div class="hidden">
+	<h1>Profile From</h1>
+	<form class="profile_form" ic-target="#responses" ic-post-to="{% url 'freelancers:profile_update' %}" method="post">{% csrf_token %}
+	    {{ profile_form.description|set_data:"bind:init, value: description.value" }}
+	    {{ profile_form.objective|set_data:"bind:init, value: heading.value" }}
+	</form>
+	<h1>Services Form</h1>
+	<div data-bind="foreachInit: { data: services, createElement: createService }">
+		<form data-template>
+		</form>
+	{% for service_form in  service_forms%}
+		<form class="service_form" id="service-form{{ forloop.counter }}" ic-target="#responses" ic-post-to="{% url 'freelancers:service_update' %}" data-init action="#" method="post">{% csrf_token %}
+			{{ service_forms.management_form }}
+			{{ service_form.id|set_data:"bind:init, value: serviceID" }}
+			{{ service_form.icon|set_data:"bind:init, value: icon" }}
+	    	{{ service_form.objective|set_data:"bind:init, value: heading.value" }}
+			{{ service_form.description|set_data:"bind:init, value: description.value" }}
+			<input type="hidden" name="serviceID" data-bind="value: serviceID">
+		</form>
+	{% endfor %}
+	</div>
+</div>
+<div id="responses">
+</div>
+<script type="text/javascript" src="{% static "app/freelancers/profile.js" %}"></script>
+{% endblock content %}

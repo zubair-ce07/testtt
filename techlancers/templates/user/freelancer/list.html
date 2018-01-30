@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+</form>
+<div class="banner_1">
+	<div class="container">
+		<div id="search_wrapper1">
+		   <div id="search_form" class="clearfix">
+		    <h1>Search Freelancer</h1>
+		    <p>
+		    <form method="get">
+			 <input type="text" name="filter" class="text" placeholder="name" value='{{filter}}'>
+			 <label class="btn2 btn-2 btn2-1b"><input type="submit" value="Find Freelancer"></label>
+			</form>
+			</p>
+           </div>
+		</div>
+   </div> 
+</div>	
+<div class="container">
+    <div class="single">  
+      <div class="col-sm-10 follow_left">
+			<h3>Freelancers</h3>
+             <div class="follow_jobs">
+				{% for freelancer  in user_list %}
+			    <a href="{% url 'freelancers:profile' slug=freelancer.username %}">
+					<img src="{% static "images/freelancer.png" %}" alt="" class="img-circle img-responsive">
+					<div class="title">
+						<h5>{{freelancer.username}}</h5>
+						{# <p>Amazon Inc.</p> #}
+					</div>
+					<div class="data">
+							<!-- <span class="city"><i class="fa fa-map-marker"></i>New York City</span>
+							<span class="type full-time"><i class="fa fa-clock-o"></i>Full Time</span>
+							<span class="sallary"><i class="fa fa-dollar"></i>45,000</span> -->
+					</div>
+				</a>
+				{% endfor %}
+				<ul class="pagination hidden">
+					<li class="disabled"><a href="#" aria-label="Previous"><span aria-hidden="true">«</span></a></li>
+					<li class="active"><a href="#">1 <span class="sr-only">(current)</span></a></li>
+					<li><a href="#">2</a></li>
+					<li><a href="#">3</a></li>
+					<li><a href="#">4</a></li>
+					<li><a href="#">5</a></li>
+					<li><a href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li>
+			   </ul>
+		    </div>
+		</div>
+		<div class="col-sm- hidden">
+			<h4 class="m_1">Career level</h4>
+			<table class="table">
+                    <tbody>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Senior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Middle
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                </tbody>
+             </table>
+             <h4 class="m_1">Job type</h4>
+             <table class="table">
+                    <tbody>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Senior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Middle
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                </tbody>
+             </table>
+             <h4 class="m_1">Location</h4>
+             <table class="table">
+                    <tbody>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Senior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Middle
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                        <tr class="unread checked">
+                            <td class="hidden-xs">
+                                <input type="checkbox" class="checkbox">
+                            </td>
+                            <td class="hidden-xs">
+                                Junior
+                            </td>
+                            <td>
+                                (56)
+                            </td>
+                        </tr>
+                </tbody>
+             </table>
+		</div>
+		<div class="clearfix"> </div>
+	</div>
+</div>
+{% endblock %}
