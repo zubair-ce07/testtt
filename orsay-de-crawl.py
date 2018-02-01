@@ -1,26 +1,20 @@
 import scrapy
+from scrapy.spider import CrawlSpider, Rule
+from scrapy.linkextractor import LinkExtractor
 import re
 import queue
 
 
-class OrsaySpider(scrapy.Spider):
-    name = "orsay-de-crawl"
+class OrsaySpider(CrawlSpider):
+    name = "orsay-de-crawl-link"
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com']
 
-    def parse(self, response):
-        all_urls = response.css('ul#nav li a:only-child::attr(href)').extract()
-        for url in all_urls:
-            yield scrapy.Request(url=url, callback=self.page_parse)
-
-    def page_parse(self, response):
-        product_urls = response.css('div.category-products article div.product-image-wrapper '
-                                    'a:first-of-type::attr(href)').extract()
-        for url in product_urls:
-            yield scrapy.Request(url=url, callback=self.detail_parse)
-        next_page = response.css('ul.pagination li.arrow a.next::attr(href)').extract_first()
-        if next_page:
-            yield scrapy.Request(url=next_page, callback=self.page_parse)
+    rules = (
+        Rule(LinkExtractor(restrict_css=('ul#nav li a:only-child'))),
+        Rule(LinkExtractor(restrict_css=('ul.pagination li.arrow a.next'))),
+        Rule(LinkExtractor(restrict_css=('div.category-products article div.product-image-wrapper a:first-of-type')),callback='detail_parse'),
+    )
 
     def detail_parse(self, response):
         img_urls = []
@@ -77,8 +71,8 @@ class OrsaySpider(scrapy.Spider):
         if not url_queue.empty():
             url = url_queue.get()
             request = scrapy.Request(url=url, callback=self.datail_color_parse)
-            request.meta['img_urls'] = img_urls
             request.meta['data'] = data
+            request.meta['url_queue'] = url_queue
             yield request
         else:
             yield data
@@ -104,13 +98,17 @@ class OrsaySpider(scrapy.Spider):
         sizes_quantity = response.css('div.sizebox-wrapper li::attr(data-qty)').extract()
         sizes_price = response.css('div.sizebox-wrapper li::attr(data-price)').extract()
 
-        for size, quantity, size_price in zip(sizes, sizes_quantity, sizes_price):
-            size_item = {'currency': currency, 'colour': color, 'size': size}
-            if float(size_price):
-                size_item['price'] = float(size_price)
-            else:
-                size_item['price'] = price
-            if int(quantity) == 0:
-                size_item['out_of_stock'] = True
-            skus[sku + "_" + size] = size_item
+        if sizes:
+            for size, quantity, size_price in zip(sizes, sizes_quantity, sizes_price):
+                size_item = {'currency': currency, 'colour': color, 'size': size}
+                if float(size_price):
+                    size_item['price'] = float(size_price)
+                else:
+                    size_item['price'] = price
+                if int(quantity) == 0:
+                    size_item['out_of_stock'] = True
+                skus[sku + "_" + size] = size_item
+        else:
+            item = {'currency': currency, 'colour': color, 'price': price}
+            skus[sku] = item
         return img_urls, skus
