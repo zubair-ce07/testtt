@@ -3,6 +3,7 @@ import urllib.parse
 import logging
 import requests
 from parsel import Selector
+import copy
 
 logger = logging.getLogger()
 handler = logging.StreamHandler()
@@ -12,8 +13,8 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 credentials = {
-    'username': 'HASSANALIAHMED',
-    'password': 'Sasta129'
+    'username': 'Asmaulhusna',
+    'password': 'QAW200'
 }
 
 
@@ -27,21 +28,33 @@ class AirBlueCrawler:
     input_keys = {
         'economy': 'Y',
         'business': 'C',
+        'one_way': 'OW',
+        'round_trip': 'RT'
     }
     output_keys = {
         'Y': 'economy',
         'C': 'business',
+        'OW': 'one_way',
+        'RT': 'round_trip'
     }
     session = None
 
     def swap_input_keys(self, input_data):
         """swap input values in air blue form-data"""
         input_data['cabin'] = self.input_keys[input_data['cabin']]
+        input_data['trip_type'] = self.input_keys[input_data['trip_type']]
+        if 'return_trip' in input_data:
+            input_data['return_trip']['cabin'] = self.input_keys[input_data['return_trip']['cabin']]
+            input_data['return_trip']['trip_type'] = self.input_keys[input_data['return_trip']['trip_type']]
         return input_data
 
     def swap_output_keys(self, output_data):
         """swap output values"""
         output_data['cabin'] = self.output_keys[output_data['cabin']]
+        output_data['trip_type'] = self.output_keys[output_data['trip_type']]
+        if 'return_trip' in output_data:
+            output_data['return_trip']['cabin'] = self.output_keys[output_data['return_trip']['cabin']]
+            output_data['return_trip']['trip_type'] = self.output_keys[output_data['return_trip']['trip_type']]
         return output_data
 
     def session_manager(self):
@@ -54,7 +67,7 @@ class AirBlueCrawler:
         search_data = self.swap_input_keys(search_data)
         response = self.agent_login()
         response = self.parse_agent_main(response, search_data)
-        searched_trips = self.parse_search_result(response, search_data)
+        searched_trips = self.get_searched_trips(response, search_data)
         if searched_trips:
             searched_trips = [self.swap_output_keys(trip) for trip in searched_trips]
         logger.info('searched trips : {0}'.format(searched_trips))
@@ -234,11 +247,13 @@ class AirBlueCrawler:
         """parse agent dashboard page and do search request"""
         search_url = 'https://www.airblue.com/agents/bookings/flight_selection.aspx?'
         form_data = {
-            'TT': 'OW',
+            'TT': search_data['trip_type'],
             'DC': search_data['departure_city'],
             'AC': search_data['arrival_city'],
             'AM': search_data['arrival_month'],
             'AD': search_data['arrival_day'],
+            'RM': '',
+            'RD': '',
             'FL': 'on',
             'CC': search_data['cabin'],
             'CD': '',
@@ -248,6 +263,12 @@ class AirBlueCrawler:
             'x': '0',
             'y': '0',
         }
+        if search_data['trip_type'] == 'RT':
+            round_trip_data = {
+                'RM': search_data['return_month'],
+                'RD': search_data['return_day'],
+            }
+            form_data.update(round_trip_data)
         search_url += urllib.parse.urlencode(form_data)
         logger.info('making search request.....')
         search_response_object = self.session.get(url=search_url, headers=self.headers)
@@ -255,7 +276,26 @@ class AirBlueCrawler:
         search_response = Selector(search_response_object.text)
         return search_response
 
-    def parse_search_result(self, response, search_data):
+    def get_searched_trips(self, response, search_data):
+        all_trips = []
+        one_way_trips = []
+        return_trips = []
+        flight_table_id = self.get_flight_table_id(response)
+        table_selector = 'table#{0} '.format(flight_table_id)
+        one_way_trips = self.parse_search_result(response, table_selector, search_data)
+
+        if search_data['trip_type'] == 'RT':
+            return_flight_table_id = self.get_return_flight_table_id(response)
+            return_table_selector = 'table#{0} '.format(return_flight_table_id)
+            return_trips = self.parse_search_result(response, return_table_selector, search_data, True)
+            for one_way_trip in one_way_trips:
+                for return_trip in return_trips:
+                    one_way_trip.update({'return_trip': return_trip})
+                    trip_item = one_way_trip
+                    all_trips.append(copy.deepcopy(trip_item))
+        return all_trips
+
+    def parse_search_result(self, response, flight_table, search_data, is_return_trip=False):
         """parse search page and
             :returns trips if found
             :returns False if no results found
@@ -264,9 +304,9 @@ class AirBlueCrawler:
         logger.info('available {0}'.format(available))
         if available is None:
             return False
-        flight_table_id = self.get_flight_table_id(response)
-        table_selector = 'table#{0} '.format(flight_table_id)
-        all_flights = response.css(table_selector + 'tbody')
+
+        trip_list = []
+        all_flights = response.css(flight_table + 'tbody')
         for current_flight in all_flights:
             flight = self.get_flight_number(current_flight)
             departure_time = self.get_departure_time(current_flight)
@@ -287,9 +327,9 @@ class AirBlueCrawler:
             }
 
             flight_types = [standard, premium]
-            trip_list = []
             for flight_type in flight_types:
                 item = {
+                    'trip_type': search_data['trip_type'],
                     'price_per_seat': flight_type['price_per_seat'].replace(',', ''),
                     'total_amount': flight_type['total_amount'].replace(',', ''),
                     'currency': flight_type['currency'],
@@ -301,20 +341,24 @@ class AirBlueCrawler:
                     'arrival_city': search_data['arrival_city'],
                     'arrival_month': search_data['arrival_month'],
                     'arrival_day': search_data['arrival_day'],
+                    'return_month': search_data['return_month'],
+                    'return_day': search_data['return_day'],
                     'departure_time': departure_time,
                     'arrival_time': arrival_time,
                     'passenger_adult': search_data['passenger_adult'],
                     'passenger_child': search_data['passenger_child'],
                     'passenger_infant': search_data['passenger_infant']}
+                if is_return_trip:
+                    item['departure_city'], item['arrival_city'] = item['arrival_city'], item['departure_city']
 
                 trip_list.append(item)
                 # with jsonlines.open('search_data.jsonl', mode='a') as writer:
                 #     writer.write(item)
-            return trip_list
+        return trip_list
 
     def compare_search_result(self, response, trip_data):
         """compare search result with given trip"""
-        searched_trips = self.parse_search_result(response, trip_data)
+        searched_trips = self.get_searched_trips(response, trip_data)
         if searched_trips:
             if trip_data in searched_trips:
                 return True, self.swap_output_keys(trip_data)
@@ -329,29 +373,12 @@ class AirBlueCrawler:
 
     def book_search_result(self, response, trip_data):
         """double check search result before reservation"""
-        trip_key = None
+        TRIP_1 = 1
+        TRIP_2 = 2
         flight_table_id = self.get_flight_table_id(response)
         table_selector = 'table#{0} '.format(flight_table_id)
-        all_flights = response.css(table_selector + 'tbody')
-        for current_flight in all_flights:
-            flight = self.get_flight_number(current_flight)
-            depart = self.get_departure_time(current_flight)
-            standard = {
-                'total_amount': self.get_total_amount_standard(current_flight),
-                'price_per_seat': self.get_standard_price(current_flight),
-                'currency': self.get_standard_currency(current_flight),
-                'trip_key': self.get_trip_ket_standard(current_flight),
-            }
-            premium = {
-                'total_amount': self.get_total_amount_premium(current_flight),
-                'price_per_seat': self.get_premium_price(current_flight),
-                'currency': self.get_premium_currency(current_flight),
-                'trip_key': self.get_trip_key_premium(current_flight),
-            }
-            input_data = trip_data
-            if (flight == input_data['flight']) and (depart == input_data['departure_time']):
-                trip_key = standard['trip_key'] if input_data['flight_type'] else premium['trip_key']
-                break
+        trip_key = self.get_trip_key(response, trip_data, table_selector, TRIP_1)
+
         ssp = self.get_ssp(response)
         fsc = self.get_fsc(response)
         form_data = {
@@ -359,16 +386,46 @@ class AirBlueCrawler:
             'fsc': fsc,
             'trip_1': trip_key,
         }
+        if trip_data['trip_type'] == 'RT':
+            return_flight_table_id = self.get_return_flight_table_id(response)
+            return_table_selector = 'table#{0} '.format(return_flight_table_id)
+            return_trip = trip_data['return_trip']
+            return_trip_key = self.get_trip_key(response, return_trip, return_table_selector, TRIP_2)
+            form_data.update({'trip_2': return_trip_key})
+
         next_url = 'https://www.airblue.com/agents/bookings/flight_selection.aspx?'
         if trip_key:
             logger.info('making itinerary request.....')
-
             itinerary_response_object = self.session.post(url=next_url,
                                                           data=form_data,
                                                           headers=self.headers)
             logger.info('itinerary response {0}'.format(itinerary_response_object.status_code))
             itinerary_response = Selector(itinerary_response_object.text)
             return itinerary_response
+
+    def get_trip_key(self, response, trip_data, flight_table, trip_number):
+        all_flights = response.css(flight_table + 'tbody')
+        for current_flight in all_flights:
+            flight = self.get_flight_number(current_flight)
+            depart = self.get_departure_time(current_flight)
+            standard = {
+                'total_amount': self.get_total_amount_standard(current_flight),
+                'price_per_seat': self.get_standard_price(current_flight),
+                'currency': self.get_standard_currency(current_flight),
+                'trip_key': self.get_trip_ket_standard(current_flight, trip_number),
+            }
+            premium = {
+                'total_amount': self.get_total_amount_premium(current_flight),
+                'price_per_seat': self.get_premium_price(current_flight),
+                'currency': self.get_premium_currency(current_flight),
+                'trip_key': self.get_trip_key_premium(current_flight, trip_number),
+            }
+            input_data = trip_data
+            if (flight == input_data['flight']) and (depart == input_data['departure_time']):
+                trip_key = standard['trip_key']
+                if input_data['flight_type'] == 'premium':
+                    trip_key = premium['trip_key']
+                return trip_key
 
     def parse_itinerary(self, response):
         """parse itinerary page and make next request"""
@@ -443,11 +500,14 @@ class AirBlueCrawler:
                 value = flyer_input.css('::attr(value)').extract_first()
                 form_data.append((key, value))
 
-        next_url = 'https://www.airblue.com/agents/bookings/item_selection.aspx?segment=0'
+        next_url = 'https://www.airblue.com/agents/bookings/item_selection.aspx?segment={0}'
+        next_url.format(current_segment)
         reservation_response_object = self.session.post(url=next_url,
                                                         data=form_data,
                                                         headers=self.headers)
         reservation_response = Selector(reservation_response_object.text)
+        if next_segment:
+            reservation_response = self.parse_additional_items(reservation_response)
         return reservation_response
 
     def parse_view_reservation(self, response, trip_data, user):
@@ -461,9 +521,13 @@ class AirBlueCrawler:
         departure_time = response.css('td.flight-time span.leaving::text').extract_first()
         arrival_time = response.css('td.flight-time span.landing::text').extract_first()
         flight_number = response.css('td.flight-number span::text').extract_first()
+        amount_due = float(trip_data['total_amount'])
+        if trip_data['trip_type'] == 'RT':
+            amount_due = float(trip_data['total_amount']) + float(trip_data['return_trip']['total_amount'])
         item = {
             'trip_data': self.swap_output_keys(trip_data),
-            'user': user
+            'user': user,
+            'amount_due': amount_due
         }
         if (trip_data['flight'] == flight_number) and (
                 trip_data['departure_time'] == departure_time) and (
@@ -526,13 +590,13 @@ class AirBlueCrawler:
         ssp = response.css('input[name="ssp"]::attr(value)').extract_first()
         return ssp
 
-    def get_trip_ket_standard(self, current_flight):
+    def get_trip_ket_standard(self, current_flight, trip_number):
         return current_flight.css(
-            'td.family-ES input[name="trip_1"]::attr(value)').extract_first()
+            'td.family-ES input[name="trip_{0}"]::attr(value)'.format(trip_number)).extract_first()
 
-    def get_trip_key_premium(self, current_flight):
+    def get_trip_key_premium(self, current_flight, trip_number):
         return current_flight.css(
-            'td.family-EP input[name="trip_1"]::attr(value)').extract_first()
+            'td.family-EP input[name="trip_{0}"]::attr(value)'.format(trip_number)).extract_first()
 
     def get_premium_price(self, current_flight):
         return current_flight.css('td.family-EP span::text').extract_first().strip()
@@ -553,10 +617,15 @@ class AirBlueCrawler:
         return current_flight.css('td.family-ES b::text').extract_first()
 
     def get_departure_time(self, current_flight):
-        return current_flight.css('td.leaving::text').extract_first()
+        return current_flight.css('td.leaving::text').extract_first().strip()
 
     def get_flight_table_id(self, response):
-        return response.css('li.current-date label::attr(for)').extract_first()
+        id = response.css('li.current-date label::attr(for)').re_first(r'trip_1(.*)')
+        return 'trip_1{0}'.format(id)
+
+    def get_return_flight_table_id(self, response):
+        id = response.css('li.current-date label::attr(for)').re_first(r'trip_2(.*)')
+        return 'trip_2{0}'.format(id)
 
     def get_total_amount_premium(self, current_flight):
         total_amount = current_flight.css('td.family-EP label::attr(data-title)').extract_first().strip()
