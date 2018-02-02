@@ -66,10 +66,16 @@ class AirBlueCrawler:
         self.session_manager()
         search_data = self.swap_input_keys(search_data)
         response = self.agent_login()
-        response = self.parse_agent_main(response, search_data)
+        new_data = copy.deepcopy(search_data)
+        new_data.update({
+            'passenger_adult': 1,
+            'passenger_child': 1,
+            'passenger_infant': 1,
+        })
+        response = self.parse_agent_main(response, new_data)
         searched_trips = self.get_searched_trips(response, search_data)
-        if searched_trips:
-            searched_trips = [self.swap_output_keys(trip) for trip in searched_trips]
+        # if searched_trips:
+        #     searched_trips = [self.swap_output_keys(trip) for trip in searched_trips]
         logger.info('searched trips : {0}'.format(searched_trips))
         return searched_trips
 
@@ -250,8 +256,8 @@ class AirBlueCrawler:
             'TT': search_data['trip_type'],
             'DC': search_data['departure_city'],
             'AC': search_data['arrival_city'],
-            'AM': search_data['arrival_month'],
-            'AD': search_data['arrival_day'],
+            'AM': search_data['departure_month'],
+            'AD': search_data['departure_day'],
             'RM': '',
             'RD': '',
             'FL': 'on',
@@ -280,9 +286,15 @@ class AirBlueCrawler:
         all_trips = []
         one_way_trips = []
         return_trips = []
+        outbound_trips = []
+        inbound_trips = []
         flight_table_id = self.get_flight_table_id(response)
         table_selector = 'table#{0} '.format(flight_table_id)
         one_way_trips = self.parse_search_result(response, table_selector, search_data)
+        if search_data['trip_type'] == 'OW':
+            self.update_trips_price(one_way_trips, response, search_data)
+            one_way_trips = [self.swap_output_keys(trip) for trip in one_way_trips]
+            return one_way_trips
 
         if search_data['trip_type'] == 'RT':
             return_flight_table_id = self.get_return_flight_table_id(response)
@@ -291,15 +303,88 @@ class AirBlueCrawler:
             for one_way_trip in one_way_trips:
                 for return_trip in return_trips:
                     one_way_trip.update({'return_trip': return_trip})
-                    trip_item = one_way_trip
-                    all_trips.append(copy.deepcopy(trip_item))
-        return all_trips
+                    trip_item = copy.deepcopy(one_way_trip)
+                    all_trips.append(trip_item)
+            self.update_trips_price(all_trips, response, search_data)
+            all_trips = [self.swap_output_keys(trip) for trip in all_trips]
+            for trip in all_trips:
+                outbound_trips.append(trip['return_trip'])
+                del trip['return_trip']
+                inbound_trips.append(trip)
+            outbound_trips = [dict(t) for t in set([tuple(d.items()) for d in outbound_trips])]
+            inbound_trips = [dict(t) for t in set([tuple(d.items()) for d in inbound_trips])]
+            all_trips_item = {
+                'outbound_trips': outbound_trips,
+                'inbound_trips': inbound_trips,
+            }
+
+            return all_trips_item
+
+    def update_trips_price(self, trips, response, search_data):
+        for trip in trips:
+            prices = self.get_prices(response, trip)
+            self.update_trip_prices(prices, search_data, trip)
+            if trip['trip_type'] == 'RT':
+                self.update_trip_prices(prices['return_prices'], search_data, trip['return_trip'])
+
+    def update_trip_prices(self, prices, search_data, trip):
+        trip.update({
+            'price_per_seat_adult': prices['adult'],
+            'price_per_seat_child': prices['child'],
+            'price_per_seat_infant': prices['infant'],
+        })
+        del trip['trip_key']
+        trip['total_amount'] = (search_data['passenger_adult'] * prices['adult']) \
+                               + (search_data['passenger_child'] * prices['child']) \
+                               + (search_data['passenger_infant'] * prices['infant'])
+
+    def get_prices(self, response, trip):
+        ssp = self.get_ssp(response)
+        fsc = self.get_fsc(response)
+        form_data = {
+            'ssp': ssp,
+            'fsc': fsc,
+            'trip_1': trip['trip_key'],
+        }
+        if trip['trip_type'] == 'RT':
+            # print(trip)
+            form_data.update({'trip_2': trip['return_trip']['trip_key']})
+
+        next_url = 'https://www.airblue.com/agents/bookings/flight_selection.aspx?'
+        if trip['trip_key']:
+            logger.info('making itinerary request.....')
+            itinerary_response_object = self.session.post(url=next_url,
+                                                          data=form_data,
+                                                          headers=self.headers)
+            logger.info('itinerary response {0}'.format(itinerary_response_object.status_code))
+            itinerary_response = Selector(itinerary_response_object.text)
+            prices = {
+                'adult': '',
+                'child': '',
+                'infant': '',
+                'return_prices': {
+                    'adult': '',
+                    'child': '',
+                    'infant': '',
+                }
+            }
+            passengers = itinerary_response.css('div.passenger_summary tbody')
+            for passenger in passengers:
+                key = passenger.css('td.pax-type::text').extract_first().strip().lower()
+                prices[key] = float(passenger.xpath('./tr[2]').css('td.segment-total::text').
+                                    extract_first().strip().replace(',', ''))
+                if trip['trip_type'] == 'RT':
+                    prices['return_prices'][key] = float(passenger.xpath('./tr[3]').css('td.segment-total::text').
+                                                         extract_first().strip().replace(',', ''))
+            print(prices)
+            return prices
 
     def parse_search_result(self, response, flight_table, search_data, is_return_trip=False):
         """parse search page and
             :returns trips if found
             :returns False if no results found
         """
+        trip_number = 2 if is_return_trip else 1
         available = self.is_flight_available(response)
         logger.info('available {0}'.format(available))
         if available is None:
@@ -318,20 +403,22 @@ class AirBlueCrawler:
                 'total_amount': self.get_total_amount_standard(current_flight),
                 'price_per_seat': self.get_standard_price(current_flight),
                 'currency': self.get_standard_currency(current_flight),
+                'trip_key': self.get_trip_ket_standard(current_flight, trip_number)
             }
             premium = {
                 'type': 'premium',
                 'total_amount': self.get_total_amount_premium(current_flight),
                 'price_per_seat': self.get_premium_price(current_flight),
                 'currency': self.get_premium_currency(current_flight),
+                'trip_key': self.get_trip_key_premium(current_flight, trip_number)
             }
 
             flight_types = [standard, premium]
             for flight_type in flight_types:
                 item = {
                     'trip_type': search_data['trip_type'],
-                    'price_per_seat': flight_type['price_per_seat'].replace(',', ''),
-                    'total_amount': flight_type['total_amount'].replace(',', ''),
+                    # 'price_per_seat': flight_type['price_per_seat'].replace(',', ''),
+                    # 'total_amount': flight_type['total_amount'].replace(',', ''),
                     'currency': flight_type['currency'],
                     'cabin': search_data['cabin'],
                     'flight': flight,
@@ -339,21 +426,23 @@ class AirBlueCrawler:
                     'route': route,
                     'departure_city': search_data['departure_city'],
                     'arrival_city': search_data['arrival_city'],
-                    'arrival_month': search_data['arrival_month'],
-                    'arrival_day': search_data['arrival_day'],
-                    'return_month': search_data['return_month'],
-                    'return_day': search_data['return_day'],
+                    'departure_month': search_data['departure_month'],
+                    'departure_day': search_data['departure_day'],
                     'departure_time': departure_time,
                     'arrival_time': arrival_time,
                     'passenger_adult': search_data['passenger_adult'],
                     'passenger_child': search_data['passenger_child'],
-                    'passenger_infant': search_data['passenger_infant']}
+                    'passenger_infant': search_data['passenger_infant'],
+                    'trip_key': flight_type['trip_key']}
+                if search_data['trip_type'] == 'RT':
+                    item.update({
+                        'return_month': search_data['return_month'],
+                        'return_day': search_data['return_day'],
+                    })
                 if is_return_trip:
                     item['departure_city'], item['arrival_city'] = item['arrival_city'], item['departure_city']
 
                 trip_list.append(item)
-                # with jsonlines.open('search_data.jsonl', mode='a') as writer:
-                #     writer.write(item)
         return trip_list
 
     def compare_search_result(self, response, trip_data):
@@ -515,8 +604,8 @@ class AirBlueCrawler:
         booking_id = self.get_booking_id(response)  # pnr
         flight_date = self.get_flight_date(response)
         flight_date = datetime.datetime.strptime(flight_date, '%d %b %Y').date()
-        year, month = trip_data['arrival_month'].split('-')
-        day = trip_data['arrival_day']
+        year, month = trip_data['departure_month'].split('-')
+        day = trip_data['departure_day']
         parsed_date = datetime.date(int(year), int(month), int(day))
         departure_time = response.css('td.flight-time span.leaving::text').extract_first()
         arrival_time = response.css('td.flight-time span.landing::text').extract_first()
