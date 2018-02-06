@@ -6,43 +6,40 @@ import queue
 
 
 class OrsaySpider(CrawlSpider):
-    name = "orsay-de-crawl-link"
+    name = "orsay-de-crawl"
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=('ul#nav li a:only-child'))),
-        Rule(LinkExtractor(restrict_css=('ul.pagination li.arrow a.next'))),
-        Rule(LinkExtractor(restrict_css=('div.category-products article div.product-image-wrapper a:first-of-type')),callback='detail_parse'),
+        Rule(LinkExtractor(restrict_css=(['#nav a:only-child', '.pagination .arrow .next']))),
+        Rule(LinkExtractor(restrict_css=('.category-products .product-image-wrapper a:first-of-type')),
+             callback='parse_detail'),
     )
 
-    def detail_parse(self, response):
+    def parse_detail(self, response):
         img_urls = []
         skus = {}
-        price = response.css('div.product-main-info  span.price::text').extract_first().split()[0]
-        currency = response.css('div.sizebox-wrapper::attr(data-currency)').extract_first()
         img_urls, skus = self.scrap_image_skus(response, img_urls, skus)
-        color_urls = response.css('ul.product-colors>li:not(.active)>a::attr(href)').extract()
-        url_queue = queue.Queue(maxsize=len(color_urls)+1)
-        sk = ""
+        color_urls = self.get_color_urls(response)
+        url_queue = queue.Queue(maxsize=len(color_urls) + 1)
+        retailor_sk = ""
         if img_urls:
-            sk = (str(img_urls[0]).split("/")[-1]).split("_")[0]
+            retailor_sk = (str(img_urls[0]).split("/")[-1]).split("_")[0]
         data = {
-                "retailor_sk": sk,
+                "retailor_sk": retailor_sk,
                 "image_urls": img_urls,
                 "skus": skus,
                 "spider_name": OrsaySpider.name,
                 "retailer": "orsay-de",
-                "currency": currency,
+                "currency": self.get_currency(response),
                 "market": 'DE',
-                "catagory": response.css('ul.breadcrumbs>li>a::text').extract(),
-                "price": price,
-                "description": " ".join((response.css('p.description::text').extract_first()).split()),
+                "catagory": self.get_category(response),
+                "price": self.get_price(response),
+                "description": self.get_description(response),
                 "brand": "Orsay",
-                "care": response.css('div.product-care>p.material::text').extract() +
-                response.css('div.product-care>ul>li>img::attr(src)').extract(),
-                "lang": response.css('html::attr(lang)').extract_first(),
-                "name": response.css('div.product-main-info h1.product-name::text').extract_first(),
+                "care": self.get_care(response),
+                "lang": self.get_language(response),
+                "name": self.get_name(response),
                 "url": response.url,
                 "crawler_start_time": self.crawler.stats.get_value('start_time'),
             }
@@ -55,22 +52,18 @@ class OrsaySpider(CrawlSpider):
 
         else:
             url = url_queue.get()
-            request = scrapy.Request(url=url, callback=self.datail_color_parse)
+            request = scrapy.Request(url=url, callback=self.parse_images_and_skus)
             request.meta['url_queue'] = url_queue
             request.meta['data'] = data
             yield request
 
-    def datail_color_parse(self, response):
+    def parse_images_and_skus(self, response):
         data = response.meta['data']
-        img_urls = data['image_urls']
-        skus = data['skus']
-        img_urls, skus = self.scrap_image_skus(response, img_urls, skus)
-        data['image_urls'] = img_urls
-        data['skus'] = skus
+        data['image_urls'], data['skus'] = self.scrap_image_skus(response, data['image_urls'], data['skus'])
         url_queue = response.meta['url_queue']
         if not url_queue.empty():
             url = url_queue.get()
-            request = scrapy.Request(url=url, callback=self.datail_color_parse)
+            request = scrapy.Request(url=url, callback=self.parse_images_and_skus)
             request.meta['data'] = data
             request.meta['url_queue'] = url_queue
             yield request
@@ -80,11 +73,11 @@ class OrsaySpider(CrawlSpider):
     # scrap image urls and skus form given response,add them to img-urls
     # and skus given as paramters and return modified values
     def scrap_image_skus(self, response, img_urls, skus):
-        sku = response.css('input#sku::attr(value)').extract_first()
+        sku_id = response.css('input#sku::attr(value)').extract_first()
         color = response.css('input#color-field::attr(value)').extract_first()
-        price = response.css('div.product-main-info  span.price::text').extract_first().split()[0]
-        currency = response.css('div.sizebox-wrapper::attr(data-currency)').extract_first()
-        img_urls += response.css('div#product_media a::attr(href)').extract()
+        price = response.css('.product-main-info  .price::text').extract_first().split()[0]
+        currency = response.css('.sizebox-wrapper::attr(data-currency)').extract_first()
+        img_urls += response.css('#product_media a::attr(href)').extract()
 
         if currency == '€':
             currency = "EUR"
@@ -92,11 +85,11 @@ class OrsaySpider(CrawlSpider):
         sizes = []
 
         for item in all_size:
-            b = re.findall("[a-zA-Z]+", item)
-            if b:
-                sizes.append(b[0])
-        sizes_quantity = response.css('div.sizebox-wrapper li::attr(data-qty)').extract()
-        sizes_price = response.css('div.sizebox-wrapper li::attr(data-price)').extract()
+            size_str = re.findall("[a-zA-Z]+", item)
+            if size_str:
+                sizes.append(size_str[0])
+        sizes_quantity = response.css('.sizebox-wrapper li::attr(data-qty)').extract()
+        sizes_price = response.css('.sizebox-wrapper li::attr(data-price)').extract()
 
         if sizes:
             for size, quantity, size_price in zip(sizes, sizes_quantity, sizes_price):
@@ -105,10 +98,36 @@ class OrsaySpider(CrawlSpider):
                     size_item['price'] = float(size_price)
                 else:
                     size_item['price'] = price
-                if int(quantity) == 0:
+                if not int(quantity):
                     size_item['out_of_stock'] = True
-                skus[sku + "_" + size] = size_item
+                skus["{}_{}".format(sku_id, size)] = size_item
         else:
             item = {'currency': currency, 'colour': color, 'price': price}
-            skus[sku] = item
+            skus[sku_id] = item
         return img_urls, skus
+
+    def get_price(self, response):
+        return response.css('.product-main-info  .price::text').extract_first().split()[0]
+
+    def get_currency(self, response):
+        return response.css('.sizebox-wrapper::attr(data-currency)').extract_first()
+
+    def get_color_urls(self, response):
+        return response.css('.product-colors>li:not(.active)>a::attr(href)').extract()
+
+    def get_description(self, response):
+        return " ".join((response.css('.description::text').extract_first()).split())
+
+    def get_category(self, response):
+        return response.css('.breadcrumbs a::text').extract()
+
+    def get_care(self, response):
+        return response.css('.product-care .material::text').extract() + \
+               response.css('.product-care img::attr(src)').extract()
+
+    def get_language(self, response):
+        return response.css('html::attr(lang)').extract_first()
+
+    def get_name(self, response):
+        return response.css('.product-main-info .product-name::text').extract_first()
+
