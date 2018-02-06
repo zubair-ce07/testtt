@@ -1,167 +1,107 @@
 # weather_man_task
 from datetime import datetime
-import numpy
 import glob
 import operator
-import sys
 import re
 import argparse
 import csv
 import os
 
-
 # constants
-RED_COLOR = 31
-BLUE_COLOR = 34
-WHITE_COLOR = 37
-
-
-# data structure for collecting weather data
-class WeatherData:
-
-    def __init__(self):
-        self.pkt = 0,
-        self.max_temperature = 0,
-        self.min_temperature = 0,
-        self.max_humidity = 0,
-        self.mean_humidity = 0,
-
-
-# data structure for holding the calculations results.
-class CalResults:
-
-    def __init__(self):
-        self.highest_temperature = 0.0,
-        self.highest_temperature_date = 0,
-        self.lowest_temperature = 0.0,
-        self.lowest_temperature_date = 0,
-        self.max_humidity = 0.0
-        self.max_humidity_date = 0,
-        self.avg_high_temp = 0,
-        self.low_avg_temp = 0,
-        self.avg_mean_humidity = 0
+HIGH_TEMP_COLOR = 31    # RED
+LOW_TEMP_COLOR = 34     # BLUE
+DEFAULT_COLOR = 37
 
 
 # class for computing the calculations given the readings data structure.
 class ComputingSubTaskResults:
-
     # Tasks Division
     def sub_task_1(self, year_value, path):
-            year_value = year_value
             read_reports = Reports()
             read_reports.fetch_high_low_temp_humidity_day(year_value, path)
 
     def sub_task_2(self, year_month_value, path):
-        year_value = year_month_value
+        month_value = year_month_value
+        month_value_split = month_value.split("/")
+        date_converted = datetime.strptime(month_value_split[1], '%m')
 
         read_reports = Reports()
-        month_value = year_value
-        month_value_split = month_value.split("/")
-
-        int_to_month = month_value_split[1]
-        date_converted = datetime.strptime(int_to_month, '%m')
-        month_converted = date_converted.strftime("%b")
-
-        read_reports.fetch_avg(month_value_split[0], month_converted, path)
+        read_reports.fetch_avg(month_value_split[0], date_converted.strftime("%b"), path)
 
     def sub_task_3(self, year_month_value, path):
-        year_value = year_month_value
+        month_value = year_month_value
+        month_value_split = month_value.split("/")
+        date_converted = datetime.strptime(month_value_split[1], '%m')
+
+        print("\n%s %s" % (date_converted.strftime("%B"), month_value_split[0]))
 
         read_reports = Reports()
-        month_value = year_value
-        month_value_split = month_value.split("/")
-
-        int_to_month = month_value_split[1]
-        date_converted = datetime.strptime(int_to_month, '%m')
-        month_converted_cap = date_converted.strftime("%B")
-
-        month_converted = date_converted.strftime("%b")
-
-        print("\n%s %s" % (month_converted_cap, month_value_split[0]))
-
-        read_reports.draw_high_low_charts(month_value_split[0], month_converted, path)
+        read_reports.draw_high_low_charts(month_value_split[0], date_converted.strftime("%b"), path)
 
     # Computation results
     def high_low_temp_and_day(self, files_yearly_parameter):
-        save_high_temp_data = []
-        save_low_temp_data = []
-        save_humid_data = []
+        save_high_temp_data, save_low_temp_data, save_humid_data = [], [], []
         data = {}
-        result_data = CalResults()
 
         for a in files_yearly_parameter:
             if a is not None:
 
                     for c in a:
                         if c is not None:
+                            if c["max_temperature"] != '':
+                                save_high_temp_data.append(int(c["max_temperature"]))
+                                data[c["max_temperature"]] = c["pkt"]
 
-                            if c.max_temperature != '':
-                                save_high_temp_data.append(int(c.max_temperature))
-                                data[c.max_temperature] = c.pkt
+                            if c["min_temperature"] != '':
+                                save_low_temp_data.append(int(c["min_temperature"]))
+                                data[c["min_temperature"]] = c["pkt"]
 
-                            if c.min_temperature != '':
-                                save_low_temp_data.append(int(c.min_temperature))
-                                data[c.min_temperature] = c.pkt
+                            if c["max_humidity"] != '':
+                                save_humid_data.append(int(c["max_humidity"]))
+                                data[c["max_humidity"]] = c["pkt"]
 
-                            if c.max_humidity != '':
-                                save_humid_data.append(int(c.max_humidity))
-                                data[c.max_humidity] = c.pkt
+        max_temp = max(save_high_temp_data) if save_high_temp_data.__len__() else 0
+        min_temp = min(save_low_temp_data) if save_low_temp_data.__len__() else 0
+        max_humid = max(save_humid_data) if save_humid_data.__len__() else 0
 
-        if save_high_temp_data.__len__():
-            result_data.highest_temperature = max(save_high_temp_data)
-            result_data.highest_temperature_date = data.get('%s' % result_data.highest_temperature)
+        high_date_converted = datetime.strptime(data.get('%s' % max_temp), '%Y-%m-%d')
+        low_date_converted = datetime.strptime(data.get('%s' % min_temp), '%Y-%m-%d')
+        humid_date_converted = datetime.strptime(data.get('%s' % max_humid), '%Y-%m-%d')
 
-        if save_low_temp_data.__len__():
-            result_data.lowest_temperature = min(save_low_temp_data)
-            result_data.lowest_temperature_date = data.get('%s' % result_data.lowest_temperature)
-
-        if save_humid_data.__len__():
-            result_data.max_humidity = max(save_humid_data)
-            result_data.max_humidity_date = data.get('%s' % result_data.max_humidity)
-
-        high_date_converted = datetime.strptime(result_data.highest_temperature_date, '%Y-%m-%d')
-        low_date_converted = datetime.strptime(result_data.lowest_temperature_date, '%Y-%m-%d')
-        humid_date_converted = datetime.strptime(result_data.max_humidity_date, '%Y-%m-%d')
-
-        print('\nHighest: %sC on %s %d' % (result_data.highest_temperature, high_date_converted.strftime("%B"),
+        print('\nHighest: %sC on %s %d' % (max_temp, high_date_converted.strftime("%B"),
                                            high_date_converted.day))
-        print('Lowest: %sC on %s %d' % (result_data.lowest_temperature, low_date_converted.strftime("%B"),
+        print('Lowest: %sC on %s %d' % (min_temp, low_date_converted.strftime("%B"),
                                         low_date_converted.day))
-        print('Humidity: %s%% on %s %d' % (result_data.max_humidity, humid_date_converted.strftime("%B"),
+        print('Humidity: %s%% on %s %d' % (max_humid, humid_date_converted.strftime("%B"),
                                            humid_date_converted.day))
 
     def avg_high_temp(self, files_yearly_parameter):
-        high_temp_data = []
-        low_temp_data = []
-        mean_humidity_date = []
-        result_data = CalResults()
-
+        high_temp_data, low_temp_data, mean_humidity_data = [], [], []
         for a in files_yearly_parameter:
             if a is not None:
 
                 for c in a:
                     if c is not None:
-                        if c.max_temperature != '':
-                            high_temp_data.append(int(c.max_temperature))
+                        if c["max_temperature"] != '':
+                            high_temp_data.append(int(c["max_temperature"]))
 
-                        if c.min_temperature != '':
-                            low_temp_data.append(int(c.min_temperature))
+                        if c["min_temperature"] != '':
+                            low_temp_data.append(int(c["min_temperature"]))
 
-                        if c.mean_humidity != '':
-                            mean_humidity_date.append(int(c.mean_humidity))
+                        if c["mean_humidity"] != '':
+                            mean_humidity_data.append(int(c["mean_humidity"]))
 
-        if high_temp_data.__len__():
-            result_data.avg_high_temp = int(sum(high_temp_data) / high_temp_data.__len__())
+        avg_high_temp = int(sum(high_temp_data) / high_temp_data.__len__()) if high_temp_data.__len__() else 0
+        low_avg_temp = int(sum(low_temp_data) / low_temp_data.__len__()) if low_temp_data.__len__() else 0
 
-        if low_temp_data.__len__():
-            result_data.low_avg_temp = int(sum(low_temp_data) / low_temp_data.__len__())
+        if mean_humidity_data.__len__():
+            avg_mean_humidity = int(sum(mean_humidity_data) / mean_humidity_data.__len__())
+        else:
+            avg_mean_humidity = 0
 
-        if mean_humidity_date.__len__():
-            result_data.avg_mean_humidity = int(sum(mean_humidity_date) / mean_humidity_date.__len__())
-
-        print('\nHighest Average: %sC' % result_data.avg_high_temp)
-        print('Lowest Average: %sC' % result_data.low_avg_temp)
-        print('Average Mean Humidity: %s%%' % result_data.avg_mean_humidity)
+        print('\nHighest Average: %sC' % avg_high_temp)
+        print('Lowest Average: %sC' % low_avg_temp)
+        print('Average Mean Humidity: %s%%' % avg_mean_humidity)
 
     def chart_horizontal(self, files_yearly_parameter):
         for a in files_yearly_parameter:
@@ -170,55 +110,49 @@ class ComputingSubTaskResults:
                 for c in a:
                     if c is not None:
 
-                        if c.max_temperature != '':
-                            self.draw_chart_horizontal(c.max_temperature, RED_COLOR, c.pkt)
+                        if c["max_temperature"] != '':
+                            self.draw_chart_horizontal(c["max_temperature"], HIGH_TEMP_COLOR, c["pkt"])
                         else:
-                            self.draw_chart_horizontal(0, RED_COLOR, c.pkt)
+                            self.draw_chart_horizontal(0, HIGH_TEMP_COLOR, c["pkt"])
 
-                        if c.min_temperature != '':
-                            self.draw_chart_horizontal(c.min_temperature, BLUE_COLOR, c.pkt)
+                        if c["min_temperature"] != '':
+                            self.draw_chart_horizontal(c["min_temperature"], LOW_TEMP_COLOR, c["pkt"])
                         else:
-                            self.draw_chart_horizontal(0, BLUE_COLOR, c.pkt)
+                            self.draw_chart_horizontal(0, LOW_TEMP_COLOR, c["pkt"])
 
     def double_chart_horizontal(self, files_yearly_parameter):
-        high_temp_data = 0
-        low_temp_data = 0
+        high_temp_data, low_temp_data = 0, 0
         for a in files_yearly_parameter:
             if a is not None:
 
                 for c in a:
                     if c is not None:
+                            high_temp_data = c["max_temperature"] if c["max_temperature"] != '' else 0
+                            low_temp_data = c["min_temperature"] if c["min_temperature"] != '' else 0
 
-                        if c.max_temperature != '':
-                            high_temp_data = c.max_temperature
-
-                        if c.min_temperature != '':
-                            low_temp_data = c.min_temperature
-
-                    self.draw_double_chart_horizontal(low_temp_data, high_temp_data, c.pkt)
-                    high_temp_data = 0
-                    low_temp_data = 0
+                    self.draw_double_chart_horizontal(low_temp_data, high_temp_data, c["pkt"])
+                    high_temp_data, low_temp_data = 0, 0
 
     def draw_chart_horizontal(self, count, color, date_value):
         count = int(count)
-        print("\033[%d;10m%s " % (WHITE_COLOR, date_value[7:]), end='')
+        print("\033[%d;10m%s " % (DEFAULT_COLOR, date_value[7:]), end='')
 
         for i in range(count):
             print("\033[%d;10m+" % int(color), end='')
 
-        print("\033[%d;10m %sC" % (WHITE_COLOR, count))
+        print("\033[%d;10m %sC" % (DEFAULT_COLOR, count))
 
     def draw_double_chart_horizontal(self, mincount, maxcount, date_value):
         mincount = int(mincount)
         maxcount = int(maxcount)
 
-        print("\033[%d;10m%s " % (WHITE_COLOR, date_value[7:]), end='')
+        print("\033[%d;10m%s " % (DEFAULT_COLOR, date_value[7:]), end='')
         for i in range(mincount):
-            print("\033[%d;10m+" % BLUE_COLOR, end='')
+            print("\033[%d;10m+" % LOW_TEMP_COLOR, end='')
         for b in range(maxcount):
-            print("\033[%d;10m+" % RED_COLOR, end='')
+            print("\033[%d;10m+" % HIGH_TEMP_COLOR, end='')
 
-        print("\033[%d;10m %sC-%sC" % (WHITE_COLOR, mincount, maxcount))
+        print("\033[%d;10m %sC-%sC" % (DEFAULT_COLOR, mincount, maxcount))
 
 
 # reading data from files
@@ -235,15 +169,15 @@ class ReadData:
         meanhumid_index = header.index(" Mean Humidity")
 
         requested_file_data = []
-
         # Loop through the lines in the file and get each coordinate
         for row in csvreader:
-            weather_data = WeatherData()
-            weather_data.pkt = row[datevalue_index]
-            weather_data.max_temperature = row[maxtemp_index]
-            weather_data.min_temperature = row[mintemp_index]
-            weather_data.max_humidity = row[maxhumid_index]
-            weather_data.mean_humidity = row[meanhumid_index]
+            weather_data = {}
+            weather_data["pkt"] = row[datevalue_index]
+            weather_data["max_temperature"] = row[maxtemp_index]
+            weather_data["min_temperature"] = row[mintemp_index]
+            weather_data["max_humidity"] = row[maxhumid_index]
+            weather_data["mean_humidity"] = row[meanhumid_index]
+
             requested_file_data.append(weather_data)
 
         return requested_file_data
@@ -288,9 +222,7 @@ class Reports:
         hightemp.double_chart_horizontal(files_yearly)
 
 
-# Main
-class Main:
-
+if __name__ == "__main__":
     def validate_input(to_validate):
         try:
             if len(to_validate) == 4:
@@ -315,13 +247,7 @@ class Main:
             pass
 
     def check_file_path(path):
-        try:
-            if os.path.isdir(path):
-                return path
-            else:
-                print("Incorrect Path!")
-        except ValueError:
-            raise ValueError("Path Incorrect!")
+            return path if os.path.isdir(path) else print("Incorrect Path!")
 
     try:
         parser = argparse.ArgumentParser()
@@ -359,11 +285,3 @@ class Main:
 
     except TypeError:
         print(TypeError)
-
-    # readdata = Reports()
-    # # readdata.fetch_high_low_temp_humidity_day("2015", "/home/abdullah/weatherfiles/weatherfiles")
-    # readdata.draw_high_low_charts("2009", "Sep", "/home/abdullah/weatherfiles/weatherfiles")
-
-
-if __name__ == "__main__":
-    Main()
