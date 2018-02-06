@@ -1,0 +1,38 @@
+{
+  "name": "techlancer-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "axios": "^0.17.1",
+    "bootstrap": "^3.3.5",
+    "jquery": "^3.3.1",
+    "popper": "^1.0.1",
+    "popper.js": "^1.12.9",
+    "react": "^16.2.0",
+    "react-bootstrap": "^0.32.1",
+    "react-contenteditable": "^2.0.5",
+    "react-dom": "^16.2.0",
+    "react-plain-editable": "^2.0.0",
+    "react-router-dom": "^4.2.2",
+    "react-sane-contenteditable": "^1.1.4",
+    "react-scripts": "0.9.5",
+    "react-simple-contenteditable": "0.0.3"
+  },
+  "devDependencies": {
+    "img-loader": "^2.0.0",
+    "install-peers": "^1.0.2",
+    "eslint-plugin-jsx-a11y": "^4.0.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-react": "^7.6.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  }
+}

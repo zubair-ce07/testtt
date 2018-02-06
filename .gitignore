@@ -55,3 +55,11 @@ target/
 
 # PyCharm
 .idea
+.importmagic.idx
+**/__init__.py
+build-react.sh
+django-react.sublime-project
+django-react.sublime-workspace
+env-django-react/
+node_modules/
+techlancers.todo
