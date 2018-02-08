@@ -13,7 +13,7 @@ class Mixin:
 
 
 class MixinDe(Mixin):
-    retailer = Mixin.retailer+'-de'
+    retailer = Mixin.retailer + '-de'
     base_url = "https://www.unisport.dk/"
     lang = "de"
     currency = "EUR"
@@ -31,6 +31,11 @@ class MixinAt(Mixin):
     lang = "de"
     currency = "EUR"
     start_urls = ["https://www.unisportstore.at/"]
+    urls_to_drop = ["fussballausruestung/43-fussbaelle/",
+                    "schienbeinschoner/1804-sock-tape/",
+                    "fussballausruestung/3573-training-equipment/",
+                    "fussballausruestung/299-ballpumpen/",
+                    "fussballausruestung/1807-sportpflege-produkte/"]
 
 
 class MixinFr(Mixin):
@@ -39,6 +44,11 @@ class MixinFr(Mixin):
     lang = "fr"
     currency = "EUR"
     start_urls = ["https://www.unisportstore.fr/"]
+    urls_to_drop = ["equipements-de-football/43-ballons-de-football/",
+                    "equipements-de-football/3573-equipement-dentrainement/",
+                    "equipements-de-football/299-pompes-a-ballons/",
+                    "protege-tibias/1804-bandes-de-maintien/",
+                    "equipements-de-football/1807-produits-de-soin/"]
 
 
 class MixinSe(Mixin):
@@ -47,6 +57,11 @@ class MixinSe(Mixin):
     lang = "sv"
     currency = "SEK"
     start_urls = ["https://www.unisportstore.se/"]
+    urls_to_drop = ["fotbollsutrustning/43-fotbollar/",
+                    "fotbollsutrustning/3573-traningsutrustning/",
+                    "fotbollsutrustning/299-bollpumpar/",
+                    "fotbollsutrustning/1807-sportskydd-rehab/",
+                    "benskydd/1804-benskyddstejp/"]
 
 
 class MixinFi(Mixin):
@@ -55,6 +70,11 @@ class MixinFi(Mixin):
     lang = "fi"
     currency = "EUR"
     start_urls = ["https://www.unisportstore.fi/"]
+    urls_to_drop = ["sekalaiset-tarvikkeet/43-jalkapallot/",
+                    "sekalaiset-tarvikkeet/1804-sukkateippi/",
+                    "sekalaiset-tarvikkeet/3573-harjoitusvalineet/",
+                    "sekalaiset-tarvikkeet/299-pallopumput/",
+                    "sekalaiset-tarvikkeet/1807-huoltotarvikkeet/"]
 
 
 class MixinNl(Mixin):
@@ -63,6 +83,11 @@ class MixinNl(Mixin):
     lang = "nl"
     currency = "EUR"
     start_urls = ["https://www.unisportstore.nl/"]
+    urls_to_drop = ["voetbalaccessoires/43-voetballen/",
+                    "voetbalaccessoires/1804-sokkentape/",
+                    "voetbalaccessoires/1807-verzorgingsproducten/",
+                    "voetbalaccessoires/299-balpompen/",
+                    "voetbalaccessoires/3573-trainingsmateriaal/"]
 
 
 class MixinNo(Mixin):
@@ -71,6 +96,11 @@ class MixinNo(Mixin):
     lang = "no"
     currency = "NOK"
     start_urls = ["https://www.unisportstore.no/"]
+    urls_to_drop = ["fotballutstyr/1804-strompetape/",
+                    "fotballutstyr/43-fotballer/",
+                    "fotballutstyr/1807-sportspleieprodukter-medisinsk/",
+                    "fotballutstyr/299-ballpumper/",
+                    "fotballutstyr/3573-treningsutstyr/"]
 
 
 class MixinDk(Mixin):
@@ -194,6 +224,13 @@ class UniSportCrawlSpider(BaseCrawlSpider, Mixin):
                                      callback=self.parse_sub_categories)
 
     def parse_sub_categories(self, response):
+        sub_categories = response.xpath('//a[@class="nav-list facet-accordion-nav"]/@href').extract()
+        for sub_category in sub_categories:
+            if sub_category in self.urls_to_drop:
+                return
+            yield scrapy.Request(url=urljoin(self.base_url, sub_category), dont_filter=True, callback=self.next_pages)
+
+    def next_pages(self, response):
         products_text_url = add_or_replace_parameter(response.url, "from", "0")
         products_text_url = add_or_replace_parameter(products_text_url, "to", "120")
         products_text_url = add_or_replace_parameter(products_text_url, "sort", "default")
@@ -207,7 +244,7 @@ class UniSportCrawlSpider(BaseCrawlSpider, Mixin):
             return
         for product_url in product_urls:
             yield scrapy.Request(url=urljoin(self.base_url, product_url), callback=self.parse_spider.parse)
-        for page in range(2, int(max_page_num)+1):
+        for page in range(2, int(max_page_num) + 1):
             next_page_url = add_or_replace_parameter(response.url, "page", page)
             yield scrapy.Request(url=next_page_url, callback=self.parse_next_pages)
 
