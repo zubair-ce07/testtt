@@ -10,19 +10,19 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean
 class Mixin:
     retailer = "unisports"
     market = 'UK'
+
+
+class MixinDe(Mixin):
+    retailer = Mixin.retailer+'-de'
+    base_url = "https://www.unisport.dk/"
+    lang = "de"
+    currency = "EUR"
+    start_urls = ["https://www.unisport.dk/"]
     urls_to_drop = ["fodboldudstyr/43-fodbolde/",
                     "benskinner/1804-strompetape/",
                     "fodboldudstyr/3573-traeningsudstyr/",
                     "fodboldudstyr/299-boldpumper/",
                     "fodboldudstyr/1807-sportspleje-produkter/"]
-
-
-class MixinDe(Mixin):
-    retailer = Mixin.retailer + '-de'
-    base_url = "https://www.unisportstore.dk/"
-    lang = "de"
-    currency = "EUR"
-    start_urls = ["https://www.unisportstore.dk/"]
 
 
 class MixinAt(Mixin):
@@ -57,14 +57,6 @@ class MixinFi(Mixin):
     start_urls = ["https://www.unisportstore.fi/"]
 
 
-class MixinDk(Mixin):
-    retailer = Mixin.retailer + '-dk'
-    base_url = "https://www.unisportstore.dk/"
-    lang = "dk"
-    currency = "DKK"
-    start_urls = ["https://www.unisportstore.dk/"]
-
-
 class MixinNl(Mixin):
     retailer = Mixin.retailer + '-nl'
     base_url = "https://www.unisportstore.nl/"
@@ -81,13 +73,33 @@ class MixinNo(Mixin):
     start_urls = ["https://www.unisportstore.no/"]
 
 
+class MixinDk(Mixin):
+    retailer = Mixin.retailer + '-dk'
+    base_url = "https://www.unisport.dk/"
+    lang = "dk"
+    currency = "DKK"
+    start_urls = ["https://www.unisport.dk/"]
+    urls_to_drop = ["fodboldudstyr/43-fodbolde/",
+                    "benskinner/1804-strompetape/",
+                    "fodboldudstyr/3573-traeningsudstyr/",
+                    "fodboldudstyr/299-boldpumper/",
+                    "fodboldudstyr/1807-sportspleje-produkter/"]
+
+
 class UniSportParsSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + "-parse"
     gender_map = [
-        ('Lady', 'women'),
+        ('Børn', 'unisex_Kids'),
+        ('Femme', 'women'),
+        ('Kinder', 'unisex_Kids'),
+        ('Damen', 'women'),
+        ('Enfant', 'unisex_Kids'),
+        ('Vrouwen', 'women'),
+        ('Naiset', 'women'),
+        ('Lapset', 'unisex_Kids'),
+        ('Kinderen', 'unisex_Kids'),
         ('Barn', 'unisex_Kids'),
-        ('Children', 'unisex-kids'),
-        ('Kids', 'unisex-kids')
+        ('Dame', 'women')
     ]
 
     def product_id(self, response):
@@ -98,11 +110,11 @@ class UniSportParsSpider(BaseParseSpider, Mixin):
 
     def gender(self, response):
         product_name = self.product_name(response)
-        category = re.findall("(\w+|\d+)$", product_name)[0]
+        category = re.findall("([\wø]*|\d+)$", product_name)[0]
         for gender_string, gender in self.gender_map:
             if gender_string == category:
                 return gender
-        return 'men'
+            return 'men'
 
     def product_brand(self, response):
         product_id_text = response.xpath('//script[contains(text(),"dataLayer")]/text()').extract_first()
@@ -122,15 +134,16 @@ class UniSportParsSpider(BaseParseSpider, Mixin):
 
     def sizes(self, response):
         sizes = clean(response.xpath('//select[@id="id_size"]/option/text()').extract()[1:])
-        return sizes if sizes else "size_less_product"
+        return sizes if sizes else ["size_less_product"]
 
     def price(self, response):
         price = response.xpath('//div[@class="price price_now"]/div/text()').extract_first()
-        return clean(price) if price else "None"
+        price = clean(price.replace('.', ' '))
+        return price if price else "None"
 
     def previous_price(self, response):
         previous_price = response.xpath('//div[@class="price-guide"]/s/text()').extract_first()
-        return re.findall(':\s(.+)\s', previous_price)[0] if previous_price else "None"
+        return re.findall(':\s(.+)\s', previous_price)[0].replace('.', ' ') if previous_price else "None"
 
     def sku(self, response):
         skus = []
@@ -139,15 +152,15 @@ class UniSportParsSpider(BaseParseSpider, Mixin):
             skus_info["price"] = self.price(response)
             skus_info["previous_price"] = self.previous_price(response)
             skus_info["stock"] = "available"
-            skus_info["size"] = size
+            skus_info["size"] = size.split('-')[0]
             skus.append(skus_info)
         return skus
 
     def parse(self, response):
         product_id = self.product_id(response)
-        garment = self.new_unique_garment(product_id)
-        if not garment:
+        if not product_id:
             return
+        garment = self.new_unique_garment(product_id)
         self.boilerplate_normal(garment, response)
         garment = {}
         garment["brand"] = self.product_brand(response)
@@ -168,15 +181,17 @@ class UniSportCrawlSpider(BaseCrawlSpider, Mixin):
     def parse(self, response):
         top_categories = response.xpath('//div[@id="offcanvas"]/@data-menu-api-url').extract_first()
         categories_url = response.urljoin(top_categories)
-        yield scrapy.Request(url=categories_url, dont_filter=True, callback=self.categories_urls)
+        yield scrapy.Request(url=categories_url, dont_filter=True, callback=self.sub_categories_urls)
 
-    def categories_urls(self, response):
-        sub_cat_urls = re.findall('"slug": \"([a-z0-9-/]+)\"', response.text)
-        for sub_cat_url in sub_cat_urls:
-            if sub_cat_url in self.urls_to_drop:
-                return
-            yield scrapy.Request(url=urljoin(self.base_url, sub_cat_url), dont_filter=True,
-                                 callback=self.parse_sub_categories)
+    def sub_categories_urls(self, response):
+        categories_text = json.loads(response.text)
+        for url_text in categories_text["top"]:
+            for categories_info in url_text["items"]:
+                cat_url = categories_info["slug"]
+                if cat_url in self.urls_to_drop:
+                    return
+                yield scrapy.Request(url=urljoin(self.base_url, cat_url), dont_filter=True,
+                                     callback=self.parse_sub_categories)
 
     def parse_sub_categories(self, response):
         products_text_url = add_or_replace_parameter(response.url, "from", "0")
@@ -246,7 +261,7 @@ class UniSportParsSpiderNl(MixinNl, UniSportParsSpider):
     name = MixinNl.retailer + '-parse'
 
 
-class UniSportCrawlSpiderNL(MixinNl, UniSportCrawlSpider):
+class UniSportCrawlSpiderNl(MixinNl, UniSportCrawlSpider):
     name = MixinNl.retailer + '-crawl'
     parse_spider = UniSportParsSpiderNl()
 
@@ -267,5 +282,3 @@ class UniSportParsSpiderDk(MixinDk, UniSportParsSpider):
 class UniSportCrawlSpiderDk(MixinDk, UniSportCrawlSpider):
     name = MixinDk.retailer + '-crawl'
     parse_spider = UniSportParsSpiderDk()
-
-
