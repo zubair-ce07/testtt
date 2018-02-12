@@ -184,14 +184,16 @@ class UniSportCrawlSpider(BaseCrawlSpider):
                 category_url = categories["slug"]
                 if category_url in self.deny_urls:
                     return
-                yield Request(url=urljoin(self.start_urls[0], category_url), meta={'trail': self.add_trail(response)}, callback=self.parse_sub_categories)
+                yield Request(url=urljoin(self.start_urls[0], category_url), meta={'trail': self.add_trail(response)},
+                              callback=self.parse_sub_categories)
 
     def parse_sub_categories(self, response):
         sub_categories = response.xpath('//a[@class="nav-list facet-accordion-nav"]/@href').extract()
         for sub_category in sub_categories:
             if sub_category in self.deny_urls:
                 return
-            yield Request(url=urljoin(self.start_urls[0], sub_category), meta={'trail': self.add_trail(response)}, callback=self.raw_page)
+            yield Request(url=urljoin(self.start_urls[0], sub_category), meta={'trail': self.add_trail(response)},
+                          callback=self.raw_page)
 
     def raw_page(self, response):
         params = {
@@ -209,7 +211,8 @@ class UniSportCrawlSpider(BaseCrawlSpider):
         if not raw_urls:
             return
         for url in raw_urls:
-            yield Request(url=urljoin(self.start_urls[0], url), meta={'trail': self.add_trail(response)}, callback=self.parse_item)
+            yield Request(url=urljoin(self.start_urls[0], url), meta={'trail': self.add_trail(response)},
+                          callback=self.parse_item)
         for page in range(2, int(max_page_num) + 1):
             next_page_url = add_or_replace_parameter(response.url, "page", page)
             yield Request(url=next_page_url, callback=self.parse_pagination)
