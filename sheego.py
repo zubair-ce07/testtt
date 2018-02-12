@@ -1,7 +1,8 @@
-import scrapy
 import urllib.parse
+
+import scrapy
+from scrapy.linkextractor import LinkExtractor
 from scrapy.spider import CrawlSpider, Rule
-from  scrapy.linkextractor import LinkExtractor
 
 
 class SheegoSpider(CrawlSpider):
@@ -10,7 +11,7 @@ class SheegoSpider(CrawlSpider):
     start_urls = ['https://www.sheego.de/']
     base_url = 'https://www.sheego.de/index.php?'
 
-    rules = (Rule(LinkExtractor(restrict_css=(['.mainnav--top','a.js-next']))),
+    rules = (Rule(LinkExtractor(restrict_css=(['.mainnav--top', 'a.js-next']))),
              Rule(LinkExtractor(restrict_css=('a.product__top')), callback="parse_product_detail"),)
 
     def parse_product_detail(self, response):
@@ -173,7 +174,7 @@ class SheegoSpider(CrawlSpider):
     def get_sizes_varselid(self, response):
         return response.css('.at-size-box ::attr(data-varselid)').extract()
 
-    def  get_length_varselids(self, response):
+    def get_length_varselids(self, response):
         return response.css('.at-size-type-box ::attr(value)').extract()
 
     def get_length(self, response):
@@ -186,7 +187,7 @@ class SheegoSpider(CrawlSpider):
         return response.css('.at-dv-color::text').extract_first()
 
     def get_currency(self, response):
-        return  response.css('meta[itemprop="priceCurrency"]::attr(content)').extract_first()
+        return response.css('meta[itemprop="priceCurrency"]::attr(content)').extract_first()
 
     def get_size(self, response):
         return response.css('.at-size-box option[selected="selected"]::text').extract_first().strip()
@@ -211,3 +212,4 @@ class SheegoSpider(CrawlSpider):
 
     def get_care(self, response):
         return response.css('div.p-details__careSymbols template ::text').extract()
+
