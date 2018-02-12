@@ -1,4 +1,5 @@
 import datetime
+import json
 import urllib.parse
 import logging
 import requests
@@ -308,17 +309,29 @@ class AirBlueCrawler:
             self.update_trips_price(all_trips, response, search_data)
             all_trips = [self.swap_output_keys(trip) for trip in all_trips]
             for trip in all_trips:
-                outbound_trips.append(trip['return_trip'])
+                return_trip = copy.deepcopy(trip['return_trip'])
+                if return_trip not in inbound_trips:
+                    if not self.is_trip_exists(return_trip, inbound_trips):
+                        inbound_trips.append(copy.deepcopy(return_trip))
                 del trip['return_trip']
-                inbound_trips.append(trip)
-            outbound_trips = [dict(t) for t in set([tuple(d.items()) for d in outbound_trips])]
-            inbound_trips = [dict(t) for t in set([tuple(d.items()) for d in inbound_trips])]
+                if trip not in outbound_trips:
+                    if not self.is_trip_exists(trip, outbound_trips):
+                        outbound_trips.append(copy.deepcopy(trip))
+
             all_trips_item = {
                 'outbound_trips': outbound_trips,
                 'inbound_trips': inbound_trips,
             }
 
             return all_trips_item
+
+    def is_trip_exists(self, search_trip, trips):
+        for trip in trips:
+            if (trip['flight'] == search_trip['flight'] and
+                    trip['flight_type'] == search_trip['flight_type'] and
+                    trip['departure_time'] == search_trip['departure_time']):
+                return True
+        return False
 
     def update_trips_price(self, trips, response, search_data):
         for trip in trips:
@@ -329,14 +342,24 @@ class AirBlueCrawler:
 
     def update_trip_prices(self, prices, search_data, trip):
         trip.update({
-            'price_per_seat_adult': prices['adult'],
-            'price_per_seat_child': prices['child'],
-            'price_per_seat_infant': prices['infant'],
+            'ADT': self.get_price_info_dict(prices, trip, 'adult'),
+            'CNN': self.get_price_info_dict(prices, trip, 'child'),
+            'INF': self.get_price_info_dict(prices, trip, 'infant'),
         })
         del trip['trip_key']
-        trip['total_amount'] = (search_data['passenger_adult'] * prices['adult']) \
-                               + (search_data['passenger_child'] * prices['child']) \
-                               + (search_data['passenger_infant'] * prices['infant'])
+        trip['total_amount'] = (search_data['passenger_adult'] * trip['ADT']['total_fare']) \
+                               + (search_data['passenger_child'] * trip['CNN']['total_fare']) \
+                               + (search_data['passenger_infant'] * trip['INF']['total_fare'])
+
+    def get_price_info_dict(self, prices, trip, key):
+        price_info_item = {
+            'total_fare': prices[key].total_fare,
+            'base_fare': prices[key].base_fare,
+            'taxes': prices[key].taxes,
+            'fee': prices[key].fee,
+            'currency_code': trip['currency']
+        }
+        return price_info_item
 
     def get_prices(self, response, trip):
         ssp = self.get_ssp(response)
@@ -347,7 +370,6 @@ class AirBlueCrawler:
             'trip_1': trip['trip_key'],
         }
         if trip['trip_type'] == 'RT':
-            # print(trip)
             form_data.update({'trip_2': trip['return_trip']['trip_key']})
 
         next_url = 'https://www.airblue.com/agents/bookings/flight_selection.aspx?'
@@ -359,25 +381,51 @@ class AirBlueCrawler:
             logger.info('itinerary response {0}'.format(itinerary_response_object.status_code))
             itinerary_response = Selector(itinerary_response_object.text)
             prices = {
-                'adult': '',
-                'child': '',
-                'infant': '',
+                'adult': PriceDetail(),
+                'child': PriceDetail(),
+                'infant': PriceDetail(),
                 'return_prices': {
-                    'adult': '',
-                    'child': '',
-                    'infant': '',
+                    'adult': PriceDetail(),
+                    'child': PriceDetail(),
+                    'infant': PriceDetail(),
                 }
             }
             passengers = itinerary_response.css('div.passenger_summary tbody')
             for passenger in passengers:
                 key = passenger.css('td.pax-type::text').extract_first().strip().lower()
-                prices[key] = float(passenger.xpath('./tr[2]').css('td.segment-total::text').
-                                    extract_first().strip().replace(',', ''))
+                total_fare = passenger.xpath('./tr[2]').css('td.segment-total::text').extract_first()
+                prices[key].total_fare = self.format_price(total_fare)
+
+                base_fare = passenger.xpath('./tr[2]/td[3]').css('::text').extract_first()
+                prices[key].base_fare = self.format_price(base_fare)
+
+                surcharges = passenger.xpath('./tr[2]/td[4]').css('span::text').extract_first()
+                prices[key].surcharges = self.format_price(surcharges)
+
+                taxes = passenger.xpath('./tr[2]/td[5]').css('span::text').extract_first()
+                prices[key].taxes = self.format_price(taxes)
+
+                fee = passenger.xpath('./tr[2]/td[6]').css('span::text').extract_first()
+                prices[key].fee = self.format_price(fee)
                 if trip['trip_type'] == 'RT':
-                    prices['return_prices'][key] = float(passenger.xpath('./tr[3]').css('td.segment-total::text').
-                                                         extract_first().strip().replace(',', ''))
-            print(prices)
+                    return_total_fare = passenger.xpath('./tr[3]').css('td.segment-total::text').extract_first()
+                    prices['return_prices'][key].total_fare = self.format_price(return_total_fare)
+
+                    return_base_fare = passenger.xpath('./tr[2]/td[3]').css('::text').extract_first()
+                    prices['return_prices'][key].base_fare = self.format_price(return_base_fare)
+
+                    return_surcharges = passenger.xpath('./tr[2]/td[4]').css('span::text').extract_first()
+                    prices['return_prices'][key].surcharges = self.format_price(return_surcharges)
+
+                    return_taxes = passenger.xpath('./tr[2]/td[5]').css('span::text').extract_first()
+                    prices['return_prices'][key].taxes = self.format_price(return_taxes)
+
+                    return_fee = passenger.xpath('./tr[2]/td[6]').css('span::text').extract_first()
+                    prices['return_prices'][key].fee = self.format_price(return_fee)
             return prices
+
+    def format_price(self, price_string):
+        return float(price_string.strip().replace(',', ''))
 
     def parse_search_result(self, response, flight_table, search_data, is_return_trip=False):
         """parse search page and
@@ -726,3 +774,15 @@ class AirBlueCrawler:
 
     def is_flight_available(self, response):
         return response.css('li.current-date label span::text').extract_first()
+
+
+class PriceDetail:
+    total_fare = None
+    base_fare = None
+    surcharges = None
+    taxes = None
+    fee = None
+
+
+class PriceInfo:
+    pass
