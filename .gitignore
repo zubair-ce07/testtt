@@ -9,6 +9,7 @@ __pycache__/
 .Python
 env/
 media/
+images/
 build/
 develop-eggs/
 dist/
@@ -56,9 +57,11 @@ target/
 
 # PyCharm
 .idea
+
 # FOr React
 # dependencies
 /node_modules
+/public
 
 # testing
 /coverage
