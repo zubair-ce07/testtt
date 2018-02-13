@@ -1,8 +1,16 @@
 import urllib.parse
+from enum import Enum
 
-import scrapy
+from scrapy import Request
 from scrapy.linkextractor import LinkExtractor
 from scrapy.spider import CrawlSpider, Rule
+from w3lib.url import add_or_replace_parameter
+
+
+class Type(Enum):
+    First = 1
+    Second = 2
+    Third = 3
 
 
 class SheegoSpider(CrawlSpider):
@@ -14,25 +22,26 @@ class SheegoSpider(CrawlSpider):
     rules = (Rule(LinkExtractor(restrict_css=(['.mainnav--top', 'a.js-next']))),
              Rule(LinkExtractor(restrict_css=('.product__top')), callback="parse_product_detail"),)
 
+
     def parse_product_detail(self, response):
         item = {}
+        item['meta'] = {}
         item['retailor_sku'] = self.retailor_sku(response)
         item['name'] = self.product_name(response)
         item['brand'] = self.brand(response)
         item['description'] = self.description(response)
         item['url'] = self.url(response)
         item['care'] = self.care(response)
-        item['price'] = self.price(response)
-        item['currency'] = self.currency(response)
-        param_cl = self.param_cl(response)
+        item['privious_price'], item['price'], item['currency'] = self.product_pricing(response)
         item['image_urls'] = []
         item['skus'] = {}
-        colours_varselids = self.colours_varselid(response)
-        requests = self.colour_requests(item, param_cl, colours_varselids)
-        yield self.make_request(requests)
+        item['meta']['requests'] = self.colour_requests(item, response)
+        yield self.next_request(item)
 
-    def colour_requests(self, item, param_cl, colours_varselids):
+    def colour_requests(self, item, response):
         requests = []
+        param_cl = self.param_cl(response)
+        colours_varselids = self.colours_varselid(response)
         for colour_varselid in colours_varselids:
             query_parameters = {
                 'anid': item['retailor_sku'],
@@ -40,115 +49,118 @@ class SheegoSpider(CrawlSpider):
                 'varselid[0]': colour_varselid,
             }
             colour_url = self.colour_url(query_parameters)
-            request = scrapy.Request(url=colour_url, callback=self.parse_colour)
-            request.meta['item'] = item
+            request = Request(url=colour_url, callback=self.parse_colour)
             requests.append(request)
             return requests
 
     def parse_colour(self, response):
         item = response.meta['item']
-        requests = response.meta['requests']
         item['image_urls'] += self.images_url(response)
+        item['meta']['requests'] = self.size_requests(response)
+        yield self.next_request(item)
+
+    def size_requests(self, response):
         size_type_varselids = self.size_type_varselids(response)
         size_varselids = self.sizes_varselid(response)
-        sizes_type = 1
+        size2_varselids = self.size2_verselids(response)
+        sizes_type = Type.First
         if size_type_varselids:
             size_varselids = size_type_varselids
-            sizes_type = 3
-        else:
-            size2_varselids = self.size2_verselids(response)
-            if size2_varselids:
-                sizes_type = 2
-        requests = self.size_requests(response.url, item, requests, size_varselids, sizes_type)
-        yield  self.make_request(requests)
-
-    def size_requests(self, url, item, requests, size_varselids, sizes_type):
+            sizes_type = Type.Third
+        elif size2_varselids:
+            sizes_type = Type.Second
+        requests = response.meta['item']['meta']['requests']
         for size_varselid in size_varselids:
-            query_parameters = {'varselid[1]': size_varselid}
-            query_string = urllib.parse.urlencode(query_parameters)
-            size_url = url + '&' + query_string
-            request = scrapy.Request(url=size_url,
-                                     meta={
-                                       'sizes_type': sizes_type
-                                     })
+            size_url = add_or_replace_parameter(response.url, 'varselid[1]', size_varselid)
+            request = Request(url=size_url,
+                              meta={
+                                  'sizes_type': sizes_type
+                              })
 
             if sizes_type is 1:
                 request.callback = self.parse_skus
             else:
                 request.callback = self.parse_size
-            request.meta['item'] = item
             requests.append(request)
-        return  requests
+        return requests
 
     def parse_size(self, response):
         item = response.meta['item']
-        requests = response.meta['requests']
         sizes_type = response.meta['sizes_type']
         size2_varselids = []
-        if sizes_type is 2:
+        if sizes_type is Type.Second:
             size2_varselids = self.size2_verselids(response)
-        elif sizes_type is 3:
+        elif sizes_type is Type.Third:
             size2_varselids = self.sizes_varselid(response)
         for size2_varselid in size2_varselids:
-            query_parameters = {'varselid[2]': size2_varselid}
-            query_string = urllib.parse.urlencode(query_parameters)
-            size_url = response.url + '&' + query_string
-            request = scrapy.Request(url=size_url,
-                                     callback=self.parse_skus,
-                                     meta={
-                                         'sizes_type': response.meta['sizes_type']
-                                     })
-            request.meta['item'] = item
-            requests.append(request)
-        yield self.make_request(requests)
+            size_url = add_or_replace_parameter(response.url, 'varselid[2]', size2_varselid)
+            request = Request(url=size_url,
+                              callback=self.parse_skus,
+                              meta={
+                                  'sizes_type': response.meta['sizes_type']
+                              })
+            item['meta']['requests'].append(request)
+        yield self.next_request(item)
 
     def parse_skus(self, response):
         item = response.meta['item']
         sizes_type = response.meta['sizes_type']
-        price = self.price(response)
-        currency = self.currency(response)
-        colour = self.colour(response)
-        stock = self.is_instock(response)
         size = self.size(response)
-        if sizes_type is 2:
+        if sizes_type is Type.Second:
             size2 = self.size2(response)
             size = '{0}_{1}'.format(size, size2)
-        elif sizes_type is 3:
+        elif sizes_type is Type.Third:
             size2 = self.size_type(response)
             size = '{0}_{1}'.format(size, size2)
-        sku = self.generate_sku(price, currency, size, colour, stock)
+        sku = self.sku(response, size)
         item['skus'].update(sku)
-        requests = response.meta['requests']
-        if requests:
-            yield self.make_request(requests)
-        else:
-            yield item
+        yield self.next_request(item)
 
     def size2_verselids(self, response):
-        selectors = response.css('.size')
-        if len(selectors) is 2:
-            return selectors[0].css('option:attr(value)').extract()
-        return None
+        xpath = '//*[contains(@class,"size")]/select[not(contains(@class,"at-size"))]/option/@value'
+        return response.xpath(xpath).extract()
 
-    def generate_sku(self, price, currency, size, colour, stock):
+    def sku(self, response, size):
+        privious_price, price, currency = self.product_pricing(response)
+        colour = self.colour(response)
+        stock = self.is_instock(response)
         sku_key = (colour + '_' + size).replace(' ', '_')
         sku_value = {
             'price': price,
             'currency': currency,
             'size': size,
             'colour': colour,
-            'in_stock': stock
+            'in_stock': stock,
+            'privious_price': privious_price
         }
         sku = {
             sku_key: sku_value
         }
         return sku
 
-    def make_request(self, requests):
-        if requests:
-            request = requests.pop(0)
-            request.meta['requests'] = requests
+    def next_request(self, item):
+        if item['meta']['requests']:
+            request = item['meta']['requests'].pop(0)
+            request.meta['item'] = item
             return request
+        return item
+
+    def product_pricing(self, response):
+        price = response.css('meta[itemprop="price"]::attr(content)').extract_first()
+        currency = response.css('meta[itemprop="priceCurrency"]::attr(content)').extract_first()
+        privious_price = self.privious_price(response)
+        price = self.int_price(price)
+        privious_price = self.int_price(privious_price)
+        return privious_price, price, currency
+
+    def int_price(self, price):
+        return int(price.replace('.','')) if price else ''
+
+    def privious_price(self, response):
+        privious_price = response.css('.product__price__wrong::text').re('(\d+,?\d*)') or ''
+        if privious_price:
+            privious_price = privious_price[0].replace(',', '.')
+        return privious_price
 
     def colour_url(self, query_parameters):
         query_string = urllib.parse.urlencode(query_parameters)
@@ -167,14 +179,8 @@ class SheegoSpider(CrawlSpider):
     def description(self, response):
         return response.css('meta[name="description"]::attr(content)').extract_first()
 
-    def title(self, response):
-        return response.css('meta[property="og:title"]::attr(content)').extract_first()
-
     def url(self, response):
         return response.css('meta[property="og:url"]::attr(content)').extract_first()
-
-    def price(self, response):
-        return response.css('meta[itemprop="price"]::attr(content)').extract_first()
 
     def sizes_varselid(self, response):
         return response.css('.at-size-box ::attr(data-varselid)').extract()
@@ -190,9 +196,6 @@ class SheegoSpider(CrawlSpider):
 
     def colour(self, response):
         return response.css('.at-dv-color::text').extract_first()
-
-    def currency(self, response):
-        return response.css('meta[itemprop="priceCurrency"]::attr(content)').extract_first()
 
     def size(self, response):
         return response.css('.at-size-box option[selected="selected"]::text').extract_first().strip()
@@ -213,5 +216,4 @@ class SheegoSpider(CrawlSpider):
 
     def care(self, response):
         return response.css('div.p-details__careSymbols template ::text').extract()
-
 
