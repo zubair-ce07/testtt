@@ -8,6 +8,7 @@
 import scrapy
 
 
+
 class AldoshoesItem(scrapy.Item):
     category_names = scrapy.Field()
     brand = scrapy.Field()
@@ -26,3 +27,17 @@ class AldoshoesItem(scrapy.Item):
     new_price_text = scrapy.Field()
     size_infos = scrapy.Field()
     available = scrapy.Field()
+
+class SweatybettyItem(scrapy.Item):
+    brand = scrapy.Field()
+    description = scrapy.Field()
+    url = scrapy.Field()
+    gender = scrapy.Field()
+    product_name = scrapy.Field()
+    skus = scrapy.Field()
+    category = scrapy.Field()
+    image_url = scrapy.Field()
+    video_url = scrapy.Field()
+    product_id = scrapy.Field()
+
+
