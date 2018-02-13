@@ -208,24 +208,23 @@ class Reports:
 
 
 if __name__ == "__main__":
-    def validate_input(to_validate):
+    def validate_year(to_validate):
         to_check_year = to_validate.split("/")
-        if len(to_validate) == 4:
-            found = re.match("(20[0-1][0-9])", to_validate)
-            if validate_input_year(to_check_year[0]) and found:
-                return to_validate
-            else:
-                raise Exception("Format not correct! {}".format(to_validate))
-        elif len(to_validate) in [6, 7]:
-            found = re.match("(20[0-1][0-9])[//](1[0-2]|0[1-9]|\d)", to_validate)
-            if validate_input_year(to_check_year[0]) and found:
-                return to_validate
-            else:
-                raise Exception("Format not correct! {}".format(to_validate))
+        found = re.match("(^20[0-1][0-9]$)", to_validate)
+        if check_year_range(to_check_year[0]) and found:
+            return to_validate
         else:
             raise Exception("Format not correct! {}".format(to_validate))
 
-    def validate_input_year(year):
+    def validate_year_month(to_validate):
+        to_check_year = to_validate.split("/")
+        found = re.match("(20[0-1][0-9][//](1[0-2]|0[1-9]|\d))", to_validate)
+        if check_year_range(to_check_year[0]) and found:
+            return to_validate
+        else:
+            raise Exception("Format not correct! {}".format(to_validate))
+
+    def check_year_range(year):
         if len(year) == 4:
             if (int(year) > 2003) and (int(year) < 2017):
                 return year
@@ -242,30 +241,21 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=check_file_path)
-    parser.add_argument('-e', '--e', type=validate_input,
-                        help='Enter Year YYYY!', default=None)
-    parser.add_argument('-a', '--a', type=validate_input,
+    parser.add_argument('-e', '--e', type=validate_year,
+                        help='Enter Year YYYY', default=None)
+    parser.add_argument('-a', '--a', type=validate_year_month,
                         help='Enter Year YYYY/MM', default=None)
-    parser.add_argument('-c', '--c', type=validate_input,
+    parser.add_argument('-c', '--c', type=validate_year_month,
                         help='Enter Year YYYY/MM', default=None)
     args = parser.parse_args()
     read_reports = Reports()
 
     if args.e:
-        if len(args.e) == 4:
-            read_reports.yearly_report(args.e, args.path)
-        else:
-            print("enter in -e yyyy format!")
+        read_reports.yearly_report(args.e, args.path)
     if args.a:
-        if len(args.a) in [6, 7]:
-            read_reports.monthly_report(args.a, args.path)
-        else:
-            print("enter in -a yyyy/mm or yyyy/m format!")
+        read_reports.monthly_report(args.a, args.path)
     if args.c:
-        if len(args.c) in [6, 7]:
-            read_reports.draw_monthly_chart(args.c, args.path)
-        else:
-            print("enter in -c yyyy/mm or yyyy/m format!")
+        read_reports.draw_monthly_chart(args.c, args.path)
 
-    if args.e is None and args.a is None and args.c is None:
-        print("Try Again!")
+    if not (args.e or args.a or args.c):
+        print("Please Enter any argument!")
