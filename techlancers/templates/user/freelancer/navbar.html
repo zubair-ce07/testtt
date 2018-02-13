@@ -1,0 +1,20 @@
+	    <!--/.navbar-header-->
+	    <div class="navbar-collapse collapse" id="bs-example-navbar-collapse-1" style="height: 1px;">
+	        <ul class="nav navbar-nav">
+		        <li class="dropdown">
+		            <a href="{% url 'recruiters:jobs' %}"><i class="fa fa-tasks"></i> Jobs</a>
+		        </li>
+		        <li><a href="{% url 'freelancers:search' %}"><i class="fa fa-users"></i> Freelancers</a></li>
+		        <li>
+		        	<a href="{% url 'freelancers:profile' %}" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user-circle"></i> <b>Freelancer:</b> {{ user.get_username }}<b class="caret"></b></a>
+		        	 <ul class="dropdown-menu">
+				            <li><a href="{% url 'freelancers:profile' %}"><i class="fa fa-user"></i> Profile</a></li>
+			            <li><a href="/logout"><i class="fa fa-sign-out"></i> Logout</a></li>
+		            </ul>
+		        </li>
+	        </ul>
+	    </div>
+	    <div class="clearfix"> </div>
+	  </div>
+	    <!--/.navbar-collapse-->
+</nav>

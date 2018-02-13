@@ -55,3 +55,6 @@ target/
 
 # PyCharm
 .idea
+techlancers/static/*.html
+*/__init__.py
+*__init__.py
