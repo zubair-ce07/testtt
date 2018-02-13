@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 from w3lib.url import add_or_replace_parameter
 from w3lib.url import urlencode
 from .base import BaseParseSpider, BaseCrawlSpider, clean
-
+from .base import Gender
 
 
 class MixinDE:
@@ -109,6 +109,7 @@ class UniSportParsSpider(BaseParseSpider):
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
         if not garment:
+            print('///////////////////////////////////////////////////////////')
             return
         self.boilerplate_normal(garment, response)
         garment["image_urls"] = self.image_urls(response)
@@ -125,7 +126,7 @@ class UniSportParsSpider(BaseParseSpider):
     def product_gender(self, response):
         product_name = self.product_name(response)
         gender = self.gender_lookup(product_name)
-        return gender if gender else "men"
+        return gender if gender else Gender.MEN.value
 
     def product_brand(self, response):
         xpath = '//script[contains(text(),"dataLayer")]/text()'
@@ -140,28 +141,34 @@ class UniSportParsSpider(BaseParseSpider):
     def product_care(self, response):
         return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
+    def raw_category(self, response):
+        xpath = '//script[contains(text(),"breadcrumbData")]/text()'
+        raw_category = response.xpath(xpath).re_first(r"'breadcrumbs_data': (.+),")
+        category_path = []
+        for category in json.loads(raw_category):
+            category_path.append(category["title"])
+        return ['/'.join(category_path)] if category_path else []
+
     def product_category(self, response):
-        return clean(response.xpath('//a[@class="crumbItems"]//span/text()'))
+        category = response.xpath('//a[@class="crumbItems"]//span/text()')
+        if category:
+            return clean(category)
+        else:
+            return self.raw_category(response)
 
     def image_urls(self, response):
         return clean(response.xpath('//div[@class="product-gallery"]//a/@href'))
-
-    def previous_price(self, response):
-        raw_pprice = response.xpath('//div[@class="price-guide"]/s/text()').extract_first()
-        return re.findall('[0-9,]+', raw_pprice)[0] if raw_pprice else None
-
-    def sku_pricing(self, response):
-        price = clean(response.xpath('//div/@data-product-price')[0])
-        currency = clean(response.xpath('//div/@data-product-currency')[0])
-        return self.product_pricing_common_new(None, money_strs=[price, self.previous_price(response), currency])
 
     def skus(self, response):
         sizes = clean(response.xpath('//select[@id="id_size"]/option/text()')[1:])
         sku_ids = clean(response.xpath('//select[@id="id_size"]/option/@value')[1:])
         skus = {}
-        common_sku = self.sku_pricing(response)
+        currency = clean(response.xpath('//div/@data-product-currency')[0])
+        price = clean(response.xpath('//div/@data-product-price')[0])
+        p_price = response.xpath('//div[@class="price-guide"]/s/text()').extract_first()
+        common = self.product_pricing_common_new(None, money_strs=[price, p_price, currency])
         for size, sku_id in zip(sizes, sku_ids):
-            sku = common_sku.copy()
+            sku = common.copy()
             if size:
                 sku['size'] = size.split('-')[0]
             else:
@@ -193,9 +200,9 @@ class UniSportCrawlSpider(BaseCrawlSpider):
             if sub_category in self.deny_urls:
                 return
             yield Request(url=urljoin(self.start_urls[0], sub_category), meta={'trail': self.add_trail(response)},
-                          callback=self.raw_page)
+                          callback=self.parse_subcategory)
 
-    def raw_page(self, response):
+    def parse_subcategory(self, response):
         params = {
             "from": "0",
             "to": "120",
