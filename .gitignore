@@ -9,6 +9,7 @@ __pycache__/
 .Python
 env/
 media/
+images/
 build/
 develop-eggs/
 dist/
