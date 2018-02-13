@@ -4,6 +4,7 @@ from . import views
 
 from rest_framework.urlpatterns import format_suffix_patterns
 
+
 urlpatterns = [
     url(r'^login/$', views.login, name='login'),
     url(r'^logout/$', views.logout, name='logout'),
@@ -18,5 +19,9 @@ urlpatterns = [
     url(r'^signup/$', views.signup, name='signup'),
     url(r'^$', views.index, name='index'),
 ]
+    url(r'^signup/$', views.signup, name='signup'),
+    url(r'^$', views.index, name='index'),
+]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
+

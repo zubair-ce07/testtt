@@ -3,8 +3,8 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.conf import settings
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
-from .managers import UserManager
 
+from .managers import UserManager, FollowingManager, FollowerManager
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_('Username'), max_length=40, unique=True)
@@ -17,6 +17,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                                width_field="width_field", height_field="height_field")
     height_field = models.IntegerField(default=0)
     width_field = models.IntegerField(default=0)
+    following = models.ManyToManyField('self', blank=True, symmetrical=False)
     is_active = models.BooleanField(_('Active'), default=True)
     is_admin = models.BooleanField(_('Admin'), default=False)
     date_joined = models.DateTimeField(_('Date Joined'), auto_now_add=True)
@@ -26,6 +27,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['first_name', 'last_name', 'email', 'date_of_birth', ]
 
     objects = UserManager()
+
+    all_following = FollowingManager()
+    all_followers = FollowerManager()
 
     class Meta:
         verbose_name = _('user')
@@ -51,10 +55,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.is_admin
 
 
+
 class FollowRelation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='followee', on_delete=models.CASCADE)
     follower = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='follower', on_delete=models.CASCADE)
     followed_at = models.DateTimeField(auto_now_add=True)
+
 
 
 class Post(models.Model):
@@ -70,16 +76,15 @@ class Post(models.Model):
 class Like(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     post = models.ForeignKey('Post', on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    like_timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return str(self.timestamp)+' '+self.user.username
-
+        return str(self.like_timestamp)+' '+self.user.username
 
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     post = models.ForeignKey('Post', on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    comment_timestamp = models.DateTimeField(auto_now_add=True)
     text = models.CharField(max_length=150, null=False)
 
     def __str__(self):

@@ -2,12 +2,11 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth import logout as auth_logout, authenticate, login as auth_login
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
+
+from instagram.forms import SignUpForm, LoginForm, NewPostForm
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
 
-import logging
-
-from instagram.forms import SignUpForm, LoginForm, NewPostForm
 from instagram.models import User, Post
 
 login_url = reverse_lazy('login')
@@ -16,10 +15,17 @@ login_url = reverse_lazy('login')
 @login_required(login_url=login_url)
 def newsfeed(request):
     user = request.user
-    return render(request, 'instagram/newsfeed.html',
-                  {'user': user,
-                   })
 
+    if user.is_authenticated():
+        followers, following = get_followers_and_following(user)
+        posts = get_posts(user)
+        # posts = Post.objects.filter(user__username=user.username)
+        return render(request, 'instagram/newsfeed.html',
+                      {'user': user, 'followers': followers,
+                       'following': following,
+                       'posts':posts})
+    else:
+        return HttpResponseRedirect(reverse('login'))
 
 def get_posts(user):
     posts = Post.objects.filter(user__username=user.username)
@@ -41,10 +47,9 @@ def get_followers_and_following(user):
     return followers, following
 
 
-@login_required(login_url=login_url)
-def index(request):
-    return HttpResponseRedirect('newsfeed')
 
+def index(request):
+    return HttpResponseRedirect('login')
 
 def logout(request):
     auth_logout(request)
@@ -74,13 +79,13 @@ def login(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        user = authenticate(username=username, password=password)
+        user = authenticate(request, username=username, password=password)
         if user is not None:
             if user.is_active:
                 auth_login(request, user)
                 return HttpResponseRedirect(reverse('newsfeed'))
     form = LoginForm()
-    return render(request, 'instagram/login.html', {'form': form, })
+    return render(request, 'instagram/login.html', {'form': form,})
 
 
 @login_required(login_url=login_url)
@@ -90,7 +95,7 @@ def profile(request, pk):
         errors.append('ERROR')
         return render(request, 'instagram/profile.html',
                       {'errors': errors,
-                       })
+                      })
     else:
         profile_owner = get_object_or_404(User, pk=pk)
         user = request.user
@@ -111,7 +116,10 @@ def profile(request, pk):
 
 
 def is_already_followed(profile_owner, following):
-    return any(f['following'] == profile_owner.pk for f in following)
+    for followee in following:
+        if followee['following'] == profile_owner.pk:
+            return True
+    return False
 
 
 def signup(request):
@@ -138,11 +146,16 @@ def follow_profile(request, pk):
     to_follow = get_object_or_404(User, pk=pk)
     user.following.add(to_follow)
     user.save()
+
+    to_follow.refresh_from_db()
+    followers, following = get_followers_and_following(to_follow)
     return render(request, 'instagram/profile.html',
                   {'errors': errors,
                    'user': to_follow,
                    'logged_in_profile': False,
                    'already_followed': True,
+                   'following': following,
+                   'followers': followers,
                    })
 
 
@@ -153,11 +166,15 @@ def unfollow_profile(request, pk):
     to_unfollow = get_object_or_404(User, pk=pk)
     user.following.remove(to_unfollow)
     to_unfollow.refresh_from_db()
+
+    followers, following = get_followers_and_following(to_unfollow)
     return render(request, 'instagram/profile.html',
                   {'errors': errors,
                    'user': to_unfollow,
                    'logged_in_profile': False,
                    'already_followed': False,
+                   'following': following,
+                   'followers': followers,
                    })
 
 
@@ -166,8 +183,7 @@ def show_followers(request, pk):
     target_profile = get_object_or_404(User, pk=pk)
     followers, following = get_followers_and_following(target_profile)
     return render(request, 'instagram/show_followers.html',
-                  {'followers': followers})
-
+                        {'followers': followers})
 
 @login_required(login_url=login_url)
 def show_following(request, pk):
@@ -175,8 +191,7 @@ def show_following(request, pk):
     followers, following = get_followers_and_following(target_profile)
     following = get_user_objects(following, 'following')
     return render(request, 'instagram/show_followers.html',
-                  {'followers': following})
-
+                        {'followers': following})
 
 def new_post(request):
     user = request.user
@@ -200,5 +215,5 @@ def get_user_objects(query_set, key):
             user = get_object_or_404(User, pk=int(item[key]))
             users.append(user)
         except KeyError:
-            logging.error('User does not exist..')
+            print('ERROR')
     return users
