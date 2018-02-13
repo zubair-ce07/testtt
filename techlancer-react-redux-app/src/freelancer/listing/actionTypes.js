@@ -1,0 +1,3 @@
+export const RECEIVE_FREELANCERS = 'RECEIVE_FREELANCERS';
+export const FETCH_FREELANCERS = 'FETCH_FREELANCERS';
+export const DEFAULT = "none";
