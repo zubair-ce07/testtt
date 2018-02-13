@@ -1,0 +1,40 @@
+from rest_framework import generics
+from lms.models import Book, Author, Bookissue
+from lms.serializers import BookListSerializer, AuthorSerializer, BookissueSerializer, BookissueListSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
+class AuthorList(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    
+
+class AuthorDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    lookup_url_kwarg = 'author_id'
+
+
+class BookList(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = Book.objects.all()
+    serializer_class = BookListSerializer
+    
+
+class BookDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+    queryset = Book.objects.all()
+    serializer_class = BookListSerializer
+    lookup_url_kwarg = 'book_id'
+
+# class BookissueList(generics.ListCreateAPIView):
+#     permission_classes = (IsAuthenticatedOrReadOnly, )
+#     queryset = Bookissue.objects.all()
+#     serializer_class = BookissueListSerializer
+
+# class BookissueDetail(generics.RetrieveUpdateDestroyAPIView):
+#     permission_classes = (IsAuthenticatedOrReadOnly, )
+#     queryset = Bookissue.objects.all()
+#     serializer_class = BookissueListSerializer
+#     lookup_url_kwarg = 'bookissue_id'
