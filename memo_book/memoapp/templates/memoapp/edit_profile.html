@@ -1,0 +1,98 @@
+{% extends "memoapp/base.html" %}
+{% block page_title %}Memo Book{% endblock page_title %}
+
+{% block body %}
+    <!-- Body contents are starting from here -->
+    <div class="container">
+        <div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-login">
+					<div class="panel-heading">
+                        <form id="register-form" action="/editprofile"  method="post" enctype="multipart/form-data" role="form" style="display: block">
+                            {% csrf_token %}
+                            <div class="form-group">
+										    <div class="row">
+                                                <div class="col-md-12">
+                                                    <label>First Name:</label>
+                                                    {{ user_form.first_name }}
+                                                </div>
+										    </div>
+                                    </div>
+
+                            <div class="form-group">
+										    <div class="row">
+                                                <div class="col-md-12">
+                                                    <label>Last Name:</label>
+                                                    {{ user_form.last_name }}
+                                                </div>
+										    </div>
+                                    </div>
+                                    <div class="form-group">
+										    <div class="row">
+											    <div class="col-sm-8">
+                                                    <strong><span style="margin: 5px; color: red" id="email_span">  </span></strong>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    {{ user_form.email.errors }}
+                                                    <label> Email: </label>
+                                                    {{ user_form.email }}
+                                                </div>
+										    </div>
+                                    </div>
+                                    <div class="form-group">
+										    <div class="row">
+											    <div class="col-sm-8">
+                                                    <strong><span style="margin: 5px; color: red" id="username_span">  </span></strong>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <label>Email:</label>
+                                                     {{ user_form.username.errors }}
+                                                    {{ user_form.username }}
+                                                </div>
+										    </div>
+                                    </div>
+                                    <div class="form-group">
+										    <div class="row">
+                                                <div class="col-md-12">
+                                                    <label>Image:</label>
+                                                    {{ user_form.image }}
+                                                </div>
+										    </div>
+                                    </div>
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-sm-6 col-sm-offset-3">
+                                        <input type="submit" name="register-submit" onclick="return validate_user()" id="register-submit" tabindex="4" class="form-control btn btn-register" value="Save Changes">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        function validateEmail(email) {
+            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return re.test(email);
+        };
+        function validate_user(){
+                var is_valid = true;
+                if (!validateEmail($("input[name='email']").val())){
+                     $('#email_span').html('Email is not valid');
+                    is_valid = false;
+                };
+                if ($("input[name='password']").val().length < 8){
+                     $('#password_span').html('Password is not valid');
+                    is_valid = false;
+                };
+                if (!$("input[name='username']").val()){
+                     $('#username_span').html('Username is not valid');
+                    is_valid = false;
+                };
+                return is_valid;
+            };
+    </script>
+{% endblock body %}
