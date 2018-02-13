@@ -5,8 +5,9 @@ from scrapy import Request
 from urllib.parse import urljoin
 from w3lib.url import add_or_replace_parameter
 from w3lib.url import urlencode
-from .base import BaseParseSpider, BaseCrawlSpider, clean
+from .base import BaseParseSpider, BaseCrawlSpider, clean, get_spider_lang
 from .base import Gender
+from ..parsers import genders
 
 
 class MixinDE:
@@ -105,17 +106,23 @@ class MixinDK:
 
 
 class UniSportParsSpider(BaseParseSpider):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.gender_regex = '|'.join(list(genders.get_gender_map(lang=get_spider_lang(self), gender_map={}).keys()))
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
         if not garment:
-            print('///////////////////////////////////////////////////////////')
             return
         self.boilerplate_normal(garment, response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
         garment["gender"] = self.product_gender(response)
         return garment
+
+    def product_colour(self, response):
+        raw_color = self.product_name(response).split('-')[-1]
+        return re.sub(self.gender_regex, '', raw_color, flags=re.IGNORECASE)
 
     def product_id(self, response):
         return clean(response.xpath('//input[@id="id_product_id"]/@value')[0])
@@ -167,6 +174,7 @@ class UniSportParsSpider(BaseParseSpider):
         price = clean(response.xpath('//div/@data-product-price')[0])
         p_price = response.xpath('//div[@class="price-guide"]/s/text()').extract_first()
         common = self.product_pricing_common_new(None, money_strs=[price, p_price, currency])
+        common["colour"] = self.product_colour(response)
         for size, sku_id in zip(sizes, sku_ids):
             sku = common.copy()
             if size:
