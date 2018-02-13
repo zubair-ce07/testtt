@@ -55,6 +55,7 @@ class GenericProduct(scrapy.Item):
     image_urls = scrapy.Field()
     description = scrapy.Field()
     skus = scrapy.Field()
+    meta = scrapy.Field()
 
 
 class JelmoliProduct(scrapy.Item):
