@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
+
 from .models import User, Post
+from instagram.models import User, Post
+
 
 
 class ContactForm(forms.Form):
@@ -9,7 +12,9 @@ class ContactForm(forms.Form):
     message = forms.CharField(widget=forms.Textarea)
 
 
+
 class EdiProfileForm(UserChangeForm):
+
     avatar = forms.ImageField(required=False)
 
 
@@ -25,16 +30,6 @@ class NewPostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ('image', 'text')
-
-    # image = forms.ImageField(required=True)
-    # text = forms.CharField(widget=forms.Textarea)
-    # def save(self, commit=True):
-    #     post = super(NewPostForm, self).save(commit=False)
-    #     post.user = request.user
-    # def __init__(self, *args, **kwargs):
-    #     self.request = kwargs.pop("request")
-    #     super(MyForm, self).__init__(*args, **kwargs)
-
 
 class SignUpForm(UserCreationForm):
     bio = forms.CharField(widget=forms.Textarea)

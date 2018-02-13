@@ -55,3 +55,6 @@ target/
 
 # PyCharm
 .idea
+
+# Database
+insta/db.sqlite3

@@ -3,8 +3,8 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.conf import settings
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
-from .managers import UserManager, FollowingManager, FollowerManager
 
+from .managers import UserManager, FollowingManager, FollowerManager
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_('Username'), max_length=40, unique=True)
@@ -27,6 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['first_name', 'last_name', 'email', 'date_of_birth', ]
 
     objects = UserManager()
+
     all_following = FollowingManager()
     all_followers = FollowerManager()
 
@@ -54,6 +55,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.is_admin
 
 
+
+class FollowRelation(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='followee', on_delete=models.CASCADE)
+    follower = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='follower', on_delete=models.CASCADE)
+    followed_at = models.DateTimeField(auto_now_add=True)
+
+
+
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='posts/', null=False, blank=False, default='default_avatar.png')
@@ -71,7 +80,6 @@ class Like(models.Model):
 
     def __str__(self):
         return str(self.like_timestamp)+' '+self.user.username
-
 
 class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

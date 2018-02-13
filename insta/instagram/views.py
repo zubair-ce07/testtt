@@ -2,9 +2,11 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth import logout as auth_logout, authenticate, login as auth_login
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
+
 from instagram.forms import SignUpForm, LoginForm, NewPostForm
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
+
 from instagram.models import User, Post
 
 login_url = reverse_lazy('login')
@@ -13,6 +15,7 @@ login_url = reverse_lazy('login')
 @login_required(login_url=login_url)
 def newsfeed(request):
     user = request.user
+
     if user.is_authenticated():
         followers, following = get_followers_and_following(user)
         posts = get_posts(user)
@@ -23,7 +26,6 @@ def newsfeed(request):
                        'posts':posts})
     else:
         return HttpResponseRedirect(reverse('login'))
-
 
 def get_posts(user):
     posts = Post.objects.filter(user__username=user.username)
@@ -45,9 +47,9 @@ def get_followers_and_following(user):
     return followers, following
 
 
+
 def index(request):
     return HttpResponseRedirect('login')
-
 
 def logout(request):
     auth_logout(request)
@@ -144,6 +146,7 @@ def follow_profile(request, pk):
     to_follow = get_object_or_404(User, pk=pk)
     user.following.add(to_follow)
     user.save()
+
     to_follow.refresh_from_db()
     followers, following = get_followers_and_following(to_follow)
     return render(request, 'instagram/profile.html',
@@ -163,6 +166,7 @@ def unfollow_profile(request, pk):
     to_unfollow = get_object_or_404(User, pk=pk)
     user.following.remove(to_unfollow)
     to_unfollow.refresh_from_db()
+
     followers, following = get_followers_and_following(to_unfollow)
     return render(request, 'instagram/profile.html',
                   {'errors': errors,
@@ -181,7 +185,6 @@ def show_followers(request, pk):
     return render(request, 'instagram/show_followers.html',
                         {'followers': followers})
 
-
 @login_required(login_url=login_url)
 def show_following(request, pk):
     target_profile = get_object_or_404(User, pk=pk)
@@ -189,7 +192,6 @@ def show_following(request, pk):
     following = get_user_objects(following, 'following')
     return render(request, 'instagram/show_followers.html',
                         {'followers': following})
-
 
 def new_post(request):
     user = request.user
