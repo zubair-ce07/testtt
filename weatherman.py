@@ -243,12 +243,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     read_reports = Reports()
 
+    if not (args.e or args.a or args.c):
+        raise Exception("Please Enter any argument!")
+
     if args.e:
         read_reports.yearly_report(args.e, args.path)
     if args.a:
         read_reports.monthly_report(args.a, args.path)
     if args.c:
         read_reports.draw_monthly_chart(args.c, args.path)
-
-    if not (args.e or args.a or args.c):
-        print("Please Enter any argument!")
