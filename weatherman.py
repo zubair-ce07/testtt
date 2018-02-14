@@ -10,6 +10,39 @@ LOW_TEMP_COLOR = 34     # BLUE
 DEFAULT_COLOR = 37      # DEFAULT
 
 
+class Validator:
+    def validate_year(self, to_validate):
+        to_check_year = to_validate.split("/")
+        found = re.match("(^20[0-1][0-9]$)", to_validate)
+        if self.check_year_range(to_check_year[0]) and found:
+            return to_validate
+        else:
+            raise Exception("Format not correct! {}".format(to_validate))
+
+    def validate_year_month(self, to_validate):
+        to_check_year = to_validate.split("/")
+        found = re.match("(20[0-1][0-9][//](1[0-2]|0[1-9]|\d))", to_validate)
+        if self.check_year_range(to_check_year[0]) and found:
+            return to_validate
+        else:
+            raise Exception("Format not correct! {}".format(to_validate))
+
+    def check_year_range(self, year):
+        if len(year) == 4:
+            if (int(year) > 2003) and (int(year) < 2017):
+                return year
+            else:
+                raise Exception("\nNo file exist against {} year!".format(year))
+        else:
+            raise Exception("Year is not in correct format({})!".format(year))
+
+    def check_file_path(self, path):
+        if os.path.isdir(path) and glob.glob('{}/*.txt'.format(path)):
+            return path
+        else:
+            raise Exception("incorrect path or no files on mentioned path!\n {}".format(path))
+
+
 class Weather:
     def __init__(self):
         self.pkt = "1900-01-01"
@@ -40,28 +73,27 @@ class ResultViewer:
 
     def display_relative_temp_and_humidity(self, files_yearly_param):
         pkt_date = {}
-        for read_dict in files_yearly_param:
-            for sub_dict in read_dict:
-                if sub_dict.max_temperature:
-                    self.max_temp.append(int(sub_dict.max_temperature))
-                    pkt_date[sub_dict.max_temperature] = sub_dict.pkt
+        for monthly_values in files_yearly_param:
+            for per_day_values in monthly_values:
+                if per_day_values.max_temperature:
+                    self.max_temp.append(per_day_values.max_temperature)
+                    pkt_date[per_day_values.max_temperature] = per_day_values.pkt
 
-                if sub_dict.min_temperature:
-                    self.low_temp.append(int(sub_dict.min_temperature))
-                    pkt_date[sub_dict.min_temperature] = sub_dict.pkt
+                if per_day_values.min_temperature:
+                    self.low_temp.append(per_day_values.min_temperature)
+                    pkt_date[per_day_values.min_temperature] = per_day_values.pkt
 
-                if sub_dict.max_humidity:
-                    self.max_humid.append(int(sub_dict.max_humidity))
-                    pkt_date[sub_dict.max_humidity] = sub_dict.pkt
+                if per_day_values.max_humidity:
+                    self.max_humid.append(per_day_values.max_humidity)
+                    pkt_date[per_day_values.max_humidity] = per_day_values.pkt
 
         self.result_value.max_temperature = max(self.max_temp) if self.max_temp else 0
         self.result_value.min_temperature = min(self.low_temp) if self.low_temp else 0
         self.result_value.max_humidity = max(self.max_humid) if self.max_humid else 0
 
-        self.result_value.max_temperature_date = pkt_date.get(str(self.result_value.max_temperature))
-        self.result_value.min_temperature_date = pkt_date.get(str(self.result_value.min_temperature))
-        self.result_value.max_humidity_date = pkt_date.get(str(self.result_value.max_humidity))
-
+        self.result_value.max_temperature_date = pkt_date.get(self.result_value.max_temperature)
+        self.result_value.min_temperature_date = pkt_date.get(self.result_value.min_temperature)
+        self.result_value.max_humidity_date = pkt_date.get(self.result_value.max_humidity)
         self.print_temp_and_humid(self.result_value)
         self.max_temp, self.low_temp, self.max_humid = [], [], []
 
@@ -77,16 +109,16 @@ class ResultViewer:
                                               result.max_humidity_date.day))
 
     def display_avg_relative_temp_and_humidity(self, monthly_file_param):
-        for read_dict in monthly_file_param:
-            for sub_dict in read_dict:
-                if sub_dict.max_temperature:
-                    self.max_temp.append(int(sub_dict.max_temperature))
+        for monthly_values in monthly_file_param:
+            for per_day_values in monthly_values:
+                if per_day_values.max_temperature:
+                    self.max_temp.append(per_day_values.max_temperature)
 
-                if sub_dict.min_temperature:
-                    self.low_temp.append(int(sub_dict.min_temperature))
+                if per_day_values.min_temperature:
+                    self.low_temp.append(per_day_values.min_temperature)
 
-                if sub_dict.mean_humidity:
-                    self.mean_humid.append(int(sub_dict.mean_humidity))
+                if per_day_values.mean_humidity:
+                    self.mean_humid.append(per_day_values.mean_humidity)
 
         self.result_value.avg_high_temperature = int(sum(self.max_temp) / len(self.max_temp)) if self.max_temp else 0
         self.result_value.avg_low_temperature = int(sum(self.low_temp) / len(self.low_temp)) if self.low_temp else 0
@@ -101,38 +133,38 @@ class ResultViewer:
         print('Average Mean Humidity: {}%'.format(result.avg_mean_humidity))
 
     def display_single_line_chart(self, monthly_file_param):
-        for read_dict in monthly_file_param:
-            for sub_dict in read_dict:
-                if sub_dict.max_temperature:
-                    self.print_single_chart(int(sub_dict.max_temperature), HIGH_TEMP_COLOR,
-                                            str(sub_dict.pkt))
+        for monthly_values in monthly_file_param:
+            for per_day_values in monthly_values:
+                if per_day_values.max_temperature:
+                    self.print_single_chart(per_day_values.max_temperature, HIGH_TEMP_COLOR,
+                                            per_day_values.pkt)
                 else:
-                    self.print_single_chart(0, HIGH_TEMP_COLOR, str(sub_dict.pkt))
+                    self.print_single_chart(0, HIGH_TEMP_COLOR, per_day_values.pkt)
 
-                if sub_dict.min_temperature:
-                    self.print_single_chart(int(sub_dict.min_temperature), LOW_TEMP_COLOR,
-                                            str(sub_dict.pkt))
+                if per_day_values.min_temperature:
+                    self.print_single_chart(per_day_values.min_temperature, LOW_TEMP_COLOR,
+                                            per_day_values.pkt)
                 else:
-                    self.print_single_chart(0, LOW_TEMP_COLOR, str(sub_dict.pkt))
+                    self.print_single_chart(0, LOW_TEMP_COLOR, per_day_values.pkt)
 
     def display_double_line_chart(self, monthly_file_param):
-        for read_dict in monthly_file_param:
-            for sub_dict in read_dict:
-                max_temp = sub_dict.max_temperature if sub_dict.max_temperature else 0
-                low_temp = sub_dict.min_temperature if sub_dict.min_temperature else 0
+        for monthly_values in monthly_file_param:
+            for per_day_values in monthly_values:
+                max_temp = per_day_values.max_temperature if per_day_values.max_temperature else 0
+                low_temp = per_day_values.min_temperature if per_day_values.min_temperature else 0
 
-                self.print_double_chart(int(low_temp), int(max_temp), str(sub_dict.pkt))
+                self.print_double_chart(low_temp, max_temp, per_day_values.pkt)
 
     def print_single_chart(self, count, color, month_date):
-        print("\033[{};10m{} ".format(DEFAULT_COLOR, month_date[8:10]), end='')
+        print("\033[{};10m{} ".format(DEFAULT_COLOR, month_date.day), end='')
 
         for _ in range(count):
-            print("\033[{};10m+".format(int(color)), end='')
+            print("\033[{};10m+".format(color), end='')
 
         print("\033[{};10m {}C".format(DEFAULT_COLOR, count))
 
     def print_double_chart(self, min_range, max_range, month_date):
-        print("\033[{};10m{} ".format(DEFAULT_COLOR, month_date[8:10]), end='')
+        print("\033[{};10m{} ".format(DEFAULT_COLOR, month_date.day), end='')
         for _ in range(min_range):
             print("\033[{};10m+".format(LOW_TEMP_COLOR), end='')
         for _ in range(max_range):
@@ -143,36 +175,27 @@ class ResultViewer:
 
 class FileReader:
     def read_file(self, file_path):
-        read_file_input = open(file_path, "r")
-        csv_reader = csv.reader(read_file_input)
-        header = next(csv_reader)
+        with open(file_path, "r") as file_content:
+            csv_reader = csv.DictReader(file_content)
+            requested_file = []
 
-        date_index = 0
-        max_temp_index = header.index("Max TemperatureC")
-        min_temp_index = header.index("Min TemperatureC")
-        max_humid_index = header.index("Max Humidity")
-        mean_humid_index = header.index(" Mean Humidity")
+            for row in csv_reader:
+                weather_reading = Weather()
+                weather_reading.pkt = datetime.strptime(row["PKT"], '%Y-%m-%d')
+                weather_reading.max_temperature = int(row["Max TemperatureC"]) if row["Max TemperatureC"] else 0
+                weather_reading.min_temperature = int(row["Min TemperatureC"]) if row["Min TemperatureC"] else 0
+                weather_reading.max_humidity = int(row["Max Humidity"]) if row["Max Humidity"] else 0
+                weather_reading.mean_humidity = int(row[" Mean Humidity"]) if row[" Mean Humidity"] else 0
 
-        requested_file = []
+                requested_file.append(weather_reading)
 
-        # Loop through the lines in the file and get each coordinate
-        for row in csv_reader:
-            weather_reading = Weather()
-            weather_reading.pkt = datetime.strptime(row[date_index], '%Y-%m-%d')
-            weather_reading.max_temperature = row[max_temp_index]
-            weather_reading.min_temperature = row[min_temp_index]
-            weather_reading.max_humidity = row[max_humid_index]
-            weather_reading.mean_humidity = row[mean_humid_index]
-
-            requested_file.append(weather_reading)
-
-        return requested_file
+            return requested_file
 
     def read_files(self, year, month, file_path):
         requested_files = glob.glob('{}/*{}*{}**.txt'.format(file_path, year, month))
         file_values = []
-        for file in requested_files:
-            file_values.append(self.read_file(file))
+        for file_to_read in requested_files:
+            file_values.append(self.read_file(file_to_read))
 
         return file_values
 
@@ -208,44 +231,14 @@ class Reports:
 
 
 if __name__ == "__main__":
-    def validate_year(to_validate):
-        to_check_year = to_validate.split("/")
-        found = re.match("(^20[0-1][0-9]$)", to_validate)
-        if check_year_range(to_check_year[0]) and found:
-            return to_validate
-        else:
-            raise Exception("Format not correct! {}".format(to_validate))
-
-    def validate_year_month(to_validate):
-        to_check_year = to_validate.split("/")
-        found = re.match("(20[0-1][0-9][//](1[0-2]|0[1-9]|\d))", to_validate)
-        if check_year_range(to_check_year[0]) and found:
-            return to_validate
-        else:
-            raise Exception("Format not correct! {}".format(to_validate))
-
-    def check_year_range(year):
-        if len(year) == 4:
-            if (int(year) > 2003) and (int(year) < 2017):
-                return year
-            else:
-                raise Exception("\nNo file exist against {} year!".format(year))
-        else:
-            raise Exception("Year is not in correct format({})!".format(year))
-
-    def check_file_path(path):
-        if os.path.isdir(path) and glob.glob('{}/*.txt'.format(path)):
-            return path
-        else:
-            raise Exception("incorrect path or no files on mentioned path!\n {}".format(path))
-
+    verify_input = Validator()
     parser = argparse.ArgumentParser()
-    parser.add_argument('path', type=check_file_path)
-    parser.add_argument('-e', '--e', type=validate_year,
+    parser.add_argument('path', type=verify_input.check_file_path)
+    parser.add_argument('-e', '--e', type=verify_input.validate_year,
                         help='Enter Year YYYY', default=None)
-    parser.add_argument('-a', '--a', type=validate_year_month,
+    parser.add_argument('-a', '--a', type=verify_input.validate_year_month,
                         help='Enter Year YYYY/MM', default=None)
-    parser.add_argument('-c', '--c', type=validate_year_month,
+    parser.add_argument('-c', '--c', type=verify_input.validate_year_month,
                         help='Enter Year YYYY/MM', default=None)
     args = parser.parse_args()
     read_reports = Reports()
