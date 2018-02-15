@@ -14,27 +14,24 @@ class Validator:
     def validate_year(self, to_validate):
         to_check_year = to_validate.split("/")
         found = re.match("(^20[0-1][0-9]$)", to_validate)
-        if self.check_year_range(to_check_year[0]) and found:
+        if found and self.check_year_range(to_check_year[0]):
             return to_validate
         else:
-            raise Exception("Format not correct! {}".format(to_validate))
+            raise Exception("Incorrect input! {}".format(to_validate))
 
     def validate_year_month(self, to_validate):
         to_check_year = to_validate.split("/")
-        found = re.match("(20[0-1][0-9][//](1[0-2]|0[1-9]|\d))", to_validate)
-        if self.check_year_range(to_check_year[0]) and found:
+        found = re.match("^(20[0-1][0-9])[/](0?[1-9]|1[0-2])$", to_validate)
+        if found and self.check_year_range(to_check_year[0]):
             return to_validate
         else:
-            raise Exception("Format not correct! {}".format(to_validate))
+            raise Exception("Incorrect input! {}".format(to_validate))
 
     def check_year_range(self, year):
-        if len(year) == 4:
-            if (int(year) > 2003) and (int(year) < 2017):
-                return year
-            else:
-                raise Exception("\nNo file exist against {} year!".format(year))
+        if (int(year) > 2003) and (int(year) < 2017):
+            return year
         else:
-            raise Exception("Year is not in correct format({})!".format(year))
+            raise Exception("\nNo file exist against {} year!".format(year))
 
     def check_file_path(self, path):
         if os.path.isdir(path) and glob.glob('{}/*.txt'.format(path)):
