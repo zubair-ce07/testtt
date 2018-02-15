@@ -3,126 +3,176 @@ import re
 
 from scrapy import Request
 from urllib.parse import urljoin
-from w3lib.url import add_or_replace_parameter
-from w3lib.url import urlencode
-from .base import BaseParseSpider, BaseCrawlSpider, clean, get_spider_lang
-from .base import Gender
+from w3lib.url import add_or_replace_parameter, urlencode
+
+from .base import BaseParseSpider, BaseCrawlSpider, clean, get_spider_lang, Gender
 from ..parsers import genders
 
 
-class MixinDE:
-    retailer = "unisports" + '-de'
+class Mixin:
+    retailer = "unisports"
+    Merch_info = [
+        'limited edition'
+    ]
+
+
+class MixinDE(Mixin):
+    retailer = Mixin.retailer + '-de'
     market = "DE"
+
+    allowed_domains = ["www.unisportstore.de"]
     start_urls = ["https://www.unisport.dk/"]
-    deny_urls = ["fodboldudstyr/43-fodbolde/",
-                    "benskinner/1804-strompetape/",
-                    "fodboldudstyr/3573-traeningsudstyr/",
-                    "fodboldudstyr/299-boldpumper/",
-                    "fodboldudstyr/1807-sportspleje-produkter/"]
+    deny_urls = [
+        "fodboldudstyr/43-fodbolde/",
+        "benskinner/1804-strompetape/",
+        "fodboldudstyr/3573-traeningsudstyr/",
+        "fodboldudstyr/299-boldpumper/",
+        "fodboldudstyr/1807-sportspleje-produkter/"
+    ]
 
 
-class MixinAT:
-    retailer = "unisports" + '-at'
+class MixinAT(Mixin):
+    retailer = Mixin.retailer + '-at'
     market = "DE"
+
+    allowed_domains = ["www.unisportstore.at"]
     start_urls = ["https://www.unisportstore.at/"]
-    deny_urls = ["fussballausruestung/43-fussbaelle/",
-                    "schienbeinschoner/1804-sock-tape/",
-                    "fussballausruestung/3573-training-equipment/",
-                    "fussballausruestung/299-ballpumpen/",
-                    "fussballausruestung/1807-sportpflege-produkte/"]
+    deny_urls = [
+        "fussballausruestung/43-fussbaelle/",
+        "schienbeinschoner/1804-sock-tape/",
+        "fussballausruestung/3573-training-equipment/",
+        "fussballausruestung/299-ballpumpen/",
+        "fussballausruestung/1807-sportpflege-produkte/"
+    ]
 
 
-class MixinFR:
-    retailer = "unisports" + '-fr'
-    allowed_domains = ["www.unisportstore.fr"]
+class MixinFR(Mixin):
+    retailer = Mixin.retailer + '-fr'
     market = "FR"
+
+    allowed_domains = ["www.unisportstore.fr"]
     start_urls = ["https://www.unisportstore.fr/"]
-    deny_urls = ["equipements-de-football/43-ballons-de-football/",
-                    "equipements-de-football/3573-equipement-dentrainement/",
-                    "equipements-de-football/299-pompes-a-ballons/",
-                    "protege-tibias/1804-bandes-de-maintien/",
-                    "equipements-de-football/1807-produits-de-soin/"]
+    deny_urls = [
+        "equipements-de-football/43-ballons-de-football/",
+        "equipements-de-football/3573-equipement-dentrainement/",
+        "equipements-de-football/299-pompes-a-ballons/",
+        "protege-tibias/1804-bandes-de-maintien/",
+        "equipements-de-football/1807-produits-de-soin/"
+    ]
 
 
-class MixinSE:
-    retailer = "unisports" + '-sv'
-    allowed_domains = ["www.unisportstore.se"]
+class MixinSE(Mixin):
+    retailer = Mixin.retailer + '-sv'
     market = "SV"
+
+    allowed_domains = ["www.unisportstore.se"]
     start_urls = ["https://www.unisportstore.se/"]
-    deny_urls = ["fotbollsutrustning/43-fotbollar/",
-                    "fotbollsutrustning/3573-traningsutrustning/",
-                    "fotbollsutrustning/299-bollpumpar/",
-                    "fotbollsutrustning/1807-sportskydd-rehab/",
-                    "benskydd/1804-benskyddstejp/"]
+    deny_urls = [
+        "fotbollsutrustning/43-fotbollar/",
+        "fotbollsutrustning/3573-traningsutrustning/",
+        "fotbollsutrustning/299-bollpumpar/",
+        "fotbollsutrustning/1807-sportskydd-rehab/",
+        "benskydd/1804-benskyddstejp/"
+    ]
 
 
-class MixinFI:
-    retailer = "unisports" + '-fi'
-    allowed_domains = ["www.unisportstore.fi"]
+class MixinFI(Mixin):
+    retailer = Mixin.retailer + '-fi'
     market = "FI"
+
+    allowed_domains = ["www.unisportstore.fi"]
     start_urls = ["https://www.unisportstore.fi/"]
-    deny_urls = ["sekalaiset-tarvikkeet/43-jalkapallot/",
-                    "sekalaiset-tarvikkeet/1804-sukkateippi/",
-                    "sekalaiset-tarvikkeet/3573-harjoitusvalineet/",
-                    "sekalaiset-tarvikkeet/299-pallopumput/",
-                    "sekalaiset-tarvikkeet/1807-huoltotarvikkeet/"]
+    deny_urls = [
+        "sekalaiset-tarvikkeet/43-jalkapallot/",
+        "sekalaiset-tarvikkeet/1804-sukkateippi/",
+        "sekalaiset-tarvikkeet/3573-harjoitusvalineet/",
+        "sekalaiset-tarvikkeet/299-pallopumput/",
+        "sekalaiset-tarvikkeet/1807-huoltotarvikkeet/"
+    ]
 
 
-class MixinNL:
-    retailer = "unisports" + '-nl'
-    allowed_domains = ["www.unisportstore.nl"]
+class MixinNL(Mixin):
+    retailer = Mixin.retailer + '-nl'
     market = "NL"
+
+    allowed_domains = ["www.unisportstore.nl"]
     start_urls = ["https://www.unisportstore.nl/"]
-    deny_urls = ["voetbalaccessoires/43-voetballen/",
-                    "voetbalaccessoires/1804-sokkentape/",
-                    "voetbalaccessoires/1807-verzorgingsproducten/",
-                    "voetbalaccessoires/299-balpompen/",
-                    "voetbalaccessoires/3573-trainingsmateriaal/"]
+    deny_urls = [
+        "voetbalaccessoires/43-voetballen/",
+        "voetbalaccessoires/1804-sokkentape/",
+        "voetbalaccessoires/1807-verzorgingsproducten/",
+        "voetbalaccessoires/299-balpompen/",
+        "voetbalaccessoires/3573-trainingsmateriaal/"
+    ]
 
 
-class MixinNO:
-    retailer = "unisports" + 'no'
-    allowed_domains = ["www.unisportstore.no"]
+class MixinNO(Mixin):
+    retailer = Mixin.retailer + 'no'
     market = "NO"
+
+    allowed_domains = ["www.unisportstore.no"]
     start_urls = ["https://www.unisportstore.no/"]
-    deny_urls = ["fotballutstyr/1804-strompetape/",
-                    "fotballutstyr/43-fotballer/",
-                    "fotballutstyr/1807-sportspleieprodukter-medisinsk/",
-                    "fotballutstyr/299-ballpumper/",
-                    "fotballutstyr/3573-treningsutstyr/"]
+    deny_urls = [
+        "fotballutstyr/1804-strompetape/",
+        "fotballutstyr/43-fotballer/",
+        "fotballutstyr/1807-sportspleieprodukter-medisinsk/",
+        "fotballutstyr/299-ballpumper/",
+        "fotballutstyr/3573-treningsutstyr/"
+    ]
 
 
-class MixinDK:
-    retailer = "unisports" + '-dk'
-    allowed_domains = ["www.unisportstore.dk"]
+class MixinDK(Mixin):
+    retailer = Mixin.retailer + '-dk'
     lang = "dk"
     market = "DA"
+
+    allowed_domains = ["www.unisportstore.dk"]
     start_urls = ["https://www.unisport.dk/"]
-    deny_urls = ["fodboldudstyr/43-fodbolde/",
-                    "benskinner/1804-strompetape/",
-                    "fodboldudstyr/3573-traeningsudstyr/",
-                    "fodboldudstyr/299-boldpumper/",
-                    "fodboldudstyr/1807-sportspleje-produkter/"]
+    deny_urls = [
+        "fodboldudstyr/43-fodbolde/",
+        "benskinner/1804-strompetape/",
+        "fodboldudstyr/3573-traeningsudstyr/",
+        "fodboldudstyr/299-boldpumper/",
+        "fodboldudstyr/1807-sportspleje-produkter/"
+    ]
 
 
 class UniSportParsSpider(BaseParseSpider):
+    price_x = '//div/@data-product-currency |' \
+              ' //div[@class="price-container l-box"]/div[@class="price price_now"]/div/text()' \
+              ' | //div[@class="price-container l-box"]/div[@class="price-guide"]/s/text()'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.gender_regex = '|'.join(list(genders.get_gender_map(lang=get_spider_lang(self), gender_map={}).keys()))
+        self.gender_re = self.gender_regex()
 
     def parse(self, response):
+
         garment = self.new_unique_garment(self.product_id(response))
         if not garment:
             return
         self.boilerplate_normal(garment, response)
+        garment["merch_info"] = self.merch_info(response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
         garment["gender"] = self.product_gender(response)
+
         return garment
+
+    def merch_info(self, response):
+        name = self.product_name(response).lower()
+        return [m for m in self.Merch_info if m in name]
+
+    def gender_regex(self):
+        raw_gender = genders.get_gender_map(lang=get_spider_lang(self), gender_map={}).keys()
+        raw_gender = '|'.join(list(raw_gender))
+
+        return re.compile(raw_gender, flags=re.IGNORECASE)
 
     def product_colour(self, response):
         raw_color = self.product_name(response).split('-')[-1]
-        return re.sub(self.gender_regex, '', raw_color, flags=re.IGNORECASE)
+        raw_color = re.sub(self.gender_re, '', raw_color)
+        return raw_color.split(' ')[1]
 
     def product_id(self, response):
         return clean(response.xpath('//input[@id="id_product_id"]/@value')[0])
@@ -133,10 +183,12 @@ class UniSportParsSpider(BaseParseSpider):
     def product_gender(self, response):
         product_name = self.product_name(response)
         gender = self.gender_lookup(product_name)
+
         return gender if gender else Gender.MEN.value
 
     def product_brand(self, response):
         xpath = '//script[contains(text(),"dataLayer")]/text()'
+
         return response.xpath(xpath).re_first(r'brand": \"([A-Za-z]+)')
 
     def raw_description(self, response):
@@ -149,65 +201,68 @@ class UniSportParsSpider(BaseParseSpider):
         return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
     def raw_category(self, response):
+        category_path = []
         xpath = '//script[contains(text(),"breadcrumbData")]/text()'
         raw_category = response.xpath(xpath).re_first(r"'breadcrumbs_data': (.+),")
-        category_path = []
+
         for category in json.loads(raw_category):
             category_path.append(category["title"])
+
         return ['/'.join(category_path)] if category_path else []
 
     def product_category(self, response):
         category = response.xpath('//a[@class="crumbItems"]//span/text()')
-        if category:
-            return clean(category)
-        else:
-            return self.raw_category(response)
+
+        return clean(category) or self.raw_category(response)
 
     def image_urls(self, response):
         return clean(response.xpath('//div[@class="product-gallery"]//a/@href'))
 
     def skus(self, response):
+        skus = {}
         sizes = clean(response.xpath('//select[@id="id_size"]/option/text()')[1:])
         sku_ids = clean(response.xpath('//select[@id="id_size"]/option/@value')[1:])
-        skus = {}
-        currency = clean(response.xpath('//div/@data-product-currency')[0])
-        price = clean(response.xpath('//div/@data-product-price')[0])
-        p_price = response.xpath('//div[@class="price-guide"]/s/text()').extract_first()
-        common = self.product_pricing_common_new(None, money_strs=[price, p_price, currency])
+        common = self.product_pricing_common_new(response)
         common["colour"] = self.product_colour(response)
+
         for size, sku_id in zip(sizes, sku_ids):
             sku = common.copy()
-            if size:
-                sku['size'] = size.split('-')[0]
-            else:
-                sku["size"] = self.one_size
+            sku['size'] = clean(size.split('-')[0]) if size else self.one_size
             skus[sku_id] = sku
+
         return skus
 
 
 class UniSportCrawlSpider(BaseCrawlSpider):
+    url_regex = '"url": \"([a-z0-9-/]+)\"'
 
     def parse(self, response):
         category = response.xpath('//div[@id="offcanvas"]/@data-menu-api-url').extract_first()
         categories_url = response.urljoin(category)
+
         yield Request(url=categories_url, callback=self.sub_categories_urls)
 
     def sub_categories_urls(self, response):
         raw_category = json.loads(response.text)
+
         for raw_categories in raw_category["top"]:
             for categories in raw_categories["items"]:
                 category_url = categories["slug"]
+
                 if category_url in self.deny_urls:
-                    return
+                    continue
+
                 yield Request(url=urljoin(self.start_urls[0], category_url), meta={'trail': self.add_trail(response)},
                               callback=self.parse_sub_categories)
 
     def parse_sub_categories(self, response):
         sub_categories = response.xpath('//a[@class="nav-list facet-accordion-nav"]/@href').extract()
+
         for sub_category in sub_categories:
             if sub_category in self.deny_urls:
-                return
-            yield Request(url=urljoin(self.start_urls[0], sub_category), meta={'trail': self.add_trail(response)},
+                continue
+
+            yield Request(url=response.urljoin(sub_category), meta={'trail': self.add_trail(response)},
                           callback=self.parse_subcategory)
 
     def parse_subcategory(self, response):
@@ -218,18 +273,25 @@ class UniSportCrawlSpider(BaseCrawlSpider):
             "content_type": "json"
         }
         url = response.url+"?"+urlencode(params)
+
         yield Request(url=url, meta={'trail': self.add_trail(response)}, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         max_page_num = json.loads(response.text)["max_page_number"]
-        raw_urls = re.findall('"url": \"([a-z0-9-/]+)\"', response.text)
+        raw_urls = re.findall(self.url_regex, response.text)
+
         if not raw_urls:
             return
+
         for url in raw_urls:
-            yield Request(url=urljoin(self.start_urls[0], url), meta={'trail': self.add_trail(response)},
+            yield Request(url=response.urljoin(url), meta={'trail': self.add_trail(response)},
                           callback=self.parse_item)
+        if response.url.find('page') != -1:
+            return
+
         for page in range(2, int(max_page_num) + 1):
             next_page_url = add_or_replace_parameter(response.url, "page", page)
+
             yield Request(url=next_page_url, callback=self.parse_pagination)
 
 
