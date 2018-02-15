@@ -5,13 +5,12 @@ from scrapy import Request
 from urllib.parse import urljoin
 from w3lib.url import add_or_replace_parameter, urlencode
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean, get_spider_lang, Gender
-from ..parsers import genders
+from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
     retailer = "unisports"
-    Merch_info = [
+    MERCH_INFO = [
         'limited edition'
     ]
 
@@ -142,15 +141,11 @@ class UniSportParsSpider(BaseParseSpider):
               ' //div[@class="price-container l-box"]/div[@class="price price_now"]/div/text()' \
               ' | //div[@class="price-container l-box"]/div[@class="price-guide"]/s/text()'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.gender_re = self.gender_regex()
-
     def parse(self, response):
-
         garment = self.new_unique_garment(self.product_id(response))
         if not garment:
             return
+
         self.boilerplate_normal(garment, response)
         garment["merch_info"] = self.merch_info(response)
         garment["image_urls"] = self.image_urls(response)
@@ -161,21 +156,16 @@ class UniSportParsSpider(BaseParseSpider):
 
     def merch_info(self, response):
         name = self.product_name(response).lower()
-        return [m for m in self.Merch_info if m in name]
 
-    def gender_regex(self):
-        raw_gender = genders.get_gender_map(lang=get_spider_lang(self), gender_map={}).keys()
-        raw_gender = '|'.join(list(raw_gender))
-
-        return re.compile(raw_gender, flags=re.IGNORECASE)
+        return [m for m in self.MERCH_INFO if m in name]
 
     def product_colour(self, response):
         raw_color = self.product_name(response).split('-')[-1]
-        raw_color = re.sub(self.gender_re, '', raw_color)
-        return raw_color.split(' ')[1]
+
+        return clean(raw_color.split(' ')[1])
 
     def product_id(self, response):
-        return clean(response.xpath('//input[@id="id_product_id"]/@value')[0])
+        return clean(response.css('#prod-promotions ::attr(data-product-id)')[0])
 
     def product_name(self, response):
         return clean(response.xpath('//div[@class="product-header"]//h1/text()')[0])
@@ -365,3 +355,4 @@ class UniSportParsSpiderDK(MixinDK, UniSportParsSpider):
 class UniSportCrawlSpiderDK(MixinDK, UniSportCrawlSpider):
     name = MixinDK.retailer + '-crawl'
     parse_spider = UniSportParsSpiderDK()
+
