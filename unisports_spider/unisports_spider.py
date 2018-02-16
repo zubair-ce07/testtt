@@ -20,7 +20,7 @@ class MixinDE(Mixin):
     market = "DE"
 
     allowed_domains = ["www.unisportstore.de"]
-    start_urls = ["https://www.unisport.dk/"]
+    start_urls = ["https://www.unisportstore.de/"]
     deny_urls = [
         "fodboldudstyr/43-fodbolde/",
         "benskinner/1804-strompetape/",
@@ -35,7 +35,7 @@ class MixinAT(Mixin):
     market = "DE"
 
     allowed_domains = ["www.unisportstore.at"]
-    start_urls = ["https://www.unisportstore.at/"]
+    start_urls = ["https://www.unisportstore.at"]
     deny_urls = [
         "fussballausruestung/43-fussbaelle/",
         "schienbeinschoner/1804-sock-tape/",
@@ -160,15 +160,20 @@ class UniSportParsSpider(BaseParseSpider):
         return [m for m in self.MERCH_INFO if m in name]
 
     def product_colour(self, response):
-        raw_color = self.product_name(response).split('-')[-1]
+        if '-' in self.product_name(response):
+            raw_color = self.product_name(response).split('-')[-1]
 
-        return clean(raw_color.split(' ')[1])
+            return clean(raw_color.split(' ')[1])
+
+        return None
 
     def product_id(self, response):
         return clean(response.css('#prod-promotions ::attr(data-product-id)')[0])
 
     def product_name(self, response):
-        return clean(response.xpath('//div[@class="product-header"]//h1/text()')[0])
+        product_name = clean(response.xpath('//div[@class="product-header"]//h1/text()')[0])
+
+        return product_name.replace(self.product_brand(response), '')
 
     def product_gender(self, response):
         product_name = self.product_name(response)
@@ -210,15 +215,24 @@ class UniSportParsSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-        sizes = clean(response.xpath('//select[@id="id_size"]/option/text()')[1:])
-        sku_ids = clean(response.xpath('//select[@id="id_size"]/option/@value')[1:])
+        product_colour = self.product_colour(response)
+        size_hxs = response.xpath('//select[@id="id_size"]/option')
         common = self.product_pricing_common_new(response)
-        common["colour"] = self.product_colour(response)
 
-        for size, sku_id in zip(sizes, sku_ids):
+        if product_colour:
+            common["colour"] = product_colour
+
+        for size in size_hxs:
+            sku_id = clean(size.xpath('./@value')[0])
+            if sku_id:
+                sku = common.copy()
+                sku["size"] = clean(size.xpath('./text()')[0]).split('-')[0]
+                skus[sku_id] = sku
+
+        if not skus:
             sku = common.copy()
-            sku['size'] = clean(size.split('-')[0]) if size else self.one_size
-            skus[sku_id] = sku
+            sku["size"] = self.one_size
+            skus = sku
 
         return skus
 
