@@ -12,26 +12,16 @@ DEFAULT_COLOR = 37      # DEFAULT
 
 class Validator:
     def validate_year(self, to_validate):
-        to_check_year = to_validate.split("/")
-        found = re.match("(^20[0-1][0-9]$)", to_validate)
-        if found and self.check_year_range(to_check_year[0]):
-            return to_validate
+        if not datetime.strptime(to_validate, '%Y'):
+            raise ValueError("Incorrect date format, should be YYYY")
         else:
-            raise Exception("Incorrect input! {}".format(to_validate))
+            return to_validate
 
     def validate_year_month(self, to_validate):
-        to_check_year = to_validate.split("/")
-        found = re.match("^(20[0-1][0-9])[/](0?[1-9]|1[0-2])$", to_validate)
-        if found and self.check_year_range(to_check_year[0]):
+        if not datetime.strptime(to_validate, '%Y/%m'):
+            raise ValueError("Incorrect date format, should be YYYY/MM or YYYY/M")
+        else:
             return to_validate
-        else:
-            raise Exception("Incorrect input! {}".format(to_validate))
-
-    def check_year_range(self, year):
-        if (int(year) > 2003) and (int(year) < 2017):
-            return year
-        else:
-            raise Exception("\nNo file exist against {} year!".format(year))
 
     def check_file_path(self, path):
         if os.path.isdir(path) and glob.glob('{}/*.txt'.format(path)):
@@ -41,12 +31,12 @@ class Validator:
 
 
 class Weather:
-    def __init__(self):
-        self.pkt = "1900-01-01"
-        self.max_temperature = 0
-        self.min_temperature = 0
-        self.max_humidity = 0
-        self.mean_humidity = 0
+    def __init__(self, pkt, max_temperature, min_temperature, max_humidity, mean_humidity):
+        self.pkt = pkt
+        self.max_temperature = max_temperature
+        self.min_temperature = min_temperature
+        self.max_humidity = max_humidity
+        self.mean_humidity = mean_humidity
 
 
 class ResultHolder:
@@ -72,21 +62,18 @@ class ResultViewer:
         pkt_date = {}
         for monthly_values in files_yearly_param:
             for per_day_values in monthly_values:
-                if per_day_values.max_temperature:
                     self.max_temp.append(per_day_values.max_temperature)
                     pkt_date[per_day_values.max_temperature] = per_day_values.pkt
 
-                if per_day_values.min_temperature:
                     self.low_temp.append(per_day_values.min_temperature)
                     pkt_date[per_day_values.min_temperature] = per_day_values.pkt
 
-                if per_day_values.max_humidity:
                     self.max_humid.append(per_day_values.max_humidity)
                     pkt_date[per_day_values.max_humidity] = per_day_values.pkt
 
-        self.result_value.max_temperature = max(self.max_temp) if self.max_temp else 0
-        self.result_value.min_temperature = min(self.low_temp) if self.low_temp else 0
-        self.result_value.max_humidity = max(self.max_humid) if self.max_humid else 0
+        self.result_value.max_temperature = max(self.max_temp)
+        self.result_value.min_temperature = min(self.low_temp)
+        self.result_value.max_humidity = max(self.max_humid)
 
         self.result_value.max_temperature_date = pkt_date.get(self.result_value.max_temperature)
         self.result_value.min_temperature_date = pkt_date.get(self.result_value.min_temperature)
@@ -108,18 +95,13 @@ class ResultViewer:
     def display_avg_relative_temp_and_humidity(self, monthly_file_param):
         for monthly_values in monthly_file_param:
             for per_day_values in monthly_values:
-                if per_day_values.max_temperature:
                     self.max_temp.append(per_day_values.max_temperature)
-
-                if per_day_values.min_temperature:
                     self.low_temp.append(per_day_values.min_temperature)
-
-                if per_day_values.mean_humidity:
                     self.mean_humid.append(per_day_values.mean_humidity)
 
-        self.result_value.avg_high_temperature = int(sum(self.max_temp) / len(self.max_temp)) if self.max_temp else 0
-        self.result_value.avg_low_temperature = int(sum(self.low_temp) / len(self.low_temp)) if self.low_temp else 0
-        self.result_value.avg_mean_humidity = int(sum(self.mean_humid) / len(self.mean_humid)) if self.mean_humid else 0
+        self.result_value.avg_high_temperature = int(sum(self.max_temp) / len(self.max_temp))
+        self.result_value.avg_low_temperature = int(sum(self.low_temp) / len(self.low_temp))
+        self.result_value.avg_mean_humidity = int(sum(self.mean_humid) / len(self.mean_humid))
 
         self.print_avg_temp_and_humid(self.result_value)
         self.max_temp, self.low_temp, self.mean_humid = [], [], []
@@ -132,23 +114,17 @@ class ResultViewer:
     def display_single_line_chart(self, monthly_file_param):
         for monthly_values in monthly_file_param:
             for per_day_values in monthly_values:
-                if per_day_values.max_temperature:
                     self.print_single_chart(per_day_values.max_temperature, HIGH_TEMP_COLOR,
                                             per_day_values.pkt)
-                else:
-                    self.print_single_chart(0, HIGH_TEMP_COLOR, per_day_values.pkt)
 
-                if per_day_values.min_temperature:
                     self.print_single_chart(per_day_values.min_temperature, LOW_TEMP_COLOR,
                                             per_day_values.pkt)
-                else:
-                    self.print_single_chart(0, LOW_TEMP_COLOR, per_day_values.pkt)
 
     def display_double_line_chart(self, monthly_file_param):
         for monthly_values in monthly_file_param:
             for per_day_values in monthly_values:
-                max_temp = per_day_values.max_temperature if per_day_values.max_temperature else 0
-                low_temp = per_day_values.min_temperature if per_day_values.min_temperature else 0
+                max_temp = per_day_values.max_temperature
+                low_temp = per_day_values.min_temperature
 
                 self.print_double_chart(low_temp, max_temp, per_day_values.pkt)
 
@@ -173,28 +149,33 @@ class ResultViewer:
 class FileReader:
     def read_file(self, file_path):
         with open(file_path, "r") as file_content:
-            csv_reader = csv.DictReader(file_content)
+            csv.register_dialect('MyDialect', skipinitialspace=True)
+            csv_reader = csv.DictReader(file_content, dialect='MyDialect')
             requested_file = []
 
             for row in csv_reader:
-                weather_reading = Weather()
-                weather_reading.pkt = datetime.strptime(row["PKT"], '%Y-%m-%d')
-                weather_reading.max_temperature = int(row["Max TemperatureC"]) if row["Max TemperatureC"] else 0
-                weather_reading.min_temperature = int(row["Min TemperatureC"]) if row["Min TemperatureC"] else 0
-                weather_reading.max_humidity = int(row["Max Humidity"]) if row["Max Humidity"] else 0
-                weather_reading.mean_humidity = int(row[" Mean Humidity"]) if row[" Mean Humidity"] else 0
+                pkt = row["PKT"] if 'PKT' in row.keys() else row["PKST"]
+                max_temperature = row["Max TemperatureC"]
+                min_temperature = row["Min TemperatureC"]
+                max_humidity = row["Max Humidity"]
+                mean_humidity = row["Mean Humidity"]
 
-                requested_file.append(weather_reading)
+                if pkt and max_temperature and min_temperature and max_humidity and mean_humidity:
+                    weather_reading = Weather(datetime.strptime(pkt, '%Y-%m-%d'), int(max_temperature),
+                                              int(min_temperature), int(max_humidity), int(mean_humidity))
+                    requested_file.append(weather_reading)
 
             return requested_file
 
     def read_files(self, year, month, file_path):
         requested_files = glob.glob('{}/*{}*{}**.txt'.format(file_path, year, month))
         file_values = []
-        for file_to_read in requested_files:
-            file_values.append(self.read_file(file_to_read))
-
-        return file_values
+        if requested_files:
+            for file_to_read in requested_files:
+                file_values.append(self.read_file(file_to_read))
+            return file_values
+        else:
+            raise Exception("No files exist on mentioned path!")
 
 
 class Reports:
