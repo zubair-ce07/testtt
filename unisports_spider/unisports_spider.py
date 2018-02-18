@@ -3,7 +3,7 @@ import re
 
 from scrapy import Request
 from urllib.parse import urljoin
-from w3lib.url import add_or_replace_parameter, urlencode
+from w3lib.url import add_or_replace_parameter, url_query_parameter
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
@@ -122,8 +122,7 @@ class MixinNO(Mixin):
 
 class MixinDK(Mixin):
     retailer = Mixin.retailer + '-dk'
-    lang = "dk"
-    market = "DA"
+    market = "DK"
 
     allowed_domains = ["www.unisportstore.dk"]
     start_urls = ["https://www.unisport.dk/"]
@@ -137,12 +136,12 @@ class MixinDK(Mixin):
 
 
 class UniSportParsSpider(BaseParseSpider):
-    price_x = '//div/@data-product-currency |' \
-              ' //div[@class="price-container l-box"]/div[@class="price price_now"]/div/text()' \
-              ' | //div[@class="price-container l-box"]/div[@class="price-guide"]/s/text()'
+    price_x = '//div/@data-product-currency | //div[@class="price price_now"]/div/text()' \
+              ' | //div[@class="price-guide"]/s/text()'
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
+
         if not garment:
             return
 
@@ -156,23 +155,21 @@ class UniSportParsSpider(BaseParseSpider):
 
     def merch_info(self, response):
         name = self.product_name(response).lower()
-
         return [m for m in self.MERCH_INFO if m in name]
 
-    def product_colour(self, response):
-        if '-' in self.product_name(response):
-            raw_color = self.product_name(response).split('-')[-1]
-
-            return clean(raw_color.split(' ')[1])
+    def colour(self, response):
+        name = self.product_name(response)
+        if '-' in name:
+            raw_color = name.split(' - ')[-1]
+            return clean(raw_color.split(' ')[0])
 
         return None
 
     def product_id(self, response):
-        return clean(response.css('#prod-promotions ::attr(data-product-id)')[0])
+        return clean(response.xpath('//div[@id="prod-promotions"]/@data-product-id')[0])
 
     def product_name(self, response):
         product_name = clean(response.xpath('//div[@class="product-header"]//h1/text()')[0])
-
         return product_name.replace(self.product_brand(response), '')
 
     def product_gender(self, response):
@@ -183,7 +180,6 @@ class UniSportParsSpider(BaseParseSpider):
 
     def product_brand(self, response):
         xpath = '//script[contains(text(),"dataLayer")]/text()'
-
         return response.xpath(xpath).re_first(r'brand": \"([A-Za-z]+)')
 
     def raw_description(self, response):
@@ -207,7 +203,6 @@ class UniSportParsSpider(BaseParseSpider):
 
     def product_category(self, response):
         category = response.xpath('//a[@class="crumbItems"]//span/text()')
-
         return clean(category) or self.raw_category(response)
 
     def image_urls(self, response):
@@ -215,22 +210,22 @@ class UniSportParsSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-        product_colour = self.product_colour(response)
-        size_hxs = response.xpath('//select[@id="id_size"]/option')
-        common = self.product_pricing_common_new(response)
+        colour = self.colour(response)
+        size_sel = response.xpath('//select[@id="id_size"]/option')
+        common_sku = self.product_pricing_common_new(response)
 
-        if product_colour:
-            common["colour"] = product_colour
+        if colour:
+            common_sku["colour"] = colour
 
-        for size in size_hxs:
+        for size in size_sel:
             sku_id = clean(size.xpath('./@value')[0])
             if sku_id:
-                sku = common.copy()
-                sku["size"] = clean(size.xpath('./text()')[0]).split('-')[0]
+                sku = common_sku.copy()
+                sku["size"] = clean(size.xpath('./text()')[0]).split(' -')[0]
                 skus[sku_id] = sku
 
         if not skus:
-            sku = common.copy()
+            sku = common_sku.copy()
             sku["size"] = self.one_size
             skus = sku
 
@@ -270,31 +265,23 @@ class UniSportCrawlSpider(BaseCrawlSpider):
                           callback=self.parse_subcategory)
 
     def parse_subcategory(self, response):
-        params = {
-            "from": "0",
-            "to": "120",
-            "sort": "default",
-            "content_type": "json"
-        }
-        url = response.url+"?"+urlencode(params)
+        products_url = add_or_replace_parameter(response.url, "content_type", "json")
+        products_url = add_or_replace_parameter(products_url, 'page', 1)
 
-        yield Request(url=url, meta={'trail': self.add_trail(response)}, callback=self.parse_pagination)
+        yield Request(url=products_url, meta={'trail': self.add_trail(response)}, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
+        url = response.url
         max_page_num = json.loads(response.text)["max_page_number"]
         raw_urls = re.findall(self.url_regex, response.text)
 
-        if not raw_urls:
-            return
-
-        for url in raw_urls:
-            yield Request(url=response.urljoin(url), meta={'trail': self.add_trail(response)},
+        for product_url in raw_urls:
+            yield Request(url=response.urljoin(product_url), meta={'trail': self.add_trail(response)},
                           callback=self.parse_item)
-        if response.url.find('page') != -1:
-            return
 
-        for page in range(2, int(max_page_num) + 1):
-            next_page_url = add_or_replace_parameter(response.url, "page", page)
+        current_page = url_query_parameter(url, "page")
+        if int(current_page) <= max_page_num:
+            next_page_url = add_or_replace_parameter(url, "page", int(current_page)+1)
 
             yield Request(url=next_page_url, callback=self.parse_pagination)
 
