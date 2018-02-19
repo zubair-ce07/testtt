@@ -9,7 +9,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
-    retailer = "unisportstore"
+    retailer = "unisports"
     MERCH_INFO = [
         'limited edition'
     ]
@@ -146,11 +146,13 @@ class UniSportParsSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-
         garment["merch_info"] = self.merch_info(response)
         garment["image_urls"] = self.image_urls(response)
-        garment["skus"] = self.skus(response)
         garment["gender"] = self.product_gender(response)
+
+        if not self.skus(response):
+            garment["out_of_stock"] = True
+        garment["skus"] = self.skus(response)
 
         return garment
 
@@ -167,7 +169,8 @@ class UniSportParsSpider(BaseParseSpider):
         return None
 
     def product_id(self, response):
-        return clean(response.xpath('//div[@id="prod-promotions"]/@data-product-id')[0])
+        product_id_xpath = '//script[contains(text(),"uni_product_id")]/text()'
+        return response.xpath(product_id_xpath).re_first('product_id": (.+),')
 
     def product_name(self, response):
         product_name = clean(response.xpath('//div[@class="product-header"]//h1/text()')[0])
@@ -213,8 +216,10 @@ class UniSportParsSpider(BaseParseSpider):
         skus = {}
         colour = self.colour(response)
         size_sel = response.xpath('//select[@class="form-control"]/option')
-        common_sku = self.product_pricing_common_new(response)
 
+        if not size_sel:
+            return skus
+        common_sku = self.product_pricing_common_new(response)
         if colour:
             common_sku["colour"] = colour
 
