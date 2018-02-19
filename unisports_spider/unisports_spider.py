@@ -32,7 +32,7 @@ class MixinDE(Mixin):
 
 class MixinAT(Mixin):
     retailer = Mixin.retailer + '-at'
-    market = "DE"
+    market = "AT"
 
     allowed_domains = ["www.unisportstore.at"]
     start_urls = ["https://www.unisportstore.at"]
@@ -62,7 +62,7 @@ class MixinFR(Mixin):
 
 class MixinSE(Mixin):
     retailer = Mixin.retailer + '-sv'
-    market = "SV"
+    market = "SE"
 
     allowed_domains = ["www.unisportstore.se"]
     start_urls = ["https://www.unisportstore.se/"]
@@ -279,9 +279,9 @@ class UniSportCrawlSpider(BaseCrawlSpider):
             yield Request(url=response.urljoin(product_url), meta={'trail': self.add_trail(response)},
                           callback=self.parse_item)
 
-        current_page = url_query_parameter(url, "page")
-        if int(current_page) <= max_page_num:
-            next_page_url = add_or_replace_parameter(url, "page", int(current_page)+1)
+        current_page = int(url_query_parameter(url, "page"))
+        if current_page <= max_page_num:
+            next_page_url = add_or_replace_parameter(url, "page", current_page+1)
 
             yield Request(url=next_page_url, callback=self.parse_pagination)
 
