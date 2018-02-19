@@ -186,10 +186,10 @@ class UniSportParsSpider(BaseParseSpider):
         return clean(response.xpath('//div[@class="full-description"]//p/text()'))
 
     def product_description(self, response):
-        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response) if not self.care_criteria(rd)]
 
     def product_care(self, response):
-        return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response) if self.care_criteria(rd)]
 
     def raw_category(self, response):
         category_path = []
@@ -211,9 +211,8 @@ class UniSportParsSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         colour = self.colour(response)
-        size_sel = response.xpath('//select[@id="id_size"]/option')
+        size_sel = response.xpath('//select[@class="form-control"]/option')
         common_sku = self.product_pricing_common_new(response)
-
         if colour:
             common_sku["colour"] = colour
 
@@ -227,7 +226,7 @@ class UniSportParsSpider(BaseParseSpider):
         if not skus:
             sku = common_sku.copy()
             sku["size"] = self.one_size
-            skus = sku
+            skus["one_size"] = sku
 
         return skus
 
