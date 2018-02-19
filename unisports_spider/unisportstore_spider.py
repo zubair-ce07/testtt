@@ -9,7 +9,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
-    retailer = "unisports"
+    retailer = "unisportstore"
     MERCH_INFO = [
         'limited edition'
     ]
@@ -146,6 +146,7 @@ class UniSportParsSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
+
         garment["merch_info"] = self.merch_info(response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
@@ -213,6 +214,7 @@ class UniSportParsSpider(BaseParseSpider):
         colour = self.colour(response)
         size_sel = response.xpath('//select[@class="form-control"]/option')
         common_sku = self.product_pricing_common_new(response)
+
         if colour:
             common_sku["colour"] = colour
 
