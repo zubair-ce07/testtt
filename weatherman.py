@@ -59,25 +59,25 @@ class ResultViewer:
         self.result_value = ResultHolder()
 
     def display_relative_temp_and_humidity(self, files_yearly_param):
-        pkt_date = {}
+        pkt_max_temp_date, pkt_min_temp_date, pkt_max_humid_date = {}, {}, {}
         for monthly_values in files_yearly_param:
             for per_day_values in monthly_values:
                     self.max_temp.append(per_day_values.max_temperature)
-                    pkt_date[per_day_values.max_temperature] = per_day_values.pkt
+                    pkt_max_temp_date[per_day_values.max_temperature] = per_day_values.pkt
 
                     self.low_temp.append(per_day_values.min_temperature)
-                    pkt_date[per_day_values.min_temperature] = per_day_values.pkt
+                    pkt_min_temp_date[per_day_values.min_temperature] = per_day_values.pkt
 
                     self.max_humid.append(per_day_values.max_humidity)
-                    pkt_date[per_day_values.max_humidity] = per_day_values.pkt
+                    pkt_max_humid_date[per_day_values.max_humidity] = per_day_values.pkt
 
         self.result_value.max_temperature = max(self.max_temp)
         self.result_value.min_temperature = min(self.low_temp)
         self.result_value.max_humidity = max(self.max_humid)
 
-        self.result_value.max_temperature_date = pkt_date.get(self.result_value.max_temperature)
-        self.result_value.min_temperature_date = pkt_date.get(self.result_value.min_temperature)
-        self.result_value.max_humidity_date = pkt_date.get(self.result_value.max_humidity)
+        self.result_value.max_temperature_date = pkt_max_temp_date.get(self.result_value.max_temperature)
+        self.result_value.min_temperature_date = pkt_min_temp_date.get(self.result_value.min_temperature)
+        self.result_value.max_humidity_date = pkt_max_humid_date.get(self.result_value.max_humidity)
         self.print_temp_and_humid(self.result_value)
         self.max_temp, self.low_temp, self.max_humid = [], [], []
 
