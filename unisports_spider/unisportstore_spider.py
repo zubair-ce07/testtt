@@ -9,7 +9,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
-    retailer = "unisports"
+    retailer = "unisportstore"
     MERCH_INFO = [
         'limited edition'
     ]
