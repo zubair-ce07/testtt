@@ -8,14 +8,13 @@ from .base import BaseCrawlSpider, BaseParseSpider, clean
 class Mixin:
     retailer = "pacsun"
     market = "US"
-    lang = "en"
     allowed_domains = ["pacsun.com"]
     start_urls = ["http://www.pacsun.com/"]
 
 
 class PacsunParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + "-parse"
-    price_x = '//*[contains(@class,"product-price")]/*/text()'
+    price_css = '.product-price ::text'
 
     def parse(self, response):
         sku_id = self.product_id(response)
@@ -29,9 +28,10 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
         garment['gender'] = self.product_gender(garment)
         garment['merch_info'] = self.merch_info(response)
         garment['skus'] = {}
-        garment['meta'] = {}
-        garment['meta']['requests_queue'] = self.colour_requests(response)
-        garment['meta']['requests_queue'] += self.size_requests(response)
+        garment['meta'] = {
+            'requests_queue': self.colour_requests(response) +
+                              self.size_requests(response)
+        }
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
@@ -47,17 +47,11 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
         return self.next_request_or_garment(garment)
 
     def skus(self, response):
-        previous_price, price, currency = self.product_pricing(response)
-        sku = {
-            'price': price,
-            'currency': currency,
-        }
-        if previous_price:
-            sku['previous_price'] = previous_price
-        size = clean(response.css('#va-sizeCode a.selected::text'))[0].upper()
+        sku = self.product_pricing_common_new(response)
+        size = clean(response.css('#va-sizeCode a.selected::text'))[0]
         colour = clean(response.css('.swatch-value::text') or \
-                       response.css('.colorcode a.selected::text'))[0].upper()
-        sku_id = (colour + size).replace(' ', '')
+                       response.css('.colorcode a.selected::text'))[0]
+        sku_id = f'{colour}_ {size}'.replace(' ', '')
         sku['colour'] = colour
         sku['size'] = size
         if self.is_out_of_stock(response):
@@ -65,35 +59,27 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
         return {sku_id: sku}
 
     def colour_requests(self, response):
-        requests = []
-        colours = response.css('.colorcode a:not(.selected)::attr(href)').extract()
-        for colour in colours:
-            requests.append(Request(url=colour, callback=self.parse_colour))
-        return requests
+        colour_urls = response.css('.colorcode a:not(.selected)::attr(href)').extract()
+        return [Request(url=url, callback=self.parse_colour) for url in colour_urls]
 
     def size_requests(self, response):
-        requests = []
-        sizes = response.css('#va-sizeCode a:not(.selected)::attr(href)').extract()
-        for size in sizes:
-            requests.append(Request(url=size, callback=self.parse_size))
-        return requests
+        size_urls = response.css('#va-sizeCode a:not(.selected)::attr(href)').extract()
+        return [Request(url=url, callback=self.parse_size) for url in size_urls]
 
     def product_id(self, response):
         return response.css('#masterid ::attr(data-id)').extract_first()
 
     def product_name(self, response):
-        name = clean(response.css('.product-name::text'))
-        return name[-1] if name else ''
+        return clean(response.css('.product-name::text'))[0]
 
     def product_description(self, response):
         return clean(response.xpath('//*[contains(@class,"pdp-desc-container")]/p[1]/text()'))
 
     def product_brand(self, response):
-        return clean(response.css('.brand ::text')) or "Pacsun"
+        return clean(response.css('.brand ::text').extract_first(default="Pacsun"))
 
     def is_out_of_stock(self, response):
-        availability = response.css('.in-stock-msg::text').extract_first() or ''
-        return not availability is 'In Stock'
+        return bool(response.xpath('//*[contains(@class,"in-stock-msg") and contains(text(), "In Stock")]'))
 
     def product_care(self, response):
         xpath = '//*[contains(text(),"CARE")]/../following-sibling::ul[1]/li/text()'
@@ -106,12 +92,11 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.breadcrumb-element ::text'))
 
     def product_gender(self, garment):
-        soup = ' '.join([garment['name']] + garment['category']).lower()
+        soup = ' '.join([garment['name']] + garment['category'])
         return self.gender_lookup(soup)
 
     def merch_info(self, response):
-        merch_info = clean(response.css('.callout-message::text'))
-        return merch_info[1] if len(merch_info) is 2 else ''
+        return clean(response.xpath('//*[contains(@class,"callout-message")][2]/text()'))
 
 
 class PacsunCrawlSpider(BaseCrawlSpider, Mixin):
@@ -134,10 +119,7 @@ class PacsunCrawlSpider(BaseCrawlSpider, Mixin):
     products_css = ['.product-image']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css,
-                           tags=listings_tags,
-                           attrs=listings_attrs),
-             callback='parse'),
-        Rule(LinkExtractor(restrict_css=products_css),
-             callback='parse_item'),
+        Rule(LinkExtractor(restrict_css=listings_css, tags=listings_tags, attrs=listings_attrs), callback='parse'),
+        Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
+
