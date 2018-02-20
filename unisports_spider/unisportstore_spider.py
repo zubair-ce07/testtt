@@ -5,7 +5,7 @@ from scrapy import Request
 from urllib.parse import urljoin
 from w3lib.url import add_or_replace_parameter, url_query_parameter
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
+from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender, JSParser
 
 
 class Mixin:
@@ -22,11 +22,11 @@ class MixinDE(Mixin):
     allowed_domains = ["www.unisportstore.de"]
     start_urls = ["https://www.unisportstore.de/"]
     deny_urls = [
-        "fodboldudstyr/43-fodbolde/",
-        "benskinner/1804-strompetape/",
-        "fodboldudstyr/3573-traeningsudstyr/",
-        "fodboldudstyr/299-boldpumper/",
-        "fodboldudstyr/1807-sportspleje-produkter/"
+        "fussballausruestung/43-fussbaelle/",
+        "schienbeinschoner/1804-sock-tape/",
+        "fussballausruestung/3573-training-equipment/",
+        "fussballausruestung/299-ballpumpen/",
+        "fussballausruestung/1807-sportpflege-produkte/"
     ]
 
 
@@ -35,7 +35,7 @@ class MixinAT(Mixin):
     market = "AT"
 
     allowed_domains = ["www.unisportstore.at"]
-    start_urls = ["https://www.unisportstore.at"]
+    start_urls = ["https://www.unisportstore.at/"]
     deny_urls = [
         "fussballausruestung/43-fussbaelle/",
         "schienbeinschoner/1804-sock-tape/",
@@ -61,7 +61,7 @@ class MixinFR(Mixin):
 
 
 class MixinSE(Mixin):
-    retailer = Mixin.retailer + '-sv'
+    retailer = Mixin.retailer + '-se'
     market = "SE"
 
     allowed_domains = ["www.unisportstore.se"]
@@ -161,30 +161,35 @@ class UniSportParsSpider(BaseParseSpider):
         return [m for m in self.MERCH_INFO if m in name]
 
     def colour(self, response):
-        name = self.product_name(response)
-        if '-' in name:
-            raw_color = name.split(' - ')[-1]
-            return clean(raw_color.split(' ')[0])
-
-        return None
+        return self.raw_json(response)["color"]
 
     def product_id(self, response):
         product_id_xpath = '//script[contains(text(),"uni_product_id")]/text()'
-        return response.xpath(product_id_xpath).re_first('product_id": (.+),')
+        return response.xpath(product_id_xpath).re_first('product_id": (\d+),')
 
     def product_name(self, response):
         product_name = clean(response.xpath('//div[@class="product-header"]//h1/text()')[0])
         return product_name.replace(self.product_brand(response), '')
 
     def product_gender(self, response):
+        size_sel = response.xpath('//select[@class="form-control"]/option')
         product_name = self.product_name(response)
-        gender = self.gender_lookup(product_name)
+
+        if not size_sel:
+            gender = self.gender_lookup(product_name)
+            return gender if gender else Gender.MEN.value
+
+        size = size_sel.xpath('./text()').extract()[1]
+        gender = self.gender_lookup(size+product_name)
 
         return gender if gender else Gender.MEN.value
 
+    def raw_json(self, response):
+        raw_json = clean(response.xpath('//div[@class="product_description"]//script/text()'))[0]
+        return JSParser('var x = ' + raw_json)['x']
+
     def product_brand(self, response):
-        xpath = '//script[contains(text(),"dataLayer")]/text()'
-        return response.xpath(xpath).re_first(r'brand": \"([A-Za-z]+)')
+        return self.raw_json(response)["brand"]
 
     def raw_description(self, response):
         return clean(response.xpath('//div[@class="full-description"]//p/text()'))
@@ -200,14 +205,15 @@ class UniSportParsSpider(BaseParseSpider):
         xpath = '//script[contains(text(),"breadcrumbData")]/text()'
         raw_category = response.xpath(xpath).re_first(r"'breadcrumbs_data': (.+),")
 
-        for category in json.loads(raw_category):
-            category_path.append(category["title"])
+        if len(raw_category) > 2:
+            for category in json.loads(raw_category):
+                category_path.append(category["title"])
 
-        return ['/'.join(category_path)] if category_path else []
+            return ['/'.join(category_path)]
 
     def product_category(self, response):
         category = response.xpath('//a[@class="crumbItems"]//span/text()')
-        return clean(category) or self.raw_category(response)
+        return clean(category) or self.raw_category(response) or [self.raw_json(response)["category"]]
 
     def image_urls(self, response):
         return clean(response.xpath('//div[@class="product-gallery"]//a/@href'))
@@ -215,11 +221,14 @@ class UniSportParsSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         colour = self.colour(response)
-        size_sel = response.xpath('//select[@class="form-control"]/option')
+        price_sel = response.xpath('//*[@class="price price_now"]/div/text()')
 
-        if not size_sel:
+        if not price_sel:
             return skus
+
+        size_sel = response.xpath('//select[@class="form-control"]/option')
         common_sku = self.product_pricing_common_new(response)
+
         if colour:
             common_sku["colour"] = colour
 
@@ -362,4 +371,3 @@ class UniSportParsSpiderDK(MixinDK, UniSportParsSpider):
 class UniSportCrawlSpiderDK(MixinDK, UniSportCrawlSpider):
     name = MixinDK.retailer + '-crawl'
     parse_spider = UniSportParsSpiderDK()
-
