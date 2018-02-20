@@ -38,7 +38,6 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
         garment = response.meta['garment']
         garment['meta']['requests_queue'] += self.size_requests(response)
         garment['image_urls'] += self.image_urls(response)
-        garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
     def parse_size(self, response):
@@ -48,9 +47,11 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
         sku = self.product_pricing_common_new(response)
-        size = clean(response.css('#va-sizeCode a.selected::text'))[0]
-        colour = clean(response.css('.swatch-value::text') or \
-                       response.css('.colorcode a.selected::text'))[0]
+        size = response.css('#va-sizeCode a.selected::text').extract_first()
+        colour = response.css('.swatch-value::text').extract_first() or \
+                 response.css('.colorcode a.selected::text').extract_first()
+        if size and "1SZ" in size:
+            size = self.one_size
         sku_id = f'{colour}_ {size}'.replace(' ', '')
         sku['colour'] = colour
         sku['size'] = size
@@ -63,7 +64,7 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
         return [Request(url=url, callback=self.parse_colour) for url in colour_urls]
 
     def size_requests(self, response):
-        size_urls = response.css('#va-sizeCode a:not(.selected)::attr(href)').extract()
+        size_urls = response.css('#va-sizeCode ::attr(href)').extract()
         return [Request(url=url, callback=self.parse_size) for url in size_urls]
 
     def product_id(self, response):
@@ -76,10 +77,10 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
         return clean(response.xpath('//*[contains(@class,"pdp-desc-container")]/p[1]/text()'))
 
     def product_brand(self, response):
-        return clean(response.css('.brand ::text').extract_first(default="Pacsun"))
+        return response.css('.brand ::text').extract_first(default="Pacsun")
 
     def is_out_of_stock(self, response):
-        return bool(response.xpath('//*[contains(@class,"in-stock-msg") and contains(text(), "In Stock")]'))
+        return not bool(response.xpath('//*[contains(@class,"in-stock-msg") and contains(text(), "In Stock")]'))
 
     def product_care(self, response):
         xpath = '//*[contains(text(),"CARE")]/../following-sibling::ul[1]/li/text()'
