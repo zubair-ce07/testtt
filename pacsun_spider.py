@@ -1,5 +1,5 @@
 from scrapy.http import Request
-from scrapy.linkextractor import LinkExtractor
+from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
