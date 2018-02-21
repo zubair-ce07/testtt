@@ -146,14 +146,13 @@ class UniSportParsSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-
         garment["merch_info"] = self.merch_info(response)
         garment["image_urls"] = self.image_urls(response)
         garment["gender"] = self.product_gender(response)
-        garment["skus"] = self.skus(response)
 
-        if not garment["skus"]:
+        if not self.skus(response):
             garment["out_of_stock"] = True
+        garment["skus"] = self.skus(response)
 
         return garment
 
