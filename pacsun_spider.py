@@ -48,8 +48,8 @@ class PacsunParseSpider(BaseParseSpider, Mixin):
     def skus(self, response):
         sku = self.product_pricing_common_new(response)
         size = response.css('#va-sizeCode a.selected::text').extract_first()
-        colour = response.css('.swatch-value::text').extract_first() or \
-                 response.css('.colorcode a.selected::text').extract_first()
+        colour = clean(response.css('.swatch-value::text').extract_first() or \
+                 response.css('.colorcode a.selected::text').extract_first())
         if size and "1SZ" in size:
             size = self.one_size
         sku_id = f'{colour}_ {size}'.replace(' ', '')
