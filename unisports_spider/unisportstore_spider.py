@@ -22,11 +22,14 @@ class MixinDE(Mixin):
     allowed_domains = ["www.unisportstore.de"]
     start_urls = ["https://www.unisportstore.de/"]
     deny_urls = [
+        "fussballausruestung/299-ball-pumps/",
         "fussballausruestung/43-fussbaelle/",
         "schienbeinschoner/1804-sock-tape/",
+        'fussballausruestung/3575-trinkflaschen/',
         "fussballausruestung/3573-training-equipment/",
-        "fussballausruestung/299-ballpumpen/",
-        "fussballausruestung/1807-sportpflege-produkte/"
+        "fussballausruestung/1807-sportpflege-produkte/",
+        "trainer-ausruestung/",
+        "fanartikel/",
     ]
 
 
@@ -37,11 +40,14 @@ class MixinAT(Mixin):
     allowed_domains = ["www.unisportstore.at"]
     start_urls = ["https://www.unisportstore.at/"]
     deny_urls = [
+        "trainer-ausruestung/",
+        "fanartikel/",
         "fussballausruestung/43-fussbaelle/",
         "schienbeinschoner/1804-sock-tape/",
+        "fussballausruestung/1807-sportpflege-produkte/",
         "fussballausruestung/3573-training-equipment/",
         "fussballausruestung/299-ballpumpen/",
-        "fussballausruestung/1807-sportpflege-produkte/"
+        "fussballausruestung/3575-trinkflaschen/",
     ]
 
 
@@ -56,7 +62,10 @@ class MixinFR(Mixin):
         "equipements-de-football/3573-equipement-dentrainement/",
         "equipements-de-football/299-pompes-a-ballons/",
         "protege-tibias/1804-bandes-de-maintien/",
-        "equipements-de-football/1807-produits-de-soin/"
+        "equipements-de-football/1807-produits-de-soin/",
+        "equipements-de-football/3575-bouteilles-deau/",
+        "materiel-pour-coach/",
+        "accessoires-des-clubs/",
     ]
 
 
@@ -71,7 +80,10 @@ class MixinSE(Mixin):
         "fotbollsutrustning/3573-traningsutrustning/",
         "fotbollsutrustning/299-bollpumpar/",
         "fotbollsutrustning/1807-sportskydd-rehab/",
-        "benskydd/1804-benskyddstejp/"
+        "benskydd/1804-benskyddstejp/",
+        "merchandise/",
+        "traenarutrustning/",
+        "fotbollsutrustning/3575-vattenflaskor/",
     ]
 
 
@@ -86,7 +98,10 @@ class MixinFI(Mixin):
         "sekalaiset-tarvikkeet/1804-sukkateippi/",
         "sekalaiset-tarvikkeet/3573-harjoitusvalineet/",
         "sekalaiset-tarvikkeet/299-pallopumput/",
-        "sekalaiset-tarvikkeet/1807-huoltotarvikkeet/"
+        "sekalaiset-tarvikkeet/1807-huoltotarvikkeet/",
+        "/sekalaiset-tarvikkeet/3575-juomapullot/",
+        "valmentajan-varusteet/",
+        "tavarat/",
     ]
 
 
@@ -101,22 +116,28 @@ class MixinNL(Mixin):
         "voetbalaccessoires/1804-sokkentape/",
         "voetbalaccessoires/1807-verzorgingsproducten/",
         "voetbalaccessoires/299-balpompen/",
-        "voetbalaccessoires/3573-trainingsmateriaal/"
+        "voetbalaccessoires/3573-trainingsmateriaal/",
+        "trainingsuitrusting/",
+        "voetbalaccessoires/3575-bidons/",
+        "merchandise/",
     ]
 
 
 class MixinNO(Mixin):
-    retailer = Mixin.retailer + 'no'
+    retailer = Mixin.retailer + '-no'
     market = "NO"
 
-    allowed_domains = ["www.unisportstore.no"]
+    allowed_domains = ["unisportstore.no"]
     start_urls = ["https://www.unisportstore.no/"]
     deny_urls = [
         "fotballutstyr/1804-strompetape/",
         "fotballutstyr/43-fotballer/",
         "fotballutstyr/1807-sportspleieprodukter-medisinsk/",
         "fotballutstyr/299-ballpumper/",
-        "fotballutstyr/3573-treningsutstyr/"
+        "fotballutstyr/3573-treningsutstyr/",
+        "trenerutstyr/",
+        "fotballutstyr/3575-drikkeflasker/",
+        "supporterutstyr/",
     ]
 
 
@@ -131,7 +152,10 @@ class MixinDK(Mixin):
         "benskinner/1804-strompetape/",
         "fodboldudstyr/3573-traeningsudstyr/",
         "fodboldudstyr/299-boldpumper/",
-        "fodboldudstyr/1807-sportspleje-produkter/"
+        "fodboldudstyr/1807-sportspleje-produkter/",
+        "fodboldudstyr/3575-drikkedunke/",
+        "merchandise/",
+        "coachudstyr/",
     ]
 
 
@@ -144,8 +168,8 @@ class UniSportParsSpider(BaseParseSpider):
 
         if not garment:
             return
-
         self.boilerplate_normal(garment, response)
+        garment['url'] = response.url
         garment["merch_info"] = self.merch_info(response)
         garment["image_urls"] = self.image_urls(response)
         garment["gender"] = self.product_gender(response)
@@ -291,6 +315,8 @@ class UniSportCrawlSpider(BaseCrawlSpider):
         raw_urls = re.findall(self.url_regex, response.text)
 
         for product_url in raw_urls:
+            if product_url in self.deny_urls:
+                continue
             yield Request(url=response.urljoin(product_url), meta={'trail': self.add_trail(response)},
                           callback=self.parse_item)
 
