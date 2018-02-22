@@ -15,14 +15,14 @@ Including another URLconf
 """
 from django.conf.urls import url
 from rest_framework.authtoken import views as drf_views
-from api.views.user_create_view import UserCreate
-from api.views.current_user_info_view import CurrentUserInfoView
-from api.views.freelancer_list_view import ListFreelancerView
+
+from api.viewset_config import freelancer
+from api.viewset_config import user
+
 
 app_name = 'api'
 urlpatterns = [
     url(r'^auth$', drf_views.obtain_auth_token, name='auth'),
-    url(r'^register_user$', UserCreate.as_view(), name='register_user'),
-    url(r'^current_user$', CurrentUserInfoView.as_view(), name='current_user'),
-    url(r'^freelancers$', ListFreelancerView.as_view(), name='list_freelancers')
+    url(r'^users$', user, name='user_detail'),
+    url(r'^freelancers$', freelancer, name='freelancer_details')
 ]

@@ -1,10 +1,9 @@
 import React from 'react';
 import SearchBox from './search-box'
 
-export default class Banner extends React.Component {
-    render() {
+ const  Banner =  () => {
         return (
-            <div className="banner">s
+            <div className="banner">
                 <div className="container">
                     <div id="search_wrapper">
                      <SearchBox />
@@ -118,5 +117,5 @@ export default class Banner extends React.Component {
                </div> 
             </div>
         );
-    }
-}
+ }
+export default Banner;
