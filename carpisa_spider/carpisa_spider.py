@@ -59,6 +59,7 @@ class MixinBE:
 
 class MixinRO:
     retailer = "carpisa" + '-ro'
+    retailer_currency = "EUR"
     start_urls = ["https://www.carpisa.it/ro_es/"]
     allowed_domain = ["www.carpisa.it/ro_es"]
     market = "RO"
@@ -66,6 +67,7 @@ class MixinRO:
 
 class MixinHU:
     retailer = "carpisa" + '-hu'
+    retailer_currency = "EUR"
     start_urls = ["https://www.carpisa.it/hu_es/"]
     allowed_domain = ["www.carpisa.it/hu_es"]
     market = "HU"
@@ -80,6 +82,7 @@ class MixinGR:
 
 class MixinHR:
     retailer = "carpisa" + '-hr'
+    retailer_currency = "EUR"
     start_urls = ["https://www.carpisa.it/hr_es/"]
     allowed_domain = ["www.carpisa.it/hr_es"]
     market = "HR"
@@ -99,10 +102,17 @@ class CarpisaParseSpider(BaseParseSpider):
         garment["skus"] = self.skus(response)
 
         if not garment["skus"]:
-            garment.update(self.product_pricing_common_new(response))
+            garment.update(self.product_pricing(response))
             garment["out_of_stock"] = True
 
         return garment
+
+    def product_pricing(self, response):
+        price_css = '.show-for-medium p.special-price span.price ::text, .show-for-medium span.regular-price ::text'
+        currency = clean(response.css('[property="product:price:currency"] ::attr(content)'))[0]
+        pprice = clean(response.css('.show-for-medium p.old-price span.price ::text'))
+        price = clean(response.css(price_css))[0]
+        return self.product_pricing_common_new(None, money_strs=[price, pprice, currency])
 
     def product_id(self, response):
         return clean(response.css('.product-sku ::text'))[0]
@@ -128,6 +138,7 @@ class CarpisaParseSpider(BaseParseSpider):
 
         for desc in desc2_sel:
             desc2 += [' '.join(clean(desc.css('.label ::text, .data ::text')))]
+
         return sum((rd.split('. ') for rd in desc1), desc2)
 
     def product_description(self, response):
@@ -136,24 +147,29 @@ class CarpisaParseSpider(BaseParseSpider):
     def product_care(self, response):
         return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
+    def check_availabity(self, response):
+        not_available = response.css('div.product-notavaillable')
+        if not_available:
+            return True
+
     def image_urls(self, response):
         image_urls = []
-        not_available = response.css('div.product-notavaillable')
 
-        if not not_available:
-            color_ids = clean(response.css('.swatches_holder')[0].css('::attr(data-swatch)'))
-
-            if "noimage" in color_ids:
-                color_ids.remove("noimage")
-
-            for color_id in color_ids:
-                image_urls += clean(response.css('figure[data-filter=\"%s\"] a ::attr(href)' % color_id))
-
+        if self.check_availabity(response):
             return image_urls
+        color_ids = clean(response.css('.swatches_holder')[0].css('::attr(data-swatch)'))
+
+        if "noimage" in color_ids:
+            color_ids.remove("noimage")
+
+        for color_id in color_ids:
+            image_urls += clean(response.css('figure[data-filter=\"%s\"] a ::attr(href)' % color_id))
+
+        return image_urls
 
     def product_gender(self, response):
-        category = self.product_category(response)
-        gender = self.gender_lookup(category[0])
+        category = '/'.join(self.product_category(response))
+        gender = self.gender_lookup(category)
 
         return gender
 
@@ -175,27 +191,37 @@ class CarpisaParseSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-        not_available = response.css('div.product-notavaillable')
 
-        if not_available:
+        if self.check_availabity(response):
             return skus
 
         color_ids = self.colour_ids(response)
         variant_id = clean(response.css('div::attr(data-super-attr)'))[0]
         raw_product = self.raw_product(response)
+        available_colors = raw_product["raw_colors"][variant_id]
+        common_sku = {"size": self.one_size}
 
-        for color_id in color_ids:
-            sku_id = raw_product["raw_colors"][variant_id][color_id]["productId"]
-            color = raw_product["raw_colors"][variant_id][color_id]["label"]
-            price_html = raw_product["raw_prices"][sku_id]["price"]
-            price_sel = Selector(text=price_html)
-            sku = self.product_pricing_common_new(price_sel)
-            sku["colour"] = color
-            sku["size"] = self.one_size
+        if len(available_colors) == len(color_ids):
+            for color_id in color_ids:
+                sku_id = raw_product["raw_colors"][variant_id][color_id]["productId"]
+                color = raw_product["raw_colors"][variant_id][color_id]["label"]
+                price_html = raw_product["raw_prices"][sku_id]["price"]
+                price_sel = Selector(text=price_html)
+                sku = common_sku.copy()
+                sku.update(self.product_pricing_common_new(price_sel))
+                sku["colour"] = color
 
-            if raw_product["raw_colors"][variant_id][color_id]["is_in_stock"] != 1:
-                sku["out_of_stock"] = True
-            skus[sku_id] = sku
+                if raw_product["raw_colors"][variant_id][color_id]["is_in_stock"] != 1:
+                    sku["out_of_stock"] = True
+                skus[sku_id] = sku
+
+        else:
+            colors = clean(response.css('.swatches_holder')[0].css('::attr(alt)'))
+            for color in colors:
+                sku = common_sku.copy()
+                sku.update(self.product_pricing(response))
+                sku["colour"] = color
+                skus[color] = sku
 
         return skus
 
