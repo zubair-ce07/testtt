@@ -1,10 +1,8 @@
 import json
 import re
-import html
 
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
-from scrapy.http import HtmlResponse
 from scrapy.selector import Selector
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
@@ -95,65 +93,63 @@ class CarpisaParseSpider(BaseParseSpider):
 
         if not garment:
             return
-
         self.boilerplate_normal(garment, response)
         garment["image_urls"] = self.image_urls(response)
         garment["gender"] = self.product_gender(response)
-
-        if not self.skus(response):
-            garment["out_of_stock"] = True
         garment["skus"] = self.skus(response)
+
+        if not garment["skus"]:
+            garment.update(self.product_pricing_common_new(response))
+            garment["out_of_stock"] = True
 
         return garment
 
     def product_id(self, response):
-        return clean(response.css('.product-sku ::text')[0])
+        return clean(response.css('.product-sku ::text'))[0]
 
     def product_name(self, response):
-        return clean(response.css('.product-name h1 ::text')[0])
+        return clean(response.css('.product-name h1 ::text'))[0]
 
     def product_brand(self, response):
         return 'Carpisa'
 
     def raw_category(self, response):
-        raw_category = response.css('title ::text').extract_first()
+        raw_category = clean(response.css('title ::text'))[0]
         return raw_category.split('-')[-1].split('|')[0]
 
     def product_category(self, response):
-        category = clean(response.css('span[itemprop="title"] ::text')[1:])
-        return ['/'.join(category)] if category else [self.raw_category(response)]
+        category = clean(response.css('span[itemprop="title"] ::text'))[1:]
+        return category if category else [self.raw_category(response)]
 
     def raw_description(self, response):
-        description = clean(response.css('.description ::text'))
-        raw_description = []
-        description_keys = clean(response.css('span.label ::text'))
-        description_values = clean(response.css('span.data ::text'))
+        desc2 = []
+        desc1 = clean(response.css('.description ::text'))
+        desc2_sel = response.css('.product-collateral .attribute')
 
-        for key, value in zip(description_keys, description_values):
-            raw_description.append(key+value)
+        for desc in desc2_sel:
+            desc2 += [' '.join(clean(desc.css('.label ::text, .data ::text')))]
+        return sum((rd.split('. ') for rd in desc1), desc2)
 
-        return clean(sum((rd.split('.') for rd in description), raw_description))
-        
     def product_description(self, response):
         return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
-    
+
     def product_care(self, response):
         return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
     def image_urls(self, response):
         image_urls = []
-        raw_images = self.raw_product(response)["raw_images"]
-        color_ids_sel = response.css('.swatches_holder')[0]
-        color_ids = color_ids_sel.css('::attr(data-swatch)').extract()
+        not_available = response.css('div.product-notavaillable')
 
-        for color_id in color_ids:
+        if not not_available:
+            color_ids = clean(response.css('.swatches_holder')[0].css('::attr(data-swatch)'))
 
-            if color_id != "noimage":
-                image_urls.append(raw_images["main"][color_id]["real"])
-                image_urls.append(raw_images["more"][color_id]["real"])
-                image_urls.append(raw_images["flip"][color_id]["real"])
+            if "noimage" in color_ids:
+                color_ids.remove("noimage")
 
-        return image_urls if image_urls else []
+            for color_id in color_ids:
+                image_urls += clean(response.css('figure[data-filter=\"%s\"] a ::attr(href)' % color_id))
+
+            return image_urls
 
     def product_gender(self, response):
         category = self.product_category(response)
@@ -165,57 +161,41 @@ class CarpisaParseSpider(BaseParseSpider):
         raw_product = {}
         color_price_xpath = '//div[@class="product-options base"]//script[contains(text(),"simple_product")]/text()'
         raw_color_and_price = response.xpath(color_price_xpath).extract_first()
+        mappings = [("options", "colors"), ("prices", "prices"), ("images", "images")]
 
-        if raw_color_and_price:
-            raw_color = re.findall("options_mappings.'\d+'. = ({.+);", raw_color_and_price)[0]
-            raw_price = re.findall("prices_mappings.'\d+'. = ({.+);", raw_color_and_price)[0]
-            raw_image = re.findall("images_mapping.'\d+'. = ({.+);", raw_color_and_price)[0]
-            raw_product["raw_colors"] = json.loads(raw_color)
-            raw_product["raw_prices"] = json.loads(raw_price)
-            raw_product["raw_images"] = json.loads(raw_image)
+        for token, key in mappings:
+            js = re.findall(f"{token}_(mappings|mapping).'\d+'. = (.+);", raw_color_and_price)[0]
+            raw_product[f"raw_{key}"] = json.loads(js[1])
 
-            return raw_product
+        return raw_product
 
     def colour_ids(self, response):
-        color_ids = []
-        color_ids_sel = response.css('.swatches_holder')[0]
-        raw_color_ids = color_ids_sel.css('::attr(id)').extract()[1:]
-
-        for raw_color_id in raw_color_ids:
-            color_ids.append(raw_color_id.split('-')[-1])
-
-        return color_ids
-
-    def product_not_exist(self, response):
-        product_css = 'div[data-append="product-availlable"] ::text'
-        product = clean(response.css(product_css)[-1])
-
-        if product == "Product not availlable":
-            return True
+        raw_color_ids = clean(response.css('.swatches_holder')[0].css('::attr(id)'))[1:]
+        return [rcid.split('-')[-1] for rcid in raw_color_ids]
 
     def skus(self, response):
         skus = {}
+        not_available = response.css('div.product-notavaillable')
 
-        if self.product_not_exist(response):
+        if not_available:
             return skus
 
-        variant_id = clean(response.css('div::attr(data-super-attr)')[0])
-        raw_color = self.raw_product(response)["raw_colors"]
-        raw_price = self.raw_product(response)["raw_prices"]
+        color_ids = self.colour_ids(response)
+        variant_id = clean(response.css('div::attr(data-super-attr)'))[0]
+        raw_product = self.raw_product(response)
 
-        for color_id in self.colour_ids(response):
-            sku_id = raw_color[variant_id][color_id]["productId"]
-            color = raw_color[variant_id][color_id]["label"]
-            price_html = raw_price[sku_id]["price"]
-            new_response = HtmlResponse(url="", body=html.unescape(price_html), encoding='utf-8')
-            new_response_sel = Selector(text=new_response.text)
-            common_sku = self.product_pricing_common_new(new_response_sel)
-            common_sku["colour"] = color
-            common_sku["size"] = self.one_size
+        for color_id in color_ids:
+            sku_id = raw_product["raw_colors"][variant_id][color_id]["productId"]
+            color = raw_product["raw_colors"][variant_id][color_id]["label"]
+            price_html = raw_product["raw_prices"][sku_id]["price"]
+            price_sel = Selector(text=price_html)
+            sku = self.product_pricing_common_new(price_sel)
+            sku["colour"] = color
+            sku["size"] = self.one_size
 
-            if raw_color[variant_id][color_id]["is_in_stock"] != 1:
-                common_sku["out_of_stock"] = True
-            skus[sku_id] = common_sku
+            if raw_product["raw_colors"][variant_id][color_id]["is_in_stock"] != 1:
+                sku["out_of_stock"] = True
+            skus[sku_id] = sku
 
         return skus
 
@@ -224,7 +204,7 @@ class CarpisaCrawlSpider(BaseCrawlSpider):
     listings_css = [
         'ul.level1 a',
         '.pages li a',
-        ]
+    ]
     product_css = '.product-image'
 
     rules = (
