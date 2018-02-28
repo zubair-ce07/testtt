@@ -1,5 +1,6 @@
 import json
 
+import re
 from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -43,7 +44,7 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
 
     def parse_description(self, response):
         garment = response.meta['garment']
-        garment['care'] = clean(self.product_care(response))
+        garment['care'] = self.product_care(response)
         garment['description'] += self.updated_description(response)
         return self.next_request_or_garment(garment)
 
@@ -52,7 +53,7 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
         return JSParser(raw_product)["shopify_product_data"]
 
     def product_id(self, product):
-        return product.get("id")
+        return product["id"]
 
     def product_name(self, response):
         return clean(response.css('.product-hero__title ::text'))[0]
@@ -70,7 +71,7 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
     @remove_duplicates
     def product_care(self, response):
         raw_description = self.raw_description(response)
-        return [raw_care for raw_care in raw_description if self.care_criteria_simplified(raw_care)]
+        return clean([rc for rc in raw_description if self.care_criteria_simplified(rc)])
 
     def merch_info(self, response):
         name = self.product_name(response)
@@ -78,21 +79,19 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
 
     @remove_duplicates
     def image_urls(self, product):
-        return [image.get("src") for image in product.get("images") if "facebook" not in image.get("src")]
+        return [i["src"] for i in product["images"] if "facebook" not in i["src"]]
 
     def skus(self, response, product):
         sku_to_hide = product.get("metafields_admin").get("skus_to_hide", "").split()
         skus = {}
         for raw_sku in product["variants"]:
-            if raw_sku["sku"] not in sku_to_hide:
+            if raw_sku["sku"] not in sku_to_hide and raw_sku['available']:
                 sku = self.product_pricing_common_new(response,
                                                       money_strs=[raw_sku['price'],
                                                                   raw_sku['compare_at_price']],
                                                       is_cents=True)
                 sku['colour'] = raw_sku['option1']
                 sku['size'] = self.one_size if raw_sku['option2'] == 'OS' else raw_sku['option2']
-                if not raw_sku['available']:
-                    continue
                 sku_id = f'{sku["colour"]}_{sku["size"]}'
                 skus[sku_id] = sku
         return skus
@@ -104,16 +103,16 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
 
     @remove_duplicates
     def clean_description(self, raw_descriptions):
-        return sum([raw_description.split('.') for raw_description in raw_descriptions], [])
+        return sum([re.split('[\.\s]', rd) for rd in raw_descriptions], [])
 
     def updated_description(self, response):
         raw_description = self.raw_description(response)
-        return [raw_care for raw_care in raw_description if not self.care_criteria_simplified(raw_care)]
+        return clean([rc for rc in raw_description if not self.care_criteria_simplified(rc)])
 
     def raw_description(self, response):
-        raw_descriptions_html = [raw_content["body"] for raw_content in json.loads(response.text)["copy"]]
+        raw_descriptions_html = [rdh["body"] for rdh in json.loads(response.text)["copy"]]
         raw_description = sum(
-            [self.text_from_html(raw_description_html) for raw_description_html in raw_descriptions_html], [])
+            [self.text_from_html(rd) for rd in raw_descriptions_html], [])
         return self.clean_description(raw_description)
 
 
