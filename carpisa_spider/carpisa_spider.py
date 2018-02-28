@@ -8,83 +8,77 @@ from scrapy.selector import Selector
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
 
-class MixinUK:
-    retailer = "carpisa" + '-uk'
+class Mixin:
+    retailer = "carpisa"
+    allowed_domain = ["www.carpisa.it"]
+
+
+class MixinUK(Mixin):
+    retailer = Mixin.retailer + '-uk'
     start_urls = ["https://www.carpisa.it/gb_en/"]
-    allowed_domain = ["www.carpisa.it/gb_en"]
     market = "UK"
 
 
-class MixinFR:
-    retailer = "carpisa" + '-fr'
+class MixinFR(Mixin):
+    retailer = Mixin.retailer + '-fr'
     start_urls = ["https://www.carpisa.it/fr_en/"]
-    allowed_domain = ["www.carpisa.it/fr_en"]
     market = "FR"
 
 
-class MixinIT:
-    retailer = "carpisa" + '-it'
+class MixinIT(Mixin):
+    retailer = Mixin.retailer + '-it'
     start_urls = ["https://www.carpisa.it/it_it/"]
-    allowed_domain = ["www.carpisa.it/it_it"]
     market = "IT"
 
 
-class MixinDE:
-    retailer = "carpisa" + '-de'
+class MixinDE(Mixin):
+    retailer = Mixin.retailer + '-de'
     start_urls = ["https://www.carpisa.it/de_en/"]
-    allowed_domain = ["www.carpisa.it/de_en"]
     market = "DE"
 
 
-class MixinES:
-    retailer = "carpisa" + '-es'
+class MixinES(Mixin):
+    retailer = Mixin.retailer + '-es'
     start_urls = ["https://www.carpisa.it/es_es/"]
-    allowed_domain = ["www.carpisa.it/es_es"]
     market = "ES"
 
 
-class MixinAT:
-    retailer = "carpisa" + '-at'
+class MixinAT(Mixin):
+    retailer = Mixin.retailer + '-at'
     start_urls = ["https://www.carpisa.it/at_en/"]
-    allowed_domain = ["www.carpisa.it/at_en"]
     market = "AT"
 
 
-class MixinBE:
-    retailer = "carpisa" + '-be'
+class MixinBE(Mixin):
+    retailer = Mixin.retailer + '-be'
     start_urls = ["https://www.carpisa.it/be_en/"]
-    allowed_domain = ["www.carpisa.it/be_en"]
     market = "BE"
 
 
-class MixinRO:
-    retailer = "carpisa" + '-ro'
+class MixinRO(Mixin):
+    retailer = Mixin.retailer + '-ro'
     retailer_currency = "EUR"
     start_urls = ["https://www.carpisa.it/ro_es/"]
-    allowed_domain = ["www.carpisa.it/ro_es"]
     market = "RO"
 
 
-class MixinHU:
-    retailer = "carpisa" + '-hu'
+class MixinHU(Mixin):
+    retailer = Mixin.retailer + '-hu'
     retailer_currency = "EUR"
     start_urls = ["https://www.carpisa.it/hu_es/"]
-    allowed_domain = ["www.carpisa.it/hu_es"]
     market = "HU"
 
 
-class MixinGR:
-    retailer = "carpisa" + '-gr'
+class MixinGR(Mixin):
+    retailer = Mixin.retailer + '-gr'
     start_urls = ["https://www.carpisa.it/gr_es/"]
-    allowed_domain = ["www.carpisa.it/gr_es"]
     market = "GR"
 
 
-class MixinHR:
-    retailer = "carpisa" + '-hr'
+class MixinHR(Mixin):
+    retailer = Mixin.retailer + '-hr'
     retailer_currency = "EUR"
     start_urls = ["https://www.carpisa.it/hr_es/"]
-    allowed_domain = ["www.carpisa.it/hr_es"]
     market = "HR"
 
 
@@ -116,14 +110,6 @@ class CarpisaParseSpider(BaseParseSpider):
     def product_brand(self, response):
         return 'Carpisa'
 
-    def raw_category(self, response):
-        raw_category = clean(response.css('title ::text'))[0]
-        return raw_category.split('-')[-1].split('|')[0]
-
-    def product_category(self, response):
-        category = clean(response.css('span[itemprop="title"] ::text'))[1:]
-        return category if category else [self.raw_category(response)]
-
     def raw_description(self, response):
         desc2 = []
         desc1 = clean(response.css('.description ::text'))
@@ -143,11 +129,13 @@ class CarpisaParseSpider(BaseParseSpider):
     def image_urls(self, response):
         return clean(response.css('a.enlarge-img ::attr(href)'))
 
-    def product_gender(self, response):
-        category = '/'.join(self.product_category(response))
-        gender = self.gender_lookup(category)
+    def product_category(self, response):
+        category = clean(response.css('span[itemprop="title"] ::text'))[1:]
+        return category
 
-        return gender
+    def product_gender(self, response):
+        category = '/'.join(self.product_category(response) + [self.product_name(response)] + [response.url])
+        return self.gender_lookup(category)
 
     def raw_product(self, response):
         raw_product = {}
