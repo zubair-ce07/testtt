@@ -1,6 +1,6 @@
 import json
-
 import re
+
 from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -85,15 +85,16 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
         sku_to_hide = product.get("metafields_admin").get("skus_to_hide", "").split()
         skus = {}
         for raw_sku in product["variants"]:
-            if raw_sku["sku"] not in sku_to_hide and raw_sku['available']:
-                sku = self.product_pricing_common_new(response,
-                                                      money_strs=[raw_sku['price'],
-                                                                  raw_sku['compare_at_price']],
-                                                      is_cents=True)
-                sku['colour'] = raw_sku['option1']
-                sku['size'] = self.one_size if raw_sku['option2'] == 'OS' else raw_sku['option2']
-                sku_id = f'{sku["colour"]}_{sku["size"]}'
-                skus[sku_id] = sku
+            if raw_sku["sku"] in sku_to_hide or not raw_sku['available']:
+                continue
+            sku = self.product_pricing_common_new(response,
+                                                  money_strs=[raw_sku['price'],
+                                                              raw_sku['compare_at_price']],
+                                                  is_cents=True)
+            sku['colour'] = raw_sku['option1']
+            sku['size'] = self.one_size if raw_sku['option2'] == 'OS' else raw_sku['option2']
+            sku_id = f'{sku["colour"]}_{sku["size"]}'
+            skus[sku_id] = sku
         return skus
 
     def description_request(self, response):
