@@ -1,5 +1,4 @@
 import json
-import re
 
 from scrapy.http import Request
 from scrapy.linkextractors import LinkExtractor
@@ -15,28 +14,30 @@ class Mixin:
     market = "US"
     allowed_domains = ["outdoorvoices.com"]
     start_urls = ["https://www.outdoorvoices.com/"]
+    care_materials = BaseParseSpider.care_materials + [
+        'soft', 'washed', 'preshrunk', 'stretch', 'smooth', 'slick','water resistant'
+    ]
 
-
-class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
+class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + "-parse"
     price_css = 'meta[property="og:price:currency"]::attr(content)'
 
     def parse(self, response):
-        product = self.raw_product(response)
-        sku_id = self.product_id(product)
+        raw_product = self.raw_product(response)
+        sku_id = raw_product["id"]
         garment = self.new_unique_garment(sku_id)
 
         if not garment:
             return
 
         self.boilerplate(garment, response)
-        garment['name'] = self.product_name(response)
-        garment['description'] = self.product_description(response)
+        garment['name'] = self.product_name(raw_product)
+        garment['description'] = self.product_description(raw_product)
         garment['brand'] = self.product_brand(response)
         garment['category'] = self.product_category(response)
-        garment['image_urls'] = self.image_urls(product)
-        garment['skus'] = self.skus(response, product)
-        garment['merch_info'] = self.merch_info(response)
+        garment['image_urls'] = self.image_urls(raw_product)
+        garment['skus'] = self.skus(response, raw_product)
+        garment['merch_info'] = self.merch_info(raw_product)
         garment['meta'] = {
             'requests_queue': self.description_request(response)
         }
@@ -52,11 +53,8 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
         raw_product = response.xpath('//script[contains(text(),"shopify_product_data")]/text()').extract_first()
         return JSParser(raw_product)["shopify_product_data"]
 
-    def product_id(self, product):
-        return product["id"]
-
-    def product_name(self, response):
-        return clean(response.css('.product-hero__title ::text'))[0]
+    def product_name(self, raw_product):
+        return raw_product["title"]
 
     def product_category(self, response):
         return response.css('script.analytics::text').re('category":"([\w+\s?]+)')
@@ -64,18 +62,8 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
     def product_brand(self, response):
         return "Outdoor Voices"
 
-    def product_description(self, response):
-        raw_descriptions = clean(response.css('meta[property="og:description"]::attr(content)'))
-        return self.clean_description(raw_descriptions)
-
-    @remove_duplicates
-    def product_care(self, response):
-        raw_description = self.raw_description(response)
-        return clean([rc for rc in raw_description if self.care_criteria_simplified(rc)])
-
-    def merch_info(self, response):
-        name = self.product_name(response)
-        return ["Limited Edition"] if "limited edition" in name.lower() else []
+    def merch_info(self, raw_product):
+        return ["Limited Edition"] if "limited edition" in raw_product["description"].lower() else []
 
     @remove_duplicates
     def image_urls(self, product):
@@ -97,24 +85,24 @@ class OutdoorVoicesParseSpider(BaseParseSpider, Mixin):
             skus[sku_id] = sku
         return skus
 
+    def product_care(self, response):
+        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
+
+    def product_description(self, raw_product):
+        return raw_product["description"].split('. ')
+
     def description_request(self, response):
         resource_id = response.css('script#__st::text').re('rid\":(\d+)')[0]
         url = f'https://mainframe.outdoorvoices.com/api/v2/product/{resource_id}/'
         return [Request(url=url, callback=self.parse_description)]
 
-    @remove_duplicates
-    def clean_description(self, raw_descriptions):
-        return sum([re.split('[\.\s]', rd) for rd in raw_descriptions], [])
-
     def updated_description(self, response):
-        raw_description = self.raw_description(response)
-        return clean([rc for rc in raw_description if not self.care_criteria_simplified(rc)])
+        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
+    @remove_duplicates
     def raw_description(self, response):
-        raw_descriptions_html = [rdh["body"] for rdh in json.loads(response.text)["copy"]]
-        raw_description = sum(
-            [self.text_from_html(rd) for rd in raw_descriptions_html], [])
-        return self.clean_description(raw_description)
+        raw_desc = [rd["body"] for rd in json.loads(response.text)["copy"]]
+        return clean(sum([desc.split('. ') for rd in raw_desc for desc in self.text_from_html(rd)], []))
 
 
 class OutdoorVoicesCrawlSpider(BaseCrawlSpider, Mixin):
