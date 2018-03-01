@@ -3,58 +3,61 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
+from ..parsers.jsparser import JSParser
 
+class Mixin:
+    retailer = "bettybarclay"
+    allowed_domains = ["bettybarclay.com"]
+    start_url = "https://www.bettybarclay.com/"
 
-class MixinUK:
-    retailer = "bettybarclay-uk"
+class MixinUK(Mixin):
+    retailer = Mixin.retailer + "-uk"
     market = "UK"
-    allowed_domains = ["bettybarclay.com"]
-    start_urls = ["https://www.bettybarclay.com/uk/"]
+    start_urls = [f"{Mixin.start_url}uk/"]
 
 
-class MixinFR:
-    retailer = "bettybarclay-fr"
+class MixinFR(Mixin):
+    retailer = Mixin.retailer + "-fr"
     market = "FR"
-    lang = "fr"
-    allowed_domains = ["bettybarclay.com"]
-    start_urls = ["https://www.bettybarclay.com/fr/"]
+    start_urls = [f"{Mixin.start_url}fr/"]
 
 
-class MixinDE:
-    retailer = "bettybarclay-de"
+class MixinDE(Mixin):
+    retailer = Mixin.retailer + "-de"
     market = "DE"
-    lang = "de"
-    allowed_domains = ["bettybarclay.com"]
-    start_urls = ["https://www.bettybarclay.com/de/"]
+    start_urls = [f"{Mixin.start_url}de/"]
 
 
-class MixinAT:
-    retailer = "bettybarclay-at"
+class MixinAT(Mixin):
+    retailer = Mixin.retailer + "-at"
     market = "AT"
     lang = "de"
-    allowed_domains = ["bettybarclay.com"]
-    start_urls = ["https://www.bettybarclay.com/at/"]
+    start_urls = [f"{Mixin.start_url}at/"]
 
 
-class MixinNL:
-    retailer = "bettybarclay-nl"
+class MixinNL(Mixin):
+    retailer = Mixin.retailer + "-nl"
     market = "NL"
-    lang = "nl"
-    allowed_domains = ["bettybarclay.com"]
-    start_urls = ["https://www.bettybarclay.com/nl/"]
+    start_urls = [f"{Mixin.start_url}nl/"]
 
 
 class BettyBarclayParseSpider(BaseParseSpider):
     price_css = '.articlePrice ::text'
 
     def parse(self, response):
-        sku_id = self.product_id(response)
+        raw_product = self.raw_product(response)
+        sku_id = raw_product["id"]
         garment = self.new_unique_garment(sku_id)
 
         if not garment:
             return
 
-        self.boilerplate_normal(garment, response)
+        self.boilerplate(garment, response)
+        garment["name"] = raw_product["name"]
+        garment["brand"] = raw_product["brand"]
+        garment["category"] = [raw_product["category"]]
+        garment["description"] = self.product_description(response)
+        garment["care"] = self.product_care(response)
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = {}
         garment['meta'] = {
@@ -74,17 +77,9 @@ class BettyBarclayParseSpider(BaseParseSpider):
         garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
-    def product_id(self, response):
-        return response.css('.articleNumber ::text').re('(\d+)')[0]
-
-    def product_name(self, response):
-        return clean(response.css('.articleTitle h1::text'))[0]
-
-    def product_brand(self, response):
-        return response.xpath('//script[contains(text(),"brand")]').re('brand":"(.*?)"')[0]
-
-    def product_category(self, response):
-        return clean(response.xpath('//script[contains(text(),"brand")]').re('category":"(.*?)"'))
+    def raw_product(self, response):
+        raw_product = response.xpath('//script[contains(text(),"productDetail")]/text()').extract_first()
+        return JSParser(raw_product)["d"]["ecommerce"]["detail"]["products"][0]
 
     def product_description(self, response):
         return clean(response.css('.longDesc ::text'))
@@ -93,7 +88,7 @@ class BettyBarclayParseSpider(BaseParseSpider):
         return clean(response.css('.careinstr ::text,.material ::text'))
 
     def image_urls(self, response):
-        return response.css('#detailsImageList li::attr(data-zoom-image)').extract()
+        return clean(response.css('#detailsImageList li::attr(data-zoom-image)'))
 
     def colour_requests(self, response):
         colour_urls = response.css('.articleVariantBasket .color ::attr(href)').extract()
@@ -115,7 +110,7 @@ class BettyBarclayParseSpider(BaseParseSpider):
 class BettyBarclayCrawlSpider(BaseCrawlSpider):
     listings_css = [
         ".categoryMenu",
-	".manu-navileiste",
+        ".manu-navileiste",
         ".pager",
     ]
 
