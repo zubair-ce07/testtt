@@ -24,7 +24,7 @@ class ConverseParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
-        garment["gender"] = self.product_gender(response)
+        garment["gender"] = self.product_gender(garment["name"])
 
         if not garment["skus"]:
             garment.update(self.product_pricing_common_new(response))
@@ -50,8 +50,8 @@ class ConverseParseSpider(BaseParseSpider):
         raw_description = clean(response.css('.product-description li ::text'))
         return [rd for rd in raw_description if self.care_criteria_simplified(rd)]
 
-    def product_gender(self, response):
-        return self.gender_lookup(self.product_name(response), greedy=True)
+    def product_gender(self, name):
+        return self.gender_lookup(name, greedy=True)
 
     def product_brand(self, response):
         return "Converse"
@@ -68,7 +68,7 @@ class ConverseParseSpider(BaseParseSpider):
             size = clean(size.css('[inventory!="0"] ::text'))
 
             if size:
-                sku["size"] = size[0]
+                sku["size"] = self.one_size if size[0] == "OS" else size[0]
                 skus[colour + "/" + sku["size"]] = sku
             else:
                 sku["out_of_stock"] = True
@@ -79,10 +79,10 @@ class ConverseParseSpider(BaseParseSpider):
 class ConverseCrawlSpider(BaseCrawlSpider):
 
     listing_css = [
-        '.navigation-expanded a',
+        '.navigation-expanded',
         '[title="next"]'
     ]
-    product_css = '.p-l-name a'
+    product_css = '.p-l-name'
 
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css), callback="parse"),
