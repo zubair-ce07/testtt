@@ -115,7 +115,8 @@ class BettyBarclayParseSpider(BaseParseSpider):
 class BettyBarclayCrawlSpider(BaseCrawlSpider):
     listings_css = [
         ".categoryMenu",
-        ".pager"
+	".manu-navileiste",
+        ".pager",
     ]
 
     products_css = [
@@ -171,3 +172,4 @@ class NLParseSpider(MixinNL, BettyBarclayParseSpider):
 class NLCrawlSpider(MixinNL, BettyBarclayCrawlSpider):
     name = MixinNL.retailer + "-crawl"
     parse_spider = NLParseSpider()
+
