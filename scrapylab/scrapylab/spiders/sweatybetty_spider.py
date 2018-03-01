@@ -98,23 +98,37 @@ class SweatyBetty(CrawlSpider):
                 if length_exist:
                     req_sku_schema = parsed_sku_value[:-10]
                     color, size, length, price = req_sku_schema
+
+                    main_price, previous_price = self.populate_prices(price)
                     size_values, out_of_stock = self.parse_stock_values(size)
                     length, out_of_stock = self.parse_stock_values(length)
-                    sub_sku = {'color': color, 'size': size_values + "/" + length, 'price': price[1:],
-                               'sku_id': color + "_" + size_values + "/" + length, 'out_of_stock': out_of_stock}
+
+                    sub_sku = {'color': color, 'size': size_values + "/" + length, 'price': main_price,
+                               'sku_id': color + "_" + size_values + "/" + length, 'out_of_stock': out_of_stock,
+                               'previous_prices': previous_price}
                     skus.append(sub_sku)
                 elif size_exist:
                     req_sku_schema = parsed_sku_value[:-10]
                     color, size, price = req_sku_schema
+
+                    main_price, previous_price = self.populate_prices(price)
                     size_values, out_of_stock = self.parse_stock_values(size)
-                    sub_sku = {'color': color, 'size': size_values, 'price': price[1:],
-                               'sku_id': color + "_" + size_values, 'out_of_stock': out_of_stock}
+
+                    sub_sku = {'color': color, 'size': size_values, 'price': main_price,
+                               'sku_id': color + "_" + size_values, 'out_of_stock': out_of_stock,
+                               'previous_prices': previous_price}
+
                     skus.append(sub_sku)
                 else:
                     req_sku_schema = parsed_sku_value[:-10]
                     color, price = req_sku_schema
-                    sub_sku = {'color': color, 'size': "/", 'price': price[1:],
-                               'sku_id': color + "_" + "/", 'out_of_stock': False}
+
+                    main_price, previous_price = self.populate_prices(price)
+
+                    sub_sku = {'color': color, 'size': "/", 'price': main_price,
+                               'sku_id': color + "_" + "/", 'out_of_stock': False,
+                               'previous_prices': previous_price}
+
                     skus.append(sub_sku)
         return skus
 
@@ -130,4 +144,14 @@ class SweatyBetty(CrawlSpider):
         else:
             out_of_stock = False
 
+        stock_values.strip()
         return stock_values, out_of_stock
+
+    def populate_prices(self, price):
+        fetched_prices = re.findall("([\d\d\d.\d\d]+)", price)
+        current_price = int(float(fetched_prices[0]) * 100)
+        if len(fetched_prices) > 1:
+            previous_prices = fetched_prices[1:]
+            previous_prices = [int(float(price_to_int) * 100) for price_to_int in previous_prices]
+            return current_price, previous_prices
+        return current_price, []
