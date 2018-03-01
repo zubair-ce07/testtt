@@ -58,27 +58,27 @@ class MixinBE(Mixin):
 class MixinRO(Mixin):
     retailer = Mixin.retailer + '-ro'
     retailer_currency = "EUR"
-    start_urls = ["https://www.carpisa.it/ro_es/"]
+    start_urls = ["https://www.carpisa.it/ro_en/"]
     market = "RO"
 
 
 class MixinHU(Mixin):
     retailer = Mixin.retailer + '-hu'
     retailer_currency = "EUR"
-    start_urls = ["https://www.carpisa.it/hu_es/"]
+    start_urls = ["https://www.carpisa.it/hu_en/"]
     market = "HU"
 
 
 class MixinGR(Mixin):
     retailer = Mixin.retailer + '-gr'
-    start_urls = ["https://www.carpisa.it/gr_es/"]
+    start_urls = ["https://www.carpisa.it/gr_en/"]
     market = "GR"
 
 
 class MixinHR(Mixin):
     retailer = Mixin.retailer + '-hr'
     retailer_currency = "EUR"
-    start_urls = ["https://www.carpisa.it/hr_es/"]
+    start_urls = ["https://www.carpisa.it/hr_en/"]
     market = "HR"
 
 
