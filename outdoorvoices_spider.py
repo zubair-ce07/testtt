@@ -14,9 +14,10 @@ class Mixin:
     market = "US"
     allowed_domains = ["outdoorvoices.com"]
     start_urls = ["https://www.outdoorvoices.com/"]
-    care_materials = BaseParseSpider.care_materials + [
-        'soft', 'washed', 'preshrunk', 'stretch', 'smooth', 'slick','water resistant'
-    ]
+    spider_care = {'relaxed': [
+        'soft', 'washed', 'preshrunk', 'stretch', 'smooth', 'slick', 'water resistant'
+    ]}
+
 
 class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + "-parse"
@@ -31,9 +32,9 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
             return
 
         self.boilerplate(garment, response)
-        garment['name'] = self.product_name(raw_product)
-        garment['description'] = self.product_description(raw_product)
-        garment['brand'] = self.product_brand(response)
+        garment['name'] = raw_product["title"]
+        garment['description'] = raw_product["description"].split('. ')
+        garment['brand'] = "Outdoor Voices"
         garment['category'] = self.product_category(response)
         garment['image_urls'] = self.image_urls(raw_product)
         garment['skus'] = self.skus(response, raw_product)
@@ -53,14 +54,8 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
         raw_product = response.xpath('//script[contains(text(),"shopify_product_data")]/text()').extract_first()
         return JSParser(raw_product)["shopify_product_data"]
 
-    def product_name(self, raw_product):
-        return raw_product["title"]
-
     def product_category(self, response):
         return response.css('script.analytics::text').re('category":"([\w+\s?]+)')
-
-    def product_brand(self, response):
-        return "Outdoor Voices"
 
     def merch_info(self, raw_product):
         return ["Limited Edition"] if "limited edition" in raw_product["description"].lower() else []
@@ -75,10 +70,8 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
         for raw_sku in product["variants"]:
             if raw_sku["sku"] in sku_to_hide or not raw_sku['available']:
                 continue
-            sku = self.product_pricing_common_new(response,
-                                                  money_strs=[raw_sku['price'],
-                                                              raw_sku['compare_at_price']],
-                                                  is_cents=True)
+            money_strs = [raw_sku['price'], raw_sku['compare_at_price']]
+            sku = self.product_pricing_common_new(response, money_strs=money_strs, is_cents=True)
             sku['colour'] = raw_sku['option1']
             sku['size'] = self.one_size if raw_sku['option2'] == 'OS' else raw_sku['option2']
             sku_id = f'{sku["colour"]}_{sku["size"]}'
@@ -87,9 +80,6 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
 
     def product_care(self, response):
         return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
-
-    def product_description(self, raw_product):
-        return raw_product["description"].split('. ')
 
     def description_request(self, response):
         resource_id = response.css('script#__st::text').re('rid\":(\d+)')[0]
