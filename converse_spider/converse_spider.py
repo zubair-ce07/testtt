@@ -12,6 +12,12 @@ class MixinCN:
 
 
 class ConverseParseSpider(BaseParseSpider):
+
+    brand_map = [
+        "CONVERSE X NBA",
+        "Converse"
+    ]
+
     price_css = '.product-price span ::text'
     spider_gender_map = [("女的", "women"), ('男的', "men"), ("男女", "men"), ("小童", "unisex-kids"),
                          ("小孩", "unisex-kids"), ("童", "unisex-kids")]
@@ -24,7 +30,7 @@ class ConverseParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
-        garment["gender"] = self.product_gender(garment["name"])
+        garment["gender"] = self.product_gender(response)
 
         if not garment["skus"]:
             garment.update(self.product_pricing_common_new(response))
@@ -35,8 +41,14 @@ class ConverseParseSpider(BaseParseSpider):
     def product_id(self, response):
         return clean(response.css('#skuCode ::attr(value)'))[0]
 
-    def product_name(self, response):
+    def raw_name(self, response):
         return clean(response.css('#product-name ::text'))[0]
+
+    def product_name(self, response):
+        raw_name = self.raw_name(response)
+        name = raw_name.split('】')[1] if "】" in raw_name else raw_name
+
+        return name.replace(self.product_brand(response), '')
 
     def image_urls(self, response):
         img_urls = clean(response.css('.product-thumb-list a ::attr(data-img)'))
@@ -50,11 +62,12 @@ class ConverseParseSpider(BaseParseSpider):
         raw_description = clean(response.css('.product-description li ::text'))
         return [rd for rd in raw_description if self.care_criteria_simplified(rd)]
 
-    def product_gender(self, name):
-        return self.gender_lookup(name, greedy=True)
+    def product_gender(self, response):
+        return self.gender_lookup(self.raw_name(response), greedy=True)
 
     def product_brand(self, response):
-        return "Converse"
+        brand = [brand for brand in self.brand_map if brand in self.raw_name(response)]
+        return ''.join(brand) if brand else "converse"
 
     def skus(self, response):
         skus = {}
