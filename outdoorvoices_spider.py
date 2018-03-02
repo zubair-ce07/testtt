@@ -36,8 +36,8 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
         garment['description'] = raw_product["description"].split('. ')
         garment['brand'] = "Outdoor Voices"
         garment['category'] = self.product_category(response)
-        garment['image_urls'] = self.image_urls(raw_product)
         garment['skus'] = self.skus(response, raw_product)
+        garment['image_urls'] = self.image_urls(raw_product, garment['skus'])
         garment['merch_info'] = self.merch_info(raw_product)
         garment['meta'] = {
             'requests_queue': self.description_request(response)
@@ -61,8 +61,10 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
         return ["Limited Edition"] if "limited edition" in raw_product["description"].lower() else []
 
     @remove_duplicates
-    def image_urls(self, product):
-        return [i["src"] for i in product["images"] if "facebook" not in i["src"]]
+    def image_urls(self, product, skus):
+        colors = [sku['colour'].lower() for id, sku in skus.items()]
+        return [i["src"] for i in product["images"] if
+                "facebook" not in i["src"] and any(clr in i['alt'].lower() for clr in colors)]
 
     def skus(self, response, product):
         sku_to_hide = product.get("metafields_admin").get("skus_to_hide", "").split()
