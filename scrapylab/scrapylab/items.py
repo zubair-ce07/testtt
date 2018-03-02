@@ -12,4 +12,3 @@ class SweatBettyItem(scrapy.Item):
     brand = scrapy.Field()
     url = scrapy.Field()
     currency = scrapy.Field()
-    pass

@@ -1,157 +1,164 @@
-import scrapy
 import re
 import json
 
-from ..items import SweatBettyItem
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+
+from ..items import SweatBettyItem
 
 
 class SweatyBetty(CrawlSpider):
     name = 'sweatybetty'
     allowed_domains = ['sweatybetty.com']
     start_urls = ['http://www.sweatybetty.com/']
+    rule_xpaths = ['//*[contains(@class, "megamenu")]', '//*[contains(@href, "page=all")]']
+    sub_rule_xpaths = ['//*[contains(@class, "productname")]//a']
 
-    rules = (Rule(LinkExtractor(allow=(),
-                                restrict_xpaths='//*[contains(@class, "megamenu")]',
-                                ),
-                  callback='parse_urls'),)
-
-    def parse_urls(self, response):
-        all_products_urls = response.xpath('//*[contains(@href, "page=all")]').css("a::attr(href)").extract_first()
-        if all_products_urls:
-            url = response.urljoin(all_products_urls)
-            yield scrapy.Request(url, callback=self.parse_product_urls)
-        else:
-            yield scrapy.Request(
-                response.url,
-                callback=self.parse_product_urls)
-
-    def parse_product_urls(self, response):
-        product_path = response.xpath("//*[contains(@class, 'productname')]//a/@href").extract()
-        for prod_url in product_path:
-            url = response.urljoin(prod_url)
-            yield scrapy.Request(url, callback=self.parse_item)
+    rules = (
+        Rule(LinkExtractor(restrict_xpaths=rule_xpaths), callback='parse'),
+        Rule(LinkExtractor(restrict_xpaths=sub_rule_xpaths), callback='parse_item'),
+    )
 
     def parse_item(self, response):
         item = SweatBettyItem()
-        html = response.text
-        product_values = self.parse_schema(html)
+        raw_product = self.product_schema(response)
 
-        item['retailer_sku'] = product_values['product']['id'].split('_')[0]
-        item['category'] = product_values['page']['breadcrumb']
-        item['name'] = product_values['product']['name']
-        item['url'] = product_values['product']['url']
-        item['currency'] = product_values['product']['currency']
+        item['retailer_sku'] = raw_product['product']['id'].split('_')[0]
+        item['category'] = raw_product['page']['breadcrumb']
+        item['name'] = raw_product['product']['name']
+        item['url'] = raw_product['product']['url']
+        item['currency'] = raw_product['product']['currency']
 
-        item['brand'] = self.parse_brand(response)
-        item['description'] = self.parse_description_item(response)
-        item['care'] = self.parse_care_item(response)
-        item['image_urls'] = self.get_image_urls(html)
-        item['skus'] = self.parse_skus(response, html)
+        item['brand'] = self.product_brand(response)
+        item['description'] = self.product_description(response)
+        item['care'] = self.product_care(response)
+        item['image_urls'] = self.image_urls(response)
+        item['skus'] = self.skus(response)
 
         return item
 
-    def parse_schema(self, html):
-        schema_container = re.findall('window\.universal\_variable = (\{\s+.*\s+.*\s+\})\s+\<\/script\>', html)
-        corrected_schema_container = schema_container[0].replace(",]", "]") if schema_container else {}
-        return json.loads(corrected_schema_container)
+    def product_schema(self, response):
+        correct_schema = ""
+        raw_schema = response.xpath('//script[contains(text(),"window.universal_variable")]').extract()
+        for schema in raw_schema:
+            match_schema = re.findall('window\.universal\_variable = (\{\s+.*\s+.*\s+\})\s+\<\/script\>', schema)
+            if match_schema:
+                correct_schema = match_schema[0].replace(",]", "]")
+                break
+        return json.loads(correct_schema)
 
-    def parse_brand(self, response):
+    def product_brand(self, response):
         return response.xpath('//*[contains(@itemprop, "logo")]//@title').extract_first()
 
-    def parse_skus(self, response, html):
-        get_raw_data = response.css('script:contains(vcaption1)').re("vdata1\[\d+\]=.*?\(.*?\((.*?)\);")
-        length_exist = True if 'Choose Length' in html else False
-        size_exist = True if 'Choose Size' in html else False
-        return self.get_skus(get_raw_data, length_exist, size_exist)
+    def product_care(self, response):
+        raw_care = response.xpath('//*[contains(@class, "fabricdesc")]//text()').extract()
+        return self.clean(raw_care)
 
-    def parse_care_item(self, response):
-        care = response.xpath('//*[contains(@class, "fabricdesc")]//text()').extract()
-        care = [care_values.rstrip() for care_values in care] if care else ""
+    def product_description(self, response):
+        raw_description = response.xpath('//*[contains(@itemprop , "description")]//p//text()').extract()
+        raw_description.extend(response.xpath('//*[contains(@itemprop , "description")]//li//text()').extract())
+        return self.clean(raw_description)
 
-        return list(filter(None, care)) if list(filter(None, care)) else ""
-
-    def parse_description_item(self, response):
-        description = response.xpath('//*[contains(@itemprop , "description")]//p//text()').extract()
-        description.extend(response.xpath('//*[contains(@itemprop , "description")]//li//text()').extract())
-        description = [description_values.rstrip() for description_values in description] if description else ""
-
-        return list(filter(None, description)) if list(filter(None, description)) else ""
-
-    def get_image_urls(self, html):
-        image_raw_urls = re.findall("large.*new\sArray\((.*?)\)", html)
-        if image_raw_urls:
-            for per_image_url in image_raw_urls:
+    def image_urls(self, response):
+        image_urls = []
+        script_container = response.xpath('//script').extract()
+        for req_schema in script_container:
+            raw_image_urls = re.findall("large.*new\sArray\((.*?)\)", req_schema)
+            for per_image_url in raw_image_urls:
                 image_urls = list(per_image_url.split(","))
 
-        image_urls = [image_url_quote.replace('"', '') for image_url_quote in image_urls]
-        return list(filter(None, image_urls))
+        image_urls = [quote_in_url.replace('\"', '') for quote_in_url in image_urls]
+        return self.clean(image_urls)
 
-    def get_skus(self, get_raw_data, length_exist, size_exist):
-        skus = []
-        for js_sku_value in get_raw_data:
-            js_sku_value = js_sku_value.replace(")", "")
-            js_sku_value = js_sku_value.replace("'", "")
-            if not ('length' in js_sku_value or 'Size' in js_sku_value):
-                parsed_sku_value = js_sku_value.split(",")
-                if length_exist:
-                    req_sku_schema = parsed_sku_value[:-10]
-                    color, size, length, price = req_sku_schema
+    def skus(self, response):
+        raw_skus = response.css('script:contains(vcaption1)').re("vdata1\[\d+\]=.*?\(.*?\((.*?)\);")
+        sku_blocks = []
+        length_exist, size_exist = self.verify_length_size(response)
 
-                    main_price, previous_price = self.populate_prices(price)
-                    size_values, out_of_stock = self.parse_stock_values(size)
-                    length, out_of_stock = self.parse_stock_values(length)
+        for js_sku in raw_skus:
+            js_sku = js_sku.replace(")", "")
+            js_sku = js_sku.replace("'", "")
 
-                    sub_sku = {'color': color, 'size': size_values + "/" + length, 'price': main_price,
-                               'sku_id': color + "_" + size_values + "/" + length, 'out_of_stock': out_of_stock,
-                               'previous_prices': previous_price}
-                    skus.append(sub_sku)
-                elif size_exist:
-                    req_sku_schema = parsed_sku_value[:-10]
-                    color, size, price = req_sku_schema
+            if 'length' in js_sku or 'Size' in js_sku:
+                continue
 
-                    main_price, previous_price = self.populate_prices(price)
-                    size_values, out_of_stock = self.parse_stock_values(size)
+            refined_sku = js_sku.split(",")
+            req_sku_schema = refined_sku[:-10]
 
-                    sub_sku = {'color': color, 'size': size_values, 'price': main_price,
-                               'sku_id': color + "_" + size_values, 'out_of_stock': out_of_stock,
-                               'previous_prices': previous_price}
+            if length_exist:
+                colour, size, length, price = req_sku_schema
 
-                    skus.append(sub_sku)
-                else:
-                    req_sku_schema = parsed_sku_value[:-10]
-                    color, price = req_sku_schema
+                main_price, previous_price = self.product_pricing(price)
+                size_values, out_of_stock = self.product_stock_check(size)
+                length, out_of_stock = self.product_stock_check(length)
+                sub_sku = {'colour': colour,
+                           'size': "{0}/{1}".format(size_values, length),
+                           'price': main_price,
+                           'sku_id': "{0}_{1}/{2}".format(colour, size_values, length),
+                           'previous_prices': previous_price}
+                if out_of_stock:
+                    sub_sku['out_of_stock'] = out_of_stock
 
-                    main_price, previous_price = self.populate_prices(price)
+                sku_blocks.append(sub_sku)
+            elif size_exist:
+                colour, size, price = req_sku_schema
 
-                    sub_sku = {'color': color, 'size': "/", 'price': main_price,
-                               'sku_id': color + "_" + "/", 'out_of_stock': False,
-                               'previous_prices': previous_price}
+                main_price, previous_price = self.product_pricing(price)
+                size_values, out_of_stock = self.product_stock_check(size)
 
-                    skus.append(sub_sku)
-        return skus
+                sub_sku = {'colour': colour,
+                           'size': "{0}".format(size_values),
+                           'price': main_price,
+                           'sku_id': "{0}_{1}".format(colour, size_values),
+                           'previous_prices': previous_price}
+                if out_of_stock:
+                    sub_sku['out_of_stock'] = out_of_stock
 
-    def parse_stock_values(self, stock_values):
-        if 'out' in stock_values and 'stock' in stock_values:
-            stock_values = stock_values.split("-")[:-1]
-            stock_values = ''.join(stock_values)
+                sku_blocks.append(sub_sku)
+            else:
+                colour, price = req_sku_schema
+                size = "One Size"
+                main_price, previous_price = self.product_pricing(price)
+                sub_sku = {'colour': colour,
+                           'size': "{0}".format(size),
+                           'price': main_price,
+                           'sku_id': "{0}_{1}".format(colour, size),
+                           'previous_prices': previous_price}
+
+                sku_blocks.append(sub_sku)
+        return sku_blocks
+
+    def product_stock_check(self, measurement):
+        out_of_stock = False
+        if 'out' in measurement and 'stock' in measurement:
+            measurement = measurement.split("-")[:-1]
+            measurement = ''.join(measurement)
             out_of_stock = True
-        elif 'stock' in stock_values:
-            stock_values = stock_values.split("-")[:-1]
-            stock_values = ''.join(stock_values)
-            out_of_stock = False
-        else:
-            out_of_stock = False
+        elif 'stock' in measurement:
+            measurement = measurement.split("-")[:-1]
+            measurement = ''.join(measurement)
 
-        stock_values.strip()
-        return stock_values, out_of_stock
+        measurement.rstrip()
+        return measurement, out_of_stock
 
-    def populate_prices(self, price):
-        fetched_prices = re.findall("([\d\d\d.\d\d]+)", price)
-        current_price = int(float(fetched_prices[0]) * 100)
-        if len(fetched_prices) > 1:
-            previous_prices = fetched_prices[1:]
-            previous_prices = [int(float(price_to_int) * 100) for price_to_int in previous_prices]
-            return current_price, previous_prices
-        return current_price, []
+    def product_pricing(self, price):
+        raw_prices = re.findall("([\d.\d]+)", price)
+        org_prices = [int(float(prices) * 100) for prices in raw_prices]
+        org_prices.sort()
+
+        current_price = org_prices.pop(0)
+        previous_prices = [org_prices.pop() for _ in org_prices]
+
+        return current_price, previous_prices
+
+    def verify_length_size(self, response):
+        raw_script = response.css('script:contains("var vcaption1")').extract_first()
+        if raw_script:
+            length_exist = True if 'Choose Length' in raw_script else False
+            size_exist = True if 'Choose Size' in raw_script else False
+            return length_exist, size_exist
+        return False, False
+
+    def clean(self, to_clean):
+        cleaned = [per_entry.rstrip() for per_entry in to_clean] if to_clean else ""
+        return list(filter(None, cleaned))
