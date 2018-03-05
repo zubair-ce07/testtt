@@ -62,7 +62,7 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
 
     @remove_duplicates
     def image_urls(self, product, skus):
-        colors = [sku['colour'].lower() for id, sku in skus.items()]
+        colors = [sku['colour'].lower() for sku_id, sku in skus.items()]
         return [i["src"] for i in product["images"] if
                 "facebook" not in i["src"] and any(clr in i['alt'].lower() for clr in colors)]
 
@@ -70,7 +70,7 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
         sku_to_hide = product.get("metafields_admin").get("skus_to_hide", "").split()
         skus = {}
         for raw_sku in product["variants"]:
-            if raw_sku["sku"] in sku_to_hide or not raw_sku['available']:
+            if raw_sku["sku"] in sku_to_hide or not raw_sku['available'] or not raw_sku["featured_image"]:
                 continue
             money_strs = [raw_sku['price'], raw_sku['compare_at_price']]
             sku = self.product_pricing_common_new(response, money_strs=money_strs, is_cents=True)
