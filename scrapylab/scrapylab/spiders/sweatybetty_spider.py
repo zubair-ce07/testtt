@@ -21,7 +21,7 @@ class SweatyBetty(CrawlSpider):
 
     def parse_item(self, response):
         item = SweatBettyItem()
-        raw_product = self.product_schema(response)
+        raw_product = self.raw_product(response)
 
         item['retailer_sku'] = raw_product['product']['id'].split('_')[0]
         item['category'] = raw_product['page']['breadcrumb']
@@ -37,36 +37,36 @@ class SweatyBetty(CrawlSpider):
 
         return item
 
-    def product_schema(self, response):
-        correct_schema = ""
-        raw_schema = response.xpath('//script[contains(text(),"window.universal_variable")]').extract()
-        for schema in raw_schema:
-            match_schema = re.findall('window\.universal\_variable = (\{\s+.*\s+.*\s+\})\s+\<\/script\>', schema)
-            if match_schema:
-                correct_schema = match_schema[0].replace(",]", "]")
-                break
-        return json.loads(correct_schema)
+    def raw_product(self, response):
+        correct_json = ""
+        xpath = '//script[contains(text(),"window.universal_variable = ")]'
+        raw_json = response.xpath(xpath).extract_first()
+        if raw_json:
+            match_json = re.search(re.compile('({.*})', re.DOTALL), raw_json).group(1)
+            if match_json:
+                correct_json = match_json.replace(",]", "]")
+        return json.loads(correct_json)
 
     def product_brand(self, response):
         return response.xpath('//*[contains(@itemprop, "logo")]//@title').extract_first()
 
     def product_care(self, response):
         raw_care = response.xpath('//*[contains(@class, "fabricdesc")]//text()').extract()
-        return list(self.clean(raw_care))
+        return self.clean(raw_care)
 
     def product_description(self, response):
-        raw_description = response.xpath('//*[contains(@itemprop , "description")]//p//text()').extract()
-        raw_description.extend(response.xpath('//*[contains(@itemprop , "description")]//li//text()').extract())
-        return list(self.clean(raw_description))
+        xpath = '//*[contains(@itemprop , "description")]//*[self::p or self::li]//text()'
+        return self.clean(response.xpath(xpath).extract())
 
     def image_urls(self, response):
         image_urls = []
-        raw_image_urls = response.xpath('//script[contains(text(),"largeArray")]').re("large.*new\sArray\((.*?)\)")
+        xpath = '//script[contains(text(),"largeArray")]'
+        raw_image_urls = response.xpath(xpath).re("large.*new\sArray\((.*?)\)")
         for per_image_url in raw_image_urls:
-            image_urls = list(per_image_url.split(","))
+            image_urls = per_image_url.split(",")
 
-        image_urls = [quote_in_url.replace('\"', '') for quote_in_url in image_urls]
-        return list(self.clean(image_urls))
+        image_urls = [url.replace('\"', '') for url in image_urls]
+        return self.clean(image_urls)
 
     def skus(self, response):
         raw_skus = response.css('script:contains(vcaption1)').re("vdata1\[\d+\]=.*?\(.*?\((.*?)\);")
@@ -74,9 +74,7 @@ class SweatyBetty(CrawlSpider):
         length_exist, size_exist = self.verify_length_size(response)
 
         for js_sku in raw_skus:
-            js_sku = js_sku.replace(")", "")
-            js_sku = js_sku.replace("'", "")
-
+            js_sku = js_sku.replace(")", "").replace("'", "")
             if 'length' in js_sku or 'Size' in js_sku:
                 continue
 
@@ -151,12 +149,8 @@ class SweatyBetty(CrawlSpider):
 
     def verify_length_size(self, response):
         raw_script = response.css('script:contains("var vcaption1")').extract_first()
-        if raw_script:
-            length_exist = True if 'Choose Length' in raw_script else False
-            size_exist = True if 'Choose Size' in raw_script else False
-            return length_exist, size_exist
-        return False, False
+        return 'Choose Length' in raw_script, 'Choose Size' in raw_script
 
     def clean(self, to_clean):
         cleaned = [per_entry.strip() for per_entry in to_clean] if to_clean else ""
-        return filter(None, cleaned)
+        return list(filter(None, cleaned))
