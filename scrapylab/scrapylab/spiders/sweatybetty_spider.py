@@ -40,11 +40,10 @@ class SweatyBetty(CrawlSpider):
     def raw_product(self, response):
         correct_json = ""
         xpath = '//script[contains(text(),"window.universal_variable = ")]'
-        raw_json = response.xpath(xpath).extract_first()
+        raw_product_re = re.compile('({.*})', re.DOTALL)
+        raw_json = response.xpath(xpath).re(raw_product_re)
         if raw_json:
-            match_json = re.search(re.compile('({.*})', re.DOTALL), raw_json).group(1)
-            if match_json:
-                correct_json = match_json.replace(",]", "]")
+            correct_json = raw_json[0].replace(",]", "]")
         return json.loads(correct_json)
 
     def product_brand(self, response):
