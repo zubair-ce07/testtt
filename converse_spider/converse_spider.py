@@ -65,9 +65,8 @@ class ConverseParseSpider(BaseParseSpider):
         return [response.urljoin(img_url.replace('S', "L")) for img_url in img_urls]
 
     def raw_description(self, response):
-        desc_sel = response.css('.product-description')[0]
-        raw_desc = clean(desc_sel.css('li ::text, p[style] ::text'))[0]
-        return raw_desc.split('. ')
+        desc_sel = response.css('.product-description')
+        return clean(desc_sel.css('li ::text, p[style] ::text'))
 
     def product_description(self, response):
         return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
