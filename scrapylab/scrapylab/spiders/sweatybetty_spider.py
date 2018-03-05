@@ -52,23 +52,21 @@ class SweatyBetty(CrawlSpider):
 
     def product_care(self, response):
         raw_care = response.xpath('//*[contains(@class, "fabricdesc")]//text()').extract()
-        return self.clean(raw_care)
+        return list(self.clean(raw_care))
 
     def product_description(self, response):
         raw_description = response.xpath('//*[contains(@itemprop , "description")]//p//text()').extract()
         raw_description.extend(response.xpath('//*[contains(@itemprop , "description")]//li//text()').extract())
-        return self.clean(raw_description)
+        return list(self.clean(raw_description))
 
     def image_urls(self, response):
         image_urls = []
-        script_container = response.xpath('//script').extract()
-        for req_schema in script_container:
-            raw_image_urls = re.findall("large.*new\sArray\((.*?)\)", req_schema)
-            for per_image_url in raw_image_urls:
-                image_urls = list(per_image_url.split(","))
+        raw_image_urls = response.xpath('//script[contains(text(),"largeArray")]').re("large.*new\sArray\((.*?)\)")
+        for per_image_url in raw_image_urls:
+            image_urls = list(per_image_url.split(","))
 
         image_urls = [quote_in_url.replace('\"', '') for quote_in_url in image_urls]
-        return self.clean(image_urls)
+        return list(self.clean(image_urls))
 
     def skus(self, response):
         raw_skus = response.css('script:contains(vcaption1)').re("vdata1\[\d+\]=.*?\(.*?\((.*?)\);")
@@ -138,7 +136,7 @@ class SweatyBetty(CrawlSpider):
             measurement = measurement.split("-")[:-1]
             measurement = ''.join(measurement)
 
-        measurement.rstrip()
+        measurement.strip()
         return measurement, out_of_stock
 
     def product_pricing(self, price):
@@ -160,5 +158,5 @@ class SweatyBetty(CrawlSpider):
         return False, False
 
     def clean(self, to_clean):
-        cleaned = [per_entry.rstrip() for per_entry in to_clean] if to_clean else ""
-        return list(filter(None, cleaned))
+        cleaned = [per_entry.strip() for per_entry in to_clean] if to_clean else ""
+        return filter(None, cleaned)
