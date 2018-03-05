@@ -31,6 +31,7 @@ class ConverseParseSpider(BaseParseSpider):
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
         garment["gender"] = self.product_gender(response)
+        garment["merch_info"] = self.merch_info(response)
 
         if not garment["skus"]:
             garment.update(self.product_pricing_common_new(response))
@@ -42,7 +43,8 @@ class ConverseParseSpider(BaseParseSpider):
         return clean(response.css('#skuCode ::attr(value)'))[0]
 
     def raw_name(self, response):
-        return clean(response.css('#product-name ::text'))[0]
+        raw_name = clean(response.css('.product-name ::text'))
+        return ''.join(raw_name)
 
     def product_name(self, response):
         raw_name = self.raw_name(response)
@@ -50,17 +52,25 @@ class ConverseParseSpider(BaseParseSpider):
 
         return name.replace(self.product_brand(response), '')
 
+    def merch_info(self, response):
+        title = clean(response.css('title ::text'))[0]
+        if "限量版" in title:
+            return True
+
     def image_urls(self, response):
         img_urls = clean(response.css('.product-thumb-list a ::attr(data-img)'))
         return [response.urljoin(img_url.replace('S', "L")) for img_url in img_urls]
 
+    def raw_description(self, response):
+        desc_sel = response.css('.product-description')[0]
+        raw_desc = clean(desc_sel.css('li ::text, p[style] ::text'))[0]
+        return raw_desc.split('. ')
+
     def product_description(self, response):
-        raw_description = clean(response.css('.product-description li ::text'))
-        return [rd for rd in raw_description if not self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
     def product_care(self, response):
-        raw_description = clean(response.css('.product-description li ::text'))
-        return [rd for rd in raw_description if self.care_criteria_simplified(rd)]
+        return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
 
     def product_gender(self, response):
         return self.gender_lookup(self.raw_name(response), greedy=True)
