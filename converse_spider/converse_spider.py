@@ -10,6 +10,10 @@ class MixinCN:
     allowed_domain = ["www.converse.com.cn"]
     market = "CN"
 
+    MERCH_INFO = [
+        "限量版",
+    ]
+
 
 class ConverseParseSpider(BaseParseSpider):
 
@@ -54,8 +58,7 @@ class ConverseParseSpider(BaseParseSpider):
 
     def merch_info(self, response):
         title = clean(response.css('title ::text'))[0]
-        if "限量版" in title:
-            return True
+        return [m for m in self.MERCH_INFO if m in title]
 
     def image_urls(self, response):
         img_urls = clean(response.css('.product-thumb-list a ::attr(data-img)'))
