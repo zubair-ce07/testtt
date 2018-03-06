@@ -21,7 +21,6 @@ class Mixin:
 
 class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
     name = Mixin.retailer + "-parse"
-    price_css = 'meta[property="og:price:currency"]::attr(content)'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -33,21 +32,21 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
 
         self.boilerplate(garment, response)
         garment['name'] = raw_product["title"]
-        garment['description'] = raw_product["description"].split('. ')
+        garment['description'] = self.product_description(response)
         garment['brand'] = "Outdoor Voices"
         garment['category'] = self.product_category(response)
-        garment['skus'] = self.skus(response, raw_product)
-        garment['image_urls'] = self.image_urls(raw_product, garment['skus'])
         garment['merch_info'] = self.merch_info(raw_product)
         garment['meta'] = {
-            'requests_queue': self.description_request(response)
+            'requests_queue': self.product_request(response, raw_product),
         }
         return self.next_request_or_garment(garment)
 
-    def parse_description(self, response):
+    def parse_product(self, response):
         garment = response.meta['garment']
         garment['care'] = self.product_care(response)
         garment['description'] += self.updated_description(response)
+        garment['skus'] = self.skus(response)
+        garment['image_urls'] = self.image_urls(response.meta['raw_images'], garment['skus'])
         return self.next_request_or_garment(garment)
 
     def raw_product(self, response):
@@ -57,25 +56,33 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
     def product_category(self, response):
         return response.css('script.analytics::text').re('category":"([\w+\s?]+)')
 
+    def product_description(self, response):
+        return clean(response.css('meta[property="og:description"]::attr(content)').extract_first().split('. '))
+
     def merch_info(self, raw_product):
         return ["Limited Edition"] if "limited edition" in raw_product["description"].lower() else []
 
     @remove_duplicates
-    def image_urls(self, product, skus):
+    def image_urls(self, images, skus):
         colors = [sku['colour'].lower() for sku_id, sku in skus.items()]
-        return [i["src"] for i in product["images"] if
+        return [i["src"] for i in images if
                 "facebook" not in i["src"] and any(clr in i['alt'].lower() for clr in colors)]
 
-    def skus(self, response, product):
-        sku_to_hide = product.get("metafields_admin").get("skus_to_hide", "").split()
+    def skus(self, response):
+        raw_product = json.loads(response.text)
+        raw_variants = raw_product["variant_swatches"]
+        variants = {var["swatch_id"]: var['color_attribute'] for v_id, var in raw_variants.items()}
+        variants = [color for v_id, color in variants.items()]
+        sku_to_hide = response.meta['sku_to_hide']
+        sku_oos = response.meta['sku_oos']
         skus = {}
-        for raw_sku in product["variants"]:
-            if raw_sku["sku"] in sku_to_hide or not raw_sku['available'] or not raw_sku["featured_image"]:
+        for r_sku in raw_product["variants"]:
+            if r_sku["sku"] in sku_to_hide or r_sku['sku'] in sku_oos or r_sku['color'] not in variants:
                 continue
-            money_strs = [raw_sku['price'], raw_sku['compare_at_price']]
-            sku = self.product_pricing_common_new(response, money_strs=money_strs, is_cents=True)
-            sku['colour'] = raw_sku['option1']
-            sku['size'] = self.one_size if raw_sku['option2'] == 'OS' else raw_sku['option2']
+            money_strs = [r_sku['price'], r_sku['compare_at_price'], response.meta['currency']]
+            sku = self.product_pricing_common_new(response, money_strs=money_strs)
+            sku['colour'] = r_sku['color']
+            sku['size'] = self.one_size if r_sku['size'] == 'OS' else r_sku['size']
             sku_id = f'{sku["colour"]}_{sku["size"]}'
             skus[sku_id] = sku
         return skus
@@ -83,10 +90,16 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
     def product_care(self, response):
         return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
 
-    def description_request(self, response):
+    def product_request(self, response, raw_product):
         resource_id = response.css('script#__st::text').re('rid\":(\d+)')[0]
         url = f'https://mainframe.outdoorvoices.com/api/v2/product/{resource_id}/'
-        return [Request(url=url, callback=self.parse_description)]
+        meta = {
+            'sku_to_hide': self.sku_to_hide(raw_product),
+            'raw_images': raw_product['images'],
+            'sku_oos': self.sku_out_of_stock(raw_product),
+            'currency': self.product_currency(response),
+        }
+        return [Request(url=url, callback=self.parse_product, meta=meta)]
 
     def updated_description(self, response):
         return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
@@ -95,6 +108,15 @@ class OutdoorVoicesParseSpider(Mixin, BaseParseSpider):
     def raw_description(self, response):
         raw_desc = [rd["body"] for rd in json.loads(response.text)["copy"]]
         return clean(sum([desc.split('. ') for rd in raw_desc for desc in self.text_from_html(rd)], []))
+
+    def sku_to_hide(self, raw_product):
+        return raw_product.get("metafields_admin").get("skus_to_hide", "").split()
+
+    def sku_out_of_stock(self, raw_product):
+        return [raw_sku['sku'] for raw_sku in raw_product["variants"] if not raw_sku['available']]
+
+    def product_currency(self, response):
+        return response.css('meta[property="og:price:currency"]::attr(content)').extract_first()
 
 
 class OutdoorVoicesCrawlSpider(BaseCrawlSpider, Mixin):
