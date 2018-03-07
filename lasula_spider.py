@@ -56,6 +56,7 @@ class MixinEU(Mixin):
 
 class LasulaParseSpider(BaseParseSpider):
     price_css = '.product-type-data .price-box ::text'
+    raw_description_css = '#acctab-description+div.panel ::text'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -96,16 +97,6 @@ class LasulaParseSpider(BaseParseSpider):
         xpath = '//script[contains(text(),"Product.Config")]/text()'
         raw_sizes = json.loads(response.xpath(xpath).re('options":(\[\{.+\}\])')[0])
         return [rs['label'] for rs in raw_sizes]
-
-    def raw_description(self, response):
-        raw_description = clean(response.css('#acctab-description+div.panel ::text'))
-        return sum([rd.split('. ') for rd in raw_description], [])
-
-    def product_care(self, response):
-        return [rc for rc in self.raw_description(response) if self.care_criteria_simplified(rc)]
-
-    def product_description(self, response):
-        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
 
 
 class LasulaCrawlSpider(BaseCrawlSpider):
