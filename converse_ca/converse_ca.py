@@ -60,24 +60,19 @@ class ConverseParseSpider(BaseParseSpider):
         return self.gender_lookup(gender)
 
     def product_brand(self, response):
-        brand = [brand for brand in self.brand_map if brand in self.product_name(response)]
+        name = self.product_name(response)
+        brand = [brand for brand in self.brand_map if brand in name]
         return ''.join(brand) if brand else "converse"
 
     def image_urls(self, response):
         return clean(response.css('.gallery-image ::attr(src)'))[1:]
 
     def raw_colours(self, response):
-        multiple_colours = {}
-        variant_ids = clean(response.css('.swatch-link ::attr(data-id)'))
         raw_colours = response.xpath('//script[contains(text(),"StyleIdOjc")]/text()').extract_first()
-
         if raw_colours:
             colours = re.findall('StyleIdOjc = (.+})', raw_colours)[-1]
             colours = json.loads(colours)
-
-            for variant_id in variant_ids:
-                multiple_colours.update({colours[variant_id][0]: colours[variant_id][1]})
-        return multiple_colours
+            return {key[0]: key[1] for key in colours.values()}
 
     def skus(self, response):
         skus = {}
@@ -87,11 +82,11 @@ class ConverseParseSpider(BaseParseSpider):
         raw_skus = self.magento_product_map(spconfig)
         common_sku = self.product_pricing_common_new(response)
 
-        for sku_id in raw_skus:
+        for sku_id, variants in raw_skus.items():
             size_label = []
             colour_label = []
 
-            for variant in raw_skus[sku_id]:
+            for variant in variants:
                 sku = common_sku.copy()
                 if variant["name"] == "Style":
                     colour_label.append(variant["label"])
