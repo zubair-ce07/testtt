@@ -69,7 +69,7 @@ class LasulaParseSpider(BaseParseSpider):
         self.boilerplate(garment, response)
         garment["name"] = raw_product["name"]
         garment["category"] = [raw_product["category"] or '']
-        garment["brand"] = raw_product["brand"]
+        garment["brand"] = "LASULA"
         garment["care"] = self.product_care(response)
         garment["description"] = self.product_description(response)
         garment["image_urls"] = self.image_urls(response)
@@ -84,7 +84,9 @@ class LasulaParseSpider(BaseParseSpider):
         return clean(response.css('.img-box a::attr(href)'))
 
     def skus(self, response, prod_id):
-        sizes = self.sizes(response)
+        xpath = '//script[contains(text(),"Product.Config")]/text()'
+        raw_sizes = json.loads(response.xpath(xpath).re('options":(\[\{.+\}\])')[0])
+        sizes = [rs['label'] for rs in raw_sizes]
         skus = {}
         for size in sizes:
             sku = self.product_pricing_common_new(response)
@@ -92,11 +94,6 @@ class LasulaParseSpider(BaseParseSpider):
             sku_id = f'{prod_id}_{sku["size"]}'
             skus[sku_id] = sku
         return skus
-
-    def sizes(self, response):
-        xpath = '//script[contains(text(),"Product.Config")]/text()'
-        raw_sizes = json.loads(response.xpath(xpath).re('options":(\[\{.+\}\])')[0])
-        return [rs['label'] for rs in raw_sizes]
 
 
 class LasulaCrawlSpider(BaseCrawlSpider):
