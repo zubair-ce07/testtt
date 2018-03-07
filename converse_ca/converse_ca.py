@@ -4,7 +4,7 @@ import json
 from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
 
-from .base import BaseCrawlSpider, BaseParseSpider, clean
+from .base import BaseCrawlSpider, BaseParseSpider, clean, Gender
 
 
 class MixinCA:
@@ -55,9 +55,11 @@ class ConverseParseSpider(BaseParseSpider):
         return clean(response.css('::attr(data-category)'))[0].split('/')
 
     def product_gender(self, response):
-        raw_gender = clean(response.css('::attr(data-category)'))[0]
-        gender = raw_gender + self.product_name(response) + response.url
-        return self.gender_lookup(gender)
+        soup = [
+            ' '.join(self.product_category(response)) + self.product_name(response),
+            ' '.join([url for _, url in response.meta.get("trail", [])])
+        ]
+        return self.gender_lookup(soup[0]) or self.gender_lookup(soup[1]) or Gender.ADULTS.value
 
     def product_brand(self, response):
         name = self.product_name(response)
@@ -102,7 +104,6 @@ class ConverseParseSpider(BaseParseSpider):
 
 
 class ConverseCrawlSpider(BaseCrawlSpider):
-
     listing_css = [
         '.level2',
         'link[rel="next"]'
