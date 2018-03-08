@@ -55,11 +55,9 @@ class ConverseParseSpider(BaseParseSpider):
         return clean(response.css('::attr(data-category)'))[0].split('/')
 
     def product_gender(self, response):
-        soup = [
-            ' '.join(self.product_category(response)) + self.product_name(response),
-            ' '.join([url for _, url in response.meta.get("trail", [])])
-        ]
-        return self.gender_lookup(soup[0]) or self.gender_lookup(soup[1]) or Gender.ADULTS.value
+        soup1 = ' '.join(self.product_category(response)) + self.product_name(response)
+        soup2 = ' '.join([url for _, url in response.meta.get("trail", [])])
+        return self.gender_lookup(soup1) or self.gender_lookup(soup2) or Gender.ADULTS.value
 
     def product_brand(self, response):
         name = self.product_name(response)
@@ -74,6 +72,7 @@ class ConverseParseSpider(BaseParseSpider):
         if raw_colours:
             colours = re.findall('StyleIdOjc = (.+})', raw_colours)[-1]
             colours = json.loads(colours)
+
             return {key[0]: key[1] for key in colours.values()}
 
     def skus(self, response):
