@@ -136,7 +136,7 @@ class UrbanLocker(CrawlSpider):
             }
             if stock_size['out_of_stock']:
                 sku['out_of_stock'] = True
-                skus.append(sku)
+            skus.append(sku)
         return skus
 
     def clean(self, to_clean):
