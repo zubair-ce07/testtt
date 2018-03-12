@@ -56,7 +56,6 @@ class MixinEU(Mixin):
 
 class LasulaParseSpider(BaseParseSpider):
     price_css = '.product-type-data .price-box ::text'
-    raw_description_css = '#acctab-description+div.panel ::text'
 
     def parse(self, response):
         raw_product = self.raw_product(response)
@@ -76,6 +75,11 @@ class LasulaParseSpider(BaseParseSpider):
         garment["skus"] = self.skus(response, raw_product["sku"])
         return garment
 
+    def raw_description(self, response):
+        raw_desc = clean(response.css('#acctab-description+div.panel>.std ::text'))
+        raw_desc = sum([rd.split("! ") for rd in raw_desc], [])
+        return self.care_detector.split_and_filter(raw_desc)
+
     def raw_product(self, response):
         xpath = '//script[contains(text(),"dataLayer")]/text()'
         return json.loads(response.xpath(xpath).re('detail":({.+}?)\}\}')[0])["products"][0]
@@ -91,9 +95,14 @@ class LasulaParseSpider(BaseParseSpider):
         for size in sizes:
             sku = self.product_pricing_common_new(response)
             sku["size"] = self.one_size if size == "ONE SIZE" else size
+            sku["colour"] = self.colour(response)
             sku_id = f'{prod_id}_{sku["size"]}'
             skus[sku_id] = sku
         return skus
+
+    def colour(self, response):
+        raw_product = self.raw_product(response)
+        return self.detect_colour(raw_product["name"])
 
 
 class LasulaCrawlSpider(BaseCrawlSpider):
