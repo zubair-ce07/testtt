@@ -9,7 +9,7 @@ It should be run from terminal with arguments of following types:
 2nd will display given month's average
 3rd will display bar charts for whole month
 
-Pylint Score: 7.50
+Pylint Score: 6.55
 All objections are on my variables, pylint consider them constants
 """
 
@@ -47,21 +47,15 @@ else:
                         print('No record for this month in 1996, only December\'s available')
                     else:
                         # When file exist for given input
-                        cur_path = path + '/lahore_weather_' + year + '_' + month[:3] + '.txt'
-                        data = []
 
-                        # read file
-                        #read_file = open(cur_path, 'r')
-                        #reader = csv.reader(read_file)
-                        #for row in reader:
-                        #    data.append(row)
-                        #read_file.close()
+                        mon = '{:.3}'.format(month)
+                        cur_path = '{}/lahore_weather_{}_{}.txt'.format(path, year, mon)
+                        data = []
 
                         with open(cur_path, 'r') as read_file:
                             reader = csv.reader(read_file)
                             for row in reader:
                                 data.append(row)
-                        read_file.close()
 
                         head_row = 0
                         max_temp_col = 0
@@ -85,32 +79,33 @@ else:
                             avg_max_temp = get_average(data, head_row, max_temp_col, total_no)
                             avg_min_temp = get_average(data, head_row, min_temp_col, total_no)
                             avg_mean_humid = get_average(data, head_row, mean_humid_col, total_no)
-                            print('Highest Average:', str(avg_max_temp) + 'C')
-                            print('Lowest Average:', str(avg_min_temp) + 'C')
-                            print('Average Humidity:', str(avg_mean_humid) + '%')
+                            print('Highest Average: {}C'.format(avg_max_temp))
+                            print('Lowest Average: {}C'.format(avg_min_temp))
+                            print('Average Humidity: {}%'.format(avg_mean_humid))
 
                         elif action == '-c':
                             # Bar charts of daily data should be returned
 
                             for k in range(head_row + 1, len(data) - 1):
-                                day = get_date(data[k][day_col])[1]
+                                day = get_day(data[k][day_col])
                                 if data[k][min_temp_col] != '':
                                     min_temp = data[k][min_temp_col]
-                                    min_temp_bar = '\033[1;34m' + '+' * int(min_temp) + '\033[1;m'
+                                    min_temp_bar = '\033[1;34m{}\033[1;m'.format('+' * int(min_temp))
                                 if data[k][max_temp_col] != '':
                                     max_temp = data[k][max_temp_col]
-                                    max_temp_bar = '\033[1;31m' + '+' * int(max_temp) + '\033[1;m'
+                                    max_temp_bar = '\033[1;31m{}\033[1;m'.format('+' * int(max_temp))
 
                                 if data[k][min_temp_col] != '':
                                     if data[k][max_temp_col] != '':
-                                        print(day, min_temp_bar + max_temp_bar,
-                                              min_temp + 'C', '-', max_temp + 'C')
+                                        print('{} {}{} {}C - {}C'
+                                              .format(day, min_temp_bar, max_temp_bar,
+                                                      min_temp, max_temp))
                                     else:
-                                        print(day, min_temp_bar, min_temp + 'C')
+                                        print('{} {} {}C'.format(day, min_temp_bar, min_temp))
                                 elif data[k][max_temp_col] != '':
-                                    print(day, max_temp_bar, max_temp + 'C')
+                                    print('{} {} {}C'.format(day, max_temp_bar, max_temp))
                                 else:
-                                    print(day, 'No Data')
+                                    print('{} No Data'.format(day))
 
                 else:
                     # wrong month
@@ -142,7 +137,7 @@ else:
 
             if year == '1996':
                 # becoz we have only 1 month data for 1996
-                cur_path = path + '/lahore_weather_' + year + '_' + 'Dec.txt'
+                cur_path = '{}/lahore_weather_{}_Dec.txt'.format(path, year)
                 data = []
 
                 # read file
@@ -150,7 +145,6 @@ else:
                     reader = csv.reader(read_file)
                     for row in reader:
                         data.append(row)
-                read_file.close()
 
                 head_row = 0
                 max_temp_col = 0
@@ -184,7 +178,8 @@ else:
             else:
                 # for other years, we have to process all 12 months files
                 for n in MONTHS:
-                    cur_path = path + '/lahore_weather_' + year + '_' + MONTHS[n][0:3] + '.txt'
+                    mon = '{:.3}'.format(MONTHS[n])
+                    cur_path = '{}/lahore_weather_{}_{}.txt'.format(path, year, mon)
                     data = []
 
                     # read file
@@ -192,7 +187,6 @@ else:
                         reader = csv.reader(read_file)
                         for row in reader:
                             data.append(row)
-                    read_file.close()
 
                     head_row = 0
                     max_temp_col = 0
@@ -230,9 +224,9 @@ else:
             max_humid_month = get_month(max_humid_date)
             max_humid_day = get_day(max_humid_date)
 
-            print('Highest:', str(max_temp) + 'C', 'on', max_temp_month, max_temp_day)
-            print('Lowest:', str(min_temp) + 'C', 'on', min_temp_month, min_temp_day)
-            print('Humid:', str(max_humid) + '%', 'on', max_humid_month, max_humid_day)
+            print('Highest: {}C on {} {}'.format(max_temp, max_temp_month, max_temp_day))
+            print('Lowest: {}C on {} {}'.format(min_temp, min_temp_month, min_temp_day))
+            print('Humid: {}% on {} {}'.format(max_humid, max_humid_month, max_humid_day))
 
         else:
             # wrong 3rd input

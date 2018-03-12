@@ -31,33 +31,12 @@ def get_average(data, head_row, col, no):
     for k in range(head_row + 1, len(data) - 1):
         if data[k][col] != '':
             total += int(data[k][col])
-    avg = total // no
+    avg = round(total / no)
     return avg
 
 
-def get_averages(data, head_row, max_temp_col, min_temp_col, mean_humid_col, total_no):
-    """Calculates averages"""
-    max_temp_sum = 0
-    min_temp_sum = 0
-    mean_humid_sum = 0
-
-    # getting required data
-    for k in range(head_row + 1, len(data) - 1):
-        if data[k][max_temp_col] != '':
-            max_temp_sum += int(data[k][max_temp_col])
-        if data[k][min_temp_col] != '':
-            min_temp_sum += int(data[k][min_temp_col])
-        if data[k][mean_humid_col] != '':
-            mean_humid_sum += int(data[k][mean_humid_col])
-
-    avg_max_temp = max_temp_sum // total_no
-    avg_min_temp = min_temp_sum // total_no
-    avg_mean_humid = mean_humid_sum // total_no
-
-    return [avg_max_temp, avg_min_temp, avg_mean_humid]
-
-
 def locate(data):
+    """Finds row and column numbers fro required data"""
     for row_no, row in enumerate(data):
         for col_no, item in enumerate(row):
             if item.find('Max TemperatureC') != -1:
