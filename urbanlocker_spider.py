@@ -1,8 +1,8 @@
-import scrapy
 import re
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+from scrapy.http import Request
 
 from ..items import UrbanLockerItem
 
@@ -39,7 +39,7 @@ class UrbanLocker(CrawlSpider):
     def parse_color_urls(self, response):
         colour_urls = response.css('div.features_color_values a::attr(href)').extract()
         for url in colour_urls:
-            yield scrapy.Request(response.urljoin(url), callback=self.parse_item)
+            yield Request(response.urljoin(url), callback=self.parse_item)
 
     def product_currency(self, response):
         raw_currency = response.css('div#currencies_block_top a::text').extract_first()
@@ -56,16 +56,16 @@ class UrbanLocker(CrawlSpider):
     def product_brand(self, response):
         return response.xpath('//*[contains(@class, "h4")]//span//text()').extract_first()
 
-    def product_description_block(self, response):
+    def raw_description(self, response):
         description_xpath = '//div[contains(@id, "short_description_block")]//text()'
         return "".join(self.clean(response.xpath(description_xpath).extract()))
 
     def product_care(self, response):
-        care = re.findall("(Composition.*?\.|qualité.*?\.)", self.product_description_block(response))
+        care = re.findall("(Composition.*?\.|qualité.*?\.)", self.raw_description(response))
         return self.clean(care)
 
     def product_description(self, response):
-        description = self.product_description_block(response)
+        description = self.raw_description(response)
         return re.sub("(Composition.*?\.|qualité.*?\.)", "", description)
 
     def image_urls(self, response):
