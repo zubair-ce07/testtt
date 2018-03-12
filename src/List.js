@@ -8,8 +8,6 @@ var opts: youtubeSearch.YouTubeSearchOptions = {
     key: "AIzaSyDbh9um58oWl8wptkdL7IvVtQcbJuDtBCs"
 };
 
-
-
 class Search extends Component {
 
     constructor(props) {
@@ -19,15 +17,15 @@ class Search extends Component {
         // This binding is necessary to make `this` work in the callback
         this.handleChange = this.handleChange.bind(this);
     }
-    render() {
+    handleChange(event) {
+        this.setState({query: event.target.value});
+    }
 
+    render() {
         return (
             <div   style={{paddingLeft:50,paddingTop:10}}  >
-
                 <input id="query" name="query" value={this.state.query}  onChange={this.handleChange} type="text"/>
                 <Link to={`/search/${this.state.query}`}><button id="search-button" name="search-button">Search</button></Link>
-
-
             </div>
 
         );
@@ -35,22 +33,20 @@ class Search extends Component {
 
     }
 
-    handleChange(event) {
-        this.setState({query: event.target.value});
-    }
+
 
 }
 
 
 class List extends Component {
-
-
     constructor(props) {
         super(props);
         this.state = {
             items: []
         };
 
+    }
+    componentDidMount() {
         youtubeSearch(this.props.match.params.query, opts, (err, results) => {
             if(err) return console.log(err);
             this.setState({items:results})
@@ -62,42 +58,28 @@ class List extends Component {
 
         return (
             <div >
-
-            <dl>
+                <dl>
                 {this.state.items.map(video => {
                     return (
                         <div className={'row'} style={{paddingLeft:50,paddingTop:10}} key={video.id}>
                             <Link to={`/play/${video.id}`} className={'crop'}>
                                 <div className={"col-md-3 "}>
-
                                     <img className={"thumbnail"} src={video.thumbnails.default.url} alt="">
                                     </img>
                                     <br></br>
-
                                 </div>
                                 <div className={'crop col-md-4'} >
                                     <label style={{color:'black',fontWeight:'bold'}}>{video.title}</label>
                                     {video.description}
-
-                                </div>
-                                <div className={'col-md-4 '} >
-
-                                </div>
-
+                                    </div>
                             </Link>
                         </div>
-
                     )
-                })
-                }
-    </dl>
+                })}
+                </dl>
             </div>
 
         );
-
-
     }
 }
-
-
 export {List, Search}

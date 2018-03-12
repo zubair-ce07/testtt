@@ -8,27 +8,13 @@ class App extends Component {
 
 
     render() {
-
         return (
-
             <div>
-
                 <Route path='/' component={Search}/>
                 <Route path='/search/:query' exact render={(props) => <List {...props} />}  />
                 <Route path='/play/:id' component={Player}/>
-
             </div>
-
-
-
         );
-
-
     }
-
-
 }
-
-
-
 export default App;
