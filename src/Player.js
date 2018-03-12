@@ -7,9 +7,7 @@ class Player extends Component {
     render() {
         return (
             <div style={{paddingLeft:50, paddingTop:50}} className={'pull-left'}>
-                <YouTube
-                    videoId={this.props.match.params.id}
-                    autoplay={true}/>
+                <YouTube videoId={this.props.match.params.id} autoplay={true}/>
             </div>
         );
     }
