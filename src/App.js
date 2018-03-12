@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
 import Player from './Player';
-import {List, Search} from './List';
+import List from './List';
+import Search from './Search';
 import { Route } from 'react-router-dom'
 
 class App extends Component {

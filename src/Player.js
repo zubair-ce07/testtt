@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
-import YouTube from "react-yt";
+import YouTube from 'react-yt';
+import PropTypes from 'prop-types';
+
 
 class Player extends Component {
 
@@ -13,5 +15,11 @@ class Player extends Component {
     }
 }
 
-
+Player.propTypes = {
+    match: PropTypes.shape({
+        params: PropTypes.shape({
+            id: PropTypes.string,
+        }),
+    }),
+};
 export default Player;
