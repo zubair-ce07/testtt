@@ -15,7 +15,7 @@ class Mixin:
         ('https://www.colcci.com.br/feminino-novo/', {'gender': 'women'}),
         ('https://www.colcci.com.br/acessorios/', {'gender': 'women'}),
         ('https://www.colcci.com.br/masculino-novo/', {'gender': 'men'}),
-        ('https://www.colcci.com.br/fitnesssale/', {'gender': 'men'}),
+        ('https://www.colcci.com.br/fitnesssale/', {'gender': 'women'}),
     ]
 
 
