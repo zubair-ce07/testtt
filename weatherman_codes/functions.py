@@ -1,54 +1,53 @@
-""" File for all constants
+"""
+File for all helper functions
 Pylint Score: 10.00
 """
 
-from constants import MONTHS
+import os
+import calendar
 
 
-def get_day(date):
-    """Extracts the day from date"""
-    first_dash = date.find('-')
-    date = date[first_dash + 1:]
-    second_dash = date.find('-')
-    day = date[second_dash + 1:]
+def get_dates(dates):
+    """Extracts month and day from date"""
+    month_day = []
+    for date in dates:
+        month, day = get_date(date)
+        month_day.append('{} {}'.format(month, day))
+    return ', '.join(n for n in month_day)
+
+
+def get_date(date):
+    """Extracts month and day from date"""
+    month_no = date.split('-')[1]
+    day = date.split('-')[2]
+    month = calendar.month_name[int(month_no)]
     if int(day) < 10:
-        day = '0' + day
-    return day
+        day = '0{}'.format(day)
+    return month, day
 
 
-def get_month(date):
-    """Extracts the month from date"""
-    first_dash = date.find('-')
-    date = date[first_dash + 1:]
-    second_dash = date.find('-')
-    month = MONTHS[int(date[:second_dash])]
-    return month
+def get_file(args):
+    """Function to find the required file"""
+    files = []
+    if args.year_month:
+        year, month_no = args.year_month.split('/')
+    elif args.year_month_graph:
+        year, month_no = args.year_month_graph.split('/')
+    mon = 'NULL'
+    if 0 < int(month_no) <= 12:
+        month = calendar.month_name[int(month_no)]
+        print(month, year)
+        mon = '{:.3}'.format(month)
+    for file in os.listdir(args.directory):
+        if file.find('{}_{}'.format(year, mon)) != -1:
+            files.append(file)
+    return files
 
 
-def get_average(data, head_row, col, no):
-    """Calculates averages"""
-    total = 0
-    for k in range(head_row + 1, len(data) - 1):
-        if data[k][col] != '':
-            total += int(data[k][col])
-    avg = round(total / no)
-    return avg
-
-
-def locate(data):
-    """Finds row and column numbers fro required data"""
-    for row_no, row in enumerate(data):
-        for col_no, item in enumerate(row):
-            if item.find('Max TemperatureC') != -1:
-                head_row = row_no
-                max_temp_col = col_no
-            if item.find('Min TemperatureC') != -1:
-                min_temp_col = col_no
-            if item.find('Max Humidity') != -1:
-                max_humid_col = col_no
-            if item.find('Mean Humidity') != -1:
-                mean_humid_col = col_no
-            if item.find('PKT') != -1 or item.find('PKST') != -1:
-                time_col = col_no
-
-    return [head_row, time_col, max_temp_col, min_temp_col, max_humid_col, mean_humid_col]
+def get_files(args):
+    """Function to find the required files"""
+    files = []
+    for file in os.listdir(args.directory):
+        if file.find(args.year) != -1:
+            files.append(file)
+    return files
