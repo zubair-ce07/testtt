@@ -1,15 +1,22 @@
+
+
+
+
 import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
+import { render } from 'react-dom';
+import { Provider } from 'react-redux';
+import App from './components/App';
+import configureStore from './store/configureStore';
 import registerServiceWorker from './registerServiceWorker';
-// Import routing components
-import { BrowserRouter } from 'react-router-dom'
+import {loadWeatherData} from './actions/weather';
+const store = configureStore()
 
+//store.dispatch(loadWeatherData());
 
-ReactDOM.render((
-    <BrowserRouter>
-        <App />
-    </BrowserRouter>
-), document.getElementById('root'));
+render(
+    <Provider store={store}>
+<App/>
+    </Provider>,
+    document.getElementById('root')
+);
 registerServiceWorker();
