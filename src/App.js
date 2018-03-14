@@ -12,7 +12,7 @@ class App extends Component {
         return (
             <div>
                 <Route path='/' component={Search}/>
-                <Route path='/search/:query' exact render={(props) => <List {...props} />}  />
+                <Route path='/search/:query' exact component={(props) => <List {...props} />}  />
                 <Route path='/play/:id' component={Player}/>
             </div>
         );
