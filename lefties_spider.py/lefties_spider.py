@@ -93,7 +93,7 @@ class LeftiesParseSpider(BaseParseSpider):
 
     def product_details(self, response):
         lang_id = response.xpath('//script[contains(text(),"iBrand")]/text()').re_first('LangId = (.+);')
-        raw_url = '/'.join([self.product_api, self.product_id(response), "detail?appId=1"])
+        raw_url = f'{self.product_api}/{self.product_id(response)}/detail?appId=1'
         detail_page_url = add_or_replace_parameter(raw_url, "languageId", lang_id)
 
         return [Request(url=detail_page_url, callback=self.parse_details)]
@@ -118,13 +118,14 @@ class LeftiesParseSpider(BaseParseSpider):
         for raw_image in raw_details["colors"]:
             is_url_available = raw_image.get('image')
 
-            if is_url_available:
-                image_url = is_url_available["url"]
-                timestamp = is_url_available["timestamp"]
+            if not is_url_available:
+                continue
+            image_url = is_url_available["url"]
+            timestamp = is_url_available["timestamp"]
 
-                for sequence_value in is_url_available["aux"]:
-                    code_sequence = '_'.join(["2", sequence_value, "2"])
-                    image_urls.append("{}{}_{}.jpg?t={}".format(self.images_api, image_url, code_sequence, timestamp))
+            for sequence_value in is_url_available["aux"]:
+                code_sequence = '_'.join(["2", sequence_value, "2"])
+                image_urls.append(f"{self.images_api}{image_url}_{code_sequence}.jpg?t={timestamp}")
 
         return image_urls
 
@@ -135,7 +136,7 @@ class LeftiesParseSpider(BaseParseSpider):
 
             for size in color["sizes"]:
                 sku = sku.copy()
-                if size["isBuyable"] is not True:
+                if not size['isBuyable']:
                     sku["out_of_stock"] = True
 
                 sku["size"] = "one size" if len(color["sizes"]) == 1 else size["name"]
@@ -158,9 +159,7 @@ class LeftiesParseSpider(BaseParseSpider):
         return raw_description.split('. ') if raw_description else []
 
     def product_care(self, raw_details):
-        product_care = []
-        for care in raw_details["care"]:
-            product_care.append(care["description"])
+        product_care = [care["description"] for care in raw_details["care"]]
         return [pc for pc in product_care if self.care_criteria_simplified(pc)]
 
     def raw_product(self, response):
@@ -173,30 +172,28 @@ class LeftiesCrawlSpider(BaseCrawlSpider):
     sub_categories_urls = []
 
     def start_requests(self):
-        yield Request(url=self.categories_api, callback=self.sub_categories)
+        yield Request(url=self.categories_api, callback=self.parse_categories)
 
-    def sub_categories(self, response):
+    def parse_categories(self, response):
         raw_categories = json.loads(response.text)["categories"]
-        self.parse_categories(raw_categories)
-        sub_categories_urls = self.sub_categories_urls
+        self.sub_categories(raw_categories)
+        for url in self.sub_categories_urls:
 
-        for url in sub_categories_urls:
             yield Request(url=urljoin(self.start_urls[0], url), meta={"trail": self.add_trail(response)},
                           callback=self.parse_sub_categories)
 
-    def parse_categories(self, raw_categories, raw_url=''):
+    def sub_categories(self, raw_categories, raw_url=''):
         temp_url = raw_url
         for category in raw_categories:
 
             if raw_url != '' or category['name'] in self.available_categories:
                 if not category['subcategories']:
                     current_category = category["name"].replace(' ', '-')
-                    self.sub_categories_urls.append("{}{}-c{}.html?".format(raw_url, current_category,
-                                                                            str(category["id"])))
+                    self.sub_categories_urls.append(f'{raw_url}{current_category}-c{str(category["id"])}.html?')
                 else:
                     raw_url += (category["name"].replace(' ', '-')).lower() + '/'
-                    self.parse_categories(category['subcategories'], raw_url)
-                raw_url = temp_url
+                    self.sub_categories(category['subcategories'], raw_url)
+            raw_url = temp_url
 
     def parse_sub_categories(self, response):
         raw_text = clean(response.xpath('//noscript'))
