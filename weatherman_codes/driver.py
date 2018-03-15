@@ -4,7 +4,8 @@ Pylint Score: 10.00
 """
 
 import argparse
-from weatherman_helpers import get_files, read_data, show_peak_days, show_averages, make_graph
+from weatherman_helpers import (get_weather_files, read_weather_data,
+                                show_peak_days, show_averages, make_graph)
 
 
 def main():
@@ -22,10 +23,10 @@ def main():
 
     args = parser.parse_args()
 
-    files = get_files(args)
+    files = get_weather_files(args)
 
     if files:
-        weather_record = read_data(args.directory, files)
+        weather_record = read_weather_data(args.directory, files)
 
         if args.year:               # For input -e
             show_peak_days(args.year, weather_record)

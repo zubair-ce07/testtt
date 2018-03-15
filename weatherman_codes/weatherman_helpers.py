@@ -10,7 +10,7 @@ from colored import fg, attr
 from weather import Weather
 
 
-def get_files(args):
+def get_weather_files(args):
     """Function to find the required files"""
     files = []
     if args.year:
@@ -18,24 +18,25 @@ def get_files(args):
             if file.find(args.year) != -1:
                 files.append(file)
     else:
-        month_no = None
-        year = None
-        if args.year_month and args.year_month.find('/') == 4:
-            year, month_no = args.year_month.split('/')
-        elif args.year_month_graph and args.year_month_graph.find('/') == 4:
-            year, month_no = args.year_month_graph.split('/')
-        if 0 < int(month_no) <= 12:
-            month = calendar.month_name[int(month_no)]
-            mon = '{:.3}'.format(month)
-            for file in os.listdir(args.directory):
-                if file.find('{}_{}'.format(year, mon)) != -1:
-                    files.append(file)
+        year_month = None
+        if args.year_month:
+            year_month = args.year_month
+        elif args.year_month_graph:
+            year_month = args.year_month_graph
+        if year_month and year_month.find('/') == 4:
+            year, month_no = year_month.split('/')
+            if 0 < int(month_no) <= 12:
+                month = calendar.month_name[int(month_no)]
+                mon = '{:.3}'.format(month)
+                for file in os.listdir(args.directory):
+                    if file.find('{}_{}'.format(year, mon)) != -1:
+                        files.append(file)
     return files
 
 
-def read_data(directory, files):
+def read_weather_data(directory, files):
     """Method to read the required data from files"""
-    weather_rows = []
+    weather_days = []
 
     for file in files:
         path = '{}/{}'.format(directory, file)
@@ -58,15 +59,15 @@ def read_data(directory, files):
                     reader.fieldnames[i] = 'Max Humidity'
 
             for row in reader:
-                weather = Weather()
+                # weather_day = Weather()
                 if row['Max TemperatureC']:
-                    weather.get_row(row)
-                    weather_rows.append(weather)
+                    weather_day = Weather.get_weather(row)
+                    weather_days.append(weather_day)
 
-    return weather_rows
+    return weather_days
 
 
-def peak_days(weather_rows):
+def peak_days(weather_days):
     """Function to find the peak days of year"""
     max_temp = float('-inf')
     min_temp = float('inf')
@@ -75,7 +76,7 @@ def peak_days(weather_rows):
     min_temp_dates = []
     max_humid_dates = []
 
-    for row in weather_rows:
+    for row in weather_days:
         if row.max_temp >= max_temp:
             if row.max_temp > max_temp:
                 max_temp_dates.clear()      # Clear the previous dates, if new max value occurs
@@ -95,10 +96,10 @@ def peak_days(weather_rows):
     return max_temp, min_temp, max_humid, max_temp_dates, min_temp_dates, max_humid_dates
 
 
-def show_peak_days(year, weather_rows):
+def show_peak_days(year, weather_days):
     """Function to display peak days of year"""
     max_temp, min_temp, max_humid, max_temp_dates, min_temp_dates, max_humid_dates = \
-        peak_days(weather_rows)
+        peak_days(weather_days)
 
     print('Year {}'.format(year))
     print('Highest: {}C on {}'.format(max_temp, ', '.join(date for date in max_temp_dates)))
@@ -106,27 +107,27 @@ def show_peak_days(year, weather_rows):
     print('Humid: {}% on {}'.format(max_humid, ', '.join(date for date in max_humid_dates)))
 
 
-def calculate_averages(weather_rows):
+def calculate_averages(weather_days):
     """Function to calculate averages"""
     sum_max_temp = 0
     sum_min_temp = 0
     sum_mean_humid = 0
 
-    for row in weather_rows:
+    for row in weather_days:
         sum_max_temp += row.max_temp
         sum_min_temp += row.min_temp
         sum_mean_humid += row.mean_humid
 
-    avg_max_temp = round(sum_max_temp / len(weather_rows))
-    avg_min_temp = round(sum_min_temp / len(weather_rows))
-    avg_mean_humid = round(sum_mean_humid / len(weather_rows))
+    avg_max_temp = round(sum_max_temp / len(weather_days))
+    avg_min_temp = round(sum_min_temp / len(weather_days))
+    avg_mean_humid = round(sum_mean_humid / len(weather_days))
 
     return avg_max_temp, avg_min_temp, avg_mean_humid
 
 
-def show_averages(year_month, weather_rows):
+def show_averages(year_month, weather_days):
     """Function to display averages of month"""
-    avg_max_temp, avg_min_temp, avg_mean_humid = calculate_averages(weather_rows)
+    avg_max_temp, avg_min_temp, avg_mean_humid = calculate_averages(weather_days)
 
     year, month_no = year_month.split('/')
     month = calendar.month_name[int(month_no)]
@@ -137,13 +138,13 @@ def show_averages(year_month, weather_rows):
     print('Average Humidity: {}%'.format(avg_mean_humid))
 
 
-def make_graph(year_month, weather_rows):
+def make_graph(year_month, weather_days):
     """Function to display daily weather graph"""
     year, month_no = year_month.split('/')
     month = calendar.month_name[int(month_no)]
     print(month, year)
 
-    for row in weather_rows:
+    for row in weather_days:
         day = row.day
         min_temp = row.min_temp
         max_temp = row.max_temp
