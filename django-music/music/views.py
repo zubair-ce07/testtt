@@ -3,11 +3,17 @@ from django.contrib.auth import logout
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
-from rest_framework import generics
-
+from rest_framework import generics,permissions
 from music.serializers import AlbumSerializers, SongSerializers
+from music.permissions import IsOwnerOrReadOnly
 from .forms import AlbumForm, SongForm, UserForm
 from .models import Album, Song
+import jwt
+from django.http import HttpResponse
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.response import Response
 
 # Create your views here.
 IMG_File_Type = ['jpg', 'png', 'jpeg']
@@ -35,7 +41,20 @@ def index(request):
             })
         else:
             return render(request, 'music/index.html', {'albums': albums})
+'''
+class LoginView(APIView):
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
 
+    
+    def post(self, request, format=None):
+        content = {
+            'user': request.user,  # `django.contrib.auth.User` instance.
+            'auth': request.auth,  # None
+        }
+        #render(request, 'music/index.html', content)
+        return Response(content)
+'''
 
 def login_user(request):
     if request.method == "POST":
@@ -47,6 +66,11 @@ def login_user(request):
                 login(request, user)
                 albums = Album.objects.filter(user=request.user)
                 return render(request, 'music/index.html', {'albums': albums})
+                
+                # encrypt credentials into JWT l
+                #encoded = jwt.encode({'username': username, 'password':password}, 'secret', algorithm='HS256')
+                #response.set_cookie('key', encoded)            
+                #return response
             else:
                 return render(request, 'music/login.html', {'error_message': 'Your account has been disabled'})
         else:
@@ -54,13 +78,27 @@ def login_user(request):
     return render(request, 'music/login.html')
 
 
+# def get_token(request,username,password):
+#     if request.method == "POST":
+#         username = request.POST['username']
+#         password = request.POST['password']
+#         user = authenticate(username=username, password=password)
+#         dict = {
+#             'username':username,
+#             'password':password,
+#         }
+#         return response
+
 def logout_user(request):
     logout(request)
     form = UserForm(request.POST or None)
+      
     context = {
         "form": form,
     }
-    return render(request, 'music/login.html', context)
+    response = render(request, 'music/login.html', context)
+    response.delete_cookie('key')
+    return response
 
 
 def register(request):
@@ -84,6 +122,10 @@ def register(request):
 
 
 def create_album(request):
+    if 'key' in request.COOKIES:
+        value = request.COOKIES['key']
+        result = jwt.decode(value, 'secret', algorithms=['HS256'])
+
     if not request.user.is_authenticated():
         return render(request, 'music/login.html')
     else:
@@ -110,38 +152,41 @@ def create_album(request):
 
 
 def create_song(request, album_id):
-    form = SongForm(request.POST or None, request.FILES or None)
-    album = get_object_or_404(Album, pk=album_id)
-    if form.is_valid():
-        albums_songs = album.song_set.all()
-        for s in albums_songs:
-            if s.song_title == form.cleaned_data.get("song_title"):
+    if not request.user.is_authenticated():
+        return render(request, 'music/login.html')
+    else:
+        form = SongForm(request.POST or None, request.FILES or None)
+        album = get_object_or_404(Album, pk=album_id)
+        if form.is_valid():
+            albums_songs = album.song_set.all()
+            for s in albums_songs:
+                if s.song_title == form.cleaned_data.get("song_title"):
+                    context = {
+                        'album': album,
+                        'form': form,
+                        'error_message': 'You already added that song',
+                    }
+                    return render(request, 'music/create_song.html', context)
+            song = form.save(commit=False)
+            song.album = album
+            song.audio_file = request.FILES['audio_file']
+            file_type = song.audio_file.url.split('.')[-1]
+            file_type = file_type.lower()
+            if file_type not in Audio_File_Type:
                 context = {
                     'album': album,
                     'form': form,
-                    'error_message': 'You already added that song',
+                    'error_message': 'Audio file must be WAV, MP3, or OGG',
                 }
                 return render(request, 'music/create_song.html', context)
-        song = form.save(commit=False)
-        song.album = album
-        song.audio_file = request.FILES['audio_file']
-        file_type = song.audio_file.url.split('.')[-1]
-        file_type = file_type.lower()
-        if file_type not in Audio_File_Type:
-            context = {
-                'album': album,
-                'form': form,
-                'error_message': 'Audio file must be WAV, MP3, or OGG',
-            }
-            return render(request, 'music/create_song.html', context)
 
-        song.save()
-        return render(request, 'music/detail.html', {'album': album})
-    context = {
-        'album': album,
-        'form': form,
-    }
-    return render(request, 'music/create_song.html', context)
+            song.save()
+            return render(request, 'music/detail.html', {'album': album})
+        context = {
+            'album': album,
+            'form': form,
+        }
+        return render(request, 'music/create_song.html', context)
 
 
 def delete_song(request, album_id, song_id):
@@ -218,6 +263,9 @@ def songs(request, filter_by):
 class AlbumList(generics.ListCreateAPIView):
     queryset = Album.objects.all()
     serializer_class = AlbumSerializers
+    permission_classes = (permissions.IsAuthenticated,)
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class AlbumDetail(generics.RetrieveUpdateDestroyAPIView):
