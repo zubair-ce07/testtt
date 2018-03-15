@@ -141,9 +141,9 @@ class LeftiesParseSpider(BaseParseSpider):
 
                 sku["size"] = "one size" if len(color["sizes"]) == 1 else size["name"]
                 money_strs = [size["price"], size["oldPrice"], currency]
-                sku.update(self.product_pricing_common_new(None, money_strs))
+                sku.update(self.product_pricing_common_new(None, money_strs, is_cents=True))
                 skus[size["sku"]] = sku
-                
+
         return skus
 
     def product_id(self, response):
@@ -162,9 +162,17 @@ class LeftiesParseSpider(BaseParseSpider):
         raw_description = raw_product.get("description")
         return raw_description.split('. ') if raw_description else []
 
+    def composition(self, raw_details):
+        composition = []
+        for raw_comp in raw_details["composition"]:
+            for raw_composition in raw_comp["composition"]:
+                composition.append(f"{raw_composition['percentage']}% {raw_composition['name']}")
+
+        return composition
+
     def product_care(self, raw_details):
-        product_care = [care["description"] for care in raw_details["care"]]
-        return [pc for pc in product_care if self.care_criteria_simplified(pc)]
+        raw_care = [care["description"] for care in raw_details["care"]] + self.composition(raw_details)
+        return [pc for pc in raw_care if self.care_criteria_simplified(pc)]
 
     def raw_product(self, response):
         raw_product = clean(response.css('script[type="application/ld+json"] ::text'))
