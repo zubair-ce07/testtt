@@ -78,7 +78,7 @@ class LeftiesParseSpider(BaseParseSpider):
 
         self.boilerplate_minimal(garment, response)
         raw_product = self.raw_product(response)
-        garment["name"] = raw_product.get("name")
+        garment["name"] = self.product_name(raw_product)
         garment["brand"] = raw_product["brand"]
         garment["description"] = self.product_description(raw_product)
         garment["category"] = raw_product["offers"]["category"].split(' - ')
@@ -143,12 +143,16 @@ class LeftiesParseSpider(BaseParseSpider):
                 money_strs = [size["price"], size["oldPrice"], currency]
                 sku.update(self.product_pricing_common_new(None, money_strs))
                 skus[size["sku"]] = sku
-
+                
         return skus
 
     def product_id(self, response):
         raw_id = response.xpath('//script[contains(text(),"iBrand")]/text()').re_first('iParams = (.+);')
         return json.loads(raw_id)["productId"][0]
+
+    def product_name(self, raw_product):
+        name = raw_product.get("name")
+        return name if name else ""
 
     def product_gender(self, raw_product):
         soup = raw_product["offers"]["category"]
