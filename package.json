@@ -17,6 +17,7 @@
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
     "reframe.js": "^2.1.21",
+    "underscore": "^1.8.3",
     "youtube-player": "^5.5.0",
     "youtube-search": "^1.0.10"
   },

@@ -4,7 +4,7 @@
 class weatherApi {
     static getWeatherData(name) {
 
-        var url=`http://api.openweathermap.org/data/2.5/weather?q=London&appid=c6cfb5efbd67fc22c65db6bfc0514fdf`
+        var url='http://api.openweathermap.org/data/2.5/forecast?q='+name+'&appid=c6cfb5efbd67fc22c65db6bfc0514fdf'
         console.log(url)
         return fetch(url).then(response => {
             console.log(response)

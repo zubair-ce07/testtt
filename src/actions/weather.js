@@ -1,4 +1,3 @@
-// src/actions/catActions.js
 
 import weatherApi from '../api/weatherApi';
 import {loadWeatherSuccess, loadWeatherFailed} from './index';
