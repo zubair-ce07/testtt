@@ -41,7 +41,6 @@ class App extends Component {
         this.setState({fetchInProgress: flag, message:message});
     }
 
-
     render() {
 
         return (
@@ -56,22 +55,12 @@ class App extends Component {
                         items={this.state.items}
                         query={this.state.query}
                         fetchInProgress={this.state.fetchInProgress}
+                        message={this.state.message}
                         searchText={this.state.searchText}
                         onDataRetrieval={this.handleDataRetrieval}
                         onLoading={this.handleLoading}  />}
                 />
                 <Route path='/play/:id' component={Player}/>
-                <div>
-                    {(() => {
-                        switch(this.state.fetchInProgress) {
-                            case true:
-                                return <div className={'alert-info'}>{this.state.message}</div>;
-                            case false:
-                                return <div className={'alert-danger'}>{this.state.message}</div>;
-                            default: return null
-                        }
-                    })()}
-                </div>
 
             </div>
         );
