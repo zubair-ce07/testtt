@@ -1,6 +1,8 @@
 export default {
 
-    config:{
+    weather:{
+        //isFetching:false,
+       // message:'',
         chart: {
             zoomType: 'xy'
         },
@@ -16,16 +18,10 @@ export default {
         }],
         yAxis: [{ // Primary yAxis
             labels: {
-                format: '{value}°C',
-                style: {
-                    //color: Highcharts.getOptions().colors[2]
-                }
+                format: '{value}°C'
             },
             title: {
-                text: 'Temperature',
-                style: {
-                    //color: Highcharts.getOptions().colors[2]
-                }
+                text: 'Temperature'
             },
             opposite: true
 
@@ -33,30 +29,18 @@ export default {
             gridLineWidth: 0,
             title: {
                 text: 'Humidity',
-                style: {
-                    // color: Highcharts.getOptions().colors[0]
-                }
             },
             labels: {
-                format: '{value} ',
-                style: {
-                    // color: Highcharts.getOptions().colors[0]
-                }
+                format: '{value} '
             }
 
         }, { // Tertiary yAxis
             gridLineWidth: 0,
             title: {
-                text: 'Pressure',
-                style: {
-                    //color: Highcharts.getOptions().colors[1]
-                }
+                text: 'Pressure'
             },
             labels: {
-                format: '{value} mb',
-                style: {
-                    //color: Highcharts.getOptions().colors[1]
-                }
+                format: '{value} mb'
             },
             opposite: true
         }],
@@ -69,8 +53,7 @@ export default {
             x: 80,
             verticalAlign: 'top',
             y: 55,
-            floating: true,
-            //backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+            floating: true
         },
         series: [{
             name: 'humidity',
@@ -78,7 +61,7 @@ export default {
             yAxis: 1,
             data:[],
             tooltip: {
-                valueSuffix: ' mm'
+                valueSuffix: ' '
             }
 
         },
