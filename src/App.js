@@ -62,6 +62,11 @@ class App extends Component {
                 />
                 <Route path='/play/:id' component={Player}/>
 
+                { this.state.fetchInProgress &&
+
+                <div className={'alert-warning'}> {this.state.message} </div>
+                }
+
             </div>
         );
     }

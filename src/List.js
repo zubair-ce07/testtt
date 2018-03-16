@@ -43,34 +43,26 @@ class List extends Component {
     }
 
     render() {
-        const fetchInProgress= this.props.fetchInProgress
         return (
             <div >
-                <div>
-                    {fetchInProgress ? (
-                        <div className={'alert-warning'}>{this.props.message}</div>
-                    ) : (
-                        <dl>
-                            {this.props.items.map(video => {
-                                return (
-                                    <div className={'row'} style={{paddingLeft:50,paddingTop:10}} key={video.id}>
-                                        <Link to={`/play/${video.id}`} className={'crop'}>
-                                            <div className={'col-md-3'}>
-                                                <img className={'thumbnail'} src={video.thumbnails.default.url} alt={''}></img>
-                                                <br></br>
-                                            </div>
-                                            <div className={'crop col-md-4'} >
-                                                <label style={{color:'black',fontWeight:'bold'}}>{video.title}</label>
-                                                {video.description}
-                                            </div>
-                                        </Link>
+                <dl>
+                    {this.props.items.map(video => {
+                        return (
+                            <div className={'row'} style={{paddingLeft:50,paddingTop:10}} key={video.id} >
+                                <Link to={`/play/${video.id}`} className={'crop'}>
+                                    <div className={'col-md-3'}>
+                                        <img className={'thumbnail'} src={video.thumbnails.default.url} alt={''}></img>
+                                        <br></br>
                                     </div>
-                                )
-                            })}
-                        </dl>
-                    )}
-                </div>
-
+                                    <div className={'crop col-md-4'} >
+                                        <label style={{color:'black',fontWeight:'bold'}}>{video.title}</label>
+                                        {video.description}
+                                    </div>
+                                </Link>
+                            </div>
+                        )
+                    })}
+                </dl>
             </div>
 
         );
@@ -81,7 +73,6 @@ class List extends Component {
 
 List.propTypes = {
     searchText:PropTypes.string,
-    message:PropTypes.string,
     query:PropTypes.string,
     onDataRetrieval:PropTypes.func,
     onLoading:PropTypes.func,
