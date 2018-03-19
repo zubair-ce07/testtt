@@ -38,26 +38,22 @@ class UrbanLocker(CrawlSpider):
         item['care'] = self.product_care(response)
         item['skus'] = []
 
-        requests = self.sku_url_requests(response)
+        return self.call_requests(self.sku_url_requests(response), item)
+
+    def call_requests(self, requests, item):
         if requests:
-            yield self.set_request_meta(requests[0], item, requests)
+            request = requests.pop(0)
+            request.meta['item'] = item
+            request.meta['requests'] = requests
+            yield request
         else:
             yield item
-
-    def set_request_meta(self, request, item, requests):
-        request.meta['item'] = item
-        request.meta['requests'] = requests
-        return request
 
     def parse_skus(self, response):
         item = response.meta['item']
         item['skus'].append(self.sku(response))
         requests = response.meta['requests']
-        requests.pop(0)
-        if requests:
-            yield self.set_request_meta(requests[0], item, requests)
-        else:
-            yield item
+        return self.call_requests(requests, item)
 
     def sku(self, response):
         color = self.product_colour(response)
@@ -65,7 +61,7 @@ class UrbanLocker(CrawlSpider):
         price, previous_prices = self.product_pricing(response)
         raw_size = self.product_dropdown_size(response)
 
-        out_of_stock = 'verfügbar' in self.product_outofstock(response)
+        out_of_stock = not ('ver' in self.product_outofstock(response))
         sku = {
             'price': price,
             'previous_price': previous_prices,
@@ -104,16 +100,16 @@ class UrbanLocker(CrawlSpider):
                             'varselid[2]': dropdown_id
                         }
                         requests.append(self.sku_url_request(response, url_params))
-        else:
-            for color_varsel_id in color_varsel_ids:
-                for size_varsel_id in size_varsel_ids:
-                    url_params = {
-                        'anid': self.url_anid(response),
-                        'cl': self.url_cl(response),
-                        'varselid[0]': color_varsel_id,
-                        'varselid[1]': size_varsel_id
-                    }
-                    requests.append(self.sku_url_request(response, url_params))
+            return requests
+        for color_varsel_id in color_varsel_ids:
+            for size_varsel_id in size_varsel_ids:
+                url_params = {
+                    'anid': self.url_anid(response),
+                    'cl': self.url_cl(response),
+                    'varselid[0]': color_varsel_id,
+                    'varselid[1]': size_varsel_id
+                }
+                requests.append(self.sku_url_request(response, url_params))
         return requests
 
     def sku_url_request(self, response, url_params):
