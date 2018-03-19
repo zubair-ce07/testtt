@@ -1,9 +1,9 @@
-import scrapy
 import re
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from urllib.parse import urlencode
+from scrapy import Request
 
 from ..items import SheegoItem
 
@@ -20,7 +20,7 @@ class UrbanLocker(CrawlSpider):
         Rule(LinkExtractor(restrict_xpaths=products_xpath), callback='parse_item'),
     )
 
-    currency = {
+    currency_map = {
         "€": "EUR"
     }
 
@@ -38,28 +38,32 @@ class UrbanLocker(CrawlSpider):
         item['care'] = self.product_care(response)
         item['skus'] = []
 
-        urls = self.sku_urls(response)
-        if urls:
-            yield scrapy.Request(url=urls[0], callback=self.skus, meta={'item': item, 'urls': urls})
+        requests = self.sku_url_requests(response)
+        if requests:
+            yield self.set_request_meta(requests[0], item, requests)
         else:
             yield item
 
-    def skus(self, response):
-        item = self.sku(response)
-        urls = response.meta['urls']
-        urls.pop(0)
-        if urls:
-            yield scrapy.Request(url=urls[0], callback=self.skus, meta={'item': item, 'urls': urls})
+    def set_request_meta(self, request, item, requests):
+        request.meta['item'] = item
+        request.meta['requests'] = requests
+        return request
+
+    def parse_skus(self, response):
+        item = response.meta['item']
+        item['skus'].append(self.sku(response))
+        requests = response.meta['requests']
+        requests.pop(0)
+        if requests:
+            yield self.set_request_meta(requests[0], item, requests)
         else:
             yield item
 
     def sku(self, response):
-        item = response.meta['item']
-
         color = self.product_colour(response)
         size = self.product_size(response)
-        price, previous_prices = self.product_prices(response)
-        dropdown_size = self.product_dropdown_size(response)
+        price, previous_prices = self.product_pricing(response)
+        raw_size = self.product_dropdown_size(response)
 
         out_of_stock = 'verfügbar' in self.product_outofstock(response)
         sku = {
@@ -71,14 +75,12 @@ class UrbanLocker(CrawlSpider):
         }
         if out_of_stock:
             sku['out_of_stock'] = out_of_stock
-        if dropdown_size:
-            sku['sku_id'] = "{}_{}/{}".format(color, dropdown_size.strip(), size)
-            sku['size'] = "{}/{}".format(dropdown_size.strip(), size)
+        if raw_size:
+            sku['sku_id'] = "{}_{}/{}".format(color, raw_size.strip(), size)
+            sku['size'] = "{}/{}".format(raw_size.strip(), size)
+        return sku
 
-        item['skus'].append(sku)
-        return item
-
-    def sku_urls(self, response):
+    def sku_url_requests(self, response):
         color_varsel_ids = self.url_color_varselids(response)
         size_varsel_ids = self.url_size_varselids(response)
 
@@ -86,7 +88,7 @@ class UrbanLocker(CrawlSpider):
                                   "js-sh-dropdown l-mb-10 js-variant-select')]/option[@selected='selected']/text()"
         selected_size = response.xpath(dropdown_selected_xpath).extract_first()
 
-        urls = []
+        requests = []
         if selected_size:
             dropdown_ids_xpath = "//select[contains(@class, 'form-group--select form-group" \
                                    "--select--big js-sh-dropdown l-mb-10 js-variant-select')]/option/@value"
@@ -101,7 +103,7 @@ class UrbanLocker(CrawlSpider):
                             'varselid[1]': size_varsel_id,
                             'varselid[2]': dropdown_id
                         }
-                        urls.append(self.sku_url(response, url_params))
+                        requests.append(self.sku_url_request(response, url_params))
         else:
             for color_varsel_id in color_varsel_ids:
                 for size_varsel_id in size_varsel_ids:
@@ -111,15 +113,17 @@ class UrbanLocker(CrawlSpider):
                         'varselid[0]': color_varsel_id,
                         'varselid[1]': size_varsel_id
                     }
-                    urls.append(self.sku_url(response, url_params))
-        return urls
+                    requests.append(self.sku_url_request(response, url_params))
+        return requests
 
-    def sku_url(self, response, url_params):
+    def sku_url_request(self, response, url_params):
         base_url = re.findall('(.*?\?)', response.url)
-        return "{}{}".format(base_url[0], urlencode(url_params))
+        url = "{}{}".format(base_url[0], urlencode(url_params))
+        return Request(url=url, callback=self.parse_skus)
 
     def url_anid(self, response):
-        url_anid = response.xpath('//script[contains(text(), "window.ads.artNr =")]').re('window.ads.artNr = \'(.*?)\'\;')
+        url_anid = response.xpath('//script[contains(text(), "window.ads.artNr =")]')\
+                   .re('window.ads.artNr = \'(.*?)\'\;')
         return url_anid[0].strip()
 
     def url_cl(self, response):
@@ -136,20 +140,20 @@ class UrbanLocker(CrawlSpider):
     def product_name(self, response):
         return response.xpath('//h1[contains(@itemprop, "name")]//text()').extract_first().strip()
 
-    def product_prices(self, response):
+    def product_pricing(self, response):
         current_price_xpath = '//span[contains(@class, "product__price__current")]//text()'
         previous_price_xpath = '//span[contains(@class, "product__price__wrong")]//text()'
 
         current_price = response.xpath(current_price_xpath).re('([\d]+,[\d]+)')
         raw_pre_price = response.xpath(previous_price_xpath).re('([\d]+,[\d]+)')
 
-        previous_price = [int(float(raw_pre_price[0].replace(",", ".")) * 100)] if raw_pre_price else []
-        return int(float(current_price[0].replace(",", ".")) * 100), previous_price
+        previous_prices = [int(float(pre_price.replace(",", ".")) * 100) for pre_price in raw_pre_price]
+        return int(float(current_price[0].replace(",", ".")) * 100), previous_prices
 
     def product_currency(self, response):
         currency_xpath = '//span[contains(@class, "product__price__current")]//text()'
         raw_currency = response.xpath(currency_xpath).extract_first().strip()[-1]
-        return self.currency.get(raw_currency)
+        return self.currency_map.get(raw_currency)
 
     def product_category(self, response):
         return self.clean(response.xpath('//span[contains(@class, "breadcrumb__item")]//text()').extract())
