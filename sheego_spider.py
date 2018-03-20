@@ -61,7 +61,7 @@ class UrbanLocker(CrawlSpider):
         price, previous_prices = self.product_pricing(response)
         raw_size = self.product_dropdown_size(response)
 
-        out_of_stock = not ('ver' in self.product_outofstock(response))
+        out_of_stock = self.product_outofstock(response)
         sku = {
             'price': price,
             'previous_price': previous_prices,
@@ -127,39 +127,34 @@ class UrbanLocker(CrawlSpider):
         return url_cl[0].strip()
 
     def url_color_varselids(self, response):
-        return response.xpath("//span[@class='colorspots__wrapper']/span/@data-varselid").extract()
+        return response.css("span.colorspots__wrapper span::attr(data-varselid)").extract()
 
     def url_size_varselids(self, response):
-        varselid_xpath = "//div[contains(@class, 'btn sizespots__item js-click-variant')]/@data-varselid"
-        return response.xpath(varselid_xpath).extract()
+        return response.css("div.sizespots__item::attr(data-varselid)").extract()
 
     def product_name(self, response):
-        return response.xpath('//h1[contains(@itemprop, "name")]//text()').extract_first().strip()
+        return response.css('h1[itemprop="name"]::text').extract_first().strip()
 
     def product_pricing(self, response):
-        current_price_xpath = '//span[contains(@class, "product__price__current")]//text()'
-        previous_price_xpath = '//span[contains(@class, "product__price__wrong")]//text()'
-
-        current_price = response.xpath(current_price_xpath).re('([\d]+,[\d]+)')
-        raw_pre_price = response.xpath(previous_price_xpath).re('([\d]+,[\d]+)')
+        current_price = response.css('span.product__price__current').re('([\d]+,[\d]+)')
+        raw_pre_price = response.css('span.product__price__wrong').re('([\d]+,[\d]+)')
 
         previous_prices = [int(float(pre_price.replace(",", ".")) * 100) for pre_price in raw_pre_price]
         return int(float(current_price[0].replace(",", ".")) * 100), previous_prices
 
     def product_currency(self, response):
-        currency_xpath = '//span[contains(@class, "product__price__current")]//text()'
-        raw_currency = response.xpath(currency_xpath).extract_first().strip()[-1]
+        raw_currency = response.css('span.product__price__current::text').extract_first().strip()[-1]
         return self.currency_map.get(raw_currency)
 
     def product_category(self, response):
-        return self.clean(response.xpath('//span[contains(@class, "breadcrumb__item")]//text()').extract())
+        return self.clean(response.css('span[class="breadcrumb__item"] ::text').extract())
 
     def product_brand(self, response):
         return response.css('title::text').extract_first().split("|")[1].strip()
 
     def image_urls(self, response):
-        image_xpath = '//div[contains(@class, "p-details__image__thumb__container")]/a/@href'
-        raw_image_urls = response.xpath(image_xpath).extract()
+        image_css = 'div[class="p-details__image__thumb__container"] a::attr(href)'
+        raw_image_urls = response.css(image_css).extract()
         image_urls = [response.urljoin(image_url) for image_url in raw_image_urls]
 
         return self.clean(image_urls)
@@ -168,8 +163,7 @@ class UrbanLocker(CrawlSpider):
         return response.css('span.js-artNr.at-dv-artNr::text').extract_first().strip()
 
     def product_description(self, response):
-        description_xpath = '//div[contains(@itemprop , "description")]//text()'
-        description = response.xpath(description_xpath).extract()
+        description = response.css('div[itemprop="description"]::text').extract()
 
         description_css = 'div.f-xs-12.f-md-6.l-hidden.l-visible-md table ::text'
         description.extend(response.css(description_css).extract())
@@ -179,15 +173,11 @@ class UrbanLocker(CrawlSpider):
     def product_care(self, response):
         care_css = 'p.l-subline.l-mb-20.l-hidden.l-visible-md+ table tbody ::text'
         care = response.css(care_css).extract()
-
-        symbols_xpath = '//div[contains(@class, "p-details__careSymbols")]//text()'
-        care.extend(response.xpath(symbols_xpath).extract())
-
+        care.extend(response.css('div.p-details__careSymbols ::text').extract())
         return self.clean(care)
 
     def product_colour(self, response):
-        active_colour_xpath = "//span[@class='colorspots__wrapper']/span[contains(@class, 'cj-active')]/@title"
-        return response.xpath(active_colour_xpath).extract_first().strip()
+        return response.css("span.colorspots__wrapper span.cj-active::attr(title)").extract_first().strip()
 
     def product_size(self, response):
         size = response.xpath("//div[contains(@class,'item--active at-dv-size-button')]/text()").extract_first()
@@ -196,7 +186,8 @@ class UrbanLocker(CrawlSpider):
         return size.strip()
 
     def product_outofstock(self, response):
-        return response.xpath("//div[@itemprop='offers']/*/text()").extract_first()
+        out_of_stock = response.css("div[itemprop='offers'] span::text").extract_first()
+        return not ('ver' in out_of_stock)
 
     def product_dropdown_size(self, response):
         dropdown_selected_xpath = "//select[contains(@class, 'form-group--select form-group--select--big " \
