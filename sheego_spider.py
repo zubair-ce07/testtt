@@ -171,9 +171,9 @@ class UrbanLocker(CrawlSpider):
         return response.css(".cj-active::attr(title)").extract_first().strip()
 
     def product_size(self, response):
-        size = response.xpath("//div[contains(@class,'item--active at-dv-size-button')]/text()").extract_first()
+        size = response.css(".sizespots__item--active::text").extract_first()
         if not size:
-            size = response.xpath("//div[contains(@class,'item--disabled')]/text()").extract_first()
+            size = response.css(".sizespots__item--disabled::text").extract_first()
         return size.strip()
 
     def product_outofstock(self, response):
