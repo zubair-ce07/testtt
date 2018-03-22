@@ -1,8 +1,17 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import registerServiceWorker from './registerServiceWorker';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+import React from 'react';
+import { render } from 'react-dom';
+import { Provider } from 'react-redux';
+import App from './components/App';
+import configureStore from './store/configureStore';
+import registerServiceWorker from './registerServiceWorker';
+import {loadCategory} from "./actions/category";
+const store = configureStore()
+//store.dispatch(loadCategory())
+render(
+    <Provider store={store}>
+        <App/>
+    </Provider>,
+    document.getElementById('root')
+);
 registerServiceWorker();
