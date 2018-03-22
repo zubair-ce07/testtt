@@ -1,48 +1,52 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import urlparse
-import itertools
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.contrib.linkextractors import LinkExtractor
+
 from converse.items import ProductData
 
 
-class ProductsSpider(scrapy.Spider):
+class ProductsSpider(CrawlSpider):
     name = 'products'
     allowed_domains = ['www.converse.ca']
+    start_urls = ["https://www.converse.ca/"]
 
-    def start_requests(self):
-        # Create combinations of urls by joining gender, category and sub category
-        base_url = "https://www.converse.ca/"
-        url_gender_part = ['men', 'women']
-        url_cat_part = ['sneakers']
-        url_sub_cat_part = ['all-star', 'limited-edition', 'chuck-70']
-        url_combinations = list(itertools.product(url_gender_part, url_cat_part, url_sub_cat_part))
-        for partial_url in url_combinations:
-            url = base_url + "/".join(partial_url) + "/"
-            yield scrapy.Request(url=url, callback=self.parse)
+    rules = (
+        # First rule extracts links for women sneakers, only exclusion is all-sneakers category
+        Rule(LinkExtractor(restrict_css="#nav .nav-1-2>ul a", deny=('/all-sneakers/', )), callback='parse_start_url'),
+        # Second rule extracts links for men sneakers,  only exclusion is all-sneakers category
+        Rule(LinkExtractor(restrict_css="#nav .nav-2-2>ul a", deny=('/all-sneakers/', )), callback='parse_start_url'),
+    )
 
-    def parse(self, response):
-        for product in response.css('.category-products .item.last'):
-            result = ProductData()
-            result['product_cat'] = self.product_cat(product)
-            result['gender'], result['category'], result['sub_category'] = self.product_info(product)
-            result['brand'] = self.product_brand(product)
-            result['name'] = self.product_name(product)
-            result['product_id'] = self.product_id(product)
-            result['product_url'] = self.product_url(product)
-            result['data_id'] = self.data_id(product)
-            result['price'], result['currency'] = self.price_info(product)
-            result['image_urls'] = self.image_urls(product)
-            result['item_info'] = self.item_info(product)
-            # Go to item page to fetch additional information
-            if result['item_info']:
-                request = scrapy.Request(url=result['product_url'], callback=self.parse_item_page)
-                request.meta['result'] = result
-                yield request
+    def parse_start_url(self, response):
+        # Call parse_item
+        return self.parse_item(response)
+
+    def parse_item(self, response):
+        # Get Item count from the page
+        item_count = response.css('.bread_count>strong')
+        if item_count:
+            # If item count > 24, append show/all(if not already present) with url to fetch all records
+            if int(item_count.re(r'[0-9]+')[0]) > 24 and "show/all" not in response.url:
+                yield scrapy.Request(url=response.urljoin('show/all/'), callback=self.parse_item)
             else:
-                yield result
-        # Go to 2nd page to fetch more records
-        more_records_link = urlparse.urljoin(response.url, "page/2/")
-        yield response.follow(more_records_link, self.parse)
+                for product in response.css('.category-products .item.last'):
+                    result = ProductData()
+                    result['product_cat'] = self.product_cat(product)
+                    result['gender'], result['category'], result['sub_category'] = self.product_info(product)
+                    result['brand'] = self.product_brand(product)
+                    result['name'] = self.product_name(product)
+                    result['product_id'] = self.product_id(product)
+                    result['product_url'] = self.product_url(product)
+                    result['data_id'] = self.data_id(product)
+                    result['price'], result['currency'] = self.price_info(product)
+                    result['image_urls'] = self.image_urls(product)
+                    result['item_info'] = self.item_info(product)
+                    # Go to item page to fetch additional information
+                    if result['item_info']:
+                        request = scrapy.Request(url=result['product_url'], callback=self.parse_item_page)
+                        request.meta['result'] = result
+                    yield result
 
     def parse_item_page(self, response):
         # Fetch results from individual item page

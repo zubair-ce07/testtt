@@ -10,12 +10,6 @@ from scrapy.exceptions import DropItem
 
 class ProductPipeline(object):
 
-    def __init__(self):
-        """
-        Declare ids_seen var to avoid duplicate ids
-        """
-        self.ids_seen = set()
-
     def open_spider(self, spider):
         """
         Declare category_to_export var, json file names will use this field
@@ -61,11 +55,6 @@ class ProductPipeline(object):
         Perform check on different items
         """
         exporter = self._exporter_for_item(item)
-        # Check duplication of product ID
-        if item['product_id'] in self.ids_seen:
-            raise DropItem("Duplicate product found: %s" % item)
-        else:
-            self.ids_seen.add(item['product_id'])
         # Show message if item info like colors etc. is not available
         if not item["item_info"]:
             item["item_info"] = "Item Information not available"
