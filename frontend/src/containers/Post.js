@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import {loadPost, deleteComment, loadCategory, addComment, editComment} from "../actions/category";
 import {editCommentSuccess} from '../actions/index'
 import { bindActionCreators } from 'redux'
-import FieldLevelValidationForm from '../containers/mainForm'
+import AddCommentForm from '../containers/mainForm'
 import _ from 'underscore'
 
 import Timestamp from 'react-timestamp';import {
@@ -69,11 +69,12 @@ class Post extends Component {
                             <button id='search-button' name='search-button' onClick={()=> {this.deleteComment(comment.id)}}> Delete</button>
                             <button id='search-button' name='search-button' onClick={()=> {this.editComment(comment.id)}}> Edit</button>
                             {comment.body}
+
                             </li>
                     })}
 
                 </ul>
-<FieldLevelValidationForm  onSubmit={this.handleSubmit}/>
+<AddCommentForm mode={'create'}  onSubmit={this.handleSubmit}/>
 
 
             </div>

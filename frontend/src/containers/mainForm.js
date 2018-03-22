@@ -30,12 +30,13 @@ const renderField = ({ input, label, type, meta: { touched, error, warning } }) 
 )
 
 let FieldLevelValidationForm = props => {
-    const {handleSubmit, load, pristine, reset, submitting} = props
+    console.log(props)
+    const {handleSubmit, mode, pristine, reset, submitting} = props
     return (
         <form onSubmit={handleSubmit}>
 
             <div>
-                <label>Name</label>
+                <label>Name{mode}</label>
                 <div>
                     <Field name="author" type="text"
                            component={renderField}
@@ -61,17 +62,20 @@ let FieldLevelValidationForm = props => {
 }
 
 
-FieldLevelValidationForm = reduxForm({
-    form: 'FieldLevelValidationForm' // a unique identifier for this form
-})(FieldLevelValidationForm)
+export const AddCommentForm = reduxForm({
 
-// You have to connect() to any reducers that you wish to connect to yourself
-FieldLevelValidationForm = connect(
+    form: 'AddCommentForm'
+
+},connect(
 
     state => ({
         initialValues: state.rootReducer.data.comment // pull initial values from account reducer
-    })/*,
-    {load: loadAccount}*/ // bind account loading action creator
-)(FieldLevelValidationForm)
+    })
+))(FieldLevelValidationForm)
 
-export default FieldLevelValidationForm;
+// You have to connect() to any reducers that you wish to connect to yourself
+
+
+
+
+//export default FieldLevelValidationForm;
