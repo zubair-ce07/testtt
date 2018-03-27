@@ -28,8 +28,7 @@ class ParseSpider(BaseParseSpider, Mixin):
         garment['gender'] = 'women'
         garment['skus'] = self.skus(response)
         garment['image_urls'] = self.image_urls(response)
-        requests = self.colour_requests(response)
-        garment['meta'] = {'requests_queue': requests}
+        garment['meta'] = {'requests_queue': self.colour_requests(response)}
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
@@ -40,17 +39,15 @@ class ParseSpider(BaseParseSpider, Mixin):
 
     def skus(self, response):
         skus = {}
-        common = self.product_pricing_common(response)
+        common_sku = self.product_pricing_common(response)
         colour = clean(response.css('ul.product-colors li.active img ::attr(title)'))
         if colour:
-            common['colour'] = titlecase(colour[0])
+            common_sku['colour'] = titlecase(colour[0])
         sizes = response.css('div.sizebox-wrapper li.size-box')
         for size in sizes:
-            sku = common.copy()
-            size_code = clean(size.xpath('.//text()'))[0]
-            sku['size'] = size_code
-            size_stock = clean(size.xpath('.//@class'))[0]
-            if 'size-unavailable' in size_stock:
+            sku = common_sku.copy()
+            sku['size'] = clean(size.xpath('.//text()'))[0]
+            if 'size-unavailable' in clean(size.xpath('.//@class'))[0]:
                 sku['out_of_stock'] = True
             sku_id = '{}_{}'.format(sku['colour'], sku['size'])
             skus[sku_id] = sku
