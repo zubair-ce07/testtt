@@ -9,7 +9,6 @@ class Mixin:
     retailer = 'orsay-de'
     allowed_domains = ['www.orsay.com']
     start_urls = ['http://www.orsay.com']
-    lang = 'de'
     market = 'DE'
 
 
@@ -28,17 +27,15 @@ class ParseSpider(BaseParseSpider, Mixin):
         self.boilerplate_normal(garment, response)
         garment['gender'] = 'women'
         garment['skus'] = self.skus(response)
-        garment['image_urls'] = self.image_urls(response, [])
+        garment['image_urls'] = self.image_urls(response)
         requests = self.colour_requests(response)
-        if not requests:
-            return garment
         garment['meta'] = {'requests_queue': requests}
         return self.next_request_or_garment(garment)
 
     def parse_colour(self, response):
         garment = response.meta['garment']
         garment['skus'].update(self.skus(response))
-        garment['image_urls'] = self.image_urls(response, garment['image_urls'])
+        garment['image_urls'] += self.image_urls(response)
         return self.next_request_or_garment(garment)
 
     def skus(self, response):
@@ -52,7 +49,7 @@ class ParseSpider(BaseParseSpider, Mixin):
             sku = common.copy()
             size_code = clean(size.xpath('.//text()'))[0]
             sku['size'] = size_code
-            size_stock = size.xpath('.//@class').extract()[0]
+            size_stock = clean(size.xpath('.//@class'))[0]
             if 'size-unavailable' in size_stock:
                 sku['out_of_stock'] = True
             sku_id = '{}_{}'.format(sku['colour'], sku['size'])
@@ -60,22 +57,18 @@ class ParseSpider(BaseParseSpider, Mixin):
         return skus
 
     def colour_requests(self, response):
-        urls = response.css('ul.product-colors > li a::attr(href)').extract()
+        urls = clean(response.css('ul.product-colors > li a::attr(href)'))
         urls.remove('#')
         return [Request(url=url, callback=self.parse_colour) for url in urls]
 
     def product_name(self, response):
         return clean(response.css('h1.product-name::text'))[0]
 
-    def product_description(self, response):
-        return clean(response.css('p.description::text'))
-
     def product_id(self, response):
         return clean(response.css('input[name="sku"]::attr(value)'))[0]
 
-    def image_urls(self, response, images):
-        images += response.css('div.product-image-gallery-thumbs > a::attr(href)').extract()
-        return sorted(set(images), key=images.index)
+    def image_urls(self, response):
+        return clean(response.css('div.product-image-gallery-thumbs > a::attr(href)'))
 
     def product_category(self, response):
         return clean(response.css('ul.breadcrumbs li[class*=category] a ::text'))
