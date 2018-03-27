@@ -63,12 +63,6 @@ class ZozotownParseSpider(BaseParseSpider):
 
         return raw_description+raw_care
 
-    def product_description(self, response):
-        return [rd for rd in self.raw_description(response) if not self.care_criteria_simplified(rd)]
-
-    def product_care(self, response):
-        return [rd for rd in self.raw_description(response) if self.care_criteria_simplified(rd)]
-
     def image_urls(self, response):
         raw_images = clean(response.css('#photoThimb img ::attr(src)'))
         return [raw_image.replace('35', '500') for raw_image in raw_images]
@@ -83,20 +77,18 @@ class ZozotownParseSpider(BaseParseSpider):
         color_size_sel = response.css('dl[class="clearfix"]')
 
         for sel in color_size_sel:
-            color = clean(sel.css('span[class="txt"] ::text'))[0]
-            common_sku["colour"] = color
+            common_sku['colour'] = color = clean(sel.css('dt span[class="txt"] ::text'))[0]
             sizes = clean(sel.css('.stock span ::text'))
-            sku = common_sku.copy()
-            for raw_size, stock in zip(sizes[0::2], sizes[1::2]):
 
+            for stock, raw_size in zip(sizes[1::2], sizes[0::2]):
+                sku = common_sku.copy()
                 if stock == "在庫なし":
                     sku["out_of_stock"] = True
-                    continue
 
                 size = raw_size.split('/')[0]
-                my_size = self.one_size if size in self.one_sizes else size
-                sku.update({"size": my_size})
-                skus[f"{color}/{my_size}"] = sku
+                size = self.one_size if size in self.one_sizes else size
+                sku["size"] = size
+                skus[f"{color}_{size}"] = sku
 
         return skus
 
