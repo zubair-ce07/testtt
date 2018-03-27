@@ -43,8 +43,7 @@ class ParseSpider(BaseParseSpider, Mixin):
         colour = clean(response.css('ul.product-colors li.active img ::attr(title)'))
         if colour:
             common_sku['colour'] = titlecase(colour[0])
-        sizes = response.css('div.sizebox-wrapper li.size-box')
-        for size in sizes:
+        for size in response.css('div.sizebox-wrapper li.size-box'):
             sku = common_sku.copy()
             sku['size'] = clean(size.xpath('.//text()'))[0]
             if 'size-unavailable' in clean(size.xpath('.//@class'))[0]:
