@@ -27,12 +27,17 @@ class LornaJaneParseSpider(BaseParseSpider):
     price_x = "//*[@class='main-product']//*[@class='price']//text()"
     size_xpath_t = '//*[contains(@id,"size_buttons") and contains(@id,"%s")]//input'
     unwanted_description = ['to see how to care for your new Lorna Jane.', 'Click', 'here']
+    location_restriction = ['404 Page Not Found This page is not available in your region']
 
     def parse(self, response):
         product_id = self.product_id(response)
 
         garment = self.new_unique_garment(product_id)
         if not garment:
+            return
+
+        location_alert = clean(response.css('div.alert-danger'))
+        if location_alert in self.location_restriction:
             return
 
         self.boilerplate_normal(garment, response)
@@ -51,7 +56,7 @@ class LornaJaneParseSpider(BaseParseSpider):
         return [x for x in clean(response.css('#desc2 ::text')) if x not in self.unwanted_description]
 
     def product_description(self, response):
-        xpath = '//div[@itemprop="description"]/p[2]//text()'
+        xpath = '//div[@itemprop="description"]/p[position()<3]//text()'
         description = clean(response.xpath(xpath))
 
         return description + [line for line in self.raw_description(response) if not self.care_criteria(line)]
@@ -104,7 +109,7 @@ class LornaJaneParseSpider(BaseParseSpider):
 class LornaJaneCrawlSpider(BaseCrawlSpider):
     listings_css = ['.pri-nav a[title~="Shop"]+div']
     products_css = ['div.product-item a.name']
-    deny_r = ['/giftCard', '/lookbook', '/instashop', '/c-Activity']
+    deny_r = ['/giftCard', '/lookbook', '/instashop', '/c-Activity', '/sisterhood', '/ActiveOutlet']
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_r), callback='parse_pagination'),
