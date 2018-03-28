@@ -43,6 +43,8 @@ class LornaJaneParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
+        if not garment['skus']:
+            return
         garment['meta'] = {'requests_queue': self.colour_requests(response)}
         return self.next_request_or_garment(garment)
 
@@ -81,6 +83,8 @@ class LornaJaneParseSpider(BaseParseSpider):
         sku_common = {'colour': colour, 'currency': CurrencyParser.currency(currency)}
 
         previous_price, sku_common['price'], _ = self.product_pricing(response)
+        if not sku_common['price']:
+            return
         if previous_price:
             sku_common['previous_prices'] = previous_price
 
