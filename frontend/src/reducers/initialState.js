@@ -1,7 +1,14 @@
 export default {
-    categories:[],
+    categories:{
+        posts:[]
+    },
     posts:[],
     allPosts:[],
     post:{},
-    comments:[]
+    comments:[],
+    comment:{},
+    createPost:false,
+    editPost:false,
+    createComment:false,
+    editComment:false,
 }

@@ -5,9 +5,7 @@ import { Provider } from 'react-redux';
 import App from './components/App';
 import configureStore from './store/configureStore';
 import registerServiceWorker from './registerServiceWorker';
-import {loadCategory} from "./actions/category";
 const store = configureStore()
-//store.dispatch(loadCategory())
 render(
     <Provider store={store}>
         <App/>
@@ -15,3 +13,5 @@ render(
     document.getElementById('root')
 );
 registerServiceWorker();
+
+

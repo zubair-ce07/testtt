@@ -2,12 +2,10 @@ import React, {Component} from 'react';
 import Categories from '../containers/Categories';
 import Posts from '../containers/Posts';
 import {connect} from 'react-redux';
-import {
-    BrowserRouter as Router,
-    Link,
-    Route // for later
-} from 'react-router-dom'
-import {loadCategory, loadPosts} from "../actions/category";
+import { Switch } from 'react-router'
+import 'react-tabs/style/react-tabs.css';
+import { Tab, Tabs, TabList } from 'react-tabs';
+import {BrowserRouter as Router, Link, Route } from 'react-router-dom'
 import Post from "../containers/Post";
 class App extends Component {
 
@@ -16,28 +14,29 @@ class App extends Component {
 
             <Router>
                 <div>
-                    <ul>
-                        <li>
-                            <Link to="/">Categories</Link>
-                        </li>
-                        <li>
-                            <Link to="/posts">Posts</Link>
-                        </li>
-                        <li>
-                            <Link to="/topics">Topics</Link>
-                        </li>
-                    </ul>
+
+                    <Tabs defaultIndex={0}>
+                        <TabList>
+                            <Tab><Link to="/">Categories</Link></Tab>
+                            <Tab><Link to="/posts">Posts</Link></Tab>
+                        </TabList>
+                    </Tabs>
+
 
                     <hr />
+                    <Switch>
+                        <Route exact path="/" component={Categories} />
+                        <Route path={'/posts/:post'} component={Post}/>
+                        <Route path="/posts" component={Posts} />
+                    </Switch>
 
-                    <Route  path="/" component={Categories} />
-                    <Route  path="/posts" component={Posts} />
                 </div>
             </Router>
 
         )
     }
 }
+
 
 export default connect()(App);
 

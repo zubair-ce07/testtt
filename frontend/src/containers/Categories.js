@@ -1,13 +1,8 @@
 import React, {Component} from 'react';
 import Category from '../containers/Category';
-import Posts from '../containers/Posts';
 import {connect} from 'react-redux';
-import {
-    BrowserRouter as Router,
-    Link,
-    Route // for later
-} from 'react-router-dom'
-import {loadCategory, loadPosts} from "../actions/category";
+import {BrowserRouter as Router,Link, Route} from 'react-router-dom'
+import {loadCategory} from "../actions/category";
 class Categories extends Component {
 
     componentDidMount(){
@@ -19,18 +14,14 @@ class Categories extends Component {
 
             <Router>
                 <div>
-                    <h1>Categories</h1>
                     <ul>
-
                         {this.props.categories.map(function(category){
+
                             return <li key={category.path}>
-                                <Link to={`/category/${category.name}`} >
-                                    {category.name}
-                                </Link>
+                                <Link to={`/category/${category.name}`} >{category.name}</Link>
                             </li>;
                         })}
                     </ul>
-                    <hr />
 
                     <Route path={`/category/:category`}  component={Category}/>
                 </div>
@@ -41,8 +32,7 @@ class Categories extends Component {
 function mapStateToProps(state){
     console.log(state)
     return {
-        posts: state.rootReducer.data.posts,
-        categories: state.rootReducer.data.categories
+        categories: state.rootReducer.categories.categories
     };
 }
 export default connect(mapStateToProps)(Categories);

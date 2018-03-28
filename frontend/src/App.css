@@ -1,59 +1,16 @@
-.App {
-  text-align: center;
+#app {
+  height: 100vh;
 }
-
-.App-title {
-  font-size: 1.5em;
+.nav {
+  padding: 10px 10px 0;
+  background: #333;
 }
-
-
-body {
-  padding-top: 54px;
+.is-visible {
+  border: solid 1px red;
 }
-.search {
-  padding-top: 10px;
-  padding-left: 50px;
-  text-align: center;
+section {
+  margin: 20px;
 }
-
-@media (min-width: 992px) {
-
-}
-body {
-  padding-top: 56px;
-}
-.pagination {
-  margin-bottom: 15px;
-}
-.crop {
-  overflow: hidden;
-
-}
-
-/* Add a black background color to the top navigation */
-.topnav {
-  background-color: gray;
-  overflow: hidden;
-}
-
-/* Style the links inside the navigation bar */
-.topnav a {
-  float: left;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 17px;
-}
-
-/* Change the color of links on hover */
-.topnav a:hover {
-  background-color: #ddd;
-  color: gray;
-}
-
-/* Add a color to the active/current link */
-.topnav a.active {
-  background-color: gray;
-  color: white;
+h2, p {
+  margin: 0;
 }
