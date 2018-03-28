@@ -51,7 +51,7 @@ class LornaJaneParseSpider(BaseParseSpider):
         return [x for x in clean(response.css('#desc2 ::text')) if x not in self.unwanted_description]
 
     def product_description(self, response):
-        xpath = '//*[@itemprop="description"]//p[contains(.//text(), "Wear me")]/preceding-sibling::*//text()'
+        xpath = '//div[@itemprop="description"]/p[2]//text()'
         description = clean(response.xpath(xpath))
 
         return description + [line for line in self.raw_description(response) if not self.care_criteria(line)]
@@ -77,7 +77,7 @@ class LornaJaneParseSpider(BaseParseSpider):
 
         previous_price, sku_common['price'], _ = self.product_pricing(response)
         if previous_price:
-            sku_common['previous_prices'] = [previous_price]
+            sku_common['previous_prices'] = previous_price
 
         for size in response.css(".second-div.size-charts a"):
             sku = sku_common.copy()
