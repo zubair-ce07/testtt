@@ -15,6 +15,7 @@ class MixinJP:
 
 class ZozotownParseSpider(BaseParseSpider):
     price_css = '.priceWrapper p ::text'
+    raw_description_css = '#tabItemInfo .innerBox:first-child .contbox ::text, #itemDetailInfo dd ::text'
 
     def parse(self, response):
         pid = self.product_id(response)
@@ -38,8 +39,8 @@ class ZozotownParseSpider(BaseParseSpider):
         return garment
 
     def product_id(self, response):
-        css = '//script[contains(text(),"goodsName")]/text()'
-        return response.xpath(css).re_first("gdid\s+:.([^']*)'")
+        xpath = '//script[contains(text(),"goodsName")]/text()'
+        return response.xpath(xpath).re_first("gdid:\s+.([^']*)'")
 
     def product_name(self, response):
         return clean(response.css('.infoBlock h1 ::text'))[0]
@@ -55,13 +56,6 @@ class ZozotownParseSpider(BaseParseSpider):
 
     def product_category(self, response):
         return clean(response.css('.lineNavi li a ::text'))
-
-    def raw_description(self, response):
-        desc_sel = response.css('#tabItemInfo .innerBox')[0]
-        raw_description = clean(desc_sel.css('.contbox ::text'))
-        raw_care = clean(response.css('#itemDetailInfo dd ::text'))
-
-        return raw_description+raw_care
 
     def image_urls(self, response):
         raw_images = clean(response.css('#photoThimb img ::attr(src)'))
