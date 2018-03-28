@@ -15,7 +15,8 @@ class MixinJP:
 
 class ZozotownParseSpider(BaseParseSpider):
     price_css = '.priceWrapper p ::text'
-    raw_description_css = '#tabItemInfo .innerBox:first-child .contbox ::text, #itemDetailInfo dd ::text'
+    raw_description_x = '//div[@id="tabItemInfo"]//div[@class="contbox"]//div/text()|/text() |' \
+                        ' //div[@id="itemDetailInfo"]//dd/text()'
 
     def parse(self, response):
         pid = self.product_id(response)
