@@ -1,0 +1,59 @@
+.App {
+  text-align: center;
+}
+
+.App-title {
+  font-size: 1.5em;
+}
+
+
+body {
+  padding-top: 54px;
+}
+.search {
+  padding-top: 10px;
+  padding-left: 50px;
+  text-align: center;
+}
+
+@media (min-width: 992px) {
+
+}
+body {
+  padding-top: 56px;
+}
+.pagination {
+  margin-bottom: 15px;
+}
+.crop {
+  overflow: hidden;
+
+}
+
+/* Add a black background color to the top navigation */
+.topnav {
+  background-color: gray;
+  overflow: hidden;
+}
+
+/* Style the links inside the navigation bar */
+.topnav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+/* Change the color of links on hover */
+.topnav a:hover {
+  background-color: #ddd;
+  color: gray;
+}
+
+/* Add a color to the active/current link */
+.topnav a.active {
+  background-color: gray;
+  color: white;
+}
