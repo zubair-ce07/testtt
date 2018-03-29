@@ -9,6 +9,9 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
+import os
+from path import Path as path
+
 BOT_NAME = 'converse'
 
 SPIDER_MODULES = ['converse.spiders']
@@ -69,7 +72,7 @@ ITEM_PIPELINES = {
     'scrapy.pipelines.images.ImagesPipeline': 200
 }
 
-IMAGES_STORE = 'images'
+IMAGES_STORE = 'results/images'
 
 IMAGES_THUMBS = {
     'small': (50, 50),
@@ -101,4 +104,8 @@ IMAGES_THUMBS = {
 # Feed formats
 
 FEED_FORMAT = 'json'
+
+RESULTS_DIR = path(os.path.join('results')).abspath()
+
+
 

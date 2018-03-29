@@ -4,9 +4,10 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-from scrapy.exporters import JsonItemExporter
-from scrapy.exceptions import DropItem
+import os
 
+from scrapy.exporters import JsonItemExporter
+from settings import RESULTS_DIR
 
 class ProductPipeline(object):
 
@@ -28,7 +29,8 @@ class ProductPipeline(object):
         category = item['product_cat']
         if category not in self.category_to_export:
             # Create individual files based on combination of gender, category and sub category
-            j_file = open(category + '.json', 'w')
+            file_name = os.path.join(RESULTS_DIR, category + '.json')
+            j_file = open(file_name, 'w')
             exporter = JsonItemExporter(j_file)
             # Define the fields to export in file
             exporter.fields_to_export = [
