@@ -1,0 +1,38 @@
+import React, { Component } from 'react';
+import {loadWeather} from '../actions/weather';
+import { connect } from 'react-redux';
+
+class Search extends Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {query:''};
+
+        this.handleChange = this.handleChange.bind(this);
+        this.handleOnClick = this.handleOnClick.bind(this);
+    }
+    handleChange(event) {
+        this.setState({query: event.target.value});
+    }
+    handleOnClick() {
+       this.props.loadWeather(this.state.query);
+    }
+
+    render() {
+        return (
+            <div style={{paddingLeft:50,paddingTop:10}}>
+                <input id='query' name='query' value={this.state.query}  onChange={this.handleChange} type='text'/>
+                    <button id='search-button' name='search-button' onClick={(event) => this.handleOnClick(event)}> Search</button>
+            </div>
+
+        );
+    }
+}
+const mapDispatchToProps = (dispatch) => {
+    return {
+        loadWeather: (id) => {
+            dispatch(loadWeather(id))
+        }
+    }
+}
+export default connect(null,mapDispatchToProps)(Search);
