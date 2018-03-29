@@ -7,7 +7,6 @@ import 'react-tabs/style/react-tabs.css';
 import { Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import {BrowserRouter as Router, Link, Route } from 'react-router-dom';
 import Post from '../containers/Post';
-import Category from '../containers/Category';
 
 class App extends Component {
 
@@ -31,7 +30,6 @@ class App extends Component {
                     <Switch>
 
                         <Route exact path='/' component={Categories} />
-                        <Route path={`/category/:category`}  component={Category}/>
                         <Route path={'/posts/:post'} component={Post}/>
                         <Route path='/posts' component={Posts} />
                     </Switch>

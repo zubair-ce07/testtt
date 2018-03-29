@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {loadPosts} from '../actions/category';
 import ListHeader from '../containers/ListHeader';
-import Categories from '../containers/Categories';
 import ListResource from './ListResource';
 class Category extends Component {
 
@@ -23,7 +22,6 @@ class Category extends Component {
 
 
             <div className='container'>
-                <Categories/>
                 <h2>Posts</h2>
                 {
                     posts.length>0 &&
