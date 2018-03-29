@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {createPostSuccess, initializePostSuccess, sortAllPosts} from "../actions";
+import {createPostSuccess, editPostSuccess, sortAllPosts} from "../actions";
 import PostForm from "../forms/PostForm";
 import ListResource from "./ListResource";
 import {addPost, editPost, deletePost,loadAllPosts} from "../actions/post";
@@ -72,7 +72,7 @@ class Posts extends Component {
                     path={path}
                     mode={'posts'}
                     onEditClick={(post) =>
-                        (this.props.dispatch(initializePostSuccess(post)))
+                        (this.props.dispatch(editPostSuccess(post)))
                     }
                     onDeleteClick={(post) =>
                         (this.props.dispatch(deletePost(post)))

@@ -16,7 +16,6 @@ class Comments extends Component {
     }
 
     handleCreateSubmit(comment) {
-        console.log(comment);
         this.props.dispatch(addComment(comment))
     }
     handleEditSubmit(comment) {
@@ -25,19 +24,19 @@ class Comments extends Component {
 
     render(){
         const comments= this.props.comments;
+        const postId= this.props.post.id;
         return (
 
             <div className='container'>
 
                 <h2>Comments</h2>
-                <i  className={'glyphicon glyphicon-plus'}  onClick={()=> {this.props.dispatch(createCommentSuccess())}}> </i>
+                <i  className={'glyphicon glyphicon-plus'}  onClick={()=> {this.props.dispatch(createCommentSuccess(postId))}}> </i>
 
                 {   comments.length>0 &&
-                <ListHeader resource={'comments'}/>
+                <ListHeader mode={'comments'}/>
                 }
                 <ListResource
                     resource={comments}
-                    path={''}
                     mode={'comments'}
                     onEditClick={(comment) =>
                         this.props.dispatch(editCommentSuccess(comment))
@@ -65,8 +64,9 @@ function mapStateToProps(state){
     console.log(state)
     return {
         comments:state.rootReducer.posts.comments,
-        createComment:state.rootReducer.comments.createComment,
-        editComment:state.rootReducer.comments.editComment,
+        createComment:state.rootReducer.posts.createComment,
+        editComment:state.rootReducer.posts.editComment,
+        post:state.rootReducer.posts.post,
     };
 }
 

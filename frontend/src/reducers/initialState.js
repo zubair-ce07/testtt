@@ -1,14 +1,18 @@
 export default {
+
+
+    postState:{
+        allPosts:[],
+        post:{},
+        comments:[],
+        comment:{},
+        editPost:false,
+        createPost:false,
+        createComment:false,
+        editComment:false
+    },
     categories:{
         posts:[]
     },
-    posts:[],
-    allPosts:[],
-    post:{},
-    comments:[],
-    comment:{},
-    createPost:false,
-    editPost:false,
-    createComment:false,
-    editComment:false,
+
 }

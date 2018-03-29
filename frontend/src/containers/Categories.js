@@ -12,20 +12,19 @@ class Categories extends Component {
     render() {
         return (
 
-            <Router>
-                <div>
-                    <ul>
-                        {this.props.categories.map(function(category){
 
-                            return <li key={category.path}>
+            <Router>
+                <div className={'container'}>
+                    {this.props.categories.map(function(category){
+                        return <div key={category.path} className={'row'}>
                                 <Link to={`/category/${category.name}`} >{category.name}</Link>
-                            </li>;
+                            </div>;
                         })}
-                    </ul>
 
                     <Route path={`/category/:category`}  component={Category}/>
                 </div>
             </Router>
+
         )
     }
 }

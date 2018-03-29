@@ -45,7 +45,7 @@ CommentsForm = reduxForm({
 
 CommentsForm = connect(
     state => ({
-        initialValues: state.rootReducer.comments.comment
+        initialValues: state.rootReducer.posts.comment
     })
 )(CommentsForm)
 export default CommentsForm

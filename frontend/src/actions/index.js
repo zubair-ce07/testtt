@@ -2,9 +2,7 @@
 import * as actionType from './actionTypes';
 
 
-export const loadCategoryRequest= ()=> ({
-    type: actionType.LOAD_CATEGORY_REQUEST
-})
+
 export const loadCategorySuccess= (data)=> ({
 
     type: actionType.LOAD_CATEGORY_SUCCESS, data
@@ -13,17 +11,17 @@ export const loadCategorySuccess= (data)=> ({
 export const loadCategoryFailed= (error)=> ({
     type: actionType.LOAD_CATEGORY_FAILED, error
 })
-export const getPostsRequest= ()=> ({
-    type: actionType.LOAD_POST_REQUEST
-})
+
 export const getPostsSuccess= (data)=> ({
 
-    type: actionType.LOAD_POST_SUCCESS, data
+    type: actionType.LOAD_CATEGORY_POST_SUCCESS, data
 })
 
 export const getPostsFailed= (error)=> ({
-    type: actionType.LOAD_POST_FAILED, error
+    type: actionType.LOAD_CATEGORY_POST_FAILED, error
 })
+
+////// POSTS ACTIONS///////////////
 export const getAllPostsSuccess= (data)=> ({
 
     type: actionType.LOAD_POSTS_SUCCESS, data
@@ -58,22 +56,22 @@ export const addPostFailed= (error)=> ({
     type: actionType.ADD_POST_FAILED, error
 })
 
-export const initializePostSuccess= (post)=> ({
+export const editPostSuccess= (post)=> ({
 
-    type: actionType.INITIALIZE_POST_SUCCESS,post
-})
-
-export const initializePostFailed= (error)=> ({
-    type: actionType.INITIALIZE_POST_FAILED, error
-})
-
-export const editPostSuccess= (post, id)=> ({
-
-    type: actionType.EDIT_POST_SUCCESS,post, id
+    type: actionType.EDIT_POST_SUCCESS,post
 })
 
 export const editPostFailed= (error)=> ({
     type: actionType.EDIT_POST_FAILED, error
+})
+
+export const updatePostSuccess= (post, id)=> ({
+
+    type: actionType.UPDATE_POST_SUCCESS,post, id
+})
+
+export const updatePostFailed= (error)=> ({
+    type: actionType.UPDATE_POST_FAILED, error
 })
 export const deletePostSuccess= (post, id)=> ({
 
@@ -86,7 +84,6 @@ export const deletePostFailed= (error)=> ({
 export const sortAllPosts= (sortBy)=> ({
     type: actionType.SORT_ALL_POSTS, sortBy
 })
-
 
 export const deleteCommentSuccess= (comment, id)=> ({
 
@@ -121,9 +118,9 @@ export const updateCommentSuccess= (comment,id)=> ({
 export const updateCommentFailed= (error)=> ({
     type: actionType.UPDATE_COMMENT_FAILED, error
 })
-export const createCommentSuccess= (comment)=> ({
+export const createCommentSuccess= (parentId)=> ({
 
-    type: actionType.CREATE_COMMENT_SUCCESS, comment
+    type: actionType.CREATE_COMMENT_SUCCESS,parentId
 })
 export const createCommentFailed= (error)=> ({
 

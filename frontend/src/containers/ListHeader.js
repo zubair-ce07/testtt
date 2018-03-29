@@ -4,7 +4,7 @@ import React from 'react';
 const ListHeader = (props) => (
     <div className='ui top attached tabular menu'>
         <div className={'row'}>
-            {   props.resource!=='comments' &&
+            {   props.mode!=='comments' &&
                 <div className={'col-md-2'}>
                     <b>Title</b>
                 </div>
@@ -22,9 +22,12 @@ const ListHeader = (props) => (
             <div className={'col-md-2'}>
                 <b>Vote Score </b>
             </div>
+            { props.mode!=='category-posts' &&
+
             <div className={'col-md-1'}>
                 <b>Action</b>
             </div>
+            }
         </div>
     </div>
 );

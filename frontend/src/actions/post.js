@@ -1,7 +1,7 @@
 
 import postApi from '../api/post';
 import {getAllPostsSuccess ,getAllPostsFailed,getPostSuccess,getPostFailed,
-    addPostSuccess, addPostFailed, editPostSuccess, editPostFailed,deletePostSuccess,deletePostFailed} from './index';
+    addPostSuccess, addPostFailed, updatePostSuccess, updatePostFailed,deletePostSuccess,deletePostFailed} from './index';
 import commentApi from "../api/comment";
 
 
@@ -66,11 +66,11 @@ export function editPost(post) {
 
         postApi.editPost(post, post.id).then(response => {
             console.log(response)
-            dispatch(editPostSuccess(response, post.id));
+            dispatch(updatePostSuccess(response, post.id));
 
         }).catch(error => {
 
-            dispatch(editPostFailed(error));
+            dispatch(updatePostFailed(error));
         });
     }
 

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {loadPosts,loadCategory} from "../actions/category";
-
+import ListHeader from '../containers/ListHeader';
+import ListResource from './ListResource';
 class Category extends Component {
 
     componentDidMount() {
@@ -19,21 +20,20 @@ class Category extends Component {
         const posts= this.props.posts;
         return (
             <div className='container'>
-                <h1>Posts</h1>
+                <h2>Posts</h2>
+                <ListHeader mode={'category-posts'}/>
 
-                <ul>
-                    {posts.map(function(post){
-                         return <li key={post.id} >{post.title}</li>
-                    })}
-
-                </ul>
+                <ListResource
+                    resource={posts}
+                    mode={'category-posts'}
+                />
               </div>
         )
     }
 }
 function mapStateToProps(state){
     return {
-        posts: state.rootReducer.posts.posts,
+        posts: state.rootReducer.categories.posts,
         categories: state.rootReducer.categories.categories
     };
 }
