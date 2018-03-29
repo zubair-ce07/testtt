@@ -29,7 +29,7 @@ export default function weatherReducer(state = initialState.weather, action) {
                         categories:axis.categories.concat(_.pluck(action.weather.list,'dt_txt'))
                     });
                 }),
-                isFetching:action.weather.cod==='200', message:action.weather.message,
+                isFetching:action.weather.cod!=='200', message:action.weather.message,
                 status:true
             }
 
