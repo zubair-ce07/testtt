@@ -1,8 +1,6 @@
-
 import * as types from '../actions/actionTypes';
 import initialState from './initialState';
 import _ from 'underscore'
-
 
 export default function categoryReducer(state = initialState.postState, action) {
     console.log(state)

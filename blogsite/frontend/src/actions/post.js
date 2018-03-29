@@ -1,10 +1,8 @@
-
 import postApi from '../api/post';
 import {getAllPostsSuccess ,getAllPostsFailed,getPostSuccess,getPostFailed,
     addPostSuccess, addPostFailed, updatePostSuccess, updatePostFailed,
     deletePostSuccess,deletePostFailed,LoadPostsProgress} from './index';
 import commentApi from '../api/comment';
-
 
 export function loadAllPosts() {
 

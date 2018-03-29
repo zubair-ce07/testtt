@@ -50,8 +50,8 @@ function mapStateToProps(state){
 }
 const mapDispatchToProps = (dispatch) => {
     return {
-        loadPost: () => {
-            dispatch(loadPost())
+        loadPost: (post) => {
+            dispatch(loadPost(post))
         }
     }
 }

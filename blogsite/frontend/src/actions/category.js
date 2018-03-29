@@ -1,4 +1,3 @@
-
 import categoryApi from '../api/category';
 import {loadCategorySuccess, loadCategoryFailed,
     getPostsSuccess ,getPostsFailed,loadCategoryProgress} from './index';

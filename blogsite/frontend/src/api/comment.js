@@ -1,5 +1,3 @@
-
-
 import axios from 'axios';
 axios.defaults.headers.common['Authorization'] = 'apple';
 class commentApi {
