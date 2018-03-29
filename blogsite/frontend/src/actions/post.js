@@ -10,7 +10,6 @@ export function loadAllPosts() {
         dispatch(LoadPostsProgress());
 
         postApi.getAllPostsData().then(posts => {
-            console.log(posts)
             dispatch(getAllPostsSuccess(posts));
 
         }).catch(error => {
@@ -24,7 +23,6 @@ export function loadPost(postId) {
     return function(dispatch) {
 
         postApi.getPost(postId).then(post => {
-            console.log(post)
             if(post.commentCount>0){
                 commentApi.getComments(postId).then(comments =>{
 
@@ -45,13 +43,11 @@ export function loadPost(postId) {
     }
 }
 export function addPost(post) {
-    console.log(post)
 
     post.timestamp=Date.now();
     return function(dispatch) {
 
         postApi.addPost(post).then(response => {
-            console.log(response)
             dispatch(addPostSuccess(response));
 
         }).catch(error => {
@@ -65,7 +61,6 @@ export function editPost(post) {
     return function(dispatch) {
 
         postApi.editPost(post, post.id).then(response => {
-            console.log(response)
             dispatch(updatePostSuccess(response, post.id));
 
         }).catch(error => {
@@ -76,11 +71,9 @@ export function editPost(post) {
 
 }
 export function deletePost(postId) {
-    console.log(postId)
     return function(dispatch) {
 
         postApi.deletePost(postId).then(response => {
-            console.log(response)
             dispatch(deletePostSuccess(response, postId));
 
         }).catch(error => {

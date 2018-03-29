@@ -30,7 +30,6 @@ class Categories extends Component {
     }
 }
 function mapStateToProps(state){
-    console.log(state)
     return {
         categories: state.rootReducer.categories.categories,
         isFetching: state.rootReducer.categories.isFetching

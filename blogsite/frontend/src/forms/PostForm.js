@@ -13,7 +13,6 @@ const renderField = ({ input, label, type, meta: { touched, error } }) => (
 );
 
 let PostForm = props => {
-console.log(props)
     const { error, handleSubmit,pristine,submitting, reset, mode } = props;
     return (
         <form onSubmit={handleSubmit}>

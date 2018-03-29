@@ -8,7 +8,6 @@ export function deleteComment(commentId) {
     return function(dispatch) {
 
         commentApi.deleteComment(commentId).then(comment => {
-            console.log(comment)
             dispatch(deleteCommentSuccess(comment, commentId));
 
         }).catch(error => {
@@ -22,7 +21,6 @@ export function addComment(comment) {
     return function(dispatch) {
 
         commentApi.addComment(comment).then(response => {
-            console.log(response)
             dispatch(addCommentSuccess(response));
 
         }).catch(error => {
@@ -36,7 +34,6 @@ export function updateComment(comment) {
     return function(dispatch) {
 
         commentApi.updateComment(comment,comment.id).then(response => {
-            console.log(response)
             dispatch(updateCommentSuccess(response, comment.id));
 
         }).catch(error => {

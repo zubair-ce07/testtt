@@ -60,7 +60,6 @@ class Comments extends Component {
     }
 }
 function mapStateToProps(state){
-    console.log(state)
     return {
         comments:state.rootReducer.posts.comments,
         createComment:state.rootReducer.posts.createComment,

@@ -17,7 +17,6 @@ class commentApi {
 
         return axios.delete(url)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;
@@ -28,7 +27,6 @@ class commentApi {
 
         return axios.post(url, comment)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;
@@ -39,7 +37,6 @@ class commentApi {
 
         return axios.put(url, comment)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;

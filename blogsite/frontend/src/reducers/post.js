@@ -3,8 +3,7 @@ import initialState from './initialState';
 import _ from 'underscore'
 
 export default function categoryReducer(state = initialState.postState, action) {
-    console.log(state)
-    console.log(action)
+
     switch(action.type) {
         case types.LOAD_CATEGORY_PROGRESS: {
             return{

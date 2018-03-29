@@ -6,7 +6,6 @@ class categoryApi {
         var url='http://localhost:3001/categories';
         return axios.get(url)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;
@@ -16,7 +15,6 @@ class categoryApi {
         var url=`http://localhost:3001/${category}/posts`;
         return axios.get(url)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;

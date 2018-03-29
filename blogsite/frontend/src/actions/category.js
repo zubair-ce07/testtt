@@ -23,7 +23,6 @@ export function loadPosts(category) {
         dispatch(loadCategoryProgress())
 
         categoryApi.getPostsOfCategory(category).then(posts => {
-            console.log(posts)
             dispatch(getPostsSuccess(posts));
 
         }).catch(error => {

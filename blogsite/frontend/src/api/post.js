@@ -27,7 +27,6 @@ class postApi {
 
         return axios.post(url, post)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;
@@ -38,7 +37,6 @@ class postApi {
 
         return axios.put(url, post)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;
@@ -49,7 +47,6 @@ class postApi {
 
         return axios.delete(url)
             .then(response => {
-                console.log(response)
                 return response.data;
             }).catch(error => {
                 return error;
