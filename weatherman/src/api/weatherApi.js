@@ -1,4 +1,3 @@
-
 class weatherApi {
     static getWeatherData(name) {
 

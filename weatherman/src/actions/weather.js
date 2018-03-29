@@ -1,4 +1,3 @@
-
 import weatherApi from '../api/weatherApi';
 import {loadWeatherSuccess, loadWeatherFailed, loadWeatherRequest} from './index';
 
