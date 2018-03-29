@@ -15,7 +15,7 @@ class Search extends Component {
         this.setState({query: event.target.value});
     }
     handleOnClick() {
-       this.props.dispatch(loadWeather(this.state.query));
+       this.props.loadWeather(this.state.query);
     }
 
     render() {
@@ -28,5 +28,11 @@ class Search extends Component {
         );
     }
 }
-
-export default connect()(Search);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        loadWeather: (id) => {
+            dispatch(loadWeather(id))
+        }
+    }
+}
+export default connect(null,mapDispatchToProps)(Search);

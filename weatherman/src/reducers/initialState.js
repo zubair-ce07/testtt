@@ -1,8 +1,7 @@
 export default {
 
     weather:{
-        //isFetching:false,
-       // message:'',
+        status:false,
         chart: {
             zoomType: 'xy'
         },

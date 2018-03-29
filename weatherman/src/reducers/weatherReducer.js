@@ -16,7 +16,8 @@ export default function weatherReducer(state = initialState.weather, action) {
         }
         case types.LOAD_WEATHER_SUCCESS: {
 
-            return Object.assign({}, state, {
+            return {
+                ...state,
                 series: state.series.map((item) => {
                         return Object.assign({}, item, {
                             data: item.data.concat(_.map(action.weather.list, (obj)=> {
@@ -30,15 +31,17 @@ export default function weatherReducer(state = initialState.weather, action) {
                         categories:axis.categories.concat(_.pluck(action.weather.list,'dt_txt'))
                     });
                 }),
-                isFetching:action.weather.cod==='200'?false:true, message:action.weather.message
-            })
+                isFetching:action.weather.cod==='200'?false:true, message:action.weather.message,
+                status:true
+            }
 
 
         }
         case types.LOAD_WEATHER_FAILED: {
             return{
                 ...state,
-                isFetching:true,message:action.weather.message
+                isFetching:true,message:action.weather.message,
+                status:false
             }
 
         }

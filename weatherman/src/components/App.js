@@ -14,7 +14,7 @@ class App extends Component {
                     <h2>{this.props.weather.message}</h2>
                 }
                 {
-                    typeof this.props.weather.isFetching!=='undefined' &&
+                    this.props.weather.status &&
                     <Visualization/>
                 }
 
