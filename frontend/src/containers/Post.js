@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {loadPost} from "../actions/post";
+import {loadPost} from '../actions/post';
 import Comments from '../containers/Comments'
 import Timestamp from 'react-timestamp';
 
 class Post extends Component {
 
     componentDidMount() {
-        this.props.dispatch(loadPost(this.props.match.params.post));
+        this.props.loadPost(this.props.match.params.post);
     }
     componentWillReceiveProps(nextprops) {
 
         if(nextprops.match.params.post!==this.props.match.params.post)
-        this.props.dispatch(loadPost(this.props.match.params.post));
+        this.props.loadPost(this.props.match.params.post);
 
     }
 
@@ -48,5 +48,12 @@ function mapStateToProps(state){
         post:state.rootReducer.posts.post
     };
 }
+const mapDispatchToProps = (dispatch) => {
+    return {
+        loadPost: () => {
+            dispatch(loadPost())
+        }
+    }
+}
 
-export default connect(mapStateToProps)(Post);
+export default connect(mapStateToProps,mapDispatchToProps)(Post);

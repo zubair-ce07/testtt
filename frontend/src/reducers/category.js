@@ -1,7 +1,6 @@
 
 import * as types from '../actions/actionTypes';
 import initialState from './initialState';
-import _ from 'underscore'
 
 
 export default function categoryReducer(state =initialState.categories, action) {
@@ -9,25 +8,34 @@ export default function categoryReducer(state =initialState.categories, action) 
     console.log(action)
     switch(action.type) {
 
+        case types.LOAD_CATEGORY_PROGRESS: {
+            return{
+                ...state,
+                isFetching:true
+            }
 
+        }
         case types.LOAD_CATEGORY_SUCCESS: {
             return{
                 ...state,
-                categories:action.data.categories
+                categories:action.data.categories,
+                isFetching:false
             }
 
         }
         case types.LOAD_CATEGORY_FAILED: {
             return{
                 ...state,
-                categories:action.data.categories
+                categories:action.data.categories,
+                isFetching:false
             }
 
         }
         case types.LOAD_CATEGORY_POST_SUCCESS: {
             return{
                 ...state,
-                posts:action.data
+                posts:action.data,
+                isFetching:false
             }
 
         }
@@ -35,7 +43,8 @@ export default function categoryReducer(state =initialState.categories, action) 
             return{
                 ...state,
                 posts:
-                action.data
+                action.data,
+                isFetching:false
             }
         }
 

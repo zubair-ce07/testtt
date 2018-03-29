@@ -1,10 +1,12 @@
 
 import categoryApi from '../api/category';
 import {loadCategorySuccess, loadCategoryFailed,
-    getPostsSuccess ,getPostsFailed} from './index';
+    getPostsSuccess ,getPostsFailed,loadCategoryProgress} from './index';
 
 export function loadCategory() {
+
     return function(dispatch) {
+        dispatch(loadCategoryProgress())
 
         return categoryApi.getCategoryData().then(categories => {
 
@@ -19,6 +21,7 @@ export function loadCategory() {
 export function loadPosts(category) {
 
     return function(dispatch) {
+        dispatch(loadCategoryProgress())
 
         categoryApi.getPostsOfCategory(category).then(posts => {
             console.log(posts)

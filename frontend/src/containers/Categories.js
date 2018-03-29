@@ -1,40 +1,45 @@
 import React, {Component} from 'react';
-import Category from '../containers/Category';
+import Loader from '../containers/Loader';
 import {connect} from 'react-redux';
-import {BrowserRouter as Router,Link, Route} from 'react-router-dom'
-import {loadCategory} from "../actions/category";
+import {Link} from 'react-router-dom'
+import {loadCategory} from '../actions/category';
 class Categories extends Component {
 
     componentDidMount(){
-        this.props.dispatch(loadCategory())
+
+        if(!this.props.categories.length)this.props.loadCategory()
     }
 
     render() {
         return (
+            <div className={'container'}>
+                <Loader isFetching={this.props.isFetching} />
 
+                {this.props.categories.map(function(category){
+                    return <div key={category.path} className={'row'}>
+                        <Link to={`/category/${category.name}`} >{category.name}</Link>
+                    </div>;
+                })}
 
-            <Router>
-                <div className={'container'}>
-                    {this.props.categories.map(function(category){
-                        return <div key={category.path} className={'row'}>
-                                <Link to={`/category/${category.name}`} >{category.name}</Link>
-                            </div>;
-                        })}
-
-                    <Route path={`/category/:category`}  component={Category}/>
-                </div>
-            </Router>
-
+            </div>
         )
     }
 }
 function mapStateToProps(state){
     console.log(state)
     return {
-        categories: state.rootReducer.categories.categories
+        categories: state.rootReducer.categories.categories,
+        isFetching: state.rootReducer.categories.isFetching
     };
 }
-export default connect(mapStateToProps)(Categories);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        loadCategory: () => {
+            dispatch(loadCategory())
+        }
+    }
+}
+export default connect(mapStateToProps,mapDispatchToProps)(Categories);
 
 
 

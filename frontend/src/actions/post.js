@@ -1,13 +1,15 @@
 
 import postApi from '../api/post';
 import {getAllPostsSuccess ,getAllPostsFailed,getPostSuccess,getPostFailed,
-    addPostSuccess, addPostFailed, updatePostSuccess, updatePostFailed,deletePostSuccess,deletePostFailed} from './index';
-import commentApi from "../api/comment";
+    addPostSuccess, addPostFailed, updatePostSuccess, updatePostFailed,
+    deletePostSuccess,deletePostFailed,LoadPostsProgress} from './index';
+import commentApi from '../api/comment';
 
 
 export function loadAllPosts() {
 
     return function(dispatch) {
+        dispatch(LoadPostsProgress());
 
         postApi.getAllPostsData().then(posts => {
             console.log(posts)

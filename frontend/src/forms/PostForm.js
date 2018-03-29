@@ -22,18 +22,18 @@ console.log(props)
             <Field name='title'    type='text' component={renderField} label='Title'/>
             <Field name='body'     type='text' component={renderField} label='Details'/>
             <div><label>Category</label></div>
-                    <Field name="category" component="select">
+                    <Field name='category' component='select'>
 
-                        <option value="redux">redux</option>
-                        <option value="react">react</option>
-                        <option value="udacity">udacity</option>
+                        <option value='redux'>redux</option>
+                        <option value='react'>react</option>
+                        <option value='udacity'>udacity</option>
                     </Field>
 
 
             {error && <strong>{error}</strong>}
             <div>
-                <button type="submit" disabled={pristine || submitting}>Done</button>
-                <button type="button" disabled={pristine || submitting} onClick={reset}>Undo</button>
+                <button type='submit' disabled={pristine || submitting}>Done</button>
+                <button type='button' disabled={pristine || submitting} onClick={reset}>Undo</button>
             </div>
         </form>
     );

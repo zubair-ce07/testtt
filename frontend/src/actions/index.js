@@ -3,6 +3,10 @@ import * as actionType from './actionTypes';
 
 
 
+export const loadCategoryProgress= (data)=> ({
+
+    type: actionType.LOAD_CATEGORY_PROGRESS, data
+})
 export const loadCategorySuccess= (data)=> ({
 
     type: actionType.LOAD_CATEGORY_SUCCESS, data
@@ -22,6 +26,11 @@ export const getPostsFailed= (error)=> ({
 })
 
 ////// POSTS ACTIONS///////////////
+export const LoadPostsProgress= (data)=> ({
+
+    type: actionType.LOAD_POSTS_PROGRESS, data
+})
+
 export const getAllPostsSuccess= (data)=> ({
 
     type: actionType.LOAD_POSTS_SUCCESS, data

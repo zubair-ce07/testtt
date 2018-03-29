@@ -1,28 +1,34 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {loadPosts,loadCategory} from "../actions/category";
+import {loadPosts} from '../actions/category';
 import ListHeader from '../containers/ListHeader';
+import Categories from '../containers/Categories';
 import ListResource from './ListResource';
 class Category extends Component {
 
     componentDidMount() {
-        this.props.dispatch(loadPosts(this.props.match.params.category));
+        this.props.loadPosts(this.props.match.params.category);
 
     }
     componentWillReceiveProps(nextProps){
-
-        if(!nextProps.categories.length) this.props.dispatch(loadCategory())
-        if(nextProps.match.params.category!==this.props.match.params.category)  this.props.dispatch(loadPosts(nextProps.match.params.category));
+        if(nextProps.match.params.category!==this.props.match.params.category)  {
+            this.props.loadPosts(nextProps.match.params.category);
+        }
 
     }
 
     render(){
         const posts= this.props.posts;
         return (
-            <div className='container'>
-                <h2>Posts</h2>
-                <ListHeader mode={'category-posts'}/>
 
+
+            <div className='container'>
+                <Categories/>
+                <h2>Posts</h2>
+                {
+                    posts.length>0 &&
+                    <ListHeader mode={'category-posts'}/>
+                }
                 <ListResource
                     resource={posts}
                     mode={'category-posts'}
@@ -37,4 +43,12 @@ function mapStateToProps(state){
         categories: state.rootReducer.categories.categories
     };
 }
-export default connect(mapStateToProps)(Category);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        loadPosts: (category) => {
+            dispatch(loadPosts(category))
+        },
+
+    }
+}
+export default connect(mapStateToProps,mapDispatchToProps)(Category);

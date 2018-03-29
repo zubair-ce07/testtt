@@ -30,7 +30,7 @@ const ListResource = (props) => (
                         {item.author}
                     </div>
                     <div className={'col-md-2'}>
-                        <Timestamp time={item.timestamp}/>
+                        <Timestamp time={new Date(item.timestamp)}/>
                     </div>
                     <div className={'col-md-2'}>
                         {item.voteScore}

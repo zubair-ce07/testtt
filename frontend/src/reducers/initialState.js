@@ -12,6 +12,7 @@ export default {
         editComment:false
     },
     categories:{
+        categories:[],
         posts:[]
     },
 
