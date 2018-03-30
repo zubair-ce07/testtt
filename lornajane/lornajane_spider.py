@@ -59,7 +59,7 @@ class LornaJaneParseSpider(BaseParseSpider):
         return [x for x in clean(response.css('#desc2 ::text')) if x not in self.unwanted_description]
 
     def product_description(self, response):
-        xpath = '//div[@itemprop="description"]/p[position()<3]//text()'
+        xpath = '//div[@itemprop="description"]/p[position()<3]//text() | //*[@id="desc1"]/div[2]/div/div[3]//text()'
         description = clean(response.xpath(xpath))
 
         return description + [line for line in self.raw_description(response) if not self.care_criteria(line)]
