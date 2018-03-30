@@ -85,7 +85,7 @@ class LornaJaneParseSpider(BaseParseSpider):
             return
         colour = clean(response.css(".color-swatch a.selected ::attr(title)"))
         if colour:
-            sku_common['colour'] = colour
+            sku_common['colour'] = colour[0]
 
         previous_price, sku_common['price'], _ = self.product_pricing(response)
         if previous_price:
