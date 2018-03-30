@@ -41,10 +41,11 @@ class LornaJaneParseSpider(BaseParseSpider):
             return
 
         self.boilerplate_normal(garment, response)
-        garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
         if not garment['skus']:
             return
+
+        garment["image_urls"] = self.image_urls(response)
         garment['meta'] = {'requests_queue': self.colour_requests(response)}
         return self.next_request_or_garment(garment)
 
@@ -79,12 +80,12 @@ class LornaJaneParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         currency = response.css('span[itemprop=priceCurrency]::attr(content)').extract()[0]
+        if not currency:
+            return
         colour = clean(response.css(".color-swatch a.selected ::attr(title)"))[0]
         sku_common = {'colour': colour, 'currency': CurrencyParser.currency(currency)}
 
         previous_price, sku_common['price'], _ = self.product_pricing(response)
-        if not sku_common['price']:
-            return
         if previous_price:
             sku_common['previous_prices'] = previous_price
 
@@ -113,7 +114,14 @@ class LornaJaneParseSpider(BaseParseSpider):
 class LornaJaneCrawlSpider(BaseCrawlSpider):
     listings_css = ['.pri-nav a[title~="Shop"]+div']
     products_css = ['div.product-item a.name']
-    deny_r = ['/giftCard', '/lookbook', '/instashop', '/c-Activity', '/sisterhood', '/ActiveOutlet']
+    deny_r = [
+        '/giftCard',
+        '/lookbook',
+        '/instashop',
+        '/c-Activity',
+        '/sisterhood',
+        '/ActiveOutlet'
+    ]
 
     rules = (
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_r), callback='parse_pagination'),
