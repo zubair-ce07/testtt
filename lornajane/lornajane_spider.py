@@ -80,10 +80,12 @@ class LornaJaneParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         currency = response.css('span[itemprop=priceCurrency]::attr(content)').extract()[0]
+        sku_common = {'currency': CurrencyParser.currency(currency)}
         if not currency:
             return
-        colour = clean(response.css(".color-swatch a.selected ::attr(title)"))[0]
-        sku_common = {'colour': colour, 'currency': CurrencyParser.currency(currency)}
+        colour = clean(response.css(".color-swatch a.selected ::attr(title)"))
+        if colour:
+            sku_common['colour'] = colour
 
         previous_price, sku_common['price'], _ = self.product_pricing(response)
         if previous_price:
