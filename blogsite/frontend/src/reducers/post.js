@@ -63,8 +63,7 @@ export default function categoryReducer(state = initialState.postState, action) 
                     author: 'Haniya',
                     category: 'Redux'
                 },
-                createPost:true,
-                editPost:false
+                postFormType:'create'
             }
         }
         case types.CREATE_POST_FAILED: {
@@ -79,7 +78,7 @@ export default function categoryReducer(state = initialState.postState, action) 
 
                 allPosts:state.allPosts.concat(action.post),
                 post:{},
-                createPost:false
+                postFormType:''
             }
         }
         case types.ADD_POST_FAILED: {
@@ -93,8 +92,8 @@ export default function categoryReducer(state = initialState.postState, action) 
                 ...state,
 
                 post:action.post,
-                editPost:true,
-                createPost:false
+                postFormType:'edit'
+
             }
         }
         case types.EDIT_POST_FAILED: {
@@ -112,7 +111,7 @@ export default function categoryReducer(state = initialState.postState, action) 
                     else return post
 
                 }),
-                editPost:false
+                postFormType:''
             }
         }
         case types.UPDATE_POST_FAILED: {
@@ -158,7 +157,7 @@ export default function categoryReducer(state = initialState.postState, action) 
                     else return comment
 
                 }),
-                editComment:false
+                commentFormType:''
             }
         }
         case types.UPDATE_COMMENT_FAILED: {
@@ -194,7 +193,7 @@ export default function categoryReducer(state = initialState.postState, action) 
 
                 comments:state.comments.concat(action.comment),
                 comment:{},
-                createComment:false
+                commentFormType:''
             }
 
         }
@@ -209,7 +208,7 @@ export default function categoryReducer(state = initialState.postState, action) 
                 ...state,
 
                 comment:action.comment,
-                editComment:true
+                commentFormType:'edit'
             }
         }
         case types.EDIT_COMMENT_FAILED: {
@@ -228,7 +227,7 @@ export default function categoryReducer(state = initialState.postState, action) 
                     author: 'Haniya',
                     parentId:action.parentId
                 },
-                createComment:true
+                commentFormType:'create'
             }
 
         }

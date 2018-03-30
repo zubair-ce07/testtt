@@ -14,11 +14,11 @@ class Categories extends Component {
     render() {
         return (
             <Router>
-            <div className={'container'}>
+            <div className='container'>
                 <Loader isFetching={this.props.isFetching} />
 
                 {this.props.categories.map(function(category){
-                    return <div key={category.path} className={'row'}>
+                    return <div key={category.path} className='row'>
                         <Link to={`/category/${category.name}`} >{category.name}</Link>
                     </div>;
                 })}

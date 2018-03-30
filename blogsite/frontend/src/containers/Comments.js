@@ -1,26 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {deleteComment,addComment, updateComment} from '../actions/comment';
+import {deleteComment} from '../actions/comment';
 import {editCommentSuccess, createCommentSuccess} from '../actions/index'
 import CommentForm from '../forms/CommentForm'
 import ListHeader from '../containers/ListHeader'
 import ListResource from './ListResource'
 
 class Comments extends Component {
-    constructor(props) {
-        super(props);
-        this.handleCreateSubmit = this.handleCreateSubmit.bind(this);
-        this.handleEditSubmit = this.handleEditSubmit.bind(this);
-
-    }
-
-    handleCreateSubmit(comment) {
-        this.props.addComment(comment)
-    }
-    handleEditSubmit(comment) {
-        this.props.updateComment(comment)
-    }
-
     render(){
         const comments= this.props.comments;
         const postId= this.props.post.id;
@@ -29,7 +15,7 @@ class Comments extends Component {
             <div className='container'>
 
                 <h2>Comments</h2>
-                <i  className={'glyphicon glyphicon-plus'}  onClick={()=> {this.props.createCommentSuccess(postId)}}> </i>
+                <i  className='glyphicon glyphicon-plus'  onClick={()=> {this.props.createCommentSuccess(postId)}}> </i>
 
                 {   comments.length>0 &&
                 <ListHeader mode={'comments'}/>
@@ -45,13 +31,9 @@ class Comments extends Component {
                     }
                 />
 
-                {    this.props.editComment &&
-                <CommentForm mode={'edit'}  onSubmit={this.handleEditSubmit}/>
+                {  this.props.commentFormType!=='' &&
+                <CommentForm/>
 
-                }
-                {
-                    this.props.createComment &&
-                    <CommentForm  mode={'create'}  onSubmit={this.handleCreateSubmit}/>
                 }
 
             </div>
@@ -62,21 +44,14 @@ class Comments extends Component {
 function mapStateToProps(state){
     return {
         comments:state.rootReducer.posts.comments,
-        createComment:state.rootReducer.posts.createComment,
-        editComment:state.rootReducer.posts.editComment,
         post:state.rootReducer.posts.post,
+        commentFormType:state.rootReducer.posts.commentFormType,
     };
 }
 const mapDispatchToProps = (dispatch) => {
     return {
         deleteComment: (commentId) => {
             dispatch(deleteComment(commentId))
-        },
-        addComment: (comment) => {
-            dispatch(addComment(comment))
-        },
-        updateComment:(comment) => {
-            dispatch(updateComment(comment))
         },
         editCommentSuccess:(comment) => {
             dispatch(editCommentSuccess(comment))

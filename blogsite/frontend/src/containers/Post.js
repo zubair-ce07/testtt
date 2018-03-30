@@ -22,17 +22,17 @@ class Post extends Component {
 
             <div className='container'>
                 <h2>{post.title}</h2>
-                <div className={'row'}>
-                    <div className={'col-md-6'}>
+                <div className='row'>
+                    <div className='col-md-6'>
                         <b>Detail </b>{post.body}
                     </div>
-                    <div className={'col-md-3'}>
+                    <div className='col-md-3'>
                         <b>Author </b>{post.author}
                     </div>
-                    <div className={'col-md-2'}>
+                    <div className='col-md-2'>
                         <b>Time </b><Timestamp time={post.timestamp}/>
                     </div>
-                    <div className={'col-md-1'}>
+                    <div className='col-md-1'>
                         <b>Votes  </b>{post.voteScore}
                     </div>
 

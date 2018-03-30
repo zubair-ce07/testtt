@@ -53,11 +53,11 @@ class Posts extends Component {
             <div className='container'>
                 <Loader isFetching={this.props.isFetching}/>
                 <h1>Posts</h1>
-                <div className={'row'}>
-                    <div className={'col-md-6'}>
-                        <i  className={'glyphicon glyphicon-plus'}  onClick={()=> {this.props.createPostSuccess()}}> </i>
+                <div className='row'>
+                    <div className='col-md-6'>
+                        <i  className='glyphicon glyphicon-plus'  onClick={()=> {this.props.createPostSuccess()}}> </i>
                     </div>
-                    <div className={'col-md-4'}>
+                    <div className='col-md-4'>
                         <label>Sort</label>
                         <Select
                             name='form-field-name'
@@ -81,12 +81,9 @@ class Posts extends Component {
                     }
                 />
 
-                {   this.props.createPost &&
-                <PostForm mode={'create'} onSubmit={this.handleCreateSubmit}/>
+                {   this.props.postFormType!=='' &&
+                <PostForm />
 
-                }
-                {   this.props.editPost &&
-                <PostForm mode={'edit'} onSubmit={this.handleEditSubmit}/>
                 }
             </div>
 
@@ -97,8 +94,7 @@ function mapStateToProps(state){
 
     return {
         allPosts: state.rootReducer.posts.allPosts,
-        createPost:state.rootReducer.posts.createPost,
-        editPost:state.rootReducer.posts.editPost,
+        postFormType:state.rootReducer.posts.postFormType,
         isFetching:state.rootReducer.posts.isFetching
     };
 }

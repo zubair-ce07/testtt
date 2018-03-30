@@ -1,19 +1,31 @@
 import React, {Component} from 'react'
 import { Field, reduxForm } from 'redux-form'
 import {connect} from 'react-redux'
+import {addComment, updateComment} from "../actions/comment";
+
 
 class CommentsForm extends Component {
-   
-    render() {
+    constructor(props) {
+        super(props);
+        this.handleCommentSubmit = this.handleCommentSubmit.bind(this);
 
-        const { handleSubmit, pristine, reset, submitting ,mode} = this.props
+    }
+
+    handleCommentSubmit(comment) {
+       if(this.props.commentFormType==='create') this.props.addComment(comment)
+        else this.props.updateComment(comment);
+    }
+
+    render() {
+        const { handleSubmit, pristine, reset, submitting,commentFormType} = this.props;
+
         return (
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit(this.handleCommentSubmit)}>
 
                 <div>
                     <label>Name</label>
                     <div>
-                        <Field name='author' component='input' type='text' placeholder='Name' disabled={mode==='edit'}/>
+                        <Field name='author' component='input' type='text' placeholder='Name' disabled={commentFormType==='edit'}/>
                     </div>
                 </div>
 
@@ -36,17 +48,32 @@ class CommentsForm extends Component {
     }
 
 }
+function mapStateToProps(state){
+    return {
+        initialValues: state.rootReducer.posts.comment,
+        commentFormType:state.rootReducer.posts.commentFormType
 
+    };
+}
+const mapDispatchToProps = (dispatch) => {
+    return {
+        addComment: (comment) => {
+         dispatch(addComment(comment))
+        },
+        updateComment: (comment) => {
+            dispatch(updateComment(comment))
 
+        }
+    }
+}
 CommentsForm = reduxForm({
     form: 'CommentsForm',
     enableReinitialize : true
 })(CommentsForm)
 
 CommentsForm = connect(
-    state => ({
-        initialValues: state.rootReducer.posts.comment
-    })
+    mapStateToProps,
+    mapDispatchToProps
 )(CommentsForm)
 export default CommentsForm
 
