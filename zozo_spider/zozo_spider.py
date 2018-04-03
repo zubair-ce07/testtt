@@ -64,6 +64,7 @@ class ZozotownParseSpider(BaseParseSpider):
     def raw_description(self, response):
         sel = response.css('#tabItemInfo .contbox')[0]
         raw_desc = clean(sel.css('div ::text, br ::text, b ::text'))
+        raw_desc = [' '.join(raw_desc).split('。')[0]]
         raw_care = clean(response.xpath('//div[@id="itemDetailInfo"]//dd/text()'))
         return raw_desc+raw_care
 
