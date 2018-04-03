@@ -78,14 +78,14 @@ class RebelliousParseSpider(BaseParseSpider):
         raw_skus = self.magento_product_map(spconfig)
 
         for sku_id, sku_values in raw_skus.items():
-            for sku_value in sku_values:
-                sku = common_sku.copy()
+            raw_sku = sku_values[0]
+            sku = common_sku.copy()
 
-                if sku_value["titlenew"] == 'Out Of Stock':
-                    sku["out_of_stock"] = True
-                size = sku_value["label"]
-                sku["size"] = self.one_size if size == "One Size" else size
-                skus[sku_id] = sku
+            if raw_sku["titlenew"] == 'Out Of Stock':
+                sku["out_of_stock"] = True
+            size = raw_sku["label"]
+            sku["size"] = self.one_size if size == "One Size" else size
+            skus[sku_id] = sku
 
         return skus
 
