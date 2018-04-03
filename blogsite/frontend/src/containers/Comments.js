@@ -31,7 +31,7 @@ class Comments extends Component {
                     }
                 />
 
-                {  this.props.commentFormType!==null &&
+                {  this.props.commentFormType &&
                 <CommentForm/>
 
                 }

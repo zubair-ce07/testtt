@@ -81,7 +81,7 @@ class Posts extends Component {
                     }
                 />
 
-                {   this.props.postFormType!==null &&
+                {   this.props.postFormType &&
                 <PostForm />
 
                 }
