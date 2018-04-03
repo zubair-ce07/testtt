@@ -47,9 +47,9 @@ export const getPostSuccess= (data, comments)=> ({
 export const getPostFailed= (error)=> ({
     type: actionType.GET_POST_FAILED, error
 })
-export const createPostSuccess= ()=> ({
+export const createPostSuccess= (id)=> ({
 
-    type: actionType.CREATE_POST_SUCCESS
+    type: actionType.CREATE_POST_SUCCESS,id
 })
 
 export const createPostFailed= (error)=> ({
@@ -127,9 +127,9 @@ export const updateCommentSuccess= (comment,id)=> ({
 export const updateCommentFailed= (error)=> ({
     type: actionType.UPDATE_COMMENT_FAILED, error
 })
-export const createCommentSuccess= (parentId)=> ({
+export const createCommentSuccess= (parentId,id)=> ({
 
-    type: actionType.CREATE_COMMENT_SUCCESS,parentId
+    type: actionType.CREATE_COMMENT_SUCCESS,parentId,id
 })
 export const createCommentFailed= (error)=> ({
 

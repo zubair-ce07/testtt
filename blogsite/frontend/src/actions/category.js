@@ -31,4 +31,3 @@ export function loadPosts(category) {
         });
     }
 }
-

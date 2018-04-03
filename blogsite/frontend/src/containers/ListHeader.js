@@ -32,5 +32,3 @@ const ListHeader = (props) => (
 );
 
 export default ListHeader
-
-

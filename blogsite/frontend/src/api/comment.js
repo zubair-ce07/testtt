@@ -1,9 +1,10 @@
 import axios from 'axios';
+import {baseUrl} from '../api/config'
 axios.defaults.headers.common['Authorization'] = 'apple';
 class commentApi {
 
     static getComments(postId) {
-        var url=`http://localhost:3001/posts/${postId}/comments`;
+        var url=`${baseUrl}posts/${postId}/comments`;
         return fetch(url, {
             headers: { 'Authorization': 'apple' }
         }).then(response => {
@@ -13,7 +14,7 @@ class commentApi {
         });
     }
     static deleteComment(commentId) {
-        var url=`http://localhost:3001/comments/${commentId}`;
+        var url=`${baseUrl}comments/${commentId}`;
 
         return axios.delete(url)
             .then(response => {
@@ -23,7 +24,7 @@ class commentApi {
             });
     }
     static addComment( comment) {
-        var url=`http://localhost:3001/comments`;
+        var url=`${baseUrl}comments`;
 
         return axios.post(url, comment)
             .then(response => {
@@ -33,7 +34,7 @@ class commentApi {
             });
     }
     static updateComment(comment,commentId) {
-        var url=`http://localhost:3001/comments/${commentId}`;
+        var url=`${baseUrl}comments/${commentId}`;
 
         return axios.put(url, comment)
             .then(response => {

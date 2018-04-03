@@ -1,17 +1,6 @@
 import React from 'react';
 
-
 const Loader = (props) => (
-
-    <div>
-        {
-            props.isFetching &&
-            <div > Loading...</div>
-        }
-
-    </div>
-);
-
+     props.isFetching ? <div > Loading...</div> : null
+)
 export default Loader
-
-

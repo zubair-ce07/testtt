@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import Categories from '../containers/Categories';
 import Posts from '../containers/Posts';
-import {connect} from 'react-redux';
 import { Switch } from 'react-router';
 import 'react-tabs/style/react-tabs.css';
 import { Tab, Tabs, TabList, TabPanel} from 'react-tabs';
@@ -21,18 +20,18 @@ class App extends Component {
                             <Tab><Link to='/'>Categories</Link></Tab>
                             <Tab><Link to='/posts'>Posts</Link></Tab>
                         </TabList>
-                        <TabPanel/>
-                        <TabPanel/>
+                        <TabPanel><Route exact path='/' component={Categories} /></TabPanel>
+                        <TabPanel>
+                            <Switch>
+                                <Route path={'/posts/:post'} component={Post}/>
+                                <Route path='/posts' component={Posts} />
+                            </Switch>
+                        </TabPanel>
                     </Tabs>
 
 
                     <hr />
-                    <Switch>
 
-                        <Route exact path='/' component={Categories} />
-                        <Route path={'/posts/:post'} component={Post}/>
-                        <Route path='/posts' component={Posts} />
-                    </Switch>
 
                 </div>
             </Router>
@@ -40,7 +39,7 @@ class App extends Component {
         )
     }
 }
-export default connect()(App);
+export default App;
 
 
 

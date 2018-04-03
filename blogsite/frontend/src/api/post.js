@@ -1,9 +1,11 @@
 import axios from 'axios';
+import {baseUrl} from '../api/config';
 axios.defaults.headers.common['Authorization'] = 'apple';
+
 class postApi {
 
     static getAllPostsData() {
-        var url=`http://localhost:3001/posts`;
+        var url=`${baseUrl}posts`;
         return fetch(url, {
             headers: { 'Authorization': 'apple' }
         }).then(response => {
@@ -13,7 +15,7 @@ class postApi {
         });
     }
     static getPost(postId) {
-        var url=`http://localhost:3001/posts/${postId}`;
+        var url=`${baseUrl}posts/${postId}`;
         return fetch(url, {
             headers: { 'Authorization': 'apple' }
         }).then(response => {
@@ -23,7 +25,7 @@ class postApi {
         });
     }
     static addPost( post) {
-        var url='http://localhost:3001/posts';
+        var url=`${baseUrl}posts`;
 
         return axios.post(url, post)
             .then(response => {
@@ -33,7 +35,7 @@ class postApi {
             });
     }
     static editPost( post, postId) {
-        var url=`http://localhost:3001/posts/${postId}`;
+        var url=`${baseUrl}posts/${postId}`;
 
         return axios.put(url, post)
             .then(response => {
@@ -43,7 +45,7 @@ class postApi {
             });
     }
     static deletePost(postId) {
-        var url=`http://localhost:3001/posts/${postId}`;
+        var url=`${baseUrl}posts/${postId}`;
 
         return axios.delete(url)
             .then(response => {
@@ -53,22 +55,4 @@ class postApi {
             });
     }
 
-}
-
-export default postApi;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}export default postApi;

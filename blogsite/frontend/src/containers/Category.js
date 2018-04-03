@@ -24,7 +24,7 @@ class Category extends Component {
             <div className='container'>
                 <h2>Posts</h2>
                 {
-                    posts.length>0 &&
+                    Boolean(posts.length) &&
                     <ListHeader mode={'category-posts'}/>
                 }
                 <ListResource

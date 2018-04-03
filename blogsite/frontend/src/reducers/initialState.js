@@ -6,8 +6,8 @@ export default {
         post:{},
         comments:[],
         comment:{},
-        commentFormType:'',
-        postFormType:'',
+        commentFormType:null,
+        postFormType:null,
     },
     categories:{
         categories:[],

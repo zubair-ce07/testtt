@@ -55,7 +55,7 @@ class Posts extends Component {
                 <h1>Posts</h1>
                 <div className='row'>
                     <div className='col-md-6'>
-                        <i  className='glyphicon glyphicon-plus'  onClick={()=> {this.props.createPostSuccess()}}> </i>
+                        <i  className='glyphicon glyphicon-plus'  onClick={()=> {this.props.createPostSuccess(Math.random().toString(36).slice(2))}}> </i>
                     </div>
                     <div className='col-md-4'>
                         <label>Sort</label>
@@ -81,7 +81,7 @@ class Posts extends Component {
                     }
                 />
 
-                {   this.props.postFormType!=='' &&
+                {   this.props.postFormType!==null &&
                 <PostForm />
 
                 }
@@ -115,8 +115,8 @@ const mapDispatchToProps = (dispatch) => {
         sortAllPosts:(sortBy) => {
             dispatch(sortAllPosts(sortBy))
         },
-        createPostSuccess:() => {
-        dispatch(createPostSuccess())
+        createPostSuccess:(id) => {
+        dispatch(createPostSuccess(id))
     },
         editPostSuccess:(post) => {
         dispatch(editPostSuccess(post))

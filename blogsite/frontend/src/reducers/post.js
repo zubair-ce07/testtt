@@ -56,7 +56,7 @@ export default function categoryReducer(state = initialState.postState, action) 
             return {
                 ...state,
                 post:{
-                    id: Math.random().toString(36).slice(2),
+                    id: action.id,
                     timestamp: '',
                     title: 'Default Title',
                     body: '',
@@ -78,7 +78,7 @@ export default function categoryReducer(state = initialState.postState, action) 
 
                 allPosts:state.allPosts.concat(action.post),
                 post:{},
-                postFormType:''
+                postFormType:null
             }
         }
         case types.ADD_POST_FAILED: {
@@ -111,7 +111,7 @@ export default function categoryReducer(state = initialState.postState, action) 
                     else return post
 
                 }),
-                postFormType:''
+                postFormType:null
             }
         }
         case types.UPDATE_POST_FAILED: {
@@ -157,7 +157,7 @@ export default function categoryReducer(state = initialState.postState, action) 
                     else return comment
 
                 }),
-                commentFormType:''
+                commentFormType:null
             }
         }
         case types.UPDATE_COMMENT_FAILED: {
@@ -193,7 +193,7 @@ export default function categoryReducer(state = initialState.postState, action) 
 
                 comments:state.comments.concat(action.comment),
                 comment:{},
-                commentFormType:''
+                commentFormType:null
             }
 
         }
@@ -221,7 +221,7 @@ export default function categoryReducer(state = initialState.postState, action) 
             return  {
                 ...state,
                 comment:{
-                    id: Math.random().toString(36).slice(2),
+                    id: action.id,
                     timestamp: '',
                     body: '',
                     author: 'Haniya',

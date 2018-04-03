@@ -15,9 +15,9 @@ class Comments extends Component {
             <div className='container'>
 
                 <h2>Comments</h2>
-                <i  className='glyphicon glyphicon-plus'  onClick={()=> {this.props.createCommentSuccess(postId)}}> </i>
+                <i  className='glyphicon glyphicon-plus'  onClick={()=> {this.props.createCommentSuccess(postId,Math.random().toString(36).slice(2))}}> </i>
 
-                {   comments.length>0 &&
+                {   Boolean(comments.length) &&
                 <ListHeader mode={'comments'}/>
                 }
                 <ListResource
@@ -31,7 +31,7 @@ class Comments extends Component {
                     }
                 />
 
-                {  this.props.commentFormType!=='' &&
+                {  this.props.commentFormType!==null &&
                 <CommentForm/>
 
                 }
@@ -56,8 +56,8 @@ const mapDispatchToProps = (dispatch) => {
         editCommentSuccess:(comment) => {
             dispatch(editCommentSuccess(comment))
         },
-        createCommentSuccess:(id) => {
-            dispatch(createCommentSuccess(id))
+        createCommentSuccess:(parentId,id) => {
+            dispatch(createCommentSuccess(parentId,id))
         },
 
     }
