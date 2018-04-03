@@ -31,7 +31,8 @@ class MixinUS(Mixin):
 
 class RebelliousParseSpider(BaseParseSpider):
     price_css = '.price-box span ::text'
-    raw_description_css = '#product_tabs_description_contents ::text'
+    description_css = '#product_tabs_description_contents .short-description p ::text'
+    raw_description_css = '#product_tabs_description_contents .std li ::text'
 
     def parse(self, response):
         garment = self.new_unique_garment(self.product_id(response))
