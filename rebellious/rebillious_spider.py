@@ -8,12 +8,12 @@ class Mixin:
     retailer = "rebellious"
     allowed_domains = ["www.rebelliousfashion.co.uk"]
     gender = "women"
-    MERCH_INFO = ["30% OFF EVERYTHING* - CODE: GIRLBOSS"]
+    MERCH_INFO = ["(30% OFF)"]
 
 
 class MixinUK(Mixin):
     retailer = Mixin.retailer + "-uk"
-    start_urls = ["https://www.rebelliousfashion.co.uk/"]
+    start_urls = ["https://www.rebelliousfashion.co.uk/?___store=gbp"]
     market = "UK"
 
 
@@ -66,7 +66,7 @@ class RebelliousParseSpider(BaseParseSpider):
 
     def merch_info(self, response):
         merch_info = clean(response.css('.special-price-discount-percentage ::text'))
-        return self.MERCH_INFO if merch_info and merch_info[0] == "(30% OFF)" else []
+        return [m for m in self.MERCH_INFO if m in merch_info]
 
     def skus(self, response):
         skus = {}
