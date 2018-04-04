@@ -1,5 +1,7 @@
-from scrapy.spiders import Rule
+from scrapy.spiders import Rule, Request
+from scrapy import Selector
 from scrapy.linkextractors import LinkExtractor
+from w3lib.url import add_or_replace_parameter
 
 from .base import BaseCrawlSpider, BaseParseSpider, clean
 
@@ -8,7 +10,8 @@ class Mixin:
     retailer = "rebellious"
     allowed_domains = ["www.rebelliousfashion.co.uk"]
     gender = "women"
-    MERCH_INFO = ["(30% OFF)"]
+    merch_info_api = "https://rebelliousfashion.1.bunting.com/call-2.js?"
+    MERCH_INFO = ["Up To 85% Off Everything!!"]
 
 
 class MixinUK(Mixin):
@@ -42,13 +45,30 @@ class RebelliousParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         garment["image_urls"] = self.image_urls(response)
         garment["skus"] = self.skus(response)
-        garment["merch_info"] = self.merch_info(response)
 
         if not garment["skus"]:
             garment.update(self.product_pricing_common_new(response))
             garment["out_of_stock"] = True
+        garment['meta'] = {
+            'requests_queue': self.merch_info(response)
+        }
 
-        return garment
+        return self.next_request_or_garment(garment)
+
+    def merch_info(self, response):
+        wmid = response.xpath('//script[contains(text(),"wmID")]/text()').re_first('wmID=(\d+)')
+        url = add_or_replace_parameter(self.merch_info_api, "url", response.url)
+        merch_info_url = add_or_replace_parameter(url, "wmID", wmid)
+
+        return [Request(merch_info_url, dont_filter=True, callback=self.parse_merch_info)]
+
+    def parse_merch_info(self, response):
+        garment = response.meta["garment"]
+        sel = Selector(text=response.text)
+        merch_info = [clean(sel.css('div p ::text'))[0]]
+        garment["merch_info"] = [m for m in self.MERCH_INFO if m in merch_info]
+
+        return self.next_request_or_garment(garment)
 
     def product_id(self, response):
         return self.magento_product_id(response)
@@ -64,10 +84,6 @@ class RebelliousParseSpider(BaseParseSpider):
 
     def image_urls(self, response):
         return clean(response.css('.swiper-slide img ::attr(src)'))
-
-    def merch_info(self, response):
-        merch_info = clean(response.css('.special-price-discount-percentage ::text'))
-        return [m for m in self.MERCH_INFO if m in merch_info]
 
     def skus(self, response):
         skus = {}
@@ -128,3 +144,4 @@ class RebelliousParseSpiderUS(MixinUS, RebelliousParseSpider):
 class RebelliousCrawlSpiderUS(MixinUS, RebelliousCrawlSpider):
     name = MixinUS.retailer + "-crawl"
     parse_spider = RebelliousParseSpiderUS()
+
