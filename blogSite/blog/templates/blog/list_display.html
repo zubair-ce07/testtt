@@ -1,0 +1,29 @@
+{% load staticfiles %}
+<link href={% static 'tellme/feedback.min.css' %} rel="stylesheet">
+
+<form method="get" action=".">
+    <p>Search: <input type="text" value="search" name="search"/></p>
+    <p><input type="submit" name="okay" value="okay"/></p>
+</form>
+
+<br>
+
+<ul>
+    {% for post in posts %}
+        <li><a href="../id/{{ post.id }}">{{ post.title }}</a></li>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+        <li>User: {{ user.get_username }}</li>
+        <li><a href="{% url 'logout'%}">Logout</a></li>
+    {% else %}
+        <li><a href="{% url 'login'%}">Login</a></li>
+    {% endif %}
+</ul>
+
+<br>
+<button type="button" id="feedback-btn" class="btn btn-info vertical-right-aligned">
+    Feedback <span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
+</button>
+
+{%  include 'tellme/js_inc.html' %}
