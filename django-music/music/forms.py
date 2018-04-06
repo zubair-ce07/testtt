@@ -14,7 +14,8 @@ class SlugField(CharField):
 class AlbumForm(forms.ModelForm):
     artist = forms.CharField(validators=[validators.validate_slug])
     genre = forms.CharField(validators=[validators.validate_slug])
-    album_title = forms.CharField(max_length=250, validators=[validators.validate_slug])
+    album_title = forms.CharField(max_length=250, validators=[
+                                  validators.validate_slug])
 
     class Meta:
         model = Album
@@ -25,9 +26,10 @@ class AlbumForm(forms.ModelForm):
         clean_data = super(AlbumForm, self).clean()
         album_title = clean_data.get('album_title')
 
+        # if album name doesn't match with list 
         if album_title not in albums:
             raise ValidationError({
-                'album_title': ValidationError(('Invalid Album name use', albums), code='invalid'),
+                'album_title': ValidationError(('Invalid Album name ', albums), code='invalid'),
                 'artist': ValidationError(('Invalid Artist name.'), code='invalid'),
             })
 
