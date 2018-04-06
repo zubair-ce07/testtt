@@ -227,24 +227,6 @@ class ErnstingsSpider(CrawlSpider):
         return response.css('script ::text').re_first(r'"{}": "(\w+)"'.format(element))
 
 
-def get_float_price(price):
-    tens, decimals = re.search(r'(\d+),(\d+)', price).group(1, 2)
-    return float('{}.{}'.format(tens, decimals))
-
-
-def remove_formatting(texts):
-    pure_text = []
-    for each in texts:
-        text = re.sub(r'\s+', ' ', each).strip()
-        if text:
-            pure_text.append(text)
-    if not pure_text:
-        pure_text = None
-    elif len(pure_text) == 1:
-        pure_text = pure_text[0]
-    return pure_text
-
-
 def get_cents_price(price_with_currency):
     price = re.search(r'(\d+),(\d+)', price_with_currency).group(0)
     return int(float(price.replace(',', '.')) * 100)
