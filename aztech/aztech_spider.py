@@ -37,17 +37,15 @@ class AztechParseSpider(BaseParseSpider):
         return garment
 
     def image_urls(self, raw_product, response):
-        raw_product = raw_product["images"]
-        return [response.urljoin(image_url) for image_url in raw_product]
+        return [response.urljoin(image_url) for image_url in raw_product["images"]]
 
     def skus(self, raw_product, response):
-        currency = clean(response.css('[property="og:price:currency"] ::attr(content)'))[0]
         skus = {}
-        raw_skus = raw_product["variants"]
+        currency = clean(response.css('[property="og:price:currency"] ::attr(content)'))[0]
 
-        for raw_sku in raw_skus:
+        for raw_sku in raw_product["variants"]:
             money_strs = [raw_product["price"], raw_product["compare_at_price"], currency]
-            sku = self.product_pricing_common_new(None, money_strs=money_strs, is_cents=True)
+            sku = self.product_pricing_common_new(None, money_strs=money_strs, is_cents=True).copy()
 
             if not raw_sku["available"]:
                 sku["out_of_stock"] = True
@@ -58,7 +56,8 @@ class AztechParseSpider(BaseParseSpider):
         return skus
 
     def raw_product(self, response):
-        raw_json = clean(response.xpath('//script[contains(text(),"initProduct")]/text()').re_first('product: (.+),'))
+        xpath = '//script[contains(text(),"initProduct")]/text()'
+        raw_json = clean(response.xpath(xpath).re_first('product: (.+),'))
         return json.loads(raw_json)
 
 
@@ -83,6 +82,3 @@ class AztechParseSpiderUS(MixinUS, AztechParseSpider):
 class AztechCrawlSpiderUS(MixinUS, AztechCrawlSpider):
     name = MixinUS.retailer + "-crawl"
     parse_spider = AztechParseSpiderUS()
-
-
-
