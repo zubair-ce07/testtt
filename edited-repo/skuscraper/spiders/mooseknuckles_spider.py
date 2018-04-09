@@ -15,8 +15,8 @@ class Mixin:
 
 class MooseKnucklesParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
+    raw_description_css = '.tab-content .std::text, .tab-content li::text'
     care_css = '.tab-content li::text'
-    description_css = '.tab-content .std::text'
     price_css = '.price-info .price ::text'
 
     def parse(self, response):
