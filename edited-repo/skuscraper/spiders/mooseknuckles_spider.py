@@ -19,14 +19,6 @@ class MooseKnucklesParseSpider(BaseParseSpider, Mixin):
     description_css = '.tab-content .std::text'
     price_css = '.price-info .price ::text'
 
-    gender_map = (
-        ('women', 'women'),
-        ('womens', 'women'),
-        ('men', 'men'),
-        ('mens', 'men'),
-        ('ladies', 'women'),
-    )
-
     def parse(self, response):
         pid = self.magento_product_id(response)
         garment = self.new_unique_garment(pid)
@@ -46,19 +38,16 @@ class MooseKnucklesParseSpider(BaseParseSpider, Mixin):
         return 'Moose Knuckles'
 
     def product_gender(self, response):
-        soup = " ".join(clean(response.css('.short-description .std::text')) + [response.url]).lower()
-        for gender_str, gender in self.gender_map:
-            if gender_str in soup:
-                return gender
-        return 'unisex-adults'
+        soup = ' '.join(clean(response.css('.short-description .std::text')) + [response.url])
+        return self.gender_lookup(soup) or 'unisex-adults'
 
     def image_urls(self, response):
-        images_script = clean(response.css('.product-img-box script::text'))[0].split('=')[-1]
-        img_json = json.loads(images_script)
-        if isinstance(img_json, dict):
-            img_json = sum(img_json.values(), [])
-        images = [i.get('fullimage') for i in img_json]
-        return images if images else clean(response.css('.product-image-gallery .not-swiper img::attr(src)'))
+        raw_images = clean(response.css('.product-img-box script::text'))[0].split('=')[-1]
+        raw_images = json.loads(raw_images)
+        if isinstance(raw_images, dict):
+            raw_images = sum(raw_images.values(), [])
+        images = [i.get('fullimage') for i in raw_images]
+        return images or clean(response.css('.product-image-gallery .not-swiper img::attr(src)'))
 
     def skus(self, response):
         common_sku = self.product_pricing_common(response)
@@ -66,15 +55,12 @@ class MooseKnucklesParseSpider(BaseParseSpider, Mixin):
         script_json = self.magento_product_map(script)
         skus = {}
         for key, item in script_json.items():
-            for dimension in item:
-                sku = common_sku.copy()
-                if not clean(response.css('.availability .value::text'))[0] == 'In stock':
-                    sku['out_of_stock'] = True
-                if dimension['name'] == 'Colour':
-                    sku['colour'] = dimension['label']
-                elif dimension['name'] == 'Size':
-                    sku['size'] = dimension['label']
-                skus[key] = sku
+            sku = common_sku.copy()
+            if not clean(response.css('.availability .value::text'))[0] == 'In stock':
+                sku['out_of_stock'] = True
+            sku['colour'] = item[0]['label']
+            sku['size'] = item[1]['label']
+            skus[key] = sku
         return skus
 
 
@@ -84,6 +70,6 @@ class MooseKnucklesCrawlSpider(BaseCrawlSpider, Mixin):
     listings_css = ['.mega-menu-container .level1', ]
     products_css = ['.product-image', ]
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, ), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listings_css), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item'),
     )
