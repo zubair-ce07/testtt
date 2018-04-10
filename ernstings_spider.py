@@ -48,11 +48,9 @@ class ErnstingsSpider(CrawlSpider):
     )
 
     def start_requests(self):
-        #yield Request('https://www.ernstings-family.de', callback=self.parse)
-        #yield Request('https://www.ernstings-family.de//navigation.json?storeId=10151',
-        #              callback=self.parse_navigation_links)
-        yield Request('https://www.ernstings-family.de/sale-jungen-kleinkinder-98-128/jungen-langarmshirt-mit-applikation-79311.html',
-                      callback=self.parse_product)
+        yield Request('https://www.ernstings-family.de//navigation.json?storeId=10151',
+                      callback=self.parse_navigation_links)
+        yield Request('https://www.ernstings-family.de', callback=self.parse)
 
     def parse_navigation_links(self, response):
         navigations = json.loads(response.text)
