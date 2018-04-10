@@ -1,4 +1,3 @@
-
 import json
 import re
 from collections import OrderedDict
@@ -13,18 +12,17 @@ class ErnstingsSpider(CrawlSpider):
     name = "ernstings"
     allowed_domains = ['ernstings-family.de']
 
-    living_items_category = 'wohnen'
-    new_items_category = 'neu'
+    living_category = 'wohnen'
+    new_category = 'neu'
 
     xpath_categories = ("//main[@id='content-wrapper']"
                         "/div[@class='container-fluid page-max-width']"
                         "//a[not(contains(@class,'product-list-tile-holder'))]"
                         "[not(.//p[text()='My Home'])]")
     required_categories = ("main#content-wrapper > div.container-fluid "
-                           "a:not([class*='product-list-tile-holder']):not(:contains('My Home')), "
-                           "a:not([class*='product-list-tile-holder']):contains('My Home ')")
-    required_products = ("a[class*='product-list-tile-holder'], "
-                         "div.teaser-highlight-product-wrapper a.link-blank")
+                           "a:not(.product-list-tile-holder):not(:contains('My Home')), "
+                           "a:not(.product-list-tile-holder):contains('My Home ')")
+    required_products = "a.product-list-tile-holder"
 
     genders = OrderedDict([
         (u'm\xe4dchen', 'girls'),
@@ -38,77 +36,79 @@ class ErnstingsSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(
             restrict_css=required_categories,
-            # restrict_xpaths=xpath_categories,
-            deny=(living_items_category,)),
-             callback='has_load_more_products',
+            deny=(living_category,)),
+             callback='parse_additional_products',
              follow=True
             ),
         Rule(LinkExtractor(
             restrict_css=required_products,
-             deny=(living_items_category,)),
+             deny=(living_category,)),
              callback='parse_product'
             ),
     )
 
     def start_requests(self):
-        yield Request('https://www.ernstings-family.de', callback=self.parse)
-        yield Request('https://www.ernstings-family.de//navigation.json?storeId=10151',
-                      callback=self.parse_json_links)
+        #yield Request('https://www.ernstings-family.de', callback=self.parse)
+        #yield Request('https://www.ernstings-family.de//navigation.json?storeId=10151',
+        #              callback=self.parse_navigation_links)
+        yield Request('https://www.ernstings-family.de/sale-jungen-kleinkinder-98-128/jungen-langarmshirt-mit-applikation-79311.html',
+                      callback=self.parse_product)
 
-    def parse_json_links(self, response):
-        whole_json_data = json.loads(response.text)
-        filtered_data = []
-        link_extractor = "'href': u'(.*?)'"
+    def parse_navigation_links(self, response):
+        navigations = json.loads(response.text)
+        required_headers = []
+        link_extractor_re = re.compile("'href': u'(.*?)'")
 
-        for each_data in whole_json_data['navigation']:
-            if (each_data['name'].lower() != self.living_items_category and
-                    each_data['name'].lower() != self.new_items_category):
-                filtered_data.append(str(each_data))
+        for header in navigations['navigation']:
+            if header['name'].lower() not in [self.living_category, self.new_category]:
+                required_headers.append(str(header))
 
-        for each_filtered_data in filtered_data:
-            extracted_links = re.findall(link_extractor, each_filtered_data)
-            for each_extracted_link in extracted_links:
-                if each_extracted_link:
-                    yield Request(each_extracted_link, callback=self.parse)
+        for header in required_headers:
+            extracted_links = link_extractor_re.findall(header)
+            for link in extracted_links:
+                if link:
+                    yield Request(link, callback=self.parse)
 
-    def has_load_more_products(self, response):
-        load_more_products = response.css(
+    def parse_additional_products(self, response):
+        pagination = response.css(
             "main#content-wrapper > div.container-fluid span#product-list-load-more-products"
         )
 
-        if load_more_products:
-            store_id = self.get_js_element(response, 'storeId')
-            catalog_id = self.get_js_element(response, 'catalogId')
-            products_per_page = self.get_js_element(response, 'productListPageSizeOfPage')
-            products_list_pages = self.get_js_element(response, 'productListPageReloadBoundary')
-            category_id = self.get_js_element(response, 'categoryId')
-            search_type = self.get_search_type(response)
+        if not pagination:
+            return
 
-            data_url_template = (
-                "https://www.ernstings-family.de/wcs/resources/store/{}/productview"
-                "/bySearchTermDetails/*?pageNumber={}&pageSize={}&pageSizeReloadBoundary={}"
-                "&searchType={}&categoryId={}&profileName=EF_findCatalogEntryByNameAndShort"
-                "Description_Details"
+        store_id = self.get_js_element(response, 'storeId')
+        catalog_id = self.get_js_element(response, 'catalogId')
+        products_per_page = self.get_js_element(response, 'productListPageSizeOfPage')
+        products_list_pages = self.get_js_element(response, 'productListPageReloadBoundary')
+        category_id = self.get_js_element(response, 'categoryId')
+        search_type = self.get_search_type(response)
+
+        products_list_url = (
+            "https://www.ernstings-family.de/wcs/resources/store/{}/productview"
+            "/bySearchTermDetails/*?pageNumber={}&pageSize={}&pageSizeReloadBoundary={}"
+            "&searchType={}&categoryId={}&profileName=EF_findCatalogEntryByNameAndShort"
+            "Description_Details"
+        )
+
+        for page_number in range(2, int(products_list_pages) + 1):
+            products_list_json = products_list_url.format(
+                store_id, page_number, products_per_page,
+                products_list_pages, search_type, category_id
             )
-
-            for page_number in range(2, int(products_list_pages) + 1):
-                products_data_json_page = data_url_template.format(
-                    store_id, page_number, products_per_page,
-                    products_list_pages, search_type, category_id
-                )
-                yield Request(products_data_json_page, callback=self.parse_json_products,
-                              meta={'catalog_id': catalog_id, 'store_id': store_id})
+            yield Request(products_list_json, callback=self.parse_json_products,
+                          meta={'catalog_id': catalog_id, 'store_id': store_id})
 
     def parse_json_products(self, response):
         catalog_id = response.meta.get('catalog_id')
         store_id = response.meta.get('store_id')
-        products_data = json.loads(response.text)
+        all_products = json.loads(response.text)
         product_url_template = (
             "https://www.ernstings-family.de/ProductDisplay?urlRequestType=Base"
             "&catalogId={}&productId={}&storeId={}"
         )
 
-        for product in products_data['CatalogEntryView']:
+        for product in all_products['CatalogEntryView']:
             product_id = product['uniqueID']
             product_url = product_url_template.format(catalog_id, product_id, store_id)
 
@@ -137,23 +137,19 @@ class ErnstingsSpider(CrawlSpider):
 
     @staticmethod
     def get_category(response):
-        javascripts = response.css('script ::text')
+        scripts = response.css('script ::text')
+        breadcrumbs = json.loads(scripts.re_first('var globalBreadcrumbs = (.+?);'))
         category = []
-        for num in range(6):
-            label = javascripts.re('"{}":(.+?)"label":"(.+?)"'.format(num))
-            if label:
-                category.append(label[1])
+        for label_key in sorted(breadcrumbs):
+            category.append(breadcrumbs[label_key]['label'])
         return category
 
     def get_gender(self, categories):
-        gender = None
         for category in categories:
-            for gender_key in self.genders.keys():
-                if not gender and gender_key in category.lower():
-                    gender = self.genders[gender_key]
-        if not gender:
-            gender = 'unisex-adults'
-        return gender
+            for gender_key in self.genders:
+                if gender_key in category.lower():
+                    return self.genders[gender_key]
+        return 'unisex-adults'
 
     @staticmethod
     def get_brand(response):
@@ -233,11 +229,9 @@ def get_cents_price(price_with_currency):
 
 
 def clean(formatted):
-    cleaned = None
-    if type(formatted) is list:
+    if not formatted:
+        return formatted
+    if isinstance(formatted, list):
         cleaned = [re.sub(r'\s+', ' ', each).strip() for each in formatted]
-        cleaned = list(filter(None, cleaned))
-    else:
-        if formatted:
-            cleaned = re.sub(r'\s+', ' ', formatted).strip()
-    return cleaned
+        return list(filter(None, cleaned))
+    return re.sub(r'\s+', ' ', formatted).strip()
