@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, get_user_model
-from freelancer.models import Employee, Project, Bids
-
+from freelancer.models import AppUser, Project, Bids
+import freelancer.messages as msg
 
 class SignUpForm(UserCreationForm):
     CHOICES = [
@@ -11,26 +11,24 @@ class SignUpForm(UserCreationForm):
     user_type = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES)
 
     class Meta:
-        model = Employee
+        model = AppUser
         fields = ('user_type', 'username', 'first_name', 'last_name', 'email', 'password1', 'password2', )
 
 
 class UserProfileEditForm(forms.ModelForm):
-    email = forms.EmailField(required=True)
-    first_name = forms.CharField(required=False)
-    last_name = forms.CharField(required=False)
+    def __init__(self, *args, **kwargs):
+        super(UserProfileEditForm, self).__init__(*args, **kwargs)
+        self.fields['first_name'].required = False
+        self.fields['last_name'].required = False
+        self.fields['email'].required = True
 
     class Meta:
-        model = get_user_model()
+        model = AppUser
         fields = ('email', 'first_name', 'last_name')
 
     def clean_email(self):
-        username = self.cleaned_data.get('username')
         email = self.cleaned_data.get('email')
-
-        if email and self.instance.email != email and get_user_model().objects.filter(email=email).count():
-            raise forms.ValidationError('This email address is already in use. Please supply a different email address.')
-        return email
+        return self.email_exists(email)
 
     def save(self, commit=True):
         user = super(UserProfileEditForm, self).save(commit=False)
@@ -41,6 +39,11 @@ class UserProfileEditForm(forms.ModelForm):
 
         return user
 
+    def email_exists(self, email):
+        if email and not (self.instance.email == email) and AppUser.objects.filter(email=email).count():
+            raise forms.ValidationError(msg.EMAIL_ALREADY_EXISTS)
+        return email
+
 
 class LoginForm(forms.Form):
     username = forms.CharField(label="username", max_length=30)
@@ -50,7 +53,7 @@ class LoginForm(forms.Form):
 class PostProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields =('name', 'description', 'budget', )
+        fields = ('name', 'description', 'budget', )
         widgets = {
             'description': forms.Textarea(attrs={'rows': 7, 'cols': 25}),
         }
@@ -66,9 +69,10 @@ class UserBidsForm(forms.ModelForm):
 
 
 class StatusForm(forms.Form):
-    status = forms.ChoiceField(choices=[(x, x) for x in ['Select', 'Pending', 'Approve']],
+    CHOICES = [
+        ('Select', 'Select'),
+        ('Pending', 'Pending'),
+        ('Approve', 'Approve')
+    ]
+    status = forms.ChoiceField(choices=CHOICES,
                                widget=forms.Select(attrs={'onchange': 'this.form.submit();'}))
-
-
-
-

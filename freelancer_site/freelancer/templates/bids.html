@@ -21,13 +21,13 @@
                     {{ bid.project_id }}</a>
             </td>
             <td>
-                <a title="View User" href={% url "profileview" id=bid.bider_user_id %}>{{ bid.bider_user_id }}</a>
+                <a title="View User" href={% url "profileview" id=bid.user_id %}>{{ bid.user_id }}</a>
             </td>
             <td>{{ bid.cover_letter }}</td>
             <td>{{ bid.bid_amount }}</td>
             <td>
                 {% if bid.status == "Pending" %}
-                <form method="post" action="{% url 'projectbidsview' id=bid.id %}">
+                    <form method="post" action="{% url 'projectbidsview' id=bid.id %}">
                     {% csrf_token %}
                     {{ form.as_p }}
                 </form>

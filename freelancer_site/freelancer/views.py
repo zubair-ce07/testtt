@@ -1,18 +1,11 @@
-from django.contrib.auth import login, authenticate, logout, get_user_model
+from django.contrib.auth import login, authenticate, logout
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
-
-from .models import Project, Employee, Bids
-from .forms import (
-    SignUpForm,
-    LoginForm,
-    PostProjectForm,
-    UserProfileEditForm,
-    UserBidsForm,
-    StatusForm)
-
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+
+from freelancer.models import Project, AppUser, Bids
+from freelancer.forms import *
 
 
 class SignUpView(TemplateView):
@@ -30,7 +23,6 @@ class SignUpView(TemplateView):
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
-            # if user:
             login(request, user)
             return redirect('homeview')
 
@@ -52,8 +44,6 @@ class LoginView(TemplateView):
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]
             user = authenticate(username=username, password=password)
-            # if user is not None:
-            #     if user.is_active:
             login(request, user)
             return redirect('homeview')
         else:
@@ -73,31 +63,22 @@ class HomeView(TemplateView):
 
     @method_decorator(login_required)
     def get(self, request):
-        username = request.user.username
-        fname = request.user.first_name
-        lname = request.user.last_name
-        user_type = request.user.employee.user_type
-        values = {
-            'username': username,
-            'fname': fname,
-            'lname': lname,
-            'user_type': user_type,
-
-        }
-        if user_type == "hire":
+        context = {}
+        if request.user.appuser.user_type == "hire":
             project_details = Project.objects.filter(user_id=request.user.id)
-            values['project_details'] = project_details
+            context['project_details'] = project_details
         else:
             project_details = Project.objects.all()
-            userbids = Bids.objects.filter(bider_user_id = request.user.id)
-            values['project_details'] = project_details
-            values['userbids'] = userbids
-            values['bids_project_ids'] =Bids.objects.values_list('project_id', flat=True)\
-                .filter(bider_user_id=request.user.id)
-            values['status_hired'] =Bids.objects.values_list('project_id', flat=True)\
+            userbids = Bids.objects.filter(user_id = request.user.id)
+            context['project_details'] = project_details
+            context['userbids'] = userbids
+            context['bids_project_ids'] =Bids.objects.values_list('project_id', flat=True)\
+                .filter(user_id=request.user.id)
+
+            context['status_hired'] =Bids.objects.values_list('project_id', flat=True)\
                 .filter(project_status="Hired")
 
-        return render(request, self.template_name, values)
+        return render(request, self.template_name, context)
 
 
 class LogoutView(TemplateView):
@@ -109,11 +90,10 @@ class LogoutView(TemplateView):
 
 
 class EditView(TemplateView):
-    user = get_user_model()
-    template_name = "edit.html"
+    template_name = "user_edit.html"
 
     def get(self, request):
-        user_details = Employee.objects.get(id=request.user.id)
+        user_details = AppUser.objects.get(id=request.user.id)
         form = UserProfileEditForm(instance=user_details)
         return render(request, self.template_name, {'form': form})
 
@@ -139,9 +119,9 @@ class PostProjectView(TemplateView):
     def post(self, request):
         form = PostProjectForm(request.POST)
         if form.is_valid():
-            profile = form.save(commit=False)
-            profile.user_id = request.user.id
-            profile.save()
+            project = form.save(commit=False)
+            project.user_id = request.user.id
+            project.save()
             return redirect("homeview")
         else:
             form = PostProjectForm()
@@ -190,7 +170,7 @@ class UserBidView(TemplateView):
         form = UserBidsForm(request.POST)
         if form.is_valid():
             bid = form.save(commit=False)
-            bid.bider_user_id = request.user.id
+            bid.user_id = request.user.id
             bid.project_id = id
             bid.save()
             return redirect("homeview")
@@ -221,15 +201,15 @@ class UserProfileView(TemplateView):
     template_name = "profile.html"
 
     def get(self, request, id):
-        users = Employee.objects.filter(id=id)
-        values = {
+        users = AppUser.objects.filter(id=id)
+        context = {
             'username': users[0].username,
             'fname': users[0].first_name,
             'lname': users[0].last_name,
             'user_type': users[0].user_type,
 
         }
-        return render(request, self.template_name, values)
+        return render(request, self.template_name, context)
 
 
 class ProjectDetailView(TemplateView):
@@ -238,4 +218,3 @@ class ProjectDetailView(TemplateView):
     def get(self, request, id):
         project_details = Project.objects.filter(id=id)
         return render(request, self.template_name,{'project_details' :project_details[0]})
-
