@@ -1,6 +1,5 @@
 import json
 import re
-from collections import OrderedDict
 from scrapy import Request
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
@@ -15,33 +14,32 @@ class ErnstingsSpider(CrawlSpider):
     living_category = 'wohnen'
     new_category = 'neu'
 
-    xpath_categories = ("//main[@id='content-wrapper']"
-                        "/div[@class='container-fluid page-max-width']"
-                        "//a[not(contains(@class,'product-list-tile-holder'))]"
-                        "[not(.//p[text()='My Home'])]")
-    required_categories = ("main#content-wrapper > div.container-fluid "
-                           "a:not(.product-list-tile-holder):not(:contains('My Home')), "
-                           "a:not(.product-list-tile-holder):contains('My Home ')")
-    required_products = "a.product-list-tile-holder"
+    listings_xpath = ("//main[@id='content-wrapper']/div[@class='container-fluid page-max-width']"
+                      "//a[not(contains(@class,'product-list-tile-holder'))]"
+                      "[not(.//p[text()='My Home'])]")
+    listings_css = ("main#content-wrapper > div.container-fluid "
+                    "a:not(.product-list-tile-holder):not(:contains('My Home')), "
+                    "a:not(.product-list-tile-holder):contains('My Home ')")
+    products_css = "a.product-list-tile-holder"
 
-    genders = OrderedDict([
+    gender_map = ([
         (u'm\xe4dchen', 'girls'),
-        (u'jungen', 'boys'),
-        (u'damen', 'women'),
-        (u'herren', 'men'),
-        (u'newborn', 'unisex-kids'),
-        (u'baby', 'unisex-kids')
+        ('jungen', 'boys'),
+        ('damen', 'women'),
+        ('herren', 'men'),
+        ('newborn', 'unisex-kids'),
+        ('baby', 'unisex-kids')
     ])
 
     rules = (
         Rule(LinkExtractor(
-            restrict_css=required_categories,
+            restrict_css=listings_css,
             deny=(living_category,)),
              callback='parse_additional_products',
              follow=True
             ),
         Rule(LinkExtractor(
-            restrict_css=required_products,
+            restrict_css=products_css,
              deny=(living_category,)),
              callback='parse_product'
             ),
@@ -115,26 +113,26 @@ class ErnstingsSpider(CrawlSpider):
     def parse_product(self, response):
 
         product = Product()
-        product['retailer_sku'] = self.get_retailer_sku(response)
-        product['category'] = self.get_category(response)
-        product['gender'] = self.get_gender(product['category'])
-        product['brand'] = self.get_brand(response)
+        product['retailer_sku'] = self.product_retailer_sku(response)
+        product['category'] = self.product_category(response)
+        product['gender'] = self.product_gender(product['category'])
+        product['brand'] = self.product_brand(response)
         product['url'] = response.url
-        product['name'] = self.get_name(response)
-        product['description'] = self.get_description(response)
-        product['care'] = self.get_care(response)
-        product['image_urls'] = self.get_images(response)
-        product['skus'] = self.get_skus(response)
+        product['name'] = self.product_name(response)
+        product['description'] = self.product_description(response)
+        product['care'] = self.product_care(response)
+        product['image_urls'] = self.product_images(response)
+        product['skus'] = self.product_skus(response)
 
         yield product
 
     @staticmethod
-    def get_retailer_sku(response):
+    def product_retailer_sku(response):
         retailer_sku = response.css("meta[name='pageIdentifier']::attr(content)").extract_first()
         return clean(retailer_sku)
 
     @staticmethod
-    def get_category(response):
+    def product_category(response):
         scripts = response.css('script ::text')
         breadcrumbs = json.loads(scripts.re_first('var globalBreadcrumbs = (.+?);'))
         category = []
@@ -142,41 +140,41 @@ class ErnstingsSpider(CrawlSpider):
             category.append(breadcrumbs[label_key]['label'])
         return category
 
-    def get_gender(self, categories):
+    def product_gender(self, categories):
         for category in categories:
-            for gender_key in self.genders:
+            for gender_key, gender_value in self.gender_map:
                 if gender_key in category.lower():
-                    return self.genders[gender_key]
+                    return gender_value
         return 'unisex-adults'
 
     @staticmethod
-    def get_brand(response):
+    def product_brand(response):
         brand = response.css('img.img-fluid.brand-logo::attr(alt)').extract_first()
         return clean(brand)
 
     @staticmethod
-    def get_name(response):
+    def product_name(response):
         name = response.css('h1.product-detail-product-name::text').extract_first()
         return clean(name)
 
     @staticmethod
-    def get_images(response):
+    def product_images(response):
         images = response.css('img.product-view-slide-image::attr(src)').extract()
         return [response.urljoin(image) for image in images]
 
     @staticmethod
-    def get_description(response):
+    def product_description(response):
         desc = response.css('div.product-detail-information-contents '
                             'p::text, li::text').extract()
         return clean(desc)
 
     @staticmethod
-    def get_care(response):
+    def product_care(response):
         care = response.css('div.care-icon-text-wrapper div.text-holder::text').extract()
         return clean(care)
 
     @staticmethod
-    def get_prices(response):
+    def product_prices(response):
         prices = response.css('div.product-detail-price-wrapper '
                               'span.product-price::text').extract()
         prices = clean(prices)
@@ -190,18 +188,18 @@ class ErnstingsSpider(CrawlSpider):
         return price, previous
 
     @staticmethod
-    def get_colour(response):
+    def product_colour(response):
         colour = response.css('p.product-detail-product-color::text').extract_first()
         return clean(colour)
 
-    def get_skus(self, response):
+    def product_skus(self, response):
         options = response.css('select#select-size-product-detail option')
         skus = []
         for option in options:
             sku = {}
-            sku['price'], sku['previous_prices'] = self.get_prices(response)
+            sku['price'], sku['previous_prices'] = self.product_prices(response)
             sku['currency'] = self.get_js_element(response, 'commandContextCurrency')
-            sku['colour'] = self.get_colour(response)
+            sku['colour'] = self.product_colour(response)
             size = option.css('option::text').extract_first()
             sku['size'] = None
             if size != '-':
