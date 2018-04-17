@@ -1,6 +1,5 @@
 import json
 import re
-from collections import OrderedDict
 from scrapy import Request
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
@@ -12,191 +11,205 @@ class FatFaceSpider(CrawlSpider):
     name = "fatface"
     allowed_domains = ['fatface.com', 'i1.adis.ws']
     start_urls = ['https://www.fatface.com']
+    ids_seen = []
 
-    blogs = 'blog'
-    competition = 'competition'
+    deny_re = ['blog', 'competition']
 
-    required_categories = "a.b-main-menu__link"
-    required_products = "a.b-product-image__link, a.b-product-name__link"
+    listings_css = "a.b-main-menu__link"
+    products_css = "a.b-product-image__link, a.b-product-name__link"
 
-    genders = OrderedDict([
-        (u'girls', 'girls'),
-        (u'boys', 'boys'),
-        (u'women', 'women'),
-        (u'men', 'men'),
-        (u'kids', 'unisex-kids')
+    gender_map = ([
+        ('girls', 'girls'),
+        ('boys', 'boys'),
+        ('women', 'women'),
+        ('men', 'men'),
+        ('kids', 'unisex-kids')
     ])
 
     rules = (
         Rule(LinkExtractor(
-            restrict_css=required_categories,
-            deny=[blogs, competition]),
-             callback='parse_all_products_page',
+            restrict_css=listings_css,
+            deny=deny_re),
+             callback='parse_pagination',
              follow=True
             ),
         Rule(LinkExtractor(
-            restrict_css=required_products,
-            deny=[blogs, competition]),
+            restrict_css=products_css,
+            deny=deny_re),
              callback='parse_product'
             ),
     )
 
-    def parse_all_products_page(self, response):
+    def parse_pagination(self, response):
         total_products = response.css('div.b-products-counter::text').re_first(r'(\d+) ')
 
         if not total_products:
             return
 
-        products_left = int(total_products)
-        products_without_pagination = 24
-        limit = 99
+        total_products = int(total_products)
+        products_per_page = 24
         starting = 0
 
-        if products_left <= products_without_pagination:
+        if total_products <= products_per_page:
             return
 
-        while products_left > limit:
-            max_products_url = response.urljoin('?sz={}&start={}'.format(limit, starting))
-            yield Request(max_products_url, callback=self.parse)
-            products_left -= limit
-            starting += limit
-
-        products_list_url = response.urljoin('?sz={}&start={}'.format(products_left, starting))
-        yield Request(products_list_url, callback=self.parse)
+        while total_products > starting:
+            products_page = response.urljoin('?start={}'.format(starting))
+            yield Request(products_page, callback=self.parse)
+            starting += products_per_page
 
     def parse_product(self, response):
 
+        retailer_sku = self.product_retailer_sku(response)
+        if retailer_sku in self.ids_seen:
+            return
+
+        self.ids_seen.append(retailer_sku)
         product = Product()
-        product['retailer_sku'] = self.get_retailer_sku(response)
-        product['category'] = self.get_category(response)
-        product['gender'] = self.get_gender(product['category'])
-        product['brand'] = self.get_brand()
+        product['retailer_sku'] = retailer_sku
+        product['category'] = self.product_category(response)
+        product['gender'] = self.product_gender(product['category'])
+        product['brand'] = self.product_brand()
         product['url'] = response.url.split('?')[0]
-        product['name'] = self.get_name(response)
-        product['description'] = self.get_description(response)
-        product['care'] = self.get_care(response)
-        product['skus'] = self.get_skus(response)
+        product['name'] = self.product_name(response)
+        product['description'] = self.product_description(response)
+        product['care'] = self.product_care(response)
+        product['skus'] = self.product_skus(response)
         product['image_urls'] = []
 
-        images_containers = [self.get_images_link(response)]
-        next_colors = response.css('a.b-variation__link.color::attr(href)').extract()
+        images_queue = []
+        img_req = Request(self.product_images_link(response), callback=self.parse_images)
+        images_queue.append(img_req)
 
-        if next_colors:
-            yield Request(next_colors.pop(0),
-                          callback=self.parse_skus,
-                          meta={'product': product,
-                                'next': next_colors,
-                                'images': images_containers})
+        additional_color_urls = response.css('a.b-variation__link.color::attr(href)').extract()
+
+        if additional_color_urls:
+            sku_request = Request(additional_color_urls.pop(0), callback=self.parse_skus)
+            sku_request.meta['product'] = product
+            request_queue = []
+            for color_url in additional_color_urls:
+                sku_req = Request(color_url, callback=self.parse_skus)
+                request_queue.append(sku_req)
+            sku_request.meta['request_queue'] = request_queue
+            sku_request.meta['images_queue'] = images_queue
+            yield sku_request
         else:
-            yield Request(images_containers.pop(0),
-                          callback=self.parse_images,
-                          meta={'product': product,
-                                'images': images_containers})
+            img_request = images_queue.pop(0)
+            img_request.meta['product'] = product
+            img_request.meta['images_queue'] = images_queue
+            yield img_request
 
     def parse_skus(self, response):
         product = response.meta['product']
-        product['skus'] += self.get_skus(response)
+        product['skus'] += self.product_skus(response)
 
-        next_colors = response.meta['next']
-        images_containers = response.meta['images'] + [self.get_images_link(response)]
+        request_queue = response.meta['request_queue']
+        images_queue = response.meta['images_queue']
+        img_req = Request(self.product_images_link(response), callback=self.parse_images)
+        images_queue.append(img_req)
 
-        if next_colors:
-            yield Request(next_colors.pop(0),
-                          callback=self.parse_skus,
-                          meta={'product': product,
-                                'next': next_colors,
-                                'images': images_containers})
+        if request_queue:
+            sku_request = request_queue.pop(0)
+            sku_request.meta['product'] = product
+            sku_request.meta['request_queue'] = request_queue
+            sku_request.meta['images_queue'] = images_queue
+            yield sku_request
         else:
-            yield Request(images_containers.pop(0),
-                          callback=self.parse_images,
-                          meta={'product': product,
-                                'images': images_containers})
+            img_request = images_queue.pop(0)
+            img_request.meta['product'] = product
+            img_request.meta['images_queue'] = images_queue
+            yield img_request
 
     def parse_images(self, response):
         product = response.meta['product']
-        images_containers = response.meta['images']
+        product['image_urls'] += self.product_images(response)
 
-        images = json.loads(response.text)
-        for image in images['items']:
-            product['image_urls'].append(image['src'])
+        images_queue = response.meta['images_queue']
 
-        if images_containers:
-            yield Request(images_containers.pop(0),
-                          callback=self.parse_images,
-                          meta={'product': product,
-                                'images': images_containers})
+        if images_queue:
+            img_request = images_queue.pop(0)
+            img_request.meta['product'] = product
+            img_request.meta['images_queue'] = images_queue
+            yield img_request
         else:
             yield product
 
     @staticmethod
-    def get_images_link(response):
+    def product_images_link(response):
         return response.css('ul.b-product-preview::attr(data-imageset)').extract_first()
 
     @staticmethod
-    def get_retailer_sku(response):
+    def product_images(response):
+        images = json.loads(response.text)
+        image_urls = []
+        for image in images['items']:
+            image_urls.append(image['src'])
+        return image_urls
+
+    @staticmethod
+    def product_retailer_sku(response):
         retailer_sku = response.css('p.b-content-upc::text').re_first(r'Product code: (\d+)')
         return clean(retailer_sku)
 
     @staticmethod
-    def get_category(response):
+    def product_category(response):
         category = clean(response.css('span[itemprop="name"]::text').extract())
         if category[0] == 'Home':
             category = category[1:]
         return category
 
-    def get_gender(self, categories):
-        for gender_key in self.genders:
+    def product_gender(self, categories):
+        for gender_key, gender_value in self.gender_map:
             for category in categories:
                 if gender_key in category.lower():
-                    return self.genders[gender_key]
+                    return gender_value
         return 'unisex-adults'
 
     @staticmethod
-    def get_brand():
+    def product_brand():
         return 'FatFace'
 
     @staticmethod
-    def get_name(response):
+    def product_name(response):
         name = response.css('h1.b-product-title ::text').extract_first()
         return clean(name)
 
     @staticmethod
-    def get_description(response):
-        desc = response.css('h2.b-product-short-description::text, '
-                            'span.b-product-promo__message::text, p.b-content-longdesc::text, '
-                            'div.b-content-bullets ::text').extract()
+    def product_description(response):
+        desc_css = ('.b-product-short-description::text, .b-product-promo__message::text, '
+                    '.b-content-longdesc::text, .b-content-bullets ::text')
+        desc = response.css(desc_css).extract()
         return clean(desc)
 
     @staticmethod
-    def get_care(response):
+    def product_care(response):
         care = response.css('section.b-content-care li::text').extract()
         return clean(care)
 
     @staticmethod
-    def get_prices(response):
+    def product_price(response):
         price = response.css('span.b-price__digit ::text').re(r'(\d+)')
         price = int(float('.'.join(price))*100)
-        previous = []
-        return price, previous
+        return price
 
     @staticmethod
-    def get_colour(response):
+    def product_colour(response):
         colour = response.css('span.b-product-variations__value ::text').extract_first()
         return clean(colour)
 
     @staticmethod
-    def get_currency(response):
+    def product_currency(response):
         currency = response.css('script ::text').re_first(r'"currencyCode":"(\w+)"')
         return clean(currency)
 
-    def get_skus(self, response):
+    def product_skus(self, response):
         sizes = response.css('ul.b-variation__list.size li')
         skus = []
         for size in sizes:
             sku = {}
-            sku['price'], sku['previous_prices'] = self.get_prices(response)
-            sku['currency'] = self.get_currency(response)
-            sku['colour'] = self.get_colour(response)
+            sku['price'] = self.product_price(response)
+            sku['currency'] = self.product_currency(response)
+            sku['colour'] = self.product_colour(response)
             sku['size'] = size.css('span::text').extract_first()
             if size.css('.unselectable'):
                 sku['out_of_stock'] = True
