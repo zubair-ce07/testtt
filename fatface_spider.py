@@ -1,8 +1,12 @@
 import json
 import re
+
+from w3lib.url import url_query_cleaner
+
 from scrapy import Request
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
+
 from fatface_scrapy.items import Product
 
 
@@ -18,13 +22,13 @@ class FatFaceSpider(CrawlSpider):
     listings_css = "a.b-main-menu__link"
     products_css = "a.b-product-image__link, a.b-product-name__link"
 
-    gender_map = ([
+    gender_map = [
         ('girls', 'girls'),
         ('boys', 'boys'),
         ('women', 'women'),
         ('men', 'men'),
         ('kids', 'unisex-kids')
-    ])
+    ]
 
     rules = (
         Rule(LinkExtractor(
@@ -70,80 +74,82 @@ class FatFaceSpider(CrawlSpider):
         product['category'] = self.product_category(response)
         product['gender'] = self.product_gender(product['category'])
         product['brand'] = self.product_brand()
-        product['url'] = response.url.split('?')[0]
+        product['url'] = url_query_cleaner(response.url)
         product['name'] = self.product_name(response)
         product['description'] = self.product_description(response)
         product['care'] = self.product_care(response)
         product['skus'] = self.product_skus(response)
         product['image_urls'] = []
 
-        images_queue = []
-        img_req = Request(self.product_images_link(response), callback=self.parse_images)
-        images_queue.append(img_req)
+        requests = self.additional_color_requests(response)
+        requests.append(self.images_request(response))
 
-        additional_color_urls = response.css('a.b-variation__link.color::attr(href)').extract()
-
-        if additional_color_urls:
-            sku_request = Request(additional_color_urls.pop(0), callback=self.parse_skus)
-            sku_request.meta['product'] = product
-            request_queue = []
-            for color_url in additional_color_urls:
-                sku_req = Request(color_url, callback=self.parse_skus)
-                request_queue.append(sku_req)
-            sku_request.meta['request_queue'] = request_queue
-            sku_request.meta['images_queue'] = images_queue
-            yield sku_request
-        else:
-            img_request = images_queue.pop(0)
-            img_request.meta['product'] = product
-            img_request.meta['images_queue'] = images_queue
-            yield img_request
+        return self.parse_additional_requests(product, requests)
 
     def parse_skus(self, response):
         product = response.meta['product']
+        requests = response.meta['request_queue']
+        requests.append(self.images_request(response))
         product['skus'] += self.product_skus(response)
 
-        request_queue = response.meta['request_queue']
-        images_queue = response.meta['images_queue']
-        img_req = Request(self.product_images_link(response), callback=self.parse_images)
-        images_queue.append(img_req)
-
-        if request_queue:
-            sku_request = request_queue.pop(0)
-            sku_request.meta['product'] = product
-            sku_request.meta['request_queue'] = request_queue
-            sku_request.meta['images_queue'] = images_queue
-            yield sku_request
-        else:
-            img_request = images_queue.pop(0)
-            img_request.meta['product'] = product
-            img_request.meta['images_queue'] = images_queue
-            yield img_request
+        return self.parse_additional_requests(product, requests)
 
     def parse_images(self, response):
         product = response.meta['product']
+        requests = response.meta['request_queue']
         product['image_urls'] += self.product_images(response)
 
-        images_queue = response.meta['images_queue']
+        return self.parse_additional_requests(product, requests)
 
-        if images_queue:
-            img_request = images_queue.pop(0)
-            img_request.meta['product'] = product
-            img_request.meta['images_queue'] = images_queue
-            yield img_request
+    @staticmethod
+    def parse_additional_requests(product, requests):
+        if requests:
+            request = requests.pop(0)
+            request.meta['product'] = product
+            request.meta['request_queue'] = requests
+            yield request
         else:
             yield product
 
-    @staticmethod
-    def product_images_link(response):
-        return response.css('ul.b-product-preview::attr(data-imageset)').extract_first()
+    def additional_color_requests(self, response):
+        additional_color_urls = response.css('a.b-variation__link.color::attr(href)').extract()
+        request_queue = []
+
+        for color_url in additional_color_urls:
+            request = Request(color_url, callback=self.parse_skus)
+            request_queue.append(request)
+
+        return request_queue
+
+    def images_request(self, response):
+        images_link = response.css('ul.b-product-preview::attr(data-imageset)').extract_first()
+        return Request(images_link, callback=self.parse_images)
+
+    def product_skus(self, response):
+        sizes = response.css('ul.b-variation__list.size li')
+        skus = []
+
+        for size in sizes:
+            sku = {}
+            sku['price'] = self.product_price(response)
+            sku['currency'] = self.product_currency(response)
+            sku['colour'] = self.product_colour(response)
+            sku['size'] = size.css('span::text').extract_first()
+            if size.css('.unselectable'):
+                sku['out_of_stock'] = True
+            sku['sku_id'] = '{}_{}'.format(sku['colour'], sku['size'])
+            skus.append(sku)
+
+        return skus
 
     @staticmethod
     def product_images(response):
         images = json.loads(response.text)
         image_urls = []
+
         for image in images['items']:
             image_urls.append(image['src'])
+
         return image_urls
 
     @staticmethod
@@ -154,15 +160,18 @@ class FatFaceSpider(CrawlSpider):
     @staticmethod
     def product_category(response):
         category = clean(response.css('span[itemprop="name"]::text').extract())
+
         if category[0] == 'Home':
             category = category[1:]
+
         return category
 
     def product_gender(self, categories):
+
         for gender_key, gender_value in self.gender_map:
-            for category in categories:
-                if gender_key in category.lower():
-                    return gender_value
+            if gender_key in ''.join(categories).lower():
+                return gender_value
+
         return 'unisex-adults'
 
     @staticmethod
@@ -202,26 +211,14 @@ class FatFaceSpider(CrawlSpider):
         currency = response.css('script ::text').re_first(r'"currencyCode":"(\w+)"')
         return clean(currency)
 
-    def product_skus(self, response):
-        sizes = response.css('ul.b-variation__list.size li')
-        skus = []
-        for size in sizes:
-            sku = {}
-            sku['price'] = self.product_price(response)
-            sku['currency'] = self.product_currency(response)
-            sku['colour'] = self.product_colour(response)
-            sku['size'] = size.css('span::text').extract_first()
-            if size.css('.unselectable'):
-                sku['out_of_stock'] = True
-            sku['sku_id'] = '{}_{}'.format(sku['colour'], sku['size'])
-            skus.append(sku)
-        return skus
-
 
 def clean(formatted):
+
     if not formatted:
         return formatted
+
     if isinstance(formatted, list):
         cleaned = [re.sub(r'\s+', ' ', each).strip() for each in formatted]
         return list(filter(None, cleaned))
+
     return re.sub(r'\s+', ' ', formatted).strip()
