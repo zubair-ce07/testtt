@@ -3,6 +3,7 @@ import json
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
+from skuscraper.parsers.genders import Gender
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
@@ -17,9 +18,6 @@ class SssportsParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
     raw_description_css = '[itemprop="description"] ::text'
     price_css = '.price-box ::text'
-
-    size_re = 'ize\",\"options\":(.+?),\"position'
-    colour_re = 'Colour\",\"options\":(.+?),\"position'
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -50,21 +48,23 @@ class SssportsParseSpider(BaseParseSpider, Mixin):
 
     def product_gender(self, garment):
         soup = ' '.join(garment['category'] + [garment['name']] + garment['description'])
-        return self.gender_lookup(soup) or 'unisex-adults'
+        return self.gender_lookup(soup) or Gender.ADULTS.value
 
     def image_urls(self, response):
         raw_images = clean(response.css('.sss-thumb-image-link img::attr(src)'))
         return [image.replace('/dpr_auto,f_auto,q_70,w_215/d_coming-soon.jpg', '') for image in raw_images]
 
+    def raw_sku(self, response):
+        raw_sku = response.xpath('//script[contains(., "jsonConfig")]/text()').re('attributes\":(.+),\"template')
+        return json.loads(raw_sku[0]) if raw_sku else None
+
     def skus(self, response):
         skus = {}
         common_sku = self.product_pricing_common(response)
-        raw_sku = response.xpath('//script[contains(., "jsonConfig")]/text()')
+        raw_sku = self.raw_sku(response)
         if raw_sku:
-            raw_colour = json.loads(raw_sku.re(self.colour_re)[0])
-            common_sku['colour'] = raw_colour[0]['label']
-            raw_sizes = raw_sku.re(self.size_re)
-            raw_sizes = json.loads(raw_sizes[0]) if raw_sizes else raw_sizes
+            common_sku['colour'] = raw_sku.pop('90')['options'][0]['label']
+            raw_sizes = raw_sku.popitem()[1]['options'] if raw_sku else []
 
             for raw_size in raw_sizes:
                 sku = common_sku.copy()
