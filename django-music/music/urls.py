@@ -1,16 +1,20 @@
 from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework_jwt.views import obtain_jwt_token
+from rest_framework import routers
 from . import views
+
 
 app_name = 'music'
 
+
 urlpatterns = [
-    url(r'^login/', obtain_jwt_token),
-    url(r'^$', views.index, name='index'),
+    
+    # url(r'^$', views.index, name='index'),
+    url(r'^index_page/$', views.IndexPage.as_view(), name='index_page'),
     url(r'^register/$', views.register, name='register'),
-    url(r'^login_user/$', views.login_user, name='login_user'),
-    url(r'^logout_user/$', views.logout_user, name='logout_user'),
+    # url(r'^login_user/$', views.login_user, name='login_user'),
+    # url(r'^logout_user/$', views.logout_user, name='logout_user'),
     url(r'^create_album/$', views.create_album, name='create_album'),
     url(r'^(?P<album_id>[0-9]+)/create_song/$',
         views.create_song, name='create_song'),
@@ -25,9 +29,17 @@ urlpatterns = [
     url(r'^songs/(?P<filter_by>[a-zA_Z]+)/$', views.songs, name='songs'),
 
     # for rest API urls
+    
+
+    url(r'^logout_user/$', views.Logout.as_view(), name='logout_user'),
     url(r'^album_list/$', views.AlbumList.as_view(), name='album_list'),
     url(r'^song_list/$', views.SongList.as_view(), name='song_list'),
-    #url(r'^login_user/$', views.LoginView.as_view(), name='login_user'),
+    url(r'^user_detail/$', views.UserDetail.as_view(), name='user_detail'),
+    url(r'^login_user/$', views.LoginView.as_view(), name='login_user'),
+    
+    
+    # url(r'^get_token/$', views.get_token, name='get_token'),
+        #url(r'^login_user/$', views.LoginView.as_view(), name='login_user'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
