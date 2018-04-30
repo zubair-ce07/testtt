@@ -1,41 +1,54 @@
+import json
+
 from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from schwab.items import SchwabItem
 from w3lib.url import add_or_replace_parameter
 import math
-import urllib.request
+# import urllib.request
 
 
 class Schwab(CrawlSpider):
     name = 'schwab'
     allowed_domain = ['https://www.schwab.de/']
-    start_urls = ['https://www.schwab.de/']
+    start_urls = ['https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID=1525066940']
     pages = ['section.mainnav--top a']
     products = ['div.product__top a']
 
-    def start_requests(self):
-        import json
+    # def start_requests(self):
+    #     scrapy_request = Request(self.start_urls[0])
+    #     return scrapy_request
 
-        url = ['https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID=1525066940']
-        web_url = urllib.request.urlopen(url[0])
-        data = web_url.read()
-        encoding = web_url.info().get_content_charset('utf-8')
-        json_response = json.loads(data.decode(encoding))
+        # web_url = urllib.request.urlopen(self.start_urls[0])
+        # data = web_url.read()
+        # encoding = web_url.info().get_content_charset('utf-8')
+        # json_response = json.loads(data.decode(encoding))
+        # pages_urls = []
+        # pages_requests = []
+        #
+        # for json in json_response:
+        #         pages_urls.append(json['url'])
+        #         for inner_cat in json['sCat']:
+        #             pages_urls.append(inner_cat['url'])
+        #
+        # for page in pages_urls:
+        #     pages_requests.append(Request(page, self.pagination))
+        #
+        # return pages_requests
+
+    def parse_start_url(self, response):
+        json_data = json.loads(response.text)
         pages_urls = []
         pages_requests = []
-        temp = 0
 
-        for json in json_response:
-            if temp == 0:
-                pages_urls.append(json['url'])
-                for inner_cat in json['sCat']:
-                    pages_urls.append(inner_cat['url'])
-            temp = temp + 1
+        for json_url in json_data:
+            pages_urls.append(json_url['url'])
+            for inner_cat in json_url['sCat']:
+                pages_urls.append(inner_cat['url'])
 
-        for page in pages_urls:
-            pages_requests.append(Request(page, self.pagination))
-
+        for page in range(len(pages_urls)):
+            pages_requests.append(Request(pages_urls[page], self.pagination, dont_filter=True))
         return pages_requests
 
     rules = (
