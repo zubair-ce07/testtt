@@ -57,21 +57,21 @@ class BikBokParseSpider(BaseParseSpider):
         ]
         return colour_requests
 
-    def raw_info(self, response):
+    def raw_description(self, response):
         return response.css(".accordion-navigation:contains('Produktinformation')")
 
     def product_id(self, response):
-        return self.raw_info(response).re_first('NR: (\d+)')
+        return self.raw_description(response).re_first('NR: (\d+)')
 
     def product_name(self, response):
         return clean(response.css('.product-title::text'))[0]
 
     def product_care(self, response):
-        return clean(self.raw_info(response).css('img::attr(alt)'))
+        return clean(self.raw_description(response).css('img::attr(alt)'))
 
     def product_description(self, response):
         return clean(response.css('.product-info-container p::text')) + \
-               clean(self.raw_info(response).css('.content ::text'))
+               clean(self.raw_description(response).css('.content ::text'))
 
     def merch_info(self, response):
         return clean(response.css('.product-info-container .product-campaign::text'))
@@ -83,17 +83,17 @@ class BikBokParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
 
-        colour = response.css('.color-item.active a img::attr(alt)').extract_first() or ''
-        colour = colour if colour else self.detect_colour_from_name(response)
+        colour = clean(response.css('.color-item.active a img::attr(alt)'))
+        colour = colour[0] if colour else self.detect_colour_from_name(response)
 
         raw_skus = response.css('.product-property-list.size-picker button')
 
         for raw_sku in raw_skus:
-            sku_id = raw_sku.css('::attr(data-sku-id)').extract_first()
-            in_stock = raw_sku.css('::attr(data-amount-in-stock)').extract_first()
+            sku_id = clean(raw_sku.css('::attr(data-sku-id)'))[0]
+            in_stock = clean(raw_sku.css('::attr(data-amount-in-stock)'))[0]
 
             sku = self.product_pricing_common(response)
-            sku['size'] = clean(raw_sku.css('::text').extract_first())
+            sku['size'] = clean(raw_sku.css('::text'))[0]
             sku['currency'] = response.css('script::text').re_first('currency:"(\w+)",')
 
             if colour:
@@ -123,14 +123,14 @@ class BikBokCrawlSpider(BaseCrawlSpider):
 
     rules = [
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_r),
-             callback='parse'),
+             callback='parse')
     ]
 
     def parse(self, response):
         yield from super().parse(response)
 
         product_urls = response.css("script::text").re(',Url:"(.*?)"')
-        product_requests = self.product_requests(response, product_urls)
+        yield from self.product_requests(response, product_urls)
 
         total_products = response.css('.enhanced-box .right::text').re_first('(\d+)') or '0'
         total_products = int(total_products)
@@ -144,21 +144,12 @@ class BikBokCrawlSpider(BaseCrawlSpider):
                                              headers={'Accept': ''}, formdata=params,
                                              callback=self.parse_post_request)
             pagination_request.meta['trail'] = self.add_trail(response)
-            pagination_request.meta['requests_queue'] = product_requests
             yield pagination_request
-
-        if not extra_pages:
-            for product_request in product_requests:
-                yield product_request
 
     def parse_post_request(self, response):
         raw_products = json.loads(response.text)
         product_urls = [product['Url'] for product in raw_products['Products']]
-        product_requests = response.meta['requests_queue']
-        product_requests += self.product_requests(response, product_urls)
-
-        for product_request in product_requests:
-            yield product_request
+        yield from self.product_requests(response, product_urls)
 
     def product_requests(self, response, products):
         requests = []
@@ -173,7 +164,7 @@ class BikBokCrawlSpider(BaseCrawlSpider):
     def get_params(self, response):
         scripts = response.css('script::text')
         return {
-            'Language': response.css('html::attr(lang)').extract_first(),
+            'Language': clean(response.css('html::attr(lang)'))[0],
             'MarketId': scripts.re_first('marketId:"(.*?)"'),
             'CatalogNode': scripts.re_first('currentCatalogNode:"(.*?)"'),
             'FetchAllPages': 'false',
