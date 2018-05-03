@@ -1,7 +1,8 @@
 import json
+import re
 
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Request, Rule
+from scrapy.spiders import Rule
 from scrapy import FormRequest
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean
@@ -22,6 +23,7 @@ class MixinSE(Mixin):
 
 class BikBokParseSpider(BaseParseSpider):
     price_css = '.product-info-container .product-price span::text'
+    raw_description_css = ".accordion-navigation:contains('Produktinformation')"
 
     def parse(self, response):
         product_id = self.product_id(response)
@@ -33,9 +35,11 @@ class BikBokParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
 
         garment['merch_info'] = self.merch_info(response)
-        garment['category'] = [trail[0] for trail in garment['trail']]
+        garment['category'] = [text for text, _ in garment['trail']]
         garment['skus'] = self.skus(response)
         garment['image_urls'] = self.image_urls(response)
+        garment['description'].insert(0, clean(response.css('.product-info-container p::text')))
+        garment['care'] += clean(response.css(self.raw_description_css).css('img::attr(alt)'))
 
         garment['meta'] = {
             'requests_queue': self.colour_requests(response)
@@ -50,28 +54,14 @@ class BikBokParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def colour_requests(self, response):
-        url_css = '.color-item:not(.active) a::attr(href)'
-        colour_requests = [
-            Request(url=response.urljoin(url), callback=self.parse_colour, dont_filter=True)
-            for url in clean(response.css(url_css))
-        ]
-        return colour_requests
-
-    def raw_description(self, response):
-        return response.css(".accordion-navigation:contains('Produktinformation')")
+        urls = clean(response.css('.color-item:not(.active) a::attr(href)'))
+        return [response.follow(u, callback=self.parse_colour, dont_filter=True) for u in urls]
 
     def product_id(self, response):
-        return self.raw_description(response).re_first('NR: (\d+)')
+        return re.search('/(\d+)_', response.url).group(1)
 
     def product_name(self, response):
         return clean(response.css('.product-title::text'))[0]
-
-    def product_care(self, response):
-        return clean(self.raw_description(response).css('img::attr(alt)'))
-
-    def product_description(self, response):
-        return clean(response.css('.product-info-container p::text')) + \
-               clean(self.raw_description(response).css('.content ::text'))
 
     def merch_info(self, response):
         return clean(response.css('.product-info-container .product-campaign::text'))
@@ -134,15 +124,14 @@ class BikBokCrawlSpider(BaseCrawlSpider):
 
         total_products = response.css('.enhanced-box .right::text').re_first('(\d+)') or '0'
         total_products = int(total_products)
-        extra_pages = int(total_products / self.page_size)
+        total_pages = int(total_products / self.page_size)
 
         params = self.get_params(response)
 
-        for page_index in range(1, extra_pages + 1):
+        for page_index in range(1, total_pages + 1):
             params['Page'] = str(page_index)
-            pagination_request = FormRequest(url=self.post_request_url, method='POST',
-                                             headers={'Accept': ''}, formdata=params,
-                                             callback=self.parse_post_request)
+            pagination_request = FormRequest(url=self.post_request_url, headers={'Accept': ''},
+                                             formdata=params, callback=self.parse_post_request)
             pagination_request.meta['trail'] = self.add_trail(response)
             yield pagination_request
 
@@ -155,7 +144,7 @@ class BikBokCrawlSpider(BaseCrawlSpider):
         requests = []
 
         for url in products:
-            request = Request(url=response.urljoin(url), callback=self.parse_item)
+            request = response.follow(url, callback=self.parse_item)
             request.meta['trail'] = self.add_trail(response)
             requests.append(request)
 
