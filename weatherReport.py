@@ -4,18 +4,16 @@ class WeatherReport:
         self.min_temperature = min_temperature
         self.max_temperature = max_temperature
 
-    def printGraphForMaxTemperature(self,date):                              #creates graph for max temperature
+    def max_temperature_graph(self,date):
         for max_temp_count in range(self.max_temperature):
             print('\033[91m'+'+',end='')
 
-
-    def printGraphForMinTemperature(self,date):                              #creates graph for min temperature
+    def min_temperature_graph(self,date):
         for min_temp_count in range(self.min_temperature):
             print('\033[94m'+'+',end='')
 
-
-    def printMinMaxTemperatureGraphForDay(self,date):    #creates merged graph for max and min temperature
+    def merged_graph(self,date):
         print(date+' ',end='')
-        self.printGraphForMinTemperature(date)
-        self.printGraphForMaxTemperature(date)
+        self.max_temperature_graph(date)
+        self.min_temperature_graph(date)
         print (' %dC - %dC'%(self.min_temperature,self.max_temperature))
