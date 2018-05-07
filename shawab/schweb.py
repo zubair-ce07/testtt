@@ -1,156 +1,218 @@
-import json
-
-from scrapy import Request
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+from scrapy import Request, FormRequest
+from scrapy.spiders import CrawlSpider
 from schwab.items import SchwabItem
-from w3lib.url import add_or_replace_parameter
-import math
-# import urllib.request
+from w3lib.url import add_or_replace_parameter, url_query_cleaner
+import json
 
 
 class Schwab(CrawlSpider):
     name = 'schwab'
     allowed_domain = ['https://www.schwab.de/']
+    sku_counter = 0
+    stock_counter = 0
     start_urls = ['https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID=1525066940']
-    pages = ['section.mainnav--top a']
-    products = ['div.product__top a']
-
-    # def start_requests(self):
-    #     scrapy_request = Request(self.start_urls[0])
-    #     return scrapy_request
-
-        # web_url = urllib.request.urlopen(self.start_urls[0])
-        # data = web_url.read()
-        # encoding = web_url.info().get_content_charset('utf-8')
-        # json_response = json.loads(data.decode(encoding))
-        # pages_urls = []
-        # pages_requests = []
-        #
-        # for json in json_response:
-        #         pages_urls.append(json['url'])
-        #         for inner_cat in json['sCat']:
-        #             pages_urls.append(inner_cat['url'])
-        #
-        # for page in pages_urls:
-        #     pages_requests.append(Request(page, self.pagination))
-        #
-        # return pages_requests
+    gender_dict = {
+        'Damen': 'Ladies',
+        'Damenmode': 'Ladies',
+        'Herren': 'Men',
+        'Mädchen': 'Girls',
+        'Jungen': 'Boys',
+        'Baby Mädchen': 'Baby Girl',
+        'Baby Jungen': 'Baby Boys',
+        'Kinder': 'Children',
+    }
 
     def parse_start_url(self, response):
-        json_data = json.loads(response.text)
+        raw_urls = json.loads(response.text)
         pages_urls = []
         pages_requests = []
+        count = 0
 
-        for json_url in json_data:
-            pages_urls.append(json_url['url'])
-            for inner_cat in json_url['sCat']:
-                pages_urls.append(inner_cat['url'])
+        for url in raw_urls:
+            if count == 0:
+                pages_urls.append(url['url'])
+                for inner_cat in url['sCat']:
+                    pages_urls.append(inner_cat['url'])
+            count = count + 1
 
-        for page in range(len(pages_urls)):
-            pages_requests.append(Request(pages_urls[page], self.pagination, dont_filter=True))
+        for page in pages_urls:
+            pages_requests.append(Request(url=page, callback=self.parse_pagination))
         return pages_requests
 
-    rules = (
-        Rule(LinkExtractor(restrict_css=products), callback='product_scraper'),
-    )
-
-    def pagination(self, response):
+    def parse_pagination(self, response):
         total_items = response.css('.pl__headline__count::text').re_first(r'(\d+)')
         items_per_page = 60
 
         if not total_items:
             return
 
-        total_pages = math.ceil(int(total_items) / items_per_page)
+        total_pages = (int(total_items) // items_per_page) + 1
 
         # 1 added for upper bound
-        for page in range(int(total_pages) + 1):
-            url = add_or_replace_parameter(
-                response.url, '?pageNr=', page)
-            yield Request(url, self.parse)
+        for page in range(total_pages + 1):
+            if page == 0:
+                yield Request(response.url, callback=self.parse_individual_request)
+            else:
+                url = add_or_replace_parameter(response.url, 'pageNr', page)
+                yield Request(url=url, callback=self.parse_individual_request)
 
-    def product_scraper(self, response):
+    def parse_individual_request(self, response):
+        main_url = 'https://www.schwab.de'
+        product_requests = []
+        products = response.css('div.product__top a::attr(href)').extract()
+        for product in products:
+            join_url = url_query_cleaner(main_url + product)
+            product_requests.append(Request(url=join_url, callback=self.parse_product))
+        return product_requests
+
+    def out_of_stock_request(self, response):
+        url = ['https://www.schwab.de/request/itemservice.php?fnc=getItemInfos']
+        post_request_data = response.css('script::text').re_first(r'articlesString(.+),(\d)')
+        post_request_data = post_request_data[2:]
+        items = {
+            'items': post_request_data
+        }
+        return [FormRequest(url=url[0], formdata=items, callback=self.parse_stock_request, dont_filter=True)]
+
+    def parse_stock_request(self, response):
+        product = response.meta['product']
+        requests = response.meta['requests']
+        raw_data = response.text
+
+        stock_data = json.loads(raw_data)
+        del stock_data['codes']
+        del stock_data['express']
+
+        if product['skus'][self.stock_counter]['sku_id']:
+            sku_id = product['skus'][self.stock_counter]['sku_id']
+            sku_id = sku_id.split('|')[0]
+
+            for size in stock_data[sku_id]:
+                size = size.split('/')[0]
+                if stock_data[sku_id][size] == 'lieferbar innerhalb 3 Wochen':
+                    product['skus'][self.stock_counter].update({'out_of_stock': True})
+                self.stock_counter = self.stock_counter + 1
+
+        return self.parse_additional_requests(requests, product)
+
+    def parse_product(self, response):
         product = SchwabItem()
-        product['product_name'] = self.product_name(response)
-        product['product_detail'] = self.product_detail(response)
+        product['name'] = self.product_name(response)
         product['product_brand'] = self.product_brand(response)
-        product['product_price'] = self.product_price(response)
-        product['product_quantity'] = self.product_quantity(response)
-        product['product_currency'] = self.product_currency(response)
-        product['product_images'] = self.product_images(response)
-        product['product_retailer_sku'] = self.product_retailer_sku(response)
-        product['product_description'] = self.product_description(response)
-        product['product_url_origin'] = self.product_url_origin(response)
+        product['price'] = self.product_price(response)
+        product['currency'] = self.product_currency(response)
+        product['images_urls'] = self.product_images(response)
+        product['retailer_sku'] = self.product_retailer_sku(response)
+        product['description'] = self.product_description(response)
+        product['url'] = self.product_url_origin(response)
         product['retailer'] = "schwab"
-        product['trail'] = self.product_trail(response)
-        product['category'] = self.product_category(response)
-        product['color'] = self.product_color(response)
-        product['skus'] = self.product_skus(response)
+        categories = self.product_category(response)
+        product['category'] = categories
+        trails = self.product_trail(response)
 
-        other_requests = self.additional_colors(response)
-        return self.parse_additional_requests(other_requests, product)
+        category_counter = 0
+        trail_list = []
+
+        for trail in trails:
+            trail_list.append((categories[category_counter], trail))
+            category_counter = category_counter + 1
+        product['trail'] = trail_list
+
+        for category in categories:
+            if category in self.gender_dict:
+                product['gender'] = self.gender_dict[category]
+            else:
+                product['gender'] = None
+
+        product['skus'] = self.product_skus(response)
+        product['care'] = self.product_care(response)
+
+        if not product['gender']:
+            product['industry'] = "Homeware"
+
+        product['merch_info'] = self.product_merch_info(response)
+
+        self.sku_counter = 0
+        self.stock_counter = 0
+        addl_requests = self.addtional_colors_requests(response)
+        return self.parse_additional_requests(addl_requests, product)
 
     def product_skus(self, response):
         sizes = self.product_size(response)
-        additional_colors = self.additional_colors_name(response)
-        count = 0
-        skus = {}
+        previous_price = self.product_previous_price(response)
+        total_skus = {}
+
+        sku = {}
+        sku["price"] = self.product_price(response)
+        sku["currency"] = self.product_currency(response)
+        sku["color"] = self.product_color(response)
+        id = self.product_retailer_sku(response)
+
+        if previous_price:
+            sku['previous_prices'] = previous_price
+
+        if not sizes:
+            if previous_price:
+                sku["sku_id"] = id + '|' + (sku['color'] or '') + '|' + sku['price']
+                total_skus.update({self.sku_counter: sku})
+                self.sku_counter = self.sku_counter + 1
 
         for size in sizes:
             sku = {}
             sku["size"] = size
-            sku["product_retailer_sku"] = self.product_retailer_sku(response)
-            sku["product_retailer_sku"] = self.product_price(response)
-            sku["product_currency"] = self.product_currency(response)
-            sku["product_color"] = self.product_color(response)
-            if additional_colors:
-                sku["additional_product_color"] = additional_colors
-            skus.update({count: sku})
-            count = count + 1
+            sku["price"] = self.product_price(response)
+            sku["currency"] = self.product_currency(response)
+            sku["color"] = self.product_color(response)
+            id = self.product_retailer_sku(response)
+            sku["sku_id"] = id + '|' + sku['color'] + '|' + sku['size'] + '|' + sku['price']
+            total_skus.update({self.sku_counter: sku})
+            self.sku_counter = self.sku_counter + 1
+        return total_skus
 
-        return skus
-
-    def additional_colors(self, response):
+    @staticmethod
+    def additional_colors(response):
         colors = response.css('a.colorspots__item::attr(title)').extract()
-        items = {}
-
-        items["sku"] = self.product_skus(response)
-        items['images'] = self.product_images(response)
-        additional_requests = []
+        additional_urls = []
 
         for color in colors:
-            requests = add_or_replace_parameter(response.url, "?color={}", color)
-            additional_requests.append(Request(requests, self.extra_color_images))
+            full_url = add_or_replace_parameter(response.url, "color", color)
+            additional_urls.append(full_url)
+
+        return additional_urls
+
+    def addtional_colors_requests(self, response):
+        addl_colors_urls = self.additional_colors(response)
+
+        additional_requests = []
+
+        for request_url in addl_colors_urls:
+            additional_requests += self.out_of_stock_request(response)
+            additional_requests.append(Request(url=request_url, callback=self.parse_extra_images, dont_filter=True))
 
         return additional_requests
 
-    def extra_color_images(self, response):
-        # https://doc.scrapy.org/en/latest/topics/request-response.html#topics-request-response-ref-request-callback-arguments
+    def parse_extra_images(self, response):
         product = response.meta['product']
-        addl_requests = response.meta['requests']
-        product['skus'].update({"18": self.product_skus(response)})
-        product['product_images'].append(self.product_images(response))
-        return self.parse_additional_requests(addl_requests, product)
+        requests = response.meta['requests']
+        product['skus'].update(self.product_skus(response))
+        product['images_urls'] += self.product_images(response)
+        return self.parse_additional_requests(requests, product)
 
     @staticmethod
-    def parse_additional_requests(addl_requests, data):
-        if not addl_requests:
-            yield data
-        for request in addl_requests:
-            request.meta['product'] = data
-            request.meta['requests'] = addl_requests
+    def parse_additional_requests(requests, product):
+        if requests:
+            request = requests[0]
+            del requests[0]
+            request.meta['product'] = product
+            request.meta['requests'] = requests
             yield request
+        else:
+            yield product
 
     @staticmethod
     def product_name(response):
         name = response.css('h1.details__title span::text').extract_first()
-        return name
-
-    @staticmethod
-    def product_detail(response):
-        detail = response.css('ul.l-outsp-bot-5 li::text').extract()
-        return detail
+        return name.strip()
 
     @staticmethod
     def product_brand(response):
@@ -158,21 +220,26 @@ class Schwab(CrawlSpider):
         return brand
 
     @staticmethod
-    def product_price(response):
-        price = response.css('.js-detail-price::text').extract_first()
+    def product_previous_price(response):
+        price = response.css('.js-wrong-price::text').extract_first()
+        if price:
+            return price.replace('.', '')
         return price
 
     @staticmethod
-    def product_quantity(response):
-        quantity = response.css(
-            '.js-current-variant-name::attr(value)').extract_first()
-        return quantity
+    def product_price(response):
+        price = response.css('.js-detail-price::text').extract_first()
+        return price.replace(',', '')
 
     @staticmethod
     def product_currency(response):
-        currency = response.css(
-            'meta[itemprop="priceCurrency"]::attr(content)').extract_first()
+        currency = response.css('meta[itemprop="priceCurrency"]::attr(content)').extract_first()
         return currency
+
+    @staticmethod
+    def product_care(response):
+        cares = response.css('.details__desc__more__content div::text').extract()
+        return clean_product(cares)
 
     @staticmethod
     def product_images(response):
@@ -189,7 +256,7 @@ class Schwab(CrawlSpider):
     @staticmethod
     def product_description(response):
         desc = response.css('div.l-outsp-bot-10 li::text').extract()
-        return desc
+        return clean_product(desc)
 
     @staticmethod
     def product_url_origin(response):
@@ -198,27 +265,13 @@ class Schwab(CrawlSpider):
 
     @staticmethod
     def product_trail(response):
-        trails = response.css('ul.breadcrumb a::attr(href)').extract()
-        trail_dict = {}
-        count = 0
-
-        for trail in trails:
-            trail_dict[str(count)] = trail
-            count = count + 1
-
-        return trail_dict
+        trails = response.css('div#breadcrumb li>a::attr(href)').extract()
+        return trails
 
     @staticmethod
     def product_category(response):
-        categories = response.css('ul.breadcrumb span[itemprop="name"]::text').extract()
-        category_dict = {}
-        count = 0
-
-        for category in categories:
-            category_dict[str(count)] = category
-            count = count + 1
-
-        return category_dict
+        category_list = response.css('div#breadcrumb a>span::text').extract()
+        return category_list
 
     @staticmethod
     def product_color(response):
@@ -231,6 +284,14 @@ class Schwab(CrawlSpider):
         return sizes
 
     @staticmethod
-    def additional_colors_name(response):
-        colors = response.css('a.colorspots__item::attr(title)').extract()
-        return colors
+    def product_merch_info(response):
+        return None
+
+
+def clean_product(raw_data):
+    cleaned_list = []
+    for item in raw_data:
+        item = item.strip()
+        if item:
+            cleaned_list.append(item)
+    return cleaned_list
