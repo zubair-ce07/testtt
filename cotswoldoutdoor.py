@@ -54,7 +54,7 @@ class CotswoldParseSpider(BaseParseSpider):
                                   '.product-details__title--product-detail span::text'))[0]
 
     def product_category(self, response):
-        breadcrumbs =  clean(response.css('span[itemprop="itemListElement"] span::text'))
+        breadcrumbs = clean(response.css('span[itemprop="itemListElement"] span::text'))
         return [text for text in breadcrumbs if text not in ['Home', self.product_name(response)]]
 
     def product_gender(self, response, category):
@@ -79,16 +79,22 @@ class CotswoldParseSpider(BaseParseSpider):
         skus = {}
 
         raw_product = JSParser(
-            clean(response.css('script:contains(productInfo)::text'))[0]
-        )['productInfo']
+            clean(response.css('script:contains(productInfo)::text'))[0])['productInfo']
 
-        id = raw_product['productId']
+        product_id = raw_product['productId']
 
         raw_prices = response.css('script').re_first(
-            r'SITE.data.productPrices\["{}"] = SITE.dataImporter\((.*?)\);'.format(id))
+            r'SITE.data.productPrices\["{}"] = SITE.dataImporter\((.*?)\);'.format(product_id))
         raw_prices = json.loads(raw_prices)
 
         currency = raw_prices['currencyCode']
+
+        colors_map = {
+            raw_product['selectedProductColorVariation']['description']:
+                raw_product['selectedProductColorVariation']['colorId']
+        }
+        for each in raw_product['otherProductColorVariation']:
+            colors_map[each['description']] = each['colorId']
 
         for raw_size in raw_product['selectedProductColorVariation']['sizes']:
             sku_id = raw_size['sku']
@@ -96,14 +102,6 @@ class CotswoldParseSpider(BaseParseSpider):
             sku['size'] = raw_size['code']
             sku['colour'] = clean(raw_product['selectedProductColorVariation']['description'])
             sku['currency'] = currency
-
-            for color in raw_prices['colours']:
-                if (str(color['colourId']) ==
-                        raw_product['selectedProductColorVariation']['colorId']):
-                    sku['price'] = round(color['sellPrice'] * 100)
-                    if round(color['rrpPrice'] * 100) > sku['price']:
-                        sku['previous_prices'] = [round(color['rrpPrice'] * 100)]
-                    break
 
             if not raw_size['active']:
                 sku['out_of_stock'] = True
@@ -118,17 +116,18 @@ class CotswoldParseSpider(BaseParseSpider):
                 sku['colour'] = clean(variation['description'])
                 sku['currency'] = currency
 
-                for color in raw_prices['colours']:
-                    if str(color['colourId']) == variation['colorId']:
-                        sku['price'] = round(color['sellPrice'] * 100)
-                        if round(color['rrpPrice'] * 100) > sku['price']:
-                            sku['previous_prices'] = [round(color['rrpPrice'] * 100)]
-                        break
-
                 if not raw_size['active']:
                     sku['out_of_stock'] = True
 
                 skus[sku_id] = sku
+
+        for _, sku in skus.items():
+            for color in raw_prices['colours']:
+                if str(color['colourId']) == colors_map[sku['colour']]:
+                    sku['price'] = round(color['sellPrice'] * 100)
+                    if round(color['rrpPrice'] * 100) > sku['price']:
+                        sku['previous_prices'] = [round(color['rrpPrice'] * 100)]
+                    break
 
         return skus
 
