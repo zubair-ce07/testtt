@@ -1,13 +1,13 @@
 import os.path
 import calendar
 from weatherReport import *
-from weatherData import *
+from weatherAnalyzer import *
 from collections import namedtuple
 
 class Weather:
 
     def __init__(self):
-        self.weather_data = weatherData();
+        self.weather_analyzer = weatherAnalyzer();
 
     def read_weather_file(self,filepath):
         weather_readings = []
@@ -17,15 +17,16 @@ class Weather:
                 for line in weather_details:
                     weather_parameters = line.split(',')
                     if weather_parameters[1] is not '' and weather_parameters[3] is not '' and weather_parameters[7] is not '' and weather_parameters[8] is not '':
-                        weather_readings.append(tuple((weather_parameters[0],weather_parameters[1],weather_parameters[3],weather_parameters[7],weather_parameters[8])))
+                        weather_readings.append(tuple((weather_parameters[0],weather_parameters[1],
+                                                weather_parameters[3],weather_parameters[7],weather_parameters[8])))
             weather_details.close()
             return weather_readings
         else:
-            return -1
+            return False
 
     def get_formatted_date(self,date):
         segmented_date = date.split('-')
-        formatted_date = calendar.month_name[int(segmented_date[1])-1]+' '+segmented_date[2]
+        formatted_date = calendar.month_name[int(segmented_date[1])]+' '+segmented_date[2]
         return formatted_date
 
 
@@ -35,23 +36,24 @@ class YearlyWeather(Weather):
         Weather.__init__(self)
         self.filenames = filenames
 
-    def verify_yearly_data(self):
+    def verify_yearly_weather(self):
         file_found = False
+
         for file_count in self.filenames:
             if os.path.exists(file_count):
-                return True
+                file_found = True
 
-        return False
+        return file_found
 
-    def get_yearly_weather(self):
+    def read_yearly_weather(self):
         for month_wise_files_counter in self.filenames:
-            weather_data = self.read_weather_file(month_wise_files_counter)
-            if weather_data != -1:
-                self.weather_data.initialize_yearly_data(weather_data)
-        return self.weather_data.get_yearly_weather_details()
+            weather_record = self.read_weather_file(month_wise_files_counter)
+            if weather_record:
+                self.weather_analyzer.initialize_yearly_weather(weather_record)
+        return self.weather_analyzer.get_yearly_weather_details()
 
     def __str__(self):
-          yearly_weather_details = self.weather_data.get_yearly_weather_details()
+          yearly_weather_details = self.weather_analyzer.get_yearly_weather_details()
           result = 'Highest Temperature: %sC on %s'%(yearly_weather_details['highest_annual_temperature'],self.get_formatted_date(yearly_weather_details['highest_annual_temperature_date'])) + '\n'
           result += 'Lowest Temperature: %sC on %s'%(yearly_weather_details['lowest_annual_temperature'],self.get_formatted_date(yearly_weather_details['lowest_annual_temperature_date']))  + '\n'
           result += 'Highest Humidity: %s%% on %s'%(yearly_weather_details['highest_annual_humidity'],self.get_formatted_date(yearly_weather_details['highest_annual_humidity_date']))
@@ -63,11 +65,11 @@ class MonthlyWeather(Weather):
     def __init__(self,filepath):
         Weather.__init__(self)
         self.filepath = filepath
-        weather_data = self.read_weather_file(self.filepath)
-        if weather_data != -1:
-            self.weather_data.initialize_monthly_data(self.read_weather_file(self.filepath))
+        weather_record = self.read_weather_file(self.filepath)
+        if weather_record:
+            self.weather_analyzer.initialize_monthly_weather(weather_record)
 
-    def verify_monthly_data(self):
+    def verify_monthly_weather(self):
         file_found = False
 
         if os.path.exists(self.filepath):
@@ -75,12 +77,12 @@ class MonthlyWeather(Weather):
 
         return file_found
 
-    def get_monthly_weather(self):
-        return self.weather_data.get_monthly_weather_details()
+    def read_monthly_weather(self):
+        return self.weather_analyzer.get_monthly_weather_details()
 
-    def get_daily_temperature(self):
-        monthly_max_readings = self.weather_data.get_monthly_max_readings()
-        monthly_min_readings = self.weather_data.get_monthly_min_readings()
+    def read_daily_weather(self):
+        monthly_max_readings = self.weather_analyzer.max_temperature_per_day
+        monthly_min_readings = self.weather_analyzer.min_temperature_per_day
 
         for index,value in enumerate (monthly_max_readings):
             weather_graph = WeatherReport(monthly_max_readings[index],monthly_min_readings[index])
@@ -91,17 +93,17 @@ class MonthlyWeather(Weather):
             weather_graph.min_temperature_graph(str(index+1))
             print ('\033[94m'+'('+str(monthly_min_readings[index])+')')
 
-    def read_data_for_daily_graph(self):
-        monthly_max_readings = self.weather_data.get_monthly_max_readings()
-        monthly_min_readings = self.weather_data.get_monthly_min_readings()
+    def analyze_daily_graph_weather(self):
+        monthly_max_readings = self.weather_analyzer.max_temperature_per_day
+        monthly_min_readings = self.weather_analyzer.min_temperature_per_day
 
         for index,value in enumerate (monthly_max_readings):
             weather_graph = WeatherReport(monthly_max_readings[index],monthly_min_readings[index])
             weather_graph.merged_graph(str(index+1))
 
     def __str__(self):
-        monthly_weather_details = self.weather_data.get_monthly_weather_details()
-        result = 'Highest Average: %sC'%(monthly_weather_details['monthly_highest_average']) + '\n'
-        result += 'Lowest Average: %sC'%(monthly_weather_details['monthly_lowest_average']) + '\n'
-        result += 'Average Mean Humidity: %s%%'%(monthly_weather_details['monthly_average_mean_humidity'])
-        return result
+        monthly_weather_details = self.weather_analyzer.get_monthly_weather_details()
+        monthly_weather = 'Highest Average: %sC'%(monthly_weather_details['monthly_highest_average']) + '\n'
+        monthly_weather += 'Lowest Average: %sC'%(monthly_weather_details['monthly_lowest_average']) + '\n'
+        monthly_weather += 'Average Mean Humidity: %s%%'%(monthly_weather_details['monthly_average_mean_humidity'])
+        return monthly_weather
