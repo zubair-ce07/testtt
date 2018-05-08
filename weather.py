@@ -1,80 +1,32 @@
 import os.path
+import calendar
 from weatherReport import *
 from weatherData import *
+from collections import namedtuple
 
 class Weather:
 
     def __init__(self):
         self.weather_data = weatherData();
 
-    def read_data_for_month(self, filepath):
-        total_days_count = 0
-        self.month_file = filepath
-        highest_average = 0
-        lowest_average = 0
-        average_mean_humidity = 0
-        max_temperature = []
-        min_temperature = []
+    def read_weather_file(self,filepath):
+        weather_readings = []
+        if os.path.exists(filepath):
+            with open(filepath) as weather_details:
+                next(weather_details)
+                for line in weather_details:
+                    weather_parameters = line.split(',')
+                    if weather_parameters[1] is not '' and weather_parameters[3] is not '' and weather_parameters[7] is not '' and weather_parameters[8] is not '':
+                        weather_readings.append(tuple((weather_parameters[0],weather_parameters[1],weather_parameters[3],weather_parameters[7],weather_parameters[8])))
+            weather_details.close()
+            return weather_readings
+        else:
+            return -1
 
-        with open(self.month_file) as weather_details:
-
-            next(weather_details)
-            for line in weather_details:
-                weather_parameters = line.split(',')
-
-                for weather_parameters_index,weather_parameter in enumerate (weather_parameters):
-                    if weather_parameters[weather_parameters_index] == '':
-                        weather_parameters[weather_parameters_index] = '0'
-
-                max_temperature.append(int(weather_parameters[1]))
-                min_temperature.append(int(weather_parameters[3]))
-
-                highest_average += int(weather_parameters[1])
-                lowest_average += int(weather_parameters[3])
-                average_mean_humidity += int(weather_parameters[8])
-                total_days_count += 1
-
-
-            highest_average = int(highest_average / total_days_count)
-            lowest_average = int(lowest_average / total_days_count)
-            average_mean_humidity = int(average_mean_humidity / total_days_count)
-        weather_details.close()
-        self.weather_data.initialize_monthly_data(highest_average,lowest_average,average_mean_humidity,max_temperature,min_temperature)
-
-    def read_files_for_particular_year(self,filenames):
-        self.years_filenames = filenames
-
-        highest_temperature = -100
-        lowest_temperature = 100
-        highest_humidity = -100
-        hightest_temperature_date = ''
-        lowest_temperature_date = ''
-        highest_humidity_date = ''
-
-        for month_wise_files_counter in self.years_filenames:
-            if os.path.exists(month_wise_files_counter):
-                with open(month_wise_files_counter) as weather_details:
-                    next(weather_details)
-                    for line in weather_details:
-                        weather_parameters = line.split(',')
-
-                        if weather_parameters[1] is not '':
-                            if int(weather_parameters[1]) > highest_temperature:
-                                highest_temperature = int(weather_parameters[1])
-                                hightest_temperature_date = weather_parameters[0]
-
-                        if weather_parameters[3] is not '':
-                            if int(weather_parameters[3]) < lowest_temperature:
-                                lowest_temperature = int(weather_parameters[3])
-                                lowest_temperature_date = weather_parameters[0]
-
-                        if weather_parameters[7] is not '':
-                            if int(weather_parameters[7]) > highest_humidity:
-                                highest_humidity = int(weather_parameters[7])
-                                highest_humidity_date = weather_parameters[0]
-
-                weather_details.close()
-        self.weather_data.initialize_yearly_data(highest_temperature,lowest_temperature,highest_humidity,hightest_temperature_date,lowest_temperature_date,highest_humidity_date)
+    def get_formatted_date(self,date):
+        segmented_date = date.split('-')
+        formatted_date = calendar.month_name[int(segmented_date[1])-1]+' '+segmented_date[2]
+        return formatted_date
 
 
 class YearlyWeather(Weather):
@@ -82,7 +34,6 @@ class YearlyWeather(Weather):
     def __init__(self,filenames):
         Weather.__init__(self)
         self.filenames = filenames
-        self.read_files_for_particular_year (self.filenames)
 
     def verify_yearly_data(self):
         file_found = False
@@ -93,7 +44,18 @@ class YearlyWeather(Weather):
         return False
 
     def get_yearly_weather(self):
+        for month_wise_files_counter in self.filenames:
+            weather_data = self.read_weather_file(month_wise_files_counter)
+            if weather_data != -1:
+                self.weather_data.initialize_yearly_data(weather_data)
         return self.weather_data.get_yearly_weather_details()
+
+    def __str__(self):
+          yearly_weather_details = self.weather_data.get_yearly_weather_details()
+          result = 'Highest Temperature: %sC on %s'%(yearly_weather_details['highest_annual_temperature'],self.get_formatted_date(yearly_weather_details['highest_annual_temperature_date'])) + '\n'
+          result += 'Lowest Temperature: %sC on %s'%(yearly_weather_details['lowest_annual_temperature'],self.get_formatted_date(yearly_weather_details['lowest_annual_temperature_date']))  + '\n'
+          result += 'Highest Humidity: %s%% on %s'%(yearly_weather_details['highest_annual_humidity'],self.get_formatted_date(yearly_weather_details['highest_annual_humidity_date']))
+          return result
 
 
 class MonthlyWeather(Weather):
@@ -101,7 +63,9 @@ class MonthlyWeather(Weather):
     def __init__(self,filepath):
         Weather.__init__(self)
         self.filepath = filepath
-        return self.read_data_for_month(self.filepath)
+        weather_data = self.read_weather_file(self.filepath)
+        if weather_data != -1:
+            self.weather_data.initialize_monthly_data(self.read_weather_file(self.filepath))
 
     def verify_monthly_data(self):
         file_found = False
@@ -134,3 +98,10 @@ class MonthlyWeather(Weather):
         for index,value in enumerate (monthly_max_readings):
             weather_graph = WeatherReport(monthly_max_readings[index],monthly_min_readings[index])
             weather_graph.merged_graph(str(index+1))
+
+    def __str__(self):
+        monthly_weather_details = self.weather_data.get_monthly_weather_details()
+        result = 'Highest Average: %sC'%(monthly_weather_details['monthly_highest_average']) + '\n'
+        result += 'Lowest Average: %sC'%(monthly_weather_details['monthly_lowest_average']) + '\n'
+        result += 'Average Mean Humidity: %s%%'%(monthly_weather_details['monthly_average_mean_humidity'])
+        return result

@@ -1,6 +1,7 @@
 import os
 import sys, getopt
 import argparse
+import calendar
 from weather import *
 
 months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -12,7 +13,7 @@ def get_month_name(num_of_month):
     if int(num_of_month) > 12 or int(num_of_month) < 0 :
         print('Invalid Input')
         keypress = input('Press any key to continue...')
-        main()
+        sys.exit()
     else:
         return months[int(num_of_month)-1]
 
@@ -24,100 +25,91 @@ def generate_file_names(year):
 
     return filenames
 
-def get_formatted_date(date):
-    segmented_date = date.split('-')
-    formatted_date = months[int(segmented_date[1])-1]+' '+segmented_date[2]
-    return formatted_date
-
-def get_yearly_data(user_input,index):
+def get_yearly_data(date):
     try:
-        user_provided_year = user_input[index].split('/')
+        user_provided_year = date.split('/')
     except IndexError:
         print('Invalid Input')
         keypress = input('Press any key to continue...')
-        main()
+        sys.exit()
     finally:
         if len(user_provided_year) > 1 :
             print('Invalid Input')
             keypress = input('Press any key to continue...')
-            main()
+            sys.exit()
         else:
              filenames = generate_file_names(user_provided_year[0])
              yearly_weather = YearlyWeather(filenames)
              if yearly_weather.verify_yearly_data():
                  yearly_weather_details = yearly_weather.get_yearly_weather()
-                 print ('Highest Temperature: %sC on %s'%(yearly_weather_details['highest_annual_temperature'],get_formatted_date(yearly_weather_details['highest_annual_temperature_date'])))
-                 print ('Lowest Temperature: %sC on %s'%(yearly_weather_details['lowest_annual_temperature'],get_formatted_date(yearly_weather_details['lowest_annual_temperature_date'])))
-                 print ('Highest Humidity: %s%% on %s'%(yearly_weather_details['highest_annual_humidity'],get_formatted_date(yearly_weather_details['highest_annual_humidity_date'])))
+                 print (yearly_weather)
              else:
                  print ('No record found against this year')
                  keypress = input('Press any key to continue...')
-                 main()
+                 sys.exit()
 
-def get_monthly_data (user_input,index):
+def get_monthly_data (date):
     try:
-        user_provided_year_month = user_input[index].split('/')
+        user_provided_year_month = date.split('/')
     except IndexError:
         print('Invalid Input')
         keypress = input('Press any key to continue...')
-        main()
+        sys.exit()
     finally:
         if len(user_provided_year_month) == 1 or len(user_provided_year_month) == 0 :
             print('Invalid Input')
             keypress = input('Press any key to continue...')
-            main()
+            sys.exit()
         else:
              month = get_month_name(int(user_provided_year_month[1]))
              if month != -1:
                  filename = 'weatherfiles/Murree_weather_'+user_provided_year_month[0]+'_'+month+'.txt'
                  monthly_weather = MonthlyWeather(filename)
+                 option = []
                  if monthly_weather.verify_monthly_data():
                      monthly_weather_details = monthly_weather.get_monthly_weather()
-                     print('Highest Average: %sC'%(monthly_weather_details['monthly_highest_average']))
-                     print('Lowest Average: %sC'%(monthly_weather_details['monthly_lowest_average']))
-                     print('Average Mean Humidity: %s%%'%(monthly_weather_details['monthly_average_mean_humidity']))
+                     print (monthly_weather)
                  else:
                      print ('No record found against this month')
                      keypress = input('Press any key to continue...')
-                     main()
+                     sys.exit()
 
-def get_monthly_graphed_data (user_input,index):
+def get_monthly_graphed_data (date):
     try:
-        user_provided_year_month = user_input[index].split('/')
+        user_provided_year_month = date.split('/')
     except IndexError:
         print('Invalid Input')
         keypress = input('Press any key to continue...')
-        main()
+        sys.exit()
     finally:
         if len(user_provided_year_month) == 1 or len(user_provided_year_month) == 0:
             print('Invalid Input')
             keypress = input('Press any key to continue...')
-            main()
+            sys.exit()
         else:
              month = get_month_name(int(user_provided_year_month[1]))
              if month != -1:
                  filename = 'weatherfiles/Murree_weather_'+user_provided_year_month[0]+'_'+month+'.txt'
                  monthly_weather = MonthlyWeather(filename)
-
                  if monthly_weather.verify_monthly_data():
                      monthly_weather.get_daily_temperature()
                  else:
                      print ('No record found against this month')
                      keypress = input('Press any key to continue...')
-                     main()
+                     sys.exit()
 
-def get_day_wise_graphed_data (user_input,index):
+def get_day_wise_graphed_data (date):
     try:
-        user_provided_year_month = user_input[index].split('/')
+        user_provided_year_month = date.split('/')
     except IndexError:
         print('Invalid Input')
         keypress = input('Press any key to continue...')
-        main()
+        sys.exit()
     finally:
         if len(user_provided_year_month) == 1 or len(user_provided_year_month) == 0:
             print('Invalid Input')
             keypress = input('Press any key to continue...')
-            main()
+            sys.exit()
         else:
              month = get_month_name(int(user_provided_year_month[1]))
              if month != -1:
@@ -129,9 +121,9 @@ def get_day_wise_graphed_data (user_input,index):
                  else:
                      print ('No record found against this month')
                      keypress = input('Press any key to continue...')
-                     main()
+                     sys.exit()
 
-def main (argv):
+def main (args):
     clear_screen()
     date = sys.argv[len(sys.argv)-1]
     yearly_data = '-e'
@@ -139,15 +131,20 @@ def main (argv):
     monthly_data_with_graph = '-c'
     monthly_data_with_merged_graph = '-g'
 
-    for index,val in enumerate(sys.argv):
-        if yearly_data in val:
-            get_yearly_data (sys.argv,index+1)
-        if monthly_data in val:
-            get_monthly_data (sys.argv,index+1)
-        if monthly_data_with_graph in val:
-            get_monthly_graphed_data (sys.argv,index+1)
-        if monthly_data_with_merged_graph in val:
-            get_day_wise_graphed_data (sys.argv,index+1)
+    if args.a is not None:
+        get_monthly_data (args.a)
+    if args.e is not None:
+        get_yearly_data (args.e)
+    if args.c is not None:
+        get_monthly_graphed_data (args.c)
+    if args.g is not None:
+        get_day_wise_graphed_data (args.g)
 
 if __name__== "__main__":
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e')
+    parser.add_argument('-a')
+    parser.add_argument('-c')
+    parser.add_argument('-g')
+    args = parser.parse_args()
+    main(args)
