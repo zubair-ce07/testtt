@@ -5,14 +5,14 @@ from w3lib.url import add_or_replace_parameter, url_query_cleaner
 import json
 
 
-class Schwab(Spider):
+class SchwabParserSpider(Spider):
     name = 'spider'
     stock_url = ['https://www.schwab.de/request/itemservice.php?fnc=getItemInfos']
-    sku_counter = 0
     stock_counter = 0
     gender = {
         'Damen': 'Ladies',
         'Damenmode': 'Ladies',
+        'Damenbademode': 'Ladies',
         'Herren': 'Men',
         'Mädchen': 'Girls',
         'Jungen': 'Boys',
@@ -42,10 +42,12 @@ class Schwab(Spider):
         if not product['gender']:
             product['industry'] = "Homeware"
 
-        self.sku_counter = 0
         self.stock_counter = 0
-        addl_requests = self.addtional_colors_requests(response)
-        return self.parse_additional_requests(addl_requests, product)
+        addl_requests = self.additional_colors(response)
+        if not addl_requests:
+            addl_requests = self.get_stocks(response)
+
+        return self.parse_requests(addl_requests, product)
 
     def product_skus(self, response):
         sizes = self.product_size(response)
@@ -56,17 +58,15 @@ class Schwab(Spider):
         sku["price"] = self.product_price(response)
         sku["currency"] = self.product_currency(response)
         sku["color"] = self.product_color(response)
-        id = self.product_retailer_sku(response)
+        sku_id = self.product_retailer_sku(response)
 
         if previous_price:
             sku['previous_prices'] = previous_price
 
         if not sizes:
             if previous_price:
-                sku["sku_id"] = id + '|' + (sku['color'] or '') + '|' + sku['price']
-                total_skus.update({self.sku_counter: sku})
-                self.sku_counter = self.sku_counter + 1
-
+                sku_id = sku_id + '|' + (sku['color'] or '') + '|' + sku['price']
+                total_skus.update({sku_id: sku})
         else:
             for size in sizes:
                 sku = {}
@@ -74,42 +74,40 @@ class Schwab(Spider):
                 sku["price"] = self.product_price(response)
                 sku["currency"] = self.product_currency(response)
                 sku["color"] = self.product_color(response)
-                id = self.product_retailer_sku(response)
+                sku_id = self.product_retailer_sku(response)
                 if sku['color'] and sku['price']:
-                    sku["sku_id"] = id + '|' + sku['color'] + '|' + sku['size'] + '|' + sku['price']
+                    sku_id = sku_id + '|' + sku['color'] + '|' + sku['size'] + '|' + sku['price']
                 else:
-                    sku["sku_id"] = id + '|' + '|' + sku['size'] + '|' + sku['price']
-                total_skus.update({self.sku_counter: sku})
-                self.sku_counter = self.sku_counter + 1
+                    sku_id = sku_id + '|' + sku['size'] + '|' + sku['price']
+                total_skus.update({sku_id: sku})
+
         return total_skus
 
-    @staticmethod
-    def additional_colors(response):
+    def additional_colors(self, response):
         colors = response.css('a.colorspots__item::attr(title)').extract()
-        additional_urls = []
+        color_urls = []
 
         for color in colors:
-            full_url = add_or_replace_parameter(response.url, "color", color)
-            additional_urls.append(full_url)
+            url = add_or_replace_parameter(response.url, "color", color)
+            color_urls.append(url)
 
-        return additional_urls
+        requests = []
 
-    def addtional_colors_requests(self, response):
-        addl_colors_urls = self.additional_colors(response)
+        for request_url in color_urls:
+            requests += self.stock_request(response)
+            requests.append(Request(url=request_url, callback=self.parse_images, dont_filter=True))
 
-        additional_requests = []
+        return requests
 
-        if addl_colors_urls:
-            for request_url in addl_colors_urls:
-                additional_requests += self.out_of_stock_request(response)
-                additional_requests.append(Request(url=request_url, callback=self.parse_extra_images, dont_filter=True))
-        else:
-            url = self.product_url_origin(response)
-            additional_requests += self.out_of_stock_request(response)
-            additional_requests.append(Request(url=url, callback=self.parse_extra_stocks, dont_filter=True))
-        return additional_requests
+    def get_stocks(self, response):
+        url = self.product_url_origin(response)
+        request = []
 
-    def out_of_stock_request(self, response):
+        # stock request is for POST request and get_stocks is for GET request
+        request += self.stock_request(response)
+        return request.append(Request(url=url, callback=self.parse_meta_stocks, dont_filter=True))
+
+    def stock_request(self, response):
         item_number = response.css('script::text').re_first(r'articlesString(.+),(\d)')
         item_number = item_number[2:]
         items = {
@@ -120,40 +118,41 @@ class Schwab(Spider):
     def parse_stock(self, response):
         product = response.meta['product']
         requests = response.meta['requests']
-        raw_data = response.text
+        stocks = response.text
 
-        stock_data = json.loads(raw_data)
-        del stock_data['codes']
-        del stock_data['express']
+        stock_status = json.loads(stocks)
+        del stock_status['codes']
+        del stock_status['express']
         sold_out = ['lieferbar innerhalb 3 Wochen', 'ausverkauft']
 
         for item in product['skus']:
             if product['skus'][item]:
-                sku_id = product['skus'][item]['sku_id'].split('|')
-                id = sku_id[0]
+                sku_id = item.split('|')
+                product_id = sku_id[0]
                 size = sku_id[2]
 
-                for stock in stock_data[id]:
+                for stock in stock_status[product_id]:
                     stock = stock.strip()
-                    if (stock == 0 or stock == size) and (stock_data[id][stock] in sold_out):
+                    if (stock == 0 or stock == size) and (stock_status[product_id][stock] in sold_out):
                         product['skus'][item]['out_of_stock'] = True
 
-        return self.parse_additional_requests(requests, product)
+        return self.parse_requests(requests, product)
 
-    def parse_extra_images(self, response):
+    def parse_images(self, response):
         product = response.meta['product']
         requests = response.meta['requests']
         product['skus'].update(self.product_skus(response))
         product['images_urls'] += self.product_images(response)
-        return self.parse_additional_requests(requests, product)
 
-    def parse_extra_stocks(self, response):
+        return self.parse_requests(requests, product)
+
+    def parse_meta_stocks(self, response):
         product = response.meta['product']
         requests = response.meta['requests']
-        return self.parse_additional_requests(requests, product)
+        return self.parse_requests(requests, product)
 
     @staticmethod
-    def parse_additional_requests(requests, product):
+    def parse_requests(requests, product):
         if requests:
             request = requests[0]
             del requests[0]
@@ -216,14 +215,14 @@ class Schwab(Spider):
     def product_trail(self, response):
         trails = response.css('div#breadcrumb li>a::attr(href)').extract()
 
-        category_counter = 0
+        counter = 0
         categories = self.product_category(response)
-        trail_list = []
+        result = []
 
         for trail in trails:
-            trail_list.append((categories[category_counter], trail))
-            category_counter = category_counter + 1
-        return trail_list
+            result.append((categories[counter], trail))
+            counter = counter + 1
+        return result
 
     def product_gender(self, response):
         categories = self.product_category(response)
@@ -231,8 +230,6 @@ class Schwab(Spider):
             for gender in self.gender:
                 if category == gender:
                     return gender
-        else:
-            return None
 
     @staticmethod
     def product_category(response):
@@ -251,10 +248,11 @@ class SchwabCralwer(CrawlSpider):
     name = 'schwab'
     allowed_domain = ['https://www.schwab.de/']
     main_url = 'https://www.schwab.de'
+    items_per_page = 60
     start_urls = [
         'https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID=1525066940']
 
-    spider_obj = Schwab()
+    spider_parser = SchwabParserSpider()
 
     def parse_start_url(self, response):
         raw_urls = json.loads(response.text)
@@ -265,25 +263,22 @@ class SchwabCralwer(CrawlSpider):
 
     def parse_pagination(self, response):
         total_items = response.css('.pl__headline__count::text').re_first(r'(\d+)')
-        items_per_page = 60
 
         if not total_items:
             return
 
-        total_pages = (int(total_items) // items_per_page) + 1
+        total_pages = (int(total_items) // self.items_per_page) + 1
 
         for page in range(1, total_pages):
             url = add_or_replace_parameter(response.url, 'pageNr', page)
-            yield Request(url=url, callback=self.parse_next_page)
+            yield Request(url=url, callback=self.product_requests)
 
-    def parse_next_page(self, response):
-        product_requests = []
+    def product_requests(self, response):
         products = response.css('div.product__top a::attr(href)').extract()
 
         for product in products:
-            product_url = url_query_cleaner(self.main_url + product)
-            product_requests.append(Request(url=product_url, callback=self.spider_obj.parse_product))
-        return product_requests
+            product_url = url_query_cleaner(response.urljoin(product))
+            yield Request(url=product_url, callback=self.spider_parser.parse_product)
 
 
 def clean_product(raw_data):
