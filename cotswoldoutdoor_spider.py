@@ -8,7 +8,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
 
 
 class Mixin:
-    retailer = 'cotswold'
+    retailer = 'cotswoldoutdoor'
     allowed_domains = ['cotswoldoutdoor.com']
 
 
@@ -24,7 +24,7 @@ class MixinUK(Mixin):
     ]
 
 
-class CotswoldParseSpider(BaseParseSpider):
+class CotswoldOutdoorParseSpider(BaseParseSpider):
     raw_description_css = '.product-information__description ::text'
 
     def parse(self, response):
@@ -88,8 +88,10 @@ class CotswoldParseSpider(BaseParseSpider):
             color_price_map[str(color['colourId'])] = [
                 color['rrpPrice'], color['standardPrice'], color['sellPrice'], currency]
 
-        for raw_sku in [raw_product['selectedProductColorVariation']] \
-                       + raw_product['otherProductColorVariation']:
+        raw_skus = [raw_product['selectedProductColorVariation']] \
+                   + raw_product['otherProductColorVariation']
+
+        for raw_sku in raw_skus:
             for raw_size in raw_sku['sizes']:
                 sku_id = raw_size['sku']
                 sku = self.product_pricing_common(response, color_price_map[raw_sku['colorId']])
@@ -104,7 +106,7 @@ class CotswoldParseSpider(BaseParseSpider):
         return skus
 
 
-class CotswoldCrawlSpider(BaseCrawlSpider):
+class CotswoldOutdoorCrawlSpider(BaseCrawlSpider):
 
     listing_url_template = 'https://www.cotswoldoutdoor.com/api/aem/search?' \
                            'mainWebShop=cotswold&fictiveWebShop=62&anaLang=en&locale=en&' \
@@ -151,10 +153,11 @@ class CotswoldCrawlSpider(BaseCrawlSpider):
         return requests
 
 
-class CotswoldUKParseSpider(MixinUK, CotswoldParseSpider):
+class CotswoldOutdoorUKParseSpider(MixinUK, CotswoldOutdoorParseSpider):
     name = MixinUK.retailer + '-parse'
 
 
-class CotswoldUKCrawlSpider(MixinUK, CotswoldCrawlSpider):
+class CotswoldOutdoorUKCrawlSpider(MixinUK, CotswoldOutdoorCrawlSpider):
     name = MixinUK.retailer + '-crawl'
-    parse_spider = CotswoldUKParseSpider()
+    parse_spider = CotswoldOutdoorUKParseSpider()
+
