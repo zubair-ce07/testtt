@@ -43,17 +43,16 @@ class CotswoldParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def product_id(self, response):
-        id_css = '.product-information__description--features--product-code a::text'
-        return clean(response.css(id_css))[0]
+        css = '.product-information__description--features--product-code a::text'
+        return clean(response.css(css))[0]
 
     def product_name(self, response):
-        name_css = '.product-details__info-wrapper .product-details__title--product-detail::text'
-        return clean(response.css(name_css))[0]
+        css = '.product-details__info-wrapper .product-details__title--product-detail::text'
+        return clean(response.css(css))[0]
 
     def product_brand(self, response):
-        brand_css = '.product-details__info-wrapper .product-details__title--product-detail ' \
-                    'span::text'
-        return clean(response.css(brand_css))[0]
+        css = '.product-details__info-wrapper .product-details__title--product-detail span::text'
+        return clean(response.css(css))[0]
 
     def product_category(self, response):
         breadcrumbs = clean(response.css('span[itemprop="itemListElement"] span::text'))
