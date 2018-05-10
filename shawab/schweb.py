@@ -10,15 +10,16 @@ class SchwabParserSpider(Spider):
     stock_url = ['https://www.schwab.de/request/itemservice.php?fnc=getItemInfos']
     stock_counter = 0
     gender = {
-        'Damen': 'Ladies',
-        'Damenmode': 'Ladies',
-        'Damenbademode': 'Ladies',
+        'Damen': 'Women',
+        'Damenmode': 'Women',
+        'Damenbademode': 'Women',
         'Herren': 'Men',
+        'Marken': 'Men',
         'Mädchen': 'Girls',
+        'Ihn': 'Men',
         'Jungen': 'Boys',
-        'Baby Mädchen': 'Baby Girl',
-        'Baby Jungen': 'Baby Boys',
-        'Kinder': 'Children',
+        'Kinder': 'Unisex',
+        'Festivalschuhe': 'Unisex adults'
     }
 
     def parse_product(self, response):
@@ -126,15 +127,18 @@ class SchwabParserSpider(Spider):
         sold_out = ['lieferbar innerhalb 3 Wochen', 'ausverkauft']
 
         for item in product['skus']:
-            if product['skus'][item]:
-                sku_id = item.split('|')
+            sku_id = item.split('|')
+            # sku_id = 4 means size is available
+            if len(sku_id) == 4:
                 product_id = sku_id[0]
                 size = sku_id[2]
-
-                for stock in stock_status[product_id]:
-                    stock = stock.strip()
-                    if (stock == 0 or stock == size) and (stock_status[product_id][stock] in sold_out):
-                        product['skus'][item]['out_of_stock'] = True
+                if (size in stock_status[product_id]) and (stock_status[product_id][size] in sold_out):
+                    product['skus'][item]['out_of_stock'] = True
+                else:
+                    product['skus'][item]['out_of_stock'] = True
+            else:
+                product_id = sku_id[0]
+                product['skus'][item]['out_of_stock'] = stock_status[product_id][0]
 
         return self.parse_requests(requests, product)
 
@@ -228,8 +232,9 @@ class SchwabParserSpider(Spider):
         categories = self.product_category(response)
         for category in categories:
             for gender in self.gender:
-                if category == gender:
-                    return gender
+                item = category.split()
+                if gender in item:
+                    return self.gender[gender]
 
     @staticmethod
     def product_category(response):
