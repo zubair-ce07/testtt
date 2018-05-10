@@ -2,7 +2,7 @@ import argparse
 import calendar
 import os
 import sys
-from weather import WeatherParser
+from weatherparser import WeatherParser
 from weatheranalyzer import WeatherAnalyzer
 from weatherreport import WeatherReport
 
