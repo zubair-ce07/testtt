@@ -1,6 +1,5 @@
 class WeatherAnalyzer:
 
-
     def __init__ (self):
         self.highest_temperature = -100
         self.lowest_temperature = 100

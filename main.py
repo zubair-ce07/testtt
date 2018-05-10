@@ -2,57 +2,43 @@ import argparse
 import calendar
 import os
 import sys
-from Weather import WeatherParser
-from WeatherAnalyzer import WeatherAnalyzer
-from WeatherReport import WeatherReport
+from weatherparser import WeatherParser
+from weatheranalyzer import WeatherAnalyzer
+from weatherreport import WeatherReport
 
 
-def generate_yearly_filename(year, directory):
-    return [directory + '/Murree_weather_' + year + '_' + calendar.month_abbr[int(months_count)] \
-            + '.txt' for months_count in range(12)]
-
-
-def generate_monthly_filename(date, directory):
-    weather_date = date.split("/")
-    filename = directory + '/Murree_weather_' + weather_date[0] + '_' \
-               + calendar.month_abbr[int(weather_date[1])] + '.txt'
-    return filename
-
-
-def error_message_exit(input=True, record=True):
-    if not input:
-        print('Invalid Input')
-    elif not record:
-        print('No record found....')
+def error_message_exit():
+    print('No record found....')
     sys.exit()
 
 
-def read_monthly_weather(filepath):
+def read_monthly_weather(date, directory):
     weather = WeatherParser()
-    return weather.read_weather_file(filepath)
+    filename = weather.generate_monthly_filename(date, directory)
+    return weather.read_weather_file(filename)
 
 
-def read_yearly_weather(filenames):
+def read_yearly_weather(date, directory):
+    weather = WeatherParser()
     weather_analyzer = WeatherAnalyzer()
     yearly_weather = False
-
+    filenames = weather.generate_yearly_filename(date, directory)
     for month_wise_files_counter in filenames:
-        weather_record = read_monthly_weather(month_wise_files_counter)
+        weather_record = weather.read_weather_file(month_wise_files_counter)
         if weather_record:
             weather_analyzer.initialize_weather_record(weather_record)
             yearly_weather = True
 
     if not yearly_weather:
-        error_message_exit(True, False)
+        error_message_exit()
 
     return weather_analyzer
 
 
 def get_yearly_weather(date, directory):
     weather_date = date.split('/')
-    filenames = generate_yearly_filename(weather_date[0], directory)
     weather_report = WeatherReport()
-    weather_analyzer = read_yearly_weather(filenames)
+    weather_analyzer = read_yearly_weather(weather_date[0], directory)
 
     weather_report.display_yearly_weather(weather_analyzer.highest_temperature,
                                           weather_analyzer.hightest_temperature_date,
@@ -63,11 +49,10 @@ def get_yearly_weather(date, directory):
 
 
 def get_monthly_weather(date, directory):
-    filepath = generate_monthly_filename(date, directory)
-    monthly_weather = read_monthly_weather(filepath)
+    monthly_weather = read_monthly_weather(date, directory)
 
-    if not monthly_weather:
-        error_message_exit(True, False)
+    if monthly_weather is None:
+        error_message_exit()
 
     weather_analyzer = WeatherAnalyzer()
     weather_report = WeatherReport()
@@ -78,11 +63,10 @@ def get_monthly_weather(date, directory):
 
 
 def get_monthly_graphed_weather(date, directory):
-    filepath = generate_monthly_filename(date, directory)
-    monthly_weather = read_monthly_weather(filepath)
+    monthly_weather = read_monthly_weather(date, directory)
 
-    if not monthly_weather:
-        error_message_exit(True, False)
+    if monthly_weather is None:
+        error_message_exit()
 
     weather_analyzer = WeatherAnalyzer()
     weather_report = WeatherReport()
@@ -91,11 +75,10 @@ def get_monthly_graphed_weather(date, directory):
 
 
 def get_day_wise_graphed_weather(date, directory):
-    filepath = generate_monthly_filename(date, directory)
-    monthly_weather = read_monthly_weather(filepath)
+    monthly_weather = read_monthly_weather(date, directory)
 
-    if not monthly_weather:
-        error_message_exit(True, False)
+    if monthly_weather is None:
+        error_message_exit()
 
     weather_analyzer = WeatherAnalyzer()
     weather_report = WeatherReport()

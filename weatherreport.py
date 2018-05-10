@@ -3,7 +3,6 @@ import calendar
 
 class WeatherReport:
 
-
     def max_temperature_graph(self, max_temperature):
         print('\033[91m'+'+'*max_temperature,end='')
 
