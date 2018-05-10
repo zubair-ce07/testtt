@@ -2,9 +2,9 @@ import argparse
 import calendar
 import os
 import sys
-from Weather import WeatherParser
-from WeatherAnalyzer import WeatherAnalyzer
-from WeatherReport import WeatherReport
+from weather import WeatherParser
+from weatheranalyzer import WeatherAnalyzer
+from weatherreport import WeatherReport
 
 
 def generate_yearly_filename(year, directory):
