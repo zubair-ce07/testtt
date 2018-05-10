@@ -39,7 +39,7 @@ def get_yearly_weather(date, directory):
     weather_date = date.split('/')
     weather_report = WeatherReport()
     weather_analyzer = read_yearly_weather(weather_date[0], directory)
-
+    weather_analyzer.calculate_weather_extremes()
     weather_report.display_yearly_weather(weather_analyzer.highest_temperature,
                                           weather_analyzer.hightest_temperature_date,
                                           weather_analyzer.lowest_temperature,
