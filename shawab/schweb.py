@@ -128,17 +128,16 @@ class SchwabParserSpider(Spider):
 
         for item in product['skus']:
             sku_id = item.split('|')
+            product_id = sku_id[0]
             # sku_id = 4 means size is available
             if len(sku_id) == 4:
-                product_id = sku_id[0]
                 size = sku_id[2]
                 if (size in stock_status[product_id]) and (stock_status[product_id][size] in sold_out):
                     product['skus'][item]['out_of_stock'] = True
                 else:
                     product['skus'][item]['out_of_stock'] = True
-            else:
-                product_id = sku_id[0]
-                product['skus'][item]['out_of_stock'] = stock_status[product_id][0]
+            elif stock_status[product_id] in sold_out:
+                product['skus'][item]['out_of_stock'] = True
 
         return self.parse_requests(requests, product)
 
