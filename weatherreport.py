@@ -41,11 +41,10 @@ class WeatherReport:
                f'\nAverage Mean Humidity: {avg_humidity}%')
 
 
-    def display_yearly_weather(self, max_temp, max_temp_date, min_temp, min_temp_date,
-                               max_humidity, max_humidity_date):
-        print(f'Highest Temperature: {max_temp}C on ' +
-              f'{self.get_formatted_date(max_temp_date)}' +
-              f'\nLowest Temperature: {min_temp}C on ' +
-              f'{self.get_formatted_date(min_temp_date)}' +
-              f'\nHighest Humidity: {max_humidity}% on ' +
-              f'{self.get_formatted_date(max_humidity_date)}')
+    def display_yearly_weather(self, max_temp, min_temp, max_humidity):
+        print(f'Highest Temperature: {max_temp.max_temp}C on ' +
+              f'{self.get_formatted_date(max_temp.date)}' +
+              f'\nLowest Temperature: {min_temp.min_temp}C on ' +
+              f'{self.get_formatted_date(min_temp.date)}' +
+              f'\nHighest Humidity: {max_humidity.max_humidity}% on ' +
+              f'{self.get_formatted_date(max_humidity.date)}')

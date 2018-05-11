@@ -1,22 +1,15 @@
+import operator
+
+
 class WeatherAnalyzer:
 
-    def __init__ (self):
-        self.highest_temperature = -100
-        self.lowest_temperature = 100
-        self.highest_humidity = -100
-        self.hightest_temperature_date = ''
-        self.lowest_temperature_date = ''
-        self.highest_humidity_date = ''
-        self.highest_average = 0
-        self.lowest_average = 0
-        self.average_mean_humidity = 0
-        self.max_temperatures = []
-        self.min_temperatures = []
-        self.max_humidity = []
-        self.weather_date = []
-        self.weather_records = []
-        self.total_days_count = 0
+    def __init__ (self, weather_record):
+        self.weather_record = weather_record
 
+    def test(self):
+        for value in self.weather_record:
+            print (value)
+        # print (len(self.weather_record))
 
     def initialize_weather_record(self, weather_record):
         for weather_reading in weather_record:
@@ -36,14 +29,11 @@ class WeatherAnalyzer:
 
 
     def calculate_weather_extremes(self):
-        for weather_reading in self.weather_records:
-            date, max_temperature, min_temperature, max_humidity, mean_humidity = weather_reading
-            if int(max_temperature) > self.highest_temperature:
-                self.highest_temperature = int(max_temperature)
-                self.hightest_temperature_date = date
-            if int(min_temperature) < self.lowest_temperature:
-                self.lowest_temperature = int(min_temperature)
-                self.lowest_temperature_date = date
-            if int(max_humidity) > self.highest_humidity:
-                self.highest_humidity = int(max_humidity)
-                self.highest_humidity_date = date
+        self.max_weather = max(self.weather_record, key = lambda index: index.max_temp)
+        self.min_weather = min(self.weather_record, key = lambda index: index.min_temp)
+        self.max_humidity = max(self.weather_record, key = lambda index: index.max_humidity)
+
+    def calculat_weather_averages(self):
+        self.max_temp_avrg = sum(self.weather_record, key = lambda index: index.max_temp) / len(self.weather_record)
+        self.min_temp_avrg = sum(self.weather_record, key = lambda index: index.min_temp) / len(self.weather_record)
+        self.max_humidity_avrg = sum(self.weather_record, key = lambda index: index.mean_humidity) / len(self.weather_record)
