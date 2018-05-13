@@ -1,6 +1,4 @@
 import argparse
-import calendar
-import os
 import sys
 from weatherparser import WeatherParser
 from weatheranalyzer import WeatherAnalyzer
@@ -13,30 +11,17 @@ def error_message_exit():
 
 
 def read_monthly_weather(date, directory):
-    weather = WeatherParser()
-    filename = weather.generate_monthly_filename(date, directory)
-    return weather.read_weather_file(filename)
+    weather_parser = WeatherParser()
+    return weather_parser.read_weather_file(date, directory)
 
 
 def read_yearly_weather(date, directory):
-    weather = WeatherParser()
-    yearly_weather = False
-    weather_data = []
-    filenames = weather.generate_yearly_filename(date, directory)
-    for month_wise_files_counter in filenames:
-        weather_record = weather.read_weather_file(month_wise_files_counter)
-        if weather_record:
-            weather_data += weather_record
-            yearly_weather = True
-
+    weather_parser = WeatherParser()
+    yearly_weather = weather_parser.read_weather_file(date, directory)
     if not yearly_weather:
         error_message_exit()
-
-    weather_analyzer = WeatherAnalyzer(weather_data)
-    # weather_analyzer.test()
-    # sys.exit()
+    weather_analyzer = WeatherAnalyzer(yearly_weather)
     return weather_analyzer
-
 
 
 def get_yearly_weather(date, directory):
@@ -44,78 +29,74 @@ def get_yearly_weather(date, directory):
     weather_report = WeatherReport()
     weather_analyzer = read_yearly_weather(weather_date[0], directory)
     weather_analyzer.calculate_weather_extremes()
-    print (weather_analyzer.max_weather)
-    print (weather_analyzer.min_weather)
-    print (weather_analyzer.max_humidity)
+    weather_report.display_yearly_weather(weather_analyzer.max_weather,
+                                          weather_analyzer.min_weather,
+                                          weather_analyzer.max_humidity)
 
 
 def get_monthly_weather(date, directory):
     monthly_weather = read_monthly_weather(date, directory)
-
     if monthly_weather is None:
         error_message_exit()
-
     weather_analyzer = WeatherAnalyzer(monthly_weather)
-    weather_analyzer.calculate_weather_extremes()
-    # weather_analyzer.test()
-    # sys.exit()
-    # weather_analyzer.calculat_weather_averages()
-    # print (weather_analyzer.max_temp_avrg)
-    # print (weather_analyzer.min_temp_avrg)
-    # print (weather_analyzer.max_humidity_avrg)
-    print (weather_analyzer.max_weather)
-    print (weather_analyzer.min_weather)
-    print (weather_analyzer.max_humidity)
-    return
+    weather_analyzer.calculate_weather_averages()
     weather_report = WeatherReport()
-    weather_analyzer.initialize_weather_record(monthly_weather)
-    weather_report.display_monthly_weather(weather_analyzer.highest_average,
-                                           weather_analyzer.lowest_average,
-                                           weather_analyzer.average_mean_humidity)
+    weather_report.display_monthly_weather(weather_analyzer.max_temp_avrg,
+                                           weather_analyzer.min_temp_avrg,
+                                           weather_analyzer.max_humidity_avrg)
+
 
 def get_monthly_graphed_weather(date, directory):
     monthly_weather = read_monthly_weather(date, directory)
-
     if monthly_weather is None:
         error_message_exit()
-
-    weather_analyzer = WeatherAnalyzer()
+    weather_analyzer = WeatherAnalyzer(monthly_weather)
     weather_report = WeatherReport()
-    weather_analyzer.initialize_weather_record(monthly_weather)
-    weather_report.monthly_graph(weather_analyzer.max_temperatures, weather_analyzer.min_temperatures)
+    max_tempertaures = [temperature.max_temp for temperature in weather_analyzer.weather_records]
+    min_tempertaures = [temperature.min_temp for temperature in weather_analyzer.weather_records]
+    weather_report.monthly_graph(max_tempertaures, min_tempertaures)
 
 
 def get_day_wise_graphed_weather(date, directory):
     monthly_weather = read_monthly_weather(date, directory)
-
     if monthly_weather is None:
         error_message_exit()
-
-    weather_analyzer = WeatherAnalyzer()
+    weather_analyzer = WeatherAnalyzer(monthly_weather)
     weather_report = WeatherReport()
-    weather_analyzer.initialize_weather_record(monthly_weather)
-    weather_report.merged_graph(weather_analyzer.max_temperatures, weather_analyzer.min_temperatures)
+    max_tempertaures = [temperature.max_temp for temperature in weather_analyzer.weather_records]
+    min_tempertaures = [temperature.min_temp for temperature in weather_analyzer.weather_records]
+    weather_report.merged_graph(max_tempertaures, min_tempertaures)
 
 
-def main ():
-    # os.system('clear')
+def weather_date(date):
+    monthly_date = date.split('/')
+    if len(monthly_date) < 2:
+        print ('Invalid Input')
+        sys.exit()
+    if not 1 <= int(monthly_date[1]) <= 12:
+        print ('Invalid Input')
+        sys.exit()
+    return date
+
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('directory')
     parser.add_argument('-e', type=int)
-    parser.add_argument('-a')
-    parser.add_argument('-c')
-    parser.add_argument('-g')
+    parser.add_argument('-a', type=weather_date)
+    parser.add_argument('-c', type=weather_date)
+    parser.add_argument('-g', type=weather_date)
     args = parser.parse_args()
 
-    if args.a is not None:
+    if args.a:
         get_monthly_weather(args.a, args.directory)
-    if args.e is not None:
+    if args.e:
         get_yearly_weather(str(args.e), args.directory)
-    if args.c is not None:
+    if args.c:
         get_monthly_graphed_weather(args.c, args.directory)
-    if args.g is not None:
+    if args.g:
         get_day_wise_graphed_weather(args.g, args.directory)
 
 
-if __name__== "__main__":
+if __name__ == "__main__":
     main()
