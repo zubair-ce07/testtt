@@ -50,22 +50,16 @@ def get_monthly_graphed_weather(date, directory):
     monthly_weather = read_monthly_weather(date, directory)
     if monthly_weather is None:
         error_message_exit()
-    weather_analyzer = WeatherAnalyzer(monthly_weather)
     weather_report = WeatherReport()
-    max_tempertaures = [temperature.max_temp for temperature in weather_analyzer.weather_records]
-    min_tempertaures = [temperature.min_temp for temperature in weather_analyzer.weather_records]
-    weather_report.monthly_graph(max_tempertaures, min_tempertaures)
+    weather_report.monthly_graph(monthly_weather)
 
 
 def get_day_wise_graphed_weather(date, directory):
     monthly_weather = read_monthly_weather(date, directory)
     if monthly_weather is None:
         error_message_exit()
-    weather_analyzer = WeatherAnalyzer(monthly_weather)
     weather_report = WeatherReport()
-    max_tempertaures = [temperature.max_temp for temperature in weather_analyzer.weather_records]
-    min_tempertaures = [temperature.min_temp for temperature in weather_analyzer.weather_records]
-    weather_report.merged_graph(max_tempertaures, min_tempertaures)
+    weather_report.merged_graph(monthly_weather)
 
 
 def weather_date(date):

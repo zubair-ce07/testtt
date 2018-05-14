@@ -13,21 +13,25 @@ class WeatherReport:
         segmented_date = date.split('-')
         return f'{calendar.month_name[int(segmented_date[1])]} {segmented_date[2]}'
 
-    def monthly_graph(self, monthly_max_temp, monthly_min_temp):
-        for index, value in enumerate(monthly_max_temp):
+    def monthly_graph(self, weather_records):
+        max_tempertaures = [temperature.max_temp for temperature in weather_records]
+        min_tempertaures = [temperature.min_temp for temperature in weather_records]
+        for index, value in enumerate(max_tempertaures):
             print('\033[91m' + str(index + 1), end='')
-            self.max_temperature_graph(monthly_max_temp[index])
-            print ('\033[91m' + '('+str(monthly_max_temp[index]) + ')')
+            self.max_temperature_graph(max_tempertaures[index])
+            print ('\033[91m' + '('+str(max_tempertaures[index]) + ')')
             print('\033[94m' + str(index + 1), end='')
-            self.min_temperature_graph(monthly_min_temp[index])
-            print ('\033[94m' + '(' + str(monthly_min_temp[index]) + ')')
+            self.min_temperature_graph(min_tempertaures[index])
+            print ('\033[94m' + '(' + str(min_tempertaures[index]) + ')')
 
-    def merged_graph(self, monthly_max_temp, monthly_min_temp):
-        for index, value in enumerate(monthly_max_temp):
+    def merged_graph(self, weather_records):
+        max_tempertaures = [temperature.max_temp for temperature in weather_records]
+        min_tempertaures = [temperature.min_temp for temperature in weather_records]
+        for index, value in enumerate(max_tempertaures):
             print(str(index + 1) + ' ', end='')
-            self.min_temperature_graph(monthly_min_temp[index])
-            self.max_temperature_graph(monthly_max_temp[index])
-            print (' %dC - %dC' % (monthly_min_temp[index], monthly_max_temp[index]))
+            self.min_temperature_graph(max_tempertaures[index])
+            self.max_temperature_graph(min_tempertaures[index])
+            print (' %dC - %dC' % (max_tempertaures[index], min_tempertaures[index]))
 
     def display_monthly_weather(self, max_avg_temperature, min_avg_temperature,
                                 max_avg_humidity):
