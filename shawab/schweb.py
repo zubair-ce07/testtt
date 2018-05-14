@@ -9,7 +9,7 @@ class SchwabParserSpider(Spider):
     name = 'spider'
     stock_url = ['https://www.schwab.de/request/itemservice.php?fnc=getItemInfos']
     size_url = ['https://www.schwab.de/index.php?']
-    size_counter = 0
+    size_counter = 1
     gender = {
         'Damen': 'Women',
         'Damenmode': 'Women',
@@ -56,7 +56,15 @@ class SchwabParserSpider(Spider):
         sizes = self.product_size(response)
         # additional sizes used for dropdown sizes
         addl_sizes = self.product_additional_sizes(response)
+        sizes_ids = self.product_sizes_ids(response)
         previous_price = self.product_previous_price(response)
+        sorted_sizes = {}
+
+        count = 0
+        for size in sizes_ids:
+            sorted_sizes[size] = addl_sizes[count]
+            count = count + 1
+
         total_skus = {}
 
         sku = {}
@@ -79,12 +87,17 @@ class SchwabParserSpider(Spider):
                 total_skus.update({sku_id: sku})
         elif addl_sizes:
             if self.size_counter >= len(addl_sizes):
-                self.size_counter = 0
+                self.size_counter = 1
             sku["price"] = self.product_price(response)
             sku["currency"] = self.product_currency(response)
             sku["color"] = self.product_color(response)
             sku_id = self.product_retailer_sku(response)
-            sku['size'] = addl_sizes[self.size_counter]
+
+            if str(self.size_counter) in sorted_sizes:
+                sku['size'] = sorted_sizes[str(self.size_counter)]
+            else:
+                sku['size'] = addl_sizes[self.size_counter]
+
             self.size_counter = self.size_counter + 1
             sku_id = sku_id + '|' + (sku['color'] or '') + '|' + sku['price']
             total_skus.update({sku_id: sku})
@@ -110,7 +123,6 @@ class SchwabParserSpider(Spider):
                 sizes_requests = []
                 sizes_requests += self.size_request(response)
 
-                self.size_counter = 0
                 for size in sizes_requests:
                     requests.append(size)
                     requests.append(Request(url=request_url, callback=self.parse_size, dont_filter=True))
@@ -135,18 +147,11 @@ class SchwabParserSpider(Spider):
         sizes_requests += self.size_request(response)
         requests += sizes_requests
 
-        self.size_counter = 0
         for size in sizes_requests:
             requests.append(size)
             requests.append(Request(url=url, callback=self.parse_size, dont_filter=True))
 
         return requests
-
-    def parse_meta_sizes(self, response):
-        product = response.meta['product']
-        requests = response.meta['requests']
-        product['skus'].update(self.product_skus(response))
-        return self.parse_requests(requests, product)
 
     def size_request(self, response):
         params = {}
@@ -169,16 +174,17 @@ class SchwabParserSpider(Spider):
             params["varselid[1]"] = varselid_1
 
         # use range for loop to access value index wise
-        for varsel in range(len(varsel_ids)):
-            params["varselid[0]"] = varsel_ids[varsel]
-            if aid and anid and size_ids:
+        for varsel in range(len(size_ids)):
+            if varsel_ids[varsel]:
+                params["varselid[0]"] = varsel_ids[varsel]
+            if aid and anid and size_ids[varsel]:
                 aid[2] = size_ids[varsel]
                 anid[2] = size_ids[varsel]
-            params['aid'] = '-'.join(aid)
-            params['anid'] = '-'.join(anid)
+                params['aid'] = '-'.join(aid)
+                params['anid'] = '-'.join(anid)
 
-            requests.append(
-                FormRequest(url=self.size_url[0], formdata=params, callback=self.parse_size, dont_filter=True))
+                requests.append(
+                    FormRequest(url=self.size_url[0], formdata=params, callback=self.parse_size, dont_filter=True))
 
         return requests
 
@@ -285,6 +291,11 @@ class SchwabParserSpider(Spider):
         sizes = response.css('.js-variantSelector option::text').extract()
         if sizes:
             del sizes[0]
+        return sizes
+
+    @staticmethod
+    def product_sizes_ids(response):
+        sizes = response.css('.js-variantSelector option::attr(data-noa-size)').extract()
         return sizes
 
     @staticmethod
