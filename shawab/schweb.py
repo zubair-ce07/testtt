@@ -118,12 +118,7 @@ class SchwabParserSpider(Spider):
         return requests
 
     def get_stocks(self, response):
-        url = self.product_url_origin(response)
-        request = []
-
-        request += self.stock_request(response)
-        request.append(Request(url=url, callback=self.stock_meta, dont_filter=True))
-        return request
+        return self.stock_request(response)
 
     def stock_request(self, response):
         item_number = response.css('script::text').re_first(r'articlesString(.+),(\d)')
@@ -191,12 +186,6 @@ class SchwabParserSpider(Spider):
         product = response.meta['product']
         requests = response.meta['requests']
         product['skus'].update(self.product_skus(response))
-
-        return self.parse_requests(requests, product)
-
-    def stock_meta(self, response):
-        product = response.meta['product']
-        requests = response.meta['requests']
 
         return self.parse_requests(requests, product)
 
