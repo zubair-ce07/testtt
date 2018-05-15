@@ -1,4 +1,5 @@
 import json
+import re
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Request, Rule
@@ -41,15 +42,12 @@ class FashionNovaParseSpider(BaseParseSpider):
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
-        return [garment] + self.colour_requests(response, garment['trail'])
+        return [garment] + self.colour_requests(response)
 
-    def colour_requests(self, response, trail):
-        url_css = '.link-color-swatch::attr(href)'
+    def colour_requests(self, response):
+        urls = clean(response.css('.link-color-swatch::attr(href)'))
         meta = response.meta.copy()
-        meta['trail'] = trail
-        colour_requests = [response.follow(url=url, callback=self.parse, meta=meta.copy())
-                           for url in clean(response.css(url_css))]
-        return colour_requests
+        return [response.follow(url=url, callback=self.parse, meta=meta.copy()) for url in urls]
 
     def product_id(self, response):
         return clean(response.css('.product_id::text'))[0]
@@ -66,32 +64,18 @@ class FashionNovaParseSpider(BaseParseSpider):
         images = clean(response.css('.productImage::attr(href)'))
         return [response.urljoin(img) for img in images]
 
-    def product_color(self, tags):
-        raw_color = ''
-        color = ''
-
-        for tag in tags:
-            raw_color = tag.split('-')[1] if tag.find('Color-') != -1 else raw_color
-
-        for char in raw_color:
-            color += ' ' + char if char.isupper() else char
-
-        return color.strip()
-
     def skus(self, response):
         skus = {}
 
         css = 'script:contains("var json_product")::text'
         raw_product = JSParser(clean(response.css(css))[0])['json_product']
 
-        color = self.product_color(raw_product['tags'])
-
         for raw_sku in raw_product['variants']:
             sku_id = raw_sku['id']
             sku = self.product_pricing_common(response)
             size = raw_sku['title']
             sku['size'] = self.one_size if size == 'OS' else size
-            sku['colour'] = color
+            sku['colour'] = re.search('- (.*?) -', raw_sku['name']).group(1)
 
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
@@ -103,8 +87,7 @@ class FashionNovaParseSpider(BaseParseSpider):
 
 class FashionNovaCrawlSpider(BaseCrawlSpider):
     listings_css = '.main-menu > ul > li > div > a'
-    listings_url = 'https://ultimate-dot-acp-magento.appspot.com/categories_navigation' \
-                   '?q=&UUID=8fb37bd6-aef1-4d7c-be3f-88bafef01308'
+    listings_url = 'https://ultimate-dot-acp-magento.appspot.com/categories_navigation?q='
     page_size = 32
 
     deny_r = ['pages']
@@ -115,7 +98,11 @@ class FashionNovaCrawlSpider(BaseCrawlSpider):
         yield from super().parse(response)
 
         category_path = urlsplit(response.url).path
-        url = add_or_replace_parameter(self.listings_url, 'page_num', 1)
+        link_for_uuid = clean(response.xpath('//script[contains(@src, "UUID")]/@src'))[0]
+        uuid = url_query_parameter(link_for_uuid, 'UUID')
+
+        url = add_or_replace_parameter(self.listings_url, 'UUID', uuid)
+        url = add_or_replace_parameter(url, 'page_num', 1)
         listing_url = add_or_replace_parameter(url, 'category_url', category_path)
 
         meta = response.meta.copy()
