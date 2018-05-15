@@ -86,7 +86,7 @@ class FashionNovaParseSpider(BaseParseSpider):
 
 
 class FashionNovaCrawlSpider(BaseCrawlSpider):
-    listings_css = '.main-menu > ul > li > div > a'
+    listings_css = '.main-menu'
     listings_url = 'https://ultimate-dot-acp-magento.appspot.com/categories_navigation?q='
     page_size = 32
 
