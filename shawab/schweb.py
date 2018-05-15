@@ -320,7 +320,6 @@ class SchwabParserSpider(Spider):
 class SchwabCralwer(CrawlSpider):
     name = 'schwab'
     allowed_domain = ['https://www.schwab.de/']
-    main_url = 'https://www.schwab.de'
     items_per_page = 60
     start_urls = [
         'https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID=1525066940']
@@ -350,8 +349,7 @@ class SchwabCralwer(CrawlSpider):
         products = response.css('div.product__top a::attr(href)').extract()
 
         for product in products:
-            product_url = url_query_cleaner(response.urljoin(product))
-            yield Request(url=product_url, callback=self.spider_parser.parse_product)
+            yield response.follow(url_query_cleaner(product), callback=self.spider_parser.parse_product)
 
 
 def clean_product(raw_data):
