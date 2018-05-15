@@ -9,7 +9,7 @@ class SchwabParserSpider(Spider):
     name = 'spider'
     stock_url = ['https://www.schwab.de/request/itemservice.php?fnc=getItemInfos']
     size_url = ['https://www.schwab.de/index.php?']
-    size_counter = 1
+    size_counter = 0
     gender = {
         'Damen': 'Women',
         'Damenmode': 'Women',
@@ -56,14 +56,8 @@ class SchwabParserSpider(Spider):
         sizes = self.product_size(response)
         # additional sizes used for dropdown sizes
         addl_sizes = self.product_additional_sizes(response)
-        sizes_ids = self.product_sizes_ids(response)
         previous_price = self.product_previous_price(response)
-        sorted_sizes = {}
-
-        count = 0
-        for size in sizes_ids:
-            sorted_sizes[size] = addl_sizes[count]
-            count = count + 1
+        addl_sizes.insert(0, "None")
 
         total_skus = {}
 
@@ -85,18 +79,15 @@ class SchwabParserSpider(Spider):
                 else:
                     sku_id = sku_id + '|' + sku['size'] + '|' + sku['price']
                 total_skus.update({sku_id: sku})
+
         elif addl_sizes:
             if self.size_counter >= len(addl_sizes):
-                self.size_counter = 1
+                self.size_counter = 0
             sku["price"] = self.product_price(response)
             sku["currency"] = self.product_currency(response)
             sku["color"] = self.product_color(response)
             sku_id = self.product_retailer_sku(response)
-
-            if str(self.size_counter) in sorted_sizes:
-                sku['size'] = sorted_sizes[str(self.size_counter)]
-            else:
-                sku['size'] = addl_sizes[self.size_counter]
+            sku['size'] = addl_sizes[self.size_counter]
 
             self.size_counter = self.size_counter + 1
             sku_id = sku_id + '|' + (sku['color'] or '') + '|' + sku['price']
@@ -112,21 +103,10 @@ class SchwabParserSpider(Spider):
             color_urls.append(url)
 
         requests = []
-        size_request = self.product_additional_sizes(response)
-        sizes = self.product_size(response)
 
         for request_url in color_urls:
             requests += self.stock_request(response)
             requests.append(Request(url=request_url, callback=self.parse_images, dont_filter=True))
-
-            if not sizes and size_request:
-                sizes_requests = []
-                sizes_requests += self.size_request(response)
-
-                for size in sizes_requests:
-                    requests.append(size)
-                    requests.append(Request(url=request_url, callback=self.parse_size, dont_filter=True))
-
         return requests
 
     def get_stocks(self, response):
@@ -141,17 +121,10 @@ class SchwabParserSpider(Spider):
         return [FormRequest(url=self.stock_url[0], formdata=items, callback=self.parse_stock, dont_filter=True)]
 
     def get_sizes(self, response):
-        url = self.product_url_origin(response)
-        requests = []
         sizes_requests = []
         sizes_requests += self.size_request(response)
-        requests += sizes_requests
 
-        for size in sizes_requests:
-            requests.append(size)
-            requests.append(Request(url=url, callback=self.parse_size, dont_filter=True))
-
-        return requests
+        return sizes_requests
 
     def size_request(self, response):
         params = {}
@@ -160,13 +133,13 @@ class SchwabParserSpider(Spider):
         size_ids = response.css('.js-variantSelector option::attr(data-noa-size)').extract()
         aid = response.css('input[name="aid"]::attr(value)').extract_first().split('-')
         anid = response.css('input[name="anid"]::attr(value)').extract_first().split('-')
+        varselid_2 = response.css('input[name="varselid[2]"]::attr(value)').extract_first()
+        varselid_1 = response.css('input[name="varselid[1]"]::attr(value)').extract_first()
 
         params["promo"] = response.css('input[name="promo"]::attr(value)').extract_first()
         params["artName"] = response.css('input[name="artName"]::attr(value)').extract_first()
         params["cl"] = response.css('div > input[name="cl"]::attr(value)').extract()[1]
         params["parentid"] = response.css('input[name="parentid"]::attr(value)').extract_first()
-        varselid_2 = response.css('input[name="varselid[2]"]::attr(value)').extract_first()
-        varselid_1 = response.css('input[name="varselid[1]"]::attr(value)').extract_first()
 
         if varselid_2:
             params["varselid[2]"] = varselid_2
@@ -177,6 +150,7 @@ class SchwabParserSpider(Spider):
         for varsel in range(len(size_ids)):
             if varsel_ids[varsel]:
                 params["varselid[0]"] = varsel_ids[varsel]
+
             if aid and anid and size_ids[varsel]:
                 aid[2] = size_ids[varsel]
                 anid[2] = size_ids[varsel]
@@ -212,6 +186,7 @@ class SchwabParserSpider(Spider):
 
             if product['skus'][item]['size']:
                 size = sku_id[2]
+
                 if (size in stock_status[product_id]) and (stock_status[product_id][size] in sold_out):
                     product['skus'][item]['out_of_stock'] = True
                 elif size not in stock_status[product_id]:
@@ -222,9 +197,16 @@ class SchwabParserSpider(Spider):
         return self.parse_requests(requests, product)
 
     def parse_images(self, response):
+        sizes = self.product_additional_sizes(response)
         product = response.meta['product']
         requests = response.meta['requests']
-        product['skus'].update(self.product_skus(response))
+
+        sizes_requests = []
+        sizes_requests += self.size_request(response)
+        requests += sizes_requests
+
+        if not sizes:
+            product['skus'].update(self.product_skus(response))
         product['images_urls'] += self.product_images(response)
 
         return self.parse_requests(requests, product)
