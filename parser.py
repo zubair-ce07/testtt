@@ -1,15 +1,22 @@
 import os
 import sys
 import csv
+import fnmatch
 
 class Parser:
 
-    def parse_files(self, directory, files_to_parse):
+    @staticmethod
+    def parse_files(directory, file_name_pattern):
+        files_to_parse = []
+        for file in os.listdir(directory):
+            if fnmatch.fnmatch(file, '*'+file_name_pattern+'*'):
+                files_to_parse.append(file)
+
         for file in files_to_parse:
-            weather_file = open(directory + "/" + file)
-            csv_reader = csv.DictReader(weather_file)
-            weather_list = []
-            for data in csv_reader:
-                weather_list.append(data)
+            with open(f"{directory}/{file}") as weather_file:
+                csv_reader = csv.DictReader(weather_file)
+                weather_list = []
+                for data in csv_reader:
+                    weather_list.append(data)
 
         return weather_list
