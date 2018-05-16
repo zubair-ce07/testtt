@@ -3,6 +3,7 @@ from scrapy.spiders import CrawlSpider, Spider
 from schwab.items import SchwabItem
 from w3lib.url import add_or_replace_parameter, url_query_cleaner
 import json
+import copy
 
 
 class SchwabParserSpider(Spider):
@@ -35,12 +36,11 @@ class SchwabParserSpider(Spider):
         product['url'] = self.product_url_origin(response)
         product['retailer'] = "schwab"
         product['category'] = self.product_category(response)
-        product['trail'] = self.product_trail(response)
+        product['trail'] = response.meta['trail']
         product['gender'] = self.product_gender(response)
         product['skus'] = self.product_skus(response)
         product['care'] = self.product_care(response)
         product['merch_info'] = []
-
         if not product['gender']:
             product['industry'] = "Homeware"
 
@@ -153,9 +153,6 @@ class SchwabParserSpider(Spider):
         stocks = response.text
 
         stock_status = json.loads(stocks)
-        del stock_status['codes']
-        del stock_status['express']
-
         sold_out = ['lieferbar innerhalb 3 Wochen', 'ausverkauft', 'lieferbar bis Mitte  Juli']
 
         for item in product['skus']:
@@ -251,18 +248,6 @@ class SchwabParserSpider(Spider):
     def product_url_origin(response):
         return response.css('link[rel="canonical"]::attr(href)').extract_first()
 
-    def product_trail(self, response):
-        trails = response.css('div#breadcrumb li>a::attr(href)').extract()
-
-        counter = 0
-        categories = self.product_category(response)
-        result = []
-
-        for trail in trails:
-            result.append((categories[counter], trail))
-            counter = counter + 1
-        return result
-
     def product_gender(self, response):
         categories = self.product_category(response)
 
@@ -294,14 +279,18 @@ class SchwabCralwer(CrawlSpider):
 
     def parse_start_url(self, response):
         raw_urls = json.loads(response.text)
-
+        response.meta['trail'] = []
         for url in raw_urls:
             for inner_cat in url['sCat']:
+                response.meta['trail'] = [inner_cat['url']]
                 yield Request(url=inner_cat['url'], callback=self.parse_pagination)
 
     def parse_pagination(self, response):
-        total_items = response.css('.pl__headline__count::text').re_first(r'(\d+)')
+        common_meta = {}
+        common_meta['trail'] = ['https://www.schwab.de/']
+        common_meta['trail'] += [response.url]
 
+        total_items = response.css('.pl__headline__count::text').re_first(r'(\d+)')
         if not total_items:
             return
 
@@ -309,13 +298,16 @@ class SchwabCralwer(CrawlSpider):
 
         for page in range(1, total_pages):
             url = add_or_replace_parameter(response.url, 'pageNr', page)
-            yield Request(url=url, callback=self.product_requests)
+            meta = copy.deepcopy(common_meta)
+            meta['trail'] += [url]
+            yield Request(url=url, callback=self.product_requests, meta=copy.deepcopy(meta))
 
     def product_requests(self, response):
+        meta = response.meta
         products = response.css('div.product__top a::attr(href)').extract()
-
         for product in products:
-            yield response.follow(url_query_cleaner(product), callback=self.spider_parser.parse_product)
+            yield response.follow(url_query_cleaner(product), callback=self.spider_parser.parse_product,
+                                  meta=copy.deepcopy(meta))
 
 
 def clean_product(raw_data):
