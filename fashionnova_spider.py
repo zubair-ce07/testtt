@@ -69,10 +69,11 @@ class FashionNovaParseSpider(BaseParseSpider):
 
         css = 'script:contains("var json_product")::text'
         raw_product = JSParser(clean(response.css(css))[0])['json_product']
+        base_sku = self.product_pricing_common(response)
 
         for raw_sku in raw_product['variants']:
             sku_id = raw_sku['id']
-            sku = self.product_pricing_common(response)
+            sku = base_sku.copy()
             size = raw_sku['title']
             sku['size'] = self.one_size if size == 'OS' else size
             sku['colour'] = re.search('- (.*?) -', raw_sku['name']).group(1)
