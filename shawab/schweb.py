@@ -50,11 +50,9 @@ class SchwabParserSpider(Spider):
         return self.extract_requests(requests, product)
 
     def product_skus(self, response):
-        sizes = self.product_size(response)
-
-        request_sizes = self.product_request_sizes(response)
+        sizes = self.product_sizes(response)
         previous_price = self.product_previous_price(response)
-        request_sizes.insert(0, "None")
+        sizes.insert(0, "None")
 
         total_skus = {}
         sku = {}
@@ -62,23 +60,16 @@ class SchwabParserSpider(Spider):
         if previous_price:
             sku['previous_prices'] = previous_price
 
-        if self.size_counter >= len(request_sizes):
+        if self.size_counter >= len(sizes):
             self.size_counter = 0
 
         sku["price"] = self.product_price(response)
         sku["currency"] = self.product_currency(response)
         sku["color"] = self.product_color(response)
-
-        for size in sizes:
-            sku["size"] = size
-            sku_id = (sku['color'] or '') + '|' + sku['size']
-            total_skus[sku_id] = sku
-
-        if request_sizes and not sizes:
-            sku['size'] = request_sizes[self.size_counter]
-            sku_id = (sku['color'] or '') + '|' + sku['size']
-            total_skus[sku_id] = sku
-            self.size_counter = self.size_counter + 1
+        sku['size'] = sizes[self.size_counter]
+        sku_id = (sku['color'] or '') + '|' + sku['size']
+        total_skus[sku_id] = sku
+        self.size_counter = self.size_counter + 1
 
         return total_skus
 
@@ -94,7 +85,6 @@ class SchwabParserSpider(Spider):
         if not colors:
             color_requests += self.stock_request(response)
             color_requests += self.size_request(response)
-
         return color_requests
 
     def stock_request(self, response):
@@ -108,8 +98,10 @@ class SchwabParserSpider(Spider):
     def size_request(self, response):
         params = {}
         requests = []
-        varsel_ids = response.css('.js-variantSelector option::attr(value)').extract()[1:]
-        size_ids = response.css('.js-variantSelector option::attr(data-noa-size)').extract()
+        varsel_ids = response.css('.js-variantSelector option::attr(value)').extract()[1:] + response.css(
+            '.js-sizeSelector button::attr(data-varselid)').extract()
+        size_ids = response.css('.js-variantSelector option::attr(data-noa-size)').extract() + response.css(
+            '.js-sizeSelector button::attr(data-noa-size)').extract()
         aid = response.css('input[name="aid"]::attr(value)').extract_first().split('-')
         anid = response.css('input[name="anid"]::attr(value)').extract_first().split('-')
         varselid_2 = response.css('input[name="varselid[2]"]::attr(value)').extract_first()
@@ -157,6 +149,9 @@ class SchwabParserSpider(Spider):
 
         for item in product['skus']:
             product_id = product['retailer_sku']
+
+            if item is None:
+                continue
 
             if product['skus'][item]['size']:
                 size = product['skus'][item]['size']
@@ -238,8 +233,9 @@ class SchwabParserSpider(Spider):
         return clean_product(desc)
 
     @staticmethod
-    def product_request_sizes(response):
-        sizes = response.css('.js-variantSelector option::text').extract()
+    def product_sizes(response):
+        sizes = response.css('.js-variantSelector option::text').extract() + \
+                response.css('.js-sizeSelector button::text').re(r'(\d+)')
         if sizes:
             del sizes[0]
         return sizes
@@ -262,10 +258,6 @@ class SchwabParserSpider(Spider):
     @staticmethod
     def product_color(response):
         return response.css('.js-current-color-name::attr(value)').re_first(r'(\w+)')
-
-    @staticmethod
-    def product_size(response):
-        return response.css('.js-sizeSelector button::text').re(r'(\d+)')
 
 
 class SchwabCralwer(CrawlSpider):
