@@ -1,35 +1,35 @@
 import datetime
+from calculations import Calculations
 
 class Report:
     
     @staticmethod
-    def show_yearly_report (results):
-        highest_temp = results["Highest Temperature"]["Max TemperatureC"]
-        highest_temp_PKT = datetime.datetime.strptime(results["Highest Temperature"]["PKT"], "%Y-%m-%d").strftime("%B %d")
-        lowest_temp = results["Lowest Temperature"]["Min TemperatureC"]
-        lowest_temp_PKT = datetime.datetime.strptime(results["Lowest Temperature"]["PKT"], "%Y-%m-%d").strftime("%B %d")
-        max_humidity = results["Max Humidity"]["Max Humidity"]
-        max_humidity_PKT = datetime.datetime.strptime(results["Max Humidity"]["PKT"], "%Y-%m-%d").strftime("%B %d")
-        print(f"Highest: {highest_temp}C on {highest_temp_PKT}")
-        print(f"Lowest: {lowest_temp}C on {lowest_temp_PKT}")
-        print(f"Most Humid Day: {max_humidity}% on {max_humidity_PKT}")
+    def show_yearly_report (weather_readings):
+        highest_temp_record = Calculations.calculate_max("Max TemperatureC", weather_readings)
+        lowest_temp_record = Calculations.calculate_min("Min TemperatureC", weather_readings)
+        max_humidity_record = Calculations.calculate_max("Max Humidity", weather_readings)
+
+        highest_temp_PKT = datetime.datetime.strptime(highest_temp_record.get("PKT"), "%Y-%m-%d").strftime("%B %d")
+        lowest_temp_PKT = datetime.datetime.strptime(lowest_temp_record.get("PKT"), "%Y-%m-%d").strftime("%B %d")
+        max_humidity_PKT = datetime.datetime.strptime(max_humidity_record.get("PKT"), "%Y-%m-%d").strftime("%B %d")
+
+        print(f"Highest: {highest_temp_record.get('Max TemperatureC')}C on {highest_temp_PKT}")
+        print(f"Lowest: {lowest_temp_record.get('Min TemperatureC')}C on {lowest_temp_PKT}")
+        print(f"Most Humid Day: {max_humidity_record.get('Max Humidity')}% on {max_humidity_PKT}")
 
     @staticmethod
-    def show_monthly_report (results):
-        highest_average = results["Highest Average"]
-        lowest_average = results["Lowest Average"]
-        average_mean_humidity = results["Average Mean Humidity"]
-        print(f"Highest Average: {highest_average}C")
-        print(f"Lowest Average: {lowest_average}C")
-        print(f"Average Mean Humidity: {average_mean_humidity}%")
+    def show_monthly_report (weather_readings):
+        print(f"Highest Average: {Calculations.calculate_average('Max TemperatureC', weather_readings)}C")
+        print(f"Lowest Average: {Calculations.calculate_average('Min TemperatureC', weather_readings)}C")
+        print(f"Average Mean Humidity: {Calculations.calculate_average('Max Humidity', weather_readings)}%")
 
     @staticmethod
     def show_chart_report(readings):
-        print(datetime.datetime.strptime(readings[0]["PKT"], "%Y-%m-%d").strftime("%B %Y"))
+        print(datetime.datetime.strptime(readings[0].get("PKT"), "%Y-%m-%d").strftime("%B %Y"))
         for reading in readings:
-            max_temperature = reading["Max TemperatureC"]
-            min_temperature = reading["Min TemperatureC"]
-            date = reading["PKT"].split('-')[2]
+            max_temperature = reading.get("Max TemperatureC")
+            min_temperature = reading.get("Min TemperatureC")
+            date = reading.get("PKT").split('-')[2]
 
             if max_temperature:
                 print(f"{date} ", end="")
@@ -45,12 +45,12 @@ class Report:
     
     @staticmethod
     def show_one_liner_chart_report(readings):
-        print(datetime.datetime.strptime(readings[0]["PKT"], "%Y-%m-%d").strftime("%B %Y"))
+        print(datetime.datetime.strptime(readings[0].get("PKT"), "%Y-%m-%d").strftime("%B %Y"))
         
         for reading in readings:
-            max_temperature = reading["Max TemperatureC"]
-            min_temperature = reading["Min TemperatureC"]
-            date = reading["PKT"].split('-')[2]
+            max_temperature = reading.get("Max TemperatureC")
+            min_temperature = reading.get("Min TemperatureC")
+            date = reading.get("PKT").split('-')[2]
             if max_temperature and min_temperature:
                 print(f"{date} " , end="")
                 for i in range(int(min_temperature)):
