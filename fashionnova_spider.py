@@ -39,6 +39,7 @@ class FashionNovaParseSpider(BaseParseSpider):
 
         self.boilerplate_normal(garment, response)
 
+        garment['merch_info'] = self.merch_info([garment['name']] + garment['description'])
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
 
@@ -53,12 +54,22 @@ class FashionNovaParseSpider(BaseParseSpider):
         return clean(response.css('.product_id::text'))[0]
 
     def product_name(self, response):
-        return clean(response.css('h1.title::text'))[0]
+        name = clean(response.css('h1.title::text'))[0]
+        return name.split(' - ')[0]
 
     def product_category(self, response):
         css = 'script:contains(ProductCategories)'
         categories = response.css(css).re_first(r"'ProductCategories': '\[(.*?)\]'")
         return json.loads('[' + categories.replace('\\\'', '\'') + ']')
+
+    def merch_info(self, description):
+        merch_info = []
+
+        for text in description:
+            if 'limited edition' in text.lower():
+                merch_info.append('Limited Edition')
+
+        return merch_info
 
     def image_urls(self, response):
         images = clean(response.css('.productImage::attr(href)'))
