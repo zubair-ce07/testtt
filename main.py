@@ -26,24 +26,20 @@ if __name__ == '__main__':
     if result.a:
         print(f"Report for {result.a[0]}")
         month = datetime.datetime.strptime(result.a[0], "%Y/%m").strftime("%Y_%b")
-        files_to_parse = []
         file_readings = Parser.parse_files(directory, month)
         Report.show_monthly_report(file_readings)
         print()
     if result.e:
         print(f"Report for year {result.e[0]}")
-        files_to_parse = []
         file_readings = Parser.parse_files(directory,result.e[0])
         Report.show_yearly_report(file_readings)
         print()
     if result.c:
-        files_to_parse = []
         month = datetime.datetime.strptime(result.c[0], "%Y/%m").strftime("%Y_%b")
         file_readings = Parser.parse_files(directory, month)
         Report.show_chart_report(file_readings)
         print()
     if result.cs:
-        files_to_parse = []
         month = datetime.datetime.strptime(result.cs[0], "%Y/%m").strftime("%Y_%b")
         file_readings = Parser.parse_files(directory, month)
         Report.show_one_liner_chart_report(file_readings)

@@ -13,7 +13,11 @@ class Calculations:
 
     @staticmethod
     def calculate_average(column_name, weather_readings):
-        sum_column = sum(int(reading[column_name]) for reading in weather_readings if reading[column_name])
-        len_column = len([int(reading[column_name]) for reading in weather_readings if reading[column_name]])
+        data_list = []
+        for reading in weather_readings:
+            if reading[column_name]:
+                data_list.append(int(reading[column_name])) 
+        sum_column = sum(data_list)
+        len_column = len(data_list)
 
         return sum_column / len_column

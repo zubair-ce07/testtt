@@ -10,7 +10,7 @@ class Parser:
         files_to_parse = []
         weather_list = []
         for file in os.listdir(directory):
-            if fnmatch.fnmatch(file, '*'+file_name_pattern+'*'):
+            if fnmatch.fnmatch(file, f"*{file_name_pattern}*"):
                 files_to_parse.append(file)
 
         for file in files_to_parse:
