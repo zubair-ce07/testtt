@@ -51,10 +51,8 @@ class SchwabParserSpider(Spider):
 
         return self.extract_requests(requests, product)
 
-    def product_skus(self, response):
+    def product_sku(self, response):
         previous_price = self.product_previous_price(response)
-
-        total_skus = {}
         sku = {}
 
         if previous_price:
@@ -63,11 +61,10 @@ class SchwabParserSpider(Spider):
         sku["price"] = self.product_price(response)
         sku["currency"] = self.product_currency(response)
         sku["color"] = self.product_color(response)
-        sku['size'] = response.meta['size']
+        sku['size'] = response.meta['size'] or ''
         sku_id = '{color}|{size}'.format(color=(sku['color'] or ''), size=sku['size'])
-        total_skus[sku_id] = sku
 
-        return total_skus
+        return sku_id, sku
 
     def color_requests(self, response):
         colors = response.css('a.colorspots__item::attr(title)').extract()
@@ -92,11 +89,10 @@ class SchwabParserSpider(Spider):
         return [FormRequest(url=self.stock_url[0], formdata=items, callback=self.parse_stock, dont_filter=True)]
 
     def size_request(self, response):
-        sizes = self.product_sizes(response)
         params = {}
         requests = []
 
-        varsel_ids = response.css('.js-variantSelector option::attr(value)').extract()[1:] + \
+        varsel_ids = response.css('.js-variantSelector option::attr(value)').re(r'(\w+)') + \
                      response.css('.js-sizeSelector button::attr(data-varselid)').extract()
         size_ids = response.css('.js-variantSelector option::attr(data-noa-size)').extract() + \
                    response.css('.js-sizeSelector button::attr(data-noa-size)').extract()
@@ -115,30 +111,29 @@ class SchwabParserSpider(Spider):
         if varselid_1:
             params["varselid[1]"] = varselid_1
 
-        size = 0
-
-        for varsel in varsel_ids:
+        for varsel, size in zip(varsel_ids, size_ids):
             if varsel:
                 params["varselid[0]"] = varsel
 
-            if aid and anid and size < len(size_ids):
-                aid[2] = size_ids[size]
-                anid[2] = size_ids[size]
+            if aid and anid:
+                aid[2] = size
+                anid[2] = size
                 params['aid'] = '-'.join(aid)
                 params['anid'] = '-'.join(anid)
-                response.meta['size'] = sizes[size]
+                response.meta['size'] = size
 
                 requests.append(
                     FormRequest(url=self.size_url[0], formdata=params, callback=self.parse_size, meta=response.meta,
                                 dont_filter=True))
-                size = size + 1
 
         return requests
 
     def parse_size(self, response):
         product = response.meta['product']
         requests = response.meta['requests']
-        product['skus'].update(self.product_skus(response))
+
+        sku_id, sku = self.product_sku(response)
+        product['skus'].update({sku_id: sku})
         return self.extract_requests(requests, product)
 
     def parse_stock(self, response):
@@ -147,21 +142,19 @@ class SchwabParserSpider(Spider):
         stocks = response.text
 
         stock_status = json.loads(stocks)
-        sold_out = ['lieferbar innerhalb 3 Wochen', 'ausverkauft', 'lieferbar bis Mitte  Juli']
+        sold_out = ['lieferbar innerhalb 3 Wochen', 'ausverkauft', 'lieferbar bis Mitte  Juli',
+                    'lieferbar innerhalb 4 Wochen']
 
-        for item in product['skus']:
+        for k, v in product['skus'].items():
             product_id = product['retailer_sku']
 
-            if product['skus'][item]['size']:
-                size = product['skus'][item]['size']
-
+            if 'size' in v:
+                size = v['size']
                 if (size in stock_status[product_id]) and (stock_status[product_id][size] in sold_out):
-                    product['skus'][item]['out_of_stock'] = True
-                elif size not in stock_status[product_id]:
-                    product['skus'][item]['out_of_stock'] = True
+                    v['out_of_stock'] = True
 
             elif stock_status[product_id] in sold_out:
-                product['skus'][item]['out_of_stock'] = True
+                v['out_of_stock'] = True
 
         return self.extract_requests(requests, product)
 
@@ -173,7 +166,9 @@ class SchwabParserSpider(Spider):
 
         requests += self.stock_request(response)
 
-        product['skus'].update(self.product_skus(response))
+        sku_id, sku = self.product_sku(response)
+
+        product['skus'].update({sku_id: sku})
         product['images_urls'] += self.product_images(response)
 
         return self.extract_requests(requests, product)
