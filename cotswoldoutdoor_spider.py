@@ -126,7 +126,7 @@ class CotswoldOutdoorParseSpider(BaseParseSpider):
         sku_merch_map = {}
 
         for color in raw_prices['colours']:
-            is_merch = True if 'exclusive' in (color.get('webThumbOverlayCode') or '').lower() else False
+            is_merch = 'exclusive' in (color['webThumbOverlayCode'] or '').lower()
             for sku in color['skus']:
                 sku_merch_map[str(sku['skuId'])] = is_merch
 
@@ -232,7 +232,7 @@ class CotswoldOutdoorCrawlSpider(BaseCrawlSpider):
             if item['impression']['category'].lower() in ['toys']:
                 continue
 
-            if any([True for text in self.products_deny_re if text in item['seoUrl']]):
+            if any([text in item['seoUrl'] for text in self.products_deny_re]):
                 continue
 
             product_url = f"/p{item['seoUrl']}.html"
