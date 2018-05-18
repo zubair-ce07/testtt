@@ -46,94 +46,13 @@ class SchwabParserSpider(Spider):
         if not product['gender']:
             product['industry'] = "Homeware"
 
-        requests = []
-        requests += self.color_requests(response)
-
-        return self.extract_requests(requests, product)
-
-    def product_sku(self, response):
-        previous_price = self.product_previous_price(response)
-        sku = {}
-
-        if previous_price:
-            sku['previous_prices'] = previous_price
-
-        sku["price"] = self.product_price(response)
-        sku["currency"] = self.product_currency(response)
-        sku["color"] = self.product_color(response)
-        sku['size'] = response.meta['size'] or ''
-        sku_id = '{color}|{size}'.format(color=(sku['color'] or ''), size=sku['size'])
-
-        return sku_id, sku
-
-    def color_requests(self, response):
-        colors = response.css('a.colorspots__item::attr(title)').extract()
-        color_requests = []
-
-        for color in colors:
-            url = add_or_replace_parameter(response.url, "color", color)
-            color_requests += [Request(url=url, callback=self.parse_color, dont_filter=True)]
-
-        # For handling those requests which doesn't has color_requests
-        if not colors:
-            color_requests += self.stock_request(response)
-            color_requests += self.size_request(response)
-        return color_requests
-
-    def stock_request(self, response):
-        item_number = response.css('script::text').re_first(r'articlesString(.+),(\d)')
-        item_number = item_number[2:]
-        items = {
-            'items': item_number
-        }
-        return [FormRequest(url=self.stock_url[0], formdata=items, callback=self.parse_stock, dont_filter=True)]
-
-    def size_request(self, response):
-        params = {}
-        requests = []
-
-        varsel_ids = response.css('.js-variantSelector option::attr(value)').re(r'(\w+)') + \
-                     response.css('.js-sizeSelector button::attr(data-varselid)').extract()
-        size_ids = response.css('.js-variantSelector option::attr(data-noa-size)').extract() + \
-                   response.css('.js-sizeSelector button::attr(data-noa-size)').extract()
-        aid = response.css('input[name="aid"]::attr(value)').extract_first().split('-')
-        anid = response.css('input[name="anid"]::attr(value)').extract_first().split('-')
-        varselid_2 = response.css('input[name="varselid[2]"]::attr(value)').extract_first()
-        varselid_1 = response.css('input[name="varselid[1]"]::attr(value)').extract_first()
-
-        params["promo"] = response.css('input[name="promo"]::attr(value)').extract_first()
-        params["artName"] = response.css('input[name="artName"]::attr(value)').extract_first()
-        params["cl"] = response.css('div > input[name="cl"]::attr(value)').extract()[1]
-        params["parentid"] = response.css('input[name="parentid"]::attr(value)').extract_first()
-
-        if varselid_2:
-            params["varselid[2]"] = varselid_2
-        if varselid_1:
-            params["varselid[1]"] = varselid_1
-
-        for varsel, size in zip(varsel_ids, size_ids):
-            if varsel:
-                params["varselid[0]"] = varsel
-
-            if aid and anid:
-                aid[2] = size
-                anid[2] = size
-                params['aid'] = '-'.join(aid)
-                params['anid'] = '-'.join(anid)
-                response.meta['size'] = size
-
-                requests.append(
-                    FormRequest(url=self.size_url[0], formdata=params, callback=self.parse_size, meta=response.meta,
-                                dont_filter=True))
-
-        return requests
+        return self.extract_requests(self.color_requests(response), product)
 
     def parse_size(self, response):
         product = response.meta['product']
         requests = response.meta['requests']
 
-        sku_id, sku = self.product_sku(response)
-        product['skus'].update({sku_id: sku})
+        product['skus'].update(self.product_sku(response))
         return self.extract_requests(requests, product)
 
     def parse_stock(self, response):
@@ -166,12 +85,87 @@ class SchwabParserSpider(Spider):
 
         requests += self.stock_request(response)
 
-        sku_id, sku = self.product_sku(response)
-
-        product['skus'].update({sku_id: sku})
+        product['skus'].update(self.product_sku(response))
         product['images_urls'] += self.product_images(response)
 
         return self.extract_requests(requests, product)
+
+    def product_sku(self, response):
+        previous_price = self.product_previous_price(response)
+        sku = {}
+
+        if previous_price:
+            sku['previous_prices'] = previous_price
+
+        sku["price"] = self.product_price(response)
+        sku["currency"] = self.product_currency(response)
+        sku["color"] = self.product_color(response)
+        sku['size'] = response.meta['size'] or "One size"
+        sku_id = '{color}|{size}'.format(color=(sku['color'] or ''), size=sku['size'])
+
+        return {sku_id: sku}
+
+    def color_requests(self, response):
+        colors = response.css('a.colorspots__item::attr(title)').extract()
+        requests = []
+
+        for color in colors:
+            url = add_or_replace_parameter(response.url, "color", color)
+            requests += [Request(url=url, callback=self.parse_color, dont_filter=True)]
+
+        # For handling those requests which doesn't has color_requests
+        if not colors:
+            requests += self.stock_request(response)
+            requests += self.size_request(response)
+        return requests
+
+    def stock_request(self, response):
+        item_number = response.css('script::text').re_first(r'articlesString(.+),(\d)')
+        item_number = item_number[2:]
+        items = {
+            'items': item_number
+        }
+        return [FormRequest(url=self.stock_url[0], formdata=items, callback=self.parse_stock, dont_filter=True)]
+
+    def size_request(self, response):
+        params = {}
+        requests = []
+
+        varsel_ids = response.css('.js-variantSelector option::attr(value)').re(r'(\w+)') + \
+                     response.css('.js-sizeSelector button::attr(data-varselid)').extract()
+        size_ids = response.css('.js-variantSelector option::attr(data-noa-size)').extract() + \
+                   response.css('.js-sizeSelector button::attr(data-noa-size)').extract()
+        aid = response.css('input[name="aid"]::attr(value)').extract_first().split('-')
+        anid = response.css('input[name="anid"]::attr(value)').extract_first().split('-')
+        varselid_2 = response.css('input[name="varselid[2]"]::attr(value)').extract_first()
+        varselid_1 = response.css('input[name="varselid[1]"]::attr(value)').extract_first()
+
+        params["promo"] = response.css('input[name="promo"]::attr(value)').extract_first()
+        params["artName"] = response.css('input[name="artName"]::attr(value)').extract_first()
+        params["cl"] = response.css('div > input[name="cl"]::attr(value)').extract()[1]
+        params["parentid"] = response.css('input[name="parentid"]::attr(value)').extract_first()
+
+        if varselid_2:
+            params["varselid[2]"] = varselid_2
+        if varselid_1:
+            params["varselid[1]"] = varselid_1
+
+        if aid and anid:
+            for varsel, size in zip(varsel_ids, size_ids):
+                if varsel:
+                    params["varselid[0]"] = varsel
+
+                aid[2] = size
+                anid[2] = size
+                params['aid'] = '-'.join(aid)
+                params['anid'] = '-'.join(anid)
+                response.meta['size'] = size
+
+                requests.append(
+                    FormRequest(url=self.size_url[0], formdata=params, callback=self.parse_size, meta=response.meta,
+                                dont_filter=True))
+
+        return requests
 
     @staticmethod
     def extract_requests(requests, product):
