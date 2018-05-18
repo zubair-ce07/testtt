@@ -1,5 +1,4 @@
 import json
-import logging
 
 from scrapy import Request, FormRequest
 from scrapy.spiders import CrawlSpider, Spider, Rule
@@ -8,8 +7,6 @@ from w3lib.url import add_or_replace_parameter
 from copy import deepcopy
 
 from schwab.items import SchwabItem
-
-logger = logging.getLogger('spider')
 
 
 class SchwabMixin():
