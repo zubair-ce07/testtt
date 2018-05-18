@@ -2,7 +2,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Request, Rule
 from w3lib.url import url_query_cleaner, url_query_parameter
 
-from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify
+from .base import BaseParseSpider, BaseCrawlSpider, clean, soupify, Gender
 
 
 class Mixin:
@@ -10,8 +10,13 @@ class Mixin:
     allowed_domains = ['bonpoint.com']
     default_brand = 'Bonpoint'
 
-    brands = ['Bonpoint', 'Vans', 'Golden Goose for Bonpoint', 'Bonpoint X IZIPIZI']
-    spider_gender_map = [('Yam bonpoint', 'girls')]
+    brands = ['Vans', 'Golden Goose for Bonpoint', 'Bonpoint x Izipizi']
+
+    spider_gender_map = [
+        ('yam', 'girls'),
+        ('ballerinas', 'girls'),
+        ('mary', 'girls')
+    ]
 
 
 class MixinUS(Mixin):
@@ -76,7 +81,8 @@ class BonpointParseSpider(BaseParseSpider):
         self.boilerplate_normal(garment, response)
         self.boilerplate_minimal(garment, response, response.url)
 
-        garment['gender'] = self.product_gender(garment['category'] + [garment['name']])
+        garment['gender'] = self.product_gender(garment['category'] + [garment['name']]
+                                                + [text for text, _ in garment['trail']])
         garment['merch_info'] = self.merch_info(garment['description'] + garment['care'])
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = self.skus(response)
@@ -89,20 +95,32 @@ class BonpointParseSpider(BaseParseSpider):
     def product_id(self, response):
         return self.get_attribute(response, 'id')
 
+    def product_name_and_color(self, response):
+        name_clr = clean(response.css('.product-essential .product-name ::text'))
+        if len(name_clr) == 1:
+            name_clr.append('')
+        return name_clr
+
     def product_name(self, response):
-        return clean(response.css('.product-essential .product-name::text'))[0]
+        name_clr = self.product_name_and_color(response)
+        color = self.detect_colour(name_clr[1])
+        name_clr[1] = name_clr[1].replace(color.title(), '')
+        return ' '.join([name_clr[0]] + name_clr[1].split())
 
     def product_brand(self, response):
-        brand = self.get_attribute(response, 'brand')
-        return brand if brand in self.brands else self.default_brand
+        for brand in self.brands:
+            if brand in self.product_name(response):
+                return brand
+        return self.default_brand
 
     def product_category(self, response):
         category = self.get_attribute(response, 'category')
         return clean(category.split('/'))
 
-    def product_gender(self, category):
-        gend = self.gender_lookup(soupify(category), greedy=True)
-        return gend or 'unisex-kids'
+    def product_gender(self, categories):
+        gend = self.detect_gender(categories)
+        gender = gend if gend else self.gender_lookup(soupify(categories))
+        return gender or Gender.KIDS.value
 
     def merch_info(self, description):
         merch_info = []
@@ -122,6 +140,9 @@ class BonpointParseSpider(BaseParseSpider):
 
         currency = response.css('.product-essential .price').re_first('>(.*?)(\d+)')
 
+        color_str = self.product_name_and_color(response)[1]
+        color = (self.detect_colour(color_str) or self.get_attribute(response, 'brand')).title()
+
         raw_product = self.magento_product_data(response) or {}
         raw_skus = self.magento_product_map(raw_product) if raw_product else None
 
@@ -130,10 +151,11 @@ class BonpointParseSpider(BaseParseSpider):
             money_str = [price, currency]
             sku = self.product_pricing_common(None, money_strs=money_str)
             sku['size'] = self.one_size
+            if color:
+                sku['colour'] = color
             skus[self.product_id(response)] = sku
             return skus
 
-        color = clean(response.css('.product-essential .product-name span::text'))[0]
         color_id_css = 'script:contains("var initialSelectedColor")'
         color_id = response.css(color_id_css).re_first("var initialSelectedColor = '(.*?)'")
 
@@ -144,7 +166,7 @@ class BonpointParseSpider(BaseParseSpider):
         for sku_id in sku_ids:
             raw_price = raw_product['childProducts'][sku_id]
             money_str = [raw_price['price'], raw_price['finalPrice'], currency]
-
+            self.product_id(response)
             sku = self.product_pricing_common(None, money_strs=money_str)
             sku['size'] = raw_skus[sku_id][0]['label']
 
@@ -157,7 +179,7 @@ class BonpointParseSpider(BaseParseSpider):
 
 
 class BonpointCrawlSpider(BaseCrawlSpider):
-    listings_css = '#nav'
+    listings_css = '#nav .level1'
     products_css = '.product-name'
     pagination_css = '.pages a::attr(href)'
 
