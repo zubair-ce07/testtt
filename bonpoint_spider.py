@@ -17,6 +17,7 @@ class Mixin:
     spider_gender_map = [
         ('yam', 'girls'),
         ('ballerinas', 'girls'),
+        ('ballerines', 'girls'),
         ('mary', 'girls')
     ]
 
@@ -186,7 +187,7 @@ class BonpointCrawlSpider(BaseCrawlSpider):
     products_css = '.product-name'
     pagination_css = '.pages a::attr(href)'
 
-    deny_r = ['/looks']
+    deny_r = ['looks/']
 
     rules = [
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_r), callback='parse'),
