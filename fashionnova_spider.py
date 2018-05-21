@@ -80,8 +80,9 @@ class FashionNovaParseSpider(BaseParseSpider):
         raw_product = JSParser(clean(response.css(css))[0])['json_product']
         base_sku = self.product_pricing_common(response)
 
-        raw_color = [tag for tag in raw_product['tags'] if tag.find('Color-') > -1]
-        color = re.sub(r'(\w)([A-Z])', r"\1 \2", raw_color[0].strip('Color-')) if raw_color else ''
+        raw_colour = [tag for tag in raw_product['tags'] if 'Color-' in tag]
+        raw_colour = raw_colour[0].strip('Color-') if raw_colour else ''
+        base_colour = re.sub(r'(\w)([A-Z])', r"\1 \2", raw_colour)
 
         for raw_sku in raw_product['variants']:
             sku_id = raw_sku['id']
@@ -89,7 +90,7 @@ class FashionNovaParseSpider(BaseParseSpider):
             size = raw_sku['title']
             sku['size'] = self.one_size if size == 'OS' else size
             colour = re.search('- (.*?) -', raw_sku['name'])
-            sku['colour'] = colour.group(1) if colour else color
+            sku['colour'] = colour.group(1) if colour else base_colour
 
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
