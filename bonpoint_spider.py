@@ -1,3 +1,5 @@
+import re
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Request, Rule
 from w3lib.url import url_query_cleaner, url_query_parameter
@@ -138,7 +140,8 @@ class BonpointParseSpider(BaseParseSpider):
         sku_ids = []
         skus ={}
 
-        currency = response.css('.product-essential .price').re_first('>(.*?)(\d+)')
+        currency = clean(response.css('.product-essential .price ::text'))[0]
+        currency = re.sub('(\d+)', '', currency)
 
         color_str = self.product_name_and_color(response)[1]
         color = (self.detect_colour(color_str) or self.get_attribute(response, 'brand')).title()
@@ -166,7 +169,7 @@ class BonpointParseSpider(BaseParseSpider):
         for sku_id in sku_ids:
             raw_price = raw_product['childProducts'][sku_id]
             money_str = [raw_price['price'], raw_price['finalPrice'], currency]
-            self.product_id(response)
+
             sku = self.product_pricing_common(None, money_strs=money_str)
             sku['size'] = raw_skus[sku_id][0]['label']
 
