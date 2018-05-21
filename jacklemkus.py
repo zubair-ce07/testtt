@@ -8,14 +8,15 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 
+
 class JacklemkusSpider(CrawlSpider):
     crawl_start_time = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     name = 'jacklemkus'
     allowed_domains = ['jacklemkus.com']
-    start_urls = ['https://www.jacklemkus.com/']
+    start_urls = ['https://www.jacklemkus.com']
 
     rules = (
-             Rule(LinkExtractor(), callback='parse_products', follow=True),
+             Rule(LinkExtractor(allow=(r'https://www.jacklemkus.com')), callback='parse_products', follow=True),
             )
 
     def parse_products(self, response):
@@ -84,5 +85,5 @@ class JacklemkusSpider(CrawlSpider):
         product_details = literal_eval(product_details)
         for index, value in product_details.items():
             skus.append({'price': product_price, 'currency': 'ZAR', 'size': value['size'], \
-                         'sku_id': value['id'],'out_of_stock': value['stock_status']})
+                         'sku_id': value['id'], 'out_of_stock': value['stock_status']})
         return skus
