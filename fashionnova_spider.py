@@ -89,8 +89,11 @@ class FashionNovaParseSpider(BaseParseSpider):
             sku = base_sku.copy()
             size = raw_sku['title']
             sku['size'] = self.one_size if size == 'OS' else size
+
             colour = re.search('- (.*?) -', raw_sku['name'])
-            sku['colour'] = colour.group(1) if colour else base_colour
+            colour = colour.group(1) if colour else base_colour
+            if colour:
+                sku['colour'] = colour
 
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
