@@ -17,7 +17,6 @@ class Mixin:
     spider_gender_map = [
         ('yam', 'girls'),
         ('ballerinas', 'girls'),
-        ('ballerines', 'girls'),
         ('mary', 'girls')
     ]
 
@@ -38,6 +37,11 @@ class MixinFR(Mixin):
     retailer = Mixin.retailer + "-fr"
     market = "FR"
     start_urls = ['https://www.bonpoint.com/fr/']
+
+    brands = Mixin.brands + ['Golden Goose pour Bonpoint']
+    spider_gender_map = Mixin.spider_gender_map + [
+        ('ballerines', 'girls')
+    ]
 
 
 class MixinIT(Mixin):
