@@ -9,7 +9,7 @@ from copy import deepcopy
 from schwab.items import SchwabItem
 
 
-class SchwabMixin():
+class SchwabMixin:
     allowed_domain = ['https://www.schwab.de/']
 
 
@@ -45,7 +45,7 @@ class SchwabParserSpider(Spider):
         product['url'] = self.product_url_origin(response)
         product['retailer'] = "schwab"
         product['category'] = self.product_category(response)
-        product['trail'] = response.meta.get('trail')
+        product['trail'] = response.meta.get('trail', [])
         product['gender'] = self.product_gender(response)
         product['care'] = self.product_care(response)
         product['skus'] = {}
@@ -76,7 +76,7 @@ class SchwabParserSpider(Spider):
             product_id = product['retailer_sku']
             size = item.get('size')
 
-            if stock_status[product_id].get(size) in sold_out:
+            if stock_status[product_id].get(size, "") in sold_out:
                 item['out_of_stock'] = True
             elif stock_status[product_id] in sold_out:
                 item['out_of_stock'] = True
@@ -241,7 +241,7 @@ class SchwabParserSpider(Spider):
         return response.css('link[rel="canonical"]::attr(href)').extract_first()
 
     def product_gender(self, response):
-        categories = self.product_category(response)
+        categories = response.css('div#breadcrumb a>span::text').extract()
 
         for category in categories:
             category = category.lower()
@@ -268,7 +268,7 @@ class SchwabCralwer(CrawlSpider):
     allowed_domain = mixin.allowed_domain
 
     rules = (
-        Rule(LinkExtractor(restrict_css='div.product__top a'), callback=spider_parser.parse_product),
+        Rule(LinkExtractor(restrict_css='div.product__top'), callback=spider_parser.parse_product),
     )
 
     def start_requests(self):
@@ -293,12 +293,13 @@ class SchwabCralwer(CrawlSpider):
         for page in range(1, total_pages):
             url = add_or_replace_parameter(response.url, 'pageNr', page)
             meta = deepcopy(common_meta)
-            meta['trail'] += [url]
             yield Request(url=url, callback=self.parse, meta=deepcopy(meta))
 
     def parse(self, response):
         for request in super().parse(response):
             request.meta['trail'] = response.meta.get('trail', [])
+            if response.url not in request.meta['trail']:
+                request.meta['trail'] += [response.url]
             yield request
 
 
