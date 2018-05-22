@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+import parsel
 
 class UrlGenerator:
 
@@ -9,12 +9,12 @@ class UrlGenerator:
     def get_year_range_from_dropdown(city_code):
         url = f"https://www.wunderground.com/history/airport/{city_code}/1996/1/1/MonthlyHistory.html?req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo="
         code = requests.get(url)
-        html_data = BeautifulSoup(code.text, "html.parser")
-        year_drop_down = html_data.find('select', {'class':'year form-select'})
+        parser = parsel.Selector(code.text)
         year_list = []
-        for option in year_drop_down.findAll('option'):
-            year_list.append(option.getText())
+        for option in parser.css('select.year > option::text').extract():
+            year_list.append(option)
 
+        print(year_list)
         return year_list
 
     # The function accepts list of years with city code and returns a list of all URLs

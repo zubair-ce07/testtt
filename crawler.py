@@ -1,5 +1,4 @@
 import requests
-from bs4 import BeautifulSoup
 import datetime
 from file_handler import FileHandler
 from url_generator import UrlGenerator
@@ -8,6 +7,7 @@ import parsel
 class WeatherCrawler:
 
     #This function formats data in proper dictionary format
+    @staticmethod
     def data_formatter(year, month, row_list, fields_name):
         #first index will have date, format the date properly.
         date_string = f"{year}/{month}/{row_list[0]}"
@@ -15,20 +15,19 @@ class WeatherCrawler:
         row_list[0] = date
         
         #Convert the list to dictionary to use with csv DictWriter
-        dictionary = {}
-        for index in range(0, len(fields_name)):
-            dictionary[fields_name[index]] = row_list[index]
-        return dictionary
+        return dict(zip(fields_name, row_list))
 
     # This function accepts month and year
     # and returns file name for that month in a specified format
+    @staticmethod
     def file_name_formatter(year, month):
         file_month = datetime.datetime.strptime(f"{year}/{month}", "%Y/%B").strftime("%Y_%b")
         file_name = f"WeatherFiles/Lahore_Weather_{file_month}.txt"
         return file_name
 
 
-    if __name__ == '__main__':
+    @staticmethod
+    def weather_crawler() :
         # City code, change this code to get data for other cities
         city_code = 'OPLA'
         
@@ -38,30 +37,28 @@ class WeatherCrawler:
         for url in url_list:
             code = requests.get(url)
             parser = parsel.Selector(code.text)
-            
             # Month and year for file name and PKT format
-            month = parser.css('select.month').css('option[selected=selected]::text').extract_first()
-            year = parser.css('select.year').css('option[selected=selected]::text').extract_first()
+            month = parser.css('select.month > option[selected=selected]::text').extract_first()
+            year = parser.css('select.year > option[selected=selected]::text').extract_first()
             
-            table = parser.css('table.obs-table')
-
-            if table:
-                tableBody = table.css('tbody')
-                data_list = []
+            table = parser.css('table.obs-table > tbody')[1:]
+            data_list = []
             
-                for tbody in tableBody[1:]:
-                    row_list = []
-                    for value in tbody.css('tr').css('td'):
-                        if (value.css('span.wx-value::text').extract_first()):
-                            row_list.append(value.css('span.wx-value::text').extract_first())
-                        else:
-                            row_list.append(value.xpath('.//text()').extract_first().strip().replace('\n','').replace('\t', ''))
-                    
-                    if row_list:
-                        dictionary = data_formatter(year, month, row_list, fields_name)
-                    
+            for row in table.css('tr'):
+                row_list = []
+                for value in row.css('td'):
+                    span_text = value.css('span.wx-value::text').extract_first()
+                    if (span_text):
+                        row_list.append(span_text)
+                    else:
+                        row_list.append(value.xpath('.//text()').extract_first().strip().replace('\n','').replace('\t', ''))
+                        
+                if row_list:
+                    dictionary = WeatherCrawler.data_formatter(year, month, row_list, fields_name)
                     data_list.append(dictionary)
-                    file_name = file_name_formatter(year, month)
-                    FileHandler.file_writer(file_name, fields_name, data_list)
-            else:
-                print(f"Data not found for {month} {year}")
+
+            file_name = WeatherCrawler.file_name_formatter(year, month)
+            FileHandler.file_writer(file_name, fields_name, data_list)
+        
+if __name__ == '__main__':
+    WeatherCrawler.weather_crawler()
