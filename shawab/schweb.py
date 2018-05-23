@@ -241,7 +241,7 @@ class SchwabParserSpider(Spider):
         return response.css('link[rel="canonical"]::attr(href)').extract_first()
 
     def product_gender(self, response):
-        categories = response.css('div#breadcrumb a>span::text').extract()
+        categories = self.product_category(response)
 
         for category in categories:
             category = category.lower()
