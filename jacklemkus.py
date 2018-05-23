@@ -2,7 +2,9 @@ import scrapy
 import json
 import time
 import datetime
+import queue
 import re
+import sys
 from ast import literal_eval
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -14,76 +16,80 @@ class JacklemkusSpider(CrawlSpider):
     name = 'jacklemkus'
     allowed_domains = ['jacklemkus.com']
     start_urls = ['https://www.jacklemkus.com']
+    product = {}
+    trail_urls = []
+    rules = [Rule(LinkExtractor(allow=[r'https://www.jacklemkus.com/(apparel|sneakers|headwear|accessories|kids)/.*/.*']),
+                  callback='parse_products'),
+             Rule(LinkExtractor(allow=[r'https://www.jacklemkus.com/']), callback='crawl_page', follow=True)]
 
-    rules = (
-             Rule(LinkExtractor(allow=(r'https://www.jacklemkus.com')), callback='parse_products', follow=True),
-            )
+    def crawl_page(self, response):
+        self.trail_urls.append(response.url)
 
     def parse_products(self, response):
-        links = LinkExtractor(canonicalize=True, unique=True).extract_links(response)
-        selector = Selector(response)
-        product = response.xpath('//*[@class="sku"]/text()').extract_first()
+        self.extract_retailer_sku(response)
+        self.product['uuid'] = 'null'
+        self.product['trail'] = self.trail_urls
+        self.trail_urls = self.trail_urls[:-1]
+        self.extract_gender(response)
+        self.extract_category(response)
+        self.product['industry'] = 'null'
+        self.extract_brand(response)
+        self.extract_original_url(response)
+        self.extract_price(response)
+        self.extract_images(response)
+        self.extract_product_skus(response, self.product['price'])
+        self.extract_url(response)
+        self.extract_name(response)
+        self.extract_description(response)
+        self.product['date'] = time.time()
 
-        if not product:
-            return
+        yield self.product
 
-        product = {
-                    'retailer_sku': '',
-                    'uuid': 'null',
-                    'trail': '',
-                    'gender': '',
-                    'category': '',
-                    'industry': 'null',
-                    'brand': '',
-                    'url': '',
-                    'date': '',
-                    'url_original': '',
-                    'name': '',
-                    'description': '',
-                    'care': '[]',
-                    'image_urls': [],
-                    'skus': [],
-                    'price': '',
-                    'currency': 'ZAR',
-                    'spider_name': 'jacklemkus',
-                    'crawl_start_time': self.crawl_start_time
-                   }
+    def extract_retailer_sku(self, response):
+        self.product['retailer_sku'] = response.css('.sku::text').extract_first()
 
-        product_description = []
-        trail_redirections = response.xpath('//*[@class="breadcrumbs"]/ul/li/a/text()').extract()
-        breadcrum_urls = response.xpath('//*[@class="breadcrumbs"]/ul/li/a/@href').extract()
+    def extract_category(self, response):
+        self.product['category'] = response.css('.breadcrumbs li:nth-child(2)>a::text').extract_first()
 
-        product['retailer_sku'] = response.xpath('//*[@class="sku"]/text()').extract_first()
-        product['category'] = selector.css('[class="breadcrumbs"]>ul>li:nth-child(2)>a::text').extract_first()
-        product['trail'] = list(zip(trail_redirections, breadcrum_urls))
-        product['brand'] = response.xpath('//*[@class="product-name"]/h1/text()').extract_first()
-        product['url'] = selector.css('link[rel="canonical"]::attr(href)').extract_first()
-        product['date'] = time.time()
-        product['url_original'] = response.url
-        product['name'] = response.xpath('//*[@class="product-name"]/h1/text()').extract_first()
-        product_details = selector.css('td:last-child::text').extract()
-        product['gender'] = product_details[0]
-        product_attributes = selector.css('th:first-child::text').extract()
+    def extract_original_url(self, response):
+        self.product['url_original'] = response.url
+
+    def extract_gender(self, response):
+        product_details = response.css('td:last-child::text').extract()
+        self.product['gender'] = product_details[0]
+
+    def extract_price(self, response):
         product_price = re.findall("var optionsPrice = new Product.OptionsPrice(.+?);\n", response.body.decode('utf-8'), re.S)
         price_details = json.loads(product_price[0][1:-1])
-        product_description.append(product['name'])
+        self.product['price'] = price_details['productPrice']
 
+    def extract_images(self, response):
+        self.product['image_urls'] = response.css('.hidden-xs img::attr(src)').extract()
+
+    def extract_product_skus(self, response, product_price):
+        skus = []
+        raw_skus = response.xpath('//*[@class="product-data-mine"]/@data-lookup').extract_first()
+        raw_skus = literal_eval(raw_skus)
+        for value in raw_skus.values():
+            skus.append({'price': product_price, 'currency': 'ZAR', 'size': value['size'], \
+                         'sku_id': value['id'], 'out_of_stock': value['stock_status']})
+        self.product['skus'] = skus
+
+    def extract_brand(self, response):
+        self.product['brand'] = response.css('.product-name h1::text').extract_first()
+
+    def extract_url(self, response):
+        self.product['url'] = response.css('link[rel="canonical"]::attr(href)').extract_first()
+
+    def extract_name(self, response):
+        self.product['name'] = response.css('.product-name h1::text').extract_first()
+
+    def extract_description(self, response):
+        product_description = []
+        product_details = response.css('td:last-child::text').extract()
+        product_attributes = response.css('th:first-child::text').extract()
+        product_description.append(self.product['name'])
         for index, value in enumerate(product_details):
             product_description.append(product_attributes[index])
             product_description.append(product_details[index])
-
-        product['description'] = product_description
-        product['image_urls'] = response.xpath('//*[@class="hidden-xs"]/a/img/@src').extract()
-        product['skus'] = self.product_skus(response, price_details['productPrice'])
-        product['price'] = price_details['productPrice']
-
-        yield product
-
-    def product_skus(self, response, product_price):
-        skus = []
-        product_details = response.xpath('//*[@class="product-data-mine"]/@data-lookup').extract_first()
-        product_details = literal_eval(product_details)
-        for index, value in product_details.items():
-            skus.append({'price': product_price, 'currency': 'ZAR', 'size': value['size'], \
-                         'sku_id': value['id'], 'out_of_stock': value['stock_status']})
-        return skus
+        self.product['description'] = product_description
