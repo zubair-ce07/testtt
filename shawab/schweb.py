@@ -75,9 +75,10 @@ class SchwabParserSpider(SchwabMixin, Spider):
             product_id = product['retailer_sku']
             size = item.get('size')
 
-            if stock_status[product_id].get(size, "") in sold_out:
-                item['out_of_stock'] = True
-            elif stock_status[product_id] in sold_out:
+            if size:
+                if stock_status[product_id].get(size) in sold_out:
+                    item['out_of_stock'] = True
+            elif stock_status[product_id][0] in sold_out:
                 item['out_of_stock'] = True
 
         return self.extract_requests(requests, product)
