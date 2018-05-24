@@ -13,11 +13,10 @@ class SchwabMixin:
     allowed_domain = ['https://www.schwab.de/']
 
 
-class SchwabParserSpider(Spider):
-    mixin = SchwabMixin()
-    allowed_domain = mixin.allowed_domain
+class SchwabParserSpider(SchwabMixin, Spider):
+    allowed_domain = SchwabMixin.allowed_domain
 
-    name = 'spider'
+    name = 'schwab-parse'
     stock_url = 'https://www.schwab.de/request/itemservice.php?fnc=getItemInfos'
     size_url = 'https://www.schwab.de/index.php?'
     gender_map = {
@@ -33,7 +32,7 @@ class SchwabParserSpider(Spider):
         'festivalschuhe': 'Unisex-adults'
     }
 
-    def parse_product(self, response):
+    def product_package(self, response):
         product = SchwabItem()
         product['name'] = self.product_name(response)
         product['product_brand'] = self.product_brand(response)
@@ -141,8 +140,8 @@ class SchwabParserSpider(Spider):
 
         varsel_ids = response.css('.js-variantSelector option::attr(value)').re(r'(\w+)') + \
                      response.css('.js-sizeSelector button::attr(data-varselid)').extract()
-        size_ids = response.css('.js-variantSelector option::attr(data-noa-size)').extract() + \
-                   response.css('.js-sizeSelector button::attr(data-noa-size)').extract()
+        size_ids = response.css(
+            '.js-variantSelector option::attr(data-noa-size), .js-sizeSelector button::attr(data-noa-size)').extract()
         aid = response.css('input[name="aid"]::attr(value)').extract_first().split('-')
         anid = response.css('input[name="anid"]::attr(value)').extract_first().split('-')
         varselid_2 = response.css('input[name="varselid[2]"]::attr(value)').extract_first()
@@ -232,8 +231,7 @@ class SchwabParserSpider(Spider):
 
     @staticmethod
     def product_sizes(response):
-        sizes = response.css('.js-variantSelector option::text').extract() + \
-                response.css('.js-sizeSelector button::text').extract()
+        sizes = response.css('.js-variantSelector option::text, .js-sizeSelector button::text').extract()
         return clean_product(sizes)
 
     @staticmethod
@@ -257,18 +255,17 @@ class SchwabParserSpider(Spider):
         return response.css('.js-current-color-name::attr(value)').re_first(r'(\w+)')
 
 
-class SchwabCralwer(CrawlSpider):
+class SchwabCralwer(SchwabMixin, CrawlSpider):
     name = 'schwab'
     items_per_page = 60
     start_url = 'https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID=1525066940'
 
-    mixin = SchwabMixin()
     spider_parser = SchwabParserSpider()
 
-    allowed_domain = mixin.allowed_domain
+    allowed_domain = SchwabMixin.allowed_domain
 
     rules = (
-        Rule(LinkExtractor(restrict_css='div.product__top'), callback=spider_parser.parse_product),
+        Rule(LinkExtractor(restrict_css='div.product__top'), callback=spider_parser.product_package),
     )
 
     def start_requests(self):
@@ -293,13 +290,14 @@ class SchwabCralwer(CrawlSpider):
         for page in range(1, total_pages):
             url = add_or_replace_parameter(response.url, 'pageNr', page)
             meta = deepcopy(common_meta)
-            yield Request(url=url, callback=self.parse, meta=deepcopy(meta))
+            yield Request(url=url, callback=self.parse, meta=meta)
 
     def parse(self, response):
+        response.meta['trail'] = response.meta.get('trail', [])
+        response.meta['trail'] += [response.url]
+
         for request in super().parse(response):
-            request.meta['trail'] = response.meta.get('trail', [])
-            if response.url not in request.meta['trail']:
-                request.meta['trail'] += [response.url]
+            request.meta['trail'] = response.meta['trail']
             yield request
 
 
