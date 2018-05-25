@@ -79,10 +79,10 @@ class YellowPages(CrawlSpider):
         return yellowpages_loader.load_item()
 
     def business_details(self, response, category):
-        raw_businessdetails = response.css('div#businessSection .business__details').extract()
-        business_titles = response.css('div#businessSection .business__details h2::text').extract()
-        for business in raw_businessdetails:
-            for title in business_titles:
+        raw_business = response.css('div#businessSection .business__details').extract()
+        titles = response.css('div#businessSection .business__details h2::text').extract()
+        for business in raw_business:
+            for title in titles:
                 if set(category) == set(self.clean_space(title)) and category in business:
                     return business
 
