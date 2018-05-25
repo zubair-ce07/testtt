@@ -91,3 +91,4 @@ class YellowPages(CrawlSpider):
 
     def website(self, response):
         return response.css('li.mlr__item--website a.mlr__item__cta::attr(href)').extract_first()
+
