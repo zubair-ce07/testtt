@@ -83,3 +83,4 @@ class DynamiteCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
     )
+
