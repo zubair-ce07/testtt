@@ -1,5 +1,3 @@
-import re
-
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 
@@ -7,7 +5,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
-    retailer = 'dynamite'
+    retailer = 'dynamite-ca'
     market = 'CA'
     default_brand = 'Dynamite'
     gender = Gender.WOMEN.value
@@ -30,18 +28,10 @@ class DynamiteParseSpider(BaseParseSpider, Mixin):
 
         self.boilerplate_normal(garment, response)
 
-        garment['skus'] = {}
-        garment['image_urls'] = []
+        garment['image_urls'] = self.image_urls(response)
+        garment['skus'] = self.skus(response)
 
-        response.meta['garment'] = garment
-        return self.parse_colour(response)
-
-    def parse_colour(self, response):
-        garment = response.meta['garment']
-        garment['image_urls'] += self.image_urls(response)
-        garment['skus'].update(self.skus(response))
-
-        return self.next_request_or_garment(garment)
+        return garment
 
     def skus(self, response):
         skus = {}
@@ -49,11 +39,12 @@ class DynamiteParseSpider(BaseParseSpider, Mixin):
         color_css = '#productColours .swatchColor::text'
         common_sku['colour'] = colour = clean(response.css(color_css))[0]
 
-        sizes = response.css('#productSizes > span')
-        for size_selector in sizes or [self.one_size]:
+        sizes = clean(response.css('#productSizes > span::text'))
+        unavailable_sizes = clean(response.css('#productSizes > .unavailable::text'))
+
+        for size in sizes or [self.one_size]:
             sku = common_sku.copy()
-            size = clean(size_selector.css('::text'))[0]
-            if size_selector.css('.unavailable'):
+            if size in unavailable_sizes:
                 sku['out_of_stock'] = True
 
             sku['size'] = size = size.strip()
@@ -73,7 +64,6 @@ class DynamiteParseSpider(BaseParseSpider, Mixin):
 
 
 class DynamiteCrawlSpider(BaseCrawlSpider, Mixin):
-    download_delay = 0.25
     name = Mixin.retailer + '-crawl'
     parse_spider = DynamiteParseSpider()
 
