@@ -47,7 +47,7 @@ class WoolrichSpider(CrawlSpider):
         colors_name = response.css('.swatch::text').extract()
         colors_link = response.css('.color>.selectable>a::attr(href)').extract()
         for index, value in enumerate(colors_link):
-            request = scrapy.Request(colors_link[index], meta={'color': colors_name[index].strip()}, \
+            request = scrapy.Request(colors_link[index], meta={'color': colors_name[index].strip(), 'product': self.product}, \
                                      callback=self.sizes)
             self.request_queue.put(request)
             yield request
@@ -73,16 +73,18 @@ class WoolrichSpider(CrawlSpider):
     def sizes(self, response):
         sizes_links = response.css('.size>.selectable>a::attr(href)').extract()
         for link in sizes_links:
-            request = scrapy.Request(link, meta={'color': response.meta.get('color')}, callback=self.skus_maker)
+            request = scrapy.Request(link, meta={'color': response.meta.get('color'),
+                                                'product': response.meta.get('product')}, callback=self.skus_maker)
             yield request
 
     def skus_maker(self, response):
         size_info = response.css('.size>.selected>a::text').extract_first().strip()
         stock_info = response.css('.in-stock-msg::text').extract_first() or 'Out of Stock'
-        self.product['skus'][response.meta.get('color')].append({'size': size_info, \
+        product = response.meta.get('product')
+        product['skus'][response.meta.get('color')].append({'size': size_info, \
                                                                  'stock_status': stock_info, \
                                                                  'price': self.product['price']})
         if self.request_queue.qsize() > 0:
             self.request_queue.get()
         else:
-            yield self.product
+            yield product
