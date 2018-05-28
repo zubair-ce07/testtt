@@ -5,20 +5,32 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
 
 class Mixin:
-    retailer = 'dynamite-ca'
-    market = 'CA'
+    retailer = 'dynamite'
     default_brand = 'Dynamite'
     gender = Gender.WOMEN.value
 
     allowed_domains = ['www.dynamiteclothing.com']
-    start_urls = ['https://www.dynamiteclothing.com/ca']
+    start_url = 'https://www.dynamiteclothing.com/'
 
 
-class DynamiteParseSpider(BaseParseSpider, Mixin):
-    name = Mixin.retailer + '-parse'
+class MixinCA(Mixin):
+    retailer = Mixin.retailer + '-ca'
+    market = 'CA'
 
+    start_urls = [f'{Mixin.start_url}ca/']
+
+
+class MixinUS(Mixin):
+    retailer = Mixin.retailer + '-us'
+    market = 'US'
+
+    start_urls = [f'{Mixin.start_url}us/']
+
+
+class DynamiteParseSpider(BaseParseSpider):
     price_css = '.prodPricePDP ::text'
-    raw_description_css = '#descTabDescriptionContent ::text'
+    description_css = '#descTabDescriptionContent ::text'
+    raw_description_css = '#descTabDetailsContent ::text'
 
     def parse(self, response):
         sku_id = self.product_id(response)
@@ -47,9 +59,9 @@ class DynamiteParseSpider(BaseParseSpider, Mixin):
             if size in unavailable_sizes:
                 sku['out_of_stock'] = True
 
-            sku['size'] = size = size.strip()
+            sku['size'] = size if size != 'O/S' else self.one_size
 
-            skus[f'{colour}_{size}'] = sku
+            skus[f'{colour}_{sku["size"]}'] = sku
 
         return skus
 
@@ -63,19 +75,16 @@ class DynamiteParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('#additionalViewsPDP ::attr(href)'))
 
 
-class DynamiteCrawlSpider(BaseCrawlSpider, Mixin):
-    name = Mixin.retailer + '-crawl'
-    parse_spider = DynamiteParseSpider()
-
+class DynamiteCrawlSpider(BaseCrawlSpider):
     listings_css = [
         '.subCatLink',
-        '#catPageNext'
-    ]
+        '#catPageNext',
+        ]
 
     deny_re = [
         'community/rsvp-collection-editorial',
-        'giftcard/giftcard.jsp'
-    ]
+        'giftcard/giftcard.jsp',
+        ]
 
     products_css = '.prodListingImg'
 
@@ -83,4 +92,22 @@ class DynamiteCrawlSpider(BaseCrawlSpider, Mixin):
         Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback='parse'),
         Rule(LinkExtractor(restrict_css=products_css), callback='parse_item')
     )
+
+
+class DynamiteParseSpiderCA(MixinCA, DynamiteParseSpider):
+    name = MixinCA.retailer + '-parse'
+
+
+class DynamiteCrawlSpiderCA(MixinCA, DynamiteCrawlSpider):
+    name = MixinCA.retailer + "-crawl"
+    parse_spider = DynamiteParseSpiderCA()
+
+
+class DynamiteParseSpiderUS(MixinUS, DynamiteParseSpider):
+    name = MixinUS.retailer + '-parse'
+
+
+class DynamiteCrawlSpiderUS(MixinUS, DynamiteCrawlSpider):
+    name = MixinUS.retailer + "-crawl"
+    parse_spider = DynamiteParseSpiderUS()
 
