@@ -12,14 +12,14 @@ class JacklemkusSpider(CrawlSpider):
     name = 'jacklemkus'
     allowed_domains = ['jacklemkus.com']
     start_urls = ['https://www.jacklemkus.com']
-    rules = [Rule(LinkExtractor(restrict_css=('#nav')), callback='parse', follow=True),
-             Rule(LinkExtractor(restrict_css=('.product-name')), callback='parse_products', follow=True),
-             Rule(LinkExtractor(restrict_css=('.ias_trigger')), callback='parse', follow=True)]
+    rules = [Rule(LinkExtractor(restrict_css=['#nav', '.ias_trigger']), callback='parse', follow=True),
+             Rule(LinkExtractor(restrict_css='.product-name'), callback='parse_products', follow=True)]
 
     def parse(self, response, append=True):
+        trail = (response.meta.get('trail') or [])
         for request in super().parse(response):
             page_title = response.css('title::text').extract_first()
-            request.meta['trail'] = (response.meta.get('trail') or []) + [page_title, response.url]
+            request.meta['trail'] = trail.copy() + [page_title, response.url]
             yield request
 
     def parse_products(self, response):
@@ -84,6 +84,6 @@ class JacklemkusSpider(CrawlSpider):
     def description(self, response, name):
         product_description = []
         product_description.append(name)
-        for description in response.css('#product-attribute-specs-table tbody>tr'):
-            product_description.append(description.css('th::text, td::text').extract_first())
+        for description_sel in response.css('#product-attribute-specs-table tbody>tr'):
+            product_description.append(':'.join(description_sel.css('th::text, td::text').extract()))
         return product_description
