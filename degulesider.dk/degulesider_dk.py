@@ -9,7 +9,7 @@ from scrapy.spiders import CrawlSpider
 from scrapylab.items import degulesiderItemLoader
 
 
-class DEGULESIDER(CrawlSpider):
+class DeguleSider(CrawlSpider):
     name = 'degulesider'
     allowed_domains = ['degulesider.dk']
     start_urls = ['https://www.degulesider.dk']
