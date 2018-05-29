@@ -70,9 +70,16 @@ def _strip_more_less(value):
     return clean_space(value.strip(",more... less..."))
 
 
+def clean(to_clean):
+    cleaned = to_clean.strip() if to_clean else ""
+    return list(filter(None, cleaned))
+
+
 class YellowPagesLoader(BizzbyItemLoader):
     telephone_out = TakeFirst()
     address_out = Join()
+
+    about_us_out = Compose(Join(""), lambda x: x.strip("See more text"), _strip_more_less)
 
     services_out = Compose(Join(""), lambda x: x.strip("Services"), _strip_more_less)
     services_in = MapCompose(remove_tags, clean, clean_space)

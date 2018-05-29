@@ -1,5 +1,6 @@
 import os
 import csv
+import json
 import urllib.parse
 
 from scrapy.http import Request
@@ -16,13 +17,13 @@ class YellowPages(CrawlSpider):
         categories = self.read_file(
             urllib.parse.urljoin('{}{}'.format(os.getcwd(), '/'), 'search-data/Categories_Generic.csv')
         )
-        postal_codes = self.read_file(
+        locations = self.read_file(
             urllib.parse.urljoin('{}{}'.format(os.getcwd(), '/'), 'search-data/canada_postal_codes.csv')
         )
 
         for category in categories:
-            for postal_code in postal_codes:
-                url = "search/si/1/{}/{}".format(category, postal_code)
+            for location in locations:
+                url = "search/si/1/{}/{}".format(category, location)
                 request = Request(response.urljoin(url), callback=self.parse_urls)
                 request.meta['search_category'] = category
                 yield request
@@ -38,57 +39,56 @@ class YellowPages(CrawlSpider):
                     search_area = row["Province"]
                 else:
                     search_area = row["Categories"]
-
                 search_base.append(search_area)
-
             return search_base
 
     def parse_urls(self, response):
-        product_urls = response.css('a.listing__logo--link::attr(href)').extract()
+        yield self.pagination(response)
+        product_urls = response.css('.listing__logo--link::attr(href)').extract()
         for url in product_urls:
             request = Request(response.urljoin(url), callback=self.parse_item)
             request.meta['search_category'] = response.meta['search_category']
             yield request
 
     def parse_item(self, response):
-        yellowpages_loader = YellowPagesLoader(response=response)
-        yellowpages_loader.add_value('url', response.url)
-        yellowpages_loader.add_css('company_name', 'span.merchant-title__name::text')
-        yellowpages_loader.add_css('telephone', 'span.mlr__sub-text::text')
-        yellowpages_loader.add_css('address', 'div.merchant__address span::text')
+        loader = YellowPagesLoader(response=response)
+        loader.add_value('url', response.url)
+        loader.add_css('company_name', '.merchant-title__name::text')
+        loader.add_css('telephone', '.mlr__sub-text::text')
+        loader.add_css('address', '.merchant__address span::text')
+        loader.add_xpath('postcode', '//*[@itemprop="postalCode"]//text()')
+        loader.add_xpath('city', '//*[@itemprop="addressLocality"]//text()')
+        loader.add_xpath('about_us', '//*[@itemprop="description"]//text()')
 
-        services = self.business_details(response, category='Services')
-        yellowpages_loader.add_value('services', services)
-        products = self.business_details(response, category='Products and Services')
-        yellowpages_loader.add_value('products', products)
-        associations = self.business_details(response, category='Associations')
-        yellowpages_loader.add_value('associations', associations)
-        specialties = self.business_details(response, category='Specialties')
-        yellowpages_loader.add_value('specialties', specialties)
+        xpath = '//*[@id="businessSection"]//*[contains(@class,"business__details")][h2/text()="\n{0}"]//ul//text()'
+        loader.add_xpath('services', xpath.format('Services'))
+        loader.add_xpath('products', xpath.format('Products and Services'))
+        loader.add_xpath('associations', xpath.format('Association'))
+        loader.add_xpath('specialties', xpath.format('Specialties'))
 
-        yellowpages_loader.add_css('average_rating', 'span.merchant__rating')
-        yellowpages_loader.add_css('review_content', 'p.review-content_text')
+        loader.add_css('average_rating', '.merchant__rating::text')
+        loader.add_css('review_content', '.review-content_text::text')
+        loader.add_css('website', '.mlr__item--website .mlr__sub-text::text')
 
-        yellowpages_loader.add_css('website', 'li.mlr__item--website ul li a span.mlr__sub-text::text')
+        raw_json = json.loads(response.xpath('//script[@id="reviews-config"]//text()').extract_first())
+        loader.add_value('latitude', self.co_ordinates(raw_json.get('pins'), 'latitude'))
+        loader.add_value('longitude', self.co_ordinates(raw_json.get('pins'), 'longitude'))
 
         if self.website(response):
-            yellowpages_loader.add_value('website', response.urljoin(self.website(response)))
+            loader.add_value('website', response.urljoin(self.website(response)))
 
-        yellowpages_loader.add_value('search_category', response.meta['search_category'])
-
-        return yellowpages_loader.load_item()
-
-    def business_details(self, response, category):
-        raw_business = response.css('div#businessSection .business__details').extract()
-        titles = response.css('div#businessSection .business__details h2::text').extract()
-        for business in raw_business:
-            for title in titles:
-                if set(category) == set(self.clean_space(title)) and category in business:
-                    return business
-
-    def clean_space(self, value):
-        return value.strip("\n")
+        loader.add_value('search_category', response.meta['search_category'])
+        return loader.load_item()
 
     def website(self, response):
-        return response.css('li.mlr__item--website a.mlr__item__cta::attr(href)').extract_first()
+        return response.css('.mlr__item--website .mlr__item__cta::attr(href)').extract_first()
 
+    def pagination(self, response):
+        next_url = response.css('.yp-pagination__item--next a::attr(href)').extract_first()
+        request = Request(response.urljoin(next_url), callback=self.parse_urls)
+        request.meta['search_category'] = response.meta['search_category']
+        return request
+
+    def co_ordinates(self, raw_lat_lon, pin_val):
+        for lat_lon in raw_lat_lon:
+            return lat_lon.get(pin_val)
