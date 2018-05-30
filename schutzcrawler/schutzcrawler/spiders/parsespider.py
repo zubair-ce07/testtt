@@ -1,37 +1,16 @@
+
 import re
-import copy
 
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
-from scrapy.selector import Selector
 
 from schutzcrawler.items import ProductItem
 from schutzcrawler.PriceExtractor import PriceExtractor
 
-
-class SchutzSpider(CrawlSpider):
-    name = 'schutzspider'
+class ParseSpider(scrapy.Spider):
+    name = 'parsespider'
     allowed_domains = ['schutz.com.br']
-    start_urls = ['https://schutz.com.br/store/']
-    default_xpaths = ['//div[@class="sch-main-menu-sub-links-left"]', 
-                      '//ul[@class="pagination"]/li[@class="next"]']
-    product_xpath = '//a[@class="sch-category-products-item-link"]'
 
-    # Follow any link scrapy finds (that is allowed and matches the patterns).
-    rules = [Rule(LinkExtractor(restrict_xpaths=default_xpaths), callback='parse'),
-             Rule(LinkExtractor(restrict_xpaths=product_xpath
-             ), callback='parse_product', follow=True)]
- 
     def parse(self, response):
-        requests = super(SchutzSpider, self).parse(response)
-        trail = copy.deepcopy(response.meta.get('trail', []))
-        trail.append(response.url)
-        for request in requests:
-            request.meta['trail'] = trail
-            yield request
-
-    def parse_product(self, response):
         price = PriceExtractor.prices(response)
         description = self.description(response)
         skus = self.sku(response)

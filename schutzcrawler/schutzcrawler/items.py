@@ -8,7 +8,16 @@
 import scrapy
 
 
-class SchutzcrawlerItem(scrapy.Item):
+class ProductItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    pass
+    brand = scrapy.Field()
+    care = scrapy.Field()
+    category = scrapy.Field()
+    description = scrapy.Field()
+    name = scrapy.Field()
+    retailer_sku = scrapy.Field()
+    sku = scrapy.Field()
+    trail = scrapy.Field()
+    url = scrapy.Field()
+    out_of_stock = scrapy.Field()
