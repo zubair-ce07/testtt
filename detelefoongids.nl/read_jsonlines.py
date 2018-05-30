@@ -1,3 +1,6 @@
+# firstly run below mentioned command 
+# pip install json-lines
+
 import os
 import re
 import json_lines
