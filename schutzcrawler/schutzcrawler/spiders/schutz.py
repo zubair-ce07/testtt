@@ -103,7 +103,7 @@ class SchutzSpider(CrawlSpider):
         return color_dictionary
 
     def is_out_of_stock(self, sku):
-        return not any(v.get('out_of_stock', False) == False for v in sku.values())
+        return not any(v.get('out_of_stock', False) is False for v in sku.values())
 
     def retailer_sku(self, response):
         retailer_sku_sel = '.sch-pdp::attr(data-product-code)'
