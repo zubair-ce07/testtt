@@ -1,7 +1,7 @@
 import scrapy
 import re
 
-from scrapy.loader.processors import TakeFirst, Join, MapCompose, Compose
+from scrapy.loader.processors import TakeFirst, Join, MapCompose
 from scrapy.loader import ItemLoader
 from w3lib.html import remove_tags
 
@@ -65,6 +65,7 @@ def clean_space(value):
 class DeteleFoongidsItem(BizzbyItem):
     associations = scrapy.Field()
     specialties = scrapy.Field()
+    certifications = scrapy.Field()
 
 
 class DeteleFoongidsItemLoader(BizzbyItemLoader):
@@ -73,4 +74,5 @@ class DeteleFoongidsItemLoader(BizzbyItemLoader):
     about_us_in = MapCompose(remove_tags)
     specialties_out = _remove_empty
     review_content_in = MapCompose(clean_space, Join(""))
+    certifications_out = MapCompose(clean_space, Join(""))
 
