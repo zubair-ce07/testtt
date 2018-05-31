@@ -11,15 +11,23 @@ from scrapy.spiders import CrawlSpider, Rule
 class WoolrichSpider(CrawlSpider):
     name = 'woolrich_spider'
     allowed_domains = ['woolrich.eu']
-    start_urls = ['http://www.woolrich.eu/en/gb/home']
+    start_urls = ['http://www.woolrich.eu/en/gb/men/']
     allowed_url = r'.*/en/.*'
-    rules = [Rule(LinkExtractor(allow=(allowed_url), restrict_css=['.menu-category', '.ajax-loader']),
+    rules = [Rule(LinkExtractor(allow=(allowed_url), restrict_css='.menu-category'),
                                 callback='parse', follow=True),
              Rule(LinkExtractor(allow=(allowed_url), restrict_css='.product-name'),
                                 callback='parse_product')]
     care = ['polyster', 'cotton', 'silk', 'fabric', 'wash']
 
     def parse(self, response):
+        pagination = response.css('.search-result-content::attr(data-url)').extract_first()
+        if pagination:
+            pagination += '&start='
+            page_limit = int(response.css('.search-result-content::attr(data-maxpage)').extract_first())
+            product_limit = int(response.css('.search-result-content::attr(data-pagesize)').extract_first())
+            for value in range(2,page_limit+1):
+                request_url = pagination + str(product_limit * value)
+                yield scrapy.Request(request_url, callback=self.parse)
         page_title = response.css('title::text').extract_first()
         trail = response.meta.get('trail') or []
         trail.append([page_title, response.url])
