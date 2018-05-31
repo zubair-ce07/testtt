@@ -173,7 +173,9 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
         response = Selector(text=json.loads(response.body)[0])
 
         links = clean(response.css(self.listing_css))
-        filtered_links = [link for link in links if link not in self.restricted_links]
+        filtered_links = [link for link in links
+                          if not any(link.startswith(restricted_link)
+                            for restricted_link in self.restricted_links)]
 
         for product_url in filtered_links:
             body = f'[{{"path":"{product_url}","page":1}}]'
