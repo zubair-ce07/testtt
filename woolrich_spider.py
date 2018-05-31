@@ -6,7 +6,8 @@ import time
 from scrapy.link import Link
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider, Rule, Request
+from w3lib.url import add_or_replace_parameter
 
 
 class PaginationLinks():
@@ -16,17 +17,17 @@ class PaginationLinks():
         if not pagination_url:
             return []
         request_url = []
-        pagination_url += '&start='
         page_limit = int(response.css('.search-result-content::attr(data-maxpage)').extract_first())
         product_limit = int(response.css('.search-result-content::attr(data-pagesize)').extract_first())
-        for value in range(2, page_limit+1):
-            request_url.append(pagination_url + str(product_limit * value))
-        return [Link(url) for url in request_url]    
+        for value in range(2, page_limit + 1):
+            request_url.append(Link(add_or_replace_parameter(pagination_url, '&start=', str(product_limit * value))))
+        return request_url     
+
 
 class WoolrichSpider(CrawlSpider):
     name = 'woolrich_spider'
     allowed_domains = ['woolrich.eu']
-    start_urls = ['http://www.woolrich.eu/en/gb/men/']
+    start_urls = ['http://www.woolrich.eu/en/gb/new-arrivals/new-men/men-spring-2018/WOCPS2656-GT02.html']
     allowed_url = r'.*/en/.*'
     rules = [Rule(LinkExtractor(allow=(allowed_url), restrict_css='.menu-category'),
                                 callback='parse', follow=True),
@@ -58,7 +59,7 @@ class WoolrichSpider(CrawlSpider):
         product['market'] = "GB"
         product['retailer'] = product['brand'] + '-' + product['language']
         product['category'] = self.category(raw_product)
-        product['care'], product['description'] = self.description(response)
+        product['care'], product['description'] = self.raw_description(response)
         product['images'] = self.images(response)
         product['date'] = int(time.time())
         product['skus'] = []
@@ -66,12 +67,33 @@ class WoolrichSpider(CrawlSpider):
         product['spider_name'] = self.name
         product['crawl_start_time'] = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         product['request_queue'] = self.color_requests(response, product)
-        
+        for request in self.request_handler(product):
+            yield request
+
+    def parse_size(self, response):
+        response.meta['product']['skus'].append(self.skus(response))
+        for request in self.request_handler(response.meta.get('product')):
+            yield request 
+
+    def parse_color(self, response):
+        response.meta['product']['request_queue'].extend(self.size_requests(response, response.meta.get('product')))
+        for request in self.request_handler(response.meta.get('product')):
+            yield request
+
+    def request_handler(self, product):
         if product['request_queue']:
             yield product['request_queue'].pop()
         else:
-            del response.meta.get('product')['request_queue']
+            del product['request_queue']
             yield product
+
+    def color_requests(self, response, product):
+        colors = response.css('.color>.selectable>a::attr(href)').extract()
+        return [Request(color, meta={'product': product}, callback=self.parse_color) for color in colors]
+
+    def size_requests(self, response, product):
+        sizes = response.css('.size>.selectable>a::attr(href)').extract()
+        return [Request(size, meta={'product': product}, callback=self.parse_size) for size in sizes]
 
     def brand(self, attributes):
         return attributes['brand']
@@ -96,53 +118,23 @@ class WoolrichSpider(CrawlSpider):
         product_description = json.loads(product_description)
         return product_description[0]['ecommerce']['detail']['products'][0]
 
-    def description(self, response):
-        care_list = []
-        descp_list = []
+    def raw_description(self, response):
         description = response.css('.description::text').extract_first()
         if not description:
             return [], []
-        description = list(filter(str.strip, description.strip().split('.')))
-        for value in description:
-            care_list.extend([value for care in self.care if care in value])
-            if value not in care_list:
-                descp_list.append(value)
-        return care_list, descp_list
+        raw_descp = list(filter(str.strip, description.strip().split('.')))
+        care = [descp for descp in raw_descp if any(care in descp for care in self.care)]
+        descp = [descp for descp in raw_descp if not any(care in descp for care in self.care)]
+        return care, descp
 
-    def color_requests(self, response, product):
-        colors_link = response.css('.color>.selectable>a::attr(href)').extract()
-        requests = [scrapy.Request(value, meta={'product': product}, callback=self.parse_color)
-                    for value in colors_link]
-        return requests
-
-    def parse_color(self, response):
-        response.meta['product']['request_queue'] = self.size_requests(response, response.meta.get('product'))
-        if response.meta.get('product')['request_queue']:
-            yield response.meta['product']['request_queue'].pop()
-        else:
-            del response.meta.get('product')['request_queue']
-            yield response.meta.get('product')
-
-    def size_requests(self, response, product):
-        request_queue = product['request_queue']
-        sizes_links = response.css('.size>.selectable>a::attr(href)').extract()
-        request_queue.extend([scrapy.Request(link, meta={'product': product}, callback=self.parse_size)
-                              for link in sizes_links])
-        return request_queue
-
-    def parse_size(self, response):
+    def skus(self, response):
         size_info = response.css('.size>.selected>a::text').extract_first().strip()
         stock_info = response.css('.in-stock-msg::text').extract_first() or 'Out of Stock'
         color_name = response.css('.color>.selected>a>div::text').extract_first().strip()
         skus_id = color_name.replace(" ", "-").lower() + '_' + size_info.replace(" ", "-").lower()
-        response.meta['product']['skus'].append({'size': size_info,
-                                                 'color': color_name,
-                                                 'price': response.meta.get('product')['price'],
-                                                 'currency': response.meta.get('product')['currency'],
-                                                 'stock_status': stock_info,
-                                                 'skus_id': skus_id}) 
-        if response.meta.get('product')['request_queue']:
-            yield response.meta.get('product')['request_queue'].pop()
-        else:
-            del response.meta.get('product')['request_queue']
-            yield response.meta.get('product') 
+        return  {'size': size_info,
+                 'color': color_name,
+                 'price': response.meta.get('product')['price'],
+                 'currency': response.meta.get('product')['currency'],
+                 'stock_status': stock_info,
+                 'skus_id': skus_id}
