@@ -29,7 +29,6 @@ class Mixin:
     allowed_domains = ['www.globus.ch']
 
     base_url = 'https://www.globus.ch'
-    start_url = 'https://www.globus.ch'
     category_api_url = 'https://www.globus.ch/service/site/GetFlyoutNavigation'
     linting_api_url = 'https://www.globus.ch/service/catalogue/GetFilteredCategory'
     variant_api_url = 'https://www.globus.ch/service/catalogue/GetProductDetailsWithPredefinedGroupID'
@@ -57,6 +56,7 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = {}
 
         garment['gender'] = self.product_gender(garment)
+        garment['description'] = self.product_description(response)
 
         if not garment['gender']:
             garment['industry'] = 'homeware'
@@ -74,10 +74,29 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
     def product_category(self, response):
         return clean(response.css('.mzg-components-module-breadcrumb-list ::text'))[1:-1]
 
+    def product_description(self, response, **kwargs):
+        description = []
+
+        raw_description = clean(response.css(self.description_css))
+        raw_description = self.care_detector.split_and_filter(strs=raw_description)
+        raw_strs = self.raw_description(response, **kwargs)
+        raw_description = raw_description + [rd for rd in raw_strs if not self.care_criteria(rd)]
+
+        for index, value in enumerate(raw_description):
+            if index > 0 and raw_description[index-1] == ":":
+                delimeter = description.pop()
+                item = description.pop()
+                item += delimeter + value
+                description.append(item)
+            else:
+                description.append(value)
+
+        return description
+
     def image_urls(self, raw_product):
         image_urls = []
         for image in raw_product['galleryImages']:
-            image_urls.append(image['uri']+'?v=gallery&width=100')
+            image_urls.append(self.base_url + image['uri'] + '?v=gallery&width=100')
 
         return image_urls
 
@@ -135,7 +154,7 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
 
             if colour.lower() not in self.default_colour:
                 sku['colour'] = colour
-                sku_id = f'{colour}_{sku["size"]}'
+                sku_id = f'{sku["colour"]}_{sku["size"]}'
 
             skus[sku_id] = sku
 
@@ -147,32 +166,35 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
     parse_spider = GlobusParseSpider()
 
     restricted_links = [
-        'home-living/kueche/kuechenmaschinen-zubehoer',
-        'home-living/elektronik-gadgets',
-        'home-living/yoga/yoga',
-        'home-living/outdoor/velo',
-        'kinder/spielwaren',
-        'delicatessa',
-        'wein-drinks'
+        '/home-living/kueche/kuechenmaschinen-zubehoer',
+        '/home-living/elektronik-gadgets',
+        '/home-living/yoga/yoga',
+        '/home-living/outdoor/velo',
+        '/kinder/spielwaren',
+        '/delicatessa',
+        '/wein-drinks'
         ]
 
     category_re = r'"flyoutReference":"(.*?)"'
     listing_css = '.mzg-component-link::attr(href)'
 
     def start_requests(self):
-        yield Request(url=self.start_url, callback=self.parse_category)
+        yield Request(url=self.base_url, callback=self.parse_category)
 
     def parse_category(self, response):
+        meta = {'trail': self.add_trail(response)}
         category_ids = re.findall(self.category_re, response.text)
         for category_id in category_ids:
             body = f'["{category_id}", "de"]'
             yield Request(url=self.category_api_url, method='POST', body=body,
-                    callback=self.parse_listing)
+                          meta=meta.copy(),
+                          callback=self.parse_listing)
 
     def parse_listing(self, response):
-        response = Selector(text=json.loads(response.body)[0])
+        meta = {'trail': self.add_trail(response)}
+        raw_listing = Selector(text=json.loads(response.body)[0])
 
-        links = clean(response.css(self.listing_css))
+        links = clean(raw_listing.css(self.listing_css))
         filtered_links = [link for link in links
                           if not any(link.startswith(restricted_link)
                             for restricted_link in self.restricted_links)]
@@ -180,17 +202,21 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
         for product_url in filtered_links:
             body = f'[{{"path":"{product_url}","page":1}}]'
             yield Request(url=self.linting_api_url, method='POST',
-                      body=body, callback=self.parse_pages)
+                          meta=meta.copy(),
+                          body=body, callback=self.parse_pages)
 
     def parse_pages(self, response):
-        response = json.loads(response.text)[0]
+        meta = {'trail': self.add_trail(response)}
+        raw_products = json.loads(response.text)[0]
 
-        for product_detail in response['items']:
+        for product_detail in raw_products['items']:
             product_url = product_detail['productSummary']['productURI']
-            yield Request(url=self.base_url + product_url, callback=self.parse_item)
+            yield Request(url=self.base_url + product_url,
+                          meta=meta.copy(),
+                          callback=self.parse_item)
 
-        if (response['page'] < response['pages']):
-            body = f'[{{"path":"{product_url}","page":{response["page"] + 1}}}]'
+        if (raw_products['page'] < raw_products['pages']):
+            body = f'[{{"path":"{product_url}","page":{raw_products["page"] + 1}}}]'
             yield Request(url=self.linting_api_url, method='POST',
                           body=body, callback=self.parse_pages)
 
