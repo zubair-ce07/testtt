@@ -1,10 +1,12 @@
 import json
+import logging
 
 from scrapy.spiders import CrawlSpider, Spider, Rule
 from scrapy.linkextractors import LinkExtractor
 from zlib import decompress
 from base64 import b64decode
 
+logger = logging.getLogger('outfitters_logger')
 from urbanoutfitters.items import UrbanoutfittersItem
 
 
@@ -85,10 +87,7 @@ class OutFittersParserSpider(OutfittersMixin, Spider):
                 sku['size'] = size.get('displayName', 'One Size')
                 sku['color'] = color['displayName']
                 sku['price'] = int(prices.get('salePriceLow')) * 100
-                # sku_id = f'{sku["color"] or ""}|{sku["size"]}'
-                sku_id = '{color}|{size}'.format(
-                    color=(sku['color'] or ''), size=sku['size'])
-
+                sku_id = f'{sku["color"] or ""}|{sku["size"]}'
                 previous_price = prices.get('listPriceHigh')
 
                 if previous_price:
@@ -140,12 +139,3 @@ class SchwabCralwer(OutfittersMixin, CrawlSpider):
 
     def add_trail(self, response):
         return response.meta.get('trail', []) + [response.url]
-
-
-def clean_product(raw_data):
-    cleaned_list = []
-    for item in raw_data:
-        item = item.strip('\\-')
-        if item:
-            cleaned_list.append(item)
-    return cleaned_list
