@@ -7,12 +7,11 @@ from scrapy.spiders import CrawlSpider
 
 from schutzcrawler.items import ProductItem
 from schutzcrawler.PriceExtractor import PriceExtractor
-from schutzcrawler.spider_utils import Utils
+from schutzcrawler.mixins import Mixin
 
 
-class ParseSpider(CrawlSpider):
-    name = f"{Utils.SCHUTZ_NAME_PREFIX}parse"
-    allowed_domains = Utils.SCHUTZ_ALLOWED_DOMAINS
+class ParseSpider(CrawlSpider, Mixin):
+    name = f"{Mixin.name}parse"
 
     price_extractor = PriceExtractor()
 
@@ -50,15 +49,12 @@ class ParseSpider(CrawlSpider):
 
     def color(self, response):
         raw_description = self.raw_description(response)
-        color = [i.split(':')[1] for i in raw_description if 'Cor' in i]
-        if color:
-            return color[0]
-        else:
-            return ''
+        color = [rd.split(':')[1] for rd in raw_description if 'Cor' in rd]
+        return color[0] if color else ''
 
     def care(self, response):
         raw_description = self.raw_description(response)
-        return [i for i in raw_description if 'Material' in i]
+        return [rd for rd in raw_description if 'Material' in rd]
 
     def category(self, response):
         categories = response.css('.clearfix a::text').extract()
@@ -66,8 +62,8 @@ class ParseSpider(CrawlSpider):
 
     def skus(self, response):
         skus = {}
-        price_sel = response.css('.sch-price ::text').extract()
-        common_sku = self.price_extractor.prices(price_sel)
+        raw_prices = response.css('.sch-price ::text').extract()
+        common_sku = self.price_extractor.prices(raw_prices)
         color = self.color(response)
         common_sku['color'] = color
         drop_down_sel = '.sch-notify-form .sch-form-group-select select option'

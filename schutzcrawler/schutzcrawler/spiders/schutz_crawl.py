@@ -7,14 +7,12 @@ from scrapy.linkextractors import LinkExtractor
 
 from schutzcrawler.items import ProductItem
 from schutzcrawler.PriceExtractor import PriceExtractor
-from schutzcrawler.spiders.parsespider import ParseSpider
-from schutzcrawler.spider_utils import Utils
+from schutzcrawler.spiders.schutz_parse import ParseSpider
+from schutzcrawler.mixins import Mixin
 
 
-class SchutzSpider(CrawlSpider):
-    name = f"{Utils.SCHUTZ_NAME_PREFIX}crawl"
-    allowed_domains = Utils.SCHUTZ_ALLOWED_DOMAINS
-    start_urls = Utils.SCHUTZ_START_URLS
+class SchutzSpider(CrawlSpider, Mixin):
+    name = f"{Mixin.name}crawl"
 
     default_xpaths = ['//div[@class="sch-main-menu-sub-links-left"]',
                       '//div[@class="sch-main-menu-sub-links-right"]',
