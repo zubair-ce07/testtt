@@ -3,6 +3,7 @@ import re
 
 from scrapy import Request
 from scrapy import Selector
+from urllib.parse import urlparse, urljoin
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
 
@@ -96,7 +97,7 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
     def image_urls(self, raw_product):
         image_urls = []
         for image in raw_product['galleryImages']:
-            image_urls.append(self.base_url + image['uri'] + '?v=gallery&width=100')
+            image_urls.append(urljoin(self.base_url, image['uri'] + '?v=gallery&width=100'))
 
         return image_urls
 
@@ -194,12 +195,12 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
         meta = {'trail': self.add_trail(response)}
         raw_listing = Selector(text=json.loads(response.body)[0])
 
-        links = clean(raw_listing.css(self.listing_css))
-        filtered_links = [link for link in links
-                          if not any(link.startswith(restricted_link)
+        raw_urls = clean(raw_listing.css(self.listing_css))
+        product_urls = [url for url in raw_urls
+                          if not any(url.startswith(restricted_link)
                             for restricted_link in self.restricted_links)]
 
-        for product_url in filtered_links:
+        for product_url in product_urls:
             body = f'[{{"path":"{product_url}","page":1}}]'
             yield Request(url=self.linting_api_url, method='POST',
                           meta=meta.copy(),
@@ -210,10 +211,11 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
         raw_products = json.loads(response.text)[0]
 
         for product_detail in raw_products['items']:
-            product_url = product_detail['productSummary']['productURI']
-            yield Request(url=self.base_url + product_url,
-                          meta=meta.copy(),
-                          callback=self.parse_item)
+            if product_detail['productSummary']['type'] == "p":
+                product_url = product_detail['productSummary']['productURI']
+                yield Request(url=urljoin(self.base_url, product_url),
+                              meta=meta.copy(),
+                              callback=self.parse_item)
 
         if (raw_products['page'] < raw_products['pages']):
             body = f'[{{"path":"{product_url}","page":{raw_products["page"] + 1}}}]'
