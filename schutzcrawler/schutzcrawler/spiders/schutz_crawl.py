@@ -12,7 +12,7 @@ from schutzcrawler.mixins import Mixin
 
 
 class SchutzSpider(CrawlSpider, Mixin):
-    name = f"{Mixin.name}crawl"
+    name = f"{Mixin.name}-crawl"
 
     default_xpaths = ['//div[@class="sch-main-menu-sub-links-left"]',
                       '//div[@class="sch-main-menu-sub-links-right"]',

@@ -11,7 +11,7 @@ from schutzcrawler.mixins import Mixin
 
 
 class ParseSpider(CrawlSpider, Mixin):
-    name = f"{Mixin.name}parse"
+    name = f"{Mixin.name}-parse"
 
     price_extractor = PriceExtractor()
 
