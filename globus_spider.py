@@ -205,3 +205,4 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
             body = f'[{{"path":"{product_url}","page":{raw_products["page"] + 1}}}]'
             yield Request(url=self.linting_api_url, method='POST',
                           body=body, callback=self.parse_pages)
+
