@@ -31,6 +31,7 @@ class OutFittersParserSpider(OutfittersMixin, Spider):
         response.meta['product_data'] = product_data
 
         filtered_product = product_data['product']['product']
+        # detail contain both content and care
         detail = filtered_product['longDescription'].split('**Content + Care**  ')
 
         product['retailer_sku'] = filtered_product['productId']
@@ -84,7 +85,9 @@ class OutFittersParserSpider(OutfittersMixin, Spider):
                 sku['size'] = size.get('displayName', 'One Size')
                 sku['color'] = color['displayName']
                 sku['price'] = int(prices.get('salePriceLow')) * 100
-                sku_id = f'{sku["color"] or ""}|{sku["size"]}'
+                # sku_id = f'{sku["color"] or ""}|{sku["size"]}'
+                sku_id = '{color}|{size}'.format(
+                    color=(sku['color'] or ''), size=sku['size'])
 
                 previous_price = prices.get('listPriceHigh')
 
