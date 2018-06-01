@@ -24,6 +24,7 @@ class ParseSpider(CrawlSpider, Mixin):
         product['category'] = self.category(response)
         product['description'] = self.description(response)
         product['name'] = self.product_name(response)
+        product['image_urls'] = self.image_urls(response)
         product['retailer_sku'] = self.retailer_sku(response)
         product['sku'] = skus
         product['trail'] = response.meta.get('trail', [])
@@ -31,6 +32,9 @@ class ParseSpider(CrawlSpider, Mixin):
         product['out_of_stock'] = self.is_out_of_stock(skus)
 
         yield product
+
+    def image_urls(self, response):
+        return response.css('div.is-slider-item > img::attr(src)').extract()
 
     def raw_description(self, response):
         description_text = '.sch-description-content p ::text'
@@ -62,6 +66,7 @@ class ParseSpider(CrawlSpider, Mixin):
 
     def skus(self, response):
         skus = {}
+        size_variety = False
         raw_prices = response.css('.sch-price ::text').extract()
         common_sku = self.price_extractor.prices(raw_prices)
         color = self.color(response)
@@ -70,6 +75,7 @@ class ParseSpider(CrawlSpider, Mixin):
         list_sel = '.sch-sizes label'
         sizes = response.css(list_sel) or response.css(drop_down_sel)
         for size in sizes:
+            size_variety = True
             sku = copy.deepcopy(common_sku)
             size_value = size.css(' ::text').extract_first()
             sku['size'] = size_value
@@ -77,6 +83,9 @@ class ParseSpider(CrawlSpider, Mixin):
                 sku['out_of_stock'] = True
 
             skus[f"{color}{size_value}"] = sku
+        if not size_variety:
+            common_sku['size'] = 'One Size'
+            skus['One Size'] = common_sku
         return skus
 
     def is_out_of_stock(self, sku):

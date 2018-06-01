@@ -16,6 +16,7 @@ class ProductItem(scrapy.Item):
     category = scrapy.Field()
     description = scrapy.Field()
     name = scrapy.Field()
+    image_urls = scrapy.Field()
     retailer_sku = scrapy.Field()
     sku = scrapy.Field()
     trail = scrapy.Field()
