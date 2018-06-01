@@ -1,11 +1,13 @@
 import json
 import re
+import itertools
 
 from scrapy import Request
 from scrapy import Selector
 from urllib.parse import urlparse, urljoin
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean, Gender
+from ..parsers.genders import GENDER_MAP
 
 
 class Mixin:
@@ -14,11 +16,7 @@ class Mixin:
     default_brand = 'Globus'
     retailer_currency = 'CHF'
 
-    gender_map = [
-        ("herren", Gender.MEN.value),
-        ("damen", Gender.WOMEN.value),
-        ("kinder", Gender.KIDS.value),
-        ]
+    spider_gender_map = GENDER_MAP['de']
 
     one_sizes = [
         'one size',
@@ -32,7 +30,8 @@ class Mixin:
     base_url = 'https://www.globus.ch'
     category_api_url = 'https://www.globus.ch/service/site/GetFlyoutNavigation'
     linting_api_url = 'https://www.globus.ch/service/catalogue/GetFilteredCategory'
-    variant_api_url = 'https://www.globus.ch/service/catalogue/GetProductDetailsWithPredefinedGroupID'
+    colour_api_url = 'https://www.globus.ch/service/catalogue/GetProductDetailsWithPredefinedGroupID'
+    image_url_t = 'https://www.globus.ch{}?v=gallery&width=100'
 
 
 class GlobusParseSpider(BaseParseSpider, Mixin):
@@ -57,12 +56,11 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
         garment['skus'] = {}
 
         garment['gender'] = self.product_gender(garment)
-        garment['description'] = self.product_description(response)
 
         if not garment['gender']:
             garment['industry'] = 'homeware'
 
-        garment['meta'] = {'requests_queue': self.variant_requests(response)}
+        garment['meta'] = {'requests_queue': self.colour_reqeusts(response)}
 
         return self.next_request_or_garment(garment)
 
@@ -76,56 +74,42 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
         return clean(response.css('.mzg-components-module-breadcrumb-list ::text'))[1:-1]
 
     def product_description(self, response, **kwargs):
-        description = []
+        raw_description = super().product_description(response)
 
-        raw_description = clean(response.css(self.description_css))
-        raw_description = self.care_detector.split_and_filter(strs=raw_description)
-        raw_strs = self.raw_description(response, **kwargs)
-        raw_description = raw_description + [rd for rd in raw_strs if not self.care_criteria(rd)]
+        description = [f"{raw_description[index-1]}:{raw_description[index+1]}"
+                        if value == ":" and index > 0
+                        else value
+                        for index, value in enumerate(raw_description)]
 
-        for index, value in enumerate(raw_description):
-            if index > 0 and raw_description[index-1] == ":":
-                delimeter = description.pop()
-                item = description.pop()
-                item += delimeter + value
-                description.append(item)
-            else:
-                description.append(value)
+        unwanted_items = [value.split(':') for value in description if ':' in value]
+        unwanted_items = list(itertools.chain.from_iterable(unwanted_items))
 
-        return description
+        return [value for value in description if value not in unwanted_items]
 
     def image_urls(self, raw_product):
-        image_urls = []
-        for image in raw_product['galleryImages']:
-            image_urls.append(urljoin(self.base_url, image['uri'] + '?v=gallery&width=100'))
-
-        return image_urls
+        return [self.image_url_t.format(image['uri']) for image in
+                raw_product['galleryImages']]
 
     def product_gender(self, garment):
         categories = ' '.join(garment['category']).lower()
-        for gender_str, gender in self.gender_map:
-            if gender_str in categories:
-                return gender
+        return self.gender_lookup(categories)
 
-        return None
-
-    def variant_requests(self, response):
+    def colour_reqeusts(self, response):
         raw_data = re.findall(r'(variants":)(.*?])', response.text)[0][1]
         product_colours = json.loads(raw_data)
 
         request_urls = []
         for colour in product_colours:
-            colour_id = colour["id"]
 
-            self.colour_map.update({colour_id: colour['name']})
+            self.colour_map[colour["id"]] = colour['name']
 
-            body = f'["{colour_id}","","de"]'
-            request_urls.append(Request(url=self.variant_api_url, method='POST', body=body,
-                        callback=self.parse_variant))
+            body = f'["{colour["id"]}","","de"]'
+            request_urls.append(Request(url=self.colour_api_url, method='POST', body=body,
+                        callback=self.parse_colours))
 
         return request_urls
 
-    def parse_variant(self, response):
+    def parse_colours(self, response):
         garment = response.meta['garment']
 
         raw_product = json.loads(response.text)[0]
