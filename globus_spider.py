@@ -82,9 +82,9 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
                         for index, value in enumerate(raw_description)]
 
         unwanted_items = [value.split(':') for value in description if ':' in value]
-        unwanted_items = list(itertools.chain.from_iterable(unwanted_items))
+        duplicate_description = list(itertools.chain.from_iterable(unwanted_items))
 
-        return [value for value in description if value not in unwanted_items]
+        return [value for value in description if value not in duplicate_description]
 
     def image_urls(self, raw_product):
         return [self.image_url_t.format(image['uri']) for image in
@@ -205,4 +205,3 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
             body = f'[{{"path":"{product_url}","page":{raw_products["page"] + 1}}}]'
             yield Request(url=self.linting_api_url, method='POST',
                           body=body, callback=self.parse_pages)
-
