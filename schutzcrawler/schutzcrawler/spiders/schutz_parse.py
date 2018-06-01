@@ -1,4 +1,3 @@
-
 import re
 import copy
 
@@ -16,8 +15,7 @@ class ParseSpider(CrawlSpider, Mixin):
     price_extractor = PriceExtractor()
 
     def parse(self, response):
-        skus = self.skus(response)
-
+        
         product = ProductItem()
         product['brand'] = 'Schutz'
         product['care'] = self.care(response)
@@ -26,7 +24,7 @@ class ParseSpider(CrawlSpider, Mixin):
         product['name'] = self.product_name(response)
         product['image_urls'] = self.image_urls(response)
         product['retailer_sku'] = self.retailer_sku(response)
-        product['sku'] = skus
+        product['sku'] = skus = self.skus(response)
         product['trail'] = response.meta.get('trail', [])
         product['url'] = response.url
         product['out_of_stock'] = self.is_out_of_stock(skus)
@@ -42,9 +40,9 @@ class ParseSpider(CrawlSpider, Mixin):
 
         description = response.css(description_text).extract() or []
         for specification in response.css(specifications):
-            span_text = specification.css('span::text').extract_first()
-            strong_text = specification.css('strong::text').extract_first()
-            description.append(f"{span_text}: {strong_text}")
+            spec_name = specification.css('span::text').extract_first()
+            spec_value = specification.css('strong::text').extract_first()
+            description.append(f"{spec_name}: {spec_value}")
         return description
 
     def description(self, response):
@@ -66,16 +64,14 @@ class ParseSpider(CrawlSpider, Mixin):
 
     def skus(self, response):
         skus = {}
-        size_variety = False
         raw_prices = response.css('.sch-price ::text').extract()
         common_sku = self.price_extractor.prices(raw_prices)
         color = self.color(response)
         common_sku['color'] = color
-        drop_down_sel = '.sch-notify-form .sch-form-group-select select option'
-        list_sel = '.sch-sizes label'
-        sizes = response.css(list_sel) or response.css(drop_down_sel)
+        size_dropdown_css = '.sch-notify-form .sch-form-group-select select option'
+        size_css = '.sch-sizes label'
+        sizes = response.css(size_css) or response.css(size_dropdown_css)
         for size in sizes:
-            size_variety = True
             sku = copy.deepcopy(common_sku)
             size_value = size.css(' ::text').extract_first()
             sku['size'] = size_value
@@ -83,7 +79,7 @@ class ParseSpider(CrawlSpider, Mixin):
                 sku['out_of_stock'] = True
 
             skus[f"{color}{size_value}"] = sku
-        if not size_variety:
+        if not skus:
             common_sku['size'] = 'One Size'
             skus['One Size'] = common_sku
         return skus
@@ -92,9 +88,9 @@ class ParseSpider(CrawlSpider, Mixin):
         return not any('out_of_stock' not in v for v in sku.values())
 
     def retailer_sku(self, response):
-        retailer_sku_sel = '.sch-pdp::attr(data-product-code)'
-        return response.css(retailer_sku_sel).extract_first()
+        retailer_sku_css = '.sch-pdp::attr(data-product-code)'
+        return response.css(retailer_sku_css).extract_first()
 
     def product_name(self, response):
-        name_sel = '.sch-sidebar-product-title::text'
-        return response.css(name_sel).extract_first()
+        name_css = '.sch-sidebar-product-title::text'
+        return response.css(name_css).extract_first()
