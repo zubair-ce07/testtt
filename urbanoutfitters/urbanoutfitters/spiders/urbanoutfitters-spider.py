@@ -31,15 +31,18 @@ class OutFittersParserSpider(OutfittersMixin, Spider):
         response.meta['product_data'] = product_data
 
         filtered_product = product_data['product']['product']
-        # detail contain both content and care
-        detail = filtered_product['longDescription'].split('**Content + Care**  ')
+
+        # for cleaning detail
+        detail = ' '.join(filtered_product['longDescription'].split())
+        # for splitting description and care
+        detail = detail.split('**Content + Care**  ')
 
         product['retailer_sku'] = filtered_product['productId']
         product['name'] = filtered_product['displayName']
         product['brand'] = filtered_product.get('brand', None)
-        product['price'] = int(product_data['product']['skuInfo'].get('salePriceLow')) * 100
+        product['price'] = self.product_price(response)
         product['currency'] = product_data['product'].get('currencyCode')
-        product['description'] = detail.pop().strip()
+        product['description'] = detail.pop()
         product['url'] = response.url
         product['gender'] = filtered_product['facets']['genders'][0]
         product['category'] = filtered_product['categoryIds']
@@ -81,15 +84,15 @@ class OutFittersParserSpider(OutfittersMixin, Spider):
 
             for size in sizes_sku.values():
                 sku = {}
-                prices = product_data['product']['skuInfo']
+
                 sku['size'] = size.get('displayName', 'One Size')
                 sku['color'] = color['displayName']
-                sku['price'] = int(prices.get('salePriceLow')) * 100
+                sku['price'] = self.product_price(response)
                 sku_id = f'{sku["color"] or ""}|{sku["size"]}'
-                previous_price = prices.get('listPriceHigh')
+                previous_price = self.product_previous_price(response)
 
                 if previous_price:
-                    sku['previous_price'] = int(previous_price) * 100
+                    sku['previous_price'] = previous_price
                 if not size['inStock']:
                     sku['out_of_stock'] = True
 
@@ -113,6 +116,18 @@ class OutFittersParserSpider(OutfittersMixin, Spider):
             'div.o-carousel__slide.js-carousel-zoom__slide'
             ' img:not(.c-zoom-overlay__img):not([src*="loading-spacer"])::attr(src)').extract()
         return ["https:" + i for i in images]
+
+    @staticmethod
+    def product_price(response):
+        product_data = response.meta['product_data']
+        return int(product_data['product']['skuInfo'].get('salePriceLow')) * 100
+
+    @staticmethod
+    def product_previous_price(response):
+        product_data = response.meta['product_data']
+        previous_price = product_data['product']['skuInfo'].get('listPriceHigh')
+        if previous_price:
+            return int(previous_price) * 100
 
     @staticmethod
     def product_merch_info(response):
