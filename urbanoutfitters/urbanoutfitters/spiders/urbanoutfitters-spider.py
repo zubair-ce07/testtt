@@ -1,12 +1,10 @@
 import json
-import logging
 
 from scrapy.spiders import CrawlSpider, Spider, Rule
 from scrapy.linkextractors import LinkExtractor
 from zlib import decompress
 from base64 import b64decode
 
-logger = logging.getLogger('outfitters_logger')
 from urbanoutfitters.items import UrbanoutfittersItem
 
 
