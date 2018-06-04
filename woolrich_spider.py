@@ -9,10 +9,10 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 from scrapy.spiders import CrawlSpider, Rule, Request
 
-from w3lib.url import add_or_replace_parameter as arp
+from w3lib.url import add_or_replace_parameter as add_parameter
 
 
-class PaginationLinks():
+class PaginationExtractor():
 
     def extract_links(self, response):
         page_url = response.css('.search-result-content::attr(data-url)').extract_first()
@@ -20,23 +20,22 @@ class PaginationLinks():
         if not page_url:
             return []
 
-        page_links = []
-        page_limit = int(response.css('.search-result-content::attr(data-maxpage)').extract_first())
-        product_limit = int(response.css('.search-result-content::attr(data-pagesize)').extract_first())
-        page_links = [Link(arp(page_url, 'start', product_limit * pl)) for pl in range(2, page_limit + 1)]
-
-        return page_links     
+        total_pages = int(response.css('.search-result-content::attr(data-maxpage)').extract_first())
+        items_per_page = int(response.css('.search-result-content::attr(data-pagesize)').extract_first())
+        return [Link(add_parameter(page_url, 'start', items_per_page * pl)) for pl in range(2, total_pages + 1)]   
 
 
 class WoolrichSpider(CrawlSpider):
     name = 'woolrich_spider'
     allowed_url = r'.*/en/.*'
-
     allowed_domains = ['woolrich.eu']
+
     start_urls = ['http://www.woolrich.eu/en/gb/new-arrivals/new-men/men-summer-2018/WOCPS2666-PT40.html']
+
     rules = [Rule(LinkExtractor(allow=(allowed_url), restrict_css='.menu-category'), callback='parse', follow=True),
-             Rule(PaginationLinks(), callback='parse'),
+             Rule(PaginationExtractor(), callback='parse'),
              Rule(LinkExtractor(allow=(allowed_url), restrict_css='.product-name'), callback='parse_product')]
+
     care = ['polyster', 'cotton', 'silk', 'fabric', 'wash']
 
     def parse(self, response):
@@ -72,28 +71,27 @@ class WoolrichSpider(CrawlSpider):
         product['crawl_start_time'] = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         product['request_queue'] = self.color_requests(response, product)
 
-        for request in self.request_or_product(product):
-            yield request
+        return self.request_or_product(product)
+
 
     def parse_size(self, response):
         response.meta['product']['skus'].append(self.skus(response))
-        for request in self.request_or_product(response.meta.get('product')):
-            yield request 
+        return self.request_or_product(response.meta.get('product'))
+
 
     def parse_color(self, response):
-        response.meta['product']['request_queue'].extend(self.size_requests(response, response.meta.get('product')))
-        response.meta['product']['images'].extend(self.images(response))
-        for request in self.request_or_product(response.meta.get('product')):
-            yield request
+        response.meta['product']['request_queue'] += self.size_requests(response, response.meta.get('product'))
+        response.meta['product']['images'] += self.image_urls(response)
+        return self.request_or_product(response.meta.get('product'))
 
     def request_or_product(self, product):
         if product['request_queue']:
             request = product['request_queue'].pop()
             request.meta['product'] = product
-            yield request
+            return request
         else:
             del product['request_queue']
-            yield product
+            return product
 
     def color_requests(self, response, product):
         colors = response.css('.color>.selectable>a::attr(href)').extract()
@@ -118,8 +116,9 @@ class WoolrichSpider(CrawlSpider):
     def category(self, attributes):
         return attributes['category']
 
-    def images(self, response):
-        return response.css('#pdp-mainimage>.carousel-container-inner>ul>li>a>picture>img::attr(src)').extract()
+    def image_urls(self, response):
+        css = '#pdp-mainimage>.carousel-container-inner>ul>li>a>picture>img::attr(src)'
+        return response.css(css).extract()
     
     def raw_products(self, response):
         product_description = re.findall("dataLayer.push.apply(.+?);", response.text, re.S)[0][12:-1]
