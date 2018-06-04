@@ -11,7 +11,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
 
 class Mixin:
     retailer = 'y3'
-    allowed_domains = ['y-3.com']
+    allowed_domains = ['store.y-3.com']
 
 
 class MixinUS(Mixin):
@@ -53,7 +53,7 @@ class y3ParseSpider(BaseParseSpider):
         sizes = self.sizes(response)
         color = self.color(response)
 
-        if not sizes:
+        if sizes:
             for size in sizes:
                 skus[color.lower() + '-' + size.lower() if color else size] = self.skus(response, color, size)
         else:
