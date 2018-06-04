@@ -73,16 +73,16 @@ class WoolrichSpider(CrawlSpider):
 
         return self.request_or_product(product)
 
-
     def parse_size(self, response):
-        response.meta['product']['skus'].append(self.skus(response))
-        return self.request_or_product(response.meta.get('product'))
-
+        product = response.meta['product']
+        product['skus'].append(self.skus(response))
+        return self.request_or_product(product)
 
     def parse_color(self, response):
-        response.meta['product']['request_queue'] += self.size_requests(response, response.meta.get('product'))
-        response.meta['product']['images'] += self.image_urls(response)
-        return self.request_or_product(response.meta.get('product'))
+        product = response.meta['product']
+        product['request_queue'] += self.size_requests(response, product)
+        product['images'] += self.image_urls(response)
+        return self.request_or_product(product)
 
     def request_or_product(self, product):
         if product['request_queue']:
@@ -138,9 +138,9 @@ class WoolrichSpider(CrawlSpider):
         return care, descp
 
     def skus(self, response):
-        size_info = response.css('.size>.selected>a::text').extract_first().strip()
+        size_info = response.css('.size .selected a::text').extract_first().strip()
         stock_info = response.css('.in-stock-msg::text').extract_first() or 'Out of Stock'
-        color_name = response.css('.color>.selected>a>div::text').extract_first().strip()
+        color_name = response.css('.color .selected a div::text').extract_first().strip()
         skus_id = color_name.replace(" ", "-").lower() + '_' + size_info.replace(" ", "-").lower()
 
         return  {'size': size_info,
