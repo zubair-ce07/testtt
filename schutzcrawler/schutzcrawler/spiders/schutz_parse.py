@@ -1,7 +1,7 @@
 import re
 import copy
-
 import scrapy
+
 from scrapy.spiders import CrawlSpider
 
 from schutzcrawler.items import ProductItem
@@ -11,11 +11,9 @@ from schutzcrawler.mixins import Mixin
 
 class ParseSpider(CrawlSpider, Mixin):
     name = f"{Mixin.name}-parse"
-
     price_extractor = PriceExtractor()
 
     def parse(self, response):
-        
         product = ProductItem()
         product['brand'] = 'Schutz'
         product['care'] = self.care(response)
@@ -77,10 +75,12 @@ class ParseSpider(CrawlSpider, Mixin):
             sku['size'] = size_value
             if size.xpath('self::*[not(contains(@class, "sch-avaiable"))]'):
                 sku['out_of_stock'] = True
-
             skus[f"{color}{size_value}"] = sku
+
         if not skus:
             common_sku['size'] = 'One Size'
+            if response.css('.sch-notify-form'):
+                common_sku['out_of_stock'] = True
             skus['One Size'] = common_sku
         return skus
 
