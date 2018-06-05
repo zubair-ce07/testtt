@@ -100,12 +100,6 @@ class Y3ParseSpider(BaseParseSpider):
     def product_description(self, response):
         return [pd for pd in self.raw_description(response) if not self.care_criteria(pd)]
 
-    def price(self, response):
-        return clean(response.css('.newprice>.priceValue::text').extract_first())
-
-    def previous_prices(self, response):
-        return clean(response.css('.oldprice>.priceValue::text').extract_first())
-
 
 class Y3CrawlSpider(BaseCrawlSpider):
     listing = '.colonna'
