@@ -15,7 +15,8 @@ class Mixin:
 
     one_sizes = [
         'one size',
-        'default'
+        'default',
+        ''
         ]
 
     default_colour = ['default']
@@ -81,10 +82,19 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
                     if 'value' in item
                     else f'{item["labeledValue"]["label"]}: {item["labeledValue"]["value"]}'
                     for item in product['infos']['description']['items']]
+        else:
+            return ['no description']
 
     def product_care(self, product, **kwargs):
         if 'care' in product['infos']:
-            return [item['icon']['label'] for item in product['infos']['care']['items']]
+            return [item['icon']['label']
+                    if 'icon' in item
+                    else f'{item["labeledValue"]["label"]}: {item["labeledValue"]["value"]}'
+                    if 'labeledValue' in item
+                    else item['value']
+                    for item in product['infos']['care']['items']]
+        else:
+            return ['no care']
 
     def product_brand(self, product):
         return product['summary']['brand']['name']
@@ -135,8 +145,9 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
 
-            sku['size'] = self.one_size if raw_sku['name'].lower() in self.one_sizes else raw_sku['name']
-            sku_id = sku['size']
+            sku['size'] = sku_id = (self.one_size
+                                    if raw_sku['name'].lower() in self.one_sizes
+                                        else raw_sku['name'])
 
             if colour.lower() not in self.default_colour:
                 sku['colour'] = colour
