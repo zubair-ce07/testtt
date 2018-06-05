@@ -4,8 +4,6 @@ import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from scrapy import Request
-from scrapy import Selector
-from urllib.parse import urljoin, urlparse
 
 from .base import BaseParseSpider, BaseCrawlSpider, clean
 
@@ -25,7 +23,6 @@ class Mixin:
     allowed_domains = ['www.globus.ch']
     start_urls = ['https://www.globus.ch']
 
-    listing_api_url = 'https://www.globus.ch/service/catalogue/GetFilteredCategory'
     colour_api_url = 'https://www.globus.ch/service/catalogue/GetProductDetailsWithPredefinedGroupID'
     image_url_t = 'https://www.globus.ch{}?v=gallery&width=100'
 
@@ -33,64 +30,77 @@ class Mixin:
 class GlobusParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
-    brand_css = '.mzg-catalogue-detail__product-summary__head >' \
-                '.mzg-component-title_type-small ::text'
-    raw_description_css = '.mzg-catalogue-detail-info__cluster-list__icons::attr(title)'
-    description_re = r'description":"(.*?)","offers'
-
     def parse(self, response):
-        sku_id = self.product_id(response)
+
+        raw_data = clean(response.css('script[type="text/javascript"]::text')[-1])
+        raw_details = re.findall(r'product":(.*?),"relatedProducts', raw_data)[0]
+        product = json.loads(raw_details)
+        if product['summary']['type'] != 'p':
+            return
+
+        sku_id = self.product_id(product)
         garment = self.new_unique_garment(sku_id)
         if not garment:
             return
 
-        self.boilerplate_normal(garment, response)
+        self.boilerplate(garment, response)
 
-        garment['image_urls'] = []
-        garment['skus'] = {}
-
+        garment['name'] = self.product_name(product)
+        garment['description'] = self.product_description(product)
+        garment['care'] = self.product_care(product)
+        garment['category'] = self.product_category(product)
+        garment['brand'] = self.product_brand(product)
         garment['gender'] = self.product_gender(garment)
-
         if not garment['gender']:
             garment['industry'] = 'homeware'
 
-        garment['meta'] = {'requests_queue': self.colour_reqeusts(response)}
+        garment['image_urls'] = []
+        garment['skus'] = {}
+        garment['meta'] = {'requests_queue': self.colour_reqeusts(
+                                                product,
+                                                self.product_currency(response))}
 
         return self.next_request_or_garment(garment)
 
-    def product_id(self, response):
-        return clean(response.css('.mzg-catalogue-detail__product-summary__id::text'))[-1][:-3]
+    def product_id(self, product):
+        return product['summary']['articleID']
 
-    def product_name(self, response):
-        return clean(response.css('.mzg-component-title_type-page-title::text'))[0]
+    def product_name(self, product):
+        return product['summary']['name']
 
-    def product_category(self, response):
-        return clean(response.css('.mzg-components-module-breadcrumb-list ::text'))[1:-1]
+    def product_category(self, product):
+        return [category['name'] for category in product['paths'][-1]]
 
-    def product_description(self, response, **kwargs):
-        description_script = clean(response.css('script[type="application\/ld+json"]')[1])
-        description = re.findall(self.description_re, description_script)
-        if description:
-            return re.findall(self.description_re, description_script)[0].split(',')
+    def product_currency(self, response):
+        price_css = '.mzg-catalogue-detail__product-summary__productPrice small::text'
+        return {'currency': clean(response.css(price_css))[0]}
 
-    def image_urls(self, raw_product):
+    def product_description(self, product, **kwargs):
+        if 'description' in product['infos']:
+            return [item['value']
+                    if 'value' in item
+                    else f'{item["labeledValue"]["label"]}: {item["labeledValue"]["value"]}'
+                    for item in product['infos']['description']['items']]
+
+    def product_care(self, product, **kwargs):
+        if 'care' in product['infos']:
+            return [item['icon']['label'] for item in product['infos']['care']['items']]
+
+    def product_brand(self, product):
+        return product['summary']['brand']['name']
+
+    def image_urls(self, product):
         return [self.image_url_t.format(image['uri']) for image in
-                raw_product['galleryImages']]
+                product['product']['galleryImages']]
 
     def product_gender(self, garment):
         categories = ' '.join(garment['category']).lower()
         return self.gender_lookup(categories)
 
-    def colour_reqeusts(self, response):
-        price_css = '.mzg-catalogue-detail__product-summary__productPrice small::text'
-        meta = {'currency': clean(response.css(price_css))[0]}
-
-        colour_script = clean(response.css('script[type="text/javascript"]')[-1])
-        raw_data = re.findall(r'(variants":)(.*?])', colour_script)[0][1]
-        product_colours = json.loads(raw_data)
-
+    def colour_reqeusts(self, product, meta):
         request_urls = []
-        for colour in product_colours:
+
+        for colour in product['summary']['variants']:
             meta['colour'] = colour['name']
             body = f'["{colour["id"]}","","de"]'
             request_urls.append(Request(url=self.colour_api_url, method='POST', body=body,
@@ -100,26 +110,27 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
 
     def parse_colours(self, response):
         garment = response.meta['garment']
-        colour = response.meta['colour']
-        currency = response.meta['currency']
 
-        raw_product = json.loads(response.text)[0]
-        garment['image_urls'] += self.image_urls(raw_product['product'])
-        garment['skus'].update(self.skus(colour, currency, raw_product['product']))
+        product = json.loads(response.text)[0]
+        garment['image_urls'] += self.image_urls(product)
+        garment['skus'].update(self.skus(product, response))
 
         return self.next_request_or_garment(garment)
 
-    def skus(self, colour, currency, raw_product):
+    def skus(self, product, response):
         skus = {}
 
-        for raw_sku in raw_product['summary']['sizes']:
-            raw_prices = [
+        colour = response.meta['colour']
+        currency = response.meta['currency']
+
+        for raw_sku in product['product']['summary']['sizes']:
+            money_strs = [
                 raw_sku['price']['price'],
                 raw_sku['price']['crossPrice'],
                 currency
             ]
 
-            sku = self.product_pricing_common(None, money_strs=raw_prices)
+            sku = self.product_pricing_common(None, money_strs=money_strs)
 
             if not raw_sku['available']:
                 sku['out_of_stock'] = True
@@ -140,10 +151,13 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + "-crawl"
     parse_spider = GlobusParseSpider()
 
-    listings_css = '#mzg-components-module-header__main-navigation'
-    category_css = '.mzg-component-sidebar-navigation__list ' \
-                    '.mzg-component-link.has-icon.icon-left.full-width'
-    products_css = '.mzg-component-button.btn.btn-default::attr(href)'
+    listings_css = [
+        '#mzg-components-module-header__main-navigation',
+        '.mzg-component-button.btn.btn-default',
+        'link[rel="next"]'
+        ]
+
+    products_css = '.mzg-components-module-product-listing__column'
 
     deny_re = [
         '/home-living/kueche/kuechenmaschinen-zubehoer',
@@ -156,44 +170,7 @@ class GlobusCrawlSpider(BaseCrawlSpider, Mixin):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re), callback='parse'),
-        Rule(LinkExtractor(restrict_css=category_css, deny=deny_re), callback='parse_category'),
+        Rule(LinkExtractor(restrict_css=listings_css, deny=deny_re, tags=['link', 'a']), callback='parse'),
+        Rule(LinkExtractor(restrict_css=products_css, deny=deny_re), callback='parse_item'),
     )
-
-    def parse_category(self, response):
-        meta = {'trail': self.add_trail(response)}
-
-        raw_category_urls = clean(response.css(self.products_css))
-        category_urls = [link for link in raw_category_urls
-                         if not any(link.startswith(restricted_link)
-                                    for restricted_link in self.deny_re)]
-
-        for category_url in category_urls:
-            yield response.follow(url=category_url, meta=meta.copy(),
-                                callback=self.parse_products)
-
-    def parse_products(self, response):
-        meta = {'trail': self.add_trail(response)}
-
-        body = f'[{{"path":"{urlparse(response.url).path}","page":1}}]'
-        yield Request(url=self.listing_api_url, method='POST',
-                      meta=meta.copy(),
-                      body=body, callback=self.parse_pages)
-
-    def parse_pages(self, response):
-        meta = {'trail': self.add_trail(response)}
-        raw_products = json.loads(response.text)[0]
-
-        for product_detail in raw_products['items']:
-            if product_detail['productSummary']['type'] == "p":
-                product_url = product_detail['productSummary']['productURI']
-                yield Request(url=urljoin(self.start_urls[0], product_url),
-                              meta=meta.copy(),
-                              callback=self.parse_item)
-
-        if (raw_products['page'] < raw_products['pages']):
-            path = raw_products['path']
-            body = f'[{{"path":"{path}","page":{raw_products["page"] + 1}}}]'
-            yield Request(url=self.listing_api_url, method='POST',
-                          body=body, callback=self.parse_pages)
 
