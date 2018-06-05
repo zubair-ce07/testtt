@@ -1,62 +1,48 @@
-import sys
-from itertools import islice
-from populate_weather_readings import WeatherReadingsPopulator as Parser
+import argparse
 from calculate_results import ResultsGenerator
 from generate_reports import ReportGenerator
+from populate_weather_readings import WeatherReadingsPopulator
 
 
 def main():
-    given_path=sys.argv[1]
-    for i in islice(range(len(sys.argv)), 2, None):
-        if sys.argv[i] == "-a":
-            given_date = sys.argv[i+1].split("/")
-            given_year = given_date[0]
-            given_month = int(given_date[1])
-            weather_file_parser = Parser()
-            weather_file_parser.list_files(given_path, sys.argv[i],
-                                           given_year, given_month)
-            weather_file_parser.populate_weather_readings(given_path)
-            results_generator = ResultsGenerator()
-            results_generator.generate_results(
-                weather_file_parser.weather_readings,
-                sys.argv[i])
-            report_generator = ReportGenerator(
-                sys.argv[i],
-                results_generator.generated_results)
-            report_generator.print_report()
-        elif sys.argv[i] == "-e":
-            given_year=sys.argv[i+1]
-            weather_file_parser = Parser()
-            weather_file_parser.list_files(given_path,
-                                           sys.argv[i], given_year)
-            weather_file_parser.populate_weather_readings(given_path)
-            results_generator = ResultsGenerator()
-            results_generator.generate_results(
-                weather_file_parser.weather_readings,
-                sys.argv[i])
-            report_generator = ReportGenerator(
-                sys.argv[i],
-                results_generator.generated_results)
-            report_generator.print_report()
-        elif sys.argv[i] == "-c":
-            given_date = sys.argv[i+1].split("/")
-            given_year = given_date[0]
-            given_month = int(given_date[1])
-            weather_file_parser = Parser()
-            weather_file_parser.list_files(given_path, sys.argv[i],
-                                           given_year, given_month)
-            weather_file_parser.populate_weather_readings(given_path)
-            results_generator = ResultsGenerator()
-            results_generator.generate_results(
-                weather_file_parser.weather_readings,
-                sys.argv[i])
-            report_generator = ReportGenerator(
-                sys.argv[i],
-                results_generator.generated_results)
-            report_generator.print_report()
-        i += 1
-    exit()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(dest='files_path', type=str)
+    parser.add_argument('-a', action='append', dest='a_collection',
+                        default=[], type=str)
+    parser.add_argument('-c', action='append', dest='c_collection',
+                        default=[], type=str)
+    parser.add_argument('-e', action='append', dest='e_collection',
+                        default=[], type=str)
+    cl_args = parser.parse_args()
+    file_parser = WeatherReadingsPopulator(cl_args.files_path)
+    results_generator = ResultsGenerator()
+    for year in cl_args.e_collection:
+        file_parser.list_files("-e", year)
+        file_parser.populate_weather_readings()
+        results_generator.generate_results("-e", file_parser.weather_readings)
+        report_generator = ReportGenerator("-e",
+                                           results_generator.generated_results)
+        report_generator.print_report()
+    for month_year in cl_args.a_collection:
+        file_parser.list_files("-a",
+                               month_year.split("/")[0],
+                               int(month_year.split("/")[1]))
+        file_parser.populate_weather_readings()
+        results_generator.generate_results("-a", file_parser.weather_readings)
+        report_generator = ReportGenerator("-a",
+                                           results_generator.generated_results)
+        report_generator.print_report()
+    for month_year in cl_args.c_collection:
+        file_parser = WeatherReadingsPopulator(cl_args.files_path)
+        file_parser.list_files("-c",
+                               month_year.split("/")[0],
+                               int(month_year.split("/")[1]))
+        file_parser.populate_weather_readings()
+        results_generator.generate_results("-c", file_parser.weather_readings)
+        report_generator = ReportGenerator("-c",
+                                           results_generator.generated_results)
+        report_generator.print_report()
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
