@@ -29,7 +29,6 @@ class Y3ParseSpider(BaseParseSpider):
     def parse(self, response):
         sku_id = self.sku_id(response)
         garment = self.new_unique_garment(sku_id)
-
         if not garment:
             return
 
@@ -51,22 +50,22 @@ class Y3ParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         sizes = self.sizes(response)
-        color = self.color(response)
+        color = ''.join(self.color(response))
 
         previous_price, price, currency = self.product_pricing(response)
 
         common_sku = {'color': color,
-                      'out_of_stock': self.out_of_stock(response),
                       'price': price,
-                      'previous_price': previous_price[0],
+                      'previous_prices': previous_price,
                       'currency': currency}
 
         if sizes:
             for size in sizes:
+                sku = common_sku.copy()
                 if self.out_of_stock(response):
-                    common_sku['out_of_stock'] = True
-                common_sku['size'] = size
-                skus[color.lower() + '-' + size.lower() if color else size] = common_sku 
+                    sku['out_of_stock'] = True
+                sku['size'] = size
+                skus[color.lower() + '-' + size.lower() if color else size] = sku 
         else:
             skus[color.lower()] = common_sku
 
@@ -77,7 +76,7 @@ class Y3ParseSpider(BaseParseSpider):
         return not out_of_stock[0]
 
     def color(self, response):
-        return clean(response.css('.miniThumbsColor>span::text').extract_first())
+        return clean(response.xpath('//script//text()').re('"desc"\s:\s"(.+?)"') or '')
 
     def product_name(self, response):
         return clean(response.css('h1::text').extract_first())
@@ -89,7 +88,7 @@ class Y3ParseSpider(BaseParseSpider):
         return clean(response.css('#alternateList>div>img::attr(src)').extract())
 
     def sizes(self, response):
-        return clean(response.css('.sizeBoxIn::attr(data-sizewid)').extract()) 
+        return clean(response.xpath('//script//text()').re('"SizeW":"(.+?)"'))
 
     def raw_description(self, response):
         return clean(response.css('.techDescription>li::text').extract())
