@@ -32,10 +32,8 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     def parse(self, response):
+        product = self.raw_product(response)
 
-        raw_data = clean(response.css('script[type="text/javascript"]::text')[-1])
-        raw_details = re.findall(r'product":(.*?),"relatedProducts', raw_data)[0]
-        product = json.loads(raw_details)
         if product['summary']['type'] != 'p':
             return
 
@@ -62,6 +60,12 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
                                                 self.product_currency(response))}
 
         return self.next_request_or_garment(garment)
+
+    def raw_product(self, response):
+        product_data_re = r'product":(.*?),"relatedProducts'
+        product_data_css = 'script[type="text/javascript"]::text'
+        product_data_json = clean(response.css(product_data_css)[-1].re_first(product_data_re))
+        return json.loads(product_data_json)
 
     def product_id(self, product):
         return product['summary']['articleID']
