@@ -74,7 +74,10 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
         return product['summary']['name']
 
     def product_category(self, product):
-        return [category['name'] for category in product['paths'][-1]]
+        if 'paths' in product:
+            return [category['name'] for category in product['paths'][-1]]
+        else:
+            return product['categories']
 
     def product_currency(self, response):
         price_css = '.mzg-catalogue-detail__product-summary__productPrice small::text'
