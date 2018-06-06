@@ -50,11 +50,11 @@ class Y3ParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         sizes = self.sizes(response)
-        color = ''.join(self.color(response))
+        colour = ''.join(self.colour(response))
 
         previous_price, price, currency = self.product_pricing(response)
 
-        common_sku = {'color': color,
+        common_sku = {'colour': colour,
                       'price': price,
                       'previous_prices': previous_price,
                       'currency': currency}
@@ -65,9 +65,9 @@ class Y3ParseSpider(BaseParseSpider):
                 if self.out_of_stock(response):
                     sku['out_of_stock'] = True
                 sku['size'] = size
-                skus[color.lower() + '-' + size.lower() if color else size] = sku 
+                skus[colour.lower() + '-' + size.lower() if colour else size] = sku 
         else:
-            skus[color.lower()] = common_sku
+            skus[colour.lower()] = common_sku
 
         return skus
 
@@ -75,7 +75,7 @@ class Y3ParseSpider(BaseParseSpider):
         out_of_stock = clean(response.xpath('//script//text()').re('"isAvailable":\s(\w+)'))
         return not out_of_stock[0]
 
-    def color(self, response):
+    def colour(self, response):
         return clean(response.xpath('//script//text()').re('"desc"\s:\s"(.+?)"') or '')
 
     def product_name(self, response):
