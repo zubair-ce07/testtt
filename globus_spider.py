@@ -11,15 +11,8 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean
 class Mixin:
     retailer = 'globus-de'
     market = 'CH'
-    default_brand = 'Globus'
 
-    one_sizes = [
-        'one size',
-        'default',
-        ''
-        ]
-
-    default_colour = ['default']
+    one_sizes = ['one size', 'default', '']
 
     allowed_domains = ['www.globus.ch']
     start_urls = ['https://www.globus.ch']
@@ -32,92 +25,96 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
     name = Mixin.retailer + '-parse'
 
     def parse(self, response):
-        product = self.raw_product(response)
+        raw_product = self.raw_product(response)
 
-        if product['summary']['type'] != 'p':
+        if raw_product['summary']['type'] != 'p':
             return
 
-        sku_id = self.product_id(product)
+        sku_id = self.product_id(raw_product)
         garment = self.new_unique_garment(sku_id)
         if not garment:
             return
 
         self.boilerplate(garment, response)
 
-        garment['name'] = self.product_name(product)
-        garment['description'] = self.product_description(product)
-        garment['care'] = self.product_care(product)
-        garment['category'] = self.product_category(product)
-        garment['brand'] = self.product_brand(product)
+        garment['name'] = self.product_name(raw_product)
+        garment['description'] = self.product_description(raw_product)
+        garment['care'] = self.product_care(raw_product)
+        garment['category'] = self.product_category(raw_product)
+        garment['brand'] = self.product_brand(raw_product)
         garment['gender'] = self.product_gender(garment)
         if not garment['gender']:
             garment['industry'] = 'homeware'
-
         garment['image_urls'] = []
         garment['skus'] = {}
-        garment['meta'] = {'requests_queue': self.colour_reqeusts(
-                                                product,
-                                                self.product_currency(response))}
+
+        currency = self.product_currency(response)
+        garment['meta'] = {'requests_queue': self.colour_reqeusts(raw_product, currency)}
 
         return self.next_request_or_garment(garment)
 
     def raw_product(self, response):
-        product_data_re = r'product":(.*?),"relatedProducts'
-        product_data_css = 'script[type="text/javascript"]::text'
-        product_data_json = clean(response.css(product_data_css)[-1].re_first(product_data_re))
-        return json.loads(product_data_json)
+        raw_product = clean(response.css('script[type="text/javascript"]::text')[-1].re_first(
+                r'product":(.*?),"relatedProducts'))
+        return json.loads(raw_product)
 
-    def product_id(self, product):
-        return product['summary']['articleID']
+    def product_id(self, raw_product):
+        return raw_product['summary']['articleID']
 
-    def product_name(self, product):
-        return product['summary']['name']
+    def product_name(self, raw_product):
+        return raw_product['summary']['name']
 
-    def product_category(self, product):
-        if 'paths' in product:
-            return [category['name'] for category in product['paths'][-1]]
+    def product_category(self, raw_product):
+        if 'paths' in raw_product:
+            return [category['name'] for category in raw_product['paths'][-1]]
         else:
-            return product['categories']
+            return raw_product['categories']
 
     def product_currency(self, response):
-        price_css = '.mzg-catalogue-detail__product-summary__productPrice small::text'
-        return {'currency': clean(response.css(price_css))[0]}
+        return {'currency': clean(response.css(
+            '.mzg-catalogue-detail__product-summary__productPrice small::text'))[0]}
 
-    def product_description(self, product, **kwargs):
-        if 'description' in product['infos']:
-            return [item['value']
-                    if 'value' in item
-                    else f'{item["labeledValue"]["label"]}: {item["labeledValue"]["value"]}'
-                    for item in product['infos']['description']['items']]
-        else:
-            return ['no description']
+    def product_description(self, raw_product):
+        description = []
 
-    def product_care(self, product, **kwargs):
-        if 'care' in product['infos']:
-            return [item['icon']['label']
-                    if 'icon' in item
-                    else f'{item["labeledValue"]["label"]}: {item["labeledValue"]["value"]}'
-                    if 'labeledValue' in item
-                    else item['value']
-                    for item in product['infos']['care']['items']]
-        else:
-            return ['no care']
+        if 'description' in raw_product['infos']:
+            for item in raw_product['infos']['description']['items']:
+                if 'value' in item:
+                    description.append(item['value'])
+                else:
+                    value = f'{item["labeledValue"]["label"]}: {item["labeledValue"]["value"]}'
+                    description.append(value)
+        return description
 
-    def product_brand(self, product):
-        return product['summary']['brand']['name']
+    def product_care(self, raw_product):
+        care = []
 
-    def image_urls(self, product):
+        if 'care' in raw_product['infos']:
+            for item in raw_product['infos']['care']['items']:
+                if 'icon' in item:
+                    care.append(item['icon']['label'])
+                elif 'labeledValue' in item:
+                    value = f'{item["labeledValue"]["label"]}: {item["labeledValue"]["value"]}'
+                    care.append(value)
+                else:
+                    care.append(item['value'])
+        return care
+
+    def product_brand(self, raw_product):
+        return raw_product['summary']['brand']['name']
+
+    def image_urls(self, raw_product):
         return [self.image_url_t.format(image['uri']) for image in
-                product['product']['galleryImages']]
+                raw_product['product']['galleryImages']]
 
     def product_gender(self, garment):
         categories = ' '.join(garment['category']).lower()
         return self.gender_lookup(categories)
 
-    def colour_reqeusts(self, product, meta):
+    def colour_reqeusts(self, raw_product, meta):
         request_urls = []
 
-        for colour in product['summary']['variants']:
+        for colour in raw_product['summary']['variants']:
             meta['colour'] = colour['name']
             body = f'["{colour["id"]}","","de"]'
             request_urls.append(Request(url=self.colour_api_url, method='POST', body=body,
@@ -128,19 +125,19 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
     def parse_colours(self, response):
         garment = response.meta['garment']
 
-        product = json.loads(response.text)[0]
-        garment['image_urls'] += self.image_urls(product)
-        garment['skus'].update(self.skus(product, response))
+        raw_product = json.loads(response.text)[0]
+        garment['image_urls'] += self.image_urls(raw_product)
+        garment['skus'].update(self.skus(raw_product, response))
 
         return self.next_request_or_garment(garment)
 
-    def skus(self, product, response):
+    def skus(self, raw_product, response):
         skus = {}
 
         colour = response.meta['colour']
         currency = response.meta['currency']
 
-        for raw_sku in product['product']['summary']['sizes']:
+        for raw_sku in raw_product['product']['summary']['sizes']:
             money_strs = [
                 raw_sku['price']['price'],
                 raw_sku['price']['crossPrice'],
@@ -154,9 +151,9 @@ class GlobusParseSpider(BaseParseSpider, Mixin):
 
             sku['size'] = sku_id = (self.one_size
                                     if raw_sku['name'].lower() in self.one_sizes
-                                        else raw_sku['name'])
+                                    else raw_sku['name'])
 
-            if colour.lower() not in self.default_colour:
+            if colour.lower() != 'default':
                 sku['colour'] = colour
                 sku_id = f'{sku["colour"]}_{sku["size"]}'
 
