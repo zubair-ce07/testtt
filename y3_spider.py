@@ -1,4 +1,3 @@
-import scrapy
 import re
 import json
 
@@ -20,7 +19,7 @@ class MixinUS(Mixin):
     
 
 class Y3ParseSpider(BaseParseSpider):
-    price_css = '.prices'
+    price_css = '#productInfo .price .prices'
 
     def parse(self, response):
         sku_id = self.sku_id(response)
@@ -47,36 +46,42 @@ class Y3ParseSpider(BaseParseSpider):
     def skus(self, response):
         skus = {}
         sizes = ''
-        colour = ''.join(self.colour(response))
-        product_details = self.product_details(response)
+        raw_skus = self.raw_skus(response)
+        colour = self.colour(raw_skus)
         common_sku = self.product_pricing_common(response)
 
-        if product_details['CURRENTITEM']['json']:
-            sizes = self.sizes(product_details)
+        if not raw_skus['CURRENTITEM']['json']:
+            skus[colour.lower()] = common_sku
+            return skus
 
+        sizes = self.sizes(raw_skus)
         common_sku['colour'] = colour
 
-        if self.out_of_stock(product_details):
+        if self.out_of_stock(raw_skus):
             common_sku['out_of_stock'] = True
 
-        if sizes:
-            available_sizes = self.available_sizes(product_details)
-            for size in sizes:
-                sku = common_sku.copy()
-                sku['size'] = size
-                if size not in available_sizes:
-                    sku['out_of_stock'] = True
-                skus[colour.lower() + '-' + size.lower() if colour else size] = sku 
-        else:
-            skus[colour.lower()] = common_sku
+        available_sizes = self.available_sizes(raw_skus)
+
+        for size in sizes:
+            sku = common_sku.copy()
+            sku['size'] = size
+
+            if size not in available_sizes:
+                sku['out_of_stock'] = True
+            
+            skus[colour.lower() + '-' + size.lower() if colour else size] = sku 
 
         return skus
 
-    def out_of_stock(self, product_details):
-        return not product_details['CURRENTITEM']['isAvailable']
+    def out_of_stock(self, raw_skus):
+        return not raw_skus['CURRENTITEM']['isAvailable']
 
-    def colour(self, response):
-        return clean(response.xpath('//script//text()').re('"desc"\s:\s"(.+?)"'))
+    def colour_id(self, raw_skus):
+        return raw_skus['CURRENTITEM']['json']['Quantity'][0]['ColorId']
+
+    def colour(self, raw_skus):
+        color_id = self.colour_id(raw_skus)
+        return raw_skus['COLORS'][color_id]['desc']
 
     def product_name(self, response):
         return clean(response.css('h1::text'))
@@ -87,15 +92,15 @@ class Y3ParseSpider(BaseParseSpider):
     def image_urls(self, response):
         return clean(response.css('#alternateList>div>img::attr(src)'))
 
-    def product_details(self, response):
-        product_details = re.findall('var jsinit_item=(.+?);', response.text, re.S)[0]
-        return json.loads(product_details)
+    def raw_skus(self, response):
+        raw_skus = re.findall('var jsinit_item=(.+?);', response.text, re.S)[0]
+        return json.loads(raw_skus)
 
-    def sizes(self, product_details):
-        return product_details['CURRENTITEM']['json']['Colors'][0]['SizeW']
+    def sizes(self, raw_skus):
+        return raw_skus['CURRENTITEM']['json']['Colors'][0]['SizeW']
 
-    def available_sizes(self, product_details):
-        sizes = product_details['CURRENTITEM']['json']['SizeW']
+    def available_sizes(self, raw_skus):
+        sizes = raw_skus['CURRENTITEM']['json']['SizeW']
         return [size['DefaultSize'] for size in sizes]
 
     def out_of_stock_sizes(self, response):
