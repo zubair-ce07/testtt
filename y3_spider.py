@@ -2,14 +2,10 @@ import scrapy
 import re
 import json
 
-from ast import literal_eval
 from scrapy.http import Response
 from scrapy.spiders import Rule, Request
-from w3lib.url import add_or_replace_parameter, url_query_cleaner
 
 from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
-from skuscraper.parsers.jsparser import JSParser
-
 
 class Mixin:
     retailer = 'y3'
@@ -20,7 +16,7 @@ class MixinUS(Mixin):
     retailer = Mixin.retailer + '-us'
     market = 'US'
     currency = 'GBP'
-    start_urls = ['http://store.y-3.com/us']
+    start_urls = ['http://store.y-3.com/us/y3store/sleeveless-t-shirt_cod12177083tm.html']
     
 
 class Y3ParseSpider(BaseParseSpider):
@@ -29,6 +25,7 @@ class Y3ParseSpider(BaseParseSpider):
     def parse(self, response):
         sku_id = self.sku_id(response)
         garment = self.new_unique_garment(sku_id)
+
         if not garment:
             return
 
@@ -49,49 +46,63 @@ class Y3ParseSpider(BaseParseSpider):
 
     def skus(self, response):
         skus = {}
-        sizes = self.sizes(response)
+        sizes = ''
         colour = ''.join(self.colour(response))
+        product_details = self.product_details(response)
+        common_sku = self.product_pricing_common(response)
 
-        previous_price, price, currency = self.product_pricing(response)
+        if product_details['CURRENTITEM']['json']:
+            sizes = self.sizes(product_details)
 
-        common_sku = {'colour': colour,
-                      'price': price,
-                      'previous_prices': previous_price,
-                      'currency': currency}
+        common_sku['colour'] = colour
+
+        if self.out_of_stock(product_details):
+            common_sku['out_of_stock'] = True
 
         if sizes:
+            available_sizes = self.available_sizes(product_details)
             for size in sizes:
                 sku = common_sku.copy()
-                if self.out_of_stock(response):
-                    sku['out_of_stock'] = True
                 sku['size'] = size
+                if size not in available_sizes:
+                    sku['out_of_stock'] = True
                 skus[colour.lower() + '-' + size.lower() if colour else size] = sku 
         else:
             skus[colour.lower()] = common_sku
 
         return skus
 
-    def out_of_stock(self, response):
-        out_of_stock = clean(response.xpath('//script//text()').re('"isAvailable":\s(\w+)'))
-        return not out_of_stock[0]
+    def out_of_stock(self, product_details):
+        return not product_details['CURRENTITEM']['isAvailable']
 
     def colour(self, response):
-        return clean(response.xpath('//script//text()').re('"desc"\s:\s"(.+?)"') or '')
+        return clean(response.xpath('//script//text()').re('"desc"\s:\s"(.+?)"'))
 
     def product_name(self, response):
-        return clean(response.css('h1::text').extract_first())
+        return clean(response.css('h1::text'))
 
     def product_category(self, response):
-        return clean(response.css('.microName::text').extract())
+        return clean(response.css('.microName::text'))
 
     def image_urls(self, response):
-        return clean(response.css('#alternateList>div>img::attr(src)').extract())
+        return clean(response.css('#alternateList>div>img::attr(src)'))
 
-    def sizes(self, response):
-        return clean(response.xpath('//script//text()').re('"SizeW":"(.+?)"'))
+    def product_details(self, response):
+        product_details = re.findall('var jsinit_item=(.+?);', response.text, re.S)[0]
+        return json.loads(product_details)
+
+    def sizes(self, product_details):
+        return product_details['CURRENTITEM']['json']['Colors'][0]['SizeW']
+
+    def available_sizes(self, product_details):
+        sizes = product_details['CURRENTITEM']['json']['SizeW']
+        return [size['DefaultSize'] for size in sizes]
+
+    def out_of_stock_sizes(self, response):
+        return clean(response.css('#itemSizes>.disbaled::text'))
 
     def raw_description(self, response):
-        return clean(response.css('.techDescription>li::text').extract())
+        return clean(response.css('.techDescription>li::text'))
 
     def product_care(self, response):
         return [pc for pc in self.raw_description(response) if self.care_criteria(pc)]
