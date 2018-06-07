@@ -1,6 +1,6 @@
 import re
 
-class PriceExtractor:
+class PriceParser:
     currencies = {'R$':'BRL', 'EUR':'EUR'}
 
     def clean_prices(self, prices):

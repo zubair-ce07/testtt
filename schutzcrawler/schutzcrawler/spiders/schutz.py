@@ -5,16 +5,16 @@ import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
-from schutzcrawler.mixins import Mixin
-from schutzcrawler.PriceExtractor import PriceExtractor
+from schutzcrawler.schutz_mixins import SchutzMixin
+from schutzcrawler.price_parser import PriceParser
 import schutzcrawler.items as items
 
-class ParseSpider(CrawlSpider, Mixin):
-    name = f"{Mixin.name}-parse"
-    price_extractor = PriceExtractor()
+class ParseSpider(CrawlSpider, SchutzMixin):
+    name = f"{SchutzMixin.name}-parse"
+    price_extractor = PriceParser()
 
     def parse(self, response):
-        product = items.SchutzProductItem()
+        product = items.ProductItem()
         product['brand'] = 'Schutz'
         product['care'] = self.care(response)
         product['category'] = self.category(response)
@@ -22,7 +22,7 @@ class ParseSpider(CrawlSpider, Mixin):
         product['name'] = self.product_name(response)
         product['image_urls'] = self.image_urls(response)
         product['retailer_sku'] = self.retailer_sku(response)
-        product['sku'] = skus = self.skus(response)
+        product['skus'] = skus = self.skus(response)
         product['trail'] = response.meta.get('trail', [])
         product['url'] = response.url
         product['out_of_stock'] = self.is_out_of_stock(skus)
@@ -96,8 +96,8 @@ class ParseSpider(CrawlSpider, Mixin):
         return response.css(name_css).extract_first()
 
 
-class SchutzSpider(CrawlSpider, Mixin):
-    name = f"{Mixin.name}-crawl"
+class SchutzSpider(CrawlSpider, SchutzMixin):
+    name = f"{SchutzMixin.name}-crawl"
 
     default_xpaths = ['//div[@class="sch-main-menu-sub-links-left"]',
                       '//div[@class="sch-main-menu-sub-links-right"]',

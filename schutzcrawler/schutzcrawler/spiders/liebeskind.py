@@ -2,102 +2,106 @@ import scrapy
 import copy
 import re
 import json
+import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 import schutzcrawler.items as items
-from schutzcrawler.PriceExtractor import PriceExtractor
-from schutzcrawler.DescriptionExtractor import DescriptionExtractor
+from schutzcrawler.liebeskind_mixins import LiebeskindMixins
+from schutzcrawler.price_parser import PriceParser
+from schutzcrawler.description_parser import DescriptionParser
 
 
-class ParseSpider(CrawlSpider):
-    name = "liebeskind-parse"
-    allowed_domains = ['liebeskind-berlin.com']
-    price_extractor = PriceExtractor()
-    description_extractor = DescriptionExtractor()
+class ParseSpider(CrawlSpider, LiebeskindMixins):
+    name = f"{LiebeskindMixins.name}-parse"
+
+    price_extractor = PriceParser()
+    description_extractor = DescriptionParser()
+    time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M")
+    next_url = ""
 
     def parse(self, response):
-        product = items.LiebeskindProductItem()
+        product = items.ProductItem()
 
         product["url"] = response.url.split('?')[0]
         product["retailer_sku"] = self.retailer_sku(response)
-        product["lang"] = self.lang(response)
         product["gender"] = "women"
         product["retailer"] = "leibskind-de"
         product["category"] = self.category(response)
-        product["url"] = response.url.split('?')[0]
-        product["market"] = self.market(response)
         product["url_original"] = response.url
         product["name"] = self.product_name(response)
-        product["price"] = self.price(response)
         product["spider_name"] = self.name
-        product["description"] = self.description_extractor.description(response)
-        product["care"] = self.description_extractor.care(response)
+        product["description"] = self.description(response)
+        product["care"] = self.care(response)
         product["trail"] = response.meta.get('trail' , [])
         product["skus"] = self.skus(response)
+        product["crawl_start_time"] = self.time
         product["image_urls"] = []
-        product["requests"] = []
+        product["requests"] = self.generate_color_requests(response, product)
+        
+        yield self.yield_results(product)
+        
+    def yield_results(self,product):
+        if product["requests"]:
+            return product["requests"].pop()
+        else:
+            return product
 
+    def generate_color_requests(self, response, product):
+        requests = []
         color_range_css = '.filter__colors__boxes input'
         color_range = response.css(color_range_css)
+
+        quantity = response.xpath('//input[@name="Quantity"]/@value').extract_first()
+        rendering_type = response.xpath('//input[@name="renderingType"]/@value').extract_first()
+        page_type = response.xpath('//input[@name="pageType"]/@value').extract_first()
+        fit_guide_name = response.xpath('//input[@name="fitguideName"]/@value').extract_first()
+        fit_guide_use = response.xpath('//input[@name="fitguideUse"]/@value').extract_first()
+        vogel_data = response.xpath('//input[@name="stickvogelData"]/@value').extract_first()
+        pid = response.xpath('//input[@name="pid"]/@value').extract_first()
+        cgid = response.xpath('//input[@name="cgid"]/@value').extract_first()
+       
         for color in color_range:
-            quantity = response.xpath('//input[@name="Quantity"]/@value').extract_first()
-            rendering_type = response.xpath('//input[@name="renderingType"]/@value').extract_first()
-            page_type = response.xpath('//input[@name="pageType"]/@value').extract_first()
-            fit_guide_name = response.xpath('//input[@name="fitguideName"]/@value').extract_first()
-            fit_guide_use = response.xpath('//input[@name="fitguideUse"]/@value').extract_first()
-            vogel_data = response.xpath('//input[@name="stickvogelData"]/@value').extract_first()
             variant_name = color.css('input::attr(name)').extract_first()
             variant_value = color.css('input::attr(value)').extract_first()
-            pid = response.xpath('//input[@name="pid"]/@value').extract_first()
-            cgid = response.xpath('//input[@name="cgid"]/@value').extract_first()
             data_action = color.css('input::attr(data-action)').extract_first()
 
             url_next = (f"https://de.liebeskind-berlin.com/on/demandware.store/Sites-liebeskindEU-Site/en/SPV-Dispatch?"
                         + f"view=ajax&Quantity={quantity}&renderingType={rendering_type}&pageType={page_type}&"
                         + f"fitguideName={fit_guide_name}&fitguideUse={fit_guide_use}&stickvogelData={vogel_data}&"
                         + f"{variant_name}={variant_value}&pid={pid}&cgid={cgid}&{data_action}={data_action}")
-            product["requests"].append(scrapy.Request(url=url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item':product}))
-
-        if product["requests"]:
-            yield product["requests"].pop()
-        else:
-            yield product
+           
+            product.get("requests", []).append(scrapy.Request(url=url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item':product}))
+            requests.append(scrapy.Request(url=url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item':product}))
+        return requests
 
     def parse_image_urls(self, response):
-        item = response.meta['item']
+        product = response.meta['item']
         image_css = '.pdp__media__slider__pager img::attr(src)'
         images = response.css(image_css).extract()
-        images.extend(item["image_urls"])
-        item["image_urls"] = set(images)
-        if item["requests"]:
-            yield item["requests"].pop()
-        else:
-            yield item
+        images.extend(product["image_urls"])
+        product["image_urls"] = set(images)
+        yield self.yield_results(product)
     
+    def crawl_time(self):
+        time = datetime.datetime.now()
+        return time.strftime("%Y-%m-%d %I:%M")
+
     def retailer_sku(self, response):
         retailer_sku_css = '.js-productvariations-swatchbase::attr(data-product)'
         return response.css(retailer_sku_css).extract_first()
 
-    def lang(self, response):
-        lang_xpath = '//div[@class="Lnewsletterbox__inputwrapper"]/input[@name="locale"]/@value'
-        return response.xpath(lang_xpath).extract_first()
-
     def category(self, response):
         categories_css = '.breadcrumbs__category_name::text'
-        return response.css(categories_css).extract()
-
-    def market(self,response):
-        market_xpath = '//div[@class="Lnewsletterbox__inputwrapper"]/input[@name="countryCode"]/@value'
-        return response.xpath(market_xpath).extract_first()
+        categories = response.css(categories_css).extract()
+        return [c.strip('\n') for c in categories]
 
     def product_name(self, response):
         return response.css('.ta_productName::text').extract_first()
 
     def price(self, response):
-        priceextractor = PriceExtractor()
-        return priceextractor.prices(response.css('.pdp__product-price ::text').extract())
+        return self.price_extractor.prices(response.css('.pdp__product-price ::text').extract())
 
     def skus(self, response):
         raw_colors = response.css('.filter__colors__boxes span::text').extract()
@@ -114,11 +118,21 @@ class ParseSpider(CrawlSpider):
             skus[f"{color}{size}"] = sku
         return skus
 
+    def raw_description(self, response):
+        raw_description = response.css('#pdp-details-longdesc ::text').extract()
+        return [d for d in raw_description if '\n' not in d]
 
-class LiebeskindSpider(CrawlSpider):
-    name = 'liebeskind-crawl'
-    allowed_domains = ['liebeskind-berlin.com']
-    start_urls = ['http://de.liebeskind-berlin.com/']
+    def description(self, response):
+        raw_description = self.raw_description(response)
+        return [rd for rd in raw_description if not self.description_extractor.is_care(rd)]
+
+    def care(self, response):
+        raw_description = self.raw_description(response)
+        return [rd for rd in raw_description if self.description_extractor.is_care(rd)]
+
+
+class LiebeskindSpider(CrawlSpider, LiebeskindMixins):
+    name = f"{LiebeskindMixins.name}-crawl"
 
     parser = ParseSpider()
     category_css = 'div.mainnav__level'
@@ -129,21 +143,21 @@ class LiebeskindSpider(CrawlSpider):
              Rule(LinkExtractor(restrict_css=products_css), callback=parser.parse)]
 
     def parse(self, response):
-        requests = list(super(LiebeskindSpider, self).parse(response))
         trail = response.meta.get('trail', [])
         trail.append(response.url)
-        
-        #append all pagination links
+
+        for request in list(super(LiebeskindSpider, self).parse(response)):
+            trail = copy.deepcopy(trail)
+            request.meta['trail'] = trail
+            yield request
+
+        # follow all pagination links
         url = response.url.split('?')[0]
         pagination_xpath = '//span[@class="pagination__btn pagination__btn--next fakelink"]/@data-pagingparams'
         pagination = response.xpath(pagination_xpath).extract_first()
         if pagination:
             pagination = json.loads(pagination)
             for key, value in pagination.items():
+                trail = copy.deepcopy(trail)
                 next_url = f"{url}?{key}={value}"
-                requests.append(scrapy.Request(url=next_url, callback=self.parse))
-
-        for request in requests:
-            trail = copy.deepcopy(trail)
-            request.meta['trail'] = trail
-            yield request
+                yield scrapy.Request(url=next_url, callback=self.parse, meta={'trail':trail})
