@@ -76,10 +76,16 @@ class BlauarBeitItemLoader(BizzbyItemLoader):
     telephone_out = TakeFirst()
     number_of_reviews_in = MapCompose(_replace_parenthesis)
     review_content_in = MapCompose(remove_tags, clean_space)
-    review_content_out = Identity()
+    review_content_out = MapCompose(replace_nextlinechar)
     # categories_out = TakeFirst()
     about_us_in = MapCompose(remove_tags, clean_space)
     blauarbeit_index = MapCompose(remove_tags, clean_space)
+    certifications_in = MapCompose(remove_tags, clean_space)
     certifications_out = Join(" | ")
+
     average_rating_in = MapCompose(clean)
+    search_category_in = MapCompose(clean_space)
+    search_category_out = TakeFirst()
+    categories_out = Join(", ")
+
 
