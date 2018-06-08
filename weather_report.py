@@ -1,6 +1,6 @@
 import os
+import re
 import csv
-from itertools import islice
 from typing import List
 from abc import ABC, abstractmethod
 
@@ -77,11 +77,15 @@ class ReportStrategyA(ReportStrategy):
         return generated_results
 
     def list_files(self, date, files_path):
-        names_of_all_files = os.listdir(files_path)
-        year = date.split("/")[0]
-        month = _months_short_names[int(date.split("/")[1])]
+        try:
+            year = date.split("/")[0]
+            month = _months_short_names[int(date.split("/")[1])]
+        except IndexError:
+            print("Provide year and month in this format: yyyy/mm\n")
+        except KeyError:
+            print("Provide year and month in this format: yyyy/mm\n")
         return list(filter(lambda x: year in x and month in x,
-                           names_of_all_files))
+                           os.listdir(files_path)))
 
 
 class ReportStrategyE(ReportStrategy):
@@ -95,7 +99,7 @@ class ReportStrategyE(ReportStrategy):
               f"C on {_months_full_names[int(date[1])]}, {date[2]}")
         date = given_results["HighestHumidity"][0].split("-")
         print(f"Humidity: {given_results['HighestHumidity'][1]}"
-              f" on {_months_full_names[int(date[1])]}, {date[2]}")
+              f"% on {_months_full_names[int(date[1])]}, {date[2]}")
 
     def generate_results(self, weather_readings: List[WeatherReading]):
         generated_results = dict()
@@ -106,15 +110,15 @@ class ReportStrategyE(ReportStrategy):
         highest_temperature = -100
         highest_temperature_day = ""
         for reading in weather_readings:
-            if (reading.max_temperature
+            if (reading.max_temperature is not None  # because 0 equals false
                     and reading.max_temperature >= highest_temperature):
                 highest_temperature = reading.max_temperature
                 highest_temperature_day = reading.date
-            if (reading.max_humidity
+            if (reading.max_humidity is not None
                     and reading.max_humidity >= highest_humidity):
                 highest_humidity = reading.max_humidity
                 highest_humidity_day = reading.date
-            if (reading.min_temperature
+            if (reading.min_temperature is not None
                     and reading.min_temperature <= lowest_temperature):
                 lowest_temperature = reading.min_temperature
                 lowest_temperature_day = reading.date
@@ -127,8 +131,7 @@ class ReportStrategyE(ReportStrategy):
         return generated_results
 
     def list_files(self, date, files_path):
-        names_of_all_files = os.listdir(files_path)
-        return list(filter(lambda x: date in x, names_of_all_files))
+        return list(filter(lambda x: date in x, os.listdir(files_path)))
 
 
 class ReportStrategyC(ReportStrategy):
@@ -160,11 +163,15 @@ class ReportStrategyC(ReportStrategy):
         return generated_results
 
     def list_files(self, date, files_path):
-        names_of_all_files = os.listdir(files_path)
-        year = date.split("/")[0]
-        month = _months_short_names[int(date.split("/")[1])]
+        try:
+            year = date.split("/")[0]
+            month = _months_short_names[int(date.split("/")[1])]
+        except IndexError:
+            print("Provide year and month in this format: yyyy/mm\n")
+        except KeyError:
+            print("Provide year and month in this format: yyyy/mm\n")
         return list(filter(lambda x: year in x and month in x,
-                           names_of_all_files))
+                           os.listdir(files_path)))
 
 
 class WeatherReadingsPopulator:
@@ -179,15 +186,18 @@ class WeatherReadingsPopulator:
         self.files.clear()
         self.files = self.strategy.list_files(self.strategy, date,
                                               self.files_path)
+        if not self.files:
+            raise FileNotFoundError("The record of "+date+" is not available")
 
     def populate_weather_readings(self):
         self.weather_readings.clear()
         for file in self.files:
             with open(self.files_path+"/"+file) as weather_file:
                 reader = csv.DictReader(weather_file)
-                for row in islice(reader, 1, None):
-                    weather_reading = WeatherReading(
-                        row['PKT'],
+                for row in reader:
+                    self.weather_readings.append(WeatherReading(
+                        row['PKT'] if 'PKT' in reader.fieldnames
+                        else row['PKST'],
                         int(row['Max TemperatureC'])
                         if row['Max TemperatureC'] else None,
                         int(row['Mean TemperatureC'])
@@ -200,8 +210,7 @@ class WeatherReadingsPopulator:
                         if row[' Mean Humidity'] else None,
                         int(row[' Min Humidity'])
                         if row[' Min Humidity'] else None
-                    )
-                    self.weather_readings.append(weather_reading)
+                    ))
 
 
 class ResultsGenerator:
