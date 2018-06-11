@@ -10,7 +10,6 @@ from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
 
 
 class PaginationLE():
-
     def extract_links(self, response):
         products_per_page = response.css('option::attr(value)').extract()
 
@@ -87,6 +86,10 @@ class KhelfParseSpider(BaseParseSpider):
         return self.next_request_or_garment(garment)
 
     def parse_skus(self, response):
+        garment = self.skus(response)
+        return self.next_request_or_garment(garment)
+
+    def skus(self, response):
         skus = {}
         garment = response.meta['garment']
         colour = response.meta['colour']
@@ -107,10 +110,10 @@ class KhelfParseSpider(BaseParseSpider):
                 sku['out_of_stock'] = True
 
             skus[colour.lower() + '-' + size.lower() if colour else size] = sku
-
+        
         garment['skus'].update(skus)
 
-        return self.next_request_or_garment(garment)
+        return garment
 
     def request_colour(self, response, garment, product_web_id):
         price = self.raw_price(response)
