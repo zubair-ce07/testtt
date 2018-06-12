@@ -8,9 +8,14 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 import schutzcrawler.items as items
-from schutzcrawler.liebeskind_mixins import LiebeskindMixins
 from schutzcrawler.price_parser import PriceParser
 from schutzcrawler.description_parser import DescriptionParser
+
+
+class LiebeskindMixins:
+    name = 'liebeskind'
+    allowed_domains = ['liebeskind-berlin.com']
+    start_urls = ['http://de.liebeskind-berlin.com/']
 
 
 class ParseSpider(CrawlSpider, LiebeskindMixins):
@@ -19,7 +24,7 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
     price_extractor = PriceParser()
     description_extractor = DescriptionParser()
     time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M")
-    next_url = ""
+    url_next = ""
 
     def parse(self, response):
         product = items.ProductItem()
@@ -34,15 +39,15 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
         product["spider_name"] = self.name
         product["description"] = self.description(response)
         product["care"] = self.care(response)
-        product["trail"] = response.meta.get('trail' , [])
+        product["trail"] = response.meta.get('trail', [])
         product["skus"] = self.skus(response)
         product["crawl_start_time"] = self.time
         product["image_urls"] = []
         product["requests"] = self.generate_color_requests(response, product)
-        
-        yield self.yield_results(product)
-        
-    def yield_results(self,product):
+
+        yield self.is_request_or_product(product)
+
+    def is_request_or_product(self, product):
         if product["requests"]:
             return product["requests"].pop()
         else:
@@ -61,7 +66,7 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
         vogel_data = response.xpath('//input[@name="stickvogelData"]/@value').extract_first()
         pid = response.xpath('//input[@name="pid"]/@value').extract_first()
         cgid = response.xpath('//input[@name="cgid"]/@value').extract_first()
-       
+
         for color in color_range:
             variant_name = color.css('input::attr(name)').extract_first()
             variant_value = color.css('input::attr(value)').extract_first()
@@ -71,10 +76,9 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
                         + f"view=ajax&Quantity={quantity}&renderingType={rendering_type}&pageType={page_type}&"
                         + f"fitguideName={fit_guide_name}&fitguideUse={fit_guide_use}&stickvogelData={vogel_data}&"
                         + f"{variant_name}={variant_value}&pid={pid}&cgid={cgid}&{data_action}={data_action}")
-           
-            product.get("requests", []).append(scrapy.Request(url=url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item':product}))
-            requests.append(scrapy.Request(url=url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item':product}))
-        return requests
+
+            product.get("requests", []).append(
+                scrapy.Request(url=url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item': product}))
 
     def parse_image_urls(self, response):
         product = response.meta['item']
@@ -82,8 +86,8 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
         images = response.css(image_css).extract()
         images.extend(product["image_urls"])
         product["image_urls"] = set(images)
-        yield self.yield_results(product)
-    
+        yield self.is_request_or_product(product)
+
     def crawl_time(self):
         time = datetime.datetime.now()
         return time.strftime("%Y-%m-%d %I:%M")
@@ -111,7 +115,7 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
         sizes = response.css('.js-productvariations-swatchbase-color a::attr(data-sizes)').extract_first()
         sizes = json.loads(sizes)
 
-        for color, size in [(color,size) for color in colors for size in sizes]:
+        for color, size in [(color, size) for color in colors for size in sizes]:
             sku = copy.deepcopy(common_sku)
             sku['color'] = color
             sku['size'] = size
@@ -160,4 +164,4 @@ class LiebeskindSpider(CrawlSpider, LiebeskindMixins):
             for key, value in pagination.items():
                 trail = copy.deepcopy(trail)
                 next_url = f"{url}?{key}={value}"
-                yield scrapy.Request(url=next_url, callback=self.parse, meta={'trail':trail})
+                yield scrapy.Request(url=next_url, callback=self.parse, meta={'trail': trail})

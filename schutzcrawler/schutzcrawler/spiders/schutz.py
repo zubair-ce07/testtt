@@ -1,13 +1,17 @@
-import re
 import copy
 
-import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
-from schutzcrawler.schutz_mixins import SchutzMixin
 from schutzcrawler.price_parser import PriceParser
 import schutzcrawler.items as items
+
+
+class SchutzMixin:
+    allowed_domains = ['schutz.com.br']
+    name = 'schutz'
+    start_urls = ['https://schutz.com.br/store/']
+
 
 class ParseSpider(CrawlSpider, SchutzMixin):
     name = f"{SchutzMixin.name}-parse"
