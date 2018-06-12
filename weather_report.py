@@ -1,5 +1,4 @@
 import os
-import re
 import csv
 from typing import List
 from abc import ABC, abstractmethod
@@ -12,6 +11,10 @@ _months_full_names = {1: 'January', 2: 'February', 3: 'March', 4: 'April',
 _months_short_names = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May',
                        6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct',
                        11: 'Nov', 12: 'Dec'}
+
+
+def int_(number):
+    return int(number) if number is not (None or "") else None
 
 
 class WeatherReading:
@@ -40,7 +43,7 @@ class ReportStrategy(ABC):
         pass
 
 
-class ReportStrategyA(ReportStrategy):
+class AveragesReport(ReportStrategy):
 
     def print_report(self, given_results):
         print("\nHighest Average: ", end="")
@@ -51,30 +54,17 @@ class ReportStrategyA(ReportStrategy):
         print(f"{given_results['AverageMeanHumidity']:.2f}%")
 
     def generate_results(self, weather_readings: List[WeatherReading]):
-        generated_results = dict()
-        highest_temperature_sum = 0.0
-        lowest_temperature_sum = 0.0
-        mean_humidity_sum = 0.0
-        no_of_highest_temperature_readings = 0
-        no_of_lowest_temperature_readings = 0
-        no_of_mean_humidity_readings = 0
-        for reading in weather_readings:
-            if reading.max_temperature:
-                highest_temperature_sum += reading.max_temperature
-                no_of_highest_temperature_readings += 1
-            if reading.min_temperature:
-                lowest_temperature_sum += reading.min_temperature
-                no_of_lowest_temperature_readings += 1
-            if reading.mean_humidity:
-                mean_humidity_sum += reading.mean_humidity
-                no_of_mean_humidity_readings += 1
-        generated_results["AverageHighestTemperature"] \
-            = highest_temperature_sum / no_of_highest_temperature_readings
-        generated_results["AverageLowestTemperature"] \
-            = lowest_temperature_sum / no_of_lowest_temperature_readings
-        generated_results["AverageMeanHumidity"] \
-            = mean_humidity_sum / no_of_mean_humidity_readings
-        return generated_results
+        max_temps = list(filter(None, [reading.max_temperature for reading
+                                  in weather_readings]))
+        min_temps = list(filter(None, [reading.min_temperature for reading
+                                  in weather_readings]))
+        mean_humidity = list(filter(None, [reading.mean_humidity for reading
+                                  in weather_readings]))
+        return {
+            "AverageHighestTemperature": sum(max_temps) / len(max_temps),
+            "AverageLowestTemperature": sum(min_temps) / len(min_temps),
+            "AverageMeanHumidity": sum(mean_humidity) / len(mean_humidity)
+        }
 
     def list_files(self, date, files_path):
         try:
@@ -88,7 +78,7 @@ class ReportStrategyA(ReportStrategy):
                            os.listdir(files_path)))
 
 
-class ReportStrategyE(ReportStrategy):
+class ExtremesReport(ReportStrategy):
 
     def print_report(self, given_results):
         date = given_results["HighestTemperature"][0].split("-")
@@ -102,39 +92,20 @@ class ReportStrategyE(ReportStrategy):
               f"% on {_months_full_names[int(date[1])]}, {date[2]}")
 
     def generate_results(self, weather_readings: List[WeatherReading]):
-        generated_results = dict()
-        lowest_temperature = 100
-        lowest_temperature_day = ""
-        highest_humidity = 0
-        highest_humidity_day = ""
-        highest_temperature = -100
-        highest_temperature_day = ""
-        for reading in weather_readings:
-            if (reading.max_temperature is not None  # because 0 equals false
-                    and reading.max_temperature >= highest_temperature):
-                highest_temperature = reading.max_temperature
-                highest_temperature_day = reading.date
-            if (reading.max_humidity is not None
-                    and reading.max_humidity >= highest_humidity):
-                highest_humidity = reading.max_humidity
-                highest_humidity_day = reading.date
-            if (reading.min_temperature is not None
-                    and reading.min_temperature <= lowest_temperature):
-                lowest_temperature = reading.min_temperature
-                lowest_temperature_day = reading.date
-        generated_results["HighestTemperature"] \
-            = (highest_temperature_day, highest_temperature)
-        generated_results["LowestTemperature"] \
-            = (lowest_temperature_day, lowest_temperature)
-        generated_results["HighestHumidity"] \
-            = (highest_humidity_day, highest_humidity)
-        return generated_results
+        hottest = max(weather_readings, key=lambda x: x.max_temperature)
+        coolest = min(weather_readings, key=lambda x: x.min_temperature)
+        most_humid = max(weather_readings, key=lambda x: x.max_humidity)
+        return {
+            "HighestTemperature": (hottest.date, hottest.max_temperature),
+            "LowestTemperature": (coolest.date, coolest.min_temperature),
+            "HighestHumidity": (most_humid.date, most_humid.max_humidity)
+        }
 
     def list_files(self, date, files_path):
         return list(filter(lambda x: date in x, os.listdir(files_path)))
 
 
-class ReportStrategyC(ReportStrategy):
+class ChartsReport(ReportStrategy):
 
     def print_report(self, given_results):
         month_and_year = given_results["DataOfMonth/Year"]
@@ -151,16 +122,13 @@ class ReportStrategyC(ReportStrategy):
             print(f"{record[2] if record[2] is not None else 'N/A'}C", end="")
 
     def generate_results(self, weather_readings: List[WeatherReading]):
-        generated_results = dict()
-        generated_results["DataOfMonth/Year"] = [
+        return {"DataOfMonth/Year": [
             int(weather_readings[0].date.split("-")[1]),
             weather_readings[0].date.split("-")[0]
-        ]
-        generated_results["MonthsTemperatureRecord"] = [
+        ], "MonthsTemperatureRecord": [
             (reading.date.split("-")[2], reading.min_temperature,
              reading.max_temperature) for reading in weather_readings
-        ]
-        return generated_results
+        ]}
 
     def list_files(self, date, files_path):
         try:
@@ -194,22 +162,15 @@ class WeatherReadingsPopulator:
         for file in self.files:
             with open(self.files_path+"/"+file) as weather_file:
                 reader = csv.DictReader(weather_file)
-                for row in reader:
+                date_field = 'PKT' if 'PKT' in reader.fieldnames else 'PKST'
+                for record in reader:
                     self.weather_readings.append(WeatherReading(
-                        row['PKT'] if 'PKT' in reader.fieldnames
-                        else row['PKST'],
-                        int(row['Max TemperatureC'])
-                        if row['Max TemperatureC'] else None,
-                        int(row['Mean TemperatureC'])
-                        if row['Mean TemperatureC'] else None,
-                        int(row['Min TemperatureC'])
-                        if row['Min TemperatureC'] else None,
-                        int(row['Max Humidity'])
-                        if row['Max Humidity'] else None,
-                        int(row[' Mean Humidity'])
-                        if row[' Mean Humidity'] else None,
-                        int(row[' Min Humidity'])
-                        if row[' Min Humidity'] else None
+                        record[date_field], int_(record['Max TemperatureC']),
+                        int_(record['Mean TemperatureC']),
+                        int_(record['Min TemperatureC']),
+                        int_(record['Max Humidity']),
+                        int_(record[' Mean Humidity']),
+                        int_(record[' Min Humidity'])
                     ))
 
 
@@ -229,7 +190,6 @@ class ReportGenerator:
     def __init__(self, strategy, given_results: dict):
         self.given_results = given_results
         self.strategy = strategy
-        super().__init__()
 
     def print_report(self):
         self.strategy.print_report(self.strategy, self.given_results)
