@@ -6,8 +6,7 @@ from scrapy import Spider, Request
 
 class CommunityosSpider(Spider):
     name = "commmunityos"
-    # start_urls = ['https://211-idaho.communityos.org/']
-    start_urls = ['https://211-idaho.communityos.org/apssreadonly/render/id/885/form/site/record_id/3146']
+    start_urls = ['https://211-idaho.communityos.org/']
     body = 'site%5Csite_addressus%5Csite_addressus=%7B%7D&service%5Cservice_geotagus%5Cservice_geotagus=%7B%22' \
            'operator%22%3A%5B%22serves_array%22%5D%7D&service%5Cservice_system%5Cawtsv_keyword=%7B%22operator%' \
            '22%3A%5B%22fulltext%22%5D%7D&service%5Cservice_taxonomy%5Cmodule_servicepost=%7B%22value%22%3A%5B%' \
@@ -27,7 +26,7 @@ class CommunityosSpider(Spider):
         '/render/id/%s/form/site/record_id/%s'
     )
 
-    def parse1(self, response):
+    def parse(self, response):
         ids = re.findall(
             r'taxonomy_id%22%3A(.*?)%7D', response.body_as_unicode()
         )
@@ -49,8 +48,7 @@ class CommunityosSpider(Spider):
                 callback=self.parse_agency_detail
             )
 
-    def parse(self, response):
-    # def parse_agency_detail(self, response):
+    def parse_agency_detail(self, response):
         data = response.xpath('//script[@id="initial-state"]/text()')
         data = json.loads(data.extract_first().strip())['data']
 
