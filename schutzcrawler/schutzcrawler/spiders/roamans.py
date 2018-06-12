@@ -1,12 +1,11 @@
-import scrapy
 import copy
-import re
 import datetime
 import js2py
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
+from scrapy import Request
 
 import schutzcrawler.items as items
 from schutzcrawler.price_parser import PriceParser
@@ -24,6 +23,7 @@ class ParseSpider(CrawlSpider, RoamansMixins):
     time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M")
     price_parser = PriceParser()
     description_parser = DescriptionParser()
+    size_family_url = ""
 
     def parse(self, response):
         product = items.ProductItem()
@@ -44,81 +44,95 @@ class ParseSpider(CrawlSpider, RoamansMixins):
         product["image_urls"] = self.image_urls(response)
         product["requests"] = []
 
-        self.generate_size_requests(response, product)
+        product["requests"].extend(self.generate_color_requests(response, product))
 
         if response.css('.sizeFamily'):
-            self.generate_size_family_requests(response, product)
-        
+            product["requests"].append(self.generate_size_family_requests(response, product))
+
         yield self.is_request_or_product(product)
-        
+
+    def parse_colors(self, response):
+        product = response.meta.get('product')
+        product["requests"].extend(self.generate_color_requests(response, product))
+        yield self.is_request_or_product(product)
+
+    def parse_size_family_values(self, response):
+        product = response.meta.get('product')
+        product["requests"].extend(self.generate_size_family_value_request(response))
+        yield self.is_request_or_product(product)
+
+    def parse_sizes(self, response):
+        product = response.meta.get('product')
+        product["requests"].extend(self.generate_size_requests(response))
+        yield self.is_request_or_product(product)
+
+    def parse_color_skus(self, response):
+        product = response.meta['product']
+        product["skus"].update(self.skus(response))
+        yield self.is_request_or_product(product)
+
+    def generate_color_requests(self, response, product):
+        requests = []
+        color_css = '.selectable a.color ::attr(data-href)'
+        color_urls = response.css(color_css).extract()
+        for color in color_urls:
+            requests.append(Request(url=color, callback=self.parse_sizes,
+                                    meta={'product': product}))
+        return requests
+
+    def generate_size_family_requests(self, response, product):
+        url = response.url.split('?')[0]
+        self.size_family_url = (f"https://f.monetate.net/trk/4/s/a-7736c7c2/p/allbrands.fullbeauty.com/907205417-0?"
+                                + f"&mi=%272.953402026.1528278326053%27&cs=!t&e=!(viewPage,gt,viewProduct)"
+                                + f"&pt=product&u=%27{url}%27&hvc=!t&eoq=!t")
+        return Request(url=self.size_family_url, callback=self.parse_size_family_values,
+                       meta={'product': product})
+
+    def generate_size_family_value_request(self, response):
+        requests = []
+        product = response.meta.get('product')
+        raw_text = response.text
+        parsed_text = js2py.eval_js(raw_text[raw_text.find("["):raw_text.rfind("]") + 1])
+        raw_size_family = [i for i in parsed_text if 'mntSwatchfamily' in str(i)]
+        size_family_sel = Selector(text=raw_size_family['args'][0])
+
+        size_family = size_family_sel.xpath('//li[@class="selectable"]/@data-swatchvalue').extract()
+        url = product.get('url')
+        pid = product.get('retailer_sku')
+        for family in size_family:
+            if 'R' in family:
+                continue
+            url_nxt = url.replace(pid, f"{pid}-{family}")
+            requests.append(Request(url=url_nxt, callback=self.parse_color_requests,
+                                    meta={'product': product}))
+        return requests
+
+    def generate_size_requests(self, response):
+        requests = []
+        sizes = response.css('li.selectable a.size::attr(data-href)').extract()
+        for size in sizes:
+            requests.append(Request(url=size, callback=self.parse_color_skus,
+                                    meta={'product': response.meta.get('product')}))
+        return requests
+
     def is_request_or_product(self, product):
         if product["requests"]:
             return product["requests"].pop()
         else:
             return product
 
-    def generate_size_requests(self, response, product):
-        sizes = response.css('.selectable a.size::attr(data-href)').extract()
-        for size in sizes:
-            product.get("requests", []).append(scrapy.Request(url=size, callback=self.parse_color_skus,
-                                                              meta={'product': product}))
-    
-    def generate_size_family_requests(self, response, product):
-        url = response.url.split('?')[0]
-        size_family_url = (f"https://f.monetate.net/trk/4/s/a-7736c7c2/p/allbrands.fullbeauty.com/907205417-0?"
-                           + f"&mi=%272.953402026.1528278326053%27&cs=!t&e=!(viewPage,gt,viewProduct)"
-                           + f"&pt=product&u=%27{url}%27&hvc=!t&eoq=!t")
-        product.get("requests", []).append(scrapy.Request(url=size_family_url, callback=self.parse_size_family_values,
-                                                          meta={'product': product}))
-        
-    def parse_size_family_values(self, response):
-        size_family_sel = {}
-        product = response.meta.get('product')
-
-        response_js_text = response.text
-        response_py = js2py.eval_js(response_js_text[response_js_text.find("["):response_js_text.rfind("]")+1])
-        for item in response_py:
-            if 'mntSwatchfamily' in str(item):
-                size_family_sel = item
-        size_family_sel = Selector(text=size_family_sel['args'][0])
-        size_family = size_family_sel.xpath('//li[@class="selectable"]/@data-swatchvalue').extract()
-        
-        url = product.get('url')
-        pid = product.get('retailer_sku')
-        for family in size_family:
-            if 'R' not in family:
-                url_nxt = url.replace(pid, f"{pid}-{family}")
-                product.get("requests", []).append(scrapy.Request(url=url_nxt, callback=self.parse_sizes,
-                                                                  meta={'product': product}))
-        yield self.is_request_or_product(product)
-
-    def parse_sizes(self, response):
-        requests = []
-        sizes = response.css('.selectable a.size::attr(data-href)').extract()
-        product = response.meta.get('product')
-        for size in sizes:
-            product.get("requests", []).append(scrapy.Request(url=size, callback=self.parse_color_skus,
-                                                              meta={'product': product}))
-            yield self.is_request_or_product(product)
-
-    def parse_color_skus(self, response):
-        xpath = '//ul[@class="swatches size"]/li[@class="selectable selected"]/span/text()'
-        size = response.xpath(xpath).extract_first()
-        raw_colors = response.xpath('//ul[@class="swatches color"]/li/span/text()').extract()
-        colors = [c for c in raw_colors if re.match('^[a-zA-Z]+', c)]
-        common_sku = self.price(response)
+    def skus(self, response):
+        size_xpath = '//ul[@class="swatches size"]/li[@class="selectable selected"]/span/text()'
+        size = response.xpath(size_xpath).extract_first()
+        color_xpath = '//ul[@class="swatches color"]/li[@class="selectable selected"]/span/text()'
+        color = response.xpath(color_xpath).extract_first()
         skus = {}
-        for color in colors:
-            sku = copy.deepcopy(common_sku)
-            sku['color'] = color
-            sku['size'] = size
-            skus[f"{color}{size}"] = sku
+        sku = self.price(response)
+        sku['color'] = color
+        sku['size'] = size
+        skus[f"{color}{size}"] = sku
 
-        product = response.meta['product']
-        skus.update(product["skus"])
-        product["skus"] = skus
-        
-        yield self.is_request_or_product(product)
+        return skus
 
     def image_urls(self, response):
         images = response.xpath('//a[@name="product_detail_image"]/img/@data-desktop-src').extract()
@@ -129,20 +143,19 @@ class ParseSpider(CrawlSpider, RoamansMixins):
         return response.xpath(retailer_sku_css).extract_first()
 
     def category(self, response):
-        name = self.product_name(response)
-        categories_css = '.breadcrumb a::text'
-        categories = response.css(categories_css).extract()
-        return [c.strip('\n') for c in categories[1:] if name not in c]
+        categories_xpath = '//div[@class="breadcrumb"]/a[not(contains(@class, "current-element"))]/text()'
+        categories = response.xpath(categories_xpath).extract()
+        return categories[1:-1]
 
     def product_name(self, response):
         return response.css('.top-wrap h1::text').extract_first()
 
     def price(self, response):
         return self.price_parser.prices(response.css('.product-price ::text').extract())
-    
+
     def raw_description(self, response):
         raw_description = response.css('.product-details-description ::text').extract()
-        return [d for d in raw_description if '\n' not in d]
+        return [d for d in raw_description if '\n' not in d and not d.isspace()]
 
     def description(self, response):
         raw_description = self.raw_description(response)
@@ -157,11 +170,10 @@ class RoamansSpider(CrawlSpider, RoamansMixins):
     name = f"{RoamansMixins.name}-crawl"
     parser = ParseSpider()
 
-    category_xpath = '//ul[contains(@class,"menu-category")]'
+    listing_x = ['//ul[contains(@class,"menu-category")]', '//li[@class="first-last"]']
     products_xpath = '//a[@class="name-link"]'
-    pagination_xpath = '//li[@class="first-last"]'
 
-    rules = [Rule(LinkExtractor(restrict_xpaths=[category_xpath,pagination_xpath]), callback='parse'),
+    rules = [Rule(LinkExtractor(restrict_xpaths=listing_x), callback='parse'),
              Rule(LinkExtractor(restrict_xpaths=products_xpath), callback=parser.parse)]
 
     def parse(self, response):
