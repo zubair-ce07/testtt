@@ -1,4 +1,3 @@
-import scrapy
 import copy
 import re
 import json
@@ -6,10 +5,12 @@ import datetime
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy import Request
 
 import schutzcrawler.items as items
 from schutzcrawler.price_parser import PriceParser
 from schutzcrawler.description_parser import DescriptionParser
+from schutzcrawler.utilities import Utilities
 
 
 class LiebeskindMixins:
@@ -18,7 +19,7 @@ class LiebeskindMixins:
     start_urls = ['http://de.liebeskind-berlin.com/']
 
 
-class ParseSpider(CrawlSpider, LiebeskindMixins):
+class ParseSpider(CrawlSpider, LiebeskindMixins, Utilities):
     name = f"{LiebeskindMixins.name}-parse"
 
     price_extractor = PriceParser()
@@ -43,15 +44,10 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
         product["skus"] = self.skus(response)
         product["crawl_start_time"] = self.time
         product["image_urls"] = []
-        product["requests"] = self.generate_color_requests(response, product)
+        product["requests"] = []
 
-        yield self.is_request_or_product(product)
-
-    def is_request_or_product(self, product):
-        if product["requests"]:
-            return product["requests"].pop()
-        else:
-            return product
+        product["requests"].extend(self.generate_color_requests(response, product))
+        yield self.next_request_or_product(product)
 
     def generate_color_requests(self, response, product):
         requests = []
@@ -72,25 +68,22 @@ class ParseSpider(CrawlSpider, LiebeskindMixins):
             variant_value = color.css('input::attr(value)').extract_first()
             data_action = color.css('input::attr(data-action)').extract_first()
 
-            url_next = (f"https://de.liebeskind-berlin.com/on/demandware.store/Sites-liebeskindEU-Site/en/SPV-Dispatch?"
-                        + f"view=ajax&Quantity={quantity}&renderingType={rendering_type}&pageType={page_type}&"
-                        + f"fitguideName={fit_guide_name}&fitguideUse={fit_guide_use}&stickvogelData={vogel_data}&"
-                        + f"{variant_name}={variant_value}&pid={pid}&cgid={cgid}&{data_action}={data_action}")
+            self.url_next = (
+                    f"https://de.liebeskind-berlin.com/on/demandware.store/Sites-liebeskindEU-Site/en/SPV-Dispatch?"
+                    + f"view=ajax&Quantity={quantity}&renderingType={rendering_type}&pageType={page_type}&"
+                    + f"fitguideName={fit_guide_name}&fitguideUse={fit_guide_use}&stickvogelData={vogel_data}&"
+                    + f"{variant_name}={variant_value}&pid={pid}&cgid={cgid}&{data_action}={data_action}")
 
-            product.get("requests", []).append(
-                scrapy.Request(url=url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item': product}))
+            requests.append(
+                Request(url=self.url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item': product}))
+        return requests
 
     def parse_image_urls(self, response):
         product = response.meta['item']
-        image_css = '.pdp__media__slider__pager img::attr(src)'
+        image_css = '.ta_imageSelector img::attr(src)'
         images = response.css(image_css).extract()
-        images.extend(product["image_urls"])
-        product["image_urls"] = set(images)
-        yield self.is_request_or_product(product)
-
-    def crawl_time(self):
-        time = datetime.datetime.now()
-        return time.strftime("%Y-%m-%d %I:%M")
+        product["image_urls"].extend(images)
+        yield self.next_request_or_product(product)
 
     def retailer_sku(self, response):
         retailer_sku_css = '.js-productvariations-swatchbase::attr(data-product)'
@@ -161,7 +154,6 @@ class LiebeskindSpider(CrawlSpider, LiebeskindMixins):
         pagination = response.xpath(pagination_xpath).extract_first()
         if pagination:
             pagination = json.loads(pagination)
-            for key, value in pagination.items():
-                trail = copy.deepcopy(trail)
-                next_url = f"{url}?{key}={value}"
-                yield scrapy.Request(url=next_url, callback=self.parse, meta={'trail': trail})
+            trail = copy.deepcopy(trail)
+            next_url = f"{url}?start={pagination['start']}"
+            yield Request(url=next_url, callback=self.parse, meta={'trail': trail})
