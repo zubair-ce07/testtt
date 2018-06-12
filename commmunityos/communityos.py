@@ -112,4 +112,4 @@ class CommunityosSpider(Spider):
         return geostats
 
     def _clean(self, value):
-        return value.replace('\n', '')
+        return value.replace('\n', '') if value else ''
