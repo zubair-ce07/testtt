@@ -185,7 +185,7 @@ class RoamansSpider(CrawlSpider, RoamansMixins):
         trail = response.meta.get('trail', [])
         trail.append(response.url)
 
-        for request in list(super(RoamansSpider, self).parse(response)):
+        for request in super(RoamansSpider, self).parse(response):
             trail = copy.deepcopy(trail)
             request.meta['trail'] = trail
             yield request
