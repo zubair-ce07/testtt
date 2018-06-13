@@ -3,7 +3,7 @@ import copy
 import datetime
 import js2py
 
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import Spider, CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 from scrapy import Request
@@ -19,7 +19,7 @@ class RoamansMixins:
     start_urls = ['https://roamans.com/']
 
 
-class ParseSpider(CrawlSpider, RoamansMixins):
+class ParseSpider(Spider, RoamansMixins):
     name = f"{RoamansMixins.name}-parse"
     time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M")
     price_parser = PriceParser()
@@ -132,7 +132,6 @@ class ParseSpider(CrawlSpider, RoamansMixins):
         color_xpath = '//ul[@class="swatches color"]/li[contains(@class, "selected")]/span/text()'
         color = response.xpath(color_xpath).extract_first()
         skus = {}
-        #pdb.set_trace()
         sku = self.price(response)
         sku['color'] = color
         sku['size'] = size
