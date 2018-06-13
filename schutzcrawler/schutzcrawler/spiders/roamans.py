@@ -1,3 +1,4 @@
+import pdb
 import copy
 import datetime
 import js2py
@@ -23,13 +24,20 @@ class ParseSpider(CrawlSpider, RoamansMixins):
     time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M")
     price_parser = PriceParser()
     description_parser = DescriptionParser()
-    size_family_url = ""
+    size_family_url = ("https://f.monetate.net/trk/4/s/a-7736c7c2/p/allbrands.fullbeauty.com/907205417-0?"
+                       + "&mi=%272.953402026.1528278326053%27&cs=!t&e=!(viewPage,gt,viewProduct)"
+                       + "&pt=product&u=%27{}%27&hvc=!t&eoq=!t")
+    retailer_skus = []
 
     def parse(self, response):
         product = items.ProductItem()
 
         product["url"] = response.url
-        product["retailer_sku"] = self.retailer_sku(response)
+        retailer_sku = self.retailer_sku(response)
+        if retailer_sku in self.retailer_skus:
+            return
+        self.retailer_skus.append(retailer_sku)
+        product["retailer_sku"] = retailer_sku
         product["gender"] = "women"
         product["retailer"] = "roamans-us"
         product["category"] = self.category(response)
@@ -82,10 +90,7 @@ class ParseSpider(CrawlSpider, RoamansMixins):
 
     def generate_size_family_requests(self, response, product):
         url = response.url.split('?')[0]
-        self.size_family_url = (f"https://f.monetate.net/trk/4/s/a-7736c7c2/p/allbrands.fullbeauty.com/907205417-0?"
-                                + f"&mi=%272.953402026.1528278326053%27&cs=!t&e=!(viewPage,gt,viewProduct)"
-                                + f"&pt=product&u=%27{url}%27&hvc=!t&eoq=!t")
-        return Request(url=self.size_family_url, callback=self.parse_size_family_values,
+        return Request(url=self.size_family_url.format(url), callback=self.parse_size_family_values,
                        meta={'product': product})
 
     def generate_size_family_value_request(self, response):
@@ -94,7 +99,7 @@ class ParseSpider(CrawlSpider, RoamansMixins):
         raw_text = response.text
         parsed_text = js2py.eval_js(raw_text[raw_text.find("["):raw_text.rfind("]") + 1])
         raw_size_family = [i for i in parsed_text if 'mntSwatchfamily' in str(i)]
-        size_family_sel = Selector(text=raw_size_family['args'][0])
+        size_family_sel = Selector(text=dict(raw_size_family)['args'][0])
 
         size_family = size_family_sel.xpath('//li[@class="selectable"]/@data-swatchvalue').extract()
         url = product.get('url')
@@ -122,11 +127,12 @@ class ParseSpider(CrawlSpider, RoamansMixins):
             return product
 
     def skus(self, response):
-        size_xpath = '//ul[@class="swatches size"]/li[@class="selectable selected"]/span/text()'
+        size_xpath = '//ul[@class="swatches size"]/li[contains(@class, "selected")]/span/text()'
         size = response.xpath(size_xpath).extract_first()
-        color_xpath = '//ul[@class="swatches color"]/li[@class="selectable selected"]/span/text()'
+        color_xpath = '//ul[@class="swatches color"]/li[contains(@class, "selected")]/span/text()'
         color = response.xpath(color_xpath).extract_first()
         skus = {}
+        #pdb.set_trace()
         sku = self.price(response)
         sku['color'] = color
         sku['size'] = size
