@@ -3,14 +3,14 @@ import re
 import json
 import datetime
 
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy import Request
 
 import schutzcrawler.items as items
 from schutzcrawler.price_parser import PriceParser
 from schutzcrawler.description_parser import DescriptionParser
-from schutzcrawler.utilities import Utilities
+from .base_spiders import BaseParseSpider, BaseCrawlSpider
 
 
 class LiebeskindMixins:
@@ -19,19 +19,27 @@ class LiebeskindMixins:
     start_urls = ['http://de.liebeskind-berlin.com/']
 
 
-class ParseSpider(CrawlSpider, LiebeskindMixins, Utilities):
+class ParseSpider(BaseParseSpider, LiebeskindMixins):
     name = f"{LiebeskindMixins.name}-parse"
 
     price_extractor = PriceParser()
     description_extractor = DescriptionParser()
     time = datetime.datetime.now().strftime("%Y-%m-%d %I:%M")
-    url_next = ""
+    url_next = (
+                "https://de.liebeskind-berlin.com/on/demandware.store/Sites-liebeskindEU-Site/en/SPV-Dispatch?view=ajax"
+                + "&Quantity={}&renderingType={}&pageType={}&fitguideName={}&fitguideUse={}&stickvogelData={}"
+                + "&{}={}&pid={}&cgid={}&{}={}")
+    retailer_skus = []
 
     def parse(self, response):
         product = items.ProductItem()
 
         product["url"] = response.url.split('?')[0]
-        product["retailer_sku"] = self.retailer_sku(response)
+        retailer_sku = self.retailer_sku(response)
+        if retailer_sku in self.retailer_skus:
+            return
+        self.retailer_skus.append(retailer_sku)
+        product["retailer_sku"] = retailer_sku
         product["gender"] = "women"
         product["retailer"] = "leibskind-de"
         product["category"] = self.category(response)
@@ -68,14 +76,11 @@ class ParseSpider(CrawlSpider, LiebeskindMixins, Utilities):
             variant_value = color.css('input::attr(value)').extract_first()
             data_action = color.css('input::attr(data-action)').extract_first()
 
-            self.url_next = (
-                    f"https://de.liebeskind-berlin.com/on/demandware.store/Sites-liebeskindEU-Site/en/SPV-Dispatch?"
-                    + f"view=ajax&Quantity={quantity}&renderingType={rendering_type}&pageType={page_type}&"
-                    + f"fitguideName={fit_guide_name}&fitguideUse={fit_guide_use}&stickvogelData={vogel_data}&"
-                    + f"{variant_name}={variant_value}&pid={pid}&cgid={cgid}&{data_action}={data_action}")
-
+            color_url = self.url_next.format(quantity, rendering_type, page_type, fit_guide_name, fit_guide_use,
+                                             vogel_data, variant_name, variant_value, pid, cgid, data_action,
+                                             data_action)
             requests.append(
-                Request(url=self.url_next, callback=self.parse_image_urls, dont_filter=True, meta={'item': product}))
+                Request(url=color_url, callback=self.parse_image_urls, dont_filter=True, meta={'item': product}))
         return requests
 
     def parse_image_urls(self, response):
@@ -128,7 +133,7 @@ class ParseSpider(CrawlSpider, LiebeskindMixins, Utilities):
         return [rd for rd in raw_description if self.description_extractor.is_care(rd)]
 
 
-class LiebeskindSpider(CrawlSpider, LiebeskindMixins):
+class LiebeskindSpider(BaseCrawlSpider, LiebeskindMixins):
     name = f"{LiebeskindMixins.name}-crawl"
 
     parser = ParseSpider()
@@ -140,11 +145,8 @@ class LiebeskindSpider(CrawlSpider, LiebeskindMixins):
              Rule(LinkExtractor(restrict_css=products_css), callback=parser.parse)]
 
     def parse(self, response):
-        trail = response.meta.get('trail', [])
-        trail.append(response.url)
-
-        for request in list(super(LiebeskindSpider, self).parse(response)):
-            trail = copy.deepcopy(trail)
+        for request in list(super(BaseCrawlSpider, self).parse(response)):
+            trail = self.add_trail(response)
             request.meta['trail'] = trail
             yield request
 
@@ -154,6 +156,6 @@ class LiebeskindSpider(CrawlSpider, LiebeskindMixins):
         pagination = response.xpath(pagination_xpath).extract_first()
         if pagination:
             pagination = json.loads(pagination)
-            trail = copy.deepcopy(trail)
             next_url = f"{url}?start={pagination['start']}"
+            trail = self.add_trail(response)
             yield Request(url=next_url, callback=self.parse, meta={'trail': trail})

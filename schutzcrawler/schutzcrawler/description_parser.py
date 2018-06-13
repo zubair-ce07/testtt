@@ -1,5 +1,4 @@
 class DescriptionParser:
-    #care_keywords = ['iron', 'soft', 'wash', 'bleach', 'Material', 'coat']
     care_keywords = ['Eisen', 'weich', 'waschen', 'bleichen', 'material', 'mantel']
 
     def is_care(self, description_text):
