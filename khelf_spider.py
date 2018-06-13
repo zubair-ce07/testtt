@@ -1,26 +1,13 @@
 import json
 import re
 
-from parsel import Selector
+from scrapy.selector import Selector
+from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, Request
 from scrapy.http import FormRequest
 from scrapy.link import Link
 
-from .base import BaseParseSpider, BaseCrawlSpider, LinkExtractor, clean
-
-
-class PaginationLE():
-    def extract_links(self, response):
-        products_per_page = response.css('option::attr(value)').extract()
-
-        if not products_per_page:
-            return [Link(response.url)]
-
-        max_product_limit = max(products_per_page)
-        category_code = response.css('#CategoriaCodigo::attr(value)').extract_first()
-        page_url = f'http://www.khelf.com.br/categoria/1/{category_code}'
-
-        return [Link(page_url+f'/0//MaisRecente/Decrescente/{max_product_limit}/{pn}//0/0/.aspx') for pn in range(10)]
+from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 
 class Mixin:
@@ -31,29 +18,36 @@ class Mixin:
 class MixinBR(Mixin):
     retailer = Mixin.retailer + '-br'
     market = 'BR'
-    start_urls = ['http://www.khelf.com.br/relogio-casio-g-shock-12529.aspx/p']
+    start_urls = ['http://www.khelf.com.br']
+
+
+class PaginationLE():
+    pagination_url = 'http://www.khelf.com.br/categoria/1/{}/0//MaisRecente/Decrescente/{}/{}//0/0/.aspx'
+
+
+    def extract_links(self, response):
+        products_per_page = clean(response.css('option::attr(value)'))
+
+        if not products_per_page:
+            return [Link(response.url)]
+
+        max_product_limit = max(products_per_page)
+        category_code = clean(response.css('#CategoriaCodigo::attr(value)'))
+
+        return [Link(self.pagination_url.format(category_code, max_product_limit, pn)) for pn in range(10)]
 
 
 class KhelfParseSpider(BaseParseSpider):
-    price_css = '#lblPrecos'
-    request_url = 'http://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx'
+    price_css = '#lblPrecos>span>strong::text'
+    source_url = 'http://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx'
     ignore_extension = '.gif'
-
-    gender_map = [
-        ('masculino', 'men'),
-        ('masculina', 'men'),
-        ('masculino', 'men'),
-        ('masculinas', 'men'),
-        ('feminina', 'women'),
-        ('feminininas', 'women'),
-        ('feminio', 'women')
-    ]
 
 
     def parse(self, response):
         raw_product = self.raw_product(response)
         sku_id = self.sku_id(raw_product)
         product_web_id = self.product_web_id(raw_product)
+
         if not sku_id:
             return
 
@@ -66,7 +60,11 @@ class KhelfParseSpider(BaseParseSpider):
         garment['skus'] = {}
         garment['image_urls'] = self.image_urls(response)
         garment['gender'] = self.product_gender(raw_product)
-        garment['meta'] = {'requests_queue': self.request_colour(response, garment, product_web_id)}
+
+        if self.validate_price(response):
+            garment['meta'] = {'requests_queue': self.request_colour(response, garment, product_web_id)}
+        else:
+            garment['out_of_stock'] = True
 
         return self.next_request_or_garment(garment)
 
@@ -76,17 +74,17 @@ class KhelfParseSpider(BaseParseSpider):
         product_web_id = response.meta.get('product_web_id')
         common_sku = response.meta.get('common_sku')
         colours = self.colour_url(str(raw_colours['value'][0]))
-        garment['meta']['requests_queue'] += self.request_sizes(colours, garment, response,
-                                                                product_web_id, common_sku)
+        garment['meta']['requests_queue'] += self.request_sizes(colours, response)
 
         if not garment['meta']['requests_queue']:
-            common_sku['size'] = 'U'
+            common_sku['size'] = self.one_size
             garment['skus'][product_web_id] = common_sku
         
         return self.next_request_or_garment(garment)
 
     def parse_skus(self, response):
-        garment = self.skus(response)
+        garment = response.meta.get('garment')
+        garment['skus'].update(self.skus(response))
         return self.next_request_or_garment(garment)
 
     def skus(self, response):
@@ -95,65 +93,64 @@ class KhelfParseSpider(BaseParseSpider):
         colour = response.meta['colour']
         raw_product = json.loads(response.text)
         common_sku = response.meta.get('common_sku')
-        sizes = self.sizes(str(raw_product['value'][3]))
+        garment['image_urls'].extend(self.image_urls_in_request(raw_product))
+        sizes = self.size(raw_product).css(' li')
 
-        out_of_stock_sizes = self.out_of_stock_sizes(str(raw_product['value'][3]))
-        garment['image_urls'].extend(self.image_urls_in_request(raw_product['value'][1]))
-        
         for size in sizes:
-            sku = {}
             sku = common_sku.copy()
-            sku['size'] = size
+            sku['size'] = clean(size.css(' a::text')[0])
             sku['colour'] = colour
 
-            if size in out_of_stock_sizes:
+            if size.css('.warn'):
                 sku['out_of_stock'] = True
 
-            skus[colour.lower() + '-' + size.lower() if colour else size] = sku
+            skus[colour.lower() + '-' + sku['size'].lower() if colour else sku['size']] = sku
         
-        garment['skus'].update(skus)
-
-        return garment
+        return skus
 
     def request_colour(self, response, garment, product_web_id):
-        price = self.raw_price(response)
-        try:
-            common_sku = self.product_pricing_common(None, money_strs=price)
+        common_sku = {}
 
-            if product_web_id:
-                parameters = {"ProdutoCodigo": product_web_id, "ColorCode": "0"}
-                return [Request(self.request_url, callback=self.parse_colour, method='POST',
-                                                  body=json.dumps(parameters), 
-                                                  headers={'X-AjaxPro-Method': 'CarregaSKU', 'Referer': response.url},
-                                                  meta={'garment': garment, 'product_web_id': product_web_id,
-                                                        'common_sku': common_sku})]
-        except IndexError:
-            return
+        if self.validate_price(response):
+            common_sku = self.product_pricing_common(response)
+
+        if product_web_id:
+            parameters = {"ProdutoCodigo": product_web_id, "ColorCode": "0"}
+            return [Request(self.source_url, callback=self.parse_colour, method='POST',
+                                                body=json.dumps(parameters), 
+                                                headers={'X-AjaxPro-Method': 'CarregaSKU', 'Referer': response.url},
+                                                meta={'garment': garment, 'product_web_id': product_web_id,
+                                                    'common_sku': common_sku})]
     
-    def request_sizes(self, colours, garment, response, product_web_id, common_sku):
+    def request_sizes(self, colours, response):
         requests = []
+        request_headers = {'X-AjaxPro-Method': 'DisponibilidadeSKU','Referer': response.url}
+        parameters = {"CarValorCodigo1": "0", "CarValorCodigo2": "0",
+                      "CarValorCodigo3": "0", "CarValorCodigo4": "0",
+                      "CarValorCodigo5": "0", "ProdutoCodigo": response.meta.get('product_web_id')}
+
         for colour in colours:
-            parameters = {"CarValorCodigo1": colour, "CarValorCodigo2": "0", "CarValorCodigo3": "0",
-                          "CarValorCodigo4": "0", "CarValorCodigo5": "0", "ProdutoCodigo": product_web_id}
-            requests.append(Request(self.request_url, callback=self.parse_skus, method='POST',
+            parameters['CarValorCodigo1'] = colour
+            requests.append(Request(self.source_url, callback=self.parse_skus, method='POST',
                                                       body=json.dumps(parameters),
-                                                      headers={'X-AjaxPro-Method': 'DisponibilidadeSKU',
-                                                               'Referer': response.url}, 
-                                                      meta={'garment': garment, 'colour': colour, 
-                                                            'common_sku': common_sku}))
+                                                      headers=request_headers, 
+                                                      meta={'garment': response.meta.get('garment'),
+                                                            'colour': colour, 
+                                                            'common_sku': response.meta.get('common_sku')}))
 
         return requests
 
-    def raw_price(self, response):
-        return clean(response.css('#lblPrecos>span>strong::text'))
+    def validate_price(self, response):
+        if response.css(self.price_css):
+            return True
+        return False
 
     def raw_product(self, response):
-        raw_product = re.findall("dataLayer.push(.+?);", response.text, re.S)[0][1:-1]
-        return json.loads(raw_product)
+        raw_product = response.xpath('//script//text()').re("\{.*\:.*\}")
+        return json.loads(raw_product[0])
 
     def raw_description(self, response):
         raw_description = clean(response.css('#description p::text'))
-        raw_description += clean(response.css('.especificacion p::text'))
         return raw_description
 
     def product_care(self, response):
@@ -163,48 +160,26 @@ class KhelfParseSpider(BaseParseSpider):
         return [pd for pd in self.raw_description(response) if not self.care_criteria(pd)]
 
     def colour_url(self, colour):
-        colours = []
-        ignore_url = ['javascript:;', 'javascript']
-        selector = Selector(colour)
-        colours_url = selector.css('.color li a::attr(href)').extract()
+        selector = Selector(text=colour)
+        colours_url = selector.css('.color li a').re('\(.*,.*,.*,.*\)')
+        return [colour.split(",")[1].replace("%20", "") for colour in colours_url]
 
-        for url in colours_url:
-            if url in ignore_url:
-                continue
-            colour = url.replace('javascript:ArmazenaOpcao', '')
-            colour = colour[1:-2]
-            colour = colour.split(",")
-            colours.append((colour[1]).strip())
-        
-        return colours
-
-    def sizes(self, response):
-        selector = Selector(response)
-        return clean(selector.css('.field ul li a::text').extract())
-
-    def out_of_stock_sizes(self, response):
-        selector = Selector(response)
-        return clean(selector.css('.field ul .warn a::text').extract())
-
-    def image_urls(self, response):
-        images = clean(response.css('.images .thumbs li a img::attr(src)'))
-        return [image for image in images if self.ignore_extension not in image]
+    def size(self, response):
+        response = str(response['value'][3])
+        selector = Selector(text=response)
+        return selector.css('ul[class=""]')
 
     def product_category(self, response):
         categories = clean(response.css('#breadcrumbs span a::attr("title")'))
         return categories[1:]
 
     def sku_id(self, raw_product):
-        if 'RKProductID' in raw_product:
-            return raw_product['RKProductID']
+        return raw_product.get('RKProductID')
 
     def product_gender(self, raw_product):
         product_name = raw_product['RKProductName']
         soup = product_name.lower()
-        for gender_string, gender in self.gender_map:
-            if gender_string in soup:
-                return gender
-        return 'unisex-adults'
+        return self.gender_lookup(soup) or 'unisex-adults'
 
     def product_web_id(self, raw_product):
         if 'RKProductWebID' in raw_product:
@@ -216,7 +191,11 @@ class KhelfParseSpider(BaseParseSpider):
     def out_of_stock(self, raw_description):
         return raw_description['RKProductAvailable']
 
+    def image_urls(self, response):
+        return clean(response.css('#big_photo_container a::attr(href)'))
+
     def image_urls_in_request(self, response):
+        response = response['value'][1]
         allowed_url = 'http://www.khelf.com.br/Imagens/produtos/'
         return [image for image in response if allowed_url in image and self.ignore_extension not in image]
 
