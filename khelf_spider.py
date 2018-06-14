@@ -18,7 +18,7 @@ class Mixin:
 class MixinBR(Mixin):
     retailer = Mixin.retailer + '-br'
     market = 'BR'
-    start_urls = ['http://www.khelf.com.br']
+    start_urls = ['http://www.khelf.com.br/']
 
 
 class PaginationLE():
@@ -28,18 +28,21 @@ class PaginationLE():
     def extract_links(self, response):
         products_per_page = clean(response.css('option::attr(value)'))
 
-        if not products_per_page:
+        if not products_per_page or not response.css('.pagination'):
             return [Link(response.url)]
 
-        max_product_limit = max(products_per_page)
-        category_code = clean(response.css('#CategoriaCodigo::attr(value)'))
+        css = '.set-next a::attr(href)'
+        max_pages = clean(response.css(css))[0]
+        max_pages = max_pages.replace('javascript:MudaPagina', '')
+        max_pages = int(max_pages[1:-1])
+        category_code = clean(response.css('#CategoriaCodigo::attr(value)'))[0]
 
-        return [Link(self.pagination_url.format(category_code, max_product_limit, pn)) for pn in range(10)]
+        return [Link(self.pagination_url.format(category_code, products_per_page[0], pn)) for pn in range(max_pages)]
 
 
 class KhelfParseSpider(BaseParseSpider):
     price_css = '#lblPrecos>span>strong::text'
-    source_url = 'http://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx'
+    product_api_url = 'http://www.khelf.com.br/ajaxpro/IKCLojaMaster.detalhes,Khelf.ashx'
     ignore_extension = '.gif'
 
 
@@ -74,11 +77,17 @@ class KhelfParseSpider(BaseParseSpider):
         product_web_id = response.meta.get('product_web_id')
         common_sku = response.meta.get('common_sku')
         colours = self.colour_url(str(raw_colours['value'][0]))
-        garment['meta']['requests_queue'] += self.request_sizes(colours, response)
+        sizes = self.request_sizes(colours, response)
 
-        if not garment['meta']['requests_queue']:
+        if not sizes:
             common_sku['size'] = self.one_size
             garment['skus'][product_web_id] = common_sku
+        else:
+            garment['meta']['requests_queue'] += sizes
+
+        # if not garment['meta']['requests_queue']:
+        #     common_sku['size'] = self.one_size
+        #     garment['skus'][product_web_id] = common_sku
         
         return self.next_request_or_garment(garment)
 
@@ -94,11 +103,11 @@ class KhelfParseSpider(BaseParseSpider):
         raw_product = json.loads(response.text)
         common_sku = response.meta.get('common_sku')
         garment['image_urls'].extend(self.image_urls_in_request(raw_product))
-        sizes = self.size(raw_product).css(' li')
+        sizes = self.sizes(raw_product)
 
         for size in sizes:
             sku = common_sku.copy()
-            sku['size'] = clean(size.css(' a::text')[0])
+            sku['size'] = clean(size.css('a::text')[0])
             sku['colour'] = colour
 
             if size.css('.warn'):
@@ -116,11 +125,11 @@ class KhelfParseSpider(BaseParseSpider):
 
         if product_web_id:
             parameters = {"ProdutoCodigo": product_web_id, "ColorCode": "0"}
-            return [Request(self.source_url, callback=self.parse_colour, method='POST',
-                                                body=json.dumps(parameters), 
-                                                headers={'X-AjaxPro-Method': 'CarregaSKU', 'Referer': response.url},
-                                                meta={'garment': garment, 'product_web_id': product_web_id,
-                                                    'common_sku': common_sku})]
+            return [Request(self.product_api_url, callback=self.parse_colour, method='POST',
+                                                  body=json.dumps(parameters), 
+                                                  headers={'X-AjaxPro-Method': 'CarregaSKU', 'Referer': response.url},
+                                                  meta={'product_web_id': product_web_id,
+                                                        'common_sku': common_sku})]
     
     def request_sizes(self, colours, response):
         requests = []
@@ -131,19 +140,16 @@ class KhelfParseSpider(BaseParseSpider):
 
         for colour in colours:
             parameters['CarValorCodigo1'] = colour
-            requests.append(Request(self.source_url, callback=self.parse_skus, method='POST',
-                                                      body=json.dumps(parameters),
-                                                      headers=request_headers, 
-                                                      meta={'garment': response.meta.get('garment'),
-                                                            'colour': colour, 
-                                                            'common_sku': response.meta.get('common_sku')}))
+            requests.append(Request(self.product_api_url, callback=self.parse_skus, method='POST',
+                                                          body=json.dumps(parameters),
+                                                          headers=request_headers, 
+                                                          meta={'colour': colour, 
+                                                                'common_sku': response.meta.get('common_sku')}))
 
         return requests
 
     def validate_price(self, response):
-        if response.css(self.price_css):
-            return True
-        return False
+        return response.css(self.price_css)
 
     def raw_product(self, response):
         raw_product = response.xpath('//script//text()').re("\{.*\:.*\}")
@@ -164,10 +170,10 @@ class KhelfParseSpider(BaseParseSpider):
         colours_url = selector.css('.color li a').re('\(.*,.*,.*,.*\)')
         return [colour.split(",")[1].replace("%20", "") for colour in colours_url]
 
-    def size(self, response):
+    def sizes(self, response):
         response = str(response['value'][3])
         selector = Selector(text=response)
-        return selector.css('ul[class=""]')
+        return selector.css('ul[class=""] li')
 
     def product_category(self, response):
         categories = clean(response.css('#breadcrumbs span a::attr("title")'))
@@ -182,8 +188,7 @@ class KhelfParseSpider(BaseParseSpider):
         return self.gender_lookup(soup) or 'unisex-adults'
 
     def product_web_id(self, raw_product):
-        if 'RKProductWebID' in raw_product:
-            return raw_product['RKProductWebID']
+        return raw_product.get('RKProductWebID')
 
     def product_name(self, response):
         return clean(response.css('.name::text'))
@@ -195,9 +200,9 @@ class KhelfParseSpider(BaseParseSpider):
         return clean(response.css('#big_photo_container a::attr(href)'))
 
     def image_urls_in_request(self, response):
-        response = response['value'][1]
+        raw_images = response['value'][1]
         allowed_url = 'http://www.khelf.com.br/Imagens/produtos/'
-        return [image for image in response if allowed_url in image and self.ignore_extension not in image]
+        return [image for image in raw_images if allowed_url in image and self.ignore_extension not in image]
 
 
 class KhelfCrawlSpider(BaseCrawlSpider):
