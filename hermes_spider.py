@@ -29,6 +29,7 @@ class MixinUS(Mixin):
 class HermesParseSpider(BaseParseSpider):
     price_css = '.field-type-commerce-price'
 
+
     def parse(self, response):
         product = ProductExtractor()
         raw_product = product.raw_product(response)
@@ -145,6 +146,7 @@ class HermesCrawlSpider(BaseCrawlSpider):
 
     rules = (Rule(LinkExtractor(restrict_css=listing), callback='parse_pagination'),    
              Rule(LinkExtractor(restrict_css=product), callback='parse_item'))
+
 
     def parse_pagination(self, response):
         yield from super().parse(response)
