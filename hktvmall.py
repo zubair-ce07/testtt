@@ -18,7 +18,7 @@ class HktvmallSpider(CrawlSpider):
 
     def parse(self, response):
         for zone in self.zones:
-            yield Request(self.api_url.format(zone, 0), callback=self.parse_json, meta={zone: zone})
+            yield Request(self.api_url.format(zone, 0), callback=self.parse_json, meta={'zone': zone})
 
     def parse_json(self, response):
         zone = response.meta.get('zone')
