@@ -49,6 +49,7 @@ class Product(Item):
     packaging = Field(
         output_processor=TakeFirst()
     )
+    colour = Field()
     image_urls = Field()
     reviews_count = Field(
         output_processor=TakeFirst()
@@ -71,3 +72,4 @@ class Product(Item):
     price_per_unit = Field(
         output_processor=TakeFirst()
     )
+    

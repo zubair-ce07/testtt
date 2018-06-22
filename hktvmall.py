@@ -39,6 +39,7 @@ class HktvmallSpider(CrawlSpider):
             product_loader.add_value('url', self.get_product_url(product))
             product_loader.add_value('brand', self.get_product_brand(product))
             product_loader.add_value('code', self.get_product_code(product))
+            product_loader.add_value('colour', self.get_colour_code(product))
             product_loader.add_value('categories', self.get_product_categories(product))
             product_loader.add_value('price', self.get_product_price(product))
             product_loader.add_value('currency', self.get_product_currency(product))
@@ -71,10 +72,16 @@ class HktvmallSpider(CrawlSpider):
         if 'categories' in product:
             return product['categories'][0]['name']
 
+    def get_colour_code(self, product):
+        if 'variantOptions' in product:
+            variants = product['variantOptions']
+            return [variant['color'] for variant in variants]
+
     def get_product_price(self, product):
         if 'promotionPrice' in product:
             return product['promotionPrice']['value']
-        return product['price']['value']
+        elif 'price' in product:
+            return product['price']['value']
 
     def get_product_currency(self, product):
         if 'price' in product:
