@@ -41,5 +41,6 @@ class PropertyscraperItem(Item):
     property_ad_link = Field()
     agent_fees = Field()
     agent_fees_amount = Field()
+    agent_name = Field()
 
 

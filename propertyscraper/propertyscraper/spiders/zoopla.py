@@ -1,5 +1,7 @@
 import re
 from dateutil import parser
+import datetime
+from collections import OrderedDict
 
 from scrapy.spiders import Spider, CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -12,17 +14,14 @@ class Mixin:
     allowed_domains = ['zoopla.co.uk']
     start_urls = [
         ('https://www.zoopla.co.uk/to-rent/property/london/?keywords=student&price_frequency=per_month&q=London'
-         + '&radius=40&results_sort=newest_listings&search_source=home')]
+         '&radius=40&results_sort=newest_listings&search_source=home')]
 
 
 class ZooplaParseSpider(Spider, Mixin):
     name = f"{Mixin.name}-parse"
 
     amenities = ['friendly', 'pets', 'smoking', 'storage', 'spacious', 'window', 'sun']
-    property_types = ['Studio', 'Flat', 'House', 'Apartment', 'Maisonette', 'Room']
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-              'November', 'December', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
-              'Dec']
+    property_types = ['Studio', 'Flat', 'House', 'Apartment', 'Maisonette', 'Room', 'bungalow', 'triplex']
 
     def parse(self, response):
         property_item = PropertyscraperItem()
@@ -41,7 +40,7 @@ class ZooplaParseSpider(Spider, Mixin):
         property_item['move_in_date'] = self.move_in_date(response)
         property_item['move_out_date'] = self.move_out_date(response)
         property_item['deposit_amount'] = self.deposit_amount(response)
-        property_item['property_amenities'] = self.property_amenities(response)
+        property_item['property_amenities'] = ';'.join(self.property_amenities(response))
         property_item['property_images'] = self.property_images(response)
         property_item['property_description'] = self.description(response)
         property_item['room_images'] = self.room_images(response)
@@ -55,17 +54,21 @@ class ZooplaParseSpider(Spider, Mixin):
         property_item['floor_plans'] = self.floorplan(response)
         property_item['deposit_name'] = self.deposit_name(response)
         property_item['deposit_type'] = ''
-        property_item['room_amenities'] = self.room_amenities(response)
+        property_item['room_amenities'] = ';'.join(self.room_amenities(response))
         property_item['property_ad_link'] = response.url
         property_item['agent_fees'] = self.agent_fees(response)
         property_item['agent_fees_amount'] = ''
+        property_item['agent_name'] = self.agent_name(response)
 
         yield property_item
+
+    def agent_name(self, response):
+        return response.css('.sidebar strong a::text').extract_first()
 
     def combine_features_and_description(self, response):
         property_info = self.property_info(response)
         property_info.extend(self.description(response))
-        property_info.extend(self.property_amenities(response).split(';'))
+        property_info.extend(self.property_amenities(response))
         description = []
         for info in property_info:
             description.extend(info.split('.'))
@@ -74,86 +77,84 @@ class ZooplaParseSpider(Spider, Mixin):
 
     def agent_fees(self, response):
         description = self.combine_features_and_description(response)
-
         agent_fees_info = [d for d in description if 'agent fee' in d.lower()]
-        if len(agent_fees_info) > 0:
-            if any(f for f in agent_fees_info if 'No' in f):
-                return 'No'
-            else:
-                return 'Yes'
+        raw_desc = ''.join(agent_fees_info)
+        if not raw_desc:
+            return ''
+        return 'No' if 'No' in raw_desc else 'Yes'
 
     def move_in_date(self, response):
         description = self.combine_features_and_description(response)
 
-        move_in_info = [d for d in description if 'move in' in d]
-        if len(move_in_info) == 0:
-            move_in_info = [d for d in description if any(m for m in self.months if m in d)]
-        try:
-            date = move_in_info[0].split("from", 1)[1].split(',')[0]
-            date = parser.parse(date)
-            return date.strftime("%d/%m/%Y")
-        except ValueError:
-            return ''
-        except IndexError:
-            return ''
+        move_in_info = [d for d in description if 'available' in d.lower()]
+
+        if move_in_info:
+            date = re.findall('(?:in|on|from|:)\s*([a-zA-Z0-9,\s]{1,17}20[\d]{2})', move_in_info[0])
+            try:
+                date = parser.parse(date[0])
+                return date.strftime("%d/%m/%Y")
+            except IndexError:
+                date_info = re.findall('(?:Available|available)\s*([a-zA-Z0-9]+)', move_in_info[0])
+                if 'now' or 'immediately' in ''.join(date_info[0]).lower():
+                    return datetime.datetime.now().strftime("%d/%m/%Y")
+                if 'mid' or 'end' or 'beginning' in ''.join(date_info[0]).lower():
+                    month = re.findall('(?:mid|end|beginning)\s*([a-zA-Z0-9]+)', move_in_info[0])
+                    month = parser.parse(month[0])
+                    return month.strftime("%d/%m/%Y")
+        return ''
 
     def move_out_date(self, response):
         description = self.combine_features_and_description(response)
         move_out_info = [d for d in description if 'move out' in d]
-        try:
-            date = move_out_info[0].split("to", 1)[1].split(',')[0]
-            date = parser.parse(date)
-            return date.strftime("%d/%m/%Y")
-        except ValueError:
-            return ''
-        except IndexError:
-            return ''
+        if len(move_out_info) > 0:
+            date = re.findall('(?:to|till|:)\s*([a-zA-Z0-9,\s]{1,17}20[\d]{2})', move_out_info[0])
+            try:
+                date = parser.parse(date[0])
+                return date.strftime("%d/%m/%Y")
+            except IndexError:
+                if 'mid' or 'end' or 'beginning' in ''.join(move_out_info[0]).lower():
+                    month = re.findall('(?:mid|end|beginning)\s*([a-zA-Z0-9]+)', move_out_info[0])
+                    month = parser.parse(month[0])
+                    return month.strftime("%d/%m/%Y")
+
+        return ''
 
     def raw_deposit_info(self, response):
         description = self.combine_features_and_description(response)
 
         deposit = [d for d in description if 'deposit' in d.lower()]
-        if len(deposit) > 0:
-            return deposit[0]
+        return deposit[0] if deposit else ''
 
     def deposit_amount(self, response):
         raw_deposit = self.raw_deposit_info(response)
-        if raw_deposit and '£' in raw_deposit:
-            if len(raw_deposit.split(' is ')) == 2:
-                return raw_deposit.split(' is ')[1]
-            elif len(raw_deposit.split(':')) == 2:
-                return raw_deposit.split(':')[1]
-            elif len(raw_deposit.split(' ')) == 2:
-                return raw_deposit.split(' ')[1]
+        deposit_amount = ''
+        if raw_deposit:
+            deposit_amount = re.findall('Deposit.*(£[\d,]+)', raw_deposit)
+
+        return deposit_amount[0] if deposit_amount else ''
 
     def deposit_name(self, response):
         raw_deposit = self.raw_deposit_info(response)
         if raw_deposit and '£' in raw_deposit:
-            if len(raw_deposit.split(' is ')) == 2:
-                return raw_deposit.split(' is ')[0]
-            elif len(raw_deposit.split(':')) == 2:
-                return raw_deposit.split(':')[0]
-            elif len(raw_deposit.split(' ')) == 2:
-                return raw_deposit.split(' ')[0]
+            return ' '.join(re.findall('Deposit|Bond|Security|Holding', raw_deposit[0]))
 
     def room_amenities(self, response):
         descriptions = self.combine_features_and_description(response)
         amenities = [d for d in descriptions if any(a for a in self.amenities if a in d)]
 
-        return ';'.join(amenities)
+        return amenities
 
     def floorplan(self, response):
-        property_info = response.css('.listing-content li')
-        for info in property_info:
-            if 'Floorplan' in info.css('span::text').extract():
-                return info.css('a::attr(href)').extract_first()
+        floorplan_xpath = '//ul[contains(@class, "listing-content")]/li[/span[contains(text(), "floorplan")]]/a/@href'
+        floorplan_tab_css = '#tab-floorplan img::attr(src)'
+        floor_plan = response.xpath(floorplan_xpath).extract_first() or response.css(floorplan_tab_css).extract_first()
 
-        return 'Floorplan is not available'
+        return floor_plan or 'Floorplan is not available'
 
     def room_price(self, response):
         price_css = '.listing-details-price strong::text'
         price = response.css(price_css).extract_first()
-        return ''.join(re.findall('\d+', price))
+        return ''.join(re.findall('£|\d+', price))
 
     def property_contact_name(self, response):
         contact_name_css = '//div[@class="sidebar sbt"]/p/strong/a/text()'
@@ -163,7 +164,7 @@ class ZooplaParseSpider(Spider, Mixin):
         return response.css('.agent_phone a::text').extract_first()
 
     def property_name(self, response):
-        property_configuration = response.css('.num-beds::attr(title)').extract_first() or ''
+        property_configuration = response.css('.num-beds::attr(title)').extract_first(default='')
         property_type = self.property_type(response) or ''
 
         return f"{property_configuration} {property_type}"
@@ -173,14 +174,12 @@ class ZooplaParseSpider(Spider, Mixin):
         return ' '.join(property_configuration).title().replace('s ', ' ')
 
     def raw_images(self, response):
-        return response.css('#images-thumbs img::attr(src)').extract()
+        return response.css('a.images-thumb ::attr(data-photo)').extract()
 
     def property_images(self, response):
         images = self.raw_images(response)
-        if images:
-            return images[0]
-        else:
-            return response.xpath('//div[@id="images-main"]/span[not(@id)]/img/@src').extract_first()
+        property_image = response.xpath('//div[@id="images-main"]/span[not(@id)]/img/@src').extract_first()
+        return images[:1] or [property_image]
 
     def room_images(self, response):
         images = self.raw_images(response)
@@ -188,23 +187,27 @@ class ZooplaParseSpider(Spider, Mixin):
 
     def property_type(self, response):
         property_heading = response.css('.listing-details-h1 ::text').extract_first()
-        type = [t for t in self.property_types if t.lower() in property_heading.lower()]
-        if len(type) > 0:
-            return type[0]
+        property_type = [t for t in self.property_types if t.lower() in property_heading.lower()]
+        if property_type:
+            return property_type[0]
         else:
-            return ''
+            description = self.description(response)
+            property_type = [t for t in self.property_types if any(d for d in description if t in d)]
+            return property_type[0] if property_type else ''
 
     def property_amenities(self, response):
         amenities_xpath = '//div[contains(@class,"ui-tabs-panel")]/div[@class="clearfix"]/ul/li/text()'
-        return ';'.join(response.xpath(amenities_xpath).extract())
+        amenitites = response.xpath(amenities_xpath).extract()
+        description_xpath = '//div[@class="bottom-plus-half"]/div[@class="top"]/descendant-or-self::text()'
+        raw_description = response.xpath(description_xpath).extract()
+        amenitites.extend([self.clean_string(rd) for rd in raw_description if self.clean_string(rd) and '-' in rd])
+
+        return response.xpath(amenities_xpath).extract()
 
     def bills_included(self, response):
         description = self.combine_features_and_description(response)
         bills_info = [d for d in description if 'bills' in d.lower()]
-        if len(bills_info) > 0:
-            return bills_info[0]
-        else:
-            'Bills Not included'
+        return bills_info[0] if bills_info else ''
 
     def postcode(self, response):
         post_code_xpath = '//meta[@property="og:postal-code"]/@content'
@@ -215,8 +218,9 @@ class ZooplaParseSpider(Spider, Mixin):
         return response.css(street_address_1_css).extract_first()
 
     def city(self, response):
-        city_xpath = '//meta[@property="og:locality"]/@content'
-        return response.xpath(city_xpath).extract_first()
+        locality_xpath = '//meta[@property="og:locality"]/@content'
+        street_xpath = '//meta[@property="og:street-address"]/@content'
+        return response.xpath(locality_xpath).extract_first() or response.xpath(street_xpath).extract_first()
 
     def area(self, response):
         raw_area = response.css('.split2r .bottom-half ::text').extract_first().split(' ')[-1]
@@ -234,20 +238,21 @@ class ZooplaParseSpider(Spider, Mixin):
     def description(self, response):
         description_xpath = '//div[@class="bottom-plus-half"]/div[@class="top"]/descendant-or-self::text()'
         raw_description = response.xpath(description_xpath).extract()
-        return [rd.replace('\n', '').strip() for rd in raw_description if rd.replace('\n', '').strip()]
+        description = [self.clean_string(rd) for rd in raw_description if self.clean_string(rd)]
+        return list(OrderedDict.fromkeys(description))
+
+    def clean_string(self, target_str):
+        return target_str.replace('\r', '').replace('\n', '').replace('-', '').strip()
 
     def furnished(self, response):
-        property_info = self.property_info(response)
+        property_info = self.combine_features_and_description(response)
         furnished_info = [r for r in property_info if 'furnished' in r.lower()]
-        if len(furnished_info) > 0:
-            return furnished_info[0]
-        else:
-            'Furnishing information not provided'
+        return furnished_info[0] if furnished_info else ''
 
     def property_info(self, response):
         property_info_xpath = '//ul[@class="listing-content clearfix noprint"]/li/descendant-or-self::text()'
         info = response.xpath(property_info_xpath).extract()
-        return [r.replace('\n', '').strip() for r in info if r.replace('\n', '').strip()]
+        return [self.clean_string(r) for r in info if self.clean_string(r)]
 
 
 class ZooplaCrawlSpider(CrawlSpider, Mixin):
