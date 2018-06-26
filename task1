@@ -24,6 +24,7 @@ def version_2(str):
                             modified_str[first_index+1:]
     print("version_2: " + modified_str)
 
+
 print("Please enter a string:")
 string = input()
 version_1(string)
