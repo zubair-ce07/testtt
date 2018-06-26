@@ -1,0 +1,30 @@
+
+def version_1(str):
+    #As letters are read, are populated in this list
+    #If a letter is being read for the second time, it is skipped
+    letters_read = []
+    modified_str = ""
+
+    for i in str:
+        if not i in letters_read:
+            letters_read.append(i)
+            modified_str = modified_str + i
+
+    print("version_1 output:" + modified_str)
+
+def version_2(str):
+    removed_letters = []
+    modified_str = str
+
+    for i in range(len(str)-1, 0, -1):
+        first_index = str.index(str[i])
+        if first_index != i and str[i] not in removed_letters:
+            removed_letters.append(str[i])
+            modified_str = modified_str[:first_index] + \
+                            modified_str[first_index+1:]
+    print("version_2: " + modified_str)
+
+print("Please enter a string:")
+string = input()
+version_1(string)
+version_2(string)
