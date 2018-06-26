@@ -1,7 +1,8 @@
 import json
 import re
-from scrapy.spiders import CrawlSpider
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy.loader import ItemLoader
+from scrapy.linkextractors import LinkExtractor
 from scrapy.loader.processors import TakeFirst
 from JacklemkusCrawler.items import ProductItem
 
@@ -22,8 +23,8 @@ def get_description(response):
 
 
 def get_brand(res, desc):
-    if "Item Brand" in desc:
-        return desc["Item Brand"]
+    if 'Item Brand' in desc:
+        return desc['Item Brand']
     else:
         return res.css('div.breadcrumbs li:nth-last-of-type(2) a::text').\
             extract()
@@ -31,28 +32,28 @@ def get_brand(res, desc):
 
 def get_gender(desc):
     if 'Gender' in desc:
-        return re.search(r'(\w{3,11})', desc["Gender"]).group()
+        return re.search(r'(\w{3,11})', desc['Gender']).group()
     else:
-        return "N/A"
+        return 'Unisex'
 
 
 class JackLemkusSpider(CrawlSpider):
-    name = "JackLemkus-spider"
-    start_urls = ['http://www.jacklemkus.com/']
+    name = 'JackLemkus-spider'
+    start_urls = ['https://www.jacklemkus.com/sneakers/buy-vans-sneakers-online-jack-lemkus']
 
-    def parse_start_url(self, response):
-        for url in response.css('li.level0.parent li.level1:not(.first) '
-                                '> a.menu-link::attr(href)').extract():
-            yield response.follow(url, self.parse_cat_url)
-        for url in response.css('li.level0:not(.parent):not(.last) '
-                                '> a.menu-link::attr(href)').extract():
-            yield response.follow(url, self.parse_cat_url)
-
-    def parse_cat_url(self, response):
-        for url in response.css("ol.products-grid>li>a::attr(href)").extract():
-            yield response.follow(url, self.parse_item)
-        url = response.css("a.next::attr(href)").extract_first()
-        yield response.follow(url, self.parse_cat_url)
+    rules = (
+        # items list
+        Rule(LinkExtractor(restrict_css='ol.products-grid>li'),
+             callback='parse_item'),
+        # menu links main page with sub menus
+        Rule(LinkExtractor(restrict_css='li.level0.parent li.level1:not(.first)'
+                                        ' > a.menu-link')),
+        # menu link main page without submenus
+        Rule(LinkExtractor(restrict_css='li.level0:not(.parent):not(.last)'
+                                        ' > a.menu-link')),
+        # next page items
+        Rule(LinkExtractor(restrict_css='a.next')),
+    )
 
     def parse_item(self, response):
         skus = get_skus(response)
@@ -71,3 +72,4 @@ class JackLemkusSpider(CrawlSpider):
         l.add_css('url','link[rel="canonical"]::attr(href)')
         l.add_value('url_original', response.url)
         yield l.load_item()
+
