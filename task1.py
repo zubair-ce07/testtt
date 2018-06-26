@@ -26,3 +26,6 @@ class WeatherReading:
 				self.Events = Events
 				self.WinDirDegrees = WinDirDegrees
 
+#testing
+
+
