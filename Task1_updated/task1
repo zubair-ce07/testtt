@@ -28,7 +28,6 @@ def retain_last_occurence_remove_rest(str):
 
     print("version_2 output: " + modified_str)
 
-
 print("Please enter a string:")
 string = input()
 retain_first_occurence_remove_rest(string)
