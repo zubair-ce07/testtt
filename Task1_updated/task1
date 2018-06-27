@@ -1,0 +1,35 @@
+
+def retain_first_occurence_remove_rest(str):
+    """
+    As letters are read, are populated in this list
+    If a letter is being read for the second time, it is skipped
+    """
+    modified_str = ""
+
+    for i in str:
+        if i not in modified_str:
+            modified_str = modified_str + i
+
+    print("version_1 output:" + modified_str)
+
+def retain_last_occurence_remove_rest(str):
+    """
+    Double occurence of letters is checked by .index() function
+    If letter has double occurence and is not removed yet, it should be removed
+    """
+    removed_letters = []
+    modified_str = str
+
+    for i in range(len(str)-1, 0, -1):
+        first_index = str.index(str[i])
+        if first_index != i and str[i] not in removed_letters:
+            removed_letters.append(str[i])
+            modified_str = modified_str.replace(str[i], '', 1)
+
+    print("version_2 output: " + modified_str)
+
+print("Please enter a string:")
+string = input()
+retain_first_occurence_remove_rest(string)
+retain_last_occurence_remove_rest(string)
+
