@@ -1,20 +1,24 @@
-import re
 import copy
-import scrapy
 
-from scrapy.spiders import CrawlSpider
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
-from schutzcrawler.items import ProductItem
-from schutzcrawler.PriceExtractor import PriceExtractor
-from schutzcrawler.mixins import Mixin
+from schutzcrawler.price_parser import PriceParser
+import schutzcrawler.items as items
 
 
-class ParseSpider(CrawlSpider, Mixin):
-    name = f"{Mixin.name}-parse"
-    price_extractor = PriceExtractor()
+class SchutzMixin:
+    allowed_domains = ['schutz.com.br']
+    name = 'schutz'
+    start_urls = ['https://schutz.com.br/store/']
+
+
+class ParseSpider(CrawlSpider, SchutzMixin):
+    name = f"{SchutzMixin.name}-parse"
+    price_extractor = PriceParser()
 
     def parse(self, response):
-        product = ProductItem()
+        product = items.ProductItem()
         product['brand'] = 'Schutz'
         product['care'] = self.care(response)
         product['category'] = self.category(response)
@@ -22,7 +26,7 @@ class ParseSpider(CrawlSpider, Mixin):
         product['name'] = self.product_name(response)
         product['image_urls'] = self.image_urls(response)
         product['retailer_sku'] = self.retailer_sku(response)
-        product['sku'] = skus = self.skus(response)
+        product['skus'] = skus = self.skus(response)
         product['trail'] = response.meta.get('trail', [])
         product['url'] = response.url
         product['out_of_stock'] = self.is_out_of_stock(skus)
@@ -94,3 +98,27 @@ class ParseSpider(CrawlSpider, Mixin):
     def product_name(self, response):
         name_css = '.sch-sidebar-product-title::text'
         return response.css(name_css).extract_first()
+
+
+class SchutzSpider(CrawlSpider, SchutzMixin):
+    name = f"{SchutzMixin.name}-crawl"
+
+    default_xpaths = ['//div[@class="sch-main-menu-sub-links-left"]',
+                      '//div[@class="sch-main-menu-sub-links-right"]',
+                      '//ul[@class="pagination"]/li[@class="next"]']
+    product_xpath = '//a[@class="sch-category-products-item-link"]'
+    parser = ParseSpider()
+    
+    # Follow any link scrapy finds (that is allowed and matches the patterns).
+    rules = [Rule(LinkExtractor(restrict_xpaths=default_xpaths), callback='parse'),
+             Rule(LinkExtractor(restrict_xpaths=product_xpath
+             ), callback=parser.parse, follow=True)]
+ 
+    def parse(self, response):
+        requests = super(SchutzSpider, self).parse(response)
+        trail = response.meta.get('trail', [])
+        trail.append(response.url)
+        for request in requests:
+            trail = copy.deepcopy(trail)
+            request.meta['trail'] = trail
+            yield request
