@@ -22,8 +22,6 @@ class AnnualResultCalculator:
         else:
             print("No data available against this input")
 
-
-
     def calculate_max_temp_for_year(self):
         for month in self.year_wise_list:
             month_max_temp_index = month['max_temperature_c'].idxmax()
