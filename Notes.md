@@ -8,7 +8,8 @@
 ### Classes
 
 - Parser
-- Interpreter
+- Calculator
+- Presenter
 
 ### Desired Calculations
 
