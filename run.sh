@@ -1,0 +1,1 @@
+python3 weatherman.py "/home/ali/Dev/Task 1/the-lab/weatherfiles/weatherfiles" -e 2012 -a 2005/06 -b 2005/6 -c 2005/06
