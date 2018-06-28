@@ -11,7 +11,8 @@ class DataParser:
         self.data = weatherdata.WeatherData()
 
     def get_data(self, file_path):
-        """This function reads data from all the txt files present in directory"""
+        """This function reads data from all the txt
+        files present in directory"""
         try:
             # Create a list of all the files to read
             all_files = [x for x in os.listdir(file_path) if x[-4:] == '.txt']
@@ -22,7 +23,8 @@ class DataParser:
         for file_name in all_files:
             try:
                 file = open(file_path + "/" + file_name, "r")
-                # Store the first row of the file for further use with remaining rows.
+                # Store the first row of the file for further use
+                # with remaining rows.
                 header = file.readline().split(",")
                 for line in file:
                     self.data.add(line, header)

@@ -5,9 +5,10 @@ class WeatherData:
     """This is a data structure for holding all the weather data
     it contains data from all the files present in directory.
     """
+
     def __init__(self):
-        self.data = []                      # The list that will hold all the data
-        self.current = 0                    # Iterator for using the object in for loops
+        self.data = []  # The list that will hold all the data
+        self.current = 0  # Iterator for using the object in for loops
 
     def __iter__(self):
         return self
@@ -17,7 +18,7 @@ class WeatherData:
             raise StopIteration
         else:
             self.current += 1
-            return self.data[self.current-1]
+            return self.data[self.current - 1]
 
     def reset_iter(self):
         self.current = 0
@@ -60,5 +61,7 @@ class WeatherData:
                     except ValueError:
                         value = "NA"
             # Keeping the key for date consistent
-            daily_report["PKT" if header[idx].strip() == "PKST" else header[idx].strip()] = value
+            date_key = "PKT" if header[idx].strip() == "PKST" \
+                else header[idx].strip()
+            daily_report[date_key] = value
         return daily_report
