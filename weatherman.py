@@ -2,6 +2,7 @@ import sys
 import os
 from weatherModule import Parser, Presenter, Calculator
 
+
 def main():
     # Get all contents of the directory passed as the first argument
 
@@ -10,7 +11,8 @@ def main():
 
     # Remove nested directories and only pickup non hidden files
 
-    files = [x for x in contents if os.path.isfile(x) and not x.startswith('.')]
+    files = [x for x in contents if os.path.isfile(
+        x) and not x.startswith('.')]
 
     # Read all files and extract data
 
@@ -46,7 +48,8 @@ def main():
 
         if str.isdigit(year) and str.isdigit(month):
             month = str(int(month))
-            result.append(calculator.calculateMonthlyAverageReport(organizedData, year, month))
+            result.append(calculator.calculateMonthlyAverageReport(
+                organizedData, year, month))
         pass
 
     if '-b' in mode:
@@ -58,7 +61,8 @@ def main():
 
         if str.isdigit(year) and str.isdigit(month):
             month = str(int(month))
-            result.append(calculator.calculateDailyExtremesReport(organizedData, year, month))
+            result.append(calculator.calculateDailyExtremesReport(
+                organizedData, year, month))
         pass
 
     if '-c' in mode:
@@ -70,14 +74,16 @@ def main():
 
         if str.isdigit(year) and str.isdigit(month):
             month = str(int(month))
-            result.append(calculator.calculateDailyExtremesReport(organizedData, year, month))
+            result.append(calculator.calculateDailyExtremesReport(
+                organizedData, year, month))
         pass
 
     if '-e' in mode:
         year = sys.argv[sys.argv.index('-e') + 1]
 
         if str.isdigit(year):
-            result.append(calculator.calculateAnnualResult(organizedData, year))
+            result.append(calculator.calculateAnnualResult(
+                organizedData, year))
         pass
 
     # print(result)
@@ -103,5 +109,6 @@ def main():
             # print(m)
             # print(r)
 
-if __name__== "__main__":
-  main()
+
+if __name__ == "__main__":
+    main()

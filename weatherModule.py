@@ -1,6 +1,7 @@
 import sys
 import datetime
 
+
 class Parser():
     def __init__(self):
         pass
@@ -21,8 +22,8 @@ class Parser():
         return collection
 
     def clean(self, collection):
-        cleanData = [x for x in collection if not x[0].isalpha()
-                     and self.includesRelevantData(x)]
+        cleanData = [x for x in collection if not x[0].isalpha() and
+                     self.includesRelevantData(x)]
         return cleanData
 
     def includesRelevantData(self, tuple):
@@ -115,7 +116,8 @@ class Calculator():
 
         result['Average Highest Temp'] = sum(highTemps) / len(highTemps)
         result['Average Lowest Temp'] = sum(lowTemps) / len(lowTemps)
-        result['Average Mean Humidity'] = sum(meanHumidities) / len(meanHumidities)
+        result['Average Mean Humidity'] = sum(
+            meanHumidities) / len(meanHumidities)
 
         return result
 
@@ -150,7 +152,7 @@ class Presenter():
 
     def presentAnnualReport(self, report):
         high = report['Highest Annual Temp']
-        
+
         date = self.strToDate(high[1])
         print("Highest: {0}C on {1}".format(high[0], date.strftime("%d %B")))
 
@@ -162,7 +164,8 @@ class Presenter():
         humid = report['Highest Annual Humidity']
 
         date = self.strToDate(humid[1])
-        print("Humidity: {0}% on {1}\n".format(humid[0], date.strftime("%d %B")))
+        print("Humidity: {0}% on {1}\n".format(
+            humid[0], date.strftime("%d %B")))
 
         pass
 
@@ -170,7 +173,8 @@ class Presenter():
 
         print('Highest Average: {0}C'.format(report['Average Highest Temp']))
         print('Lowest Average: {0}C'.format(report['Average Lowest Temp']))
-        print('Average Mean Humidity: {0}%\n'.format(report['Average Mean Humidity']))
+        print('Average Mean Humidity: {0}%\n'.format(
+            report['Average Mean Humidity']))
 
         pass
 
@@ -183,16 +187,22 @@ class Presenter():
         print(date.strftime('%B %Y'))
 
         for i in range(0, len(dates)):
-            day = dates[i].split('-')[2] if len(dates[i].split('-')[2]) == 2 else '0' + dates[i].split('-')[2]
-            
+            day = dates[i].split(
+                '-')[2] if len(dates[i].split('-')[2]) == 2 else '0' + \
+                dates[i].split('-')[2]
+
             low = '+' * int(minTemps[i])
             high = '+' * int(maxTemps[i])
 
-            if horizontal == False:
-                print(u"{0} \u001b[34m{1}\u001b[0m {2}C".format(day, high, int(maxTemps[i])))
-                print(u"{0} \u001b[31m{1}\u001b[0m {2}C".format(day, low, int(minTemps[i])))
+            if not horizontal:
+                print(u"{0} \u001b[34m{1}\u001b[0m {2}C".format(
+                    day, high, int(maxTemps[i])))
+                print(u"{0} \u001b[31m{1}\u001b[0m {2}C".format(
+                    day, low, int(minTemps[i])))
             else:
-                print(u"{0} \u001b[31m{1}\u001b[0m\u001b[34m{2}\u001b[0m {3}C-{4}C".format(day, low, high, int(minTemps[i]), int(maxTemps[i])))
+                print((u"{0} \u001b[31m{1}\u001b[0m\u001b[34m{2}" +
+                       u"\u001b[0m {3}C-{4}C").format(
+                    day, low, high, int(minTemps[i]), int(maxTemps[i])))
 
         print()
         pass
