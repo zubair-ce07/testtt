@@ -7,42 +7,37 @@ class ReportGenerator:
     CEND = '\033[0m'
 
     def __init__(self):
-        self.report = "NA"
+        self.__report = "NA"
 
-    def get_report(self, result):
-        """The function gets the report depending upon the command provided"""
-        if result.get_result_type() == "-e":
-            self._get_report_for_e(result)
-        elif result.get_result_type() == "-a":
-            self._get_report_for_a(result)
-        elif result.get_result_type() == "-c":
-            self._get_report_for_c(result)
-        elif result.get_result_type() == "-cb":
-            self._get_report_for_c_bonus(result)
-        else:
-            self.report = "Invalid command, results not computed!"
+    @property
+    def report(self):
+        return self.__report
 
-    def _get_report_for_e(self, result):
+    @report.setter
+    def report(self, r):
+        self.__report = r
+
+    def set_report_for_e(self, result):
         self.report = "Highest: {}C {}\nLowest: {}C {}\nHumidity: " \
                       "{}% {}".format(
-                                result.get_highest_temperature(),
-                                result.get_highest_temperature_day(),
-                                result.get_lowest_temperature(),
-                                result.get_lowest_temperature_day(),
-                                result.get_highest_humidity(),
-                                result.get_most_humid_day()
+                                result.highest_temperature,
+                                result.highest_temperature_day,
+                                result.lowest_temperature,
+                                result.lowest_temperature_day,
+                                result.highest_humidity,
+                                result.most_humid_day
                                 )
 
-    def _get_report_for_a(self, result):
+    def set_report_for_a(self, result):
         self.report = "Highest Average: {}C\nLowest Average: {}C" \
                       "\nAverage Mean Humidity: " \
                       "{}%".format(
-                            result.get_highest_temperature(),
-                            result.get_lowest_temperature(),
-                            result.get_highest_humidity()
+                            result.highest_temperature,
+                            result.lowest_temperature,
+                            result.highest_humidity
                             )
 
-    def _get_report_for_c(self, result):
+    def set_report_for_c(self, result):
         self.report = ""
         for idx, temperatures in enumerate(result.temperature_list):
             max_temp, min_temp = temperatures
@@ -58,7 +53,7 @@ class ReportGenerator:
                                                   min_temp
                                                   )
 
-    def _get_report_for_c_bonus(self, result):
+    def set_report_for_c_bonus(self, result):
         self.report = ""
         for idx, temperatures in enumerate(result.temperature_list):
             max_temp, min_temp = temperatures

@@ -1,22 +1,37 @@
 import dataparser
-import calculator
+import weather_summary as ws
 import report_generator
 import sys
 
 
+def get_report(command, data):
 
-def get_report(result):
+    weather_summary = ws.WeatherSummary()
     report = report_generator.ReportGenerator()
-    report.get_report(result)
+    action = command[0]
+
+    if action == "-e":
+        result = weather_summary.get_result_for_e(int(command[1]), data)
+        report.set_report_for_e(result)
+
+    elif action == "-a":
+        year, month = command[1].split("/")
+        result = weather_summary.get_result_for_a(int(year),
+                                                  int(month), data)
+        report.set_report_for_a(result)
+    elif action == "-c" or action == "-cb":
+        year, month = command[1].split("/")
+        result = weather_summary.get_result_for_c(
+            int(year),
+            int(month), data
+        )
+
+        if action == "-c":
+            report.set_report_for_c(result)
+        else:
+            report.set_report_for_c_bonus(result)
 
     return report.report
-
-
-def get_results(command, data):
-    c = calculator.Calculator()
-    c.compute(command, data)
-
-    return c.result
 
 
 def get_commands():
@@ -38,8 +53,7 @@ def get_multi_reports(commands, data):
         for command in commands:
             # The condition checks for validation of requested command
             if is_command_valid(command):
-                result = get_results(command, data)
-                report = get_report(result)
+                report = get_report(command, data)
 
                 multi_reports += "User Command : {} {}\n".format(
                     command[0], command[1]
