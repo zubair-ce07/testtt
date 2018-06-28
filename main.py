@@ -4,6 +4,7 @@ import report_generator
 import sys
 
 
+
 def get_report(result):
     report = report_generator.ReportGenerator()
     report.get_report(result)
@@ -40,7 +41,9 @@ def get_multi_reports(commands, data):
                 result = get_results(command, data)
                 report = get_report(result)
 
-                multi_reports += "User Command : {} {}\n".format(command[0], command[1])
+                multi_reports += "User Command : {} {}\n".format(
+                    command[0], command[1]
+                )
                 multi_reports += (report+"\n\n")
 
                 data.reset_iter()
@@ -75,3 +78,4 @@ if __name__ == "__main__":
     reports = get_multi_reports(commands, data)
 
     print(reports)
+
