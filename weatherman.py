@@ -1,6 +1,6 @@
 import sys
 import os
-from weatherModule import Parser, Presenter, Calculator
+from weather import Parser, Presenter, Calculator
 
 
 def main():
@@ -31,15 +31,15 @@ def main():
 
     parser = Parser()
 
-    weatherData = parser.read(files)
+    weather_data = parser.read(files)
 
     # Remove Extra attributes and empty rows
 
-    cleanData = parser.clean(weatherData)
+    clean_data = parser.clean(weather_data)
 
     # Convert the data into easily readable form
 
-    organizedData = parser.organizeData(cleanData)
+    organized_data = parser.organize_data(clean_data)
 
     # for x in organizedData:
     #     print(x)
@@ -69,8 +69,8 @@ def main():
 
             if str.isdigit(year) and str.isdigit(month):
                 month = str(int(month))
-                result.append(calculator.calculateMonthlyAverageReport(
-                    organizedData, year, month))
+                result.append(calculator.calculate_monthly_average_report(
+                    organized_data, year, month))
             else:
                 print('Invalid Arguments')
                 return
@@ -88,8 +88,8 @@ def main():
 
             if str.isdigit(year) and str.isdigit(month):
                 month = str(int(month))
-                result.append(calculator.calculateDailyExtremesReport(
-                    organizedData, year, month))
+                result.append(calculator.calculate_daily_extremes_report(
+                    organized_data, year, month))
             else:
                 print('Invalid Arguments')
                 return
@@ -107,8 +107,8 @@ def main():
 
             if str.isdigit(year) and str.isdigit(month):
                 month = str(int(month))
-                result.append(calculator.calculateDailyExtremesReport(
-                    organizedData, year, month))
+                result.append(calculator.calculate_daily_extremes_report(
+                    organized_data, year, month))
             else:
                 print('Invalid Arguments')
                 return
@@ -118,8 +118,8 @@ def main():
             year = sys.argv[sys.argv.index('-e') + 1]
 
             if str.isdigit(year):
-                result.append(calculator.calculateAnnualResult(
-                    organizedData, year))
+                result.append(calculator.calculate_annual_result(
+                    organized_data, year))
             else:
                 print('Invalid Arguments')
                 return
@@ -136,7 +136,7 @@ def main():
     result.reverse()
 
     if len(mode) == len(result):
-        print('No Error Occured In Computation\n')
+        print('No Error Occurred In Computation\n')
 
         while len(mode) != 0:
             m = mode.pop()
@@ -147,13 +147,13 @@ def main():
             # print('\n\n')
 
             if m == '-e':
-                presenter.presentAnnualReport(r)
+                presenter.present_annual_report(r)
             elif m == '-a':
-                presenter.presentMonthyAverageReport(r)
+                presenter.present_monthly_average_report(r)
             elif m == '-b':
-                presenter.presentDailyExtremesReport(r, horizontal=True)
+                presenter.present_daily_extremes_report(r, horizontal=True)
             elif m == '-c':
-                presenter.presentDailyExtremesReport(r)
+                presenter.present_daily_extremes_report(r)
                 pass
 
             # print(m)
