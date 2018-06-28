@@ -174,7 +174,7 @@ class Calculator():
 
         for data in organizedData:
             if date in data['Date']:
-                print(data['Date'])
+                # print(data['Date'])
                 if data['Max Temp'] != '' and data['Min Temp'] != '':
                     dates.append(data['Date'])
                     minTemps.append(data['Min Temp'])
