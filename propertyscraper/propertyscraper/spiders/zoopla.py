@@ -2,6 +2,7 @@ import re
 from dateutil import parser
 import datetime
 from collections import OrderedDict
+import pdb
 
 from scrapy.spiders import Spider, CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -29,10 +30,10 @@ class ZooplaParseSpider(Spider, Mixin):
         property_item['property_name'] = self.property_name(response)
         property_item['street_address_1'] = self.street_address(response)
         property_item['street_address_2'] = ''
-        property_item['city'] = self.city(response)
-        property_item['postcode'] = self.postcode(response)
+        property_item['city'] = 'London'
+        property_item['postcode'] = ''
         property_item['area'] = self.area(response)
-        property_item['area_info'] = self.area_rating_info(response)
+        property_item['area_info'] = ''
         property_item['website'] = self.property_website(response)
         property_item['furnished'] = self.furnished(response)
         property_item['bills_included'] = self.bills_included(response)
@@ -46,10 +47,10 @@ class ZooplaParseSpider(Spider, Mixin):
         property_item['room_images'] = self.room_images(response)
         property_item['room_name'] = self.room_name(response)
         # property_item['room_availability'] = ''
-        property_item['property_contact_name'] = self.property_contact_name(response)
+        property_item['property_contact_name'] = ''
         property_item['property_contact_email'] = ''
         property_item['property_contact_number'] = self.property_contact_number(response)
-        property_item['discounts'] = ''
+        property_item['discounts'] = self.discount(response)
         property_item['room_price'] = self.room_price(response)
         property_item['floor_plans'] = self.floorplan(response)
         property_item['deposit_name'] = self.deposit_name(response)
@@ -57,18 +58,24 @@ class ZooplaParseSpider(Spider, Mixin):
         property_item['room_amenities'] = ';'.join(self.room_amenities(response))
         property_item['property_ad_link'] = response.url
         property_item['agent_fees'] = self.agent_fees(response)
-        property_item['agent_fees_amount'] = ''
+        property_item['agent_fees_amount'] = self.agent_fees_amount(response)
         property_item['agent_name'] = self.agent_name(response)
 
         yield property_item
 
+    def discount(self, response):
+        description = self.combine_features_and_description(response)
+
+        discount_info = [d for d in description if '% off' in d]
+        return discount_info[0] if discount_info else ''
+
     def agent_name(self, response):
-        return response.css('.sidebar strong a::text').extract_first()
+        return response.css('.ui-agent__name ::text').extract_first()
 
     def combine_features_and_description(self, response):
-        property_info = self.property_info(response)
+        property_info = self.property_amenities(response)
         property_info.extend(self.description(response))
-        property_info.extend(self.property_amenities(response))
+
         description = []
         for info in property_info:
             description.extend(info.split('.'))
@@ -76,12 +83,13 @@ class ZooplaParseSpider(Spider, Mixin):
         return description
 
     def agent_fees(self, response):
-        description = self.combine_features_and_description(response)
-        agent_fees_info = [d for d in description if 'agent fee' in d.lower()]
-        raw_desc = ''.join(agent_fees_info)
-        if not raw_desc:
-            return ''
-        return 'No' if 'No' in raw_desc else 'Yes'
+        return 'Yes' if self.agent_fees_amount(response) else 'No'
+
+    def agent_fees_amount(self, response):
+        fees = response.css('.ui-modal-message #dp-modal-fees-content ::text').extract()
+        fee_regex = '(?:£)([\d,]+)(?:.*Fee|.*fee)'
+        fee_amount = sum([int(''.join(re.findall(fee_regex, f))) for f in fees if ''.join(re.findall(fee_regex, f))])
+        return f"£{fee_amount}" if fee_amount else ''
 
     def move_in_date(self, response):
         description = self.combine_features_and_description(response)
@@ -89,15 +97,16 @@ class ZooplaParseSpider(Spider, Mixin):
         move_in_info = [d for d in description if 'available' in d.lower()]
 
         if move_in_info:
-            date = re.findall('(?:in|on|from|:)\s*([a-zA-Z0-9,\s]{1,17}20[\d]{2})', move_in_info[0])
+            date = re.findall('(?:on|from|:)\s*([a-zA-Z0-9,\s]{1,17}20[\d]{2})', move_in_info[0])
             try:
                 date = parser.parse(date[0])
                 return date.strftime("%d/%m/%Y")
             except IndexError:
                 date_info = re.findall('(?:Available|available)\s*([a-zA-Z0-9]+)', move_in_info[0])
-                if 'now' or 'immediately' in ''.join(date_info[0]).lower():
+                # pdb.set_trace()
+                if re.findall('immediately|now', ''.join(date_info[0]).lower()):
                     return datetime.datetime.now().strftime("%d/%m/%Y")
-                if 'mid' or 'end' or 'beginning' in ''.join(date_info[0]).lower():
+                if re.findall('mid|end|beginning', ''.join(date_info[0]).lower()):
                     month = re.findall('(?:mid|end|beginning)\s*([a-zA-Z0-9]+)', move_in_info[0])
                     month = parser.parse(month[0])
                     return month.strftime("%d/%m/%Y")
@@ -112,7 +121,7 @@ class ZooplaParseSpider(Spider, Mixin):
                 date = parser.parse(date[0])
                 return date.strftime("%d/%m/%Y")
             except IndexError:
-                if 'mid' or 'end' or 'beginning' in ''.join(move_out_info[0]).lower():
+                if re.findall('mid|end|beginning', ''.join(move_out_info[0]).lower()):
                     month = re.findall('(?:mid|end|beginning)\s*([a-zA-Z0-9]+)', move_out_info[0])
                     month = parser.parse(month[0])
                     return month.strftime("%d/%m/%Y")
@@ -120,23 +129,38 @@ class ZooplaParseSpider(Spider, Mixin):
         return ''
 
     def raw_deposit_info(self, response):
+        # pdb.set_trace()
         description = self.combine_features_and_description(response)
-
         deposit = [d for d in description if 'deposit' in d.lower()]
-        return deposit[0] if deposit else ''
+
+        return deposit if deposit else ''
 
     def deposit_amount(self, response):
         raw_deposit = self.raw_deposit_info(response)
-        deposit_amount = ''
         if raw_deposit:
-            deposit_amount = re.findall('Deposit.*(£[\d,]+)', raw_deposit)
+            regex = '(?:Deposit.*?|deposit.*?)(?:(£[\d,]+|\s[\d,]+\spounds)|(?:rent))'
+            deposit_amount = [' '.join(list(re.findall(regex, d))) for d in raw_deposit if re.findall(regex, d)]
+            if deposit_amount:
+                return deposit_amount[0]
+            regex = '(£\d+).*deposit'
+            deposit_amount = [' '.join(list(re.findall(regex, d))) for d in raw_deposit if re.findall(regex, d)]
+            if deposit_amount:
+                return deposit_amount[0]
+            regex = 'pay.*?(£\d+)'
+            deposit_amount = [' '.join(list(re.findall(regex, d))) for d in raw_deposit if re.findall(regex, d)]
+            if deposit_amount:
+                return deposit_amount[0]
 
-        return deposit_amount[0] if deposit_amount else ''
+        return ''
 
     def deposit_name(self, response):
         raw_deposit = self.raw_deposit_info(response)
-        if raw_deposit and '£' in raw_deposit:
-            return ' '.join(re.findall('Deposit|Bond|Security|Holding', raw_deposit[0]))
+        deposit_name = ""
+        if raw_deposit:
+            regex = 'Deposit|Bond|Security|Holding'
+            deposit_name = [' '.join(re.findall(regex, d)) for d in raw_deposit if re.findall(regex, d) and '£' in d]
+
+        return deposit_name[0] if deposit_name else ''
 
     def room_amenities(self, response):
         descriptions = self.combine_features_and_description(response)
@@ -145,14 +169,12 @@ class ZooplaParseSpider(Spider, Mixin):
         return amenities
 
     def floorplan(self, response):
-        floorplan_xpath = '//ul[contains(@class, "listing-content")]/li[/span[contains(text(), "floorplan")]]/a/@href'
-        floorplan_tab_css = '#tab-floorplan img::attr(src)'
-        floor_plan = response.xpath(floorplan_xpath).extract_first() or response.css(floorplan_tab_css).extract_first()
-
+        floorplan_css = '.dp-assets-card__item img::attr(src)'
+        floor_plan = response.css(floorplan_css).extract_first()
         return floor_plan or 'Floorplan is not available'
 
     def room_price(self, response):
-        price_css = '.listing-details-price strong::text'
+        price_css = '.dp-sidebar-wrapper__summary .ui-pricing__main-price ::text'
         price = response.css(price_css).extract_first()
         return ''.join(re.findall('£|\d+', price))
 
@@ -161,20 +183,28 @@ class ZooplaParseSpider(Spider, Mixin):
         return response.xpath(contact_name_css).extract_first()
 
     def property_contact_number(self, response):
-        return response.css('.agent_phone a::text').extract_first()
+        contact_number = response.xpath('//a[@data-track-label="Agent phone number 1"]/text()').extract()
+        contact_number = [''.join(re.findall('\d+', self.clean_string(c))) for c in contact_number if
+                          self.clean_string(c)]
+        return contact_number[0] if contact_number else ''
 
     def property_name(self, response):
-        property_configuration = response.css('.num-beds::attr(title)').extract_first(default='')
+        property_amenities = self.property_amenities(response)
+        property_configuration = [a for a in property_amenities if 'bedroom' in a]
         property_type = self.property_type(response) or ''
 
-        return f"{property_configuration} {property_type}"
+        return f"{property_configuration[0]} {property_type}" if property_configuration else f"{property_type}"
 
     def room_name(self, response):
-        property_configuration = response.css('.listing-details-attr span::attr(title)').extract()
+        property_configuration = response.xpath('//section[@class="dp-features"]/ul[1]/li/text()').extract()
+        property_configuration = [re.sub(' +', ' ', self.clean_string(pc)) for pc in property_configuration if
+                                  self.clean_string(pc)]
         return ' '.join(property_configuration).title().replace('s ', ' ')
 
     def raw_images(self, response):
-        return response.css('a.images-thumb ::attr(data-photo)').extract()
+        images = response.css('.dp-gallery__list img::attr(src)').extract()
+        images = [i.replace('//lid', '//lc').replace('645/430/', '') for i in images]
+        return images
 
     def property_images(self, response):
         images = self.raw_images(response)
@@ -186,7 +216,8 @@ class ZooplaParseSpider(Spider, Mixin):
         return images[1:]
 
     def property_type(self, response):
-        property_heading = response.css('.listing-details-h1 ::text').extract_first()
+        property_heading = response.css('.listing-details-h1 ::text').extract_first() or response.css(
+            '.ui-prop-summary__title ::text').extract_first()
         property_type = [t for t in self.property_types if t.lower() in property_heading.lower()]
         if property_type:
             return property_type[0]
@@ -196,49 +227,41 @@ class ZooplaParseSpider(Spider, Mixin):
             return property_type[0] if property_type else ''
 
     def property_amenities(self, response):
-        amenities_xpath = '//div[contains(@class,"ui-tabs-panel")]/div[@class="clearfix"]/ul/li/text()'
-        amenitites = response.xpath(amenities_xpath).extract()
+        amenities = response.css('.dp-features__list li::text').extract()
+        amenities = [re.sub(' +', ' ', self.clean_string(rd)) for rd in amenities if self.clean_string(rd)]
+
         description_xpath = '//div[@class="bottom-plus-half"]/div[@class="top"]/descendant-or-self::text()'
         raw_description = response.xpath(description_xpath).extract()
-        amenitites.extend([self.clean_string(rd) for rd in raw_description if self.clean_string(rd) and '-' in rd])
+        amenities.extend([self.clean_string(rd) for rd in raw_description if self.clean_string(rd) and '-' in rd])
+        dimensions = response.css('.num-sqft ::text').extract_first()
+        if dimensions:
+            amenities.append(dimensions)
 
-        return response.xpath(amenities_xpath).extract()
+        return amenities
 
     def bills_included(self, response):
         description = self.combine_features_and_description(response)
         bills_info = [d for d in description if 'bills' in d.lower()]
         return bills_info[0] if bills_info else ''
 
-    def postcode(self, response):
-        post_code_xpath = '//meta[@property="og:postal-code"]/@content'
-        return response.xpath(post_code_xpath).extract_first()
-
     def street_address(self, response):
-        street_address_1_css = '.listing-details-address h2 ::text'
+        street_address_1_css = '.dp-sidebar-wrapper__summary .ui-prop-summary__address ::text'
+        # pdb.set_trace()
         return response.css(street_address_1_css).extract_first()
 
-    def city(self, response):
-        locality_xpath = '//meta[@property="og:locality"]/@content'
-        street_xpath = '//meta[@property="og:street-address"]/@content'
-        return response.xpath(locality_xpath).extract_first() or response.xpath(street_xpath).extract_first()
-
     def area(self, response):
-        raw_area = response.css('.split2r .bottom-half ::text').extract_first().split(' ')[-1]
-        return ''.join(re.findall('[a-zA-Z0-9]+', raw_area))
-
-    def area_rating_info(self, response):
-        rating_bar_style = response.css('.top-half ::attr(style)').extract_first()
-        rating_bar_width = ''.join(re.findall('[0-9]+', rating_bar_style))
-        return f"{int(rating_bar_width) / 20} stars"
+        address = self.street_address(response)
+        # pdb.set_trace()
+        return address.split(', ')[-1]
 
     def property_website(self, response):
-        raw_url = response.css('.sidebar strong a::attr(href)').extract_first()
-        return f"https://zoopla.co.uk{raw_url}"
+        return response.css('.ui-agent__details ::attr(href)').extract_first()
 
     def description(self, response):
-        description_xpath = '//div[@class="bottom-plus-half"]/div[@class="top"]/descendant-or-self::text()'
-        raw_description = response.xpath(description_xpath).extract()
-        description = [self.clean_string(rd) for rd in raw_description if self.clean_string(rd)]
+        description_css = '.dp-description__text ::text'
+        raw_description = response.css(description_css).extract()
+        description = [re.sub(' +', ' ', self.clean_string(rd)) for rd in raw_description if self.clean_string(rd)]
+
         return list(OrderedDict.fromkeys(description))
 
     def clean_string(self, target_str):
@@ -248,11 +271,6 @@ class ZooplaParseSpider(Spider, Mixin):
         property_info = self.combine_features_and_description(response)
         furnished_info = [r for r in property_info if 'furnished' in r.lower()]
         return furnished_info[0] if furnished_info else ''
-
-    def property_info(self, response):
-        property_info_xpath = '//ul[@class="listing-content clearfix noprint"]/li/descendant-or-self::text()'
-        info = response.xpath(property_info_xpath).extract()
-        return [self.clean_string(r) for r in info if self.clean_string(r)]
 
 
 class ZooplaCrawlSpider(CrawlSpider, Mixin):
