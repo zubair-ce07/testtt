@@ -60,6 +60,10 @@ def main():
             date = sys.argv[sys.argv.index('-a') + 1]
             date = date.split('/')
 
+            if not len(date) == 2:
+                print('Month not specified for', m)
+                return
+
             year = date[0]
             month = date[1]
 
@@ -67,12 +71,18 @@ def main():
                 month = str(int(month))
                 result.append(calculator.calculateMonthlyAverageReport(
                     organizedData, year, month))
-            pass
+            else:
+                print('Invalid Arguments')
+                return
 
         if '-b' == m:
             date = sys.argv[sys.argv.index('-b') + 1]
             date = date.split('/')
 
+            if not len(date) == 2:
+                print('Month not specified for', m)
+                return
+
             year = date[0]
             month = date[1]
 
@@ -80,12 +90,18 @@ def main():
                 month = str(int(month))
                 result.append(calculator.calculateDailyExtremesReport(
                     organizedData, year, month))
-            pass
+            else:
+                print('Invalid Arguments')
+                return
 
         if '-c' == m:
             date = sys.argv[sys.argv.index('-c') + 1]
             date = date.split('/')
 
+            if not len(date) == 2:
+                print('Month not specified for', m)
+                return
+
             year = date[0]
             month = date[1]
 
@@ -93,6 +109,9 @@ def main():
                 month = str(int(month))
                 result.append(calculator.calculateDailyExtremesReport(
                     organizedData, year, month))
+            else:
+                print('Invalid Arguments')
+                return
             pass
 
         if '-e' == m:
@@ -101,6 +120,11 @@ def main():
             if str.isdigit(year):
                 result.append(calculator.calculateAnnualResult(
                     organizedData, year))
+            else:
+                print('Invalid Arguments')
+                return
+
+        sys.argv.pop(sys.argv.index(m))
 
     # print(result)
 
@@ -119,6 +143,8 @@ def main():
             r = result.pop()
 
             print(m)
+            print(r)
+            # print('\n\n')
 
             if m == '-e':
                 presenter.presentAnnualReport(r)
@@ -128,6 +154,7 @@ def main():
                 presenter.presentDailyExtremesReport(r, horizontal=True)
             elif m == '-c':
                 presenter.presentDailyExtremesReport(r)
+                pass
 
             # print(m)
             # print(r)
