@@ -169,7 +169,7 @@ class ZooplaParseSpider(Spider, Mixin):
         return amenities
 
     def floorplan(self, response):
-        floorplan_css = '.dp-assets-card__item img::attr(src)'
+        floorplan_css = '.dp-assets-card__item img::attr(data-src)'
         floor_plan = response.css(floorplan_css).extract_first()
         return floor_plan or 'Floorplan is not available'
 
