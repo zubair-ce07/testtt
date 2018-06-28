@@ -53,7 +53,7 @@ def main():
     mode = []
     result = []
 
-    [mode.append(x) for x in sys.argv if x[0] == '-']
+    [mode.append(x) for x in sys.argv if x[0] == '-' and len(x) == 2]
 
     for m in mode:
         if '-a' == m:
@@ -143,7 +143,7 @@ def main():
             r = result.pop()
 
             print(m)
-            print(r)
+            # print(r)
             # print('\n\n')
 
             if m == '-e':
