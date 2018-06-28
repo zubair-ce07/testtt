@@ -2,6 +2,7 @@ import re
 import scrapy
 from dateutil import parser
 import datetime
+import itertools
 
 from scrapy.spiders import Spider, CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -9,11 +10,32 @@ from scrapy.linkextractors import LinkExtractor
 from propertyscraper.items import PropertyscraperItem
 
 
+def make_urls(start_urls_temp, sort_types):
+    return [u.format(s) for u in start_urls_temp for s in sort_types]
+
+
 class Mixin:
     name = "rightmove"
     allowed_domains = ['rightmove.co.uk']
-    start_urls = [('http://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
-                   '&insId=1&radius=40.0')]
+    start_urls_temp = [('https://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
+                        '&insId=1&radius=40.0&sortType={}'),
+                       ('https://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
+                        '&radius=40.0&propertyTypes=detached&secondaryDisplayPropertyType=detachedshouses&sortType={}'),
+                       ('https://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
+                        '&radius=40.0&propertyTypes=semi-detached&secondaryDisplayPropertyType=semidetachedhouses'
+                        '&sortType={}'),
+                       ('https://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
+                        '&radius=40.0&propertyTypes=terraced&secondaryDisplayPropertyType=terracedhouses&sortType={}'),
+                       ('https://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
+                        '&radius=40.0&propertyTypes=flat&primaryDisplayPropertyType=flats&sortType={}'),
+                       ('https://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
+                        '&radius=40.0&propertyTypes=bungalow&primaryDisplayPropertyType=bungalows&sortType={}'),
+                       ('https://www.rightmove.co.uk/student-accommodation/find.html?locationIdentifier=REGION%5E87490'
+                        '&radius=40.0&propertyTypes=private-halls&sortType={}'),
+                       ]
+
+    sort_types = ['1', '2', '10', '']
+    start_urls = make_urls(start_urls_temp, sort_types)
 
 
 class RightmoveParseSpider(Spider, Mixin):
@@ -110,7 +132,7 @@ class RightmoveParseSpider(Spider, Mixin):
     def combine_description_and_amenities(self, response):
         property_info = self.letting_info(response)
         property_info.extend(self.description(response))
-        property_info.extend(self.property_amenities(response).split(';'))
+        property_info.extend(self.property_amenities(response))
         description = []
         for info in property_info:
             description.extend(info.split('.'))
@@ -132,8 +154,10 @@ class RightmoveParseSpider(Spider, Mixin):
         return amenities
 
     def floorplan(self, response):
-        floor_plan_css = '#floorplan .zoomableimagewrapper img::attr(src)'
-        floor_plan_image = response.css(floor_plan_css).extract_first()
+        floor_plan_css = '#floorplan img.site-plan::attr(src)'
+        floor_plan_css_alt = '#floorplan .zoomableimagewrapper img::attr(src)'
+        floor_plan_image = response.css(floor_plan_css).extract_first() or response.css(
+            floor_plan_css_alt).extract_first()
         return floor_plan_image or 'Floorplan is not available'
 
     def room_price(self, response):
@@ -153,7 +177,10 @@ class RightmoveParseSpider(Spider, Mixin):
         return property_heading.split("to")[0]
 
     def raw_images(self, response):
-        return response.css('.gallery-thumbs-list li meta::attr(content)').extract()
+        images = response.css('.gallery-thumbs-list li meta::attr(content)').extract()
+        larger_image_regex = '(.*)(?:_max[\d_x]+)(.[a-z]+)'
+        images = [''.join(list(re.findall(larger_image_regex, image)[0])) for image in images]
+        return images
 
     def property_images(self, response):
         images = self.raw_images(response)
@@ -190,32 +217,50 @@ class RightmoveParseSpider(Spider, Mixin):
 
 class RightmoveCrawlSpider(CrawlSpider, Mixin):
     parser = RightmoveParseSpider()
+    sumtotal = 0
 
     name = f"{Mixin.name}-crawl"
     property_url = '//a[contains(@class, "propertyCard-img-link")]'
     rules = [Rule(LinkExtractor(restrict_xpaths=property_url), callback=parser.parse)]
 
     def parse(self, response):
-        requests = super(RightmoveCrawlSpider, self).parse(response)
+        for request in super(RightmoveCrawlSpider, self).parse(response):
+            yield request
+
+        requests = []
+        if 'minPrice' not in response.url:
+            # price filters request
+            requests = self.generate_price_filter_requests(response)
+        elif 'index' not in response.url:
+            requests = self.generate_pagination_requests(response)
+
         for request in requests:
             yield request
 
-        # price filters request
-        if 'minPrice' not in response.url:
-            range_list = response.css('#priceFilterBar select[name="minPrice"] option ::attr(value)').extract()
+    def generate_pagination_requests(self, response):
+        requests = []
+        total = response.css('.searchHeader-resultCount ::text').extract_first()
+        total = int(total.replace(",", ""))
 
-            range_list = [r for r in range_list if r]
-            list_chunks = list(zip(*[iter(range_list)]*2))
+        for index in range(1, int(total / 24)):
+            next_url = f"{response.url}&index={int(index)*24}"
+            requests.append(scrapy.Request(url=next_url, callback=self.parse))
 
-            for i in list_chunks:
-                next_chunk_url = f"{response.url}&maxPrice={i[-1]}&minPrice={i[0]}"
-                yield scrapy.Request(url=next_chunk_url, callback=self.parse)
+        return requests
 
-        # pagination links
-        if 'index' not in response.url and 'minPrice' in response.url:
-            total = response.css('.searchHeader-resultCount ::text').extract_first()
-            total = int(total.replace(",", ""))
+    def generate_price_filter_requests(self, response):
+        requests = []
+        bedding_range = response.css('#bedroomFilterBar select[name="minBedrooms"] option ::attr(value)').extract()
+        bedding_range = [r for r in bedding_range if r]
+        bedding_range_chunks = list(zip(*[iter(bedding_range)] * 2))
 
-            for index in range(1, int(total/24)):
-                next_url = f"{response.url}&index={int(index)*24}"
-                yield scrapy.Request(url=next_url, callback=self.parse)
+        price_range = response.css('#priceFilterBar select[name="minPrice"] option ::attr(value)').extract()
+        price_range = [r for r in price_range if r]
+        price_range_chunks = list(zip(*[iter(price_range)] * 6))
+
+        for pair in list(itertools.product(bedding_range_chunks, price_range_chunks)):
+            next_chunk = (f"{response.url}&maxPrice={pair[1][-1]}&minPrice={pair[1][0]}&"
+                                    f"maxBedrooms={pair[0][1]}&minBedrooms={pair[0][0]}")
+            requests.append(scrapy.Request(url=next_chunk, callback=self.parse))
+
+        return requests
