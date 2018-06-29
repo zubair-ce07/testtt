@@ -1,6 +1,5 @@
 import os
 import sys
-from os import listdir
 import csv
 import calendar
 from termcolor import colored
@@ -9,18 +8,17 @@ import re
 
 class WeatherFilesParser:
     
-    def __init__(self):
-        pass
-    
     #Get all files from given dirctory path
-    def get_all_files(self, path, key = None):
-        files = []
-        for file_name in listdir(path):
-            if file_name.endswith(".txt"):
-                file_path = path + "/" + file_name
-                files.append(file_path)
+    def get_all_files(self, path):
+        if os.path.isdir(path):
+            return [path + "/" + file_name for file_name in os.listdir(path) if file_name.endswith(".txt")]
+        else: return -1
+        # for file_name in listdir(path):
+        #     if file_name.endswith(".txt"):
+        #         file_path = path + "/" + file_name
+        #         files.append(file_path)
         
-        return files
+        # return files
     
     def read_file(self, file_path):
         file_data = []
