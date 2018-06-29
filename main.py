@@ -1,7 +1,6 @@
 import dataparser
 import weather_summary as ws
 import report_generator
-import sys
 import argparse
 
 
@@ -56,13 +55,11 @@ if __name__ == "__main__":
     file_path = args.file_path
     data_parser = dataparser.DataParser()
     data = data_parser.get_data(file_path)
-    weather_summary = ws.WeatherSummary()
     report = report_generator.ReportGenerator()
     reports = ""
 
     if args.e:
-        result = weather_summary.get_result_for_e(args.e, data)
-        data.reset_iter()
+        result = ws.WeatherSummary.get_result_for_e(args.e, data)
         report.set_report_for_e(result)
         reports += report.report+"\n\n"
 
@@ -70,10 +67,9 @@ if __name__ == "__main__":
         year_month = get_year_month(args.a)
 
         if year_month is not None:
-            result = weather_summary.get_result_for_a(int(year_month[0]),
+            result = ws.WeatherSummary.get_result_for_a(int(year_month[0]),
                                                       int(year_month[1]),
                                                       data)
-            data.reset_iter()
             report.set_report_for_a(result)
             reports += report.report+"\n\n"
 
@@ -81,23 +77,21 @@ if __name__ == "__main__":
         year_month = get_year_month(args.c)
 
         if year_month is not None:
-            result = weather_summary.get_result_for_c(int(year_month[0]),
+            result = ws.WeatherSummary.get_result_for_c(int(year_month[0]),
                                                       int(year_month[1]),
                                                       data)
             report.set_report_for_c(result)
             reports += report.report + "\n\n"
-            data.reset_iter()
 
     if args.b:
         year_month = get_year_month(args.c)
 
         if year_month is not None:
-            result = weather_summary.get_result_for_c(int(year_month[0]),
+            result = ws.WeatherSummary.get_result_for_c(int(year_month[0]),
                                                        int(year_month[1]),
                                                        data)
-            report.set_report_for_cb(result)
+            report.set_report_for_c_bonus(result)
             reports += report.report + "\n\n"
-            data.reset_iter()
 
     print(reports)
 

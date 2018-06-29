@@ -6,62 +6,59 @@ class WeatherData:
     it contains data from all the files present in directory.
     """
 
-    def __init__(self):
-        self.data = []  # The list that will hold all the data
-        self.current = 0  # Iterator for using the object in for loops
+    def __init__(self, date, h_temperature, l_temperature, m_temperature,
+                 max_humidity, mean_humidity):
+        self.__date = date
+        self.__highest_temperature = h_temperature
+        self.__lowest_temperature = l_temperature
+        self.__mean_temperature = m_temperature
+        self.__max_humidity = max_humidity
+        self.__mean_humidity = mean_humidity
 
-    def __iter__(self):
-        return self
+    @property
+    def date(self):
+        return self.__date
 
-    def __next__(self):
-        if self.current >= len(self.data):
-            raise StopIteration
-        else:
-            self.current += 1
-            return self.data[self.current - 1]
+    @date.setter
+    def date(self, date):
+        self.__date = date
 
-    def reset_iter(self):
-        self.current = 0
+    @property
+    def highest_temperature(self):
+        return self.__highest_temperature
 
-    def add(self, day_report, header):
-        """This function adds new elements to the data structure
-        on each operation a dictionary with whole data for one
-        day is added to the list"""
-        daily_report = self._get_daily_report(day_report, header)
-        self.data.append(daily_report)
+    @highest_temperature.setter
+    def highest_temperature(self, h_temperature):
+        self.__highest_temperature = h_temperature
 
-    def get(self, index):
-        return self.data[index]
+    @property
+    def lowest_temperature(self):
+        return self.__lowest_temperature
 
-    def remove(self):
-        del self.data[len(self.data) - 1]
-        return self
+    @lowest_temperature.setter
+    def lowest_temperature(self, l_temperature):
+        self.__lowest_temperature = l_temperature
 
-    def size(self):
-        return len(self.data)
+    @property
+    def max_humidity(self):
+        return self.__max_humidity
 
-    @staticmethod
-    def _get_daily_report(day_report, header):
-        """This function gets the raw data and populates the
-        data structure with proper formatted data types and values"""
-        daily_report = dict()
+    @max_humidity.setter
+    def max_humidity(self, max_humidity):
+        self.__max_humidity = max_humidity
 
-        for idx, value in enumerate(day_report.split(",")):
-            if idx == 0:
-                date = value.split("-")
-                # Storing date in proper datetime format
-                value = datetime.date(int(date[0]), int(date[1]), int(date[2]))
-            else:
-                # Converting int/float values to their respective data types
-                try:
-                    value = int(value)
-                except ValueError:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        value = "NA"
-            # Keeping the key for date consistent
-            date_key = "PKT" if header[idx].strip() == "PKST" \
-                else header[idx].strip()
-            daily_report[date_key] = value
-        return daily_report
+    @property
+    def min_humidity(self):
+        return self.__mean_humidity
+
+    @min_humidity.setter
+    def min_humidity(self, mean_humidity):
+        self.__mean_humidity = mean_humidity
+
+    @property
+    def mean_temperature(self):
+        return self.__mean_temperature
+
+    @mean_temperature.setter
+    def mean_temperature(self, mean_temperature):
+        self.__mean_temperature = mean_temperature
