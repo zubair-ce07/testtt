@@ -1,6 +1,4 @@
 class ReportGenerator:
-    """The class generates reports according to the
-    provided command and result"""
     # The variables defined for displaying colored output
     CRED = '\033[91m'
     CBLUE = '\33[94m'
@@ -40,41 +38,28 @@ class ReportGenerator:
     def set_report_for_c(self, result):
         self.report = ""
         for idx, temperatures in enumerate(result.temperature_list):
-            max_temp, min_temp = temperatures
+            max_temp, min_temp = abs(temperatures[0]), abs(temperatures[1])
             self.report += "{:02} {} {}\n".format(
-                idx+1, ReportGenerator.CRED
-                + self.__get_starts(max_temp)
+                idx+1,ReportGenerator.CRED
+                + ''.join(['+' for _ in range(max_temp)])
                 + ReportGenerator.CEND,
                 max_temp
-                )
-            self.report += "{:02} {} {}\n".format(idx+1, ReportGenerator.CBLUE
-                                                  + self.__get_starts(min_temp)
-                                                  + ReportGenerator.CEND,
-                                                  min_temp
-                                                  )
+            )
+            self.report += "{:02} {} {}\n".format(
+                idx+1, ReportGenerator.CBLUE
+                + ''.join(['+' for _ in range(min_temp)])
+                + ReportGenerator.CEND,
+                min_temp
+            )
 
     def set_report_for_c_bonus(self, result):
         self.report = ""
         for idx, temperatures in enumerate(result.temperature_list):
-            max_temp, min_temp = temperatures
+            max_temp, min_temp = abs(temperatures[0]), abs(temperatures[1])
             self.report += "{:02} {}{} {} {}\n".format(
                 idx+1, ReportGenerator.CRED
-                + self.__get_starts(max_temp)+ReportGenerator.CEND,
-                ReportGenerator.CBLUE+self.__get_starts(min_temp)
+                + ''.join(['+' for _ in range(max_temp)])
+                + ReportGenerator.CEND,
+                ReportGenerator.CBLUE + ''.join(['+' for _ in range(min_temp)])
                 + ReportGenerator.CEND, max_temp, min_temp
             )
-
-    @staticmethod
-    def __get_starts(value):
-        stars_str = ""
-
-        try:
-            value = int(value)
-            # converting value to positive to create bar for -ve values
-            value = -1*value if value < 0 else value
-            for i in range(value):
-                stars_str += "+"
-        except ValueError:
-            stars_str = ""
-
-        return stars_str

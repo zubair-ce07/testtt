@@ -2,10 +2,6 @@ import datetime
 
 
 class WeatherData:
-    """This is a data structure for holding all the weather data
-    it contains data from all the files present in directory.
-    """
-
     def __init__(self, date, h_temperature, l_temperature, m_temperature,
                  max_humidity, mean_humidity):
         self.__date = date
@@ -48,11 +44,11 @@ class WeatherData:
         self.__max_humidity = max_humidity
 
     @property
-    def min_humidity(self):
+    def mean_humidity(self):
         return self.__mean_humidity
 
-    @min_humidity.setter
-    def min_humidity(self, mean_humidity):
+    @mean_humidity.setter
+    def mean_humidity(self, mean_humidity):
         self.__mean_humidity = mean_humidity
 
     @property
@@ -62,3 +58,46 @@ class WeatherData:
     @mean_temperature.setter
     def mean_temperature(self, mean_temperature):
         self.__mean_temperature = mean_temperature
+
+    def set_all_members(self, line):
+
+        one_day_data = WeatherData._get_one_day_data(line)
+
+        self.date = one_day_data["PKT"]
+        self.highest_temperature = one_day_data[
+            "Max TemperatureC"
+        ]
+        self.lowest_temperature = one_day_data[
+            "Min TemperatureC"
+        ]
+        self.mean_temperature = one_day_data[
+            "Mean TemperatureC"
+        ]
+        self.max_humidity = one_day_data[
+            "Max Humidity"
+        ]
+        self.mean_humidity = one_day_data[
+            "Min Humidity"
+        ]
+
+    @staticmethod
+    def _get_one_day_data(line):
+        daily_report = dict()
+
+        for key in line.keys():
+            if key == "PKT" or key == "PKST":
+                date = line["PKT" if "PKT" == key else "PKST"].split("-")
+                value = datetime.date(int(date[0]), int(date[1]), int(date[2]))
+                daily_report["PKT"] = value
+            else:
+                try:
+                    value = int(line[key])
+                except ValueError:
+                    try:
+                        value = float(line[key])
+                    except ValueError:
+                        value = "NA"
+
+                daily_report[key.strip()] = value
+
+        return daily_report

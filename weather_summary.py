@@ -3,20 +3,15 @@ import result_container
 
 
 class WeatherSummary:
-    """This class serves as the tool for making all the required
-    calculations depending upon what command is provided by user"""
     date_key = "PKT"
 
     @staticmethod
     def get_result_for_e(year, data):
-        """The function calculates result for command -e"""
         result = result_container.ResultContainer(
             "NA", "NA", "NA", "NA", "NA", "NA"
         )
         for daily_data in data:
-            # Loop through whole data and filter data for requested year
             if daily_data.date.year == year:
-                # The conditions ensure the use of data when value is not 'NA'
                 if (daily_data.highest_temperature != "NA"
                     and result.highest_temperature == "NA") \
                         or (daily_data.highest_temperature != "NA"
@@ -59,7 +54,6 @@ class WeatherSummary:
 
     @staticmethod
     def get_result_for_a(year, month, data):
-        """The function calculates results for command -a"""
         result = result_container.ResultContainer(
             "NA", "NA", "NA", "NA", "NA", "NA"
         )
@@ -67,12 +61,8 @@ class WeatherSummary:
         sum_avg_humidity_entries = 0
 
         for daily_data in data:
-            # Loop through all the data and filter only for
-            # the requested Month and Year
             if daily_data.date.year == year \
                     and daily_data.date.month == month:
-                # The conditions make sure that data with 'NA'
-                # values is not considered
                 if (daily_data.mean_temperature != "NA"
                     and result.highest_temperature == "NA") \
                         or (daily_data.mean_temperature != "NA"
@@ -110,13 +100,10 @@ class WeatherSummary:
 
     @staticmethod
     def get_result_for_c(year, month, data):
-        """The function calculates the result for command -c"""
         result = result_container.ResultContainer(
             "NA", "NA", "NA", "NA", "NA", "NA"
         )
         for daily_data in data:
-            # Loop through all the data and filter only for
-            # the requested Month and Year
             if daily_data.date.year == year \
                     and daily_data.date.month == month:
                 # If the above condition is true

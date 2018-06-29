@@ -1,6 +1,4 @@
 class ResultContainer:
-    """This class is used as a data structure to store all the
-    result values"""
     def __init__(self, h_temperature, h_temperature_day, l_temperature,
                  l_temperature_day, h_humidity, m_humid_day):
         self.highest_temperature = h_temperature

@@ -6,7 +6,6 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-
 parser.add_argument("file_path", help="This arg stores the path to all "
                                       "weather data files", type=str)
 
@@ -51,7 +50,6 @@ def get_year_month(date):
 
 
 if __name__ == "__main__":
-    # The user provided params starts from index 1
     file_path = args.file_path
     data_parser = dataparser.DataParser()
     data = data_parser.get_data(file_path)
@@ -94,6 +92,3 @@ if __name__ == "__main__":
             reports += report.report + "\n\n"
 
     print(reports)
-
-
-
