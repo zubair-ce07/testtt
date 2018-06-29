@@ -1,7 +1,13 @@
 import sys
-import os
-import operator
-from colorsys import *
+
+
+MonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May',
+              'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+filename = 'Murree_weather_'
+
+option = 0
+File_Data = []
+YearReadings = []
 
 
 class WeatherReading:
@@ -79,7 +85,6 @@ class CalculateMonthResults:
         self.low_average = 0
         self.mean_humidity_average = 0
 
-
         highsum = 0
         lowsum = 0
         humiditysum = 0
@@ -93,7 +98,7 @@ class CalculateMonthResults:
             high_average = float(highsum / len(monthreadings))
             low_average = float(lowsum / len(monthreadings))
             mean_humidity_average = float(humiditysum / len(monthreadings))
-            
+
         print("Highest Average: " + str(high_average) + "C")
         print("Lowest Average: " + str(low_average) + "C")
         print("Average Mean Humidity: " + str(mean_humidity_average) + "%")
@@ -103,7 +108,9 @@ class Print_Month_Averages:
     def __init__(self, Month_Data):
         print("Highest Average: " + str(Month_Data.high_average) + "C")
         print("Lowest Average: " + str(Month_Data.low_average) + "C")
-        print("Average Mean Humidity: " + str(Month_Data.mean_humidity_average) + "%")
+        print("Average Mean Humidity: " +
+              str(Month_Data.mean_humidity_average) + "%")
+
 
 class Print_Month_Bar:
     def __init__(self, monthreadings):
@@ -117,26 +124,25 @@ class Print_Month_Bar:
             Min = int(monthreadings[i].MinTemp)
             high = str(i + 1)
             low = str(i + 1)
-            
+
             high += ' '
             low += ' '
-            
+
             for j in range(0, Max):
                 high += "+"
-            
+
             high += ' '
             high += str(Max)
 
             for j in range(0, Min):
                 low += "+"
-            
+
             low += ' '
             low += str(Min)
 
             print(high)
             print(low)
-        
-        
+
 
 class CalculateYearResults:
     def __init__(self, YearReadings):
@@ -152,81 +158,80 @@ class CalculateYearResults:
                 if(int(YearReadings[i][j].MaxTemp) > int(self.highest)):
                     self.highest = YearReadings[i][j].MaxTemp
                     self.highest_date = YearReadings[i][j].PKT
-                
+
                 if(int(YearReadings[i][j].MinTemp) < int(self.lowest)):
                     self.lowest = YearReadings[i][j].MinTemp
                     self.lowest_date = YearReadings[i][j].PKT
-                
+
                 if(int(YearReadings[i][j].MaxHumidity) > int(self.humid)):
                     self.humid = YearReadings[i][j].MaxHumidity
                     self.humid_date = YearReadings[i][j].PKT
-        
 
 
 class Print_Year_Results:
-    def __init__(self, Highest, Lowest, Most_Humid, Highest_Date, Lowest_Date, Humid_Date):
+    def __init__(self, Highest, Lowest, Most_Humid, Highest_Date, Lowest_Date,
+                 Humid_Date):
         MonthNames = ['January', 'February', 'March', 'April', 'May',
-              'June', 'July', 'August', 'September', 'October', 'November', 'December']
+                      'June', 'July', 'August', 'September', 'October',
+                      'November', 'December']
         High_Year, High_Month, High_Day = Highest_Date.split("-")
         Lowest_Year, Lowest_Month, Lowest_Day = Lowest_Date.split("-")
         Humid_Year, Humid_Month, Humid_Day = Humid_Date.split("-")
-        
+
         High_Month = MonthNames[int(High_Month) - 1]
         Lowest_Month = MonthNames[int(Lowest_Month) - 1]
         Humid_Month = MonthNames[int(Humid_Month) - 1]
 
-        print("Highest: " + str(Highest) + "C on " + str(High_Month) + " " + High_Day)
-        print("Lowest: " + str(Lowest) + "C on " + str(Lowest_Month) + " " + Lowest_Day)
-        print("Most Humidity: " + str(Most_Humid) + '% on' + str(Humid_Month) + " " + Humid_Day)
+        print("Highest: " + str(Highest) + "C on " +
+              str(High_Month) + " " + High_Day)
+        print("Lowest: " + str(Lowest) + "C on " +
+              str(Lowest_Month) + " " + Lowest_Day)
+        print("Most Humidity: " + str(Most_Humid) +
+              '% on' + str(Humid_Month) + " " + Humid_Day)
 
 
-MonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May',
-              'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-filename = 'Murree_weather_'
+def main():
 
-option = 0
-File_Data = []
-MaxTemp_List = []
-MinTemp_List = []
-MaxHumidity_List = []
-YearReadings = []
+    for i in range(2, len(sys.argv[1:]) + 1):
 
-for i in range(2, len(sys.argv[1:]) + 1):
+        word = sys.argv[i]
 
-    word = sys.argv[i]
+        if(word == '-a'):
+            option = 1
+        if(word == '-c'):
+            option = 2
+        if(word == '-e'):
+            option = 3
 
-    if(word == '-a'):
-        option = 1
-    if(word == '-c'):
-        option = 2
-    if(word == '-e'):
-        option = 3
-
-    if("/" in word):
-        year, month = word.split("/")
-        filename = 'Murree_weather_'
-        filename += (year + "_" + MonthNames[int(month) - 1] + ".txt")
-        filename = sys.argv[1] + "/" + filename
-
-#        print(filename)
-        File_Data = (ParseFiles(filename))
-        if(option == 1):
-            Results = CalculateMonthResults(File_Data)
-#           Print_Month_Averages(Results)
-        elif(option == 2):
-            Print_Month_Bar(File_Data.monthreadings)
-
-    elif(len(word) > 2):
-        for j in range(0, 12):
+        if("/" in word):
+            year, month = word.split("/")
             filename = 'Murree_weather_'
-            filename += (word + "_" + MonthNames[j] + ".txt")
+            filename += (year + "_" + MonthNames[int(month) - 1] + ".txt")
             filename = sys.argv[1] + "/" + filename
 
-#            print(filename)
             File_Data = (ParseFiles(filename))
-            YearReadings.append(File_Data.monthreadings)
+            if(option == 1):
+                Results = CalculateMonthResults(File_Data)
 
-        YearResults = CalculateYearResults(YearReadings)
-        Print_Year_Results(YearResults.highest, YearResults.lowest, YearResults.humid, YearResults.highest_date, YearResults.lowest_date, YearResults.humid_date)
+            elif(option == 2):
+                Print_Month_Bar(File_Data.monthreadings)
 
-#print('\x1b[6;30;42m' + 'Success!' + '\x1b[0m')
+        elif(len(word) > 2):
+            for j in range(0, 12):
+                filename = 'Murree_weather_'
+                filename += (word + "_" + MonthNames[j] + ".txt")
+                filename = sys.argv[1] + "/" + filename
+
+                File_Data = (ParseFiles(filename))
+                YearReadings.append(File_Data.monthreadings)
+
+            YearResults = CalculateYearResults(YearReadings)
+            Print_Year_Results(YearResults.highest, YearResults.lowest,
+                               YearResults.humid,
+                               YearResults.highest_date,
+                               YearResults.lowest_date,
+                               YearResults.humid_date)
+
+
+if __name__ == "__main__":
+    main()
