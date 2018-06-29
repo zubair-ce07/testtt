@@ -3,6 +3,7 @@ import os
 import datetime
 import csv
 
+
 class DataParser:
     """Class for parsing and storing data in correct formats,
     this class is not static so multiple instances of data
@@ -48,35 +49,30 @@ class DataParser:
             return None
 
         for file_name in all_files:
-            try:
-                file = open(file_path + "/" + file_name, "r")
+
+            with open(file_path + "/" + file_name, "r") as weather_file:
                 # Store the first row of the file for further use
                 # with remaining rows.
-                csv_file = csv.DictReader(file, delimiter=",")
+                csv_file = csv.DictReader(weather_file, delimiter=",")
 
                 for line in csv_file:
-                    oneday_data = DataParser._get_oneday_data(line)
+                    one_day_data = DataParser._get_oneday_data(line)
 
                     weather_data = weatherdata.WeatherData("NA", "NA", "NA",
                                                            "NA", "NA", "NA")
-                    weather_data.date = oneday_data["PKT"]
-                    weather_data.highest_temperature = oneday_data[
+                    weather_data.date = one_day_data["PKT"]
+                    weather_data.highest_temperature = one_day_data[
                         "Max TemperatureC"
                     ]
-                    weather_data.lowest_temperature = oneday_data[
+                    weather_data.lowest_temperature = one_day_data[
                         "Min TemperatureC"
                     ]
-                    weather_data.mean_temperature = oneday_data[
+                    weather_data.mean_temperature = one_day_data[
                         "Mean TemperatureC"
                     ]
-                    weather_data.max_humidity = oneday_data["Max Humidity"]
-                    weather_data.mean_humidity = oneday_data["Min Humidity"]
+                    weather_data.max_humidity = one_day_data["Max Humidity"]
+                    weather_data.mean_humidity = one_day_data["Min Humidity"]
 
                     self.data.append(weather_data)
-
-                file.close()
-            except FileNotFoundError:
-                print("Wrong file path or name, no such file exists!")
-                return None
 
         return self.data
