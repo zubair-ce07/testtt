@@ -2,7 +2,6 @@ import re
 from dateutil import parser
 import datetime
 from collections import OrderedDict
-import pdb
 
 from scrapy.spiders import Spider, CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -23,6 +22,9 @@ class ZooplaParseSpider(Spider, Mixin):
 
     amenities = ['friendly', 'pets', 'smoking', 'storage', 'spacious', 'window', 'sun']
     property_types = ['Studio', 'Flat', 'House', 'Apartment', 'Maisonette', 'Room', 'bungalow', 'triplex']
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
+              'November', 'December', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+              'Dec']
 
     def parse(self, response):
         property_item = PropertyscraperItem()
@@ -93,8 +95,7 @@ class ZooplaParseSpider(Spider, Mixin):
 
     def move_in_date(self, response):
         description = self.combine_features_and_description(response)
-
-        move_in_info = [d for d in description if 'available' in d.lower()]
+        move_in_info = [d for d in description if re.findall('available|availabl', d.lower())]
 
         if move_in_info:
             date = re.findall('(?:on|from|:)\s*([a-zA-Z0-9,\s]{1,17}20[\d]{2})', move_in_info[0])
@@ -102,14 +103,19 @@ class ZooplaParseSpider(Spider, Mixin):
                 date = parser.parse(date[0])
                 return date.strftime("%d/%m/%Y")
             except IndexError:
-                date_info = re.findall('(?:Available|available)\s*([a-zA-Z0-9]+)', move_in_info[0])
-                # pdb.set_trace()
-                if re.findall('immediately|now', ''.join(date_info[0]).lower()):
+                if re.findall('immediately|now', ''.join(move_in_info[0]).lower()):
                     return datetime.datetime.now().strftime("%d/%m/%Y")
-                if re.findall('mid|end|beginning', ''.join(date_info[0]).lower()):
+                if re.findall('mid|end|beginning', ''.join(move_in_info[0]).lower()):
                     month = re.findall('(?:mid|end|beginning)\s*([a-zA-Z0-9]+)', move_in_info[0])
                     month = parser.parse(month[0])
                     return month.strftime("%d/%m/%Y")
+                month = [m for m in self.months if m in move_in_info[0]]
+                if month:
+                    regex = '[\d].*\s{0}\s20[\d]{{2}}'.format(month[0])
+                    date = re.findall(regex, move_in_info[0])
+                    date = parser.parse(date[0])
+                    return date.strftime("%d/%m/%Y")
+
         return ''
 
     def move_out_date(self, response):
@@ -129,8 +135,8 @@ class ZooplaParseSpider(Spider, Mixin):
         return ''
 
     def raw_deposit_info(self, response):
-        # pdb.set_trace()
         description = self.combine_features_and_description(response)
+        description.extend(response.css('.ui-modal-message #dp-modal-fees-content ::text').extract())
         deposit = [d for d in description if 'deposit' in d.lower()]
 
         return deposit if deposit else ''
@@ -138,15 +144,16 @@ class ZooplaParseSpider(Spider, Mixin):
     def deposit_amount(self, response):
         raw_deposit = self.raw_deposit_info(response)
         if raw_deposit:
-            regex = '(?:Deposit.*?|deposit.*?)(?:(£[\d,]+|\s[\d,]+\spounds)|(?:rent))'
-            deposit_amount = [' '.join(list(re.findall(regex, d))) for d in raw_deposit if re.findall(regex, d)]
+            regex = '(?:deposit.*?)(?:(£[\d,]+|\s[\d,]+\spounds)|(?:agency|agent|fee))'
+            deposit_amount = [' '.join(list(re.findall(regex, d.lower()))) for d in raw_deposit if
+                              ' '.join(list(re.findall(regex, d.lower())))]
             if deposit_amount:
                 return deposit_amount[0]
             regex = '(£\d+).*deposit'
             deposit_amount = [' '.join(list(re.findall(regex, d))) for d in raw_deposit if re.findall(regex, d)]
             if deposit_amount:
                 return deposit_amount[0]
-            regex = 'pay.*?(£\d+)'
+            regex = '(£[\d]+).*(?:deposit)'
             deposit_amount = [' '.join(list(re.findall(regex, d))) for d in raw_deposit if re.findall(regex, d)]
             if deposit_amount:
                 return deposit_amount[0]
@@ -158,7 +165,8 @@ class ZooplaParseSpider(Spider, Mixin):
         deposit_name = ""
         if raw_deposit:
             regex = 'Deposit|Bond|Security|Holding'
-            deposit_name = [' '.join(re.findall(regex, d)) for d in raw_deposit if re.findall(regex, d) and '£' in d]
+            deposit_name = [' '.join(re.findall(regex, d)) for d in raw_deposit if
+                            re.findall(regex, d) and re.findall('£|pounds', d)]
 
         return deposit_name[0] if deposit_name else ''
 
@@ -196,7 +204,9 @@ class ZooplaParseSpider(Spider, Mixin):
         return f"{property_configuration[0]} {property_type}" if property_configuration else f"{property_type}"
 
     def room_name(self, response):
-        property_configuration = response.xpath('//section[@class="dp-features"]/ul[1]/li/text()').extract()
+        property_config_xpath = ('//ul[contains(@class, "dp-features__list")][1]/li'
+                                 '[svg[not(contains(@class, "icon-area"))]]/text()')
+        property_configuration = response.xpath(property_config_xpath).extract()
         property_configuration = [re.sub(' +', ' ', self.clean_string(pc)) for pc in property_configuration if
                                   self.clean_string(pc)]
         return ' '.join(property_configuration).title().replace('s ', ' ')
@@ -246,12 +256,10 @@ class ZooplaParseSpider(Spider, Mixin):
 
     def street_address(self, response):
         street_address_1_css = '.dp-sidebar-wrapper__summary .ui-prop-summary__address ::text'
-        # pdb.set_trace()
         return response.css(street_address_1_css).extract_first()
 
     def area(self, response):
         address = self.street_address(response)
-        # pdb.set_trace()
         return address.split(', ')[-1]
 
     def property_website(self, response):
