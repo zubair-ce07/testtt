@@ -1,7 +1,7 @@
 import weatherdata
 import os
 import datetime
-
+import csv
 
 class DataParser:
     """Class for parsing and storing data in correct formats,
@@ -12,29 +12,29 @@ class DataParser:
         self.data = []
 
     @staticmethod
-    def _get_oneday_data(day_report, header):
+    def _get_oneday_data(line):
         """This function gets the raw data and populates the
         data structure with proper formatted data types and values"""
         daily_report = dict()
 
-        for idx, value in enumerate(day_report.split(",")):
-            if idx == 0:
-                date = value.split("-")
+        for key in line.keys():
+            if key == "PKT" or key == "PKST":
+                date = line["PKT" if "PKT" == key else "PKST"].split("-")
                 # Storing date in proper datetime format
                 value = datetime.date(int(date[0]), int(date[1]), int(date[2]))
+                daily_report["PKT"] = value
             else:
                 # Converting int/float values to their respective data types
                 try:
-                    value = int(value)
+                    value = int(line[key])
                 except ValueError:
                     try:
-                        value = float(value)
+                        value = float(line[key])
                     except ValueError:
                         value = "NA"
-            # Keeping the key for date consistent
-            date_key = "PKT" if header[idx].strip() == "PKST" \
-                else header[idx].strip()
-            daily_report[date_key] = value
+
+                daily_report[key.strip()] = value
+
         return daily_report
 
     def get_data(self, file_path):
@@ -52,10 +52,10 @@ class DataParser:
                 file = open(file_path + "/" + file_name, "r")
                 # Store the first row of the file for further use
                 # with remaining rows.
-                header = file.readline().split(",")
+                csv_file = csv.DictReader(file, delimiter=",")
 
-                for line in file:
-                    oneday_data = DataParser._get_oneday_data(line, header)
+                for line in csv_file:
+                    oneday_data = DataParser._get_oneday_data(line)
 
                     weather_data = weatherdata.WeatherData("NA", "NA", "NA",
                                                            "NA", "NA", "NA")
