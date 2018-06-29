@@ -2,94 +2,104 @@ import dataparser
 import weather_summary as ws
 import report_generator
 import sys
+import argparse
 
 
-def get_report(command, data):
-
-    weather_summary = ws.WeatherSummary()
-    report = report_generator.ReportGenerator()
-    action = command[0]
-
-    if action == "-e":
-        result = weather_summary.get_result_for_e(int(command[1]), data)
-        report.set_report_for_e(result)
-
-    elif action == "-a":
-        year, month = command[1].split("/")
-        result = weather_summary.get_result_for_a(int(year),
-                                                  int(month), data)
-        report.set_report_for_a(result)
-    elif action == "-c" or action == "-cb":
-        year, month = command[1].split("/")
-        result = weather_summary.get_result_for_c(
-            int(year),
-            int(month), data
-        )
-
-        if action == "-c":
-            report.set_report_for_c(result)
-        else:
-            report.set_report_for_c_bonus(result)
-
-    return report.report
+parser = argparse.ArgumentParser()
 
 
-def get_commands():
-    commands = []
+parser.add_argument("file_path", help="This arg stores the path to all "
+                                      "weather data files", type=str)
 
-    if len(commands) % 2 == 0:
-        # We need to ignore 1st and 2nd param
-        for x in range(2,len(sys.argv)-1, 2):
-            commands.append((sys.argv[x], sys.argv[x+1]))
-    else:
-        commands.append((0, 0))
+parser.add_argument("-e", help="This command will give you the highest and "
+                               "lowest temperature and highest humidity with "
+                               "respective days for given year", type=int)
 
-    return commands
+parser.add_argument("-a", help="This command will give you the highest and "
+                               "lowest avg temperature and Mean avg Humidity"
+                               "for a given month"
+                               , type=str)
 
+parser.add_argument("-c", help="For a given month this command will draw two "
+                               "horizontal bar charts on the console for the "
+                               "highest and lowest temperature on each day. "
+                               "Highest in red and lowest in blue."
+                               , type=str)
 
-def get_multi_reports(commands, data):
-    multi_reports = ""
-    if data is not None:
-        for command in commands:
-            # The condition checks for validation of requested command
-            if is_command_valid(command):
-                report = get_report(command, data)
+parser.add_argument("-b", help="For a given month this command will draw one "
+                               "horizontal bar charts on the console for the "
+                               "highest and lowest temperature on each day. "
+                               "Highest in red and lowest in blue."
+                               , type=str)
 
-                multi_reports += "User Command : {} {}\n".format(
-                    command[0], command[1]
-                )
-                multi_reports += (report+"\n\n")
-
-                data.reset_iter()
-            else:
-                multi_reports += "The user command is not valid!\n\n"
-
-        return multi_reports
-    else:
-        return "The data provided is not valid!\n\n"
+args = parser.parse_args()
 
 
-def is_command_valid(command):
-    if command[0] == '-e':
-        if command[1].isdigit():
-            return True
-    elif command[0] in ['-a', '-c', '-cb']:
-        year_month = command[1].split("/")
-        if len(year_month) == 2:
-            if year_month[0].isdigit() and year_month[1].isdigit():
-                return True
+def get_year_month(date):
+    year_month = date.split("/")
+    year = None
+    month = None
 
-    return False
+    if len(year_month) == 2:
+        year = year_month[0]
+        month = year_month[1]
+
+        if year.isdigit() and month.isdigit():
+            return year, month
+
+    print("The date given is not valid!")
+    return None
 
 
 if __name__ == "__main__":
     # The user provided params starts from index 1
-    file_path = sys.argv[1]
+    file_path = args.file_path
     data_parser = dataparser.DataParser()
     data = data_parser.get_data(file_path)
+    weather_summary = ws.WeatherSummary()
+    report = report_generator.ReportGenerator()
+    reports = ""
 
-    commands = get_commands()
-    reports = get_multi_reports(commands, data)
+    if args.e:
+        result = weather_summary.get_result_for_e(args.e, data)
+        data.reset_iter()
+        report.set_report_for_e(result)
+        reports += report.report+"\n\n"
+
+    if args.a:
+        year_month = get_year_month(args.a)
+
+        if year_month is not None:
+            result = weather_summary.get_result_for_a(int(year_month[0]),
+                                                      int(year_month[1]),
+                                                      data)
+            data.reset_iter()
+            report.set_report_for_a(result)
+            reports += report.report+"\n\n"
+
+    if args.c:
+        year_month = get_year_month(args.c)
+
+        if year_month is not None:
+            result = weather_summary.get_result_for_c(int(year_month[0]),
+                                                      int(year_month[1]),
+                                                      data)
+            report.set_report_for_c(result)
+            reports += report.report + "\n\n"
+            data.reset_iter()
+
+    if args.b:
+        year_month = get_year_month(args.c)
+
+        if year_month is not None:
+            result = weather_summary.get_result_for_c(int(year_month[0]),
+                                                       int(year_month[1]),
+                                                       data)
+            report.set_report_for_cb(result)
+            reports += report.report + "\n\n"
+            data.reset_iter()
 
     print(reports)
+
+
 
