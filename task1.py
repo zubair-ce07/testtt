@@ -124,24 +124,30 @@ class Print_Month_Bar:
             Min = int(monthreadings[i].MinTemp)
             high = str(i + 1)
             low = str(i + 1)
+            highnum = high
+            lownum = low
 
-            high += ' '
-            low += ' '
+            high = ' '
+            low = ' '
 
             for j in range(0, Max):
                 high += "+"
+            print(highnum + u"\u001b[31m" + str(high) + u"\u001b[0m" + " " +
+                  str(Max))
 
-            high += ' '
-            high += str(Max)
+            # high = ' '
+            # high += str(Max)
 
             for j in range(0, Min):
                 low += "+"
+            print(lownum + u"\u001b[34m" + str(low) + u"\u001b[0m" + " " +
+                  str(Min))
 
-            low += ' '
-            low += str(Min)
+            # low = ' '
+            # low += str(Min)
 
-            print(high)
-            print(low)
+            # print(high)
+            # print(low)
 
 
 class CalculateYearResults:
@@ -191,6 +197,7 @@ class Print_Year_Results:
 
 
 def main():
+    print(u"\u001b[31mHello\u001b[0mWorld")
 
     for i in range(2, len(sys.argv[1:]) + 1):
 
