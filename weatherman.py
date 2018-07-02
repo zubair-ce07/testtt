@@ -1,22 +1,33 @@
-import sys
 import os
 from weather import Parser, Presenter, Calculator
+import argparse
 
 
 def main():
     # Get all contents of the directory passed as the first argument
+    parser = argparse.ArgumentParser()
+    parser.add_argument("directory")
+    parser.add_argument("-e", help=("For a given year display the highest temperature and day,"
+                                    " lowest temperature and day, most humid day and humidity"),
+                        action="append")
+    parser.add_argument("-a", help=("For a given month display the average highest temperature,"
+                                    " average lowest temperature,average mean humidity"),
+                        action="append")
+    parser.add_argument("-c",
+                        help=("For a given month draw two horizontal bar charts on the console for the highest and"
+                              " lowest temperature on each day. Highest in red and lowest in blue"),
+                        action="append")
+    parser.add_argument("-b", help=("For a given month draw one horizontal bar chart on the console for the highest"
+                                    " and lowest temperature on each day. Highest in red and lowest in blue."),
+                        action="append")
+    args = parser.parse_args()
 
-    if not len(sys.argv) % 2 == 0:
-        print('Invalid Number of arguments')
-        print('Sample Usage: python3 weatherman.py "path/to/dir" -e 2012')
-        return
-
-    if not os.path.exists(sys.argv[1]):
+    if not os.path.exists(args.directory):
         print('Invalid Directory Path')
         return
 
-    contents = os.listdir(sys.argv[1])
-    contents = [os.path.join(sys.argv[1], x) for x in contents]
+    contents = os.listdir(args.directory)
+    contents = [os.path.join(args.directory, x) for x in contents]
 
     # Remove nested directories and only pickup non hidden files
 
@@ -33,13 +44,9 @@ def main():
 
     weather_data = parser.read(files)
 
-    # Remove Extra attributes and empty rows
+    # Convert the data into easily readable form and clean it
 
-    clean_data = parser.clean(weather_data)
-
-    # Convert the data into easily readable form
-
-    organized_data = parser.organize_data(clean_data)
+    organized_data = parser.clean(weather_data)
 
     # for x in organizedData:
     #     print(x)
@@ -53,15 +60,13 @@ def main():
     mode = []
     result = []
 
-    [mode.append(x) for x in sys.argv if x[0] == '-' and len(x) == 2]
-
-    for m in mode:
-        if '-a' == m:
-            date = sys.argv[sys.argv.index('-a') + 1]
+    if args.a:
+        for arg in args.a:
+            date = arg
             date = date.split('/')
 
             if not len(date) == 2:
-                print('Month not specified for', m)
+                print('Month not specified for -a')
                 return
 
             year = date[0]
@@ -69,18 +74,20 @@ def main():
 
             if str.isdigit(year) and str.isdigit(month):
                 month = str(int(month))
+                mode.append('-a')
                 result.append(calculator.calculate_monthly_average_report(
                     organized_data, year, month))
             else:
                 print('Invalid Arguments')
                 return
 
-        if '-b' == m:
-            date = sys.argv[sys.argv.index('-b') + 1]
+    if args.b:
+        for arg in args.b:
+            date = arg
             date = date.split('/')
 
             if not len(date) == 2:
-                print('Month not specified for', m)
+                print('Month not specified for -b')
                 return
 
             year = date[0]
@@ -88,18 +95,20 @@ def main():
 
             if str.isdigit(year) and str.isdigit(month):
                 month = str(int(month))
+                mode.append('-b')
                 result.append(calculator.calculate_daily_extremes_report(
                     organized_data, year, month))
             else:
                 print('Invalid Arguments')
                 return
 
-        if '-c' == m:
-            date = sys.argv[sys.argv.index('-c') + 1]
+    if args.c:
+        for arg in args.c:
+            date = arg
             date = date.split('/')
 
             if not len(date) == 2:
-                print('Month not specified for', m)
+                print('Month not specified for -c')
                 return
 
             year = date[0]
@@ -107,26 +116,24 @@ def main():
 
             if str.isdigit(year) and str.isdigit(month):
                 month = str(int(month))
+                mode.append('-c')
                 result.append(calculator.calculate_daily_extremes_report(
                     organized_data, year, month))
             else:
                 print('Invalid Arguments')
                 return
-            pass
 
-        if '-e' == m:
-            year = sys.argv[sys.argv.index('-e') + 1]
+    if args.e:
+        for arg in args.e:
+            year = arg
 
             if str.isdigit(year):
+                mode.append('-e')
                 result.append(calculator.calculate_annual_result(
                     organized_data, year))
             else:
                 print('Invalid Arguments')
                 return
-
-        sys.argv.pop(sys.argv.index(m))
-
-    # print(result)
 
     # Print the Calculation results
 

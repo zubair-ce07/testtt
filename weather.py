@@ -1,105 +1,66 @@
 import sys
 import datetime
+import csv
 
 
 # The class responsible for reading and organizing the data
 class Parser:
-    def __init__(self):
-        pass
-
     # Read all files line by line and return them
     @staticmethod
-    def read(files):
+    def read(files_input):
         collection = []
 
-        for file in files:
-            f = open(file, 'r')
-            data = f.readlines()
+        for file in files_input:
+            with open(file, 'r') as f:
+                data = csv.DictReader(f)
 
-            for line in data:
-                collection.append(line)
-            pass
+                for line in data:
+                    collection.append(dict(line))
+                pass
 
         return collection
 
     # Read all the previously read lines and filter headers and useless rows
-    def clean(self, collection):
-        indices = []
+    def clean(self, dict_array):
+        clean_data = []
 
-        attributes = collection[0].split(',')
+        for data in dict_array:
+            keys = data.keys()
 
-        attributes = [x.strip() for x in attributes]
+            if 'PKST' in keys:
+                data['PKT'] = data['PKST']
+                del data['PKST']
 
-        date_index = attributes.index('PKT')
+            for key in keys:
+                if key != key.strip():
+                    data[key.strip()] = data[key]
+                    del data[key]
 
-        indices.append(attributes.index('Max TemperatureC'))
-        indices.append(attributes.index('Mean TemperatureC'))
-        indices.append(attributes.index('Min TemperatureC'))
-        indices.append(attributes.index('Max Humidity'))
-        indices.append(attributes.index('Mean Humidity'))
-        indices.append(attributes.index('Min Humidity'))
-
-        clean_data = [x for x in collection if not x[0].isalpha() and
-                      self.includes_relevant_data(x, indices)]
-
-        # Convert the data into a standard form
-
-        standardized_data = []
-
-        for row in clean_data:
-            data = row.split(',')
-            temp_row = data[date_index]
-            temp_row += ','
-
-            for i in range(0, len(indices)):
-                temp_row += data[indices[i]]
-
-                if not i == len(indices) - 1:
-                    temp_row += ','
-
-            standardized_data.append(temp_row)
-
-        clean_data = standardized_data
+            if self.includes_relevant_data(data):
+                clean_data.append(data)
 
         return clean_data
 
     # Check if the tuple contains at least one of the required attributes
     @staticmethod
-    def includes_relevant_data(entry, indices):
-        data = entry.split(',')
-        relevant_indices = indices
+    def includes_relevant_data(entry):
+        if entry['Max TemperatureC'] or \
+                entry['Mean TemperatureC'] or \
+                entry['Min TemperatureC'] or \
+                entry['Max Humidity'] or \
+                entry['Mean Humidity'] or \
+                entry['Min Humidity']:
+            # print(True, entry['Max TemperatureC'], entry['Mean TemperatureC'], entry['Min TemperatureC'],
+            #       entry['Max Humidity'], entry['Mean Humidity'], entry['Min Humidity'])
+            return True
 
-        for r in relevant_indices:
-            if data[r] != '':
-                return True
-            pass
-
+        # print(False, entry['Max TemperatureC'], entry['Mean TemperatureC'], entry['Min TemperatureC'],
+        #       entry['Max Humidity'], entry['Mean Humidity'], entry['Min Humidity'])
         return False
-
-    # Covert the list of lines into a dictionary
-    @staticmethod
-    def organize_data(clean_data):
-        organized = []
-
-        for entry in clean_data:
-            data = entry.split(',')
-            organized.append({'Date': data[0],
-                              'Max Temp': data[1],
-                              'Mean Temp': data[2],
-                              'Min Temp': data[3],
-                              'Max Humidity': data[4],
-                              'Mean Humidity': data[5],
-                              'Min Humidity': data[6]
-                              })
-
-        return organized
 
 
 # The class responsible for performing calculations
 class Calculator:
-    def __init__(self):
-        pass
-
     @staticmethod
     def calculate_annual_result(organized_data, year):
         result = {}
@@ -112,21 +73,21 @@ class Calculator:
         highest_humidity_date = '1990-1-1'
 
         for data in organized_data:
-            if year in data['Date']:
-                if data['Min Temp'] != '' and \
-                        int(data['Min Temp']) < lowest_temp:
-                    lowest_temp = int(data['Min Temp'])
-                    lowest_temp_date = data['Date']
+            if year in data['PKT']:
+                if data['Min TemperatureC'] != '' and \
+                        int(data['Min TemperatureC']) < lowest_temp:
+                    lowest_temp = int(data['Min TemperatureC'])
+                    lowest_temp_date = data['PKT']
 
-                if data['Max Temp'] != '' and \
-                        int(data['Max Temp']) > highest_temp:
-                    highest_temp = int(data['Max Temp'])
-                    highest_temp_date = data['Date']
+                if data['Max TemperatureC'] != '' and \
+                        int(data['Max TemperatureC']) > highest_temp:
+                    highest_temp = int(data['Max TemperatureC'])
+                    highest_temp_date = data['PKT']
 
                 if data['Max Humidity'] != '' and \
                         int(data['Max Humidity']) > highest_humidity:
                     highest_humidity = int(data['Max Humidity'])
-                    highest_humidity_date = data['Date']
+                    highest_humidity_date = data['PKT']
             pass
 
         result['Lowest Annual Temp'] = [lowest_temp, lowest_temp_date]
@@ -139,18 +100,18 @@ class Calculator:
     @staticmethod
     def calculate_monthly_average_report(organized_data, year, month):
         result = {}
-        date = year + '-' + month
+        date = f"{year}-{month}"
 
         high_temps = []
         low_temps = []
         mean_humidity_val = []
 
         for data in organized_data:
-            if date in data['Date']:
-                if data['Max Temp'] != '':
-                    high_temps.append(int(data['Max Temp']))
-                if data['Min Temp'] != '':
-                    low_temps.append(int(data['Min Temp']))
+            if date in data['PKT']:
+                if data['Max TemperatureC'] != '':
+                    high_temps.append(int(data['Max TemperatureC']))
+                if data['Min TemperatureC'] != '':
+                    low_temps.append(int(data['Min TemperatureC']))
                 if data['Max Humidity'] != '':
                     mean_humidity_val.append(int(data['Mean Humidity']))
 
@@ -172,19 +133,19 @@ class Calculator:
     @staticmethod
     def calculate_daily_extremes_report(organized_data, year, month):
         result = {}
-        date = year + '-' + month + '-'
+        date = f"{year}-{month}-"
 
         dates = []
         min_temps = []
         max_temps = []
 
         for data in organized_data:
-            if date in data['Date']:
-                # print(data['Date'])
-                if data['Max Temp'] != '' and data['Min Temp'] != '':
-                    dates.append(data['Date'])
-                    min_temps.append(data['Min Temp'])
-                    max_temps.append(data['Max Temp'])
+            if date in data['PKT']:
+                # print(data['PKT'])
+                if data['Max TemperatureC'] != '' and data['Min TemperatureC'] != '':
+                    dates.append(data['PKT'])
+                    min_temps.append(data['Min TemperatureC'])
+                    max_temps.append(data['Max TemperatureC'])
 
         result['Dates'] = dates
         result['Min Temps'] = min_temps
@@ -194,9 +155,6 @@ class Calculator:
 
 # The class responsible for presenter the calculations
 class Presenter:
-    def __init__(self):
-        pass
-
     @staticmethod
     def str_to_date(string):
         date = string.split('-')
@@ -257,11 +215,10 @@ class Presenter:
 
         for i in range(0, len(dates)):
             day = dates[i].split(
-                '-')[2] if len(dates[i].split('-')[2]) == 2 else '0' + \
-                                                                 dates[i].split('-')[2]
+                '-')[2] if len(dates[i].split('-')[2]) == 2 else f"0{dates[i].split('-')[2]}"
 
             low = '+' * abs(int(min_temps[i]))
-            high = '+' * int(max_temps[i])
+            high = '+' * abs(int(max_temps[i]))
 
             if not horizontal:
                 print(u"{0} \u001b[34m{1}\u001b[0m {2}C".format(
@@ -269,8 +226,9 @@ class Presenter:
                 print(u"{0} \u001b[31m{1}\u001b[0m {2}C".format(
                     day, low, int(min_temps[i])))
             else:
-                print((u"{0} \u001b[31m{1}\u001b[0m\u001b[34m{2}" +
-                       u"\u001b[0m {3}C-{4}C").format(
+
+                print((("{0} \u001b[31m{1}\u001b[0m\u001b[34m{2}"
+                        "\u001b[0m {3}C-{4}C")).format(
                     day, low, high, int(min_temps[i]), int(max_temps[i])))
 
         print()
