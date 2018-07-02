@@ -44,33 +44,34 @@ class ReportGenerator:
                             print("{:02}".format(counter) + "\033[0m", end=' ')
                             for a in range(int(dataSegment.highestT)):
                                 print('\033[94m' + '+' + '\033[0m', end='')
-                            print(" {:02}C".format(int(dataSegment.highestT)), end='')
+                            print(" {:02}".format(dataSegment.highestT), end='')
                             print('\n')
                             print("{:02}".format(counter), end=' ')
                             for a in range(int(dataSegment.lowestT)):
                                 print('\033[91m' + '+' + '\033[0m', end='')
-                            print(" {:02}C".format(int(dataSegment.lowestT)), end='')
+                            print(" {:02}".format(dataSegment.lowestT), end='')
                             print('\n')
                 except:
                     continue
 
     @staticmethod
     def report_d(year, month, data):
-        counter = 0
+        counter = 1
         for dataSegmen in data:
             for dataSegment in dataSegmen:
                 try:
                     if dataSegment.year == year and dataSegment.month == month:
-                        if counter == 0:
+                        if counter == 1:
                             print(ReportGenerator.month_translation[month], year)
-                        counter += 1
+
                         if dataSegment.highestT != -100:
-                            print("{:02}".format(counter) + '\033[0m', end=' ')
-                            for a in range(int(dataSegment.lowestT)):
-                                print('\033[91m' + '+' + '\033[0m', end='')
-                            for a in range(int(dataSegment.highestT)):
-                                print('\033[94m' + '+' + '\033[0m', end='')
-                            print(" {:02}-{:02}C".format(int(dataSegment.lowestT), int(dataSegment.highestT)), end='')
+                            print("{:02}".format(counter), end=' ')
+                            print('\033[91m' + '+' * dataSegment.lowestT + '\033[0m', end='')
+                            print('\033[94m' + '+' * dataSegment.highestT + '\033[0m', end='')
+                            print(" {:02}C - {:02}C".format
+                                  (dataSegment.lowestT,
+                                   dataSegment.highestT), end='')
                             print('\n')
+                        counter += 1
                 except:
                     continue

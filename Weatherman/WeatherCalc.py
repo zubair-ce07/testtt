@@ -10,7 +10,6 @@ class WeatherCalc:
                     if dataSegment.year == year and dataSegment.month == month:
                         if dataSegment.highestT != -100:
                             total += dataSegment.highestT
-
                             counter += 1
                 except:
                     continue
@@ -52,7 +51,6 @@ class WeatherCalc:
         index = 0
         index1 = 0
         counter = 0
-        counter1 = 0
         for dataSegmen in data:
             counter1 = 0
             for dataSegment in dataSegmen:
@@ -96,12 +94,11 @@ class WeatherCalc:
         index = 0
         index1 = 0
         counter = 0
-        counter1 = 0
         for dataSegmen in data:
             counter1 = 0
             for dataSegment in dataSegmen:
                 try:
-                    if (dataSegment.year == year):
+                    if dataSegment.year == year:
                         if dataSegment.highestH > highest:
                             highest = dataSegment.highestH
                             index = counter
