@@ -25,8 +25,8 @@ class DrawMonthlyPlot:
             i+=1
             no_of_days.append(i)
 
-        min_list = [0 if i == None else int(i) for i in min_list]
-        max_list = [0 if i == None else int(i) for i in max_list]
+        min_list = [0 if not i else int(i) for i in min_list]
+        max_list = [0 if not i else int(i) for i in max_list]
         plt.bar(no_of_days, max_list, .5, align='center', label='max', color=['red'])
         plt.bar(no_of_days, min_list, .5, align='center', label='min', color=['blue'])
         plt.xticks(no_of_days)

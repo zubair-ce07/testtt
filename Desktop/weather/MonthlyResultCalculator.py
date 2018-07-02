@@ -14,7 +14,7 @@ class MonthlyResutCalculator:
             if year_mon in str(year.pkt):
                 self.month_wise_list.append(year)
 
-        if len(self.month_wise_list) > 0:
+        if len(self.month_wise_list):
             monthlyGenerator = MonthlyReportGenerator()
             monthlyGenerator.generate_monthly_report(self.get_avg_highest_temp_for_month(dat_mon[0], dat_mon[1]), \
                                                      self.get_avg_lowest_temp_for_month(dat_mon[0], dat_mon[1]), \
