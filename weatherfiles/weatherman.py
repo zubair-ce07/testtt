@@ -2,8 +2,10 @@ import os
 import sys
 import csv
 import calendar
-from termcolor import colored
 import re
+import argparse
+from termcolor import colored
+from collections import defaultdict
 
 
 class WeatherFilesParser:
@@ -12,135 +14,106 @@ class WeatherFilesParser:
     def get_all_files(self, path):
         if os.path.isdir(path):
             return [path + "/" + file_name for file_name in os.listdir(path) if file_name.endswith(".txt")]
-        else: return -1
-        # for file_name in listdir(path):
-        #     if file_name.endswith(".txt"):
-        #         file_path = path + "/" + file_name
-        #         files.append(file_path)
-        
-        # return files
+        else: 
+            raise OSError("Directory does not exist " + path)
     
-    def read_file(self, file_path):
-        file_data = []
-        with open(file_path, 'r') as f:
-            csv_reader = csv.reader(f)
-            next(csv_reader)
-
-            for row in csv_reader:
-                file_data.append(row)
-        return file_data
+    def read_weather_file(self, file_path):
+        fieldnames = ('PKT', 'Max TemperatureC', 'Mean TemperatureC', 'Min TemperatureC', 'Dew PointC', 'MeanDew PointC',
+                      'Min DewpointC', 'Max Humidity', 'Mean Humidity', 'Min Humidity', 'Max Sea Level PressurehPa', 
+                      'Mean Sea Level PressurehPa', 'Min Sea Level PressurehPa', 'Max VisibilityKm', 'Mean VisibilityKm', 
+                      'Min VisibilitykM', 'Max Wind SpeedKm/h', 'Mean Wind SpeedKm/h', 'Max Gust SpeedKm/h', 'Precipitationmm', 
+                      'CloudCover', 'Events', 'WindDirDegrees')
+        try:
+            with open(file_path, 'r') as f:
+                csv_reader = csv.DictReader(f, fieldnames = fieldnames)
+                next(csv_reader)                       #skip header row
+                return [row for row in csv_reader]
+        except IOError:
+            print ("Could not read file:" + file_path)
     
     #Populate weather data
-    def read_weather_files(self, files):
-        weather_data = []
+    def read_all_files(self, files):
+        weather_readings = []
         for file_path in files:
-            file_data = self.read_file(file_path)
-            weather_data.extend(file_data)
-        return weather_data
+            file_data = self.read_weather_file(file_path)
+            weather_readings.extend(file_data)
+        return weather_readings
 
 
 class WeatherResultCalculation:
     
-    def __init__(self):
-        pass
+    def filter_weather_readings(self, weather_readings, key):
+        return [row for row in weather_readings if key in row['PKT']]
     
-    def filter_weather_data(self, weather_data, key):
-        filtered_data = []
-        for row in weather_data:
-            if key in row[0]:
-                filtered_data.append(row)
-        return filtered_data
-    
-    def calculate_annual_weather_results(self, weather_data, year):
-        filtered_weather_data = self.filter_weather_data(weather_data, year)
-        if not filtered_weather_data:
-            return -1
+    def calculate_annual_weather_results(self, weather_readings, year):
+        filtered_weather_readings = self.filter_weather_readings(weather_readings, year)
         
         #Hold annual calculated results
-        annaul_results = {}
+        annaul_results = defaultdict(lambda: None)
         
         #Find highest temprature and day
-        max_tempr_list = [int(row[1]) for row in filtered_weather_data if row[1]]
+        max_tempr_list = [int(row['Max TemperatureC']) for row in filtered_weather_readings if row['Max TemperatureC']]
         if max_tempr_list:
-            max_tempr = max(max_tempr_list)
-            max_tempr_date = filtered_weather_data[max_tempr_list.index(max_tempr)][0]
-            annaul_results["max_tempr"] = [max_tempr, max_tempr_date]
-        else: annaul_results["max_tempr"] = [None, None]
+            annaul_results["max_tempr"] = max(max_tempr_list)
+            annaul_results["max_tempr_date"] = filtered_weather_readings[max_tempr_list.index(annaul_results["max_tempr"])]['PKT']
             
         #Find lowest temprature and day
-        min_tempr_list = [int(row[3]) for row in filtered_weather_data if row[3]]
+        min_tempr_list = [int(row['Min TemperatureC']) for row in filtered_weather_readings if row['Min TemperatureC']]
         if min_tempr_list:
-            min_tempr = min(min_tempr_list)
-            min_tempr_date = filtered_weather_data[min_tempr_list.index(min_tempr)][0]
-            annaul_results["min_tempr"] = [min_tempr, min_tempr_date]
-        else: annaul_results["min_tempr"] = [None, None]
+            annaul_results["min_tempr"] = min(min_tempr_list)
+            annaul_results["min_tempr_date"] = filtered_weather_readings[min_tempr_list.index(annaul_results["min_tempr"])]['PKT']
             
         #Find highest humidity and day
-        max_humidity_list = [int(row[7]) for row in filtered_weather_data if row[7]]
+        max_humidity_list = [int(row['Max Humidity']) for row in filtered_weather_readings if row['Max Humidity']]
         if max_humidity_list:
-            max_humidity = max(max_humidity_list)
-            max_humidity_date = filtered_weather_data[max_humidity_list.index(max_humidity)][0]
-            annaul_results["max_humidity"] = [max_humidity, max_humidity_date]
-        else: annaul_results["max_humidity"] = [None, None]
+            annaul_results["max_humidity"] = max(max_humidity_list)
+            annaul_results["max_humidity_date"] = filtered_weather_readings[max_humidity_list.index(annaul_results["max_humidity"])]['PKT']
         
         return annaul_results
     
-    def calculate_monthly_weather_results(self, weather_data, year_month):
+    def calculate_monthly_weather_results(self, weather_readings, year_month):
         year, month = map(int, year_month.split("/"))
-        year_month = '{}-{}'.format(year, month)
+        year_month = '{}-{}-'.format(year, month)
         
-        filtered_weather_data = self.filter_weather_data(weather_data, year_month)
-        if not filtered_weather_data:
-            return -1
+        filtered_weather_readings = self.filter_weather_readings(weather_readings, year_month)
         
         #Hold monthly calculated results
-        monthly_results = {}
+        monthly_results = defaultdict(lambda: None)
         
         #Find average_highest_temprature
-        max_tempr_list = [int(row[1]) for row in filtered_weather_data if row[1]]
+        max_tempr_list = [int(row['Max TemperatureC']) for row in filtered_weather_readings if row['Max TemperatureC']]
         if max_tempr_list:
-            highest_avg_tempr = sum(max_tempr_list)//calendar.monthrange(year, month)[1]
-            monthly_results["highest_avg_tempr"] = highest_avg_tempr
-        else: monthly_results["max_tempr"] = None
+            monthly_results["highest_avg_tempr"] = sum(max_tempr_list)//calendar.monthrange(year, month)[1]
             
         #Find average_lowest_temprature
-        min_tempr_list = [int(row[3]) for row in filtered_weather_data if row[3]]
+        min_tempr_list = [int(row['Min TemperatureC']) for row in filtered_weather_readings if row['Min TemperatureC']]
         if min_tempr_list:
-            lowest_avg_tempr = sum(min_tempr_list)//calendar.monthrange(year, month)[1]
-            monthly_results["lowest_avg_tempr"] = lowest_avg_tempr
-        else: monthly_results["lowest_avg_tempr"] = None
+            monthly_results["lowest_avg_tempr"] = sum(min_tempr_list)//calendar.monthrange(year, month)[1]
         
         #Find average mean humidity
-        mean_humidity_list = [int(row[8]) for row in filtered_weather_data if row[8]]
+        mean_humidity_list = [int(row['Mean Humidity']) for row in filtered_weather_readings if row['Mean Humidity']]
         if mean_humidity_list:
-            avg_mean_humidity = sum(mean_humidity_list)//calendar.monthrange(year, month)[1]
-            monthly_results["avg_mean_humidity"] = avg_mean_humidity
-        else: monthly_results["avg_mean_humidity"] = None
+            monthly_results["avg_mean_humidity"] = sum(mean_humidity_list)//calendar.monthrange(year, month)[1]
             
         return monthly_results
     
-    def get_month_temprature_readings(self, weather_data, year_month):
+    def get_month_temprature_readings(self, weather_readings, year_month):
         year, month = map(int, year_month.split("/"))
-        year_month = '{}-{}'.format(year, month)
+        year_month = '{}-{}-'.format(year, month)
         
-        filtered_weather_data = self.filter_weather_data(weather_data, year_month)
-        if not filtered_weather_data:
-            return -1
+        filtered_weather_readings = self.filter_weather_readings(weather_readings, year_month)
         
         #Hold highes, lowest temprature reading for a month
-        month_temprature_readings = {}
+        month_temprature_readings = defaultdict(lambda: None)
         
         month_temprature_readings['year_month'] = year_month
-        month_temprature_readings['max_tempr'] = [int(row[1]) if row[1] else None for row in filtered_weather_data]
-        month_temprature_readings['min_tempr'] = [int(row[3]) if row[3] else None for row in filtered_weather_data]
+        month_temprature_readings['max_tempr'] = [int(row['Max TemperatureC']) if row['Max TemperatureC'] else None for row in filtered_weather_readings]
+        month_temprature_readings['min_tempr'] = [int(row['Min TemperatureC']) if row['Min TemperatureC'] else None for row in filtered_weather_readings]
         
         return month_temprature_readings
 
 
 class GenerateWeatherReports:
-    
-    def __init__(self):
-        pass
     
     def get_month_name(self, date):
         ind = int(date.split("-")[1])
@@ -150,84 +123,96 @@ class GenerateWeatherReports:
         return int(date.split("-")[2])
     
     def generate_annual_report(self, annual_results):
-        print('Highest: {}C on {} {}'.format(annual_results['max_tempr'][0], 
-                                             self.get_month_name(annual_results['max_tempr'][1]),
-                                             self.get_day(annual_results['max_tempr'][1])))
-        print('Lowest: {}C on {} {}'.format(annual_results['min_tempr'][0], 
-                                             self.get_month_name(annual_results['min_tempr'][1]),
-                                             self.get_day(annual_results['min_tempr'][1])))
-        print('Humidity: {}% on {} {}'.format(annual_results['max_humidity'][0], 
-                                             self.get_month_name(annual_results['max_humidity'][1]),
-                                             self.get_day(annual_results['max_humidity'][1])))
+        print('Highest: {}C on {} {}'.format(annual_results['max_tempr'], 
+                                             self.get_month_name(annual_results['max_tempr_date']),
+                                             self.get_day(annual_results['max_tempr_date'])))
+        print('Lowest: {}C on {} {}'.format(annual_results['min_tempr'], 
+                                             self.get_month_name(annual_results['min_tempr_date']),
+                                             self.get_day(annual_results['min_tempr_date'])))
+        print('Humidity: {}% on {} {}'.format(annual_results['max_humidity'], 
+                                             self.get_month_name(annual_results['max_humidity_date']),
+                                             self.get_day(annual_results['max_humidity_date'])))
         
     def generate_monthly_report(self, monthly_results):
-        print('Highest Average: {}C'.format(monthly_results['highest_avg_tempr']))
-        print('Lowest Average: {}C'.format(monthly_results['lowest_avg_tempr']))
-        print('Average Mean Humidity: {}%'.format(monthly_results['avg_mean_humidity']))
+        print(f"Highest Average: {monthly_results['highest_avg_tempr']}C")
+        print(f"Lowest Average: {monthly_results['lowest_avg_tempr']}C")
+        print(f"Average Mean Humidity: {monthly_results['avg_mean_humidity']}%")
         
     def generate_month_temprature_report(self, month_temprature_readings):
         max_tempr_list = month_temprature_readings['max_tempr']
         max_tempr_list = month_temprature_readings['min_tempr']
-        year, month = month_temprature_readings['year_month'].split("-")
+        year, month = month_temprature_readings['year_month'].split("-")[:2]
         
         print('{} {}'.format(calendar.month_name[int(month)], year))
         i = 0
-        for h_tempr, m_tempr in zip(max_tempr_list, max_tempr_list):
-            h_tempr_str = ''
-            m_tempr_str = ''
+        for highest_tempr, min_tempr in zip(max_tempr_list, max_tempr_list):
+            highest_tempr_bar = ''
+            mim_tempr_bar = ''
             day = '{num:02d}'.format(num=i + 1)
-            if h_tempr:
-                h_tempr_str = colored('+' * h_tempr, 'red')
-            if m_tempr:
-                m_tempr_str = colored('+' * m_tempr, 'blue')
+            if highest_tempr:
+                highest_tempr_bar = colored('+' * highest_tempr, 'red')
+            if min_tempr:
+                mim_tempr_bar = colored('+' * min_tempr, 'blue')
                 
-            print('{}{}{} {}C - {}C'.format(day, m_tempr_str, h_tempr_str, m_tempr, h_tempr))
+            print('{}{}{} {}C - {}C'.format(day, mim_tempr_bar, highest_tempr_bar, min_tempr, highest_tempr))
             
             i = i + 1
 
 
+class CheckDate(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if len(values.split("/")) == 1:
+            if not re.match(r'[0-9]{4}', values):
+                raise ValueError("Insert Valid Year in format XXXX, i.e. 2004")
+        elif len(values.split("/")) == 2:
+            if not re.match(r'^(\d{4})/(0?[1-9]|1[012])$', values):
+                raise ValueError("Insert Valid Month in format XXXX/XX, i.e. 2004/10")
+        else:
+            print ("Got value:"+ values)
+            raise ValueError("Argument Not Valid")
+        setattr(namespace, self.dest, values)
+
+
+def check_args(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path_to_folder",
+                        help="Path of the folder that contains weather files")
+    parser.add_argument("-e", "--year_report", type=str, action = CheckDate,
+                        help="Year to generate year report")
+    parser.add_argument("-a", "--month_report", type=str, action = CheckDate,
+                        help="Specify the month to generate month report")
+    parser.add_argument("-c", "--month_temprature", type=str, action = CheckDate,
+                        help="Specify the month to generate the charts for highest and lowest temprature")
+    
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    path = sys.argv[1]
+    args = check_args(sys.argv[1:])
+
+    #Parse weather files from give path of folder
     parser = WeatherFilesParser()
-    files_list = parser.get_all_files(path)
-    weather_data = parser.read_weather_files(files_list)
+    files_list = parser.get_all_files(args.path_to_folder)
+    weather_readings = parser.read_all_files(files_list)
 
-    arguments = sys.argv[2:]
-
-    for i in range(0, len(arguments), 2):
-        report_type, date = arguments[i:i + 2]
-
+    #Calculate weather results and generate reports
+    if args.year_report:
         w_r_cal = WeatherResultCalculation()
         g_r = GenerateWeatherReports()
 
-        if report_type == "-e":
-            if re.match(r'[0-9]{4}', date):
-                annual_results = w_r_cal.calculate_annual_weather_results(weather_data, date)
-                if annual_results != -1:
-                    g_r.generate_annual_report(annual_results)
-                else:
-                    print("No weather data available for given year")
-            else:
-                print("Error: Invalid argument 'year'")
-                sys.exit()
-        elif report_type == "-a":
-            if len(date.split('/')) == 2:
-                month_results = w_r_cal.calculate_monthly_weather_results(weather_data, date)
-                if month_results != -1:
-                    g_r.generate_monthly_report(month_results)
-                else:
-                    print("No weather data available for given month")
-            else:
-                print("Error: Invalid argument 'date', it should be year/month format")
-                sys.exit()
-        elif report_type == "-c":
-            if len(date.split('/')) == 2:
-                month_tempr_list = w_r_cal.get_month_temprature_readings(weather_data, date)
-                if month_tempr_list != -1:
-                    g_r.generate_month_temprature_report(month_tempr_list)
-                else:
-                    print("No weather data available for given month")
-            else:
-                print("Error: Invalid argument 'date', it should be year/month format")
-                sys.exit()
-    
+        annual_results = w_r_cal.calculate_annual_weather_results(weather_readings, args.year_report)
+        g_r.generate_annual_report(annual_results)
+    if args.month_report:
+        w_r_cal = WeatherResultCalculation()
+        g_r = GenerateWeatherReports()
+
+        month_results = w_r_cal.calculate_monthly_weather_results(weather_readings, args.month_report)
+        g_r.generate_monthly_report(month_results)
+    if args.month_temprature:
+        w_r_cal = WeatherResultCalculation()
+        g_r = GenerateWeatherReports()
+
+        month_tempr_list = w_r_cal.get_month_temprature_readings(weather_readings, args.month_temprature)
+        g_r.generate_month_temprature_report(month_tempr_list)
+
+
