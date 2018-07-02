@@ -72,7 +72,6 @@ def check_repetition_in_columns(matrix, n):
 
 
 def check_sudoku(matrix):
-    # You code goes here
     n = len(matrix)
     if check_repetition_in_rows(matrix, n):
         return check_repetition_in_columns(matrix, n)
