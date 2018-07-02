@@ -4,32 +4,12 @@ False otherwise
 """
 
 
-def check_symmetry(list1, list2):
-    """
-    General Function to check if two list are the same.
-    """
-    if len(list1) == len(list2):
-        for i in range(0, len(list1)):
-            if list1[i] != list2[i]:
-                return False
-        return True
-    return False
-
-
-def generate_list(m, col, n):
-    list2 = [0]*n
-    for j in range(0, n):
-        list2[j] = m[j][col]
-
-    return list2
-
-
 def symmetric(matrix):
-    n = len(matrix)
-    for i in range(0, n):
+    length = len(matrix)
+    for i in range(0, length):
         list1 = matrix[i]
-        list2 = generate_list(matrix, i, n)
-        if not check_symmetry(list1, list2):
+        list2 = [matrix[j][i] for j in range(0, length)]
+        if not list1 == list2:
             return False
     return True
 
