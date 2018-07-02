@@ -41,7 +41,10 @@ matrix6 = [[1, 1.5, 3],
            [1.5, 3, 1]]
 
 
-def check_row(matrix, n):  # Check if repetition is found in Rows
+def check_repetition_in_rows(matrix, n):
+    """
+    Checks if repetition is found in Rows of a matrix
+    """
     for i in range(0, n):
         row = [True] * n
         for j in range(0, n):
@@ -53,7 +56,10 @@ def check_row(matrix, n):  # Check if repetition is found in Rows
     return True
 
 
-def check_col(matrix, n):  # Check if repetition is found in Columns
+def check_repetition_in_columns(matrix, n):
+    """
+    Checks if repetition is found in Columns of a matrix
+    """
     for i in range(0, n):
         col = [True] * n
         for j in range(0, n):
@@ -68,8 +74,8 @@ def check_col(matrix, n):  # Check if repetition is found in Columns
 def check_sudoku(matrix):
     # You code goes here
     n = len(matrix)
-    if check_row(matrix, n):
-        return check_col(matrix, n)
+    if check_repetition_in_rows(matrix, n):
+        return check_repetition_in_columns(matrix, n)
     else:
         return False
 
@@ -94,3 +100,4 @@ print check_sudoku(incorrect5)
 
 print check_sudoku(matrix6)
 #>>> False
+
