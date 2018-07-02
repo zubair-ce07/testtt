@@ -1,5 +1,5 @@
 import sys
-
+import csv
 
 MonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May',
               'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -8,38 +8,34 @@ filename = 'Murree_weather_'
 option = 0
 File_Data = []
 YearReadings = []
+csvReader = []
 
 
 class WeatherReading:
-    def __init__(self, PKT, MaxTemp, MeanTemp, MinTemp,
-                 Dew, MeanDew, MinDew, MaxHumidity, MeanHumidity, MinHumidity,
-                 MaxSeaPressure, MeanSeaPressure, MinSeaPressure,
-                 MaxVisibility, MeanVisibility, Minvisibility, MaxWindSpeed,
-                 MeanWindSpeed, MaxGustSpeed, Precipitation, CloudCover,
-                 Events, WinDirDegrees):
-        self.PKT = PKT
-        self.MaxTemp = MaxTemp
-        self.MeanTemp = MeanTemp
-        self.MinTemp = MinTemp
-        self.Dew = Dew
-        self.MeanDew = MeanDew
-        self.MinDew = MinDew
-        self.MaxHumidity = MaxHumidity
-        self.MeanHumidity = MeanHumidity
-        self.MinHumidity = MinHumidity
-        self.MaxSeaPressure = MaxSeaPressure
-        self.MeanSeaPressure = MeanSeaPressure
-        self.MinSeaPressure = MinSeaPressure
-        self.MaxVisibility = MaxVisibility
-        self.MeanVisibility = MeanVisibility
-        self.Minvisibility = Minvisibility
-        self.MaxWindSpeed = MaxWindSpeed
-        self.MeanWindSpeed = MeanWindSpeed
-        self.MaxGustSpeed = MaxGustSpeed
-        self.Precipitation = Precipitation
-        self.CloudCover = CloudCover
-        self.Events = Events
-        self.WinDirDegrees = WinDirDegrees
+    def __init__(self, row):
+        self.PKT = row[0]
+        self.MaxTemp = row[1]
+        self.MeanTemp = row[2]
+        self.MinTemp = row[3]
+        self.Dew = row[4]
+        self.MeanDew = row[5]
+        self.MinDew = row[6]
+        self.MaxHumidity = row[7]
+        self.MeanHumidity = row[8]
+        self.MinHumidity = row[9]
+        self.MaxSeaPressure = row[10]
+        self.MeanSeaPressure = row[11]
+        self.MinSeaPressure = row[12]
+        self.MaxVisibility = row[13]
+        self.MeanVisibility = row[14]
+        self.Minvisibility = row[15]
+        self.MaxWindSpeed = row[16]
+        self.MeanWindSpeed = row[17]
+        self.MaxGustSpeed = row[18]
+        self.Precipitation = row[19]
+        self.CloudCover = row[20]
+        self.Events = row[21]
+        self.WinDirDegrees = row[22]
 
 
 class ParseFiles:
@@ -50,20 +46,11 @@ class ParseFiles:
         try:
 
             with open(filename, "r") as filestream:
-                next(filestream)
-                for line in filestream:
-                    currentline = line.split(",")
-                    reading = WeatherReading(
-                        currentline[0], currentline[1], currentline[2],
-                        currentline[3], currentline[4], currentline[5],
-                        currentline[6], currentline[7], currentline[8],
-                        currentline[9], currentline[10], currentline[11],
-                        currentline[12], currentline[13], currentline[14],
-                        currentline[15], currentline[16], currentline[17],
-                        currentline[18], currentline[19], currentline[20],
-                        currentline[21], currentline[22]
-                    )
-                    if(currentline[1] != ''):
+                csvReader = csv.reader(filestream)
+                header = next(csvReader)
+                for row in csvReader:
+                    reading = WeatherReading(row)
+                    if(row[header.index("Max TemperatureC")] != ''):
                         self.monthreadings.append(reading)
 
         except IOError:
@@ -135,19 +122,10 @@ class Print_Month_Bar:
             print(highnum + u"\u001b[31m" + str(high) + u"\u001b[0m" + " " +
                   str(Max))
 
-            # high = ' '
-            # high += str(Max)
-
             for j in range(0, Min):
                 low += "+"
             print(lownum + u"\u001b[34m" + str(low) + u"\u001b[0m" + " " +
                   str(Min))
-
-            # low = ' '
-            # low += str(Min)
-
-            # print(high)
-            # print(low)
 
 
 class CalculateYearResults:
@@ -197,7 +175,6 @@ class Print_Year_Results:
 
 
 def main():
-    print(u"\u001b[31mHello\u001b[0mWorld")
 
     for i in range(2, len(sys.argv[1:]) + 1):
 
