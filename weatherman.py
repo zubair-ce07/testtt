@@ -41,18 +41,8 @@ def main():
     # Read all files and extract data
 
     parser = Parser()
-
     weather_data = parser.read(files)
-
-    # Convert the data into easily readable form and clean it
-
     organized_data = parser.clean(weather_data)
-
-    # for x in organizedData:
-    #     print(x)
-
-    # for x in organizedData:
-    #     print(x['Mean Temp'] == '')
 
     # Perform Calculations according to the parameters given
 
@@ -138,20 +128,16 @@ def main():
     # Print the Calculation results
 
     presenter = Presenter()
-
     mode.reverse()
     result.reverse()
 
     if len(mode) == len(result):
         print('No Error Occurred In Computation\n')
 
-        while len(mode) != 0:
+        while len(mode):
             m = mode.pop()
             r = result.pop()
-
             print(m)
-            # print(r)
-            # print('\n\n')
 
             if m == '-e':
                 presenter.present_annual_report(r)
@@ -161,10 +147,6 @@ def main():
                 presenter.present_daily_extremes_report(r, horizontal=True)
             elif m == '-c':
                 presenter.present_daily_extremes_report(r)
-                pass
-
-            # print(m)
-            # print(r)
 
 
 if __name__ == "__main__":
