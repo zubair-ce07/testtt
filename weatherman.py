@@ -1,152 +1,136 @@
 import os
-from weather import Parser, Presenter, Calculator
+from weather import Parser, WeatherDisplay, Calculator
 import argparse
 
 
-def main():
-    # Get all contents of the directory passed as the first argument
+def validate_year(string):
+    if len(string) == 4 and string.isdigit():
+        return string
+    else:
+        raise TypeError
+
+
+def validate_month(string):
+    date_arg = string.split('/')
+
+    if not len(date_arg) == 2:
+        raise TypeError
+
+    year_arg = date_arg[0]
+    month_arg = date_arg[1]
+
+    if len(year_arg) == 4 and len(month_arg) > 0 and year_arg.isdigit() and month_arg.isdigit():
+        return string
+    else:
+        raise TypeError
+
+
+def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("directory")
+
     parser.add_argument("-e", help=("For a given year display the highest temperature and day,"
                                     " lowest temperature and day, most humid day and humidity"),
-                        action="append")
+                        action="append", type=validate_year)
+
     parser.add_argument("-a", help=("For a given month display the average highest temperature,"
                                     " average lowest temperature,average mean humidity"),
-                        action="append")
-    parser.add_argument("-c",
-                        help=("For a given month draw two horizontal bar charts on the console for the highest and"
-                              " lowest temperature on each day. Highest in red and lowest in blue"),
-                        action="append")
-    parser.add_argument("-b", help=("For a given month draw one horizontal bar chart on the console for the highest"
-                                    " and lowest temperature on each day. Highest in red and lowest in blue."),
-                        action="append")
-    args = parser.parse_args()
+                        action="append", type=validate_month)
 
-    if not os.path.exists(args.directory):
+    parser.add_argument("-c",
+                        help=("For a given month draw two horizontal bar charts on"
+                              " the console for the highest and"
+                              " lowest temperature on each day. Highest in red and lowest in blue"),
+                        action="append", type=validate_month)
+
+    parser.add_argument("-b", help=("For a given month draw one horizontal bar chart on the console"
+                                    " for the highest and lowest temperature on each day."
+                                    " Highest in red and lowest in blue."),
+                        action="append", type=validate_month)
+    return parser.parse_args()
+
+
+def get_files(directory):
+    contents = os.listdir(directory)
+    contents = [os.path.join(directory, x) for x in contents]
+    return [x for x in contents if os.path.isfile(x) and 'weather' in x and not x.startswith('.')]
+
+
+def display_results(problem_type, result):
+    display = WeatherDisplay()
+
+    while len(problem_type):
+        m = problem_type.pop()
+        r = result.pop()
+
+        print(m)
+        if m == '-e':
+            display.present_annual_report(r)
+        elif m == '-a':
+            display.present_monthly_average_report(r)
+        elif m == '-b':
+            display.present_daily_extremes_report(r, horizontal=True)
+        elif m == '-c':
+            display.present_daily_extremes_report(r)
+
+
+def parse_date(date):
+    date = date.split('/')
+    year = date[0]
+    month = date[1]
+
+    month = str(int(month))
+    return year, month
+
+
+def calculate_results(args, weather_readings):
+    calculator = Calculator()
+    problem_type = []
+    result = []
+
+    for arg in args.a or []:
+        year, month = parse_date(arg)
+        problem_type.append('-a')
+        result.append(calculator.calculate_monthly_average_report(weather_readings, year, month))
+
+    for arg in args.b or []:
+        year, month = parse_date(arg)
+        problem_type.append('-b')
+        result.append(calculator.calculate_daily_extremes_report(weather_readings, year, month))
+
+    for arg in args.c or []:
+        year, month = parse_date(arg)
+        problem_type.append('-c')
+        result.append(calculator.calculate_daily_extremes_report(weather_readings, year, month))
+
+    for arg in args.e or []:
+        problem_type.append('-e')
+        result.append(calculator.calculate_annual_result(weather_readings, year=arg))
+
+    return problem_type, result
+
+
+def main():
+    arguments = get_arguments()
+
+    if not os.path.exists(arguments.directory):
         print('Invalid Directory Path')
         return
 
-    contents = os.listdir(args.directory)
-    contents = [os.path.join(args.directory, x) for x in contents]
-
-    # Remove nested directories and only pickup non hidden files
-
-    files = [x for x in contents if os.path.isfile(
-        x) and 'weather' in x and not x.startswith('.')]
+    files = get_files(arguments.directory)
 
     if len(files) == 0:
         print('No valid files found in directory')
         return
 
-    # Read all files and extract data
-
     parser = Parser()
-    weather_data = parser.read(files)
-    organized_data = parser.clean(weather_data)
+    weather_readings = parser.read(files)
+    problem_type, result = calculate_results(arguments, weather_readings)
 
-    # Perform Calculations according to the parameters given
-
-    calculator = Calculator()
-    mode = []
-    result = []
-
-    if args.a:
-        for arg in args.a:
-            date = arg
-            date = date.split('/')
-
-            if not len(date) == 2:
-                print('Month not specified for -a')
-                return
-
-            year = date[0]
-            month = date[1]
-
-            if str.isdigit(year) and str.isdigit(month):
-                month = str(int(month))
-                mode.append('-a')
-                result.append(calculator.calculate_monthly_average_report(
-                    organized_data, year, month))
-            else:
-                print('Invalid Arguments')
-                return
-
-    if args.b:
-        for arg in args.b:
-            date = arg
-            date = date.split('/')
-
-            if not len(date) == 2:
-                print('Month not specified for -b')
-                return
-
-            year = date[0]
-            month = date[1]
-
-            if str.isdigit(year) and str.isdigit(month):
-                month = str(int(month))
-                mode.append('-b')
-                result.append(calculator.calculate_daily_extremes_report(
-                    organized_data, year, month))
-            else:
-                print('Invalid Arguments')
-                return
-
-    if args.c:
-        for arg in args.c:
-            date = arg
-            date = date.split('/')
-
-            if not len(date) == 2:
-                print('Month not specified for -c')
-                return
-
-            year = date[0]
-            month = date[1]
-
-            if str.isdigit(year) and str.isdigit(month):
-                month = str(int(month))
-                mode.append('-c')
-                result.append(calculator.calculate_daily_extremes_report(
-                    organized_data, year, month))
-            else:
-                print('Invalid Arguments')
-                return
-
-    if args.e:
-        for arg in args.e:
-            year = arg
-
-            if str.isdigit(year):
-                mode.append('-e')
-                result.append(calculator.calculate_annual_result(
-                    organized_data, year))
-            else:
-                print('Invalid Arguments')
-                return
-
-    # Print the Calculation results
-
-    presenter = Presenter()
-    mode.reverse()
+    problem_type.reverse()
     result.reverse()
 
-    if len(mode) == len(result):
-        print('No Error Occurred In Computation\n')
-
-        while len(mode):
-            m = mode.pop()
-            r = result.pop()
-            print(m)
-
-            if m == '-e':
-                presenter.present_annual_report(r)
-            elif m == '-a':
-                presenter.present_monthly_average_report(r)
-            elif m == '-b':
-                presenter.present_daily_extremes_report(r, horizontal=True)
-            elif m == '-c':
-                presenter.present_daily_extremes_report(r)
+    display_results(problem_type, result)
 
 
 if __name__ == "__main__":

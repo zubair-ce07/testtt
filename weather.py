@@ -1,121 +1,85 @@
-import sys
 import datetime
 import csv
 
 
-# The class responsible for reading and organizing the data
 class Parser:
-    # Read all files line by line and return them
-    @staticmethod
-    def read(files_input):
-        collection = []
+    def read(self, directory):
+        weather_readings = []
 
-        for path in files_input:
+        for path in directory:
             with open(path, 'r') as f:
-                data = csv.DictReader(f)
+                weather_data = csv.DictReader(f)
 
-                for line in data:
-                    collection.append(dict(line))
+                [weather_readings.append(dict(reading)) for reading in weather_data]
 
-        return collection
+        return self.clean(weather_readings)
 
-    # Read all the previously read lines and filter headers and useless rows
-    def clean(self, dict_array):
-        clean_data = []
+    def clean(self, weather_readings):
+        weather_data = []
 
-        for data in dict_array:
-            keys = data.keys()
+        for reading in weather_readings:
+            keys = reading.keys()
 
             if 'PKST' in keys:
-                data['PKT'] = data['PKST']
-                del data['PKST']
+                reading['PKT'] = reading['PKST']
+                del reading['PKST']
 
             for key in keys:
                 if key != key.strip():
-                    data[key.strip()] = data[key]
-                    del data[key]
+                    reading[key.strip()] = reading[key]
+                    del reading[key]
 
-            if self.includes_relevant_data(data):
-                clean_data.append(data)
+            if self.includes_relevant_data(reading):
+                weather_data.append(reading)
 
-        return clean_data
+        return weather_data
 
-    # Check if the tuple contains at least one of the required attributes
     @staticmethod
-    def includes_relevant_data(entry):
-        if entry['Max TemperatureC'] or \
-                entry['Mean TemperatureC'] or \
-                entry['Min TemperatureC'] or \
-                entry['Max Humidity'] or \
-                entry['Mean Humidity'] or \
-                entry['Min Humidity']:
-            return True
+    def includes_relevant_data(reading):
+        required_fields = ['Max TemperatureC', 'Mean TemperatureC', 'Min TemperatureC',
+                           'Max Humidity', 'Mean Humidity', 'Min Humidity']
 
-        return False
+        return all(reading[field] for field in required_fields)
 
 
-# The class responsible for performing calculations
 class Calculator:
-    def calculate_annual_result(self, organized_data, year):
-        result = {'Lowest Annual Temp': self.find_annual_lowest_temp(organized_data, f"{year}-"),
-                  'Highest Annual Temp': self.find_annual_highest_temp(organized_data, f"{year}-"),
-                  'Highest Annual Humidity': self.find_annual_highest_humidity(organized_data, f"{year}-")}
-
+    def calculate_annual_result(self, weather_readings, year):
+        result = {
+            'Lowest Annual Temp':
+                self.find_annual_lowest_temp(weather_readings, f"{year}-"),
+            'Highest Annual Temp':
+                self.find_annual_highest_temp(weather_readings, f"{year}-"),
+            'Highest Annual Humidity':
+                self.find_annual_highest_humidity(weather_readings, f"{year}-")
+        }
         return result
 
     @staticmethod
-    def find_annual_highest_temp(organized_data, year):
-        temps = []
-        dates = []
-
-        for data in organized_data:
-            if year in data['PKT']:
-                if data['Max TemperatureC']:
-                    temps.append(int(data['Max TemperatureC']))
-                    dates.append(data['PKT'])
-
-        if len(temps):
-            highest = max(temps)
-            return [highest, dates[temps.index(highest)]]
+    def find_annual_highest_temp(weather_readings, year):
+        weather_readings = [r for r in weather_readings if year in r['PKT']]
+        if len(weather_readings):
+            return max(weather_readings, key=lambda r: int(r['Max TemperatureC']))
         else:
-            return [-sys.maxsize, '1990-1-1']
+            return {}
 
     @staticmethod
-    def find_annual_highest_humidity(organized_data, year):
-        temps = []
-        dates = []
-
-        for data in organized_data:
-            if year in data['PKT']:
-                if data['Max Humidity']:
-                    temps.append(int(data['Max Humidity']))
-                    dates.append(data['PKT'])
-
-        if len(temps):
-            highest = max(temps)
-            return [highest, dates[temps.index(highest)]]
+    def find_annual_highest_humidity(weather_readings, year):
+        weather_readings = [r for r in weather_readings if year in r['PKT']]
+        if len(weather_readings):
+            return max(weather_readings, key=lambda r: int(r['Max Humidity']))
         else:
-            return [-sys.maxsize, '1990-1-1']
+            return {}
 
     @staticmethod
-    def find_annual_lowest_temp(organized_data, year):
-        temps = []
-        dates = []
-
-        for data in organized_data:
-            if year in data['PKT']:
-                if data['Min TemperatureC']:
-                    temps.append(int(data['Min TemperatureC']))
-                    dates.append(data['PKT'])
-
-        if len(temps):
-            lowest = min(temps)
-            return [lowest, dates[temps.index(lowest)]]
+    def find_annual_lowest_temp(weather_readings, year):
+        weather_readings = [r for r in weather_readings if year in r['PKT']]
+        if len(weather_readings):
+            return min(weather_readings, key=lambda r: int(r['Min TemperatureC']))
         else:
-            return [sys.maxsize, '1990-1-1']
+            return {}
 
     @staticmethod
-    def calculate_monthly_average_report(organized_data, year, month):
+    def calculate_monthly_average_report(weather_readings, year, month):
         result = {}
         date = f"{year}-{month}"
 
@@ -123,28 +87,26 @@ class Calculator:
         low_temps = []
         mean_humidity_val = []
 
-        for data in organized_data:
-            if date in data['PKT']:
-                if data['Max TemperatureC']:
-                    high_temps.append(int(data['Max TemperatureC']))
-                if data['Min TemperatureC']:
-                    low_temps.append(int(data['Min TemperatureC']))
-                if data['Max Humidity']:
-                    mean_humidity_val.append(int(data['Mean Humidity']))
+        for reading in weather_readings:
+            if date in reading['PKT']:
+                if reading['Max TemperatureC']:
+                    high_temps.append(int(reading['Max TemperatureC']))
+                if reading['Min TemperatureC']:
+                    low_temps.append(int(reading['Min TemperatureC']))
+                if reading['Max Humidity']:
+                    mean_humidity_val.append(int(reading['Mean Humidity']))
 
-        if len(high_temps) == 0 or len(low_temps) == 0 or \
-                len(mean_humidity_val) == 0:
+        if len(high_temps) == 0 or len(low_temps) == 0 or len(mean_humidity_val) == 0:
             return {}
 
         result['Average Highest Temp'] = sum(high_temps) / len(high_temps)
         result['Average Lowest Temp'] = sum(low_temps) / len(low_temps)
-        result['Average Mean Humidity'] = sum(
-            mean_humidity_val) / len(mean_humidity_val)
+        result['Average Mean Humidity'] = sum(mean_humidity_val) / len(mean_humidity_val)
 
         return result
 
     @staticmethod
-    def calculate_daily_extremes_report(organized_data, year, month):
+    def calculate_daily_extremes_report(weather_readings, year, month):
         result = {}
         date = f"{year}-{month}-"
 
@@ -152,12 +114,12 @@ class Calculator:
         min_temps = []
         max_temps = []
 
-        for data in organized_data:
-            if date in data['PKT']:
-                if data['Max TemperatureC'] and data['Min TemperatureC']:
-                    dates.append(data['PKT'])
-                    min_temps.append(data['Min TemperatureC'])
-                    max_temps.append(data['Max TemperatureC'])
+        for reading in weather_readings:
+            if date in reading['PKT']:
+                if reading['Max TemperatureC'] and reading['Min TemperatureC']:
+                    dates.append(reading['PKT'])
+                    min_temps.append(reading['Min TemperatureC'])
+                    max_temps.append(reading['Max TemperatureC'])
 
         result['Dates'] = dates
         result['Min Temps'] = min_temps
@@ -165,8 +127,7 @@ class Calculator:
         return result
 
 
-# The class responsible for presenter the calculations
-class Presenter:
+class WeatherDisplay:
     @staticmethod
     def str_to_date(string):
         date = string.split('-')
@@ -177,20 +138,20 @@ class Presenter:
         low = report['Lowest Annual Temp']
         humid = report['Highest Annual Humidity']
 
-        if humid[0] == -sys.maxsize or low[0] == sys.maxsize or \
-                high[0] == -sys.maxsize:
+        if humid == {} or low == {} or \
+                high == {}:
             print('Invalid data or input')
             return
 
-        date = self.str_to_date(high[1])
-        print("Highest: {0}C on {1}".format(high[0], date.strftime("%d %B")))
+        date = self.str_to_date(high['PKT'])
+        print("Highest: {0}C on {1}".format(high['Max TemperatureC'], date.strftime("%d %B")))
 
-        date = self.str_to_date(low[1])
-        print("Lowest: {0}C on {1}".format(low[0], date.strftime("%d %B")))
+        date = self.str_to_date(low['PKT'])
+        print("Lowest: {0}C on {1}".format(low['Min TemperatureC'], date.strftime("%d %B")))
 
-        date = self.str_to_date(humid[1])
+        date = self.str_to_date(humid['PKT'])
         print("Humidity: {0}% on {1}\n".format(
-            humid[0], date.strftime("%d %B")))
+            humid['Max Humidity'], date.strftime("%d %B")))
 
     @staticmethod
     def present_monthly_average_report(report):
@@ -229,10 +190,8 @@ class Presenter:
             high = '+' * abs(int(max_temps[i]))
 
             if not horizontal:
-                print(u"{0} \u001b[34m{1}\u001b[0m {2}C".format(
-                    day, high, int(max_temps[i])))
-                print(u"{0} \u001b[31m{1}\u001b[0m {2}C".format(
-                    day, low, int(min_temps[i])))
+                print(u"{0} \u001b[34m{1}\u001b[0m {2}C".format(day, high, int(max_temps[i])))
+                print(u"{0} \u001b[31m{1}\u001b[0m {2}C".format(day, low, int(min_temps[i])))
             else:
 
                 print((("{0} \u001b[31m{1}\u001b[0m\u001b[34m{2}"
