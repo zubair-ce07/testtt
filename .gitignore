@@ -58,3 +58,9 @@ target/
 
 # VSCode
 .vscode
+
+#virtual environment
+venv/
+
+#input data files
+weatherman/weatherfiles/
