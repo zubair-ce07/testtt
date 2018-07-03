@@ -5,11 +5,10 @@ def retain_first_occurence_remove_rest(str):
     removes all other occurences.
     E.g. TechCity' -> 'Techiy'
     """
-    input_str = str
-    if not input_str:
-        raise IndexError('Empty input is not allowed. Please re-enter:')
-    if not input_str.isalpha():
-        raise ValueError('Numbers or special characters are not allowed. Please re-enter:')
+    if not str:
+        raise ValueError('Empty input is not allowed.')
+    if not str.isalpha():
+        raise TypeError('Numbers or special characters are not allowed.')
 
     # Actual program starts her
     modified_str = ""
@@ -27,11 +26,10 @@ def retain_last_occurence_remove_rest(str):
     removes all other occurences.
     E.g. 'TechTeam' -> 'chTeam'
     """
-    input_str = str
-    if not input_str:
-        raise IndexError('Empty input is not allowed. Please re-enter:')
-    if not input_str.isalpha():
-        raise ValueError('Numbers or special characters are not allowed. Please re-enter:')
+    if not str:
+        raise ValueError('Empty input is not allowed.')
+    if not str.isalpha():
+        raise TypeError('Numbers or special characters are not allowed.')
 
     # Actual program starts here
     removed_letters = []
@@ -44,5 +42,3 @@ def retain_last_occurence_remove_rest(str):
             modified_str = modified_str.replace(str[i], '', 1)
 
     return modified_str
-
-

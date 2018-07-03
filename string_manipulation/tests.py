@@ -1,20 +1,20 @@
 import unittest
-import helpers as funcs_module
+import helpers
 
 
 class TestValues(unittest.TestCase):
     manual_values_1 = (
         ("techteam", "techam"),
-        ("", IndexError),
-        ("sdf3", ValueError),
-        ("2", ValueError)
+        ("", ValueError),
+        ("sdf3", TypeError),
+        ("2", TypeError)
     )
 
     manual_values_2 = (
         ("techteam", "chteam"),
-        ("", IndexError),
-        ("sdf3", ValueError),
-        ("2", ValueError)
+        ("", ValueError),
+        ("sdf3", TypeError),
+        ("2", TypeError)
     )
 
     def test_retain_first_occurence_remove_rest(self):
@@ -23,10 +23,10 @@ class TestValues(unittest.TestCase):
         """
         for input, expected_output in self.manual_values_1:
             try:
-                result = funcs_module.retain_first_occurence_remove_rest(input)
+                result = helpers.retain_first_occurence_remove_rest(input)
                 self.assertEqual(expected_output, result)
-            except IndexError:
-                self.assertEqual(expected_output, IndexError)
+            except TypeError:
+                self.assertEqual(expected_output, TypeError)
             except ValueError:
                 self.assertEqual(expected_output, ValueError)
 
@@ -36,10 +36,10 @@ class TestValues(unittest.TestCase):
         """
         for input, expected_output in self.manual_values_2:
             try:
-                result = funcs_module.retain_last_occurence_remove_rest(input)
+                result = helpers.retain_last_occurence_remove_rest(input)
                 self.assertEqual(expected_output, result)
-            except IndexError:
-                self.assertEqual(expected_output, IndexError)
+            except TypeError:
+                self.assertEqual(expected_output, TypeError)
             except ValueError:
                 self.assertEqual(expected_output, ValueError)
 
