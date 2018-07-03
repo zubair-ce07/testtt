@@ -1,8 +1,8 @@
 import quizzer
 
 # Import the quizzer module, start quiz
-quizzer_obj = quizzer.QuizTaker()
+quizzer = quizzer.QuizTaker()
 try:
-    quizzer_obj.start_quiz()
+    quizzer.start_quiz()
 except FileNotFoundError as f:
-    print(f.args[0])
+    print(format(f))
