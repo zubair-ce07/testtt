@@ -5,7 +5,7 @@ Boolean indicating if the input string is a palindrome
 
 
 def is_palindrome(string):
-    if string == '':
+    if not string:
         return True
     elif string[0] != string[-1]:
         return False
