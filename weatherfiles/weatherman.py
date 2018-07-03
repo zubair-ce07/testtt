@@ -6,14 +6,15 @@ import re
 import argparse
 from termcolor import colored
 from collections import defaultdict
+from time import strptime
 
 
 class WeatherFilesParser:
     
     #Get all files from given dirctory path
-    def get_all_files(self, path):
+    def get_filtered_files(self, path, key):
         if os.path.isdir(path):
-            return [path + "/" + file_name for file_name in os.listdir(path) if file_name.endswith(".txt")]
+            return [path + "/" + file_name for file_name in os.listdir(path) if (file_name.endswith(".txt") and key in file_name)]
         else: 
             raise OSError("Directory does not exist " + path)
     
@@ -45,9 +46,7 @@ class WeatherResultCalculation:
     def filter_weather_readings(self, weather_readings, key):
         return [row for row in weather_readings if key in row['PKT']]
     
-    def calculate_annual_weather_results(self, weather_readings, year):
-        filtered_weather_readings = self.filter_weather_readings(weather_readings, year)
-        
+    def calculate_annual_weather_results(self, filtered_weather_readings):        
         #Hold annual calculated results
         annaul_results = defaultdict(lambda: None)
         
@@ -71,11 +70,10 @@ class WeatherResultCalculation:
         
         return annaul_results
     
-    def calculate_monthly_weather_results(self, weather_readings, year_month):
-        year, month = map(int, year_month.split("/"))
-        year_month = '{}-{}-'.format(year, month)
-        
-        filtered_weather_readings = self.filter_weather_readings(weather_readings, year_month)
+    def calculate_monthly_weather_results(self, filtered_weather_readings, year_month):
+        year, month = year_month.split("_")
+        year = int(year)
+        month = strptime(month,'%b').tm_mon
         
         #Hold monthly calculated results
         monthly_results = defaultdict(lambda: None)
@@ -97,18 +95,13 @@ class WeatherResultCalculation:
             
         return monthly_results
     
-    def get_month_temprature_readings(self, weather_readings, year_month):
-        year, month = map(int, year_month.split("/"))
-        year_month = '{}-{}-'.format(year, month)
-        
-        filtered_weather_readings = self.filter_weather_readings(weather_readings, year_month)
-        
+    def get_month_temprature_readings(self, weather_readings, year_month):      
         #Hold highes, lowest temprature reading for a month
         month_temprature_readings = defaultdict(lambda: None)
         
         month_temprature_readings['year_month'] = year_month
-        month_temprature_readings['max_tempr'] = [int(row['Max TemperatureC']) if row['Max TemperatureC'] else None for row in filtered_weather_readings]
-        month_temprature_readings['min_tempr'] = [int(row['Min TemperatureC']) if row['Min TemperatureC'] else None for row in filtered_weather_readings]
+        month_temprature_readings['max_tempr'] = [int(row['Max TemperatureC']) if row['Max TemperatureC'] else None for row in weather_readings]
+        month_temprature_readings['min_tempr'] = [int(row['Min TemperatureC']) if row['Min TemperatureC'] else None for row in weather_readings]
         
         return month_temprature_readings
 
@@ -141,9 +134,9 @@ class GenerateWeatherReports:
     def generate_month_temprature_report(self, month_temprature_readings):
         max_tempr_list = month_temprature_readings['max_tempr']
         max_tempr_list = month_temprature_readings['min_tempr']
-        year, month = month_temprature_readings['year_month'].split("-")[:2]
+        year, month = month_temprature_readings['year_month'].split("_")
         
-        print('{} {}'.format(calendar.month_name[int(month)], year))
+        print('{} {}'.format(calendar.month_name[strptime(month,'%b').tm_mon], year))
         i = 0
         for highest_tempr, min_tempr in zip(max_tempr_list, max_tempr_list):
             highest_tempr_bar = ''
@@ -159,60 +152,73 @@ class GenerateWeatherReports:
             i = i + 1
 
 
-class CheckDate(argparse.Action):
+class CheckDateFormat(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if len(values.split("/")) == 1:
             if not re.match(r'[0-9]{4}', values):
-                raise ValueError("Insert Valid Year in format XXXX, i.e. 2004")
+                raise ValueError("Insert Valid Year in format XXXX, i.e. 2004")                
         elif len(values.split("/")) == 2:
-            if not re.match(r'^(\d{4})/(0?[1-9]|1[012])$', values):
+            if re.match(r'^(\d{4})/(0?[1-9]|1[012])$', values):
+                values = values.split("/")[0] +"_"+ self.get_month_name(values.split("/")[1])
+            else:
                 raise ValueError("Insert Valid Month in format XXXX/XX, i.e. 2004/10")
         else:
-            print ("Got value:"+ values)
             raise ValueError("Argument Not Valid")
         setattr(namespace, self.dest, values)
+    
+    def get_month_name(self, month):
+        ind = int(month)
+        return calendar.month_abbr[ind]
 
 
 def check_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument("path_to_folder",
                         help="Path of the folder that contains weather files")
-    parser.add_argument("-e", "--year_report", type=str, action = CheckDate,
-                        help="Year to generate year report")
-    parser.add_argument("-a", "--month_report", type=str, action = CheckDate,
+    parser.add_argument("-e", "--year_report", type=str, action = CheckDateFormat,
+                        help="Year to generate yearl report")
+    parser.add_argument("-a", "--month_report", type=str, action = CheckDateFormat,
                         help="Specify the month to generate month report")
-    parser.add_argument("-c", "--month_temprature", type=str, action = CheckDate,
+    parser.add_argument("-c", "--month_temprature", type=str, action = CheckDateFormat,
                         help="Specify the month to generate the charts for highest and lowest temprature")
     
     return parser.parse_args()
 
 
+def get_weather_readings(path_to_folder, key):
+    #Parse weather files from give path of folder
+        parser = WeatherFilesParser()
+        filtered_files = parser.get_filtered_files(path_to_folder, key)
+        weather_readings = parser.read_all_files(filtered_files)
+
+        if weather_readings: return weather_readings
+        else: raise ValueError("Weather Readings Not Available for Given Query")
+
 if __name__ == '__main__':
     args = check_args(sys.argv[1:])
 
-    #Parse weather files from give path of folder
-    parser = WeatherFilesParser()
-    files_list = parser.get_all_files(args.path_to_folder)
-    weather_readings = parser.read_all_files(files_list)
-
-    #Calculate weather results and generate reports
     if args.year_report:
+        weather_readings = get_weather_readings(args.path_to_folder, args.year_report)
+        #Calculate weather results and generate reports
         w_r_cal = WeatherResultCalculation()
         g_r = GenerateWeatherReports()
 
-        annual_results = w_r_cal.calculate_annual_weather_results(weather_readings, args.year_report)
+        annual_results = w_r_cal.calculate_annual_weather_results(weather_readings)
         g_r.generate_annual_report(annual_results)
     if args.month_report:
+        weather_readings = get_weather_readings(args.path_to_folder, args.month_report)
+        #Calculate weather results and generate reports
         w_r_cal = WeatherResultCalculation()
         g_r = GenerateWeatherReports()
 
         month_results = w_r_cal.calculate_monthly_weather_results(weather_readings, args.month_report)
         g_r.generate_monthly_report(month_results)
     if args.month_temprature:
+        weather_readings = get_weather_readings(args.path_to_folder, args.month_temprature)
+        #Get weather results and generate reports
         w_r_cal = WeatherResultCalculation()
         g_r = GenerateWeatherReports()
 
         month_tempr_list = w_r_cal.get_month_temprature_readings(weather_readings, args.month_temprature)
         g_r.generate_month_temprature_report(month_tempr_list)
-
-
+        
