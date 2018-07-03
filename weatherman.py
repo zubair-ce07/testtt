@@ -1,5 +1,5 @@
 import os
-from weather import Parser, WeatherDisplay, Calculator
+from weather import FileParser, WeatherDisplay, Calculator
 import argparse
 
 
@@ -48,12 +48,6 @@ def get_arguments():
                                     " Highest in red and lowest in blue."),
                         action="append", type=validate_month)
     return parser.parse_args()
-
-
-def get_files(directory):
-    contents = os.listdir(directory)
-    contents = [os.path.join(directory, x) for x in contents]
-    return [x for x in contents if os.path.isfile(x) and 'weather' in x and not x.startswith('.')]
 
 
 def display_results(problem_type, result):
@@ -117,13 +111,13 @@ def main():
         print('Invalid Directory Path')
         return
 
-    files = get_files(arguments.directory)
+    parser = FileParser()
+    files = parser.get_files(arguments.directory)
 
     if len(files) == 0:
         print('No valid files found in directory')
         return
 
-    parser = Parser()
     weather_readings = parser.read(files)
     problem_type, result = calculate_results(arguments, weather_readings)
 
