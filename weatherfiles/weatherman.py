@@ -11,10 +11,9 @@ from time import strptime
 
 class WeatherFilesParser:
 
-    # Get all files from given dirctory path
-    def get_filtered_files(self, path, key):
+    def get_filtered_files(self, path, file_key):
         if os.path.isdir(path):
-            return [path + "/" + file_name for file_name in os.listdir(path) if (file_name.endswith(".txt") and key in file_name)]
+            return [os.path.join(path, f) for f in os.listdir(path) if (f.endswith(".txt") and file_key in f)]
         else:
             raise OSError("Directory does not exist " + path)
 
@@ -24,13 +23,10 @@ class WeatherFilesParser:
                       'Mean Sea Level PressurehPa', 'Min Sea Level PressurehPa', 'Max VisibilityKm', 'Mean VisibilityKm',
                       'Min VisibilitykM', 'Max Wind SpeedKm/h', 'Mean Wind SpeedKm/h', 'Max Gust SpeedKm/h', 'Precipitationmm',
                       'CloudCover', 'Events', 'WindDirDegrees')
-        try:
-            with open(file_path, 'r') as f:
-                csv_reader = csv.DictReader(f, fieldnames=fieldnames)
-                next(csv_reader)                       # skip header row
-                return [row for row in csv_reader]
-        except IOError:
-            print ("Could not read file:" + file_path)
+        with open(file_path, 'r') as f:
+            csv_reader = csv.DictReader(f, fieldnames=fieldnames)
+            next(csv_reader)                       # skip header row
+            return list(csv_reader)
 
     # Populate weather data
     def read_all_files(self, files):
@@ -38,6 +34,7 @@ class WeatherFilesParser:
         for file_path in files:
             file_data = self.read_weather_file(file_path)
             weather_readings.extend(file_data)
+
         return weather_readings
 
 
@@ -48,22 +45,24 @@ class WeatherResultCalculation:
         annaul_results = defaultdict(lambda: None)
 
         # Find highest temprature and day
-        max_tempr_list = [int(row['Max TemperatureC']) for row in weather_readings if row['Max TemperatureC']]
-        if max_tempr_list:
-            annaul_results["max_tempr"] = max(max_tempr_list)
-            annaul_results["max_tempr_date"] = weather_readings[max_tempr_list.index(annaul_results["max_tempr"])]['PKT']
+        max_tempr_readings = list(int(row['Max TemperatureC']) for row in weather_readings if row['Max TemperatureC'])
+        if max_tempr_readings:
+            annaul_results["max_tempr"] = max(max_tempr_readings)
+            min_temp_ind = max_tempr_readings.index(annaul_results["max_tempr"])
+            annaul_results["max_tempr_date"] = weather_readings[min_temp_ind]['PKT']
 
         # Find lowest temprature and day
-        min_tempr_list = [int(row['Min TemperatureC']) for row in weather_readings if row['Min TemperatureC']]
-        if min_tempr_list:
-            annaul_results["min_tempr"] = min(min_tempr_list)
-            annaul_results["min_tempr_date"] = weather_readings[min_tempr_list.index(annaul_results["min_tempr"])]['PKT']
+        min_tempr_readings = list(int(row['Min TemperatureC']) for row in weather_readings if row['Min TemperatureC'])
+        if min_tempr_readings:
+            annaul_results["min_tempr"] = min(min_tempr_readings)
+            max_temp_ind = min_tempr_readings.index(annaul_results["min_tempr"])
+            annaul_results["min_tempr_date"] = weather_readings[max_temp_ind]['PKT']
 
         # Find highest humidity and day
-        max_humidity_list = [int(row['Max Humidity']) for row in weather_readings if row['Max Humidity']]
-        if max_humidity_list:
-            annaul_results["max_humidity"] = max(max_humidity_list)
-            annaul_results["max_humidity_date"] = weather_readings[max_humidity_list.index(annaul_results["max_humidity"])]['PKT']
+        max_humidity_readings = list(int(row['Max Humidity']) for row in weather_readings if row['Max Humidity'])
+        if max_humidity_readings:
+            annaul_results["max_humidity"] = max(max_humidity_readings)
+            annaul_results["max_humidity_date"] = weather_readings[max_humidity_readings.index(annaul_results["max_humidity"])]['PKT']
 
         return annaul_results
 
@@ -76,29 +75,29 @@ class WeatherResultCalculation:
         monthly_results = defaultdict(lambda: None)
 
         # Find average_highest_temprature
-        max_tempr_list = [int(row['Max TemperatureC']) for row in weather_readings if row['Max TemperatureC']]
-        if max_tempr_list:
-            monthly_results["highest_avg_tempr"] = sum(max_tempr_list)//calendar.monthrange(year, month)[1]
+        max_tempr_readings = list(int(row['Max TemperatureC']) for row in weather_readings if row['Max TemperatureC'])
+        if max_tempr_readings:
+            monthly_results["highest_avg_tempr"] = sum(max_tempr_readings)//len(max_tempr_readings)
      
         # Find average_lowest_temprature
-        min_tempr_list = [int(row['Min TemperatureC']) for row in weather_readings if row['Min TemperatureC']]
-        if min_tempr_list:
-            monthly_results["lowest_avg_tempr"] = sum(min_tempr_list)//calendar.monthrange(year, month)[1]
+        min_tempr_readings = list(int(row['Min TemperatureC']) for row in weather_readings if row['Min TemperatureC'])
+        if min_tempr_readings:
+            monthly_results["lowest_avg_tempr"] = sum(min_tempr_readings)//len(min_tempr_readings)
 
         # Find average mean humidity
-        mean_humidity_list = [int(row['Mean Humidity']) for row in weather_readings if row['Mean Humidity']]
-        if mean_humidity_list:
-            monthly_results["avg_mean_humidity"] = sum(mean_humidity_list)//calendar.monthrange(year, month)[1]
+        mean_humidity_readings = list(int(row['Mean Humidity']) for row in weather_readings if row['Mean Humidity'])
+        if mean_humidity_readings:
+            monthly_results["avg_mean_humidity"] = sum(mean_humidity_readings)//len(mean_humidity_readings)
         
         return monthly_results
 
     def get_month_temprature_readings(self, weather_readings, year_month):      
-        # Hold highes, lowest temprature reading for a month
+        # Hold highest, lowest temprature reading for a month
         tempr_readings = defaultdict(lambda: None)
      
         tempr_readings['year_month'] = year_month
-        tempr_readings['max_tempr'] = [int(row['Max TemperatureC']) if row['Max TemperatureC'] else None for row in weather_readings]
-        tempr_readings['min_tempr'] = [int(row['Min TemperatureC']) if row['Min TemperatureC'] else None for row in weather_readings]
+        tempr_readings['max_tempr'] = list(int(row['Max TemperatureC']) if row['Max TemperatureC'] else None for row in weather_readings)
+        tempr_readings['min_tempr'] = list(int(row['Min TemperatureC']) if row['Min TemperatureC'] else None for row in weather_readings)
 
         return tempr_readings
 
@@ -128,14 +127,14 @@ class GenerateWeatherReports:
         print(f"Lowest Average: {monthly_results['lowest_avg_tempr']}C")
         print(f"Average Mean Humidity: {monthly_results['avg_mean_humidity']}%")
  
-    def generate_month_temprature_report(self, month_temprature_readings):
-        max_tempr_list = month_temprature_readings['max_tempr']
-        max_tempr_list = month_temprature_readings['min_tempr']
-        year, month = month_temprature_readings['year_month'].split("_")
+    def generate_month_temprature_report(self, month_tempr_readings):
+        max_readings = month_tempr_readings['max_tempr']
+        min_readings = month_tempr_readings['min_tempr']
+        year, month = month_tempr_readings['year_month'].split("_")
 
         print('{} {}'.format(calendar.month_name[strptime(month,'%b').tm_mon], year))
         i = 0
-        for highest_tempr, min_tempr in zip(max_tempr_list, max_tempr_list):
+        for highest_tempr, min_tempr in zip(max_readings, min_readings):
             highest_tempr_bar = ''
             mim_tempr_bar = ''
             day = '{num:02d}'.format(num=i + 1)
@@ -150,6 +149,7 @@ class GenerateWeatherReports:
 
 
 class CheckDateFormat(argparse.Action):
+
     def __call__(self, parser, namespace, values, option_string=None):
         if len(values.split("/")) == 1:
             if not re.match(r'[0-9]{4}', values):
@@ -182,10 +182,9 @@ def check_args(args):
     return parser.parse_args()
 
 
-def get_weather_readings(path_to_folder, key):
-    # Parse weather files from give path of folder
+def get_weather_readings(path_to_folder, file_key):
         parser = WeatherFilesParser()
-        filtered_files = parser.get_filtered_files(path_to_folder, key)
+        filtered_files = parser.get_filtered_files(path_to_folder, file_key)
         weather_readings = parser.read_all_files(filtered_files)
 
         if weather_readings: return weather_readings
@@ -196,26 +195,23 @@ if __name__ == '__main__':
 
     if args.year_report:
         weather_readings = get_weather_readings(args.path_to_folder, args.year_report)
-        # Calculate weather results and generate reports
-        w_r_cal = WeatherResultCalculation()
-        g_r = GenerateWeatherReports()
+        weather_res_cal = WeatherResultCalculation()
+        gen_weather_rep = GenerateWeatherReports()
 
-        annual_results = w_r_cal.calculate_annual_weather_results(weather_readings)
-        g_r.generate_annual_report(annual_results)
+        annual_results = weather_res_cal.calculate_annual_weather_results(weather_readings)
+        gen_weather_rep.generate_annual_report(annual_results)
     if args.month_report:
         weather_readings = get_weather_readings(args.path_to_folder, args.month_report)
-        # Calculate weather results and generate reports
-        w_r_cal = WeatherResultCalculation()
-        g_r = GenerateWeatherReports()
+        weather_res_cal = WeatherResultCalculation()
+        gen_weather_rep = GenerateWeatherReports()
 
-        month_results = w_r_cal.calculate_monthly_weather_results(weather_readings, args.month_report)
-        g_r.generate_monthly_report(month_results)
+        month_results = weather_res_cal.calculate_monthly_weather_results(weather_readings, args.month_report)
+        gen_weather_rep.generate_monthly_report(month_results)
     if args.month_temprature:
         weather_readings = get_weather_readings(args.path_to_folder, args.month_temprature)
-        # Get weather results and generate reports
-        w_r_cal = WeatherResultCalculation()
-        g_r = GenerateWeatherReports()
+        weather_res_cal = WeatherResultCalculation()
+        gen_weather_rep = GenerateWeatherReports()
 
-        month_tempr_list = w_r_cal.get_month_temprature_readings(weather_readings, args.month_temprature)
-        g_r.generate_month_temprature_report(month_tempr_list)
+        month_tempr_list = weather_res_cal.get_month_temprature_readings(weather_readings, args.month_temprature)
+        gen_weather_rep.generate_month_temprature_report(month_tempr_list)
     
