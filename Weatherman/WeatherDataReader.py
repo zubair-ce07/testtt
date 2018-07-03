@@ -8,42 +8,45 @@ import WeatherData
 class WeatherDataReader:
 
     @staticmethod
-    def read_line(line):
-        line = {k.strip(): v for k, v in line.items()}
-        dayData = WeatherData.WeatherData()
+    def read_day(day):
+        day = {k.strip(): v for k, v in day.items()}
         for index in ["Mean TemperatureC", "Min TemperatureC", "Max TemperatureC",
                       "Mean Humidity", "Max Humidity", "Min Humidity"]:
-            if line[index] == '':
-                line[index] = -100
+            if day[index] == '':
+                day[index] = -100
             else:
-                line[index] = int(line[index])
+                day[index] = int(day[index])
         try:
-            date = line["PKT"].split('-')
+            date = day["PKT"].split('-')
         except:
-            date = line["PKST"].split('-')
-        dayData.year = int(date[0])
-        dayData.month = int(date[1])
-        dayData.day = int(date[2])
-        dayData.highestT = line["Max TemperatureC"]
-        dayData.meanT = line["Mean TemperatureC"]
-        dayData.lowestT = line["Min TemperatureC"]
-        dayData.highestH = line["Max Humidity"]
-        dayData.meanH = line["Mean Humidity"]
-        dayData.lowestH = line["Min Humidity"]
-        return dayData
+            date = day["PKST"].split('-')
+        day_data = WeatherData.WeatherData(int(date[0]), int(date[1]), int(date[2]), day["Max TemperatureC"],
+                                           day["Min TemperatureC"], day["Mean TemperatureC"], day["Max Humidity"],
+                                           day["Min Humidity"], day["Mean Humidity"])
+        return day_data
 
     @staticmethod
     def read_file(path):
         list_month_data = []
         month_file = csv.DictReader(open(path))
         for row in month_file:
-                list_month_data.append(WeatherDataReader.read_line(row))
+                list_month_data.append(WeatherDataReader.read_day(row))
         return list_month_data
 
     @staticmethod
-    def read(path):
+    def read_yearly_data(path, year):
         weather_data = []
         files = [f for f in sorted(listdir(path)) if isfile(join(path, f))]
         for file_path in files:
-            weather_data.append(WeatherDataReader.read_file(path + '/' + file_path))
+            if int(file_path.split('_')[2]) == year:
+                weather_data.append(WeatherDataReader.read_file(path + '/' + file_path))
+        return weather_data
+
+    @staticmethod
+    def read_monthly_data(path, year, month):
+        weather_data = []
+        files = [f for f in sorted(listdir(path)) if isfile(join(path, f))]
+        for file_path in files:
+            if int(file_path.split('_')[2]) == year and file_path.split('_')[3].split('.')[0] == month:
+                weather_data.append(WeatherDataReader.read_file(path + '/' + file_path))
         return weather_data
