@@ -8,9 +8,8 @@ import string
 
 def freq_analysis(message):
     alphabets = list(string.ascii_lowercase)
-    result = []
-    for a in alphabets:
-        result.append(float(message.count(a))/len(message))
+    length = len(message)
+    result = [float(message.count(a))/length for a in alphabets]
     return result
 
 
