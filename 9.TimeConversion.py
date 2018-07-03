@@ -12,9 +12,9 @@ def convert_seconds(number):
     result = h
     result += [" hours ", " hour "][int(h) == 1]
     result += m
-    result += [" minutes ", " minute "][int(h) == 1]
+    result += [" minutes ", " minute "][int(m) == 1]
     result += s
-    result += [" seconds ", " second "][int(h) == 1]
+    result += [" seconds ", " second "][int(float(s)) == 1]
     return result
 
 
