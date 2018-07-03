@@ -16,8 +16,8 @@ no_of_bits = {'kb': 2 ** 10,
               'TB': 2 ** 40 * 8}
 
 
-def download_time(filesize, fileUnit, BandWidth, BandWiddthUnit):
-    seconds = (filesize * no_of_bits[fileUnit])/(BandWidth * no_of_bits[BandWiddthUnit])
+def download_time(file_size, file_unit, band_width, band_width_unit):
+    seconds = (file_size * no_of_bits[file_unit])/(band_width * no_of_bits[band_width_unit])
     h, m, s = str(datetime.timedelta(seconds=seconds)).split(":")
     return h + " hours " + m + " minutes " + s + " seconds"
 
