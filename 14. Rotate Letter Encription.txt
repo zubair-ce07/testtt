@@ -1,0 +1,33 @@
+"""Rotate Letters in string
+The procedure, rotate, takes as its input a string of lower case letters, a-z, and
+spaces, and an integer n, and returns the string constructed by shifting each of the letters
+n steps, and leaving the spaces unchanged.
+"""
+
+import string
+
+
+def shift_n_letters(letter, n):
+    alphabets = list(string.ascii_lowercase)
+    letter_index = alphabets.index(letter) + n
+    return alphabets[letter_index % len(alphabets)]
+
+
+def rotate(string_, number):
+    rotated_string = ""
+    for ch in string_:
+        rotated_string += shift_n_letters(ch, number) if not ch == " " else ch
+    return rotated_string
+
+print rotate('sarah', 13)
+#>>> 'fnenu'
+print rotate('fnenu', 13)
+#>>> 'sarah'
+print rotate('dave', 5)
+#>>>'ifaj'
+print rotate('ifaj', -5)
+#>>>'dave'
+print rotate(("zw pfli tfuv nfibj tfiivtkcp pfl jyflcu "
+                "sv rscv kf ivru kyzj"), -17)
+#>>>
+
