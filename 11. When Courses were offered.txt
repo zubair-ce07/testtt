@@ -36,16 +36,16 @@ courses = {
 }
 
 
-def courses_offered(courses, hexamester):
+def courses_offered(hexamester):
     courses_in_hexamester = [c for c in courses[hexamester]]
     return courses_in_hexamester
 
 
 def when_offered(courses, course):
     hexamesters = []
-    for h in courses:
-        if course in courses_offered(courses, h):
-            hexamesters.append(h)
+    for hexamester in courses:
+        if course in courses_offered(hexamester):
+            hexamesters.append(hexamester)
     return hexamesters
 
 print when_offered(courses, 'cs101')
@@ -53,4 +53,3 @@ print when_offered(courses, 'cs101')
 
 print when_offered(courses, 'bio893')
 #>>> []
-
