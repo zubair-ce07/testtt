@@ -50,24 +50,6 @@ def get_arguments():
     return parser.parse_args()
 
 
-def display_results(problem_type, result):
-    display = WeatherDisplay()
-
-    while len(problem_type):
-        m = problem_type.pop()
-        r = result.pop()
-
-        print(m)
-        if m == '-e':
-            display.present_annual_report(r)
-        elif m == '-a':
-            display.present_monthly_average_report(r)
-        elif m == '-b':
-            display.present_daily_extremes_report(r, horizontal=True)
-        elif m == '-c':
-            display.present_daily_extremes_report(r)
-
-
 def parse_date(date):
     date = date.split('/')
     year = date[0]
@@ -79,29 +61,26 @@ def parse_date(date):
 
 def calculate_results(args, weather_readings):
     calculator = Calculator()
-    problem_type = []
-    result = []
+    display = WeatherDisplay()
 
     for arg in args.a or []:
         year, month = parse_date(arg)
-        problem_type.append('-a')
-        result.append(calculator.calculate_monthly_average_report(weather_readings, year, month))
+        result = calculator.calculate_monthly_average_report(weather_readings, year, month)
+        display.present_monthly_average_report(result)
 
     for arg in args.b or []:
         year, month = parse_date(arg)
-        problem_type.append('-b')
-        result.append(calculator.calculate_daily_extremes_report(weather_readings, year, month))
+        result = calculator.calculate_daily_extremes_report(weather_readings, year, month)
+        display.present_daily_extremes_report(result, horizontal=True)
 
     for arg in args.c or []:
         year, month = parse_date(arg)
-        problem_type.append('-c')
-        result.append(calculator.calculate_daily_extremes_report(weather_readings, year, month))
+        result = calculator.calculate_daily_extremes_report(weather_readings, year, month)
+        display.present_daily_extremes_report(result)
 
     for arg in args.e or []:
-        problem_type.append('-e')
-        result.append(calculator.calculate_annual_result(weather_readings, year=arg))
-
-    return problem_type, result
+        result = calculator.calculate_annual_result(weather_readings, year=arg)
+        display.present_annual_report(result)
 
 
 def main():
@@ -119,12 +98,7 @@ def main():
         return
 
     weather_readings = parser.read(files)
-    problem_type, result = calculate_results(arguments, weather_readings)
-
-    problem_type.reverse()
-    result.reverse()
-
-    display_results(problem_type, result)
+    calculate_results(arguments, weather_readings)
 
 
 if __name__ == "__main__":
