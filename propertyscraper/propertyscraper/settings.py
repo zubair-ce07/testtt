@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for schutzcrawler project
+# Scrapy settings for propertyscraper project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,18 +9,17 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'schutzcrawler'
+BOT_NAME = 'propertyscraper'
 
-SPIDER_MODULES = ['schutzcrawler.spiders']
-NEWSPIDER_MODULE = 'schutzcrawler.spiders'
-
+SPIDER_MODULES = ['propertyscraper.spiders']
+NEWSPIDER_MODULE = 'propertyscraper.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'schutzcrawler (+http://www.yourdomain.com)'
+#USER_AGENT = 'propertyscraper (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-# ROBOTSTXT_OBEY = True
+#ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -48,13 +47,13 @@ NEWSPIDER_MODULE = 'schutzcrawler.spiders'
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'schutzcrawler.middlewares.SchutzcrawlerSpiderMiddleware': 543,
+#    'propertyscraper.middlewares.PropertyscraperSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'schutzcrawler.middlewares.SchutzcrawlerDownloaderMiddleware': 543,
+#    'propertyscraper.middlewares.PropertyscraperDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -66,7 +65,7 @@ NEWSPIDER_MODULE = 'schutzcrawler.spiders'
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'schutzcrawler.pipelines.SchutzcrawlerPipeline': 300,
+#    'propertyscraper.pipelines.PropertyscraperPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
