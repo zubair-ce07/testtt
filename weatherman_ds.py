@@ -35,4 +35,12 @@ class DayData:
         data = data.rstrip('\n')
         values = data.split(',')
         self.readings = dict(zip(titles, values))
-        print(self.readings)
+
+
+class ResultData:
+    def __init__(self):
+        self.temperature_highest = {}
+        self.temperature_lowest = {}
+        self.humidity = {}
+
+
