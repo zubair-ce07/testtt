@@ -1,13 +1,17 @@
 
 def minimum_temperature_calculate(data):
     """"Calculates the minimum temperature and day through out the year"""
-    minimum_temperature_date = data[0].days[0].readings['PKT']
-    minimum_temperature = int(data[0].days[0].readings['Min TemperatureC'])
+    first_iteration = True
     for month in data:
         for day in month.days:
-            if day.readings['Min TemperatureC'] == '':
+            print(day.readings['Mean TemperatureC'])
+            if day.readings['Mean TemperatureC'] == '':
                 continue
-            temperature = int(day.readings['Min TemperatureC'])
+            if first_iteration:
+                minimum_temperature_date = day.readings['PKT']
+                minimum_temperature = int(day.readings['Mean TemperatureC'])
+                first_iteration = False
+            temperature = int(day.readings['Mean TemperatureC'])
             if temperature < minimum_temperature:
                 minimum_temperature = temperature
                 minimum_temperature_date = day.readings['PKT']
@@ -17,13 +21,17 @@ def minimum_temperature_calculate(data):
 
 def maximum_temperature_calculate(data):
     """"Calculates the maximum temperature and day through out the year"""
-    maximum_temperature_date = data[0].days[0].readings['PKT']
-    maximum_temperature = int(data[0].days[0].readings['Max TemperatureC'])
+    first_iteration = True
+
     for month in data:
         for day in month.days:
-            if day.readings['Max TemperatureC'] == '':
+            if day.readings['Mean TemperatureC'] == '':
                 continue
-            temperature = int(day.readings['Max TemperatureC'])
+            if first_iteration:
+                maximum_temperature_date = day.readings['PKT']
+                maximum_temperature = int(day.readings['Mean TemperatureC'])
+                first_iteration = False
+            temperature = int(day.readings['Mean TemperatureC'])
             if temperature > maximum_temperature:
                 maximum_temperature = temperature
                 maximum_temperature_date = day.readings['PKT']
@@ -33,14 +41,17 @@ def maximum_temperature_calculate(data):
 
 def maximum_humidity_calculate(data):
     """"Calculates the day when the humidity was highest through out the year"""
-    maximum_humidity_date = data[0].days[0].readings['PKT']
-    maximum_humidity = int(data[0].days[0].readings['Max Humidity'])
+    first_iteration = True
+
     for month in data:
         for day in month.days:
-            print(day.readings['Max Humidity'])
-            if day.readings['Max Humidity'] == '':
+            if day.readings[' Mean Humidity'] == '':
                 continue
-            humidity = int(day.readings['Max Humidity'])
+            if first_iteration:
+                maximum_humidity_date = day.readings['PKT']
+                maximum_humidity = int(day.readings[' Mean Humidity'])
+                first_iteration = False
+            humidity = int(day.readings[' Mean Humidity'])
             if humidity > maximum_humidity:
                 maximum_humidity = humidity
                 maximum_humidity_date = day.readings['PKT']
