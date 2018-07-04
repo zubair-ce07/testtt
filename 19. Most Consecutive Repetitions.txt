@@ -1,0 +1,27 @@
+"""Longest Repetition
+The module below defines a procedure, longest_repetition, that takes as input a list, and
+returns the element in the list that has the most consecutive repetitions. If there are
+multiple elements that have the same number of longest repetitions, the result is the
+one that appears first. If the input list is empty, it returns None.
+"""
+
+from collections import defaultdict
+
+
+def longest_repetition(input_list):
+    repitition_count = defaultdict(int)
+    for element in input_list:
+        repitition_count[element] += 1
+    return max(repitition_count.iteritems())[0] if repitition_count else None
+
+#For example
+print longest_repetition([1, 2, 2, 3, 3, 3, 2, 2, 1])
+# 2
+print longest_repetition(['a', 'b', 'b', 'b', 'c', 'd', 'd', 'd'])
+# b
+print longest_repetition([1, 2, 3, 4, 5])
+# 1
+print longest_repetition([])
+# None
+
+
