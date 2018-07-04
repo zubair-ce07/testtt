@@ -1,14 +1,16 @@
-class WeatherData:
-    def __init__(self, year, month, day, highest_temp, lowest_temp, mean_temp, highest_hum, lowest_hum, mean_hum):
-        self.year = year
-        self.month = month
-        self.day = day
-        self.highest_temp = highest_temp
-        self.lowest_temp = lowest_temp
-        self.mean_temp = mean_temp
-        self.highest_hum = highest_hum
-        self.lowest_hum = lowest_hum
-        self.mean_hum = mean_hum
+class WeatherReading:
+    def __init__(self, day):
+        date = day.get('PKT') or day.get('PKST')
+        date = date.split('-')
+        self.year = int(date[0])
+        self.month = int(date[1])
+        self.day = int(date[2])
+        self.highest_temp = int(day["Max TemperatureC"])
+        self.lowest_temp = int(day["Min TemperatureC"])
+        self.mean_temp = int(day["Mean TemperatureC"])
+        self.highest_hum = int(day["Max Humidity"])
+        self.lowest_hum = int(day["Min Humidity"])
+        self.mean_hum = int(day["Mean Humidity"])
 
 
 
