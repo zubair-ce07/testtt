@@ -3,19 +3,6 @@ import csv
 import os
 
 
-def str_to_date(string):
-    date = string.split('-')
-    return datetime.date(int(date[0]), int(date[1]), int(date[2]))
-
-
-def filter_by_date(weather_readings, year, month=''):
-    if not month:
-        return [r for r in weather_readings if r.date.year == int(year)]
-    else:
-        return [r for r in weather_readings if r.date.year == int(year)
-                and r.date.month == int(month)]
-
-
 class FileParser:
     @staticmethod
     def get_files(directory_path):
@@ -46,16 +33,29 @@ class FileParser:
 class WeatherReading:
     def __init__(self, weather_reading):
         if 'PKT' in weather_reading.keys():
-            self.date = str_to_date(weather_reading['PKT'])
+            self.date = self.str_to_date(weather_reading['PKT'])
         else:
-            self.date = str_to_date(weather_reading['PKST'])
+            self.date = self.str_to_date(weather_reading['PKST'])
         self.max_temp = int(weather_reading['Max TemperatureC'])
         self.min_temp = int(weather_reading['Min TemperatureC'])
         self.mean_humidity = int(weather_reading[' Mean Humidity'])
         self.max_humidity = int(weather_reading['Max Humidity'])
 
+    @staticmethod
+    def str_to_date(string):
+        date = string.split('-')
+        return datetime.date(int(date[0]), int(date[1]), int(date[2]))
+
 
 class Calculator:
+    @staticmethod
+    def filter_by_date(weather_readings, year, month=''):
+        if not month:
+            return [r for r in weather_readings if r.date.year == int(year)]
+        else:
+            return [r for r in weather_readings if r.date.year == int(year)
+                    and r.date.month == int(month)]
+
     def calculate_annual_result(self, weather_readings, year):
         result = {
             'Lowest Annual Temp':
@@ -67,46 +67,44 @@ class Calculator:
         }
         return result
 
-    @staticmethod
-    def find_annual_highest_temp(weather_readings, year):
-        weather_readings = filter_by_date(weather_readings, year)
+    def find_annual_highest_temp(self, weather_readings, year):
+        weather_readings = self.filter_by_date(weather_readings, year)
         if not weather_readings:
             return {}
 
         return max(weather_readings, key=lambda r: r.max_temp)
 
-    @staticmethod
-    def find_annual_highest_humidity(weather_readings, year):
-        weather_readings = filter_by_date(weather_readings, year)
+    def find_annual_highest_humidity(self, weather_readings, year):
+        weather_readings = self.filter_by_date(weather_readings, year)
         if not weather_readings:
             return {}
 
         return max(weather_readings, key=lambda r: r.max_humidity)
 
-    @staticmethod
-    def find_annual_lowest_temp(weather_readings, year):
-        weather_readings = filter_by_date(weather_readings, year)
+    def find_annual_lowest_temp(self, weather_readings, year):
+        weather_readings = self.filter_by_date(weather_readings, year)
         if not weather_readings:
             return {}
 
         return min(weather_readings, key=lambda r: r.min_temp)
 
-    @staticmethod
-    def calculate_monthly_average_report(weather_readings, year, month):
+    def calculate_monthly_average_report(self, weather_readings, year, month):
         result = {}
 
         high_temps = []
         low_temps = []
         mean_humidity_val = []
 
-        weather_readings = filter_by_date(weather_readings, year, month)
+        weather_readings = self.filter_by_date(weather_readings, year, month)
 
         for reading in weather_readings:
             high_temps.append(reading.max_temp)
             low_temps.append(reading.min_temp)
             mean_humidity_val.append(reading.mean_humidity)
 
-        if not any(len(readings) for readings in [high_temps, low_temps, mean_humidity_val]):
+        required_readings = [high_temps, low_temps, mean_humidity_val]
+
+        if not any(len(reading) for reading in required_readings):
             return {}
 
         result['Average Highest Temp'] = sum(high_temps) / len(high_temps)
@@ -115,15 +113,14 @@ class Calculator:
 
         return result
 
-    @staticmethod
-    def calculate_daily_extremes_report(weather_readings, year, month):
+    def calculate_daily_extremes_report(self, weather_readings, year, month):
         result = {}
 
         dates = []
         min_temps = []
         max_temps = []
 
-        weather_readings = filter_by_date(weather_readings, year, month)
+        weather_readings = self.filter_by_date(weather_readings, year, month)
 
         for reading in weather_readings:
                 dates.append(reading.date)
