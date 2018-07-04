@@ -54,35 +54,31 @@ class WeatherAnalyzer:
                 and r.date.month == month]
 
     def calculate_annual_result(self, weather_readings, year):
+        weather_readings = self.filter_readings_by_date(weather_readings, year)
+
+        if not weather_readings:
+            return {}
+
         result = {
             'Lowest Annual Temp':
-                self.find_annual_lowest_temp(weather_readings, year),
+                self.find_lowest_temp(weather_readings),
             'Highest Annual Temp':
-                self.find_annual_highest_temp(weather_readings, year),
+                self.find_highest_temp(weather_readings),
             'Highest Annual Humidity':
-                self.find_annual_highest_humidity(weather_readings, year)
+                self.find_highest_humidity(weather_readings)
         }
         return result
 
-    def find_annual_highest_temp(self, weather_readings, year):
-        weather_readings = self.filter_readings_by_date(weather_readings, year)
-        if not weather_readings:
-            return {}
-
+    @staticmethod
+    def find_highest_temp(weather_readings):
         return max(weather_readings, key=lambda r: r.max_temp)
 
-    def find_annual_highest_humidity(self, weather_readings, year):
-        weather_readings = self.filter_readings_by_date(weather_readings, year)
-        if not weather_readings:
-            return {}
-
+    @staticmethod
+    def find_highest_humidity(weather_readings):
         return max(weather_readings, key=lambda r: r.max_humidity)
 
-    def find_annual_lowest_temp(self, weather_readings, year):
-        weather_readings = self.filter_readings_by_date(weather_readings, year)
-        if not weather_readings:
-            return {}
-
+    @staticmethod
+    def find_lowest_temp(weather_readings):
         return min(weather_readings, key=lambda r: r.min_temp)
 
     def calculate_monthly_average_report(self, weather_readings, year, month):
@@ -113,15 +109,13 @@ class WeatherAnalyzer:
 class WeatherDisplay:
     @staticmethod
     def present_annual_report(report):
+        if not report:
+            print('Invalid data or input')
+            return
+
         high = report['Highest Annual Temp']
         low = report['Lowest Annual Temp']
         humid = report['Highest Annual Humidity']
-
-        required_results = [humid, low, high]
-
-        if not all(result for result in required_results):
-            print('Invalid data or input')
-            return
 
         print("Highest: {0}C on {1}".format(
             high.max_temp, high.date.strftime("%d %B")))
