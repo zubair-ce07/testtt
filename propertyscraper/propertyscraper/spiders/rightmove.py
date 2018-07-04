@@ -129,24 +129,26 @@ class RightmoveParseSpider(Spider, Mixin):
         letting_info.extend(self.combine_description_and_amenities(response))
 
         move_in_info = [r for r in letting_info if 'available' in r.lower()]
+        date_regex = '[\d]{2}\/[\d]{2}\/[\d]{4}'
 
         if move_in_info:
             try:
                 move_in_date_info = move_in_info[0].split(':')[1]
-                date = parser.parse(move_in_date_info)
-                return date.strftime("%d/%m/%Y")
+                if re.match(date_regex, self.clean_string(move_in_date_info)):
+                    return move_in_date_info
+                else:
+                    date = parser.parse(move_in_date_info)
+                    return date.strftime("%d/%m/%Y")
             except ValueError:
-                if 'Now' in move_in_date_info:
+                if re.findall('immediately|now', move_in_info[0].lower()):
                     return datetime.datetime.now().strftime("%d/%m/%Y")
             except IndexError:
-                date = re.findall('(?:on|from|:)\s*([a-zA-Z0-9,\s]{1,17}20[\d]{2})', move_in_info[0])
+                date = re.findall('(?:on|from)\s*([a-zA-Z0-9,\s]{1,17}20[\d]{2})', move_in_info[0])
                 try:
                     date = parser.parse(date[0])
                     return date.strftime("%d/%m/%Y")
                 except IndexError:
-                    if re.findall('immediately|now', ''.join(move_in_info[0]).lower()):
-                        return datetime.datetime.now().strftime("%d/%m/%Y")
-                    if re.findall('mid|end|beginning', ''.join(move_in_info[0]).lower()):
+                    if re.findall('mid|end|beginning', move_in_info[0].lower()):
                         month = re.findall('(?:mid|end|beginning)\s*([a-zA-Z0-9]+)', move_in_info[0])
                         month = parser.parse(month[0])
                         return month.strftime("%d/%m/%Y")
@@ -288,7 +290,7 @@ class RightmoveParseSpider(Spider, Mixin):
         return [self.clean_string(rd) for rd in raw_description if self.clean_string(rd)]
 
     def clean_string(self, target_str):
-        return target_str.replace('\r', '').replace('\n', '').strip()
+        return target_str.replace('\r', '').replace('\n', '').strip(' ')
 
 
 class RightmoveCrawlSpider(CrawlSpider, Mixin):
