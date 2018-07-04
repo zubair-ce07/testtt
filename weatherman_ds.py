@@ -5,7 +5,7 @@ class MonthData:
         self.days = []
         self.titles = []
         self.MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec')
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
     def load_month(self, directory='none', year='none', month='none'):
         """Loads a given months data in the data structure"""
