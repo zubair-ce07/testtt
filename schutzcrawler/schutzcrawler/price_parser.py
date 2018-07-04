@@ -1,14 +1,14 @@
 import re
 
-class PriceExtractor:
-    currencies = {'R$':'BRL'}
+class PriceParser:
+    currencies = {'R$':'BRL', 'EUR':'EUR'}
 
     def clean_prices(self, prices):
         raw_prices = []
         for price in prices:
-            price = re.findall('\d+', price)
+            price = ''.join(re.findall('\d+', price))
             if price:
-                raw_prices.append(int(price[0]) * 100)
+                raw_prices.append(int(price))
         return raw_prices
     
     def currency(self, prices):
