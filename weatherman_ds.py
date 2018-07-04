@@ -38,9 +38,9 @@ class DayData:
 
 
 class ResultData:
-    def __init__(self):
-        self.temperature_highest = {}
-        self.temperature_lowest = {}
-        self.humidity = {}
+    def __init__(self, min_temperature, max_temperature, humidity):
+        self.temperature_highest = max_temperature
+        self.temperature_lowest = min_temperature
+        self.humidity = humidity
 
 
