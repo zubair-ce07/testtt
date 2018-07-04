@@ -23,7 +23,7 @@ class QuizTaker:
             first_space = i.find(' ')
             qo_without_number = i[first_space+1:]
 
-            print(str(qo_no) + ". " + qo_without_number + "\n")
+            print ("{}. {}\n".format(qo_no, qo_without_number))
             qo_no += 1
 
     def input_answers(self):
@@ -32,7 +32,7 @@ class QuizTaker:
         """
         print("------------------Give Answers------------------")
         for i in range(len(self.question.questions)):
-            print("\nQuestion - " + str(i+1) + " :")
+            print("\nQuestion - {} :".format(str(i+1)))
             self.user_answers.append(str(input()))
 
     def show_results(self):
@@ -42,9 +42,9 @@ class QuizTaker:
         print("---------------------Result---------------------")
         for i in range(len(self.question.questions)):
             if self.question.get_correct_answer(i) == self.user_answers[i]:
-                print("Question-" + str(i+1) + " Correct Answer!\n")
+                print("Question-{} Correct Answer!\n".format(str(i+1)))
             else:
-                print("Sorry, the correct answer of Question-" + str(i+1) + " is: " + self.question.get_correct_answer(i) + "\n")
+                print("Sorry, the correct answer of Question-{} is: {}\n".format(str(i), self.question.get_correct_answer(i)))
 
     def start_quiz(self):
         """

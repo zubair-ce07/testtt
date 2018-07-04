@@ -4,5 +4,5 @@ import quizzer
 quizzer = quizzer.QuizTaker()
 try:
     quizzer.start_quiz()
-except FileNotFoundError as f:
-    print(format(f))
+except FileNotFoundError as e:
+    print(format(e))

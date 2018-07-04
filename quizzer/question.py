@@ -1,3 +1,6 @@
+import constants
+
+
 class QuestionReader:
     """
     Reads questions from file and stores them
@@ -13,14 +16,14 @@ class QuestionReader:
         """
         Reads questions from file
         """
-        with open('questions.txt', 'r') as f:
+        with open(constants.qo_file_name, 'r') as f:
             self.questions = f.readlines()
 
     def read_key_answers(self):
         """
         Reads key.txt and populates key_answers[]
         """
-        with open('key.txt', 'r') as f:
+        with open(constants.key_file_name, 'r') as f:
             self.key_answers = f.readlines()
 
         # Remove numbering of answers
