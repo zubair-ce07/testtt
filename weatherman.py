@@ -6,8 +6,8 @@ import argparse
 def validate_year(string):
     if len(string) == 4 and string.isdigit():
         return string
-    else:
-        raise TypeError
+
+    raise TypeError
 
 
 def validate_month(string):
@@ -21,8 +21,8 @@ def validate_month(string):
 
     if len(year_arg) == 4 and len(month_arg) > 0 and year_arg.isdigit() and month_arg.isdigit():
         return string
-    else:
-        raise TypeError
+
+    raise TypeError
 
 
 def get_arguments():

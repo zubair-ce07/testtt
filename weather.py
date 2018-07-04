@@ -7,9 +7,9 @@ class FileParser:
     @staticmethod
     def get_files(directory_path):
         file_names = os.listdir(directory_path)
-        file_names = [os.path.join(directory_path, file_name) for file_name in file_names]
-        return [x for x in file_names if
-                os.path.isfile(x) and 'weather' in x and not x.startswith('.')]
+        file_paths = [os.path.join(directory_path, file_name) for file_name in file_names if
+                      'weather' in file_name and not file_name.startswith('.')]
+        return [file_path for file_path in file_paths if os.path.isfile(file_path)]
 
     def read(self, file_names):
         weather_readings = []
@@ -24,8 +24,7 @@ class FileParser:
 
     @staticmethod
     def is_valid_reading(reading):
-        required_fields = ['Max TemperatureC', 'Mean TemperatureC', 'Min TemperatureC',
-                           'Max Humidity', ' Mean Humidity', ' Min Humidity']
+        required_fields = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
 
         return all(reading[field] for field in required_fields)
 
@@ -49,12 +48,12 @@ class WeatherReading:
 
 class Calculator:
     @staticmethod
-    def filter_by_date(weather_readings, year, month=''):
+    def filter_readings_by_date(weather_readings, year, month=None):
         if not month:
             return [r for r in weather_readings if r.date.year == int(year)]
-        else:
-            return [r for r in weather_readings if r.date.year == int(year)
-                    and r.date.month == int(month)]
+
+        return [r for r in weather_readings if r.date.year == int(year)
+                and r.date.month == int(month)]
 
     def calculate_annual_result(self, weather_readings, year):
         result = {
@@ -68,21 +67,21 @@ class Calculator:
         return result
 
     def find_annual_highest_temp(self, weather_readings, year):
-        weather_readings = self.filter_by_date(weather_readings, year)
+        weather_readings = self.filter_readings_by_date(weather_readings, year)
         if not weather_readings:
             return {}
 
         return max(weather_readings, key=lambda r: r.max_temp)
 
     def find_annual_highest_humidity(self, weather_readings, year):
-        weather_readings = self.filter_by_date(weather_readings, year)
+        weather_readings = self.filter_readings_by_date(weather_readings, year)
         if not weather_readings:
             return {}
 
         return max(weather_readings, key=lambda r: r.max_humidity)
 
     def find_annual_lowest_temp(self, weather_readings, year):
-        weather_readings = self.filter_by_date(weather_readings, year)
+        weather_readings = self.filter_readings_by_date(weather_readings, year)
         if not weather_readings:
             return {}
 
@@ -95,7 +94,7 @@ class Calculator:
         low_temps = []
         mean_humidity_val = []
 
-        weather_readings = self.filter_by_date(weather_readings, year, month)
+        weather_readings = self.filter_readings_by_date(weather_readings, year, month)
 
         for reading in weather_readings:
             high_temps.append(reading.max_temp)
@@ -104,7 +103,7 @@ class Calculator:
 
         required_readings = [high_temps, low_temps, mean_humidity_val]
 
-        if not any(len(reading) for reading in required_readings):
+        if not all(reading for reading in required_readings):
             return {}
 
         result['Average Highest Temp'] = sum(high_temps) / len(high_temps)
@@ -120,7 +119,7 @@ class Calculator:
         min_temps = []
         max_temps = []
 
-        weather_readings = self.filter_by_date(weather_readings, year, month)
+        weather_readings = self.filter_readings_by_date(weather_readings, year, month)
 
         for reading in weather_readings:
                 dates.append(reading.date)
@@ -140,7 +139,9 @@ class WeatherDisplay:
         low = report['Lowest Annual Temp']
         humid = report['Highest Annual Humidity']
 
-        if any(result == {} for result in [humid, low, high]):
+        required_results = [humid, low, high]
+
+        if not all(result for result in required_results):
             print('Invalid data or input')
             return
 
@@ -156,7 +157,7 @@ class WeatherDisplay:
 
         required_fields = ['Average Highest Temp', 'Average Lowest Temp', 'Average Mean Humidity']
 
-        if any(field not in report for field in required_fields):
+        if not all(field in report for field in required_fields):
             print('Invalid data or input')
             return
 
@@ -173,7 +174,9 @@ class WeatherDisplay:
         min_temps = report['Min Temps']
         max_temps = report['Max Temps']
 
-        if not any(len(readings) for readings in [dates, min_temps, max_temps]):
+        required_results = [dates, min_temps, max_temps]
+
+        if not all(result for result in required_results):
             print('Invalid data or input')
             return
 
