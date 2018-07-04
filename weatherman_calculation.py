@@ -4,7 +4,6 @@ def minimum_temperature_calculate(data):
     first_iteration = True
     for month in data:
         for day in month.days:
-            print(day.readings['Mean TemperatureC'])
             if day.readings['Mean TemperatureC'] == '':
                 continue
             if first_iteration:
@@ -57,3 +56,31 @@ def maximum_humidity_calculate(data):
                 maximum_humidity_date = day.readings['PKT']
 
     print(maximum_humidity_date + " : " + str(maximum_humidity))
+
+
+def average_maximum_calculate(data):
+    total_temperature = 0
+    days_count = 0
+    for month in data:
+        for day in month.days:
+            if day.readings['Max TemperatureC'] == '':
+                continue
+            temperature = int(day.readings['Max TemperatureC'])
+            total_temperature = total_temperature + temperature
+            days_count += 1
+
+    print("Average Max: "+str(total_temperature//days_count))
+
+
+def average_minimum_calculate(data):
+    total_temperature = 0
+    days_count = 0
+    for month in data:
+        for day in month.days:
+            if day.readings['Min TemperatureC'] == '':
+                continue
+            temperature = int(day.readings['Min TemperatureC'])
+            total_temperature = total_temperature + temperature
+            days_count += 1
+
+    print("Average Min: "+str(total_temperature//days_count))
