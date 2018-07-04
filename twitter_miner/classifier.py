@@ -1,32 +1,28 @@
 __author__ = 'abdul'
 import re
+# Reference: https://stackoverflow.com/questions/6883049/regex-to-find-urls-in-string-in-python
+
+# used further in the class
+regexs = [
+{'name': 'Mention', 'regex': re.compile(r"@\w+")},
+{'name': 'Link', 'regex': re.compile(r"https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+")},
+{'name': 'Hash Tag', 'regex': re.compile(r"#\w+")}
+]
 
 
 class Classifier:
     """
     Defines regexes to classify strings
     """
-    mention_regex = re.compile(r"@\w+")
-    # Reference: https://stackoverflow.com/questions/6883049/regex-to-find-urls-in-string-in-python
-    link_regex = re.compile(r"https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+")
-    hashtag_regex = re.compile(r"#")
-
-    regex_value = {
-     mention_regex : "Mention",
-     link_regex: "Link",
-     hashtag_regex : "Hash tag"
-    }
 
     def classify(self, string):
         """
         Returns a category after classifying input string
         """
-        accumulated_category = ""
+        accumulated_category = "Text, "
 
-        for key, value in self.regex_value.items():
-            if key.search(string):
-                accumulated_category += value + ", "
+        for regex in regexs:
+            if regex['regex'].search(string):
+                accumulated_category += regex['name'] + ", "
 
-        if not accumulated_category:
-            return "Text"
         return accumulated_category

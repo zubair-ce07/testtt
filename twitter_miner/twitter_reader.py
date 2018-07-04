@@ -26,8 +26,8 @@ class TwitterReader:
         self.access_key = os.environ.get('accessToken')
         self.access_secret_key = os.getenv('accessTokenSecret')
 
-        if self.consumer_key == None or self.consumer_secret_key == None \
-                or self.access_key == None or self.access_secret_key == None:
+        if None in (self.consumer_key, self.consumer_secret_key,
+                    self.access_key,self.access_secret_key):
             raise ValueError('Environment variables not found')
 
         auth = tweepy.OAuthHandler(self.consumer_key, self.consumer_secret_key)

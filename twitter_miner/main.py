@@ -25,12 +25,15 @@ def check_arg(args=None):
 
 if __name__ == '__main__':
     string, count = check_arg(sys.argv[1:]) # Receive arguments
+    tweet_reader = None
 
     try:
         tweet_reader = twitter_reader.TwitterReader()
-        searched_tweets = tweet_reader.read_tweets(string, count) # Start mining
-        for tweet in searched_tweets:
-            tweet.print()
-            print("------")
     except ValueError as v:
         print(format(v))
+        exit()
+
+    searched_tweets = tweet_reader.read_tweets(string, count) # Start mining
+    for tweet in searched_tweets:
+        tweet.print()
+        print("------")
