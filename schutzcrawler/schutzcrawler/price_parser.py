@@ -1,7 +1,9 @@
 import re
 
+
 class PriceParser:
-    currencies = {'R$':'BRL', 'EUR':'EUR'}
+    currencies = {'R$': 'BRL', 'EUR': 'EUR', '$': 'USD'}
+
 
     def clean_prices(self, prices):
         raw_prices = []
@@ -10,13 +12,13 @@ class PriceParser:
             if price:
                 raw_prices.append(int(price))
         return raw_prices
-    
+
     def currency(self, prices):
         for price in prices:
             for key, value in self.currencies.items():
                 if key in price:
                     return value
-                
+    
     def prices(self, prices): 
         raw_prices = sorted(set(self.clean_prices(prices)))
         currency = (self.currency(prices))
