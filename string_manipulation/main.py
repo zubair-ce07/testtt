@@ -24,8 +24,6 @@ def main():
 
     except (TypeError, ValueError) as i:
         print(format(i))
-    # except ValueError as e:
-    #     print(e.args[0])
     else:
         print ("Retain first output: " + retain_first_output)
         print("Retain last output: " + retain_last_output)
