@@ -20,16 +20,19 @@ class MonthData:
             self.titles = title_line.split(',')
             for line in file:
                 day = DayData()
-                day.add_reading(line)
+                day.add_reading(line, self.titles)
                 self.days.append(day)
         except FileNotFoundError:
-            print('No file found for current year')
+            return 'not available'
 
 
 class DayData:
     def __init__(self):
-        self.readings = []
+        self.readings = {}
 
-    def add_reading(self, data):
+    def add_reading(self, data, titles):
+        """Create a dictionary with all the titles and the readings"""
         data = data.rstrip('\n')
-        self.readings = data.split(',')
+        values = data.split(',')
+        self.readings = dict(zip(titles, values))
+        print(self.readings)
