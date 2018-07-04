@@ -25,7 +25,6 @@ class FileParser:
     @staticmethod
     def is_valid_reading(reading):
         required_fields = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
-
         return all(reading[field] for field in required_fields)
 
 
@@ -154,7 +153,6 @@ class WeatherDisplay:
 
     @staticmethod
     def present_monthly_average_report(report):
-
         required_fields = ['Average Highest Temp', 'Average Lowest Temp', 'Average Mean Humidity']
 
         if not all(field in report for field in required_fields):
