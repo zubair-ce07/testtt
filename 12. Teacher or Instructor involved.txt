@@ -5,6 +5,9 @@ A person is involved in a course if they are a value for any property for the co
 Dictionary should have hexamesters as its keys, and each value should be a list of courses that
 are offered that hexamester (the courses in the list can be in any order).
 """
+
+from collections import defaultdict
+
 courses = {
     'feb2012': {'cs101': {'name': 'Building a Search Engine',
                           'teacher': 'Dave',
@@ -38,14 +41,12 @@ courses = {
 
 
 def involved(courses, person):
-    result_dict = {}
+    result = defaultdict(list)
     for hexamester, course in courses.iteritems():
-        for c, property in course.iteritems():
-            if person in property.values():
-                if hexamester not in result_dict:
-                    result_dict[hexamester] = []
-                result_dict[hexamester].append(c)
-    return result_dict
+        for c, property_ in course.iteritems():
+            if person in property_.values():
+                result[hexamester].append(c)
+    return dict(result)
 
 print involved(courses, 'Dave')
 #>>> {'apr2012': ['cs101', 'cs387'], 'feb2012': ['cs101']}
