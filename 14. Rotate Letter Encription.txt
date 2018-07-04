@@ -6,9 +6,12 @@ n steps, and leaving the spaces unchanged.
 
 import string
 
+alphabets = list(string.ascii_lowercase)
+
 
 def shift_n_letters(letter, n):
-    alphabets = list(string.ascii_lowercase)
+    if letter == ' ':
+        return letter
     letter_index = alphabets.index(letter) + n
     return alphabets[letter_index % len(alphabets)]
 
@@ -16,7 +19,7 @@ def shift_n_letters(letter, n):
 def rotate(string_, number):
     rotated_string = ""
     for ch in string_:
-        rotated_string += shift_n_letters(ch, number) if not ch == " " else ch
+        rotated_string += shift_n_letters(ch, number)
     return rotated_string
 
 print rotate('sarah', 13)
@@ -30,4 +33,3 @@ print rotate('ifaj', -5)
 print rotate(("zw pfli tfuv nfibj tfiivtkcp pfl jyflcu "
                 "sv rscv kf ivru kyzj"), -17)
 #>>>
-
