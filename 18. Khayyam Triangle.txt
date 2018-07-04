@@ -1,0 +1,39 @@
+"""Khayyam Triangle
+The module define a procedure, triangle(lines), that takes a number 'lines' as its input, and
+returns a list of the first n rows in the triangle. Each element of the returned list should
+be a list of the numbers at the corresponding row in the triangle.
+The pattern is shown below:
+                    1
+                   1 1
+                  1 2 1
+                 1 3 3 1
+                1 4 6 4 1
+                  ...
+"""
+
+import math
+
+
+def triangle(lines):
+    result = []
+    for line in range(lines):
+        rows = [math.factorial(line)/(math.factorial(line-entry) * math.factorial(entry))
+                for entry in range(line+1)]
+        result.append(rows)
+    return result
+
+#For example:
+print triangle(0)
+#>>> []
+
+print triangle(1)
+#>>> [[1]]
+
+print triangle(2)
+#>> [[1], [1, 1]]
+
+print triangle(3)
+#>>> [[1], [1, 1], [1, 2, 1]]
+
+print triangle(6)
+#>>> [[1], [1, 1], [1, 2, 1], [1, 3, 3, 1], [1, 4, 6, 4, 1], [1, 5, 10, 10, 5, 1]]
