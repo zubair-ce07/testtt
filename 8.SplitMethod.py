@@ -10,7 +10,7 @@ import re
 
 def split_string(source, split_list):
     pattern = '|'.join(map(re.escape, split_list))
-    result = [string for string in re.split(pattern, source) if string not in '']
+    result = [string for string in re.split(pattern, source) if string]
     return result
 
 out = split_string("This is a test-of the,string separation-code!", " ,!-")
