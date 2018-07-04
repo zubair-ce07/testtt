@@ -5,18 +5,12 @@ procedure should return a list of strings that break the source string up by
 the characters in the splitlist
 """
 
+import re
+
 
 def split_string(source, split_list):
-    result = []
-    string = ""
-    for s in source:
-        if string and s in split_list:
-            result.append(string)
-            string = ""
-        elif s not in split_list:
-            string = string + s
-    if string not in split_list:
-        result.append(string)
+    pattern = '|'.join(map(re.escape, split_list))
+    result = [string for string in re.split(pattern, source) if string not in '']
     return result
 
 out = split_string("This is a test-of the,string separation-code!", " ,!-")
