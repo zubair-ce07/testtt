@@ -1,5 +1,5 @@
 import os
-from weather import FileParser, WeatherDisplay, Calculator
+from weather import FileParser, WeatherDisplay, WeatherAnalyzer
 import argparse
 
 
@@ -55,12 +55,11 @@ def parse_date(date):
     year = date[0]
     month = date[1]
 
-    month = str(int(month))
     return year, month
 
 
 def calculate_results(args, weather_readings):
-    calculator = Calculator()
+    calculator = WeatherAnalyzer()
     display = WeatherDisplay()
 
     for arg in args.a or []:
@@ -93,7 +92,7 @@ def main():
     parser = FileParser()
     files = parser.get_files(arguments.directory)
 
-    if len(files) == 0:
+    if not files:
         print('No valid files found in directory')
         return
 

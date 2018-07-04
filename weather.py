@@ -30,10 +30,7 @@ class FileParser:
 
 class WeatherReading:
     def __init__(self, weather_reading):
-        if 'PKT' in weather_reading.keys():
-            self.date = self.str_to_date(weather_reading['PKT'])
-        else:
-            self.date = self.str_to_date(weather_reading['PKST'])
+        self.date = self.str_to_date(weather_reading.get('PKST') or weather_reading.get('PKT'))
         self.max_temp = int(weather_reading['Max TemperatureC'])
         self.min_temp = int(weather_reading['Min TemperatureC'])
         self.mean_humidity = int(weather_reading[' Mean Humidity'])
@@ -45,14 +42,16 @@ class WeatherReading:
         return datetime.date(int(date[0]), int(date[1]), int(date[2]))
 
 
-class Calculator:
+class WeatherAnalyzer:
     @staticmethod
     def filter_readings_by_date(weather_readings, year, month=None):
+        year = int(year)
         if not month:
-            return [r for r in weather_readings if r.date.year == int(year)]
+            return [r for r in weather_readings if r.date.year == year]
 
-        return [r for r in weather_readings if r.date.year == int(year)
-                and r.date.month == int(month)]
+        month = int(month)
+        return [r for r in weather_readings if r.date.year == year
+                and r.date.month == month]
 
     def calculate_annual_result(self, weather_readings, year):
         result = {
@@ -88,47 +87,27 @@ class Calculator:
 
     def calculate_monthly_average_report(self, weather_readings, year, month):
         result = {}
-
-        high_temps = []
-        low_temps = []
-        mean_humidity_val = []
-
         weather_readings = self.filter_readings_by_date(weather_readings, year, month)
 
-        for reading in weather_readings:
-            high_temps.append(reading.max_temp)
-            low_temps.append(reading.min_temp)
-            mean_humidity_val.append(reading.mean_humidity)
-
-        required_readings = [high_temps, low_temps, mean_humidity_val]
-
-        if not all(reading for reading in required_readings):
+        if not weather_readings:
             return {}
 
-        result['Average Highest Temp'] = sum(high_temps) / len(high_temps)
-        result['Average Lowest Temp'] = sum(low_temps) / len(low_temps)
-        result['Average Mean Humidity'] = sum(mean_humidity_val) / len(mean_humidity_val)
+        total_readings = len(weather_readings)
+        result['Average Highest Temp'] = sum(
+            (r.max_temp for r in weather_readings)) / total_readings
+        result['Average Lowest Temp'] = sum(
+            (r.min_temp for r in weather_readings)) / total_readings
+        result['Average Mean Humidity'] = sum(
+            (r.mean_humidity for r in weather_readings)) / total_readings
 
         return result
 
     def calculate_daily_extremes_report(self, weather_readings, year, month):
-        result = {}
-
-        dates = []
-        min_temps = []
-        max_temps = []
-
         weather_readings = self.filter_readings_by_date(weather_readings, year, month)
+        if not weather_readings:
+            return {}
 
-        for reading in weather_readings:
-                dates.append(reading.date)
-                min_temps.append(reading.min_temp)
-                max_temps.append(reading.max_temp)
-
-        result['Dates'] = dates
-        result['Min Temps'] = min_temps
-        result['Max Temps'] = max_temps
-        return result
+        return weather_readings
 
 
 class WeatherDisplay:
@@ -153,9 +132,7 @@ class WeatherDisplay:
 
     @staticmethod
     def present_monthly_average_report(report):
-        required_fields = ['Average Highest Temp', 'Average Lowest Temp', 'Average Mean Humidity']
-
-        if not all(field in report for field in required_fields):
+        if not report:
             print('Invalid data or input')
             return
 
@@ -168,30 +145,24 @@ class WeatherDisplay:
 
     @staticmethod
     def present_daily_extremes_report(report, horizontal=False):
-        dates = report['Dates']
-        min_temps = report['Min Temps']
-        max_temps = report['Max Temps']
-
-        required_results = [dates, min_temps, max_temps]
-
-        if not all(result for result in required_results):
+        if not report:
             print('Invalid data or input')
             return
 
-        print(dates[0].strftime('%B %Y'))
+        print(report[0].date.strftime('%B %Y'))
 
-        for i in range(0, len(dates)):
-            low = '+' * abs(min_temps[i])
-            high = '+' * abs(max_temps[i])
+        for reading in report:
+            low = '+' * abs(reading.min_temp)
+            high = '+' * abs(reading.max_temp)
 
             if not horizontal:
                 print(u"{0} \u001b[34m{1}\u001b[0m {2}C".format(
-                    dates[i].strftime('%d'), high, max_temps[i]))
+                    reading.date.strftime('%d'), high, reading.max_temp))
                 print(u"{0} \u001b[31m{1}\u001b[0m {2}C".format(
-                    dates[i].strftime('%d'), low, min_temps[i]))
+                    reading.date.strftime('%d'), low, reading.min_temp))
             else:
                 print((("{0} \u001b[31m{1}\u001b[0m\u001b[34m{2}"
                         "\u001b[0m {3}C-{4}C")).format(
-                    dates[i].strftime('%d'), low, high, min_temps[i], max_temps[i]))
+                    reading.date.strftime('%d'), low, high, reading.min_temp, reading.max_temp))
 
         print()
