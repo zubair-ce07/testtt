@@ -35,6 +35,7 @@ class DayForecast:
         self.events = read_list[21]
         self.wind_air_degrees = read_list[22]
 
+
 argument_list = []
 readings_list = []
 files_directory = sys.argv[1] + '/'  # Files Directory
@@ -47,7 +48,6 @@ month_tuple = ('Jan', 'Feb', 'Mar', 'Apr',
 # CONSTANTS
 WEATHER_CITY = "Murree_weather"
 TOTAL_REPORTS = int(len(temp_list) / 2)
-REPORT_PARAMS = 2
 YEAR_LENGTH = len(month_tuple)
 
 
@@ -58,15 +58,32 @@ def get_argument_list():
         index += 1
 
 
-def generate_reports(file_dir):
-    for i in range(0, TOTAL_REPORTS):
-        parse_files(argument_list[i], file_dir)
+def parse_files(directory):
+    for x in range(0, TOTAL_REPORTS):
+        arg_list_row = argument_list[x]
 
+        if arg_list_row.action == '-e':
+            for i in range(0, YEAR_LENGTH):
+                file_name = WEATHER_CITY + "_" + arg_list_row.year_month + "_" + month_tuple[i] + ".txt"
+                file_location = directory + file_name
 
-def parse_files(arg_list, directory):
-    if arg_list.action == '-e':
-        for i in range(0, YEAR_LENGTH):
-            file_name = WEATHER_CITY + "_" + arg_list.year_month + "_" + month_tuple[i] + ".txt"
+                try:
+                    weather_file = open(file_location, "r")
+                    temp_readings = [line.split(",") for line in weather_file]
+
+                    for j in range(1, len(temp_readings)):
+                        readings_list.append(DayForecast(temp_readings[j]))
+
+                except:
+                    print("", end="")
+
+            calculate_results(readings_list)
+
+        elif arg_list_row.action == '-a':
+            temp = arg_list_row.year_month.split("/")
+            month = month_tuple[int(temp[1]) - 1]
+
+            file_name = WEATHER_CITY + "_" + temp[0] + "_" + month + ".txt"
             file_location = directory + file_name
 
             try:
@@ -76,20 +93,9 @@ def parse_files(arg_list, directory):
                 for j in range(1, len(temp_readings)):
                     readings_list.append(DayForecast(temp_readings[j]))
 
+                
             except:
-                print("", end="")
-
-        calculate_results(readings_list)
-
-    elif arg_list.action == '-a':
-        temp = arg_list.year_month.split("/")
-        month = month_tuple[int(temp[1]) - 1]
-
-        file_name = WEATHER_CITY + "_" + temp[0] + "_" + month + ".txt"
-        file_location = directory + file_name
-
-        # print(file_name)
-        print(file_location)
+                print("File with the name %s not found" % file_name)
 
 
 def calculate_results(yearly_readings):
@@ -110,19 +116,34 @@ def calculate_results(yearly_readings):
     max_humidity_month_index = int(max_humidity_month.split("-")[1]) - 1
     max_humidity_day = int(max_humidity_month.split("-")[2])
 
+    # Displays the reports
+    generate_reports(max_temp_readings[0],
+                     month_tuple[max_temp_month_index],
+                     max_temp_day,
+                     min_temp_readings[0],
+                     month_tuple[min_temp_month_index],
+                     min_temp_day,
+                     max_humidity_readings[0],
+                     month_tuple[max_humidity_month_index],
+                     max_humidity_day)
+
+
+def generate_reports(max_temp, max_temp_month, max_temp_day,
+                     min_temp, min_temp_month, min_temp_day,
+                     max_humidity, max_humidity_month, max_humidity_day):
     print("Highest: %dC on %s %d" %
-          (max_temp_readings[0],
-           month_tuple[max_temp_month_index],
+          (max_temp,
+           max_temp_month,
            max_temp_day))
 
     print("Lowest: %dC on %s %d" %
-          (min_temp_readings[0],
-           month_tuple[min_temp_month_index],
+          (min_temp,
+           min_temp_month,
            min_temp_day))
 
     print("Humidity: %d%% on %s %d" %
-          (max_humidity_readings[0],
-           month_tuple[max_humidity_month_index],
+          (max_humidity,
+           max_humidity_month,
            max_humidity_day))
 
 
@@ -167,7 +188,7 @@ def find_max_humidity(read_list):
 
 def main():
     get_argument_list()
-    generate_reports(files_directory)
+    parse_files(files_directory)
 
 
 main()
