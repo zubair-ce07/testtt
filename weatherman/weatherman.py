@@ -70,47 +70,46 @@ class GenerateWeatherReports(WeatherFilesParser):
 
     def generate_annual_report(self):
         weather_readings = self.read_all_files()
-        if not weather_readings:
-            print(f'Weather readings not available for given query')
-            return
-        max_tempr_row = self.weather_cal.max_field(weather_readings, 'Max TemperatureC')
-        min_tempr_row = self.weather_cal.min_field(weather_readings, 'Min TemperatureC')
-        max_humidity_row = self.weather_cal.max_field(weather_readings, 'Max Humidity')
+        if weather_readings:
+            max_tempr_row = self.weather_cal.max_field(weather_readings, 'Max TemperatureC')
+            min_tempr_row = self.weather_cal.min_field(weather_readings, 'Min TemperatureC')
+            max_humidity_row = self.weather_cal.max_field(weather_readings, 'Max Humidity')
 
-        max_tempr_date = self.__get_date(max_tempr_row)
-        min_tempr_date = self.__get_date(min_tempr_row)
-        max_humidity_date = self.__get_date(max_tempr_row)
-    
-        print(f'Highest: {max_tempr_row["Max TemperatureC"]}C on {max_tempr_date}')
-        print(f'Lowest: {min_tempr_row["Min TemperatureC"]}C on {min_tempr_date}')
-        print(f'Humidity: {max_humidity_row["Max Humidity"]}C on {max_humidity_date}')
+            max_tempr_date = self.__get_date(max_tempr_row)
+            min_tempr_date = self.__get_date(min_tempr_row)
+            max_humidity_date = self.__get_date(max_tempr_row)
+        
+            print(f'Highest: {max_tempr_row["Max TemperatureC"]}C on {max_tempr_date}')
+            print(f'Lowest: {min_tempr_row["Min TemperatureC"]}C on {min_tempr_date}')
+            print(f'Humidity: {max_humidity_row["Max Humidity"]}C on {max_humidity_date}')
+
+        else: print(f'Weather readings not available for given query')
  
     def generate_monthly_report(self):
         weather_readings = self.read_all_files()
-        if not weather_readings:
-            print(f'Weather readings not available for given query')
-            return
+        if  weather_readings:
+            max_tempr_avg = self.weather_cal.average_field(weather_readings, 'Max TemperatureC')
+            min_tempr_avg = self.weather_cal.average_field(weather_readings, 'Min TemperatureC')
+            mean_humidity_avg = self.weather_cal.average_field(weather_readings, 'Mean Humidity')
 
-        max_tempr_avg = self.weather_cal.average_field(weather_readings, 'Max TemperatureC')
-        min_tempr_avg = self.weather_cal.average_field(weather_readings, 'Min TemperatureC')
-        mean_humidity_avg = self.weather_cal.average_field(weather_readings, 'Mean Humidity')
+            print(f"Highest Average: {max_tempr_avg}C")
+            print(f"Lowest Average: {min_tempr_avg}C")
+            print(f"Average Mean Humidity: {mean_humidity_avg}%")
 
-        print(f"Highest Average: {max_tempr_avg}C")
-        print(f"Lowest Average: {min_tempr_avg}C")
-        print(f"Average Mean Humidity: {mean_humidity_avg}%")
+        else: print(f'Weather readings not available for given query')
                 
     def generate_month_temprature_report(self, month):
         weather_readings = self.read_all_files()
-        if not weather_readings:
-            print(f'Weather readings not available for given query')
-            return
-        month = strftime('%B %Y', strptime(month, '%Y_%b'))
-        print(f'{month}')
-        for row in weather_readings:
-            min_tempr = row['Min TemperatureC']
-            max_tempr = row['Max TemperatureC']
-            print(f'{strftime("%d", strptime(row["PKT"], "%Y-%m-%d"))}', end='')
-            print(f'{colored("+"*min_tempr, "blue")}{colored("+"*max_tempr, "red")}{min_tempr}-{max_tempr}')
+        if weather_readings:
+            month = strftime('%B %Y', strptime(month, '%Y_%b'))
+            print(f'{month}')
+            for row in weather_readings:
+                min_tempr = row['Min TemperatureC']
+                max_tempr = row['Max TemperatureC']
+                print(f'{strftime("%d", strptime(row["PKT"], "%Y-%m-%d"))}', end='')
+                print(f'{colored("+"*min_tempr, "blue")}{colored("+"*max_tempr, "red")}{min_tempr}-{max_tempr}')
+
+        else: print(f'Weather readings not available for given query')
             
 
 
