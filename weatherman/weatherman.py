@@ -12,7 +12,6 @@ class WeatherFilesParser:
     def __get_int(self, value):
         return int(value) if value else None
 
-    # Populate weather data
     def __get_readings(self, row):
         reading = {}
         reading['PKT'] = row.get('PKT') if row.get('PKT') else row.get('PKST')
@@ -45,8 +44,8 @@ class WeatherFilesParser:
     def read_all_files(self, path, file_key):
         weather_readings = []
         for file_path in self.get_filtered_files(path, file_key):
-            file_data = self.read_weather_file(file_path)
-            weather_readings.extend(file_data)
+            file_readings = self.read_weather_file(file_path)
+            weather_readings.extend(file_readings)
 
         return weather_readings
 
