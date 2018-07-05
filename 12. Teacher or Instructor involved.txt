@@ -44,8 +44,9 @@ def involved(courses, person):
     result = defaultdict(list)
     for hexamester, course in courses.iteritems():
         for c, property_ in course.iteritems():
-            if person in property_.values():
-                result[hexamester].append(c)
+            for key, value in property_.iteritems():
+                if key in ['teacher', 'instructor', 'assistant', ] and person == value:
+                    result[hexamester].append(c)
     return dict(result)
 
 print involved(courses, 'Dave')
