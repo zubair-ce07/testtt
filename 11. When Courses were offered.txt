@@ -1,0 +1,50 @@
+"""When offered
+The module defines a procedure, when_offered(courses, course), that takes a courses data structure and
+a string representing a class, and returns a list of strings representing the hexamesters when the
+input course is offered.
+"""
+
+courses = {
+    'feb2012': {'cs101': {'name': 'Building a Search Engine',
+                          'teacher': 'Dave',
+                          'assistant': 'Peter C.'},
+                'cs373': {'name': 'Programming a Robotic Car',
+                          'teacher': 'Sebastian',
+                          'assistant': 'Andy'}},
+    'apr2012': {'cs101': {'name': 'Building a Search Engine',
+                          'teacher': 'Dave',
+                          'assistant': 'Sarah'},
+                'cs212': {'name': 'The Design of Computer Programs',
+                          'teacher': 'Peter N.',
+                          'assistant': 'Andy',
+                          'prereq': 'cs101'},
+                'cs253': {'name': 'Web Application Engineering - Building a Blog',
+                          'teacher': 'Steve',
+                          'prereq': 'cs101'},
+                'cs262': {'name': 'Programming Languages - Building a Web Browser',
+                          'teacher': 'Wes',
+                          'assistant': 'Peter C.',
+                          'prereq': 'cs101'},
+                'cs373': {'name': 'Programming a Robotic Car',
+                          'teacher': 'Sebastian'},
+                'cs387': {'name': 'Applied Cryptography',
+                          'teacher': 'Dave'}},
+    'jan2044': {'cs001':  {'name': 'Building a Quantum Holodeck',
+                           'teacher': 'Dorina'},
+                'cs003': {'name': 'Programming a Robotic Robotics Teacher',
+                          'teacher': 'Jasper'}}
+}
+
+
+def when_offered(courses, course):
+    hexamesters = []
+    for hexamester, hexamester_courses in courses.iteritems():
+        if course in hexamester_courses:
+            hexamesters.append(hexamester)
+    return hexamesters
+
+print when_offered(courses, 'cs101')
+#>>> ['apr2012', 'feb2012']
+
+print when_offered(courses, 'bio893')
+#>>> []
