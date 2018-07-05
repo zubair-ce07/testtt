@@ -120,25 +120,31 @@ def calculate_results(yearly_readings, action):
         max_humidity_day = int(max_humidity_month.split("-")[2])
 
         # Displays the reports
-        generate_reports(max_temp_readings[0],
-                         month_tuple[max_temp_month_index],
-                         max_temp_day,
-                         min_temp_readings[0],
-                         month_tuple[min_temp_month_index],
-                         min_temp_day,
-                         max_humidity_readings[0],
-                         month_tuple[max_humidity_month_index],
-                         max_humidity_day)
+        generate_yearly_report(max_temp_readings[0],
+                               month_tuple[max_temp_month_index],
+                               max_temp_day,
+                               min_temp_readings[0],
+                               month_tuple[min_temp_month_index],
+                               min_temp_day,
+                               max_humidity_readings[0],
+                               month_tuple[max_humidity_month_index],
+                               max_humidity_day)
 
     elif action == '-a':
-        print("Highest Average: %dC" % find_avg_highest(yearly_readings))
-        print("Lowest Average: %dC" % find_avg_lowest(yearly_readings))
-        print("Average Mean Humidity: %d%%" % find_avg_mean_humidity(yearly_readings))
+        generate_monthly_report(find_avg_highest(yearly_readings),
+                                find_avg_lowest(yearly_readings),
+                                find_avg_mean_humidity(yearly_readings))
 
 
-def generate_reports(max_temp, max_temp_month, max_temp_day,
-                     min_temp, min_temp_month, min_temp_day,
-                     max_humidity, max_humidity_month, max_humidity_day):
+def generate_monthly_report(avg_max_temp, avg_lowest_temp, avg_mean_humidity):
+    print("Highest Average: %dC" % avg_max_temp)
+    print("Lowest Average: %dC" % avg_lowest_temp)
+    print("Average Mean Humidity: %d%%" % avg_mean_humidity)
+
+
+def generate_yearly_report(max_temp, max_temp_month, max_temp_day,
+                           min_temp, min_temp_month, min_temp_day,
+                           max_humidity, max_humidity_month, max_humidity_day):
     print("Highest: %dC on %s %d" %
           (max_temp,
            max_temp_month,
