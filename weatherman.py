@@ -5,8 +5,8 @@ from weatherman_calculation import minimum_temperature_calculate
 from weatherman_calculation import maximum_humidity_calculate
 from weatherman_calculation import average_maximum_temperature_calculate
 from weatherman_calculation import average_minimum_temperature_calculate
+from weatherman_calculation import average_humidity_calculate
 import argparse
-import datetime
 
 
 weather_data_c = []
@@ -39,12 +39,20 @@ def main():
         date_full = args.a
         date = date_full.split('/')
         month = MonthData()
-        available = month.load_month(args.directory, date[0], date[1])
+        try:
+            available = month.load_month(args.directory, date[0], date[1])
+        except IndexError:
+            print("Invalid date formay :yyyy/mm")
+            return
         if available != 'not available':
             weather_data_a.append(month)
 
-        print(average_maximum_temperature_calculate(weather_data_a))
-        print(average_minimum_temperature_calculate(weather_data_a))
+        average_maximum = average_maximum_temperature_calculate(weather_data_a)
+        average_minimum = average_minimum_temperature_calculate(weather_data_a)
+        average_humidity = average_humidity_calculate(weather_data_a)
+
+        result = ResultData(average_minimum, average_maximum, average_humidity)
+        option_a_report(result)
 
 
 def option_e_report(result):
@@ -59,6 +67,12 @@ def option_e_report(result):
     date_str = result.humidity[0]
     date = date_str.split('-')
     print("Humidity: " + result.humidity[1] + "% on " + months[int(date[1]) - 1] + " " + date[2])
+
+
+def option_a_report(result):
+    print("Highest Average: "+result.temperature_highest+"C")
+    print("Lowest Average: "+result.temperature_lowest+"C")
+    print("Average mean humidity: "+result.humidity+"%")
 
 
 if __name__ == '__main__':
