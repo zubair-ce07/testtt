@@ -61,8 +61,9 @@ def get_argument_list():
 def parse_files(directory):
     for x in range(0, TOTAL_REPORTS):
         arg_list_row = argument_list[x]
+        action = arg_list_row.action
 
-        if arg_list_row.action == '-e':
+        if action == '-e':
             for i in range(0, YEAR_LENGTH):
                 file_name = WEATHER_CITY + "_" + arg_list_row.year_month + "_" + month_tuple[i] + ".txt"
                 file_location = directory + file_name
@@ -77,9 +78,9 @@ def parse_files(directory):
                 except:
                     print("", end="")
 
-            calculate_results(readings_list)
+            calculate_results(readings_list, action)
 
-        elif arg_list_row.action == '-a':
+        elif action == '-a':
             temp = arg_list_row.year_month.split("/")
             month = month_tuple[int(temp[1]) - 1]
 
@@ -93,39 +94,46 @@ def parse_files(directory):
                 for j in range(1, len(temp_readings)):
                     readings_list.append(DayForecast(temp_readings[j]))
 
-                
             except:
                 print("File with the name %s not found" % file_name)
 
+            calculate_results(readings_list, action)
 
-def calculate_results(yearly_readings):
-    max_temp_readings = find_max(yearly_readings)  # Max Temperature
-    min_temp_readings = find_lowest(yearly_readings)  # Min Temperature
-    max_humidity_readings = find_max_humidity(readings_list)  # Max Humidity
 
-    max_temp_month = yearly_readings[max_temp_readings[1]].date
-    min_temp_month = yearly_readings[min_temp_readings[1]].date
-    max_humidity_month = yearly_readings[max_humidity_readings[1]].date
+def calculate_results(yearly_readings, action):
+    if action == '-e':
+        max_temp_readings = find_max(yearly_readings)  # Max Temperature
+        min_temp_readings = find_lowest(yearly_readings)  # Min Temperature
+        max_humidity_readings = find_max_humidity(readings_list)  # Max Humidity
 
-    max_temp_month_index = int(max_temp_month.split("-")[1]) - 1
-    max_temp_day = int(max_temp_month.split("-")[2])
+        max_temp_month = yearly_readings[max_temp_readings[1]].date
+        min_temp_month = yearly_readings[min_temp_readings[1]].date
+        max_humidity_month = yearly_readings[max_humidity_readings[1]].date
 
-    min_temp_month_index = int(min_temp_month.split("-")[1]) - 1
-    min_temp_day = int(min_temp_month.split("-")[2])
+        max_temp_month_index = int(max_temp_month.split("-")[1]) - 1
+        max_temp_day = int(max_temp_month.split("-")[2])
 
-    max_humidity_month_index = int(max_humidity_month.split("-")[1]) - 1
-    max_humidity_day = int(max_humidity_month.split("-")[2])
+        min_temp_month_index = int(min_temp_month.split("-")[1]) - 1
+        min_temp_day = int(min_temp_month.split("-")[2])
 
-    # Displays the reports
-    generate_reports(max_temp_readings[0],
-                     month_tuple[max_temp_month_index],
-                     max_temp_day,
-                     min_temp_readings[0],
-                     month_tuple[min_temp_month_index],
-                     min_temp_day,
-                     max_humidity_readings[0],
-                     month_tuple[max_humidity_month_index],
-                     max_humidity_day)
+        max_humidity_month_index = int(max_humidity_month.split("-")[1]) - 1
+        max_humidity_day = int(max_humidity_month.split("-")[2])
+
+        # Displays the reports
+        generate_reports(max_temp_readings[0],
+                         month_tuple[max_temp_month_index],
+                         max_temp_day,
+                         min_temp_readings[0],
+                         month_tuple[min_temp_month_index],
+                         min_temp_day,
+                         max_humidity_readings[0],
+                         month_tuple[max_humidity_month_index],
+                         max_humidity_day)
+
+    elif action == '-a':
+        print("Highest Average: %dC" % find_avg_highest(yearly_readings))
+        print("Lowest Average: %dC" % find_avg_lowest(yearly_readings))
+        print("Average Mean Humidity: %d%%" % find_avg_mean_humidity(yearly_readings))
 
 
 def generate_reports(max_temp, max_temp_month, max_temp_day,
@@ -158,6 +166,39 @@ def find_max(read_list):
                 max_index = i
 
     return [max, max_index]
+
+
+def find_avg_highest(read_list):
+    sum = 0
+    divisor = 0
+    for i in range(0, len(read_list)):
+        if read_list[i].max_temp != '':
+            sum += int(read_list[i].max_temp)
+            divisor += 1
+
+    return sum / divisor
+
+
+def find_avg_lowest(read_list):
+    sum = 0
+    divisor = 0
+    for i in range(0, len(read_list)):
+        if read_list[i].min_temp != '':
+            sum += int(read_list[i].min_temp)
+            divisor += 1
+
+    return sum / divisor
+
+
+def find_avg_mean_humidity(read_list):
+    sum = 0
+    divisor = 0
+    for i in range(0, len(read_list)):
+        if read_list[i].mean_humidity != '':
+            sum += int(read_list[i].mean_humidity)
+            divisor += 1
+
+    return sum / divisor
 
 
 def find_lowest(read_list):
