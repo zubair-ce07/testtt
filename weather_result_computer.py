@@ -1,52 +1,34 @@
-import weather_result
+import weather_summary_result
 
 
 class WeatherResultComputer:
     @staticmethod
-    def get_result_for_e(weather_records):
-        if weather_records:
-            result = weather_result.WeatherResult()
-            result.highest_temperature = max([daily_data.highest_temperature for daily_data in weather_records
-                                              if daily_data.highest_temperature != ''])
-            result.highest_temperature_day = [daily_data.weather_record_date for daily_data in weather_records
-                                              if daily_data.highest_temperature == result.highest_temperature][0]
+    def get_result(weather_records):
+        weather_result = weather_summary_result.WeatherResult()
 
-            result.lowest_temperature = min([daily_data.lowest_temperature for daily_data in weather_records
-                                             if daily_data.lowest_temperature != ''])
-            result.lowest_temperature_day = [daily_data.weather_record_date for daily_data in weather_records
-                                             if daily_data.lowest_temperature == result.lowest_temperature][0]
+        h_temp_weather_record = max(weather_records, key=lambda p: p.highest_temperature)
+        weather_result.highest_temperature = h_temp_weather_record.highest_temperature
+        weather_result.highest_temperature_day = h_temp_weather_record.weather_record_date
 
-            result.highest_humidity = max([daily_data.max_humidity for daily_data in weather_records
-                                           if daily_data.max_humidity != ''])
-            result.most_humid_day = [daily_data.weather_record_date for daily_data in weather_records
-                                     if daily_data.max_humidity == result.highest_humidity][0]
+        l_temp_weather_record = min(weather_records, key=lambda p: p.lowest_temperature)
+        weather_result.lowest_temperature = l_temp_weather_record.lowest_temperature
+        weather_result.lowest_temperature_day = l_temp_weather_record.weather_record_date
 
-            return result
+        h_humid_weather_record = max(weather_records, key=lambda p: p.max_humidity)
+        weather_result.highest_humidity = h_humid_weather_record.max_humidity
+        weather_result.most_humid_day = h_humid_weather_record.weather_record_date
 
-    @staticmethod
-    def get_result_for_a(weather_records):
-        if weather_records:
-            result = weather_result.WeatherResult()
-            result.highest_temperature = max([daily_data.highest_temperature for daily_data in weather_records
-                                              if daily_data.highest_temperature != ''])
+        h_temp_weather_record = max(weather_records, key=lambda p: p.mean_temperature)
+        weather_result.highest_temperature = h_temp_weather_record.highest_temperature
 
-            result.lowest_temperature = min([daily_data.lowest_temperature for daily_data in weather_records
-                                             if daily_data.lowest_temperature != ''])
+        l_temp_weather_record = min(weather_records, key=lambda p: p.mean_temperature)
+        weather_result.lowest_temperature = l_temp_weather_record.lowest_temperature
 
-            humidity_values = [daily_data.mean_humidity for daily_data in weather_records
-                               if daily_data.mean_humidity != '']
+        total_humidity_value = sum(weather_record.mean_humidity for weather_record in weather_records)
+        weather_result.mean_humidity = total_humidity_value/len(weather_records)
 
-            if len(humidity_values) > 0:
-                result.mean_humidity = sum(humidity_values)/len(humidity_values)
+        for daily_data in weather_records:
+            weather_result.daily_temperatures.append((daily_data.highest_temperature,
+                                                      daily_data.lowest_temperature))
 
-            return result
-
-    @staticmethod
-    def get_result_for_c(weather_records):
-        daily_temperatures = []
-
-        if weather_records:
-            for daily_data in weather_records:
-                daily_temperatures.append((daily_data.highest_temperature, daily_data.lowest_temperature))
-
-            return weather_result.WeatherResult(daily_temperatures=daily_temperatures)
+        return weather_result
