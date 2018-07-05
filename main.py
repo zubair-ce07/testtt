@@ -6,13 +6,20 @@ import weather_result_computer as ws
 import weather_report_maker as report_maker
 
 
+def valid_year(year):
+    year = int(year)
+    if year >= datetime.date.today().year:
+        raise argparse.ArgumentTypeError(f"Max year is {datetime.date.today().year}")
+    return year
+
+
 user_command_parser = argparse.ArgumentParser()
 
 user_command_parser.add_argument("file_path", help="This arg stores the path to all weather data files", type=str)
 
 user_command_parser.add_argument("-e", help="This command will give you the highest and "
                                  "lowest temperature and highest humidity with "
-                                 "respective days for given year", type=int, choices=range(2004, 2017))
+                                 "respective days for given year", type=valid_year)
 
 user_command_parser.add_argument("-a", help="This command will give you the highest and "
                                  "lowest avg temperature and Mean avg Humidity"
@@ -39,7 +46,7 @@ def get_year_month(weather_date):
         month = date_year_month[1]
 
         if year.isdigit() and month.isdigit() \
-                and int(year) in range(datetime.MINYEAR, datetime.MAXYEAR+1) and int(month) in range(1, 13):
+                and valid_year(year) and int(month) in range(1, 13):
             return int(year), int(month)
 
     print("The date given is not valid!")

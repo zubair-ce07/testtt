@@ -50,7 +50,7 @@ class WeatherReportMaker:
                 weather_report += f"{idx+1:02} {red_stars} {max_temp}\n"
                 weather_report += f"{idx+1:02} {blue_stars} {min_temp}\n"
 
-                print(weather_report)
+            print(weather_report)
 
     @staticmethod
     def print_report_for_c_bonus(weather_result):
@@ -77,4 +77,4 @@ class WeatherReportMaker:
 
                 weather_report += f"{idx+1:02} {red_stars}{blue_stars} {max_temp} {min_temp}\n"
 
-                print(weather_report)
+            print(weather_report)

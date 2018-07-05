@@ -13,7 +13,7 @@ class ParsedWeatherReading:
         try:
             # Getting only files for which year and month has been specified.
             weather_files = [x for x in os.listdir(weather_files_path) if x[-4:] == '.txt'
-                             and str(year) in x and month in x]
+                             and str(year) == x[-12:-8] and month in x[-7:-4]]
         except FileNotFoundError:
             traceback.print_exc()
         else:
