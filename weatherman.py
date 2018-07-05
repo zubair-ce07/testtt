@@ -9,8 +9,9 @@ from weatherman_calculation import average_humidity_calculate
 import argparse
 
 
-weather_data_c = []
+weather_data_e = []
 weather_data_a = []
+weather_data_c = []
 
 
 def main():
@@ -28,10 +29,10 @@ def main():
             month = MonthData()
             available = month.load_month(args.directory, args.e, i)
             if available != 'not available':
-                weather_data_c.append(month)
-        minimum_temperature = minimum_temperature_calculate(weather_data_c)
-        maximum_temperature = maximum_temperature_calculate(weather_data_c)
-        maximum_humidity = maximum_humidity_calculate(weather_data_c)
+                weather_data_e.append(month)
+        minimum_temperature = minimum_temperature_calculate(weather_data_e)
+        maximum_temperature = maximum_temperature_calculate(weather_data_e)
+        maximum_humidity = maximum_humidity_calculate(weather_data_e)
         result = ResultData(minimum_temperature, maximum_temperature, maximum_humidity)
         option_e_report(result)
 
@@ -42,10 +43,13 @@ def main():
         try:
             available = month.load_month(args.directory, date[0], date[1])
         except IndexError:
-            print("Invalid date formay :yyyy/mm")
+            print("Invalid date option -a format :yyyy/mm")
             return
         if available != 'not available':
             weather_data_a.append(month)
+        else:
+            print("Weather data not available for "+date_full)
+            return
 
         average_maximum = average_maximum_temperature_calculate(weather_data_a)
         average_minimum = average_minimum_temperature_calculate(weather_data_a)
@@ -53,6 +57,23 @@ def main():
 
         result = ResultData(average_minimum, average_maximum, average_humidity)
         option_a_report(result)
+
+    if args.c != '0':
+        date_full = args.c
+        date = date_full.split('/')
+        month = MonthData()
+        try:
+            available = month.load_month(args.directory, date[0], date[1])
+        except IndexError:
+            print("Invalid date option -a format :yyyy/mm")
+            return
+        if available != 'not available':
+            weather_data_c.append(month)
+        else:
+            print("Weather data not available for " + date_full)
+            return
+
+        option_c_report(weather_data_c, date)
 
 
 def option_e_report(result):
@@ -73,6 +94,42 @@ def option_a_report(result):
     print("Highest Average: "+result.temperature_highest+"C")
     print("Lowest Average: "+result.temperature_lowest+"C")
     print("Average mean humidity: "+result.humidity+"%")
+
+
+def option_c_report(data, date):
+    months = ('January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December')
+    print(months[int(date[1])-1]+" "+date[0])
+    month_data = data.pop()
+    day_number = 1
+    for day in month_data.days:
+            temperature = day.readings["Max TemperatureC"]
+            if temperature != '':
+                reading_value = int(temperature)
+                if reading_value >= 0:
+                    print("\033[35m%02d" % day_number + "\033[31m"
+                          + "+"*reading_value + "\033[35m"
+                          + temperature + "C\033[30m")
+                else:
+                    reading_value = abs(reading_value)
+                    print("\033[35m%02d" % day_number + "\033[31m"
+                          + "-" * reading_value + "\033[35m"
+                          + temperature + "C\033[30m")
+
+            temperature = day.readings["Min TemperatureC"]
+            if temperature != '':
+                reading_value = int(temperature)
+                if reading_value >= 0:
+                    print("\033[35m%02d" % day_number + "\033[34m"
+                          + "+" * reading_value + "\033[35m"
+                          + temperature + "C\033[30m")
+                else:
+                    reading_value = abs(reading_value)
+                    print("\033[35m%02d" % day_number + "\033[34m"
+                          + "-" * reading_value + "\033[35m"
+                          + temperature + "C\033[30m")
+
+            day_number += 1
 
 
 if __name__ == '__main__':
