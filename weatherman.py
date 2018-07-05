@@ -23,7 +23,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.e != '':
+    if args.e:
         for i in range(0, 12):
             month = MonthData()
             available = month.load_month(args.directory, args.e, i)
@@ -35,7 +35,7 @@ def main():
         result = ResultData(minimum_temperature, maximum_temperature, maximum_humidity)
         option_e_report(result)
 
-    if args.a != '':
+    if args.a:
         date_full = args.a
         date = date_full.split('/')
         month = MonthData()
@@ -57,17 +57,21 @@ def main():
         result = ResultData(average_minimum, average_maximum, average_humidity)
         option_a_report(result)
 
-    if args.c != '':
+    if args.c:
         date_full = args.c
         date = date_full.split('/')
         month = MonthData()
+
         try:
             available = month.load_month(args.directory, date[0], date[1])
+
         except IndexError:
-            print("Invalid date option -a format :yyyy/mm")
+            print("Invalid date option -c format :yyyy/mm")
             return
+
         if available != 'not available':
             weather_data_c.append(month)
+
         else:
             print("Weather data not available for " + date_full)
             return
@@ -77,10 +81,11 @@ def main():
 
 def option_e_report(result):
     """"Displays the highest lowest temperature and highest humidity report"""
-    print("REPORT OPTION -e:")
-    print("-"*18)
     months = ('January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December')
+
+    print("REPORT OPTION -e:")
+    print("-"*18)
 
     date_str = result.temperature_highest[0]
     date = date_str.split('-')
@@ -91,10 +96,12 @@ def option_e_report(result):
     date = date_str.split('-')
     print("Lowest: " + result.temperature_lowest[1] +
           "C on " + months[int(date[1])-1] + " " + date[2])
+
     date_str = result.humidity[0]
     date = date_str.split('-')
     print("Humidity: " + result.humidity[1] + "% on " +
           months[int(date[1]) - 1] + " " + date[2])
+
     print("")
 
 
@@ -102,6 +109,7 @@ def option_a_report(result):
     """Displays the average highest lowest temperature and humidity of a month"""
     print("REPORT OPTION -a:")
     print("-"*18)
+
     print("Highest Average: " + result.temperature_highest + "C")
     print("Lowest Average: " + result.temperature_lowest + "C")
     print("Average mean humidity: " + result.humidity + "%")
@@ -110,39 +118,40 @@ def option_a_report(result):
 
 def option_c_report(data, date):
     """"Displays the bar chart for temperatures through the month"""
-    print("REPORT OPTION -c:")
-    print("-"*18)
     months = ('January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December')
+
+    print("REPORT OPTION -c:")
+    print("-"*18)
+
     print(months[int(date[1])-1] + " " + date[0])
     month_data = data.pop()
     day_number = 1
     for day in month_data.days:
-            temperature = day.readings["Max TemperatureC"]
-            if temperature != '':
-                reading_value = int(temperature)
+            min_temperature = day.readings["Min TemperatureC"]
+            if min_temperature:
+                reading_value = int(min_temperature)
                 if reading_value >= 0:
-                    print("\033[35m%02d" % day_number + "\033[31m"
-                          + "+"*reading_value + "\033[35m"
-                          + temperature + "C\033[30m")
+                    print("\033[35m%02d" % day_number + "\033[34m" +
+                          "+" * reading_value + "\033[30m", end="")
                 else:
                     reading_value = abs(reading_value)
-                    print("\033[35m%02d" % day_number + "\033[31m"
-                          + "-" * reading_value + "\033[35m"
-                          + temperature + "C\033[30m")
+                    print("\033[35m%02d" % day_number + "\033[34m" +
+                          "-" * reading_value + "\033[30m", end="")
 
-            temperature = day.readings["Min TemperatureC"]
-            if temperature != '':
-                reading_value = int(temperature)
+            max_temperature = day.readings["Max TemperatureC"]
+            if max_temperature:
+                reading_value = int(max_temperature)
                 if reading_value >= 0:
-                    print("\033[35m%02d" % day_number + "\033[34m"
-                          + "+" * reading_value + "\033[35m"
-                          + temperature + "C\033[30m")
+                    print("\033[31m" + "+"*reading_value + "\033[35m" +
+                          min_temperature + "C-" +
+                          max_temperature + "C\033[30m")
                 else:
                     reading_value = abs(reading_value)
-                    print("\033[35m%02d" % day_number + "\033[34m"
-                          + "-" * reading_value + "\033[35m"
-                          + temperature + "C\033[30m")
+                    print("\033[31m" +
+                          "-" * reading_value + "\033[35m" +
+                          min_temperature + "C-" +
+                          max_temperature + "C\033[30m")
 
             day_number += 1
 
