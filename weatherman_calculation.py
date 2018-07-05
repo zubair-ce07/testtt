@@ -1,5 +1,5 @@
 
-def minimum_temperature_calculate(data):
+def min_temp_cal(data):
     """"Calculates the minimum temperature and day through out the year"""
     first_iteration = True
     for month in data:
@@ -18,7 +18,7 @@ def minimum_temperature_calculate(data):
     return [minimum_temperature_date, str(minimum_temperature)]
 
 
-def maximum_temperature_calculate(data):
+def max_temp_cal(data):
     """"Calculates the maximum temperature and day through out the year"""
     first_iteration = True
 
@@ -38,7 +38,7 @@ def maximum_temperature_calculate(data):
     return [maximum_temperature_date, str(maximum_temperature)]
 
 
-def maximum_humidity_calculate(data):
+def max_humid_cal(data):
     """"Calculates the day when the humidity was highest through out the year"""
     first_iteration = True
 
@@ -58,7 +58,7 @@ def maximum_humidity_calculate(data):
     return [maximum_humidity_date, str(maximum_humidity)]
 
 
-def average_maximum_temperature_calculate(data):
+def avg_max_temp_cal(data):
     total_temperature = 0
     days_count = 0
     for month in data:
@@ -72,7 +72,7 @@ def average_maximum_temperature_calculate(data):
     return str(total_temperature//days_count)
 
 
-def average_minimum_temperature_calculate(data):
+def avg_min_temp_cal(data):
     total_temperature = 0
     days_count = 0
     for month in data:
@@ -86,7 +86,7 @@ def average_minimum_temperature_calculate(data):
     return str(total_temperature // days_count)
 
 
-def average_humidity_calculate(data):
+def avg_humid_cal(data):
     total_humidity = 0
     days_count = 0
     for month in data:

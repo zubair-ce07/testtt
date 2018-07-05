@@ -12,8 +12,10 @@ class MonthData:
         if year == 'none' or month == 'none' or directory == 'none':
             print('Cannot load without year.')
             return
+
         try:
-            file_path = directory + '/Murree_weather_' + year + "_" + self.MONTHS[int(month)-1] + '.txt'
+            file_path = directory + '/Murree_weather_' + \
+                        year + "_" + self.MONTHS[int(month)-1] + '.txt'
             file = open(file_path, 'r')
             title_line = file.readline()
             title_line = title_line.rstrip('\n')
@@ -22,11 +24,13 @@ class MonthData:
                 day = DayData()
                 day.add_reading(line, self.titles)
                 self.days.append(day)
+
         except FileNotFoundError:
             return 'not available'
 
 
 class DayData:
+    """"Data structure for storing data for each day"""
     def __init__(self):
         self.readings = {}
 
@@ -38,6 +42,7 @@ class DayData:
 
 
 class ResultData:
+    """"Data structure to hold the results calculated by calculation module"""
     def __init__(self, min_temperature, max_temperature, humidity):
         self.temperature_highest = max_temperature
         self.temperature_lowest = min_temperature
