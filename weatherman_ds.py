@@ -13,7 +13,8 @@ class MonthData:
             print('Cannot load without year.')
             return
         try:
-            file_path = directory + '/Murree_weather_' + year + "_" + self.MONTHS[int(month)] + '.txt'
+            file_path = directory + '/Murree_weather_' + year + "_" + self.MONTHS[int(month)-1] + '.txt'
+            print(file_path)
             file = open(file_path, 'r')
             title_line = file.readline()
             title_line = title_line.rstrip('\n')
