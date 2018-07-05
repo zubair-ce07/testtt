@@ -1,5 +1,6 @@
 import argparse
 import calendar
+import datetime
 import parsed_weather_reading
 import weather_result_computer as ws
 import weather_report_maker as report_maker
@@ -38,7 +39,7 @@ def get_year_month(weather_date):
         month = date_year_month[1]
 
         if year.isdigit() and month.isdigit() \
-                and int(year) in range(2004, 2017) and int(month) in range(1, 13):
+                and int(year) in range(datetime.MINYEAR, datetime.MAXYEAR+1) and int(month) in range(1, 13):
             return int(year), int(month)
 
     print("The date given is not valid!")
