@@ -11,22 +11,22 @@ user_command_parser = argparse.ArgumentParser()
 user_command_parser.add_argument("file_path", help="This arg stores the path to all weather data files", type=str)
 
 user_command_parser.add_argument("-e", help="This command will give you the highest and "
-                               "lowest temperature and highest humidity with "
-                               "respective days for given year", type=int, choices=range(2004, 2017))
+                                 "lowest temperature and highest humidity with "
+                                 "respective days for given year", type=int, choices=range(2004, 2017))
 
 user_command_parser.add_argument("-a", help="This command will give you the highest and "
-                               "lowest avg temperature and Mean avg Humidity"
-                               "for a given month", type=str)
+                                 "lowest avg temperature and Mean avg Humidity"
+                                 "for a given month", type=str)
 
 user_command_parser.add_argument("-c", help="For a given month this command will draw two "
-                               "horizontal bar charts on the console for the "
-                               "highest and lowest temperature on each day. "
-                               "Highest in red and lowest in blue.", type=str)
+                                 "horizontal bar charts on the console for the "
+                                 "highest and lowest temperature on each day. "
+                                 "Highest in red and lowest in blue.", type=str)
 
 user_command_parser.add_argument("-b", help="For a given month this command will draw one "
-                               "horizontal bar charts on the console for the "
-                               "highest and lowest temperature on each day. "
-                               "Highest in red and lowest in blue.", type=str)
+                                 "horizontal bar charts on the console for the "
+                                 "highest and lowest temperature on each day. "
+                                 "Highest in red and lowest in blue.", type=str)
 
 user_cli_args = user_command_parser.parse_args()
 
