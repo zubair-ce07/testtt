@@ -20,11 +20,12 @@ class ParsedWeatherReading:
                     weather_reading_csv = csv.DictReader(weather_file, delimiter=",")
 
                     for weather_record_row in weather_reading_csv:
-                        if "" not in [weather_record_row["Max TemperatureC"],
-                                      weather_record_row["Min TemperatureC"],
-                                      weather_record_row["Mean TemperatureC"],
-                                      weather_record_row["Max Humidity"],
-                                      weather_record_row[" Min Humidity"]]:
+                        if all([weather_record_row["Max TemperatureC"],
+                                weather_record_row["Min TemperatureC"],
+                                weather_record_row["Mean TemperatureC"],
+                                weather_record_row["Max Humidity"],
+                                weather_record_row[" Min Humidity"]]):
+                            # If all the required field contain data.
                             weather_record = weather_recordset.WeatherRecord(
                                 weather_record_row.get("PKT", weather_record_row.get("PKST", None)),
                                 weather_record_row["Max TemperatureC"],
