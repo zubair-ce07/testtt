@@ -10,35 +10,30 @@ class Argument:
 
 class DayForecast:
 
-    def __init__(self, date=None, max_temp=None, mean_temp=None, min_temp=None, max_dew_point=None,
-                 mean_dew_point=None, min_dew_point=None, max_humidity=None, mean_humidity=None, min_humidity=None,
-                 max_sea_pressure=None, mean_sea_pressure=None, min_sea_pressure=None, max_visibility=None,
-                 mean_visibility=None, min_visibility=None, max_wind_speed=None, mean_wind_speed=None,
-                 max_gust_speed=None, precipitation=None, cloud_cover=None, events=None, wind_air_degrees=None):
-        self.date = date
-        self.max_temp = max_temp
-        self.mean_temp = mean_temp
-        self.min_temp = min_temp
-        self.max_dew_point = max_dew_point
-        self.mean_dew_point = mean_dew_point
-        self.min_dew_point = min_dew_point
-        self.max_humidity = max_humidity
-        self.mean_humidity = mean_humidity
-        self.min_humidity = min_humidity
-        self.max_sea_pressure = max_sea_pressure
-        self.mean_sea_pressure = mean_sea_pressure
-        self.min_sea_pressure = min_sea_pressure
-        self.max_visibility = max_visibility
-        self.mean_visibility = mean_visibility
-        self.min_visibility = min_visibility
-        self.max_wind_speed = max_wind_speed
-        self.mean_wind_speed = mean_wind_speed
-        self.max_gust_speed = max_gust_speed
-        self.precipitation = precipitation
-        self.cloud_cover = cloud_cover
-        self.events = events
-        self.wind_air_degrees = wind_air_degrees
-
+    def __init__(self, read_list):
+        self.date = read_list[0]
+        self.max_temp = read_list[1]
+        self.mean_temp = read_list[2]
+        self.min_temp = read_list[3]
+        self.max_dew_point = read_list[4]
+        self.mean_dew_point = read_list[5]
+        self.min_dew_point = read_list[6]
+        self.max_humidity = read_list[7]
+        self.mean_humidity = read_list[8]
+        self.min_humidity = read_list[9]
+        self.max_sea_pressure = read_list[10]
+        self.mean_sea_pressure = read_list[11]
+        self.min_sea_pressure = read_list[12]
+        self.max_visibility = read_list[13]
+        self.mean_visibility = read_list[14]
+        self.min_visibility = read_list[15]
+        self.max_wind_speed = read_list[16]
+        self.mean_wind_speed = read_list[17]
+        self.max_gust_speed = read_list[18]
+        self.precipitation = read_list[19]
+        self.cloud_cover = read_list[20]
+        self.events = read_list[21]
+        self.wind_air_degrees = read_list[22]
 
 argument_list = []
 readings_list = []
@@ -49,7 +44,7 @@ month_tuple = ('Jan', 'Feb', 'Mar', 'Apr',
                'May', 'Jun', 'Jul', 'Aug',
                'Sep', 'Oct', 'Nov', 'Dec')
 
-# Constants
+# CONSTANTS
 WEATHER_CITY = "Murree_weather"
 TOTAL_REPORTS = int(len(temp_list) / 2)
 REPORT_PARAMS = 2
@@ -79,24 +74,22 @@ def parse_files(arg_list, directory):
                 temp_readings = [line.split(",") for line in weather_file]
 
                 for j in range(1, len(temp_readings)):
-                    # Try to
-                    readings_list.append(DayForecast(temp_readings[j][0], temp_readings[j][1],
-                                                     temp_readings[j][2], temp_readings[j][3],
-                                                     temp_readings[j][4], temp_readings[j][5],
-                                                     temp_readings[j][6], temp_readings[j][7],
-                                                     temp_readings[j][8], temp_readings[j][9],
-                                                     temp_readings[j][10], temp_readings[j][11],
-                                                     temp_readings[j][12], temp_readings[j][13],
-                                                     temp_readings[j][14], temp_readings[j][15],
-                                                     temp_readings[j][16], temp_readings[j][17],
-                                                     temp_readings[j][18], temp_readings[j][19],
-                                                     temp_readings[j][20], temp_readings[j][21],
-                                                     temp_readings[j][22]))
+                    readings_list.append(DayForecast(temp_readings[j]))
 
             except:
                 print("", end="")
 
         calculate_results(readings_list)
+
+    elif arg_list.action == '-a':
+        temp = arg_list.year_month.split("/")
+        month = month_tuple[int(temp[1]) - 1]
+
+        file_name = WEATHER_CITY + "_" + temp[0] + "_" + month + ".txt"
+        file_location = directory + file_name
+
+        # print(file_name)
+        print(file_location)
 
 
 def calculate_results(yearly_readings):
