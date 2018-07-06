@@ -1,44 +1,34 @@
-class MonthData:
-    """Data structure for storing data for a month weather conditions"""
+import datetime
+import csv
+
+
+class WeatherData:
+    """Data structure for storing data weather conditions"""
 
     def __init__(self):
-        self.days = []
-        self.titles = []
-        self.MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+        self.daily_weather = []
 
-    def load_month(self, directory='none', year='none', month='none'):
+    def load_data(self, directory='', year='', month=''):
         """Loads a given months data in the data structure"""
-        if year == 'none' or month == 'none' or directory == 'none':
-            print('Cannot load without year.')
-            return
-
-        try:
-            file_path = directory + '/Murree_weather_' + \
-                        year + "_" + self.MONTHS[int(month)-1] + '.txt'
+        files = []
+        if not month:
+            for i in range(1, 13):
+                month_abr = datetime.date(2000, i, 1).strftime('%b')
+                file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
+                file = open(file_path, 'r')
+                if file:
+                    files.append(file)
+        else:
+            month_abr = datetime.date(2000, int(month), 1).strftime('%b')
+            file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
             file = open(file_path, 'r')
-            title_line = file.readline()
-            title_line = title_line.rstrip('\n')
-            self.titles = title_line.split(',')
-            for line in file:
-                day = DayData()
-                day.add_reading(line, self.titles)
-                self.days.append(day)
+            if file:
+                files.append(file)
 
-        except FileNotFoundError:
-            return 'not available'
-
-
-class DayData:
-    """"Data structure for storing data for each day"""
-    def __init__(self):
-        self.readings = {}
-
-    def add_reading(self, data, titles):
-        """Create a dictionary with all the titles and the readings"""
-        data = data.rstrip('\n')
-        values = data.split(',')
-        self.readings = dict(zip(titles, values))
+        for file in files:
+            weather_csv = csv.DictReader(file)
+            for row in weather_csv:
+                self.daily_weather.append(row)
 
 
 class ResultData:
