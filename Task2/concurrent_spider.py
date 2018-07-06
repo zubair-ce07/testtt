@@ -66,8 +66,6 @@ class RecursiveConcurrentSpider:
 
                 return await self.start_crawler(RecursiveConcurrentSpider.get_next_urls(self.site, html_text),
                                                 urls_limit, download_delay, concurrent_requests_limit)
-        else:
-            return self
 
     def run_crawler(self, url_limit, download_delay, concurrent_requests_limit):
         loop = asyncio.get_event_loop()
