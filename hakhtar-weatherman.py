@@ -94,7 +94,7 @@ def parse_files(directory):
             except:
                 print("Invalid file")
 
-            print("\n------------- End of report 1 -------------\n\n")
+            print("\n\n")
 
         elif action == '-a':
             month, year = get_month(arg_list_row)
@@ -112,7 +112,7 @@ def parse_files(directory):
             except:
                 print("File not found")
 
-            print("\n------------- End of report 2 -------------\n\n")
+            print("\n\n")
 
         elif action == '-c':
             month, year = get_month(arg_list_row)
@@ -125,12 +125,13 @@ def parse_files(directory):
                 for j in range(1, len(temp_readings)):
                     readings_list.append(DayForecast(temp_readings[j]))
 
+                print(month, year)
                 calculate_results(readings_list, action)
 
             except:
                 print("Invalid file or reading")
 
-            print("\n------------- End of report 3 -------------\n\n")
+            print("\n\n")
 
 
 def calculate_results(yearly_readings, action):
@@ -169,10 +170,13 @@ def calculate_results(yearly_readings, action):
                                 find_avg_mean_humidity(yearly_readings))
 
     elif action == '-c':
+
         for i in range(0, len(yearly_readings)):
             if yearly_readings[i].max_temp != '':
                 high_temp_bar_chart(int(yearly_readings[i].max_temp), i + 1)
                 low_temp_bar_chart(int(yearly_readings[i].min_temp), i + 1)
+
+    yearly_readings.clear()  # Clear the list after generating a report
 
 
 def high_temp_bar_chart(max_temp, day):
