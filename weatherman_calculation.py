@@ -1,100 +1,51 @@
-
-def min_temp_cal(data):
-    """"Calculates the minimum temperature and day through out the year"""
-    first_iteration = True
-    for month in data:
-        for day in month.days:
-            if day.readings['Mean TemperatureC'] == '':
-                continue
-            if first_iteration:
-                minimum_temperature_date = day.readings['PKT']
-                minimum_temperature = int(day.readings['Mean TemperatureC'])
-                first_iteration = False
-            temperature = int(day.readings['Mean TemperatureC'])
-            if temperature < minimum_temperature:
-                minimum_temperature = temperature
-                minimum_temperature_date = day.readings['PKT']
-
-    return [minimum_temperature_date, str(minimum_temperature)]
+from operator import attrgetter
+from weatherman_ds import ReportResult
 
 
-def max_temp_cal(data):
-    """"Calculates the maximum temperature and day through out the year"""
-    first_iteration = True
+class WeatherReport:
 
-    for month in data:
-        for day in month.days:
-            if day.readings['Mean TemperatureC'] == '':
-                continue
-            if first_iteration:
-                maximum_temperature_date = day.readings['PKT']
-                maximum_temperature = int(day.readings['Mean TemperatureC'])
-                first_iteration = False
-            temperature = int(day.readings['Mean TemperatureC'])
-            if temperature > maximum_temperature:
-                maximum_temperature = temperature
-                maximum_temperature_date = day.readings['PKT']
+    @staticmethod
+    def yearly_results(readings):
+        humidity_filtered = []
+        mean_temp_filtered = []
+        for reading in readings:
+            if reading.mean_temperature:
+                mean_temp_filtered.append(reading)
+            if reading.mean_humidity:
+                humidity_filtered.append(reading)
+        minimum_reading = min(mean_temp_filtered, key=attrgetter('mean_temperature'))
+        maximum_reading = max(mean_temp_filtered, key=attrgetter('mean_temperature'))
+        humidity_reading = max(humidity_filtered, key=attrgetter('mean_humidity'))
 
-    return [maximum_temperature_date, str(maximum_temperature)]
+        return ReportResult(minimum_reading.pkt, minimum_reading.mean_temperature,
+                            maximum_reading.pkt, maximum_reading.mean_temperature,
+                            humidity_reading.pkt, humidity_reading.mean_humidity)
 
+    @staticmethod
+    def monthly_results(readings):
+        high_temp_filtered = []
+        low_temp_filtered = []
+        mean_humidity_filtered = []
+        for reading in readings:
+            if reading.min_temperature:
+                low_temp_filtered.append(reading)
+            if reading.mean_humidity:
+                mean_humidity_filtered.append(reading)
+            if reading.max_temperature:
+                high_temp_filtered.append(reading)
+        sum_high = 0
+        for reading in high_temp_filtered:
+            sum_high = sum_high + reading.max_temperature
 
-def max_humid_cal(data):
-    """"Calculates the day when the humidity was highest through out the year"""
-    first_iteration = True
+        sum_low = 0
+        for reading in low_temp_filtered:
+            sum_low = sum_low + reading.min_temperature
 
-    for month in data:
-        for day in month.days:
-            if day.readings[' Mean Humidity'] == '':
-                continue
-            if first_iteration:
-                maximum_humidity_date = day.readings['PKT']
-                maximum_humidity = int(day.readings[' Mean Humidity'])
-                first_iteration = False
-            humidity = int(day.readings[' Mean Humidity'])
-            if humidity > maximum_humidity:
-                maximum_humidity = humidity
-                maximum_humidity_date = day.readings['PKT']
+        sum_humidity = 0
+        for reading in mean_humidity_filtered:
+            sum_humidity = sum_humidity + reading.mean_humidity
 
-    return [maximum_humidity_date, str(maximum_humidity)]
+        return ReportResult('', sum_low//len(low_temp_filtered),
+                            '', sum_high//len(high_temp_filtered),
+                            '', sum_humidity//len(mean_humidity_filtered))
 
-
-def avg_max_temp_cal(data):
-    total_temperature = 0
-    days_count = 0
-    for month in data:
-        for day in month.days:
-            if day.readings['Max TemperatureC'] == '':
-                continue
-            temperature = int(day.readings['Max TemperatureC'])
-            total_temperature = total_temperature + temperature
-            days_count += 1
-
-    return str(total_temperature//days_count)
-
-
-def avg_min_temp_cal(data):
-    total_temperature = 0
-    days_count = 0
-    for month in data:
-        for day in month.days:
-            if day.readings['Min TemperatureC'] == '':
-                continue
-            temperature = int(day.readings['Min TemperatureC'])
-            total_temperature = total_temperature + temperature
-            days_count += 1
-
-    return str(total_temperature // days_count)
-
-
-def avg_humid_cal(data):
-    total_humidity = 0
-    days_count = 0
-    for month in data:
-        for day in month.days:
-            if day.readings[' Mean Humidity'] == '':
-                continue
-            humidity = int(day.readings[' Mean Humidity'])
-            total_humidity = total_humidity + humidity
-            days_count += 1
-
-    return str(total_humidity // days_count)
