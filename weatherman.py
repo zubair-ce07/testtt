@@ -19,14 +19,30 @@ def main():
     args = parser.parse_args()
 
     if args.e:
-        weather_readings = load_data(args.directory, args.e)
-        results = WeatherReport.yearly_results(weather_readings)
-        extreme_weather_report(results)
+        weather_readings_extreme = load_data(args.directory, args.e)
+        if weather_readings_extreme:
+            results = WeatherReport.yearly_results(weather_readings_extreme)
+            weather_report_extreme(results)
+        else:
+            print("Readings not available for " + args.e)
     if args.a:
-        month = args.a
-        weather_readings = load_data(args.directory, month.split('/')[0], month.split('/')[1])
-        results = WeatherReport.monthly_results(weather_readings)
-        average_weather_report(results)
+        input_date = args.a
+        input_date = input_date.split('/')
+        weather_readings_average = load_data(args.directory, input_date[0], input_date[1])
+        if weather_readings_average:
+            results = WeatherReport.monthly_results(weather_readings_average)
+            weather_report_average(results)
+        else:
+            print("Readings not available for " + args.a)
+
+    if args.c:
+        input_date = args.c
+        input_date = input_date.split('/')
+        weather_readings_chart = load_data(args.directory, input_date[0], input_date[1])
+        if weather_readings_chart:
+            weather_report_chart(weather_readings_chart)
+        else:
+            print("Readings not available for " + args.c)
 
 
 def load_data(directory='', year='', month=''):
@@ -55,72 +71,43 @@ def load_data(directory='', year='', month=''):
         return daily_readings
 
 
-def extreme_weather_report(result):
+def weather_report_extreme(result):
     """"Displays the highest lowest temperature and highest humidity report"""
-
-    print("REPORT OPTION -e:")
-    print("-"*18)
-
-    high_day = datetime.datetime.strptime(result.highest_day, "%Y-%m-%d").strftime('%d %B')
+    high_day = datetime.datetime.strptime(result.highest_day, "%Y-%m-%d").strftime('%B %d')
     print("Highest: " + str(result.highest_reading) + "C on " + high_day)
-    low_day = datetime.datetime.strptime(result.lowest_day, "%Y-%m-%d").strftime('%d %B')
+    low_day = datetime.datetime.strptime(result.lowest_day, "%Y-%m-%d").strftime('%B %d')
     print("Lowest: " + str(result.lowest_reading) + "C on " + low_day)
-    humid_day = datetime.datetime.strptime(result.humidity_day, "%Y-%m-%d").strftime('%d %B')
+    humid_day = datetime.datetime.strptime(result.humidity_day, "%Y-%m-%d").strftime('%B %d')
     print("Humidity: " + str(result.humidity_reading) + "% on " + humid_day)
 
 
-def average_weather_report(result):
+def weather_report_average(result):
     """Displays the average highest lowest temperature and humidity of a month"""
-
-    print("REPORT OPTION -a:")
-    print("-"*18)
-
     print("Highest Average: " + str(result.highest_reading) + "C")
     print("Lowest Average: " + str(result.lowest_reading) + "C")
     print("Average mean humidity: " + str(result.humidity_reading) + "%")
     print("")
 
 
-def option_c_report(data, date):
+def weather_report_chart(weather_readings):
     """"Displays the bar chart for temperatures through the month"""
-    months = ('January', 'February', 'March', 'April', 'May', 'June',
-              'July', 'August', 'September', 'October', 'November', 'December')
+    report_month = datetime.datetime.strptime(weather_readings[0].pkt, "%Y-%m-%d").strftime('%B %Y')
 
-    print("REPORT OPTION -c:")
-    print("-"*18)
+    print(report_month)
+    for reading in weather_readings:
+        day_number = datetime.datetime.strptime(reading.pkt, "%Y-%m-%d").strftime('%d')
+        max_temp = reading.max_temperature
+        min_temp = reading.min_temperature
+        if max_temp and min_temp:
+            print(day_number + ColorOutput.BLUE + "+" * min_temp + ColorOutput.RED +
+                  "+" * max_temp + ColorOutput.RESET + str(min_temp) +
+                  "C-" + str(max_temp) + "C")
 
-    print(months[int(date[1])-1] + " " + date[0])
-    month_data = data.pop()
-    day_number = 1
-    for day in month_data.days:
-            min_temperature = day.readings["Min TemperatureC"]
-            if min_temperature:
-                reading_value = int(min_temperature)
-                if reading_value >= 0:
-                    print("\033[35m%02d" % day_number + "\033[34m" +
-                          "+" * reading_value + "\033[30m", end="")
-                else:
-                    reading_value = abs(reading_value)
-                    print("\033[35m%02d" % day_number + "\033[34m" +
-                          "-" * reading_value + "\033[30m", end="")
 
-            max_temperature = day.readings["Max TemperatureC"]
-            if max_temperature:
-                reading_value = int(max_temperature)
-                if reading_value >= 0:
-                    print("\033[31m" + "+"*reading_value + "\033[35m" +
-                          min_temperature + "C-" +
-                          max_temperature + "C\033[30m")
-                else:
-                    reading_value = abs(reading_value)
-                    print("\033[31m" +
-                          "-" * reading_value + "\033[35m" +
-                          min_temperature + "C-" +
-                          max_temperature + "C\033[30m")
-
-            day_number += 1
-
-    print("")
+class ColorOutput:
+    RED = "\033[31m"
+    BLUE = "\033[34m"
+    RESET = "\033[0m"
 
 
 if __name__ == '__main__':
