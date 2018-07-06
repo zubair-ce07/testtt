@@ -1,0 +1,87 @@
+import urllib.request
+import concurrent.futures
+import time
+from scrapy.selector import Selector
+
+
+URLS = []
+
+
+# Retrieve a single page and report the URL and contents
+def load_url(url, timeout):
+    with urllib.request.urlopen(url, timeout=timeout) as conn:
+        return conn.read()
+
+
+# Print the reports given the data
+def print_report(total_bytes, page_size, requests):
+    print('Total bytes downloaded = {0}'.format(total_bytes))
+    print('Average page size = {0}'.format(page_size))
+    print('Total requests made = {0}'.format(requests))
+
+
+# Filter the links found in <a> tags
+def filter_links(all_links):
+    cleaned_links = []
+    for i in range(len(all_links)):
+        if all_links[i][0] != '#':
+            cleaned_links.append(all_links[i])
+    return cleaned_links
+
+
+# Populate the complete urls
+def populate_urls(maximum_urls, wiki_string, cleaned_links):
+    for i in range(int(maximum_urls)):
+        complete_url = wiki_string + cleaned_links[i]
+        URLS.append(complete_url)
+
+
+def run_threads(concur_req):
+    total_requests_made = 0
+    total_bytes = 0
+    total_urls = 0
+    avg_page_size = 0.0
+
+    # We can use a with statement to ensure threads are cleaned up promptly
+    with concurrent.futures.ThreadPoolExecutor(max_workers=int(concur_req)) as executor:
+        # Start the load operations and mark each future with its URL
+        fut_to_url = {executor.submit(load_url, url, 60): url for url in URLS}
+        for future in concurrent.futures.as_completed(fut_to_url):
+            time.sleep(0.5)
+            url = fut_to_url[future]
+            try:
+                data = future.result()
+                total_requests_made += 1
+            except Exception as exc:
+                print('%r exception generated %s' % (url, exc))
+            else:
+                total_bytes += len(data)
+                total_urls += 1
+
+        avg_page_size = (total_bytes / total_urls)
+        print_report(total_bytes, avg_page_size, total_requests_made)
+
+
+def main():
+    maximum_urls = 0
+    concur_req = 0
+    maximum_urls = input("Maximum urls= ")
+    concur_req = input("Concurrent requests= ")
+    print("(Download delay is 0.5s by default)")
+
+    main_page = 'https://en.wikipedia.org/wiki/FIFA_World_Cup'
+    wiki_string = 'https://en.wikipedia.org'
+    f = urllib.request.urlopen(main_page)
+    complete_html = f.read()
+
+    all_found_links = Selector(text=complete_html).xpath('.//a/@href').extract()
+
+    cleaned_links = filter_links(all_found_links)
+
+    populate_urls(maximum_urls, wiki_string, cleaned_links)
+
+    run_threads(concur_req)
+
+
+if __name__ == "__main__":
+    main()
