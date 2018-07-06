@@ -1,4 +1,4 @@
-from termcolor import colored
+import utility as ut
 import sys
 
 
@@ -64,11 +64,6 @@ def get_month(str):
     return month_tuple[int(temp[1]) - 1], temp[0]
 
 
-def get_file_location(year, month, directory):
-    file_name = WEATHER_CITY + "_" + year + "_" + month + ".txt"
-    return directory + file_name
-
-
 def parse_files(directory):
     for x in range(0, TOTAL_REPORTS):
         arg_list_row = argument_list[x]
@@ -76,16 +71,14 @@ def parse_files(directory):
 
         if action == '-e':
             for i in range(0, YEAR_LENGTH):
-                file_name = WEATHER_CITY + "_" + arg_list_row.year_month + "_" + month_tuple[i] + ".txt"
-                file_location = directory + file_name
-
+                file_location = ut.get_file_location(arg_list_row.year_month, month_tuple[i],
+                                                     WEATHER_CITY, directory)
                 try:
                     weather_file = open(file_location, "r")
                     temp_readings = [line.split(",") for line in weather_file]
 
                     for j in range(1, len(temp_readings)):
                         readings_list.append(DayForecast(temp_readings[j]))
-
                 except:
                     print("", end="")
 
@@ -98,7 +91,7 @@ def parse_files(directory):
 
         elif action == '-a':
             month, year = get_month(arg_list_row)
-            file_location = get_file_location(year, month, directory)
+            file_location = ut.get_file_location(year, month, WEATHER_CITY, directory)
 
             try:
                 weather_file = open(file_location, "r")
@@ -108,15 +101,13 @@ def parse_files(directory):
                     readings_list.append(DayForecast(temp_readings[j]))
 
                 calculate_results(readings_list, action)
-
             except:
                 print("File not found")
-
             print("\n\n")
 
         elif action == '-c':
             month, year = get_month(arg_list_row)
-            file_location = get_file_location(year, month, directory)
+            file_location = ut.get_file_location(year, month, WEATHER_CITY, directory)
 
             try:
                 weather_file = open(file_location, "r")
@@ -127,7 +118,6 @@ def parse_files(directory):
 
                 print(month, year)
                 calculate_results(readings_list, action)
-
             except:
                 print("Invalid file or reading")
 
@@ -136,9 +126,9 @@ def parse_files(directory):
 
 def calculate_results(yearly_readings, action):
     if action == '-e':
-        max_temp_readings = find_max(yearly_readings)  # Max Temperature
-        min_temp_readings = find_lowest(yearly_readings)  # Min Temperature
-        max_humidity_readings = find_max_humidity(readings_list)  # Max Humidity
+        max_temp_readings = ut.find_max(yearly_readings)  # Max Temperature
+        min_temp_readings = ut.find_lowest(yearly_readings)  # Min Temperature
+        max_humidity_readings = ut.find_max_humidity(readings_list)  # Max Humidity
 
         max_temp_month = yearly_readings[max_temp_readings[1]].date
         min_temp_month = yearly_readings[min_temp_readings[1]].date
@@ -165,9 +155,9 @@ def calculate_results(yearly_readings, action):
                                max_humidity_day)
 
     elif action == '-a':
-        generate_monthly_report(find_avg_highest(yearly_readings),
-                                find_avg_lowest(yearly_readings),
-                                find_avg_mean_humidity(yearly_readings))
+        generate_monthly_report(ut.find_avg_highest(yearly_readings),
+                                ut.find_avg_lowest(yearly_readings),
+                                ut.find_avg_mean_humidity(yearly_readings))
 
     elif action == '-c':
 
@@ -176,9 +166,6 @@ def calculate_results(yearly_readings, action):
                 generate_bar_chart(int(yearly_readings[i].max_temp),
                                    int(yearly_readings[i].min_temp), i + 1)
 
-        # high_temp_bar_chart(int(yearly_readings[i].max_temp), i + 1)
-        # low_temp_bar_chart(int(yearly_readings[i].min_temp), i + 1)
-
     yearly_readings.clear()  # Clear the list after generating a report
 
 
@@ -186,9 +173,9 @@ def generate_bar_chart(max_temp, min_temp, day):
     print("0%d " % day, end="")
     for i in range(0, max_temp + min_temp):
         if i < min_temp:
-            print(colored('+', 'blue'), end="")
+            ut.print_blue("+")
         else:
-            print(colored('+', 'red'), end="")
+            ut.print_red("+")
 
     print(" %dC - %dC" % (min_temp, max_temp))
 
@@ -230,79 +217,6 @@ def generate_yearly_report(max_temp, max_temp_month, max_temp_day,
           (max_humidity,
            max_humidity_month,
            max_humidity_day))
-
-
-def find_max(read_list):
-    max = int(read_list[0].max_temp)
-    max_index = 0
-
-    for i in range(1, len(read_list)):
-        if read_list[i].max_temp != '':
-            if max < int(read_list[i].max_temp):
-                max = int(read_list[i].max_temp)
-                max_index = i
-
-    return [max, max_index]
-
-
-def find_avg_highest(read_list):
-    sum = 0
-    divisor = 0
-
-    for i in range(0, len(read_list)):
-        if read_list[i].max_temp != '':
-            sum += int(read_list[i].max_temp)
-            divisor += 1
-
-    return sum / divisor
-
-
-def find_avg_lowest(read_list):
-    sum = 0
-    divisor = 0
-    for i in range(0, len(read_list)):
-        if read_list[i].min_temp != '':
-            sum += int(read_list[i].min_temp)
-            divisor += 1
-
-    return sum / divisor
-
-
-def find_avg_mean_humidity(read_list):
-    sum = 0
-    divisor = 0
-    for i in range(0, len(read_list)):
-        if read_list[i].mean_humidity != '':
-            sum += int(read_list[i].mean_humidity)
-            divisor += 1
-
-    return sum / divisor
-
-
-def find_lowest(read_list):
-    min = int(read_list[0].min_temp)
-    min_index = 0
-
-    for i in range(1, len(read_list)):
-        if read_list[i].min_temp != '':
-            if min > int(read_list[i].min_temp):
-                min = int(read_list[i].min_temp)
-                min_index = i
-
-    return [min, min_index]
-
-
-def find_max_humidity(read_list):
-    max = int(read_list[0].max_humidity)
-    max_index = 0
-
-    for i in range(1, len(read_list)):
-        if read_list[i].max_humidity != '':
-            if max < int(read_list[i].max_humidity):
-                max = int(read_list[i].max_humidity)
-                max_index = i
-
-    return [max, max_index]
 
 
 def main():
