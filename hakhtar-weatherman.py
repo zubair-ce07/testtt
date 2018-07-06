@@ -1,12 +1,7 @@
+import calendar as cal
+import argparse
 import utility as ut
 import sys
-
-
-class Argument:
-
-    def __init__(self, action=None, year_month=None):
-        self.action = action
-        self.year_month = year_month
 
 
 class DayForecast:
@@ -16,40 +11,14 @@ class DayForecast:
         self.max_temp = read_list[1]
         self.mean_temp = read_list[2]
         self.min_temp = read_list[3]
-        self.max_dew_point = read_list[4]
-        self.mean_dew_point = read_list[5]
-        self.min_dew_point = read_list[6]
         self.max_humidity = read_list[7]
         self.mean_humidity = read_list[8]
         self.min_humidity = read_list[9]
-        self.max_sea_pressure = read_list[10]
-        self.mean_sea_pressure = read_list[11]
-        self.min_sea_pressure = read_list[12]
-        self.max_visibility = read_list[13]
-        self.mean_visibility = read_list[14]
-        self.min_visibility = read_list[15]
-        self.max_wind_speed = read_list[16]
-        self.mean_wind_speed = read_list[17]
-        self.max_gust_speed = read_list[18]
-        self.precipitation = read_list[19]
-        self.cloud_cover = read_list[20]
-        self.events = read_list[21]
-        self.wind_air_degrees = read_list[22]
 
-
-argument_list = []
-readings_list = []
-files_directory = sys.argv[1] + '/'  # Files Directory
-temp_list = sys.argv[2:]  # List of all the arguments
-
-month_tuple = ('Jan', 'Feb', 'Mar', 'Apr',
-               'May', 'Jun', 'Jul', 'Aug',
-               'Sep', 'Oct', 'Nov', 'Dec')
 
 # CONSTANTS
 WEATHER_CITY = "Murree_weather"
-TOTAL_REPORTS = int(len(temp_list) / 2)
-YEAR_LENGTH = len(month_tuple)
+YEAR_LENGTH = 12
 
 
 def get_argument_list():
@@ -61,67 +30,77 @@ def get_argument_list():
 
 def get_month(str):
     temp = str.year_month.split("/")
-    return month_tuple[int(temp[1]) - 1], temp[0]
+    return cal.month_name[int(temp[1])], temp[0]
 
 
-def parse_files(directory):
-    for x in range(0, TOTAL_REPORTS):
-        arg_list_row = argument_list[x]
-        action = arg_list_row.action
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("directory", help="Directory to all weather files", type=str)
+    parser.add_argument("-e", "--e", help="Option E for Min Max", action="append")
+    parser.add_argument("-a", "--a", help="Option A for Min Max", action="append")
+    parser.add_argument("-c", "--c", help="Option C for Min Max", action="append")
 
-        if action == '-e':
-            for i in range(0, YEAR_LENGTH):
-                file_location = ut.get_file_location(arg_list_row.year_month, month_tuple[i],
-                                                     WEATHER_CITY, directory)
-                try:
-                    weather_file = open(file_location, "r")
-                    temp_readings = [line.split(",") for line in weather_file]
+    return parser.parse_args()
 
-                    for j in range(1, len(temp_readings)):
-                        readings_list.append(DayForecast(temp_readings[j]))
-                except:
-                    print("", end="")
 
-            try:
-                calculate_results(readings_list, action)
-            except:
-                print("Invalid file")
+def parse_files(args, read_list):
+    if args.e:
+        # for i in range(0, YEAR_LENGTH):
+        #     file_location = ut.get_file_location(arg_list_row.year_month, month_tuple[i],
+        #                                          WEATHER_CITY, directory)
+        #     try:
+        #         weather_file = open(file_location, "r")
+        #         temp_readings = [line.split(",") for line in weather_file]
+        #
+        #         for j in range(1, len(temp_readings)):
+        #             readings_list.append(DayForecast(temp_readings[j]))
+        #     except:
+        #         print("", end="")
+        #
+        # try:
+        #     calculate_results(readings_list, action)
+        # except:
+        #     print("Invalid file")
+        #
+        # print("\n\n")
+        print("IN AAA")
 
-            print("\n\n")
+    if args.a:
+        # month, year = get_month(arg_list_row)
+        # file_location = ut.get_file_location(year, month, WEATHER_CITY, directory)
+        #
+        # try:
+        #     weather_file = open(file_location, "r")
+        #     temp_readings = [line.split(",") for line in weather_file]
+        #
+        #     for j in range(1, len(temp_readings)):
+        #         readings_list.append(DayForecast(temp_readings[j]))
+        #
+        #     calculate_results(readings_list, action)
+        # except:
+        #     print("File not found")
+        # print("\n\n")
+        print("IN AAA")
 
-        elif action == '-a':
-            month, year = get_month(arg_list_row)
-            file_location = ut.get_file_location(year, month, WEATHER_CITY, directory)
+    if args.c:
+        # month, year = get_month(arg_list_row)
+        # file_location = ut.get_file_location(year, month, WEATHER_CITY, directory)
+        #
+        # try:
+        #     weather_file = open(file_location, "r")
+        #     temp_readings = [line.split(",") for line in weather_file]
+        #
+        #     for j in range(1, len(temp_readings)):
+        #         readings_list.append(DayForecast(temp_readings[j]))
+        #
+        #     print(month, year)
+        #     calculate_results(readings_list, action)
+        # except:
+        #     print("Invalid file or reading")
+        #
+        # print("\n\n")
 
-            try:
-                weather_file = open(file_location, "r")
-                temp_readings = [line.split(",") for line in weather_file]
-
-                for j in range(1, len(temp_readings)):
-                    readings_list.append(DayForecast(temp_readings[j]))
-
-                calculate_results(readings_list, action)
-            except:
-                print("File not found")
-            print("\n\n")
-
-        elif action == '-c':
-            month, year = get_month(arg_list_row)
-            file_location = ut.get_file_location(year, month, WEATHER_CITY, directory)
-
-            try:
-                weather_file = open(file_location, "r")
-                temp_readings = [line.split(",") for line in weather_file]
-
-                for j in range(1, len(temp_readings)):
-                    readings_list.append(DayForecast(temp_readings[j]))
-
-                print(month, year)
-                calculate_results(readings_list, action)
-            except:
-                print("Invalid file or reading")
-
-            print("\n\n")
+        print("IN CCC")
 
 
 def calculate_results(yearly_readings, action):
@@ -219,9 +198,11 @@ def generate_yearly_report(max_temp, max_temp_month, max_temp_day,
            max_humidity_day))
 
 
-def main():
-    get_argument_list()
-    parse_files(files_directory)
+def main(args):
+    readings_list = []
+    parse_files(args, readings_list)
 
 
-main()
+if __name__ == '__main__':
+    args = parse_arguments()
+    main(args)
