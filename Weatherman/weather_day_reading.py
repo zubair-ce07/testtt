@@ -11,6 +11,3 @@ class WeatherReading:
         self.highest_hum = int(day["Max Humidity"])
         self.lowest_hum = int(day["Min Humidity"])
         self.mean_hum = int(day["Mean Humidity"])
-
-
-
