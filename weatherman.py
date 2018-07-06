@@ -1,7 +1,7 @@
 import argparse
-import datetime
 import os
 import csv
+import datetime
 
 from weatherman_ds import WeatherReading
 from weatherman_calculation import WeatherReport
@@ -9,26 +9,35 @@ from weatherman_calculation import WeatherReport
 
 def main():
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='A program that calculates '
+                                                 'weather information and'
+                                                 ' visualizes it.')
 
-    parser.add_argument('directory')
-    parser.add_argument('-e', default='')
-    parser.add_argument('-a', default='')
-    parser.add_argument('-c', default='')
+    parser.add_argument('directory', help='directory of the weather readings.')
+    parser.add_argument('-e', default='', help='option for extreme '
+                        'weather report format:yyyy')
+    parser.add_argument('-a', default='', help='option for average'
+                                               ' weather report format:yyyy/mm')
+    parser.add_argument('-c', default='', help='option for weather '
+                                               ' chart format:yyyy/mm')
 
     args = parser.parse_args()
 
     if args.e:
-        weather_readings_extreme = load_data(args.directory, args.e)
+        input_date_extreme = args.e
+        weather_readings_extreme = load_readings(args.directory,
+                                                 input_date_extreme)
         if weather_readings_extreme:
             results = WeatherReport.yearly_results(weather_readings_extreme)
             weather_report_extreme(results)
         else:
             print("Readings not available for " + args.e)
     if args.a:
-        input_date = args.a
-        input_date = input_date.split('/')
-        weather_readings_average = load_data(args.directory, input_date[0], input_date[1])
+        input_date_average = args.a
+        input_date_average = input_date_average.split('/')
+        weather_readings_average = load_readings(args.directory,
+                                                 input_date_average[0],
+                                                 input_date_average[1])
         if weather_readings_average:
             results = WeatherReport.monthly_results(weather_readings_average)
             weather_report_average(results)
@@ -36,16 +45,18 @@ def main():
             print("Readings not available for " + args.a)
 
     if args.c:
-        input_date = args.c
-        input_date = input_date.split('/')
-        weather_readings_chart = load_data(args.directory, input_date[0], input_date[1])
+        input_date_chart = args.c
+        input_date_chart = input_date_chart.split('/')
+        weather_readings_chart = load_readings(args.directory,
+                                               input_date_chart[0],
+                                               input_date_chart[1])
         if weather_readings_chart:
             weather_report_chart(weather_readings_chart)
         else:
             print("Readings not available for " + args.c)
 
 
-def load_data(directory='', year='', month=''):
+def load_readings(directory='', year='', month=''):
         """Loads a given months data in the data structure"""
         files = []
         daily_readings = []
@@ -79,6 +90,7 @@ def weather_report_extreme(result):
     print("Lowest: " + str(result.lowest_reading) + "C on " + low_day)
     humid_day = datetime.datetime.strptime(result.humidity_day, "%Y-%m-%d").strftime('%B %d')
     print("Humidity: " + str(result.humidity_reading) + "% on " + humid_day)
+    print("")
 
 
 def weather_report_average(result):
@@ -102,6 +114,7 @@ def weather_report_chart(weather_readings):
             print(day_number + ColorOutput.BLUE + "+" * min_temp + ColorOutput.RED +
                   "+" * max_temp + ColorOutput.RESET + str(min_temp) +
                   "C-" + str(max_temp) + "C")
+    print("")
 
 
 class ColorOutput:
