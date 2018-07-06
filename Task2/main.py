@@ -19,8 +19,8 @@ start_time = time.time()
 c_spider = concurrent_spider.RecursiveConcurrentSpider(user_cli_args.site_url)
 c_spider.run_crawler(user_cli_args.total_urls, user_cli_args.download_delay, user_cli_args.tasks_limit)
 
-print("\nTotal Requests: {}\nBytes Downloaded: {}\nSize Per Page: {}".format(c_spider.report.total_requests,
-                                                                             c_spider.report.bytes_downloaded,
-                                                                             c_spider.report.bytes_downloaded/
-                                                                             c_spider.report.total_requests))
+print(f"\nTotal Requests: {c_spider.report.total_requests}\n"
+      f"Bytes Downloaded: {c_spider.report.bytes_downloaded}\n"
+      f"Size Per Page: {c_spider.report.bytes_downloaded/c_spider.report.total_requests}")
+
 print("Execution Time: {}".format(time.time()-start_time))

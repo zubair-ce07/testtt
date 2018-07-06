@@ -42,7 +42,7 @@ class RecursiveConcurrentSpider:
         tasks = []
         for url in urls:
             tasks.append(RecursiveConcurrentSpider.make_get_request(url, tasks_limiting_semaphore))
-            logging.info("{} - Visited page: {}".format(datetime.datetime.now().time(), url.geturl()))
+            logging.info(f"{datetime.datetime.now().time()} - Visited page: {url.geturl()}")
             await asyncio.sleep(download_delay)
 
         results = await asyncio.gather(*tasks)
