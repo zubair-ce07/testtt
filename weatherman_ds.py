@@ -1,38 +1,4 @@
-import datetime
-import csv
-import os
-
-
-class WeatherData:
-    """Data structure for storing data weather conditions"""
-
-    def __init__(self):
-        self.daily_weather = []
-
-    def load_data(self, directory='', year='', month=''):
-        """Loads a given months data in the data structure"""
-        files = []
-        if not month:
-            for i in range(1, 13):
-                month_abr = datetime.date(2000, i, 1).strftime('%b')
-                file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
-                if os.path.exists(file_path):
-                    file = open(file_path, 'r')
-                    files.append(file)
-        else:
-            month_abr = datetime.date(2000, int(month), 1).strftime('%b')
-            file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
-            if os.path.exists(file_path):
-                file = open(file_path, 'r')
-                files.append(file)
-
-        for file in files:
-            weather_csv = csv.DictReader(file)
-            for row in weather_csv:
-                self.daily_weather.append(DayData(row))
-
-
-class DayData:
+class WeatherReading:
 
     def __init__(self, conditions):
         self.pkt: str = None
@@ -55,13 +21,17 @@ class DayData:
             self.max_humidity = int(conditions['Max Humidity'])
         if conditions[' Mean Humidity']:
             self.mean_humidity = int(conditions[' Mean Humidity'])
-            
 
-class ResultData:
+
+class ReportResult:
     """"Data structure to hold the results calculated by calculation module"""
-    def __init__(self, min_temperature, max_temperature, humidity):
-        self.temperature_highest = max_temperature
-        self.temperature_lowest = min_temperature
-        self.humidity = humidity
+    def __init__(self, min_day='', minimum=0, max_day='',
+                 maximum=0, humid_day='', humidity=0):
+        self.highest_reading = maximum
+        self.highest_day = max_day
+        self.lowest_reading = minimum
+        self.lowest_day = min_day
+        self.humidity_reading = humidity
+        self.humidity_day = humid_day
 
 
