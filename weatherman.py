@@ -1,18 +1,13 @@
 import argparse
-from weatherman_ds import MonthData
-from weatherman_ds import ResultData
-from weatherman_calculation import max_temp_cal
-from weatherman_calculation import min_temp_cal
-from weatherman_calculation import max_humid_cal
-from weatherman_calculation import avg_max_temp_cal
-from weatherman_calculation import avg_min_temp_cal
-from weatherman_calculation import avg_humid_cal
+import datetime
+import os
+import csv
+
+from weatherman_ds import WeatherReading
+from weatherman_calculation import WeatherReport
 
 
 def main():
-    weather_data_e = []
-    weather_data_a = []
-    weather_data_c = []
 
     parser = argparse.ArgumentParser()
 
@@ -24,95 +19,65 @@ def main():
     args = parser.parse_args()
 
     if args.e:
-        for i in range(0, 12):
-            month = MonthData()
-            available = month.load_month(args.directory, args.e, i)
-            if available != 'not available':
-                weather_data_e.append(month)
-        minimum_temperature = min_temp_cal(weather_data_e)
-        maximum_temperature = max_temp_cal(weather_data_e)
-        maximum_humidity = max_humid_cal(weather_data_e)
-        result = ResultData(minimum_temperature, maximum_temperature, maximum_humidity)
-        option_e_report(result)
-
+        weather_readings = load_data(args.directory, args.e)
+        results = WeatherReport.yearly_results(weather_readings)
+        extreme_weather_report(results)
     if args.a:
-        date_full = args.a
-        date = date_full.split('/')
-        month = MonthData()
-        try:
-            available = month.load_month(args.directory, date[0], date[1])
-        except IndexError:
-            print("Invalid date option -a format :yyyy/mm")
-            return
-        if available != 'not available':
-            weather_data_a.append(month)
+        month = args.a
+        weather_readings = load_data(args.directory, month.split('/')[0], month.split('/')[1])
+        results = WeatherReport.monthly_results(weather_readings)
+        average_weather_report(results)
+
+
+def load_data(directory='', year='', month=''):
+        """Loads a given months data in the data structure"""
+        files = []
+        daily_readings = []
+        if not month:
+            for i in range(1, 13):
+                month_abr = datetime.date(2000, i, 1).strftime('%b')
+                file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
+                if os.path.exists(file_path):
+                    file = open(file_path, 'r')
+                    files.append(file)
         else:
-            print("Weather data not available for " + date_full)
-            return
+            month_abr = datetime.date(2000, int(month), 1).strftime('%b')
+            file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
+            if os.path.exists(file_path):
+                file = open(file_path, 'r')
+                files.append(file)
 
-        average_maximum = avg_max_temp_cal(weather_data_a)
-        average_minimum = avg_min_temp_cal(weather_data_a)
-        average_humidity = avg_humid_cal(weather_data_a)
+        for file in files:
+            weather_csv = csv.DictReader(file)
+            for row in weather_csv:
+                daily_readings.append(WeatherReading(row))
 
-        result = ResultData(average_minimum, average_maximum, average_humidity)
-        option_a_report(result)
-
-    if args.c:
-        date_full = args.c
-        date = date_full.split('/')
-        month = MonthData()
-
-        try:
-            available = month.load_month(args.directory, date[0], date[1])
-
-        except IndexError:
-            print("Invalid date option -c format :yyyy/mm")
-            return
-
-        if available != 'not available':
-            weather_data_c.append(month)
-
-        else:
-            print("Weather data not available for " + date_full)
-            return
-
-        option_c_report(weather_data_c, date)
+        return daily_readings
 
 
-def option_e_report(result):
+def extreme_weather_report(result):
     """"Displays the highest lowest temperature and highest humidity report"""
-    months = ('January', 'February', 'March', 'April', 'May', 'June',
-              'July', 'August', 'September', 'October', 'November', 'December')
 
     print("REPORT OPTION -e:")
     print("-"*18)
 
-    date_str = result.temperature_highest[0]
-    date = date_str.split('-')
-    print("Highest: " + result.temperature_highest[1] +
-          "C on " + months[int(date[1])-1] + " " + date[2])
-
-    date_str = result.temperature_lowest[0]
-    date = date_str.split('-')
-    print("Lowest: " + result.temperature_lowest[1] +
-          "C on " + months[int(date[1])-1] + " " + date[2])
-
-    date_str = result.humidity[0]
-    date = date_str.split('-')
-    print("Humidity: " + result.humidity[1] + "% on " +
-          months[int(date[1]) - 1] + " " + date[2])
-
-    print("")
+    high_day = datetime.datetime.strptime(result.highest_day, "%Y-%m-%d").strftime('%d %B')
+    print("Highest: " + str(result.highest_reading) + "C on " + high_day)
+    low_day = datetime.datetime.strptime(result.lowest_day, "%Y-%m-%d").strftime('%d %B')
+    print("Lowest: " + str(result.lowest_reading) + "C on " + low_day)
+    humid_day = datetime.datetime.strptime(result.humidity_day, "%Y-%m-%d").strftime('%d %B')
+    print("Humidity: " + str(result.humidity_reading) + "% on " + humid_day)
 
 
-def option_a_report(result):
+def average_weather_report(result):
     """Displays the average highest lowest temperature and humidity of a month"""
+
     print("REPORT OPTION -a:")
     print("-"*18)
 
-    print("Highest Average: " + result.temperature_highest + "C")
-    print("Lowest Average: " + result.temperature_lowest + "C")
-    print("Average mean humidity: " + result.humidity + "%")
+    print("Highest Average: " + str(result.highest_reading) + "C")
+    print("Lowest Average: " + str(result.lowest_reading) + "C")
+    print("Average mean humidity: " + str(result.humidity_reading) + "%")
     print("")
 
 
