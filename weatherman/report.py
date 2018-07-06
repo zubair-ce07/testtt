@@ -24,8 +24,7 @@ class Report():
         day = 1
         for max_, min_ in zip(max_temp, min_temp):
             if max_:  # Check if temperature was recorded for that day
-                print(self.color.RED, day, "+" * int(max_), str(max_) + "C")
+                print(day, self.color.RED, "+" * int(max_), self.color.END_COLOR, end=" + ")
             if min_:
-                print(self.color.BLUE, day, "+" * int(min_), str(min_) + "C")
+                print(self.color.BLUE, "+" * abs(int(min_)), self.color.END_COLOR, "{}C  {}C".format(max_, min_))
             day += 1
-        print(self.color.END_COLOR)
