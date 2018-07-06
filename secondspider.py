@@ -25,7 +25,6 @@ class OrsaySpider(scrapy.Spider):
             yield scrapy.http.Request(self.next_page_link(next_page, response), callback=self.parse_main_products)
 
     def parse_products(self, response):
-
         item = {
             'care': self.care(response),
             'description': self.description(response),
