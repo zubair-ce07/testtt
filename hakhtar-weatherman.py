@@ -173,10 +173,24 @@ def calculate_results(yearly_readings, action):
 
         for i in range(0, len(yearly_readings)):
             if yearly_readings[i].max_temp != '':
-                high_temp_bar_chart(int(yearly_readings[i].max_temp), i + 1)
-                low_temp_bar_chart(int(yearly_readings[i].min_temp), i + 1)
+                generate_bar_chart(int(yearly_readings[i].max_temp),
+                                   int(yearly_readings[i].min_temp), i + 1)
+
+        # high_temp_bar_chart(int(yearly_readings[i].max_temp), i + 1)
+        # low_temp_bar_chart(int(yearly_readings[i].min_temp), i + 1)
 
     yearly_readings.clear()  # Clear the list after generating a report
+
+
+def generate_bar_chart(max_temp, min_temp, day):
+    print("0%d " % day, end="")
+    for i in range(0, max_temp + min_temp):
+        if i < min_temp:
+            print(colored('+', 'blue'), end="")
+        else:
+            print(colored('+', 'red'), end="")
+
+    print(" %dC - %dC" % (min_temp, max_temp))
 
 
 def high_temp_bar_chart(max_temp, day):
