@@ -36,7 +36,7 @@ class RecursiveConcurrentSpider:
         return list(filtered_urls)
 
     @staticmethod
-    async def get_html(urls, download_delay, concurrent_requests_limit):
+    async def visit_urls(urls, download_delay, concurrent_requests_limit):
         tasks_limiting_semaphore = asyncio.BoundedSemaphore(concurrent_requests_limit)
 
         tasks = []
@@ -51,25 +51,19 @@ class RecursiveConcurrentSpider:
 
     async def start_crawler(self, urls, urls_limit, download_delay, concurrent_requests_limit):
         if urls_limit > 0:
-            if len(urls) > urls_limit:
-                urls = urls[:urls_limit]
-                urls_limit = 0
-            else:
-                urls_limit = urls_limit - len(urls)
-
-            get_request_results = await RecursiveConcurrentSpider.get_html(urls, download_delay,
-                                                                           concurrent_requests_limit)
+            urls, urls_limit = (urls[:urls_limit], 0) if len(urls) > urls_limit else (urls, urls_limit - len(urls))
+ 
+            get_request_results = await RecursiveConcurrentSpider.visit_urls(urls, download_delay,
+                                                                             concurrent_requests_limit)
             self.report.total_requests += len(urls)
 
             for html_text, html_page_size in get_request_results:
                 self.report.bytes_downloaded += html_page_size
-
                 return await self.start_crawler(RecursiveConcurrentSpider.get_next_urls(self.site, html_text),
                                                 urls_limit, download_delay, concurrent_requests_limit)
 
     def run_crawler(self, url_limit, download_delay, concurrent_requests_limit):
         loop = asyncio.get_event_loop()
-
         try:
             loop.run_until_complete(self.start_crawler([urlparse(self.site)], url_limit,
                                                        download_delay, concurrent_requests_limit))
