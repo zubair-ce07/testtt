@@ -1,4 +1,4 @@
-class Results:
+class AnalysisResults:
     def __init__(self, result_dict):
         self.max_annual_temp = result_dict.get('max_annual_temp')
         self.min_annual_temp = result_dict.get('min_annual_temp')
