@@ -1,3 +1,4 @@
+from termcolor import colored
 import sys
 
 
@@ -58,6 +59,16 @@ def get_argument_list():
         index += 1
 
 
+def get_month(str):
+    temp = str.year_month.split("/")
+    return month_tuple[int(temp[1]) - 1], temp[0]
+
+
+def get_file_location(year, month, directory):
+    file_name = WEATHER_CITY + "_" + year + "_" + month + ".txt"
+    return directory + file_name
+
+
 def parse_files(directory):
     for x in range(0, TOTAL_REPORTS):
         arg_list_row = argument_list[x]
@@ -78,14 +89,16 @@ def parse_files(directory):
                 except:
                     print("", end="")
 
-            calculate_results(readings_list, action)
+            try:
+                calculate_results(readings_list, action)
+            except:
+                print("Invalid file")
+
+            print("\n------------- End of report 1 -------------\n\n")
 
         elif action == '-a':
-            temp = arg_list_row.year_month.split("/")
-            month = month_tuple[int(temp[1]) - 1]
-
-            file_name = WEATHER_CITY + "_" + temp[0] + "_" + month + ".txt"
-            file_location = directory + file_name
+            month, year = get_month(arg_list_row)
+            file_location = get_file_location(year, month, directory)
 
             try:
                 weather_file = open(file_location, "r")
@@ -94,10 +107,30 @@ def parse_files(directory):
                 for j in range(1, len(temp_readings)):
                     readings_list.append(DayForecast(temp_readings[j]))
 
-            except:
-                print("File with the name %s not found" % file_name)
+                calculate_results(readings_list, action)
 
-            calculate_results(readings_list, action)
+            except:
+                print("File not found")
+
+            print("\n------------- End of report 2 -------------\n\n")
+
+        elif action == '-c':
+            month, year = get_month(arg_list_row)
+            file_location = get_file_location(year, month, directory)
+
+            try:
+                weather_file = open(file_location, "r")
+                temp_readings = [line.split(",") for line in weather_file]
+
+                for j in range(1, len(temp_readings)):
+                    readings_list.append(DayForecast(temp_readings[j]))
+
+                calculate_results(readings_list, action)
+
+            except:
+                print("Invalid file or reading")
+
+            print("\n------------- End of report 3 -------------\n\n")
 
 
 def calculate_results(yearly_readings, action):
@@ -134,6 +167,26 @@ def calculate_results(yearly_readings, action):
         generate_monthly_report(find_avg_highest(yearly_readings),
                                 find_avg_lowest(yearly_readings),
                                 find_avg_mean_humidity(yearly_readings))
+
+    elif action == '-c':
+        for i in range(0, len(yearly_readings)):
+            if yearly_readings[i].max_temp != '':
+                high_temp_bar_chart(int(yearly_readings[i].max_temp), i + 1)
+                low_temp_bar_chart(int(yearly_readings[i].min_temp), i + 1)
+
+
+def high_temp_bar_chart(max_temp, day):
+    print("0%d " % day, end="")
+    for i in range(0, max_temp):
+        print(colored('+', 'red'), end="")
+    print(" %dC" % max_temp)
+
+
+def low_temp_bar_chart(min_temp, day):
+    print("0%d " % day, end="")
+    for i in range(0, min_temp):
+        print(colored('+', 'blue'), end="")
+    print(" %dC" % min_temp)
 
 
 def generate_monthly_report(avg_max_temp, avg_lowest_temp, avg_mean_humidity):
@@ -177,6 +230,7 @@ def find_max(read_list):
 def find_avg_highest(read_list):
     sum = 0
     divisor = 0
+
     for i in range(0, len(read_list)):
         if read_list[i].max_temp != '':
             sum += int(read_list[i].max_temp)
