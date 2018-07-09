@@ -6,13 +6,9 @@ class WeatherReport:
 
     @staticmethod
     def yearly_results(readings):
-        humidity_filtered = []
-        mean_temp_filtered = []
-        for reading in readings:
-            if reading.mean_temperature:
-                mean_temp_filtered.append(reading)
-            if reading.mean_humidity:
-                humidity_filtered.append(reading)
+        mean_temp_filtered = list(filter(lambda x: x.mean_temperature, readings))
+        humidity_filtered = list(filter(lambda x: x.mean_humidity, readings))
+
         minimum_reading = min(mean_temp_filtered, key=attrgetter('mean_temperature'))
         maximum_reading = max(mean_temp_filtered, key=attrgetter('mean_temperature'))
         humidity_reading = max(humidity_filtered, key=attrgetter('mean_humidity'))
@@ -23,16 +19,10 @@ class WeatherReport:
 
     @staticmethod
     def monthly_results(readings):
-        high_temp_filtered = []
-        low_temp_filtered = []
-        mean_humidity_filtered = []
-        for reading in readings:
-            if reading.min_temperature:
-                low_temp_filtered.append(reading)
-            if reading.mean_humidity:
-                mean_humidity_filtered.append(reading)
-            if reading.max_temperature:
-                high_temp_filtered.append(reading)
+        high_temp_filtered = list(filter(lambda x: x.max_temperature, readings))
+        low_temp_filtered = list(filter(lambda x: x.min_temperature, readings))
+        mean_humidity_filtered = list(filter(lambda x: x.mean_humidity, readings))
+
         avg_high = sum(reading.max_temperature for reading in high_temp_filtered) // len(high_temp_filtered)
         avg_low = sum(reading.min_temperature for reading in low_temp_filtered) // len(low_temp_filtered)
         avg_humid = sum(reading.mean_humidity for reading in mean_humidity_filtered) // len(mean_humidity_filtered)
