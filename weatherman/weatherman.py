@@ -6,7 +6,8 @@ import argparse
 from termcolor import colored
 from time import strptime, strftime
 
-class Reading:
+
+class WeatherReading:
     def __init__(self, pkt, max_tempr, min_tempr, mean_humid, max_humid):
         self.pkt = pkt
         self.max_tempr = max_tempr
@@ -14,18 +15,22 @@ class Reading:
         self.mean_humid = mean_humid
         self.max_humid = max_humid
 
+    def get(self, field_name):
+        return self.__dict__.get(field_name)
+
+
 class WeatherFilesParser:
 
-    def __init__(self, path, file_pattern):
+    def __init__(self, path, pattern):
         self.path = path
-        self.file_pattern = file_pattern
+        self.pattern = pattern
     
-    def __get_fields(self, row):
+    def _get_fields(self, row):
         required_fields = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
 
         if all(row.get(f) for f in required_fields):
 
-            return Reading(   row.get('PKT') or row.get('PKST'),
+            return WeatherReading(row.get('PKT') or row.get('PKST'),
                               int(row.get('Max TemperatureC')),
                               int(row.get('Min TemperatureC')),
                               int(row.get('Max Humidity')),
@@ -33,13 +38,13 @@ class WeatherFilesParser:
                             )
 
     def get_filtered_files(self):
-        files = list(filter(lambda f : f.endswith(".txt") and self.file_pattern in f, os.listdir(self.path)))
+        files = list(filter(lambda f : f.endswith(".txt") and self.pattern in f, os.listdir(self.path)))
         return map(lambda f : os.path.join(self.path, f), files)
 
     def read_weather_file(self, file_path):
         with open(file_path, 'r') as f:
             reader = csv.DictReader(f)
-            return list(filter(None, map(self.__get_fields, reader)))
+            return list(filter(None, map(self._get_fields, reader)))
 
     def read_all_files(self):
         weather_readings = []
@@ -56,13 +61,13 @@ class WeatherResultCalculation:
         return row.__dict__.get(field_name)
 
     def max_field(self, weather_readings, field_name):
-        return max(weather_readings, key=lambda r : self.__get_field(r, field_name))
+        return max(weather_readings, key=lambda r : r.get(field_name))
 
     def min_field(self, weather_readings, field_name):
-        return min(weather_readings, key=lambda r : self.__get_field(r, field_name))
+        return min(weather_readings, key=lambda r : r.get(field_name))
 
     def average_field(self, weather_readings, field_name):
-        return sum(self.__get_field(r, field_name) for r in weather_readings)//len(weather_readings)
+        return sum(r.get(field_name) for r in weather_readings)//len(weather_readings)
 
 
      
@@ -74,12 +79,9 @@ class GenerateWeatherReports:
 
         self.file_parser = WeatherFilesParser(folder_path, date)
         self.weather_cal = WeatherResultCalculation()
-
-    def __get_field(self, row, field_name):
-        return row.__dict__.get(field_name)
     
     def __get_date(self, reading):
-        return strftime('%B %d', strptime(self.__get_field(reading, 'pkt'), '%Y-%m-%d'))
+        return strftime('%B %d', strptime(reading.get('pkt'), '%Y-%m-%d'))
 
     def generate_annual_report(self):
         weather_readings = self.file_parser.read_all_files()
@@ -92,11 +94,12 @@ class GenerateWeatherReports:
             min_tempr_date = self.__get_date(min_tempr)
             max_humidity_date = self.__get_date(max_humid)
         
-            print(f'Highest: {self.__get_field(max_tempr, "max_tempr")}C on {max_tempr_date}')
-            print(f'Lowest: {self.__get_field(min_tempr, "min_tempr")}C on {min_tempr_date}')
-            print(f'Humidity: {self.__get_field(max_humid, "max_humid")}C on {max_humidity_date}')
+            print(f'Highest: {max_tempr.get("max_tempr")}C on {max_tempr_date}')
+            print(f'Lowest: {min_tempr.get("min_tempr")}C on {min_tempr_date}')
+            print(f'Humidity: {max_humid.get("max_humid")}C on {max_humidity_date}')
 
-        else: print(f'Weather readings not available for given query')
+        else: 
+            print(f'Weather readings not available for given query')
  
     def generate_monthly_report(self):
         weather_readings = self.file_parser.read_all_files()
@@ -109,7 +112,8 @@ class GenerateWeatherReports:
             print(f"Lowest Average: {min_tempr_avg}C")
             print(f"Average Mean Humidity: {mean_humidity_avg}%")
 
-        else: print(f'Weather readings not available for given query')
+        else: 
+            print(f'Weather readings not available for given query')
                 
     def generate_month_temprature_report(self, month):
         weather_readings = self.file_parser.read_all_files()
@@ -117,12 +121,13 @@ class GenerateWeatherReports:
             month = strftime('%B %Y', month)
             print(f'{month}')
             for r in weather_readings:
-                min_tempr = self.__get_field(r, 'min_tempr')
-                max_tempr = self.__get_field(r, 'max_tempr')
-                print(f'{strftime("%d", strptime(self.__get_field(r, "pkt"), "%Y-%m-%d"))}', end='')
+                min_tempr = r.get("min_tempr")
+                max_tempr = r.get("max_tempr")
+                print(f'{strftime("%d", strptime(r.get("pkt"), "%Y-%m-%d"))}', end='')
                 print(f'{colored("+"*min_tempr, "blue")}{colored("+"*max_tempr, "red")}{min_tempr}-{max_tempr}')
 
-        else: print(f'Weather readings not available for given query')
+        else: 
+            print(f'Weather readings not available for given query')
             
 
 
