@@ -28,8 +28,8 @@ class WeatherReportMaker:
         for idx, temperatures in enumerate(weather_result.daily_temperatures):
             max_temp, min_temp = temperatures[0], temperatures[1]
 
-            red_stars = WeatherReportMaker.RED_COLOR_CODE.format(''.join(['+' for _ in range(abs(max_temp))]))
-            blue_stars = WeatherReportMaker.BLUE_COLOR_CODE.format(''.join(['+' for _ in range(abs(min_temp))]))
+            red_stars = WeatherReportMaker.RED_COLOR_CODE.format('+' * abs(max_temp))
+            blue_stars = WeatherReportMaker.BLUE_COLOR_CODE.format('+' * abs(min_temp))
 
             weather_report += f"{idx+1:02} {red_stars} {max_temp}\n"
             weather_report += f"{idx+1:02} {blue_stars} {min_temp}\n"
@@ -42,8 +42,8 @@ class WeatherReportMaker:
         for idx, temperatures in enumerate(weather_result.daily_temperatures):
             max_temp, min_temp = temperatures[0], temperatures[1]
 
-            red_stars = WeatherReportMaker.RED_COLOR_CODE.format( ''.join(['+' for _ in range(abs(max_temp))]) )
-            blue_stars = WeatherReportMaker.BLUE_COLOR_CODE.format(''.join(['+' for _ in range(abs(min_temp))]))
+            red_stars = WeatherReportMaker.RED_COLOR_CODE.format('+' * abs(max_temp))
+            blue_stars = WeatherReportMaker.BLUE_COLOR_CODE.format('+' * abs(min_temp))
 
             weather_report += f"{idx+1:02} {red_stars}{blue_stars} {max_temp} {min_temp}\n"
 
