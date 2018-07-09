@@ -16,11 +16,11 @@ class WeatherReadingsReader:
     @staticmethod
     def validate_day(day):
         day = {k.strip(): v for k, v in day.items()}
-        for index in ['Mean TemperatureC', 'Min TemperatureC', 'Max TemperatureC',
-                      'Mean Humidity', 'Max Humidity', 'Min Humidity']:
-            if not day[index]:
-                return False
-        return True
+        if all(x for x in {k: day[k] for k in ('Mean TemperatureC', 'Min TemperatureC', 'Max TemperatureC',
+                                               'Mean Humidity', 'Max Humidity', 'Min Humidity') if k in day}.values()):
+            return True
+        return False
+
 
     @staticmethod
     def read_file(path):
@@ -33,16 +33,14 @@ class WeatherReadingsReader:
 
     @staticmethod
     def get_weather_files(directory):
-        file_names = [f for f in listdir(directory) if isfile(join(directory, f))]
-        return file_names
+        return [f for f in listdir(directory) if isfile(join(directory, f))]
 
     @staticmethod
     def file_needs_to_be_read(file_name, year, month):
-        if month != 0:
-            if int(file_name.split('_')[2]) == year and file_name.split('_')[3].split('.')[0] == month:
+        if int(file_name.split('_')[2]) == year:
+            if not month:
                 return True
-        else:
-            if int(file_name.split('_')[2]) == year:
+            elif file_name.split('_')[3].split('.')[0] == month:
                 return True
         return False
 

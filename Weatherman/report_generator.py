@@ -13,28 +13,27 @@ class ReportGenerator:
                          12: 'December'}
 
     @staticmethod
-    def annual_report(year, results):
-        if results:
-            print(f'-e Annual Report {year}:')
-            print(f'Highest: {results.max_annual_temp}C on '
-                  f'{ReportGenerator.month_translation[results.date_max_annual_temp[1]]} '
-                  f'{results.date_max_annual_temp[0]}')
-            print(f'Lowest: {results.min_annual_temp}C on '
-                  f'{ReportGenerator.month_translation[results.date_min_annual_temp[1]]} '
-                  f'{results.date_min_annual_temp[0]}')
-            print(f'Humidity: {results.max_annual_hum}% on '
-                  f'{ReportGenerator.month_translation[results.date_max_annual_hum[1]]} '
-                  f'{results.date_max_annual_hum[0]} \n')
+    def annual_report(year, highest_hum, highest_temp, lowest_temp):
+        if highest_temp:
+            print(f'Highest: {highest_temp.highest_temp}C on '
+                  f'{ReportGenerator.month_translation[highest_temp.month]} '
+                  f'{highest_temp.day}')
+            print(f'Lowest: {lowest_temp.lowest_temp}C on '
+                  f'{ReportGenerator.month_translation[lowest_temp.month]} '
+                  f'{lowest_temp.day}')
+            print(f'Humidity: {highest_hum.highest_hum}% on '
+                  f'{ReportGenerator.month_translation[highest_hum.month]} '
+                  f'{highest_hum.day} \n')
         else:
             print(f'No weather_readings Found for -e {year}\n')
 
     @staticmethod
-    def month_report(month, year, results):
-        if results:
+    def month_report(month, year, max_avg_temp, min_avg_temp, mean_avg_hum):
+        if max_avg_temp:
             print(f'-a Months Report {ReportGenerator.month_translation[month]} {year}:')
-            print(f'Highest Average: {int(results.max_avg_temp_of_month)}C')
-            print(f'Lowest Average: {int(results.min_avg_temp_of_month)}C')
-            print(f'Mean Average Humidity: {int(results.avg_mean_hum_of_month)}% \n')
+            print(f'Highest Average: {int(max_avg_temp)}C')
+            print(f'Lowest Average: {int(min_avg_temp)}C')
+            print(f'Mean Average Humidity: {int(mean_avg_hum)}% \n')
         else:
             print(f'No weather_readings Found for -a {ReportGenerator.month_translation[month]} {year}\n')
 
@@ -57,7 +56,7 @@ class ReportGenerator:
     @staticmethod
     def single_bar_chart_report(year, month, weather_readings):
         if weather_readings:
-            print(f'-d {ReportGenerator.month_translation[month]} {year}')
+            print(f'-c {ReportGenerator.month_translation[month]} {year}')
             for day_reading in weather_readings:
                 counter = day_reading.day
                 print(f'{counter:02}', end=' ')
@@ -67,8 +66,3 @@ class ReportGenerator:
         else:
             print(f'No weather_readings Found For -d {ReportGenerator.month_translation[month]} {year}')
         print('\n')
-
-    @staticmethod
-    def display_argument_error_msg(argument):
-        print(f'Invalid arguments {argument} Enter in the form of year/month where year is any integer and month is '
-              'in range (1-12)\n')
