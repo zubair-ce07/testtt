@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import math
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
-
-class LornajaneSpider(scrapy.Spider):
+class LornajaneSpider(CrawlSpider):
 
     name = 'LornaJaneSpider'
     allowed_domains = ['lornajane.sg']
     start_urls = ['https://www.lornajane.sg/']
     download_delay = 3
 
-    def parse(self, response):
-        cat_urls = self.main_product_links(response)[0]
-        yield scrapy.http.Request(cat_urls, callback=self.parse_main_products)
+    rules = (
+        Rule(LinkExtractor(restrict_css='.main-menu > li:nth-child(1) > a:nth-child(1)', strip=True),
+             callback='parse_main_products'),
+    )
 
     def parse_main_products(self, response):
-        product_links = self.get_sub_prod_links(response)
-        product_links = [response.urljoin(href) for href in product_links]
 
+        product_links = self.get_sub_prod_links(response)
         for product in product_links:
             yield scrapy.http.Request(product, callback=self.parse_products)
 
@@ -37,29 +38,42 @@ class LornajaneSpider(scrapy.Spider):
             'product_name': self.product_name(response),
             'sku': self.sku_id(response),
             'url': response.url,
-            'skus': {}
+            'skus': self.populate_sku_for_all_sizes(response)
         }
 
-        yield self.populate_sku_for_all_sizes(item, response)
-
         color_links = self.color_links(response)
-        for color in color_links:
-            yield scrapy.http.Request(color, callback=self.parse_products)
+        if color_links:
+            yield scrapy.http.Request(color_links.pop(0), callback=self.parse_cols,
+                                      meta={'color_links': color_links, 'item': item})
+        else:
+            yield item
 
-    def populate_sku_for_all_sizes(self, item, response):
-        for x in self.size(response):
+    def parse_cols(self, response):
+        color_links = response.meta['color_links']
+        item = response.meta['item']
+        item['image_url']+=self.image_url(response)
+        item['product_name']+=self.product_name(response)
+        item['skus'].update(self.populate_sku_for_all_sizes(response))
+
+        if color_links:
+            yield scrapy.http.Request(color_links.pop(0), callback=self.parse_cols,
+                                      meta={'color_links': color_links, 'item': item})
+        else:
+            yield item
+
+    def populate_sku_for_all_sizes(self, response):
+        items = {
+            'skus': {}
+        }
+        for size in self.size(response):
             values = {
                 'color': self.color(response),
                 'currency': self.currency(response),
                 'price': self.price(response),
-                'size': x
+                'size': size
             }
-            item['skus'][item['sku'] + "_" + x + "_" + self.color(response)] = values
-        return item
-
-    def main_product_links(self, response):
-        links =  response.css('.main-menu > li:nth-child(1) > a:nth-child(1)::attr(href)').extract()
-        return [link if 'https://' in link else 'https://www.lornajane.sg{0}'.format(link) for link in links]
+            items['skus']['{0}_{1}_{2}'.format(self.sku_id(response), size, self.color(response))] = values
+        return items['skus']
 
     def next_page_link(self, next_page, response):
         return '{0}?page={1}'.format(response.url.split('?')[0], next_page)
@@ -72,13 +86,13 @@ class LornajaneSpider(scrapy.Spider):
             return response.css('.count-text::text').extract()[1].split(' ')
 
     def get_sub_prod_links(self, response):
-        return response.css('div.product-item > div.product-grid-item > div:nth-child(1) > a:nth-child(1)'
-                            '::attr(href)').extract()
+        prod = LinkExtractor(restrict_css='div.product-item > div.product-grid-item > div:nth-child(1) > a:nth-child(1)'
+                      ,strip=True).extract_links(response)
+        return [p.url for p in prod]
 
     def color_links(self, response):
-        cols = response.css('.color-swatch > ul:nth-child(1) > li > a.product-detail-swatch-btn'
-                            '::attr(data-url)').extract()
-        return [('https://www.lornajane.sg{0}').format(col) for col in cols]
+        prod = LinkExtractor(restrict_css='.color-swatch > ul:nth-child(1) > li > a:not(.selected)', attrs='data-url').extract_links(response)
+        return [p.url for p in prod]
 
     def size(self,response):
         size = response.css('#sizeWrap .product-detail-swatch-btn::text').extract()
