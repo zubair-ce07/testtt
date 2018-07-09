@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
-
-class OrsaySpider(scrapy.Spider):
+class OrsaySpider(CrawlSpider):
     name = 'orsay.com'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/']
     download_delay = 3
 
-    def parse(self, response):
-        cat_urls = self.main_product_links(response)
-        for category in cat_urls:
-            yield scrapy.http.Request(category, callback=self.parse_main_products)
+    rules = (
+        Rule(LinkExtractor(restrict_css='.header-navigation > ul > li:nth-child(-n+4) > a.has-sub-menu.'
+                            'level-1.visible-xlg', strip=True),
+                            callback='parse_main_products'),
+    )
 
     def parse_main_products(self, response):
         product_links = self.get_sub_prod_links(response)
-        product_links = [response.urljoin(href) for href in product_links]
 
         for product in product_links:
             yield scrapy.http.Request(product, callback=self.parse_products)
@@ -33,12 +34,42 @@ class OrsaySpider(scrapy.Spider):
             'url': response.url,
             'image_url': self.image_url(response),
             'sku': self.sku_id(response),
+            'skus': self.populate_sku_for_all_sizes(response)
+        }
+
+        color_links = self.color_links(response)
+        if color_links:
+            yield scrapy.http.Request(color_links.pop(0), callback=self.parse_cols,
+                                      meta={'color_links': color_links, 'item': item})
+        else:
+            item['skus'] = self.populate_sku_for_all_sizes(response)
+            yield item
+
+    def parse_cols(self, response):
+        color_links = response.meta['color_links']
+        item = response.meta['item']
+        item['image_url']+=self.image_url(response)
+        item['product_name']+=self.product_name(response)
+        item['skus'].update(self.populate_sku_for_all_sizes(response))
+
+        if color_links:
+            yield scrapy.http.Request(color_links.pop(0), callback=self.parse_cols,
+                                      meta={'color_links': color_links, 'item': item})
+        else:
+            yield item
+
+    def populate_sku_for_all_sizes(self, response):
+        item = {
             'skus': {}
         }
-        yield self.populate_sku_for_all_sizes(item, response)
-        color_links = self.color_links(response)
-        for color in color_links:
-            yield scrapy.http.Request(color, callback=self.parse_products)
+        for idx, siz in enumerate(self.size(response)):
+            values = {'color': self.color(response),
+                      'currency': self.currency(response),
+                      'price': self.price(response),
+                      'stock': self.stock(idx, response),
+                      'size': siz}
+            item['skus']['{0}_{1}_{2}'.format(self.sku_id(response), size, self.color(response))] = values
+        return item['skus']
 
     def image_url(self, response):
         return response.css('.product-col-1 > div.js-slick-swiper > div > img::attr(src)').extract()[0]
@@ -62,22 +93,13 @@ class OrsaySpider(scrapy.Spider):
         name = [d for d in name if 'name' in d]
         return name[0].split(':')[1][1:-1]
 
-    def populate_sku_for_all_sizes(self, item, response):
-        for idx, siz in enumerate(self.size(response)):
-            values = {'color': self.color(response),
-                      'currency': self.currency(response),
-                      'price': self.price(response),
-                      'stock': self.stock(idx, response),
-                      'size': siz}
-            item['skus'][item['sku'] + "_" + siz] = values
-        return item
-
     def records_for_category(self, response):
         return response.css('div.refinements-footer > div > div.pagination-product-count'
                             '::attr(data-count)').extract()[0]
 
     def get_sub_prod_links(self, response):
-        return response.css('.product-image a.thumb-link::attr(href)').extract()
+        prod = LinkExtractor(restrict_css='.product-image a.thumb-link', strip=True).extract_links(response)
+        return [p.url for p in prod]
 
     def size(self, response):
         size = response.css('.size li a::text').extract()
