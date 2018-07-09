@@ -1,12 +1,12 @@
-import requests
-from parsel import Selector
 from urllib.parse import urlparse
 from urllib.parse import urljoin
-import asyncio
+from parsel import Selector
 import concurrent.futures
-import scraping_report
+import requests
+import asyncio
 import logging
 import datetime
+import scraping_report
 
 
 class RecursiveConcurrentSpider:
