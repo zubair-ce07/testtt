@@ -1,8 +1,9 @@
 import argparse
-import os
 import csv
 import datetime
 import re
+from os import path
+from glob import glob
 from weatherman_ds import WeatherReading
 from weatherman_calculation import WeatherReport
 
@@ -23,9 +24,19 @@ def main():
 
     args = parser.parse_args()
 
+    if path.exists(args.directory):
+        reading_file_paths = glob(args.directory+'/*.txt')
+    else:
+        print("Invalid path.")
+
+    weather_reading_files = []
+    for file_path in reading_file_paths:
+            opened_file = open(file_path, 'r')
+            weather_reading_files.append(opened_file)
+
     if args.extreme:
         input_date_extreme = args.extreme
-        weather_readings_extreme = load_readings(args.directory,
+        weather_readings_extreme = load_readings(weather_reading_files,
                                                  input_date_extreme)
         if weather_readings_extreme:
             extreme_weather_results = WeatherReport.yearly_results(weather_readings_extreme)
@@ -35,7 +46,7 @@ def main():
     if args.average:
         input_date_average = args.average
         input_date_average = input_date_average.split('/')
-        weather_readings_average = load_readings(args.directory,
+        weather_readings_average = load_readings(weather_reading_files,
                                                  input_date_average[0],
                                                  input_date_average[1])
         if weather_readings_average:
@@ -47,7 +58,7 @@ def main():
     if args.chart:
         input_date_chart = args.chart
         input_date_chart = input_date_chart.split('/')
-        weather_readings_chart = load_readings(args.directory,
+        weather_readings_chart = load_readings(weather_reading_files,
                                                input_date_chart[0],
                                                input_date_chart[1])
         if weather_readings_chart:
@@ -56,26 +67,18 @@ def main():
             print("Readings not available for " + args.chart)
 
 
-def load_readings(directory='', year='', month=''):
+def load_readings(reading_files='', year='', month=''):
         """Loads a given months data in the data structure"""
-        files = []
         daily_readings = []
         if not month:
-            for i in range(1, 13):
-                month_abr = datetime.date(2000, i, 1).strftime('%b')
-                file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
-                if os.path.exists(file_path):
-                    file = open(file_path, 'r')
-                    files.append(file)
+            expression = r'.*_'+year+'_.*'
+            files_needed = list(filter(lambda x: re.match(expression, x.name), reading_files))
         else:
-            month_abr = datetime.date(2000, int(month), 1).strftime('%b')
-            file_path = directory + '/Murree_weather_' + year + "_" + month_abr + '.txt'
-            if os.path.exists(file_path):
-                file = open(file_path, 'r')
-                files.append(file)
-
-        for file in files:
-            weather_csv = csv.DictReader(file)
+            month_name = datetime.date(2000, int(month), 1).strftime('%b')
+            expression = r'.*_' + year + '_'+month_name+'.*'
+            files_needed = list(filter(lambda x: re.match(expression, x.name), reading_files))
+        for weather_reading_file in files_needed:
+            weather_csv = csv.DictReader(weather_reading_file)
             for row in weather_csv:
                 daily_readings.append(WeatherReading(row))
 
