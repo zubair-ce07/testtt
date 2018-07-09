@@ -15,11 +15,11 @@ def main():
 
     parser.add_argument('directory', help='directory of the weather readings.')
     parser.add_argument('-e', '--extreme', default='', help='option for extreme '
-                        'weather report format:yyyy', type=year_input)
+                        'weather report format:yyyy', type=year_validate)
     parser.add_argument('-a', '--average', default='', help='option for average'
-                        ' weather report format:yyyy/mm', type=month_input)
+                        ' weather report format:yyyy/mm', type=month_validate)
     parser.add_argument('-c', '--chart', default='', help='option for weather '
-                        ' chart format:yyyy/mm', type=month_input)
+                        ' chart format:yyyy/mm', type=month_validate)
 
     args = parser.parse_args()
 
@@ -28,8 +28,8 @@ def main():
         weather_readings_extreme = load_readings(args.directory,
                                                  input_date_extreme)
         if weather_readings_extreme:
-            results = WeatherReport.yearly_results(weather_readings_extreme)
-            weather_report_extreme(results)
+            extreme_weather_results = WeatherReport.yearly_results(weather_readings_extreme)
+            weather_report_extreme(extreme_weather_results)
         else:
             print("Readings not available for " + args.extreme)
     if args.average:
@@ -39,8 +39,8 @@ def main():
                                                  input_date_average[0],
                                                  input_date_average[1])
         if weather_readings_average:
-            results = WeatherReport.monthly_results(weather_readings_average)
-            weather_report_average(results)
+            average_weather_results = WeatherReport.monthly_results(weather_readings_average)
+            weather_report_average(average_weather_results)
         else:
             print("Readings not available for " + args.average)
 
@@ -117,18 +117,18 @@ def weather_report_chart(weather_readings):
     print("")
 
 
-def year_input(value):
-    if re.match('\d\d\d\d$', value) or not value:
-        return value
+def year_validate(year_input):
+    if re.match('\d\d\d\d$', year_input) or not year_input:
+        return year_input
     else:
-        raise argparse.ArgumentTypeError(value+" is invalid format please enter yyyy")
+        raise argparse.ArgumentTypeError(year_input+" is invalid format please enter yyyy")
 
 
-def month_input(value):
-    if re.match('\d\d\d\d/\d?\d$', value) or not value:
-        return value
+def month_validate(month_input):
+    if re.match('\d\d\d\d/\d?\d$', month_input) or not month_input:
+        return month_input
     else:
-        raise argparse.ArgumentTypeError(value+" is invalid format please enter yyyy/mm")
+        raise argparse.ArgumentTypeError(month_input+" is invalid format please enter yyyy/mm")
 
 
 class ColorOutput:
