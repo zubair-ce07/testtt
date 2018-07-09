@@ -1,10 +1,10 @@
-import weather_summary_result
+from weather_summary_result import WeatherResult
 
 
 class WeatherResultComputer:
     @staticmethod
     def get_result(weather_records):
-        weather_result = weather_summary_result.WeatherResult()
+        weather_result = WeatherResult()
 
         h_temp_weather_record = max(weather_records, key=lambda p: p.highest_temperature)
         weather_result.highest_temperature = h_temp_weather_record.highest_temperature

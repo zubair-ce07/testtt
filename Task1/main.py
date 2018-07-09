@@ -1,9 +1,9 @@
 import argparse
 import calendar
 import datetime
-import parsed_weather_reading
-import weather_result_computer as ws
-import weather_report_maker as report_maker
+from parsed_weather_reading import ParsedWeatherReading
+from weather_result_computer import WeatherResultComputer
+from weather_report_maker import WeatherReportMaker
 
 
 def valid_year(year):
@@ -17,8 +17,8 @@ def valid_year_month(weather_date):
         weather_date = datetime.datetime.strptime(weather_date, '%Y/%m')
     except ValueError:
         raise argparse.ArgumentTypeError(f"The Date is not valid")
-    else:
-        return valid_year(weather_date.year), weather_date.month
+
+    return valid_year(weather_date.year), weather_date.month
 
 
 user_command_parser = argparse.ArgumentParser()
@@ -46,31 +46,31 @@ if __name__ == "__main__":
     file_path = user_cli_args.file_path
 
     if user_cli_args.e:
-        weather_record_parser = parsed_weather_reading.ParsedWeatherReading()
+        weather_record_parser = ParsedWeatherReading()
         filtered_weather_records = weather_record_parser.get_weather_records(file_path, user_cli_args.e)
-        weather_summary_result = ws.WeatherResultComputer.get_result(filtered_weather_records)
-        report_maker.WeatherReportMaker.print_report_for_e(weather_summary_result)
+        weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
+        WeatherReportMaker.print_report_for_e(weather_summary_result)
 
     if user_cli_args.a:
         year, month = user_cli_args.a
-        weather_record_parser = parsed_weather_reading.ParsedWeatherReading()
+        weather_record_parser = ParsedWeatherReading()
         filtered_weather_records = weather_record_parser.get_weather_records(file_path, year,
                                                                              calendar.month_abbr[month])
-        weather_summary_result = ws.WeatherResultComputer.get_result(filtered_weather_records)
-        report_maker.WeatherReportMaker.print_report_for_a(weather_summary_result)
+        weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
+        WeatherReportMaker.print_report_for_a(weather_summary_result)
 
     if user_cli_args.c:
         year, month = user_cli_args.c
-        weather_record_parser = parsed_weather_reading.ParsedWeatherReading()
+        weather_record_parser = ParsedWeatherReading()
         filtered_weather_records = weather_record_parser.get_weather_records(file_path, year,
                                                                              calendar.month_abbr[month])
-        weather_summary_result = ws.WeatherResultComputer.get_result(filtered_weather_records)
-        report_maker.WeatherReportMaker.print_report_for_c(weather_summary_result)
+        weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
+        WeatherReportMaker.print_report_for_c(weather_summary_result)
 
     if user_cli_args.b:
         year, month = user_cli_args.b
-        weather_record_parser = parsed_weather_reading.ParsedWeatherReading()
+        weather_record_parser = ParsedWeatherReading()
         filtered_weather_records = weather_record_parser.get_weather_records(file_path, year,
                                                                              calendar.month_abbr[month])
-        weather_summary_result = ws.WeatherResultComputer.get_result(filtered_weather_records)
-        report_maker.WeatherReportMaker.print_report_for_c_bonus(weather_summary_result)
+        weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
+        WeatherReportMaker.print_report_for_c_bonus(weather_summary_result)
