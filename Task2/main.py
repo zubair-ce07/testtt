@@ -2,6 +2,8 @@ import time
 import concurrent_spider
 import argparse
 import validators
+from urllib.parse import urlparse
+import asyncio
 
 
 def validate_url(url):
@@ -28,10 +30,17 @@ user_command_parser.add_argument("tasks_limit", help="This arg stores the total 
                                                      "that can be executed concurrently", type=validate_input_limit)
 
 user_cli_args = user_command_parser.parse_args()
-
 start_time = time.time()
 c_spider = concurrent_spider.RecursiveConcurrentSpider(user_cli_args.site_url)
-c_spider.run_crawler(int(user_cli_args.total_urls), user_cli_args.download_delay, int(user_cli_args.tasks_limit))
+
+loop = asyncio.get_event_loop()
+try:
+    loop.run_until_complete(c_spider.start_crawler([urlparse(c_spider.site)],
+                                                   int(user_cli_args.total_urls),
+                                                   int(user_cli_args.download_delay),
+                                                   int(user_cli_args.tasks_limit)))
+finally:
+    loop.close()
 
 print(f"\nTotal Requests: {c_spider.report.total_requests}\n"
       f"Bytes Downloaded: {c_spider.report.bytes_downloaded}\n"

@@ -10,17 +10,15 @@ import datetime
 
 
 class RecursiveConcurrentSpider:
-
     def __init__(self, site):
         self.site = site
         self.report = scraping_report.CrawlingSummaryReport()
+        self.__loop = asyncio.get_event_loop()
+        self.__executor = concurrent.futures.ThreadPoolExecutor()
 
-    @staticmethod
-    async def make_get_request(url, tasks_limiting_semaphore):
+    async def make_get_request(self, url, tasks_limiting_semaphore):
         async with tasks_limiting_semaphore:
-            loop = asyncio.get_event_loop()
-            get_method_executor = concurrent.futures.ThreadPoolExecutor()
-            task = asyncio.ensure_future(loop.run_in_executor(get_method_executor, requests.get, url.geturl()))
+            task = asyncio.ensure_future(self.__loop.run_in_executor(self.__executor, requests.get, url.geturl()))
             get_response = await asyncio.wait_for(task, None)
 
         return get_response.text, len(get_response.text)
@@ -35,13 +33,12 @@ class RecursiveConcurrentSpider:
 
         return list(filtered_urls)
 
-    @staticmethod
-    async def visit_urls(urls, download_delay, concurrent_requests_limit):
+    async def visit_urls(self, urls, download_delay, concurrent_requests_limit):
         tasks_limiting_semaphore = asyncio.BoundedSemaphore(concurrent_requests_limit)
 
         tasks = []
         for url in urls:
-            tasks.append(RecursiveConcurrentSpider.make_get_request(url, tasks_limiting_semaphore))
+            tasks.append(self.make_get_request(url, tasks_limiting_semaphore))
             logging.info(f"{datetime.datetime.now().time()} - Visited page: {url.geturl()}")
             await asyncio.sleep(download_delay)
 
@@ -52,20 +49,11 @@ class RecursiveConcurrentSpider:
     async def start_crawler(self, urls, urls_limit, download_delay, concurrent_requests_limit):
         if urls_limit > 0:
             urls, urls_limit = (urls[:urls_limit], 0) if len(urls) > urls_limit else (urls, urls_limit - len(urls))
- 
-            get_request_results = await RecursiveConcurrentSpider.visit_urls(urls, download_delay,
-                                                                             concurrent_requests_limit)
+
+            get_request_results = await self.visit_urls(urls, download_delay, concurrent_requests_limit)
             self.report.total_requests += len(urls)
 
             for html_text, html_page_size in get_request_results:
                 self.report.bytes_downloaded += html_page_size
                 return await self.start_crawler(RecursiveConcurrentSpider.get_next_urls(self.site, html_text),
                                                 urls_limit, download_delay, concurrent_requests_limit)
-
-    def run_crawler(self, url_limit, download_delay, concurrent_requests_limit):
-        loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(self.start_crawler([urlparse(self.site)], url_limit,
-                                                       download_delay, concurrent_requests_limit))
-        finally:
-            loop.close()
