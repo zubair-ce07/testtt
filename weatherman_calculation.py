@@ -33,19 +33,8 @@ class WeatherReport:
                 mean_humidity_filtered.append(reading)
             if reading.max_temperature:
                 high_temp_filtered.append(reading)
-        sum_high = 0
-        for reading in high_temp_filtered:
-            sum_high = sum_high + reading.max_temperature
+        avg_high = sum(reading.max_temperature for reading in high_temp_filtered) // len(high_temp_filtered)
+        avg_low = sum(reading.min_temperature for reading in low_temp_filtered) // len(low_temp_filtered)
+        avg_humid = sum(reading.mean_humidity for reading in mean_humidity_filtered) // len(mean_humidity_filtered)
 
-        sum_low = 0
-        for reading in low_temp_filtered:
-            sum_low = sum_low + reading.min_temperature
-
-        sum_humidity = 0
-        for reading in mean_humidity_filtered:
-            sum_humidity = sum_humidity + reading.mean_humidity
-
-        return ReportResult('', sum_low//len(low_temp_filtered),
-                            '', sum_high//len(high_temp_filtered),
-                            '', sum_humidity//len(mean_humidity_filtered))
-
+        return ReportResult('', avg_low, '', avg_high, '', avg_humid)

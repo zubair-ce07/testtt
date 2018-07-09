@@ -3,7 +3,6 @@ import os
 import csv
 import datetime
 import re
-
 from weatherman_ds import WeatherReading
 from weatherman_calculation import WeatherReport
 
