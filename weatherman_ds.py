@@ -1,26 +1,19 @@
 class WeatherReading:
 
     def __init__(self, conditions):
-        self.pkt: str = None
-        self.max_temperature: int = None
-        self.min_temperature: int = None
-        self.mean_temperature: int = None
-        self.max_humidity: int = None
-        self.mean_humidity: int = None
-        self.min_humidity: int = None
-
-        if conditions['PKT']:
-            self.pkt = conditions['PKT']
-        if conditions['Max TemperatureC']:
-            self.max_temperature = int(conditions['Max TemperatureC'])
-        if conditions['Min TemperatureC']:
-            self.min_temperature = int(conditions['Min TemperatureC'])
-        if conditions['Mean TemperatureC']:
-            self.mean_temperature = int(conditions['Mean TemperatureC'])
-        if conditions['Max Humidity']:
-            self.max_humidity = int(conditions['Max Humidity'])
-        if conditions[' Mean Humidity']:
-            self.mean_humidity = int(conditions[' Mean Humidity'])
+        self.pkt = conditions.get('PKT')
+        self.max_temperature = int(conditions.get('Max TemperatureC')) \
+            if conditions.get('Max TemperatureC') else None
+        self.min_temperature = int(conditions.get('Min TemperatureC')) \
+            if conditions.get('Min TemperatureC') else None
+        self.mean_temperature = int(conditions.get('Mean TemperatureC')) \
+            if conditions.get('Mean TemperatureC') else None
+        self.max_humidity = int(conditions.get('Max Humidity')) \
+            if conditions.get('Max Humidity') else None
+        self.mean_humidity = int(conditions.get(' Mean Humidity')) \
+            if conditions.get(' Mean Humidity') else None
+        self.min_humidity = int(conditions.get(' Min Humidity')) \
+            if conditions.get(' Min Humidity') else None
 
 
 class ReportResult:
