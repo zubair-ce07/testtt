@@ -57,9 +57,6 @@ class WeatherFilesParser:
 
 class WeatherResultCalculation:
 
-    def __get_field(self, row, field_name):
-        return row.__dict__.get(field_name)
-
     def max_field(self, weather_readings, field_name):
         return max(weather_readings, key=lambda r : r.get(field_name))
 
