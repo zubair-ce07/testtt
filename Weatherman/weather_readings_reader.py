@@ -1,11 +1,41 @@
 from os import listdir
 from os.path import isfile, join
 import csv
+import calendar
 
 import weather_day_reading
+from report_generator import ReportGenerator
 
 
 class WeatherReadingsReader:
+
+    def __init__(self, args):
+        my_path = args.directory
+        if args.type_e:
+            weather_readings = WeatherReadingsReader.read_readings(my_path, args.type_e)
+            if weather_readings:
+                ReportGenerator.process_annual_report(weather_readings)
+        if args.type_a:
+            year, month = args.type_a.split('/')
+            month_name = calendar.month_abbr[int(month)]
+            weather_readings = WeatherReadingsReader.read_readings(
+                my_path, int(year), month_name)
+            if weather_readings:
+                ReportGenerator.process_month_report(int(month), int(year), weather_readings)
+        if args.type_c:
+            year, month = args.type_c.split('/')
+            month_name = calendar.month_abbr[int(month)]
+            weather_readings = WeatherReadingsReader.read_readings(
+                my_path, int(year), month_name)
+            if weather_readings:
+                ReportGenerator.process_dual_bar_report(args.type_c, weather_readings)
+        if args.type_d:
+            year, month = args.type_d.split('/')
+            month_name = calendar.month_abbr[int(month)]
+            weather_readings = WeatherReadingsReader.read_readings(
+                my_path, int(year), month_name)
+            if weather_readings:
+                ReportGenerator.process_single_bar_report(args.type_d, weather_readings)
 
     @staticmethod
     def read_day_reading(day):
@@ -20,7 +50,6 @@ class WeatherReadingsReader:
                                                'Mean Humidity', 'Max Humidity', 'Min Humidity') if k in day}.values()):
             return True
         return False
-
 
     @staticmethod
     def read_file(path):
