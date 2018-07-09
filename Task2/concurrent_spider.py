@@ -10,9 +10,9 @@ import datetime
 
 
 class RecursiveConcurrentSpider:
-    def __init__(self, site):
-        self.site = site
-        self.report = scraping_report.CrawlingSummaryReport()
+    def __init__(self, site_to_crawl):
+        self.site_to_crawl = site_to_crawl
+        self.spider_execution_report = scraping_report.CrawlingSummaryReport()
         self.__loop = asyncio.get_event_loop()
         self.__executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -24,11 +24,11 @@ class RecursiveConcurrentSpider:
         return get_response.text, len(get_response.text)
 
     @staticmethod
-    def get_next_urls(site, html_text):
+    def get_next_urls(site_to_crawl, html_text):
         html_selector = Selector(html_text)
 
         all_urls = [urlparse(url) for url in html_selector.css('a::attr(href)').extract()]
-        filtered_urls = {urlparse(urljoin(site, url.path)) for url in all_urls
+        filtered_urls = {urlparse(urljoin(site_to_crawl, url.path)) for url in all_urls
                          if url.scheme == '' and url.path not in ('', '/')}
 
         return list(filtered_urls)
@@ -51,9 +51,9 @@ class RecursiveConcurrentSpider:
             urls, urls_limit = (urls[:urls_limit], 0) if len(urls) > urls_limit else (urls, urls_limit - len(urls))
 
             get_request_results = await self.visit_urls(urls, download_delay, concurrent_requests_limit)
-            self.report.total_requests += len(urls)
+            self.spider_execution_report.total_requests += len(urls)
 
             for html_text, html_page_size in get_request_results:
-                self.report.bytes_downloaded += html_page_size
-                return await self.start_crawler(RecursiveConcurrentSpider.get_next_urls(self.site, html_text),
+                self.spider_execution_report.bytes_downloaded += html_page_size
+                return await self.start_crawler(RecursiveConcurrentSpider.get_next_urls(self.site_to_crawl, html_text),
                                                 urls_limit, download_delay, concurrent_requests_limit)
