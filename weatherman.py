@@ -2,6 +2,7 @@ import argparse
 import os
 import csv
 import datetime
+import re
 
 from weatherman_ds import WeatherReading
 from weatherman_calculation import WeatherReport
@@ -14,26 +15,26 @@ def main():
                                                  ' visualizes it.')
 
     parser.add_argument('directory', help='directory of the weather readings.')
-    parser.add_argument('-e', default='', help='option for extreme '
-                        'weather report format:yyyy')
-    parser.add_argument('-a', default='', help='option for average'
-                                               ' weather report format:yyyy/mm')
-    parser.add_argument('-c', default='', help='option for weather '
-                                               ' chart format:yyyy/mm')
+    parser.add_argument('-e', '--extreme', default='', help='option for extreme '
+                        'weather report format:yyyy', type=year_input)
+    parser.add_argument('-a', '--average', default='', help='option for average'
+                        ' weather report format:yyyy/mm', type=month_input)
+    parser.add_argument('-c', '--chart', default='', help='option for weather '
+                        ' chart format:yyyy/mm', type=month_input)
 
     args = parser.parse_args()
 
-    if args.e:
-        input_date_extreme = args.e
+    if args.extreme:
+        input_date_extreme = args.extreme
         weather_readings_extreme = load_readings(args.directory,
                                                  input_date_extreme)
         if weather_readings_extreme:
             results = WeatherReport.yearly_results(weather_readings_extreme)
             weather_report_extreme(results)
         else:
-            print("Readings not available for " + args.e)
-    if args.a:
-        input_date_average = args.a
+            print("Readings not available for " + args.extreme)
+    if args.average:
+        input_date_average = args.average
         input_date_average = input_date_average.split('/')
         weather_readings_average = load_readings(args.directory,
                                                  input_date_average[0],
@@ -42,10 +43,10 @@ def main():
             results = WeatherReport.monthly_results(weather_readings_average)
             weather_report_average(results)
         else:
-            print("Readings not available for " + args.a)
+            print("Readings not available for " + args.average)
 
-    if args.c:
-        input_date_chart = args.c
+    if args.chart:
+        input_date_chart = args.chart
         input_date_chart = input_date_chart.split('/')
         weather_readings_chart = load_readings(args.directory,
                                                input_date_chart[0],
@@ -53,7 +54,7 @@ def main():
         if weather_readings_chart:
             weather_report_chart(weather_readings_chart)
         else:
-            print("Readings not available for " + args.c)
+            print("Readings not available for " + args.chart)
 
 
 def load_readings(directory='', year='', month=''):
@@ -115,6 +116,20 @@ def weather_report_chart(weather_readings):
                   "+" * max_temp + ColorOutput.RESET + str(min_temp) +
                   "C-" + str(max_temp) + "C")
     print("")
+
+
+def year_input(value):
+    if re.match('\d\d\d\d$', value) or not value:
+        return value
+    else:
+        raise argparse.ArgumentTypeError(value+" is invalid format please enter yyyy")
+
+
+def month_input(value):
+    if re.match('\d\d\d\d/\d?\d$', value) or not value:
+        return value
+    else:
+        raise argparse.ArgumentTypeError(value+" is invalid format please enter yyyy/mm")
 
 
 class ColorOutput:
