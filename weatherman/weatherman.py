@@ -16,7 +16,7 @@ class WeatherReading:
         self.max_humid = max_humid
 
     def get(self, field_name):
-        return self.__dict__.get(field_name)
+        return getattr(self, field_name)
 
 
 class WeatherFilesParser:
