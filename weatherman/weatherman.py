@@ -66,7 +66,6 @@ class WeatherResultCalculation:
     def average_field(self, weather_readings, field_name):
         return sum(r.get(field_name) for r in weather_readings)//len(weather_readings)
 
-
      
 class GenerateWeatherReports:
 
@@ -82,51 +81,50 @@ class GenerateWeatherReports:
 
     def generate_annual_report(self):
         weather_readings = self.file_parser.read_all_files()
-        if weather_readings:
-            max_tempr = self.weather_cal.max_field(weather_readings, 'max_tempr')
-            min_tempr = self.weather_cal.min_field(weather_readings, 'min_tempr')
-            max_humid = self.weather_cal.max_field(weather_readings, 'max_humid')
-
-            max_tempr_date = self.__get_date(max_tempr)
-            min_tempr_date = self.__get_date(min_tempr)
-            max_humidity_date = self.__get_date(max_humid)
-        
-            print(f'Highest: {max_tempr.get("max_tempr")}C on {max_tempr_date}')
-            print(f'Lowest: {min_tempr.get("min_tempr")}C on {min_tempr_date}')
-            print(f'Humidity: {max_humid.get("max_humid")}C on {max_humidity_date}')
-
-        else: 
+        if not weather_readings:
             print(f'Weather readings not available for given query')
+            return
+
+        max_tempr = self.weather_cal.max_field(weather_readings, 'max_tempr')
+        min_tempr = self.weather_cal.min_field(weather_readings, 'min_tempr')
+        max_humid = self.weather_cal.max_field(weather_readings, 'max_humid')
+
+        max_tempr_date = self.__get_date(max_tempr)
+        min_tempr_date = self.__get_date(min_tempr)
+        max_humidity_date = self.__get_date(max_humid)
+    
+        print(f'Highest: {max_tempr.get("max_tempr")}C on {max_tempr_date}')
+        print(f'Lowest: {min_tempr.get("min_tempr")}C on {min_tempr_date}')
+        print(f'Humidity: {max_humid.get("max_humid")}C on {max_humidity_date}')            
  
     def generate_monthly_report(self):
         weather_readings = self.file_parser.read_all_files()
-        if  weather_readings:
-            max_tempr_avg = self.weather_cal.average_field(weather_readings, 'max_tempr')
-            min_tempr_avg = self.weather_cal.average_field(weather_readings, 'min_tempr')
-            mean_humidity_avg = self.weather_cal.average_field(weather_readings, 'mean_humid')
-
-            print(f"Highest Average: {max_tempr_avg}C")
-            print(f"Lowest Average: {min_tempr_avg}C")
-            print(f"Average Mean Humidity: {mean_humidity_avg}%")
-
-        else: 
+        if not weather_readings:
             print(f'Weather readings not available for given query')
+            return
+
+        max_tempr_avg = self.weather_cal.average_field(weather_readings, 'max_tempr')
+        min_tempr_avg = self.weather_cal.average_field(weather_readings, 'min_tempr')
+        mean_humidity_avg = self.weather_cal.average_field(weather_readings, 'mean_humid')
+
+        print(f"Highest Average: {max_tempr_avg}C")
+        print(f"Lowest Average: {min_tempr_avg}C")
+        print(f"Average Mean Humidity: {mean_humidity_avg}%")
                 
     def generate_month_temprature_report(self, month):
         weather_readings = self.file_parser.read_all_files()
-        if weather_readings:
-            month = strftime('%B %Y', month)
-            print(f'{month}')
-            for r in weather_readings:
-                min_tempr = r.get("min_tempr")
-                max_tempr = r.get("max_tempr")
-                print(f'{strftime("%d", strptime(r.get("pkt"), "%Y-%m-%d"))}', end='')
-                print(f'{colored("+"*min_tempr, "blue")}{colored("+"*max_tempr, "red")}{min_tempr}-{max_tempr}')
-
-        else: 
+        if not weather_readings:
             print(f'Weather readings not available for given query')
-            
+            return
 
+        month = strftime('%B %Y', month)
+        print(f'{month}')
+        for r in weather_readings:
+            min_tempr = r.get("min_tempr")
+            max_tempr = r.get("max_tempr")
+            print(f'{strftime("%d", strptime(r.get("pkt"), "%Y-%m-%d"))}', end='')
+            print(f'{colored("+"*min_tempr, "blue")}{colored("+"*max_tempr, "red")}{min_tempr}-{max_tempr}')
+            
 
 def check_date(value):
     if '/' not in value:
