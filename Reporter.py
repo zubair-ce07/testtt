@@ -1,29 +1,35 @@
-
-def report_e(result):
-    print("Highest: {}C on {}".format(
-        result["max_temperature"]["temperature"],
-        result["max_temperature"]["date"].strftime("%B %d")))
-    print("Lowest: {}C on {}".format(
-        result["min_temperature"]["temperature"],
-        result["min_temperature"]["date"].strftime("%B %d")))
-    print("Humidity: {}% on {}".format(
-        result["max_humidity"]["humidity"],
-        result["max_humidity"]["date"].strftime("%B %d")))
+from Computer import Computer
 
 
-def report_a(result):
-    print("Highest Average: {}C".format(result["max_avg_temperature"]))
-    print("Lowest Average: {}C".format(result["min_avg_temperature"]))
-    print("Average Mean Humidity: {}%".format(result["max_avg_humidity"]))
+class Reporter:
+    def __init__(self, data):
+        self.__computer = Computer(data)
 
+    def report_e(self, year):
+        result_e = self.__computer.result_e(year)
+        print("Highest: {}C on {}".format(
+            result_e[0].max_temperature,
+            result_e[0].date.strftime("%B %d")))
+        print("Lowest: {}C on {}".format(
+            result_e[1].min_temperature,
+            result_e[1].date.strftime("%B %d")))
+        print("Humidity: {}% on {}".format(
+            result_e[2].max_humidity,
+            result_e[2].date.strftime("%B %d")))
 
-def report_c(result):
-    red = "\033[1;31m"
-    blue = "\033[1;34m"
-    normal = "\033[0;0m"
-    print(result['month'], result['year'])
-    for day in range(len(result['max_temperatures'])):
-        print("%02d" % (day+1),
-              blue + "+" * result['min_temperatures'][day] + red + "+" * result['max_temperatures'][day],
-              normal + "%02dC - %02dC" % (result['min_temperatures'][day], result['max_temperatures'][day]))
+    def report_a(self, month, year):
+        result_a = self.__computer.result_a(month, year)
+        print("Highest Average: {}C".format(result_a[0].mean_temperature))
+        print("Lowest Average: {}C".format(result_a[1].mean_temperature))
+        print("Average Mean Humidity: {}%".format(result_a[2].mean_humidity))
 
+    def report_c(self, month, year):
+        print(month, year)
+        result_c = self.__computer.result_c(month, year)
+        red = "\033[1;31m"
+        blue = "\033[1;34m"
+        normal = "\033[0;0m"
+        for day in result_c:
+            print("%02d" % day.date.day,
+                  blue + "+" * day.min_temperature + red + "+" * day.max_temperature,
+                  normal + "%02dC - %02dC" % (day.min_temperature, day.max_temperature))

@@ -3,23 +3,23 @@
 from WeatherRecord import WeatherRegister
 import argparse
 from Parser import parse_month as psm
-from Computer import *
-from Reporter import *
+from Reporter import Reporter
 
 
 def main(argv):
     records = WeatherRegister()
-    if not argv.e or argv.a or argv.c:
+    if not argv.e and argv.a and argv.c:
         parser.error('No action requested, add at-least one action (-e, -a, -c)')
     records.read_dir(argv.path)
+    reporter = Reporter(records)
     if argv.e:
-        report_e(result_e(argv.e, records))
-    if argv.c:
-        month, year = psm(argv.c)
-        report_c(result_c(month, year, records))
+        reporter.report_e(argv.e)
     if argv.a:
         month, year = psm(argv.a)
-        report_c(result_c(month, year, records))
+        reporter.report_a(month, year)
+    if argv.c:
+        month, year = psm(argv.c)
+        reporter.report_c(month, year)
 
 
 if __name__ == "__main__":

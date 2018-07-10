@@ -38,9 +38,5 @@ class WeatherRegister:
                     weather_record.mean_temperature = psr(row["Mean TemperatureC"])
                     weather_record.max_humidity = psr(row["Max Humidity"])
                     weather_record.mean_humidity = psr(row[" Mean Humidity"])
-                    self.__data[year_month[2]][year_month[3][:3]].append(weather_record)
-
-
-wr = WeatherRegister()
-wr.read_dir("weatherfiles/")
-print(wr)
+                    if weather_record.max_humidity is not None:
+                        self.__data[year_month[2]][year_month[3][:3]].append(weather_record)
