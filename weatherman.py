@@ -14,7 +14,7 @@ def main():
                                                  'weather information and'
                                                  ' visualizes it.')
 
-    parser.add_argument('directory', help='directory of the weather readings.')
+    parser.add_argument('directory', help='directory of the weather readings.', type=directory_validate)
     parser.add_argument('-e', '--extreme', default='', help='option for extreme '
                         'weather report format:yyyy', type=year_validate)
     parser.add_argument('-a', '--average', default='', help='option for average'
@@ -24,11 +24,7 @@ def main():
 
     args = parser.parse_args()
 
-    if path.exists(args.directory):
-        reading_file_paths = glob(args.directory+'/*.txt')
-    else:
-        print("Invalid path.")
-
+    reading_file_paths = glob(args.directory+'/*.txt')
     weather_reading_files = []
     for file_path in reading_file_paths:
             opened_file = open(file_path, 'r')
@@ -79,6 +75,7 @@ def load_readings(reading_files='', year='', month=''):
             files_needed = list(filter(lambda x: re.match(expression, x.name), reading_files))
         for weather_reading_file in files_needed:
             weather_csv = csv.DictReader(weather_reading_file)
+            weather_reading_file.seek(0)
             for row in weather_csv:
                 daily_readings.append(WeatherReading(row))
 
@@ -132,6 +129,13 @@ def month_validate(month_input):
         return month_input
     else:
         raise argparse.ArgumentTypeError(month_input+" is invalid format please enter yyyy/mm")
+
+
+def directory_validate(input_directory):
+    if path.exists(input_directory):
+        return input_directory
+    else:
+        raise argparse.ArgumentTypeError(input_directory + ' is invalid directory.')
 
 
 class ColorOutput:
