@@ -17,6 +17,9 @@ class WeatherRegister:
     def __init__(self):
         self.__data = {}
 
+    def __getitem__(self, item):
+        return self.__data[item]
+
     def read_dir(self, directory_path):
         for file_path in glob.glob(directory_path + 'Murree_weather_*_*.txt'):
             year_month = str.split(file_path, '_')
