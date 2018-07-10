@@ -26,32 +26,11 @@ def main():
 
     weather_readings = load_weather_data(args.directory)
     if args.extreme:
-        weather_readings_extreme = list(filter(lambda x: x.pkt.startswith(args.extreme), weather_readings))
-        if weather_readings_extreme:
-            extreme_weather_results = WeatherReport.yearly_results(weather_readings_extreme)
-            weather_report_extreme(extreme_weather_results)
-        else:
-            print("Readings not available for " + args.extreme)
+        extreme_weather_handler(weather_readings, args.extreme)
     if args.average:
-        input_date_average = args.average
-        input_date_average = input_date_average.split('/')
-        average_weather_regex = input_date_average[0]+'-'+str(int(input_date_average[1]))+'-'
-        weather_readings_average = list(filter(lambda x: re.match(average_weather_regex, x.pkt), weather_readings))
-        if weather_readings_average:
-            average_weather_results = WeatherReport.monthly_results(weather_readings_average)
-            weather_report_average(average_weather_results)
-        else:
-            print("Readings not available for " + args.average)
-
+        average_weather_handler(weather_readings, args.average)
     if args.chart:
-        input_date_chart = args.chart
-        input_date_chart = input_date_chart.split('/')
-        chart_weather_regex = input_date_chart[0]+'-'+str(int(input_date_chart[1]))+'-'
-        weather_readings_chart = list(filter(lambda x: re.match(chart_weather_regex, x.pkt), weather_readings))
-        if weather_readings_chart:
-            weather_report_chart(weather_readings_chart)
-        else:
-            print("Readings not available for " + args.chart)
+        chart_weather_handler(weather_readings, args.chart)
 
 
 def load_weather_data(directory):
@@ -63,6 +42,36 @@ def load_weather_data(directory):
             for row in weather_reading_csv:
                 weather_readings.append(WeatherReading(row))
     return weather_readings
+
+
+def extreme_weather_handler(weather_readings, input_date_extreme):
+    weather_readings_extreme = list(filter(lambda x: x.pkt.startswith(input_date_extreme), weather_readings))
+    if weather_readings_extreme:
+        extreme_weather_results = WeatherReport.yearly_results(weather_readings_extreme)
+        weather_report_extreme(extreme_weather_results)
+    else:
+        print("Readings not available for " + input_date_extreme)
+
+
+def average_weather_handler(weather_readings, input_date_average):
+    input_date_average = input_date_average.split('/')
+    average_weather_regex = input_date_average[0] + '-' + str(int(input_date_average[1])) + '-'
+    weather_readings_average = list(filter(lambda x: re.match(average_weather_regex, x.pkt), weather_readings))
+    if weather_readings_average:
+        average_weather_results = WeatherReport.monthly_results(weather_readings_average)
+        weather_report_average(average_weather_results)
+    else:
+        print("Readings not available for " + input_date_average)
+
+
+def chart_weather_handler(weather_readings, input_date_chart):
+    input_date_chart = input_date_chart.split('/')
+    chart_weather_regex = input_date_chart[0] + '-' + str(int(input_date_chart[1])) + '-'
+    weather_readings_chart = list(filter(lambda x: re.match(chart_weather_regex, x.pkt), weather_readings))
+    if weather_readings_chart:
+        weather_report_chart(weather_readings_chart)
+    else:
+        print("Readings not available for " + input_date_chart)
 
 
 def weather_report_extreme(result):
@@ -103,20 +112,19 @@ def weather_report_chart(weather_readings):
 def year_validate(year_input):
     if not year_input or re.match('\d{4}$', year_input):
         return year_input
-    else:
-        raise argparse.ArgumentTypeError(year_input+" is invalid format please enter yyyy")
+    raise argparse.ArgumentTypeError(year_input+" is invalid format please enter yyyy")
 
 
 def month_validate(month_input):
     if not month_input or re.match('\d{4}/\d{1,2}$', month_input):
         return month_input
-    else:
-        raise argparse.ArgumentTypeError(month_input+" is invalid format please enter yyyy/mm")
+    raise argparse.ArgumentTypeError(month_input+" is invalid format please enter yyyy/mm")
 
 
 def directory_validate(input_directory):
     if path.exists(input_directory):
         return input_directory
+    raise argparse.ArgumentTypeError(input_directory + " is invalid directory")
 
 
 class ColorOutput:
