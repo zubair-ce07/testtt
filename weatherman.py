@@ -74,7 +74,6 @@ def weather_report_extreme(result):
     print(f"Highest: {result.highest_reading}C on {high_day:%B %d}")
     print(f"Lowest: {result.lowest_reading}C on {low_day:%B %d}")
     print(f"Humidity: {result.humidity_reading}% on {humid_day:%B %d}")
-    print("")
 
 
 def weather_report_average(result):
@@ -82,7 +81,6 @@ def weather_report_average(result):
     print(f"Highest Average: {result.highest_reading}C")
     print(f"Lowest Average: {result.lowest_reading}C")
     print(f"Average mean humidity: {result.humidity_reading}%")
-    print("")
 
 
 def weather_report_chart(weather_readings):
@@ -101,18 +99,16 @@ def weather_report_chart(weather_readings):
                   f"C-{reading.max_temperature}C")
         day_number += 1
 
-    print("")
-
 
 def year_validate(year_input):
-    if re.match('\d\d\d\d$', year_input) or not year_input:
+    if not year_input or re.match('\d{4}$', year_input):
         return year_input
     else:
         raise argparse.ArgumentTypeError(year_input+" is invalid format please enter yyyy")
 
 
 def month_validate(month_input):
-    if re.match('\d\d\d\d/\d?\d$', month_input) or not month_input:
+    if not month_input or re.match('\d{4}/\d{1,2}$', month_input):
         return month_input
     else:
         raise argparse.ArgumentTypeError(month_input+" is invalid format please enter yyyy/mm")
@@ -121,8 +117,6 @@ def month_validate(month_input):
 def directory_validate(input_directory):
     if path.exists(input_directory):
         return input_directory
-    else:
-        raise argparse.ArgumentTypeError(input_directory + ' is invalid directory.')
 
 
 class ColorOutput:
