@@ -65,11 +65,12 @@ class LornajaneSpider(CrawlSpider):
         items = {
             'skus': {}
         }
-        for size in self.size(response):
+        for idx, size in enumerate(self.size_color(response)['size']):
             values = {
                 'color': self.color(response),
                 'currency': self.currency(response),
                 'price': self.price(response),
+                'stock': self.stock(idx, self.size_color(response)['stock']),
                 'size': size
             }
             items['skus']['{0}_{1}_{2}'.format(self.sku_id(response), size, self.color(response))] = values
@@ -82,21 +83,33 @@ class LornajaneSpider(CrawlSpider):
         return response.urljoin(response.css('.product-slider-image > div.item > picture > source::'
                                              'attr(srcset)')[0].extract())
 
+    def stock(self, idx, stock_list):
+        return 'Out of Stock' if 'disabled' in stock_list[idx]  else 'In Stock'
+
     def records_for_category(self, response):
             return response.css('.count-text::text').extract()[1].split(' ')
 
     def get_sub_prod_links(self, response):
-        prod = LinkExtractor(restrict_css='div.product-item > div.product-grid-item > div:nth-child(1) > a:nth-child(1)'
-                      ,strip=True).extract_links(response)
+        prod = LinkExtractor(restrict_css='div.product-item > div.product-grid-item > div:nth-child(1) > a:nth-child(1)',
+                             strip=True).extract_links(response)
         return [p.url for p in prod]
 
     def color_links(self, response):
         prod = LinkExtractor(restrict_css='.color-swatch > ul:nth-child(1) > li > a:not(.selected)', attrs='data-url').extract_links(response)
         return [p.url for p in prod]
 
-    def size(self,response):
-        size = response.css('#sizeWrap .product-detail-swatch-btn::text').extract()
-        return [s.strip() for s in size]
+    def size_color(self,response):
+        sz_selector = response.css('#sizeWrap > a').extract()
+        sz_selector = [s.encode('utf-8') for s in sz_selector]
+        col_size = {
+            'stock': [],
+            'size': []
+        }
+        for i in sz_selector:
+            resp = scrapy.http.HtmlResponse(url=response.url, body=i)
+            col_size['stock'].append(resp.css('a::attr(class)').extract()[0].strip())
+            col_size['size'].append(resp.css('a::text ').extract()[0].strip())
+        return col_size
 
     def product_name(self, response):
         return response.css('.pro-heading-sec > h1:nth-child(3)::text').extract()[0]
