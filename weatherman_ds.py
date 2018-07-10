@@ -1,7 +1,7 @@
 class WeatherReading:
 
     def __init__(self, conditions):
-        self.pkt = conditions.get('PKT')
+        self.pkt = conditions.get('PKT', conditions.get('PKST'))
         self.max_temperature = int(conditions.get('Max TemperatureC')) \
             if conditions.get('Max TemperatureC') else None
         self.min_temperature = int(conditions.get('Min TemperatureC')) \
