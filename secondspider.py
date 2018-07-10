@@ -3,7 +3,9 @@ import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
+
 class OrsaySpider(CrawlSpider):
+
     name = 'orsay.com'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/']
@@ -11,8 +13,7 @@ class OrsaySpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(restrict_css='.header-navigation > ul > li:nth-child(-n+4) > a.has-sub-menu.'
-                            'level-1.visible-xlg', strip=True),
-                            callback='parse_main_products'),
+                                        'level-1.visible-xlg', strip=True), callback='parse_main_products')
     )
 
     def parse_main_products(self, response):
@@ -47,8 +48,8 @@ class OrsaySpider(CrawlSpider):
     def parse_cols(self, response):
         color_links = response.meta['color_links']
         item = response.meta['item']
-        item['image_url']+=self.image_url(response)
-        item['product_name']+=self.product_name(response)
+        item['image_url'] += self.image_url(response)
+        item['Product_name'] += self.product_name(response)
         item['skus'].update(self.populate_sku_for_all_sizes(response))
 
         if color_links:
@@ -61,11 +62,11 @@ class OrsaySpider(CrawlSpider):
         item = {
             'skus': {}
         }
-        for idx, siz in enumerate(self.size(response)):
+        for idx, siz in enumerate(self.size_color(response)['size']):
             values = {'color': self.color(response),
                       'currency': self.currency(response),
                       'price': self.price(response),
-                      'stock': self.stock(idx, response),
+                      'stock': self.stock(idx, self.size_color(response)['stock']),
                       'size': siz}
             item['skus']['{0}_{1}'.format(self.sku_id(response), siz)] = values
         return item['skus']
@@ -73,9 +74,8 @@ class OrsaySpider(CrawlSpider):
     def image_url(self, response):
         return response.css('.product-col-1 > div.js-slick-swiper > div > img::attr(src)').extract()[0]
 
-    def stock(self, idx, response):
-        stock_list = response.css('.size > li::attr(class)').extract()
-        return 'Out of Stock' if 'unselectable' in stock_list[idx]  else 'In Stock'
+    def stock(self, idx, stock_list):
+        return 'Out of Stock' if 'unselectable' in stock_list[idx] else 'In Stock'
 
     def next_page_link(self, next_page, response):
         return '{0}?sz=12&start={1}'.format(response.url.split('?sz=')[0], next_page)
@@ -100,15 +100,25 @@ class OrsaySpider(CrawlSpider):
         prod = LinkExtractor(restrict_css='.product-image a.thumb-link', strip=True).extract_links(response)
         return [p.url for p in prod]
 
-    def size(self, response):
-        size = response.css('.size li a::text').extract()
-        return [s.strip() for s in size]
+    def size_color(self, response):
+        sz_selector = response.css('.size > li').extract()
+        sz_selector = [s.encode('utf-8') for s in sz_selector]
+        col_size = {
+            'stock': [],
+            'size': []
+        }
+        for i in sz_selector:
+            resp = scrapy.http.HtmlResponse(url=response.url, body=i)
+            col_size['stock'].append(resp.css('li::attr(class)').extract()[0].strip())
+            col_size['size'].append(resp.css('li > a::text ').extract()[0].strip())
+        return col_size
 
     def price(self, response):
         return response.css('.price-sales::text').extract()[0].strip().split(' ')[0]
 
     def color(self, response):
-        return response.css('.color li.selectable.selected a.swatchanchor::attr(title)').extract()[0].strip().split(' - ')[1]
+        return response.css('.color li.selectable.selected a.swatchanchor::attr(title)'
+                            ).extract()[0].strip().split(' - ')[1]
 
     def color_links(self, response):
         return response.css('.color li a.swatchanchor::attr(href)').extract()
