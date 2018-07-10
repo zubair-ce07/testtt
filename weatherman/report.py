@@ -9,10 +9,10 @@ class Report():
     def __init__(self):
         self.color = Colors()
 
-    def year_report(self, result):
-        print("Highest: {}C on {} {}".format(result['Value'][0], result['Month'][0], result['Day'][0]))
-        print("Lowest: {}C on {} {}".format(result['Value'][1], result['Month'][1], result['Day'][1]))
-        print("Humidity: {}% on {} {}".format(result['Value'][2], result['Month'][2], result['Day'][2]))
+    def year_report(self, max_temp, min_temp, max_humidity):
+        print("Highest: {}C on {} {}".format(max_temp['Value'], max_temp['Month'], max_temp['Day']))
+        print("Lowest: {}C on {} {}".format(min_temp['Value'], min_temp['Month'], min_temp['Day']))
+        print("Humidity: {}% on {} {}".format(max_humidity['Value'], max_humidity['Month'], max_humidity['Day']))
 
     def month_report(self, avg_highest_temp, avg_lowest_temp, avg_mean_humidity):
         print("Highest Average: {}C".format(avg_highest_temp))

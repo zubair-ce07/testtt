@@ -21,8 +21,8 @@ if __name__ == '__main__':
         else:
             calculation = Calculate(readings)
             if operation == '-e':
-                result = calculation.year_calculation()
-                generate_report.year_report(result)
+                max_temp, min_temp, max_humidity = calculation.year_calculation()
+                generate_report.year_report(max_temp, min_temp, max_humidity)
             elif operation == '-a':
                 avg_highest_temp, avg_lowest_temp, avg_mean_humidity = calculation.month_calculation()
                 generate_report.month_report(avg_highest_temp, avg_lowest_temp, avg_mean_humidity)

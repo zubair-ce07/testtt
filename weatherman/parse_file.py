@@ -35,8 +35,14 @@ class ParseFile():
         return dict(readings)
 
     def _convertDataType(self, entry):
-        entry[0] = datetime.strptime(entry[0], '%Y-%m-%d')
         for index in range(1, len(entry) - 2):
-            entry[index] = float(entry[index]) if entry[index] else None
-        entry[-2] = str(entry[-2])
-        entry[-1] = float(entry[-1]) if entry[-1] else None
+            try:
+                datetime.strptime(entry[index], '%Y-%m-%d')
+            except ValueError:
+                try:
+                    entry[index] = int(entry[index])
+                except ValueError:
+                    try:
+                        entry[index] = float(entry[index])
+                    except ValueError:
+                        pass

@@ -1,3 +1,4 @@
+import collections
 import sys
 
 
@@ -19,26 +20,27 @@ class Calculate():
         self.index_mean_humidity = self.parameters.index('Mean Humidity')
 
     def year_calculation(self):
-        result = {'Month': [None]*3, 'Day': [None]*3, 'Value': [0]*3}
-        result['Value'].append(sys.maxsize)
+        max_temp = {'Month': None, 'Day': None, 'Value': 0}
+        min_temp = {'Month': None, 'Day': None, 'Value': sys.maxsize}
+        max_humidity = {'Month': None, 'Day': None, 'Value': 0}
         for month, month_entry in self.readings.items():
             for day_entry in month_entry:
                 high_temp = day_entry[self.index_max_temp]
-                if high_temp and high_temp > result['Value'][0]:
-                    result['Value'][0] = high_temp
-                    result['Month'][0] = month
-                    result['Day'][0] = month_entry.index(day_entry) + 1
+                if high_temp and high_temp > max_temp['Value']:
+                    max_temp['Value'] = high_temp
+                    max_temp['Month'] = month
+                    max_temp['Day'] = month_entry.index(day_entry) + 1
                 low_temp = day_entry[self.index_min_temp]
-                if low_temp and low_temp < result['Value'][1]:
-                    result['Value'][1] = low_temp
-                    result['Month'][1] = month
-                    result['Day'][1] = month_entry.index(day_entry) + 1
+                if low_temp and low_temp < min_temp['Value']:
+                    min_temp['Value'] = low_temp
+                    min_temp['Month'] = month
+                    min_temp['Day'] = month_entry.index(day_entry) + 1
                 high_humid = day_entry[self.index_max_humidity]
-                if high_humid and high_temp > result['Value'][2]:
-                    result['Value'][2] = high_humid
-                    result['Month'][2] = month
-                    result['Day'][2] = month_entry.index(day_entry) + 1
-        return result
+                if high_humid and high_temp > max_humidity['Value']:
+                    max_humidity['Value'] = high_humid
+                    max_humidity['Month'] = month
+                    max_humidity['Day'] = month_entry.index(day_entry) + 1
+        return max_temp, min_temp, max_humidity
 
     def month_calculation(self):
         avg_highest_temp, avg_lowest_temp, avg_mean_humidity = 0, 0, 0
