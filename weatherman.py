@@ -45,7 +45,7 @@ def load_weather_data(directory):
 
 
 def extreme_weather_handler(weather_readings, input_date_extreme):
-    weather_readings_extreme = list(filter(lambda x: x.pkt.startswith(input_date_extreme), weather_readings))
+    weather_readings_extreme = list(filter(lambda day: day.pkt.startswith(input_date_extreme), weather_readings))
     if weather_readings_extreme:
         extreme_weather_results = WeatherReport.yearly_results(weather_readings_extreme)
         weather_report_extreme(extreme_weather_results)
@@ -54,9 +54,8 @@ def extreme_weather_handler(weather_readings, input_date_extreme):
 
 
 def average_weather_handler(weather_readings, input_date_average):
-    input_date_average = input_date_average.split('/')
-    average_weather_regex = input_date_average[0] + '-' + str(int(input_date_average[1])) + '-'
-    weather_readings_average = list(filter(lambda x: re.match(average_weather_regex, x.pkt), weather_readings))
+    average_weather_date = datetime.strptime(input_date_average, '%Y/%m').strftime('%Y-%-m-')
+    weather_readings_average = list(filter(lambda day: day.pkt.startswith(average_weather_date), weather_readings))
     if weather_readings_average:
         average_weather_results = WeatherReport.monthly_results(weather_readings_average)
         weather_report_average(average_weather_results)
@@ -65,11 +64,10 @@ def average_weather_handler(weather_readings, input_date_average):
 
 
 def chart_weather_handler(weather_readings, input_date_chart):
-    input_date_chart = input_date_chart.split('/')
-    chart_weather_regex = input_date_chart[0] + '-' + str(int(input_date_chart[1])) + '-'
-    weather_readings_chart = list(filter(lambda x: re.match(chart_weather_regex, x.pkt), weather_readings))
+    chart_weather_date = datetime.strptime(input_date_chart, '%Y/%m').strftime('%Y-%-m-')
+    weather_readings_chart = list(filter(lambda day: day.pkt.startswith(chart_weather_date), weather_readings))
     if weather_readings_chart:
-        weather_report_chart(weather_readings_chart)
+        weather_report_chart(weather_readings_chart, input_date_chart)
     else:
         print("Readings not available for " + input_date_chart)
 
@@ -92,13 +90,12 @@ def weather_report_average(result):
     print(f"Average mean humidity: {result.humidity_reading}%")
 
 
-def weather_report_chart(weather_readings):
+def weather_report_chart(weather_readings, input_date_chart):
     """"Displays the bar chart for temperatures through the month"""
-    report_month = datetime.strptime(weather_readings[0].pkt, "%Y-%m-%d").strftime('%B %Y')
-
     def repeat_plus(x): return '+' * x
 
-    print(report_month)
+    report_month = datetime.strptime(input_date_chart, "%Y/%m")
+    print(f"{report_month:%B %Y}")
     day_number = 1
     for reading in weather_readings:
 
