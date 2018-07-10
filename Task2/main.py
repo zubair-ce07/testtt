@@ -30,15 +30,14 @@ user_command_parser.add_argument("tasks_limit", help="This arg stores the total 
                                                      "that can be executed concurrently", type=validate_input_limit)
 
 user_cli_args = user_command_parser.parse_args()
-c_spider = concurrent_spider.RecursiveConcurrentSpider(user_cli_args.site_to_crawl)
+c_spider = concurrent_spider.RecursiveConcurrentSpider(user_cli_args.site_to_crawl,
+                                                       user_cli_args.download_delay,
+                                                       int(user_cli_args.tasks_limit))
 
 loop = asyncio.get_event_loop()
 try:
     start_time = time.time()
-    loop.run_until_complete(c_spider.start_crawler([urlparse(c_spider.site_to_crawl)],
-                                                   int(user_cli_args.total_urls),
-                                                   user_cli_args.download_delay,
-                                                   int(user_cli_args.tasks_limit)))
+    loop.run_until_complete(c_spider.start_crawler([urlparse(c_spider.site_to_crawl)], int(user_cli_args.total_urls)))
 finally:
     loop.close()
 

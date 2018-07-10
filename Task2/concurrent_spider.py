@@ -10,35 +10,35 @@ import scraping_report
 
 
 class RecursiveConcurrentSpider:
-    def __init__(self, site_to_crawl):
+    def __init__(self, site_to_crawl, download_delay, concurrent_requests_limit):
         self.site_to_crawl = site_to_crawl
         self.spider_execution_report = scraping_report.CrawlingSummaryReport()
+        self.download_delay = download_delay
+        self.concurrent_requests_limit = concurrent_requests_limit
         self.__loop = asyncio.get_event_loop()
         self.__executor = concurrent.futures.ThreadPoolExecutor()
 
-    async def start_crawler(self, urls, urls_limit, download_delay, concurrent_requests_limit):
+    async def start_crawler(self, urls, urls_limit):
         if urls_limit > 0 and urls:
             urls, urls_limit = (urls[:urls_limit], 0) if len(urls) > urls_limit else (urls, urls_limit - len(urls))
 
-            get_request_results = await self.visit_urls(urls, download_delay, concurrent_requests_limit)
-
-            self.spider_execution_report.total_requests += len(urls)
+            get_request_results = await self.visit_urls(urls)
 
             for html_text, html_page_size in get_request_results:
                 self.spider_execution_report.bytes_downloaded += html_page_size
-                next_urls = self.get_next_urls(html_text)
-                return await self.start_crawler(next_urls, urls_limit, download_delay, concurrent_requests_limit)
+                return await self.start_crawler(self.get_next_urls(html_text), urls_limit)
 
-    async def visit_urls(self, urls, download_delay, concurrent_requests_limit):
-        tasks_limiting_semaphore = asyncio.BoundedSemaphore(concurrent_requests_limit)
+    async def visit_urls(self, urls):
+        tasks_limiting_semaphore = asyncio.BoundedSemaphore(self.concurrent_requests_limit)
 
         tasks = []
         for url in urls:
             tasks.append(self.make_get_request(url, tasks_limiting_semaphore))
             logging.info(f"{datetime.datetime.now().time()} - Visited page: {url.geturl()}")
-            await asyncio.sleep(download_delay)
+            await asyncio.sleep(self.download_delay)
 
         results = await asyncio.gather(*tasks)
+        self.spider_execution_report.total_requests += len(urls)
 
         return results
 
