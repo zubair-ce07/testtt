@@ -4,9 +4,10 @@ main function for assembling the weatherman code and running the program.
 """
 import sys
 
-from parse_file import ParseFile
 from calculate import Calculate
+from parse_file import ParseFile
 from report import Report
+
 
 path = sys.argv[1] + "/"
 parser = ParseFile()
