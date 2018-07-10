@@ -36,7 +36,7 @@ class ParseFile():
 
     def _convertDataType(self, entry):
         entry[0] = datetime.strptime(entry[0], '%Y-%m-%d')
-        for index in range(1, 21):
+        for index in range(1, len(entry) - 2):
             entry[index] = float(entry[index]) if entry[index] else None
-        entry[21] = str(entry[21])
-        entry[22] = float(entry[22]) if entry[22] else None
+        entry[-2] = str(entry[-2])
+        entry[-1] = float(entry[-1]) if entry[-1] else None
