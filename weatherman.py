@@ -1,7 +1,8 @@
 import calendar as cal
 import csv
 import argparse
-import utility as ut
+import glob as gb
+import os
 
 
 class DayForecast:
@@ -16,15 +17,6 @@ class DayForecast:
         self.min_humidity = read_list[9]
 
 
-# CONSTANTS
-WEATHER_CITY = "Murree_weather"
-YEAR_LENGTH = 12
-
-
-def get_month(string):
-    return string[:3]
-
-
 def get_year(action):
     year = 0
     for i in action or []:
@@ -32,82 +24,95 @@ def get_year(action):
     return year
 
 
+def print_blue(text, n):
+    print("\033[96m{}\033[00m".format(text) * n, end="")
+
+
+def print_red(text, n):
+    print("\033[31m{}\033[00m".format(text) * n, end="")
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
+
     parser.add_argument("directory", help="Directory to all weather files", type=str)
-    parser.add_argument("-e", "--e", help="Option E for Min Max", action="append")
-    parser.add_argument("-a", "--a", help="Option A for Min Max", action="append")
-    parser.add_argument("-c", "--c", help="Option C for Min Max", action="append")
+    parser.add_argument("-c", "--chart",
+                        help="Display bar charts for provided month in C (YY/MM)",
+                        action="append")
+    parser.add_argument("-e", "--extreme",
+                        help="Calculate max temp, humidity and min temp for year E (YY)",
+                        action="append")
+    parser.add_argument("-a", "--average",
+                        help="Calculate average of max temp, min temp, mean humidity for month in A (YY/MM)",
+                        action="append")
+
     return parser.parse_args()
 
 
-def parse_files(directory, read_list):
-    year = 2016
-    year_list = list(range(year, year - 13, -1))
+def parse_files(directory):
+    weather_records = []
+    os.chdir(directory)
 
-    # Reading all the files in the directory
-    for i in range(0, len(year_list)):
-        for j in range(0, YEAR_LENGTH):
-            file_location = ut.get_file_location(year_list[i], get_month(cal.month_name[j + 1]),
-                                                 WEATHER_CITY, directory)
-            try:
-                weather_file = open(file_location, "r")
-                reader = csv.reader(weather_file)
-                temp_readings = list(reader)
+    for file in gb.glob("*.txt"):
+        weather_file = open(file, "r")
+        reader = csv.reader(weather_file)
+        temp_readings = list(reader)
 
-                for j in range(1, len(temp_readings)):
-                    read_list.append(DayForecast(temp_readings[j]))
+        for j in range(1, len(temp_readings)):
+            single_day_record = DayForecast(temp_readings[j])
 
-            except:
-                print("File at location %s not found" % file_location)
-    print("\n")
+            if not (single_day_record.max_temp == '' or
+                    single_day_record.min_temp == '' or
+                    single_day_record.max_humidity == '' or
+                    single_day_record.mean_humidity == ''):
+                weather_records.append(DayForecast(temp_readings[j]))
+
+    return weather_records
 
 
-def calculate_results(args, readings):
-    list_subset = []
-    if args.e:
-        year = get_year(args.e)
-        for i in readings:
-            if year in i.date and not (i.max_temp == ''
-                                       and i.min_temp == ''
-                                       and i.max_humidity == ''):
-                list_subset.append(i)
+def calculate_results(args, weather_records):
+    weather_record_subset = []
+    if args.extreme:
+        year = get_year(args.extreme)
+        for i in weather_records:
+            if year in i.date:
+                weather_record_subset.append(i)
 
-        node_max = max(list_subset, key=lambda DayForecast: int(DayForecast.max_temp))
-        node_min = min(list_subset, key=lambda DayForecast: int(DayForecast.min_temp))
-        node_max_humidity = max(list_subset, key=lambda DayForecast: int(DayForecast.max_humidity))
+        maximum_temperature = max(weather_record_subset, key=lambda DayForecast: int(DayForecast.max_temp))
+        minimum_temperature = min(weather_record_subset, key=lambda DayForecast: int(DayForecast.min_temp))
+        maximum_humidity = max(weather_record_subset, key=lambda DayForecast: int(DayForecast.max_humidity))
 
-        generate_yearly_report(node_max, node_min, node_max_humidity)
-        list_subset.clear()
+        generate_yearly_report(maximum_temperature, minimum_temperature, maximum_humidity)
+        weather_record_subset.clear()
 
-    if args.a:
-        temp = get_year(args.a).split("/")
-        key = temp[0] + "-" + temp[1]
+    if args.average:
+        temp = get_year(args.average).split("/")
+        single_month = temp[0] + "-" + temp[1]
 
-        for i in readings:
-            if key in i.date and not (i.max_temp == ''
-                                      and i.min_temp == ''
-                                      and i.mean_humidity == ''):
-                list_subset.append(i)
+        for i in weather_records:
+            if single_month in i.date:
+                weather_record_subset.append(i)
 
-        avg_max_temp = round(sum(int(DayForecast.max_temp) for DayForecast in list_subset) / len(list_subset))
-        avg_min_temp = round(sum(int(DayForecast.min_temp) for DayForecast in list_subset) / len(list_subset))
-        avg_mean_humidity = round(sum(int(DayForecast.mean_humidity) for DayForecast in list_subset) / len(list_subset))
+        avg_maximum_temp = round(sum(int(DayForecast.max_temp)
+                                     for DayForecast in weather_record_subset) / len(weather_record_subset))
 
-        generate_monthly_report(avg_max_temp, avg_min_temp, avg_mean_humidity)
-        list_subset.clear()
+        avg_minimum_temp = round(sum(int(DayForecast.min_temp)
+                                     for DayForecast in weather_record_subset) / len(weather_record_subset))
 
-    if args.c:
+        avg_mean_humidity = round(sum(int(DayForecast.mean_humidity)
+                                      for DayForecast in weather_record_subset) / len(weather_record_subset))
+
+        generate_monthly_report(avg_maximum_temp, avg_minimum_temp, avg_mean_humidity)
+        weather_record_subset.clear()
+
+    if args.chart:
         day_index = 1
-        temp = get_year(args.c).split("/")
-        key = temp[0] + "-" + temp[1][1:]
+        temp = get_year(args.chart).split("/")
+        single_month = temp[0] + "-" + temp[1][1:]
 
         print(cal.month_name[int(temp[1])], temp[0])
-        for i in readings:
-            if key in i.date and not (i.max_temp == ''
-                                      and i.min_temp == ''
-                                      and i.mean_humidity == ''):
-
+        for i in weather_records:
+            if single_month in i.date:
                 # UNCOMMENT ONE OF ANY BAR CHART FORMATS
                 display_single_bar_chart(day_index, i.min_temp, i.max_temp)
                 # display_separate_bar_charts(day_index, i.min_temp, i.max_temp)
@@ -115,50 +120,53 @@ def calculate_results(args, readings):
                 day_index += 1
 
 
-def display_single_bar_chart(day, min_temp, max_temp):
+def display_single_bar_chart(day, minimum_temp, maximum_temp):
     print("%d " % day, end="")
-    ut.print_blue("+", int(min_temp))
-    ut.print_red("+", int(max_temp))
-    print(" %sC - %sC" % (min_temp, max_temp))
+    print_blue("+", int(minimum_temp))
+    print_red("+", int(maximum_temp))
+    print(" %sC - %sC" % (minimum_temp, maximum_temp))
 
 
-def display_separate_bar_charts(day, min_temp, max_temp):
+def display_separate_bar_charts(day, minimum_temp, maximum_temp):
     print("%d " % day, end="")
-    ut.print_red("+", int(max_temp))
-    print(" %sC" % max_temp)
+    print_red("+", int(maximum_temp))
+    print(" %sC" % maximum_temp)
 
     print("%d " % day, end="")
-    ut.print_blue("+", int(min_temp))
-    print(" %sC" % min_temp)
+    print_blue("+", int(minimum_temp))
+    print(" %sC" % minimum_temp)
 
 
-def get_date_params(string):
-    string = string.split("-")
-    return [string[0], string[1], string[2]]
+def get_date_params(date_str):
+    date_str = date_str.split("-")
+    return [date_str[0], date_str[1], date_str[2]]
 
 
-def generate_yearly_report(max_node, min_node, humidity_node):
-    year_max, month_max, date_max = get_date_params(max_node.date)
-    year_min, month_min, date_min = get_date_params(min_node.date)
-    year_humid, month_humid, date_humid = get_date_params(humidity_node.date)
+def generate_yearly_report(maximum_temperature, minimum_temperature, maximum_humidity):
+    year_max, month_max, date_max = get_date_params(maximum_temperature.date)
+    year_min, month_min, date_min = get_date_params(minimum_temperature.date)
+    year_humid, month_humid, date_humid = get_date_params(maximum_humidity.date)
 
-    print("Highest: %sC on %s %s" % (max_node.max_temp, cal.month_name[int(month_max)], date_max))
-    print("Lowest: %sC on %s %s" % (min_node.min_temp, cal.month_name[int(month_min)], date_min))
-    print("Humidity: %s%% on %s %s" % (humidity_node.max_humidity, cal.month_name[int(month_humid)], date_humid))
-    print('\n')
+    print("\nHighest: %sC on %s %s" % (maximum_temperature.max_temp,
+                                     cal.month_name[int(month_max)],
+                                     date_max))
+    print("Lowest: %sC on %s %s" % (minimum_temperature.min_temp,
+                                    cal.month_name[int(month_min)],
+                                    date_min))
+    print("Humidity: %s%% on %s %s\n" % (maximum_humidity.max_humidity,
+                                         cal.month_name[int(month_humid)],
+                                         date_humid))
 
 
 def generate_monthly_report(avg_max_temp, avg_lowest_temp, avg_mean_humidity):
     print("Highest Average: %dC" % avg_max_temp)
     print("Lowest Average: %dC" % avg_lowest_temp)
-    print("Average Mean Humidity: %d%%" % avg_mean_humidity)
-    print('\n')
+    print("Average Mean Humidity: %d%%\n" % avg_mean_humidity)
 
 
 def main(arguments):
-    readings_list = []
-    parse_files(arguments.directory, readings_list)
-    calculate_results(arguments, readings_list)
+    weather_records = parse_files(arguments.directory)
+    calculate_results(arguments, weather_records)
 
 
 if __name__ == '__main__':
