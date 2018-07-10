@@ -4,6 +4,7 @@ import math
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
+
 class LornajaneSpider(CrawlSpider):
 
     name = 'LornaJaneSpider'
@@ -51,8 +52,8 @@ class LornajaneSpider(CrawlSpider):
     def parse_cols(self, response):
         color_links = response.meta['color_links']
         item = response.meta['item']
-        item['image_url']+=self.image_url(response)
-        item['product_name']+=self.product_name(response)
+        item['image_url'] += self.image_url(response)
+        item['product_name'] += self.product_name(response)
         item['skus'].update(self.populate_sku_for_all_sizes(response))
 
         if color_links:
@@ -84,14 +85,14 @@ class LornajaneSpider(CrawlSpider):
                                              'attr(srcset)')[0].extract())
 
     def stock(self, idx, stock_list):
-        return 'Out of Stock' if 'disabled' in stock_list[idx]  else 'In Stock'
+        return 'Out of Stock' if 'disabled' in stock_list[idx] else 'In Stock'
 
     def records_for_category(self, response):
             return response.css('.count-text::text').extract()[1].split(' ')
 
     def get_sub_prod_links(self, response):
-        prod = LinkExtractor(restrict_css='div.product-item > div.product-grid-item > div:nth-child(1) > a:nth-child(1)',
-                             strip=True).extract_links(response)
+        prod = LinkExtractor(restrict_css='div.product-item > div.product-grid-item > div:nth-child(1) '
+                                          '> a:nth-child(1)',strip=True).extract_links(response)
         return [p.url for p in prod]
 
     def color_links(self, response):
