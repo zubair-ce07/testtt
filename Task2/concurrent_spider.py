@@ -2,10 +2,10 @@ from urllib.parse import urlparse
 from urllib.parse import urljoin
 from parsel import Selector
 import concurrent.futures
-import requests
 import asyncio
-import logging
 import datetime
+import requests
+import logging
 import scraping_report
 
 

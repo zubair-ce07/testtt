@@ -1,8 +1,8 @@
 from urllib.parse import urlparse
 import argparse
-import validators
 import asyncio
 import time
+import validators
 import concurrent_spider
 
 
