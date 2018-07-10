@@ -3,9 +3,7 @@ from urllib.parse import urljoin
 from parsel import Selector
 import concurrent.futures
 import asyncio
-import datetime
 import requests
-import logging
 import scraping_report
 
 
@@ -22,7 +20,8 @@ class RecursiveConcurrentSpider:
         if urls_limit > 0 and urls:
             urls, urls_limit = (urls[:urls_limit], 0) if len(urls) > urls_limit else (urls, urls_limit - len(urls))
 
-            get_request_results = await self.visit_urls(urls)
+            get_request_results, total_urls_visited = await self.visit_urls(urls)
+            self.spider_execution_report.total_requests += total_urls_visited
 
             for html_text, html_page_size in get_request_results:
                 self.spider_execution_report.bytes_downloaded += html_page_size
@@ -31,16 +30,16 @@ class RecursiveConcurrentSpider:
     async def visit_urls(self, urls):
         tasks_limiting_semaphore = asyncio.BoundedSemaphore(self.concurrent_requests_limit)
 
+        total_urls_visited = 0
         tasks = []
         for url in urls:
             tasks.append(self.make_get_request(url, tasks_limiting_semaphore))
-            logging.info(f"{datetime.datetime.now().time()} - Visited page: {url.geturl()}")
+            total_urls_visited += 1
             await asyncio.sleep(self.download_delay)
 
         results = await asyncio.gather(*tasks)
-        self.spider_execution_report.total_requests += len(urls)
 
-        return results
+        return results, total_urls_visited
 
     async def make_get_request(self, url, tasks_limiting_semaphore):
         async with tasks_limiting_semaphore:
