@@ -42,7 +42,6 @@ class OrsaySpider(CrawlSpider):
             yield scrapy.http.Request(color_links.pop(0), callback=self.parse_cols,
                                       meta={'color_links': color_links, 'item': item})
         else:
-            item['skus'] = self.populate_sku_for_all_sizes(response)
             yield item
 
     def parse_cols(self, response):
@@ -68,7 +67,7 @@ class OrsaySpider(CrawlSpider):
                       'price': self.price(response),
                       'stock': self.stock(idx, response),
                       'size': siz}
-            item['skus']['{0}_{1}_{2}'.format(self.sku_id(response), size, self.color(response))] = values
+            item['skus']['{0}_{1}'.format(self.sku_id(response), siz)] = values
         return item['skus']
 
     def image_url(self, response):
