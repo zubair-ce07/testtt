@@ -24,14 +24,7 @@ def main():
 
     args = parser.parse_args()
 
-    reading_file_paths = glob(args.directory+'/*.txt')
-    weather_readings = []
-    for file_path in reading_file_paths:
-            with open(file_path, 'r') as opened_reading_file:
-                weather_reading_csv = csv.DictReader(opened_reading_file)
-                for row in weather_reading_csv:
-                    weather_readings.append(WeatherReading(row))
-
+    weather_readings = load_weather_data(args.directory)
     if args.extreme:
         weather_readings_extreme = list(filter(lambda x: x.pkt.startswith(args.extreme), weather_readings))
         if weather_readings_extreme:
@@ -59,6 +52,17 @@ def main():
             weather_report_chart(weather_readings_chart)
         else:
             print("Readings not available for " + args.chart)
+
+
+def load_weather_data(directory):
+    reading_file_paths = glob(directory + '/*.txt')
+    weather_readings = []
+    for file_path in reading_file_paths:
+        with open(file_path, 'r') as opened_reading_file:
+            weather_reading_csv = csv.DictReader(opened_reading_file)
+            for row in weather_reading_csv:
+                weather_readings.append(WeatherReading(row))
+    return weather_readings
 
 
 def weather_report_extreme(result):
