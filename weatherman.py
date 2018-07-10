@@ -64,19 +64,19 @@ def main():
 def weather_report_extreme(result):
     """"Displays the highest lowest temperature and highest humidity report"""
     high_day = datetime.strptime(result.highest_day, "%Y-%m-%d").strftime('%B %d')
-    print("Highest: " + str(result.highest_reading) + "C on " + high_day)
+    print(f"Highest: {result.highest_reading}C on {high_day}")
     low_day = datetime.strptime(result.lowest_day, "%Y-%m-%d").strftime('%B %d')
-    print("Lowest: " + str(result.lowest_reading) + "C on " + low_day)
+    print(f"Lowest: {result.lowest_reading}C on {low_day}")
     humid_day = datetime.strptime(result.humidity_day, "%Y-%m-%d").strftime('%B %d')
-    print("Humidity: " + str(result.humidity_reading) + "% on " + humid_day)
+    print(f"Humidity: {result.humidity_reading}% on {humid_day}")
     print("")
 
 
 def weather_report_average(result):
     """Displays the average highest lowest temperature and humidity of a month"""
-    print("Highest Average: " + str(result.highest_reading) + "C")
-    print("Lowest Average: " + str(result.lowest_reading) + "C")
-    print("Average mean humidity: " + str(result.humidity_reading) + "%")
+    print(f"Highest Average: {result.highest_reading}C")
+    print(f"Lowest Average: {result.lowest_reading}C")
+    print(f"Average mean humidity: {result.humidity_reading}%")
     print("")
 
 
@@ -84,13 +84,18 @@ def weather_report_chart(weather_readings):
     """"Displays the bar chart for temperatures through the month"""
     report_month = datetime.strptime(weather_readings[0].pkt, "%Y-%m-%d").strftime('%B %Y')
 
+    def repeat_plus(x): return '+' * x
+
     print(report_month)
+    day_number = 1
     for reading in weather_readings:
-        day_number = datetime.strptime(reading.pkt, "%Y-%m-%d").strftime('%d')
+
         if reading.max_temperature and reading.min_temperature:
-            print(day_number + ColorOutput.BLUE + "+" * reading.min_temperature + ColorOutput.RED +
-                  "+" * reading.max_temperature + ColorOutput.RESET + str(reading.min_temperature) +
-                  "C-" + str(reading.max_temperature) + "C")
+            print(f"{day_number:{0}{2}}{ColorOutput.BLUE}{repeat_plus(reading.min_temperature)}{ColorOutput.RED}"
+                  f"{repeat_plus(reading.max_temperature)}{ColorOutput.RESET}{reading.min_temperature}"
+                  f"C-{reading.max_temperature}C")
+        day_number += 1
+
     print("")
 
 
