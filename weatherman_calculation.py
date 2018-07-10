@@ -6,8 +6,8 @@ class WeatherReport:
 
     @staticmethod
     def yearly_results(readings):
-        mean_temp_filtered = list(filter(lambda x: x.mean_temperature, readings))
-        humidity_filtered = list(filter(lambda x: x.mean_humidity, readings))
+        mean_temp_filtered = list(filter(lambda reading: reading.mean_temperature, readings))
+        humidity_filtered = list(filter(lambda reading: reading.mean_humidity, readings))
 
         minimum_reading = min(mean_temp_filtered, key=attrgetter('mean_temperature'))
         maximum_reading = max(mean_temp_filtered, key=attrgetter('mean_temperature'))
@@ -19,9 +19,9 @@ class WeatherReport:
 
     @staticmethod
     def monthly_results(readings):
-        high_temp_filtered = list(filter(lambda x: x.max_temperature, readings))
-        low_temp_filtered = list(filter(lambda x: x.min_temperature, readings))
-        mean_humidity_filtered = list(filter(lambda x: x.mean_humidity, readings))
+        high_temp_filtered = list(filter(lambda reading: reading.max_temperature, readings))
+        low_temp_filtered = list(filter(lambda reading: reading.min_temperature, readings))
+        mean_humidity_filtered = list(filter(lambda reading: reading.mean_humidity, readings))
 
         avg_high = sum(reading.max_temperature for reading in high_temp_filtered) // len(high_temp_filtered)
         avg_low = sum(reading.min_temperature for reading in low_temp_filtered) // len(low_temp_filtered)
