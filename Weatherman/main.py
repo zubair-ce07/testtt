@@ -6,9 +6,9 @@ def validate_argument(argument):
     try:
         year, month = argument.split('/')
     except:
-        raise ValueError()
+        raise argparse.ArgumentTypeError("Argument Type Error. Enter in the form of int/int")
     if not int(year) or not int(month) in range(1, 13):
-        raise ValueError()
+        raise argparse.ArgumentTypeError("Year should be an integer month should be an integer from 1-12")
     return argument
 
 
