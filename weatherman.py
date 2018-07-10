@@ -63,12 +63,13 @@ def main():
 
 def weather_report_extreme(result):
     """"Displays the highest lowest temperature and highest humidity report"""
-    high_day = datetime.strptime(result.highest_day, "%Y-%m-%d").strftime('%B %d')
-    print(f"Highest: {result.highest_reading}C on {high_day}")
-    low_day = datetime.strptime(result.lowest_day, "%Y-%m-%d").strftime('%B %d')
-    print(f"Lowest: {result.lowest_reading}C on {low_day}")
-    humid_day = datetime.strptime(result.humidity_day, "%Y-%m-%d").strftime('%B %d')
-    print(f"Humidity: {result.humidity_reading}% on {humid_day}")
+    high_day = datetime.strptime(result.highest_day, "%Y-%m-%d")
+    low_day = datetime.strptime(result.lowest_day, "%Y-%m-%d")
+    humid_day = datetime.strptime(result.humidity_day, "%Y-%m-%d")
+
+    print(f"Highest: {result.highest_reading}C on {high_day:%B %d}")
+    print(f"Lowest: {result.lowest_reading}C on {low_day:%B %d}")
+    print(f"Humidity: {result.humidity_reading}% on {humid_day:%B %d}")
     print("")
 
 
