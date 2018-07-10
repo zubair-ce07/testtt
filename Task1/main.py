@@ -1,9 +1,9 @@
-import argparse
-import calendar
-import datetime
 from parsed_weather_reading import ParsedWeatherReading
 from weather_result_computer import WeatherResultComputer
 from weather_report_maker import WeatherReportMaker
+import argparse
+import calendar
+import datetime
 
 
 def valid_year(year):
