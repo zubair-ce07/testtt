@@ -73,25 +73,23 @@ def chart_for_month(weather_records, month):
 
 
 def records_filter_month(weather_records, month):
-    month = datetime.strptime(month, '%Y/%m').strftime('%Y-%-m-')
-    filtered_records = list(filter(lambda day: day.pkt.startswith(month), weather_records))
+    month = datetime.strptime(month, '%Y/%m')
+    filtered_records = list(filter(lambda day: day.pkt.year == month.year
+                            and day.pkt.month == month.month, weather_records))
     return filtered_records
 
 
 def records_filter_year(weather_records, year):
-    filtered_records = list(filter(lambda day: day.pkt.startswith(year), weather_records))
+    year = datetime.strptime(year, '%Y')
+    filtered_records = list(filter(lambda day: day.pkt.year == year.year, weather_records))
     return filtered_records
 
 
 def weather_report_extreme(year_extreme):
     """"Displays the highest lowest temperature and highest humidity report"""
-    high_day = datetime.strptime(year_extreme.highest_day, "%Y-%m-%d")
-    low_day = datetime.strptime(year_extreme.lowest_day, "%Y-%m-%d")
-    humid_day = datetime.strptime(year_extreme.humidity_day, "%Y-%m-%d")
-
-    print(f"Highest: {year_extreme.highest_reading}C on {high_day:%B %d}")
-    print(f"Lowest: {year_extreme.lowest_reading}C on {low_day:%B %d}")
-    print(f"Humidity: {year_extreme.humidity_reading}% on {humid_day:%B %d}")
+    print(f"Highest: {year_extreme.highest_reading}C on {year_extreme.highest_day:%B %d}")
+    print(f"Lowest: {year_extreme.lowest_reading}C on {year_extreme.lowest_day:%B %d}")
+    print(f"Humidity: {year_extreme.humidity_reading}% on {year_extreme.humidity_day:%B %d}")
 
 
 def weather_report_average(month_average):
