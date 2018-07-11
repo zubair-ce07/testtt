@@ -12,7 +12,7 @@ from .base import BaseCrawlSpider, BaseParseSpider
 class Mixin:
     name = landlord_slug = 'staytoo'
     allowed_domains = ['staytoo.de', 'immoblueplus.aareon.com']
-    start_urls = ['https://www.staytoo.de/']
+    start_urls = ['https://www.staytoo.de/en/']
     landlord_name = 'Staytoo'
     deposit_amount = '400'
     deposit_name = 'deposit'
@@ -33,8 +33,7 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
 
     def parse(self, response):
         loader = RoomLoader(item=Room(), response=response)
-        property_amenities_xpath = '(//section[12]|//section[13])//p/text()'
-        loader.add_xpath('property_amenities', property_amenities_xpath)
+        loader.add_value('room_amenities', self.room_amenities(response))
         meta = {'item': loader.load_item()}
         cities_css = '#menu-item-20479 .level_2 a::attr(href)'
         for cities in response.css(cities_css).extract():
@@ -42,6 +41,7 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
 
     def parse_city(self, response):
         loader = RoomLoader(item=response.meta['item'], response=response)
+        loader.add_xpath('property_amenities', self.property_amenities(response))
         loader.add_value('deposit_amount', self.deposit_amount)
         loader.add_value('deposit_name', self.deposit_name)
         loader.add_value('deposit_type', self.deposit_type)
@@ -54,20 +54,20 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
         loader.add_value('property_name', self.property_name(response))
         loader.add_value('property_url', response.url)
         loader.add_css('property_description', self.description_css, re=self.description_re)
-        telephone_css = 'a[href^="tel"]::attr(href)'
-        telephone_re = r'tel:([+\d ]+)'
-        loader.add_css('property_contact_info', telephone_css, re=telephone_re)
-        loader.add_value('property_contact_info', self.e_mail)
+        loader.add_value('property_contact_info', self.property_contact_info(response))
         floor_plan_css = 'img[src$="plan.png"]::attr(src)'
         loader.add_css('floor_plans', floor_plan_css)
         room_photos_css = 'img[src*="Apartment"]::attr(src)'
         loader.add_css('room_photos', room_photos_css)
+        base_item = loader.load_item()
 
-        yield from self.city_request(response, loader.load_item())
+        yield from self.city_request(response, base_item.copy())
 
-    def city_request(self, response, item):
+    def city_request(self, response, base_item):
         city_re = r'en/(\w+)-'
-        meta = {'item': item, 'city': re.search(city_re, response.url).group(1)}
+        city = re.search(city_re, response.url).group(1)
+
+        meta = {'item': base_item, 'city': city}
         url_css = 'a.w-btn::attr(href)'
         url = response.css(url_css).extract_first()
 
@@ -81,10 +81,11 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
         yield Request(url=u, callback=self.parse_rooms, meta=response.meta.copy())
 
     def parse_rooms(self, response):
-        data_place = self.data_place(response.meta['city'], response)
-        response.meta['data_place'] = data_place
+        meta = response.meta
+        data_place = self.data_place(meta.get('city'), response)
         room_xpath = '//select[@name="apartmentType"]'
         room_css = f'option[data-places*="{data_place}"]'
+        print(f'data place : {data_place}')
 
         for room_sel in response.xpath(room_xpath).css(room_css):
             room_name_css = '::attr(data-lang-id)'
@@ -93,20 +94,19 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
             room_min_price_css = '::attr(data-minprice)'
             room_min_price = room_sel.css(room_min_price_css).extract_first()
 
-            yield from self.parse_room(room_name, room_min_price, response)
+            yield from self.parse_room(room_name, room_min_price, response, data_place)
 
-    def parse_room(self, room_name, min_price, response):
-        room_prices = self.room_prices(room_name, min_price, response)
+    def parse_room(self, room_name, min_price, response, data_place):
+        room_prices = self.room_prices(room_name, min_price, response, data_place)
 
         for price in room_prices:
-            loader = RoomLoader(item=response.meta['item'], response=response)
+            loader = RoomLoader(item=response.meta.get('item'), response=response)
             loader.add_value('room_name', room_name)
             loader.add_value('room_price', str(price))
 
             yield loader.load_item()
 
-    def room_prices(self, room_name, min_price, response):
-        data_place = response.meta['data_place']
+    def room_prices(self, room_name, min_price, response, data_place):
         room_xpath = '//select[@name="maxPrice"]'
         room_css = f'option[data-places*="{data_place}"]::attr(value)'
         room_prices = response.xpath(room_xpath).css(room_css).extract()
@@ -120,16 +120,15 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
         return list(filter(filter_prices, room_prices))
 
     def move_in_date(self):
-        mm = (int(datetime.now().month) % 12) + 1
         yy = int(datetime.now().year)
 
-        return date(yy, mm, 1).strftime('%d/%m/%y')
+        return date(yy, 11, 1).strftime('%d/%m/%y')
 
     def move_out_date(self, move_in_date):
         move_in_date = datetime.strptime(move_in_date, '%d/%m/%y')
         move_out_date = move_in_date + timedelta(days=364)
 
-        return move_out_date.strftime('%m/%d/%y')
+        return move_out_date.strftime('%d/%m/%y')
 
     def property_name(self, response):
         css = 'h2 ::text'
@@ -146,7 +145,29 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
 
     def data_place(self, room_name, response):
         data_place_css = f'select[name="location"] option:contains({room_name[-3:]})::attr(value)'
+
         return int(response.css(data_place_css).extract_first())
+
+    def property_amenities(self, response):
+        property_amenities_css = 'h5::text'
+        property_amenities_re = r'.+(?<!Extra)$'
+
+        return response.css(property_amenities_css).re(property_amenities_re)
+
+    def property_contact_info(self, response):
+        telephone_css = 'a[href^="tel"]::attr(href)'
+        telephone_re = r'tel:([+\d ]+)'
+        telephone = response.css(telephone_css).re_first(telephone_re)
+
+        return [telephone, self.e_mail]
+
+    def room_amenities(self, response):
+        amenities_css = 'div.ult_exp_content'
+        amenities_xpath = './/h5/text()'
+        amenities_re = r'.+(?<!Extra)$'
+        amenities_section = response.css(amenities_css)[0]
+
+        return amenities_section.xpath(amenities_xpath).re(amenities_re)
 
 
 class StaytooSpider(BaseCrawlSpider, Mixin):
@@ -157,8 +178,7 @@ class StaytooSpider(BaseCrawlSpider, Mixin):
 
     parse_spider = StaytooParseSpider()
 
-    english_url = 'a.w-dropdown-item:first-child'
+    english_url = 'li>a[href$="/en/apartments/"]'
     rules = [
         Rule(LinkExtractor(restrict_css=english_url), 'parse_item'),
     ]
-
