@@ -45,7 +45,7 @@ def load_weather_data(directory):
 
 
 def extreme_weather_handler(weather_readings, input_date_extreme):
-    weather_readings_extreme = list(filter(lambda day: day.pkt.startswith(input_date_extreme), weather_readings))
+    weather_readings_extreme = readings_filter_year(weather_readings, input_date_extreme)
     if weather_readings_extreme:
         extreme_weather_results = WeatherReport.yearly_results(weather_readings_extreme)
         weather_report_extreme(extreme_weather_results)
@@ -54,8 +54,7 @@ def extreme_weather_handler(weather_readings, input_date_extreme):
 
 
 def average_weather_handler(weather_readings, input_date_average):
-    average_weather_date = datetime.strptime(input_date_average, '%Y/%m').strftime('%Y-%-m-')
-    weather_readings_average = list(filter(lambda day: day.pkt.startswith(average_weather_date), weather_readings))
+    weather_readings_average = readings_filter_month(weather_readings, input_date_average)
     if weather_readings_average:
         average_weather_results = WeatherReport.monthly_results(weather_readings_average)
         weather_report_average(average_weather_results)
@@ -64,12 +63,22 @@ def average_weather_handler(weather_readings, input_date_average):
 
 
 def chart_weather_handler(weather_readings, input_date_chart):
-    chart_weather_date = datetime.strptime(input_date_chart, '%Y/%m').strftime('%Y-%-m-')
-    weather_readings_chart = list(filter(lambda day: day.pkt.startswith(chart_weather_date), weather_readings))
+    weather_readings_chart = readings_filter_month(weather_readings, input_date_chart)
     if weather_readings_chart:
         weather_report_chart(weather_readings_chart, input_date_chart)
     else:
         print("Readings not available for " + input_date_chart)
+
+
+def readings_filter_month(weather_readings, month):
+    readings_date = datetime.strptime(month, '%Y/%m').strftime('%Y-%-m-')
+    filtered_weather_readings = list(filter(lambda day: day.pkt.startswith(readings_date), weather_readings))
+    return filtered_weather_readings
+
+
+def readings_filter_year(weather_readings, year):
+    filtered_weather_readings = list(filter(lambda day: day.pkt.startswith(year), weather_readings))
+    return filtered_weather_readings
 
 
 def weather_report_extreme(result):
