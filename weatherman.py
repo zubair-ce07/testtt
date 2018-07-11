@@ -4,12 +4,12 @@ import re
 from datetime import datetime
 from glob import glob
 from os import path
+
 from weatherman_ds import WeatherReading
 from weatherman_calculation import WeatherReport
 
 
 def main():
-
     parser = argparse.ArgumentParser(description='A program that calculates '
                                                  'weather information and'
                                                  ' visualizes it.')
@@ -26,11 +26,11 @@ def main():
 
     weather_records = load_weather_records(args.directory)
     if args.extreme:
-        year_extreme_weather(weather_records, args.extreme)
+        extremes_for_year(weather_records, args.extreme)
     if args.average:
-        month_average_weather(weather_records, args.average)
+        average_for_month(weather_records, args.average)
     if args.chart:
-        month_weather_chart(weather_records, args.chart)
+        chart_for_month(weather_records, args.chart)
 
 
 def load_weather_records(directory):
@@ -44,25 +44,25 @@ def load_weather_records(directory):
     return weather_records
 
 
-def year_extreme_weather(weather_records, year):
+def extremes_for_year(weather_records, year):
     weather_records = records_filter_year(weather_records, year)
     if weather_records:
-        year_weather_result = WeatherReport.year_extreme_calculate(weather_records)
+        year_weather_result = WeatherReport.calculate_extreme_for_year(weather_records)
         weather_report_extreme(year_weather_result)
     else:
-        print("Records not available for {year}")
+        print(f"Records not available for {year}")
 
 
-def month_average_weather(weather_records, month):
+def average_for_month(weather_records, month):
     weather_records = records_filter_month(weather_records, month)
     if weather_records:
-        year_weather_result = WeatherReport.month_average_calculate(weather_records)
+        year_weather_result = WeatherReport.calculate_extreme_for_month(weather_records)
         weather_report_average(year_weather_result)
     else:
         print(f"Records not available for {month}")
 
 
-def month_weather_chart(weather_records, month):
+def chart_for_month(weather_records, month):
     weather_records = records_filter_month(weather_records, month)
     if weather_records:
         weather_report_chart(weather_records, month)
@@ -108,9 +108,9 @@ def weather_report_chart(weather_records, month):
     day = 1
     for record in weather_records:
         if record.max_temperature and record.min_temperature:
-            print(f"{day:{0}{2}}{ColorOutput.BLUE}{repeat_plus(record.min_temperature)}{ColorOutput.RED}"
-                  f"{repeat_plus(record.max_temperature)}{ColorOutput.RESET}{record.min_temperature}"
-                  f"C-{record.max_temperature}C")
+            print(f"{day:{0}{2}}{ColorOutput.BLUE}{repeat_plus(record.min_temperature)}"
+                  f"{ColorOutput.RED}{repeat_plus(record.max_temperature)}"
+                  f"{ColorOutput.RESET}{record.min_temperature}C-{record.max_temperature}C")
         day += 1
 
 
