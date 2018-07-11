@@ -21,7 +21,7 @@ def main():
                         'of the year provided.', type=year_validate)
     parser.add_argument('-a', '--average', help='this option display a report of average readings'
                         'of a month provided.', type=month_validate)
-    parser.add_argument('-c', '--chart', help='this option displays a vertical chart of high and low'
+    parser.add_argument('-c', '--chart', help='this option displays a horizontal bar chart of high and low'
                         'temperature of the month provided.', type=month_validate)
 
     args = parser.parse_args()
