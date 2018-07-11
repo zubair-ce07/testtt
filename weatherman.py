@@ -1,9 +1,13 @@
 #!/usr/bin/python
-
-from weatheregister import WeatherRegister
+import datetime
+from weather_register import WeatherRegister
 import argparse
-from parser import parse_month as psm
 from reporter import Reporter
+
+
+def parse_month(string):
+    parts = str.split(string, '/')
+    return datetime.date(int(parts[0]), int(parts[1]), 1).strftime("%B"), parts[0]
 
 
 def main(argv):
@@ -13,19 +17,19 @@ def main(argv):
         records = WeatherRegister()
         records.read_dir(argv.path, argv.e)
         reporter = Reporter(records)
-        reporter.report_e()
+        reporter.report_for_e()
     if argv.a:
-        month, year = psm(argv.a)
+        month, year = parse_month(argv.a)
         records = WeatherRegister()
         records.read_dir(argv.path, year, month)
         reporter = Reporter(records)
-        reporter.report_a()
+        reporter.report_for_a()
     if argv.c:
-        month, year = psm(argv.c)
+        month, year = parse_month(argv.c)
         records = WeatherRegister()
         records.read_dir(argv.path, year, month)
         reporter = Reporter(records)
-        reporter.report_c()
+        reporter.report_for_c()
 
 
 if __name__ == "__main__":
