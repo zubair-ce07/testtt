@@ -17,19 +17,16 @@ class WeatherRecord:
 
 class WeatherRegister:
     def __init__(self):
-        self.__data = {}
+        self.month = None
+        self.year = None
+        self.readings = list()
 
-    def __getitem__(self, item):
-        return self.__data[item]
-
-    def read_dir(self, directory_path):
+    def read_dir(self, directory_path, year, month='*'):
+        self.month = month
+        self.year = year
         files = os.listdir(directory_path)
-        for filename in fnmatch.filter(files, "Murree_weather_*_*.txt"):
-            year_month = str.split(filename, '_')
-            if not self.__data.get(year_month[2]):
-                self.__data.update({year_month[2]: {}})
+        for filename in fnmatch.filter(files, f"Murree_weather_{year}_{month[:3]}.txt"):
             with open(directory_path+filename, newline='\n') as file:
-                self.__data.get(year_month[2]).update({year_month[3][:3]: []})
                 for row in csv.DictReader(file):
                     if row.get("PKT"):
                         date = psr(row["PKT"])
@@ -42,4 +39,4 @@ class WeatherRegister:
                                                    psr(row["Max Humidity"]),
                                                    psr(row[" Mean Humidity"]))
                     if weather_record.max_humidity is not None:
-                        self.__data.get(year_month[2]).get(year_month[3][:3]).append(weather_record)
+                        self.readings.append(weather_record)
