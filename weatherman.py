@@ -58,7 +58,7 @@ def extremes_for_year(weather_records, year):
 def average_for_month(weather_records, month):
     weather_records = records_filter_month(weather_records, month)
     if weather_records:
-        year_weather_result = WeatherReport.calculate_extreme_for_month(weather_records)
+        year_weather_result = WeatherReport.calculate_average_for_month(weather_records)
         weather_report_average(year_weather_result)
     else:
         print(f"Records not available for {month}")

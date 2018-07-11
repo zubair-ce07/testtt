@@ -18,7 +18,7 @@ class WeatherReport:
                              humidity_reading.pkt, humidity_reading.mean_humidity)
 
     @staticmethod
-    def calculate_extreme_for_month(weather_records):
+    def calculate_average_for_month(weather_records):
         high_records = list(filter(lambda reading: reading.max_temperature, weather_records))
         low_records = list(filter(lambda reading: reading.min_temperature, weather_records))
         humidity_records = list(filter(lambda reading: reading.mean_humidity, weather_records))
