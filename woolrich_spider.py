@@ -14,7 +14,7 @@ class Mixin:
 
 class WoolRichParseSpider(BaseParseSpider, Mixin):
     url_api = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
-    price_x = "//span[@itemprop='price']/@content"
+    price_x = "//span[@itemprop='price']/@content | //span[contains(@class, 'strikethrough')]/text()"
     care_x = "//div[@class='span4']//div[@class='text']//li/text()"
     description_x = "//span[@itemprop='description']/text()"
 
@@ -143,7 +143,6 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
         sku_id = "{}_{}".format(colour, size)
         sku['size'] = "{}/{}".format(size, fit)
         sku['colour'] = colour
-        sku['currency'] = self.currency(response)
         return {sku_id: sku}
 
     @staticmethod
@@ -161,10 +160,6 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
         xpath = "//select[contains(@class, 'dimensionslist')]//option[@selected]/text()"
         return response.xpath(xpath).extract_first(default='').strip()
 
-    @staticmethod
-    def currency(response):
-        xpath = "//span[@itemprop='priceCurrency']/@content"
-        return response.xpath(xpath).extract_first(default='')
 
 
 class WoolRichSpider(BaseCrawlSpider, Mixin):
