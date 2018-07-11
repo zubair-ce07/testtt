@@ -1,9 +1,9 @@
 import argparse
 import csv
 import re
-from os import path
-from glob import glob
 from datetime import datetime
+from glob import glob
+from os import path
 from weatherman_ds import WeatherReading
 from weatherman_calculation import WeatherReport
 
@@ -14,7 +14,7 @@ def main():
                                                  'weather information and'
                                                  ' visualizes it.')
 
-    parser.add_argument('directory', help='directory of the weather readings.', type=directory_validate)
+    parser.add_argument('directory', help='directory of the weather records.', type=directory_validate)
     parser.add_argument('-e', '--extreme', default='', help='option for extreme '
                         'weather report format:yyyy', type=year_validate)
     parser.add_argument('-a', '--average', default='', help='option for average'
@@ -24,113 +24,112 @@ def main():
 
     args = parser.parse_args()
 
-    weather_readings = load_weather_data(args.directory)
+    weather_records = load_weather_records(args.directory)
     if args.extreme:
-        extreme_weather_handler(weather_readings, args.extreme)
+        year_extreme_weather(weather_records, args.extreme)
     if args.average:
-        average_weather_handler(weather_readings, args.average)
+        month_average_weather(weather_records, args.average)
     if args.chart:
-        chart_weather_handler(weather_readings, args.chart)
+        month_weather_chart(weather_records, args.chart)
 
 
-def load_weather_data(directory):
-    reading_file_paths = glob(directory + '/*.txt')
-    weather_readings = []
-    for file_path in reading_file_paths:
-        with open(file_path, 'r') as opened_reading_file:
-            weather_reading_csv = csv.DictReader(opened_reading_file)
-            for row in weather_reading_csv:
-                weather_readings.append(WeatherReading(row))
-    return weather_readings
+def load_weather_records(directory):
+    directory = glob(f"{directory}/*.txt")
+    weather_records = []
+    for record_file in directory:
+        with open(record_file, 'r') as csv_file:
+            weather_record = csv.DictReader(csv_file)
+            for row in weather_record:
+                weather_records.append(WeatherReading(row))
+    return weather_records
 
 
-def extreme_weather_handler(weather_readings, input_date_extreme):
-    weather_readings_extreme = readings_filter_year(weather_readings, input_date_extreme)
-    if weather_readings_extreme:
-        extreme_weather_results = WeatherReport.yearly_results(weather_readings_extreme)
-        weather_report_extreme(extreme_weather_results)
+def year_extreme_weather(weather_records, year):
+    weather_records = records_filter_year(weather_records, year)
+    if weather_records:
+        year_weather_result = WeatherReport.year_extreme_calculate(weather_records)
+        weather_report_extreme(year_weather_result)
     else:
-        print("Readings not available for " + input_date_extreme)
+        print("Records not available for {year}")
 
 
-def average_weather_handler(weather_readings, input_date_average):
-    weather_readings_average = readings_filter_month(weather_readings, input_date_average)
-    if weather_readings_average:
-        average_weather_results = WeatherReport.monthly_results(weather_readings_average)
-        weather_report_average(average_weather_results)
+def month_average_weather(weather_records, month):
+    weather_records = records_filter_month(weather_records, month)
+    if weather_records:
+        year_weather_result = WeatherReport.month_average_calculate(weather_records)
+        weather_report_average(year_weather_result)
     else:
-        print("Readings not available for " + input_date_average)
+        print(f"Records not available for {month}")
 
 
-def chart_weather_handler(weather_readings, input_date_chart):
-    weather_readings_chart = readings_filter_month(weather_readings, input_date_chart)
-    if weather_readings_chart:
-        weather_report_chart(weather_readings_chart, input_date_chart)
+def month_weather_chart(weather_records, month):
+    weather_records = records_filter_month(weather_records, month)
+    if weather_records:
+        weather_report_chart(weather_records, month)
     else:
-        print("Readings not available for " + input_date_chart)
+        print(f"Records not available for {month}")
 
 
-def readings_filter_month(weather_readings, month):
-    readings_date = datetime.strptime(month, '%Y/%m').strftime('%Y-%-m-')
-    filtered_weather_readings = list(filter(lambda day: day.pkt.startswith(readings_date), weather_readings))
-    return filtered_weather_readings
+def records_filter_month(weather_records, month):
+    month = datetime.strptime(month, '%Y/%m').strftime('%Y-%-m-')
+    filtered_records = list(filter(lambda day: day.pkt.startswith(month), weather_records))
+    return filtered_records
 
 
-def readings_filter_year(weather_readings, year):
-    filtered_weather_readings = list(filter(lambda day: day.pkt.startswith(year), weather_readings))
-    return filtered_weather_readings
+def records_filter_year(weather_records, year):
+    filtered_records = list(filter(lambda day: day.pkt.startswith(year), weather_records))
+    return filtered_records
 
 
-def weather_report_extreme(result):
+def weather_report_extreme(year_extreme):
     """"Displays the highest lowest temperature and highest humidity report"""
-    high_day = datetime.strptime(result.highest_day, "%Y-%m-%d")
-    low_day = datetime.strptime(result.lowest_day, "%Y-%m-%d")
-    humid_day = datetime.strptime(result.humidity_day, "%Y-%m-%d")
+    high_day = datetime.strptime(year_extreme.highest_day, "%Y-%m-%d")
+    low_day = datetime.strptime(year_extreme.lowest_day, "%Y-%m-%d")
+    humid_day = datetime.strptime(year_extreme.humidity_day, "%Y-%m-%d")
 
-    print(f"Highest: {result.highest_reading}C on {high_day:%B %d}")
-    print(f"Lowest: {result.lowest_reading}C on {low_day:%B %d}")
-    print(f"Humidity: {result.humidity_reading}% on {humid_day:%B %d}")
+    print(f"Highest: {year_extreme.highest_reading}C on {high_day:%B %d}")
+    print(f"Lowest: {year_extreme.lowest_reading}C on {low_day:%B %d}")
+    print(f"Humidity: {year_extreme.humidity_reading}% on {humid_day:%B %d}")
 
 
-def weather_report_average(result):
+def weather_report_average(month_average):
     """Displays the average highest lowest temperature and humidity of a month"""
-    print(f"Highest Average: {result.highest_reading}C")
-    print(f"Lowest Average: {result.lowest_reading}C")
-    print(f"Average mean humidity: {result.humidity_reading}%")
+    print(f"Highest Average: {month_average.highest_reading}C")
+    print(f"Lowest Average: {month_average.lowest_reading}C")
+    print(f"Average mean humidity: {month_average.humidity_reading}%")
 
 
-def weather_report_chart(weather_readings, input_date_chart):
+def weather_report_chart(weather_records, month):
     """"Displays the bar chart for temperatures through the month"""
     def repeat_plus(x): return '+' * x
 
-    report_month = datetime.strptime(input_date_chart, "%Y/%m")
-    print(f"{report_month:%B %Y}")
-    day_number = 1
-    for reading in weather_readings:
-
-        if reading.max_temperature and reading.min_temperature:
-            print(f"{day_number:{0}{2}}{ColorOutput.BLUE}{repeat_plus(reading.min_temperature)}{ColorOutput.RED}"
-                  f"{repeat_plus(reading.max_temperature)}{ColorOutput.RESET}{reading.min_temperature}"
-                  f"C-{reading.max_temperature}C")
-        day_number += 1
-
-
-def year_validate(year_input):
-    if not year_input or re.match('\d{4}$', year_input):
-        return year_input
-    raise argparse.ArgumentTypeError(year_input+" is invalid format please enter yyyy")
+    month = datetime.strptime(month, "%Y/%m")
+    print(f"{month:%B %Y}")
+    day = 1
+    for record in weather_records:
+        if record.max_temperature and record.min_temperature:
+            print(f"{day:{0}{2}}{ColorOutput.BLUE}{repeat_plus(record.min_temperature)}{ColorOutput.RED}"
+                  f"{repeat_plus(record.max_temperature)}{ColorOutput.RESET}{record.min_temperature}"
+                  f"C-{record.max_temperature}C")
+        day += 1
 
 
-def month_validate(month_input):
-    if not month_input or re.match('\d{4}/\d{1,2}$', month_input):
-        return month_input
-    raise argparse.ArgumentTypeError(month_input+" is invalid format please enter yyyy/mm")
+def year_validate(year):
+    if not year or re.match('\d{4}$', year):
+        return year
+    raise argparse.ArgumentTypeError(f"{year} is invalid format please enter yyyy")
 
 
-def directory_validate(input_directory):
-    if path.exists(input_directory):
-        return input_directory
-    raise argparse.ArgumentTypeError(input_directory + " is invalid directory")
+def month_validate(month):
+    if not month or re.match('\d{4}/\d{1,2}$', month):
+        return month
+    raise argparse.ArgumentTypeError(f"{month} is invalid format please enter yyyy/mm")
+
+
+def directory_validate(directory):
+    if path.exists(directory):
+        return directory
+    raise argparse.ArgumentTypeError(f"{directory} is invalid directory")
 
 
 class ColorOutput:
