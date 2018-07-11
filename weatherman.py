@@ -14,13 +14,15 @@ def main():
                                                  'weather information and'
                                                  ' visualizes it.')
 
-    parser.add_argument('directory', help='directory of the weather records.', type=directory_validate)
-    parser.add_argument('-e', '--extreme', default='', help='option for extreme '
-                        'weather report format:yyyy', type=year_validate)
-    parser.add_argument('-a', '--average', default='', help='option for average'
-                        ' weather report format:yyyy/mm', type=month_validate)
-    parser.add_argument('-c', '--chart', default='', help='option for weather '
-                        ' chart format:yyyy/mm', type=month_validate)
+    parser.add_argument('directory', help='this argument provides the application '
+                        'directory where weather records are available.',
+                        type=directory_validate)
+    parser.add_argument('-e', '--extreme', help='this option display a report of extreme readings'
+                        'of the year provided.', type=year_validate)
+    parser.add_argument('-a', '--average', help='this option display a report of average readings'
+                        'of a month provided.', type=month_validate)
+    parser.add_argument('-c', '--chart', help='this option displays a vertical chart of high and low'
+                        'temperature of the month provided.', type=month_validate)
 
     args = parser.parse_args()
 
@@ -105,23 +107,21 @@ def weather_report_chart(weather_records, month):
 
     month = datetime.strptime(month, "%Y/%m")
     print(f"{month:%B %Y}")
-    day = 1
-    for record in weather_records:
+    for day, record in enumerate(weather_records, start=1):
         if record.max_temperature and record.min_temperature:
             print(f"{day:{0}{2}}{ColorOutput.BLUE}{repeat_plus(record.min_temperature)}"
                   f"{ColorOutput.RED}{repeat_plus(record.max_temperature)}"
                   f"{ColorOutput.RESET}{record.min_temperature}C-{record.max_temperature}C")
-        day += 1
 
 
 def year_validate(year):
-    if not year or re.match('\d{4}$', year):
+    if re.match('\d{4}$', year):
         return year
     raise argparse.ArgumentTypeError(f"{year} is invalid format please enter yyyy")
 
 
 def month_validate(month):
-    if not month or re.match('\d{4}/\d{1,2}$', month):
+    if re.match('\d{4}/\d{1,2}$', month):
         return month
     raise argparse.ArgumentTypeError(f"{month} is invalid format please enter yyyy/mm")
 
