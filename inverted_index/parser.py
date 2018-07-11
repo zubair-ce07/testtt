@@ -27,4 +27,3 @@ class HtmlParser(HTMLParser):
         if self.isRecording and data != '\n':
             with open(constants.parsed_data_file_name, 'a') as f:
                     f.write("{}\n".format(data.strip('\n')))
-                    #f.write("!-#-!\n")

@@ -86,11 +86,10 @@ class InvertedIndex:
                     continue
 
                 current_results = search_results.get(word, [])
+                index_error_msg = 'Data file has changed\nPlease reconstruct Inverted Index'
                 for position in positions:
-                    if position > len(lines):
-                        raise IndexError('Data file has changed\n'
-                                         'Please reconstruct Inverted Index')
-                    current_results.append(lines[position])
+                    raise IndexError(index_error_msg) if position > len(lines) \
+                        else current_results.append(lines[position])
                 search_results[word] = current_results
 
         self.print_search_results(search_results)
