@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-from WeatherRecord import WeatherRegister
+from weatheregister import WeatherRegister
 import argparse
-from Parser import parse_month as psm
-from Reporter import Reporter
+from parser import parse_month as psm
+from reporter import Reporter
 
 
 def main(argv):

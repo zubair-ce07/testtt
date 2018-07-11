@@ -1,4 +1,4 @@
-from Computer import Computer
+from computer import Computer
 
 
 class Reporter:
@@ -31,5 +31,5 @@ class Reporter:
         normal = "\033[0;0m"
         for day in result_c:
             print("%02d" % day.date.day,
-                  blue + "+" * day.min_temperature + red + "+" * day.max_temperature,
-                  normal + "%02dC - %02dC" % (day.min_temperature, day.max_temperature))
+                  f"{blue}{'+' * day.min_temperature}{red}{'+' * day.max_temperature}",
+                  f"{normal}{'%02dC - %02dC' % (day.min_temperature, day.max_temperature)}")
