@@ -24,22 +24,22 @@ class WeatherFilesParser:
     def __init__(self, path, pattern):
         self.path = path
         self.pattern = pattern
-    
+
     def _get_fields(self, row):
         required_fields = ['Max TemperatureC', 'Min TemperatureC', 'Max Humidity', ' Mean Humidity']
 
         if all(row.get(f) for f in required_fields):
 
             return WeatherReading(row.get('PKT') or row.get('PKST'),
-                              int(row.get('Max TemperatureC')),
-                              int(row.get('Min TemperatureC')),
-                              int(row.get('Max Humidity')),
-                              int(row.get(' Mean Humidity'))
+                                  int(row.get('Max TemperatureC')),
+                                  int(row.get('Min TemperatureC')),
+                                  int(row.get('Max Humidity')),
+                                  int(row.get(' Mean Humidity'))
                             )
 
     def get_filtered_files(self):
-        files = list(filter(lambda f : f.endswith(".txt") and self.pattern in f, os.listdir(self.path)))
-        return map(lambda f : os.path.join(self.path, f), files)
+        files = list(filter(lambda f: f.endswith(".txt") and self.pattern in f, os.listdir(self.path)))
+        return map(lambda f: os.path.join(self.path, f), files)
 
     def read_weather_file(self, file_path):
         with open(file_path, 'r') as f:
@@ -58,15 +58,15 @@ class WeatherFilesParser:
 class WeatherResultCalculation:
 
     def max_field(self, weather_readings, field_name):
-        return max(weather_readings, key=lambda r : r.get(field_name))
+        return max(weather_readings, key=lambda r: r.get(field_name))
 
     def min_field(self, weather_readings, field_name):
-        return min(weather_readings, key=lambda r : r.get(field_name))
+        return min(weather_readings, key=lambda r: r.get(field_name))
 
     def average_field(self, weather_readings, field_name):
         return sum(r.get(field_name) for r in weather_readings)//len(weather_readings)
 
-     
+
 class GenerateWeatherReports:
 
     def __init__(self, folder_path, date):
@@ -92,11 +92,11 @@ class GenerateWeatherReports:
         max_tempr_date = self.__get_date(max_tempr)
         min_tempr_date = self.__get_date(min_tempr)
         max_humidity_date = self.__get_date(max_humid)
-    
+
         print(f'Highest: {max_tempr.get("max_tempr")}C on {max_tempr_date}')
         print(f'Lowest: {min_tempr.get("min_tempr")}C on {min_tempr_date}')
-        print(f'Humidity: {max_humid.get("max_humid")}C on {max_humidity_date}')            
- 
+        print(f'Humidity: {max_humid.get("max_humid")}C on {max_humidity_date}')
+
     def generate_monthly_report(self):
         weather_readings = self.file_parser.read_all_files()
         if not weather_readings:
@@ -128,9 +128,10 @@ class GenerateWeatherReports:
 
 def check_date(value):
     if '/' not in value:
-        raise argparse.ArgumentTypeError(f'Argument Not Valid {value}') 
+        raise argparse.ArgumentTypeError(f'Argument Not Valid {value}')
 
     return strptime(value, '%Y/%m')
+
 
 def check_year(value):
     if not re.match(r'[0-9]{4}', value):
@@ -138,10 +139,12 @@ def check_year(value):
     
     return value
 
+
 def is_path_exist(path):
     if os.path.isdir(path):
         return path
     raise OSError("Directory does not exist " + path)
+
 
 def check_args(args):
     parser = argparse.ArgumentParser()
