@@ -36,8 +36,9 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
         loader.add_value('room_amenities', self.room_amenities(response))
         meta = {'item': loader.load_item()}
         cities_css = '#menu-item-20479 .level_2 a::attr(href)'
+
         for cities in response.css(cities_css).extract():
-            yield Request(url=cities, callback=self.parse_city, meta=meta.copy())
+            yield Request(url=cities, callback=self.parse_city, meta=meta)
 
     def parse_city(self, response):
         loader = RoomLoader(item=response.meta['item'], response=response)
@@ -81,11 +82,9 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
         yield Request(url=u, callback=self.parse_rooms, meta=response.meta.copy())
 
     def parse_rooms(self, response):
-        meta = response.meta
-        data_place = self.data_place(meta.get('city'), response)
+        data_place = self.data_place(response)
         room_xpath = '//select[@name="apartmentType"]'
         room_css = f'option[data-places*="{data_place}"]'
-        print(f'data place : {data_place}')
 
         for room_sel in response.xpath(room_xpath).css(room_css):
             room_name_css = '::attr(data-lang-id)'
@@ -120,9 +119,11 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
         return list(filter(filter_prices, room_prices))
 
     def move_in_date(self):
+        dd = 1
+        mm = 11
         yy = int(datetime.now().year)
 
-        return date(yy, 11, 1).strftime('%d/%m/%y')
+        return date(yy, mm, dd).strftime('%d/%m/%y')
 
     def move_out_date(self, move_in_date):
         move_in_date = datetime.strptime(move_in_date, '%d/%m/%y')
@@ -143,7 +144,8 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
 
         return f'{self.landlord_name}-{city_name}'
 
-    def data_place(self, room_name, response):
+    def data_place(self, response):
+        room_name = response.meta.get('city')
         data_place_css = f'select[name="location"] option:contains({room_name[-3:]})::attr(value)'
 
         return int(response.css(data_place_css).extract_first())
@@ -182,3 +184,4 @@ class StaytooSpider(BaseCrawlSpider, Mixin):
     rules = [
         Rule(LinkExtractor(restrict_css=english_url), 'parse_item'),
     ]
+
