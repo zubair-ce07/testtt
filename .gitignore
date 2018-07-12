@@ -55,3 +55,13 @@ target/
 
 # PyCharm
 .idea
+
+
+venv/
+landmarkcrawler/.scrapy/*
+*.pyc
+*.csv
+LANDMARK*
+*data/
+**/*.pyclandmarkcrawler/landmarkcrawler/__pycache__/items.cpython-36.pyc
+*.json
