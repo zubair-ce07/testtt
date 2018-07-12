@@ -53,7 +53,7 @@ def main(user_cli_args, c_spider):
     print("Execution Time: {}".format(time.time()-start_time))
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     user_cli_args = parse_user_cli_arguments()
     concurrent_spider = RecursiveConcurrentSpider(user_cli_args.site_to_crawl,
                                                   user_cli_args.download_delay,
