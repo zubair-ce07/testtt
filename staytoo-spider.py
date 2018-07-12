@@ -175,7 +175,7 @@ class StaytooParseSpider(BaseParseSpider, Mixin):
 class StaytooSpider(BaseCrawlSpider, Mixin):
     name = Mixin.name + '-crawl'
     custom_settings = {
-        'COOKIES_ENABLED': False
+        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
     }
 
     parse_spider = StaytooParseSpider()
