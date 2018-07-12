@@ -5,28 +5,13 @@ from weather_data import WeatherData
 
 
 class ParsingFiles:
-    def __init__(self, path, flag, query):
+    def __init__(self, path, argument_list):
         self.path = path
-        self.flag = flag
-        self.query = query
-        self.months = {
-            '1': 'Jan', '2': 'Feb', '3': 'Mar', '4': 'Apr', '5': 'May', '6': 'Jun',
-            '7': 'Jul', '8': 'Aug', '9': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
-        }
+        self.argument_list = argument_list
         self.all_files_names = self.get_all_files_names()
 
     def get_all_files_names(self):
-        files = os.listdir(self.path)
-        if self.flag == '-e':
-            new_files = [file for file in files if self.query in file]
-            return new_files
-
-        if self.flag == '-a' or self.flag == '-c':
-            year_month = self.query.split('/')
-            year_plus_month = "{}_{}".format(year_month[0], self.months[str(int(year_month[1]))])
-            new_files = [file for file in files if year_plus_month in file]
-            return new_files
-
+        return [file_name for file_name in os.listdir(self.path) for arg in self.argument_list if arg in file_name]
 
     def is_there_not_any_empty_element(self, myList):
         for element in myList:

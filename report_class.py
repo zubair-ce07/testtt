@@ -1,31 +1,44 @@
+import calendar
+
 class ReportPrinting:
-    def __init__(self, results, flag):
+    def __init__(self, results, args):
         self.results = results
-        self.flag = flag
+        self.args = args
 
-    def print(self):
+    def get_file_name_key_plus_month_name(self, year_month):
+        month_abbrv = calendar.month_abbr[int(year_month[1])]
+        month_name = calendar.month_name[int(year_month[1])]
+        file_name_key = "lahore_weather_{}_{}".format(year_month[0], month_abbrv)
+        return file_name_key, month_name
+
+    def printing(self):
         print('\n')
-        if isinstance(self.results, str):
-            print(self.results)
-        else:
-            if self.flag == '-e':
-                print("Highest:", self.results.year[0])
-                print("Lowest:", self.results.year[1])
-                print("Humidity:", self.results.year[2])
-            elif self.flag == '-a':
-                print("Highest Average:", self.results.month[0])
-                print("Lowest Average:", self.results.month[1])
-                print("Average Mean Humidity:", self.results.month[2])
-            else:
-                for string in self.results.month:
-                    print(string)
+        for arg_e in self.args.e:
+            print(arg_e, '\n')
+            result = self.results.year[str(arg_e)]
+            print("Highest:", result[0])
+            print("Lowest:", result[1])
+            print("Humidity:", result[2])
 
-                print('\033[0m')
+        for arg_a in self.args.a:
+            year_month = arg_a.split('/')
+            file_name_key, month_name = self.get_file_name_key_plus_month_name(year_month)
+            print('\n' + month_name, year_month[0], '\n')
+            result = self.results.month_average[file_name_key]
+            print("Highest Average:", result[0])
+            print("Lowest Average:", result[1])
+            print("Average Mean Humidity:", result[2])
 
-                for string in self.results.bonus:
-                    print(string)
+        for arg_c in self.args.c:
+            year_month = arg_a.split('/')
+            file_name_key, month_name = self.get_file_name_key_plus_month_name(year_month)
+            print('\n' + month_name, year_month[0], '\n')
+            for result in self.results.month_chart[file_name_key]:
+                print(result)
 
-                print('\033[0m')
+            for result in self.results.bonus[file_name_key]:
+                print(result)
+
 
 
 
