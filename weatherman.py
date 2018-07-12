@@ -5,74 +5,117 @@ import argparse
 from datetime import datetime
 import csv
 import glob
-from weatherman_data_structure import readings_holder
-from weatherman_data_structure import colors
+
+from weatherman_data_structure import ReadingsHolder
+from weatherman_data_structure import Colors
 import weatherman_computations
 
 
 def parse_files(directory):
     readings = []
-    for file in glob.iglob(directory+'*.txt'):
-        with open(os.path.join(directory, file)) as csvfile:
+    for data_file in glob.iglob(directory+'*.txt'):
+        with open(os.path.join(directory, data_file)) as csvfile:
             csv_reader = csv.DictReader(csvfile)
             required_features = ['Max TemperatureC', 'Min TemperatureC',
                                  'Mean TemperatureC', 'Max Humidity',
                                  ' Min Humidity', ' Mean Humidity']
             for row in csv_reader:
-                data = list(row[i] for i in required_features)
-                if '' not in data:
-                    readings.append(readings_holder(row))
+                if all(row[req_f] for req_f in required_features):
+                    readings.append(ReadingsHolder(row))
     return readings
 
 
-def report_generator(report_type, max_temp, min_temp, humidity, max_temp_day,
-                     min_temp_day, humidity_day, date):
+def print_report(report_contents, seperator):
+    print(seperator.join(report_contents))
+
+
+def report_generator(report_type, readings_result, report_date):
     if report_type == 'a':
-        print(f"{colors.GREEN}\n************ Average Readings of {date} "
-              f"************\n\n{colors.RESET}"
-              f"Highest Average: {max_temp}C\nLowest Average: "
-              f"{min_temp}C\nAverage Mean Humidity: "
-              f"{int(humidity)}%\n")
+
+        header = f"{Colors.GREEN}\n{'*' * 12}Average Readings of "\
+                 f"{report_date} {'*' * 12}\n{Colors.RESET}"
+
+        highest_avg = f"Highest Average: {readings_result.max_mean_temp}C"
+        lowest_average = f"Lowest Average: {readings_result.min_mean_temp}C"
+        mean_humidity = f"Average Mean Humidity: "\
+            f"{int(readings_result.average_mean_humidity)}%\n"
+
+        results = [
+            header,
+            highest_avg,
+            lowest_average,
+            mean_humidity
+        ]
+
+        return results
+
     elif report_type == 'e':
-        print(f"{colors.GREEN}\n************ Extreme Readings of {date} "
-              f"************\n\n{colors.RESET}"
-              f"Highest: {max_temp}C on {max_temp_day}"
-              f"\nLowest: {min_temp}C on"
-              f"{min_temp_day}\nHumidity: "
-              f"{humidity}% on {humidity_day}\n")
+
+        header = f"{Colors.GREEN}\n{'*' * 12} Extreme Readings of "\
+                 f"{report_date} {'*' * 12}\n{Colors.RESET}"
+
+        highest = f"Highest: {readings_result.maximum_temp}"\
+            f"C on {readings_result.maximum_temp_day}"
+
+        lowest = f"Lowest: {readings_result.minimum_temp}C on "\
+            f"{readings_result.minimum_temp_day}"
+
+        humidity = f"Humidity: {readings_result.maximum_humidity}% on "\
+            f"{readings_result.maximum_humidity_day}"
+
+        results = [
+            header,
+            highest,
+            lowest,
+            humidity
+        ]
+
+        return results
+
     else:
-        print (f"{colors.MAGENTA}{int(date)} {colors.BLUE}"
-               f"{'+' * int(min_temp)}{colors.RED}{'+' * int(max_temp)}"
-               f"{colors.MAGENTA} {int(min_temp)}C - "
-               f"{int(max_temp)}C{colors.RESET}")
+        day = f"{Colors.MAGENTA}{int(report_date)}"
+        symbols = f"{Colors.BLUE}{'+' * int(readings_result[1])}"\
+            f"{Colors.RED}{'+' * int(readings_result[0])}"
+        min_temp = f"{Colors.MAGENTA} {int(readings_result[1])}C - "
+        max_temp = f"{int(readings_result[0])}C{Colors.RESET}"
+
+        results = [
+            day,
+            symbols,
+            min_temp,
+            max_temp
+        ]
+
+        return results
 
 
-def readings_of_year(year_, readings):
-    year = str(year_.year)
-    results = weatherman_computations.calculate(readings, 'e', year, '')
-    report_generator('e', results.maximum_temperature,
-                     results.minimum_temperature, results.maximum_humidity,
-                     results.maximum_temperature_day,
-                     results.minimum_temperature_day,
-                     results.maximum_humidity_day, year)
+def readings_of_year(given_date, weather_readings):
+    readings_result = weatherman_computations.calculate_readings(
+                      weather_readings, 'e', given_date)
+    report = report_generator('e', readings_result,
+                              given_date.year)
+    print_report(report, '\n')
 
 
-def average_of_date(date, readings):
-    year, month = str(date.year), str(date.month)
-    results = weatherman_computations.calculate(readings, 'a', year, month)
-    report_generator('a', results.max_mean_temperature,
-                     results.min_mean_temperature,
-                     results.average_mean_humidity, '', '', '', year+"/"+month)
+def average_of_date(given_date, weather_readings):
+    readings_result = weatherman_computations.calculate_readings(
+                      weather_readings, 'a', given_date)
+    report = report_generator('a', readings_result, given_date)
+    print_report(report, '\n')
 
 
-def charts(month_, readings):
-    year, month = str(month_.year), str(month_.month)
-    print(f"{colors.GREEN}\n************ Temperature chart for {year}/{month}"
-          f" ************\n{colors.RESET}")
-    for row in readings:
-        if(row.pkt.split("-")[0] == year and row.pkt.split("-")[1] == month):
-            report_generator('c', row.max_temp, row.min_temp, '', '', '', '',
-                             row.pkt.split("-")[2])
+def charts(given_date, weather_readings):
+    print(f"{Colors.GREEN}\n************ Temperature chart for "
+          f"{given_date.year}/{given_date.month}"
+          f" ************\n{Colors.RESET}")
+    for row in weather_readings:
+        date_from_file = datetime.strptime(row.pkt, '%Y-%m-%d')
+        if(date_from_file.year == given_date.year and
+           date_from_file.month == given_date.month):
+            report = report_generator('c', [row.max_temp,
+                                      row.min_temp],
+                                      str(date_from_file.day))
+            print_report(report, ' ')
 
 
 def main():
@@ -98,5 +141,7 @@ def main():
         readings_of_year(arg[0], readings)
     for arg in args.chart:
         charts(arg[0], readings)
+
+
 if __name__ == "__main__":
     main()
