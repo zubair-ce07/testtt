@@ -10,79 +10,79 @@ class Mixin:
     market = 'CA'
     allowed_domains = ['woolrich.com']
     start_urls = ['http://www.woolrich.com/woolrich/?countryCode=CA']
+    url_api = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
 
 
 class WoolRichParseSpider(BaseParseSpider, Mixin):
-    url_api = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
+    name = Mixin.retailer + '-parse'
     price_x = "//span[@itemprop='price']/@content | //span[contains(@class, 'strikethrough')]/text()"
     care_x = "//div[@class='span4']//div[@class='text']//li/text()"
     description_x = "//span[@itemprop='description']/text()"
 
-    def __init__(self):
-        self.xpath_productid = "//span[@itemprop='productID']/text()"
-        self.xpath_previous_price = "//span[contains(@class, 'strikethrough')]/text()"
-
     def parse(self, response):
-        product_id = response.xpath(self.xpath_productid).extract_first()
+        product_id = self.product_id(response)
         garment = self.new_unique_garment(product_id)
         if not garment:
             return
         self.boilerplate_normal(garment, response)
-        garment['gender'] = self.gender_lookup(self.gender(response))
-        garment['image_urls'] = self.image_urls(response)
+        garment['gender'] = self.gender(response)
+        garment['image_urls'] = []
         garment['skus'] = {}
         garment['meta'] = {'requests_queue': self.colors_request(response)}
         return self.next_request_or_garment(garment)
 
     @staticmethod
+    def product_id(response):
+        xpath = "//span[@itemprop='productID']/text()"
+        return response.xpath(xpath).extract_first()
+
+    @staticmethod
     def product_name(response):
         xpath = "//div[@class='pdp_title']//h1/text()"
-        title = response.xpath(xpath).extract_first()
-        return title.strip()
+        return clean(response.xpath(xpath).extract_first())[0]
 
     @staticmethod
     def image_urls(response):
-        xpath = "//div[@id='prod-detail__slider-nav']//img/@src"
-        image_urls = response.xpath(xpath).extract()
-        return [response.urljoin(u) for u in image_urls]
+        xpath = "//a[contains(@class,'selected')and contains(@class,' link  ')]//img/@src | " \
+                "//div[@id='prod-detail__slider-nav']//img/@src"
+        return [response.urljoin(u) for u in clean(response.xpath(xpath))]
 
     @staticmethod
     def product_category(response):
         xpath = "//div[contains(@class,'wrap') and " \
                 "contains(@class,'breadcrumb')]//a/text()"
-        category = response.xpath(xpath).extract()
-        return category
+        return clean(response.xpath(xpath).extract())
 
     def gender(self, response):
         xpath = "//div[@class='pdp_title']//h1/text()"
-        return response.xpath(xpath).extract_first()
+        gender = self.gender_lookup(response.xpath(xpath).extract_first())
+        if not gender:
+            return 'uni-sex'
+        return gender
 
     def colors_request(self, response):
         colour_requests = []
         xpath = "//div[@id='productDetails']//a[not(@disabled)]//img/@colorid"
         for colorid in response.xpath(xpath).extract():
-            if colorid:
-                form_data = {
-                    'productId': response.xpath(self.xpath_productid).extract_first(),
-                    'colorId': colorid
-                }
-                colour_requests += [FormRequest(url=self.url_api,
-                                                formdata=form_data,
-                                                callback=self.parse_colors,
-                                                dont_filter=True
-                                                )]
+            form_data = {
+                'productId': self.product_id(response),
+                'colorId': colorid
+            }
+            colour_requests += [FormRequest(url=self.url_api,
+                                            formdata=form_data,
+                                            callback=self.parse_colors,
+                                            dont_filter=True
+                                            )]
         return colour_requests
 
     def size_request(self, response):
         size_requests = []
         xpath = "//ul[@class='sizelist']//a[@stocklevel != 0]"
-        for size_itrator in response.xpath(xpath):
+        for size_selector in response.xpath(xpath):
             form_data = dict(parse_qsl(response.request.body.decode()))
-            size = size_itrator.xpath("text()").extract_first()
+            size = size_selector.xpath("text()").extract_first()
             form_data['selectedSize'] = size
-            skuid = size_itrator.xpath("@id").extract_first()
-            if skuid != size:
-                form_data['skuId'] = skuid
+            form_data['skuId'] = size_selector.xpath("@id").extract_first()
             size_requests += [FormRequest(url=self.url_api,
                                           formdata=form_data,
                                           callback=self.parse_size,
@@ -117,49 +117,23 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
 
     def parse_colors(self, response):
         garment = response.meta['garment']
-        garment['image_urls'].append(self.color_image_urls(response))
+        garment['image_urls'] += self.image_urls(response)
         garment['meta']['requests_queue'] += self.size_request(response)
         return self.next_request_or_garment(garment)
 
-    @staticmethod
-    def color_image_urls(response):
-        xpath = "//a[contains(@class,'selected')and contains(@class,' link  ')]//img/@src"
-        img_url = response.xpath(xpath).extract_first(default='')
-        if img_url:
-            return urljoin('http:', img_url)
-
-    def common_sku(self, response):
-        sku = {}
-        sku.update(self.product_pricing_common(response))
-        return sku
-
     def skus(self, response):
-        common_sku = self.common_sku(response)
+        color_xpath = "//ul[@class='colorlist']//li//a[contains(@class, 'selected')]/@title"
+        size_xpath = "//select[contains(@class,'sizelist')]//option[@selected]/text()"
+        fiting_xpath = "//select[contains(@class, 'dimensionslist')]//option[@selected]/text()"
+        common_sku = self.product_pricing_common(response)
         sku = common_sku.copy()
-        # sku['previous_price'] = self.previous_prices(response, self.xpath_previous_price)
-        size = self.size(response)
-        colour = self.colour(response)
-        fit = self.fitting(response)
+        size = clean(response.xpath(size_xpath))[0]
+        colour = response.xpath(color_xpath).extract_first()
+        fit = response.xpath(fiting_xpath).extract_first(default='').strip()
         sku_id = "{}_{}".format(colour, size)
-        sku['size'] = "{}/{}".format(size, fit)
+        sku['size'] = "{}_{}".format(size, fit)
         sku['colour'] = colour
         return {sku_id: sku}
-
-    @staticmethod
-    def colour(response):
-        xpath = "//ul[@class='colorlist']//li//a[contains(@class, 'selected')]/@title"
-        return response.xpath(xpath).extract_first()
-
-    @staticmethod
-    def size(response):
-        xpath = "//select[contains(@class,'sizelist')]//option[@selected]/text()"
-        return response.xpath(xpath).extract_first().strip()
-
-    @staticmethod
-    def fitting(response):
-        xpath = "//select[contains(@class, 'dimensionslist')]//option[@selected]/text()"
-        return response.xpath(xpath).extract_first(default='').strip()
-
 
 
 class WoolRichSpider(BaseCrawlSpider, Mixin):
