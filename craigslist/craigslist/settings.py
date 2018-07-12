@@ -1,13 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Scrapy settings for craigslist project
-#
-# For simplicity, this file contains only settings considered important or
-# commonly used. You can find more settings consulting the documentation:
-#
-#     https://doc.scrapy.org/en/latest/topics/settings.html
-#     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 BOT_NAME = 'craigslist'
 
@@ -15,8 +5,8 @@ SPIDER_MODULES = ['craigslist.spiders']
 NEWSPIDER_MODULE = 'craigslist.spiders'
 
 #Export as CSV Feed
-FEED_FORMAT = "csv"
-FEED_URI = "result.csv"
+FEED_FORMAT = "json"
+FEED_URI = "result.json"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'craigslist (+http://www.yourdomain.com)'
