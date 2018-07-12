@@ -31,18 +31,20 @@ class ParsingFiles:
             all_weather_readings.mean_humidity[file_name_key] = []
 
             with open(''.join([self.path, file_name])) as file:
-                file_reader = csv.reader(file)
+                file_reader = csv.DictReader(file)
 
                 for line in file_reader:
-                    if len(line) > 1:
+                    if line:
                         if flag:
                             flag = False
                         else:
-                            line = [line[1], line[3], line[7], line[8]]
-                            if self.is_there_not_any_empty_element(line):
-                                all_weather_readings.max_temperature[file_name_key].append(int(line[0]))
-                                all_weather_readings.min_temperature[file_name_key].append(int(line[1]))
-                                all_weather_readings.max_humidity[file_name_key].append(int(line[2]))
-                                all_weather_readings.mean_humidity[file_name_key].append(float(line[3]))
+                            for value in line.values():
+                                if len(value) > 1:
+                                    line1 = [value[1], value[3], value[7], value[8]]
+                                    if self.is_there_not_any_empty_element(line1):
+                                        all_weather_readings.max_temperature[file_name_key].append(int(line1[0]))
+                                        all_weather_readings.min_temperature[file_name_key].append(int(line1[1]))
+                                        all_weather_readings.max_humidity[file_name_key].append(int(line1[2]))
+                                        all_weather_readings.mean_humidity[file_name_key].append(float(line1[3]))
 
         return all_weather_readings
