@@ -1,7 +1,8 @@
-from weather_record import WeatherRecord
 import traceback
 import os
 import csv
+
+from weather_record import WeatherRecord
 
 
 class ParsedWeatherReading:
