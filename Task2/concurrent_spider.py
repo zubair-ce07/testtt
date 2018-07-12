@@ -1,16 +1,17 @@
-from urllib.parse import urlparse
-from urllib.parse import urljoin
-from parsel import Selector
 import concurrent.futures
 import asyncio
+
+from urllib.parse import urlparse, urljoin
+from parsel import Selector
 import requests
-import scraping_report
+
+from scraping_report import CrawlingSummaryReport
 
 
 class RecursiveConcurrentSpider:
     def __init__(self, site_to_crawl, download_delay, concurrent_requests_limit):
         self.site_to_crawl = site_to_crawl
-        self.spider_execution_report = scraping_report.CrawlingSummaryReport()
+        self.spider_execution_report = CrawlingSummaryReport()
         self.download_delay = download_delay
         self.concurrent_requests_limit = concurrent_requests_limit
         self.__loop = asyncio.get_event_loop()

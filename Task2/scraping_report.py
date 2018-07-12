@@ -1,5 +1,5 @@
 class CrawlingSummaryReport:
-    def __init__(self, t_requests=0, b_downloaded=0, a_page_size=0):
-        self.total_requests = t_requests
-        self.bytes_downloaded = b_downloaded
-        self.avg_page_size = a_page_size
+    def __init__(self, total_requests=0, bytes_downloaded=0, avg_page_size=0):
+        self.total_requests = total_requests
+        self.bytes_downloaded = bytes_downloaded
+        self.avg_page_size = avg_page_size
