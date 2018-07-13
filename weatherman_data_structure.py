@@ -1,13 +1,7 @@
-from enum import Enum
-
-
 class ReadingsHolder:
 
     def __init__(self, features):
-        if 'PKT' in features.keys():
-            self.pkt = features.get('PKT')
-        else:
-            self.pkt = features.get('PKST')
+        self.pkt = features.get('PKT') or features.get('PKST')
         self.max_temp = int(features.get('Max TemperatureC'))
         self.min_temp = int(features.get('Min TemperatureC'))
         self.mean_temp = int(features.get('Mean TemperatureC'))
