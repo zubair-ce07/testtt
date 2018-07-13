@@ -78,14 +78,11 @@ def parse_files(directory):
 
 
 def clean_weather_records(weather_records):
-    clean_records = []
     weather_records = list(filter(lambda record: record.get('Max TemperatureC') and
                                                  record.get('Min TemperatureC') and
                                                  record.get('Max Humidity') and
                                                  record.get(' Mean Humidity'), weather_records))
-    for record in weather_records:
-        clean_records.append(DayForecast(record))
-    return clean_records
+    return [DayForecast(record) for record in weather_records]
 
 
 def calculate_results(args, weather_records):
