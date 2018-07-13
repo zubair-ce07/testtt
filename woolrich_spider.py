@@ -34,12 +34,12 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
     @staticmethod
     def product_id(response):
         xpath = "//span[@itemprop='productID']/text()"
-        return response.xpath(xpath).extract_first()
+        return clean(response.xpath(xpath))[0]
 
     @staticmethod
     def product_name(response):
         xpath = "//div[@class='pdp_title']//h1/text()"
-        return clean(response.xpath(xpath).extract_first())[0]
+        return clean(response.xpath(xpath))[0]
 
     @staticmethod
     def image_urls(response):
@@ -51,11 +51,11 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
     def product_category(response):
         xpath = "//div[contains(@class,'wrap') and " \
                 "contains(@class,'breadcrumb')]//a/text()"
-        return clean(response.xpath(xpath).extract())
+        return clean(response.xpath(xpath))
 
     def gender(self, response):
         xpath = "//div[@class='pdp_title']//h1/text()"
-        gender = self.gender_lookup(response.xpath(xpath).extract_first())
+        gender = self.gender_lookup(clean(response.xpath(xpath))[0])
         if not gender:
             return 'uni-sex'
         return gender
@@ -63,7 +63,7 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
     def colors_request(self, response):
         colour_requests = []
         xpath = "//div[@id='productDetails']//a[not(@disabled)]//img/@colorid"
-        for colorid in response.xpath(xpath).extract():
+        for colorid in clean(response.xpath(xpath)):
             form_data = {
                 'productId': self.product_id(response),
                 'colorId': colorid
@@ -80,9 +80,9 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
         xpath = "//ul[@class='sizelist']//a[@stocklevel != 0]"
         for size_selector in response.xpath(xpath):
             form_data = dict(parse_qsl(response.request.body.decode()))
-            size = size_selector.xpath("text()").extract_first()
+            size = clean(size_selector.xpath("text()"))[0]
             form_data['selectedSize'] = size
-            form_data['skuId'] = size_selector.xpath("@id").extract_first()
+            form_data['skuId'] = clean(size_selector.xpath("@id"))[0]
             size_requests += [FormRequest(url=self.url_api,
                                           formdata=form_data,
                                           callback=self.parse_size,
@@ -125,8 +125,7 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
         color_xpath = "//ul[@class='colorlist']//li//a[contains(@class, 'selected')]/@title"
         size_xpath = "//select[contains(@class,'sizelist')]//option[@selected]/text()"
         fiting_xpath = "//select[contains(@class, 'dimensionslist')]//option[@selected]/text()"
-        common_sku = self.product_pricing_common(response)
-        sku = common_sku.copy()
+        sku = self.product_pricing_common(response)
         size = clean(response.xpath(size_xpath))[0]
         colour = response.xpath(color_xpath).extract_first()
         fit = response.xpath(fiting_xpath).extract_first(default='').strip()
@@ -139,15 +138,17 @@ class WoolRichParseSpider(BaseParseSpider, Mixin):
 class WoolRichSpider(BaseCrawlSpider, Mixin):
     name = Mixin.retailer + '-crawl'
     parse_spider = WoolRichParseSpider()
-    css_classes = [
+    listing_css = [
         '.nav.navbar-nav .upper',
         '.nav.nav-list.nav-',
         '.clear.addMore'
     ]
+    productCard_css = '.productCard'
+
     rules = (
-        Rule(LinkExtractor(restrict_css=css_classes, tags=['a', 'div'], attrs=['href', 'nextpage'])
+        Rule(LinkExtractor(restrict_css=listing_css, tags=['a', 'div'], attrs=['href', 'nextpage'])
              ),
         Rule(
-            LinkExtractor(restrict_css='.productCard'), callback='parse_item'
+            LinkExtractor(restrict_css=productCard_css), callback='parse_item'
         )
     )
