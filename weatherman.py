@@ -4,17 +4,15 @@ import glob as gb
 import os
 
 from operator import attrgetter
-from time import strptime
 from calendar import month_name
-from datetime import date as get_date
+from datetime import datetime
 
 
 class DayForecast:
 
     def __init__(self, day_record):
         temp_date = day_record.get('PKT') or day_record.get('PKST')
-        temp_date = list(map(int, temp_date.split("-")))
-        self.date = get_date(temp_date[0], temp_date[1], temp_date[2])
+        self.date = datetime.strptime(temp_date, '%Y-%m-%d')
         self.max_temp = int(day_record['Max TemperatureC'])
         self.min_temp = int(day_record['Min TemperatureC'])
         self.max_humidity = int(day_record['Max Humidity'])
@@ -22,28 +20,28 @@ class DayForecast:
 
 
 def print_in_blue(text, n):
-    print("\033[96m{}\033[00m".format(text) * n, end="")
+    print(f'\033[96m{text}\033[00m' * n, end='')
 
 
 def print_in_red(text, n):
-    print("\033[31m{}\033[00m".format(text) * n, end="")
+    print(f'\033[31m{text}\033[00m' * n, end='')
 
 
 def validate_year(date):
     try:
-        date = strptime(date, "%Y")
-        return date.tm_year
+        date = datetime.strptime(date, "%Y")
+        return date.year
     except ValueError:
-        msg = "Invalid input. Use format YYYY: '{0}'.".format(date)
+        msg = f'Not a valid year {date}. Use format YYYY'
         raise argparse.ArgumentTypeError(msg)
 
 
 def validate_date(date):
     try:
-        date = strptime(date, "%Y/%m")
-        return date.tm_year, date.tm_mon
+        date = datetime.strptime(date, "%Y/%m")
+        return date.year, date.month
     except ValueError:
-        msg = "Not a valid date. Should be YYYY/MM: '{0}'.".format(date)
+        msg = f'Not a valid date {date}. Use format YYYY/MM:'
         raise argparse.ArgumentTypeError(msg)
 
 
@@ -72,7 +70,6 @@ def parse_files(directory):
     for file_name in gb.glob("*.txt"):
         with open(file_name) as weather_file:
             reader = csv.DictReader(weather_file)
-
             for row in reader:
                 weather_records.append(row)
 
@@ -106,35 +103,34 @@ def calculate_results(args, weather_records):
 
 
 def generate_yearly_report(year, weather_records):
-    year_records = list(filter(lambda x: x.date.year == year, weather_records))
+    year_records = list(filter(lambda record: record.date.year == year, weather_records))
 
-    if not year_records:
-        print(f'\nNo record for year {year} present')
-    else:
+    if year_records:
         maximum_temperature = max(year_records, key=attrgetter('max_temp'))
         minimum_temperature = min(year_records, key=attrgetter('min_temp'))
         maximum_humidity = max(year_records, key=attrgetter('max_humidity'))
         return maximum_temperature, minimum_temperature, maximum_humidity
 
+    print(f'\nNo record for year {year} present')
+
 
 def generate_monthly_report(date, weather_records):
-    month_records = list(filter(lambda x: x.date.year == date[0] and
-                                          x.date.month == date[1], weather_records))
-    if not month_records:
-        print(f'\nNo record for {month_name[date[1]]} {date[0]} present')
-    else:
+    month_records = list(filter(lambda record: record.date.year == date[0] and
+                                               record.date.month == date[1], weather_records))
+    if month_records:
         avg_maximum_temp = round(sum(DayForecast.max_temp
                                      for DayForecast in month_records) / len(month_records))
         avg_minimum_temp = round(sum(DayForecast.min_temp
                                      for DayForecast in month_records) / len(month_records))
         avg_mean_humidity = round(sum(DayForecast.mean_humidity
                                       for DayForecast in month_records) / len(month_records))
-
         return avg_maximum_temp, avg_minimum_temp, avg_mean_humidity
+
+    print(f'\nNo record for {month_name[date[1]]} {date[0]} present')
 
 
 def generate_bar_charts(date, weather_records):
-    choice = input("\n1. Single chart\n2. Separate charts\n")
+    choice = input(f'\n1. Single chart\n2. Separate charts\n')
     print(f'\n{month_name[date[1]]} {date[0]}')
 
     for record in weather_records:
