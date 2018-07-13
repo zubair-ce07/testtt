@@ -1,7 +1,6 @@
 import csv
 import argparse
 import glob as gb
-import os
 
 from operator import attrgetter
 from calendar import month_name
@@ -65,13 +64,11 @@ def parse_arguments():
 
 def parse_files(directory):
     weather_records = []
-    os.chdir(directory)
 
-    for file_name in gb.glob("*.txt"):
+    for file_name in gb.glob(f'{directory}/*.txt'):
         with open(file_name) as weather_file:
             reader = csv.DictReader(weather_file)
-            for row in reader:
-                weather_records.append(row)
+            weather_records += [row for row in reader]
 
     return weather_records
 
@@ -89,14 +86,10 @@ def clean_weather_records(weather_records):
 
 def calculate_results(args, weather_records):
     if args.extreme:
-        maximum_temp, minimum_temp, maximum_humidity = generate_yearly_report(args.extreme[0],
-                                                                              weather_records)
-        display_yearly_report(maximum_temp, minimum_temp, maximum_humidity)
+        display_yearly_report(generate_yearly_report(args.extreme[0], weather_records))
 
     if args.average:
-        avg_maximum_temp, avg_minimum_temp, avg_mean_humidity = generate_monthly_report(args.average[0],
-                                                                                        weather_records)
-        display_monthly_report(avg_maximum_temp, avg_minimum_temp, avg_mean_humidity)
+        display_monthly_report(generate_monthly_report(args.average[0], weather_records))
 
     if args.chart:
         generate_bar_charts(args.chart[0], weather_records)
@@ -106,27 +99,18 @@ def generate_yearly_report(year, weather_records):
     year_records = list(filter(lambda record: record.date.year == year, weather_records))
 
     if year_records:
-        maximum_temperature = max(year_records, key=attrgetter('max_temp'))
-        minimum_temperature = min(year_records, key=attrgetter('min_temp'))
-        maximum_humidity = max(year_records, key=attrgetter('max_humidity'))
-        return maximum_temperature, minimum_temperature, maximum_humidity
-
-    print(f'\nNo record for year {year} present')
+        return [max(year_records, key=attrgetter('max_temp')),
+                min(year_records, key=attrgetter('min_temp')),
+                max(year_records, key=attrgetter('max_humidity'))]
 
 
 def generate_monthly_report(date, weather_records):
     month_records = list(filter(lambda record: record.date.year == date[0] and
                                                record.date.month == date[1], weather_records))
     if month_records:
-        avg_maximum_temp = round(sum(DayForecast.max_temp
-                                     for DayForecast in month_records) / len(month_records))
-        avg_minimum_temp = round(sum(DayForecast.min_temp
-                                     for DayForecast in month_records) / len(month_records))
-        avg_mean_humidity = round(sum(DayForecast.mean_humidity
-                                      for DayForecast in month_records) / len(month_records))
-        return avg_maximum_temp, avg_minimum_temp, avg_mean_humidity
-
-    print(f'\nNo record for {month_name[date[1]]} {date[0]} present')
+        return [round(sum(DayForecast.max_temp for DayForecast in month_records) / len(month_records)),
+                round(sum(DayForecast.min_temp for DayForecast in month_records) / len(month_records)),
+                round(sum(DayForecast.mean_humidity for DayForecast in month_records) / len(month_records))]
 
 
 def generate_bar_charts(date, weather_records):
@@ -139,26 +123,32 @@ def generate_bar_charts(date, weather_records):
                                record.max_temp, int(choice))
 
 
-def display_yearly_report(maximum_temp, minimum_temp, maximum_humidity):
-    print(f'\nHighest: {maximum_temp.max_temp}C on {maximum_temp.date:%B %d}')
-    print(f'Lowest: {minimum_temp.min_temp}C on {minimum_temp.date:%B %d}')
-    print(f'Humidity: {maximum_humidity.max_humidity}% on {maximum_humidity.date:%B %d}')
+def display_yearly_report(yearly_results):
+    if yearly_results:
+        print(f'\nHighest: {yearly_results[0].max_temp}C on {yearly_results[0].date:%B %d}')
+        print(f'Lowest: {yearly_results[1].min_temp}C on {yearly_results[1].date:%B %d}')
+        print(f'Humidity: {yearly_results[2].max_humidity}% on {yearly_results[2].date:%B %d}')
+    else:
+        print(f'\nNo yearly record')
 
 
-def display_monthly_report(avg_maximum_temp, avg_minimum_temp, avg_mean_humidity):
-    print(f'\nHighest Average: {avg_maximum_temp}C')
-    print(f'Lowest Average: {avg_minimum_temp}C')
-    print(f'Average Mean Humidity: {avg_mean_humidity}C')
+def display_monthly_report(monthly_results):
+    if monthly_results:
+        print(f'\nHighest Average: {monthly_results[0]}C')
+        print(f'Lowest Average: {monthly_results[1]}C')
+        print(f'Average Mean Humidity: {monthly_results[2]}C')
+    else:
+        print(f'\nNo monthly record')
 
 
 def display_bar_charts(day, minimum_temp, maximum_temp, user_choice):
     print(f'{day} ', end='')
-    if user_choice == 1:                    # 1 if the user wants to print Single bar chart
+    if user_choice == 1:                        # 1 if the user wants to print Single bar chart
         print_in_blue("+", minimum_temp)
         print_in_red("+", maximum_temp)
         print(f' {minimum_temp}C - {maximum_temp}C')
 
-    elif user_choice == 2:                  # 2 if the user wants to print Separate bar charts
+    elif user_choice == 2:                      # 2 if the user wants to print Separate bar charts
         print_in_red("+", maximum_temp)
         print(f' {maximum_temp}C')
         print(f'{day} ', end='')
