@@ -10,9 +10,10 @@ class WoolworthSpider(CrawlSpider):
     name = 'woolworths'
     allowed_domains = ['woolworths.co.za']
     start_urls = ['https://woolworths.co.za']
+    download_delay = 3
 
     rules = (
-        Rule(LinkExtractor(restrict_css='li.main-nav__list-item--primary > ul:nth-child(2) > li > a', strip=True),
+        Rule(LinkExtractor(restrict_css='li.main-nav__list-item--primary > ul > li > ul > li > a', strip=True),
              callback='parse_main_products'),
     )
 
