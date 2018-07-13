@@ -1,0 +1,27 @@
+class WeatherData:
+    def __init__(self):
+        self.pkt = ''
+        self.max_temperature = ''
+        self.min_temperature = ''
+        self.max_humidity = ''
+        self.mean_humidity = ''
+        # self.mean_temperature = ''
+        # self.dew_point = ''
+        # self.mean_dew_point = ''
+        # self.min_dew_point = ''
+        # self.min_humidity = ''
+        # self.max_sea_level_pressure = ''
+        # self.mean_sea_level_pressure = ''
+        # self.min_sea_level_pressure = ''
+        # self.max_visibility = ''
+        # self.mean_visibility = ''
+        # self.min_visibility = ''
+        # self.max_wind_speed = ''
+        # self.mean_wind_speed = ''
+        # self.max_gust_speed = ''
+        # self.precipitationmm = ''
+        # self.cloud_cover = ''
+        # self.events = ''
+        # self.wind_dir_degrees = ''
+
+
