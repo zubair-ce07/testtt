@@ -8,7 +8,6 @@ from datetime import datetime
 
 
 class DayForecast:
-
     def __init__(self, day_record):
         temp_date = day_record.get('PKT') or day_record.get('PKST')
         self.date = datetime.strptime(temp_date, '%Y-%m-%d')
@@ -33,6 +32,11 @@ def validate_year(date):
     except ValueError:
         msg = f'Not a valid year {date}. Use format YYYY'
         raise argparse.ArgumentTypeError(msg)
+
+
+def get_average(reading, weather_records):
+    return round(sum(DayForecast.__getattribute__(reading) for
+                     DayForecast in weather_records) / len(weather_records))
 
 
 def validate_date(date):
@@ -89,7 +93,7 @@ def calculate_results(args, weather_records):
         display_yearly_report(generate_yearly_report(args.extreme[0], weather_records))
 
     if args.average:
-        display_monthly_report(generate_monthly_report(args.average[0], weather_records))
+        display_monthly_report(generate_monthly_report(str(args.average[0]), weather_records))
 
     if args.chart:
         generate_bar_charts(str(args.chart[0]), weather_records)
@@ -105,12 +109,13 @@ def generate_yearly_report(year, weather_records):
 
 
 def generate_monthly_report(date, weather_records):
-    month_records = list(filter(lambda record: record.date.year == date[0] and
-                                               record.date.month == date[1], weather_records))
+    date = datetime.strptime(date, '(%Y, %m)')
+    month_records = list(filter(lambda record: record.date.year == date.year and
+                                               record.date.month == date.month, weather_records))
     if month_records:
-        return [round(sum(DayForecast.max_temp for DayForecast in month_records) / len(month_records)),
-                round(sum(DayForecast.min_temp for DayForecast in month_records) / len(month_records)),
-                round(sum(DayForecast.mean_humidity for DayForecast in month_records) / len(month_records))]
+        return [get_average('max_temp', month_records),
+                get_average('min_temp', month_records),
+                get_average('mean_humidity', month_records)]
 
 
 def generate_bar_charts(date, weather_records):
@@ -144,12 +149,12 @@ def display_monthly_report(monthly_results):
 
 def display_bar_charts(day, minimum_temp, maximum_temp, user_choice):
     print(f'{day} ', end='')
-    if user_choice == 1:                        # 1 if the user wants to print Single bar chart
+    if user_choice == 1:                            # 1 if the user wants to print Single bar chart
         print_in_blue("+", minimum_temp)
         print_in_red("+", maximum_temp)
         print(f' {minimum_temp}C - {maximum_temp}C')
 
-    elif user_choice == 2:                      # 2 if the user wants to print Separate bar charts
+    elif user_choice == 2:                          # 2 if the user wants to print Separate bar charts
         print_in_red("+", maximum_temp)
         print(f' {maximum_temp}C')
         print(f'{day} ', end='')
