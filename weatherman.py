@@ -92,7 +92,7 @@ def calculate_results(args, weather_records):
         display_monthly_report(generate_monthly_report(args.average[0], weather_records))
 
     if args.chart:
-        generate_bar_charts(args.chart[0], weather_records)
+        generate_bar_charts(str(args.chart[0]), weather_records)
 
 
 def generate_yearly_report(year, weather_records):
@@ -115,10 +115,11 @@ def generate_monthly_report(date, weather_records):
 
 def generate_bar_charts(date, weather_records):
     choice = input(f'\n1. Single chart\n2. Separate charts\n')
-    print(f'\n{month_name[date[1]]} {date[0]}')
+    date = datetime.strptime(date, '(%Y, %m)')
+    print(f'\n{month_name[date.month]} {date.year}')
 
     for record in weather_records:
-        if date[0] == record.date.year and date[1] == record.date.month:
+        if date.year == record.date.year and date.month == record.date.month:
             display_bar_charts(record.date.day, record.min_temp,
                                record.max_temp, int(choice))
 
