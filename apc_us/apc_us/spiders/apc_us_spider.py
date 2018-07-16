@@ -18,15 +18,18 @@ class APCUSSpider(scrapy.Spider):
         'DOWNLOAD_DELAY': 2,
     }
 
-    def parse(self, response):
-        for link in response.css('a'):
-            url = self.extract_from_css('a::attr(href)', link)
+    allowed_domains = [
+        'apc-us.com'
+    ]
 
-            if 'apc-us.com' in url:
-                if self.is_product_url(link):
-                    yield response.follow(url, self.parse_product)
-                else:
-                    yield response.follow(url, self.parse)
+    def parse(self, response):
+        for url_selector in response.css('a'):
+            url = self.extract_from_css('a::attr(href)', url_selector)
+
+            if self.is_product_url(url_selector):
+                yield response.follow(url, self.parse_product)
+            else:
+                yield response.follow(url, self.parse)
 
     def is_product_url(self, response):
         if self.extract_from_css('a.product-image::attr(href)', response):
@@ -74,7 +77,7 @@ class APCUSSpider(scrapy.Spider):
     @staticmethod
     def inverse_search_in_list(query, string_list, search_flags=0):
         r = re.compile(query, flags=search_flags)
-        return list(filter(lambda v: not r.search(v), string_list))
+        return list(filter(lambda l: not r.search(l), string_list))
 
     def get_product_name(self, response):
         return self.extract_from_css('div.product-name h1::text', response)
