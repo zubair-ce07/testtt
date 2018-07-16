@@ -1,6 +1,6 @@
 import argparse
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from urllib import parse
 
 import requests
@@ -40,18 +40,17 @@ class Crawler:
         print(f"Requesting: {url}")
         time.sleep(delay)
         response = requests.get(url)
-        self.bytes_downloaded = self.bytes_downloaded + len(response.content)
-        return response.text
+        return response.text, len(response.content)
 
     def extract_urls(self, url, delay):
         url = parse.urljoin(self.website_url, url)
-        page_text = self.fetch_page(url, delay)
+        page_text, page_size = self.fetch_page(url, delay)
         selector = parsel.Selector(text=page_text)
         found_urls = selector.css("a::attr(href)").extract()
         found_urls = set(found_urls)
         found_urls = self.filter_absolute_urls(found_urls)
         print(f"Extracted {len(found_urls)} urls from {url}")
-        return found_urls
+        return found_urls, page_size
 
     def filter_absolute_urls(self, urls):
         filtered_urls = set(filter(lambda url: not parse.urlparse(url).netloc
@@ -61,7 +60,7 @@ class Crawler:
     def crawl_parallel(self, url_limit, request_limit, download_delay):
         found_urls = set('/')
         future_requests = []
-        executor = ThreadPoolExecutor(max_workers=request_limit)
+        executor = ProcessPoolExecutor(max_workers=request_limit)
         self.visited_urls = set()
 
         while True:
@@ -75,7 +74,9 @@ class Crawler:
                 if len(self.visited_urls) == url_limit:
                     break
             for request in future_requests:
-                found_urls = found_urls.union(request.result())
+                urls, page_size = request.result()
+                self.bytes_downloaded = self.bytes_downloaded + page_size
+                found_urls = found_urls.union(urls)
                 found_urls = found_urls.difference(self.visited_urls)
             if len(self.visited_urls) == url_limit:
                 break
