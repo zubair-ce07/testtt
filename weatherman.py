@@ -1,10 +1,8 @@
 import os
-import sys
-from datetime import date
 import argparse
-from datetime import datetime
 import csv
 import glob
+from datetime import datetime
 
 from weatherman_data_structure import ReadingsHolder
 from weatherman_data_structure import Colors
@@ -13,12 +11,12 @@ import weatherman_computations
 
 def parse_files(directory):
     readings = []
+    required_features = ['Max TemperatureC', 'Min TemperatureC',
+                         'Mean TemperatureC', 'Max Humidity',
+                         ' Min Humidity', ' Mean Humidity']
     for data_file in glob.iglob(directory+'*.txt'):
         with open(os.path.join(directory, data_file)) as csvfile:
             csv_reader = csv.DictReader(csvfile)
-            required_features = ['Max TemperatureC', 'Min TemperatureC',
-                                 'Mean TemperatureC', 'Max Humidity',
-                                 ' Min Humidity', ' Mean Humidity']
             for row in csv_reader:
                 if all(row[req_f] for req_f in required_features):
                     readings.append(ReadingsHolder(row))
@@ -84,26 +82,26 @@ def charts_report_generator(readings_result, report_date):
     print(' '.join(results))
 
 
-def readings_of_year(given_date, weather_readings):
+def get_extreme_of_readings(given_date, weather_readings):
     readings_result = weatherman_computations.calculate_extreme_readings(
                       weather_readings, given_date)
     extreme_report_generator(readings_result,
                              given_date.year)
 
 
-def average_of_date(given_date, weather_readings):
+def get_average_of_readings(given_date, weather_readings):
     readings_result = weatherman_computations.calculate_average_readings(
                       weather_readings, given_date)
     average_report_generator(readings_result,
                              given_date.strftime("%Y/%m"))
 
 
-def charts(given_date, weather_readings):
+def get_charts_of_readings(given_date, weather_readings):
     print(f"{Colors.GREEN}\n************ Temperature chart for "
           f"{given_date.year}/{given_date.month}"
           f" ************\n{Colors.RESET}")
     for reading in weather_readings:
-        date_from_file = weatherman_computations.str_to_date(reading.pkt)
+        date_from_file = reading.pkt
         if(date_from_file.year == given_date.year and
            date_from_file.month == given_date.month):
             charts_report_generator([reading.max_temp,
@@ -117,23 +115,26 @@ def main():
     parser.add_argument("directory_path", type=str,
                         help="Path to the directory containing data files")
     parser.add_argument("-a", "--month", type=lambda m:
-                        weatherman_computations.str_to_date(m, format='%Y/%m'),
+                        datetime.strptime(m, '%Y/%m'),
                         action='append', nargs='*', default=[])
     parser.add_argument("-e", "--year", type=lambda y:
-                        weatherman_computations.str_to_date(y, format='%Y'),
+                        datetime.strptime(y, '%Y'),
                         action='append', nargs='*', default=[])
     parser.add_argument("-c", "--chart", type=lambda c:
-                        weatherman_computations.str_to_date(c, format='%Y/%m'),
+                        datetime.strptime(c, '%Y/%m'),
                         action='append', nargs='*', default=[])
     args = parser.parse_args()
-
-    readings = parse_files(args.directory_path)
+    directory_path = args.directory_path+"/"
+    if directory_path.startswith('.'):
+        abs_path = os.path.abspath(os.path.dirname(__file__))
+        directory_path = abs_path + directory_path.strip(".")
+    readings = parse_files(directory_path)
     for arg in args.month:
-        average_of_date(arg[0], readings)
+        get_average_of_readings(arg[0], readings)
     for arg in args.year:
-        readings_of_year(arg[0], readings)
+        get_extreme_of_readings(arg[0], readings)
     for arg in args.chart:
-        charts(arg[0], readings)
+        get_charts_of_readings(arg[0], readings)
 
 
 if __name__ == "__main__":
