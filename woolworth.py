@@ -10,9 +10,9 @@ class WoolworthSpider(CrawlSpider):
     download_delay = 3
 
     rules = (
-        Rule(LinkExtractor(restrict_css='.main-nav__list-item--secondary .main-nav__link'),callback='parse'),
-        Rule(LinkExtractor(restrict_css='.product-card__visual'), callback='parse_products'),
-        Rule(LinkExtractor(restrict_css='.pagination > a'),callback='parse'),
+        Rule(LinkExtractor(restrict_css=['.main-nav__list-item--secondary .main-nav__link',
+                                         '.pagination'])),
+        Rule(LinkExtractor(restrict_css='.product-card__visual'), callback='parse_products')
     )
 
     def parse_products(self, response):
