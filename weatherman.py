@@ -20,6 +20,7 @@ def main():
                                  ' highest and lowest temperature on each  '
                                  'day. Highest in  red and lowest in blue. ('
                                  'Range of Months)')
+
     args = arg_parser.parse_args()
     if args.e:
         year_report = WeatherReport()

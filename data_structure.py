@@ -10,7 +10,6 @@ class Colors:
 class DailyRecords:
 
     def __init__(self, row):
-
         date = row.get('PKT') or row.get('PKST')
         self.date = datetime.strptime(date, "%Y-%m-%d")
         self.max_temperature = int(row.get('Max TemperatureC') or 0) or None
