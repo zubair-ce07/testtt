@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class ReadingsHolder:
+class WeatherRecord:
 
     def __init__(self, features):
         self.pkt = features.get('PKT') or features.get('PKST')
