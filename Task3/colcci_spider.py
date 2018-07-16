@@ -12,9 +12,9 @@ class ColcciProductDetails(CrawlSpider):
 
     allowed_links = ('masculino-novo1', 'feminino-novo1', 'fitness', 'acessorios')
     rules = (Rule(LinkExtractor(allow=allowed_links, restrict_css="div#main-menu ul#menus")),
-             Rule(LinkExtractor(restrict_css="div.products-list"), callback='parse_the_page'),)
+             Rule(LinkExtractor(restrict_css="div.products-list"), callback='parse_page'),)
 
-    def parse_the_page(self, response):
+    def parse_page(self, response):
         product_css_selector = response.css("div.descriptioncolContent")
         product_loader = ItemLoader(item=ProductItem(), selector=product_css_selector)
 
