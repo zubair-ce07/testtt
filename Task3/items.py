@@ -47,7 +47,7 @@ def decode_non_ascii(des):
 
 class ProductItem(scrapy.Item):
     retailer_sku = scrapy.Field()
-    name = scrapy.Field()
+    name = scrapy.Field(input_processor=MapCompose(decode_non_ascii))
     brand = scrapy.Field()
     description = scrapy.Field(input_processor=MapCompose(decode_non_ascii))
     category = scrapy.Field(input_processor=MapCompose(get_category_from_name))
