@@ -1,28 +1,17 @@
+from datetime import datetime
+
+
 class ReadingsHolder:
 
     def __init__(self, features):
         self.pkt = features.get('PKT') or features.get('PKST')
+        self.pkt = datetime.strptime(self.pkt, '%Y-%m-%d')
         self.max_temp = int(features.get('Max TemperatureC'))
         self.min_temp = int(features.get('Min TemperatureC'))
         self.mean_temp = int(features.get('Mean TemperatureC'))
         self.max_humidity = int(features.get('Max Humidity'))
         self.min_humidity = int(features.get(' Min Humidity'))
         self.mean_humidity = int(features.get(' Mean Humidity'))
-
-
-class CalculationHolder:
-
-    def __init__(self, **weather_readings):
-        self.maximum_temp = weather_readings.get('max_temp', 0)
-        self.minimum_temp = weather_readings.get('min_temp', 0)
-        self.maximum_humidity = weather_readings.get('max_humidity', 0)
-        self.maximum_temp_day = weather_readings.get('max_temp_day', '')
-        self.minimum_temp_day = weather_readings.get('min_temp_day', '')
-        self.maximum_humidity_day = weather_readings.get('max_humid_day', '')
-        self.max_mean_temp = weather_readings.get('max_mean_temp', 0)
-        self.min_mean_temp = weather_readings.get('min_mean_temp', 0)
-        self.average_mean_humidity = weather_readings.get('avg_mean_humidity',
-                                                          0)
 
 
 class Colors:
