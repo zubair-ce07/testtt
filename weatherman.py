@@ -12,7 +12,7 @@ import weatherman_computations
 def parse_files(directory):
     if not os.path.isabs(directory):
         directory = os.path.dirname(os.path.abspath(__file__)
-                    ) + directory.strip(".")
+                                    ) + directory.strip(".")
     readings = []
     required_features = ['Max TemperatureC', 'Min TemperatureC',
                          'Mean TemperatureC', 'Max Humidity',
@@ -47,7 +47,7 @@ def display_extreme_readings(given_date, weather_readings):
     readings_result = weatherman_computations.calculate_extreme_readings(
                       weather_readings, given_date)
     header = f"{Colors.GREEN}\n{'*' * 12} Extreme Readings of "\
-             f"{given_date} {'*' * 12}\n{Colors.RESET}"
+        f"{given_date} {'*' * 12}\n{Colors.RESET}"
 
     highest = f"Highest: {readings_result.maximum_temp}"\
         f"C on {readings_result.maximum_temp_day}"
@@ -72,7 +72,7 @@ def display_average_readings(given_date, weather_readings):
     readings_result = weatherman_computations.calculate_average_readings(
                       weather_readings, given_date)
     header = f"{Colors.GREEN}\n{'*' * 12}Average Readings of "\
-             f"{given_date} {'*' * 12}\n{Colors.RESET}"
+        f"{given_date} {'*' * 12}\n{Colors.RESET}"
 
     highest_avg = f"Highest Average: {readings_result.max_mean_temp}C"
     lowest_average = f"Lowest Average: {readings_result.min_mean_temp}C"
