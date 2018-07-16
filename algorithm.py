@@ -1,37 +1,56 @@
-
-import concurrent
-import urllib.request
+import aiohttp as aiohttp
+from parsel import Selector
+import asyncio
+from urllib.parse import urljoin, urlparse
 
 
 class Algorithm:
-    def __init__(self, urls, workers=1, download_delay=1, max_urls=5):
-        self._total_urls = 0
+    def __init__(self, url, workers=1, download_delay=1, max_urls=0):
         self._total_data = 0
-        self._urls = urls
-        self._workers = workers
-        self.download_delay = download_delay
-        self.max_urls = max_urls
+        self._url = '{}://{}'.format(urlparse(url).scheme, urlparse(url).netloc)
+        self._pending_urls = set([self._url])
+        self._workers = asyncio.BoundedSemaphore(workers)
+        self._session = aiohttp.ClientSession()
+        self._download_delay = download_delay
+        self._max_urls = max_urls
+        self._seen_urls = set()
 
-    def run(self):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self._workers) as executor:
-            future_to_url = dict()
-            while True:
-                if self._total_urls <= self.max_urls:
-                    for url in self._urls:
-                        future_to_url.update({executor.submit(self._load_url, url, 60): url})
-                        self._total_urls = self._total_urls + 1
-                        self._urls.pop(0)
-                    for future in concurrent.futures.as_completed(future_to_url):
-                        url = future_to_url.get(future)
-                        try:
-                            data = future.result()
-                        except Exception as exc:
-                            print('%r generated an exception: %s' % (url, exc))
-                        else:
-                            self._total_data = self._total_data + len(data)
-                            print('%r page is %d bytes' % (url, len(data)))
+    def _find_urls(self, html):
+        found_urls = set()
+        dom = Selector(html)
+        for anchor in dom.css('a'):
+            url = urljoin(self._url, anchor.xpath('@href').get())
+            if url not in self._seen_urls and url.startswith(self._url):
+                found_urls.add(url)
+        return found_urls
 
-    @staticmethod
-    def _load_url(url, timeout):
-        with urllib.request.urlopen(url, timeout=timeout) as conn:
-            return conn.read()
+    async def _http_request(self, url):
+        async with self._workers:
+            try:
+                async with self._session.get(url) as response:
+                    html = await response.read()
+            except Exception as e:
+                print('Exception: {}'.format(e))
+            else:
+                return len(str(html)), self._find_urls(str(html))
+
+    async def run(self):
+        while self._pending_urls:
+            futures = []
+            for url in self._pending_urls:
+                if len(self._seen_urls) < self._max_urls or self._max_urls == 0:
+                    self._seen_urls.add(url)
+                    futures.append(self._http_request(url))
+            self._pending_urls = set()
+            for future in asyncio.as_completed(futures):
+                try:
+                    read_data, extracted_urls = await future
+                    self._total_data = self._total_data + read_data
+                    [self._pending_urls.add(url) for url in extracted_urls]
+                except Exception as e:
+                    print('Encountered exception: {}'.format(e))
+        await self._session.close()
+        return self._total_data, len(self._seen_urls)
+
+
+
