@@ -1,4 +1,5 @@
 import json
+import unicodedata
 
 import scrapy
 from scrapy.loader.processors import MapCompose
@@ -12,6 +13,7 @@ def create_sku_jsonobject_from_jsonstring(sku_jsonstring):
         "Currency": "Brazilian real",
         "size": sku_jsonobject.get("option1", 'None'),
         "previous_price": sku_jsonobject.get("compare_at_price_short", 'None'),
+        "out_of_stock": not sku_jsonobject.get("available", 'None'),
         "sku_id": sku_jsonobject.get("sku", 'None')
         }
 
@@ -38,11 +40,16 @@ def convert_price_to_cents(product_price):
         return float(product_price[2:].replace(',', '')) * 100
 
 
+def decode_non_ascii(des):
+    if des:
+        return unicodedata.normalize("NFKD", des)
+
+
 class ProductItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     name = scrapy.Field()
     brand = scrapy.Field()
-    description = scrapy.Field()
+    description = scrapy.Field(input_processor=MapCompose(decode_non_ascii))
     category = scrapy.Field(input_processor=MapCompose(get_category_from_name))
     price = scrapy.Field(input_processor=MapCompose(convert_price_to_cents))
     url = scrapy.Field()
