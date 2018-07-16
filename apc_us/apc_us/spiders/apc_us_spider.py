@@ -87,10 +87,9 @@ class APCUSSpider(scrapy.Spider):
 
     def get_product_care(self, response):
         care = response.css('section#description div > div::text').extract_first()
-        care = care.split('. ')
-        care = self.search_in_list(r'%', care)
-        care = [c.rstrip('.') for c in care]
-        return [c.strip() for c in care]
+        string_to_sentence = re.compile(r'\. ')
+        care = [c.strip() for c in string_to_sentence.split(care)]
+        return self.search_in_list(r'%', care)
 
     def get_product_images(self, response, retailer_sku):
         product_gallery = self.extract_from_css('div.product-image-gallery img::attr(src)',
@@ -213,6 +212,6 @@ class APCUSSpider(scrapy.Spider):
     def get_product_prices(self, response):
         prices = self.extract_from_css('div.product-shop div.price-info span.price::text', response)
         if type(prices) is list:
-            return [self.get_price_from_string(price) for price in prices]
+            return [self.get_price_from_string(price.strip()) for price in prices]
 
-        return self.get_price_from_string(prices)
+        return self.get_price_from_string(prices.strip())
