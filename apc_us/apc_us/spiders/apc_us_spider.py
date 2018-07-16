@@ -112,16 +112,7 @@ class APCUSSpider(scrapy.Spider):
         if self.extract_from_css('#size_label', response):
             return 'none'
 
-        if self.extract_from_css('#ring_size_label', response):
-            return 'ring'
-
-        if self.extract_from_css('#men_shoe_size_label', response):
-            return 'men_shoe'
-
-        if self.extract_from_css('#men_belt_size_label', response):
-            return 'men_belt'
-
-        return 'unknown'
+        return 'undefined'
 
     @staticmethod
     def generate_product_sku(color, size, product_json, prices):
@@ -166,12 +157,6 @@ class APCUSSpider(scrapy.Spider):
             size_responses = response.css('#configurable_swatch_men_apparel_size li')
         elif gender == 'female':
             size_responses = response.css('#configurable_swatch_women_apparel_size li')
-        elif gender == 'ring':
-            size_responses = response.css('#configurable_swatch_ring_size li')
-        elif gender == 'men_shoe':
-            size_responses = response.css('#configurable_swatch_men_shoe_size li')
-        elif gender == 'men_belt':
-            size_responses = response.css('#configurable_swatch_men_belt_size li')
         elif gender == 'none':
             size_responses = response.css('#configurable_swatch_size li')
         else:
