@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlparse
 
 
 class Algorithm:
-    def __init__(self, url, workers=1, download_delay=1, max_urls=0):
+    def __init__(self, url, workers=1, download_delay=0, max_urls=0):
         self._total_data = 0
         self._url = '{}://{}'.format(urlparse(url).scheme, urlparse(url).netloc)
         self._pending_urls = set([self._url])
@@ -39,6 +39,7 @@ class Algorithm:
             futures = []
             for url in self._pending_urls:
                 if len(self._seen_urls) < self._max_urls or self._max_urls == 0:
+                    asyncio.sleep(self._download_delay)
                     self._seen_urls.add(url)
                     futures.append(self._http_request(url))
             self._pending_urls = set()
