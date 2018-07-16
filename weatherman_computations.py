@@ -11,8 +11,10 @@ def extreme_values_days(weather_readings, max_temp, min_temp, max_humid):
         if reading.max_humidity == max_humid:
             max_humidity_day = reading.pkt.strftime("%A %B %d")
 
-    return {'max': highest_temp_day, 'min': lowest_temp_day,
-            'humid': max_humidity_day}
+    days_ = namedtuple('days_', 'max, min, humid')
+
+    return days_(highest_temp_day, lowest_temp_day,
+                 max_humidity_day)
 
 
 def calculate_extreme_readings(weather_readings, given_date):
@@ -26,9 +28,9 @@ def calculate_extreme_readings(weather_readings, given_date):
 
     extreme_days = extreme_values_days(weather_readings, max_temperature,
                                        min_temperature, max_humid)
-    max_temp_day = extreme_days.get('max')
-    min_temp_day = extreme_days.get('min')
-    max_humid_day = extreme_days.get('humid')
+    max_temp_day = extreme_days.max
+    min_temp_day = extreme_days.min
+    max_humid_day = extreme_days.humid
 
     calculation_holder = namedtuple('calculation_holder', 'maximum_temp,\
                                     minimum_temp, maximum_humidity,\
