@@ -61,7 +61,7 @@ class Crawler:
 
 def main():
     loop = asyncio.get_event_loop()
-    arbisoft_crawler = Crawler('http://quotes.toscrape.com/')
+    arbisoft_crawler = Crawler('http://arbisoft.com/')
     loop.run_until_complete(arbisoft_crawler.crawl_async(20, 5, 0.1))
     arbisoft_crawler.crawl_report()
     loop.close()
