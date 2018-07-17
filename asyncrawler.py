@@ -11,7 +11,6 @@ class AsynCrawler:
 
     def __init__(self, url, concurrent_requests=1,
                  download_delay=0, total_visits=0):
-
         self.url = url
         self.html = self.download_html()
         self.concurrent_request = concurrent_requests
@@ -34,13 +33,20 @@ class AsynCrawler:
         return [urljoin(self.url, url) for url in sel.css('html').xpath('.//a/@href').getall()]
 
 
-def main():
-    con_requests = int(input("Enter no of concurrent requests"))
-    delay = int(input("Enter delay in secs"))
-    visits = int(input("Enter total urls to visit"))
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("website", help="website url for crawling", type=str)
+    parser.add_argument("concurrent_requests", help="Concurrent request that can be made", type=int)
+    parser.add_argument("download_delay", help="Download delay for each worker", type=int)
+    parser.add_argument("total_visits", help="Total urls to visits", type=int)
+    return parser.parse_args()
 
-    web_crawler = AsynCrawler('http://google.com/', con_requests,
-                              delay, visits)
+
+def main():
+    args = parse_arguments()
+
+    web_crawler = AsynCrawler(args.website, args.concurrent_requests,
+                              args.download_delay, args.total_visits)
 
     anchor_urls = web_crawler.get_anchor_urls()
     print(anchor_urls)
