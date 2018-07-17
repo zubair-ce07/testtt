@@ -21,41 +21,41 @@ def validate_positive_input(value):
     return value
 
 
-def parse_user_cli_arguments():
-    user_command_parser = argparse.ArgumentParser()
+def parse_arguments():
+    parser = argparse.ArgumentParser()
 
-    user_command_parser.add_argument("site_to_crawl", help="This arg stores the link of the site on "
+    parser.add_argument("site_to_crawl", help="This arg stores the link of the site on "
                                                            "which crawling will be performed", type=validate_url)
-    user_command_parser.add_argument("total_urls", help="This arg stores the total number of urls "
+    parser.add_argument("total_urls", help="This arg stores the total number of urls "
                                                         "that should be visited", type=validate_positive_input)
-    user_command_parser.add_argument("download_delay", help="This arg stores the amount of delay "
+    parser.add_argument("download_delay", help="This arg stores the amount of delay "
                                                             "in consecutive downloads", type=validate_positive_input)
-    user_command_parser.add_argument("tasks_limit", help="This arg stores the total number of task that can be "
+    parser.add_argument("tasks_limit", help="This arg stores the total number of task that can be "
                                                          "executed concurrently", type=validate_positive_input)
 
-    return user_command_parser.parse_args()
+    return parser.parse_args()
 
 
-def main(user_cli_args, c_spider):
+def main(user_cli_args):
+    spider = RecursiveConcurrentSpider(user_cli_args.site_to_crawl,
+                                                  user_cli_args.download_delay,
+                                                  int(user_cli_args.tasks_limit))
     loop = asyncio.get_event_loop()
     try:
         start_time = time.time()
-        loop.run_until_complete(c_spider.start_crawler([urlparse(c_spider.site_to_crawl)],
+        loop.run_until_complete(spider.start_crawler([urlparse(spider.site_to_crawl)],
                                                        int(user_cli_args.total_urls)))
     finally:
         loop.close()
 
-    print(f"\nTotal Requests: {c_spider.spider_execution_report.total_requests}\n"
-          f"Bytes Downloaded: {c_spider.spider_execution_report.bytes_downloaded}\n"
+    print(f"\nTotal Requests: {spider.spider_execution_report.total_requests}\n"
+          f"Bytes Downloaded: {spider.spider_execution_report.bytes_downloaded}\n"
           f"Size Per Page: "
-          f"{c_spider.spider_execution_report.bytes_downloaded/c_spider.spider_execution_report.total_requests}")
+          f"{spider.spider_execution_report.bytes_downloaded/spider.spider_execution_report.total_requests}")
 
     print("Execution Time: {}".format(time.time()-start_time))
 
 
 if __name__ == '__main__':
-    user_cli_args = parse_user_cli_arguments()
-    concurrent_spider = RecursiveConcurrentSpider(user_cli_args.site_to_crawl,
-                                                  user_cli_args.download_delay,
-                                                  int(user_cli_args.tasks_limit))
-    main(user_cli_args, concurrent_spider)
+    user_cli_args = parse_arguments()
+    main(user_cli_args)
