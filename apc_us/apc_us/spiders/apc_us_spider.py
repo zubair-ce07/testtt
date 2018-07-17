@@ -52,7 +52,7 @@ class APCUSSpider(scrapy.Spider):
             'gender': gender,
             'brand': 'A.P.C.',
             'care': self.get_product_care(response),
-            'skus': self.get_product_skus(response, gender, prices)
+            'skus': self.get_product_skus(response, prices)
         }
 
     @staticmethod
@@ -139,10 +139,10 @@ class APCUSSpider(scrapy.Spider):
 
         return sku
 
-    def get_product_skus(self, response, gender, prices):
+    def get_product_skus(self, response, prices):
         skus = []
         colors = self.get_product_colors(response)
-        sizes = self.get_product_sizes(response, gender)
+        sizes = self.get_product_sizes(response)
         product_json = self.get_product_json(response)
 
         for color in colors:
@@ -153,18 +153,10 @@ class APCUSSpider(scrapy.Spider):
 
         return skus
 
-    def get_product_sizes(self, response, gender):
+    def get_product_sizes(self, response):
         sizes = []
-
-        if gender == 'male':
-            size_responses = response.css('#configurable_swatch_men_apparel_size li')
-        elif gender == 'female':
-            size_responses = response.css('#configurable_swatch_women_apparel_size li')
-        elif gender == 'none':
-            size_responses = response.css('#configurable_swatch_size li')
-        else:
-            size_responses = response.css(
-                'ul.configurable-swatch-list.configurable-block-list.clearfix li')
+        size_responses = response.css(
+            'ul.configurable-swatch-list.configurable-block-list.clearfix li')
 
         for size_response in size_responses:
             size_code = self.extract_from_css('li::attr(id)', size_response)
