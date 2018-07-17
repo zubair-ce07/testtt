@@ -35,9 +35,11 @@ class DocketSpider(scrapy.Spider):
     def parse_row_for_item(self, row_index, item, is_single_span, is_double_span):
         column_no = 0 if is_single_span else 1
         item['docket'] = self.get_value_from_column(self.all_rows[row_index], 1)
+        item['file_url'] = self.all_rows[row_index].xpath('td[1]/a/@href').extract_first()
         item['filer'] = self.get_value_from_column(self.all_rows[row_index], column_no + 1 if not is_double_span else 1)
         item['description'] = self.get_value_from_column(self.all_rows[row_index], column_no + 2 if not is_double_span else 1)
         item['filed_date'] = self.get_filer_from_description(self.item['description'])
+
 
     def get_value_from_column(self, row, colunm_no):
         return row.xpath('td[{}]//text()'.format(colunm_no)).extract_first()
@@ -54,6 +56,7 @@ class DocketSpider(scrapy.Spider):
 
         if self.is_docket_spanning:
             self.item2['docket'] = self.item['docket']
+            self.item2['file_url'] = self.item['file_url']
         if self.is_filer_spanning:
             self.item2['filer'] = self.item['filer']
         if self.is_description_spanning:
