@@ -10,15 +10,13 @@ class WeatherReadingsReader:
 
     @staticmethod
     def read_day_reading(reading):
-        reading = {k.strip(): v for k, v in reading.items()}
         day_reading = weather_day_reading.WeatherReading(reading)
         return day_reading
 
     @staticmethod
     def validate_day_reading(reading):
-        reading = {k.strip(): v for k, v in reading.items()}
         required_fields = ['Mean TemperatureC', 'Min TemperatureC', 'Max TemperatureC',
-                           'Mean Humidity', 'Max Humidity', 'Min Humidity']
+                           ' Mean Humidity', 'Max Humidity', ' Min Humidity']
         return all(reading.get(f) for f in required_fields)
 
     @staticmethod

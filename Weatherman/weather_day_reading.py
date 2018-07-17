@@ -6,5 +6,5 @@ class WeatherReading:
         self.lowest_temp = int(day["Min TemperatureC"])
         self.mean_temp = int(day["Mean TemperatureC"])
         self.highest_hum = int(day["Max Humidity"])
-        self.lowest_hum = int(day["Min Humidity"])
-        self.mean_hum = int(day["Mean Humidity"])
+        self.lowest_hum = int(day[" Min Humidity"])
+        self.mean_hum = int(day[" Mean Humidity"])
