@@ -21,9 +21,11 @@ class ReportGenerator:
     @staticmethod
     def get_bar_report(report_type, argument, weather_readings):
         year, month = [int(a) for a in argument.split('/')]
-        if report_type == 'c':
+        dual_bar_report_parameter = 'c'
+        single_bar_report_parameter = 'd'
+        if report_type == dual_bar_report_parameter:
             ReportGenerator.dual_bar_chart_report(year, month, weather_readings)
-        elif report_type == 'd':
+        elif report_type == single_bar_report_parameter:
             ReportGenerator.single_bar_chart_report(year, month, weather_readings)
 
     @staticmethod
@@ -45,7 +47,7 @@ class ReportGenerator:
 
     @staticmethod
     def dual_bar_chart_report(year, month, weather_readings):
-        print(f'-d {calendar.month_name[month]} {year}')
+        print(f'-c {calendar.month_name[month]} {year}')
         for reading in weather_readings:
             print(f'{reading.day:02}', end=' ')
             print(f'\033[94m' + '+' * reading.highest_temp + '\033[0m', end='')
@@ -57,7 +59,7 @@ class ReportGenerator:
 
     @staticmethod
     def single_bar_chart_report(year, month, weather_readings):
-        print(f'-c {calendar.month_name[month]} {year}')
+        print(f'-d {calendar.month_name[month]} {year}')
         for reading in weather_readings:
             print(f'{reading.day:02}', end=' ')
             print(f'\033[91m' + '+' * reading.lowest_temp + '\033[0m', end='')

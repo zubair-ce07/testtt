@@ -1,6 +1,10 @@
 import os
 import argparse
+import calendar
+import warnings
+
 from weather_readings_reader import WeatherReadingsReader
+from report_generator import ReportGenerator
 
 
 def validate_month(argument):
@@ -13,13 +17,46 @@ def validate_month(argument):
     return argument
 
 
-def validate_directory(argument):
-    if os.path.exists(argument):
-        if argument.endswith('/'):
-            return argument
-        raise argparse.ArgumentTypeError(f"{argument} Not a directory but a file path")
-    else:
-        raise argparse.ArgumentTypeError(f"{argument} Directory does not exist")
+def validate_directory(path):
+    if os.path.isdir(path):
+        return path
+    raise argparse.ArgumentTypeError(f"Invalid directory path")
+
+
+def month_argument_reader(argument):
+    year, month = argument.split('/')
+    return int(year), calendar.month_abbr[int(month)]
+
+
+def run(args):
+    my_path = args.directory
+    if args.type_e:
+        weather_readings = WeatherReadingsReader.read_readings(my_path, args.type_e)
+        if weather_readings:
+            ReportGenerator.get_annual_report(weather_readings)
+        else:
+            warnings.warn(f'Could not find Any Data for {args.type_e}')
+    if args.type_a:
+        year, month_name = month_argument_reader(args.type_a)
+        weather_readings = WeatherReadingsReader.read_readings(my_path, year, month_name)
+        if weather_readings:
+            ReportGenerator.get_month_report(month_name, year, weather_readings)
+        else:
+            warnings.warn(f'Could not find Any Data for {args.type_a}')
+    if args.type_c:
+        year, month_name = month_argument_reader(args.type_c)
+        weather_readings = WeatherReadingsReader.read_readings(my_path, year, month_name)
+        if weather_readings:
+            ReportGenerator.get_bar_report('c', args.type_c, weather_readings)
+        else:
+            warnings.warn(f'Could not find Any Data for {args.type_c}')
+    if args.type_d:
+        year, month_name = month_argument_reader(args.type_d)
+        weather_readings = WeatherReadingsReader.read_readings(my_path, year, month_name)
+        if weather_readings:
+            ReportGenerator.get_bar_report('d', args.type_d, weather_readings)
+        else:
+            warnings.warn(f'Could not find Any Data for {args.type_d}')
 
 
 def main():
@@ -30,7 +67,7 @@ def main():
     parser.add_argument('-c', '--type_c', type=validate_month, help='Dual Bar Chart year/month')
     parser.add_argument('-d', '--type_d', type=validate_month, help='Single Bar Chart year/month')
     args = parser.parse_args()
-    WeatherReadingsReader(args)
+    run(args)
 
 
 if __name__ == '__main__':

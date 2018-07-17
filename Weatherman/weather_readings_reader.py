@@ -1,52 +1,12 @@
 from os import listdir
 from os.path import isfile, join
 import csv
-import calendar
 import re
 
 import weather_day_reading
-from report_generator import ReportGenerator
 
 
 class WeatherReadingsReader:
-
-    def __init__(self, args):
-        my_path = args.directory
-        if args.type_e:
-            weather_readings = WeatherReadingsReader.read_readings(my_path, args.type_e)
-            if weather_readings:
-                ReportGenerator.get_annual_report(weather_readings)
-            else:
-                ReportGenerator.no_data_found(year=args.type_e)
-        if args.type_a:
-            year, month_name = WeatherReadingsReader.month_argument_reader(args.type_a)
-            weather_readings = WeatherReadingsReader.read_readings(
-                my_path, year, month_name)
-            if weather_readings:
-                ReportGenerator.get_month_report(month_name, year, weather_readings)
-            else:
-                ReportGenerator.no_data_found(year, month_name)
-        if args.type_c:
-            year, month_name = WeatherReadingsReader.month_argument_reader(args.type_c)
-            weather_readings = WeatherReadingsReader.read_readings(
-                my_path, year, month_name)
-            if weather_readings:
-                ReportGenerator.get_bar_report('c', args.type_c, weather_readings)
-            else:
-                ReportGenerator.no_data_found(year, month_name)
-        if args.type_d:
-            year, month_name = WeatherReadingsReader.month_argument_reader(args.type_d)
-            weather_readings = WeatherReadingsReader.read_readings(
-                my_path, year, month_name)
-            if weather_readings:
-                ReportGenerator.get_bar_report('d', args.type_d, weather_readings)
-            else:
-                ReportGenerator.no_data_found(year, month_name)
-
-    @staticmethod
-    def month_argument_reader(argument):
-        year, month = argument.split('/')
-        return int(year), calendar.month_abbr[int(month)]
 
     @staticmethod
     def read_day_reading(reading):
