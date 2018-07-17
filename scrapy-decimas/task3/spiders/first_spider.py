@@ -7,7 +7,7 @@ from task3.items import Task3Item
 
 
 class DecimasSpider(CrawlSpider):
-    DOWNLOAD_DELAY = 0
+    DOWNLOAD_DELAY = 0.5
     name = "decimas"
     allowed_domains = ['decimas.es']
     start_urls = ['https://www.decimas.es/']
@@ -15,6 +15,8 @@ class DecimasSpider(CrawlSpider):
     rules = (Rule(LinkExtractor(restrict_css='a.view_all'),
                   follow=True),
              Rule(LinkExtractor(restrict_css='div.ambrands-list a'),
+                  follow=True),
+             Rule(LinkExtractor(restrict_css='a.next.i-next'),
                   follow=True),
              Rule(LinkExtractor(restrict_css='div.category-products a.product-image'),
                   follow=False, callback='parse_item'))
@@ -62,12 +64,12 @@ class DecimasSpider(CrawlSpider):
         else:
             curr = response.css('p.special-price span.price span::attr(content)').extract_first()
             old_price = response.css('p.old-price span.price::text').extract_first().strip()
-            counter = 0
-            for char in old_price:
-                if char == '\\':
-                    break
-                counter += 1
-            old_price = int(float(old_price[0:counter].replace(',', '.')) * 100)
+            special1 = u"\u00a0"
+            special2 = u"\u20ac"
+            old_price = old_price.replace(special1, '')
+            old_price = old_price.replace(special2, '')
+            old_price = old_price.replace(',', '.')
+            old_price = int(float(old_price) * 100)
             new_price = int(float(response.css('p.special-price span.price::attr(content)').extract_first()) * 100)
             return [curr, old_price, new_price]
 
@@ -81,8 +83,10 @@ class DecimasSpider(CrawlSpider):
         return response.request.url
 
     def get_description(self, response):
-        description = response.css('div.descripcionProducto > div > p::text').extract_first().strip()
-        return description.split('.')
+        description = response.css('div.descripcionProducto > div > p::text').extract_first()
+        if description:
+            description.strip()
+            return description.split('.')
 
     def get_categories(self, title, brand, gender):
         return [title.split(' ')[0], gender, brand]
