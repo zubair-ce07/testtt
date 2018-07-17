@@ -37,7 +37,6 @@ class Crawler:
         self.visited_urls = set()
 
     def fetch_page(self, url, delay):
-        print(f"Requesting: {url}")
         time.sleep(delay)
         response = requests.get(url)
         return response.text, len(response.content)
@@ -49,7 +48,6 @@ class Crawler:
         found_urls = selector.css("a::attr(href)").extract()
         found_urls = set(found_urls)
         found_urls = self.filter_absolute_urls(found_urls)
-        print(f"Extracted {len(found_urls)} urls from {url}")
         return found_urls, page_size
 
     def filter_absolute_urls(self, urls):
@@ -64,7 +62,7 @@ class Crawler:
         self.visited_urls = set()
 
         while True:
-            for i in range(url_limit):
+            for _ in range(url_limit):
                 if found_urls:
                     url = found_urls.pop()
                     future_requests.append(executor.submit(self.extract_urls, url, download_delay))
