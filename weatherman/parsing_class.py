@@ -1,9 +1,9 @@
-from os import listdir
-from os.path import isfile, join
 import csv
 import datetime
+from os import listdir
+from os.path import isfile, join
 
-from weather_data import WeatherData
+from record import Record
 
 
 class ParsingFiles:
@@ -24,34 +24,16 @@ class ParsingFiles:
             with open(''.join([self.path, file_name]), 'r') as in_file:
                 file_reader = csv.DictReader(in_file)
                 for line in file_reader:
-                    one_record = WeatherData()
-                    date = line.get('PKT')
-                    if date is None:
-                        date = line.get('PKST')
-                    one_record.pkt = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-                    one_record.max_temperature = line['Max TemperatureC']
-                    one_record.max_humidity = line['Max Humidity']
-                    one_record.mean_humidity = line[' Mean Humidity']
-                    one_record.min_temperature = line['Min TemperatureC']
-                    # one_record.mean_temperature = line['Mean TemperatureC']
-                    # one_record.dew_point = line['Dew PointC']
-                    # one_record.mean_dew_point = line['MeanDew PointC']
-                    # one_record.min_dew_point = line['Min DewpointC']
-                    # one_record.min_humidity = line[' Min Humidity']
-                    # one_record.max_sea_level_pressure = line[' Max Sea Level PressurehPa']
-                    # one_record.mean_sea_level_pressure = line[' Mean Sea Level PressurehPa']
-                    # one_record.min_sea_level_pressure = line[' Min Sea Level PressurehPa']
-                    # one_record.max_visibility = line[' Max VisibilityKm']
-                    # one_record.mean_visibility = line[' Mean VisibilityKm']
-                    # one_record.min_visibility = line[' Min VisibilitykM']
-                    # one_record.max_wind_speed = line[' Max Wind SpeedKm/h']
-                    # one_record.mean_wind_speed = line[' Mean Wind SpeedKm/h']
-                    # one_record.max_gust_speed = line[' Max Gust SpeedKm/h']
-                    # one_record.precipitationmm = line['Precipitationmm']
-                    # one_record.cloud_cover = line[' CloudCover']
-                    # one_record.events = line[' Events']
-                    # one_record.wind_dir_degrees = line['WindDirDegrees']
-                    month_record.append(one_record)
+                    date = line.get('PKT', line.get('PKST'))
+                    date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+                    max_temp = line['Max TemperatureC']
+                    max_humidity = line['Max Humidity']
+                    mean_humidity = line[' Mean Humidity']
+                    min_temp = line['Min TemperatureC']
+
+                    record = Record(date, max_temp, min_temp, max_humidity, mean_humidity)
+                    month_record.append(record)
+
             all_weather_readings[file_name_key] = month_record
 
         return all_weather_readings

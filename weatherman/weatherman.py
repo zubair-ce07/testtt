@@ -2,9 +2,8 @@ import argparse
 import calendar
 import datetime
 
-
-from parsing_class import ParsingFiles
 from calculation_class import CalculatingResults
+from parsing_class import ParsingFiles
 from report_class import ReportPrinting
 
 
@@ -102,10 +101,22 @@ if __name__ == "__main__":
     all_weather_readings = parsing_files.reading_files()
     file_names = [file_name.replace('.txt', '') for file_name in parsing_files.all_files_names]
 
-    calculations_class = CalculatingResults(all_weather_readings, argument_list, file_names)
-    calculations_class.calculations()
-    results = calculations_class.results
+    argument_dict = get_argument_flag_dict(args)
+    calculations_class = CalculatingResults(all_weather_readings, file_names)
+    
+    for key_arg in argument_dict.keys():
+        for argument in argument_dict[key_arg]:
+            if key_arg == 'e':
+                calculations_class.calculate_results_for_year(argument)
+                report_class = ReportPrinting(calculations_class.results)
+                report_class.print_results_for_year(argument)
 
-    report_printer = ReportPrinting(results, get_argument_flag_dict(args))
-    report_printer.printing()
+            if key_arg == 'a':
+                calculations_class.calculate_average_results_for_month(argument)
+                report_class = ReportPrinting(calculations_class.results)
+                report_class.print_results_for_month(argument)
 
+            if key_arg == 'c':
+                calculations_class.calculate_month_chart(argument)
+                report_class = ReportPrinting(calculations_class.results)
+                report_class.plot_chart_for_month(argument)
