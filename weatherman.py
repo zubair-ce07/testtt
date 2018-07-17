@@ -21,11 +21,11 @@ class WeatherRecord:
         self.mean_humidity = int(features.get(' Mean Humidity'))
 
 
-class CalculateReadings:
+class WeatherAnalysis:
 
     @staticmethod
-    def ext_readings(weather_records, given_date):
-        weather_readings = list(filter(lambda e: e.pkt.year == given_date.year,
+    def ext_readings(weather_records, raw_date):
+        weather_readings = list(filter(lambda wr: wr.pkt.year == raw_date.year,
                                        weather_records))
 
         max_temperatures = list(
@@ -51,14 +51,14 @@ class CalculateReadings:
                                   max_humid.pkt.strftime("%A %B %d"))
 
     @staticmethod
-    def avg_readings(weather_records, given_date):
-        weather_readings = list(filter(lambda a: a.pkt.year == given_date.year and
-                                       a.pkt.month == given_date.month, weather_records))
+    def avg_readings(weather_records, raw_date):
+        weather_readings = list(filter(lambda wr: wr.pkt.year == raw_date.year and
+                                       wr.pkt.month == raw_date.month, weather_records))
         mean_temps = list(filter(attrgetter('mean_temp'), weather_readings))
-        mean_humid = list(
+        mean_humidities = list(
             filter(attrgetter('mean_humidity'), weather_readings))
 
-        mean_value = mean(m.mean_humidity for m in mean_humid)
+        mean_humid_value = mean(m.mean_humidity for m in mean_humidities)
         highest_mean_temp = max(mean_temps, key=attrgetter('mean_temp'))
         lowest_mean_temp = min(mean_temps, key=attrgetter('mean_temp'))
 
@@ -66,13 +66,13 @@ class CalculateReadings:
             'calculation_holder', 'max_mean_temp, min_mean_temp, average_mean_humidity')
         return calculation_holder(highest_mean_temp.mean_temp,
                                   lowest_mean_temp.mean_temp,
-                                  mean_value)
+                                  mean_humid_value)
 
 
-class PrintReports:
+class ReportGenerator:
 
     @staticmethod
-    def extreme_readings(given_date, weather_readings):
+    def display_annual_extremes(raw_date, weather_readings):
 
         highest = f"Highest: {weather_readings.maximum_temp}C on {weather_readings.maximum_temp_day}"
         lowest = f"Lowest: {weather_readings.minimum_temp}C on {weather_readings.minimum_temp_day}"
@@ -87,7 +87,7 @@ class PrintReports:
         print('\n'.join(results))
 
     @staticmethod
-    def average_readings(given_date, weather_readings):
+    def display_monthly_averages(raw_date, weather_readings):
 
         highest_avg = f"Highest Average: {weather_readings.max_mean_temp}C"
         lowest_average = f"Lowest Average: {weather_readings.min_mean_temp}C"
@@ -107,21 +107,22 @@ class PrintReports:
         RED = "\u001b[31m"
         BLUE = "\u001b[34m"
         RESET = "\u001b[0m"
+        for record in weather_readings:
+            report_date = str(record.pkt.day)
+            day = f"{int(report_date)}"
+            symbols = f"{BLUE}{'+' * int(record.min_temp)}{RED}{'+' * int(record.max_temp)}"
+            min_temp = f" {RESET}{int(record.min_temp)}C - "
+            max_temp = f"{int(record.max_temp)}C{RESET}"
 
-        report_date = weather_readings[2]
-        day = f"{int(report_date)}"
-        symbols = f"{BLUE}{'+' * int(weather_readings[1])}{RED}{'+' * int(weather_readings[0])}"
-        min_temp = f" {RESET}{int(weather_readings[1])}C - "
-        max_temp = f"{int(weather_readings[0])}C{RESET}"
+            results = [
+                day,
+                symbols,
+                min_temp,
+                max_temp
+            ]
 
-        results = [
-            day,
-            symbols,
-            min_temp,
-            max_temp
-        ]
-
-        print(' '.join(results))
+            print(' '.join(results))
+        print("\n")
 
 
 def parse_arguments():
@@ -163,24 +164,21 @@ def main():
 
     if args.average:
         for arg in args.average:
-            weather_result = CalculateReadings.avg_readings(
+            weather_result = WeatherAnalysis.avg_readings(
                 weather_records, arg)
-            PrintReports.average_readings(arg, weather_result)
+            ReportGenerator.display_monthly_averages(arg, weather_result)
 
     if args.extreme:
         for arg in args.extreme:
-            weather_result = CalculateReadings.ext_readings(
+            weather_result = WeatherAnalysis.ext_readings(
                 weather_records, arg)
-            PrintReports.extreme_readings(arg, weather_result)
+            ReportGenerator.display_annual_extremes(arg, weather_result)
 
     if args.chart:
         for arg in args.chart:
             weather_readings = list(filter(lambda a: a.pkt.year == arg.year and
                                            a.pkt.month == arg.month, weather_records))
-            for record in weather_readings:
-                PrintReports.charts_of_readings([record.max_temp,
-                                                 record.min_temp,
-                                                 str(record.pkt.day)])
+            ReportGenerator.charts_of_readings(weather_readings)
 
 
 if __name__ == "__main__":
