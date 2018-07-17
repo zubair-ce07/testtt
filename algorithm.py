@@ -1,4 +1,4 @@
-import aiohttp as aiohttp
+from requests_futures.sessions import FuturesSession
 from parsel import Selector
 import asyncio
 from urllib.parse import urljoin, urlparse
@@ -10,7 +10,7 @@ class Algorithm:
         self._url = '{}://{}'.format(urlparse(url).scheme, urlparse(url).netloc)
         self._pending_urls = set([self._url])
         self._workers = asyncio.BoundedSemaphore(workers)
-        self._session = aiohttp.ClientSession()
+        self._session = FuturesSession(max_workers=workers)
         self._download_delay = download_delay
         self._max_urls = max_urls
         self._seen_urls = set()
@@ -27,8 +27,9 @@ class Algorithm:
     async def _http_request(self, url):
         async with self._workers:
             try:
-                async with self._session.get(url) as response:
-                    html = await response.read()
+                future = self._session.get(url)
+                response = future.result()
+                html = response.content
             except Exception as e:
                 print('Exception: {}'.format(e))
             else:
@@ -50,7 +51,6 @@ class Algorithm:
                     [self._pending_urls.add(url) for url in extracted_urls]
                 except Exception as e:
                     print('Encountered exception: {}'.format(e))
-        await self._session.close()
         return self._total_data, len(self._seen_urls)
 
 
