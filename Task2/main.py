@@ -25,13 +25,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("site_to_crawl", help="This arg stores the link of the site on "
-                                                           "which crawling will be performed", type=validate_url)
+                                              "which crawling will be performed", type=validate_url)
     parser.add_argument("total_urls", help="This arg stores the total number of urls "
-                                                        "that should be visited", type=validate_positive_input)
+                                           "that should be visited", type=validate_positive_input)
     parser.add_argument("download_delay", help="This arg stores the amount of delay "
-                                                            "in consecutive downloads", type=validate_positive_input)
+                                               "in consecutive downloads", type=validate_positive_input)
     parser.add_argument("tasks_limit", help="This arg stores the total number of task that can be "
-                                                         "executed concurrently", type=validate_positive_input)
+                                            "executed concurrently", type=validate_positive_input)
 
     return parser.parse_args()
 
