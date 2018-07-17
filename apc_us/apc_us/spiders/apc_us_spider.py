@@ -6,6 +6,7 @@ import scrapy
 
 Size = namedtuple('Size', ['code', 'text'])
 Color = namedtuple('Color', ['code', 'text'])
+SkuVariant = namedtuple('SkuVariant', ['color', 'size', 'prices'])
 
 
 class APCUSSpider(scrapy.Spider):
@@ -23,13 +24,16 @@ class APCUSSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        for url_selector in response.css('a'):
-            url = self.extract_from_css('a::attr(href)', url_selector)
+        listing_css = '#main-nav a'
+        product_css = 'a.product-image'
 
-            if self.is_product_url(url_selector):
-                yield response.follow(url, self.parse_product)
-            else:
-                yield response.follow(url, self.parse)
+        for url_selector in response.css(listing_css):
+            url = self.extract_from_css('a::attr(href)', url_selector)
+            yield response.follow(url, self.parse)
+
+        for url_selector in response.css(product_css):
+            url = self.extract_from_css('a::attr(href)', url_selector)
+            yield response.follow(url, self.parse_product)
 
     def is_product_url(self, response):
         if self.extract_from_css('a.product-image::attr(href)', response):
@@ -38,21 +42,17 @@ class APCUSSpider(scrapy.Spider):
         return False
 
     def parse_product(self, response):
-        retailer_sku = self.get_product_retailer_sku(response)
-        gender = self.get_product_gender(response)
-        prices = self.get_product_prices(response)
-
         yield {
-            'retailer_sku': retailer_sku,
+            'retailer_sku': self.get_product_retailer_sku(response),
             'name': self.get_product_name(response),
             'category': self.get_product_categories(response),
             'description': self.get_product_description(response),
-            'image_urls': self.get_product_images(response, retailer_sku),
+            'image_urls': self.get_product_images(response),
             'url': response.url,
-            'gender': gender,
+            'gender': self.get_product_gender(response),
             'brand': 'A.P.C.',
             'care': self.get_product_care(response),
-            'skus': self.get_product_skus(response, prices)
+            'skus': self.get_product_skus(response)
         }
 
     @staticmethod
@@ -94,7 +94,8 @@ class APCUSSpider(scrapy.Spider):
         care = [c.strip() for c in string_to_sentence.split(care)]
         return self.search_in_list(r'%', care)
 
-    def get_product_images(self, response, retailer_sku):
+    def get_product_images(self, response):
+        retailer_sku = self.get_product_retailer_sku(response)
         product_gallery = self.extract_from_css('div.product-image-gallery img::attr(src)',
                                                 response)
         small_images = self.search_in_list(
@@ -118,36 +119,37 @@ class APCUSSpider(scrapy.Spider):
         return 'undefined'
 
     @staticmethod
-    def generate_product_sku(color, size, product_json, prices):
+    def generate_product_sku(sku_variant, product_json):
         sku = {}
-        key = f"{color.code},{size.code}"
+        key = f"{sku_variant.color.code},{sku_variant.size.code}"
         sku_json = product_json.get(key)
         if not sku_json:
             return
 
         sku['sku_id'] = sku_json['product_id']
-        sku['color'] = color.text
+        sku['color'] = sku_variant.color.text
         sku['currency'] = 'USD'
-        sku['size'] = size.text
+        sku['size'] = sku_variant.size.text
         sku['out_of_stock'] = not sku_json['is_in_stock']
 
-        if type(prices) is list:
-            sku['previous_price'] = prices[0]
-            sku['price'] = prices[1]
+        if type(sku_variant.prices) is list:
+            sku['previous_price'] = sku_variant.prices[0]
+            sku['price'] = sku_variant.prices[1]
         else:
-            sku['price'] = prices
+            sku['price'] = sku_variant.prices
 
         return sku
 
-    def get_product_skus(self, response, prices):
+    def get_product_skus(self, response):
         skus = []
         colors = self.get_product_colors(response)
         sizes = self.get_product_sizes(response)
+        prices = self.get_product_prices(response)
         product_json = self.get_product_json(response)
 
         for color in colors:
             for size in sizes:
-                sku = self.generate_product_sku(color, size, product_json, prices)
+                sku = self.generate_product_sku(SkuVariant(color, size, prices), product_json)
                 if sku:
                     skus.append(sku)
 
