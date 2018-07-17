@@ -32,6 +32,22 @@ class AsynCrawler:
         sel = Selector(text=self.html)
         return [urljoin(self.url, url) for url in sel.css('html').xpath('.//a/@href').getall()]
 
+    def generate_report(self, anchor_urls, total_bytes, size):
+        if self.total_visits <= len(anchor_urls):
+            print(f'\nTotal request: {self.total_requests}')
+            print(f'Total bytes downloaded: {total_bytes}')
+            print(f'Average page size: {int(total_bytes / size)}\n')
+
+    async def get_total_bytes(self, anchor_urls, async_loop):
+        if self.total_visits <= len(anchor_urls):
+            futures = []
+            for index in range(self.total_visits):
+                futures += [async_loop.run_in_executor(None, self.get_page_size, anchor_urls[index])
+                            for request in range(self.concurrent_request)]
+            return sum(stat for stat in await asyncio.gather(*futures))
+
+        print("Number of visited urls exceeded total urls\n")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -49,7 +65,14 @@ def main():
                               args.download_delay, args.total_visits)
 
     anchor_urls = web_crawler.get_anchor_urls()
-    print(anchor_urls)
+
+    t0 = time.time()
+    loop = asyncio.get_event_loop()
+    total_bytes = loop.run_until_complete(web_crawler.get_total_bytes(anchor_urls, loop))
+    t1 = time.time()
+
+    web_crawler.generate_report(anchor_urls, total_bytes, args.total_visits)
+    print(f'Total Time {t1-t0}')
 
 
 if __name__ == '__main__':
