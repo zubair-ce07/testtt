@@ -70,36 +70,31 @@ class APCUSSpider(scrapy.Spider):
         return result
 
     @staticmethod
-    def search_in_list(query, string_list, search_flags=0):
-        r = re.compile(query, flags=search_flags)
-        return list(filter(r.search, string_list))
+    def search_in_list(query, string_list):
+        return [s for s in string_list if query.lower() in s.lower()]
 
     @staticmethod
-    def inverse_search_in_list(query, string_list, search_flags=0):
-        r = re.compile(query, flags=search_flags)
-        return list(filter(lambda l: not r.search(l), string_list))
+    def inverse_search_in_list(query, string_list):
+        return [s for s in string_list if query.lower() not in s.lower()]
 
     def get_product_name(self, response):
         return self.extract_from_css('div.product-name h1::text', response)
 
     def get_product_description(self, response):
         description = response.css('section#description div > div::text').extract_first()
-        string_to_sentence = re.compile(r'\. ')
-        description = [d.strip() for d in string_to_sentence.split(description)]
-        return self.inverse_search_in_list(r'%', description)
+        description = [d.strip() for d in description.split('. ')]
+        return self.inverse_search_in_list('%', description)
 
     def get_product_care(self, response):
         care = response.css('section#description div > div::text').extract_first()
-        string_to_sentence = re.compile(r'\. ')
-        care = [c.strip() for c in string_to_sentence.split(care)]
-        return self.search_in_list(r'%', care)
+        care = [c.strip() for c in care.split('. ')]
+        return self.search_in_list('%', care)
 
     def get_product_images(self, response):
         retailer_sku = self.get_product_retailer_sku(response)
         product_gallery = self.extract_from_css('div.product-image-gallery img::attr(src)',
                                                 response)
-        small_images = self.search_in_list(
-            retailer_sku, product_gallery, search_flags=re.IGNORECASE)
+        small_images = self.search_in_list(retailer_sku, product_gallery)
         return [re.sub(r'600x', r'1800x', i) for i in small_images]
 
     @staticmethod
@@ -116,7 +111,7 @@ class APCUSSpider(scrapy.Spider):
         if self.extract_from_css('#size_label', response):
             return 'none'
 
-        return 'undefined'
+        return
 
     @staticmethod
     def generate_product_sku(sku_variant, product_json):
