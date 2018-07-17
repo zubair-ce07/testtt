@@ -70,11 +70,11 @@ class APCUSSpider(scrapy.Spider):
         return result
 
     @staticmethod
-    def search_in_list(query, string_list):
+    def filter_string_list(query, string_list):
         return [s for s in string_list if query.lower() in s.lower()]
 
     @staticmethod
-    def inverse_search_in_list(query, string_list):
+    def inverse_filter_string_list(query, string_list):
         return [s for s in string_list if query.lower() not in s.lower()]
 
     def get_product_name(self, response):
@@ -83,18 +83,18 @@ class APCUSSpider(scrapy.Spider):
     def get_product_description(self, response):
         description = response.css('section#description div > div::text').extract_first()
         description = [d.strip() for d in description.split('. ')]
-        return self.inverse_search_in_list('%', description)
+        return self.inverse_filter_string_list('%', description)
 
     def get_product_care(self, response):
         care = response.css('section#description div > div::text').extract_first()
         care = [c.strip() for c in care.split('. ')]
-        return self.search_in_list('%', care)
+        return self.filter_string_list('%', care)
 
     def get_product_images(self, response):
         retailer_sku = self.get_product_retailer_sku(response)
         product_gallery = self.extract_from_css('div.product-image-gallery img::attr(src)',
                                                 response)
-        small_images = self.search_in_list(retailer_sku, product_gallery)
+        small_images = self.filter_string_list(retailer_sku, product_gallery)
         return [re.sub(r'600x', r'1800x', i) for i in small_images]
 
     @staticmethod
@@ -121,11 +121,11 @@ class APCUSSpider(scrapy.Spider):
         if not sku_json:
             return
 
-        sku['sku_id'] = sku_json['product_id']
+        sku['sku_id'] = sku_json.get('product_id')
         sku['color'] = sku_variant.color.text
         sku['currency'] = 'USD'
         sku['size'] = sku_variant.size.text
-        sku['out_of_stock'] = not sku_json['is_in_stock']
+        sku['out_of_stock'] = not sku_json.get('is_in_stock')
 
         if type(sku_variant.prices) is list:
             sku['previous_price'] = sku_variant.prices[0]
