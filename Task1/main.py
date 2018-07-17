@@ -1,6 +1,6 @@
 import argparse
-import calendar
 import datetime
+import os
 
 from parsed_weather_reading import ParsedWeatherReading
 from weather_result_computer import WeatherResultComputer
@@ -22,9 +22,17 @@ def valid_year_month(weather_date):
     return valid_year(weather_date.year), weather_date.month
 
 
+def validate_path(file_path):
+    if os.path.isdir(file_path):
+        return file_path
+    else:
+        raise argparse.ArgumentTypeError(f"The given directory does not exist")
+
+
 user_command_parser = argparse.ArgumentParser()
 
-user_command_parser.add_argument("file_path", help="This arg stores the path to all weather data files", type=str)
+user_command_parser.add_argument("file_path", help="This arg stores the path to all weather data files",
+                                 type=validate_path)
 user_command_parser.add_argument("-e", help="This command will give you the highest and "
                                  "lowest temperature and highest humidity with "
                                  "respective days for given year", type=valid_year)
@@ -50,28 +58,25 @@ if __name__ == "__main__":
         weather_record_parser = ParsedWeatherReading()
         filtered_weather_records = weather_record_parser.get_weather_records(file_path, user_cli_args.e)
         weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
-        WeatherReportMaker.print_report_for_e(weather_summary_result)
+        WeatherReportMaker.print_report_for_usr_command_e(weather_summary_result)
 
     if user_cli_args.a:
         year, month = user_cli_args.a
         weather_record_parser = ParsedWeatherReading()
-        filtered_weather_records = weather_record_parser.get_weather_records(file_path, year,
-                                                                             calendar.month_abbr[month])
+        filtered_weather_records = weather_record_parser.get_weather_records(file_path, year, month)
         weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
-        WeatherReportMaker.print_report_for_a(weather_summary_result)
+        WeatherReportMaker.print_report_for_usr_command_a(weather_summary_result)
 
     if user_cli_args.c:
         year, month = user_cli_args.c
         weather_record_parser = ParsedWeatherReading()
-        filtered_weather_records = weather_record_parser.get_weather_records(file_path, year,
-                                                                             calendar.month_abbr[month])
+        filtered_weather_records = weather_record_parser.get_weather_records(file_path, year, month)
         weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
-        WeatherReportMaker.print_report_for_c(weather_summary_result)
+        WeatherReportMaker.print_report_for_usr_command_c(weather_summary_result)
 
     if user_cli_args.b:
         year, month = user_cli_args.b
         weather_record_parser = ParsedWeatherReading()
-        filtered_weather_records = weather_record_parser.get_weather_records(file_path, year,
-                                                                             calendar.month_abbr[month])
+        filtered_weather_records = weather_record_parser.get_weather_records(file_path, year, month)
         weather_summary_result = WeatherResultComputer.get_result(filtered_weather_records)
-        WeatherReportMaker.print_report_for_c_bonus(weather_summary_result)
+        WeatherReportMaker.print_report_for_usr_command_b(weather_summary_result)
