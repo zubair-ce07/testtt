@@ -1,92 +1,67 @@
 import csv
 import glob
 
-from data_structure import *
+from weatherman_records import *
 
 
 class WeatherReport:
     def __init__(self):
-        self.readings = list()
+        self.weather_records = list()
 
-    def file_read(self, dir_name, year, month):
-        dir_file_path = f'{dir_name}Murree_weather_{year}_{month}.txt'
-        for file_path in glob.glob(dir_file_path):
+    def file_read(self, dir_name):
+        file_name_t = f"{dir_name}*.txt"
+        for file_path in glob.glob(file_name_t):
             with open(file_path, 'r') as csv_file:
-                    reader = csv.DictReader(csv_file)
-                    for row in reader:
-                        if row:
-                            self.readings.append(DailyRecords(row))
+                reader = csv.DictReader(csv_file)
+                filtered_records = list(filter(lambda line:
+                                               line.get('Max TemperatureC')
+                                               and line.get('Min TemperatureC')
+                                               and line.get('Max Humidity')
+                                               and line.get(' Mean Humidity'),
+                                               reader))
+                for row in filtered_records:
+                    self.weather_records.append(DailyRecords(row))
 
-    def yearly_report(self):
-        obj_max_temp = max_temperature_record(self.readings)
-        month_max_temp = obj_max_temp.date.strftime("%b")
-        day_max_temp = obj_max_temp.date.day
+    def yearly_report(self, year):
+        yearly_record = list(filter(lambda record: record.date.year == year,
+                                    self.weather_records))
 
-        print(f'Highest: {obj_max_temp.max_temperature}C on {month_max_temp}'
-              f' {day_max_temp}')
+        max_temp = max(yearly_record, key=lambda day: day.max_temperature)
+        min_temp = min(yearly_record, key=lambda day: day.min_temperature)
+        max_humidity = max(yearly_record, key=lambda day: day.max_humidity)
 
-        obj_min_temp = min_temperature_record(self.readings)
-        month_min_temp = obj_min_temp.date.strftime("%b")
-        day_min_temp = obj_min_temp.date.day
+        print(f'Highest: {max_temp.max_temperature}C on '
+              f'{max_temp.date.strftime("%b")} {max_temp.date.day}')
 
-        print(f'Lowest: {obj_min_temp.min_temperature}C on {month_min_temp}'
-              f' {day_min_temp}')
+        print(f'Lowest: {min_temp.min_temperature}C on '
+              f'{min_temp.date.strftime("%b")} {min_temp.date.day}')
 
-        obj_max_humidity = max_humidity_record(self.readings)
-        month_max_humidity = obj_max_humidity.date.strftime("%b")
-        day_max_humidity = obj_max_humidity.date.day
+        print(f'Highest: {max_humidity.max_humidity}% on '
+              f'{max_humidity.date.strftime("%b")} {max_humidity.date.day}')
 
-        print(f'Highest: {obj_max_humidity.max_humidity}% on '
-              f'{month_max_humidity} {day_max_humidity}', end='\n')
+    def monthly_report(self, year, month):
+        monthly_record = list(filter(lambda record: record.date.year == year
+                                     and record.date.strftime("%b") == month,
+                                     self.weather_records))
 
-    def monthly_report(self):
-        avg_max_temp = get_avg_max_temp(self.readings)
-        avg_min_temp = get_avg_min_temp(self.readings)
-        avg_mean_humidity = get_avg_mean_humidity(self.readings)
+        avg_max_temp = sum(day.max_temperature for day in
+                           monthly_record)//len(monthly_record)
+        avg_min_temp = sum(day.min_temperature for day in
+                           monthly_record)//len(monthly_record)
+        avg_mean_humidity = sum(day.mean_humidity for day in
+                                monthly_record)//len(monthly_record)
 
         print(f'Highest Average: {avg_max_temp}C')
         print(f'Lowest Average: {avg_min_temp}C')
-        print(f'Average Mean Humidity: {avg_mean_humidity}%', end='\n')
+        print(f'Average Mean Humidity: {avg_mean_humidity}%')
 
-    def daily_report(self):
-        for day in self.readings:
-            if not day.min_temperature or not day.max_temperature:
-                continue
+    def daily_report(self, year, month):
+        monthly_record = list(filter(lambda record: record.date.year == year
+                                     and record.date.strftime("%b") == month,
+                                     self.weather_records))
+        for day in monthly_record:
             print(str(day.date.day).zfill(2), end=' ')
-            print(f'{Colors.RED}+'*day.min_temperature, end='')
-            print(f'{Colors.BLUE}+'*day.max_temperature, end='')
+            print(f'{Colors.BLUE}+'*day.min_temperature, end='')
+            print(f'{Colors.RED}+'*day.max_temperature, end='')
             print(f'{Colors.RESET} {day.min_temperature}C - '
-                  f'{day.max_temperature}C', end='\n')
-
-
-def max_temperature_record(readings):
-    readings = [day for day in readings if day.max_temperature]
-    return max(readings, key=lambda day: day.max_temperature)
-
-
-def min_temperature_record(readings):
-    readings = [day for day in readings if day.min_temperature]
-    return min(readings, key=lambda day: day.min_temperature)
-
-
-def max_humidity_record(readings):
-    readings = [day for day in readings if day.max_humidity]
-    return max(readings, key=lambda day: day.max_humidity)
-
-
-def get_avg_max_temp(readings):
-    total_days = len([day for day in readings if day.max_temperature])
-    return sum(day.max_temperature for day in readings
-               if day.max_temperature)//total_days
-
-
-def get_avg_min_temp(readings):
-    total_days = len([day for day in readings if day.min_temperature])
-    return sum(day.min_temperature for day in readings
-               if day.min_temperature)//total_days
-
-
-def get_avg_mean_humidity(readings):
-    total_days = len([day for day in readings if day.mean_humidity])
-    return sum(day.mean_humidity for day in readings
-               if day.mean_humidity)//total_days
+                  f'{day.max_temperature}C')
