@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load user_detail %}
+{% block title %}View Products{% endblock %}
+
+{% block content %}
+
+    <div align="right">
+        <form action="/user/logout">
+            <a href="{{ request.user.get_absolute_url }}">
+                {{ request.user|details|linebreaks}}
+            </a>
+            <input class="btn btn-default" name="logout" type="submit" id="logout" value="Log out">
+        </form>
+    </div>
+
+    <div align="center">
+        <h1>{{ 'products'|title }}</h1>
+
+        <form action="." method="POST"> {% csrf_token %}
+            <label> Select user to view products</label><br>
+            <select name="user_id" >
+                <option value="0"> Select User </option>
+                {% for user in user_list %}
+                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                {% endfor %}
+            </select>
+            <p><input type="submit" value=" Search "/></p>
+        </form>
+
+
+        <h3> {{ user.get_full_name }}</h3>
+        {% if product_list %}
+            <table >
+                <tr>
+                    <th>Title</th>
+                    <th>Price</th>
+                </tr>
+                {% for item in product_list %}
+                    <tr>
+                        <td> <a href="{{ item.get_absolute_url }}">{{ item.title }}</a> </td>
+                        <td> {{ item.price }} </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No items are available.</p>
+        {% endif %}
+    </div>
+{% endblock %}

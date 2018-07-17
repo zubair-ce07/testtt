@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% load user_detail %}
+{% block title %}All Products{% endblock %}
+
+{% block content %}
+
+    <div align="right">
+        <form action="/user/logout">
+            {<a href="{{ request.user.get_absolute_url }}">
+                {{ request.user|details|linebreaks}}
+            </a>
+            <input class="btn btn-default" name="logout" type="submit" id="logout" value="Log out">
+        </form>
+    </div>
+
+    <div align="center">
+        <h1> All Products </h1>
+
+        {% if products %}
+            <table >
+                <tr>
+                    <th>Title</th>
+                    <th>Price</th>
+                    <th>Description</th>
+                </tr>
+                {% for product in products %}
+                    <tr>
+                        <td> {{ product.title }} </td>
+                        <td> {{ product.price }} </td>
+                        <td> {{ product.description }} </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No items are available.</p>
+        {% endif %}
+    </div>
+{% endblock %}
