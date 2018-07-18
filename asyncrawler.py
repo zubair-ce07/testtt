@@ -29,7 +29,7 @@ class AsynCrawler:
 
     def get_anchor_urls(self):
         sel = Selector(text=self.get_html())
-        return [urljoin(self.url, url) for url in sel.css('a::attr(href)').getall()]
+        return list(map(lambda url: urljoin(self.url, url), sel.css('a::attr(href)').getall()))
 
     def generate_report(self, anchor_urls, total_bytes, size):
         if self.total_visits <= len(anchor_urls):
@@ -43,7 +43,7 @@ class AsynCrawler:
             for index in range(self.total_visits):
                 futures += [async_loop.run_in_executor(None, self.get_page_size, anchor_urls[index])
                             for request in range(self.concurrent_request)]
-            return sum(stat for stat in await asyncio.gather(*futures))
+            return sum(page_size for page_size in await asyncio.gather(*futures))
 
         print("Number of visited urls exceeded total urls\n")
 
