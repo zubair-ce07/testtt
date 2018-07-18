@@ -10,16 +10,16 @@ def main():
     parser = argparse.ArgumentParser(description='A program that crawls a website concurrently.')
     parser.add_argument('url', help='this arguments specifies the url of the website to crawl',
                         type=url_validate)
-    parser.add_argument('max_url', help='this arguments specifies the maximum number '
-                        'of urls to visit', type=int)
-    parser.add_argument('req_limit', help='this arguments specifies the number of '
+    parser.add_argument('-m', '--max_url', help='this arguments specifies the maximum number '
+                        'of urls to visit', default=20, type=int)
+    parser.add_argument('-r', '--requests_count', default=5, help='this arguments specifies the number of '
                         'concurrent requests allowed', type=int)
-    parser.add_argument('delay', help='this arguments specifies the delay between each request'
-                        , type=float)
+    parser.add_argument('-d', '--delay', default=0.05, help='this arguments specifies the delay '
+                        'between each request', type=float)
     args = parser.parse_args()
     loop = asyncio.get_event_loop()
     crawler = Crawler(args.url)
-    loop.run_until_complete(crawler.crawl_async(args.max_url, args.req_limit, args.delay))
+    loop.run_until_complete(crawler.crawl_async(args.max_url, args.requests_count, args.delay))
     loop.close()
     crawler.crawl_report()
 
