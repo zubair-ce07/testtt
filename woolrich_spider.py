@@ -7,7 +7,7 @@ from .base import BaseParseSpider, BaseCrawlSpider, clean
 
 class Mixin:
     retailer = 'woolrich'
-    market = 'CA'
+    market = 'DE'
     allowed_domains = ['woolrich.com']
     start_urls = ['http://www.woolrich.com/woolrich/?countryCode=CA']
     url_api = "http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp"
