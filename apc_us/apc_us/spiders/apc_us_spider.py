@@ -6,7 +6,7 @@ import scrapy
 
 Size = namedtuple('Size', ['code', 'text'])
 Color = namedtuple('Color', ['code', 'text'])
-SkuVariant = namedtuple('SkuVariant', ['color', 'size', 'prices'])
+SKUVariant = namedtuple('SKUVariant', ['color', 'size', 'prices'])
 
 
 class APCUSSpider(scrapy.Spider):
@@ -34,12 +34,6 @@ class APCUSSpider(scrapy.Spider):
         for url_selector in response.css(product_css):
             url = self.extract_from_css('a::attr(href)', url_selector)
             yield response.follow(url, self.parse_product)
-
-    def is_product_url(self, response):
-        if self.extract_from_css('a.product-image::attr(href)', response):
-            return True
-
-        return False
 
     def parse_product(self, response):
         yield {
@@ -144,7 +138,7 @@ class APCUSSpider(scrapy.Spider):
 
         for color in colors:
             for size in sizes:
-                sku = self.generate_product_sku(SkuVariant(color, size, prices), product_json)
+                sku = self.generate_product_sku(SKUVariant(color, size, prices), product_json)
                 if sku:
                     skus.append(sku)
 
