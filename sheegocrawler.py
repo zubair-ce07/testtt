@@ -1,63 +1,111 @@
-# -*- coding: utf-8 -*-
-import scrapy
+import json
+import re
+
+from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-import requests
 
 
-class SheegoSpider(scrapy.Spider):
+class SheegoSpider(CrawlSpider):
     name = 'sheegocrawler'
-    allowed_domains = ['www.sheego.de/']
-    start_urls = ['https://www.sheego.de/basic-stretch-bluse-mit-kurzem-arm_115639.html?color=00878']
+    allowed_domains = ['sheego.de']
+    start_urls = ['https://www.sheego.de']
 
-    # def parse(self, response):
-    #     print(response.css('div.header__area.header__area--nav > section > section > div:nth-child(-n+7) > a::attr(href)').extract())
-    #     pass
+    rules = (
+        Rule(LinkExtractor(restrict_css=['.cj-mainnav__entry .cj-mainnav__entry-title',
+                                         '.paging__btn.paging__btn--next .js-next'])),
+        Rule(LinkExtractor(restrict_css='.js-product__wrapper .js-product__link'), callback='parse_products')
+    )
 
-    def parse_main_products(self, response):
+    def parse_products(self, response):
+        json_resp = self.extract_json_data(response)
+        item = {
+            'care': self.extract_care(response),
+            'description': self.extract_description(response),
+            'image_urls': self.extract_image_urls(response),
+            'product_name': self.extract_product_name(json_resp),
+            'sku': self.extract_sku_id(json_resp),
+            'url': response.url,
+            'skus': self.product_skus(response, json_resp)
+        }
 
-        # getting product link on same page
-        print(response.css('#page-content > section > div.l-f > div > div.c-pl > '
-                           'section.pl__list.js-productList.at-product-list > section > div > div.js-product__wrapper'
-                           '> a.js-product__link::attr(href)').extract())
+        color_links = self.extract_color_links(response)
+        if color_links:
+            yield Request(color_links.pop(0), callback=self.parse_cols,
+                          meta={'color_links': color_links, 'item': item})
+        else:
+            yield item
 
-        # getting next page link
-        print(response.css('span.paging__btn.paging__btn--next > a::attr(href)').extract())
+    def parse_cols(self, response):
+        color_links = response.meta['color_links']
+        item = response.meta['item']
+        json_resp = self.extract_json_data(response)
+        item['image_urls'] += self.extract_image_urls(response)
+        item['skus'].update(self.product_skus(response, json_resp))
 
-    def parse(self, response):
-        print(self.care(response))
-        print(self.description(response))
-        print(self.product_name(response))
-        # item = {
-        #     'care': self.care(response),
-        #     'description': self.description(response),
-        #     'type': self.product_type(response),
-        #     'image_url': self.image_url(response),
-        #     'product_name': self.product_name(response),
-        #     'sku': self.sku_id(response),
-        #     'url': response.url,
-        #     #'skus': self.populate_sku_for_all_sizes(response)
-        # }
-        #
-        # yield item
-        pass
+        if color_links:
+            yield Request(color_links.pop(0), callback=self.parse_cols,
+                          meta={'color_links': color_links, 'item': item})
+        else:
+            yield item
 
-    def image_url(self, response):
-        return response.urljoin(response.css('.product-slider-image > div.item > picture > source::'
-                                             'attr(srcset)')[0].extract())
-    def product_name(self, response):
-        return response.css('div.l-f.l-f-w-w.l-f-a-c.at-dv-title-box > h1::text').extract()[0].strip()
+    def product_skus(self, response, json_resp):
+        items = {
+            'skus': {}
+        }
+        sku_id = self.extract_product_sku(json_resp)
+        color = self.extract_color(response).encode('utf-8')
+        for size, stock in self.extract_sizes_availability(response).items():
+            values = {
+                'price': self.extract_price(json_resp),
+                'color': color,
+                'size': size,
+                'stock': stock
+            }
+            items['skus']['{0}_{1}'.format(sku_id, size)] = values
+        return items['skus']
 
-    def product_type(self, response):
-        return response.css('.breadcrumb > ul:nth-child(1) > li:nth-child(3) > a:nth-child(1)::'
-                            'text').extract()[0].strip()
+    def extract_json_data(self, response):
+        return json.loads(response.css('.js-webtrends-data::attr(data-webtrends)').extract()[0])
 
-    def care(self, response):
-        return ', '.join(t.strip() for t in response.css('.p-details__material.l-mb-10.l-mb-20-md.l-mb-0-md > tbody > tr > td:nth-child(2)::text').extract())
+    def extract_color_links(self, response):
+        colors = response.css('.cj-slider__slides script').extract()[0].split(' = [')[1].split('];')[0].split(',')
+        url = response.url.split('=')[0]
+        prev_col = response.url.split('=')[1][1:-1]
+        return ['{0}={1}'.format(url, col_link[1:-1]) for col_link in colors if prev_col not in col_link]
 
-    def description(self, response):
-        return ', '.join(t.strip() for t in response.css('div.l-hidden-xs-s.l-startext > div >'
-                            ' ul > li::text').extract()).strip()
+    def extract_color(self, response):
+        return response.css('.p-details__variants.l-f-d-c .l-mb-5::text').extract()[1].strip()
 
-    def sku_id(self, response):
-        return response.css('div.mobile_toggle:nth-child(1) > p:nth-child(1)::text').extract()[0].split(':')[1]
+    def extract_sizes_availability(self, response):
+        sizes = response.css('.c-sizespots div::text').extract()
+        sizes = [size.strip() for size in sizes]
+        stock = response.css('.c-sizespots div::attr(class)').extract()
+        stock = ['Not Available' if 'strike' in st else 'Available' for st in stock]
+        return dict(zip(sizes, stock))
+
+    def extract_image_urls(self, response):
+        return response.css('.p-details__image__main .MagicZoom::attr(href)').extract()
+
+    def extract_product_name(self, response):
+        return response['productName']
+
+    def extract_care(self, response):
+        return self.clean_spaces(''.join(care for care in response.css(
+            '.p-details__material.l-mb-10 td::text').extract()))
+
+    def extract_description(self, response):
+        return self.clean_spaces(', '.join(desc for desc in response.css(
+            '.l-hidden-xs-s .l-list.l-list--nospace li::text').extract()))
+
+    def extract_sku_id(self, response):
+        return response['productId']
+
+    def extract_product_sku(self, response):
+        return response['productSku']
+
+    def extract_price(self, response):
+        return response['productPrice']
+
+    def clean_spaces(self, string):
+        return ' '.join(re.split("\s+", string, flags=re.UNICODE))
