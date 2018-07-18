@@ -20,8 +20,8 @@ def main():
     loop = asyncio.get_event_loop()
     crawler = Crawler(args.url)
     loop.run_until_complete(crawler.crawl_async(args.max_url, args.req_limit, args.delay))
-    crawler.crawl_report()
     loop.close()
+    crawler.crawl_report()
 
 
 def url_validate(url):
@@ -47,10 +47,10 @@ class Crawler:
         url = parse.urljoin(self.website_url, url)
         page_text = await self.fetch_page(url, delay)
         selector = parsel.Selector(text=page_text)
-        found_urls = selector.css("a::attr(href)").extract()
-        found_urls = set(found_urls)
-        found_urls = self.filter_absolute_urls(found_urls)
-        return found_urls
+        extracted_urls = selector.css("a::attr(href)").extract()
+        extracted_urls = set(extracted_urls)
+        extracted_urls = self.filter_absolute_urls(extracted_urls)
+        return extracted_urls
 
     def filter_absolute_urls(self, urls):
         filtered_urls = set(filter(lambda url: not parse.urlparse(url).netloc
@@ -58,23 +58,21 @@ class Crawler:
         return filtered_urls
 
     async def crawl_async(self, url_limit, request_limit, download_delay):
-        found_urls = set('/')
+        extracted_urls = await self.extract_urls('/', download_delay)
         future_requests = []
-        self.visited_urls = set()
-        while True:
-            for request_no in range(request_limit):
-                if found_urls:
-                    url = found_urls.pop()
-                    future_requests.append(self.extract_urls(url, download_delay))
-                    self.visited_urls = self.visited_urls.union({url})
-                    if len(self.visited_urls) == url_limit:
-                        break
-            for request in asyncio.as_completed(future_requests):
-                found_urls = found_urls.union(await request)
-            found_urls = found_urls.difference(self.visited_urls)
-            future_requests = []
-            if len(self.visited_urls) == url_limit:
-                break
+        self.visited_urls = set('/')
+        for request_no in range(1, url_limit):
+            url = extracted_urls.pop()
+            future_requests.append(self.extract_urls(url, download_delay))
+            self.visited_urls = self.visited_urls.union({url})
+            if not request_no % request_limit:
+                for request in asyncio.as_completed(future_requests):
+                    extracted_urls = extracted_urls.union(await request)
+                extracted_urls = extracted_urls.difference(self.visited_urls)
+                future_requests = []
+            if request_no == url_limit-1:
+                for request in asyncio.as_completed(future_requests):
+                    extracted_urls = extracted_urls.union(await request)
 
     def crawl_report(self):
         print(f"Number of requests: {len(self.visited_urls)}.")
