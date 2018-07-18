@@ -1,18 +1,19 @@
-import asyncio
-import requests
+import concurrent.futures
 import argparse
+import requests
 
 from parsel import Selector
 from urllib.parse import urljoin
+from functools import reduce
 from time import sleep
 
 
-class AsyncCrawler:
+class ConcurrentCrawler:
 
     def __init__(self, url, concurrent_requests=1,
                  download_delay=0, total_visits=0):
         self.url = url
-        self.concurrent_request = concurrent_requests
+        self.concurrent_requests = concurrent_requests
         self.download_delay = download_delay
         self.total_visits = total_visits
         self.total_requests = 0
@@ -37,13 +38,12 @@ class AsyncCrawler:
             print(f'Total bytes downloaded: {total_bytes}')
             print(f'Average page size: {int(total_bytes / self.total_visits)}\n')
 
-    async def get_total_bytes(self, anchor_urls, async_loop):
+    def get_total_bytes(self, anchor_urls):
         if self.total_visits <= len(anchor_urls):
-            futures = []
-            for index in range(self.total_visits):
-                futures += [async_loop.run_in_executor(None, self.get_page_size, anchor_urls[index])
-                            for request in range(self.concurrent_request)]
-            return sum(page_size for page_size in await asyncio.gather(*futures))
+            with concurrent.futures.ProcessPoolExecutor(self.concurrent_requests) as executor:
+                result = executor.map(self.get_page_size, anchor_urls[:self.total_visits])
+
+            return reduce(lambda accumulator, page_size: page_size + accumulator, result)
 
         print("Number of visited urls exceeded total urls\n")
 
@@ -67,13 +67,10 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
-    web_crawler = AsyncCrawler(args.website, args.concurrent_requests,
-                              args.download_delay, args.total_visits)
+    web_crawler = ConcurrentCrawler(args.website, args.concurrent_requests,
+                                    args.download_delay, args.total_visits)
     anchor_urls = web_crawler.get_anchor_urls()
-
-    loop = asyncio.get_event_loop()
-    total_bytes = loop.run_until_complete(web_crawler.get_total_bytes(anchor_urls, loop))
-
+    total_bytes = web_crawler.get_total_bytes(anchor_urls)
     web_crawler.generate_report(anchor_urls, total_bytes)
 
 
