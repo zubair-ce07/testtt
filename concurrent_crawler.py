@@ -1,8 +1,10 @@
 import concurrent.futures
 import argparse
 import requests
+import urllib.parse
 
 from parsel import Selector
+from urllib.request import urlopen
 from urllib.parse import urljoin
 from functools import reduce
 from time import sleep
@@ -55,9 +57,17 @@ def validate_requests(concurrent_requests):
     raise argparse.ArgumentTypeError("Value cannot be less than or equal to 0")
 
 
+def validate_web_url(website):
+    try:
+        urlopen(website)
+        return website
+    except urllib.request.URLError:
+        raise argparse.ArgumentTypeError(f"Invalid url {website}")
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("website", help="web address for crawling", type=str)
+    parser.add_argument("website", help="web address for crawling", type=validate_web_url)
     parser.add_argument("concurrent_requests", help="Concurrent request that can be made", type=validate_requests)
     parser.add_argument("download_delay", help="Download delay for each worker", type=int)
     parser.add_argument("total_visits", help="Total urls to visits", type=int)
