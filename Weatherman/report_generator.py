@@ -6,17 +6,17 @@ class ReportGenerator:
 
     @staticmethod
     def get_annual_report(weather_readings):
-        highest_temp = WeatherAnalyzer.highest_temp_of_year(weather_readings)
-        lowest_temp = WeatherAnalyzer.lowest_temp_of_year(weather_readings)
-        highest_hum = WeatherAnalyzer.highest_hum_of_year(weather_readings)
+        highest_temp = WeatherAnalyzer.highest_temperature(weather_readings)
+        lowest_temp = WeatherAnalyzer.lowest_temperature(weather_readings)
+        highest_hum = WeatherAnalyzer.highest_humidity(weather_readings)
         ReportGenerator.annual_report(highest_hum, highest_temp, lowest_temp)
 
     @staticmethod
-    def get_month_report(month, year, weather_readings):
-        max_avg_temp = WeatherAnalyzer.highest_avg_temp_of_month(weather_readings)
-        min_avg_temp = WeatherAnalyzer.lowest_avg_temp_of_month(weather_readings)
-        mean_avg_hum = WeatherAnalyzer.average_mean_humidity_of_month(weather_readings)
-        ReportGenerator.month_report(month, year, max_avg_temp, min_avg_temp, mean_avg_hum)
+    def get_month_report(weather_readings):
+        max_avg_temp = WeatherAnalyzer.highest_avg_temp(weather_readings)
+        min_avg_temp = WeatherAnalyzer.lowest_avg_temp(weather_readings)
+        mean_avg_hum = WeatherAnalyzer.average_mean_humidity(weather_readings)
+        ReportGenerator.month_report(max_avg_temp, min_avg_temp, mean_avg_hum)
 
     @staticmethod
     def annual_report(highest_hum, highest_temp, lowest_temp):
@@ -29,14 +29,15 @@ class ReportGenerator:
               f'{highest_hum.day} \n')
 
     @staticmethod
-    def month_report(month_name, year, max_avg_temp, min_avg_temp, mean_avg_hum):
-        print(f'-a Months Report {month_name} {year}:')
+    def month_report(max_avg_temp, min_avg_temp, mean_avg_hum):
         print(f'Highest Average: {max_avg_temp}C')
         print(f'Lowest Average: {min_avg_temp}C')
         print(f'Mean Average Humidity: {mean_avg_hum}% \n')
 
     @staticmethod
-    def dual_bar_chart_report(year, month, weather_readings):
+    def dual_bar_chart_report(weather_readings):
+        year = weather_readings[0].year
+        month = weather_readings[0].month
         print(f'-c {calendar.month_name[month]} {year}')
         for reading in weather_readings:
             print(f'{reading.day:02}', end=' ')
@@ -48,7 +49,9 @@ class ReportGenerator:
         print('\n')
 
     @staticmethod
-    def single_bar_chart_report(year, month, weather_readings):
+    def single_bar_chart_report(weather_readings):
+        year = weather_readings[0].year
+        month = weather_readings[0].month
         print(f'-d {calendar.month_name[month]} {year}')
         for reading in weather_readings:
             print(f'{reading.day:02}', end=' ')
@@ -56,7 +59,3 @@ class ReportGenerator:
             print(f'\033[94m' + '+' * reading.highest_temp + '\033[0m', end='')
             print(f' {reading.lowest_temp:02}C - {reading.highest_temp:02}C', end='\n')
         print('\n')
-
-    @staticmethod
-    def no_data_found(year, month_name=None):
-        print(f'No data found for {month_name} {year}')
