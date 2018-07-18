@@ -25,11 +25,13 @@ class APCUSSpider(scrapy.Spider):
 
     def parse(self, response):
         listing_css = '#main-nav a'
-        product_css = 'a.product-image'
 
         for url_selector in response.css(listing_css):
             url = self.extract_from_css('a::attr(href)', url_selector)
-            yield response.follow(url, self.parse)
+            yield response.follow(url, self.parse_listing)
+
+    def parse_listing(self, response):
+        product_css = 'a.product-image'
 
         for url_selector in response.css(product_css):
             url = self.extract_from_css('a::attr(href)', url_selector)
