@@ -15,22 +15,23 @@ class DocketSpider(scrapy.Spider):
         self.is_description_spanning, self.is_filer_spanning, self.is_docket_spanning = False, False, False
 
     def parse(self, response):
-        PATH = '/html/body/table[3]/tr[1]/td[3]/table/tr'
+        PATH = '//td[@class="normal"]//tr'
         self.all_rows = response.xpath(PATH)
         row_index = 0
         while row_index < len(self.all_rows):
-            self.item = items.DocketItem()
-            self.parse_row_for_item(row_index, self.item, False, False)
+            item = items.DocketItem()
+            self.parse_row_for_item(row_index, item, False, False)
+            self.detect_spanning(self.all_rows[row_index], item)
 
-            if self.is_special_case(row_index):
-                self.handle_special_case(row_index)
-                yield self.item
-                yield self.item2
-                self.is_description_spanning, self.is_filer_spanning, self.is_docket_spanning = False, False, False
-                row_index += 2
+            if self.is_special_case():
+                yield item
+                for new_item in self.handle_special_case(row_index, item):
+                    yield new_item
+                row_index += int(item['max_span'])
             else:
-                yield self.item
+                yield item
                 row_index += 1
+            self.is_description_spanning, self.is_filer_spanning, self.is_docket_spanning = False, False, False
 
     def parse_row_for_item(self, row_index, item, is_single_span, is_double_span):
         column_no = 0 if is_single_span else 1
@@ -38,30 +39,35 @@ class DocketSpider(scrapy.Spider):
         item['file_url'] = self.all_rows[row_index].xpath('td[1]/a/@href').extract_first()
         item['filer'] = self.get_value_from_column(self.all_rows[row_index], column_no + 1 if not is_double_span else 1)
         item['description'] = self.get_value_from_column(self.all_rows[row_index], column_no + 2 if not is_double_span else 1)
-        item['filed_date'] = self.get_filer_from_description(self.item['description'])
+        item['filed_date'] = self.get_filed_date_from_description(item['description'])
 
 
     def get_value_from_column(self, row, colunm_no):
         return row.xpath('td[{}]//text()'.format(colunm_no)).extract_first()
 
-    def get_filer_from_description(self, description):
+    def get_filed_date_from_description(self, description):
         if description is None: return "Not Available"
         date = re.search(r'(\d+/\d+/\d+)', description)
         if date: return date.group()
         return "Not Available"
 
-    def handle_special_case(self, row_index):
-        self.item2 = items.DocketItem()
-        self.parse_row_for_item(row_index+1, self.item2, True, self.get_is_double_span())
+    def handle_special_case(self, row_index, item):
 
-        if self.is_docket_spanning:
-            self.item2['docket'] = self.item['docket']
-            self.item2['file_url'] = self.item['file_url']
-        if self.is_filer_spanning:
-            self.item2['filer'] = self.item['filer']
-        if self.is_description_spanning:
-            self.item2['description'] = self.item['description']
-            self.item2['filed_date'] = self.item['filed_date']
+        index = 1
+        while index < int(item['max_span']):
+            item2 = items.DocketItem()
+            self.parse_row_for_item(row_index+index, item2, True, self.get_is_double_span())
+
+            if self.is_docket_spanning:
+                item2['docket'] = item['docket']
+                item2['file_url'] = item['file_url']
+            if self.is_filer_spanning:
+                item2['filer'] = item['filer']
+            if self.is_description_spanning:
+                item2['description'] = item['description']
+                item2['filed_date'] = item['filed_date']
+            yield item2
+            index += 1
 
     def get_is_double_span(self):
         if self.is_description_spanning and self.is_filer_spanning:
@@ -71,14 +77,18 @@ class DocketSpider(scrapy.Spider):
         if self.is_description_spanning and self.is_docket_spanning:
             return True
 
-    def is_special_case(self, index):
-        if self.all_rows[index].xpath('td[1]/@rowspan').extract_first() is not None:
+    def detect_spanning(self, row, item):
+        if row.xpath('td[1]/@rowspan').extract_first() is not None:
             self.is_docket_spanning = True
-        if self.all_rows[index].xpath('td[2]/@rowspan').extract_first() is not None:
+            item['max_span'] = row.xpath('td[1]/@rowspan').extract_first()
+        if row.xpath('td[2]/@rowspan').extract_first() is not None:
             self.is_filer_spanning = True
-        if self.all_rows[index].xpath('td[3]/@rowspan').extract_first() is not None:
+            item['max_span'] = row.xpath('td[2]/@rowspan').extract_first()
+        if row.xpath('td[3]/@rowspan').extract_first() is not None:
             self.is_description_spanning = True
+            item['max_span'] = row.xpath('td[3]/@rowspan').extract_first()
 
+    def is_special_case(self):
         if True in [self.is_description_spanning, self.is_docket_spanning, self.is_filer_spanning]:
             return True
         return False
