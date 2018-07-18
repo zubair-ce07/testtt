@@ -19,16 +19,6 @@ class ReportGenerator:
         ReportGenerator.month_report(month, year, max_avg_temp, min_avg_temp, mean_avg_hum)
 
     @staticmethod
-    def get_bar_report(report_type, argument, weather_readings):
-        year, month = [int(a) for a in argument.split('/')]
-        dual_bar_report_parameter = 'c'
-        single_bar_report_parameter = 'd'
-        if report_type == dual_bar_report_parameter:
-            ReportGenerator.dual_bar_chart_report(year, month, weather_readings)
-        elif report_type == single_bar_report_parameter:
-            ReportGenerator.single_bar_chart_report(year, month, weather_readings)
-
-    @staticmethod
     def annual_report(highest_hum, highest_temp, lowest_temp):
         print(f'-e Annual Report {highest_hum.year}')
         print(f'Highest: {highest_temp.highest_temp}C on {calendar.month_name[highest_temp.month]} '

@@ -34,7 +34,7 @@ class WeatherReadingsReader:
 
     @staticmethod
     def file_needs_to_be_read(file_name, year, month):
-        regex = '.*' + str(year) + '_' + month + '.txt'
+        regex = f'.*{str(year)}_{month}.txt'
         return bool(re.match(regex, file_name))
 
     @staticmethod
@@ -43,5 +43,5 @@ class WeatherReadingsReader:
         file_names = WeatherReadingsReader.get_weather_files(dir_path)
         for file_name in file_names:
             if WeatherReadingsReader.file_needs_to_be_read(file_name, year, month):
-                    weather_readings += WeatherReadingsReader.read_file(join(dir_path, file_name))
+                weather_readings += WeatherReadingsReader.read_file(join(dir_path, file_name))
         return weather_readings

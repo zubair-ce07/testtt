@@ -25,7 +25,7 @@ def validate_directory(path):
 
 def month_argument_reader(argument):
     year, month = argument.split('/')
-    return int(year), calendar.month_abbr[int(month)]
+    return int(year), int(month)
 
 
 def run(args):
@@ -35,28 +35,35 @@ def run(args):
         if weather_readings:
             ReportGenerator.get_annual_report(weather_readings)
         else:
-            warnings.warn(f'Could not find Any Data for {args.type_e}')
+            no_data_warning(args.type_e)
     if args.type_a:
-        year, month_name = month_argument_reader(args.type_a)
+        year, month = month_argument_reader(args.type_a)
+        month_name = calendar.month_abbr[month]
         weather_readings = WeatherReadingsReader.read_readings(my_path, year, month_name)
         if weather_readings:
             ReportGenerator.get_month_report(month_name, year, weather_readings)
         else:
-            warnings.warn(f'Could not find Any Data for {args.type_a}')
+            no_data_warning(args.type_a)
     if args.type_c:
-        year, month_name = month_argument_reader(args.type_c)
+        year, month = month_argument_reader(args.type_c)
+        month_name = calendar.month_abbr[month]
         weather_readings = WeatherReadingsReader.read_readings(my_path, year, month_name)
         if weather_readings:
-            ReportGenerator.get_bar_report('c', args.type_c, weather_readings)
+            ReportGenerator.dual_bar_chart_report(year, month, weather_readings)
         else:
-            warnings.warn(f'Could not find Any Data for {args.type_c}')
+            no_data_warning(args.type_c)
     if args.type_d:
-        year, month_name = month_argument_reader(args.type_d)
+        year, month = month_argument_reader(args.type_d)
+        month_name = calendar.month_abbr[month]
         weather_readings = WeatherReadingsReader.read_readings(my_path, year, month_name)
         if weather_readings:
-            ReportGenerator.get_bar_report('d', args.type_d, weather_readings)
+            ReportGenerator.single_bar_chart_report(year, month, weather_readings)
         else:
-            warnings.warn(f'Could not find Any Data for {args.type_d}')
+            no_data_warning(args.type_d)
+
+
+def no_data_warning(argument):
+    warnings.warn(f'Could not find Any Data for {argument}')
 
 
 def main():
