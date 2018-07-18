@@ -1,9 +1,9 @@
 import asyncio
 import requests
 import argparse
+import urllib.request as url_checker
 
 from parsel import Selector
-from urllib.request import urlopen
 from urllib.parse import urljoin
 from time import sleep
 
@@ -58,9 +58,9 @@ def validate_requests(concurrent_requests):
 
 def validate_web_url(website):
     try:
-        urlopen(website)
+        url_checker.urlopen(website)
         return website
-    except urllib.request.URLError:
+    except url_checker.URLError:
         raise argparse.ArgumentTypeError(f"Invalid url {website}")
 
 
