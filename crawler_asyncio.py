@@ -68,7 +68,7 @@ class Crawler:
             if not request_no % request_count or request_no == url_limit-1:
                 for request in asyncio.as_completed(future_requests):
                     extracted_urls = extracted_urls.union(await request)
-                    future_requests = []
+                future_requests = []
             extracted_urls = extracted_urls.difference(self.visited_urls)
 
     def crawl_report(self):
