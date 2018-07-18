@@ -1,86 +1,69 @@
-import scrapy
 import json
 from urllib.parse import urlparse
 
+from scrapy.loader import ItemLoader
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
-class ProductsSpider(scrapy.Spider):
+from jacklemkus.items import ProductItem
+
+
+class ProductsSpider(CrawlSpider):
     name = 'jacklemkus'
-    start_urls = ['https://www.jacklemkus.com/sneakers?p=1',
-                  'https://www.jacklemkus.com/mens-apparel?p=1',
-                  'https://www.jacklemkus.com/womens-apparel?p=1',
-                  'https://www.jacklemkus.com/accessories?p=1',
-                  'https://www.jacklemkus.com/kids?p=1'
-                  ]
+    start_urls = ['https://www.jacklemkus.com']
+    rules = (
+        Rule(LinkExtractor(restrict_css='#nav li.level0>a', deny='how-to-order')),
+        Rule(LinkExtractor(restrict_css='ol.row a.product-image'), 'parse_product'),
+        Rule(LinkExtractor(restrict_css='ol.pagination.left a.next')),
 
-    def parse(self, response):
+    )
 
-        for href in response.css('ol.row a.product-image::attr(href)'):
-            yield response.follow(href, self.parse_product)
-        page_query = 'div.js-infinite-scroll-pager-data::attr({})'
-
-        current_page = response.css(page_query.format('data-currentpage')).extract_first()
-        last_page = response.css(page_query.format('data-lastpage')).extract_first()
-
-        if current_page is not last_page:
-            next_url = '?p={}'.format(int(current_page) + 1)
-            yield response.follow(next_url, self.parse)
+    custom_settings = {
+        'DOWNLOAD_DELAY': 2,
+    }
 
     def parse_product(self, response):
+        xpath_query = "//body//div[@class='row']" \
+                      "//tbody//th[contains(.,'{}')]/following-sibling::td/text()"
+        base_url = urlparse(response.request.headers.get('Referer', 'None').decode("utf-8"))
 
-        def extract_with_css(query):
-            return response.css(query)
+        product_loader = ItemLoader(item=ProductItem(), response=response)
+        product_loader.add_css('retailer_sku', 'div.product-essential span.sku::text')
 
-        def extract_with_xpath(query):
-            path = "//body//div[@class='row']" \
-                   "//tbody//th[contains(.,'{}')]/following-sibling::td/text()".format(query)
+        product_loader.add_xpath('gender', xpath_query.format('Gender'))
 
-            return response.xpath(path)
+        product_loader.add_css('image_urls', 'div.product-essential p.product-image a::attr(href)')
 
-        def get_category():
-            base_url = urlparse(response.request.headers.get('Referer', None).decode("utf-8"))
-            categories = extract_with_xpath('DEPARTMENT').extract().append(base_url.path[1:])
-            product_type = extract_with_xpath('Type').extract()
-            return categories + product_type
+        product_loader.add_css('description', '#description-tab div.std::text')
 
-        def get_brand():
-            selector = extract_with_xpath('Brand').extract_first()
-            return "local" if selector is None else selector.strip()
+        product_loader.add_xpath('category', xpath_query.format('DEPARTMENT'))
+        product_loader.add_xpath('category', xpath_query.format('Type'))
+        product_loader.add_value('category', base_url.path[1:])
 
-        def get_gender():
-            selector = extract_with_xpath('Gender').extract_first()
-            return "None" if selector is None else selector.strip()
+        product_loader.add_value('url', response.url)
 
-        def get_list_of_skus():
-            lookup_mine = json.loads(response.css('div.product-data-mine::attr(data-lookup)')
-                                     .extract_first().replace("\'", "\""))
-            list_of_sku = []
-            for item in lookup_mine.values():
-                product_sku = {}
-                price = response.css('div.product-essential span.price::text').extract_first()
-                if price[0] is 'R':
-                    product_sku["price"] = float(price[1:].replace(",", ""))
-                    product_sku["currency"] = 'RAND'
-                product_sku["size"] = item.get("size")
-                product_sku["sku_id"] = "{}_{}".format(item.get("id"),
-                                                       item.get("size").replace(" ", '_'))
-                if not item.get("stock_status"):
-                    product_sku["out_of_stock"] = True
-                list_of_sku.append(product_sku)
-            return list_of_sku
+        product_loader.add_css('name', 'div.product-essential div.product-name h1::text')
 
-        yield {
-            'retailer_sku': extract_with_css(
-                'div.product-essential span.sku::text').extract_first().strip(),
+        product_loader.add_xpath('brand', xpath_query.format('Brand'))
 
-            'gender': get_gender(),
-            'category': get_category(),
-            'brand': get_brand(),
-            'url': response.url,
-            'name': extract_with_css(
-                'div.product-essential div.product-name h1::text').extract_first().strip(),
+        product_loader.add_value('skus', self.get_list_of_skus(response))
+        return product_loader.load_item()
 
-            'description': [extract_with_css('div.row div.std::text').extract_first().strip()],
-            'image_urls': extract_with_css(
-                'div.product-essential p.product-image a::attr(href)').extract(),
-            'suks': get_list_of_skus()
-        }
+    @staticmethod
+    def get_list_of_skus(response):
+        lookup_mine = json.loads(response.css('div.product-data-mine::attr(data-lookup)')
+                                 .extract_first().replace("\'", "\""))
+        list_of_sku = []
+        for item in lookup_mine.values():
+            product_sku = {}
+            price = response.css('div.product-essential span.price::text').extract_first()
+            if price[0] is 'R':
+                product_sku["price"] = float(price[1:].replace(",", ""))
+                product_sku["currency"] = 'RAND'
+            product_sku["size"] = item.get("size")
+            product_sku["sku_id"] = "{}_{}".format(item.get("id"),
+                                                   item.get("size").replace(" ", '_'))
+            if not item.get("stock_status"):
+                product_sku["out_of_stock"] = True
+            list_of_sku.append(product_sku)
+        return list_of_sku
