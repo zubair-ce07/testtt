@@ -22,6 +22,10 @@ def valid_date(date):
         datetime.datetime.strptime(date, '%Y/%m')
     except ValueError:
         raise
+
+    year_month = date.split('/')
+    year_month[1] = calendar.month_abbr[int(year_month[1])]
+    date = '_'.join(year_month)
     return date
 
 
@@ -42,58 +46,34 @@ def parsing_arguments():
     return argument_parser.parse_args()
 
 
-def append_year_month(argument_list, year_month):
-    """This function is appending date in argument list"""
-    year_month[1] = calendar.month_abbr[int(year_month[1])]
-    if year_month[0] not in argument_list:
-        argument_list.append('_'.join(year_month))
-
-
 def get_argument(args):
     """This function returns distinct arguments list and all arguments dictionary"""
 
-    argument_list = []
-    argument_dict = {}
+    argument_dictionary = {}
+    if args.e:
+        argument_dictionary['e'] = args.e[:]
 
-    for arg_e in args.e:
-        if arg_e:
-            argument_list.append(str(arg_e))
-            if 'e' not in argument_dict:
-                argument_dict['e'] = []
-            argument_dict['e'].append(arg_e)
+    if args.a:
+        argument_dictionary['a'] = args.a[:]
 
-    for arg_a in args.a:
-        if arg_a:
-            year_month = arg_a.split('/')
-            append_year_month(argument_list, year_month)
-            if 'a' not in argument_dict:
-                argument_dict['a'] = []
-            argument_dict['a'].append('_'.join(year_month))
+    if args.c:
+        argument_dictionary['c'] = args.c[:]
 
-    for arg_c in args.c:
-        if arg_c:
-            year_month = arg_c.split('/')
-            append_year_month(argument_list, year_month)
-            if 'c' not in argument_dict:
-                argument_dict['c'] = []
-            argument_dict['c'].append('_'.join(year_month))
-
-    return argument_list, argument_dict
+    return argument_dictionary
 
 
 if __name__ == "__main__":
     """This is the main."""
 
     args = parsing_arguments()
-    argument_list, argument_dict = get_argument(args)
-
-    parsing_files = ParsingFiles(args.file_path, argument_list)
+    argument_dictionary = get_argument(args)
+    parsing_files = ParsingFiles(args.file_path)
     all_weather_readings = parsing_files.reading_files()
 
     calculations_class = CalculatingResults(all_weather_readings)
 
-    for key_arg in argument_dict.keys():
-        for argument in argument_dict[key_arg]:
+    for key_arg in argument_dictionary.keys():
+        for argument in argument_dictionary[key_arg]:
             if argument:
                 if key_arg == 'e':
                     calculations_class.calculate_results_for_year(argument)
