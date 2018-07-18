@@ -1,5 +1,6 @@
 import re
 
+from unidecode import unidecode
 from scrapy.linkextractor import LinkExtractor
 from scrapy.spider import Rule, CrawlSpider
 
@@ -8,18 +9,15 @@ from task3.items import Task3Item
 
 class DecimasSpider(CrawlSpider):
     DOWNLOAD_DELAY = 0.5
+    FEED_EXPORT_ENCODING = 'utf-8'
     name = "decimas"
     allowed_domains = ['decimas.es']
     start_urls = ['https://www.decimas.es/']
 
-    rules = (Rule(LinkExtractor(restrict_css='a.view_all'),
-                  follow=True),
-             Rule(LinkExtractor(restrict_css='div.ambrands-list a'),
-                  follow=True),
-             Rule(LinkExtractor(restrict_css='a.next.i-next'),
-                  follow=True),
-             Rule(LinkExtractor(restrict_css='div.category-products a.product-image'),
-                  follow=False, callback='parse_item'))
+    rules = (Rule(LinkExtractor(restrict_css='a.view_all')),
+             Rule(LinkExtractor(restrict_css='div.ambrands-list a')),
+             Rule(LinkExtractor(restrict_css='a.next.i-next')),
+             Rule(LinkExtractor(restrict_css='div.category-products a.product-image'), callback='parse_item'))
 
     def parse_item(self, response):
         sizes = self.get_sizes(response)
@@ -52,7 +50,7 @@ class DecimasSpider(CrawlSpider):
 
     def get_brand(self, response):
         brands = ['arena', 'reebok', 'nike', 'head', 'tenth', 'adidas', 'cougar', 'plns', 'asics', 'new-balance',
-                      'ipanema', 'joma', 'le-coq-sportif', 'polinesia', 'puma', 'rider', '47-brand']
+                  'ipanema', 'joma', 'le-coq-sportif', 'polinesia', 'puma', 'rider', '47-brand']
         for key in brands:
             if re.match('.*' + key + '.*', response.request.url):
                 return key
@@ -85,7 +83,7 @@ class DecimasSpider(CrawlSpider):
     def get_description(self, response):
         description = response.css('div.descripcionProducto > div > p::text').extract_first()
         if description:
-            description.strip()
+            description = description.strip()
             return description.split('.')
 
     def get_categories(self, title, brand, gender):
@@ -114,3 +112,5 @@ class DecimasSpider(CrawlSpider):
             skus.append(sku)
         return skus
 
+    def remove_non_ascii(self, text):
+        return unidecode(str(text))
