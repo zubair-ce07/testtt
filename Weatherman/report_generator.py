@@ -1,4 +1,5 @@
 import calendar
+
 from weather_analyzer import WeatherAnalyzer
 
 

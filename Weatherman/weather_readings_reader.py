@@ -1,16 +1,16 @@
-from os import listdir
-from os.path import isfile, join
 import csv
 import re
+from os import listdir
+from os.path import isfile, join
 
-import weather_day_reading
+from weather_day_reading import WeatherReading
 
 
 class WeatherReadingsReader:
 
     @staticmethod
     def read_day_reading(reading):
-        day_reading = weather_day_reading.WeatherReading(reading)
+        day_reading = WeatherReading(reading)
         return day_reading
 
     @staticmethod

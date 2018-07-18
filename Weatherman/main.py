@@ -1,14 +1,12 @@
 import os
 import argparse
 import calendar
-import warnings
 
 from weather_readings_reader import WeatherReadingsReader
 from report_generator import ReportGenerator
 
 
 class Main:
-
     my_path = ''
 
     def validate_month(self, argument):
