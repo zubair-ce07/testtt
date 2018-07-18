@@ -7,116 +7,101 @@ from parsing_class import ParsingFiles
 from report_class import ReportPrinting
 
 
-def valid_date(year, month=1, day=1):
-    """This function is checking validation of date"""
-
+def valid_year(date):
+    """This function is checking validation of year"""
     try:
-        datetime.datetime(int(year), int(month), int(day))
+        datetime.datetime.strptime(date, '%Y')
     except ValueError:
-        return False
-    return True
+        raise
+    return date
+
+
+def valid_date(date):
+    """This function is checking validation of date"""
+    try:
+        datetime.datetime.strptime(date, '%Y/%m')
+    except ValueError:
+        raise
+    return date
 
 
 def parsing_arguments():
     """This function is parsing argument"""
 
-    argument_parser = argparse.ArgumentParser(add_help=False)
+    argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument('file_path', type=str, help='Path to the weatherdata files directory.',
                                  default='/home/muhammad/training-tasks/the-lab/weatherfiles/')
-    argument_parser.add_argument('-e', nargs='*', type=int, help='Enter year to print the results for that year.',
+    argument_parser.add_argument('-e', nargs='*', type=valid_year, help='Enter year to print the results for that year',
                                  default=[])
-    argument_parser.add_argument('-a', nargs='*', type=str, help='Enter year/month in this format.', default=[])
-    argument_parser.add_argument('-c', nargs='*', type=str, help='Enter year/month in this format.', default=[])
+    argument_parser.add_argument('-a', nargs='*', type=valid_date, help='Enter year/month in this format.', default=[])
+    argument_parser.add_argument('-c', nargs='*', type=valid_date, help='Enter year/month in this format.', default=[])
     return argument_parser.parse_args()
 
 
 def append_year_month(argument_list, year_month):
     """This function is appending date in argument list"""
-
-    if valid_date(year_month[0], year_month[1]):
-        if year_month[0] not in argument_list:
-            year_month[1] = calendar.month_abbr[int(year_month[1])]
-            argument_list.append('_'.join(year_month))
-    else:
-        print('date is not valid!')
+    year_month[1] = calendar.month_abbr[int(year_month[1])]
+    if year_month[0] not in argument_list:
+        argument_list.append('_'.join(year_month))
 
 
-def get_distinct_arguments_in_list(args):
-    """This function returns distinct arguments list"""
+def get_argument(args):
+    """This function returns distinct arguments list and all arguments dictionary"""
 
     argument_list = []
-
-    for arg_e in args.e:
-        if valid_date(arg_e):
-            argument_list.append(str(arg_e))
-        else:
-            print("Invalid Input for arg -e !", arg_e)
-
-    for arg_a in args.a:
-        append_year_month(argument_list, arg_a.split('/'))
-
-    for arg_c in args.c:
-        append_year_month(argument_list, arg_c.split('/'))
-
-    return argument_list
-
-
-def get_argument_flag_dict(args):
-    """This function returns dictionary with flags arguments"""
-
     argument_dict = {}
 
     for arg_e in args.e:
-        if 'e' not in argument_dict:
-            argument_dict['e'] = []
-
-        argument_dict['e'].append(str(arg_e))
+        if arg_e:
+            argument_list.append(str(arg_e))
+            if 'e' not in argument_dict:
+                argument_dict['e'] = []
+            argument_dict['e'].append(arg_e)
 
     for arg_a in args.a:
-        if 'a' not in argument_dict:
-            argument_dict['a'] = []
-
-        year_month = arg_a.split('/')
-        year_month[1] = calendar.month_abbr[int(year_month[1])]
-        argument_dict['a'].append('_'.join(year_month))
+        if arg_a:
+            year_month = arg_a.split('/')
+            append_year_month(argument_list, year_month)
+            if 'a' not in argument_dict:
+                argument_dict['a'] = []
+            argument_dict['a'].append('_'.join(year_month))
 
     for arg_c in args.c:
-        if 'c' not in argument_dict:
-            argument_dict['c'] = []
+        if arg_c:
+            year_month = arg_c.split('/')
+            append_year_month(argument_list, year_month)
+            if 'c' not in argument_dict:
+                argument_dict['c'] = []
+            argument_dict['c'].append('_'.join(year_month))
 
-        year_month = arg_c.split('/')
-        year_month[1] = calendar.month_abbr[int(year_month[1])]
-        argument_dict['c'].append('_'.join(year_month))
-
-    return argument_dict
+    return argument_list, argument_dict
 
 
 if __name__ == "__main__":
     """This is the main."""
 
     args = parsing_arguments()
-    argument_list = get_distinct_arguments_in_list(args)
+    argument_list, argument_dict = get_argument(args)
 
     parsing_files = ParsingFiles(args.file_path, argument_list)
     all_weather_readings = parsing_files.reading_files()
-    file_names = [file_name.replace('.txt', '') for file_name in parsing_files.all_files_names]
 
-    argument_dict = get_argument_flag_dict(args)
-    calculations_class = CalculatingResults(all_weather_readings, file_names)
-    
+    calculations_class = CalculatingResults(all_weather_readings)
+
     for key_arg in argument_dict.keys():
         for argument in argument_dict[key_arg]:
-            if key_arg == 'e':
-                calculations_class.calculate_results_for_year(argument)
-                report_class = ReportPrinting(calculations_class.results)
-                report_class.print_results_for_year(argument)
+            if argument:
+                if key_arg == 'e':
+                    calculations_class.calculate_results_for_year(argument)
+                    report_class = ReportPrinting(calculations_class.results)
+                    report_class.print_results_for_year(argument)
 
-            if key_arg == 'a':
-                calculations_class.calculate_average_results_for_month(argument)
-                report_class = ReportPrinting(calculations_class.results)
-                report_class.print_results_for_month(argument)
+                if key_arg == 'a':
+                    calculations_class.calculate_average_results_for_month(argument)
+                    report_class = ReportPrinting(calculations_class.results)
+                    report_class.print_results_for_month(argument)
 
-            if key_arg == 'c':
-                calculations_class.calculate_month_chart(argument)
-                report_class = ReportPrinting(calculations_class.results)
-                report_class.plot_chart_for_month(argument)
+                if key_arg == 'c':
+                    calculations_class.calculate_month_chart(argument)
+                    report_class = ReportPrinting(calculations_class.results)
+                    report_class.plot_chart_for_month(argument)

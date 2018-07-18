@@ -1,4 +1,5 @@
 import csv
+import calendar
 import datetime
 from os import listdir
 from os.path import isfile, join
@@ -19,21 +20,14 @@ class ParsingFiles:
     def reading_files(self):
         all_weather_readings = {}
         for file_name in self.all_files_names:
-            month_record = []
-            file_name_key = file_name.replace('.txt', '')
             with open(''.join([self.path, file_name]), 'r') as in_file:
                 file_reader = csv.DictReader(in_file)
                 for line in file_reader:
                     date = line.get('PKT', line.get('PKST'))
                     date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
-                    max_temp = line['Max TemperatureC']
-                    max_humidity = line['Max Humidity']
-                    mean_humidity = line[' Mean Humidity']
-                    min_temp = line['Min TemperatureC']
-
-                    record = Record(date, max_temp, min_temp, max_humidity, mean_humidity)
-                    month_record.append(record)
-
-            all_weather_readings[file_name_key] = month_record
+                    record = Record(line)
+                    date_key = "{}_{}_{}".format(date.year, calendar.month_abbr[date.month], date.day)
+                    all_weather_readings[date_key] = record
 
         return all_weather_readings
+
