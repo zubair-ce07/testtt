@@ -1,24 +1,45 @@
-#!/usr/bin/python
-import argparse
+from requests_futures.sessions import FuturesSession
+from parsel import Selector
 import asyncio
-from algorithm import Algorithm
+from urllib.parse import urljoin, urlparse
 
 
-def main(argv):
-    crawler = Algorithm(argv.url, argv.workers, argv.delay, argv.max_urls)
-    future = asyncio.Task(crawler.run())
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(future)
-    loop.close()
-    total_data, total_urls = future.result()
-    print("Crawler Crawled {} bytes of total data and {} URLs".format(total_data, total_urls))
+class Crawler:
+    def __init__(self, url, workers=1, download_delay=0, max_urls=0):
+        self._total_data = 0
+        self._url = '{}://{}'.format(urlparse(url).scheme, urlparse(url).netloc)
+        self._pending_urls = {self._url}
+        self._session = FuturesSession(max_workers=workers)
+        self._download_delay = download_delay
+        self._max_urls = max_urls
+        self._seen_urls = set()
 
+    def _find_urls(self, html):
+        found_urls = set()
+        selector = Selector(html)
+        for anchor in selector.css('a::attr(href)').getall():
+            url = urljoin(self._url, anchor)
+            if url not in self._seen_urls and url.startswith(self._url):
+                found_urls.add(url)
+        return found_urls
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('url', help="Website url to crawl")
-    parser.add_argument('-w', "--workers", type=int, default=1, help="Number of worker threads")
-    parser.add_argument('-d', "--delay", type=int, default=0, help="Download delay for making two concurrent requests")
-    parser.add_argument('-m', "--max-urls", type=int, default=0, help="Maximum urls to visit")
-    args = parser.parse_args()
-    main(args)
+    async def crawl(self, url):
+        future = self._session.get(url)
+        response = future.result()
+        html = response.content
+        return len(str(html)), self._find_urls(str(html))
+
+    async def run(self):
+        while self._pending_urls:
+            futures = []
+            for url in self._pending_urls:
+                if len(self._seen_urls) < self._max_urls or self._max_urls == 0:
+                    asyncio.sleep(self._download_delay)
+                    self._seen_urls.add(url)
+                    futures.append(self.crawl(url))
+            self._pending_urls = set()
+            for future in asyncio.as_completed(futures):
+                read_data, extracted_urls = await future
+                self._total_data = self._total_data + read_data
+                self._pending_urls |= extracted_urls
+        return self._total_data, len(self._seen_urls)
