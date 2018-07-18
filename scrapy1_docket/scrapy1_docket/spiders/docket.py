@@ -27,7 +27,7 @@ class DocketSpider(scrapy.Spider):
                 yield item
                 for new_item in self.handle_special_case(row_index, item):
                     yield new_item
-                row_index += int(item['max_span'])
+                row_index += int(self.max_span)
             else:
                 yield item
                 row_index += 1
@@ -41,9 +41,11 @@ class DocketSpider(scrapy.Spider):
         item['description'] = self.get_value_from_column(self.all_rows[row_index], column_no + 2 if not is_double_span else 1)
         item['filed_date'] = self.get_filed_date_from_description(item['description'])
 
-
     def get_value_from_column(self, row, colunm_no):
-        return row.xpath('td[{}]//text()'.format(colunm_no)).extract_first()
+        selection_list = row.xpath('td[{}]//text()'.format(colunm_no))
+        for selection in selection_list:
+            if re.search(r'\w+', selection.extract()):
+                return selection.extract()
 
     def get_filed_date_from_description(self, description):
         if description is None: return "Not Available"
@@ -54,7 +56,7 @@ class DocketSpider(scrapy.Spider):
     def handle_special_case(self, row_index, item):
 
         index = 1
-        while index < int(item['max_span']):
+        while index < int(self.max_span):
             item2 = items.DocketItem()
             self.parse_row_for_item(row_index+index, item2, True, self.get_is_double_span())
 
@@ -80,13 +82,13 @@ class DocketSpider(scrapy.Spider):
     def detect_spanning(self, row, item):
         if row.xpath('td[1]/@rowspan').extract_first() is not None:
             self.is_docket_spanning = True
-            item['max_span'] = row.xpath('td[1]/@rowspan').extract_first()
+            self.max_span = row.xpath('td[1]/@rowspan').extract_first()
         if row.xpath('td[2]/@rowspan').extract_first() is not None:
             self.is_filer_spanning = True
-            item['max_span'] = row.xpath('td[2]/@rowspan').extract_first()
+            self.max_span = row.xpath('td[2]/@rowspan').extract_first()
         if row.xpath('td[3]/@rowspan').extract_first() is not None:
             self.is_description_spanning = True
-            item['max_span'] = row.xpath('td[3]/@rowspan').extract_first()
+            self.max_span = row.xpath('td[3]/@rowspan').extract_first()
 
     def is_special_case(self):
         if True in [self.is_description_spanning, self.is_docket_spanning, self.is_filer_spanning]:

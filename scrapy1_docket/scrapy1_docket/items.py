@@ -16,4 +16,3 @@ class DocketItem(scrapy.Item):
     description = scrapy.Field()
     filed_date = scrapy.Field()
     file_url = scrapy.Field()
-    max_span = scrapy.Field()
