@@ -57,7 +57,7 @@ class Crawler:
                             and not parse.urlparse(url).scheme == 'mailto', urls))
         return filtered_urls
 
-    async def crawl_async(self, url_limit, request_limit, download_delay):
+    async def crawl_async(self, url_limit, request_count, download_delay):
         extracted_urls = await self.extract_urls('/', download_delay)
         future_requests = []
         self.visited_urls = set('/')
@@ -65,14 +65,11 @@ class Crawler:
             url = extracted_urls.pop()
             future_requests.append(self.extract_urls(url, download_delay))
             self.visited_urls = self.visited_urls.union({url})
-            if not request_no % request_limit:
+            if not request_no % request_count or request_no == url_limit-1:
                 for request in asyncio.as_completed(future_requests):
                     extracted_urls = extracted_urls.union(await request)
-                extracted_urls = extracted_urls.difference(self.visited_urls)
-                future_requests = []
-            if request_no == url_limit-1:
-                for request in asyncio.as_completed(future_requests):
-                    extracted_urls = extracted_urls.union(await request)
+                    future_requests = []
+            extracted_urls = extracted_urls.difference(self.visited_urls)
 
     def crawl_report(self):
         print(f"Number of requests: {len(self.visited_urls)}.")
