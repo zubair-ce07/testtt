@@ -13,6 +13,7 @@ class Crawler:
         self._download_delay = download_delay
         self._max_urls = max_urls
         self._seen_urls = set()
+        self._in_progress = 0
 
     def _find_urls(self, html):
         found_urls = set()
@@ -23,23 +24,21 @@ class Crawler:
                 found_urls.add(url)
         return found_urls
 
-    async def crawl(self, url):
+    def crawl(self, url):
         future = self._session.get(url)
         response = future.result()
         html = response.content
-        return len(str(html)), self._find_urls(str(html))
+        self._total_data = self._total_data + len(str(html))
+        self._pending_urls |= self._find_urls(str(html))
+        self._in_progress -= 1
 
     async def run(self):
-        while self._pending_urls:
-            futures = []
-            for url in self._pending_urls:
+        while self._pending_urls or self._in_progress:
+            if self._pending_urls:
+                url = self._pending_urls.pop()
                 if len(self._seen_urls) < self._max_urls or self._max_urls == 0:
                     asyncio.sleep(self._download_delay)
                     self._seen_urls.add(url)
-                    futures.append(self.crawl(url))
-            self._pending_urls = set()
-            for future in asyncio.as_completed(futures):
-                read_data, extracted_urls = await future
-                self._total_data = self._total_data + read_data
-                self._pending_urls |= extracted_urls
+                    self._in_progress += 1
+                    self.crawl(url)
         return self._total_data, len(self._seen_urls)
