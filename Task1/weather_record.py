@@ -2,9 +2,9 @@ import datetime
 
 
 class WeatherRecord:
-    def __init__(self, weather_date, highest_temperature, lowest_temperature, mean_temperature,
+    def __init__(self, date, highest_temperature, lowest_temperature, mean_temperature,
                  max_humidity, mean_humidity):
-        self.weather_record_date = datetime.datetime.strptime(weather_date, "%Y-%m-%d").date()
+        self.date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         self.highest_temperature = int(highest_temperature)
         self.lowest_temperature = int(lowest_temperature)
         self.mean_temperature = float(mean_temperature)
