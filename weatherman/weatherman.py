@@ -33,8 +33,12 @@ def parsing_arguments():
                                  default='/home/muhammad/training-tasks/the-lab/weatherfiles/')
     argument_parser.add_argument('-e', nargs='*', type=valid_year, help='Enter year to print the results for that year',
                                  default=[])
-    argument_parser.add_argument('-a', nargs='*', type=valid_date, help='Enter year/month in this format.', default=[])
-    argument_parser.add_argument('-c', nargs='*', type=valid_date, help='Enter year/month in this format.', default=[])
+    argument_parser.add_argument('-a', nargs='*', type=valid_date, help='Enter year/month to print average of maximum '
+                                                                        'temperature, minimum temperature and '
+                                                                        'mean humidity.', default=[])
+    argument_parser.add_argument('-c', nargs='*', type=valid_date, help='Enter year/month to plot a bar chart of '
+                                                                        'maximum temperature and minimum temperature '
+                                                                        'on each day of given month', default=[])
     return argument_parser.parse_args()
 
 
