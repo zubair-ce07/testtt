@@ -1,4 +1,6 @@
 import json
+import re
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -16,60 +18,63 @@ class WoolworthSpider(CrawlSpider):
     )
 
     def parse_products(self, response):
-        resp = response.css('body > script::text')[0].extract()
+        resp = response.css('body > script::text').extract_first()
         json_resp = json.loads(resp.split('= ')[1])
         item = {
-            'description': self.description(response),
-            'type': self.product_type(json_resp),
-            'image_url': self.image_url(json_resp),
-            'product_name': self.product_name(json_resp),
-            'sku': self.sku_id(json_resp),
+            'description': self.extract_description(response),
+            'type': self.extract_product_type(json_resp),
+            'image_urls': self.extract_image_urls(json_resp),
+            'product_name': self.extract_product_name(json_resp),
+            'sku': self.extract_sku_id(json_resp),
             'url': response.url,
-            'skus': self.populate_sku_for_all_sizes(json_resp)
+            'skus': self.extract_product_skus(json_resp)
         }
         yield item
 
-    def populate_sku_for_all_sizes(self, json_resp):
+    def extract_product_skus(self, json_resp):
         items = {
             'skus': {}
         }
-        price = self.price(json_resp)
-        for col in self.colors(json_resp):
-            for size in self.sizes(json_resp):
+        price = self.extract_price(json_resp)
+        for col in self.extract_colors(json_resp):
+            for size in self.extract_sizes(json_resp):
                 values = {
                     'color': col,
                     'price': price,
                     'size': size
                 }
-                items['skus']['{0}_{1}_{2}'.format(self.sku_id(json_resp), size, col)] = values
+                items['skus']['{0}_{1}'.format(size, col)] = values
             return items['skus']
 
-    def product_type(self, response):
-        prod_type = (response['pdp']['productInfo']['breadcrumbs']['default'])
-        return [d[k] for d in prod_type for k in d if k == 'label']
+    def extract_product_type(self, response):
+        prod_type = response['pdp']['productInfo']['breadcrumbs']['default']
+        return [items[key] for items in prod_type for key in items if key == 'label']
 
-    def colors(self, response):
-        color = (response['pdp']['productInfo']['colourSKUs'])
-        return [d[k] for d in color for k in d if k == 'colour']
+    def extract_colors(self, response):
+        color = response['pdp']['productInfo']['colourSKUs']
+        return [items[key] for items in color for key in items if key == 'colour']
 
-    def price(self, json_resp):
-        return json_resp['pdp']['productPrices'][self.sku_id(json_resp)]['plist3620008']['priceMax']
+    def extract_price(self, json_resp):
+        return json_resp['pdp']['productPrices'][self.extract_sku_id(json_resp)]['plist3620008']['priceMax']
 
-    def sizes(self, response):
-        size = (response['pdp']['productInfo']['styleIdSizeSKUsMap']).values()[0]
-        return [d[k] for d in size for k in d if k == 'size']
+    def extract_sizes(self, response):
+        items = response['pdp']['productInfo']['styleIdSizeSKUsMap'].values()[0]
+        return [size[key] for size in items for key in size if key == 'size']
 
-    def image_url(self, response):
-        url = (response['pdp']['productInfo']['colourSKUs'])
-        image_url = [d[k] for d in url for k in d if k == 'externalImageUrlReference']
+    def extract_image_urls(self, response):
+        items = response['pdp']['productInfo']['colourSKUs']
+        image_url = [url[key] for url in items for key in url if key == 'externalImageUrlReference']
         return ['https://woolworths.co.za/{0}'.format(image) for image in image_url]
 
-    def description(self, response):
-        return ' '.join(t.strip() for t in response.css('.accordion--chrome .accordion__segment--chrome > '
-                                                        'div ::text').extract()[:-2]).strip()
+    def extract_description(self, response):
+        return ''.join(self.clean_spaces(desc) for desc in response.css('.accordion--chrome .accordion__segment--chrome > '
+                                                              ' div ::text').extract()[:-2])
 
-    def sku_id(self, response):
+    def extract_sku_id(self, response):
         return response['pdp']['productInfo']['productId']
 
-    def product_name(self, response):
+    def extract_product_name(self, response):
         return response['pdp']['productInfo']['displayName']
+
+    def clean_spaces(self, str):
+        return ' '.join(re.split("\s+", str, flags=re.UNICODE))
