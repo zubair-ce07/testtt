@@ -9,13 +9,15 @@ class Crawler:
         self._total_data = 0
         self._url = f'{urlparse(url).scheme}://{urlparse(url).netloc}'
         self._pending_urls = {self._url}
+        self._scheduled_tasks = []
         self._download_delay = download_delay
         self._max_urls = max_urls
         self._seen_urls = set()
+        self._workers = asyncio.BoundedSemaphore(value=workers)
         self._in_progress = 0
         self._loop = asyncio.get_event_loop()
 
-    def _find_urls(self, html):
+    def _parse(self, html):
         found_urls = set()
         selector = Selector(html)
         for anchor in selector.css('a::attr(href)').extract():
@@ -25,13 +27,13 @@ class Crawler:
         return found_urls
 
     async def _request(self, url):
-        print(self._in_progress)
-        future = self._loop.run_in_executor(None, requests.get, url)
-        response = await future
+        async with self._workers:
+            future = self._loop.run_in_executor(None, requests.get, url)
+            response = await future
+            await asyncio.sleep(self._download_delay)
         html = response.text
-        print(url)
         self._total_data = self._total_data + len(str(html))
-        self._pending_urls |= self._find_urls(str(html))
+        self._pending_urls |= self._parse(str(html))
         self._in_progress -= 1
 
     async def crawl(self):
@@ -39,9 +41,9 @@ class Crawler:
             if self._pending_urls:
                 url = self._pending_urls.pop()
                 if len(self._seen_urls) < self._max_urls or self._max_urls == 0:
-                    asyncio.sleep(self._download_delay)
                     self._seen_urls.add(url)
                     self._in_progress += 1
-                    await self._request(url)
-                    print(url)
+                    self._scheduled_tasks.append(asyncio.ensure_future(self._request(url)))
+            else:
+                await asyncio.wait(self._scheduled_tasks)
         return self._total_data, len(self._seen_urls)
