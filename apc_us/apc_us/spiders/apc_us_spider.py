@@ -19,13 +19,15 @@ class APCUSSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        for url_selector in response.css('#main-nav a'):
-            url = url_selector.css('a::attr(href)').extract_first()
+        listing_css = '#main-nav a::attr(href)'
+
+        for url in response.css(listing_css).extract():
             yield response.follow(url, self.parse_listing)
 
     def parse_listing(self, response):
-        for url_selector in response.css('a.product-image'):
-            url = url_selector.css('a::attr(href)').extract_first()
+        product_css = 'a.product-image::attr(href)'
+
+        for url in response.css(product_css).extract():
             yield response.follow(url, self.parse_product)
 
     def parse_product(self, response):
