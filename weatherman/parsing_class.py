@@ -29,4 +29,3 @@ class ParsingFiles:
                     all_weather_readings[date_key] = record
 
         return all_weather_readings
-

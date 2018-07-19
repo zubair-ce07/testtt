@@ -38,7 +38,7 @@ def parsing_arguments():
     argument_parser.add_argument('file_path', type=str, help='Path to the weatherdata files directory.',
                                  default='/home/muhammad/training-tasks/the-lab/weatherfiles/')
     argument_parser.add_argument('-e', nargs='*', type=valid_year, help='Enter year to print the results for that year',
-                                 default=[])
+                                 default=['2005'])
     argument_parser.add_argument('-a', nargs='*', type=valid_year_month, help='Enter year/month to print average of '
                                                                               'maximum temperature, minimum temperature'
                                                                               ' and mean humidity.', default=[])
