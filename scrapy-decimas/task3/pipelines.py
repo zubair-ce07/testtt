@@ -6,6 +6,6 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-class Task3Pipeline(object):
+class DecimasPipeline(object):
     def process_item(self, item, spider):
         return item
