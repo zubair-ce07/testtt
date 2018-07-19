@@ -24,15 +24,15 @@ class CalculatingResults:
     def calculate_results_for_year(self, year):
         year_max_temp_records = [self.all_weather_readings[date_key] for date_key in self.all_weather_readings.keys()
                                  if year in date_key
-                                 if self.all_weather_readings[date_key].max_temperature is not '']
+                                 and self.all_weather_readings[date_key].max_temperature is not '']
 
         year_min_temp_records = [self.all_weather_readings[date_key] for date_key in self.all_weather_readings.keys()
                                  if year in date_key
-                                 if self.all_weather_readings[date_key].min_temperature is not '']
+                                 and self.all_weather_readings[date_key].min_temperature is not '']
 
         year_max_humid_records = [self.all_weather_readings[date_key] for date_key in self.all_weather_readings.keys()
                                   if year in date_key
-                                  if self.all_weather_readings[date_key].max_humidity is not '']
+                                  and self.all_weather_readings[date_key].max_humidity is not '']
 
         self.results.year[year] = {
             'max_temp': max(year_max_temp_records, key=lambda x: int(x.max_temperature)),
