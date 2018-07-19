@@ -24,17 +24,13 @@ class APCUSSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        listing_css = '#main-nav a'
-
-        for url_selector in response.css(listing_css):
-            url = self.extract_from_css('a::attr(href)', url_selector)
+        for url_selector in response.css('#main-nav a'):
+            url = url_selector.css('a::attr(href)').extract_first()
             yield response.follow(url, self.parse_listing)
 
     def parse_listing(self, response):
-        product_css = 'a.product-image'
-
-        for url_selector in response.css(product_css):
-            url = self.extract_from_css('a::attr(href)', url_selector)
+        for url_selector in response.css('a.product-image'):
+            url = url_selector.css('a::attr(href)').extract_first()
             yield response.follow(url, self.parse_product)
 
     def parse_product(self, response):
@@ -57,15 +53,8 @@ class APCUSSpider(scrapy.Spider):
         return categories[1:]
 
     @staticmethod
-    def extract_from_css(query, response):
-        result = response.css(query).extract()
-        if len(result) == 1:
-            return result[0]
-
-        return result
-
-    def get_product_name(self, response):
-        return self.extract_from_css('div.product-name h1::text', response)
+    def get_product_name(response):
+        return response.css('div.product-name h1::text', response).extract_first()
 
     @staticmethod
     def get_product_description(response):
@@ -79,10 +68,10 @@ class APCUSSpider(scrapy.Spider):
 
     def get_product_images(self, response):
         retailer_sku = self.get_product_retailer_sku(response)
-        product_gallery = self.extract_from_css('div.product-image-gallery img::attr(src)',
-                                                response)
+        product_gallery = response.css('div.product-image-gallery img::attr(src)').extract()
+        retailer_sku_lowercase = retailer_sku.lower()
         return [i.replace('600x', '1800x') for i in product_gallery
-                if retailer_sku.lower() in i.lower()]
+                if retailer_sku_lowercase in i.lower()]
 
     @staticmethod
     def get_product_retailer_sku(response):
@@ -94,28 +83,6 @@ class APCUSSpider(scrapy.Spider):
         size_label = response.xpath('//dt/label[contains(@id, "size")]/@id').extract_first()
         return gender_map.get(size_label)
 
-    @staticmethod
-    def generate_product_sku(sku_variant, raw_product):
-        sku = {}
-        key = f"{sku_variant.color.code},{sku_variant.size.code}"
-        raw_sku = raw_product.get(key)
-        if not raw_sku:
-            return
-
-        sku['sku_id'] = raw_sku.get('product_id')
-        sku['color'] = sku_variant.color.text
-        sku['currency'] = 'USD'
-        sku['size'] = sku_variant.size.text
-        sku['out_of_stock'] = not raw_sku.get('is_in_stock')
-
-        if len(sku_variant.prices) > 1:
-            sku['previous_price'] = sku_variant.prices[0]
-            sku['price'] = sku_variant.prices[1]
-        else:
-            sku['price'] = sku_variant.prices[0]
-
-        return sku
-
     def get_product_skus(self, response):
         skus = []
         colors = self.get_product_colors(response)
@@ -125,33 +92,50 @@ class APCUSSpider(scrapy.Spider):
 
         for color in colors:
             for size in sizes:
-                sku = self.generate_product_sku(SKUVariant(color, size, prices), raw_product)
-                if sku:
-                    skus.append(sku)
+                sku = {}
+                key = f"{color.code},{size.code}"
+                raw_sku = raw_product.get(key)
+                if not raw_sku:
+                    continue
 
+                sku['sku_id'] = raw_sku.get('product_id')
+                sku['color'] = color.text
+                sku['currency'] = 'USD'
+                sku['size'] = size.text
+                sku['out_of_stock'] = not raw_sku.get('is_in_stock')
+
+                if len(prices) > 1:
+                    sku['previous_price'] = prices[0]
+                    sku['price'] = prices[1]
+                else:
+                    sku['price'] = prices[0]
+
+                skus.append(sku)
         return skus
 
-    def get_product_sizes(self, response):
+    @staticmethod
+    def get_product_sizes(response):
         sizes = []
         size_responses = response.css(
             'ul.configurable-swatch-list.configurable-block-list.clearfix li')
 
         for size_response in size_responses:
-            size_code = self.extract_from_css('li::attr(id)', size_response)
+            size_code = size_response.css('li::attr(id)').extract_first()
             size_code = re.findall(r'\d+', size_code)[0]
-            size_text = self.extract_from_css('a::attr(name)', size_response)
+            size_text = size_response.css('a::attr(name)').extract_first()
             sizes.append(Size(size_code, size_text))
 
         return sizes
 
-    def get_product_colors(self, response):
+    @staticmethod
+    def get_product_colors(response):
         colors = []
         color_responses = response.css('#configurable_swatch_color li')
 
         for color_response in color_responses:
-            color_code = self.extract_from_css('li::attr(id)', color_response)
+            color_code = color_response.css('li::attr(id)').extract_first()
             color_code = re.findall(r'\d+', color_code)[0]
-            color_text = self.extract_from_css('a::attr(name)', color_response)
+            color_text = color_response.css('a::attr(name)').extract_first()
             colors.append(Color(color_code, color_text))
 
         return colors
