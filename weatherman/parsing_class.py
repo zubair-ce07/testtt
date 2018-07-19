@@ -13,7 +13,8 @@ class ParsingFiles:
         self.all_files_names = self.get_all_files_names()
 
     def get_all_files_names(self):
-        return [file_name for file_name in listdir(self.path) if isfile(join(self.path, file_name)) if 'Murree' in file_name]
+        return [file_name for file_name in listdir(self.path)
+                if isfile(join(self.path, file_name)) and 'Murree' in file_name]
 
     def reading_files(self):
         all_weather_readings = {}
@@ -24,7 +25,7 @@ class ParsingFiles:
                     date = line.get('PKT', line.get('PKST'))
                     date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
                     record = Record(line)
-                    date_key = "{}_{}_{}".format(date.year, calendar.month_abbr[date.month], date.day)
+                    date_key = '{}_{}_{}'.format(date.year, calendar.month_abbr[date.month], date.day)
                     all_weather_readings[date_key] = record
 
         return all_weather_readings
