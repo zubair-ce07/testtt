@@ -44,6 +44,7 @@ class Crawler:
         return response.text
 
     async def extract_urls(self, url, delay):
+        print(f"Requesting from {url}")
         url = parse.urljoin(self.website_url, url)
         page_text = await self.fetch_page(url, delay)
         selector = parsel.Selector(text=page_text)
@@ -52,24 +53,24 @@ class Crawler:
         extracted_urls = self.filter_absolute_urls(extracted_urls)
         return extracted_urls
 
-    def filter_absolute_urls(self, urls):
+    @classmethod
+    def filter_absolute_urls(cls, urls):
         filtered_urls = set(filter(lambda url: not parse.urlparse(url).netloc
                             and not parse.urlparse(url).scheme == 'mailto', urls))
         return filtered_urls
 
     async def crawl_async(self, url_limit, request_count, download_delay):
-        extracted_urls = await self.extract_urls('/', download_delay)
         future_requests = []
-        self.visited_urls = set('/')
-        for request_no in range(1, url_limit):
+        extracted_urls = {'/'}
+        for request_no in range(url_limit):
             url = extracted_urls.pop()
             future_requests.append(self.extract_urls(url, download_delay))
-            self.visited_urls = self.visited_urls.union({url})
+            self.visited_urls |= {url}
             if not request_no % request_count or request_no == url_limit-1:
                 for request in asyncio.as_completed(future_requests):
-                    extracted_urls = extracted_urls.union(await request)
+                    extracted_urls |= await request
                 future_requests = []
-            extracted_urls = extracted_urls.difference(self.visited_urls)
+            extracted_urls -= self.visited_urls
 
     def crawl_report(self):
         print(f"Number of requests: {len(self.visited_urls)}.")
