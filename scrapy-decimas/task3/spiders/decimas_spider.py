@@ -11,13 +11,19 @@ class DecimasSpider(CrawlSpider):
     name = "decimas"
     allowed_domains = ['decimas.es']
     start_urls = ['https://www.decimas.es/']
+    brands = set()
 
     rules = (Rule(LinkExtractor(restrict_css='.view_all')),
-             Rule(LinkExtractor(restrict_css='.ambrands-list a')),
+             Rule(LinkExtractor(restrict_css='.ambrands-list a'), callback='parse_brands', follow=True),
              Rule(LinkExtractor(restrict_css='.next.i-next')),
              Rule(LinkExtractor(restrict_css='.category-products .product-image'), callback='parse_item'))
 
+    def parse_brands(self, response):
+        brand = response.request.url.split('/')[3].split('.')[0]
+        DecimasSpider.brands.add(brand)
+
     def parse_item(self, response):
+        print(DecimasSpider.brands)
         item = DecimasItem()
         sizes = self.get_sizes(response)
         item['name'] = self.get_title(response)
@@ -38,20 +44,18 @@ class DecimasSpider(CrawlSpider):
         return response.css('h1::text').extract_first()
 
     def get_gender(self, response):
-        if re.match(".*hombre.*", response.request.url):
+        if "hombre" in response.request.url:
             return "male"
-        elif re.match(".*nino.*", response.request.url):
-            return "boy"
-        elif re.match(".*ninoa.*", response.request.url):
+        if "ninoa" in response.request.url:
             return "girl"
+        if "nino" in response.request.url:
+            return "boy"
         else:
             return "female"
 
     def get_brand(self, response):
-        brands = ['arena', 'reebok', 'nike', 'head', 'tenth', 'adidas', 'cougar', 'plns', 'asics', 'new-balance',
-                  'ipanema', 'joma', 'le-coq-sportif', 'polinesia', 'puma', 'rider', '47-brand']
-        for key in brands:
-            if re.match('.*' + key + '.*', response.request.url):
+        for key in DecimasSpider.brands:
+            if key in response.request.url:
                 return key
 
     def get_price(self, response):
@@ -83,10 +87,10 @@ class DecimasSpider(CrawlSpider):
         return response.request.url
 
     def get_description(self, response):
-        description = response.css('.descripcionProducto > div > p::text').extract_first()
+        description = response.css('.descripcionProducto > div > p::text').extract()
         if description:
-            description = description.strip()
-            return description.split('.')
+            description = [d.strip().split('.') for d in description]
+            return description
 
     def get_categories(self, title, brand, gender):
         return [title.split(' ')[0], gender, brand]
