@@ -1,6 +1,6 @@
-import traceback
-import os
+import glob
 import csv
+import os
 
 from weather_record import WeatherRecord
 
@@ -14,22 +14,13 @@ class WeatherDataParser:
         self.weather_records = []
 
     def parse(self, files_path, year, month=None):
-        files = [x for x in os.listdir(files_path) if x.endswith('.txt')]
-
-        for file_name in files:
+        for file_name in glob.iglob(os.path.join(files_path, '*.txt')):
             with open(os.path.join(files_path, file_name), "r") as weather_file:
                 weather_readings = csv.DictReader(weather_file, delimiter=",")
 
-                for weather_record_row in weather_readings:
-                    if all(weather_record_row.get(f) for f in WeatherDataParser.required_fields):
-                        weather_record = WeatherRecord(
-                            weather_record_row.get("PKT", weather_record_row.get("PKST", None)),
-                            weather_record_row["Max TemperatureC"],
-                            weather_record_row["Min TemperatureC"],
-                            weather_record_row["Mean TemperatureC"],
-                            weather_record_row["Max Humidity"],
-                            weather_record_row[" Min Humidity"],
-                        )
+                for weather_record in weather_readings:
+                    if all(weather_record.get(f) for f in WeatherDataParser.required_fields):
+                        weather_record = WeatherRecord(weather_record)
 
                         if (weather_record.date.month == month if month else True) \
                                 and weather_record.date.year == year:
