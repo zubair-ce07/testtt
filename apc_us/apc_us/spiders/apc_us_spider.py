@@ -1,12 +1,7 @@
 import re
 import json
-from collections import namedtuple
 
 import scrapy
-
-Size = namedtuple('Size', ['code', 'text'])
-Color = namedtuple('Color', ['code', 'text'])
-SKUVariant = namedtuple('SKUVariant', ['color', 'size', 'prices'])
 
 
 class APCUSSpider(scrapy.Spider):
@@ -54,7 +49,7 @@ class APCUSSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_name(response):
-        return response.css('div.product-name h1::text', response).extract_first()
+        return response.css('div.product-name h1::text').extract_first()
 
     @staticmethod
     def get_product_description(response):
@@ -85,23 +80,25 @@ class APCUSSpider(scrapy.Spider):
 
     def get_product_skus(self, response):
         skus = []
-        colors = self.get_product_colors(response)
-        sizes = self.get_product_sizes(response)
+        colors = response.css('#configurable_swatch_color li')
+        sizes = response.css('ul.configurable-swatch-list.configurable-block-list.clearfix li')
         prices = self.get_product_prices(response)
         raw_product = self.get_raw_product(response)
 
         for color in colors:
             for size in sizes:
                 sku = {}
-                key = f"{color.code},{size.code}"
+                color_code, color_name = self.get_product_color(color)
+                size_code, size_name = self.get_product_size(size)
+                key = f"{color_code},{size_code}"
                 raw_sku = raw_product.get(key)
                 if not raw_sku:
                     continue
 
                 sku['sku_id'] = raw_sku.get('product_id')
-                sku['color'] = color.text
+                sku['color'] = color_name
                 sku['currency'] = 'USD'
-                sku['size'] = size.text
+                sku['size'] = size_name
                 sku['out_of_stock'] = not raw_sku.get('is_in_stock')
 
                 if len(prices) > 1:
@@ -114,31 +111,18 @@ class APCUSSpider(scrapy.Spider):
         return skus
 
     @staticmethod
-    def get_product_sizes(response):
-        sizes = []
-        size_responses = response.css(
-            'ul.configurable-swatch-list.configurable-block-list.clearfix li')
-
-        for size_response in size_responses:
-            size_code = size_response.css('li::attr(id)').extract_first()
-            size_code = re.findall(r'\d+', size_code)[0]
-            size_text = size_response.css('a::attr(name)').extract_first()
-            sizes.append(Size(size_code, size_text))
-
-        return sizes
+    def get_product_size(response):
+        size_code = response.css('li::attr(id)').extract_first()
+        size_code = re.findall(r'\d+', size_code)[0]
+        size_text = response.css('a::attr(name)').extract_first()
+        return size_code, size_text
 
     @staticmethod
-    def get_product_colors(response):
-        colors = []
-        color_responses = response.css('#configurable_swatch_color li')
-
-        for color_response in color_responses:
-            color_code = color_response.css('li::attr(id)').extract_first()
-            color_code = re.findall(r'\d+', color_code)[0]
-            color_text = color_response.css('a::attr(name)').extract_first()
-            colors.append(Color(color_code, color_text))
-
-        return colors
+    def get_product_color(response):
+        color_code = response.css('li::attr(id)').extract_first()
+        color_code = re.findall(r'\d+', color_code)[0]
+        color_text = response.css('a::attr(name)').extract_first()
+        return color_code, color_text
 
     @staticmethod
     def get_raw_product(response):
