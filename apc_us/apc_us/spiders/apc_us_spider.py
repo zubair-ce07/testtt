@@ -31,7 +31,7 @@ class APCUSSpider(scrapy.Spider):
             yield response.follow(url, self.parse_product)
 
     def parse_product(self, response):
-        yield {
+        return {
             'retailer_sku': self.get_product_retailer_sku(response),
             'name': self.get_product_name(response),
             'category': self.get_product_categories(response),
