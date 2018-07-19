@@ -60,16 +60,16 @@ class Crawler:
         return filtered_urls
 
     async def crawl_async(self, url_limit, request_count, download_delay):
-        future_requests = []
+        links_queue = []
         extracted_urls = {'/'}
         for request_no in range(url_limit):
             url = extracted_urls.pop()
-            future_requests.append(self.extract_urls(url, download_delay))
+            links_queue.append(self.extract_urls(url, download_delay))
             self.visited_urls |= {url}
             if not request_no % request_count or request_no == url_limit-1:
-                for request in asyncio.as_completed(future_requests):
+                for request in asyncio.as_completed(links_queue):
                     extracted_urls |= await request
-                future_requests = []
+                links_queue = []
             extracted_urls -= self.visited_urls
 
     def crawl_report(self):
