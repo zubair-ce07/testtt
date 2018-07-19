@@ -1,4 +1,4 @@
-from requests_futures.sessions import FuturesSession
+import requests
 from parsel import Selector
 import asyncio
 from urllib.parse import urljoin, urlparse
@@ -9,11 +9,11 @@ class Crawler:
         self._total_data = 0
         self._url = f'{urlparse(url).scheme}://{urlparse(url).netloc}'
         self._pending_urls = {self._url}
-        self._session = FuturesSession(max_workers=workers)
         self._download_delay = download_delay
         self._max_urls = max_urls
         self._seen_urls = set()
         self._in_progress = 0
+        self._loop = asyncio.get_event_loop()
 
     def _find_urls(self, html):
         found_urls = set()
@@ -25,9 +25,11 @@ class Crawler:
         return found_urls
 
     async def _request(self, url):
-        future = self._session.get(url)
-        response = future.result()
-        html = response.content
+        print(self._in_progress)
+        future = self._loop.run_in_executor(None, requests.get, url)
+        response = await future
+        html = response.text
+        print(url)
         self._total_data = self._total_data + len(str(html))
         self._pending_urls |= self._find_urls(str(html))
         self._in_progress -= 1
@@ -41,4 +43,5 @@ class Crawler:
                     self._seen_urls.add(url)
                     self._in_progress += 1
                     await self._request(url)
+                    print(url)
         return self._total_data, len(self._seen_urls)
