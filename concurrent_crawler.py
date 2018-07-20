@@ -1,5 +1,4 @@
 import argparse
-import time
 import asyncio
 from urllib import parse
 
