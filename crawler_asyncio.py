@@ -39,9 +39,10 @@ class Crawler:
         self.urls_queue = {self.website_url}
 
     async def fetch_page(self, url, delay):
-        print(f"Extracting from {url}")
+        loop = asyncio.get_event_loop()
+        future_request = loop.run_in_executor(None, requests.get, url)
         await asyncio.sleep(delay)
-        response = requests.get(url)
+        response = await future_request
         self.bytes_downloaded = self.bytes_downloaded + len(response.content)
         return response.text
 
@@ -54,13 +55,12 @@ class Crawler:
         selector = parsel.Selector(text=page_text)
         extracted_urls = selector.css("a::attr(href)").extract()
         extracted_urls = set(extracted_urls)
-        extracted_urls = self.filter_absolute_urls(extracted_urls)
-        print(f"Extracted {len(extracted_urls)} urls from {url}")
+        extracted_urls = self.filter_urls(extracted_urls)
         self.urls_queue |= extracted_urls
         self.urls_queue -= self.visited_urls
         workers.release()
 
-    def filter_absolute_urls(self, urls):
+    def filter_urls(self, urls):
         urls = [parse.urljoin(self.website_url, url) for url in urls]
         filtered_urls = set(filter(lambda url: url.startswith(self.website_url), urls))
         return filtered_urls
