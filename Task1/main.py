@@ -30,18 +30,11 @@ def validate_path(file_path):
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-
     parser.add_argument("file_path", help="Get the path to all weather data files", type=validate_path)
-    parser.add_argument("-e", help="Get the highest and lowest temperature and highest humidity "
-                                   "with respective days for given year", type=valid_year)
-    parser.add_argument("-a", help="Get the highest and lowest avg temperature and Mean avg "
-                                   "Humidity for a given month", type=valid_year_month)
-    parser.add_argument("-c", help="For a given month get two horizontal bar charts on the console "
-                                   "for the highest and lowest temperature on each day. "
-                                   "Highest in red and lowest in blue.", type=valid_year_month)
-    parser.add_argument("-b", help="For a given month get one horizontal bar charts on the console "
-                                   "for the highest and lowest temperature on each day. "
-                                   "Highest in red and lowest in blue.", type=valid_year_month)
+    parser.add_argument("-e", help="Get the highest, lowest temperature and highest humidity", type=valid_year)
+    parser.add_argument("-a", help="Get the avg temperature extremes and Mean Humidity", type=valid_year_month)
+    parser.add_argument("-c", help="Get two horizontal bar charts for temp extremes.", type=valid_year_month)
+    parser.add_argument("-b", help="Get horizontal bar chart for temp extremes.", type=valid_year_month)
 
     return parser.parse_args()
 
