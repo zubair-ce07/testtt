@@ -16,7 +16,6 @@ class Crawler:
         self._workers = asyncio.BoundedSemaphore(value=workers)
         self._in_progress = 0
         self._loop = asyncio.get_event_loop()
-        self._test = [5, 4, 3, 2, 1]
 
     def _parse(self, html):
         found_urls = set()
@@ -29,13 +28,9 @@ class Crawler:
 
     async def _request(self, url):
         async with self._workers:
-            workerid = self._test.pop()
-            print(workerid)
             future = self._loop.run_in_executor(None, requests.get, url)
             response = await future
             await asyncio.sleep(self._download_delay)
-            self._test.insert(4, workerid)
-            print(self._test)
         html = response.text
         self._total_data = self._total_data + len(str(html))
         self._pending_urls |= self._parse(str(html))
