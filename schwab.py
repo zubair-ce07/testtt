@@ -13,8 +13,9 @@ class Mixin:
     market = 'DE'
     allowed_domains = ['schwab.de']
     start_urls = [
-        'https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true&cacheID=1531715824']
+        'https://www.schwab.de/index.php?cl=oxwCategoryTree&jsonly=true&staticContent=true']
     base_url = 'https://www.schwab.de/index.php?'
+    info_api_url = 'https://www.schwab.de/request/itemservice.php?fnc=getItemInfos'
 
 
 class SchwabParseSpider(BaseParseSpider, Mixin):
@@ -35,6 +36,7 @@ class SchwabParseSpider(BaseParseSpider, Mixin):
         garment['image_urls'] = self.image_urls(response)
         garment['skus'] = {}
         garment['meta'] = {'requests_queue': self.colours_size_request(response)}
+        garment['meta']['requests_queue'].append(self.information_requests(response))
         return self.next_request_or_garment(garment)
 
     @staticmethod
@@ -63,15 +65,27 @@ class SchwabParseSpider(BaseParseSpider, Mixin):
         image_urls = clean(response.xpath('.//a[@id="magic"]/@href'))
         return [response.urljoin(url) for url in image_urls]
 
+    def stock_check(self, response, size):
+        size = 0 if size == 'one size' else size
+        garment = response.meta['garment']
+        information = garment['meta']['information']
+        article_id = clean(response.css('input[name=artNr] ::attr(value)'))[0]
+        if 'ausverkauft' in information[article_id][size]:
+            return 'out of stock'
+        return 'available'
+
     def skus(self, response):
         colour_css = '.js-current-color-name ::attr(value)'
         size_css = '.js-current-size-name ::attr(value)'
         length_css = '.js-current-variant-name ::attr(value)'
         sku = self.product_pricing_common(response)
+        size = response.css(size_css).extract_first(default='')
+        size = size if size is not '' else 'one size'
         sku['colour'] = colour = response.css(colour_css).extract_first(default='')
-        sku['size'] = size = response.css(size_css).extract_first(default='')
+        sku['size'] = size
         sku['length'] = length = response.css(length_css).extract_first(default='')
-        sku_id = f'{colour}-{size}-{length}'
+        sku['stock'] = self.stock_check(response, size)
+        sku_id = f'{colour}_{size}_{length}'
         return {sku_id: sku}
 
     def colours_size_request(self, response):
@@ -90,6 +104,15 @@ class SchwabParseSpider(BaseParseSpider, Mixin):
                                      )]
         return requests
 
+    def information_requests(self, response):
+        form_data = {
+            'items': self.articles(response)
+        }
+        return FormRequest(url=self.info_api_url,
+                           formdata=form_data,
+                           callback=self.parse_info,
+                           )
+
     def image_requests(self, response):
         varselid = clean(response.css('.js-varselid-COLOR ::attr(value)'))
         if not varselid:
@@ -105,6 +128,11 @@ class SchwabParseSpider(BaseParseSpider, Mixin):
                         callback=self.parse_images,
                         )]
 
+    def parse_info(self, response):
+        garment = response.meta['garment']
+        garment['meta']['information'] = json.loads(response.body)
+        return self.next_request_or_garment(garment)
+
     def parse_images(self, response):
         garment = response.meta['garment']
         garment['image_urls'] += self.image_urls(response)
@@ -119,10 +147,10 @@ class SchwabParseSpider(BaseParseSpider, Mixin):
     def articles(self, response):
         articles_string = clean(response.xpath("//script[contains(text(),'articlesString')]/text()"))[0]
         data = re.findall('\d+\|\d+\|[A-Z0-9|;,]+', articles_string)
-        return data[0].split(';')
+        return data[0]
 
     def product_articles(self, response):
-        articles = self.articles(response)
+        articles = self.articles(response).split(';')
         product_id = self.product_id(response)
         anids = []
         for article in articles:
