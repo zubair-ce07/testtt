@@ -6,7 +6,7 @@ from weather_record import WeatherRecord
 
 
 class WeatherDataParser:
-
+    
     required_fields = ["Max TemperatureC", "Min TemperatureC", "Mean TemperatureC",
                        "Max Humidity", " Min Humidity"]
 
