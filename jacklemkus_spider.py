@@ -14,7 +14,7 @@ class ProductsSpider(CrawlSpider):
     rules = (
         Rule(LinkExtractor(restrict_css='#nav .level0 > .menu-link', deny='how-to-order')),
         Rule(LinkExtractor(restrict_css='.row .product-image'), 'parse_product'),
-        Rule(LinkExtractor(restrict_css='pagination .next')),
+        Rule(LinkExtractor(restrict_css='.pagination .next')),
 
     )
 
