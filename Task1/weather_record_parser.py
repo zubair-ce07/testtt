@@ -15,9 +15,7 @@ class WeatherDataParser:
     def parse(self, files_path):
         for file_name in glob.iglob(os.path.join(files_path, '*.txt')):
             with open(os.path.join(files_path, file_name), "r") as weather_file:
-                weather_readings = csv.DictReader(weather_file, delimiter=",")
-
-                for weather_record in weather_readings:
+                for weather_record in csv.DictReader(weather_file, delimiter=","):
                     if all(weather_record.get(f) for f in WeatherDataParser.required_fields):
                         self.weather_records.append(WeatherRecord(weather_record))
 
