@@ -3,8 +3,8 @@ import datetime
 import os
 
 from weather_record_parser import WeatherDataParser
-from weather_result_calculator import WeatherResultCalculator
-from weather_report_maker import WeatherReporter
+from weather_analyzer import WeatherAnalyzer
+from weather_reporter import WeatherReporter
 
 
 def valid_year(year):
@@ -25,8 +25,7 @@ def valid_year_month(date):
 def validate_path(file_path):
     if os.path.isdir(file_path):
         return file_path
-    else:
-        raise argparse.ArgumentTypeError(f"The given directory does not exist")
+    raise argparse.ArgumentTypeError(f"The given directory does not exist")
 
 
 def parse_arguments():
@@ -57,29 +56,29 @@ def main(commandline_arguments):
 
     if commandline_arguments.e:
         weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path, commandline_arguments.e)
-        weather_result = WeatherResultCalculator.get_result(parsed_weather_records)
+        parsed_weather_records = weather_record_parser.parse(file_path)
+        weather_result = WeatherAnalyzer.get_result(parsed_weather_records, commandline_arguments.e)
         WeatherReporter.print_annual_report(weather_result)
 
     if commandline_arguments.a:
         year, month = commandline_arguments.a
         weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path, year, month)
-        weather_result = WeatherResultCalculator.get_result(parsed_weather_records)
+        parsed_weather_records = weather_record_parser.parse(file_path)
+        weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
         WeatherReporter.print_monthly_report(weather_result)
 
     if commandline_arguments.c:
         year, month = commandline_arguments.c
         weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path, year, month)
-        weather_result = WeatherResultCalculator.get_result(parsed_weather_records)
+        parsed_weather_records = weather_record_parser.parse(file_path)
+        weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
         WeatherReporter.print_charts_for_extremes(weather_result)
 
     if commandline_arguments.b:
         year, month = commandline_arguments.b
         weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path, year, month)
-        weather_result = WeatherResultCalculator.get_result(parsed_weather_records)
+        parsed_weather_records = weather_record_parser.parse(file_path)
+        weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
         WeatherReporter.print_mixed_chart_for_extremes(weather_result)
 
 

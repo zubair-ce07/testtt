@@ -24,32 +24,28 @@ class WeatherReporter:
     @staticmethod
     def print_charts_for_extremes(weather_result):
         weather_report = ""
-        for temperatures in weather_result.daily_temperatures:
-            record_date = temperatures.date
-
-            if record_date:
-                max_temp = temperatures.highest_temperature
-                min_temp = temperatures.lowest_temperature
+        for weather_reading in weather_result.daily_temperatures:
+            if weather_reading.date:
+                max_temp = weather_reading.highest_temperature
+                min_temp = weather_reading.lowest_temperature
                 red_stars = WeatherReporter.RED_COLOR_CODE.format('+' * abs(max_temp))
                 blue_stars = WeatherReporter.BLUE_COLOR_CODE.format('+' * abs(min_temp))
 
-                weather_report += f"{record_date.day:02} {red_stars} {max_temp}\n"
-                weather_report += f"{record_date.day:02} {blue_stars} {min_temp}\n"
+                weather_report += f"{weather_reading.date.day:02} {red_stars} {max_temp}\n"
+                weather_report += f"{weather_reading.date.day:02} {blue_stars} {min_temp}\n"
 
         print(weather_report)
 
     @staticmethod
     def print_mixed_chart_for_extremes(weather_result):
         weather_report = ""
-        for temperatures in weather_result.daily_temperatures:
-            record_date = temperatures.date
-
-            if record_date:
-                max_temp = temperatures.highest_temperature
-                min_temp = temperatures.lowest_temperature
+        for weather_reading in weather_result.daily_temperatures:
+            if weather_reading.date:
+                max_temp = weather_reading.highest_temperature
+                min_temp = weather_reading.lowest_temperature
                 red_stars = WeatherReporter.RED_COLOR_CODE.format('+' * abs(max_temp))
                 blue_stars = WeatherReporter.BLUE_COLOR_CODE.format('+' * abs(min_temp))
 
-                weather_report += f"{record_date.day:02} {red_stars}{blue_stars} {max_temp} {min_temp}\n"
+                weather_report += f"{weather_reading.date.day:02} {red_stars}{blue_stars} {max_temp} {min_temp}\n"
 
         print(weather_report)
