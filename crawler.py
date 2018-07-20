@@ -28,9 +28,10 @@ class Crawler:
 
     async def _request(self, url):
         async with self._workers:
+            if url is not self._url:
+                await asyncio.sleep(self._download_delay)
             future = self._loop.run_in_executor(None, requests.get, url)
             response = await future
-            await asyncio.sleep(self._download_delay)
         html = response.text
         self._total_data = self._total_data + len(str(html))
         self._pending_urls |= self._parse(str(html))
