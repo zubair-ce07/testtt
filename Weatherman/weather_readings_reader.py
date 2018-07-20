@@ -22,8 +22,8 @@ class WeatherReadingsReader:
     @staticmethod
     def read_file(path):
         weather_readings = []
-        month_file = csv.DictReader(open(path))
-        for reading in month_file:
+        month_readings = csv.DictReader(open(path))
+        for reading in month_readings:
             if WeatherReadingsReader.validate_day_reading(reading):
                 weather_readings.append(WeatherReadingsReader.read_day_reading(reading))
         return weather_readings

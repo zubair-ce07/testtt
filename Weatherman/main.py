@@ -1,6 +1,7 @@
 import os
 import argparse
 import calendar
+import time
 
 from weather_readings_reader import WeatherReadingsReader
 from report_generator import ReportGenerator
@@ -10,40 +11,30 @@ class Main:
     my_path = ''
 
     def validate_month(self, argument):
-        try:
-            year, month = argument.split('/')
-            if not int(year) or not int(month) in range(1, 13):
-                raise argparse.ArgumentTypeError("Year should be an integer month should be an integer from 1-12")
-            else:
-                year, month = self.month_argument_reader(argument)
-                month_name = calendar.month_abbr[month]
-                weather_readings = WeatherReadingsReader.read_readings(Main.my_path, year, month_name)
-                if weather_readings:
-                    return weather_readings
-                else:
-                    argparse.ArgumentTypeError(f"No Data found for argument {argument}")
-        except Exception:
-            raise argparse.ArgumentTypeError("Argument Type Error. Enter in the form of int/int")
+        required_date = time.strptime(argument, "%Y/%m")
+        year = required_date.tm_year
+        month = required_date.tm_mon
+        month_name = calendar.month_abbr[month]
+        weather_readings = WeatherReadingsReader.read_readings(Main.my_path, year, month_name)
+        if weather_readings:
+            return weather_readings
+        else:
+            argparse.ArgumentTypeError(f"No Data found for argument {argument}")
 
     def validate_year(self, argument):
-        if int(argument):
-            weather_readings = WeatherReadingsReader.read_readings(Main.my_path, argument)
-            if weather_readings:
-                return weather_readings
-            else:
-                raise argparse.ArgumentTypeError(f"No Data found for {argument}")
+        required_date = time.strptime(argument, "%Y")
+        year = required_date.tm_year
+        weather_readings = WeatherReadingsReader.read_readings(Main.my_path, year)
+        if weather_readings:
+            return weather_readings
         else:
-            raise argparse.ArgumentTypeError("Not a valid year")
+            raise argparse.ArgumentTypeError(f"No Data found for {argument}")
 
     def validate_directory(self, path):
         if os.path.isdir(path):
             Main.my_path = path
             return path
         raise argparse.ArgumentTypeError(f"Invalid directory path")
-
-    def month_argument_reader(self, argument):
-        year, month = argument.split('/')
-        return int(year), int(month)
 
     def run(self, args):
         if args.type_e:
