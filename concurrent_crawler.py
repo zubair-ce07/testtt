@@ -18,7 +18,8 @@ class AsyncSpider:
         self.num_request_made = 0
         self.total_bytes_downloaded = 0
 
-    async def extract_urls(self):
+    async def extract_urls(self, semaphore):
+        await semaphore.acquire()
         self.num_request_made += 1
         url = self.pending_urls.pop()
         response = requests.get(url)
@@ -28,32 +29,34 @@ class AsyncSpider:
             self.visited_urls[url] = True
             self.total_bytes_downloaded += int(response.headers.get(
                 'content-length'))
-
             selector = parsel.Selector(text=response.text)
             extracted_urls = selector.css("a::attr(href)").extract()
-
             for link in extracted_urls:
                 link = parse.urljoin(url, link)
                 if not self.visited_urls.get(link):
                     self.pending_urls.add(link)
 
-            time.sleep(self.delay)
-            self.url_visit_limit -= 1
+        await asyncio.sleep(self.delay)
+        semaphore.release()
 
     def crawl(self):
-        while True:
-            loop = asyncio.get_event_loop()
-            tasks = [asyncio.async(self.extract_urls())
-                     for _ in range(self.concurrent_req) if self.pending_urls]
-            loop.run_until_complete(asyncio.wait(tasks))
-            if self.url_visit_limit < 1:
-                break
+
+        semaphore = asyncio.BoundedSemaphore(self.concurrent_req)
+        futures = []
+        for i in range(self.url_visit_limit):
+            futures.append(
+                asyncio.ensure_future(
+                    self.extract_urls(semaphore)))
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.wait(futures))
 
     def spider_report(self):
-        print(f"Total Bytes downloaded: {self.total_bytes_downloaded}B.")
-        print(f"Number of requests: {self.num_request_made}.")
-        print(f"Average page size : "
-              f"{self.total_bytes_downloaded // self.num_request_made}B.")
+        print(f"Total Bytes downloaded: {self.total_bytes_downloaded//1024}KB")
+        print(f"Number of requests: {self.num_request_made}")
+        print(f"Average page size :"
+              f"{(self.total_bytes_downloaded//self.num_request_made)//1024}"
+              f"KB")
 
 
 def main():
