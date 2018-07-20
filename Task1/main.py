@@ -47,7 +47,7 @@ def main(cli_arguments):
     if cli_arguments.e:
         weather_result = WeatherAnalyzer.get_result(parsed_weather_records, cli_arguments.e)
         WeatherReporter.print_annual_report(weather_result)
-
+        
     if cli_arguments.a:
         year, month = cli_arguments.a
         weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
