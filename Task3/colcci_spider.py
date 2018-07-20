@@ -21,27 +21,17 @@ class ColcciProductDetails(CrawlSpider):
         product_loader = ItemLoader(item=ProductItem(), selector=product_css_selector)
         product_loader.default_output_processor = TakeFirst()
 
-        product_loader.add_css('retailer_sku', 'form input::attr(value)')
-        product_loader.add_css('name', " div.title h1::text")
-        product_loader.add_css('category', " div.title h1::text")
-        product_loader.add_css('price', "div.price-holder span.price::text")
-        product_loader.add_css('description', ColcciProductDetails.get_product_description_css(response))
+        product_loader.add_css('retailer_sku', '[name="add_to_cart"]::attr(value)')
+        product_loader.add_css('name', '[itemprop="name"]::text')
+        product_loader.add_css('category', '[itemprop="name"]::text')
+        product_loader.add_css('price', '[itemprop="price"]::text')
+        product_loader.add_xpath('description', '//*[@id="whatItIs"]//text()')
         product_loader.add_value('brand', 'Colcci')
         product_loader.add_value('url', response.url)
-        product_loader.add_value('gender', response.url+response.css(" div.title h1::text").extract_first())
-        product_loader.add_value('image_urls', response.css("div.jTscroller a::attr(href)").extract())
-        product_loader.add_value('skus', json.loads(
-            response.css("head script::text").re_first(r'.+LS.variants = (.+);')))
+        product_loader.add_value('gender', response.url+response.css('[itemprop="name"]::text').extract_first())
+        product_loader.add_value('image_urls', response.css(".cloud-zoom-gallery::attr(href)").extract())
+
+        sku_jsondata = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
+        product_loader.add_value('skus', sku_jsondata)
 
         yield product_loader.load_item()
-
-    @staticmethod
-    def get_product_description_css(response):
-        if response.css("div#whatItIs p::text").extract():
-            description_css = "div#whatItIs p::text"
-        elif response.css("div#whatItIs p + div::text").extract():
-            description_css = "div#whatItIs p + div::text"
-        else:
-            description_css = "div#whatItIs p + div div::text"
-
-        return description_css

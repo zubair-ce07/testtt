@@ -15,16 +15,6 @@ def get_required_skus(sku_jsonobject):
         }
 
 
-def get_category_from_name(product_name):
-    if product_name:
-        return product_name.split(" ")[0]
-
-
-def convert_price_to_cents(product_price):
-    if product_price:
-        return float(product_price[2:].replace(',', '')) * 100
-
-
 def get_gender_from_url(url):
     if 'Unisex' in url:
         return 'Unisex'
@@ -38,10 +28,12 @@ class ProductItem(scrapy.Item):
     retailer_sku = scrapy.Field()
     name = scrapy.Field()
     brand = scrapy.Field()
-    description = scrapy.Field()
-    category = scrapy.Field(input_processor=MapCompose(get_category_from_name))
-    price = scrapy.Field(input_processor=MapCompose(convert_price_to_cents))
     url = scrapy.Field()
+    category = scrapy.Field(input_processor=MapCompose(lambda x: x.split(" ")[0]))
+    price = scrapy.Field(input_processor=MapCompose(lambda x: float(x[2:].replace(',', '')) * 100))
     gender = scrapy.Field(input_processor=MapCompose(get_gender_from_url))
     skus = scrapy.Field(input_processor=MapCompose(get_required_skus), output_processor=lambda x: x)
-    image_urls = scrapy.Field(input_processor=MapCompose(lambda x: f"http:{x}"), output_processor=lambda x: x)
+    image_urls = scrapy.Field(input_processor=MapCompose(lambda x: f"http:{x}"),
+                              output_processor=lambda x: x)
+    description = scrapy.Field(input_processor=MapCompose(lambda x: x.strip()),
+                               output_processor=lambda x: ''.join(x))
