@@ -13,9 +13,7 @@ class WeatherAnalyzer:
         weather_result.max_avg_temperature_record = max(filtered_records, key=lambda p: p.mean_temperature)
         weather_result.min_avg_temperature_record = min(filtered_records, key=lambda p: p.mean_temperature)
         weather_result.mean_humidity = sum(record.mean_humidity for record in filtered_records)/len(filtered_records)
-
-        for daily_data in filtered_records:
-            weather_result.daily_temperatures.append(daily_data)
+        weather_result.daily_temperatures = filtered_records
 
         return weather_result
 
