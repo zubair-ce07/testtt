@@ -31,55 +31,44 @@ def validate_path(file_path):
 def parse_arguments():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("file_path", help="This arg stores the path to all weather data files",
-                                     type=validate_path)
-    parser.add_argument("-e", help="This command will give you the highest and "
-                                   "lowest temperature and highest humidity with "
-                                   "respective days for given year", type=valid_year)
-    parser.add_argument("-a", help="This command will give you the highest and "
-                                   "lowest avg temperature and Mean avg Humidity"
-                                   "for a given month", type=valid_year_month)
-    parser.add_argument("-c", help="For a given month this command will draw two "
-                                   "horizontal bar charts on the console for the "
-                                   "highest and lowest temperature on each day. "
+    parser.add_argument("file_path", help="Get the path to all weather data files", type=validate_path)
+    parser.add_argument("-e", help="Get the highest and lowest temperature and highest humidity "
+                                   "with respective days for given year", type=valid_year)
+    parser.add_argument("-a", help="Get the highest and lowest avg temperature and Mean avg "
+                                   "Humidity for a given month", type=valid_year_month)
+    parser.add_argument("-c", help="For a given month get two horizontal bar charts on the console "
+                                   "for the highest and lowest temperature on each day. "
                                    "Highest in red and lowest in blue.", type=valid_year_month)
-    parser.add_argument("-b", help="For a given month this command will draw one "
-                                   "horizontal bar charts on the console for the "
-                                   "highest and lowest temperature on each day. "
+    parser.add_argument("-b", help="For a given month get one horizontal bar charts on the console "
+                                   "for the highest and lowest temperature on each day. "
                                    "Highest in red and lowest in blue.", type=valid_year_month)
 
     return parser.parse_args()
 
 
-def main(commandline_arguments):
-    file_path = commandline_arguments.file_path
+def main(cli_arguments):
+    file_path = cli_arguments.file_path
+    weather_record_parser = WeatherDataParser()
+    parsed_weather_records = weather_record_parser.parse(file_path)
 
-    if commandline_arguments.e:
-        weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path)
-        weather_result = WeatherAnalyzer.get_result(parsed_weather_records, commandline_arguments.e)
+    if cli_arguments.e:
+        weather_result = WeatherAnalyzer.get_result(parsed_weather_records, cli_arguments.e)
         WeatherReporter.print_annual_report(weather_result)
 
-    if commandline_arguments.a:
-        year, month = commandline_arguments.a
-        weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path)
+    if cli_arguments.a:
+        year, month = cli_arguments.a
         weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
         WeatherReporter.print_monthly_report(weather_result)
 
-    if commandline_arguments.c:
-        year, month = commandline_arguments.c
-        weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path)
+    if cli_arguments.c:
+        year, month = cli_arguments.c
         weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
-        WeatherReporter.print_charts_for_extremes(weather_result)
+        WeatherReporter.print_charts_for_extremes(weather_result, 'c')
 
-    if commandline_arguments.b:
-        year, month = commandline_arguments.b
-        weather_record_parser = WeatherDataParser()
-        parsed_weather_records = weather_record_parser.parse(file_path)
+    if cli_arguments.b:
+        year, month = cli_arguments.b
         weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
-        WeatherReporter.print_mixed_chart_for_extremes(weather_result)
+        WeatherReporter.print_charts_for_extremes(weather_result, 'b')
 
 
 if __name__ == "__main__":
