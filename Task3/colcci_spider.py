@@ -13,11 +13,11 @@ class ColcciProductDetails(CrawlSpider):
     start_urls = ['https://www.colcci.com.br/']
 
     allowed_links = ('masculino-novo1', 'feminino-novo1', 'fitness', 'acessorios')
-    rules = (Rule(LinkExtractor(allow=allowed_links, restrict_css="div#main-menu ul#menus")),
-             Rule(LinkExtractor(deny='page', restrict_css="div.products-list"), callback='parse_page'),)
+    rules = (Rule(LinkExtractor(allow=allowed_links, restrict_css=".with-subitems")),
+             Rule(LinkExtractor(deny='page', restrict_css=".products-list"), callback='parse_page'),)
 
     def parse_page(self, response):
-        product_css_selector = response.css("div.descriptioncolContent")
+        product_css_selector = response.css(".descriptioncolContent")
         product_loader = ItemLoader(item=ProductItem(), selector=product_css_selector)
         product_loader.default_output_processor = TakeFirst()
 
