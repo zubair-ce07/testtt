@@ -24,8 +24,8 @@ class RecursiveConcurrentSpider:
             responses = await self.visit_urls(urls)
             self.spider_execution_report.total_requests += len(urls)
 
-            for html_text, html_page_size in responses:
-                self.spider_execution_report.bytes_downloaded += html_page_size
+            for html_text in responses:
+                self.spider_execution_report.bytes_downloaded += len(html_text)
                 return await self.start_crawler(self.get_urls(html_text), urls_limit)
 
     async def visit_urls(self, urls):
@@ -45,7 +45,7 @@ class RecursiveConcurrentSpider:
             task = asyncio.ensure_future(self.__loop.run_in_executor(self.__executor, requests.get, url.geturl()))
             get_response = await asyncio.wait_for(task, None)
 
-        return get_response.text, len(get_response.text)
+        return get_response.text
 
     def get_urls(self, html_text):
         html_selector = Selector(html_text)
