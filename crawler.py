@@ -2,6 +2,7 @@ import requests
 from parsel import Selector
 import asyncio
 from urllib.parse import urljoin, urlparse
+import time
 
 
 class Crawler:
@@ -29,7 +30,7 @@ class Crawler:
     async def _request(self, url):
         async with self._workers:
             if url is not self._url:
-                await asyncio.sleep(self._download_delay)
+                time.sleep(self._download_delay)
             future = self._loop.run_in_executor(None, requests.get, url)
             response = await future
         html = response.text
