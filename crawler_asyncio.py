@@ -41,34 +41,33 @@ class Crawler:
     async def fetch_page(self, url, delay):
         loop = asyncio.get_event_loop()
         future_request = loop.run_in_executor(None, requests.get, url)
-        await asyncio.sleep(delay)
         response = await future_request
+        await asyncio.sleep(delay)
         self.bytes_downloaded = self.bytes_downloaded + len(response.content)
         return response.text
 
-    async def extract_next_url(self, delay, workers):
+    async def crawl_next_url(self, delay, workers):
         await workers.acquire()
         url = self.urls_queue.pop()
         self.visited_urls |= {url}
         url = parse.urljoin(self.website_url, url)
         page_text = await self.fetch_page(url, delay)
-        selector = parsel.Selector(text=page_text)
-        extracted_urls = selector.css("a::attr(href)").extract()
-        extracted_urls = set(extracted_urls)
-        extracted_urls = self.filter_urls(extracted_urls)
+        extracted_urls = self.extract_and_filter_urls(page_text)
         self.urls_queue |= extracted_urls
         self.urls_queue -= self.visited_urls
         workers.release()
 
-    def filter_urls(self, urls):
-        urls = [parse.urljoin(self.website_url, url) for url in urls]
-        filtered_urls = set(filter(lambda url: url.startswith(self.website_url), urls))
-        return filtered_urls
+    def extract_and_filter_urls(self, page_text):
+        selector = parsel.Selector(text=page_text)
+        extracted_urls = selector.css("a::attr(href)").extract()
+        extracted_urls = [parse.urljoin(self.website_url, url) for url in extracted_urls]
+        extracted_urls = set(filter(lambda url: url.startswith(self.website_url), extracted_urls))
+        return extracted_urls
 
     async def crawl_async(self, url_limit, request_count, download_delay):
         workers = asyncio.BoundedSemaphore(value=request_count)
-        await self.extract_next_url(download_delay, workers)
-        extract_tasks = [asyncio.ensure_future(self.extract_next_url(download_delay, workers))
+        await self.crawl_next_url(download_delay, workers)
+        extract_tasks = [asyncio.ensure_future(self.crawl_next_url(download_delay, workers))
                          for _ in range(url_limit - 1)]
         for extract_task in extract_tasks:
             await extract_task
