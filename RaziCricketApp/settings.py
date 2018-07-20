@@ -31,11 +31,11 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'articles.contrib.ArticlesConfig'
-    'comments.contrib.CommentsConfig'
-    'player.contrib.PlayerConfig'
-    'team.contrib.TeamConfig'
-    'user.contrib.UserConfig'
+    'articles.apps.ArticlesConfig',
+    'comments.apps.CommentsConfig',
+    'player.apps.PlayerConfig',
+    'team.apps.TeamConfig',
+    'user.apps.UserConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
