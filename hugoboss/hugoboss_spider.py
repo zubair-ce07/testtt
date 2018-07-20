@@ -8,7 +8,7 @@ from scrapy.linkextractors import LinkExtractor
 from items import HugoBossItem
 
 
-class MySpider(CrawlSpider):
+class HugoBossSpider(CrawlSpider):
     name = 'hugoboss'
     allowed_domains = ['hugoboss.com']
     start_urls = ['https://www.hugoboss.com/uk/']
@@ -48,7 +48,6 @@ class MySpider(CrawlSpider):
             yield item     
 
     def _extract_colors(self, response):
-        print("Extracting color:", response.url)
         item = response.meta.get('item')
         color_links = response.meta.get('color_links')
 
