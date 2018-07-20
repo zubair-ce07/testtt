@@ -1,6 +1,7 @@
 import argparse
 import time
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import wait
 from urllib import parse
 
 import requests
@@ -11,15 +12,15 @@ def main():
     parser = argparse.ArgumentParser(description='A program that crawls a website parallel.')
     parser.add_argument('url', help='this arguments specifies the url of the website to crawl',
                         type=url_validate)
-    parser.add_argument('max_url', help='this arguments specifies the maximum number '
-                        'of urls to visit', type=int)
-    parser.add_argument('req_limit', help='this arguments specifies the number of '
+    parser.add_argument('-m', '--max_url', help='this arguments specifies the maximum number '
+                        'of urls to visit', default=20, type=int)
+    parser.add_argument('-r', '--requests_count', default=5, help='this arguments specifies the number of '
                         'concurrent requests allowed', type=int)
-    parser.add_argument('delay', help='this arguments specifies the delay between each request'
-                        , type=float)
+    parser.add_argument('-d', '--delay', default=0.05, help='this arguments specifies the delay '
+                        'between each request', type=float)
     args = parser.parse_args()
     crawler = Crawler(args.url)
-    crawler.crawl_parallel(args.max_url, args.req_limit, args.delay)
+    crawler.crawl_parallel(args.max_url, args.requests_count, args.delay)
     crawler.crawl_report()
 
 
@@ -35,49 +36,45 @@ class Crawler:
         self.website_url = web_url
         self.bytes_downloaded = 0
         self.visited_urls = set()
+        self.urls_queue = {self.website_url}
 
-    def fetch_page(self, url, delay):
-        time.sleep(delay)
+    @classmethod
+    def fetch_page(cls, url, delay):
         response = requests.get(url)
+        time.sleep(delay)
         return response.text, len(response.content)
 
-    def extract_urls(self, url, delay):
-        url = parse.urljoin(self.website_url, url)
+    def crawl_next_urls(self, url, delay):
         page_text, page_size = self.fetch_page(url, delay)
-        selector = parsel.Selector(text=page_text)
-        found_urls = selector.css("a::attr(href)").extract()
-        found_urls = set(found_urls)
-        found_urls = self.filter_absolute_urls(found_urls)
+        found_urls = self.extract_and_filter_urls(page_text)
         return found_urls, page_size
 
-    def filter_absolute_urls(self, urls):
-        filtered_urls = set(filter(lambda url: not parse.urlparse(url).netloc
-                            and not parse.urlparse(url).scheme == 'mailto', urls))
-        return filtered_urls
+    def extract_and_filter_urls(self, page_text):
+        selector = parsel.Selector(text=page_text)
+        extracted_urls = selector.css("a::attr(href)").extract()
+        extracted_urls = [parse.urljoin(self.website_url, url) for url in extracted_urls]
+        extracted_urls = set(filter(lambda url: url.startswith(self.website_url), extracted_urls))
+        return extracted_urls
 
     def crawl_parallel(self, url_limit, request_limit, download_delay):
-        found_urls = set('/')
-        future_requests = []
         executor = ProcessPoolExecutor(max_workers=request_limit)
-        self.visited_urls = set()
+        extract_tasks = []
+        for _ in range(url_limit):
+            url = self.urls_queue.pop()
+            self.visited_urls |= {url}
+            extract_tasks.append(executor.submit(self.crawl_next_urls, url, download_delay))
+            if not self.urls_queue:
+                self.execute_tasks(extract_tasks)
 
-        while True:
-            for _ in range(url_limit):
-                if found_urls:
-                    url = found_urls.pop()
-                    future_requests.append(executor.submit(self.extract_urls, url, download_delay))
-                    self.visited_urls = self.visited_urls.union({url})
-                else:
-                    break
-                if len(self.visited_urls) == url_limit:
-                    break
-            for request in future_requests:
-                urls, page_size = request.result()
-                self.bytes_downloaded = self.bytes_downloaded + page_size
-                found_urls = found_urls.union(urls)
-                found_urls = found_urls.difference(self.visited_urls)
-            if len(self.visited_urls) == url_limit:
-                break
+        self.execute_tasks(extract_tasks)
+
+    def execute_tasks(self, tasks):
+        for task in tasks:
+            urls_extracted, page_size = task.result()
+            urls_extracted -= self.visited_urls
+            self.urls_queue |= urls_extracted
+            self.bytes_downloaded += page_size
+        wait(tasks)
 
     def crawl_report(self):
         print(f"Number of requests: {len(self.visited_urls)}.")
