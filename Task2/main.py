@@ -36,10 +36,19 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def print_stats(spider, start_time):
+    print(f"\nTotal Requests: {spider.spider_execution_report.total_requests}\n"
+          f"Bytes Downloaded: {spider.spider_execution_report.bytes_downloaded}\n"
+          f"Size Per Page: "
+          f"{spider.spider_execution_report.bytes_downloaded/spider.spider_execution_report.total_requests}")
+
+    print("Execution Time: {}".format(time.time()-start_time))
+
+
 def main(user_cli_args):
     spider = RecursiveConcurrentSpider(user_cli_args.site_to_crawl,
-                                                  user_cli_args.download_delay,
-                                                  int(user_cli_args.tasks_limit))
+                                       user_cli_args.download_delay,
+                                       int(user_cli_args.tasks_limit))
     loop = asyncio.get_event_loop()
     try:
         start_time = time.time()
@@ -48,12 +57,7 @@ def main(user_cli_args):
     finally:
         loop.close()
 
-    print(f"\nTotal Requests: {spider.spider_execution_report.total_requests}\n"
-          f"Bytes Downloaded: {spider.spider_execution_report.bytes_downloaded}\n"
-          f"Size Per Page: "
-          f"{spider.spider_execution_report.bytes_downloaded/spider.spider_execution_report.total_requests}")
-
-    print("Execution Time: {}".format(time.time()-start_time))
+    print_stats(spider, start_time)
 
 
 if __name__ == '__main__':
