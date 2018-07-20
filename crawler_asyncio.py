@@ -36,41 +36,42 @@ class Crawler:
         self.website_url = web_url
         self.bytes_downloaded = 0
         self.visited_urls = set()
+        self.urls_queue = {self.website_url}
 
     async def fetch_page(self, url, delay):
+        print(f"Extracting from {url}")
         await asyncio.sleep(delay)
         response = requests.get(url)
         self.bytes_downloaded = self.bytes_downloaded + len(response.content)
         return response.text
 
-    async def extract_urls(self, url, delay):
-        print(f"Requesting from {url}")
+    async def extract_next_url(self, delay, workers):
+        await workers.acquire()
+        url = self.urls_queue.pop()
+        self.visited_urls |= {url}
         url = parse.urljoin(self.website_url, url)
         page_text = await self.fetch_page(url, delay)
         selector = parsel.Selector(text=page_text)
         extracted_urls = selector.css("a::attr(href)").extract()
         extracted_urls = set(extracted_urls)
         extracted_urls = self.filter_absolute_urls(extracted_urls)
-        return extracted_urls
+        print(f"Extracted {len(extracted_urls)} urls from {url}")
+        self.urls_queue |= extracted_urls
+        self.urls_queue -= self.visited_urls
+        workers.release()
 
-    @classmethod
-    def filter_absolute_urls(cls, urls):
-        filtered_urls = set(filter(lambda url: not parse.urlparse(url).netloc
-                            and not parse.urlparse(url).scheme == 'mailto', urls))
+    def filter_absolute_urls(self, urls):
+        urls = [parse.urljoin(self.website_url, url) for url in urls]
+        filtered_urls = set(filter(lambda url: url.startswith(self.website_url), urls))
         return filtered_urls
 
     async def crawl_async(self, url_limit, request_count, download_delay):
-        links_queue = []
-        extracted_urls = {'/'}
-        for request_no in range(url_limit):
-            url = extracted_urls.pop()
-            links_queue.append(self.extract_urls(url, download_delay))
-            self.visited_urls |= {url}
-            if not request_no % request_count or request_no == url_limit-1:
-                for request in asyncio.as_completed(links_queue):
-                    extracted_urls |= await request
-                links_queue = []
-            extracted_urls -= self.visited_urls
+        workers = asyncio.BoundedSemaphore(value=request_count)
+        await self.extract_next_url(download_delay, workers)
+        extract_tasks = [asyncio.ensure_future(self.extract_next_url(download_delay, workers))
+                         for _ in range(url_limit - 1)]
+        for extract_task in extract_tasks:
+            await extract_task
 
     def crawl_report(self):
         print(f"Number of requests: {len(self.visited_urls)}.")
