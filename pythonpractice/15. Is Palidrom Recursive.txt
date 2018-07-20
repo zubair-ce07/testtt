@@ -1,0 +1,19 @@
+"""Palindrome Recursive
+The module defines a recursive procedure that takes as input a string, and returns a
+Boolean indicating if the input string is a palindrome
+"""
+
+
+def is_palindrome(string):
+    if not string:
+        return True
+    elif string[0] != string[-1]:
+        return False
+    return is_palindrome(string[1:-1])
+
+print is_palindrome('')
+#>>> True
+print is_palindrome('abab')
+#>>> False
+print is_palindrome('abba')
+#>>> True
