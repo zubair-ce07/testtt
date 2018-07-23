@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import time
 from urllib import parse
 
 import requests
@@ -17,14 +18,11 @@ class AsyncSpider:
         self.num_request_made = 0
         self.total_bytes_downloaded = 0
 
-    async def extract_urls(self, semaphore, loop):
-        await semaphore.acquire()
-        url = self.pending_urls.pop()
+    async def extract_urls(self, url, loop):
         future = loop.run_in_executor(None, requests.get, url)
         response = await asyncio.wait_for(future, 3, loop=loop)
-
         self.num_request_made += 1
-        if response.status_code == 200 \
+        if response.status_code == 200\
                 and response.headers.get('content-length'):
             print(f'URL = {url}')
             self.visited_urls[url] = True
@@ -32,26 +30,35 @@ class AsyncSpider:
                 'content-length'))
             selector = parsel.Selector(text=response.text)
             extracted_urls = selector.css("a::attr(href)").extract()
-
             for link in extracted_urls:
                 link = parse.urljoin(url, link)
                 if not self.visited_urls.get(link):
                     self.pending_urls.add(link)
+            time.sleep(self.delay)
 
-        await  asyncio.sleep(self.delay)
-        semaphore.release()
+    async def schedule_futures(self, loop):
+        futures = []
+        semaphore = asyncio.BoundedSemaphore(self.concurrent_req)
+
+        for _ in range(self.concurrent_req):
+            if not self.pending_urls:
+                continue
+            url = self.pending_urls.pop()
+            self.url_visit_limit -= 1
+            async with semaphore:
+                futures.append(
+                    asyncio.ensure_future(self.extract_urls(url, loop)))
+
+            if self.url_visit_limit < 1:
+                break
+
+        await asyncio.wait(futures)
+        return futures
 
     def crawl(self):
-        loop = asyncio.get_event_loop()
-        futures = []
         while self.url_visit_limit > 1:
-            if len(self.pending_urls):
-                semaphore = asyncio.BoundedSemaphore(self.concurrent_req)
-                futures.append(
-                    asyncio.ensure_future(
-                        self.extract_urls(semaphore, loop)))
-                self.url_visit_limit -= 1
-                loop.run_until_complete(asyncio.wait(futures))
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.schedule_futures(loop))
 
     def spider_report(self):
         print(f"Total Bytes downloaded: {self.total_bytes_downloaded//1024}KB")
