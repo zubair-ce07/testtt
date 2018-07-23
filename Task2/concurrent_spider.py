@@ -64,7 +64,7 @@ class RecursiveConcurrentSpider:
     def get_filtered_urls(self, absolute_urls):
         visited_urls_strings = [url.geturl() for url in self.visited_urls]
         return [url for url in absolute_urls if url.geturl() not in visited_urls_strings]
-    
+
     def get_absolute_urls(self, html_text):
         return {self.get_parsed_url(url) for url in self.get_links_from_html(html_text)
                 if urlparse(url).scheme == '' and urlparse(url).path not in ('', '/')}
