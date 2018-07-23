@@ -11,23 +11,21 @@ class GoSportSpider(scrapy.Spider):
     allowed_domains = ['go-sport.pl']
     start_urls = ['https://www.go-sport.pl/']
 
-    download_delay = 0.2
+    download_delay = 1
 
     genders = {'Mężczyzna': "Man", 'Kobieta': "Woman",
                'Dziewczynka': "Girl", 'Chłopiec': "Boy",
                'Dla dzieci': "Children"}
 
     def parse(self, response):
-        category_links = response.css('a.level-top::attr(href)').extract()
-        
+        category_links = response.css('.level-top::attr(href)').extract()  
         yield from (response.follow(l, self.parse_products) for l in category_links)
 
     def parse_products(self, response):
-        item_links =  response.css("div.product-item h2 > a::attr(href)").extract()
-
+        item_links =  response.css(".product-item h2 > a::attr(href)").extract()
         yield from (response.follow(l, self.parse_item) for l in item_links)
-        
-        next_page = response.css("a.action.next::attr(href)").extract_first()
+
+        next_page = response.css(".next::attr(href)").extract_first()
         if next_page:
             yield response.follow(next_page, self.parse_products)
         
@@ -47,7 +45,7 @@ class GoSportSpider(scrapy.Spider):
         return item
 
     def _get_retailer_sku(self, response):
-        return response.css('span.product_id::text').extract_first()
+        return response.css('.product_id::text').extract_first()
 
     def _get_gender(self, response):
         gender = response.xpath('//span[contains(., "gender")]/text()').extract_first().split(":")[-1]
@@ -55,36 +53,34 @@ class GoSportSpider(scrapy.Spider):
         return self.genders.get(gender, "No")
     
     def _get_category(self, response):
-        return response.css('span.category::text').extract_first().split('/')[1:]
+        return response.css('.category::text').extract_first().split('/')[1:]
     
     def _get_brand(self, response):
-        return response.css('span.brand::text').extract_first()
+        return response.css('.brand::text').extract_first()
     
     def _get_name(self, response):
-        return response.css('span.nosto_product span.name::text').extract_first()
+        return response.css('.name::text').extract_first()
     
     def _get_description(self, response):
         descriptions = response.css('div.description').xpath('descendant-or-self::*/text()').extract()    
 
-        return list(self.clean_text(d) for d in descriptions if len(d.strip()) > 1)
+        return [self.clean_text(d) for d in descriptions if len(d.strip()) > 1]
     
     def _get_image_urls(self, response):
-        return response.css('span.alternate_image_url::text').extract()
+        return response.css('.alternate_image_url::text').extract()
 
-    def _get_skus(self, response):
-        color, price, currency, previous_price = self._get_sku_static_attrs(response)
-        
+    def _get_skus(self, response):      
         item = {}
-        item['color'] = color
-        item['price'] = price
-        item['currency'] = currency
-        item['previous_price'] = previous_price
+        item['color'] = response.css('.color_web::text').extract_first()
+        item['price'] = response.css('.price::text').extract_first()
+        item['currency'] = response.css('.price_currency_code::text').extract_first()
+        item['previous_price'] = response.css('.list_price::text').extract_first()
 
-        skus_selector = response.css('span.nosto_sku')
+        skus_selector = response.css('.nosto_sku')
 
         if not skus_selector:
             item['size'] = "Single Size"
-            item['id'] = response.css('span.product_id::text').extract_first()
+            item['id'] = response.css('.product_id::text').extract_first()
 
             return [item]
 
@@ -93,8 +89,8 @@ class GoSportSpider(scrapy.Spider):
         skus = []
         for sku in skus_selector:
             sku_item = item.copy()
-            sku_item['size'] = sku.css('span.size::text').extract_first()
-            sku_item['id'] = sku.css('span.id::text').extract_first()
+            sku_item['size'] = sku.css('.size::text').extract_first()
+            sku_item['id'] = sku.css('.id::text').extract_first()
 
             if sku_item['id'] not in skus_in_stock:
                 sku_item['out_of_stock'] = True
@@ -103,22 +99,14 @@ class GoSportSpider(scrapy.Spider):
 
         return skus
 
-    def _get_sku_static_attrs(self, response):
-        color = response.css('span.color_web::text').extract_first()
-        price = response.css('span.price::text').extract_first()
-        currency = response.css('span.price_currency_code::text').extract_first()
-        previous_price = response.css('span.list_price::text').extract_first()
-
-        return color, price, currency, previous_price
-
     def _get_skus_in_stock(self, response):
-        megento_json = response.xpath('//script[contains\
-                       (., "Magento_Swatches/js/swatch-renderer-custom")]/text()').extract_first()
-        megento_json = json.loads(megento_json)
+        xpath = '//script[contains(., "Magento_Swatches/js/swatch-renderer-custom")]/text()'
+        raw_product = response.xpath(xpath).extract_first()
+        raw_product = json.loads(raw_product)
 
-        return  megento_json["[data-role=swatch-options]"]\
-                                    ["Magento_Swatches/js/swatch-renderer-custom"]\
-                                    ["jsonConfig"]["optionPrices"]
+        return  raw_product["[data-role=swatch-options]"]\
+                           ["Magento_Swatches/js/swatch-renderer-custom"]\
+                           ["jsonConfig"]["optionPrices"]
 
     def clean_text(self, text):
         return re.sub(r'\s+', ' ', text)
