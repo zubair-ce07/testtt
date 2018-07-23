@@ -34,32 +34,29 @@ class AsyncCrawler:
 
     async def extract_multiple_anchor_urls(self, to_extract, event_loop):
         futures = []
-        extracted_urls = []
         for web_url in to_extract:
             if len(self.visited_urls) < self.maximum_urls:
                 if web_url in self.visited_urls:
                     continue
 
                 self.visited_urls.add(web_url)
-                futures.append(self.extract_anchor_urls(web_url, event_loop))
+                future = asyncio.ensure_future(self.extract_anchor_urls(web_url, event_loop))
+                futures.append(future)
 
-        for future in asyncio.as_completed(futures):
-            try:
-                extracted_urls.append(await future)
-            except Exception as e:
-                print(f'Entered exception {e}')
-        return extracted_urls
+        results = await asyncio.gather(*futures)
+        return results
 
     async def crawl(self, event_loop):
         anchor_urls = [self.parent_url]
         while len(self.visited_urls) < self.maximum_urls:
             results = await self.extract_multiple_anchor_urls(anchor_urls, event_loop)
+
             anchor_urls = []
             for extracted_urls in results:
                 anchor_urls.extend(extracted_urls)
 
     def generate_report(self):
-        print(f'\nTotal request: {self.maximum_urls}')
+        print(f'\nTotal requests: {self.maximum_urls}')
         print(f'Total bytes downloaded: {self.download_bytes}')
         print(f'Average page size: {int(self.download_bytes / len(self.visited_urls))}\n')
 
@@ -70,7 +67,7 @@ class AsyncCrawler:
         print("Done crawling")
 
 
-def validate_web_url(website):
+def validate_web_url(url):
     regex = re.compile(
         r'^(?:http|ftp)s?://'
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
@@ -79,9 +76,9 @@ def validate_web_url(website):
         r'(?::\d+)?'
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
-    if re.match(regex, website):
-        return website
-    raise argparse.ArgumentTypeError(f"Invalid url {website}")
+    if re.match(regex, url):
+        return url
+    raise argparse.ArgumentTypeError(f"Invalid url {url}")
 
 
 def parse_arguments():
@@ -91,7 +88,7 @@ def parse_arguments():
     parser.add_argument("download_delay", help="Download delay for each worker", type=float)
     parser.add_argument("number_of_concurrent_requests",
                         help="Requests that can be made concurrently",
-                        type=lambda x: int(x) if int(x) is not 0 else 1)
+                        type=lambda no_of_requests: int(no_of_requests) if int(no_of_requests) is not 0 else 1)
 
     return parser.parse_args()
 
