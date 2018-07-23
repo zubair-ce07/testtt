@@ -23,23 +23,29 @@ class RecursiveConcurrentSpider:
         if urls_limit > 0 and urls:
             urls, urls_limit = (urls[:urls_limit], 0) if len(urls) > urls_limit else (urls, urls_limit-len(self.visited_urls))
 
-            responses = await self.visit_urls(urls)
-            self.spider_execution_report.total_requests += len(urls)
+            completed_futures, pending_futures = await self.visit_urls(urls)
+            while True:
+                for completed in completed_futures:
+                    self.spider_execution_report.total_requests += 1
+                    self.spider_execution_report.bytes_downloaded += len(completed.result())
+                    await self.start_crawler(self.get_urls(completed.result()), urls_limit)
 
-            for html_text in responses:
-                self.spider_execution_report.bytes_downloaded += len(html_text)
-                await self.start_crawler(self.get_urls(html_text), urls_limit)
+                if pending_futures:
+                    completed_futures, pending_futures = await asyncio.wait(pending_futures,
+                                                                            return_when=asyncio.FIRST_COMPLETED)
+                else:
+                    break
 
     async def visit_urls(self, urls):
         tasks = []
         for url in urls:
-            tasks.append(self.make_get_request(url, self.__tasks_limiting_semaphore))
+            tasks.append(asyncio.ensure_future(self.make_get_request(url, self.__tasks_limiting_semaphore)))
             await asyncio.sleep(self.download_delay)
             self.visited_urls.append(url.geturl())
 
-        results = await asyncio.gather(*tasks)
+        completed, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
-        return results
+        return completed, pending
 
     async def make_get_request(self, url, tasks_limiting_semaphore):
         async with tasks_limiting_semaphore:
