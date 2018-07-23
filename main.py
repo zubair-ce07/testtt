@@ -1,5 +1,4 @@
 import argparse
-import requests
 
 from concurrent_crawler import ConcurrentCrawler
 from concurrent_crawler import UrlProcessor
