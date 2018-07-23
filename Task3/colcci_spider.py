@@ -72,3 +72,4 @@ class ColcciProductDetails(CrawlSpider):
                 })
 
             return filtered_skus
+
