@@ -4,7 +4,6 @@ from parsel import Selector
 from urllib import parse
 from requests.compat import urljoin
 
-from concurrent_crawler import CrawlerResults
 from concurrent_crawler import ConcurrentCrawler
 
 
@@ -32,9 +31,9 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def print_results(crawl_report):
-    print(f'Total bytes: {crawl_report.total_bytes}\nTotal requests: {crawl_report.total_requests}\nAverage page size:'
-          f'{round(crawl_report.total_bytes/crawl_report.total_requests, 2)} bytes')
+def print_results(total_bytes, total_requests):
+    print(f'Total bytes: {total_bytes}\nTotal requests: {total_requests}\nAverage page size:'
+          f'{round(total_bytes/total_requests, 2)} bytes')
 
 
 def main():
@@ -42,22 +41,17 @@ def main():
     args = parse_arguments()
 
     max_reqs = args.maximum_requests
-
     conc_reqs = args.concurrent_requests
-
     download_delay = args.download_delay
-
     start_url = args.starting_url
 
     extracted_urls = extract_urls(start_url)
-
     filtered_urls = filter_urls(start_url, extracted_urls, max_reqs)
 
     conc_crawler = ConcurrentCrawler(download_delay, conc_reqs)
-
     conc_crawler.start_crawler(filtered_urls)
 
-    print_results(conc_crawler.crawler_results)
+    print_results(conc_crawler.total_bytes, conc_crawler.total_requests)
 
 
 if __name__ == "__main__":
