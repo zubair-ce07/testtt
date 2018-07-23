@@ -1,8 +1,8 @@
 import asyncio
 import requests
+import time
 from parsel import Selector
 from urllib import parse
-from requests.compat import urljoin
 
 
 class UrlProcessor:
@@ -15,7 +15,7 @@ class UrlProcessor:
     @staticmethod
     def filter_urls(start_url, extracted_urls):
         domain = parse.urlparse(start_url).netloc
-        filtered_urls = [urljoin(start_url, url)
+        filtered_urls = [parse.urljoin(start_url, url)
                          for url in extracted_urls if parse.urlparse(url).netloc == domain]
         return filtered_urls
 
@@ -31,11 +31,12 @@ class ConcurrentCrawler:
         self.total_requests = 0
         self.visited_urls = []
         self.remaining_requests = max_reqs
+        self.urls_to_visit = []
 
     async def crawl_url(self, url):
         async with self.semaphore:
             responce = await asyncio.ensure_future(self.loop.run_in_executor(None, requests.get, url))
-            await asyncio.sleep(self.download_delay)
+            time.sleep(self.download_delay)
         return responce.text
 
     async def create_tasks(self, filtered_urls):
@@ -52,10 +53,16 @@ class ConcurrentCrawler:
         for result in results:
             self.total_bytes += len(result)
             self.total_requests += 1
+
+            urls_in_result = Selector(result).css("a::attr(href)").extract()
+            filtered_urls_in_result = UrlProcessor.filter_urls(
+                self.start_url, urls_in_result)
+            self.urls_to_visit += list(
+                set(filtered_urls_in_result).difference(self.visited_urls))
             self.remaining_requests = self.max_reqs - self.total_requests
 
-        if self.remaining_requests:
-            starting_url = self.visited_urls.pop()
+        if self.remaining_requests and self.urls_to_visit:
+            starting_url = self.urls_to_visit.pop()
             extracted_urls = UrlProcessor.extract_urls(starting_url)
             filtered_urls = UrlProcessor.filter_urls(
                 starting_url, extracted_urls)
