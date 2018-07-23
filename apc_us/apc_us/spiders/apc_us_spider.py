@@ -87,10 +87,19 @@ class APCUSSpider(scrapy.Spider):
         prices = self.get_product_prices(response)
         raw_product = self.get_raw_product(response)
 
+        sku_price = {}
+
+        if len(prices) > 1:
+            sku_price['previous_price'] = prices[0]
+            sku_price['price'] = prices[1]
+        else:
+            sku_price['price'] = prices[0]
+
         for color in colors:
+            color_code, color_name = self.get_product_color(color)
             for size in sizes:
                 sku = {}
-                color_code, color_name = self.get_product_color(color)
+                sku.update(sku_price)
                 size_code, size_name = self.get_product_size(size)
                 key = f"{color_code},{size_code}"
                 raw_sku = raw_product.get(key)
@@ -102,12 +111,6 @@ class APCUSSpider(scrapy.Spider):
                 sku['currency'] = 'USD'
                 sku['size'] = size_name
                 sku['out_of_stock'] = not raw_sku.get('is_in_stock')
-
-                if len(prices) > 1:
-                    sku['previous_price'] = prices[0]
-                    sku['price'] = prices[1]
-                else:
-                    sku['price'] = prices[0]
 
                 skus.append(sku)
         return skus
@@ -128,9 +131,9 @@ class APCUSSpider(scrapy.Spider):
 
     @staticmethod
     def get_raw_product(response):
-        script_div = response.css('#product-options-wrapper')
-        script = script_div.xpath('//script[contains(text(), "StockStatus")]/text()'
-                                  ).extract_first()
+        script = response.xpath(
+            '//div[@id="product-options-wrapper"]//script[contains(text(), "StockStatus")]/text()'
+        ).extract_first()
         stock_status_json = script.split('new StockStatus(')[1].split(')')[0]
         return json.loads(stock_status_json)
 
