@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import time
 from urllib import parse
 
 import requests
@@ -12,8 +13,8 @@ def main():
                         type=url_validate)
     parser.add_argument('-m', '--max_url', help='this arguments specifies the maximum number '
                         'of urls to visit', default=20, type=int)
-    parser.add_argument('-r', '--requests_count', default=5, help='this arguments specifies the number of '
-                        'concurrent requests allowed', type=int)
+    parser.add_argument('-r', '--requests_count', default=5, help='this arguments specifies'
+                        ' the number of concurrent requests allowed', type=int)
     parser.add_argument('-d', '--delay', default=0.05, help='this arguments specifies the delay '
                         'between each request', type=float)
     args = parser.parse_args()
@@ -42,7 +43,7 @@ class Crawler:
         loop = asyncio.get_event_loop()
         future_request = loop.run_in_executor(None, requests.get, url)
         response = await future_request
-        await asyncio.sleep(delay)
+        time.sleep(delay)
         self.bytes_downloaded = self.bytes_downloaded + len(response.content)
         return response.text
 
