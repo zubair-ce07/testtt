@@ -1,7 +1,6 @@
 import argparse
 import time
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import wait
+from concurrent.futures import ProcessPoolExecutor, wait
 from urllib import parse
 
 import requests
@@ -58,15 +57,15 @@ class Crawler:
 
     def crawl_parallel(self, url_limit, request_limit, download_delay):
         executor = ProcessPoolExecutor(max_workers=request_limit)
-        extract_tasks = []
+        tasks = []
         for _ in range(url_limit):
             url = self.urls_queue.pop()
             self.visited_urls |= {url}
-            extract_tasks.append(executor.submit(self.crawl_next_urls, url, download_delay))
+            tasks.append(executor.submit(self.crawl_next_urls, url, download_delay))
             if not self.urls_queue:
-                self.execute_tasks(extract_tasks)
+                self.execute_tasks(tasks)
 
-        self.execute_tasks(extract_tasks)
+        self.execute_tasks(tasks)
 
     def execute_tasks(self, tasks):
         for task in tasks:
