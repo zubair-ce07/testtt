@@ -62,9 +62,9 @@ class TausendkindSpider(scrapy.Spider):
             request = scrapy.Request(variants.pop(), self.parse_product_variant)
             request.meta['sku'] = sku
             request.meta['variants'] = variants
-            yield request
-        else:
-            yield sku
+            return request
+
+        return sku
 
     def parse_product_variant(self, response):
         sku = response.meta['sku']
@@ -77,9 +77,9 @@ class TausendkindSpider(scrapy.Spider):
             request = scrapy.Request(variants.pop(), self.parse_product_variant)
             request.meta['sku'] = sku
             request.meta['variants'] = variants
-            yield request
-        else:
-            yield sku
+            return request
+
+        return sku
 
     def get_product_skus(self, response):
         skus = []
