@@ -59,16 +59,16 @@ if __name__ == "__main__":
     calculations_class = CalculatingResults(all_weather_readings)
 
     for argument in args.e:
-        calculations_class.calculate_results_for_year(argument)
+        calculations_class.get_extrema_statistics(argument)
         report_class = ReportPrinting(calculations_class.results)
-        report_class.print_results_for_year(argument)
+        report_class.print_extrema_statistics(argument)
 
     for argument in args.a:
-        calculations_class.calculate_average_results_for_month(argument)
+        calculations_class.get_average_statistics(argument)
         report_class = ReportPrinting(calculations_class.results)
-        report_class.print_results_for_month(argument)
+        report_class.print_average_statistics(argument)
 
     for argument in args.c:
-        calculations_class.calculate_month_chart(argument)
+        calculations_class.get_bar_chart_records(argument)
         report_class = ReportPrinting(calculations_class.results)
-        report_class.plot_chart_for_month(argument)
+        report_class.plot_chart(argument)
