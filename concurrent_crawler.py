@@ -2,7 +2,7 @@ import asyncio
 import requests
 import time
 from parsel import Selector
-from urllib import parse
+from urllib.parse import urlparse, urljoin
 
 
 class UrlProcessor:
@@ -14,9 +14,9 @@ class UrlProcessor:
 
     @staticmethod
     def filter_urls(start_url, extracted_urls):
-        domain = parse.urlparse(start_url).netloc
-        filtered_urls = [parse.urljoin(start_url, url)
-                         for url in extracted_urls if parse.urlparse(url).netloc == domain]
+        domain = urlparse(start_url).netloc
+        filtered_urls = [urljoin(start_url, url)
+                         for url in extracted_urls if urlparse(url).netloc == domain]
         return filtered_urls
 
 
