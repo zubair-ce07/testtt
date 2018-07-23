@@ -24,24 +24,30 @@ class HugoBossSpider(CrawlSpider):
     )
 
     def parse_item(self, response):
-        prod_details = self._extract_prod_details(response)
+        raw_product = self._extract_raw_product(response)
 
         item = HugoBossItem()
-        item['retailer_sku'] = prod_details['productID']
-        item['gender'] = prod_details['productGender']
-        item['category'] = prod_details['productCategory']
-        item['brand'] = prod_details['productBrand']
+        item['retailer_sku'] = raw_product['productID']
+        item['gender'] = raw_product['productGender']
+        item['category'] = raw_product['productCategory']
+        item['brand'] = raw_product['productBrand']
+        item['name'] = raw_product['productName']
         item['url'] = response.url
-        item['name'] = prod_details['productName']
         item["description"] = self._extract_description(response)
         item['care'] = self._extract_care(response)
         item['image_urls'] = self._extract_image_urls(response)
         item['skus'] = self._extract_skus(response)
 
         color_links = response.css('.swatch-list__button--is-empty a::attr(href)').extract()
-        yield from self._check_col_links(response, color_links, item)
+        yield from self._process_colors(response, color_links, item)
+    
+    def _extract_raw_product(self, response):
+        script = response.xpath('//script[contains(., "productCurrency")]').extract_first()
 
-    def _check_col_links(self, response, color_links, item):
+        raw_product = re.search(r"({.*?})", script).group(1)
+        return json.loads(raw_product)
+
+    def _process_colors(self, response, color_links, item):
         if color_links:
             yield response.follow(color_links.pop(), callback=self._extract_color,\
                                  meta={'item': item, 'color_links': color_links})
@@ -55,13 +61,7 @@ class HugoBossSpider(CrawlSpider):
         item['image_urls'] += self._extract_image_urls(response)
         item['skus'] += self._extract_skus(response)
 
-        yield from self._check_col_links(response, color_links, item)
-    
-    def _extract_prod_details(self, response):
-        script = response.xpath('//script[contains(., "productCurrency")]').extract_first()
-
-        raw_product = re.search(r"({.*?})", script).group(1)
-        return self._extract_json(raw_product)
+        yield from self._process_colors(response, color_links, item)
 
     def _extract_description(self, response):
         description = response.css('.product-container__text__description::text').extract()
@@ -84,7 +84,7 @@ class HugoBossSpider(CrawlSpider):
         previous_price = self._extract_prev_price(response)
 
         if previous_price:
-            item['previous price'] = previous_price.strip()[1:]
+            item['previous price'] = previous_price
         
         skus = []
         size_selectors = response.css('a.product-stage__choose-size__select-size')
@@ -97,7 +97,7 @@ class HugoBossSpider(CrawlSpider):
                 
             sku_item['id'] = '{}_{}'.format(sku_item['color'], sku_item['size'])
 
-            if sku.css('a::attr(disabled)').extract_first():
+            if sku.css('a::attr(disabled)').extract():
                 sku_item['out_of_stock'] = True
 
             skus.append(sku_item)
@@ -105,10 +105,10 @@ class HugoBossSpider(CrawlSpider):
         return skus
 
     def _extract_color(self, response):
-        data_current = response.css('.product-variations::attr(data-current)').extract_first()
-        data_current = self._extract_json(data_current)
+        raw_product = response.css('.product-variations::attr(data-current)').extract_first()
+        raw_product = json.loads(raw_product)
 
-        return data_current['color']['displayValue']
+        return raw_product['color']['displayValue']
     
     def _extract_currency(self, response):
         return response.xpath('//meta[@itemprop="priceCurrency"]/@content').extract_first()
@@ -117,10 +117,9 @@ class HugoBossSpider(CrawlSpider):
         return response.xpath('//meta[@itemprop="price"]/@content').extract_first()
 
     def _extract_prev_price(self, response):
-        return response.css('span.product-price--price-standard s::text').extract_first()
-
-    def _extract_json(self, json_str):
-        return json.loads(json_str)
+        previous_price = response.css('span.product-price--price-standard s::text').extract_first()
+        if previous_price:
+            return previous_price.strip()[1:]
     
     def clean_text(self, text):
         return re.sub(r'\s+', ' ', text)
