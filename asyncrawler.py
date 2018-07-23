@@ -46,8 +46,7 @@ class AsyncCrawler:
         anchor_urls = [self.start_url]
         while len(self.visited_urls) < self.maximum_urls:
             extracted_urls = await self.extract_multiple_anchor_urls(anchor_urls, event_loop)
-            anchor_urls = []
-            anchor_urls += sum(extracted_urls, [])
+            anchor_urls = sum(extracted_urls, [])
 
     def execute_crawler(self):
         loop = asyncio.get_event_loop()
