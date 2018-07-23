@@ -56,12 +56,12 @@ def main(cli_arguments):
     if cli_arguments.c:
         year, month = cli_arguments.c
         weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
-        WeatherReporter.print_charts_for_extremes(weather_result, 'c')
+        WeatherReporter.print_charts_for_extremes(weather_result)
 
     if cli_arguments.b:
         year, month = cli_arguments.b
         weather_result = WeatherAnalyzer.get_result(parsed_weather_records, year, month)
-        WeatherReporter.print_charts_for_extremes(weather_result, 'b')
+        WeatherReporter.print_mixed_chart_for_extremes(weather_result)
 
 
 if __name__ == "__main__":
