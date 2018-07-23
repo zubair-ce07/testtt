@@ -1,12 +1,7 @@
 import re
 import json
-from collections import namedtuple
 
 import scrapy
-
-Size = namedtuple('Size', ['code', 'text'])
-Color = namedtuple('Color', ['code', 'text'])
-SKUVariant = namedtuple('SKUVariant', ['color', 'size', 'prices'])
 
 
 class TausendkindSpider(scrapy.Spider):
