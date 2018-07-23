@@ -1,6 +1,6 @@
 import argparse
 import time
-from concurrent.futures import ProcessPoolExecutor, wait
+from concurrent.futures import ProcessPoolExecutor
 from urllib import parse
 
 import requests
@@ -73,7 +73,6 @@ class Crawler:
             urls_extracted -= self.visited_urls
             self.urls_queue |= urls_extracted
             self.bytes_downloaded += page_size
-        wait(tasks)
 
     def crawl_report(self):
         print(f"Number of requests: {len(self.visited_urls)}.")
