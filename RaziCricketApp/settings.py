@@ -33,9 +33,8 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'articles.apps.ArticlesConfig',
     'comments.apps.CommentsConfig',
-    'player.apps.PlayerConfig',
-    'team.apps.TeamConfig',
-    'user.apps.UserConfig',
+    'teams.apps.TeamConfig',
+    'users.apps.UserConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
