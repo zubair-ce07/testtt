@@ -2,6 +2,7 @@ from django.db import models
 from model_utils import Choices
 
 # Create your models here.
+from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
 
 
 class Team(models.Model):
@@ -15,33 +16,13 @@ class Team(models.Model):
 
 
 class Player(models.Model):
-    PLAYING_ROLES = Choices(
-        ('batsman', 'Batsman'),
-        ('bowler', 'Bowler'),
-        ('allrounder', 'AllRounder'),
-        ('wicketkeeper', 'WicketKeeper'),
-    )
-    BATTING_STYLES = Choices(
-        ('right-hand', 'Right Hand Bat'),
-        ('left-hand', 'Left Hand Bat'),
-    )
-    BOWLING_STYLES = Choices(
-        ('right-arm-fast', 'Right Arm Fast'),
-        ('right-arm-medium-fast', 'Right Arm Medium Fast'),
-        ('right-arm-off-break', 'Right Arm OffBreak'),
-        ('right-arm-leg-break-googly', 'Right Arm LegBreak Googly'),
-        ('right-arm-orthodox', 'Right Arm Orthodox'),
-        ('left-arm-fast', 'Left Arm Fast'),
-        ('left-arm-medium-fast', 'Left Arm Medium Fast'),
-        ('left-arm-orthodox', 'Left Arm Orthodox'),
-        ('left-arm-chinaman', 'Left Arm Chinaman'),
-    )
+
     name = models.CharField(max_length=100, default=' ')
     DOB = models.DateTimeField('born')
     # Calculate Age
-    playing_role = models.CharField(max_length=20, default=' ', choices=PLAYING_ROLES)
-    batting_style = models.CharField(max_length=20, default=' ', choices=BATTING_STYLES)
-    bowling_style = models.CharField(max_length=30, default=' ', choices=BOWLING_STYLES)
+    playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices)
+    batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices)
+    bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices)
     major_teams = models.CharField(max_length=200, default=' ')
     ranking = models.PositiveSmallIntegerField(null=True, blank=True)
     url = models.URLField(max_length=100, default=' ')
@@ -51,15 +32,8 @@ class Player(models.Model):
 
 
 class BasicAverageIfo(models.Model):
-    FORMATS = Choices(
-        ('test', 'Tests'),
-        ('odi', 'ODIs'),
-        ('t20i', 'T20Is'),
-        ('first-class', 'FirstClass'),
-        ('list A', 'ListA'),
-        ('t20', 'T20s'),
-    )
-    format = models.CharField(max_length=50, choices=FORMATS)
+
+    format = models.CharField(max_length=50, choices=FormatChoices.Choices)
     matches = models.IntegerField(null=True, blank=True)
     innings = models.IntegerField(null=True, blank=True)
 
@@ -75,7 +49,6 @@ class BasicAverageIfo(models.Model):
 class BattingAverage(BasicAverageIfo):
 
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    # TODO: Limit this to specific choices
 
     not_outs = models.IntegerField(null=True, blank=True)
     highest_score = models.CharField(max_length=50, default=' ')    # 88*
