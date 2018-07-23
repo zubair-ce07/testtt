@@ -7,7 +7,7 @@ import scrapy
 class TausendkindSpider(scrapy.Spider):
     name = "tausendkind"
     start_urls = [
-        'https://www.tausendkind.de/zoolaboo-t-shirt-big-shark-in-dunkelblau-91811121000'
+        'https://www.tausendkind.de/'
     ]
 
     custom_settings = {
@@ -19,15 +19,16 @@ class TausendkindSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
+
         # ax = scrapy.Request(
         #     'https://www.tausendkind.de/zoolaboo-t-shirt-hai-gestreift-in-blau-weiss-89772001000',
         #     self.parse_product)
         ax = scrapy.Request(
-            'https://www.tausendkind.de/zoolaboo-t-shirt-big-shark-in-dunkelblau-91811121000',
+            'https://www.tausendkind.de/finkid-feinstrick-beanie-kokko-in-freesia-poseidon-91764754000',
             self.parse_product)
         # ax = scrapy.Request(
         #     'https://www.tausendkind.de/zoolaboo-t-shirt-big-shark-in-dunkelblau-91811121000',
-        #     self.parse_product_variant)
+        #     self.parse_product)
         yield ax
 
     def parse_product(self, response):
@@ -35,7 +36,7 @@ class TausendkindSpider(scrapy.Spider):
 
         sku = {
             'retailer_sku': self.get_product_retailer_sku(raw_product),
-            'name': self.get_product_name(raw_product),
+            'name': self.get_product_name(response),
             'brand': self.get_product_brand(raw_product),
             'gender': self.get_product_gender(raw_product),
             'category': self.get_product_categories(response),
@@ -75,8 +76,7 @@ class TausendkindSpider(scrapy.Spider):
         skus = []
 
         size_drop_down = response.css('div.select__menu.select__menu--pdp li.select__option')
-        color = response.css('img.pdp-other-color--active::attr(alt)'
-                             ).extract_first().split(' in ')[-1]
+        color = self.get_product_name(response).split(' in ')[-1].split('/')[0]
 
         for row in size_drop_down:
             sku = {
@@ -87,19 +87,22 @@ class TausendkindSpider(scrapy.Spider):
                 'color': color
             }
 
-            special_price = self.get_price_from_string(
-                row.css('li::attr(data-specialprice)').extract_first())
-            price = self.get_price_from_string(row.css('li::attr(data-price)').extract_first())
+            special_price = row.css('li::attr(data-specialprice)').extract_first()
+            price = row.css('li::attr(data-price)').extract_first()
 
             if special_price:
-                sku['price'] = special_price
-                sku['previous_price'] = price
+                sku['price'] = self.get_price_from_string(special_price)
+                sku['previous_price'] = self.get_price_from_string(price)
             else:
-                sku['price'] = price
+                sku['price'] = self.get_price_from_string(price)
 
             skus.append(sku)
 
         return skus
+
+    @staticmethod
+    def get_product_variants_urls(response):
+        return response.css('div.alternatives-list-item a::attr(href)').extract()
 
     def get_product_images(self, response):
         raw_images = self.get_raw_product_images(response)
@@ -111,25 +114,24 @@ class TausendkindSpider(scrapy.Spider):
         return {c.strip() for c in categories[1:] if c.strip()}
 
     @staticmethod
-    def get_product_variants_urls(response):
-        return response.css('div.alternatives-list-item a::attr(href)').extract()
-
-    @staticmethod
     def get_product_retailer_sku(raw_product):
         return raw_product['product']['master_sku']
 
     @staticmethod
     def get_product_gender(raw_product):
         gender_map = {'junge': 'boys', 'maedchen': 'girls'}
-        return gender_map.get(raw_product['product']['filter_gender'])
+        gender = raw_product['product']['filter_gender']
+        if all(g in gender for g in gender_map.keys()):
+            return 'unisex'
+        return gender_map.get(gender)
 
     @staticmethod
     def get_product_brand(raw_product):
         return raw_product['product']['manufacturer_name']
 
     @staticmethod
-    def get_product_name(raw_product):
-        return raw_product['product']['name']
+    def get_product_name(response):
+        return response.css('#product-name::text').extract_first()
 
     @staticmethod
     def get_price_from_string(string):
