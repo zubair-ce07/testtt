@@ -19,17 +19,26 @@ class TausendkindSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
+        listing_css = '#main-menu a::attr(href)'
 
-        # ax = scrapy.Request(
-        #     'https://www.tausendkind.de/zoolaboo-t-shirt-hai-gestreift-in-blau-weiss-89772001000',
-        #     self.parse_product)
-        ax = scrapy.Request(
-            'https://www.tausendkind.de/finkid-feinstrick-beanie-kokko-in-freesia-poseidon-91764754000',
-            self.parse_product)
-        # ax = scrapy.Request(
-        #     'https://www.tausendkind.de/zoolaboo-t-shirt-big-shark-in-dunkelblau-91811121000',
-        #     self.parse_product)
-        yield ax
+        for url in response.css(listing_css).extract()[1:]:
+            yield response.follow(url, self.parse_listing)
+
+    def parse_listing(self, response):
+        raw_listing = self.get_raw_listing(response)
+
+        for key in raw_listing.keys():
+            yield response.follow(f"/{raw_listing[key]['url_key']}", self.parse_product)
+
+        next_page = response.css('#pager-next-page::attr(href)').extract_first()
+        if next_page:
+            return response.follow(next_page, self.parse_listing)
+
+    @staticmethod
+    def get_raw_listing(response):
+        script = response.xpath('//div/script[contains(text(),"DOMContentLoaded")]').extract_first()
+        raw_listing = script.split('tkd_product_list\', ')[1].split(');')[0]
+        return json.loads(raw_listing)['list']
 
     def parse_product(self, response):
         raw_product = self.get_raw_product(response)
