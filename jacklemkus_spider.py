@@ -9,11 +9,12 @@ from jacklemkus.items import ProductItem
 
 class ProductsSpider(CrawlSpider):
     name = 'jacklemkus'
+    currency = 'RAND'
     start_urls = ['https://www.jacklemkus.com/']
     rules = (
-        Rule(LinkExtractor(restrict_css='#nav .level0 > .menu-link', deny='how-to-order')),
-        Rule(LinkExtractor(restrict_css='.row .product-image'), 'parse_product'),
-        Rule(LinkExtractor(restrict_css='.pagination .next')),
+        Rule(LinkExtractor(restrict_css='#nav .level0 > .menu-link', deny='how-to-order'), callback=None),
+        Rule(LinkExtractor(restrict_css='.row .product-image'), callback='parse_product'),
+        Rule(LinkExtractor(restrict_css='.pagination .next'), callback=None),
 
     )
 
@@ -29,11 +30,11 @@ class ProductsSpider(CrawlSpider):
         product_item['description'] = self.get_description(response)
         product_item['name'] = self.get_product_name(response)
 
-        product_item['gender'] = self.extract_attr(response, 'Gender')
-        product_item['category'] = self.extract_categories(response)
-        product_item['url'] = response.url
-        product_item['brand'] = self.extract_attr(response, 'Brand')
-        product_item['skus'] = self.extract_skus(response)
+        product_item['gender'] = self.get_gender(response)
+        product_item['category'] = self.get_categories(response)
+        product_item['url'] = self.get_product_url(response)
+        product_item['brand'] = self.get_brand(response)
+        product_item['skus'] = self.get_skus(response)
 
         yield product_item
 
@@ -54,7 +55,19 @@ class ProductsSpider(CrawlSpider):
         return response.css('.product-essential .product-image a::attr(href)').extract()
 
     @staticmethod
-    def extract_categories(response):
+    def get_gender(response):
+        return ProductsSpider.extract_attr(response, 'Gender')
+
+    @staticmethod
+    def get_brand(response):
+        return ProductsSpider.extract_attr(response, 'Brand')
+
+    @staticmethod
+    def get_product_url(response):
+        return response.url
+
+    @staticmethod
+    def get_categories(response):
         categories = []
         base_url = urlparse(response.request.headers.get('Referer', 'None').decode("utf-8"))
         categories.append(ProductsSpider.extract_attr(response, 'DEPARTMENT'))
@@ -73,20 +86,21 @@ class ProductsSpider(CrawlSpider):
         return product_details.get(query)
 
     @staticmethod
-    def extract_skus(response):
+    def get_skus(response):
         product_skus = []
         product_sel = response.css('.product-data-mine::attr(data-lookup)')
-        if any(product_sel):
-            product_details = json.loads(product_sel.extract_first().replace("\'", "\""))
-            for item in product_details.values():
-                sku = {}
-                price = response.css('.product-essential span.price::text').extract_first()
-                if price[0] is 'R':
-                    sku["price"] = float(price[1:].replace(",", ""))
-                    sku["currency"] = 'RAND'
-                sku["size"] = item.get("size")
-                sku["sku_id"] = "{}_{}".format(item.get("id"), item.get("size").replace(" ", '_'))
-                if not item.get("stock_status"):
-                    sku["out_of_stock"] = True
-                product_skus.append(sku)
+        if not any(product_sel):
+            return []
+        price = response.css('.product-essential span.price::text').extract_first()
+        product_details = json.loads(product_sel.extract_first().replace("\'", "\""))
+        for item in product_details.values():
+            sku = {}
+            if price[0] is 'R':
+                sku["price"] = float(price[1:].replace(",", ""))
+                sku["currency"] = ProductsSpider.currency
+            sku["size"] = item.get("size")
+            sku["sku_id"] = "{}_{}".format(item.get("id"), item.get("size").replace(" ", '_'))
+            if not item.get("stock_status"):
+                sku["out_of_stock"] = True
+            product_skus.append(sku)
         return product_skus
