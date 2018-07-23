@@ -47,51 +47,68 @@ class TausendkindSpider(scrapy.Spider):
             'url': response.url,
             'description': self.get_product_description(response),
             'care': self.get_product_care(response),
-            'alt': self.get_color_urls(response)
+            'skus': self.get_product_skus(response),
+            'image_urls': self.get_product_images(response)
         }
 
-        if sku['alt']:
-            request = scrapy.Request(sku['alt'].pop(), self.parse_product_variant)
+        variants = self.get_product_variants_urls(response)
+
+        if variants:
+            request = scrapy.Request(variants.pop(), self.parse_product_variant)
             request.meta['sku'] = sku
+            request.meta['variants'] = variants
             yield request
-
-    def get_product_variants(self, response):
-        color_url = self.get_color_urls(response)
-
-        for alternative in color_url:
-            yield scrapy.Request(alternative, self.parse_product_variant)
+        else:
+            yield sku
 
     def parse_product_variant(self, response):
-        yield response.meta['sku']
-        # product_variant = {'skus': []}
-        # sizes_column = response.css('div.select__menu.select__menu--pdp li.select__option')
-        # raw_images = self.get_raw_product_images(response)
-        # color = response.css(
-        #     'img.pdp-other-color--active::attr(alt)').extract_first().split(' in ')[-1]
-        #
-        # for row in sizes_column:
-        #     sku = {
-        #         'sku_id': row.css('li::attr(data-value)').extract_first(),
-        #         'size': row.css('div.l-space::text').extract_first(),
-        #         'is_in_stock': not row.xpath('.//div[contains(text(), "Ausverkauft")]').extract(),
-        #         'currency': 'EUR',
-        #         'color': color
-        #     }
-        #
-        #     special_price = self.get_price_from_string(
-        #         row.css('li::attr(data-specialprice)').extract_first())
-        #     price = self.get_price_from_string(row.css('li::attr(data-price)').extract_first())
-        #
-        #     if special_price:
-        #         sku['price'] = special_price
-        #         sku['previous_price'] = price
-        #     else:
-        #         sku['price'] = price
-        #
-        #     product_variant['skus'].append(sku)
-        #
-        # product_variant['images'] = raw_images['images']['list']
-        # yield product_variant
+        sku = response.meta['sku']
+        variants = response.meta['variants']
+
+        sku['image_urls'].extend(self.get_product_images(response))
+        sku['skus'].extend(self.get_product_skus(response))
+
+        if variants:
+            request = scrapy.Request(variants.pop(), self.parse_product_variant)
+            request.meta['sku'] = sku
+            request.meta['variants'] = variants
+            yield request
+        else:
+            yield sku
+
+    def get_product_skus(self, response):
+        skus = []
+
+        size_drop_down = response.css('div.select__menu.select__menu--pdp li.select__option')
+        color = response.css('img.pdp-other-color--active::attr(alt)'
+                             ).extract_first().split(' in ')[-1]
+
+        for row in size_drop_down:
+            sku = {
+                'sku_id': row.css('li::attr(data-value)').extract_first(),
+                'size': row.css('div.l-space::text').extract_first(),
+                'is_in_stock': not row.xpath('.//div[contains(text(), "Ausverkauft")]').extract(),
+                'currency': 'EUR',
+                'color': color
+            }
+
+            special_price = self.get_price_from_string(
+                row.css('li::attr(data-specialprice)').extract_first())
+            price = self.get_price_from_string(row.css('li::attr(data-price)').extract_first())
+
+            if special_price:
+                sku['price'] = special_price
+                sku['previous_price'] = price
+            else:
+                sku['price'] = price
+
+            skus.append(sku)
+
+        return skus
+
+    def get_product_images(self, response):
+        raw_images = self.get_raw_product_images(response)
+        return raw_images['images']['list']
 
     @staticmethod
     def get_product_categories(response):
@@ -99,7 +116,7 @@ class TausendkindSpider(scrapy.Spider):
         return {c.strip() for c in categories[1:] if c.strip()}
 
     @staticmethod
-    def get_color_urls(response):
+    def get_product_variants_urls(response):
         return response.css('div.alternatives-list-item a::attr(href)').extract()
 
     @staticmethod
@@ -108,7 +125,7 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_gender(raw_product):
-        gender_map = {'junge': 'boy', 'maedchen': 'girl'}
+        gender_map = {'junge': 'boys', 'maedchen': 'girls'}
         return gender_map.get(raw_product['product']['filter_gender'])
 
     @staticmethod
