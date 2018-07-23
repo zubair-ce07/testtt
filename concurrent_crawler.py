@@ -41,15 +41,14 @@ class AsyncSpider:
         semaphore = asyncio.BoundedSemaphore(self.concurrent_req)
 
         for _ in range(self.concurrent_req):
-            if not self.pending_urls:
-                continue
+
             url = self.pending_urls.pop()
             self.url_visit_limit -= 1
             async with semaphore:
                 futures.append(
                     asyncio.ensure_future(self.extract_urls(url, loop)))
 
-            if self.url_visit_limit < 1:
+            if not self.pending_urls or self.url_visit_limit < 1:
                 break
 
         await asyncio.wait(futures)
