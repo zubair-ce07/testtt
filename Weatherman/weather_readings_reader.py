@@ -9,11 +9,6 @@ from weather_day_reading import WeatherReading
 class WeatherReadingsReader:
 
     @staticmethod
-    def read_day_reading(reading):
-        day_reading = WeatherReading(reading)
-        return day_reading
-
-    @staticmethod
     def validate_day_reading(reading):
         required_fields = ['Mean TemperatureC', 'Min TemperatureC', 'Max TemperatureC',
                            ' Mean Humidity', 'Max Humidity', ' Min Humidity']
@@ -22,10 +17,11 @@ class WeatherReadingsReader:
     @staticmethod
     def read_file(path):
         weather_readings = []
-        month_readings = csv.DictReader(open(path))
-        for reading in month_readings:
-            if WeatherReadingsReader.validate_day_reading(reading):
-                weather_readings.append(WeatherReadingsReader.read_day_reading(reading))
+        with open(path) as readings_file:
+            readings = csv.DictReader(readings_file)
+            for reading in readings:
+                if WeatherReadingsReader.validate_day_reading(reading):
+                    weather_readings.append(WeatherReading(reading))
         return weather_readings
 
     @staticmethod
