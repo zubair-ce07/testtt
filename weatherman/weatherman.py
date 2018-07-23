@@ -2,9 +2,9 @@ import argparse
 import calendar
 import datetime
 
-from calculation_class import CalculatingResults
-from parsing_class import ParsingFiles
-from report_class import ReportPrinting
+from weather_statistics_calculation import WeatherStatisticsCalculation
+from weather_data_parsing import WeatherDataParsing
+from weather_statistics_report import WeatherStatisticsReport
 
 
 def valid_year(year):
@@ -53,22 +53,21 @@ if __name__ == "__main__":
     """This is the main."""
 
     args = parsing_arguments()
-    parsing_files = ParsingFiles(args.file_path)
-    all_weather_readings = parsing_files.reading_files()
-
-    calculations_class = CalculatingResults(all_weather_readings)
+    weather_data_parsing = WeatherDataParsing(args.file_path)
+    all_weather_readings = weather_data_parsing.reading_files()
+    weather_statistics_calculation = WeatherStatisticsCalculation(all_weather_readings)
 
     for argument in args.e:
-        calculations_class.get_extrema_statistics(argument)
-        report_class = ReportPrinting(calculations_class.results)
-        report_class.print_extrema_statistics(argument)
+        weather_statistics_calculation.get_extrema_statistics(argument)
+        weather_statistics_report = WeatherStatisticsReport(weather_statistics_calculation.results)
+        weather_statistics_report.print_extrema_statistics(argument)
 
     for argument in args.a:
-        calculations_class.get_average_statistics(argument)
-        report_class = ReportPrinting(calculations_class.results)
-        report_class.print_average_statistics(argument)
+        weather_statistics_calculation.get_average_statistics(argument)
+        weather_statistics_report = WeatherStatisticsReport(weather_statistics_calculation.results)
+        weather_statistics_report.print_average_statistics(argument)
 
     for argument in args.c:
-        calculations_class.get_bar_chart_records(argument)
-        report_class = ReportPrinting(calculations_class.results)
-        report_class.plot_chart(argument)
+        weather_statistics_calculation.get_bar_chart_records(argument)
+        weather_statistics_report = WeatherStatisticsReport(weather_statistics_calculation.results)
+        weather_statistics_report.plot_chart(argument)
