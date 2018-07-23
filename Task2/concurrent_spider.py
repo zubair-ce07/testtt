@@ -19,16 +19,16 @@ class RecursiveConcurrentSpider:
         self.__executor = concurrent.futures.ThreadPoolExecutor()
         self.__tasks_limiting_semaphore = asyncio.BoundedSemaphore(self.concurrent_requests_limit)
 
-    async def start_crawler(self, urls, urls_limit):
-        if urls_limit > 0 and urls:
-            urls, urls_limit = (urls[:urls_limit], 0) if len(urls) > urls_limit else (urls, urls_limit-len(self.visited_urls))
+    async def start_crawler(self, urls, limit):
+        if limit > 0 and urls:
+            urls, limit = (urls[:limit], 0) if len(urls) > limit else (urls, limit - len(self.visited_urls))
 
             completed_futures, pending_futures = await self.visit_urls(urls)
             while True:
                 for completed in completed_futures:
                     self.spider_execution_report.total_requests += 1
                     self.spider_execution_report.bytes_downloaded += len(completed.result())
-                    await self.start_crawler(self.get_urls(completed.result()), urls_limit)
+                    await self.start_crawler(self.get_urls(completed.result()), limit)
 
                 if pending_futures:
                     completed_futures, pending_futures = await asyncio.wait(pending_futures,
