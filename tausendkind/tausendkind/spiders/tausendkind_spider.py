@@ -52,7 +52,7 @@ class TausendkindSpider(scrapy.Spider):
             'url': response.url,
             'description': self.get_product_description(response),
             'care': self.get_product_care(response),
-            'skus': self.get_product_skus(response),
+            'skus': self.get_product_skus(response, raw_product),
             'image_urls': self.get_product_images(response)
         }
 
@@ -69,9 +69,10 @@ class TausendkindSpider(scrapy.Spider):
     def parse_product_variant(self, response):
         sku = response.meta['sku']
         variants = response.meta['variants']
+        raw_product = self.get_raw_product(response)
 
         sku['image_urls'].extend(self.get_product_images(response))
-        sku['skus'].extend(self.get_product_skus(response))
+        sku['skus'].extend(self.get_product_skus(response, raw_product))
 
         if variants:
             request = scrapy.Request(variants.pop(), self.parse_product_variant)
@@ -81,11 +82,24 @@ class TausendkindSpider(scrapy.Spider):
 
         return sku
 
-    def get_product_skus(self, response):
+    def get_product_skus(self, response, raw_product):
         skus = []
 
         size_drop_down = response.css('div.select__menu.select__menu--pdp li.select__option')
-        color = self.get_product_name(response).split(' in ')[-1].split('/')[0]
+        color = self.get_product_color(response)
+
+        if not size_drop_down:
+            sku = {
+                'sku_id': raw_product['product']['sku'],
+                'size': 'One Size',
+                'is_in_stock': bool(raw_product['product']['qty']),
+                'currency': 'EUR',
+                'color': color,
+                'price': raw_product['product']['price'] * 100
+            }
+
+            skus.append(sku)
+            return skus
 
         for row in size_drop_down:
             sku = {
@@ -116,6 +130,16 @@ class TausendkindSpider(scrapy.Spider):
     def get_product_images(self, response):
         raw_images = self.get_raw_product_images(response)
         return raw_images['images']['list']
+
+    def get_product_color(self, response):
+        color = self.get_product_name(response).split(' in ')
+
+        if len(color) > 1:
+            color = color[-1].split('/')[0]
+        else:
+            color = None
+
+        return color
 
     @staticmethod
     def get_product_categories(response):
