@@ -45,12 +45,12 @@ class WeatherStatisticsReport:
         minimum_temp_bar, maximum_temp_bar = '', ''
         maximum_temp, minimum_temp, separator = '', '', ''
 
-        if record.max_temperature:
+        if record.max_temperature is not None:
             maximum_temp_bar = '\033[91m' + '+'*record.max_temperature
             maximum_temp = str(record.max_temperature) + 'C'
             separator = '-'
 
-        if record.min_temperature:
+        if record.min_temperature is not None:
             style = self.get_line_style(record.min_temperature)
             minimum_temp_bar = '\033[94m' + style*abs(record.min_temperature)
             minimum_temp = str(record.min_temperature) + 'C ' + separator

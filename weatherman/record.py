@@ -28,7 +28,7 @@ class Record:
         self.wind_dir_degrees = self.convert_datatype(line['WindDirDegrees'], float)
 
     def convert_datatype(self, value, datatype):
-        return datatype(value) if value else None
+        return datatype(value) if value is not '' else None
 
     def get_datatime(self, date):
         return datetime.datetime.strptime(date, '%Y-%m-%d').date()

@@ -15,11 +15,11 @@ class WeatherStatisticsCalculation:
         mean_humidity_list = []
 
         for record in month_record:
-            if record.max_temperature:
+            if record.max_temperature is not None:
                 max_temp_list.append(record.max_temperature)
-            if record.min_temperature:
+            if record.min_temperature is not None:
                 min_temp_list.append(record.min_temperature)
-            if record.mean_humidity:
+            if record.mean_humidity is not None:
                 mean_humidity_list.append(record.mean_humidity)
 
         return self.get_average(max_temp_list), self.get_average(min_temp_list), self.get_average(mean_humidity_list)
@@ -36,15 +36,15 @@ class WeatherStatisticsCalculation:
         year_max_temp_records = []
         year_min_temp_records = []
         year_max_humid_records = []
-        all_records = self.get_records_of_argument(self.all_weather_readings, year)
+        all_records = self.get_required_records(self.all_weather_readings, year)
         for record in all_records:
-            if record.max_temperature:
+            if record.max_temperature is not None:
                 year_max_temp_records.append(record)
 
-            if record.min_temperature:
+            if record.min_temperature is not None:
                 year_min_temp_records.append(record)
 
-            if record.max_humidity:
+            if record.max_humidity is not None:
                 year_max_humid_records.append(record)
 
         self.results.year[year] = {
@@ -53,11 +53,11 @@ class WeatherStatisticsCalculation:
             'max_humidity': self.find_max_min(year_max_humid_records, lambda x: x.max_humidity, 'max')
         }
 
-    def get_records_of_argument(self, all_weather_data, argument):
+    def filter_weather_readings(self, all_weather_data, argument):
         return [record for date_key, record in all_weather_data.items() if argument in date_key]
 
     def get_average_statistics(self, argument):
-        month_record = self.get_records_of_argument(self.all_weather_readings, argument)
+        month_record = self.filter_weather_readings(self.all_weather_readings, argument)
         avg_max_temp, avg_min_temp, avg_mean_humidity = self.get_all_averages(month_record)
 
         self.results.month_average[argument] = {
@@ -68,6 +68,6 @@ class WeatherStatisticsCalculation:
 
     def get_bar_chart_records(self, argument):
         self.results.month_chart[argument] = [
-            record for record in self.get_records_of_argument(self.all_weather_readings, argument)
-            if record.max_temperature or record.min_temperature
+            record for record in self.filter_weather_readings(self.all_weather_readings, argument)
+            if record.max_temperature is not None or record.min_temperature is not None
         ]
