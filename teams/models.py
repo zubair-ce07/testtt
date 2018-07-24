@@ -1,6 +1,4 @@
 from django.db import models
-from model_utils import Choices
-
 # Create your models here.
 from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
 
