@@ -3,7 +3,7 @@ import os
 import glob
 
 
-class WeatherReport:
+class WeatherRecord:
     def __init__(self):
         self.weather_data = None
 
@@ -51,5 +51,5 @@ class WeatherReport:
         return sub_key_level_dictionary
     
 
-weather_report = WeatherReport()
-weather_report.read_data_from_files()
+weather_record = WeatherRecord()
+weather_record.read_data_from_files()
