@@ -1,4 +1,5 @@
 from django.db import models
+
 # Create your models here.
 from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
 
@@ -83,4 +84,3 @@ class BowlingAverage(BasicAverageIfo):
 class Photos(models.Model):
     player_id = models.ForeignKey(Player, on_delete=models.CASCADE)
     photo_url = models.URLField(max_length=100, default=' ')
-
