@@ -41,13 +41,13 @@ class WeatherRecord:
             key = key.replace('\n','')
             temp_dictionary[key] = weather_data
             sub_key_level_dictionary = {
-                                str(year_month_date[0]):{
-                                    (str(year_month_date[1]),month_name):{
-                                        str(year_month_date[2]):
-                                            temp_dictionary
+                                        str(year_month_date[0]):{
+                                            (str(year_month_date[1]),month_name):{
+                                                str(year_month_date[2]):
+                                                    temp_dictionary
+                                                }
+                                            }
                                         }
-                                    }
-                                }
         return sub_key_level_dictionary
     
 
