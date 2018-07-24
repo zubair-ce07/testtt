@@ -27,8 +27,8 @@ class TausendkindSpider(scrapy.Spider):
     def parse_listing(self, response):
         raw_listing = self.get_raw_listing(response)
 
-        for key in raw_listing.keys():
-            yield response.follow(f"/{raw_listing[key]['url_key']}", self.parse_product)
+        for listing in raw_listing.values():
+            yield response.follow(f"/{listing['url_key']}", self.parse_product)
 
         next_page = response.css('#pager-next-page::attr(href)').extract_first()
         if next_page:
@@ -36,9 +36,8 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_raw_listing(response):
-        script = response.xpath('//div/script[contains(text(),"DOMContentLoaded")]').extract_first()
-        raw_listing = script.split('tkd_product_list\', ')[1].split(');')[0]
-        return json.loads(raw_listing)['list']
+        script = response.xpath('//div/script[contains(text(),"DOMContentLoaded")]').re(r'{.*}')[0]
+        return json.loads(script)['list']
 
     def parse_product(self, response):
         raw_product = self.get_raw_product(response)
@@ -59,10 +58,7 @@ class TausendkindSpider(scrapy.Spider):
         variants = self.get_product_variants_urls(response)
 
         if variants:
-            request = scrapy.Request(variants.pop(), self.parse_product_variant)
-            request.meta['sku'] = sku
-            request.meta['variants'] = variants
-            return request
+            return self.prepare_follow_request(variants, sku)
 
         return sku
 
@@ -75,12 +71,15 @@ class TausendkindSpider(scrapy.Spider):
         sku['skus'].extend(self.get_product_skus(response, raw_product))
 
         if variants:
-            request = scrapy.Request(variants.pop(), self.parse_product_variant)
-            request.meta['sku'] = sku
-            request.meta['variants'] = variants
-            return request
+            return self.prepare_follow_request(variants, sku)
 
         return sku
+
+    def prepare_follow_request(self, variants, sku):
+        request = scrapy.Request(variants.pop(), self.parse_product_variant)
+        request.meta['sku'] = sku
+        request.meta['variants'] = variants
+        return request
 
     def get_product_skus(self, response, raw_product):
         skus = []
@@ -110,18 +109,24 @@ class TausendkindSpider(scrapy.Spider):
                 'color': color
             }
 
-            special_price = row.css('li::attr(data-specialprice)').extract_first()
-            price = row.css('li::attr(data-price)').extract_first()
-
-            if special_price:
-                sku['price'] = self.get_price_from_string(special_price)
-                sku['previous_price'] = self.get_price_from_string(price)
-            else:
-                sku['price'] = self.get_price_from_string(price)
-
+            sku.update(self.get_product_price(row))
             skus.append(sku)
 
         return skus
+
+    def get_product_price(self, row):
+        product_price = {}
+
+        special_price = row.css('li::attr(data-specialprice)').extract_first()
+        price = row.css('li::attr(data-price)').extract_first()
+
+        if special_price:
+            product_price['price'] = self.get_price_from_string(special_price)
+            product_price['previous_price'] = self.get_price_from_string(price)
+        else:
+            product_price['price'] = self.get_price_from_string(price)
+
+        return product_price
 
     @staticmethod
     def get_product_variants_urls(response):
@@ -132,14 +137,10 @@ class TausendkindSpider(scrapy.Spider):
         return raw_images['images']['list']
 
     def get_product_color(self, response):
-        color = self.get_product_name(response).split(' in ')
+        color = re.search(r'(in )([a-z]+)', self.get_product_name(response))
 
-        if len(color) > 1:
-            color = color[-1].split('/')[0]
-        else:
-            color = None
-
-        return color
+        if color:
+            return color.group(2)
 
     @staticmethod
     def get_product_categories(response):
@@ -179,9 +180,8 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_raw_product_images(response):
-        script = response.xpath('//script[contains(text(), "tkd_product")]').extract_first()
-        raw_images = script.split('tkd_product\', ')[1].split(');')[0]
-        return json.loads(raw_images)
+        script = response.xpath('//script[contains(text(), "tkd_product")]').re(r'{.*}')[0]
+        return json.loads(script)
 
     @staticmethod
     def get_product_care(response):
@@ -190,6 +190,5 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_raw_product(response):
-        script = response.xpath('//script[contains(text(), "master_sku")]').extract_first()
-        raw_product = script.split('= [')[1].split('];')[0]
-        return json.loads(raw_product)
+        script = response.xpath('//script[contains(text(), "master_sku")]').re(r'{.*}')[0]
+        return json.loads(script)
