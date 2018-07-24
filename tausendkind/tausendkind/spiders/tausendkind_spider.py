@@ -58,7 +58,7 @@ class TausendkindSpider(scrapy.Spider):
         variants = self.get_product_variants_urls(response)
 
         if variants:
-            return self.prepare_follow_request(variants, sku)
+            return self.prepare_product_variant_request(variants, sku)
 
         return sku
 
@@ -71,11 +71,11 @@ class TausendkindSpider(scrapy.Spider):
         sku['skus'].extend(self.get_product_skus(response, raw_product))
 
         if variants:
-            return self.prepare_follow_request(variants, sku)
+            return self.prepare_product_variant_request(variants, sku)
 
         return sku
 
-    def prepare_follow_request(self, variants, sku):
+    def prepare_product_variant_request(self, variants, sku):
         request = scrapy.Request(variants.pop(), self.parse_product_variant)
         request.meta['sku'] = sku
         request.meta['variants'] = variants
