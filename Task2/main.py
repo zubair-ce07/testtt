@@ -49,14 +49,8 @@ def main(user_cli_args):
     spider = RecursiveConcurrentSpider(user_cli_args.site_to_crawl,
                                        user_cli_args.download_delay,
                                        int(user_cli_args.tasks_limit))
-    loop = asyncio.get_event_loop()
-    try:
-        start_time = time.time()
-        loop.run_until_complete(spider.start_crawler([urlparse(spider.site_to_crawl)],
-                                                       int(user_cli_args.total_urls)))
-    finally:
-        loop.close()
-
+    start_time = time.time()
+    spider.run(int(user_cli_args.total_urls))
     print_stats(spider, start_time)
 
 
