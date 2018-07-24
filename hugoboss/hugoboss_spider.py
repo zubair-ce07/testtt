@@ -68,8 +68,12 @@ class HugoBossSpider(CrawlSpider):
         return [self.clean_text(d.strip()) for d in description]
 
     def _extract_care(self, response):
-        care = response.css('.accordion__care-icon__text::text').extract()
-        return list(map(str.strip, care))
+        xpath = 'descendant-or-self::*/text()'
+        care_css = '.materialCare .product-container__text'
+        raw_care = response.css(care_css).xpath(xpath).extract()
+
+        care = [self.clean_text(c) for c in raw_care if len(c.strip()) > 1]
+        return list(set(care))
     
     def _extract_image_urls(self, response):
         img_urls = response.css('.slider-item__image::attr(src)').extract()[:-1]
