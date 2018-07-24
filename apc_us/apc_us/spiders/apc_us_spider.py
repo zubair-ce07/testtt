@@ -87,19 +87,11 @@ class APCUSSpider(scrapy.Spider):
         prices = self.get_product_prices(response)
         raw_product = self.get_raw_product(response)
 
-        sku_price = {}
-
-        if len(prices) > 1:
-            sku_price['previous_price'] = prices[0]
-            sku_price['price'] = prices[1]
-        else:
-            sku_price['price'] = prices[0]
-
         for color in colors:
             color_code, color_name = self.get_product_color(color)
             for size in sizes:
                 sku = {}
-                sku.update(sku_price)
+                sku.update(prices)
                 size_code, size_name = self.get_product_size(size)
                 key = f"{color_code},{size_code}"
                 raw_sku = raw_product.get(key)
@@ -117,15 +109,13 @@ class APCUSSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_size(response):
-        size_code = response.css('li::attr(id)').extract_first()
-        size_code = re.findall(r'\d+', size_code)[0]
+        size_code = response.css('li::attr(id)').re(r'\d+')[0]
         size_text = response.css('a::attr(name)').extract_first()
         return size_code, size_text
 
     @staticmethod
     def get_product_color(response):
-        color_code = response.css('li::attr(id)').extract_first()
-        color_code = re.findall(r'\d+', color_code)[0]
+        color_code = response.css('li::attr(id)').re(r'\d+')[0]
         color_text = response.css('a::attr(name)').extract_first()
         return color_code, color_text
 
@@ -144,4 +134,14 @@ class APCUSSpider(scrapy.Spider):
 
     def get_product_prices(self, response):
         prices = response.css('div.product-shop div.price-info span.price::text').extract()
-        return [self.get_price_from_string(price.strip()) for price in prices]
+        prices = [self.get_price_from_string(price.strip()) for price in prices]
+
+        product_price = {}
+
+        if len(prices) > 1:
+            product_price['previous_price'] = prices[0]
+            product_price['price'] = prices[1]
+        else:
+            product_price['price'] = prices[0]
+
+        return product_price
