@@ -200,26 +200,48 @@ class ReportsGenrator:
         print("Highest Average: " + str(calculated_results["HighestAverage"]) + "C")
         print("Lowest Average: " + str(calculated_results["LowestAverage"]) + "C")
         print("Average Mean Humidity: " + str(calculated_results["AverageMeanHumidity"]) + "%")
+
     
 
-    def daily_report_genrator(self, calculated_results):
+    def daily_report_genrator(self, calculated_results, caller_flag):
         print(calculated_results["Month"] +" "+ calculated_results["Year"])
         daily_max_data = calculated_results.get("MaxTempreture")
         daily_min_data = calculated_results.get("MinTemperature")
-        for day in zip(daily_max_data, daily_min_data):
-            print(day[0], end="")
-            for iterator in range(0, int(daily_max_data.get(day[0]))):
-               sys.stdout.write("\033[1;31m")  #Red color
-               print("+", end="")
-               sys.stdout.write("\033[1;00m")  #White
-            print(" " + daily_max_data.get(day[0]) + "C")
-            print(day[0], end="")
-            for iterator in range(0, int(daily_min_data.get(day[0]))):
-               sys.stdout.write("\033[1;34m")  #Red color
-               print("+", end="")
-               sys.stdout.write("\033[1;00m")  #White
-            print(" " + daily_min_data.get(day[0]) + "C")
 
+        if caller_flag:  #Called from daily calculator
+        
+            for day in zip(daily_max_data, daily_min_data):
+                print(day[0], end="")
+
+                for iterator in range(0, int(daily_max_data.get(day[0]))):
+                    sys.stdout.write("\033[1;31m")  #Red color
+                    print("+", end="")
+                    sys.stdout.write("\033[1;00m")  #White
+                print(" " + daily_max_data.get(day[0]) + "C")
+                print(day[0], end="")
+
+                for iterator in range(0, int(daily_min_data.get(day[0]))):
+                    sys.stdout.write("\033[1;34m")  #Blue color
+                    print("+", end="")
+                    sys.stdout.write("\033[1;00m")  #White
+                print(" " + daily_min_data.get(day[0]) + "C")
+
+        else:
+
+            for day in zip(daily_max_data, daily_min_data):
+                print(day[0], end="")
+
+                for iterator in range(0, int(daily_min_data.get(day[0]))):
+                    sys.stdout.write("\033[1;34m")  #Blue color
+                    print("+", end="")
+                    sys.stdout.write("\033[1;00m")  #White
+
+                for iterator in range(0, int(daily_max_data.get(day[0]))):
+                    sys.stdout.write("\033[1;31m")  #Red color
+                    print("+", end="")
+                    sys.stdout.write("\033[1;00m")  #White
+                print(" " + daily_min_data.get(day[0]) + "C", end="")
+                print(" - " + daily_max_data.get(day[0]) + "C")
 
 
 def usage_printer():
@@ -247,7 +269,13 @@ def monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month)
     ReportsGenratorInstance.monthly_report_genrator(
             ResultsCalculatorInstance.calculated_results
             )
-
+    ResultsCalculatorInstance.daily_temperature_calculator(
+                WeatherRecordInstance.weather_data, year,
+                month
+                )
+    ReportsGenratorInstance.daily_report_genrator(
+            ResultsCalculatorInstance.calculated_results,
+            False)
 
 def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
     ResultsCalculatorInstance.daily_temperature_calculator(
@@ -255,8 +283,8 @@ def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
                 month
                 )
     ReportsGenratorInstance.daily_report_genrator(
-            ResultsCalculatorInstance.calculated_results
-            )
+            ResultsCalculatorInstance.calculated_results,
+            True)
 
 
 if __name__ == "__main__":
