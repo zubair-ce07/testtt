@@ -177,7 +177,23 @@ class ResultsCalculator:
                                 self.calculated_results["MostHumidDay"]  = day
                                 self.calculated_results["MostHumidMonth"] = month_names[month]
         
-                            
+
+class ReportsGenrator:
+    def __init__(self):
+        pass
+
+    def yearly_report_genrator(self, calculated_results):
+        print("Highest: " + calculated_results["MaxYearlyTempreature"]\
+                +"C on " + calculated_results["HighestTempretureDay"]\
+                +" " + calculated_results["HighestTempretureMonth"])
+        print("Lowest: " + calculated_results["MinYearlyTempreature"]\
+                +"C on " + calculated_results["LowestTempretureDay"]\
+                +" " + calculated_results["LowestTempretureMonth"])
+        print("Humidity: " + calculated_results["Humidity"]\
+                +"% on " + calculated_results["MostHumidDay"]\
+                +" " + calculated_results["MostHumidMonth"])
+
+
 def usage_printer():
     print("Usage:")
     print(USAGE_STRING)
@@ -189,6 +205,9 @@ def usage_printer():
 def yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, year):
     ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
             WeatherRecordInstance.weather_data, year
+            )
+    ReportsGenratorInstance.yearly_report_genrator(
+            ResultsCalculatorInstance.calculated_results
             )
 
 
@@ -219,6 +238,8 @@ if __name__ == "__main__":
     WeatherRecordInstance.read_data_from_files(sys.argv[1])
     
     ResultsCalculatorInstance = ResultsCalculator()
+
+    ReportsGenratorInstance = ReportsGenrator()
 
     if len(sys.argv) > 3:  #Multiple reports
         for iterator in range(0, len(sys.argv)):
@@ -255,5 +276,3 @@ if __name__ == "__main__":
                                                 )
         elif sys.argv[2] == '-e':
             yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, str(sys.argv[3]))
-    
-    print(ResultsCalculatorInstance.calculated_results)
