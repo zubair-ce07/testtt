@@ -60,9 +60,30 @@ class WeatherRecord:
 
 class ResultsCalculator:
     def __init__(self):
-        self.calculated_results = None
+        self.calculated_results = {}
 
-    
+
+    def daily_temperature_calculator(self, weather_data, year, month):
+        self.calculated_results.setdefault("MaxTempreture", [])
+        self.calculated_results.setdefault("Minempreture", [])
+
+        for data in weather_data:
+            year_level_data = data.get(year)
+
+            if year_level_data is not None:
+                month_level_data = year_level_data.get(month)
+
+                if month_level_data is not None:
+                    for day in month_level_data:
+                        day_level_data = month_level_data.get(day)
+
+                        if not day_level_data.get("Max TemperatureC") == "":
+                            self.calculated_results["MaxTempreture"].append(day_level_data.get("Max TemperatureC"))
+                        
+                        if not day_level_data.get("Min TemperatureC") == "":
+                            self.calculated_results["Minempreture"].append(day_level_data.get("Min TemperatureC"))
+
+        
     def monthly_tempreture_and_humitdity_calculator(self, weather_data, year, month):
         self.calculated_results = {
                                     "HighestAverage": 0
@@ -73,18 +94,20 @@ class ResultsCalculator:
                                     
         for data in weather_data:    
             year_level_data = data.get(year)
+
             if year_level_data is not None:
                 month_level_data = year_level_data.get(month)
+
                 if month_level_data is not None:
                     for day in month_level_data:
                         total_days += 1
                         day_level_data = month_level_data.get(day)
                         
-                        if not day_level_data.get("Max TemperatureC") == "" :
+                        if not day_level_data.get("Max TemperatureC") == "":
                             self.calculated_results["HighestAverage"] = (float(day_level_data.get("Max TemperatureC")) + 
                                                                         float(self.calculated_results["HighestAverage"]))
 
-                        if not day_level_data.get("Min TemperatureC") == "" :
+                        if not day_level_data.get("Min TemperatureC") == "":
                             self.calculated_results["LowestAverage"] = (float(day_level_data.get("Min TemperatureC")) + 
                                                                         float(self.calculated_results["LowestAverage"]))
                                                                         
@@ -99,15 +122,17 @@ class ResultsCalculator:
 
 
     def yearly_temperature_and_humidity_calulator(self, weather_data, year):
-        self.calculated_results = {}
         first_iteration = True  #Flag to memorize to do initial setup 
         for data in weather_data:
             year_level_data = data.get(year)
+            
             if year_level_data is not None:
                 for month in year_level_data:
                     month_level_data = year_level_data.get(month)
+                    
                     for day in month_level_data:
                         temp_data  = month_level_data.get(day)
+
                         if first_iteration:
                             first_iteration = False
                             self.calculated_results = {
@@ -124,6 +149,7 @@ class ResultsCalculator:
                         elif ((not temp_data.get("Max TemperatureC") == "" or
                                 not temp_data.get("Min TemperatureC") == "") and
                                 not temp_data.get(" Mean Humidity") ==""):
+
                             if (float(temp_data.get("Max TemperatureC")) > 
                                     float(self.calculated_results.get("MaxYearlyTempreature"))):
                                 self.calculated_results["MaxYearlyTempreature"] = temp_data.get("Max TemperatureC")
@@ -172,7 +198,11 @@ if __name__ == "__main__":
             splited_year_n_month[1]
             )
     elif sys.argv[2] == '-c':
-        pass
+        splited_year_n_month = sys.argv[3].split("/")  #Parse input
+        ResultsCalculatorInstance.daily_temperature_calculator(
+            WeatherRecordInstance.weather_data, splited_year_n_month[0],
+            splited_year_n_month[1]
+            )
     elif sys.argv[2] == '-e':
         ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
             WeatherRecordInstance.weather_data, str(sys.argv[3])
