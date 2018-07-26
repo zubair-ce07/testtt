@@ -12,19 +12,19 @@ VALID_OPTIONS = [
 USAGE_STRING = "Python weatherman.py [Path to weatherman files]"\
                 " [Valid Options] [Valid Month, Year]"
 
+month_names = {
+                "1":"Jan", "2":"Feb",
+                "3":"Mar", "4":"Apr",
+                "5":"May", "6":"Jun",
+                "7":"Jul", "8":"Aug",
+                "9":"Sep", "10":"Oct",
+                "11":"Nov", "12":"Dec"
+                }
+
 
 class WeatherRecord:
     def __init__(self):
         self.weather_data = None
-        self.month_names = {
-                            "1":"Jan", "2":"Feb",
-                            "3":"Mar", "4":"Apr",
-                            "5":"May", "6":"Jun",
-                            "7":"Jul", "8":"Aug",
-                            "9":"Sep", "10":"Oct",
-                            "11":"Nov", "12":"Dec"
-                            }
-
 
     def read_data_from_files(self,folder_path):
         txt_files = glob.glob(folder_path+"/*.txt")  #Read text files
@@ -39,12 +39,7 @@ class WeatherRecord:
                 year_month_date = line_content_list[0].split('-')
                 self.weather_data.append(self.populate_data(keys,line_content_list,year_month_date))
             opened_file.close()
-        # for data in self.weather_data:
-        #     x  = data.get("2008",{}).get('1',{}).get("31",{}).get("MeanDew PointC")
-        #     if x is not None:
-        #         print x
-
-
+        
 
     def populate_data(self,keys,line_content_list,year_month_date):
         temp_dictionary = {}
@@ -73,7 +68,7 @@ class ResultsCalculator:
         pass
     
 
-    def calculate_yearly_min_max_tempreture(self,weather_data, year):
+    def yearly_temperature_and_humidity_calulator(self,weather_data, year):
         self.calculated_results = {}
         first_iteration = True
         for data in weather_data:
@@ -84,22 +79,40 @@ class ResultsCalculator:
                     for day in day_level_data:
                         temp_data  = day_level_data.get(day)
                         if first_iteration:
+                            first_iteration = False
                             self.calculated_results = {
-                                                        "MaxYearlyTempreature":temp_data.get("Max TemperatureC")
-                                                        ,"MinYearlyTempreature":temp_data.get("Min TemperatureC")
+                                                        "MaxYearlyTempreature": temp_data.get("Max TemperatureC")
+                                                        ,"HighestTempretureDay": day
+                                                        ,"HighestTempretureMonth": month_names[month]
+                                                        ,"MinYearlyTempreature": temp_data.get("Min TemperatureC")
+                                                        ,"LowestTempretureDay": day
+                                                        ,"LowestTempretureMonth": month_names[month]
+                                                        ,"Humidity": temp_data.get(" Mean Humidity")
+                                                        ,"MostHumidDay": day
+                                                        ,"MostHumidMonth": month_names[month]
                                                         }
-                        else:
-                            if temp_data.get("Max TemperatureC") > self.calculated_results.get("MaxYearlyTempreature"):
+                        elif ((not temp_data.get("Max TemperatureC") == "" or
+                                not temp_data.get("Min TemperatureC") == "") and
+                                not temp_data.get(" Mean Humidity") ==""):
+                            if (float(temp_data.get("Max TemperatureC")) > 
+                                    float(self.calculated_results.get("MaxYearlyTempreature"))):
                                 self.calculated_results["MaxYearlyTempreature"] = temp_data.get("Max TemperatureC")
-
-                            if temp_data.get("Min Temperature") > self.calculated_results.get("MinYearlyTempreature"):
-                                self.calculated_results["MinYearlyTempreature"] = temp_data.get("Min Temperature")
-
-        print(self.calculated_results.get("MaxYearlyTempreature"))
-        print(self.calculated_results.get("MinYearlyTempreature"))
+                                self.calculated_results["HighestTempretureMonth"] = month_names[month]
+                                self.calculated_results["HighestTempretureDay"] = day
+                            elif (float(temp_data.get("Min TemperatureC")) < 
+                                    float(self.calculated_results.get("MinYearlyTempreature"))):
+                                self.calculated_results["MinYearlyTempreature"] = temp_data.get("Min TemperatureC")
+                                self.calculated_results["LowestTempretureMonth"] = month_names[month]
+                                self.calculated_results["LowestTempretureDay"] = day
+                            
+                            if(float(temp_data.get(" Mean Humidity")) >
+                                    float(self.calculated_results.get("Humidity"))):
+                                self.calculated_results["Humidity"] = temp_data.get(" Mean Humidity")
+                                self.calculated_results["MostHumidDay"]  = day
+                                self.calculated_results["MostHumidMonth"] = month_names[month]
+        print(self.calculated_results)
 
                             
-
 def usage_printer():
     print("Usage:")
     print(USAGE_STRING)
@@ -128,7 +141,7 @@ if __name__ == "__main__":
     elif sys.argv[2] == '-c':
         pass
     elif sys.argv[2] == '-e':
-        ResultsCalculatorInstance.calculate_yearly_min_max_tempreture(
+        ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
             WeatherRecordInstance.weather_data, str(sys.argv[3])
             )
     
