@@ -65,8 +65,6 @@ class ToryburchSpider(scrapy.Spider):
         product_item['brand'] = data["brand"]
         product_item['store_keeping_unit'] = data["ID"]
         product_item['breadcrumbs'] = self.get_breadcrumbs(response.meta)
-        # class_id = "v-offset-top-m body-copy--s body-copy product-description__content"
-        # product_item['description'] = self.parse_description(response.xpath('//div[@class="{}"]'.format(class_id)))
         product_item['description'] = self.parse_description(response.css('div.product-description__content'))
         product_item['variations'] = self.parse_variation_item(response)
         yield product_item
@@ -121,7 +119,7 @@ class ToryburchSpider(scrapy.Spider):
         Returns a template string to construct variation image urls
         """
         variation_template_url = variation.xpath('a/img/@src').extract_first()
-        variation_template_url = re.search(r'https://s7.toryburch.com/is/image/ToryBurchNA/(\w+_\w+_\w+_)', variation_template_url).group()
+        variation_template_url = re.search(r'(\w+)://(\w.+)/(\w+\w+\w+_)', variation_template_url).group()
         return variation_template_url[:-1]
 
     def parse_size_items(self, response):
