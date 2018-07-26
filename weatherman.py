@@ -186,6 +186,25 @@ def usage_printer():
     sys.exit()
 
 
+def yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, year):
+    ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
+            WeatherRecordInstance.weather_data, year
+            )
+
+
+def monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
+    ResultsCalculatorInstance.monthly_tempreture_and_humitdity_calculator(
+                WeatherRecordInstance.weather_data, year,
+                month
+                )
+
+def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
+    ResultsCalculatorInstance.daily_temperature_calculator(
+                WeatherRecordInstance.weather_data, year,
+                month
+                )
+
+
 if __name__ == "__main__":
 
     if sys.argv[2] not in VALID_OPTIONS:  #Verify valid options
@@ -201,20 +220,40 @@ if __name__ == "__main__":
     
     ResultsCalculatorInstance = ResultsCalculator()
 
-    if sys.argv[2] == '-a':
-        splited_year_n_month = sys.argv[3].split("/")  #Parse input
-        ResultsCalculatorInstance.monthly_tempreture_and_humitdity_calculator(
-            WeatherRecordInstance.weather_data, splited_year_n_month[0],
-            splited_year_n_month[1]
-            )
-    elif sys.argv[2] == '-c':
-        splited_year_n_month = sys.argv[3].split("/")  #Parse input
-        ResultsCalculatorInstance.daily_temperature_calculator(
-            WeatherRecordInstance.weather_data, splited_year_n_month[0],
-            splited_year_n_month[1]
-            )
-    elif sys.argv[2] == '-e':
-        ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
-            WeatherRecordInstance.weather_data, str(sys.argv[3])
-            )
+    if len(sys.argv) > 3:  #Multiple reports
+        for iterator in range(0, len(sys.argv)):
+            if sys.argv[iterator] == '-a':
+                splited_year_n_month = sys.argv[iterator+1].split("/")  #Parse input
+                monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
+                                                    splited_year_n_month[0], 
+                                                    splited_year_n_month[1]
+                                                    )
+            
+            if sys.argv[iterator] == '-c':
+                splited_year_n_month = sys.argv[iterator+1].split("/")  #Parse input
+                splited_year_n_month[1] = splited_year_n_month[1].replace("0","")
+                daily_calculator_n_genrator_caller(ResultsCalculatorInstance, 
+                                                    splited_year_n_month[0], 
+                                                    splited_year_n_month[1]
+                                                    )
+            
+            if sys.argv[iterator] == '-e':
+                yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, str(sys.argv[iterator+1]))
+
+    else:
+        if sys.argv[2] == '-a':
+            splited_year_n_month = sys.argv[3].split("/")  #Parse input
+            monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
+                                                splited_year_n_month[0], 
+                                                splited_year_n_month[1]
+                                                )
+        elif sys.argv[2] == '-c':
+            splited_year_n_month = sys.argv[3].split("/")  #Parse input
+            daily_calculator_n_genrator_caller(ResultsCalculatorInstance, 
+                                                splited_year_n_month[0], 
+                                                splited_year_n_month[1]
+                                                )
+        elif sys.argv[2] == '-e':
+            yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, str(sys.argv[3]))
     
+    print(ResultsCalculatorInstance.calculated_results)
