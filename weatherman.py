@@ -1,15 +1,11 @@
 from __future__ import print_function
-
 import os
-
 import glob
-
 import sys
-
 
 VALID_OPTIONS = [
                     '-e','-c', '-a'
-                 ]
+                    ]
 
 USAGE_STRING = "Python weatherman.py [Path to weatherman files]"\
                 " [Valid Options] [Valid Month, Year]"
@@ -25,12 +21,14 @@ month_names = {
 
 
 class WeatherRecord:
+
     def __init__(self):
         self.weather_data = None
 
     def read_data_from_files(self,folder_path):
         txt_files = glob.glob(folder_path+"/*.txt")  #Read text files
         self.weather_data = []
+
         for txt_file in txt_files:
             opened_file = open(txt_file)
             keys = str(opened_file.readline())  #Read headings
@@ -46,6 +44,7 @@ class WeatherRecord:
     def populate_data(self,keys,line_content_list,year_month_date):
         temp_dictionary = {}
         sub_key_level_dictionary = {}
+
         for key, weather_data in zip(keys, line_content_list):
             key = key.replace('\n','')
             temp_dictionary[key] = weather_data
@@ -61,39 +60,33 @@ class WeatherRecord:
     
 
 class ResultsCalculator:
+
     def __init__(self):
         self.calculated_results = {}
 
 
     def daily_temperature_calculator(self, weather_data, year, month):
         self.calculated_results = {
-                                        "Month": month_names[month]
-                                        ,"Year": year
+                                    "Month": month_names[month]
+                                    ,"Year": year
                                     }
         self.calculated_results.setdefault("MaxTempreture",{})
         self.calculated_results.setdefault("MinTemperature",{})
 
         for data in weather_data:
             year_level_data = data.get(year)
-
             if year_level_data is not None:
                 month_level_data = year_level_data.get(month)
-
                 if month_level_data is not None:
                     for day in month_level_data:
                         day_level_data = month_level_data.get(day)
-
                         if not day_level_data.get("Max TemperatureC") == "":
                             self.calculated_results["MaxTempreture"].update({
-                                                                            str(day):
-                                                                               day_level_data.get("Max TemperatureC") 
-                                                                            })
-                        
+                                str(day): day_level_data.get("Max TemperatureC")})  
+
                         if not day_level_data.get("Min TemperatureC") == "":
                             self.calculated_results["MinTemperature"].update({
-                                                                            str(day):
-                                                                               day_level_data.get("Min TemperatureC") 
-                                                                            })
+                                str(day): day_level_data.get("Min TemperatureC")})
 
 
     def monthly_tempreture_and_humitdity_calculator(self, weather_data, year, month):
@@ -106,81 +99,110 @@ class ResultsCalculator:
                                     
         for data in weather_data:    
             year_level_data = data.get(year)
-
             if year_level_data is not None:
                 month_level_data = year_level_data.get(month)
-
                 if month_level_data is not None:
                     for day in month_level_data:
                         total_days += 1
                         day_level_data = month_level_data.get(day)
-                        
                         if not day_level_data.get("Max TemperatureC") == "":
-                            self.calculated_results["HighestAverage"] = (float(day_level_data.get("Max TemperatureC")) + 
-                                                                        float(self.calculated_results["HighestAverage"]))
+                            self.calculated_results["HighestAverage"] = (
+                                float(day_level_data.get("Max TemperatureC")) 
+                                    + float(self.calculated_results["HighestAverage"]))
 
                         if not day_level_data.get("Min TemperatureC") == "":
-                            self.calculated_results["LowestAverage"] = (float(day_level_data.get("Min TemperatureC")) + 
-                                                                        float(self.calculated_results["LowestAverage"]))
+                            self.calculated_results["LowestAverage"] = (
+                                float(day_level_data.get("Min TemperatureC")) 
+                                    + float(self.calculated_results["LowestAverage"]))
                                                                         
                         if not day_level_data.get(" Mean Humidity") == "":
-                            self.calculated_results["AverageMeanHumidity"] = (float(day_level_data.get(" Mean Humidity")) + 
-                                                                        float(self.calculated_results["AverageMeanHumidity"]))    
+                            self.calculated_results["AverageMeanHumidity"] = (
+                                float(day_level_data.get(" Mean Humidity")) 
+                                    + float(self.calculated_results["AverageMeanHumidity"]))    
         
-        self.calculated_results["HighestAverage"] = int(self.calculated_results["HighestAverage"] / total_days)
-        self.calculated_results["LowestAverage"] = int(self.calculated_results["LowestAverage"] / total_days)
-        self.calculated_results["AverageMeanHumidity"] = int(self.calculated_results["AverageMeanHumidity"] 
-                                                            / total_days)
+        self.calculated_results["HighestAverage"] = int(
+            self.calculated_results["HighestAverage"] 
+            / total_days
+            )
+        self.calculated_results["LowestAverage"] = int(
+            self.calculated_results["LowestAverage"] 
+            / total_days
+            )
+        self.calculated_results["AverageMeanHumidity"] = int(
+            self.calculated_results["AverageMeanHumidity"] 
+            / total_days
+            )
 
 
     def yearly_temperature_and_humidity_calulator(self, weather_data, year):
         first_iteration = True  #Flag to memorize to do initial setup 
+
         for data in weather_data:
-            year_level_data = data.get(year)
-            
+            year_level_data = data.get(year) 
             if year_level_data is not None:
                 for month in year_level_data:
                     month_level_data = year_level_data.get(month)
-                    
                     for day in month_level_data:
                         temp_data  = month_level_data.get(day)
-
                         if first_iteration:
                             first_iteration = False
                             self.calculated_results = {
-                                                        "MaxYearlyTempreature": temp_data.get("Max TemperatureC")
+                                                        "MaxYearlyTempreature": (
+                                                            temp_data.get("Max TemperatureC")
+                                                            )
                                                         ,"HighestTempretureDay": day
-                                                        ,"HighestTempretureMonth": month_names[month]
-                                                        ,"MinYearlyTempreature": temp_data.get("Min TemperatureC")
+                                                        ,"HighestTempretureMonth": (
+                                                            month_names[month]
+                                                            )
+                                                        ,"MinYearlyTempreature": (
+                                                            temp_data.get("Min TemperatureC")
+                                                            )
                                                         ,"LowestTempretureDay": day
-                                                        ,"LowestTempretureMonth": month_names[month]
-                                                        ,"Humidity": temp_data.get(" Mean Humidity")
+                                                        ,"LowestTempretureMonth": (
+                                                            month_names[month]
+                                                            )
+                                                        ,"Humidity": (
+                                                            temp_data.get(" Mean Humidity")
+                                                            )
                                                         ,"MostHumidDay": day
-                                                        ,"MostHumidMonth": month_names[month]
+                                                        ,"MostHumidMonth": (
+                                                            month_names[month]
+                                                            )
                                                         }
-                        elif ((not temp_data.get("Max TemperatureC") == "" or
-                                not temp_data.get("Min TemperatureC") == "") and
-                                not temp_data.get(" Mean Humidity") ==""):
+                        elif ((not temp_data.get("Max TemperatureC") == ""
+                                or not temp_data.get("Min TemperatureC") == "")
+                                and not temp_data.get(" Mean Humidity") ==""):
 
-                            if (float(temp_data.get("Max TemperatureC")) > 
-                                    float(self.calculated_results.get("MaxYearlyTempreature"))):
-                                self.calculated_results["MaxYearlyTempreature"] = temp_data.get("Max TemperatureC")
+                            if (float(temp_data.get("Max TemperatureC")) 
+                                    > float(self.calculated_results.get("MaxYearlyTempreature"))):
+                                self.calculated_results["MaxYearlyTempreature"] = (
+                                    temp_data.get("Max TemperatureC")
+                                    )
                                 self.calculated_results["HighestTempretureMonth"] = month_names[month]
                                 self.calculated_results["HighestTempretureDay"] = day
-                            elif (float(temp_data.get("Min TemperatureC")) < 
-                                    float(self.calculated_results.get("MinYearlyTempreature"))):
-                                self.calculated_results["MinYearlyTempreature"] = temp_data.get("Min TemperatureC")
-                                self.calculated_results["LowestTempretureMonth"] = month_names[month]
+                            elif (float(temp_data.get("Min TemperatureC"))
+                                    < float(self.calculated_results.get("MinYearlyTempreature"))):
+                                self.calculated_results["MinYearlyTempreature"] = (
+                                    temp_data.get("Min TemperatureC")
+                                    )
+                                self.calculated_results["LowestTempretureMonth"] = (
+                                    month_names[month]
+                                    )
                                 self.calculated_results["LowestTempretureDay"] = day
                             
                             if(float(temp_data.get(" Mean Humidity")) >
                                     float(self.calculated_results.get("Humidity"))):
-                                self.calculated_results["Humidity"] = temp_data.get(" Mean Humidity")
+                                self.calculated_results["Humidity"] = (
+                                    temp_data.get(" Mean Humidity")
+                                    )
                                 self.calculated_results["MostHumidDay"]  = day
-                                self.calculated_results["MostHumidMonth"] = month_names[month]
+                                self.calculated_results["MostHumidMonth"] = (
+                                    month_names[month]
+                                    )
         
 
 class ReportsGenrator:
+    
     def __init__(self):
         pass
 
@@ -197,29 +219,30 @@ class ReportsGenrator:
     
 
     def monthly_report_genrator(self, calculated_results):
-        print("Highest Average: " + str(calculated_results["HighestAverage"]) + "C")
-        print("Lowest Average: " + str(calculated_results["LowestAverage"]) + "C")
-        print("Average Mean Humidity: " + str(calculated_results["AverageMeanHumidity"]) + "%")
+        print("Highest Average: " 
+                + str(calculated_results["HighestAverage"]) + "C")
+        print("Lowest Average: " 
+                + str(calculated_results["LowestAverage"]) + "C")
+        print("Average Mean Humidity: " 
+                + str(calculated_results["AverageMeanHumidity"]) + "%")
 
     
 
     def daily_report_genrator(self, calculated_results, caller_flag):
-        print(calculated_results["Month"] +" "+ calculated_results["Year"])
+        print(calculated_results["Month"] 
+                +" "+ calculated_results["Year"])
         daily_max_data = calculated_results.get("MaxTempreture")
         daily_min_data = calculated_results.get("MinTemperature")
 
         if caller_flag:  #Called from daily calculator
-        
             for day in zip(daily_max_data, daily_min_data):
                 print(day[0], end="")
-
                 for iterator in range(0, int(daily_max_data.get(day[0]))):
                     sys.stdout.write("\033[1;31m")  #Red color
                     print("+", end="")
                     sys.stdout.write("\033[1;00m")  #White
                 print(" " + daily_max_data.get(day[0]) + "C")
                 print(day[0], end="")
-
                 for iterator in range(0, int(daily_min_data.get(day[0]))):
                     sys.stdout.write("\033[1;34m")  #Blue color
                     print("+", end="")
@@ -230,7 +253,6 @@ class ReportsGenrator:
 
             for day in zip(daily_max_data, daily_min_data):
                 print(day[0], end="")
-
                 for iterator in range(0, int(daily_min_data.get(day[0]))):
                     sys.stdout.write("\033[1;34m")  #Blue color
                     print("+", end="")
@@ -254,37 +276,39 @@ def usage_printer():
 
 def yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, year):
     ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
-            WeatherRecordInstance.weather_data, year
-            )
+        WeatherRecordInstance.weather_data, year
+        )
     ReportsGenratorInstance.yearly_report_genrator(
-            ResultsCalculatorInstance.calculated_results
-            )
+        ResultsCalculatorInstance.calculated_results
+        )
 
 
 def monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
     ResultsCalculatorInstance.monthly_tempreture_and_humitdity_calculator(
-                WeatherRecordInstance.weather_data, year,
-                month
-                )
+        WeatherRecordInstance.weather_data, year,
+        month
+        )
     ReportsGenratorInstance.monthly_report_genrator(
-            ResultsCalculatorInstance.calculated_results
-            )
+        ResultsCalculatorInstance.calculated_results
+        )
     ResultsCalculatorInstance.daily_temperature_calculator(
-                WeatherRecordInstance.weather_data, year,
-                month
-                )
+        WeatherRecordInstance.weather_data,
+        year, month
+        )
     ReportsGenratorInstance.daily_report_genrator(
-            ResultsCalculatorInstance.calculated_results,
-            False)
+        ResultsCalculatorInstance.calculated_results,
+        False
+        )
 
 def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
     ResultsCalculatorInstance.daily_temperature_calculator(
-                WeatherRecordInstance.weather_data, year,
-                month
-                )
+        WeatherRecordInstance.weather_data,
+        year, month
+        )
     ReportsGenratorInstance.daily_report_genrator(
-            ResultsCalculatorInstance.calculated_results,
-            True)
+        ResultsCalculatorInstance.calculated_results,
+        True
+        )
 
 
 if __name__ == "__main__":
@@ -310,32 +334,30 @@ if __name__ == "__main__":
                 splited_year_n_month = sys.argv[iterator+1].split("/")  #Parse input
                 monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
                                                     splited_year_n_month[0], 
-                                                    splited_year_n_month[1]
-                                                    )
+                                                    splited_year_n_month[1])
             
             if sys.argv[iterator] == '-c':
                 splited_year_n_month = sys.argv[iterator+1].split("/")  #Parse input
                 splited_year_n_month[1] = splited_year_n_month[1].replace("0","")
                 daily_calculator_n_genrator_caller(ResultsCalculatorInstance, 
                                                     splited_year_n_month[0], 
-                                                    splited_year_n_month[1]
-                                                    )
+                                                    splited_year_n_month[1])
             
             if sys.argv[iterator] == '-e':
-                yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, str(sys.argv[iterator+1]))
+                yearly_calculator_n_genrator_caller(ResultsCalculatorInstance,
+                                                    str(sys.argv[iterator+1]))
 
     else:
         if sys.argv[2] == '-a':
             splited_year_n_month = sys.argv[3].split("/")  #Parse input
             monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
                                                 splited_year_n_month[0], 
-                                                splited_year_n_month[1]
-                                                )
+                                                splited_year_n_month[1])
         elif sys.argv[2] == '-c':
             splited_year_n_month = sys.argv[3].split("/")  #Parse input
             daily_calculator_n_genrator_caller(ResultsCalculatorInstance, 
                                                 splited_year_n_month[0], 
-                                                splited_year_n_month[1]
-                                                )
+                                                splited_year_n_month[1])
         elif sys.argv[2] == '-e':
-            yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, str(sys.argv[3]))
+            yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
+                                                str(sys.argv[3]))
