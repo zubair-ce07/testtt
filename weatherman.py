@@ -64,8 +64,12 @@ class ResultsCalculator:
 
 
     def daily_temperature_calculator(self, weather_data, year, month):
-        self.calculated_results.setdefault("MaxTempreture", [])
-        self.calculated_results.setdefault("Minempreture", [])
+        self.calculated_results = {
+                                        "Month": month_names[month]
+                                        ,"Year": year
+                                    }
+        self.calculated_results.setdefault("MaxTempreture",{})
+        self.calculated_results.setdefault("MinTemperature",{})
 
         for data in weather_data:
             year_level_data = data.get(year)
@@ -78,12 +82,18 @@ class ResultsCalculator:
                         day_level_data = month_level_data.get(day)
 
                         if not day_level_data.get("Max TemperatureC") == "":
-                            self.calculated_results["MaxTempreture"].append(day_level_data.get("Max TemperatureC"))
+                            self.calculated_results["MaxTempreture"].update({
+                                                                            str(day):
+                                                                               day_level_data.get("Max TemperatureC") 
+                                                                            })
                         
                         if not day_level_data.get("Min TemperatureC") == "":
-                            self.calculated_results["Minempreture"].append(day_level_data.get("Min TemperatureC"))
+                            self.calculated_results["MinTemperature"].update({
+                                                                            str(day):
+                                                                               day_level_data.get("Min TemperatureC") 
+                                                                            })
 
-        
+
     def monthly_tempreture_and_humitdity_calculator(self, weather_data, year, month):
         self.calculated_results = {
                                     "HighestAverage": 0
