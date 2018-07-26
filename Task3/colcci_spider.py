@@ -19,18 +19,19 @@ class ColcciProductDetails(Spider):
         'FEED_EXPORT_ENCODING': "utf-8",
     }
 
-    start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1/'
-                  , 'https://www.colcci.com.br/feminino-novo1/page/1/'
-                  , 'https://www.colcci.com.br/fitness/page/1/'
-                  , 'https://www.colcci.com.br/acessorios/page/1/']
+    start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1'
+                  , 'https://www.colcci.com.br/feminino-novo1/page/1'
+                  , 'https://www.colcci.com.br/fitness/page/1'
+                  , 'https://www.colcci.com.br/acessorios/page/1']
 
     def parse(self, response):
 
         yield Request(response.url, callback=self.parse_products, dont_filter=True)
         load_more = response.css('#loadMoreBtn').extract()
         if load_more:
-            page_number = int(response.url[-2])
-            yield Request(f"{response.url[:-3]}/{page_number+1}", callback=self.parse)
+            url = response.url.strip("/").split('/')
+            next_page_url = f"{'/'.join(url[:-1])}/{int(url[-1])+1}"
+            yield Request(next_page_url, callback=self.parse)
 
     def parse_products(self, response):
         item_links = response.css('[itemprop="name"] a::attr(href)').extract()
