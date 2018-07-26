@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 
 import glob
@@ -198,6 +200,26 @@ class ReportsGenrator:
         print("Highest Average: " + str(calculated_results["HighestAverage"]) + "C")
         print("Lowest Average: " + str(calculated_results["LowestAverage"]) + "C")
         print("Average Mean Humidity: " + str(calculated_results["AverageMeanHumidity"]) + "%")
+    
+
+    def daily_report_genrator(self, calculated_results):
+        print(calculated_results["Month"] +" "+ calculated_results["Year"])
+        daily_max_data = calculated_results.get("MaxTempreture")
+        daily_min_data = calculated_results.get("MinTemperature")
+        for day in zip(daily_max_data, daily_min_data):
+            print(day[0], end="")
+            for iterator in range(0, int(daily_max_data.get(day[0]))):
+               sys.stdout.write("\033[1;31m")  #Red color
+               print("+", end="")
+               sys.stdout.write("\033[1;00m")  #White
+            print(" " + daily_max_data.get(day[0]) + "C")
+            print(day[0], end="")
+            for iterator in range(0, int(daily_min_data.get(day[0]))):
+               sys.stdout.write("\033[1;34m")  #Red color
+               print("+", end="")
+               sys.stdout.write("\033[1;00m")  #White
+            print(" " + daily_min_data.get(day[0]) + "C")
+
 
 
 def usage_printer():
@@ -232,6 +254,9 @@ def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
                 WeatherRecordInstance.weather_data, year,
                 month
                 )
+    ReportsGenratorInstance.daily_report_genrator(
+            ResultsCalculatorInstance.calculated_results
+            )
 
 
 if __name__ == "__main__":
