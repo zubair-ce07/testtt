@@ -1,5 +1,4 @@
 import re
-import json
 
 import scrapy
 
@@ -28,47 +27,31 @@ class TausendkindSpider(scrapy.Spider):
         yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//www.garageclothing.com/ca/crew-neck-sweater/p/prod3030019.product&noRedirectJavaScript=true', self.parse_product)
 
     def parse_listing(self, response):
-        raw_listing = self.get_raw_listing(response)
-
-        for listing in raw_listing.values():
-            yield response.follow(f"/{listing['url_key']}", self.parse_product)
-
-        next_page = response.css('#pager-next-page::attr(href)').extract_first()
-        if next_page:
-            return response.follow(next_page, self.parse_listing)
-
-    @staticmethod
-    def get_raw_listing(response):
-        script = response.xpath('//div/script[contains(text(),"DOMContentLoaded")]').re(r'{.*}')[0]
-        return json.loads(script)['list']
+        pass
 
     def parse_product(self, response):
-        sku = {
-            'retailer_sku': self.get_product_retailer_sku(response),
-            'name': self.get_product_name(response),
-            'brand': 'Garage',
-            'gender': 'Female',
-            'category': [],
-            'image_urls': [],
-            'url': response.url.split(';')[0],
-            'description': self.get_product_description(response),
-            'care': self.get_product_care(response),
-            'skus': []
-        }
+        sku = {'retailer_sku': self.get_product_retailer_sku(response),
+               'name': self.get_product_name(response),
+               'brand': 'Garage',
+               'gender': 'Female',
+               'category': [],
+               'image_urls': [],
+               'url': response.url.split(';')[0],
+               'description': self.get_product_description(response),
+               'care': self.get_product_care(response),
+               'skus': [],
+               'sku_fields': {
+                'price': self.get_product_price(response),
+                'currency': 'CAD',
+                'colors': self.get_product_colors(response)
+            }}
 
-        sku_variant_fields = {
-            'price': self.get_product_price(response),
-            'currency': 'CAD',
-            'colors': self.get_product_colors(response)
-        }
-
-        sku['sku_fields'] = sku_variant_fields
         img_request_params_queue = self.generate_img_request_params_queue(response)
 
-        image_request = self.generate_image_parse_request(img_request_params_queue, sku)
-        if image_request:
-            return image_request
+        if img_request_params_queue:
+            return self.generate_image_parse_request(img_request_params_queue, sku)
 
+        del sku['sku_fields']
         return sku
 
     def parse_product_images(self, response):
@@ -82,16 +65,11 @@ class TausendkindSpider(scrapy.Spider):
 
         size_request_params_queue = self.generate_size_request_params_queue(sku)
 
-        size_request = self.generate_size_parse_request(size_request_params_queue, sku)
-        if size_request:
-            return size_request
+        if size_request_params_queue:
+            return self.generate_size_parse_request(size_request_params_queue, sku)
 
+        del sku['sku_fields']
         return sku
-
-    @staticmethod
-    def get_product_images(response):
-        return [f"https://{i.lstrip('/')}"
-                for i in response.css('ul.addViews a::attr(href)').extract()]
 
     def parse_product_sizes(self, response):
         sku = response.meta['sku']
@@ -115,22 +93,14 @@ class TausendkindSpider(scrapy.Spider):
         request.meta['img_request_params_queue'] = img_request_params_queue
         return request
 
-    @staticmethod
-    def map_color_code_to_name(color, color_map):
-        for entry in color_map:
-            if color == entry['code']:
-                return entry['name']
+    def generate_size_parse_request(self, size_request_params_queue, sku):
+        request = scrapy.FormRequest(
+            'https://www.garageclothing.com/ca/prod/include/productSizes.jsp',
+            self.parse_product_sizes, formdata=size_request_params_queue.pop())
 
-    def generate_product_sku(self, size, sku):
-        return {
-            'price': sku['sku_fields']['price'],
-            'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
-                                                 sku['sku_fields']['colors']),
-            'currency': sku['sku_fields']['currency'],
-            'sku_id': size.css('span::attr(skuid)').extract_first(),
-            'size': size.css('span::text').extract_first(),
-            'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
-        }
+        request.meta['sku'] = sku
+        request.meta['size_request_params_queue'] = size_request_params_queue
+        return request
 
     def generate_img_request_params_queue(self, response):
         colors = self.get_product_colors(response)
@@ -148,15 +118,6 @@ class TausendkindSpider(scrapy.Spider):
 
         return img_request_params_queue
 
-    def generate_size_parse_request(self, size_request_params_queue, sku):
-        request = scrapy.FormRequest(
-            'https://www.garageclothing.com/ca/prod/include/productSizes.jsp',
-            self.parse_product_sizes, formdata=size_request_params_queue.pop())
-
-        request.meta['sku'] = sku
-        request.meta['size_request_params_queue'] = size_request_params_queue
-        return request
-
     @staticmethod
     def generate_size_request_params_queue(sku):
         colors = sku['sku_fields']['colors']
@@ -171,6 +132,17 @@ class TausendkindSpider(scrapy.Spider):
             })
 
         return size_request_params_queue
+
+    def generate_product_sku(self, size, sku):
+        return {
+            'price': sku['sku_fields']['price'],
+            'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
+                                                 sku['sku_fields']['colors']),
+            'currency': sku['sku_fields']['currency'],
+            'sku_id': size.css('span::attr(skuid)').extract_first(),
+            'size': size.css('span::text').extract_first(),
+            'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
+        }
 
     def get_product_price(self, response):
         return self.get_price_from_string(response.css('h2.prodPricePDP::text').extract_first())
@@ -212,3 +184,14 @@ class TausendkindSpider(scrapy.Spider):
     @staticmethod
     def get_product_original_style(response):
         return response.css('#originalStyle::attr(value)').extract_first()
+
+    @staticmethod
+    def get_product_images(response):
+        return [f"https://{i.lstrip('/')}"
+                for i in response.css('ul.addViews a::attr(href)').extract()]
+
+    @staticmethod
+    def map_color_code_to_name(color, color_map):
+        for entry in color_map:
+            if color == entry['code']:
+                return entry['name']
