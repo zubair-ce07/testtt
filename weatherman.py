@@ -73,9 +73,32 @@ class ResultsCalculator:
         pass
     
 
-    def calculate_max_min(self):
-        pass
+    def calculate_yearly_min_max_tempreture(self,weather_data, year):
+        self.calculated_results = {}
+        first_iteration = True
+        for data in weather_data:
+            month_level_data = data.get(year)
+            if month_level_data is not None:
+                for month in month_level_data:
+                    day_level_data = month_level_data.get(month)
+                    for day in day_level_data:
+                        temp_data  = day_level_data.get(day)
+                        if first_iteration:
+                            self.calculated_results = {
+                                                        "MaxYearlyTempreature":temp_data.get("Max TemperatureC")
+                                                        ,"MinYearlyTempreature":temp_data.get("Min TemperatureC")
+                                                        }
+                        else:
+                            if temp_data.get("Max TemperatureC") > self.calculated_results.get("MaxYearlyTempreature"):
+                                self.calculated_results["MaxYearlyTempreature"] = temp_data.get("Max TemperatureC")
 
+                            if temp_data.get("Min Temperature") > self.calculated_results.get("MinYearlyTempreature"):
+                                self.calculated_results["MinYearlyTempreature"] = temp_data.get("Min Temperature")
+
+        print(self.calculated_results.get("MaxYearlyTempreature"))
+        print(self.calculated_results.get("MinYearlyTempreature"))
+
+                            
 
 def usage_printer():
     print("Usage:")
@@ -97,11 +120,15 @@ if __name__ == "__main__":
     
     WeatherRecordInstance = WeatherRecord()
     WeatherRecordInstance.read_data_from_files(sys.argv[1])
+    
+    ResultsCalculatorInstance = ResultsCalculator()
 
-    if sys.argv[2] is '-a':
+    if sys.argv[2] == '-a':
         pass
-    elif sys.argv[2] is '-c':
+    elif sys.argv[2] == '-c':
         pass
-    elif sys.argv[2] is '-e':
-        pass
+    elif sys.argv[2] == '-e':
+        ResultsCalculatorInstance.calculate_yearly_min_max_tempreture(
+            WeatherRecordInstance.weather_data, str(sys.argv[3])
+            )
     
