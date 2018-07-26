@@ -1,7 +1,18 @@
 from django.db import models
+# from django.contrib import admin
 
 # Create your models here.
+# from teams.admin import TestModelAdmin
 from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
+from teams.managers import SoftDeleteManager
+from datetime import datetime
+
+
+class TestModel(models.Model):
+    name = models.CharField(max_length=50, default=' ')
+    is_active = models.BooleanField(default=True)
+
+    objects = SoftDeleteManager()
 
 
 class Team(models.Model):
@@ -14,11 +25,18 @@ class Team(models.Model):
         return self.name
 
 
+@staticmethod
+def calculate_age(born):
+    today = datetime.today()
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
+
 class Player(models.Model):
 
     name = models.CharField(max_length=100, default=' ')
     DOB = models.DateTimeField('born')
     # Calculate Age
+
     playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices)
     batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices)
     bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices)
@@ -84,3 +102,6 @@ class BowlingAverage(BasicAverageIfo):
 class Photos(models.Model):
     player_id = models.ForeignKey(Player, on_delete=models.CASCADE)
     photo_url = models.URLField(max_length=100, default=' ')
+
+
+# admin.site.register(TestModel, TestModelAdmin)

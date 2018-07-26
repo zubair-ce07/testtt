@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Team, Player, BattingAverage, BowlingAverage
+from .models import Team, Player, BattingAverage, BowlingAverage, TestModel
+
 
 # Register your models here.
 
@@ -33,9 +34,14 @@ class PlayerAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-class SoftDeleteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'deleted',)
-    list_filter = ('deleted',)
+class TestModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'is_active',)
+    list_filter = ('is_active',)
+    actions = ['delete_model']
+
+    def delete_model(self, request, queryset):
+        # print(queryset)
+        queryset.update(is_active=False)
 
     def queryset(self, request):
         """ Returns a QuerySet of all model instances that can be edited by the
@@ -47,4 +53,6 @@ class SoftDeleteAdmin(admin.ModelAdmin):
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
-# this requires __unicode__ to be defined in your model
+
+
+admin.site.register(TestModel, TestModelAdmin)
