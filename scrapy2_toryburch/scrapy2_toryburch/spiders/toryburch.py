@@ -78,13 +78,13 @@ class ToryburchSpider(scrapy.Spider):
     def get_breadcrumbs(self, category_names):
         return [category_names['category_name'], category_names['sub_category_name']]
 
-    def parse_description(self, description_response):
+    def parse_description(self, description_selector):
         """
         Helper method
         """
         description = []
-        description.append(description_response.xpath('p//text()').extract_first().strip())
-        traits = description_response.xpath('div[@id="longDescription"]/ul/li//text()').extract()
+        description.append(description_selector.xpath('p//text()').extract_first().strip())
+        traits = description_selector.xpath('div[@id="longDescription"]/ul/li//text()').extract()
         for trait in traits:
             description.append(trait.strip())
         return description
@@ -110,7 +110,8 @@ class ToryburchSpider(scrapy.Spider):
         image_urls = []
         image_url_suffixes = ['','_A', '_B', '_C', '_D', '_E', '_F', '_G']
         variation_template_url = self.get_image_template(variation)
-        for image_index in range(len(response.xpath('//div[@class="product-image-gallery__column"]//img/@src').extract())):
+        xpath_string = '//div[@class="product-image-gallery__column"]//img/@src'
+        for image_index in range(len(response.xpath(xpath_string).extract())):
             image_urls.append(variation_template_url + image_url_suffixes[image_index])
         return image_urls
 
@@ -145,12 +146,9 @@ class ToryburchSpider(scrapy.Spider):
         """
         Parses and returns json object from html containing product details
         """
-        # json_data = response.xpath('//div[@id="main"]//div[@class="page-container"]/script[2]//text()').extract_first()
         json_data = response.css('script:contains("scene7foldername")').extract_first()
         json_data = json_data[json_data.find("{\n\"source\""):]
         json_data = json_data[:-23]
-        # braces_index = json_data.find('{', json_data.find('{', json_data.find('{') + 1) + 1)
-        # json_data = json_data[braces_index:]
         json_data = json_data.replace(")", "")
         json_data = json_data.replace(";", "")
         json_data = json_data.replace("'", "\"")
