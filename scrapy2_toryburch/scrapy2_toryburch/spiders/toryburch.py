@@ -14,12 +14,10 @@ class ToryburchSpider(scrapy.Spider):
 
     def parse(self, response):
         category_menu = response.xpath('//ul[@class="nav-primary"]/li')
-
         category_menu = category_menu[1:]
         for category in category_menu:
             category_name = self.get_category_name(category)
             url = category.xpath('a/@href').extract_first()
-            # print("Category: " +url)
             yield Request(url, self.parse_main_category, meta={'category_name' : category_name})
 
     def get_category_name(self, category):
@@ -50,7 +48,6 @@ class ToryburchSpider(scrapy.Spider):
         """
         product_links = response.xpath('//a[@class="product-tile__thumb"]/@href')
         for product_url in product_links:
-            #print("Product: " +product_url.extract())
             yield Request(product_url.extract(), callback=self.parse_product, meta=response.meta)
 
     def parse_product(self, response):
@@ -65,7 +62,8 @@ class ToryburchSpider(scrapy.Spider):
         product_item['brand'] = data["brand"]
         product_item['store_keeping_unit'] = data["ID"]
         product_item['breadcrumbs'] = self.get_breadcrumbs(response.meta)
-        product_item['description'] = self.parse_description(response.css('div.product-description__content'))
+        product_item['description'] = self.parse_description(response.css
+                                                             ('div.product-description__content'))
         product_item['variations'] = self.parse_variation_item(response)
         yield product_item
 
@@ -120,7 +118,8 @@ class ToryburchSpider(scrapy.Spider):
         Returns a template string to construct variation image urls
         """
         variation_template_url = variation.xpath('a/img/@src').extract_first()
-        variation_template_url = re.search(r'(\w+)://(\w.+)/(\w+\w+\w+_)', variation_template_url).group()
+        variation_template_url = re.search(r'(\w+)://(\w.+)/(\w+\w+\w+_)',
+                                           variation_template_url).group()
         return variation_template_url[:-1]
 
     def parse_size_items(self, response):
@@ -152,7 +151,6 @@ class ToryburchSpider(scrapy.Spider):
         json_data = json_data.replace(")", "")
         json_data = json_data.replace(";", "")
         json_data = json_data.replace("'", "\"")
-        # json_data = json_data[:-10]  # Remove invalid braces to validate json
         return json_data
 
     def get_standard_price_and_is_discounted(self, response):
@@ -165,17 +163,21 @@ class ToryburchSpider(scrapy.Spider):
         standard price can also be in form of a range.
         """
         print("urL: " + response.request.url)
-        standard_price = response.xpath('//span[@class="price--standard notonsale"]//text()').extract_first()
+        standard_price = response.xpath\
+            ('//span[@class="price--standard notonsale"]//text()').extract_first()
         if standard_price is not None: return (standard_price.strip(), False)
         standard_price = response.xpath('//span[@class="minPrice"]//text()').extract_first()
         if standard_price is not None:
-            standard_price = standard_price + "-" + response.xpath('//span[@class="maxPrice"]//text()').extract_first()
+            standard_price = standard_price + "-" + \
+                             response.xpath('//span[@class="maxPrice"]//text()').extract_first()
             return (standard_price, False)
-        standard_price = response.xpath('//span[@class="price--standard strikethrough onsale"]//text()').extract_first()
+        standard_price = response.xpath\
+            ('//span[@class="price--standard strikethrough onsale"]//text()').extract_first()
         return (standard_price.strip(), True)
 
     def get_discounted_price(self, response):
         """
         Helper method
         """
-        return response.xpath('//span[@class="price--sale onsale"]//text()').extract_first().strip()
+        return response.xpath\
+            ('//span[@class="price--sale onsale"]//text()').extract_first().strip()
