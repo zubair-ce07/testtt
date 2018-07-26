@@ -23,8 +23,12 @@ class TausendkindSpider(scrapy.Spider):
         #
         # for url in response.css(listing_css).extract()[1:]:
         #     yield response.follow(url, self.parse_listing)
-        # yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//www.garageclothing.com/ca/cropped-classic-tee-with-rolled-cuff/p/100036409.product&noRedirectJavaScript=true', self.parse_product)
-        yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//www.garageclothing.com/ca/crew-neck-sweater/p/prod3030019.product&noRedirectJavaScript=true', self.parse_product)
+        # yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//'
+        #                      'www.garageclothing.com/ca/cropped-classic-tee-with-rolled-cuff/p/'
+        #                      '100036409.product&noRedirectJavaScript=true', self.parse_product)
+        yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//'
+                             'www.garageclothing.com/ca/crew-neck-sweater/p/prod3030019.product'
+                             '&noRedirectJavaScript=true', self.parse_product)
 
     def parse_listing(self, response):
         pass
