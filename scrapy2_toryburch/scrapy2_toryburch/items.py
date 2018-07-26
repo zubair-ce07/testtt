@@ -17,6 +17,7 @@ class ProductItem(scrapy.Item):
     locale = scrapy.Field()
     currency = scrapy.Field()
     variations = scrapy.Field()
+    breadcrumbs = scrapy.Field()
 
 
 class VariationItem(scrapy.Item):

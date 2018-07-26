@@ -17,17 +17,32 @@ class ToryburchSpider(scrapy.Spider):
 
         category_menu = category_menu[1:]
         for category in category_menu:
+            category_name = self.get_category_name(category)
             url = category.xpath('a/@href').extract_first()
             # print("Category: " +url)
-            yield Request(url, self.parse_main_category)
+            yield Request(url, self.parse_main_category, meta={'category_name' : category_name})
+
+    def get_category_name(self, category):
+        for name in category.xpath('a//text()').extract():
+            if re.search(r"\w+", name):
+                return name
 
     def parse_main_category(self, response):
         """
         Parses urls of main categories
         """
-        for sub_category in response.xpath('//div[@class="subcategory__button"]//a/@href'):
-            # print("Sub-Category: " + sub_category.extract())
-            yield Request(sub_category.extract(), self.parse_sub_category)
+        sub_categories = response.xpath('//div[@class="subcategory__button"]//a/@href')
+        sub_category_names = response.xpath('//div[@class="subcategory__button"]//a//text()')
+        for (sub_category, sub_category_name) in zip(sub_categories, sub_category_names):
+            meta_data = {
+                'category_name' : response.meta['category_name'],
+                'sub_category_name' : self.get_sub_category_name(sub_category_name.extract())
+            }
+            yield Request(sub_category.extract(), self.parse_sub_category, meta=meta_data)
+
+    def get_sub_category_name(self, raw_name):
+        raw_name = raw_name.replace("View All ", "")
+        return raw_name[:-5]
 
     def parse_sub_category(self, response):
         """
@@ -36,7 +51,7 @@ class ToryburchSpider(scrapy.Spider):
         product_links = response.xpath('//a[@class="product-tile__thumb"]/@href')
         for product_url in product_links:
             #print("Product: " +product_url.extract())
-            yield Request(product_url.extract(), callback=self.parse_product)
+            yield Request(product_url.extract(), callback=self.parse_product, meta=response.meta)
 
     def parse_product(self, response):
         """
@@ -49,6 +64,7 @@ class ToryburchSpider(scrapy.Spider):
         product_item['currency'] = self.get_currency(response)
         product_item['brand'] = data["brand"]
         product_item['store_keeping_unit'] = data["ID"]
+        product_item['breadcrumbs'] = self.get_breadcrumbs(response.meta)
         # class_id = "v-offset-top-m body-copy--s body-copy product-description__content"
         # product_item['description'] = self.parse_description(response.xpath('//div[@class="{}"]'.format(class_id)))
         product_item['description'] = self.parse_description(response.css('div.product-description__content'))
@@ -60,6 +76,9 @@ class ToryburchSpider(scrapy.Spider):
 
     def get_currency(self, response):
         return response.xpath('//span[@itemprop="priceCurrency"]//text()').extract_first()
+
+    def get_breadcrumbs(self, category_names):
+        return [category_names['category_name'], category_names['sub_category_name']]
 
     def parse_description(self, description_response):
         """
