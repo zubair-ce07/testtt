@@ -52,6 +52,24 @@ def extract_product_urls(url):
     return page_urls
 
 
+def get_product_obj(sel, model_no, product_url):
+    product_name = sel.css('h1.single-prod-title::text').get()
+    product_gender = sel.css("div#unisex-tab::attr(class)").get()
+    product_price = sel.css("div#top-right-info meta[itemprop='price']::attr(content)").get()
+    product_colors = sel.css("div#colour-label span.color-label::text").get().split('/')
+    product_features = sel.css("div#productFeaturesContent h5::text").getall()
+    product_shipping = sel.css("div#info-container > div::text").get()
+    product_details = sel.css("div#collapse1 p::text").get() or
+    product_image_urls = sel.css("div#pdp-main-image img.product-img::attr(data-url-src)").getall()
+    product_status = sel.css("div#stock-info-container::text").get().strip()
+    product_status = False if "Out" in product_status else True
+    product_size = list(filter(None, set(size.strip() for size in sel.css("a.SizeOption::text").getall())))
+
+    return Product(product_name, product_gender, model_no, product_price, product_colors, product_url,
+                   product_features, product_status, product_shipping, product_details, product_size,
+                   product_image_urls)
+
+
 def crawl(category_links, visited_products):
     myobj = []
     for category in category_links:
@@ -67,19 +85,7 @@ def crawl(category_links, visited_products):
             if product_model in visited_products:
                 continue
             visited_products.add(product_model)
-            product_url = product
-            product_gender = sel.css("div#unisex-tab::attr(class)").get()
-            product_name = sel.css('h1.single-prod-title::text').get()
-            product_price = sel.css("div#top-right-info meta[itemprop='price']::attr(content)").get()
-            product_colors = sel.css("div#colour-label span.color-label::text").get().split('/')
-            product_shipping = sel.css("div#info-container > div::text").get()
-            product_details = sel.css("div#collapse1 p::text").get() or sel.css("div.pronation-title::text")
-            product_image_urls = sel.css("div#pdp-main-image img.product-img::attr(data-url-src)").getall()
-            product_features = sel.css("div#productFeaturesContent h5::text").getall()
-            product_status = sel.css("div#stock-info-container::text").get().strip()
-            product_status = False if "Out" in product_status else True
-            product_size = list(filter(None, set(size.strip() for size in sel.css("a.SizeOption::text").getall())))
-
+            myobj.append(get_product_obj(sel))
             # print(f"Gender: {product_gender}")
             # print(f"url: {product_url}")
             # print(f"product_name: {product_name}")
@@ -94,7 +100,8 @@ def crawl(category_links, visited_products):
             # print(f"Product features: {product_features}")
 
             myobj.append(
-                Product(product_name, product_gender, product_model, product_price, product_colors, product_url, product_features,
+                Product(product_name, product_gender, product_model, product_price, product_colors, product_url,
+                        product_features,
                         product_status, product_shipping, product_details, product_size, product_image_urls))
 
             # json_string = json.dumps([obj.obj_to_json() for obj in myobj], indent=4)
