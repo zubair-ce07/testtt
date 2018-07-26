@@ -192,6 +192,12 @@ class ReportsGenrator:
         print("Humidity: " + calculated_results["Humidity"]\
                 +"% on " + calculated_results["MostHumidDay"]\
                 +" " + calculated_results["MostHumidMonth"])
+    
+
+    def monthly_report_genrator(self, calculated_results):
+        print("Highest Average: " + str(calculated_results["HighestAverage"]) + "C")
+        print("Lowest Average: " + str(calculated_results["LowestAverage"]) + "C")
+        print("Average Mean Humidity: " + str(calculated_results["AverageMeanHumidity"]) + "%")
 
 
 def usage_printer():
@@ -216,6 +222,10 @@ def monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month)
                 WeatherRecordInstance.weather_data, year,
                 month
                 )
+    ReportsGenratorInstance.monthly_report_genrator(
+            ResultsCalculatorInstance.calculated_results
+            )
+
 
 def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
     ResultsCalculatorInstance.daily_temperature_calculator(
