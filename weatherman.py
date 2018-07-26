@@ -2,6 +2,16 @@ import os
 
 import glob
 
+import sys
+
+
+VALID_OPTIONS = [
+                    '-e','-c', '-a'
+                 ]
+
+USAGE_STRING = "Python weatherman.py [Path to weatherman files]"\
+                " [Valid Options] [Valid Month, Year]"
+
 
 class WeatherRecord:
     def __init__(self):
@@ -16,7 +26,7 @@ class WeatherRecord:
                             }
 
 
-    def read_data_from_files(self,folder_path="/home/haseeb/Desktop/weatherfiles/weatherfiles"):
+    def read_data_from_files(self,folder_path):
         txt_files = glob.glob(folder_path+"/*.txt")  #Read text files
         self.weather_data = []
         for txt_file in txt_files:
@@ -30,7 +40,7 @@ class WeatherRecord:
                 self.weather_data.append(self.populate_data(keys,line_content_list,year_month_date))
             opened_file.close()
         # for data in self.weather_data:
-        #     x  = data.get("2008",{}).get(('1','Jan'),{}).get("31",{}).get("MeanDew PointC")
+        #     x  = data.get("2008",{}).get('1',{}).get("31",{}).get("MeanDew PointC")
         #     if x is not None:
         #         print x
 
@@ -53,6 +63,45 @@ class WeatherRecord:
         return sub_key_level_dictionary
     
 
+class ResultsCalculator:
+    def __init__(self):
+        self.calculated_results = None
+
     
-weather_record = WeatherRecord()
-weather_record.read_data_from_files()
+    def calculate_average(self):
+
+        pass
+    
+
+    def calculate_max_min(self):
+        pass
+
+
+def usage_printer():
+    print("Usage:")
+    print(USAGE_STRING)
+    print("Options:")
+    print(VALID_OPTIONS)
+    sys.exit()
+
+
+if __name__ == "__main__":
+
+    if sys.argv[2] not in VALID_OPTIONS:  #Verify valid options
+        print("Invalid Option")
+        usage_printer()
+    
+    if not os.path.isdir(sys.argv[1]):  #Verify valid files path  
+        print("Invalid Path")
+        usage_printer()
+    
+    WeatherRecordInstance = WeatherRecord()
+    WeatherRecordInstance.read_data_from_files(sys.argv[1])
+
+    if sys.argv[2] is '-a':
+        pass
+    elif sys.argv[2] is '-c':
+        pass
+    elif sys.argv[2] is '-e':
+        pass
+    
