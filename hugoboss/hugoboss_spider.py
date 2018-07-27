@@ -50,7 +50,7 @@ class HugoBossSpider(CrawlSpider):
     def _process_colors(self, response, color_links, item):
         if color_links:
             yield response.follow(color_links.pop(), callback=self._extract_color,\
-                                 meta={'item': item, 'color_links': color_links})
+                                  meta={'item': item, 'color_links': color_links})
         else:
             yield item
 
@@ -81,32 +81,33 @@ class HugoBossSpider(CrawlSpider):
 
 
     def _extract_skus(self, response):
-        item = {}
-        item['color'] = self._extract_color(response)
-        item['price'] = self._extract_price(response)
-        item['currency'] = self._extract_currency(response)
-        previous_price = self._extract_prev_price(response)
+        raw_item = self._extract_sku_pricing(response)
+        raw_item['color'] = self._extract_color(response)
 
-        if previous_price:
-            item['previous price'] = previous_price
-        
         skus = []
         size_selectors = response.css('a.product-stage__choose-size__select-size')
-        for sku in size_selectors:
-            sku_item = item.copy()
-            sku_item['size'] = sku.css('a::attr(title)').extract_first()
-            
+        for sku_sel in size_selectors:
+            sku_item = raw_item.copy()
+            sku_item['size'] = sku_sel.css('a::attr(title)').extract_first()
+
             if not sku_item['size']:
                 sku_item['size'] = 'ONE-SIZE'
                 
             sku_item['id'] = '{}_{}'.format(sku_item['color'], sku_item['size'])
 
-            if sku.css('a::attr(disabled)').extract():
+            if sku_sel.css('a::attr(disabled)').extract():
                 sku_item['out_of_stock'] = True
 
             skus.append(sku_item)
 
         return skus
+    
+    def _extract_sku_pricing(self, response):
+        return {
+            'price': self._extract_price(response),
+            'previous price': self._extract_prev_price(response),
+            'currency': self._extract_currency(response)
+        }
 
     def _extract_color(self, response):
         raw_product = response.css('.product-variations::attr(data-current)').extract_first()
