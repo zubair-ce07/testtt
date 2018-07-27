@@ -13,7 +13,7 @@ class HugoBossSpider(CrawlSpider):
     allowed_domains = ['hugoboss.com']
     start_urls = ['https://www.hugoboss.com/uk/']
 
-    DOWNLOAD_DELAY = 0.2
+    DOWNLOAD_DELAY = 0.5
 
     listing_css = ['.nav-list--third-level', '.pagingbar__item--arrow']
     product_sel = '.product-tile__product-name'
@@ -39,20 +39,13 @@ class HugoBossSpider(CrawlSpider):
         item['skus'] = self._extract_skus(response)
 
         color_links = response.css('.swatch-list__button--is-empty a::attr(href)').extract()
-        yield from self._process_colors(response, color_links, item)
-    
-    def _extract_raw_product(self, response):
-        script = response.xpath('//script[contains(., "productCurrency")]').extract_first()
-
-        raw_product = re.search(r"({.*?})", script).group(1)
-        return json.loads(raw_product)
+        return  self._process_colors(response, color_links, item)
 
     def _process_colors(self, response, color_links, item):
         if color_links:
-            yield response.follow(color_links.pop(), callback=self._extract_color,\
+            return response.follow(color_links.pop(), callback=self._extract_color,\
                                   meta={'item': item, 'color_links': color_links})
-        else:
-            yield item
+        return item
 
     def _extract_color(self, response):
         item = response.meta.get('item')
@@ -61,7 +54,7 @@ class HugoBossSpider(CrawlSpider):
         item['image_urls'] += self._extract_image_urls(response)
         item['skus'] += self._extract_skus(response)
 
-        yield from self._process_colors(response, color_links, item)
+        return self._process_colors(response, color_links, item)
 
     def _extract_description(self, response):
         description = response.css('.product-container__text__description::text').extract()
@@ -79,10 +72,9 @@ class HugoBossSpider(CrawlSpider):
         img_urls = response.css('.slider-item__image::attr(src)').extract()[:-1]
         return list(map(lambda c: c.replace('wid=70&hei=106', 'wid=461&hei=698'), img_urls))
 
-
     def _extract_skus(self, response):
         raw_item = self._extract_sku_pricing(response)
-        raw_item['color'] = self._extract_color(response)
+        raw_item['color'] = self._extract_color_name(response)
 
         skus = []
         size_selectors = response.css('a.product-stage__choose-size__select-size')
@@ -109,7 +101,7 @@ class HugoBossSpider(CrawlSpider):
             'currency': self._extract_currency(response)
         }
 
-    def _extract_color(self, response):
+    def _extract_color_name(self, response):
         raw_product = response.css('.product-variations::attr(data-current)').extract_first()
         raw_product = json.loads(raw_product)
 
@@ -126,5 +118,11 @@ class HugoBossSpider(CrawlSpider):
         if previous_price:
             return previous_price.strip()[1:]
     
+    def _extract_raw_product(self, response):
+        script = response.xpath('//script[contains(., "productCurrency")]').extract_first()
+
+        raw_product = re.search(r"({.*?})", script).group(1)
+        return json.loads(raw_product)
+
     def clean_text(self, text):
         return re.sub(r'\s+', ' ', text)
