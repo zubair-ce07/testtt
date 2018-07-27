@@ -2,23 +2,31 @@
 import scrapy
 import re
 
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 from scrapy.http import FormRequest
 from urllib.parse import urljoin
 
 from items import WoolrichItem
 
 
-class WoolrichSpider(scrapy.Spider):
+class WoolrichSpider(CrawlSpider):
     name = 'woolrich'
     allowed_domains = ['woolrich.com']
-    start_urls = ['http://www.woolrich.com/woolrich/details/men-s-amblewood-cargo-shorts-100-cotton/_/R-3065',
-                ]
-    
+    start_urls = ['http://www.woolrich.com/woolrich/?countryCode=CA']
+
+    download_delay = 0.5
+
     request_url = 'http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp'
     genders = ['Men', 'Women']
 
-    def parse(self, response):
+    listing_css = ['.nav.navbar-nav .upper', '.clear.addMore']
+    rules = (
+                Rule(LinkExtractor(restrict_css=listing_css, tags=('a', 'div'), attrs=('href', 'nextpage'))),
+                Rule(LinkExtractor(restrict_css=('.productCard')), callback='parse_item')
+    		)
 
+    def parse_item(self, response):
         item = WoolrichItem()
         item['retailer_sku'] = self._get_retailer_sku(response)
         item['gender'] = self._get_gender(response)
@@ -40,12 +48,12 @@ class WoolrichSpider(scrapy.Spider):
                         'productId': item['retailer_sku'], 
                         'colorId': color_ids.pop()
                         }
-            yield FormRequest(url=self.request_url, callback=self._get_color,\
+            yield FormRequest(url=self.request_url, callback=self._get_color_skus,\
                               formdata=formdata, meta = {'item': item, 'color_ids': color_ids})
         else:
             yield item
 
-    def _get_color(self, response):
+    def _get_color_skus(self, response):
         item = response.meta.get('item')
         color_ids = response.meta.get('color_ids')
 
@@ -61,7 +69,9 @@ class WoolrichSpider(scrapy.Spider):
 
         for gender in self.genders:
             if gender in prod_name:
-                return gender       
+                return gender
+
+        return 'unisex adults'     
     
     def _get_category(self, response):
         return response.css('.breadcrumb a::text').extract()[1:]
@@ -109,6 +119,8 @@ class WoolrichSpider(scrapy.Spider):
 
             skus.append(sku_item)
 
+        if len(skus) == 1:
+            skus[0]['size'] = 'ONE-SIZE'
         return skus
     
     def _extract_color(self, response):
