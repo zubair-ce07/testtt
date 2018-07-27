@@ -5,10 +5,6 @@ import scrapy
 
 class GarageClothingSpider(scrapy.Spider):
     name = "garageclothing"
-    session_id = None
-    start_urls = [
-        'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true'
-    ]
 
     custom_settings = {
         'DOWNLOAD_DELAY': 2
@@ -34,10 +30,10 @@ class GarageClothingSpider(scrapy.Spider):
             }, callback=self.parse)
 
     def parse(self, response):
-        self.session_id = response.css('p::text').extract_first()
+        session_id = response.css('p::text').extract_first()
 
         yield scrapy.Request('https://www.garageclothing.com/ca/', callback=self.parse_landing_page,
-                             cookies={'JSESSIONID': self.session_id})
+                             cookies={'JSESSIONID': session_id})
 
     def parse_landing_page(self, response):
         listing_css = 'li.categoryMenuItem span.categoryMenuItemSpan a::attr(href)'
