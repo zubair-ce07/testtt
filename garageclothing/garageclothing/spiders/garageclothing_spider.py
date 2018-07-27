@@ -5,13 +5,13 @@ import scrapy
 
 class GarageClothingSpider(scrapy.Spider):
     name = "garageclothing"
+    session_id = None
     start_urls = [
         'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true'
     ]
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 2,
-        'HTTPERROR_ALLOWED_CODES': [404]
+        'DOWNLOAD_DELAY': 2
     }
 
     allowed_domains = [
@@ -19,44 +19,41 @@ class GarageClothingSpider(scrapy.Spider):
         'dynamiteclothing.com'
     ]
 
+    def start_requests(self):
+        yield scrapy.Request(
+            'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true',
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) '
+                              'Gecko/20100101 Firefox/62.0',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Referer': 'https://www.garageclothing.com/',
+                'Origin': 'https://www.garageclothing.com',
+                'DNT': '1',
+                'Connection': 'keep-alive'
+            }, callback=self.parse)
+
     def parse(self, response):
-        yield scrapy.Request('https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true',
-                       headers={
-                           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) '
-                                         'Gecko/20100101 Firefox/62.0',
-                           'Accept': '*/*',
-                           'Accept-Language': 'en-US,en;q=0.5',
-                           'Referer': 'https://www.garageclothing.com/',
-                           'Origin': 'https://www.garageclothing.com',
-                           'DNT': '1',
-                           'Connection': 'keep-alive'
-                       })
+        self.session_id = response.css('p::text').extract_first()
 
-        yield {'ax': response.css('*').extract()}
-        # yield {'a': response.css(
-        #     '#mainCategoryMenu span.categoryMenuItemSpan a::attr(href)').extract(),
-        #        'r': response.url}
+        yield scrapy.Request('https://www.garageclothing.com/ca/', callback=self.parse_landing_page,
+                             cookies={'JSESSIONID': self.session_id})
 
-        # cookie_jar = response.meta.setdefault('cookie_jar', CookieJar())
-        # cookie_jar.extract_cookies(response, response.request)
-        # request = scrapy.Request('https://www.garageclothing.com/ca/', self.parse, dont_filter=True)
-        # cookie_jar.add_cookie_header(request)
-        # yield request
+    def parse_landing_page(self, response):
+        listing_css = 'li.categoryMenuItem span.categoryMenuItemSpan a::attr(href)'
 
-        # listing_css = '#mainCategoryMenu span.categoryMenuItemSpan a::attr(href)'
-        #
-        # for url in response.css(listing_css).extract()[1:]:
-        #     yield response.follow(url.split(';')[0], self.parse_listing)
-
-        # yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//www.garageclothing.com/ca/cropped-classic-tee-with-rolled-cuff/p/100036409.product&noRedirectJavaScript=true', self.parse_product)
-        # yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//'
-        #                      'www.garageclothing.com/ca/crew-neck-sweater/p/prod3030019.product'
-        #                      '&noRedirectJavaScript=true', self.parse_product)
+        for listing in response.css(listing_css).extract()[:-1]:
+            yield response.follow(listing, self.parse_listing)
 
     def parse_listing(self, response):
+        product_css = 'a.gaProductClickFromGallery::attr(href)'
+
+        for product in response.css(product_css).extract():
+            yield response.follow(product, self.parse_product)
+
         next_page = response.css('#catPageNext::attr(href)').extract_first()
         if next_page:
-            return scrapy.Request(next_page, self.parse_listing)
+            return response.follow(next_page, self.parse_listing)
 
     def parse_product(self, response):
         sku = {'retailer_sku': self.get_product_retailer_sku(response),
@@ -163,18 +160,32 @@ class GarageClothingSpider(scrapy.Spider):
         return size_request_params_queue
 
     def generate_product_sku(self, size, sku):
-        return {
-            'price': sku['sku_fields']['price'],
+        variant = {
             'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
                                                  sku['sku_fields']['colors']),
             'currency': sku['sku_fields']['currency'],
             'sku_id': size.css('span::attr(skuid)').extract_first(),
             'size': size.css('span::text').extract_first(),
-            'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
+            'is_in_stock': 'unavailable' not in size.css('span::attr(class)').extract_first()
         }
 
+        variant.update(sku['sku_fields']['price'])
+        return variant
+
     def get_product_price(self, response):
-        return self.get_price_from_string(response.css('h2.prodPricePDP::text').extract_first())
+        prices = {}
+
+        special_price = response.css('h2.prodPricePDP span.withSale::text').extract_first()
+        normal_price = response.css('h2.prodPricePDP span.salePrice::text').extract_first()
+
+        if special_price:
+            prices['price'] = self.get_price_from_string(special_price)
+            prices['previous_price'] = self.get_price_from_string(normal_price)
+        else:
+            normal_price = response.css('h2.prodPricePDP::text').extract_first()
+            prices['price'] = self.get_price_from_string(normal_price)
+
+        return prices
 
     @staticmethod
     def get_product_colors(response):
@@ -203,7 +214,9 @@ class GarageClothingSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_description(response):
-        description = response.css('#descTabDescriptionContent p::text').extract_first()
+        description = response.css('#descTabDescriptionContent p::text,'
+                                   ' #descTabDescriptionContent::text,'
+                                   ' #descTab0Content::text').extract_first()
         return [d.strip() for d in re.split(r'[.,]', description) if d.strip()]
 
     @staticmethod
