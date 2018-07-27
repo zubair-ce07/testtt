@@ -40,11 +40,11 @@ def extract_categories(start_url):                                          # Re
 def extract_product_links(category_links):                                  # Return links of all products on site
     product_links = set()
     for category in category_links:
-        product_links |= extract_product_urls(category)
+        product_links |= extract_relative_urls(category)
     yield product_links
 
 
-def extract_product_urls(url):                                              # Get url of each product for a category
+def extract_relative_urls(url):                                              # Get url of each product for a category
     page_no = 0
     page_urls = set()
     seen_urls = set()
