@@ -13,6 +13,7 @@ class LandmarkcrawlerItem(scrapy.Item):
     search_query = scrapy.Field()
     google_rating_count = scrapy.Field()
     trip_advisor_rating_count = scrapy.Field()
+    title = scrapy.Field()
     address = scrapy.Field()
     phone_number = scrapy.Field()
     operating_hours = scrapy.Field()
@@ -21,4 +22,5 @@ class LandmarkcrawlerItem(scrapy.Item):
     region = scrapy.Field()
     country = scrapy.Field()
     url = scrapy.Field()
+    trip_advisor_url = scrapy.Field()
     error = scrapy.Field()
