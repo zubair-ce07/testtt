@@ -18,7 +18,7 @@ class WoolrichSpider(CrawlSpider):
     download_delay = 0.5
 
     request_url = 'http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp'
-    genders = ['Men', 'Women']
+    genders = ['Men', 'Women', 'Unisex-Adults']
 
     listing_css = ['.nav.navbar-nav .upper', '.clear.addMore']
     rules = (
@@ -40,7 +40,7 @@ class WoolrichSpider(CrawlSpider):
         item['skus']=[]
 
         color_ids = response.css('.colorlist .link img::attr(colorid)').extract()
-        yield from self._process_colors(item, color_ids)
+        return self._process_colors(item, color_ids)
     
     def _process_colors(self, item, color_ids):
         if color_ids:
@@ -48,10 +48,9 @@ class WoolrichSpider(CrawlSpider):
                         'productId': item['retailer_sku'], 
                         'colorId': color_ids.pop()
                         }
-            yield FormRequest(url=self.request_url, callback=self._get_color_skus,\
+            return FormRequest(url=self.request_url, callback=self._get_color_skus,\
                               formdata=formdata, meta = {'item': item, 'color_ids': color_ids})
-        else:
-            yield item
+        return item
 
     def _get_color_skus(self, response):
         item = response.meta.get('item')
@@ -59,7 +58,7 @@ class WoolrichSpider(CrawlSpider):
 
         item['skus'] += self._get_skus(response)
 
-        yield from self._process_colors(item, color_ids)
+        return self._process_colors(item, color_ids)
     
     def _get_retailer_sku(self, response):
         return response.css('[itemprop="productID"]::text').extract_first().strip()
@@ -71,7 +70,7 @@ class WoolrichSpider(CrawlSpider):
             if gender in prod_name:
                 return gender
 
-        return 'unisex adults'     
+        return self.genders[-1]   
     
     def _get_category(self, response):
         return response.css('.breadcrumb a::text').extract()[1:]
