@@ -156,14 +156,25 @@ class GarageClothingSpider(scrapy.Spider):
         return size_request_params_queue
 
     def generate_product_sku(self, size, sku):
-        variant = {
-            'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
-                                                 sku['sku_fields']['colors']),
-            'currency': sku['sku_fields']['currency'],
-            'sku_id': size.css('span::attr(skuid)').extract_first(),
-            'size': size.css('span::text').extract_first(),
-            'is_in_stock': 'unavailable' not in size.css('span::attr(class)').extract_first()
-        }
+        try:
+            variant = {
+                'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
+                                                     sku['sku_fields']['colors']),
+                'currency': sku['sku_fields']['currency'],
+                'sku_id': size.css('span::attr(skuid)').extract_first(),
+                'size': size.css('span::text').extract_first(),
+                'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
+            }
+        except Exception as e:
+            variant = {
+                'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
+                                                     sku['sku_fields']['colors']),
+                'currency': sku['sku_fields']['currency'],
+                'sku_id': size.css('span::attr(skuid)').extract_first(),
+                'size': size.css('span::text').extract_first(),
+                'is_in_stock': 'MULTI SIZE VECTOR',
+                'error': str(e)
+            }
 
         variant.update(sku['sku_fields']['price'])
         return variant
