@@ -46,7 +46,7 @@ class CeaSpider(Spider):
             item['category'] = self.get_category(item_detail)
             item['image_urls'] = self.get_image_urls(item_detail)
             item['description'] = self.get_description(item_detail)
-            yield item
+            return item
         else:
             item = ProductItem()
             item['name'] = self.get_item_name(response)
@@ -58,7 +58,7 @@ class CeaSpider(Spider):
             item['url'] = response.url
 
             url = f"https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{item['retailer_sku']}"
-            yield Request(url, callback=self.parse_item, meta={'item': item})
+            return Request(url, callback=self.parse_item, meta={'item': item})
 
     def get_item_name(self, response):
         return response.css('.productName::text').extract_first()
