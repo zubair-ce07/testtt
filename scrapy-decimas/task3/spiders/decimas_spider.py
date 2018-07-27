@@ -1,20 +1,17 @@
-import re
-
-from scrapy.linkextractor import LinkExtractor
-from scrapy.spider import Rule, CrawlSpider
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule, CrawlSpider
 
 from task3.items import DecimasItem
 
 
 class DecimasSpider(CrawlSpider):
-    FEED_EXPORT_ENCODING = "utf-8"
     name = "decimas"
     allowed_domains = ['decimas.es']
     start_urls = ['https://www.decimas.es/']
     brands = set()
 
     rules = (Rule(LinkExtractor(restrict_css='.view_all')),
-             Rule(LinkExtractor(restrict_css='.ambrands-list a'), callback='parse_brands', follow=True),
+             Rule(LinkExtractor(restrict_css='.ambrands-list'), callback='parse_brands', follow=True),
              Rule(LinkExtractor(restrict_css='.next.i-next')),
              Rule(LinkExtractor(restrict_css='.category-products .product-image'), callback='parse_item'))
 
@@ -23,9 +20,7 @@ class DecimasSpider(CrawlSpider):
         DecimasSpider.brands.add(brand)
 
     def parse_item(self, response):
-        print(DecimasSpider.brands)
         item = DecimasItem()
-        sizes = self.get_sizes(response)
         item['name'] = self.get_title(response)
         item['categories'] = self.get_categories(self.get_title(response),
                                                  self.get_brand(response), self.get_gender(response))
@@ -33,25 +28,19 @@ class DecimasSpider(CrawlSpider):
         item['gender'] = self.get_gender(response)
         item['brand'] = self.get_brand(response)
         item['retailer_sku'] = self.get_retailer_sku(response)
-        price = self.get_price(response)
         item['image_urls'] = self.get_image_urls(response)
         item['description'] = self.get_description(response)
-        availability = self.get_availability(response)
-        item['skus'] = self.get_skus(price, sizes, availability, self.get_retailer_sku(response))
+        item['skus'] = self.get_skus(response)
         yield item
 
     def get_title(self, response):
-        return response.css('h1::text').extract_first()
+        return response.css('[itemprop="name"]::text').extract_first()
 
     def get_gender(self, response):
-        if "hombre" in response.request.url:
-            return "male"
-        if "ninoa" in response.request.url:
-            return "girl"
-        if "nino" in response.request.url:
-            return "boy"
-        else:
-            return "female"
+        genders = {'hombre': 'male', 'ninoa': 'girl', 'nino': 'boy', 'mujer': 'female'}
+        for key in genders.keys():
+            if key in response.url:
+                return genders.get(key)
 
     def get_brand(self, response):
         for key in DecimasSpider.brands:
@@ -59,23 +48,17 @@ class DecimasSpider(CrawlSpider):
                 return key
 
     def get_price(self, response):
-        if response.css('.regular-price').extract():
-            currency = response.css('.regular-price span::attr(content)').extract_first()
-            regular_price = response.css('.regular-price::attr(content)').extract_first()
-            regular_price = int(float(regular_price) * 100)
-            return [currency, regular_price]
-        else:
-            currency = response.css('.special-price .price span::attr(content)').extract_first()
-            old_price = response.css('.old-price .price::text').extract_first().strip()
-            special1 = u"\u00a0"
-            special2 = u"\u20ac"
-            old_price = old_price.replace(special1, '')
-            old_price = old_price.replace(special2, '')
-            old_price = old_price.replace(',', '.')
-            old_price = int(float(old_price) * 100)
-            new_price = response.css('.special-price .price::attr(content)').extract_first()
-            new_price = int(float(new_price) * 100)
-            return [currency, old_price, new_price]
+        prices = [r.strip() for r in response.css('.product-shop .price::text').extract()]
+        prices = list(filter(None, prices))
+        return [self.format_price(p) for p in prices]
+
+    def format_price(self, price):
+        special1 = u"\u00a0"
+        special2 = u"\u20ac"
+        price = price.replace(special1, '')
+        price = price.replace(special2, '')
+        price = price.replace(',', '.')
+        return int(float(price) * 100)
 
     def get_image_urls(self, response):
         return response.css('.thumb-link img::attr(src)').extract()
@@ -84,36 +67,39 @@ class DecimasSpider(CrawlSpider):
         return response.css('.skuProducto > span::text').extract_first().split(' ')[1]
 
     def get_url(self, response):
-        return response.request.url
+        return response.url
 
     def get_description(self, response):
-        description = response.css('.descripcionProducto > div > p::text').extract()
-        if description:
-            description = [d.strip().split('.') for d in description]
-            return description
+        description = response.css('[itemprop="description"]::text').extract()
+        return [d.strip().split('.') for d in description]
 
     def get_categories(self, title, brand, gender):
         return [title.split(' ')[0], gender, brand]
 
     def get_sizes(self, response):
-        return response.css('#configurable_swatch_talla a::attr(name)').extract()
+        return [r.strip() for r in response.css('.swatch-label::text').extract()]
 
     def get_availability(self, response):
         return response.css('.extra-info .value::text').extract_first() == 'En existencia'
 
-    def get_skus(self, prices, sizes, availability, sku_id):
+    def get_currency(self, response):
+        return response.css('[itemprop="priceCurrency"]::attr(content)').extract_first()
+
+    def get_skus(self, response):
+        sku_id = self.get_retailer_sku(response)
+        availability = self.get_availability(response)
+        prices = sorted(self.get_price(response))
+        sizes = self.get_sizes(response)
+        currency = self.get_currency(response)
         skus = []
+        sku = {}
+        if len(prices) > 1:
+            sku['old-price'] = prices[1]
+        sku['price'] = prices[0]
+        sku['currency'] = currency
+        if not availability:
+            sku['out_of_stock'] = 'true'
         for size in sizes:
-            sku = {}
-            sku['size'] = size
-            if len(prices) > 2:
-                sku['price'] = prices[2]
-                sku['old-price'] = prices[1]
-            else:
-                sku['price'] = prices[1]
-            sku['currency'] = prices[0]
-            if not availability:
-                sku['out_of_stock'] = 'true'
-            sku['sku_id'] = sku_id + '_' + size
-            skus.append(sku)
+            sku.update({'size': size, 'sku_id': f'{sku_id}_{size}'})
+            skus.append(sku.copy())
         return skus
