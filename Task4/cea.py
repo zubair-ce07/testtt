@@ -40,24 +40,33 @@ class CeaSpider(Spider):
     def parse_item(self, response):
 
         if response.meta.get("item"):
-            data = json.loads(response.text)[0]
+            item_detail = json.loads(response.text)[0]
             item = response.meta["item"]
-            item['category'] = self.get_category(data)
-            item['image_urls'] = self.get_image_urls(data)
-            item['description'] = self.get_description(data)
+            item['category'] = self.get_category(item_detail)
+            item['image_urls'] = self.get_image_urls(item_detail)
+            item['description'] = self.get_description(item_detail)
             yield item
         else:
             item = ProductItem()
-            item['name'] = response.css('.productName::text').extract_first()
-            item['retailer_sku'] = response.css('#___rc-p-id::attr(value)').extract_first()
+            item['name'] = self.get_item_name(response)
+            item['retailer_sku'] = self.get_retailer_sku(response)
             item['gender'] = self.get_gender(response.url, item['name'])
             item['price'] = self.get_price(response)
-            item['brand'] = response.css('td.Marca::text').extract_first()
+            item['brand'] = self.get_brand(response)
             item['skus'] = self.get_skus(response)
             item['url'] = response.url
 
-            uri = f"https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{item['retailer_sku']}"
-            yield Request(uri, callback=self.parse_item, meta={'item': item})
+            url = f"https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{item['retailer_sku']}"
+            yield Request(url, callback=self.parse_item, meta={'item': item})
+
+    def get_item_name(self, response):
+        return response.css('.productName::text').extract_first()
+
+    def get_retailer_sku(self, response):
+        return response.css('#___rc-p-id::attr(value)').extract_first()
+
+    def get_brand(self, response):
+        return response.css('td.Marca::text').extract_first()
 
     def get_gender(self, url, item_name):
         if 'masculino' in url or 'masculino'in item_name:
@@ -72,21 +81,21 @@ class CeaSpider(Spider):
         raw_price = response.css('#___rc-p-dv-id::attr(value)').extract_first()
         return float(raw_price.replace(',', '')) * 100
 
-    def get_image_urls(self, item_data):
+    def get_image_urls(self, item_detail):
         image_urls = [f"https://cea.vteximg.com.br/arquivos/ids/{image_id['imageId']}"
-                      for image_id in item_data['items'][0]['images']]
+                      for image_id in item_detail['items'][0]['images']]
         return image_urls
 
-    def get_category(self, item_data):
-        return item_data['categories']
+    def get_category(self, item_detail):
+        return item_detail['categories']
 
-    def get_description(self, item_data):
-        return item_data['description']
+    def get_description(self, item_detail):
+        return item_detail['description']
 
     def get_skus(self, response):
-        data = json.loads(response.css('script::text').re(r'var skuJson_0 = (.+]});')[0])
+        raw_skus = json.loads(response.css('script::text').re_first(r'var skuJson_0 = (.+]});'))
         skus = []
-        for sku_json in data['skus']:
+        for sku_json in raw_skus['skus']:
             skus.append({
                 "colour": sku_json.get("dimensions").get("Cor"),
                 "price": sku_json.get("bestPrice"),
