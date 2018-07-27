@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for scrapy1_docket project
+# Scrapy settings for scrapy3_sears project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,25 +9,25 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'scrapy1_docket'
+BOT_NAME = 'scrapy3_sears'
 
-SPIDER_MODULES = ['scrapy1_docket.spiders']
-NEWSPIDER_MODULE = 'scrapy1_docket.spiders'
+SPIDER_MODULES = ['scrapy3_sears.spiders']
+NEWSPIDER_MODULE = 'scrapy3_sears.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'scrapy1_docket (+http://www.yourdomain.com)'
+#USER_AGENT = 'scrapy3_sears (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-#ROBOTSTXT_OBEY = False
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 1
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -47,14 +47,16 @@ NEWSPIDER_MODULE = 'scrapy1_docket.spiders'
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'scrapy1_docket.middlewares.Scrapy1DocketSpiderMiddleware': 543,
+#    'scrapy3_sears.middlewares.Scrapy3SearsSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'scrapy1_docket.middlewares.Scrapy1DocketDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   # 'scrapy3_sears.middlewares.Scrapy3SearsDownloaderMiddleware': 543,
+    'captchaMiddleware.middleware.CaptchaMiddleware':500,
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 1
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
@@ -65,7 +67,7 @@ NEWSPIDER_MODULE = 'scrapy1_docket.spiders'
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'scrapy1_docket.pipelines.Scrapy1DocketPipeline': 300,
+#    'scrapy3_sears.pipelines.Scrapy3SearsPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -89,5 +91,9 @@ NEWSPIDER_MODULE = 'scrapy1_docket.spiders'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-RETRY_HTTP_CODES = ['404']
-RETRY_TIMES = 5
+PROXY_ADDRESS_POOL = [
+    "172.110.84.46:53281",
+    "47.75.135.72:80"
+    "206.104.213.156:53281",
+    "108.178.64.170:53281"
+]

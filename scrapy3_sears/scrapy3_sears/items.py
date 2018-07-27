@@ -8,11 +8,7 @@
 import scrapy
 
 
-class DocketItem(scrapy.Item):
+class Scrapy3SearsItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    docket = scrapy.Field()
-    filer = scrapy.Field()
-    description = scrapy.Field()
-    filed_date = scrapy.Field()
-    file_url = scrapy.Field()
+    pass
