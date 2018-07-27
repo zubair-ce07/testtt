@@ -1,21 +1,13 @@
 from django.db import models
-# from django.contrib import admin
 
-# Create your models here.
-# from teams.admin import TestModelAdmin
 from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
-from teams.managers import SoftDeleteManager
-from datetime import datetime
+from datetime import date
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from common.models import SoftDeleteModelMixin
 
 
-class TestModel(models.Model):
-    name = models.CharField(max_length=50, default=' ')
-    is_active = models.BooleanField(default=True)
-
-    objects = SoftDeleteManager()
-
-
-class Team(models.Model):
+class Team(SoftDeleteModelMixin):
     name = models.CharField(max_length=50, default=' ')
     ranking = models.IntegerField(default=0)
     type = models.CharField(max_length=20, default='county')
@@ -25,30 +17,30 @@ class Team(models.Model):
         return self.name
 
 
-@staticmethod
-def calculate_age(born):
-    today = datetime.today()
-    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
-
-
-class Player(models.Model):
+class Player(SoftDeleteModelMixin):
 
     name = models.CharField(max_length=100, default=' ')
-    DOB = models.DateTimeField('born')
-    # Calculate Age
+    DOB = models.DateField('Born')
+    # Calculate Age in model as property
 
     playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices)
     batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices)
     bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices)
-    major_teams = models.CharField(max_length=200, default=' ')
     ranking = models.PositiveSmallIntegerField(null=True, blank=True)
-    url = models.URLField(max_length=100, default=' ')
+    teams = models.ManyToManyField('Team', related_name='players', null=True, blank=True)
+    url = models.URLField(max_length=100, default=' ', null=True, blank=True)
 
     def __str__(self):
         return self.name
 
+    @property
+    def get_age(self):
+        today = date.today()
+        cal_age = today.year - self.DOB.year - ((today.month, today.day) < (self.DOB.month, self.DOB.day))
+        return cal_age
 
-class BasicAverageIfo(models.Model):
+
+class BasicAverageInfo(SoftDeleteModelMixin):
 
     format = models.CharField(max_length=50, choices=FormatChoices.Choices)
     matches = models.IntegerField(null=True, blank=True)
@@ -63,9 +55,9 @@ class BasicAverageIfo(models.Model):
         abstract = True
 
 
-class BattingAverage(BasicAverageIfo):
+class BattingAverage(BasicAverageInfo):
 
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, related_name='batting_average', on_delete=models.CASCADE)
 
     not_outs = models.IntegerField(null=True, blank=True)
     highest_score = models.CharField(max_length=50, default=' ')    # 88*
@@ -82,8 +74,8 @@ class BattingAverage(BasicAverageIfo):
         )
 
 
-class BowlingAverage(BasicAverageIfo):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+class BowlingAverage(BasicAverageInfo):
+    player = models.ForeignKey(Player, related_name='bowling_average', on_delete=models.CASCADE)
 
     wickets = models.IntegerField(null=True, blank=True)
     best_bowling_innings = models.CharField(max_length=50, default=' ', null=True, blank=True)
@@ -99,9 +91,9 @@ class BowlingAverage(BasicAverageIfo):
         )
 
 
-class Photos(models.Model):
-    player_id = models.ForeignKey(Player, on_delete=models.CASCADE)
+class Photo(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
     photo_url = models.URLField(max_length=100, default=' ')
-
-
-# admin.site.register(TestModel, TestModelAdmin)
+    photo = models.ImageField(upload_to="", blank=False)

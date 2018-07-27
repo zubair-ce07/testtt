@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'imagekit',
+    'tinymce',
 ]
 
 MIDDLEWARE = [
@@ -125,4 +127,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
+STATIC_ROOT = "/home/raziullah/DjangoCricketApp/the-lab/static"
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+MEDIA_URL = '/media/'
+
+STATICFILES_DIRS = [
+    "/home/raziullah/DjangoCricketApp/the-lab/articles/static/articles",
+    "/home/raziullah/DjangoCricketApp/the-lab/comments/static/comments",
+    "/home/raziullah/DjangoCricketApp/the-lab/teams/static/teams",
+    "/home/raziullah/DjangoCricketApp/the-lab/users/static/users",
+]
+
+
+
+
