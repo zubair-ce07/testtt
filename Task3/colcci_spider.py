@@ -42,8 +42,8 @@ class ColcciProductDetails(Spider):
         selector = response.css(".descriptioncolContent")
         item = ProductItem()
 
-        item['retailer_sku'] = selector.css('[name="add_to_cart"]::attr(value)').extract_first()
-        item['name'] = selector.css('[itemprop="name"]::text').extract_first()
+        item['retailer_sku'] = self.get_retailer_sku(selector)
+        item['name'] = self.get_item_name(selector)
         item['brand'] = 'Colcci'
         item['url'] = response.url
         item['category'] = self.get_category(item['name'])
@@ -54,6 +54,12 @@ class ColcciProductDetails(Spider):
         item['skus'] = self.get_skus(response)
 
         yield item
+
+    def get_item_name(self, selector):
+        return selector.css('[itemprop="name"]::text').extract_first()
+
+    def get_retailer_sku(self, selector):
+        return selector.css('[name="add_to_cart"]::attr(value)').extract_first()
 
     def get_category(self, item_name):
         return item_name.split(" ")[0]
@@ -83,17 +89,16 @@ class ColcciProductDetails(Spider):
 
     def get_skus(self, response):
         sku_jsons = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
-        filtered_skus = []
-        if sku_jsons:
-            for sku_json in sku_jsons:
-                filtered_skus.append({
-                    "colour": sku_json.get("option0"),
-                    "price": sku_json.get("price_short"),
-                    "Currency": "Brazilian real",
-                    "size": sku_json.get("option1"),
-                    "previous_price": sku_json.get("compare_at_price_short"),
-                    "out_of_stock": not sku_json.get("available"),
-                    "sku_id": sku_json.get("sku")
-                })
+        skus = []
+        for sku_json in sku_jsons:
+            skus.append({
+                "colour": sku_json.get("option0"),
+                "price": sku_json.get("price_short"),
+                "currency": "BRL",
+                "size": sku_json.get("option1"),
+                "previous_price": sku_json.get("compare_at_price_short"),
+                "out_of_stock": not sku_json.get("available"),
+                "sku_id": sku_json.get("sku")
+            })
 
-            return filtered_skus
+        return skus
