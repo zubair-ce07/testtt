@@ -23,6 +23,7 @@ class CeaSpider(Spider):
     start_urls = [f'https://www.cea.com.br/buscapagina?ft=masculino&{query_string}&PageNumber=1'
                   , f'https://www.cea.com.br/buscapagina?ft=feminina&{query_string}&PageNumber=1'
                   , f'https://www.cea.com.br/buscapagina?ft=infantil&{query_string}&PageNumber=1'
+                  , f'https://www.cea.com.br/buscapagina?ft=beauty&{query_string}&PageNumber=1'
                   , f'https://www.cea.com.br/buscapagina?ft=celulares&{query_string}&PageNumber=1'
                   , f'https://www.cea.com.br/buscapagina?ft=tablets&{query_string}&PageNumber=1'
                   , f'https://www.cea.com.br/buscapagina?ft=acessorios&{query_string}&PageNumber=1']
