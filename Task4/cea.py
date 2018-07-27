@@ -85,15 +85,15 @@ class CeaSpider(Spider):
 
     def get_skus(self, response):
         data = json.loads(response.css('script::text').re(r'var skuJson_0 = (.+]});')[0])
-        filtered_skus = []
-        for sku_json in data.get('skus'):
-            filtered_skus.append({
+        skus = []
+        for sku_json in data['skus']:
+            skus.append({
                 "colour": sku_json.get("dimensions").get("Cor"),
                 "price": sku_json.get("bestPrice"),
-                "Currency": "Brazilian real",
+                "currency": "BRL",
                 "size": sku_json.get("dimensions").get("Tamanho"),
                 "out_of_stock": not sku_json.get("available"),
                 "sku_id": sku_json.get("sku")
             })
 
-        return filtered_skus
+        return skus
