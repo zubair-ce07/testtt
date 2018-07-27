@@ -3,14 +3,15 @@ import re
 import scrapy
 
 
-class TausendkindSpider(scrapy.Spider):
+class GarageClothingSpider(scrapy.Spider):
     name = "garageclothing"
     start_urls = [
-        'https://www.garageclothing.com/ca/'
+        'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true'
     ]
 
     custom_settings = {
         'DOWNLOAD_DELAY': 2,
+        'HTTPERROR_ALLOWED_CODES': [404]
     }
 
     allowed_domains = [
@@ -19,19 +20,43 @@ class TausendkindSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        # listing_css = '#main-menu a::attr(href)'
+        yield scrapy.Request('https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true',
+                       headers={
+                           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) '
+                                         'Gecko/20100101 Firefox/62.0',
+                           'Accept': '*/*',
+                           'Accept-Language': 'en-US,en;q=0.5',
+                           'Referer': 'https://www.garageclothing.com/',
+                           'Origin': 'https://www.garageclothing.com',
+                           'DNT': '1',
+                           'Connection': 'keep-alive'
+                       })
+
+        yield {'ax': response.css('*').extract()}
+        # yield {'a': response.css(
+        #     '#mainCategoryMenu span.categoryMenuItemSpan a::attr(href)').extract(),
+        #        'r': response.url}
+
+        # cookie_jar = response.meta.setdefault('cookie_jar', CookieJar())
+        # cookie_jar.extract_cookies(response, response.request)
+        # request = scrapy.Request('https://www.garageclothing.com/ca/', self.parse, dont_filter=True)
+        # cookie_jar.add_cookie_header(request)
+        # yield request
+
+        # listing_css = '#mainCategoryMenu span.categoryMenuItemSpan a::attr(href)'
         #
         # for url in response.css(listing_css).extract()[1:]:
-        #     yield response.follow(url, self.parse_listing)
+        #     yield response.follow(url.split(';')[0], self.parse_listing)
+
+        # yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//www.garageclothing.com/ca/cropped-classic-tee-with-rolled-cuff/p/100036409.product&noRedirectJavaScript=true', self.parse_product)
         # yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//'
-        #                      'www.garageclothing.com/ca/cropped-classic-tee-with-rolled-cuff/p/'
-        #                      '100036409.product&noRedirectJavaScript=true', self.parse_product)
-        yield scrapy.Request('https://www.dynamiteclothing.com/?postSessionRedirect=https%3A//'
-                             'www.garageclothing.com/ca/crew-neck-sweater/p/prod3030019.product'
-                             '&noRedirectJavaScript=true', self.parse_product)
+        #                      'www.garageclothing.com/ca/crew-neck-sweater/p/prod3030019.product'
+        #                      '&noRedirectJavaScript=true', self.parse_product)
 
     def parse_listing(self, response):
-        pass
+        next_page = response.css('#catPageNext::attr(href)').extract_first()
+        if next_page:
+            return scrapy.Request(next_page, self.parse_listing)
 
     def parse_product(self, response):
         sku = {'retailer_sku': self.get_product_retailer_sku(response),
