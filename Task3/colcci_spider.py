@@ -53,7 +53,7 @@ class ColcciProductDetails(Spider):
         item['image_urls'] = self.get_image_urls(response)
         item['skus'] = self.get_skus(response)
 
-        yield item
+        return item
 
     def get_item_name(self, selector):
         return selector.css('[itemprop="name"]::text').extract_first()
