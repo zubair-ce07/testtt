@@ -95,14 +95,8 @@ class WoolrichSpider(CrawlSpider):
         return [urljoin(response.url, l) for l in img_links]
 
     def _get_skus(self, response):
-        item = {}
-        item['color'] = self._extract_color(response)
-        item['price'] = self._extract_price(response)
-        item['currency'] = self._extract_currency(response)
-        previous_price = self._extract_prev_price(response)
-
-        if previous_price:
-            item['previous price'] = previous_price
+        raw_item = self._extract_sku_pricing(response)
+        raw_item['color'] = self._extract_color(response)
 
         sizes = response.css('.sizelist li a::attr(title)').extract()
         size_ids = response.css('.sizelist li a::attr(id)').extract()
@@ -110,7 +104,7 @@ class WoolrichSpider(CrawlSpider):
 
         skus = []
         for size, size_id, stock_level in zip(sizes, size_ids, stock_levels):
-            sku_item = item.copy()
+            sku_item = raw_item.copy()
             sku_item['size'] = size
             sku_item['id'] = size_id
 
@@ -122,6 +116,13 @@ class WoolrichSpider(CrawlSpider):
         if len(skus) == 1:
             skus[0]['size'] = 'ONE-SIZE'
         return skus
+
+    def _extract_sku_pricing(self, response):
+        return {
+            'price': self._extract_price(response),
+            'previous price': self._extract_prev_price(response),
+            'currency': self._extract_currency(response)
+        }
     
     def _extract_color(self, response):
         return response.css('.colorName::text').extract_first().strip()
