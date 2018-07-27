@@ -21,14 +21,14 @@ class TausendkindSpider(scrapy.Spider):
     def parse(self, response):
         listing_css = '#main-menu a::attr(href)'
 
-        for url in response.css(listing_css).extract()[1:]:
-            yield response.follow(url, self.parse_listing)
+        yield from (response.follow(u, self.parse_listing) for u in
+                    response.css(listing_css).extract()[1:])
 
     def parse_listing(self, response):
         raw_listing = self.get_raw_listing(response)
 
-        for listing in raw_listing.values():
-            yield response.follow(f"/{listing['url_key']}", self.parse_product)
+        yield from (response.follow(f"/{listing['url_key']}", self.parse_product) for listing in
+                    raw_listing.values())
 
         next_page = response.css('#pager-next-page::attr(href)').extract_first()
         if next_page:
@@ -100,25 +100,27 @@ class TausendkindSpider(scrapy.Spider):
             skus.append(sku)
             return skus
 
-        for row in size_drop_down:
+        for size_sel in size_drop_down:
+            availability_xpath = './/div[contains(text(), "Ausverkauft")]'
+
             sku = {
-                'sku_id': row.css('li::attr(data-value)').extract_first(),
-                'size': row.css('div.l-space::text').extract_first(),
-                'is_in_stock': not row.xpath('.//div[contains(text(), "Ausverkauft")]').extract(),
+                'sku_id': size_sel.css('li::attr(data-value)').extract_first(),
+                'size': size_sel.css('div.l-space::text').extract_first(),
+                'is_in_stock': not size_sel.xpath(availability_xpath).extract(),
                 'currency': 'EUR',
                 'color': color
             }
 
-            sku.update(self.get_product_price(row))
+            sku.update(self.get_product_price(size_sel))
             skus.append(sku)
 
         return skus
 
-    def get_product_price(self, row):
+    def get_product_price(self, size_sel):
         product_price = {}
 
-        special_price = row.css('li::attr(data-specialprice)').extract_first()
-        price = row.css('li::attr(data-price)').extract_first()
+        special_price = size_sel.css('li::attr(data-specialprice)').extract_first()
+        price = size_sel.css('li::attr(data-price)').extract_first()
 
         if special_price:
             product_price['price'] = self.get_price_from_string(special_price)
@@ -137,10 +139,10 @@ class TausendkindSpider(scrapy.Spider):
         return raw_images['images']['list']
 
     def get_product_color(self, response):
-        color = re.search(r'(in )([a-z]+)', self.get_product_name(response))
+        color = re.findall(r'in ([a-z]+)', self.get_product_name(response))
 
         if color:
-            return color.group(2)
+            return color[0]
 
     @staticmethod
     def get_product_categories(response):
@@ -174,8 +176,8 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_description(response):
-        description = response.css(
-            'div.pdp-description-container--description p::text').extract_first()
+        description_css = 'div.pdp-description-container--description p::text'
+        description = response.css(description_css).extract_first()
         return [d.strip() for d in re.split(r'[.,]', description) if d.strip()]
 
     @staticmethod
@@ -185,7 +187,7 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_care(response):
-        care = response.css('div.pdp-description-container--fabric_and_care li::text').extract()
+        care = response.css('.pdp-description-container--fabric_and_care li::text').extract()
         return [c for c in care[:-1] if 'Herstellerartikelnummer' not in c]
 
     @staticmethod
