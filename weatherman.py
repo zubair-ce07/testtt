@@ -1,7 +1,5 @@
 import sys
 import os
-import datetime
-
 
 class WeatherData():
     """"""
@@ -110,7 +108,7 @@ class WeatherData():
 if __name__ == "__main__":
     weather_data_obj = WeatherData()
     given_arg_list = weather_data_obj.read_cmd_arg()
-    valid_list_of_files =
-    weather_data_obj.collect_realted_files(given_arg_list)
+    valid_list_of_files = weather_data_obj.collect_realted_files(
+                          given_arg_list)
     weather_data_obj.read_files(valid_list_of_files)
     weather_data_obj.print_weather_data()
