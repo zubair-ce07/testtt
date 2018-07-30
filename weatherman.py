@@ -32,27 +32,23 @@ class WeatherRecord:
         
         for txt_file in txt_files:
             with open(txt_file, 'r') as opened_file:
-                csv_reader = csv.reader(opened_file)
-                keys = next(csv_reader)  #Read headings
+                csv_reader = csv.DictReader(opened_file)
                 for line in csv_reader:
-                    line_content_list = line[0].split(',')
-                    year_month_date = line_content_list[0].split('-')
-                    self.weather_data.append(self.populate_data(keys,line_content_list,year_month_date))        
+                    try:
+                        year_month_date = line["PKST"].split('-')
+                    except KeyError:
+                        year_month_date = line["PKT"].split('-')     
+                    self.weather_data.append(self.populate_data(line, year_month_date))   
 
-    def populate_data(self, keys, line_content_list, year_month_date):
-        temp_dictionary = {}
-        sub_key_level_dictionary = {}
-        for key, weather_data in zip(keys, line_content_list):
-            key = key.replace('\n','')
-            temp_dictionary[key] = weather_data
-            sub_key_level_dictionary = {
-                                        str(year_month_date[0]):{
-                                            str(year_month_date[1]):{
-                                                str(year_month_date[2]):
-                                                    temp_dictionary
-                                                }
+    def populate_data(self, data, year_month_date):
+        sub_key_level_dictionary = {
+                                    str(year_month_date[0]):{
+                                        str(year_month_date[1]):{
+                                            str(year_month_date[2]):
+                                                data
                                             }
                                         }
+                                    }
         return sub_key_level_dictionary
     
 
