@@ -2,7 +2,7 @@ import argparse
 
 import validators
 
-from concurrent_spider import RecursiveConcurrentSpider
+from concurrent_spider import ConcurrentSpider
 
 
 def validate_url(url):
@@ -21,15 +21,15 @@ def validate_positive_input(value):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("site_to_crawl", help="This arg stores the link of the site to Crawl", type=validate_url)
-    parser.add_argument("urls_limit", help="This arg stores the total number of urls to visit", type=validate_positive_input)
-    parser.add_argument("download_delay", help="The amount of delay in consecutive downloads", type=validate_positive_input)
-    parser.add_argument("tasks_limit", help="Total number concurrent requests", type=validate_positive_input)
+    parser.add_argument("urls_limit", help="Total number of urls to visit", type=validate_positive_input)
+    parser.add_argument("download_delay", help="Amount of delay in consecutive downloads", type=validate_positive_input)
+    parser.add_argument("concurrency", help="Total number of concurrent requests", type=validate_positive_input)
     return parser.parse_args()
 
 
 def main():
     arguments = parse_arguments()
-    spider = RecursiveConcurrentSpider(arguments.site_to_crawl, arguments.download_delay, int(arguments.tasks_limit))
+    spider = ConcurrentSpider(arguments.site_to_crawl, arguments.download_delay, int(arguments.concurrency))
     spider.run(int(arguments.urls_limit), arguments.site_to_crawl)
     spider.print_stats()
 

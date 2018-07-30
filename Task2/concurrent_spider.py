@@ -7,29 +7,29 @@ from parsel import Selector
 import requests
 
 
-class RecursiveConcurrentSpider:
-    def __init__(self, site_url, download_delay, concurrent_requests_limit):
-        self.allowed_domain = urlparse(site_url).netloc
+class ConcurrentSpider:
+    def __init__(self, site_url, download_delay, concurrency):
         self.download_delay = download_delay
+        self.allowed_domain = urlparse(site_url).netloc
+        self.__tasks_limiting_semaphore = asyncio.BoundedSemaphore(concurrency)
+
+        self.start_time = None
         self.bytes_downloaded = 0
         self.visited_urls = []
-        self.start_time = None
-        self.__tasks_limiting_semaphore = asyncio.BoundedSemaphore(concurrent_requests_limit)
         self.__loop = asyncio.get_event_loop()
         self.__executor = concurrent.futures.ThreadPoolExecutor()
 
     def run(self, urls_limit, url):
-        loop = asyncio.get_event_loop()
         self.start_time = time.time()
-        loop.run_until_complete(self.schedule_requests([self.normalize_url(url)], urls_limit))
+        self.__loop.run_until_complete(self.schedule_requests([self.normalize_url(url)], urls_limit))
 
     async def schedule_requests(self, urls, limit):
         if len(self.visited_urls) < limit and urls:
             urls = urls[:limit-len(self.visited_urls)] if len(urls) > limit-len(self.visited_urls) else urls
             self.visited_urls.extend(urls)
 
-            for task in await self.visit_urls(urls):
-                response = await task
+            for request in await self.visit_urls(urls):
+                response = await request
                 await self.schedule_requests(self.parse_response(response), limit)
 
     async def visit_urls(self, urls):
@@ -49,17 +49,16 @@ class RecursiveConcurrentSpider:
     def parse_response(self, response):
         links = self.extract_links(response)
         absolute_urls = {self.make_absolute_url(self.normalize_url(link)) for link in links}
-        filtered_urls = self.filter_urls(absolute_urls)
-        return filtered_urls
+        return self.filter_urls(absolute_urls)
 
     def extract_links(self, response):
         return Selector(response.text).css('a::attr(href)').extract()
 
+    def make_absolute_url(self, link):
+        return urljoin(f"http://{self.allowed_domain}", link)
+
     def normalize_url(self, url):
         return url.strip().strip("/")
-
-    def make_absolute_url(self, link):
-        return urljoin(f'http://{self.allowed_domain}', link)
 
     def filter_urls(self, urls):
         return [url for url in urls if self.validate_url(url)]
