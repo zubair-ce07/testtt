@@ -28,17 +28,17 @@ class WeatherRecord:
     def read_data_from_files(self,folder_path):
         txt_files = glob.glob(folder_path+"/*.txt")  #Read text files
         self.weather_data = []
-
+        
         for txt_file in txt_files:
-            opened_file = open(txt_file)
-            keys = str(opened_file.readline())  #Read headings
-            keys = keys.split(',')
-            for line in opened_file.readlines()[1:]:
-                line = line.replace('\n', '')
-                line_content_list = line.split(',')
-                year_month_date = line_content_list[0].split('-')
-                self.weather_data.append(self.populate_data(keys,line_content_list,year_month_date))
-            opened_file.close()
+            with open(txt_file, 'r') as opened_file:
+                opened_file = open(txt_file)
+                keys = str(opened_file.readline())  #Read headings
+                keys = keys.split(',')
+                for line in opened_file.readlines()[1:]:
+                    line = line.replace('\n', '')
+                    line_content_list = line.split(',')
+                    year_month_date = line_content_list[0].split('-')
+                    self.weather_data.append(self.populate_data(keys,line_content_list,year_month_date))
         
 
     def populate_data(self,keys,line_content_list,year_month_date):
