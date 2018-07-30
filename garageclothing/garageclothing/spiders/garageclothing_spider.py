@@ -98,10 +98,12 @@ class GarageClothingSpider(scrapy.Spider):
         size_request_params_queue = response.meta['size_request_params_queue']
 
         if response.css('#productLengths'):
-            if sku.get('partial_skus'):
-                sku['partial_skus'].extend(self.generate_product_partial_skus(response))
+            if sku.get('multi_dimension_params_queue'):
+                sku['multi_dimension_params_queue'].extend(
+                    self.generate_multi_dimension_params_queue(response))
             else:
-                sku['partial_skus'] = self.generate_product_partial_skus(response)
+                sku['multi_dimension_params_queue'] = \
+                    self.generate_multi_dimension_params_queue(response)
         else:
             for size in response.css('span'):
                 sku['skus'].append(self.generate_product_sku(size, sku))
@@ -109,7 +111,7 @@ class GarageClothingSpider(scrapy.Spider):
         if size_request_params_queue:
             return self.generate_size_parse_request(size_request_params_queue, sku)
 
-        if sku.get('partial_skus'):
+        if sku.get('multi_dimension_params_queue'):
             return self.generate_multi_dimension_parse_request(sku)
 
         del sku['sku_fields']
@@ -128,11 +130,11 @@ class GarageClothingSpider(scrapy.Spider):
                                                                sku['sku_fields']['colors'])
             sku['skus'].append(sku_variant)
 
-        if sku.get('partial_skus'):
+        if sku.get('multi_dimension_params_queue'):
             return self.generate_multi_dimension_parse_request(sku)
 
         del sku['sku_fields']
-        del sku['partial_skus']
+        del sku['multi_dimension_params_queue']
         return sku
 
     def generate_image_parse_request(self, img_request_params_queue, sku):
@@ -154,9 +156,9 @@ class GarageClothingSpider(scrapy.Spider):
         return request
 
     def generate_multi_dimension_parse_request(self, sku):
-        partial_sku = sku['partial_skus'].pop()
+        multi_dimension_params_queue = sku['multi_dimension_params_queue'].pop()
         form_params = {
-            'skuId': partial_sku['sku_id'],
+            'skuId': multi_dimension_params_queue['sku_id'],
             'productId': sku['retailer_sku']
         }
 
@@ -165,8 +167,8 @@ class GarageClothingSpider(scrapy.Spider):
             self.parse_multi_dimension_product, formdata=form_params)
 
         request.meta['sku'] = sku
-        request.meta['skus_color_code'] = partial_sku['color_code']
-        request.meta['length'] = partial_sku['length']
+        request.meta['skus_color_code'] = multi_dimension_params_queue['color_code']
+        request.meta['length'] = multi_dimension_params_queue['length']
         return request
 
     def generate_img_request_params_queue(self, response):
@@ -201,18 +203,18 @@ class GarageClothingSpider(scrapy.Spider):
         return size_request_params_queue
 
     @staticmethod
-    def generate_product_partial_skus(response):
-        partial_skus = []
+    def generate_multi_dimension_params_queue(response):
+        multi_dimension_params_queue = []
         color_code = response.css('span.size::attr(colour)').extract_first()
 
         for length in response.css('span.length'):
-            partial_skus.append({
+            multi_dimension_params_queue.append({
                 'color_code': color_code,
                 'length': length.css('span::text').extract_first(),
                 'sku_id': length.css('span::attr(skuid)').extract_first()
             })
 
-        return partial_skus
+        return multi_dimension_params_queue
 
     def generate_product_sku(self, size, sku):
         variant = {
