@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import glob
 import sys
+import csv
 
 VALID_OPTIONS = [
                     '-e','-c', '-a'
@@ -31,20 +32,16 @@ class WeatherRecord:
         
         for txt_file in txt_files:
             with open(txt_file, 'r') as opened_file:
-                opened_file = open(txt_file)
-                keys = str(opened_file.readline())  #Read headings
-                keys = keys.split(',')
-                for line in opened_file.readlines()[1:]:
-                    line = line.replace('\n', '')
-                    line_content_list = line.split(',')
+                csv_reader = csv.reader(opened_file)
+                keys = next(csv_reader)  #Read headings
+                for line in csv_reader:
+                    line_content_list = line[0].split(',')
                     year_month_date = line_content_list[0].split('-')
-                    self.weather_data.append(self.populate_data(keys,line_content_list,year_month_date))
-        
+                    self.weather_data.append(self.populate_data(keys,line_content_list,year_month_date))        
 
-    def populate_data(self,keys,line_content_list,year_month_date):
+    def populate_data(self, keys, line_content_list, year_month_date):
         temp_dictionary = {}
         sub_key_level_dictionary = {}
-
         for key, weather_data in zip(keys, line_content_list):
             key = key.replace('\n','')
             temp_dictionary[key] = weather_data
