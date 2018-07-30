@@ -34,10 +34,9 @@ class WeatherRecord:
             with open(txt_file, 'r') as opened_file:
                 csv_reader = csv.DictReader(opened_file)
                 for line in csv_reader:
-                    try:
-                        year_month_date = line["PKST"].split('-')
-                    except KeyError:
-                        year_month_date = line["PKT"].split('-')     
+                    year_month_date = (line.get("PKST") or 
+                                        line.get("PKT")
+                                        ).split('-') 
                     self.weather_data.append(self.populate_data(line, year_month_date))   
 
     def populate_data(self, data, year_month_date):
@@ -198,32 +197,40 @@ class ReportsGenrator:
     
     def __init__(self):
         pass
-
     def yearly_report_genrator(self, calculated_results):
-        print("Highest: " + calculated_results["MaxYearlyTempreature"]\
-                +"C on " + calculated_results["HighestTempretureDay"]\
-                +" " + calculated_results["HighestTempretureMonth"])
-        print("Lowest: " + calculated_results["MinYearlyTempreature"]\
-                +"C on " + calculated_results["LowestTempretureDay"]\
-                +" " + calculated_results["LowestTempretureMonth"])
-        print("Humidity: " + calculated_results["Humidity"]\
-                +"% on " + calculated_results["MostHumidDay"]\
-                +" " + calculated_results["MostHumidMonth"])
-    
-
+        print("Highest: {} C on {} {}".format(
+                calculated_results["MaxYearlyTempreature"],
+                calculated_results["HighestTempretureDay"],
+                calculated_results["HighestTempretureMonth"]
+                ))
+        print("Lowest: {} C on {} {}".format(
+                calculated_results["MinYearlyTempreature"],
+                calculated_results["LowestTempretureDay"],
+                calculated_results["LowestTempretureMonth"]
+                ))
+        print("Humidity: {}% on {}".format(
+                calculated_results["MostHumidDay"],
+                calculated_results["MostHumidMonth"]
+                )) 
+        
     def monthly_report_genrator(self, calculated_results):
-        print("Highest Average: " 
-                + str(calculated_results["HighestAverage"]) + "C")
-        print("Lowest Average: " 
-                + str(calculated_results["LowestAverage"]) + "C")
-        print("Average Mean Humidity: " 
-                + str(calculated_results["AverageMeanHumidity"]) + "%")
+        print("Highest Average: {} C".format(
+                calculated_results["HighestAverage"]
+                ))
+        print("Lowest Average: {} C".format(
+                calculated_results["LowestAverage"]  
+                ))
+        print("Average Mean Humidity: {}%".format(
+                calculated_results["AverageMeanHumidity"]
+                ))
 
     
 
     def daily_report_genrator(self, calculated_results, caller_flag):
-        print(calculated_results["Month"] 
-                +" "+ calculated_results["Year"])
+        print("{} {}".format(
+                calculated_results["Month"],
+                calculated_results["Year"]
+                ))
         daily_max_data = calculated_results.get("MaxTempreture")
         daily_min_data = calculated_results.get("MinTemperature")
 
@@ -234,16 +241,15 @@ class ReportsGenrator:
                     sys.stdout.write("\033[1;31m")  #Red color
                     print("+", end="")
                     sys.stdout.write("\033[1;00m")  #White
-                print(" " + daily_max_data.get(day[0]) + "C")
+                print(" {} C".format(daily_max_data.get(day[0])))
                 print(day[0], end="")
                 for iterator in range(0, int(daily_min_data.get(day[0]))):
                     sys.stdout.write("\033[1;34m")  #Blue color
                     print("+", end="")
                     sys.stdout.write("\033[1;00m")  #White
-                print(" " + daily_min_data.get(day[0]) + "C")
+                print(" {} C".format(daily_min_data.get(day[0])))
 
         else:
-
             for day in zip(daily_max_data, daily_min_data):
                 print(day[0], end="")
                 for iterator in range(0, int(daily_min_data.get(day[0]))):
@@ -255,8 +261,8 @@ class ReportsGenrator:
                     sys.stdout.write("\033[1;31m")  #Red color
                     print("+", end="")
                     sys.stdout.write("\033[1;00m")  #White
-                print(" " + daily_min_data.get(day[0]) + "C", end="")
-                print(" - " + daily_max_data.get(day[0]) + "C")
+                print(" {} C".format(daily_min_data.get(day[0])), end="")
+                print(" - {} C".format(daily_max_data.get(day[0])))
 
 
 def usage_printer():
