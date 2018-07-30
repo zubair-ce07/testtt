@@ -5,6 +5,7 @@ import time
 from urllib.parse import urljoin, urlparse
 from parsel import Selector
 import requests
+import validators
 
 
 class ConcurrentSpider:
@@ -48,14 +49,14 @@ class ConcurrentSpider:
 
     def parse_response(self, response):
         links = self.extract_links(response)
-        absolute_urls = {self.make_absolute_url(self.normalize_url(link)) for link in links}
+        absolute_urls = {self.normalize_url(self.make_absolute_url(response.url, link)) for link in links}
         return self.filter_urls(absolute_urls)
 
     def extract_links(self, response):
         return Selector(response.text).css('a::attr(href)').extract()
 
-    def make_absolute_url(self, link):
-        return urljoin(f"http://{self.allowed_domain}", link)
+    def make_absolute_url(self, base_url, link):
+        return urljoin(base_url, link)
 
     def normalize_url(self, url):
         return url.strip().strip("/")
@@ -64,7 +65,7 @@ class ConcurrentSpider:
         return [url for url in urls if self.validate_url(url)]
 
     def validate_url(self, url):
-        return url not in self.visited_urls and self.allowed_domain == urlparse(url).netloc
+        return url not in self.visited_urls and self.allowed_domain == urlparse(url).netloc and validators.url(url)
 
     def print_stats(self):
         print(f"\nTotal Requests: {len(self.visited_urls)}\nBytes Downloaded: {self.bytes_downloaded}\n"
