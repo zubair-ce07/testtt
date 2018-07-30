@@ -99,3 +99,9 @@ class Photo(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     photo_url = models.URLField(max_length=100, default=' ')
     photo = models.ImageField(upload_to="", blank=False)
+
+
+class LiveScore(models.Model):
+    team1 = models.ForeignKey(Team, related_name='lives_scores_1', on_delete=models.CASCADE)
+    team2 = models.ForeignKey(Team, related_name='lives_scores_2', on_delete=models.CASCADE)
+    status = models.CharField(max_length=50, null=True, blank=True)
