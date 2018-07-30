@@ -1,9 +1,9 @@
-
 from datetime import datetime
 
 from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+from slugify import slugify
 
 from student.items import Room, RoomLoader
 from .base import BaseCrawlSpider, BaseParseSpider
@@ -15,7 +15,7 @@ class Mixin:
     allowed_domains = ['iqstudentaccommodation.com']
     start_urls = ['https://www.iqstudentaccommodation.com/']
     landlord_slug = 'iqstudent-property-group-pty-ltd'
-    landlord_name = 'Iqstudent Property Group Pty Ltd'
+    landlord_name = slugify('Iqstudent Property Group Pty Ltd')
 
 
 class IQStudentAccommodationSpider(BaseParseSpider, Mixin):
@@ -32,16 +32,21 @@ class IQStudentAccommodationSpider(BaseParseSpider, Mixin):
         loader.add_css('room_name', '.slidertext span ::text')
         loader.add_css('room_amenities', '.left-intro.room-type .sprite-before.star ::text')
         loader.add_css('room_photos', '.carousel img::attr(src)')
-        rooms = iter(response.css('.divTable .divTableBody .divTableRow'))
-        next(rooms)
-        for room in rooms:
-            cells = clean(room.css('.divTableCell ::text'))
-            loader.add_value('room_availability', cells[5])
-            loader.add_value('move_in_date', self.date_format(cells[1]))
-            loader.add_value('move_out_date', self.date_format(cells[2]))
-            loader.add_value('deposit_amount', cells[3])
-            loader.add_value('room_price', cells[4])
-            yield loader.load_item().copy()
+        rooms_sel = iter(response.css('.divTable .divTableBody .divTableRow'))
+        next(rooms_sel)
+        common_room = loader.load_item()
+        for room_sel in rooms_sel:
+            loader_r = RoomLoader(item=common_room.copy(), selector=room_sel)
+            self.parse_rooms(loader_r, room_sel)
+            yield loader_r.load_item()
+
+    def parse_rooms(self, loader, room_sel):
+        cells = clean(room_sel.css('.divTableCell ::text'))
+        loader.add_value('room_availability', cells[5])
+        loader.add_value('move_in_date', self.date_format(cells[1]))
+        loader.add_value('move_out_date', self.date_format(cells[2]))
+        loader.add_value('deposit_amount', cells[3])
+        loader.add_value('room_price', cells[4])
 
     def date_format(self, in_out_date):
         indate = datetime.strptime(in_out_date, "%d/%m/%Y").date()
@@ -68,5 +73,3 @@ class IQStudentAccommodationCrawlSpider(BaseCrawlSpider, Mixin):
         rooms_urls = clean(response.css('.button.cta-small.btnsite ::attr(href)'))
         for url in rooms_urls:
             yield Request(url=response.urljoin(url), callback=self.parse_item, meta=meta)
-
-
