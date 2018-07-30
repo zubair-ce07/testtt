@@ -34,8 +34,8 @@ class IQStudentAccommodationSpider(BaseParseSpider, Mixin):
         loader.add_css('room_photos', '.carousel img::attr(src)')
         rooms = iter(response.css('.divTable .divTableBody .divTableRow'))
         next(rooms)
-        for row in rooms:
-            cells = clean(row.css('.divTableCell ::text'))
+        for room in rooms:
+            cells = clean(room.css('.divTableCell ::text'))
             loader.add_value('room_availability', cells[5])
             loader.add_value('move_in_date', self.date_format(cells[1]))
             loader.add_value('move_out_date', self.date_format(cells[2]))
