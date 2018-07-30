@@ -5,24 +5,18 @@ from scrapy.spiders import Spider, Request
 from Task3.items import ProductItem
 
 
-class ColcciProductDetails(Spider):
+class ColcciSpider(Spider):
     name = "Colcci"
 
     custom_settings = {
         'ROBOTSTXT_OBEY': True,
         'DOWNLOAD_DELAY': 0.25,
-        'ITEM_PIPELINES': {
-            'Task3.pipelines.DuplicatesRemovalPipeline': 100,
-        },
-        'FEED_FORMAT': 'json',
-        'FEED_URI': 'output/productsdetail.json',
-        'FEED_EXPORT_ENCODING': "utf-8",
     }
 
-    start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1'
-                  , 'https://www.colcci.com.br/feminino-novo1/page/1'
-                  , 'https://www.colcci.com.br/fitness/page/1'
-                  , 'https://www.colcci.com.br/acessorios/page/1']
+    start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1',
+                  'https://www.colcci.com.br/feminino-novo1/page/1',
+                  'https://www.colcci.com.br/fitness/page/1',
+                  'https://www.colcci.com.br/acessorios/page/1']
 
     def parse(self, response):
 
@@ -42,42 +36,42 @@ class ColcciProductDetails(Spider):
         selector = response.css(".descriptioncolContent")
         item = ProductItem()
 
-        item['retailer_sku'] = self.get_retailer_sku(selector)
-        item['name'] = self.get_item_name(selector)
+        item['retailer_sku'] = self.extract_retailer_sku(selector)
+        item['name'] = self.extract_item_name(selector)
         item['brand'] = 'Colcci'
         item['url'] = response.url
-        item['category'] = self.get_category(item['name'])
-        item['price'] = self.get_price(selector)
-        item['description'] = self.get_description(selector)
-        item['gender'] = self.get_gender(response)
-        item['image_urls'] = self.get_image_urls(response)
-        item['skus'] = self.get_skus(response)
+        item['category'] = self.extract_category(item['name'])
+        item['price'] = self.extract_price(selector)
+        item['description'] = self.extract_description(selector)
+        item['gender'] = self.extract_gender(response)
+        item['image_urls'] = self.extract_image_urls(response)
+        item['skus'] = self.extract_skus(response)
 
         return item
 
-    def get_item_name(self, selector):
+    def extract_item_name(self, selector):
         return selector.css('[itemprop="name"]::text').extract_first()
 
-    def get_retailer_sku(self, selector):
+    def extract_retailer_sku(self, selector):
         return selector.css('[name="add_to_cart"]::attr(value)').extract_first()
 
-    def get_category(self, item_name):
+    def extract_category(self, item_name):
         return item_name.split(" ")[0]
 
-    def get_price(self, selector):
+    def extract_price(self, selector):
         raw_price = selector.css('[itemprop="price"]::text').re_first('[\d+,]+')
         return float(raw_price.replace(',', ''))*100
 
-    def get_image_urls(self, response):
+    def extract_image_urls(self, response):
         raw_image_urls = response.css(".cloud-zoom-gallery::attr(href)").extract()
         return [f"http:{url}" for url in raw_image_urls]
 
-    def get_description(self, selector):
+    def extract_description(self, selector):
         raw_description = selector.css('#whatItIs *::text').extract()
         descriptions = [description.strip() for description in raw_description]
         return ''.join(descriptions)
 
-    def get_gender(self, response):
+    def extract_gender(self, response):
         item_name = response.css('[itemprop="name"]::text').extract_first()
 
         if 'Unissex' in item_name:
@@ -87,18 +81,24 @@ class ColcciProductDetails(Spider):
 
         return 'Women'
 
-    def get_skus(self, response):
+    def extract_skus(self, response):
         sku_jsons = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
         skus = []
         for sku_json in sku_jsons:
-            skus.append({
+            sku = {
                 "colour": sku_json.get("option0"),
                 "price": sku_json.get("price_short"),
                 "currency": "BRL",
                 "size": sku_json.get("option1"),
-                "previous_price": sku_json.get("compare_at_price_short"),
-                "out_of_stock": not sku_json.get("available"),
                 "sku_id": sku_json.get("sku")
-            })
+            }
+
+            if sku_json.get("compare_at_price_short"):
+                sku["previous_price"] = [sku_json.get("compare_at_price_short")]
+
+            if not sku_json.get("available"):
+                sku["out_of_stock"] = True
+
+            skus.append(sku)
 
         return skus
