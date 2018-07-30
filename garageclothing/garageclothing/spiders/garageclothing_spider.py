@@ -33,8 +33,8 @@ class GarageClothingSpider(scrapy.Spider):
     def parse(self, response):
         session_id = response.css('p::text').extract_first()
 
-        yield scrapy.Request('https://www.garageclothing.com/ca/', callback=self.parse_landing_page,
-                             cookies={'JSESSIONID': session_id})
+        return scrapy.Request('https://www.garageclothing.com/ca/',
+                              callback=self.parse_landing_page, cookies={'JSESSIONID': session_id})
 
     def parse_landing_page(self, response):
         listing_css = 'li.categoryMenuItem span.categoryMenuItemSpan a::attr(href)'
@@ -65,7 +65,6 @@ class GarageClothingSpider(scrapy.Spider):
                'skus': [],
                'sku_fields': {
                 'price': self.get_product_price(response),
-                'currency': 'CAD',
                 'colors': self.get_product_colors(response)
             }}
 
@@ -111,28 +110,26 @@ class GarageClothingSpider(scrapy.Spider):
             return self.generate_size_parse_request(size_request_params_queue, sku)
 
         if sku.get('partial_skus'):
-            return self.generate_multi_size_parse_request(sku)
+            return self.generate_multi_dimension_parse_request(sku)
 
         del sku['sku_fields']
         return sku
 
-    def parse_multi_size_product(self, response):
+    def parse_multi_dimension_product(self, response):
         sku = response.meta['sku']
         color_code = response.meta['skus_color_code']
         length = response.meta['length']
 
-        sizes = json.loads(response.css('p::text').extract_first())
+        raw_sizes = json.loads(response.css('p::text').extract_first())
 
-        sku_info = {
-            'length': length,
-            'color_code': color_code
-        }
-
-        for size in sizes['skulist']:
-            sku['skus'].append(self.generate_multi_size_product_sku(sku, size, sku_info))
+        for raw_size in raw_sizes['skulist']:
+            sku_variant = self.generate_multi_dimension_product_sku(sku, raw_size, length)
+            sku_variant['color'] = self.map_color_code_to_name(color_code,
+                                                               sku['sku_fields']['colors'])
+            sku['skus'].append(sku_variant)
 
         if sku.get('partial_skus'):
-            return self.generate_multi_size_parse_request(sku)
+            return self.generate_multi_dimension_parse_request(sku)
 
         del sku['sku_fields']
         del sku['partial_skus']
@@ -156,7 +153,7 @@ class GarageClothingSpider(scrapy.Spider):
         request.meta['size_request_params_queue'] = size_request_params_queue
         return request
 
-    def generate_multi_size_parse_request(self, sku):
+    def generate_multi_dimension_parse_request(self, sku):
         partial_sku = sku['partial_skus'].pop()
         form_params = {
             'skuId': partial_sku['sku_id'],
@@ -165,7 +162,7 @@ class GarageClothingSpider(scrapy.Spider):
 
         request = scrapy.FormRequest(
             'https://www.garageclothing.com/ca/json/sizeInventoryCheckByLengthJSON.jsp',
-            self.parse_multi_size_product, formdata=form_params)
+            self.parse_multi_dimension_product, formdata=form_params)
 
         request.meta['sku'] = sku
         request.meta['skus_color_code'] = partial_sku['color_code']
@@ -221,7 +218,6 @@ class GarageClothingSpider(scrapy.Spider):
         variant = {
             'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
                                                  sku['sku_fields']['colors']),
-            'currency': sku['sku_fields']['currency'],
             'sku_id': size.css('span::attr(skuid)').extract_first(),
             'size': size.css('span::text').extract_first(),
             'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
@@ -230,14 +226,12 @@ class GarageClothingSpider(scrapy.Spider):
         variant.update(sku['sku_fields']['price'])
         return variant
 
-    def generate_multi_size_product_sku(self, sku, size, sku_info):
+    @staticmethod
+    def generate_multi_dimension_product_sku(sku, raw_size, length):
         variant = {
-            'color': self.map_color_code_to_name(sku_info['color_code'],
-                                                 sku['sku_fields']['colors']),
-            'currency': sku['sku_fields']['currency'],
-            'sku_id': size['skuId'],
-            'size': {'length': sku_info['length'], 'width': size['size']},
-            'is_in_stock': True if size['available'] == 'true' else False
+            'sku_id': raw_size['skuId'],
+            'size': f"{length}/{raw_size['size']}",
+            'is_in_stock': True if raw_size['available'] == 'true' else False
         }
 
         variant.update(sku['sku_fields']['price'])
@@ -248,6 +242,7 @@ class GarageClothingSpider(scrapy.Spider):
 
         special_price = response.css('h2.prodPricePDP span.withSale::text').extract_first()
         normal_price = response.css('h2.prodPricePDP span.salePrice::text').extract_first()
+        prices['currency'] = 'CAD'
 
         if special_price:
             prices['price'] = self.get_price_from_string(special_price)
@@ -260,9 +255,9 @@ class GarageClothingSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_colors(response):
-        raw_colors = response.xpath('//div[@id="productColours"]'
-                                    '//div[contains(@class, "prodDetail")]'
-                                    '/@*[name()="colourid" or name()="colorname"]').extract()
+        colors_xpath = '//div[@id="productColours"]//div[contains(@class, "prodDetail")]' \
+                       '/@*[name()="colourid" or name()="colorname"]'
+        raw_colors = response.xpath(colors_xpath).extract()
         colors = []
 
         while raw_colors:
@@ -285,9 +280,9 @@ class GarageClothingSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_description(response):
-        description = response.css('#descTabDescriptionContent p::text,'
-                                   ' #descTabDescriptionContent::text,'
-                                   ' #descTab0Content::text').extract_first()
+        description_css = '#descTabDescriptionContent p::text, #descTabDescriptionContent::text, ' \
+                          '#descTab0Content::text'
+        description = response.css(description_css).extract_first()
         return [d.strip() for d in re.split(r'[.,]', description) if d.strip()]
 
     @staticmethod
