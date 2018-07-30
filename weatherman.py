@@ -15,41 +15,46 @@ COLOR_PURPLE = '\033[35m'
 COLOR_DEFAULT = '\033[0m'
 
 
+def is_dir(dirname):
+    if os.path.isdir(dirname):
+        return dirname
+    else:
+        return None
+
+
+def get_year_and_month(file_name):
+
+    year_and_month = file_name.split('_')
+    year = year_and_month[2]
+    month = year_and_month[3][:-4]
+
+    return year, str(strptime(month, '%b').tm_mon)
+
+
 class FileParser:
 
     def __init__(self):
-        self.year_data = defaultdict(dict)
+        self.year_data = {}
         self.month_data = {}
-
-    @staticmethod
-    def is_dir(dirname):
-        if not os.path.isdir(dirname):
-            print('Sorry! The directory path is not valid')
-            sys.exit(3)
-        else:
-            return dirname
-
-    @staticmethod
-    def get_year_and_month(file_name):
-
-        temp = file_name.split('_')
-        year = temp[2]
-        month = temp[3][:-4]
-
-        return year, str(strptime(month, '%b').tm_mon)
 
     def parse_file(self, dir_path):
 
-        file_names = os.listdir(self.is_dir(dir_path))
-        os.chdir(dir_path)
+        if is_dir(dir_path) is None:
+            print('Sorry! The directory path is not valid')
+            return None
+
+        file_names = os.listdir(dir_path)
 
         for file_name in file_names:
-            with open(file_name, 'r') as file:
-                year, month = self.get_year_and_month(file_name)
+            with open(dir_path + file_name, 'r') as file:
+                year, month = get_year_and_month(file_name)
                 read_csv = csv.DictReader(file, delimiter=',')
                 for i, row in enumerate(read_csv):
-                    row = {k.strip(): v.strip() for k, v in row.items()}
+                    row = {key.strip(): value.strip() for key, value in row.items()}
                     self.month_data[str(i + 1)] = row
+
+                if year not in self.year_data:
+                    self.year_data[year] = {}
 
                 self.year_data[year][month] = copy.deepcopy(self.month_data)
                 self.month_data.clear()
@@ -59,24 +64,24 @@ class ResultComputer:
 
     def compute_avg_results(self, month_data):
         sum_highest = sum_lowest = sum_humidity = 0
-        count_highest_temp = count_lowest_temp = count_humidity = 0
+        highest_temp_count = lowest_temp_count = humidity_count = 0
 
         for day in month_data.values():
             if day['Max TemperatureC'] is not EMPTY:
                 sum_highest += int(day['Max TemperatureC'])
-                count_highest_temp += 1
+                highest_temp_count += 1
 
             if day['Min TemperatureC'] is not EMPTY:
                 sum_lowest += int(day['Min TemperatureC'])
-                count_lowest_temp += 1
+                lowest_temp_count += 1
 
             if day['Max Humidity'] is not EMPTY:
                 sum_humidity += int(day['Max Humidity'])
-                count_humidity += 1
+                humidity_count += 1
 
         return (
-            sum_highest / count_highest_temp, sum_lowest / count_lowest_temp,
-            sum_humidity / count_humidity
+            sum_highest / highest_temp_count, sum_lowest / lowest_temp_count,
+            sum_humidity / humidity_count
         )
 
     def compute_extreme_results(self, year_data):
