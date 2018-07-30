@@ -1,11 +1,15 @@
 import sys
 import os
+import calendar
 
 class WeatherData():
     """"""
     max_temp = 0
     min_temp = 100
     max_humidity = 0
+    avg_max_temp = 0
+    avg_min_temp = 0
+    avg_max_humidity = 0
     max_temp_date = ""
     min_temp_date = ""
     max_humidity_date = ""
@@ -37,7 +41,16 @@ class WeatherData():
             print('Wrong Arguments Provided')
             exit()  # exiting program
 
-    def extract_data(self, file_path):
+    def extract_data_month(self,file):
+        max_temp_avg = 0
+        min_temp_avg = 0
+        humidity_avg = 0
+        count_max_temp = 0
+        count_min_temp = 0
+        tcount_humidty = 0
+        exit()
+
+    def extract_data_year(self, file_path):
         file_reader = open(file_path, "r")
         file_data = file_reader.readlines()
         file_reader.close()
@@ -62,8 +75,12 @@ class WeatherData():
                             self.max_humidity_date = day_data[0]
 
     def read_files(self, valid_list_of_files):
-        for file_path in valid_list_of_files:
-            self.extract_data(file_path)
+        report_type = given_arg_list[0]
+        if report_type == '-e':
+            for file_path in valid_list_of_files:
+                self.extract_data_year(file_path)
+        elif report_type == '-a':
+             print(valid_list_of_files)
         # self.extract_data(valid_list_of_files[0])
 
     def year_temp_report(self, sgiven_arg_list):
@@ -75,19 +92,30 @@ class WeatherData():
                 valid_list_of_files.append(files_path + file_name)
         return valid_list_of_files
 
+    def month_temp_report(self,given_arg_list):
+        year_month_list = given_arg_list[1].split("/")
+        if(len(year_month_list) < 2):
+            print("Wrong Second Argument Given")
+            exit()
+        year=year_month_list[0]
+        month_name = calendar.month_name[int(year_month_list[1])]
+        month_name = month_name[0:3]
+        file_path =  given_arg_list[2] + "lahore_weather_" + year +"_"+month_name+".txt"
+        return file_path
+
     def collect_realted_files(self, given_arg_list):
         report_type = given_arg_list[0]
         if report_type == '-e':
             return self.year_temp_report(given_arg_list)
         elif report_type == '-a':
-            pass
+            return self.month_temp_report(given_arg_list)
         elif report_type == '-c':
             pass
         else:
             print ("Wrong type given")
             exit()  # exiting program
 
-    def print_weather_data(self):
+    def print_year_temp_report(self):
         max_temp_date = self.max_temp_date.split("-")
         min_temp_date = self.min_temp_date.split("-")
         max_humidity_date = self.max_temp_date.split("-")
@@ -104,6 +132,10 @@ class WeatherData():
               "% on " + self.month_dictionary[int(max_humidity_date[1])] +
               " " + str(max_humidity_date[2]))
 
+    def print_weather_data(self, report_type):
+        if report_type == '-e':
+           self.print_year_temp_report()
+
 
 if __name__ == "__main__":
     weather_data_obj = WeatherData()
@@ -111,4 +143,4 @@ if __name__ == "__main__":
     valid_list_of_files = weather_data_obj.collect_realted_files(
                           given_arg_list)
     weather_data_obj.read_files(valid_list_of_files)
-    weather_data_obj.print_weather_data()
+    weather_data_obj.print_weather_data(given_arg_list[0])
