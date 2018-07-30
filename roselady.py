@@ -50,7 +50,6 @@ class RoseladySpider(CrawlSpider):
     def extract_disclosure(self, response):
         if '<br>' in self.extract_description_disclosure(response):
             return self.extract_description_disclosure(response).split('<br>')[-1]
-        return None
 
     def extract_description_disclosure(self, response):
         return response.css('#head meta[property="og:description"]::attr(content)').extract_first()
