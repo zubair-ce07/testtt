@@ -1,8 +1,7 @@
 from django.db import models
-
 from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
 from datetime import date
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from common.models import SoftDeleteModelMixin
 
@@ -12,6 +11,7 @@ class Team(SoftDeleteModelMixin):
     ranking = models.IntegerField(default=0)
     type = models.CharField(max_length=20, default='county')
     url = models.URLField(max_length=100, default=' ')
+    photos = GenericRelation('Photo', related_query_name='teams')
 
     def __str__(self):
         return self.name
@@ -22,13 +22,13 @@ class Player(SoftDeleteModelMixin):
     name = models.CharField(max_length=100, default=' ')
     DOB = models.DateField('Born')
     # Calculate Age in model as property
-
     playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices)
     batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices)
     bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices)
     ranking = models.PositiveSmallIntegerField(null=True, blank=True)
-    teams = models.ManyToManyField('Team', related_name='players', null=True, blank=True)
+    teams = models.ManyToManyField('Team', related_name='players', blank=True)
     url = models.URLField(max_length=100, default=' ', null=True, blank=True)
+    photos = GenericRelation('Photo', related_query_name='players')
 
     def __str__(self):
         return self.name
@@ -92,7 +92,9 @@ class BowlingAverage(BasicAverageInfo):
 
 
 class Photo(models.Model):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    limit = models.Q(app_label='articles', model='article') | models.Q(app_label='teams', model='player') | \
+            models.Q(app_label='teams', model='team') | models.Q(app_label='users', model='profile')
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, limit_choices_to=limit)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     photo_url = models.URLField(max_length=100, default=' ')

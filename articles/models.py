@@ -14,7 +14,7 @@ class Article(models.Model):
     players = models.ManyToManyField(Player, related_name='articles', blank=True)
     teams = models.ManyToManyField(Team, related_name='articles', blank=True)
     content = tinymce_models.HTMLField(default='')
-    photos = GenericRelation(Photo)
+    photos = GenericRelation(Photo, related_query_name='articles')
 
     def __str__(self):
         return self.title

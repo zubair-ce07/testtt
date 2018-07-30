@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'RaziCricketApp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': "razi",
+        'NAME': "cricket-dev",
         'USER': 'razi',
         'PASSWORD': '12345678',
         'HOST': '127.0.0.1',
