@@ -68,16 +68,16 @@ class ResultsCalculator:
 
         for data in weather_data:
             year_level_data = data.get(year)
-            if year_level_data is not None:
+            if year_level_data:
                 month_level_data = year_level_data.get(month)
-                if month_level_data is not None:
+                if month_level_data:
                     for day in month_level_data:
                         day_level_data = month_level_data.get(day)
-                        if not day_level_data.get("Max TemperatureC") == "":
+                        if day_level_data.get("Max TemperatureC"):
                             self.calculated_results["MaxTempreture"].update({
                                 str(day): day_level_data.get("Max TemperatureC")})  
 
-                        if not day_level_data.get("Min TemperatureC") == "":
+                        if day_level_data.get("Min TemperatureC"):
                             self.calculated_results["MinTemperature"].update({
                                 str(day): day_level_data.get("Min TemperatureC")})
 
@@ -92,23 +92,23 @@ class ResultsCalculator:
                                     
         for data in weather_data:    
             year_level_data = data.get(year)
-            if year_level_data is not None:
+            if year_level_data:
                 month_level_data = year_level_data.get(month)
-                if month_level_data is not None:
+                if month_level_data:
                     for day in month_level_data:
                         total_days += 1
                         day_level_data = month_level_data.get(day)
-                        if not day_level_data.get("Max TemperatureC") == "":
+                        if day_level_data.get("Max TemperatureC"):
                             self.calculated_results["HighestAverage"] = (
                                 float(day_level_data.get("Max TemperatureC")) 
                                     + float(self.calculated_results["HighestAverage"]))
 
-                        if not day_level_data.get("Min TemperatureC") == "":
+                        if day_level_data.get("Min TemperatureC"):
                             self.calculated_results["LowestAverage"] = (
                                 float(day_level_data.get("Min TemperatureC")) 
                                     + float(self.calculated_results["LowestAverage"]))
                                                                         
-                        if not day_level_data.get(" Mean Humidity") == "":
+                        if day_level_data.get(" Mean Humidity"):
                             self.calculated_results["AverageMeanHumidity"] = (
                                 float(day_level_data.get(" Mean Humidity")) 
                                     + float(self.calculated_results["AverageMeanHumidity"]))    
@@ -132,7 +132,7 @@ class ResultsCalculator:
 
         for data in weather_data:
             year_level_data = data.get(year) 
-            if year_level_data is not None:
+            if year_level_data:
                 for month in year_level_data:
                     month_level_data = year_level_data.get(month)
                     for day in month_level_data:
@@ -162,9 +162,9 @@ class ResultsCalculator:
                                                             month_names[month]
                                                             )
                                                         }
-                        elif ((not temp_data.get("Max TemperatureC") == ""
-                                or not temp_data.get("Min TemperatureC") == "")
-                                and not temp_data.get(" Mean Humidity") ==""):
+                        elif ((temp_data.get("Max TemperatureC")
+                                or temp_data.get("Min TemperatureC"))
+                                and temp_data.get(" Mean Humidity")):
 
                             if (float(temp_data.get("Max TemperatureC")) 
                                     > float(self.calculated_results.get("MaxYearlyTempreature"))):
