@@ -1,4 +1,5 @@
 import re
+import json
 
 import scrapy
 
@@ -97,13 +98,44 @@ class GarageClothingSpider(scrapy.Spider):
         sku = response.meta['sku']
         size_request_params_queue = response.meta['size_request_params_queue']
 
-        for size in response.css('span'):
-            sku['skus'].append(self.generate_product_sku(size, sku))
+        if response.css('#productLengths'):
+            if sku.get('partial_skus'):
+                sku['partial_skus'].extend(self.generate_product_partial_skus(response))
+            else:
+                sku['partial_skus'] = self.generate_product_partial_skus(response)
+        else:
+            for size in response.css('span'):
+                sku['skus'].append(self.generate_product_sku(size, sku))
 
         if size_request_params_queue:
             return self.generate_size_parse_request(size_request_params_queue, sku)
 
+        if sku.get('partial_skus'):
+            return self.generate_multi_size_parse_request(sku)
+
         del sku['sku_fields']
+        return sku
+
+    def parse_multi_size_product(self, response):
+        sku = response.meta['sku']
+        color_code = response.meta['skus_color_code']
+        length = response.meta['length']
+
+        sizes = json.loads(response.css('p::text').extract_first())
+
+        sku_info = {
+            'length': length,
+            'color_code': color_code
+        }
+
+        for size in sizes['skulist']:
+            sku['skus'].append(self.generate_multi_size_product_sku(sku, size, sku_info))
+
+        if sku.get('partial_skus'):
+            return self.generate_multi_size_parse_request(sku)
+
+        del sku['sku_fields']
+        del sku['partial_skus']
         return sku
 
     def generate_image_parse_request(self, img_request_params_queue, sku):
@@ -122,6 +154,22 @@ class GarageClothingSpider(scrapy.Spider):
 
         request.meta['sku'] = sku
         request.meta['size_request_params_queue'] = size_request_params_queue
+        return request
+
+    def generate_multi_size_parse_request(self, sku):
+        partial_sku = sku['partial_skus'].pop()
+        form_params = {
+            'skuId': partial_sku['sku_id'],
+            'productId': sku['retailer_sku']
+        }
+
+        request = scrapy.FormRequest(
+            'https://www.garageclothing.com/ca/json/sizeInventoryCheckByLengthJSON.jsp',
+            self.parse_multi_size_product, formdata=form_params)
+
+        request.meta['sku'] = sku
+        request.meta['skus_color_code'] = partial_sku['color_code']
+        request.meta['length'] = partial_sku['length']
         return request
 
     def generate_img_request_params_queue(self, response):
@@ -155,26 +203,42 @@ class GarageClothingSpider(scrapy.Spider):
 
         return size_request_params_queue
 
+    @staticmethod
+    def generate_product_partial_skus(response):
+        partial_skus = []
+        color_code = response.css('span.size::attr(colour)').extract_first()
+
+        for length in response.css('span.length'):
+            partial_skus.append({
+                'color_code': color_code,
+                'length': length.css('span::text').extract_first(),
+                'sku_id': length.css('span::attr(skuid)').extract_first()
+            })
+
+        return partial_skus
+
     def generate_product_sku(self, size, sku):
-        try:
-            variant = {
-                'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
-                                                     sku['sku_fields']['colors']),
-                'currency': sku['sku_fields']['currency'],
-                'sku_id': size.css('span::attr(skuid)').extract_first(),
-                'size': size.css('span::text').extract_first(),
-                'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
-            }
-        except Exception as e:
-            variant = {
-                'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
-                                                     sku['sku_fields']['colors']),
-                'currency': sku['sku_fields']['currency'],
-                'sku_id': size.css('span::attr(skuid)').extract_first(),
-                'size': size.css('span::text').extract_first(),
-                'is_in_stock': 'MULTI SIZE VECTOR',
-                'error': str(e)
-            }
+        variant = {
+            'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
+                                                 sku['sku_fields']['colors']),
+            'currency': sku['sku_fields']['currency'],
+            'sku_id': size.css('span::attr(skuid)').extract_first(),
+            'size': size.css('span::text').extract_first(),
+            'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
+        }
+
+        variant.update(sku['sku_fields']['price'])
+        return variant
+
+    def generate_multi_size_product_sku(self, sku, size, sku_info):
+        variant = {
+            'color': self.map_color_code_to_name(sku_info['color_code'],
+                                                 sku['sku_fields']['colors']),
+            'currency': sku['sku_fields']['currency'],
+            'sku_id': size['skuId'],
+            'size': {'length': sku_info['length'], 'width': size['size']},
+            'is_in_stock': True if size['available'] == 'true' else False
+        }
 
         variant.update(sku['sku_fields']['price'])
         return variant
