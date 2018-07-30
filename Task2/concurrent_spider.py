@@ -69,4 +69,5 @@ class RecursiveConcurrentSpider:
 
     def print_stats(self):
         print(f"\nTotal Requests: {len(self.visited_urls)}\nBytes Downloaded: {self.bytes_downloaded}\n"
-              f"Size Per Page:{self.bytes_downloaded/len(self.visited_urls)}\nExecution Time: {time.time()-self.start_time}")
+              f"Size Per Page:{self.bytes_downloaded/len(self.visited_urls)}\n"
+              f"Execution Time: {time.time()-self.start_time}")
