@@ -18,10 +18,10 @@ class RecursiveConcurrentSpider:
         self.__loop = asyncio.get_event_loop()
         self.__executor = concurrent.futures.ThreadPoolExecutor()
 
-    def run(self, urls_limit, site_url):
+    def run(self, urls_limit, url):
         loop = asyncio.get_event_loop()
         self.start_time = time.time()
-        loop.run_until_complete(self.schedule_requests([self.normalize_url(site_url)], urls_limit))
+        loop.run_until_complete(self.schedule_requests([self.normalize_url(url)], urls_limit))
 
     async def schedule_requests(self, urls, limit):
         if len(self.visited_urls) < limit and urls:
