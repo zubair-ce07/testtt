@@ -3,13 +3,7 @@ import os
 import glob
 import sys
 import csv
-
-VALID_OPTIONS = [
-                    '-e','-c', '-a'
-                    ]
-
-USAGE_STRING = "Python weatherman.py [Path to weatherman files]"\
-                " [Valid Options] [Valid Month, Year]"
+import argparse
 
 month_names = {
                 "1":"Jan", "2":"Feb",
@@ -265,14 +259,6 @@ class ReportsGenrator:
                 print(" - {} C".format(daily_max_data.get(day[0])))
 
 
-def usage_printer():
-    print("Usage:")
-    print(USAGE_STRING)
-    print("Options:")
-    print(VALID_OPTIONS)
-    sys.exit()
-
-
 def yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, year):
     ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
         WeatherRecordInstance.weather_data, year
@@ -310,53 +296,49 @@ def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
         )
 
 
-if __name__ == "__main__":
+class FullPaths(argparse.Action):
+    """Expand user- and relative-paths"""
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
 
-    if sys.argv[2] not in VALID_OPTIONS:  #Verify valid options
-        print("Invalid Option")
-        usage_printer()
+def is_dir(dirname):
+    """Checks if a path is an actual directory"""
+    if not os.path.isdir(dirname):
+        msg = "{0} is not a directory".format(dirname)
+        raise argparse.ArgumentTypeError(msg)
+    else:
+        return dirname
+
+
+if __name__ == "__main__":
     
-    if not os.path.isdir(sys.argv[1]):  #Verify valid files path  
-        print("Invalid Path")
-        usage_printer()
-    
+    parser = argparse.ArgumentParser()
+    #Match file path
+    parser.add_argument('directory', help="Path to directory containing data", action=FullPaths, type=is_dir)
+    parser.add_argument("-c", help = "Daily Report")
+    parser.add_argument("-e", help = "Yearly Report")
+    parser.add_argument("-a", help = "Monthly Report")
+    args = parser.parse_args()
+
     WeatherRecordInstance = WeatherRecord()
-    WeatherRecordInstance.read_data_from_files(sys.argv[1])
-    
+    WeatherRecordInstance.read_data_from_files(args.directory)
+
     ResultsCalculatorInstance = ResultsCalculator()
 
     ReportsGenratorInstance = ReportsGenrator()
+    if args.a:
+        splited_year_n_month = args.a.split("/")
+        monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
+                                            splited_year_n_month[0], 
+                                            splited_year_n_month[1])
+    
+    if args.e:
+        yearly_calculator_n_genrator_caller(ResultsCalculatorInstance,
+                                                str(args.e))
 
-    if len(sys.argv) > 3:  #Multiple reports
-        for iterator in range(0, len(sys.argv)):
-            if sys.argv[iterator] == '-a':
-                splited_year_n_month = sys.argv[iterator+1].split("/")  #Parse input
-                monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
+    if args.c:
+        splited_year_n_month = args.c.split("/")  #Parse input
+        splited_year_n_month[1] = splited_year_n_month[1].replace("0","")
+        daily_calculator_n_genrator_caller(ResultsCalculatorInstance, 
                                                     splited_year_n_month[0], 
                                                     splited_year_n_month[1])
-            
-            if sys.argv[iterator] == '-c':
-                splited_year_n_month = sys.argv[iterator+1].split("/")  #Parse input
-                splited_year_n_month[1] = splited_year_n_month[1].replace("0","")
-                daily_calculator_n_genrator_caller(ResultsCalculatorInstance, 
-                                                    splited_year_n_month[0], 
-                                                    splited_year_n_month[1])
-            
-            if sys.argv[iterator] == '-e':
-                yearly_calculator_n_genrator_caller(ResultsCalculatorInstance,
-                                                    str(sys.argv[iterator+1]))
-
-    else:
-        if sys.argv[2] == '-a':
-            splited_year_n_month = sys.argv[3].split("/")  #Parse input
-            monthly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
-                                                splited_year_n_month[0], 
-                                                splited_year_n_month[1])
-        elif sys.argv[2] == '-c':
-            splited_year_n_month = sys.argv[3].split("/")  #Parse input
-            daily_calculator_n_genrator_caller(ResultsCalculatorInstance, 
-                                                splited_year_n_month[0], 
-                                                splited_year_n_month[1])
-        elif sys.argv[2] == '-e':
-            yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, 
-                                                str(sys.argv[3]))
