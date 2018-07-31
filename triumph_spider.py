@@ -7,10 +7,10 @@ from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
-from triumph.items import ProductItem
+from triumph.items import Product
 
 
-class ProductsSpider(CrawlSpider):
+class TriumphSpider(CrawlSpider):
     name = 'triumph'
 
     start_urls = ['http://uk.triumph.com/']
@@ -20,7 +20,7 @@ class ProductsSpider(CrawlSpider):
 
     def process_product_url(url):
         parsed_url = urlparse(url)
-        return urljoin(ProductsSpider.start_urls[0], parsed_url.path)
+        return urljoin(TriumphSpider.start_urls[0], parsed_url.path)
 
     listing_css = ['.mainLink', '.pagination-wrapper .paginationlink:not(.disabled)']
 
@@ -37,7 +37,7 @@ class ProductsSpider(CrawlSpider):
     def parse_product(self, response):
         print(response.url)
 
-        product_item = ProductItem()
+        product_item = Product()
         product_item['retailer_sku'] = self.get_retailer_sku(response)
         product_item['image_urls'] = self.get_image_urls(response)
         product_item['description'] = self.get_description(response)
