@@ -36,7 +36,7 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_raw_listing(response):
-        script = response.xpath('//div/script[contains(text(),"DOMContentLoaded")]').re(r'{.*}')[0]
+        script = response.xpath('//script[contains(text(),"tkd_product_list")]').re(r'{.*}')[0]
         return json.loads(script)['list']
 
     def parse_product(self, response):
@@ -56,7 +56,7 @@ class TausendkindSpider(scrapy.Spider):
         }
 
         variants = self.get_product_variants_urls(response)
-        return self.fetch_next_return_item(variants, sku)
+        return self.fetch_next_item(variants, sku)
 
     def parse_product_variant(self, response):
         sku = response.meta['sku']
@@ -66,7 +66,7 @@ class TausendkindSpider(scrapy.Spider):
         sku['image_urls'].extend(self.get_product_images(response))
         sku['skus'].extend(self.get_product_skus(response, raw_product))
 
-        return self.fetch_next_return_item(variants, sku)
+        return self.fetch_next_item(variants, sku)
 
     def prepare_product_variant_request(self, variants, sku):
         request = scrapy.Request(variants.pop(), self.parse_product_variant)
@@ -74,7 +74,7 @@ class TausendkindSpider(scrapy.Spider):
         request.meta['variants'] = variants
         return request
 
-    def fetch_next_return_item(self, variants, sku):
+    def fetch_next_item(self, variants, sku):
         if variants:
             return self.prepare_product_variant_request(variants, sku)
 
@@ -83,29 +83,34 @@ class TausendkindSpider(scrapy.Spider):
     def get_product_skus(self, response, raw_product):
         skus = []
 
-        size_drop_down = response.css('.select__menu.select__menu--pdp li.select__option')
+        size_drop_down = response.css('.select__menu.select__menu--pdp .select__option')
         color = self.get_product_color(response)
+        currency = self.get_product_currency(response)
 
         if not size_drop_down:
             sku = {
                 'sku_id': raw_product['product']['sku'],
                 'size': 'One Size',
                 'is_in_stock': bool(raw_product['product']['qty']),
-                'currency': 'EUR',
+                'currency': currency,
                 'color': color,
-                'price': raw_product['product']['price'] * 100
+                'price': int(raw_product['product']['price'] * 100)
             }
+
+            if raw_product['product']['price'] != raw_product['product']['price_original']:
+                sku['previous_price'] = [int(raw_product['product']['price_original'] * 100)]
 
             skus.append(sku)
             return skus
 
         for size_sel in size_drop_down:
-            availability_xpath = './/div[contains(text(), "Ausverkauft")]'
+            availability_xpath = './/*[contains(text(), "Ausverkauft")]'
 
             sku = {
                 'sku_id': size_sel.css('li::attr(data-value)').extract_first(),
-                'size': size_sel.css('div.l-space::text').extract_first(),
+                'size': size_sel.css('.l-space::text').extract_first(),
                 'is_in_stock': not size_sel.xpath(availability_xpath).extract(),
+                'currency': currency,
                 'color': color
             }
 
@@ -114,17 +119,19 @@ class TausendkindSpider(scrapy.Spider):
 
         return skus
 
+    @staticmethod
+    def get_product_currency(response):
+        return response.css('.pdp-price strong::text').re(r'[A-Z]+')[0]
+
     def get_product_price(self, size_sel):
         product_price = {}
 
         prices = size_sel.css('li::attr(data-specialprice), li::attr(data-price)').extract()
         prices = [p.strip() for p in prices if p.strip()]
 
-        product_price['currency'] = 'EUR'
-
         if len(prices) > 1:
-            product_price['previous_price'] = self.get_price_from_string(prices[0])
-            product_price['price'] = self.get_price_from_string(prices[1])
+            product_price['price'] = self.get_price_from_string(prices.pop(-1))
+            product_price['previous_price'] = [self.get_price_from_string(p) for p in prices]
         else:
             product_price['price'] = self.get_price_from_string(prices[0])
 
@@ -146,7 +153,7 @@ class TausendkindSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_categories(response):
-        categories = response.css('li.breadcrumb__li a::text').extract()
+        categories = response.css('.breadcrumb__li a::text').extract()
         return {c.strip() for c in categories[1:] if c.strip()}
 
     @staticmethod
