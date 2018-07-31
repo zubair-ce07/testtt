@@ -19,8 +19,8 @@ class AsicsSpider:
     def extract_categories(self):
         sel = Selector(text=self.get_page_content(self.start_url))
         relative_category_urls = sel.css(".nav-item:not(.mobile) ::attr(href)").getall()
-        unfiltered_categories = [urljoin(self.start_url, url) for url in relative_category_urls]
-        return set([url for url in unfiltered_categories if self.network_location in url])
+        absolute_category_urls = [urljoin(self.start_url, url) for url in relative_category_urls]
+        return set([url for url in absolute_category_urls if self.network_location in url])
 
     def extract_product_urls(self, category_urls):
         return set(sum([self.get_absolute_urls(url) for url in category_urls], []))
@@ -29,26 +29,26 @@ class AsicsSpider:
         page_no = 0
         relative_urls = []
         sel = Selector(text=self.get_page_content(category_url))
-        page_limit = sel.css("body::attr(class)").get()
-        page_not_found_class = "server-error-body"
+        product_page_class = sel.css("body::attr(class)").get()
+        page_not_found_class = ["server-error-body", "page-notFound"]
 
-        while page_not_found_class not in page_limit:  # If next page exists
+        while not any(error_page in product_page_class for error_page in page_not_found_class):  # If page exists
             page_no += 1
             relative_urls += sel.css('.productMainLink::attr(href)').getall()
-            sel = Selector(text=self.get_page_content(f'{category_url}?page={page_no}'))  # Move to next page
-            page_limit = sel.css("body::attr(class)").get()
+            sel = Selector(text=self.get_page_content(f'{category_url}?page={page_no}'))         # Move to next page
+            product_page_class = sel.css("body::attr(class)").get()
 
-        filtered_urls = filter(lambda url: "//" not in url, set(relative_urls))
+        filtered_urls = filter(lambda url: "//" not in url, set(relative_urls))                  # Remove invalid urls
         return [urljoin(self.start_url, url) for url in filtered_urls]
 
-    def get_result_in_json(self, products):
+    def get_json_result(self, products):
         print(json.dumps(products, indent=4))
 
     def crawl(self):
         category_urls = self.extract_categories()
         product_urls = self.extract_product_urls(category_urls)
         products = [ProductParser(url, self.get_page_content(url)).get_product() for url in product_urls]
-        self.get_result_in_json(products)
+        self.get_json_result(products)
 
 
 def main():
