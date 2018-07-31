@@ -1,4 +1,4 @@
-from computer import *
+from weatherman.computer import *
 
 
 class Reporter:

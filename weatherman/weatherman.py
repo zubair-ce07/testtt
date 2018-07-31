@@ -1,8 +1,8 @@
 #!/usr/bin/python
 import datetime
-from weather_register import WeatherRegister
+from weatherman.weather_register import WeatherRegister
 import argparse
-from reporter import Reporter
+from weatherman.reporter import Reporter
 
 
 def parse_month(string):

@@ -1,6 +1,6 @@
 import requests
 from parsel import Selector
-from productschema import parse_product
+from liujo_scraper.productschema import parse_product
 
 
 class Scraper:
