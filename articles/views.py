@@ -13,11 +13,3 @@ from rest_framework.decorators import action
 def index(request):
     return HttpResponse("Hello, world. You're at the articles index.")
 
-
-class ArticleViewSet(viewsets.ModelViewSet):
-    """
-        This viewset automatically provides `list`, `create`, `retrieve`,
-        `update` and `destroy` actions.
-    """
-    queryset = Article.objects.all()
-    serializer_class = ArticleSerializer
