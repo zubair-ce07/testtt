@@ -16,13 +16,14 @@ def previous_prices(selector):
 
 def parse_description(selector):
     description = selector.css('div[class="short-description-value"] ::text').extract()
-    return re.sub(r"[\r\n]+", " ", ''.join(description).strip()).split(". ")
+    return re.split(r"\. |: ", re.sub(r"[\r\n]+", " ", ''.join(description).strip()))
 
 
 def parse_category(selector):
     for text in selector.css('script[type="text/javascript"]::text').extract():
         if "category" in text:
-            return re.search(r'\'category\': "+(.+)"', text).group(1).split("/")
+            category = re.search(r'\'category\': "+(.+)"', text)
+            return category.group(1).split("/") if category else []
 
 
 def single_product(selector):
