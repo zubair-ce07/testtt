@@ -59,7 +59,7 @@ class IQStudentAccommodationCrawlSpider(BaseCrawlSpider, Mixin):
     listing_css = '.sub-menu.level-2'
 
     rules = [
-        Rule(LinkExtractor(restrict_css=listing_css, tags='a', attrs='href'), callback='parse_property'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse_property'),
     ]
 
     def parse_property(self, response):
