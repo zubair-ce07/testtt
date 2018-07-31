@@ -1,7 +1,7 @@
 
 class ArticleChoices:
-    NEWS = 'news'
-    ARTICLE = 'article'
+    NEWS = 'NEWS'
+    ARTICLE = 'ARTICLE'
 
     Choices = (
         (NEWS, 'News'),

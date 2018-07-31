@@ -21,6 +21,3 @@ class ArticleViewSet(viewsets.ModelViewSet):
     """
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
-
-    def perform_create(self, serializer):
-        serializer.save()
