@@ -16,19 +16,20 @@ class GarageClothingSpider(scrapy.Spider):
         'dynamiteclothing.com'
     ]
 
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) Gecko/20100101 Firefox/62.0',
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Referer': 'https://www.garageclothing.com/',
+        'Origin': 'https://www.garageclothing.com',
+        'DNT': '1',
+        'Connection': 'keep-alive'
+    }
+
     def start_requests(self):
         yield scrapy.Request(
             'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true',
-            headers={
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) '
-                              'Gecko/20100101 Firefox/62.0',
-                'Accept': '*/*',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Referer': 'https://www.garageclothing.com/',
-                'Origin': 'https://www.garageclothing.com',
-                'DNT': '1',
-                'Connection': 'keep-alive'
-            }, callback=self.parse)
+            headers=self.headers, callback=self.parse)
 
     def parse(self, response):
         session_id = response.css('p::text').extract_first()
