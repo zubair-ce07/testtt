@@ -14,7 +14,7 @@ class UpsideSportCrawler(object):
         self.parse_categories(next_page) if next_page else None
 
     def parse_category(self, product_id, product_url):
-        if(product_id not in self.visited_products):
+        if product_id not in self.visited_products:
             product = ProductParser.parse_product(product_url)
             print(json.dumps(product, indent=4))
             self.visited_products.append(product_id)
