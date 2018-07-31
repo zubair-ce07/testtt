@@ -21,6 +21,7 @@ class Scraper:
     def _extract_product(self, response):
         selector = Selector(response.text)
         if selector.css('.catalog-product-view').extract_first():
+            print(response.url)
             product = parse_product(response)
             print(product)
             self.products.append(product)
@@ -37,6 +38,6 @@ class Scraper:
 
 
 if __name__ == "__main__":
-    scraper = Scraper('https://www.liujo.com/gb/abito-1037.html')
+    scraper = Scraper('https://www.liujo.com/gb/')
     products = scraper.scrap()
     print(len(products), products)
