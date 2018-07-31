@@ -1,7 +1,7 @@
 import requests
 import json
 from parsel import Selector
-from Product_details import ProductParser
+from product_details import ProductParser
 
 
 class UpsideSportCrawler(object):
