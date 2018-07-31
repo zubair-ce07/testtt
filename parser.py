@@ -8,39 +8,41 @@ import parsel
 class Skus:
     def __init__(self, colour, price, currency, size, previous_prices,
                  sku_id, out_of_stock = None):
-
-        self.colour = colour
-        self.price = price
-        self.currency = currency
-        self.size = size
-        self.previous_prices = previous_prices
-        self.out_of_stock = out_of_stock
-        self.sku_id = sku_id
+        self.sku_records = dict()
+        self.sku_records["colour"] = colour
+        self.sku_records["price"] = price
+        self.sku_records["currency"] = currency
+        self.sku_records["size"] = size
+        self.sku_records["previous_prices"] = previous_prices
+        if out_of_stock:
+            self.sku_records["out_of_stock"] = out_of_stock
+        self.sku_records["sku_id"] = sku_id
 
 
 class Sprinter:
     def __init__(self, retailer_sku, gender, category, brand, url, name,
                  description, care, image_urls, skus):
-        self.retailer_sku = retailer_sku
-        self.gender = gender
-        self.category = category
-        self.brand = brand
-        self.url = url
-        self.name = name
-        self.description = description
-        self.care = care
-        self.image_urls = image_urls
-        self.skus = skus
+        self.sprinter_records = dict()
+        self.sprinter_records["retailer_sku"] = retailer_sku
+        self.sprinter_records["gender"] = gender
+        self.sprinter_records["category"] = category
+        self.sprinter_records["brand"] = brand
+        self.sprinter_records["url"] = url
+        self.sprinter_records["name"] = name
+        self.sprinter_records["description"] = description
+        self.sprinter_records["care"] = care
+        self.sprinter_records["image_urls"] = image_urls
+        self.sprinter_records["skus"] = skus
 
 
-def index_containing_substring(the_list, substring):
+async def index_containing_substring(the_list, substring):
     for i, s in enumerate(the_list):
         if substring in s:
             return i
     return -1
 
 
-def get_description_and_care(selector):
+async def get_description_and_care(selector):
     all_description_key = '//div[@class="features-delivery-inner"]//text()'
     all_description = selector.xpath(all_description_key).getall()
     description_titles_key = '//div[@class="features-delivery-inner"]' \
@@ -90,20 +92,20 @@ def get_description_and_care(selector):
     return description, care
 
 
-def get_images_urls(selector):
+async def get_images_urls(selector):
     images_url_key = '//li[@class="product-thumb-item "]/img/@src'
     images_urls = selector.xpath(images_url_key).getall()
     images_urls = [urls.replace("84x84", "539x539") for urls in images_urls]
     return images_urls
 
 
-def get_sku_id(selector):
+async def get_sku_id(selector):
     retailer_sku__key = '//span[@class="nmbrjga ' \
                         'js-product-code"]/text()'
     return selector.xpath(retailer_sku__key).get()
 
 
-def get_gender(item_url, selector):
+async def get_gender(item_url, selector):
     url_details = item_url.split('/')
     gender = "N/A"
     gender_from_url = url_details[3].split('-')[-1]
@@ -115,20 +117,20 @@ def get_gender(item_url, selector):
     return gender
 
 
-def get_categories(selector):
+async def get_categories(selector):
     bread_crumbs_key = '//span[@itemprop="name"]/text()'
     total_bread_crumbs = selector.xpath(bread_crumbs_key).getall()
     return list(total_bread_crumbs[1:-1])
 
 
-def get_name(selector):
+async def get_name(selector):
     name_key = '//h1[@class="product-main-title"]/text()'
     name = selector.xpath(name_key).get()
     name = ' '.join(name.split())
     return name
 
 
-def get_sku(selector):
+async def get_sku(selector):
     colour_key = '//div[@class="ref-color"]//p/text()'
     colour = selector.xpath(colour_key).get()
 
@@ -155,13 +157,13 @@ def get_sku(selector):
         sku_id = f"{colour}_{size}"
         sk = Skus(colour, new_price, currency, size, old_prices,
                          sku_id, True)
-        skus.append(sk.__dict__)
+        skus.append(sk.sku_records)
 
     for size in available_sizes:
         sku_id = f"{colour}_{size}"
         sk = Skus(colour, new_price, currency, size, old_prices,
                          sku_id)
-        skus.append(sk.__dict__)
+        skus.append(sk.sku_records)
 
     return skus
 
@@ -184,9 +186,9 @@ async def scrap_item_url(items_visited_urls, item_url, loop, sprinter_records):
             images_urls = get_images_urls(selector)
             skus = get_sku(selector)
             items_visited_urls[item_url] = True
-            sp = Sprinter(retailer_sku, gender, categories, brand, item_url,
+            spr = Sprinter(retailer_sku, gender, categories, brand, item_url,
                           name, description, care, images_urls, skus)
-            sprinter_records.append(sp)
+            sprinter_records.append(spr.sprinter_records)
 
 
 async def schedule_items_futures(items_visited_urls, items_pending_urls,
