@@ -35,14 +35,14 @@ class Sprinter:
         self.sprinter_records["skus"] = skus
 
 
-async def index_containing_substring(the_list, substring):
+def index_containing_substring(the_list, substring):
     for i, s in enumerate(the_list):
         if substring in s:
             return i
     return -1
 
 
-async def get_description_and_care(selector):
+def get_description_and_care(selector):
     all_description_key = '//div[@class="features-delivery-inner"]//text()'
     all_description = selector.xpath(all_description_key).getall()
     description_titles_key = '//div[@class="features-delivery-inner"]' \
@@ -92,20 +92,20 @@ async def get_description_and_care(selector):
     return description, care
 
 
-async def get_images_urls(selector):
+def get_images_urls(selector):
     images_url_key = '//li[@class="product-thumb-item "]/img/@src'
     images_urls = selector.xpath(images_url_key).getall()
     images_urls = [urls.replace("84x84", "539x539") for urls in images_urls]
     return images_urls
 
 
-async def get_sku_id(selector):
+def get_sku_id(selector):
     retailer_sku__key = '//span[@class="nmbrjga ' \
                         'js-product-code"]/text()'
     return selector.xpath(retailer_sku__key).get()
 
 
-async def get_gender(item_url, selector):
+def get_gender(item_url, selector):
     url_details = item_url.split('/')
     gender = "N/A"
     gender_from_url = url_details[3].split('-')[-1]
@@ -117,20 +117,20 @@ async def get_gender(item_url, selector):
     return gender
 
 
-async def get_categories(selector):
+def get_categories(selector):
     bread_crumbs_key = '//span[@itemprop="name"]/text()'
     total_bread_crumbs = selector.xpath(bread_crumbs_key).getall()
     return list(total_bread_crumbs[1:-1])
 
 
-async def get_name(selector):
+def get_name(selector):
     name_key = '//h1[@class="product-main-title"]/text()'
     name = selector.xpath(name_key).get()
     name = ' '.join(name.split())
     return name
 
 
-async def get_sku(selector):
+def get_sku(selector):
     colour_key = '//div[@class="ref-color"]//p/text()'
     colour = selector.xpath(colour_key).get()
 
