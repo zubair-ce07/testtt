@@ -26,8 +26,9 @@ class ProductParser:
     def generate_skus(selector):
         generated_skus = {}
         sizes = ProductParser.extract_sizes(selector)
-        sku = ProductParser.extract_sku_features(selector)
+        common_sku = ProductParser.extract_sku_features(selector)
         for size in sizes:
+            sku = common_sku.copy()
             sku['size'] = size
             generated_skus[size] = sku
         return generated_skus
