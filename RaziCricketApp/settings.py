@@ -31,12 +31,19 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'articles.apps.ArticlesConfig',
+    'comments.apps.CommentsConfig',
+    'teams.apps.TeamConfig',
+    'users.apps.UserConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'imagekit',
+    'tinymce',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +55,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
 
 ROOT_URLCONF = 'RaziCricketApp.urls'
 
@@ -75,8 +90,12 @@ WSGI_APPLICATION = 'RaziCricketApp.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': "cricket-dev",
+        'USER': 'razi',
+        'PASSWORD': '12345678',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
@@ -117,4 +136,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
+STATIC_ROOT = "/home/raziullah/DjangoCricketApp/the-lab/static"
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+MEDIA_URL = '/media/'
+
+STATICFILES_DIRS = [
+    "/home/raziullah/DjangoCricketApp/the-lab/articles/static/articles",
+    "/home/raziullah/DjangoCricketApp/the-lab/comments/static/comments",
+    "/home/raziullah/DjangoCricketApp/the-lab/teams/static/teams",
+    "/home/raziullah/DjangoCricketApp/the-lab/users/static/users",
+]
+
+
+
+
