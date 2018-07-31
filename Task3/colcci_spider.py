@@ -21,7 +21,7 @@ class ColcciSpider(Spider):
     def parse(self, response):
         yield Request(response.url, callback=self.parse_products, dont_filter=True)
         load_more = response.css('#loadMoreBtn').extract()
-        
+
         if load_more:
             parsed_url = response.url.strip("/").split('/')
             url = '/'.join(parsed_url[:-1])
@@ -76,13 +76,13 @@ class ColcciSpider(Spider):
 
     def extract_gender(self, response):
         item_name = response.css('[itemprop="name"]::text').extract_first()
+        gender_map = {'Unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
 
-        if 'Unissex' in item_name:
-            return 'Unisex'
-        if 'masculino' in response.url:
-            return 'Men'
+        for gender in gender_map.keys():
+            if gender in item_name or gender in response.url:
+                return gender_map[gender]
 
-        return 'Women'
+        return gender_map['feminino']
 
     def extract_skus(self, response):
         raw_skus = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
