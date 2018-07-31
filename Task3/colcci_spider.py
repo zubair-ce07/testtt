@@ -82,9 +82,9 @@ class ColcciSpider(Spider):
         return 'Women'
 
     def extract_skus(self, response):
-        sku_jsons = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
+        raw_skus = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
         skus = []
-        for sku_json in sku_jsons:
+        for sku_json in raw_skus:
             sku = {
                 "colour": sku_json.get("option0"),
                 "price": sku_json.get("price_short"),
