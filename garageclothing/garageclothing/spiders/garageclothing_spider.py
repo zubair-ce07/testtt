@@ -2,9 +2,11 @@ import re
 import json
 
 import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
 
-class GarageClothingSpider(scrapy.Spider):
+class GarageClothingSpider(CrawlSpider):
     name = "garageclothing"
 
     custom_settings = {
@@ -15,6 +17,11 @@ class GarageClothingSpider(scrapy.Spider):
         'garageclothing.com',
         'dynamiteclothing.com'
     ]
+
+    rules = (
+        Rule(LinkExtractor(allow=r'/cat/', deny=['/fr-ca/', '/us/']), callback='parse'),
+        Rule(LinkExtractor(allow=r'/p/'), callback='parse_product'),
+    )
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) Gecko/20100101 Firefox/62.0',
@@ -29,29 +36,13 @@ class GarageClothingSpider(scrapy.Spider):
     def start_requests(self):
         yield scrapy.Request(
             'https://www.dynamiteclothing.com/?canonicalSessionRenderSessionId=true',
-            headers=self.headers, callback=self.parse)
+            headers=self.headers, callback=self.parse_landing_page)
 
-    def parse(self, response):
+    def parse_landing_page(self, response):
         session_id = response.css('p::text').extract_first()
 
         return scrapy.Request('https://www.garageclothing.com/ca/',
-                              callback=self.parse_landing_page, cookies={'JSESSIONID': session_id})
-
-    def parse_landing_page(self, response):
-        listing_css = '.categoryMenuItem .categoryMenuItemSpan a::attr(href)'
-
-        for listing in response.css(listing_css).extract()[:-1]:
-            yield response.follow(listing, self.parse_listing)
-
-    def parse_listing(self, response):
-        product_css = '.gaProductClickFromGallery::attr(href)'
-
-        for product in response.css(product_css).extract():
-            yield response.follow(product, self.parse_product)
-
-        next_page = response.css('#catPageNext::attr(href)').extract_first()
-        if next_page:
-            return response.follow(next_page, self.parse_listing)
+                              cookies={'JSESSIONID': session_id}, callback=self.parse)
 
     def parse_product(self, response):
         sku = {'retailer_sku': self.get_product_retailer_sku(response),
