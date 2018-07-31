@@ -20,7 +20,7 @@ class WeatherRecord:
     def __init__(self):
         self.weather_data = None
 
-    def read_data_from_files(self, folder_path):
+    def file_reader(self, folder_path):
         txt_files = glob.glob(folder_path + "/*.txt")  # Read text files
         self.weather_data = []
 
@@ -32,10 +32,10 @@ class WeatherRecord:
                                        line.get("PKT")
                                        ).split('-')
                     self.weather_data.append(
-                        self.populate_data(
+                        self.data_populater(
                             line, year_month_date))
 
-    def populate_data(self, data, year_month_date):
+    def data_populater(self, data, year_month_date):
         sub_key_level_dictionary = {
             str(year_month_date[0]): {
                 str(year_month_date[1]): {
@@ -52,7 +52,7 @@ class ResultsCalculator:
     def __init__(self):
         self.calculated_results = {}
 
-    def daily_temperature_calculator(self, weather_data, year, month):
+    def daily_temp_calc(self, weather_data, year, month):
         self.calculated_results = {
             "Month": month_names[month], "Year": year
         }
@@ -74,7 +74,7 @@ class ResultsCalculator:
                             self.calculated_results["MinTemperature"].update({
                                 str(day): day_level_data.get("Min TemperatureC")})
 
-    def monthly_tempreture_and_humitdity_calculator(
+    def monthly_temp_n_humidity_calc(
             self, weather_data, year, month):
         self.calculated_results = {
             "HighestAverage": 0, "LowestAverage": 0, "AverageMeanHumidity": 0
@@ -117,7 +117,7 @@ class ResultsCalculator:
             / total_days
         )
 
-    def yearly_temperature_and_humidity_calulator(self, weather_data, year):
+    def yearly_temp_n_humidity_calc(self, weather_data, year):
         first_iteration = True  # Flag to memorize to do initial setup
 
         for data in weather_data:
@@ -244,45 +244,6 @@ class ReportsGenrator:
                 print(" - {} C".format(daily_max_data.get(day[0])))
 
 
-def yearly_calculator_n_genrator_caller(ResultsCalculatorInstance, year):
-    ResultsCalculatorInstance.yearly_temperature_and_humidity_calulator(
-        WeatherRecordInstance.weather_data, year
-    )
-    ReportsGenratorInstance.yearly_report_genrator(
-        ResultsCalculatorInstance.calculated_results
-    )
-
-
-def monthly_calculator_n_genrator_caller(
-        ResultsCalculatorInstance, year, month):
-    ResultsCalculatorInstance.monthly_tempreture_and_humitdity_calculator(
-        WeatherRecordInstance.weather_data, year,
-        month
-    )
-    ReportsGenratorInstance.monthly_report_genrator(
-        ResultsCalculatorInstance.calculated_results
-    )
-    ResultsCalculatorInstance.daily_temperature_calculator(
-        WeatherRecordInstance.weather_data,
-        year, month
-    )
-    ReportsGenratorInstance.daily_report_genrator(
-        ResultsCalculatorInstance.calculated_results,
-        False
-    )
-
-
-def daily_calculator_n_genrator_caller(ResultsCalculatorInstance, year, month):
-    ResultsCalculatorInstance.daily_temperature_calculator(
-        WeatherRecordInstance.weather_data,
-        year, month
-    )
-    ReportsGenratorInstance.daily_report_genrator(
-        ResultsCalculatorInstance.calculated_results,
-        True
-    )
-
-
 class FullPaths(argparse.Action):
     """Expand user- and relative-paths"""
 
@@ -302,9 +263,7 @@ def is_dir(dirname):
     else:
         return dirname
 
-
-if __name__ == "__main__":
-
+def input_parser():
     parser = argparse.ArgumentParser()
     # Match file path
     parser.add_argument(
@@ -315,27 +274,58 @@ if __name__ == "__main__":
     parser.add_argument("-c", help="Daily Report")
     parser.add_argument("-e", help="Yearly Report")
     parser.add_argument("-a", help="Monthly Report")
+    parser.add_argument("-b", help="Detailed Monthly Report")
     args = parser.parse_args()
 
-    WeatherRecordInstance = WeatherRecord()
-    WeatherRecordInstance.read_data_from_files(args.directory)
+    weather_record = WeatherRecord()
+    weather_record.file_reader(args.directory)
 
-    ResultsCalculatorInstance = ResultsCalculator()
+    results_calculator = ResultsCalculator()
 
-    ReportsGenratorInstance = ReportsGenrator()
+    reports_genrator = ReportsGenrator()
     if args.a:
-        splited_year_n_month = args.a.split("/")
-        monthly_calculator_n_genrator_caller(ResultsCalculatorInstance,
-                                             splited_year_n_month[0],
-                                             splited_year_n_month[1])
+        year_n_month = args.a.split("/")
+        results_calculator.monthly_temp_n_humidity_calc(
+            weather_record.weather_data, 
+            year = year_n_month[0], month = year_n_month[1]
+        )
+        reports_genrator.monthly_report_genrator(
+            results_calculator.calculated_results
+        )
+
 
     if args.e:
-        yearly_calculator_n_genrator_caller(ResultsCalculatorInstance,
-                                            str(args.e))
+        results_calculator.yearly_temp_n_humidity_calc(
+            weather_record.weather_data, year=str(args.e)
+        )
+        reports_genrator.yearly_report_genrator(
+            results_calculator.calculated_results
+        )
 
     if args.c:
-        splited_year_n_month = args.c.split("/")
-        splited_year_n_month[1] = splited_year_n_month[1].replace("0", "")
-        daily_calculator_n_genrator_caller(ResultsCalculatorInstance,
-                                           splited_year_n_month[0],
-                                           splited_year_n_month[1])
+        year_n_month = args.c.split("/")
+        year_n_month[1] = year_n_month[1].replace("0", "")
+        results_calculator.daily_temp_calc(
+            weather_record.weather_data,
+            year = year_n_month[0], month = year_n_month[1]
+        )
+        reports_genrator.daily_report_genrator(
+            results_calculator.calculated_results,
+            caller_flag = True
+        )
+    
+    if args.b:
+        year_n_month = args.c.split("/")
+        year_n_month[1] = year_n_month[1].replace("0", "")
+        results_calculator.daily_temp_calc(
+            weather_record.weather_data,
+            year = year_n_month[0], month = year_n_month[1]
+        )
+        reports_genrator.daily_report_genrator(
+            results_calculator.calculated_results,
+            caller_flag = False
+        )
+        
+
+if __name__ == "__main__":
+    input_parser()
