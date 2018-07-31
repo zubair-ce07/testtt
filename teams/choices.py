@@ -62,3 +62,4 @@ class FormatChoices:
         (LISTA, 'ListA'),
         (T20S, 'T20s'),
     )
+

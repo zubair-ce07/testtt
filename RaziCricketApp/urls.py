@@ -20,25 +20,15 @@ from django.conf.urls.static import static
 from django.conf.urls import url
 from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
-
-
-# Serializers define the API representation.
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = User
-        fields = ('url', 'username', 'email', 'is_staff')
-
-
-# ViewSets define the view behavior.
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+from articles.views import ArticleViewSet
 
 
 # Routers provide an easy way of automatically determining the URL conf.
+from users.views import UserViewSet
+
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
-
+router.register(r'articles', ArticleViewSet)
 
 urlpatterns = [
     path('articles/', include('articles.urls')),
@@ -47,7 +37,6 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('admin/', admin.site.urls),
 
-    url(r'^api-auth/', include('rest_framework.urls')),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
