@@ -31,7 +31,7 @@ class AsicsSpider:
         sel = Selector(text=self.get_page_content(category_url))
         product_page_class = sel.css("body::attr(class)").get()
         page_not_found_class = ["server-error-body", "page-notFound"]
-        
+
         while not any(error_page in product_page_class for error_page in page_not_found_class):  # If page exists
             page_no += 1
             relative_urls += sel.css('.productMainLink::attr(href)').getall()
