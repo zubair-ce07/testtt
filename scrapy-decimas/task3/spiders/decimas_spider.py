@@ -37,9 +37,9 @@ class DecimasSpider(CrawlSpider):
 
     def get_gender(self, response):
         genders = {'hombre': 'male', 'ninoa': 'girl', 'nino': 'boy', 'mujer': 'female'}
-        for gender_spanish in genders.keys():
+        for gender_spanish, gender in genders.items():
             if gender_spanish in response.url:
-                return genders.get(gender_spanish)
+                return gender
 
     def get_brand(self, response):
         for brand in DecimasSpider.brands:
@@ -49,7 +49,10 @@ class DecimasSpider(CrawlSpider):
     def get_price(self, response):
         prices = [r.strip() for r in response.css('.product-shop .price::text').extract()]
         prices = list(filter(None, prices))
-        return [self.format_price(p) for p in prices]
+        prices = sorted([self.format_price(p) for p in prices])
+        if len(prices) < 2:
+            prices.append('')
+        return prices
 
     def format_price(self, price):
         price = price.translate(str.maketrans({u"\u20ac": '', ',': '.'}))
@@ -59,7 +62,7 @@ class DecimasSpider(CrawlSpider):
         return response.css('.thumb-link img::attr(src)').extract()
 
     def get_retailer_sku(self, response):
-        return response.css('.skuProducto > span::text').extract_first().split(' ')[1]
+        return response.css('.skuProducto span::text').extract_first().split(' ')[1]
 
     def get_url(self, response):
         return response.url
@@ -85,14 +88,11 @@ class DecimasSpider(CrawlSpider):
 
     def get_skus(self, response):
         sku_id = self.get_retailer_sku(response)
-        prices = sorted(self.get_price(response))
         sizes = self.get_sizes(response)
         currency = self.get_currency(response)
         skus = []
         sku = {}
-        if len(prices) > 1:
-            sku['old-price'] = prices[1]
-        sku['price'] = prices[0]
+        sku['price'], sku['old-price'] = self.get_price(response)
         sku['currency'] = currency
         if self.is_out_of_stock(response):
             sku['out_of_stock'] = 'True'
