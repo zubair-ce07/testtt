@@ -2,6 +2,7 @@ import json
 
 from scrapy import Spider, Request
 from w3lib import url
+from urllib.parse import urljoin
 
 from Task4.items import ProductItem
 
@@ -11,41 +12,37 @@ class CeaSpider(Spider):
 
     custom_settings = {
         'ROBOTSTXT_OBEY': True,
-        'DOWNLOAD_DELAY': 0.25,
-        'ITEM_PIPELINES': {
-            'Task4.pipelines.DuplicatesRemovalPipeline': 100,
-        },
-        'FEED_FORMAT': 'json',
-        'FEED_URI': 'output/productsdetail.json',
-        'FEED_EXPORT_ENCODING': "utf-8",
+        'DOWNLOAD_DELAY': 0.25
     }
 
-    base_url_t = 'https://www.cea.com.br/buscapagina?PS=48&cc=1&sm=0&sl=267cfeec-2b17-4122-9f04-c7abf8e5a82d&PageNumber=1&ft={}'
-
-    def start_requests(self):
-        urls = [CeaSpider.base_url_t.format(u) for u in
-                  ('masculino', 'feminina', 'infantil', 'beauty', 'celulares', 'tablets', 'acessorios')]
-
-        for url in urls:
-            yield Request(url, callback=self.parse)
+    start_urls = ['https://www.cea.com.br']
 
     def parse(self, response):
+        category_links = response.css('script[id^="submenu-data-"]::text').re(r'"url":"([\w+/-]+)[\?|"]')
+
+        for category_link in category_links:
+            yield response.follow(category_link, callback=self.parse_category_link)
+
+    def parse_category_link(self, response):
+        base_link = urljoin(response.url, response.css('script::text').re_first(r'(/buscapagina?.+)&PageNumber'))
+        base_link = url.add_or_replace_parameter(base_link, "PageNumber", 1)
+        return Request(base_link, callback=self.parse_item_links)
+
+    def parse_item_links(self, response):
         item_links = response.css('.product-actions_details a::attr(href)').extract()
 
-        for item_link in item_links:
-            yield Request(item_link, callback=self.parse_item)
-
-        page_number = url.url_query_parameter(response.url, "PageNumber")
-        next_page_url = url.add_or_replace_parameter(response.url, "PageNumber", int(page_number)+1)
-
         if item_links:
+            for item_link in item_links:
+                yield Request(item_link, callback=self.parse_item)
+
+            page_number = url.url_query_parameter(response.url, "PageNumber")
+            next_page_url = url.add_or_replace_parameter(response.url, "PageNumber", int(page_number) + 1)
             yield Request(next_page_url)
 
     def parse_item(self, response):
         item = ProductItem()
         item['name'] = self.extract_item_name(response)
         item['retailer_sku'] = self.extract_retailer_sku(response)
-        item['gender'] = self.extract_gender(response.url, item['name'])
         item['price'] = self.extract_price(response)
         item['brand'] = self.extract_brand(response)
         item['skus'] = self.extract_skus(response)
@@ -58,6 +55,7 @@ class CeaSpider(Spider):
         item_detail = json.loads(response.text)[0]
         item = response.meta["item"]
         item['category'] = self.extract_category(item_detail)
+        item['gender'] = self.extract_gender(response.url, item['name'], item['category'])
         item['image_urls'] = self.extract_image_urls(item_detail)
         item['description'] = self.extract_description(item_detail)
         return item
@@ -71,18 +69,20 @@ class CeaSpider(Spider):
     def extract_brand(self, response):
         return response.css('td.Marca::text').extract_first()
 
-    def extract_gender(self, url, item_name):
+    def extract_gender(self, url, item_name, item_categories):
         gender_map = {
-                        'Unissex': 'Unisex',
-                        'masculino': 'Men',
-                        'feminina': 'Women',
-                        'Menina': 'Girl',
-                        'Menino': 'Boy',
-                        'Neutro': 'Kids'
+            'Unissex': 'Unisex',
+            'Masculina': 'Men',
+            'Masculino': 'Men',
+            'Feminino': 'Women',
+            'Feminina': 'Women',
+            'Menina': 'Girl',
+            'Menino': 'Boy',
+            'Neutro': 'Kids'
         }
 
         for gender in gender_map.keys():
-            if gender in item_name or gender in url:
+            if gender in item_name or gender in url or any(gender in category for category in item_categories):
                 return gender_map[gender]
 
         return 'Unisex'
@@ -100,7 +100,7 @@ class CeaSpider(Spider):
         return item_detail['categories']
 
     def extract_description(self, item_detail):
-        return item_detail['description']
+        return item_detail['description'].split("\n")
 
     def extract_skus(self, response):
         raw_skus = json.loads(response.css('script::text').re_first(r'var skuJson_0 = (.+]});'))
