@@ -3,26 +3,29 @@ import calendar
 import argparse
 
 
-class Starter:
+class FileParser:
 
-    file_names = os.listdir("/home/rehan/Documents/task/the-lab/weatherfiles")
+    file_names = []
     data = []
 
-    def __init__(self):
+    def __init__(self, file_path):
+
+        file_path = file_path + '/'
+
+        self.file_names = os.listdir(file_path)
+
         for q in range(1, self.file_names.__len__()):
 
-            tempo = open('/home/rehan/Documents/task/the-lab/weatherfiles/'
-                         + str(self.file_names[q])).read().split("\n")
-            self.data = tempo + self.data
+            file_data = open(file_path + str(self.file_names[q])).read().split("\n")
+            self.data = file_data + self.data
 
         for q in range(self.data.__len__()):  # reads and splits using comma into list
             self.data[q] = self.data[q].split(',')
 
 
-class Calculations:
+class ResultComputer:
 
-    s = Starter()
-    all_data = s.data
+    all_data = []
 
     def give_month_bar(self, year_month):
         print(calendar.month_name[int(year_month[-1:])] + " " + year_month[:4])
@@ -86,19 +89,19 @@ class Calculations:
         return highest_average, lowest_average, humidity_average
 
 
-class PrintReport:
+class GenerateReports:
 
-    def print_task_2(self, highest_average, lowest_average, humidity_average):
+    def generate_average_weather_report(self, highest_average, lowest_average, humidity_average):
         print("Highest Average: " + str(highest_average) + "C")
         print("Lowest Average: " + str(lowest_average) + "C")
         print("Average Mean Humidity: " + str(humidity_average) + "C")
 
-    def print_task_1(self, s1, s2, s3, s4, s5, s6, s7, s8, s9):
+    def generate_extreme_weather_report(self, s1, s2, s3, s4, s5, s6, s7, s8, s9):
         print("Highest: " + s1 + "C on " + s2 + " " + s3)
         print("Lowest: " + s4 + "C on " + s5 + " " + s6)
         print("Humidity: " + s7 + "% on " + s8 + " " + s9)
 
-    def print_task_bonus(self, year_month, data_list):
+    def generate_extreme_single_bar_report(self, year_month, data_list):
         print(calendar.month_name[int(year_month[-1:])] + " " + year_month[:4])
         for k in range(0, data_list.__len__() - 1):
             if year_month[0:4] == data_list[k][0][0:4] and year_month[-1:] == data_list[k][0][5:6]:
@@ -107,7 +110,7 @@ class PrintReport:
                           '\033[94m' + '+' * int(data_list[k][3]) + '\033[0m' +
                           " " + data_list[k][1] + "C" + " " + data_list[k][3] + "C")
 
-    def print_task_3(self, year_month, data_list):
+    def generate_extreme_double_bar_report(self, year_month, data_list):
         print(calendar.month_name[int(year_month[-1:])] + " " + year_month[:4])
         for k in range(0, data_list.__len__() - 1):
             if year_month[0:4] == data_list[k][0][0:4] and year_month[-1:] == data_list[k][0][5:6]:
@@ -121,26 +124,38 @@ class PrintReport:
 
 def main():
 
-    c = Calculations()
-
-    p = PrintReport()
-
     parser = argparse.ArgumentParser()
+    parser.add_argument('dir_path', help='foo help')
     parser.add_argument('-e', '--extreme', help='foo help')
     parser.add_argument('-a', '--average', help='foo help')
     parser.add_argument('-c', '--bar', help='foo help')
     parser.add_argument('-b', '--bonus', help='foo help')
     args = parser.parse_args()
-    if args.extreme:
-        s1, s2, s3, s4, s5, s6, s7, s8, s9 = c.give_year_data(args.extreme)
-        p.print_task_1(s1, s2, s3, s4, s5, s6, s7, s8, s9)
-    if args.average:
-        highest_average, lowest_average, humdity_average = c.give_month_data(args.average)
-        p.print_task_2(highest_average, lowest_average, humdity_average)
-    if args.bar:
-        p.print_task_3(args.bar, c.all_data)
-    if args.bonus:
-        p.print_task_bonus(args.bonus, c.all_data)
+
+    if not os.path.isdir(args.dir_path):
+        print("Error, file path not found")
+    else:
+        f = FileParser(args.dir_path)
+
+        c = ResultComputer()
+        c.all_data = f.data
+
+        g = GenerateReports()
+
+        if args.extreme:
+            highest_temp, highest_temp_month, highest_temp_day, \
+            lowest_temp, lowest_temp_month, lowest_temp_day, \
+            humidity, humidity_month, humidity_day = c.give_year_data(args.extreme)
+            g.generate_extreme_weather_report(highest_temp, highest_temp_month, highest_temp_day,
+                                              lowest_temp, lowest_temp_month, lowest_temp_day,
+                                              humidity, humidity_month, humidity_day)
+        if args.average:
+            highest_average, lowest_average, humidity_average = c.give_month_data(args.average)
+            g.generate_average_weather_report(highest_average, lowest_average, humidity_average)
+        if args.bar:
+            g.generate_extreme_double_bar_report(args.bar, c.all_data)
+        if args.bonus:
+            g.generate_extreme_single_bar_report(args.bonus, c.all_data)
 
 
 if '__main__' == __name__:
