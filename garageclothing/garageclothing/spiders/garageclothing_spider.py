@@ -37,13 +37,13 @@ class GarageClothingSpider(scrapy.Spider):
                               callback=self.parse_landing_page, cookies={'JSESSIONID': session_id})
 
     def parse_landing_page(self, response):
-        listing_css = 'li.categoryMenuItem span.categoryMenuItemSpan a::attr(href)'
+        listing_css = '.categoryMenuItem .categoryMenuItemSpan a::attr(href)'
 
         for listing in response.css(listing_css).extract()[:-1]:
             yield response.follow(listing, self.parse_listing)
 
     def parse_listing(self, response):
-        product_css = 'a.gaProductClickFromGallery::attr(href)'
+        product_css = '.gaProductClickFromGallery::attr(href)'
 
         for product in response.css(product_css).extract():
             yield response.follow(product, self.parse_product)
@@ -239,25 +239,30 @@ class GarageClothingSpider(scrapy.Spider):
         variant.update(sku['sku_fields']['price'])
         return variant
 
+    @staticmethod
+    def get_product_currency(response):
+        currency_xpath = '//script[contains(text(), "priceCurrency")]'
+        return response.xpath(currency_xpath).re(r'"priceCurrency": "([A-Z]+)"')[0]
+
     def get_product_price(self, response):
         prices = {}
 
-        special_price = response.css('h2.prodPricePDP span.withSale::text').extract_first()
-        normal_price = response.css('h2.prodPricePDP span.salePrice::text').extract_first()
-        prices['currency'] = 'CAD'
+        special_price = response.css('.prodPricePDP .withSale::text').extract_first()
+        normal_price = response.css('.prodPricePDP .salePrice::text').extract_first()
+        prices['currency'] = self.get_product_currency(response)
 
         if special_price:
             prices['price'] = self.get_price_from_string(special_price)
             prices['previous_price'] = self.get_price_from_string(normal_price)
         else:
-            normal_price = response.css('h2.prodPricePDP::text').extract_first()
+            normal_price = response.css('.prodPricePDP::text').extract_first()
             prices['price'] = self.get_price_from_string(normal_price)
 
         return prices
 
     @staticmethod
     def get_product_colors(response):
-        colors_xpath = '//div[@id="productColours"]//div[contains(@class, "prodDetail")]' \
+        colors_xpath = '//*[@id="productColours"]//*[contains(@class, "prodDetail")]' \
                        '/@*[name()="colourid" or name()="colorname"]'
         raw_colors = response.xpath(colors_xpath).extract()
         colors = []
@@ -273,7 +278,7 @@ class GarageClothingSpider(scrapy.Spider):
 
     @staticmethod
     def get_product_name(response):
-        return response.css('h1.prodName::text').extract_first()
+        return response.css('.prodName::text').extract_first()
 
     @staticmethod
     def get_price_from_string(string):
@@ -298,7 +303,7 @@ class GarageClothingSpider(scrapy.Spider):
     @staticmethod
     def get_product_images(response):
         return [f"https://{i.lstrip('/')}"
-                for i in response.css('ul.addViews a::attr(href)').extract()]
+                for i in response.css('.addViews a::attr(href)').extract()]
 
     @staticmethod
     def map_color_code_to_name(color, color_map):
