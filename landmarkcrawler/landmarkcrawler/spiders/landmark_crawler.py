@@ -6,8 +6,8 @@ import scrapy
 from scrapy import Selector
 from w3lib.url import add_or_replace_parameter
 from scrapy import Request
+from urllib.parse import urljoin
 
-from csv import DictReader
 
 from ..items import LandmarkcrawlerItem
 
@@ -29,7 +29,7 @@ def clean(lst_or_str):
 
 class LandmarkCrawlerSpider(scrapy.Spider):
     name = 'landmark_crawler'
-    allowed_domains = ['google.com', 'www.tripadvisor.com']
+    allowed_domains = ['google.com', 'www.tripadvisor.com', 'google.com.pk']
     google_review_re = re.compile('(\d+)\s*reviews?|([\d,]+)\s+Google reviews?', flags=re.IGNORECASE)
     trip_advisor_rating_re = re.compile('Rating:\s*[\d\.]+\s*-.*?([\d,]+) reviews', flags=re.IGNORECASE)
     search_url = 'https://www.google.com/search'
@@ -38,18 +38,12 @@ class LandmarkCrawlerSpider(scrapy.Spider):
         yield Request('https://www.google.com/', callback=self.parse_from_file)
 
     def parse_from_file(self, response):
-        json_path = './landmarkcrawler/kayak-landmark-reviews.json'
+        json_path = './landmarkcrawler/reviews.json'
         self.logger.info(f'Reading landmarks from {json_path}')
 
         with open(json_path) as f:
             landmarks = json.load(f)
-            for landmark in landmarks:
-                if landmark['trip_advisor_rating_count'] and landmark['trip_advisor_rating_count'] > 1:
-                    item = LandmarkcrawlerItem()
-                    item.update(landmark)
-                    yield item
-                else:
-                    yield self.google_search_request(landmark)
+            yield from (self.google_search_request(landmark) for landmark in landmarks)
 
     def google_search_request(self, landmark):
         url = landmark["url"]
@@ -108,16 +102,21 @@ class LandmarkCrawlerSpider(scrapy.Spider):
         return int((clean(response.css('.rating_and_popularity .rating [property="count"]::text')) or
                     clean(response.css(css).re('\d+')))[0])
 
+    def trip_advisor_title(self, response):
+        return (clean(response.css('.heading_title ::text, #PAGEHEADING::text')) or
+                clean(response.css('.ui_column.wrap_column.meta-block-header')) or [''])[0]
+
     def parse(self, response):
         landmark = LandmarkcrawlerItem()
 
-        landmark['url'] = response.url
+        landmark['google_search_url'] = response.url
         landmark['lmid'] = response.meta['record']['lmid']
         landmark['google_rating_count'] = self.google_rating_count(response)
         landmark['address'] = self.address(response)
         landmark['phone_number'] = self.phone_number(response)
         landmark['operating_hours'] = self.operating_hours(response)
-        landmark['title'] = self.get_title(response)
+        landmark['google_search_title'] = self.get_title(response)
+        landmark['trip_advisor_title'] = ''
 
         ta_count = self.trip_advisor_rating_count(response)
         url = self.get_trip_advisor_url(response)
@@ -128,28 +127,33 @@ class LandmarkCrawlerSpider(scrapy.Spider):
             return landmark
 
         if not url:
-            url = f'{landmark["url"]}+tripadvisor'
+            url = f'{landmark["google_search_url"]}+tripadvisor'
             return Request(url, callback=self.parse_landmark,
                            meta={'landmark': landmark, 'use_proxy': True})
 
+        url = urljoin('https://', url)
         return Request(url, callback=self.parse_trip_advisor, meta={'landmark': landmark, 'use_proxy': False})
 
     def parse_landmark(self, response):
         landmark = response.meta.get('landmark')
-        landmark['title'] = self.get_title(response)
+        landmark['google_search_url'] = response.url
+        landmark['google_search_title'] = self.get_title(response)
         ta_count = self.trip_advisor_rating_count(response)
 
         url = self.get_trip_advisor_url(response)
 
         if ta_count and ta_count > 1:
+            landmark['trip_advisor_url'] = url
             landmark['trip_advisor_rating_count'] = self.trip_advisor_rating_count(response)
             return landmark
 
         landmark['trip_advisor_url'] = url
+        url = urljoin('https://', url)
         return Request(url, callback=self.parse_trip_advisor, meta={'landmark': landmark, 'use_proxy': False})
 
     def parse_trip_advisor(self, response):
         landmark = response.meta.get('landmark')
         landmark['trip_advisor_rating_count'] = self.trip_advisor_reviews_count(response)
         landmark['trip_advisor_url'] = response.url
+        landmark['trip_advisor_title'] = self.trip_advisor_title(response)
         return landmark
