@@ -7,31 +7,25 @@ from Task3.items import ProductItem
 
 class ColcciSpider(Spider):
     name = "Colcci"
-
     custom_settings = {'DOWNLOAD_DELAY': 0.25}
-    gender_map = {'Unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
-
     start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1',
                   'https://www.colcci.com.br/feminino-novo1/page/1',
                   'https://www.colcci.com.br/fitness/page/1',
                   'https://www.colcci.com.br/acessorios/page/1']
+
+    gender_map = {'Unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
 
     def parse(self, response):
         yield Request(response.url, callback=self.parse_products, dont_filter=True)
         load_more = response.css('#loadMoreBtn').extract()
 
         if load_more:
-            parsed_url = response.url.strip("/").split('/')
-            url = '/'.join(parsed_url[:-1])
-            page_number = int(parsed_url[-1])
-            next_page_url = f"{url}/{page_number+1}"
-            yield Request(next_page_url, callback=self.parse)
+            next_page_url = response.css('.pagination a::attr(href)').extract()[-1]
+            yield response.follow(next_page_url, callback=self.parse)
 
     def parse_products(self, response):
         item_links = response.css('[itemprop="name"] a::attr(href)').extract()
-
-        for item_link in item_links:
-            yield Request(item_link, callback=self.parse_item)
+        yield from [Request(item_link, callback=self.parse_item) for item_link in item_links]
 
     def parse_item(self, response):
         selector = response.css(".descriptioncolContent")
@@ -73,17 +67,17 @@ class ColcciSpider(Spider):
         return ''.join(descriptions)
 
     def extract_gender(self, response):
-        item_name = response.css('[itemprop="name"]::text').extract_first()
-        lookup_text = item_name + response.url
+        item_name = self.extract_item_name(response)
+        lookup_text = (item_name + response.url).lower()
 
-        for gender in ColcciSpider.gender_map.keys():
-            if gender in lookup_text.lower():
-                return gender_map[gender]
+        for gender in self.gender_map.keys():
+            if gender in lookup_text:
+                return self.gender_map[gender]
 
-        return ColcciSpider.gender_map['feminino']
+        return self.gender_map['feminino']
 
     def extract_skus(self, response):
-        raw_skus = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
+        raw_skus = json.loads(response.css("head script::text").re_first('.+LS.variants = (.+);'))
         skus = []
         for sku_json in raw_skus:
             sku = {
