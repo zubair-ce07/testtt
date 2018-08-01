@@ -1,6 +1,6 @@
 import argparse
 import asyncio
-from crawler import Crawler
+from async_crawler.crawler import Crawler
 
 
 def main(argv):
