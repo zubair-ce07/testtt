@@ -1,0 +1,34 @@
+{% extends 'taskmanager/base.html' %}
+{% block content %}
+    <h1>Task Manager</h1>
+    <a href="{% url 'taskmanager:add'%}">
+        <button>Add Task</button>
+    </a>
+    <table>
+        <tr>
+            <td> Title </td>
+            <td> Deadline </td>
+            <td> Description </td>
+            <td> Assignee </td>
+            <td> Options </td>
+        </tr>
+        {% for task in object_list %}
+            <tr>
+                <td> {{ task.title }} </td>
+                <td> {{ task.due_date }} </td>
+                <td class="set_fixed_width"> {{ task.description }} </td>
+                <td> {{ task.assignee }} </td>
+                <td>
+                    <form action="{% url 'taskmanager:delete' task.id%}" method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="submit" value="Delete" name="delete" />
+                    </form>
+                    <a href="{% url 'taskmanager:edit' task.id %}">
+                        <button>Edit</button>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock content %}
+
