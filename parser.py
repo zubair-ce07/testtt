@@ -25,7 +25,7 @@ class Sprinter:
         self.sprinter_records["description"] = description
         self.sprinter_records["care"] = care
         self.sprinter_records["image_urls"] = image_urls
-        self.sprinter_records["skus"] = product_skus.copy()
+        self.sprinter_records["skus"] = product_skus
 
 
 def product_care(selector):
@@ -108,18 +108,19 @@ def unavailable_sizes(selector):
 
 
 def skus(selector):
-    sku = dict()
+    skus = list()
     sizes = all_sizes(selector)
     unavailable = unavailable_sizes(selector)
     colour = product_color(selector)
     common = prices(selector)
     for size in sizes:
-        sku["colour"] = colour
         sku = common.copy()
+        sku["colour"] = colour
         if size in unavailable:
             sku["out_of_stock"] = True
         sku["sku_id"] = f"{colour}_{size}"
-    return sku
+        skus.append(sku)
+    return skus
 
 
 async def parse(items_visited_urls, item_url, loop, sprinter_records):
