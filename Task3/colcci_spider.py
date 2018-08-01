@@ -16,14 +16,14 @@ class ColcciSpider(Spider):
     gender_map = {'unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
 
     def parse(self, response):
-        yield Request(response.url, callback=self.parse_products, dont_filter=True)
+        yield Request(response.url, callback=self.parse_pages, dont_filter=True)
         load_more = response.css('#loadMoreBtn').extract()
 
         if load_more:
             next_page_url = response.css('.pagination a::attr(href)').extract()[-1]
             return response.follow(next_page_url, callback=self.parse)
 
-    def parse_products(self, response):
+    def parse_pages(self, response):
         item_links = response.css('[itemprop="name"] a::attr(href)').extract()
         yield from [Request(item_link, callback=self.parse_item) for item_link in item_links]
 
