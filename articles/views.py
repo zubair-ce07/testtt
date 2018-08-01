@@ -1,15 +1,33 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+from drf_multiple_model.views import ObjectMultipleModelAPIView
+from articles.pagination import LimitPagination
+
 from articles.models import Article
 from articles.serializers import ArticleSerializer
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
-from rest_framework.response import Response
-from rest_framework import renderers
-from rest_framework import viewsets
-from rest_framework.decorators import action
+from rest_framework import generics
 
 
 def index(request):
     return HttpResponse("Hello, world. You're at the articles index.")
 
+
+class ArticleList(ObjectMultipleModelAPIView):
+    pagination_class = LimitPagination
+    querylist = [
+        {
+            'queryset': Article.objects.filter(category="ARTICLE"),
+            'serializer_class': ArticleSerializer,
+            'label': 'Articles',
+        },
+        {
+            'queryset': Article.objects.filter(category="NEWS"),
+            'serializer_class': ArticleSerializer,
+            'label': 'News',
+        },
+    ]
+
+
+class ArticleDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
