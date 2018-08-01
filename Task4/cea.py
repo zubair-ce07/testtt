@@ -26,15 +26,15 @@ class CeaSpider(Spider):
 
     def parse(self, response):
         category_links = response.css('script[id^="submenu-data-"]::text').re(r'"url":"([\w+/-]+)[\?|"]')
-        yield from [response.follow(category_link, callback=self.parse_category_link)
+        yield from [response.follow(category_link, callback=self.parse_category_links)
                     for category_link in category_links]
 
-    def parse_category_link(self, response):
+    def parse_category_links(self, response):
         item_base_link = response.urljoin(response.css('script::text').re_first(r'(/buscapagina?.+)&PageNumber'))
         item_base_link = url.add_or_replace_parameter(item_base_link, "PageNumber", 1)
-        return Request(item_base_link, callback=self.parse_item_links)
+        return Request(item_base_link, callback=self.parse_pages)
 
-    def parse_item_links(self, response):
+    def parse_pages(self, response):
         item_links = response.css('.product-actions_details a::attr(href)').extract()
 
         if item_links:
@@ -42,7 +42,7 @@ class CeaSpider(Spider):
 
             page_number = url.url_query_parameter(response.url, "PageNumber")
             next_page_url = url.add_or_replace_parameter(response.url, "PageNumber", int(page_number) + 1)
-            return Request(next_page_url, callback=self.parse_item_links)
+            return Request(next_page_url, callback=self.parse_pages)
 
     def parse_item(self, response):
         item = ProductItem()
