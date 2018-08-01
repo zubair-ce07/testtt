@@ -17,12 +17,10 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.conf.urls import url
 from django.contrib.auth.models import User
-from rest_framework import routers, serializers
+from rest_framework import routers
 from articles.views import ArticleList, ArticleDetail
-
-from teams.views import TeamList, PlayerList, TeamDetail, PlayerDetail
+from teams.views import TeamList, PlayerList, TeamDetail, PlayerDetail, TeamPlayersView, TeamPlayersFormatWiseView
 
 router = routers.DefaultRouter()
 
@@ -32,13 +30,14 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('admin/', admin.site.urls),
 
-
-    url(r'^players/$', PlayerList.as_view(), name='players-list'),
-    url(r'^teams/$', TeamList.as_view(), name='teams-list'),
-    url(r'^articles/$', ArticleList.as_view(), name='articles-list'),
-    url(r'^articles/(?P<pk>[0-9]+)/$', ArticleDetail.as_view(), name='article-detail'),
-    url(r'^teams/(?P<pk>[0-9]+)/$', TeamDetail.as_view(), name='team-detail'),
-    url(r'^players/(?P<pk>[0-9]+)/$', PlayerDetail.as_view(), name='player-detail'),
-    url(r'^', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path('players/', PlayerList.as_view(), name='players-list'),
+    path('teams/', TeamList.as_view(), name='teams-list'),
+    path('articles/', ArticleList.as_view(), name='articles-list'),
+    path('articles/<int:pk>/', ArticleDetail.as_view(), name='article-detail'),
+    path('teams/<int:pk>/', TeamDetail.as_view(), name='team-detail'),
+    path('teams/<int:pk>/players/', TeamPlayersView.as_view(), name='team-players'),
+    path('teams/<int:pk>/players/format=odi', TeamPlayersFormatWiseView.as_view(), name='team-players-format'),
+    path('players/<int:pk>/', PlayerDetail.as_view(), name='player-detail'),
+    path('', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

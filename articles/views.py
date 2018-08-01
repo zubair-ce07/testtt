@@ -1,30 +1,17 @@
-from django.http import HttpResponse
-from drf_multiple_model.views import ObjectMultipleModelAPIView
-from common.pagination import LimitPagination
-
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from articles.models import Article
 from articles.serializers import ArticleSerializer
 from rest_framework import generics
 
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the articles index.")
+class ArticleList(APIView):
 
-
-class ArticleList(ObjectMultipleModelAPIView):
-    pagination_class = LimitPagination
-    querylist = [
-        {
-            'queryset': Article.objects.filter(category="ARTICLE"),
-            'serializer_class': ArticleSerializer,
-            'label': 'Articles',
-        },
-        {
-            'queryset': Article.objects.filter(category="NEWS"),
-            'serializer_class': ArticleSerializer,
-            'label': 'News',
-        },
-    ]
+    def get(self, request, format=None):
+        articles = Article.objects.filter(category="ARTICLE")
+        news = Article.objects.filter(category="NEWS")
+        response = ArticleSerializer((articles | news), many=True)
+        return Response(response.data)
 
 
 class ArticleDetail(generics.RetrieveUpdateDestroyAPIView):

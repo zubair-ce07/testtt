@@ -5,4 +5,4 @@ from articles.models import Article, ArticleChoices
 class ArticleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
-        fields = ['id', 'title', 'author', 'description', 'category', 'url', 'content', 'players', 'teams']
+        fields = '__all__'

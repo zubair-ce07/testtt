@@ -32,7 +32,6 @@ class Player(SoftDeleteModelMixin):
     def __str__(self):
         return self.name
 
-    # Calculate Age as property
     @property
     def get_age(self):
         today = date.today()
@@ -57,7 +56,7 @@ class BasicAverageInfo(SoftDeleteModelMixin):
 
 class BattingAverage(BasicAverageInfo):
 
-    player = models.ForeignKey(Player, related_name='batting_average', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, related_name='batting_averages', on_delete=models.CASCADE)
 
     not_outs = models.IntegerField(null=True, blank=True)
     highest_score = models.CharField(max_length=50, default=' ')    # 88*
@@ -75,7 +74,7 @@ class BattingAverage(BasicAverageInfo):
 
 
 class BowlingAverage(BasicAverageInfo):
-    player = models.ForeignKey(Player, related_name='bowling_average', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, related_name='bowling_averages', on_delete=models.CASCADE)
 
     wickets = models.IntegerField(null=True, blank=True)
     best_bowling_innings = models.CharField(max_length=50, default=' ', null=True, blank=True)

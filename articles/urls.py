@@ -5,5 +5,5 @@ from articles.views import ArticleList
 from . import views
 
 urlpatterns = [
-    path('', ArticleList.as_view()),
+
 ]
