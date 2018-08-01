@@ -1,5 +1,5 @@
 import json
-from urllib import parse
+from urllib.parse import urlsplit, urljoin
 
 from parser import *
 
@@ -14,22 +14,22 @@ class SprinterSpider:
         self.delay = delay
         self.url_visit_limit = url_visit_limit
         self.semaphore = asyncio.BoundedSemaphore(concurrent_req)
-        self.host = parse.urlsplit(url).netloc
+        self.host = "www.sprinter.es"
         self.sprinter_records = list()
 
-    async def filter_bad_urls(self, extracted_urls):
-        return list(filter(lambda e: parse.urlsplit(e).netloc == self.host,
+    def filter_bad_urls(self, extracted_urls):
+        return list(filter(lambda e: urlsplit(e).netloc == self.host,
                            extracted_urls))
 
-    async def add_crawler_links(self, extracted_urls, url):
+    def add_crawler_links(self, extracted_urls, url):
         for link in extracted_urls:
-            link = parse.urljoin(url, link)
+            link = urljoin(url, link)
             if not self.visited_urls.get(link):
                 self.crawler_pending_urls.add(link)
 
-    async def add_items_links(self, item_urls, url):
+    def add_items_links(self, item_urls, url):
         for link in item_urls:
-            link = parse.urljoin(url, link)
+            link = urljoin(url, link)
             if len(link.split('/')) < 5:
                 continue
             if not self.items_visited_urls.get(link):
@@ -48,9 +48,9 @@ class SprinterSpider:
             extracted_urls = selector.css("a::attr(href)").extract()
             item_link_key = '//div[@class="item"]/a/@href'
             item_urls = selector.xpath(item_link_key).getall()
-            extracted_urls = await self.filter_bad_urls(extracted_urls)
-            await self.add_crawler_links(extracted_urls, url)
-            await self.add_items_links(item_urls, url)
+            extracted_urls = self.filter_bad_urls(extracted_urls)
+            self.add_crawler_links(extracted_urls, url)
+            self.add_items_links(item_urls, url)
 
     async def schedule_futures(self, loop):
         futures = []

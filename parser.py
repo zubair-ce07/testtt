@@ -4,24 +4,17 @@ import time
 import requests
 import parsel
 
-
-class Skus:
-    def __init__(self, colour, price, currency, size, previous_prices,
-                 sku_id, out_of_stock = None):
-        self.sku_records = dict()
-        self.sku_records["colour"] = colour
-        self.sku_records["price"] = price
-        self.sku_records["currency"] = currency
-        self.sku_records["size"] = size
-        self.sku_records["previous_prices"] = previous_prices
-        if out_of_stock:
-            self.sku_records["out_of_stock"] = out_of_stock
-        self.sku_records["sku_id"] = sku_id
+gender_translator = [
+    ('nino', 'boy'),
+    ('nina', 'girl'),
+    ('hombre', 'man'),
+    ('mujer', 'woman')
+]
 
 
 class Sprinter:
     def __init__(self, retailer_sku, gender, category, brand, url, name,
-                 description, care, image_urls, skus):
+                 description, care, image_urls, product_skus):
         self.sprinter_records = dict()
         self.sprinter_records["retailer_sku"] = retailer_sku
         self.sprinter_records["gender"] = gender
@@ -32,162 +25,125 @@ class Sprinter:
         self.sprinter_records["description"] = description
         self.sprinter_records["care"] = care
         self.sprinter_records["image_urls"] = image_urls
-        self.sprinter_records["skus"] = skus
+        self.sprinter_records["skus"] = product_skus.copy()
 
 
-def index_containing_substring(the_list, substring):
-    for i, s in enumerate(the_list):
-        if substring in s:
-            return i
-    return -1
+def product_care(selector):
+    care_css = ".features-delivery-inner :contains('Cómo cuidar')+ul ::text"
+    care = selector.css(care_css).extract()
+    care = [c.strip(' ').rstrip() for c in care]
+    return list(filter(None, care))
 
 
-def get_description_and_care(selector):
-    all_description_key = '//div[@class="features-delivery-inner"]//text()'
-    all_description = selector.xpath(all_description_key).getall()
-    description_titles_key = '//div[@class="features-delivery-inner"]' \
-                             '//strong//text()'
-    description_titles = selector.xpath(description_titles_key).getall()
-
-    if not all_description:
-        return "N/A", "N/A"
-
-    all_description = [x.strip(' ').rstrip() for x in
-                       all_description]
-    all_description = list(filter(None, all_description))
-
-    care_start_word = "Cómo cuidar"
-    index = index_containing_substring(description_titles, care_start_word)
-
-    if index == -1:
-        description_titles_key = '//div[' \
-                                 '@class="features-delivery-inner"]//b//text()'
-        description_titles = selector.xpath(description_titles_key).getall()
-        index = index_containing_substring(description_titles, care_start_word)
-        if index == -1:
-            return all_description, "N/A"
-
-    if (index+1) >= len(description_titles):
-        care_end_word = None
-    else:
-        care_end_word = description_titles[(index + 1)]
-
-    description = list()
-    care = list()
-    care_string_start = False
-
-    for word in all_description:
-        if care_start_word in word:
-            care_string_start = True
-
-        if care_end_word == word:
-            care_string_start = False
-
-        if care_string_start:
-
-            care.append(word)
-        else:
-            description.append(word)
-
-    return description, care
+def product_description(selector):
+    des_css = ".features-delivery-inner :contains('Características')+ul ::text"
+    description = selector.css(des_css).extract()
+    description = [d.strip(' ').rstrip() for d in description]
+    return list(filter(None, description))
 
 
-def get_images_urls(selector):
-    images_url_key = '//li[@class="product-thumb-item "]/img/@src'
-    images_urls = selector.xpath(images_url_key).getall()
-    images_urls = [urls.replace("84x84", "539x539") for urls in images_urls]
-    return images_urls
+def images_urls(selector):
+    image_url_css = ".product-thumb-item>img::attr(src)"
+    images = selector.css(image_url_css).extract()
+    return [urls.replace("84x84", "539x539") for urls in images]
 
 
-def get_sku_id(selector):
-    retailer_sku__key = '//span[@class="nmbrjga ' \
-                        'js-product-code"]/text()'
-    return selector.xpath(retailer_sku__key).get()
+def product_id(selector):
+    retailer_sku_css = '.js-product-code::text'
+    return selector.css(retailer_sku_css).extract_first()
 
 
-def get_gender(item_url, selector):
+def product_gender(item_url, selector):
     url_details = item_url.split('/')
-    gender = "N/A"
+    gender = "unisex"
     gender_from_url = url_details[3].split('-')[-1]
-    if gender_from_url == "nino" \
-            or gender_from_url == "nina" \
-            or gender_from_url == "hombre" \
-            or gender_from_url == "mujer":
-        gender = gender_from_url
+    gender_css = '.product__category::text'
+    gender_detail = selector.css(gender_css).extract_first()
+    global gender_translator
+    for spanish, english in gender_translator:
+        if gender_from_url == spanish:
+            gender = english
+        elif spanish in gender_detail:
+            gender = english
     return gender
 
 
-def get_categories(selector):
-    bread_crumbs_key = '//span[@itemprop="name"]/text()'
-    total_bread_crumbs = selector.xpath(bread_crumbs_key).getall()
-    return list(total_bread_crumbs[1:-1])
+def product_categories(selector):
+    product_category_css = 'span[itemprop="name"]::text'
+    product_category = selector.css(product_category_css).extract()
+    return list(product_category[1:-1])
 
 
-def get_name(selector):
-    name_key = '//h1[@class="product-main-title"]/text()'
-    name = selector.xpath(name_key).get()
+def product_name(selector):
+    name_css = '.product-main-title::text'
+    name = selector.css(name_css).extract_first()
     name = ' '.join(name.split())
     return name
 
 
-def get_sku(selector):
-    colour_key = '//div[@class="ref-color"]//p/text()'
-    colour = selector.xpath(colour_key).get()
-
-    currency = "Euro"
-
-    old_price_key = '//div[@class="price"]//p[' \
-                    '@class="old-price"]//span//text()'
-
-    new_price_key = '//div[@class="price"]//span//text()'
-
-    old_prices = [selector.xpath(old_price_key).get()[:-2]]
-    new_price = selector.xpath(new_price_key).get()[:-2]
-
-    available_size_key = '//li[@class="nmbrjga available"]//text()'
-    available_sizes = selector.xpath(available_size_key).getall()
-    available_sizes = list(set(available_sizes))
-
-    unavailable_size_key = '//li[@class="nmbrjga unavailable"]//text()'
-    unavailable_sizes = selector.xpath(unavailable_size_key).getall()
-    unavailable_sizes = list(set(unavailable_sizes))
-
-    skus = list()
-    for size in unavailable_sizes:
-        sku_id = f"{colour}_{size}"
-        sk = Skus(colour, new_price, currency, size, old_prices,
-                         sku_id, True)
-        skus.append(sk.sku_records)
-
-    for size in available_sizes:
-        sku_id = f"{colour}_{size}"
-        sk = Skus(colour, new_price, currency, size, old_prices,
-                         sku_id)
-        skus.append(sk.sku_records)
-
-    return skus
+def product_color(selector):
+    colour_css = '.ref-color>p::text'
+    return selector.css(colour_css).extract_first()
 
 
-async def scrap_item_url(items_visited_urls, item_url, loop, sprinter_records):
+def prices(selector):
+    all_prices = dict()
+    old_price_css = '.price>p.old-price>span::text'
+    new_price_css = '.price>p>span::text'
+    all_prices["currency"] = "Euro"
+    all_prices["price"] = selector.css(new_price_css).extract_first()[:-2]
+    all_prices["previous_prices"] = [selector.css(old_price_css).extract_first(
+    )[:-2]]
+    return all_prices
+
+
+def all_sizes(selector):
+    sizes_css = '#mobile-size>li::text'
+    return selector.css(sizes_css).extract()
+
+
+def unavailable_sizes(selector):
+    unavailable_size_x = '#mobile-size>.unavailable::text'
+    return selector.css(unavailable_size_x).extract()
+
+
+def skus(selector):
+    sku = dict()
+    sizes = all_sizes(selector)
+    unavailable = unavailable_sizes(selector)
+    colour = product_color(selector)
+    common = prices(selector)
+    for size in sizes:
+        sku["colour"] = colour
+        sku = common.copy()
+        if size in unavailable:
+            sku["out_of_stock"] = True
+        sku["sku_id"] = f"{colour}_{size}"
+    return sku
+
+
+async def parse(items_visited_urls, item_url, loop, sprinter_records):
     async with asyncio.BoundedSemaphore(5):
         future = loop.run_in_executor(None, requests.post, item_url)
         response = await future
-        time.sleep(0.5)
+        time.sleep(1)
+
         if response.status_code == 200 \
                 and len(response.text):
             selector = parsel.Selector(text=response.text)
 
-            retailer_sku = get_sku_id(selector)
-            gender = get_gender(item_url, selector)
-            categories = get_categories(selector)
+            retailer_sku = product_id(selector)
+            gender = product_gender(item_url, selector)
+            categories = product_categories(selector)
             brand = "N/A"
-            name = get_name(selector)
-            description, care = get_description_and_care(selector)
-            images_urls = get_images_urls(selector)
-            skus = get_sku(selector)
+            name = product_name(selector)
+            description = product_description(selector)
+            care = product_care(selector)
+            images = images_urls(selector)
+            product_skus = skus(selector)
             items_visited_urls[item_url] = True
             spr = Sprinter(retailer_sku, gender, categories, brand, item_url,
-                          name, description, care, images_urls, skus)
+                           name, description, care, images, product_skus)
             sprinter_records.append(spr.sprinter_records)
 
 
@@ -196,8 +152,8 @@ async def schedule_items_futures(items_visited_urls, items_pending_urls,
     futures = []
     for item_url in items_pending_urls:
         futures.append(
-            asyncio.ensure_future(scrap_item_url(items_visited_urls,
-                                                 item_url, loop, sprinter_records)))
+            asyncio.ensure_future(parse(items_visited_urls, item_url, loop,
+                                        sprinter_records)))
     await asyncio.wait(futures)
     return futures
 
