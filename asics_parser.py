@@ -6,6 +6,7 @@ class ProductParser:
     def __init__(self, product_url, product_page_content):
         self.product_url = product_url
         self.url_selector = Selector(text=product_page_content)
+        self.brand = "Asics Tiger"
 
     def extract_product_name(self):
         return self.url_selector.css('.single-prod-title::text').get()
@@ -23,9 +24,7 @@ class ProductParser:
 
     def extract_previous_price(self):
         previous_price = self.url_selector.css("del::text").getall()
-        if not previous_price:
-            return "none"
-        return [float(price[1:]) for price in set(previous_price)]
+        return [float(price[1:]) for price in set(previous_price)] if previous_price else None
 
     def extract_product_model(self):
         return self.url_selector.css("span[itemprop='model']::text").get().strip()
@@ -46,10 +45,6 @@ class ProductParser:
     def extract_product_image_urls(self):
         return self.url_selector.css("#pdp-main-image .product-img::attr(data-url-src)").getall()
 
-    def extract_product_status(self):
-        product_status = self.url_selector.css("#stock-info-container::text").get().strip()
-        return False if "Out" in product_status else True
-
     def extract_total_sizes(self):
         return set(
             filter(None, set(size.strip() for size in self.url_selector.css("a.SizeOption::text").getall())))
@@ -60,20 +55,19 @@ class ProductParser:
 
     def get_skus(self):
         color = self.extract_product_colors()[0]
-        total_sizes = self.extract_total_sizes()
         unavailable_sizes = self.extract_unavailable_sizes()
 
         return [{"color": color, "price": self.extract_product_price(), "currency": self.extract_currency(),
                  "size": size, "previous_prices": self.extract_previous_price(),
                  "out_of_stock": True if size in unavailable_sizes else False,
-                 "sku_id": f'{color}_{size}'} for size in total_sizes]
+                 "sku_id": f'{color}_{size}'} for size in self.extract_total_sizes()]
 
     def get_product(self):
         return {
             "retailer_sku": self.extract_product_model(),
             "gender": self.extract_product_gender(),
             "category": self.extract_product_category(),
-            "brand": "Asics Tiger",
+            "brand": self.brand,
             "url": self.product_url,
             "name": self.extract_product_name(),
             "description": self.extract_product_details(),
