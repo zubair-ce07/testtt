@@ -53,10 +53,6 @@ class GarageClothingSpider(CrawlSpider):
 
     def parse_landing_page(self, response):
         session_id = response.css('p::text').extract_first()
-
-        # return scrapy.Request('https://www.garageclothing.com/ca/crew-neck-sweater/p/'
-        #                       'prod3030019.product',
-        #                       cookies={'JSESSIONID': session_id}, callback=self.parse_product)
         return scrapy.Request('https://www.garageclothing.com/ca/',
                               cookies={'JSESSIONID': session_id}, callback=self.parse)
 
@@ -88,9 +84,7 @@ class GarageClothingSpider(CrawlSpider):
         meta = response.meta['meta']
         sku['image_urls'].extend(self.get_product_images(response))
         size_requests = self.generate_size_requests(sku, meta)
-
-        if size_requests:
-            return size_requests.pop()
+        return self.get_request(size_requests, sku)
 
     def parse_product_sizes(self, response):
         sku = response.meta['sku']
@@ -99,14 +93,11 @@ class GarageClothingSpider(CrawlSpider):
 
         if response.css('#productLengths'):
             multi_dimension_requests = self.generate_multi_dimension_requests(response, sku, meta)
-            return multi_dimension_requests.pop()
+            return self.get_request(multi_dimension_requests, sku)
         else:
             for size in response.css('span'):
                 sku['skus'].append(self.generate_product_sku(size, meta))
-
-            if size_requests:
-                return size_requests.pop()
-            return sku
+            return self.get_request(size_requests, sku)
 
     def parse_multi_dimension_product(self, response):
         sku = response.meta['sku']
@@ -122,9 +113,7 @@ class GarageClothingSpider(CrawlSpider):
             sku_variant['color'] = self.map_color_code_to_name(color_code, meta['colors'])
             sku['skus'].append(sku_variant)
 
-        if multi_dimension_requests:
-            return multi_dimension_requests.pop()
-        return sku
+        return self.get_request(multi_dimension_requests, sku)
 
     def generate_image_requests(self, response, sku, meta):
         colors = self.get_product_colors(response)
@@ -280,8 +269,8 @@ class GarageClothingSpider(CrawlSpider):
         return response.css('#originalStyle::attr(value)').extract_first()
 
     @staticmethod
-    def get_requests(request, default):
-        return request.pop() if request else default
+    def get_request(requests, default):
+        return requests.pop() if requests else default
 
     @staticmethod
     def get_product_images(response):
