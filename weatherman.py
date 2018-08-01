@@ -5,7 +5,6 @@ import csv
 import datetime
 import os
 import re
-import sys
 from time import strptime
 
 COLOR_RED = '\033[91m'
@@ -14,7 +13,7 @@ COLOR_PURPLE = '\033[35m'
 COLOR_DEFAULT = '\033[0m'
 
 
-def if_dir_exists(dirname):
+def validate_path(dirname):
     if os.path.isdir(dirname):
         return dirname
     else:
@@ -22,9 +21,8 @@ def if_dir_exists(dirname):
 
 
 def get_year_and_month(file_name):
-    year_and_month = file_name.split('_')
-    year = year_and_month[2]
-    month = year_and_month[3][:-4]
+    year = file_name[15:19]
+    month = file_name[20:23]
     return year, str(strptime(month, '%b').tm_mon)
 
 
@@ -35,17 +33,17 @@ class FileParser:
         self.month_data = {}
 
     def parse_file(self, dir_path):
-        if if_dir_exists(dir_path) is None:
+        if validate_path(dir_path) is None:
             print('Sorry! The directory path is not valid')
             return None
 
         file_names = os.listdir(dir_path)
 
         for file_name in file_names:
-            with open(dir_path + file_name, 'r') as file:
+            with open(os.path.join(dir_path, file_name), 'r') as file:
                 year, month = get_year_and_month(file_name)
-                read_csv = csv.DictReader(file, skipinitialspace=True, delimiter=',')
-                for index, row in enumerate(read_csv):
+                file_data = csv.DictReader(file, skipinitialspace=True, delimiter=',')
+                for index, row in enumerate(file_data):
                     self.month_data[str(index + 1)] = row
 
                 if year not in self.year_data.keys():
@@ -88,11 +86,11 @@ class ResultComputer:
         result = {}
 
         for month in year_data.values():
-            value = max(month.items(), key=lambda x: x[1]['Max TemperatureC'])
+            value = max(month.items(), key=lambda x: int(x[1]['Max TemperatureC']))
             max_temp_list.append((value[1]['Max TemperatureC'], value[1]['PKT']))
-            value = min(month.items(), key=lambda x: x[1]['Min TemperatureC'])
+            value = min(month.items(), key=lambda x: int(x[1]['Min TemperatureC']))
             min_temp_list.append((value[1]['Min TemperatureC'], value[1]['PKT']))
-            value = max(month.items(), key=lambda x: x[1]['Max Humidity'])
+            value = max(month.items(), key=lambda x: int(x[1]['Max Humidity']))
             max_humidity_list.append((value[1]['Max Humidity'], value[1]['PKT']))
 
         highest_temp_and_date = max(max_temp_list, key=lambda x: x[0])
@@ -202,7 +200,6 @@ def main():
             my_result_generator.generate_extreme_results(year_result)
         else:
             print_data_not_present_message()
-            sys.exit(1)
 
     if args.average_report:
         year_and_month = validate_year_and_month(args.average_report)
@@ -211,7 +208,6 @@ def main():
             month = year_and_month['month']
         else:
             print_invalid_input_message()
-            sys.exit(2)
 
         if year in my_parser.year_data.keys():
             if month in my_parser.year_data[year].keys():
@@ -230,7 +226,6 @@ def main():
             month = year_and_month['month']
         else:
             print_invalid_input_message()
-            sys.exit(3)
 
         if year in my_parser.year_data.keys():
             if month in my_parser.year_data[year].keys():
@@ -249,7 +244,6 @@ def main():
             month = year_and_month['month']
         else:
             print_invalid_input_message()
-            sys.exit(4)
 
         if year in my_parser.year_data.keys():
             if month in my_parser.year_data[year].keys():
