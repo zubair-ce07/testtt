@@ -12,18 +12,20 @@ gender_map = [
 ]
 
 
+def cleaner(product_record):
+    return list(filter(None, [p.strip(' ').rstrip() for p in product_record]))
+
+
 def product_care(text_s):
     care_css = ".features-delivery-inner :contains('Cómo cuidar')+ul ::text"
     care = text_s.css(care_css).extract()
-    care = [c.strip(' ').rstrip() for c in care]
-    return list(filter(None, care))
+    return cleaner(care)
 
 
 def product_description(text_s):
     des_css = ".features-delivery-inner :contains('Características')+ul ::text"
     description = text_s.css(des_css).extract()
-    description = [d.strip(' ').rstrip() for d in description]
-    return list(filter(None, description))
+    return cleaner(description)
 
 
 def images_urls(text_s):
@@ -33,8 +35,7 @@ def images_urls(text_s):
 
 
 def product_id(text_s):
-    retailer_sku_css = '.js-product-code::text'
-    return text_s.css(retailer_sku_css).extract_first()
+    return text_s.css('.js-product-code::text').extract_first()
 
 
 def product_gender(item_url, text_s):
@@ -54,8 +55,7 @@ def product_categories(text_s):
 
 
 def product_name(text_s):
-    name_css = '.product-main-title::text'
-    name = text_s.css(name_css).extract_first()
+    name = text_s.css('.product-main-title::text').extract_first()
     name = ' '.join(name.split())
     return name
 
@@ -65,32 +65,22 @@ def product_color(text_s):
     return text_s.css(colour_css).extract_first()
 
 
-def prices(text_s):
-    all_prices = dict()
-    old_price_css = '.price .old-price span::text'
-    new_price_css = '[itemprop="price"]::attr(content)'
-    all_prices["currency"] = "Euro"
-    all_prices["price"] = text_s.css(new_price_css).extract_first()
-    all_prices["previous_prices"] = [text_s.css(old_price_css).extract_first()[:-2]]
-    return all_prices
-
-
-def all_sizes(text_s):
-    sizes_css = '#mobile-size li::text'
-    return text_s.css(sizes_css).extract()
-
-
-def unavailable_sizes(text_s):
-    unavailable_size_x = '#mobile-size .unavailable::text'
-    return text_s.css(unavailable_size_x).extract()
+def product_pricing(text_s):
+    prices = dict()
+    prices["currency"] = "Euro"
+    price_css = '[itemprop="price"]::attr(content)'
+    prices["price"] = text_s.css(price_css).extract_first()
+    prices["previous_product_pricing"] = [
+        text_s.css('.price .old-price span::text').extract_first()[:-2]]
+    return prices
 
 
 def skus(text_s):
     skus = list()
-    sizes = all_sizes(text_s)
-    unavailable = unavailable_sizes(text_s)
+    sizes = text_s.css('#mobile-size li::text').extract()
+    unavailable = text_s.css('#mobile-size .unavailable::text').extract()
     colour = product_color(text_s)
-    common = prices(text_s)
+    common = product_pricing(text_s)
     for size in sizes:
         sku = common.copy()
         sku["colour"] = colour
@@ -125,19 +115,19 @@ async def parse(items_visited_urls, item_url, loop, sprinter_records):
             sprinter_records.append(product_details)
 
 
-async def schedule_items_futures(items_visited_urls, items_pending_urls,
+async def schedule_items_futures(items_visited_urls, items_urls,
                                  loop, sprinter_records):
     futures = []
-    for item_url in items_pending_urls:
-        futures.append(
-            asyncio.ensure_future(parse(items_visited_urls, item_url, loop,
-                                        sprinter_records)))
+    for url in items_urls:
+        futures.append(asyncio.ensure_future(parse(items_visited_urls,
+                                                   url, loop,
+                                                   sprinter_records)))
     await asyncio.wait(futures)
     return futures
 
 
-def traverse_items(items_visited_urls, items_pending_urls, sprinter_records):
+def traverse_items(items_visited_urls, items_urls, sprinter_records):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(schedule_items_futures(items_visited_urls,
-                                                   items_pending_urls,
+                                                   items_urls,
                                                    loop, sprinter_records))
