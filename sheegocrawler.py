@@ -31,12 +31,12 @@ class SheegoSpider(CrawlSpider):
 
         color_links = self.extract_color_links(response)
         if color_links:
-            yield Request(color_links.pop(0), callback=self.parse_cols,
+            yield Request(color_links.pop(0), callback=self.parse_colors,
                           meta={'color_links': color_links, 'item': item})
         else:
             yield item
 
-    def parse_cols(self, response):
+    def parse_colors(self, response):
         color_links = response.meta['color_links']
         item = response.meta['item']
         json_resp = self.extract_json_data(response)
@@ -44,15 +44,13 @@ class SheegoSpider(CrawlSpider):
         item['skus'].update(self.product_skus(response, json_resp))
 
         if color_links:
-            yield Request(color_links.pop(0), callback=self.parse_cols,
+            yield Request(color_links.pop(0), callback=self.parse_colors,
                           meta={'color_links': color_links, 'item': item})
         else:
             yield item
 
     def product_skus(self, response, json_resp):
-        items = {
-            'skus': {}
-        }
+        skus = {}
         sku_id = self.extract_product_sku(json_resp)
         color = self.extract_color(response).encode('utf-8')
         for size, stock in self.extract_sizes_availability(response).items():
@@ -62,14 +60,14 @@ class SheegoSpider(CrawlSpider):
                 'size': size,
                 'stock': stock
             }
-            items['skus']['{0}_{1}'.format(sku_id, size)] = values
-        return items['skus']
+            skus['{0}_{1}'.format(sku_id, size)] = values
+        return skus
 
     def extract_json_data(self, response):
-        return json.loads(response.css('.js-webtrends-data::attr(data-webtrends)').extract()[0])
+        return json.loads(response.css('.js-webtrends-data::attr(data-webtrends)').extract_first())
 
     def extract_color_links(self, response):
-        colors = response.css('.cj-slider__slides script').extract()[0].split(' = [')[1].split('];')[0].split(',')
+        colors = response.css('.cj-slider__slides script').extract_first().split(' = [')[1].split('];')[0].split(',')
         url = response.url.split('=')[0]
         prev_col = response.url.split('=')[1][1:-1]
         return ['{0}={1}'.format(url, col_link[1:-1]) for col_link in colors if prev_col not in col_link]
@@ -108,4 +106,4 @@ class SheegoSpider(CrawlSpider):
         return response['productPrice']
 
     def clean_spaces(self, string):
-        return ' '.join(re.split("\s+", string, flags=re.UNICODE))
+        return ''.join(re.sub("\s+", ' ', string))
