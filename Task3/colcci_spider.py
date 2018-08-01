@@ -8,10 +8,7 @@ from Task3.items import ProductItem
 class ColcciSpider(Spider):
     name = "Colcci"
 
-    custom_settings = {
-        'ROBOTSTXT_OBEY': True,
-        'DOWNLOAD_DELAY': 0.25,
-    }
+    custom_settings = {'DOWNLOAD_DELAY': 0.25}
 
     start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1',
                   'https://www.colcci.com.br/feminino-novo1/page/1',
@@ -75,11 +72,12 @@ class ColcciSpider(Spider):
         return ''.join(descriptions)
 
     def extract_gender(self, response):
-        item_name = response.css('[itemprop="name"]::text').extract_first()
         gender_map = {'Unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
+        item_name = response.css('[itemprop="name"]::text').extract_first()
+        lookup_text = item_name + response.url
 
         for gender in gender_map.keys():
-            if gender in item_name or gender in response.url:
+            if gender in lookup_text.lower():
                 return gender_map[gender]
 
         return gender_map['feminino']
