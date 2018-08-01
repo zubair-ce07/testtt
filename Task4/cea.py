@@ -10,10 +10,7 @@ from Task4.items import ProductItem
 class CeaSpider(Spider):
     name = 'cea'
 
-    custom_settings = {
-        'ROBOTSTXT_OBEY': True,
-        'DOWNLOAD_DELAY': 0.25
-    }
+    custom_settings = {'DOWNLOAD_DELAY': 0.25}
 
     start_urls = ['https://www.cea.com.br']
 
@@ -71,19 +68,21 @@ class CeaSpider(Spider):
 
     def extract_gender(self, url, item_name, item_categories):
         gender_map = {
-            'Unissex': 'Unisex',
-            'Masculina': 'Men',
-            'Masculino': 'Men',
-            'Feminino': 'Women',
-            'Feminina': 'Women',
-            'Menina': 'Girl',
-            'Menino': 'Boy',
-            'Neutro': 'Kids'
+            'unissex': 'Unisex',
+            'masculina': 'Men',
+            'masculino': 'Men',
+            'feminino': 'Women',
+            'feminina': 'Women',
+            'menina': 'Girl',
+            'menino': 'Boy',
+            'neutro': 'Kids'
         }
 
-        for gender in gender_map.keys():
-            if gender in item_name or gender in url or any(gender in category for category in item_categories):
-                return gender_map[gender]
+        lookup_text = item_name + url + ' '.join(item_categories)
+
+        for gender_term in gender_map.keys():
+            if gender_term in lookup_text.lower():
+                return gender_map[gender_term]
 
         return 'Unisex'
 
