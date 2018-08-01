@@ -34,8 +34,7 @@ class TriumphSpider(CrawlSpider):
         'DOWNLOAD_DELAY': 2,
     }
 
-    def parse_product(self, response):
-        print(response.url)
+    def parse(self, response):
 
         product_item = Product()
         product_item['retailer_sku'] = self.get_retailer_sku(response)
@@ -49,15 +48,16 @@ class TriumphSpider(CrawlSpider):
         product_item['care'] = self.get_product_care(response)
         product_item['skus'] = self.get_skus(response)
 
-        if self.get_color_urls(response):
-            return self.extract_colors(self.get_color_urls(response), product_item)
+        if self.requests_to_follow(response):
+            return self.extract_colors(self.requests_to_follow(response), product_item)
 
         return product_item
 
-    def get_color_urls(self, response):
+    def requests_to_follow(self, response):
         css = '.colorswatches_inner li:not(.selected) a::attr(href)'
-        return [url for url in response.css(css).extract()
-                if re.match('.*\/Product-ShowProductDetails\?.*', url)]
+        color_urls = [url for url in response.css(css).extract()
+                      if re.match('.*\/Product-ShowProductDetails\?.*', url)]
+        return [Request(urljoin('http://uk.triumph.com/', url)) for url in color_urls]
 
     def get_product_name(self, response):
         return response.css('.product_name::text').extract_first()
@@ -132,16 +132,17 @@ class TriumphSpider(CrawlSpider):
 
         return product_skus
 
-    def extract_colors(self, color_urls, product_item):
-        if color_urls:
-            url = urljoin('http://uk.triumph.com/', color_urls.pop())
-            return Request(url, callback=self.parse_colors, meta={'item': product_item,
-                                                                  'color_urls': color_urls})
+    def extract_colors(self, requests_to_follow, product_item):
+        if requests_to_follow:
+            request = requests_to_follow.pop()
+            request.callback = self.parse_colors
+            request.meta['item'] = product_item
+            request.meta['requests_to_follow'] = requests_to_follow
+            return request
 
         return product_item
 
     def parse_colors(self, response):
         product_item = response.meta.get('item')
-        color_urls = response.meta.get('color_urls')
         product_item['skus'] = product_item.get('skus', []) + self.get_skus(response)
-        return self.extract_colors(color_urls, product_item)
+        return self.extract_colors(response.meta.get('requests_to_follow'), product_item)
