@@ -2,7 +2,6 @@ import json
 
 from scrapy import Spider, Request
 from w3lib import url
-from urllib.parse import urljoin
 
 from Task4.items import ProductItem
 
@@ -31,7 +30,7 @@ class CeaSpider(Spider):
                     for category_link in category_links]
 
     def parse_category_link(self, response):
-        item_base_link = urljoin(response.url, response.css('script::text').re_first(r'(/buscapagina?.+)&PageNumber'))
+        item_base_link = response.urljoin(response.css('script::text').re_first(r'(/buscapagina?.+)&PageNumber'))
         item_base_link = url.add_or_replace_parameter(item_base_link, "PageNumber", 1)
         return Request(item_base_link, callback=self.parse_item_links)
 
