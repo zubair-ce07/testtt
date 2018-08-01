@@ -9,6 +9,7 @@ class ColcciSpider(Spider):
     name = "Colcci"
 
     custom_settings = {'DOWNLOAD_DELAY': 0.25}
+    gender_map = {'Unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
 
     start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1',
                   'https://www.colcci.com.br/feminino-novo1/page/1',
@@ -72,15 +73,14 @@ class ColcciSpider(Spider):
         return ''.join(descriptions)
 
     def extract_gender(self, response):
-        gender_map = {'Unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
         item_name = response.css('[itemprop="name"]::text').extract_first()
         lookup_text = item_name + response.url
 
-        for gender in gender_map.keys():
+        for gender in ColcciSpider.gender_map.keys():
             if gender in lookup_text.lower():
                 return gender_map[gender]
 
-        return gender_map['feminino']
+        return ColcciSpider.gender_map['feminino']
 
     def extract_skus(self, response):
         raw_skus = json.loads(response.css("head script::text").re_first(r'.+LS.variants = (.+);'))
