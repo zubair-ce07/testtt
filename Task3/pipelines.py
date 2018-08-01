@@ -1,3 +1,6 @@
+from scrapy.exceptions import DropItem
+
+
 class DuplicatesRemovalPipeline(object):
 
     def __init__(self):
