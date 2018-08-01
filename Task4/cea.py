@@ -26,13 +26,13 @@ class CeaSpider(Spider):
 
     def parse(self, response):
         category_links = response.css('script[id^="submenu-data-"]::text').re(r'"url":"([\w+/-]+)[\?|"]')
-        yield from [response.follow(category_link, callback=self.parse_category_links)
+        yield from [response.follow(category_link, callback=self.parse_category_link)
                     for category_link in category_links]
 
-    def parse_category_links(self, response):
-        item_base_link = response.urljoin(response.css('script::text').re_first(r'(/buscapagina?.+)&PageNumber'))
-        item_base_link = url.add_or_replace_parameter(item_base_link, "PageNumber", 1)
-        return Request(item_base_link, callback=self.parse_pagination)
+    def parse_category_link(self, response):
+        base_category_link = response.urljoin(response.css('script::text').re_first(r'(/buscapagina?.+)&PageNumber'))
+        base_category_link = url.add_or_replace_parameter(base_category_link, "PageNumber", 1)
+        return Request(base_category_link, callback=self.parse_pagination)
 
     def parse_pagination(self, response):
         item_links = response.css('.product-actions_details a::attr(href)').extract()
