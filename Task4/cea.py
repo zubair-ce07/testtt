@@ -45,8 +45,8 @@ class CeaSpider(Spider):
         item['skus'] = self.extract_skus(response)
         item['url'] = response.url
 
-        url = f"https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{item['retailer_sku']}"
-        return Request(url, callback=self.parse_json_request, meta={'item': item})
+        url = "https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{}"
+        return Request(url.format(item['retailer_sku']), callback=self.parse_json_request, meta={'item': item})
 
     def parse_json_request(self, response):
         item_detail = json.loads(response.text)[0]
@@ -91,9 +91,8 @@ class CeaSpider(Spider):
         return float(raw_price.replace(',', '')) * 100
 
     def extract_image_urls(self, item_detail):
-        image_urls = [f"https://cea.vteximg.com.br/arquivos/ids/{image_id['imageId']}"
-                      for image_id in item_detail['items'][0]['images']]
-        return image_urls
+        image_url_t = "https://cea.vteximg.com.br/arquivos/ids/{}"
+        return [image_url_t.format(image_id['imageId']) for image_id in item_detail['items'][0]['images']]
 
     def extract_category(self, item_detail):
         return item_detail['categories']
