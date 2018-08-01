@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 
 from parsel import Selector
 from urllib.parse import urljoin, urlparse
@@ -26,20 +27,15 @@ class AsicsSpider:
         return set(sum([self.get_absolute_urls(url) for url in category_urls], []))
 
     def get_absolute_urls(self, category_url):
-        page_no = 0
         relative_urls = []
         sel = Selector(text=self.get_page_content(category_url))
-        product_page_class = sel.css("body::attr(class)").get()
-        page_not_found_class = ["server-error-body", "page-notFound"]
+        next_page = sel.css("#nextPageLink > a::attr(href)").get()
+        if next_page:
+            relative_urls += self.get_absolute_urls(urljoin(category_url, nextpage))
 
-        while not any(error_page in product_page_class for error_page in page_not_found_class):  # If page exists
-            page_no += 1
-            relative_urls += sel.css('.productMainLink::attr(href)').getall()
-            sel = Selector(text=self.get_page_content(f'{category_url}?page={page_no}'))         # Move to next page
-            product_page_class = sel.css("body::attr(class)").get()
-
-        filtered_urls = filter(lambda url: "//" not in url, set(relative_urls))                  # Remove invalid urls
-        return [urljoin(self.start_url, url) for url in filtered_urls]
+        relative_urls += sel.css('.productMainLink::attr(href)').getall()
+        filtered_urls = filter(lambda url: "//" not in url, set(relative_urls))                 # Remove invalid urls
+        return [urljoin(category_url, url) for url in filtered_urls]
 
     def get_json_result(self, products):
         print(json.dumps(products, indent=4))
