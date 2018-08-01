@@ -11,6 +11,18 @@ class CeaSpider(Spider):
     name = 'cea'
 
     custom_settings = {'DOWNLOAD_DELAY': 0.25}
+    url = "https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{}"
+    image_url_t = "https://cea.vteximg.com.br/arquivos/ids/{}"
+    gender_map = {
+        'unissex': 'Unisex',
+        'masculina': 'Men',
+        'masculino': 'Men',
+        'feminino': 'Women',
+        'feminina': 'Women',
+        'menina': 'Girl',
+        'menino': 'Boy',
+        'neutro': 'Kids'
+    }
 
     start_urls = ['https://www.cea.com.br']
 
@@ -45,8 +57,8 @@ class CeaSpider(Spider):
         item['skus'] = self.extract_skus(response)
         item['url'] = response.url
 
-        url = "https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{}"
-        return Request(url.format(item['retailer_sku']), callback=self.parse_json_request, meta={'item': item})
+        return Request(CeaSpider.url.format(item['retailer_sku']),
+                       callback=self.parse_json_request, meta={'item': item})
 
     def parse_json_request(self, response):
         item_detail = json.loads(response.text)[0]
@@ -67,22 +79,11 @@ class CeaSpider(Spider):
         return response.css('td.Marca::text').extract_first()
 
     def extract_gender(self, url, item_name, item_categories):
-        gender_map = {
-            'unissex': 'Unisex',
-            'masculina': 'Men',
-            'masculino': 'Men',
-            'feminino': 'Women',
-            'feminina': 'Women',
-            'menina': 'Girl',
-            'menino': 'Boy',
-            'neutro': 'Kids'
-        }
-
         lookup_text = item_name + url + ' '.join(item_categories)
 
-        for gender_term in gender_map.keys():
+        for gender_term in CeaSpider.gender_map.keys():
             if gender_term in lookup_text.lower():
-                return gender_map[gender_term]
+                return CeaSpider.gender_map[gender_term]
 
         return 'Unisex'
 
@@ -91,8 +92,7 @@ class CeaSpider(Spider):
         return float(raw_price.replace(',', '')) * 100
 
     def extract_image_urls(self, item_detail):
-        image_url_t = "https://cea.vteximg.com.br/arquivos/ids/{}"
-        return [image_url_t.format(image_id['imageId']) for image_id in item_detail['items'][0]['images']]
+        return [CeaSpider.image_url_t.format(image_id['imageId']) for image_id in item_detail['items'][0]['images']]
 
     def extract_category(self, item_detail):
         return item_detail['categories']
