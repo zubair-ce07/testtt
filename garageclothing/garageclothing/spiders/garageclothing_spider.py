@@ -6,6 +6,19 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
 
+class Product(scrapy.Item):
+    retailer_sku = scrapy.Field()
+    name = scrapy.Field()
+    brand = scrapy.Field()
+    gender = scrapy.Field()
+    category = scrapy.Field()
+    image_urls = scrapy.Field()
+    url = scrapy.Field()
+    description = scrapy.Field()
+    care = scrapy.Field()
+    skus = scrapy.Field()
+
+
 class GarageClothingSpider(CrawlSpider):
     name = "garageclothing"
 
@@ -41,194 +54,168 @@ class GarageClothingSpider(CrawlSpider):
     def parse_landing_page(self, response):
         session_id = response.css('p::text').extract_first()
 
+        # return scrapy.Request('https://www.garageclothing.com/ca/crew-neck-sweater/p/'
+        #                       'prod3030019.product',
+        #                       cookies={'JSESSIONID': session_id}, callback=self.parse_product)
         return scrapy.Request('https://www.garageclothing.com/ca/',
                               cookies={'JSESSIONID': session_id}, callback=self.parse)
 
     def parse_product(self, response):
-        sku = {'retailer_sku': self.get_product_retailer_sku(response),
-               'name': self.get_product_name(response),
-               'brand': 'Garage',
-               'gender': 'Female',
-               'category': [],
-               'image_urls': [],
-               'url': response.url.split(';')[0],
-               'description': self.get_product_description(response),
-               'care': self.get_product_care(response),
-               'skus': [],
-               'sku_fields': {
-                'price': self.get_product_price(response),
-                'colors': self.get_product_colors(response)
-            }}
+        sku = Product(
+            retailer_sku=self.get_product_retailer_sku(response),
+            name=self.get_product_name(response),
+            brand='Garage',
+            gender='Female',
+            category=[],
+            image_urls=[],
+            url=response.url.split(';')[0],
+            description=self.get_product_description(response),
+            care=self.get_product_care(response),
+            skus=[],
+        )
 
-        img_request_params_queue = self.generate_img_request_params_queue(response)
+        meta = {
+            'price': self.get_product_price(response),
+            'colors': self.get_product_colors(response)
+        }
 
-        if img_request_params_queue:
-            return self.generate_image_parse_request(img_request_params_queue, sku)
-
-        del sku['sku_fields']
-        return sku
+        image_requests = self.generate_image_requests(response, sku, meta)
+        for request in image_requests:
+            yield request
 
     def parse_product_images(self, response):
         sku = response.meta['sku']
-        img_request_params_queue = response.meta['img_request_params_queue']
-
+        meta = response.meta['meta']
         sku['image_urls'].extend(self.get_product_images(response))
+        size_requests = self.generate_size_requests(sku, meta)
 
-        if img_request_params_queue:
-            return self.generate_image_parse_request(img_request_params_queue, sku)
-
-        size_request_params_queue = self.generate_size_request_params_queue(sku)
-
-        if size_request_params_queue:
-            return self.generate_size_parse_request(size_request_params_queue, sku)
-
-        del sku['sku_fields']
-        return sku
+        if size_requests:
+            return size_requests.pop()
 
     def parse_product_sizes(self, response):
         sku = response.meta['sku']
-        size_request_params_queue = response.meta['size_request_params_queue']
+        meta = response.meta['meta']
+        size_requests = response.meta['size_requests']
 
         if response.css('#productLengths'):
-            if sku.get('multi_dimension_params_queue'):
-                sku['multi_dimension_params_queue'].extend(
-                    self.generate_multi_dimension_params_queue(response))
-            else:
-                sku['multi_dimension_params_queue'] = \
-                    self.generate_multi_dimension_params_queue(response)
+            multi_dimension_requests = self.generate_multi_dimension_requests(response, sku, meta)
+            return multi_dimension_requests.pop()
         else:
             for size in response.css('span'):
-                sku['skus'].append(self.generate_product_sku(size, sku))
+                sku['skus'].append(self.generate_product_sku(size, meta))
 
-        if size_request_params_queue:
-            return self.generate_size_parse_request(size_request_params_queue, sku)
-
-        if sku.get('multi_dimension_params_queue'):
-            return self.generate_multi_dimension_parse_request(sku)
-
-        del sku['sku_fields']
-        return sku
+            if size_requests:
+                return size_requests.pop()
+            return sku
 
     def parse_multi_dimension_product(self, response):
         sku = response.meta['sku']
         color_code = response.meta['skus_color_code']
         length = response.meta['length']
+        multi_dimension_requests = response.meta['multi_dimension_requests']
+        meta = response.meta['meta']
 
         raw_sizes = json.loads(response.css('p::text').extract_first())
 
         for raw_size in raw_sizes['skulist']:
-            sku_variant = self.generate_multi_dimension_product_sku(sku, raw_size, length)
-            sku_variant['color'] = self.map_color_code_to_name(color_code,
-                                                               sku['sku_fields']['colors'])
+            sku_variant = self.generate_multi_dimension_product_sku(meta, raw_size, length)
+            sku_variant['color'] = self.map_color_code_to_name(color_code, meta['colors'])
             sku['skus'].append(sku_variant)
 
-        if sku.get('multi_dimension_params_queue'):
-            return self.generate_multi_dimension_parse_request(sku)
-
-        del sku['sku_fields']
-        del sku['multi_dimension_params_queue']
+        if multi_dimension_requests:
+            return multi_dimension_requests.pop()
         return sku
 
-    def generate_image_parse_request(self, img_request_params_queue, sku):
-        request = scrapy.FormRequest(
-            'https://www.garageclothing.com/ca/prod/include/pdpImageDisplay.jsp',
-            self.parse_product_images, formdata=img_request_params_queue.pop())
-
-        request.meta['sku'] = sku
-        request.meta['img_request_params_queue'] = img_request_params_queue
-        return request
-
-    def generate_size_parse_request(self, size_request_params_queue, sku):
-        request = scrapy.FormRequest(
-            'https://www.garageclothing.com/ca/prod/include/productSizes.jsp',
-            self.parse_product_sizes, formdata=size_request_params_queue.pop())
-
-        request.meta['sku'] = sku
-        request.meta['size_request_params_queue'] = size_request_params_queue
-        return request
-
-    def generate_multi_dimension_parse_request(self, sku):
-        multi_dimension_params_queue = sku['multi_dimension_params_queue'].pop()
-        form_params = {
-            'skuId': multi_dimension_params_queue['sku_id'],
-            'productId': sku['retailer_sku']
-        }
-
-        request = scrapy.FormRequest(
-            'https://www.garageclothing.com/ca/json/sizeInventoryCheckByLengthJSON.jsp',
-            self.parse_multi_dimension_product, formdata=form_params)
-
-        request.meta['sku'] = sku
-        request.meta['skus_color_code'] = multi_dimension_params_queue['color_code']
-        request.meta['length'] = multi_dimension_params_queue['length']
-        return request
-
-    def generate_img_request_params_queue(self, response):
+    def generate_image_requests(self, response, sku, meta):
         colors = self.get_product_colors(response)
         product_id = self.get_product_retailer_sku(response)
         original_style = self.get_product_original_style(response)
 
-        img_request_params_queue = []
+        image_requests = []
 
-        for color in colors:
-            img_request_params_queue.append({
-                'colour': color['code'],
-                'productId': product_id,
-                'originalStyle': original_style
-            })
+        for color_sel in colors:
+            request = scrapy.FormRequest(
+                'https://www.garageclothing.com/ca/prod/include/pdpImageDisplay.jsp',
+                self.parse_product_images, formdata={
+                    'colour': color_sel['code'],
+                    'productId': product_id,
+                    'originalStyle': original_style
+                }
+            )
 
-        return img_request_params_queue
+            request.meta['sku'] = sku
+            request.meta['meta'] = meta
+            image_requests.append(request)
 
-    @staticmethod
-    def generate_size_request_params_queue(sku):
-        colors = sku['sku_fields']['colors']
+        return image_requests
+
+    def generate_size_requests(self, sku, meta):
+        colors = meta['colors']
         product_id = sku['retailer_sku']
 
-        size_request_params_queue = []
+        size_requests = []
 
         for color in colors:
-            size_request_params_queue.append({
-                'colour': color['code'],
-                'productId': product_id
-            })
+            request = scrapy.FormRequest(
+                'https://www.garageclothing.com/ca/prod/include/productSizes.jsp',
+                self.parse_product_sizes, formdata={
+                    'colour': color['code'],
+                    'productId': product_id
+                }
+            )
 
-        return size_request_params_queue
+            request.meta['sku'] = sku
+            request.meta['meta'] = meta
+            request.meta['size_requests'] = size_requests
+            size_requests.append(request)
 
-    @staticmethod
-    def generate_multi_dimension_params_queue(response):
-        multi_dimension_params_queue = []
+        return size_requests
+
+    def generate_multi_dimension_requests(self, response, sku, meta):
         color_code = response.css('span.size::attr(colour)').extract_first()
 
+        multi_dimension_requests = []
+
         for length in response.css('span.length'):
-            multi_dimension_params_queue.append({
-                'color_code': color_code,
-                'length': length.css('span::text').extract_first(),
-                'sku_id': length.css('span::attr(skuid)').extract_first()
-            })
+            request = scrapy.FormRequest(
+                'https://www.garageclothing.com/ca/json/sizeInventoryCheckByLengthJSON.jsp',
+                self.parse_multi_dimension_product, formdata={
+                    'skuId': length.css('span::attr(skuid)').extract_first(),
+                    'productId': sku['retailer_sku']
+                }
+            )
 
-        return multi_dimension_params_queue
+            request.meta['sku'] = sku
+            request.meta['meta'] = meta
+            request.meta['skus_color_code'] = color_code
+            request.meta['length'] = length.css('span::text').extract_first()
+            request.meta['multi_dimension_requests'] = multi_dimension_requests
 
-    def generate_product_sku(self, size, sku):
+            multi_dimension_requests.append(request)
+
+        return multi_dimension_requests
+
+    def generate_product_sku(self, size, meta):
         variant = {
             'color': self.map_color_code_to_name(size.css('span::attr(colour)').extract_first(),
-                                                 sku['sku_fields']['colors']),
+                                                 meta['colors']),
             'sku_id': size.css('span::attr(skuid)').extract_first(),
             'size': size.css('span::text').extract_first(),
             'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
         }
 
-        variant.update(sku['sku_fields']['price'])
+        variant.update(meta['price'])
         return variant
 
     @staticmethod
-    def generate_multi_dimension_product_sku(sku, raw_size, length):
+    def generate_multi_dimension_product_sku(meta, raw_size, length):
         variant = {
             'sku_id': raw_size['skuId'],
             'size': f"{length}/{raw_size['size']}",
             'is_in_stock': True if raw_size['available'] == 'true' else False
         }
 
-        variant.update(sku['sku_fields']['price'])
+        variant.update(meta['price'])
         return variant
 
     @staticmethod
@@ -291,6 +278,10 @@ class GarageClothingSpider(CrawlSpider):
     @staticmethod
     def get_product_original_style(response):
         return response.css('#originalStyle::attr(value)').extract_first()
+
+    @staticmethod
+    def get_requests(request, default):
+        return request.pop() if request else default
 
     @staticmethod
     def get_product_images(response):
