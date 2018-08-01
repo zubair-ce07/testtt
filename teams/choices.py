@@ -1,6 +1,6 @@
 class BattingStyleChoices:
-    RIGHT_HAND = 'rhb'
-    LEFT_HAND = 'lhb'
+    RIGHT_HAND = 'RIGHT_HANDED'
+    LEFT_HAND = 'LEFT_HANDED'
 
     Choices = (
         (RIGHT_HAND, 'Right Hand Bat'),
@@ -9,15 +9,15 @@ class BattingStyleChoices:
 
 
 class BowlingStyleChoices:
-    RIGHT_ARM_FAST = 'raf'
-    RIGHT_ARM_MEDIUM_FAST = 'ramf'
-    RIGHT_ARM_OFF_BREAK = 'raob'
-    RIGHT_ARM_LEG_BREAK_GOOGLY = 'ralg'
-    RIGHT_ARM_ORTHODOX = 'rao'
-    LEFT_ARM_FAST = 'laf'
-    LEFT_ARM_MEDIUM_FAST = 'lamf'
-    LEFT_ARM_ORTHODOX = 'lao'
-    LEFT_ARM_CHINAMAN = 'lac'
+    RIGHT_ARM_FAST = 'RIGHT_ARM_FAST'
+    RIGHT_ARM_MEDIUM_FAST = 'RIGHT_ARM_MEDIUM_FAST'
+    RIGHT_ARM_OFF_BREAK = 'RIGHT_ARM_OFF_BREAK'
+    RIGHT_ARM_LEG_BREAK_GOOGLY = 'RIGHT_ARM_LEG_BREAK_GOOGLY'
+    RIGHT_ARM_ORTHODOX = 'RIGHT_ARM_ORTHODOX'
+    LEFT_ARM_FAST = 'LEFT_ARM_FAST'
+    LEFT_ARM_MEDIUM_FAST = 'LEFT_ARM_MEDIUM_FAST'
+    LEFT_ARM_ORTHODOX = 'LEFT_ARM_ORTHODOX'
+    LEFT_ARM_CHINAMAN = 'LEFT_ARM_CHINAMAN'
 
     Choices = (
         (RIGHT_ARM_FAST, 'Right Arm Fast'),
@@ -33,10 +33,10 @@ class BowlingStyleChoices:
 
 
 class PlayingRoleChoices:
-    BATSMAN = 'bat'
-    BOWLER = 'bowl'
-    ALLROUNDER = 'all'
-    WICKETKEEPER = 'wkt'
+    BATSMAN = 'BATSMAN'
+    BOWLER = 'BOWLER'
+    ALLROUNDER = 'ALLROUNDER'
+    WICKETKEEPER = 'WICKETKEEPER'
 
     Choices = (
         (BATSMAN, 'Batsman'),
@@ -47,12 +47,12 @@ class PlayingRoleChoices:
 
 
 class FormatChoices:
-    TEST = 'test'
-    ODI = 'odi'
-    T20I = 't20i'
-    FIRSTCLASS = 'firstclass'
-    LISTA = 'lista'
-    T20S = 't20s'
+    TEST = 'TEST'
+    ODI = 'ODI'
+    T20I = 'T20I'
+    FIRSTCLASS = 'FIRSTCLASS'
+    LISTA = 'LISTA'
+    T20S = 'T20S'
 
     Choices = (
         (TEST, 'Test'),
@@ -63,3 +63,12 @@ class FormatChoices:
         (T20S, 'T20s'),
     )
 
+
+class TeamTypeChoices:
+    INTERNATIONAL = 'INTERNATIONAL'
+    COUNTY = 'COUNTY'
+
+    Choices = (
+        (INTERNATIONAL, 'International'),
+        (COUNTY, 'County'),
+    )

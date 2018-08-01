@@ -1,7 +1,6 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from drf_multiple_model.views import ObjectMultipleModelAPIView
-from articles.pagination import LimitPagination
+from common.pagination import LimitPagination
 
 from articles.models import Article
 from articles.serializers import ArticleSerializer

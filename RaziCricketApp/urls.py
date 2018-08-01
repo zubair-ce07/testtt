@@ -22,7 +22,7 @@ from django.contrib.auth.models import User
 from rest_framework import routers, serializers
 from articles.views import ArticleList, ArticleDetail
 
-# Routers provide an easy way of automatically determining the URL conf.
+from teams.views import TeamList, PlayerList, TeamDetail, PlayerDetail
 
 router = routers.DefaultRouter()
 
@@ -32,8 +32,13 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('admin/', admin.site.urls),
 
+
+    url(r'^players/$', PlayerList.as_view(), name='players-list'),
+    url(r'^teams/$', TeamList.as_view(), name='teams-list'),
     url(r'^articles/$', ArticleList.as_view(), name='articles-list'),
     url(r'^articles/(?P<pk>[0-9]+)/$', ArticleDetail.as_view(), name='article-detail'),
+    url(r'^teams/(?P<pk>[0-9]+)/$', TeamDetail.as_view(), name='team-detail'),
+    url(r'^players/(?P<pk>[0-9]+)/$', PlayerDetail.as_view(), name='player-detail'),
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

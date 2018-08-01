@@ -1,5 +1,5 @@
 from django.db import models
-from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
+from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices, TeamTypeChoices
 from datetime import date
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -9,7 +9,7 @@ from common.models import SoftDeleteModelMixin
 class Team(SoftDeleteModelMixin):
     name = models.CharField(max_length=50, default=' ')
     ranking = models.IntegerField(default=0)
-    type = models.CharField(max_length=20, default='county')
+    type = models.CharField(max_length=20, choices=TeamTypeChoices.Choices)
     url = models.URLField(max_length=100, default=' ')
     photos = GenericRelation('Photo', related_query_name='teams')
 
@@ -21,7 +21,6 @@ class Player(SoftDeleteModelMixin):
 
     name = models.CharField(max_length=100, default=' ')
     DOB = models.DateField('Born')
-    # Calculate Age in model as property
     playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices)
     batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices)
     bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices)
@@ -33,6 +32,7 @@ class Player(SoftDeleteModelMixin):
     def __str__(self):
         return self.name
 
+    # Calculate Age as property
     @property
     def get_age(self):
         today = date.today()
