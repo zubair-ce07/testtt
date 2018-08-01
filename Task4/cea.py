@@ -9,9 +9,10 @@ from Task4.items import ProductItem
 
 class CeaSpider(Spider):
     name = 'cea'
-
     custom_settings = {'DOWNLOAD_DELAY': 0.25}
-    url = "https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{}"
+    start_urls = ['https://www.cea.com.br']
+
+    item_base_url_t = "https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{}"
     image_url_t = "https://cea.vteximg.com.br/arquivos/ids/{}"
     gender_map = {
         'unissex': 'Unisex',
@@ -23,8 +24,6 @@ class CeaSpider(Spider):
         'menino': 'Boy',
         'neutro': 'Kids'
     }
-
-    start_urls = ['https://www.cea.com.br']
 
     def parse(self, response):
         category_links = response.css('script[id^="submenu-data-"]::text').re(r'"url":"([\w+/-]+)[\?|"]')
@@ -41,12 +40,11 @@ class CeaSpider(Spider):
         item_links = response.css('.product-actions_details a::attr(href)').extract()
 
         if item_links:
-            for item_link in item_links:
-                yield Request(item_link, callback=self.parse_item)
+            yield from [Request(item_link, callback=self.parse_item) for item_link in item_links]
 
             page_number = url.url_query_parameter(response.url, "PageNumber")
             next_page_url = url.add_or_replace_parameter(response.url, "PageNumber", int(page_number) + 1)
-            yield Request(next_page_url)
+            yield Request(next_page_url, callback=self.parse_item_links)
 
     def parse_item(self, response):
         item = ProductItem()
@@ -57,7 +55,7 @@ class CeaSpider(Spider):
         item['skus'] = self.extract_skus(response)
         item['url'] = response.url
 
-        return Request(CeaSpider.url.format(item['retailer_sku']),
+        return Request(self.item_base_url_t.format(item['retailer_sku']),
                        callback=self.parse_json_request, meta={'item': item})
 
     def parse_json_request(self, response):
@@ -79,11 +77,11 @@ class CeaSpider(Spider):
         return response.css('td.Marca::text').extract_first()
 
     def extract_gender(self, url, item_name, item_categories):
-        lookup_text = item_name + url + ' '.join(item_categories)
+        lookup_text = (item_name + url + ' '.join(item_categories)).lower()
 
-        for gender_term in CeaSpider.gender_map.keys():
-            if gender_term in lookup_text.lower():
-                return CeaSpider.gender_map[gender_term]
+        for gender_term in self.gender_map.keys():
+            if gender_term in lookup_text:
+                return self.gender_map[gender_term]
 
         return 'Unisex'
 
@@ -92,7 +90,7 @@ class CeaSpider(Spider):
         return float(raw_price.replace(',', '')) * 100
 
     def extract_image_urls(self, item_detail):
-        return [CeaSpider.image_url_t.format(image_id['imageId']) for image_id in item_detail['items'][0]['images']]
+        return [self.image_url_t.format(image_id['imageId']) for image_id in item_detail['items'][0]['images']]
 
     def extract_category(self, item_detail):
         return item_detail['categories']
