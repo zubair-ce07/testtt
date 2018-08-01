@@ -5,14 +5,14 @@ from parser import *
 
 
 class SprinterSpider:
-    def __init__(self, url, concurrent_req, delay, url_visit_limit):
-        self.visited_urls = dict()
-        self.items_visited_urls = dict()
-        self.crawler_pending_urls = set([url])
-        self.items_pending_urls = set([])
+    def __init__(self, url, concurrent_req, delay, max_urls_limit):
+        self.visited_urls = set()
+        self.items_visited_urls = set()
+        self.crawler_pending_urls = {url}
+        self.items_pending_urls = set()
         self.concurrent_req = concurrent_req
         self.delay = delay
-        self.url_visit_limit = url_visit_limit
+        self.max_urls_limit = max_urls_limit
         self.semaphore = asyncio.BoundedSemaphore(concurrent_req)
         self.host = "www.sprinter.es"
         self.sprinter_records = list()
@@ -24,15 +24,13 @@ class SprinterSpider:
     def add_crawler_links(self, extracted_urls, url):
         for link in extracted_urls:
             link = urljoin(url, link)
-            if not self.visited_urls.get(link):
+            if not self.visited_urls:
                 self.crawler_pending_urls.add(link)
 
     def add_items_links(self, item_urls, url):
         for link in item_urls:
             link = urljoin(url, link)
-            if len(link.split('/')) < 5:
-                continue
-            if not self.items_visited_urls.get(link):
+            if link not in self.items_visited_urls:
                 self.items_pending_urls.add(link)
 
     async def extract_urls(self, url, loop):
@@ -43,27 +41,28 @@ class SprinterSpider:
 
         if response.status_code == 200\
                 and len(response.text):
-            self.visited_urls[url] = True
-            selector = parsel.Selector(text=response.text)
-            extracted_urls = selector.css("a::attr(href)").extract()
-            item_link_key = '//div[@class="item"]/a/@href'
-            item_urls = selector.xpath(item_link_key).getall()
+            self.visited_urls.add(url)
+            text_s = parsel.Selector(text=response.text)
+            extracted_urls = text_s.css("a::attr(href)").extract()
+            item_link_css = 'article[class="listing-item"] a::attr(href)'
+            item_urls = text_s.css(item_link_css).extract()
             extracted_urls = self.filter_bad_urls(extracted_urls)
             self.add_crawler_links(extracted_urls, url)
             self.add_items_links(item_urls, url)
 
     async def schedule_futures(self, loop):
         futures = []
-        while self.crawler_pending_urls and self.url_visit_limit > 1:
+        while self.crawler_pending_urls and self.max_urls_limit > 1:
             url = self.crawler_pending_urls.pop()
-            self.url_visit_limit -= 1
+            print(url)
+            self.max_urls_limit -= 1
             futures.append(
                 asyncio.ensure_future(self.extract_urls(url, loop)))
         await asyncio.wait(futures)
         return futures
 
     def crawl(self):
-        while self.url_visit_limit > 1 and self.crawler_pending_urls:
+        while self.max_urls_limit > 1 and self.crawler_pending_urls:
             loop = asyncio.get_event_loop()
             loop.run_until_complete(self.schedule_futures(loop))
             traverse_items(self.items_visited_urls, self.items_pending_urls,
