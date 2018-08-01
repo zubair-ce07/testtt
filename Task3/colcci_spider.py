@@ -13,7 +13,7 @@ class ColcciSpider(Spider):
                   'https://www.colcci.com.br/fitness/page/1',
                   'https://www.colcci.com.br/acessorios/page/1']
 
-    gender_map = {'Unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
+    gender_map = {'unissex': 'Unisex', 'masculino': 'Men', 'feminino': 'Women'}
 
     def parse(self, response):
         yield Request(response.url, callback=self.parse_products, dont_filter=True)
@@ -21,7 +21,7 @@ class ColcciSpider(Spider):
 
         if load_more:
             next_page_url = response.css('.pagination a::attr(href)').extract()[-1]
-            yield response.follow(next_page_url, callback=self.parse)
+            return response.follow(next_page_url, callback=self.parse)
 
     def parse_products(self, response):
         item_links = response.css('[itemprop="name"] a::attr(href)').extract()
@@ -63,8 +63,7 @@ class ColcciSpider(Spider):
 
     def extract_description(self, selector):
         raw_description = selector.css('#whatItIs *::text').extract()
-        descriptions = [description.strip() for description in raw_description]
-        return ''.join(descriptions)
+        return [description.strip() for description in raw_description]
 
     def extract_gender(self, response):
         item_name = self.extract_item_name(response)
