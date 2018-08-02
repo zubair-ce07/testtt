@@ -17,9 +17,8 @@ class SprinterSpider:
         self.host = "www.sprinter.es"
         self.sprinter_records = list()
 
-    def filter_bad_urls(self, extracted_urls):
-        return list(filter(lambda e: urlsplit(e).netloc == self.host,
-                           extracted_urls))
+    def filter_urls(self, extracted_urls):
+        return [e for e in extracted_urls if urlsplit(e).netloc == self.host]
 
     async def extract_urls(self, url, loop):
         async with self.semaphore:
@@ -27,27 +26,24 @@ class SprinterSpider:
             response = await future
             time.sleep(self.delay)
 
-        if response.status_code == 200\
-                and len(response.text):
+        if response.status_code == 200 and len(response.text):
             self.visited_urls.add(url)
             text_s = parsel.Selector(text=response.text)
             extracted_urls = text_s.css('a[rel="follow"]::attr(href)').extract()
-            item_link_css = 'article[class="listing-item"] a::attr(href)'
-            item_urls = text_s.css(item_link_css).extract()
-            extracted_urls = self.filter_bad_urls(extracted_urls)
-            self.cat_urls |= set(urljoin(url, link) for link in extracted_urls
-                                 if not self.items_visited_urls)
-            self.items_urls |= set(urljoin(url, link) for link in item_urls
-                                   if link not in self.items_visited_urls)
+            css = 'article[class="listing-item"] a::attr(href)'
+            item_urls = text_s.css(css).extract()
+            extracted_urls = self.filter_urls(extracted_urls)
+            self.cat_urls |= {urljoin(url, link) for link in extracted_urls}\
+                             - self.visited_urls
+            self.items_urls |= {urljoin(url, link) for link in item_urls} \
+                               - self.items_visited_urls
 
     async def schedule_futures(self, loop):
         futures = []
         while self.cat_urls and self.max_urls_limit > 1:
             url = self.cat_urls.pop()
-            print(url)
             self.max_urls_limit -= 1
-            futures.append(
-                asyncio.ensure_future(self.extract_urls(url, loop)))
+            futures.append(asyncio.ensure_future(self.extract_urls(url, loop)))
         await asyncio.wait(futures)
         return futures
 
@@ -63,7 +59,3 @@ class SprinterSpider:
                           ensure_ascii=False))
             outfile.write(",\n")
         print("File Saved!")
-
-
-
-

@@ -12,20 +12,18 @@ gender_map = [
 ]
 
 
-def cleaner(product_record):
-    return list(filter(None, [p.strip(' ').rstrip() for p in product_record]))
+def clean(product_record):
+    return [p.strip(' ').rstrip() for p in product_record if p is not None]
 
 
 def product_care(text_s):
     care_css = ".features-delivery-inner :contains('Cómo cuidar')+ul ::text"
-    care = text_s.css(care_css).extract()
-    return cleaner(care)
+    return clean(text_s.css(care_css).extract())
 
 
 def product_description(text_s):
     des_css = ".features-delivery-inner :contains('Características')+ul ::text"
-    description = text_s.css(des_css).extract()
-    return cleaner(description)
+    return clean( text_s.css(des_css).extract())
 
 
 def images_urls(text_s):
@@ -56,8 +54,7 @@ def product_categories(text_s):
 
 def product_name(text_s):
     name = text_s.css('.product-main-title::text').extract_first()
-    name = ' '.join(name.split())
-    return name
+    return ' '.join(name.split())
 
 
 def product_color(text_s):
