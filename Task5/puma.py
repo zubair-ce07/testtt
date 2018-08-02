@@ -99,32 +99,34 @@ class PumaSpider(Spider):
         return ''.join(descriptions)
 
     def extract_image_urls(self, response):
-        product_options = self.extract_product_options(response)
-        return {image_url for image_url in product_options["base_image"].values()}
+        item_detail = self.extract_product_options(response).get("base_image")
+        if item_detail:
+            return {image_url for image_url in item_detail.values()}
 
     def extract_skus(self, response):
         item_detail = self.extract_product_options(response).get("option_labels")
-        sizes = [label for label in item_detail.keys() if label in self.item_sizes or not label.isalpha()]
-        colors = [label for label in item_detail.keys() if label not in sizes]
-        skus = []
+        if item_detail:
+            sizes = [label for label in item_detail.keys() if label in self.item_sizes or not label.isalpha()]
+            colors = [label for label in item_detail.keys() if label not in sizes]
+            skus = []
 
-        for color in colors:
-            products = item_detail[color]["products"]
+            for color in colors:
+                products = item_detail[color]["products"]
 
-            for size in sizes:
-                sku = {"sku_id": f"{color}_{size}", "color": color, 'size': size}
+                for size in sizes:
+                    sku = {"sku_id": f"{color}_{size}", "color": color, 'size': size}
 
-                if all([product not in products for product in item_detail[size]["products"]]):
-                    sku["out_of_stock"] = True
+                    if all([product not in products for product in item_detail[size]["products"]]):
+                        sku["out_of_stock"] = True
 
-                if response.css('span[id^="old-price-"]::text').extract():
-                    sku["previous_prices"] = [price.strip("\n").strip(" ") for price in
-                                              response.css('span[id^="old-price-"]::text').extract()]
-                    sku["currency"] = sku["previous_prices"][0][0]
+                    if response.css('span[id^="old-price-"]::text').extract():
+                        sku["previous_prices"] = [price.strip("\n").strip(" ") for price in
+                                                  response.css('span[id^="old-price-"]::text').extract()]
+                        sku["currency"] = sku["previous_prices"][0][0]
 
-                skus.append(sku)
+                    skus.append(sku)
 
-        return skus
+            return skus
 
     def extract_product_options(self, response):
         return json.loads(response.css('script').re_first(r'.*parseJSON\(\'(.+)\'\)\);'))
