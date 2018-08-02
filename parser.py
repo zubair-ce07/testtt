@@ -17,18 +17,17 @@ def clean(product_record):
 
 
 def product_care(text_s):
-    care_css = ".features-delivery-inner :contains('Cómo cuidar')+ul ::text"
-    return clean(text_s.css(care_css).extract())
+    css = ".features-delivery-inner :contains('Cómo cuidar')+ul ::text"
+    return clean(text_s.css(css).extract())
 
 
 def product_description(text_s):
-    des_css = ".features-delivery-inner :contains('Características')+ul ::text"
-    return clean( text_s.css(des_css).extract())
+    css = ".features-delivery-inner :contains('Características')+ul ::text"
+    return clean(text_s.css(css).extract())
 
 
 def images_urls(text_s):
-    image_url_css = ".product-thumb-item img::attr(src)"
-    images = text_s.css(image_url_css).extract()
+    images = text_s.css(".product-thumb-item img::attr(src)").extract()
     return [urls.replace("84x84", "539x539") for urls in images]
 
 
@@ -38,8 +37,7 @@ def product_id(text_s):
 
 def product_gender(item_url, text_s):
     gender = "unisex-adults"
-    gender_css = '.product__category::text'
-    gender_detail = text_s.css(gender_css).extract_first()
+    gender_detail = text_s.css('.product__category::text').extract_first()
     soup = f'{item_url} {gender_detail}'.lower()
     for token, raw_gender in gender_map:
         if token in soup:
@@ -48,8 +46,8 @@ def product_gender(item_url, text_s):
 
 
 def product_categories(text_s):
-    product_category_css = '.custom-breadcrumb [itemprop="item"] span::text'
-    return text_s.css(product_category_css).extract()
+    css = '.custom-breadcrumb [itemprop="item"] span::text'
+    return text_s.css(css).extract()
 
 
 def product_name(text_s):
@@ -58,15 +56,15 @@ def product_name(text_s):
 
 
 def product_color(text_s):
-    colour_css = '.ref-color :contains("Color: "):not(strong)::text'
-    return text_s.css(colour_css).extract_first()
+    css = '.ref-color :contains("Color: "):not(strong)::text'
+    return text_s.css(css).extract_first()
 
 
 def product_pricing(text_s):
     prices = dict()
     prices["currency"] = "Euro"
-    price_css = '[itemprop="price"]::attr(content)'
-    prices["price"] = text_s.css(price_css).extract_first()
+    css = '[itemprop="price"]::attr(content)'
+    prices["price"] = text_s.css(css).extract_first()
     prices["previous_product_pricing"] = [
         text_s.css('.price .old-price span::text').extract_first()[:-2]]
     return prices
@@ -94,8 +92,7 @@ async def parse(items_visited_urls, item_url, loop, sprinter_records):
         response = await future
         time.sleep(1)
 
-        if response.status_code == 200 \
-                and len(response.text):
+        if response.status_code == 200 and len(response.text):
             text_s = parsel.Selector(text=response.text)
             items_visited_urls.add(item_url)
             product_details = dict()

@@ -18,7 +18,7 @@ class SprinterSpider:
         self.sprinter_records = list()
 
     def filter_urls(self, extracted_urls):
-        return [e for e in extracted_urls if urlsplit(e).netloc == self.host]
+        return [u for u in extracted_urls if urlsplit(u).netloc == self.host]
 
     async def extract_urls(self, url, loop):
         async with self.semaphore:
