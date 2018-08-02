@@ -15,6 +15,7 @@ class PumaSpider(Spider):
 
     items_per_page = 12
     item_sizes = ['xs', 's', 'm', 'l', 'x', 'xl', 'xxl', 'one size', 'adult']
+    image_url_t = "https://in.puma.com/ajaxswatches/ajax/update?pid={}"
     gender_map = {
         'unisex': 'Unisex',
         'men': 'Men',
@@ -64,10 +65,31 @@ class PumaSpider(Spider):
         item['gender'] = self.extract_gender(response)
         item["category"] = self.get_categories(response)
         item['description'] = self.extract_description(response)
-        item['image_urls'] = self.extract_image_urls(response)
         item['skus'] = self.extract_skus(response)
+        product_ids = self.extract_product_options(response).get("base_image")
 
-        return item
+        if not product_ids:
+            return item
+
+        item["image_urls"] = set()
+        image_urls_json_requests = []
+        image_urls_json_requests.extend([Request(self.image_url_t.format(id), callback=self.parse_image_urls,
+                                                 meta={"json_requests": image_urls_json_requests, "item": item})
+                                        for id in product_ids.keys()])
+        return image_urls_json_requests.pop()
+
+    def parse_image_urls(self, response):
+        image_urls = {image_url["image"] for image_url in json.loads(response.body)}
+        image_urls_json_requests = response.meta.get("json_requests")
+        item = response.meta.get("item")
+        
+        for image_url in image_urls:
+            item["image_urls"].add(image_url)
+
+        if not image_urls_json_requests:
+            return item
+
+        return image_urls_json_requests.pop()
 
     def extract_retailer_sku(self, response):
         return response.css('.style_no::text').extract_first()
@@ -97,11 +119,6 @@ class PumaSpider(Spider):
     def extract_description(self, response):
         descriptions = response.css('.product-collateral .std *::text').extract()
         return ''.join(descriptions)
-
-    def extract_image_urls(self, response):
-        image_urls = self.extract_product_options(response).get("base_image")
-        if image_urls:
-            return {image_url for image_url in image_urls.values()}
 
     def extract_skus(self, response):
         item_options = self.extract_product_options(response).get("option_labels")
