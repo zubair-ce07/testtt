@@ -13,6 +13,24 @@ COLOR_PURPLE = '\033[35m'
 COLOR_DEFAULT = '\033[0m'
 
 
+def is_valid_directory(dirname):
+    if not os.path.isdir(dirname):
+        msg = '{} is not a directory'.format(dirname)
+        raise argparse.ArgumentTypeError(msg)
+    else:
+        return dirname
+
+
+def is_valid_year_and_month(year_and_month):
+    match = re.search('^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)/(1[0-2]|0[1-9]|\d)', year_and_month)
+
+    if not match:
+        msg = '{} is not a valid year/month'.format(year_and_month)
+        raise argparse.ArgumentTypeError(msg)
+    else:
+        return year_and_month
+
+
 def get_year_and_month(file_name):
     year = file_name[15:19]
     month = file_name[20:23]
@@ -21,40 +39,50 @@ def get_year_and_month(file_name):
 
 class FileParser:
 
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, required_year_arg, required_years_and_months):
         self.year_data = {}
-        self.month_data = {}
+        self.required_files = []
         self.dir_path = dir_path
-        self.file_names = os.listdir(self.dir_path)
 
-    def parse_year_data(self):
-        self.month_data.clear()
-        for file_name in self.file_names:
+        file_names = os.listdir(dir_path)
+        for file_name in file_names:
+            if required_year_arg == file_name[15:19]:
+                self.required_files.append(file_name)
+                continue
+
+            for required_year_and_month in required_years_and_months:
+                if not required_year_and_month:
+                    continue
+
+                required_year_and_month = required_year_and_month.split('/')
+                required_year = required_year_and_month[0]
+                required_month = required_year_and_month[1]
+                file_year_and_month = get_year_and_month(file_name)
+                file_year = file_year_and_month[0]
+                file_month = file_year_and_month[1]
+                if file_year == required_year and file_month == required_month:
+                    self.required_files.append(file_name)
+
+    def parse_file_data(self):
+        month_data = {}
+        for file_name in self.required_files:
             with open(os.path.join(self.dir_path, file_name), 'r') as file:
                 year, month = get_year_and_month(file_name)
                 file_data = csv.DictReader(file, skipinitialspace=True, delimiter=',')
 
                 for index, row in enumerate(file_data):
-                    self.month_data[str(index + 1)] = row
+                    index_string = str(index + 1)
+                    month_data[index_string] = {}
+                    month_data[index_string]['Max TemperatureC'] = row['Max TemperatureC']
+                    month_data[index_string]['Min TemperatureC'] = row['Min TemperatureC']
+                    month_data[index_string]['Max Humidity'] = row['Max Humidity']
+                    month_data[index_string]['PKT'] = row['PKT']
 
                 if year not in self.year_data.keys():
                     self.year_data[year] = {}
 
-                self.year_data[year][month] = copy.deepcopy(self.month_data)
-                self.month_data.clear()
-
-    def parse_month_data(self, required_year, required_month):
-        self.month_data.clear()
-        for file_name in self.file_names:
-            year, month = get_year_and_month(file_name)
-            if year == required_year and month == required_month:
-                with open(os.path.join(self.dir_path, file_name), 'r') as file:
-                    file_data = csv.DictReader(file, skipinitialspace=True, delimiter=',')
-
-                    for index, row in enumerate(file_data):
-                        self.month_data[str(index + 1)] = row
-
-                return
+                self.year_data[year][month] = copy.deepcopy(month_data)
+                month_data.clear()
 
 
 class ResultComputer:
@@ -80,6 +108,7 @@ class ResultComputer:
         result['Highest Average'] = sum_highest / highest_temp_count
         result['Lowest Average'] = sum_lowest / lowest_temp_count
         result['Average Humidity'] = sum_humidity / humidity_count
+
         return result
 
     def compute_extreme_results(self, year_data):
@@ -99,6 +128,7 @@ class ResultComputer:
         highest_temp_and_date = max(max_temp_list, key=lambda x: x[0])
         lowest_temp_and_date = min(min_temp_list, key=lambda x: x[0])
         highest_humidity_and_date = max(max_humidity_list, key=lambda x: x[0])
+
         result['Highest Temp'] = highest_temp_and_date[0]
         result['Highest Temp Date'] = highest_temp_and_date[1]
         result['Lowest Temp'] = lowest_temp_and_date[0]
@@ -153,114 +183,73 @@ class ResultGenerator:
         print(COLOR_DEFAULT)
 
 
-def print_data_not_present_message():
-    print('Sorry! data is not available of required year')
-
-
-def print_invalid_input_message():
-    print('Invalid input format')
-
-
-def validate_year_and_month(year_and_month):
-    match = re.search('^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)/(1[0-2]|0[1-9]|\d)', year_and_month)
-    year_and_month = {}
-
-    if match:
-        year_and_month['year'] = match.group(1)
-        year_and_month['month'] = match.group(2)
-        return year_and_month
-    else:
-        return None
-
-
 def main():
     argument_parser = argparse.ArgumentParser()
 
-    argument_parser.add_argument('dir_path',
+    argument_parser.add_argument('dir_path', type=is_valid_directory,
                                  help='Directory path of weather files')
     argument_parser.add_argument('-e', '--extreme-report',
                                  help='Generates extreme weather report, taking year as input')
-    argument_parser.add_argument('-a', '--average-report',
+    argument_parser.add_argument('-a', '--average-report', type=is_valid_year_and_month,
                                  help='Generates average weather report, taking year and month as input')
-    argument_parser.add_argument('-c', '--chart-report',
+    argument_parser.add_argument('-c', '--chart-report', type=is_valid_year_and_month,
                                  help='Generates two line reports, taking year and month as input')
-    argument_parser.add_argument('-b', '--bonus',
+    argument_parser.add_argument('-b', '--bonus', type=is_valid_year_and_month,
                                  help='Generates single line reports, taking year and month as input')
     args = argument_parser.parse_args()
 
-    if not os.path.isdir(args.dir_path):
-        print('Invalid directory path')
-        return
-
-    file_parser = FileParser(args.dir_path)
+    file_parser = FileParser(args.dir_path, args.extreme_report, [args.average_report,
+                                                                  args.chart_report, args.bonus])
     result_computer = ResultComputer()
     result_generator = ResultGenerator()
+    file_parser.parse_file_data()
 
     if args.extreme_report:
-        file_parser.parse_year_data()
         if file_parser.year_data.get(args.extreme_report):
             year_data = file_parser.year_data[args.extreme_report]
             year_result = result_computer.compute_extreme_results(year_data)
             result_generator.generate_extreme_results(year_result)
         else:
-            print_data_not_present_message()
+            print('Sorry! data is not available of required year')
 
     if args.average_report:
-        year_and_month = validate_year_and_month(args.average_report)
+        year_and_month = args.average_report.split('/')
 
-        if year_and_month:
-            year = year_and_month['year']
-            month = year_and_month['month']
-        else:
-            print_invalid_input_message()
+        year = year_and_month[0]
+        month = year_and_month[1]
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
             month_result = result_computer.compute_average_results(month_data)
             result_generator.generate_average_results(month_result)
         else:
-            file_parser.parse_month_data(year, month)
-            month_data = file_parser.month_data
-            month_result = result_computer.compute_average_results(month_data)
-            result_generator.generate_average_results(month_result)
+            print('Sorry! data is not available of required year and month')
 
     if args.chart_report:
-        year_and_month = validate_year_and_month(args.chart_report)
+        year_and_month = args.chart_report.split('/')
 
-        if year_and_month:
-            year = year_and_month['year']
-            month = year_and_month['month']
-        else:
-            print_invalid_input_message()
+        year = year_and_month[0]
+        month = year_and_month[1]
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
             month_result = result_computer.compute_high_low_day_results(month_data)
             result_generator.generate_high_low_day_double_results(month_result)
         else:
-            file_parser.parse_month_data(year, month)
-            month_data = file_parser.month_data
-            month_result = result_computer.compute_high_low_day_results(month_data)
-            result_generator.generate_high_low_day_double_results(month_result)
+            print('Sorry! data is not available of required year and month')
 
     if args.bonus:
-        year_and_month = validate_year_and_month(args.bonus)
+        year_and_month = args.bonus.split('/')
 
-        if year_and_month:
-            year = year_and_month['year']
-            month = year_and_month['month']
-        else:
-            print_invalid_input_message()
+        year = year_and_month[0]
+        month = year_and_month[1]
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
             month_result = result_computer.compute_high_low_day_results(month_data)
             result_generator.generate_high_low_day_single_results(month_result)
         else:
-            file_parser.parse_month_data(year, month)
-            month_data = file_parser.month_data
-            month_result = result_computer.compute_high_low_day_results(month_data)
-            result_generator.generate_high_low_day_single_results(month_result)
+            print('Sorry! data is not available of required year and month')
 
 
 if __name__ == '__main__':
