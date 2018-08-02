@@ -50,9 +50,7 @@ class DecimasSpider(CrawlSpider):
         prices = [r.strip() for r in response.css('.product-shop .price::text').extract()]
         prices = list(filter(None, prices))
         prices = sorted([self.format_price(p) for p in prices])
-        if len(prices) < 2:
-            prices.append('')
-        return prices
+        return prices[0], prices[1:]
 
     def format_price(self, price):
         price = price.translate(str.maketrans({u"\u20ac": '', ',': '.'}))
@@ -91,12 +89,14 @@ class DecimasSpider(CrawlSpider):
         sizes = self.get_sizes(response)
         currency = self.get_currency(response)
         skus = []
-        sku = {}
-        sku['price'], sku['old-price'] = self.get_price(response)
-        sku['currency'] = currency
+        sku_common = {}
+        sku_common['price'], sku_common['old-price'] = self.get_price(response)
+        sku_common['currency'] = currency
         if self.is_out_of_stock(response):
-            sku['out_of_stock'] = 'True'
+            sku_common['out_of_stock'] = 'True'
         for size in sizes:
-            sku.update({'size': size, 'sku_id': f'{sku_id}_{size}'})
-            skus.append(sku.copy())
+            sku = sku_common.copy()
+            sku['size'] = size
+            sku['sku_id'] = f'{sku_id}_{size}'
+            skus += [sku]
         return skus
