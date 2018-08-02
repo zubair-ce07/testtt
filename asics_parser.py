@@ -1,12 +1,13 @@
 from parsel import Selector
 
 
-class ProductParser:
+class ProductParser(object):
+
+    brand = "Asics Tiger"
 
     def __init__(self, product_url, product_page_content):
         self.product_url = product_url
         self.url_selector = Selector(text=product_page_content)
-        self.brand = "Asics Tiger"
 
     def extract_product_name(self):
         return self.url_selector.css('.single-prod-title::text').get()
@@ -39,8 +40,9 @@ class ProductParser:
         return self.url_selector.css("#productFeaturesContent h5::text").getall()
 
     def extract_product_details(self):
-        return self.url_selector.css("#collapse1 p::text").get() or self.url_selector.css(
+        description = self.url_selector.css("#collapse1 p::text").get() or self.url_selector.css(
             "#collapse1 li::text").getall()
+        return description.split('. ') if description else None
 
     def extract_product_image_urls(self):
         return self.url_selector.css("#pdp-main-image .product-img::attr(data-url-src)").getall()
