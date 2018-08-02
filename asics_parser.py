@@ -1,7 +1,7 @@
 from parsel import Selector
 
 
-class ProductParser(object):
+class ProductParser:
 
     brand = "Asics Tiger"
 
@@ -41,7 +41,7 @@ class ProductParser(object):
 
     def extract_product_details(self):
         description = self.url_selector.css("#collapse1 p::text").get() or self.url_selector.css(
-            "#collapse1 li::text").getall()
+            "#collapse1 li::text").get()
         return description.split('. ') if description else None
 
     def extract_product_image_urls(self):
