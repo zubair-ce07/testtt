@@ -43,7 +43,7 @@ class PumaSpider(Spider):
         total_items = response.css('b.only::text').extract_first()
         total_pages = int(math.ceil(int(total_items)/self.items_per_page)) if total_items else 0
         product_type = response.xpath('//*[text()="Product Type:"]/following-sibling::span[1]/text()').extract_first()
-        menu_category = re.search('/(\w+)\.html', response.url).group(1)
+        menu_category = re.search('/([-\w+]+)\.html', response.url).group(1)
 
         for page_number in range(1, total_pages+1):
             yield Request(url.add_or_replace_parameter(response.url, "p", page_number),
@@ -103,18 +103,18 @@ class PumaSpider(Spider):
         return {image_url for image_url in product_options["base_image"].values()}
 
     def extract_skus(self, response):
-        item_detail = self.extract_product_options(response)
-        sizes = [label for label in item_detail["option_labels"].keys() if label in self.item_sizes or not label.isalpha()]
-        colors = [label for label in item_detail["option_labels"].keys() if label not in sizes]
+        item_detail = self.extract_product_options(response).get("option_labels")
+        sizes = [label for label in item_detail.keys() if label in self.item_sizes or not label.isalpha()]
+        colors = [label for label in item_detail.keys() if label not in sizes]
         skus = []
 
         for color in colors:
-            products = item_detail["option_labels"][color]["products"]
+            products = item_detail[color]["products"]
 
             for size in sizes:
                 sku = {"sku_id": f"{color}_{size}", "color": color, 'size': size}
 
-                if all([product not in products for product in item_detail["option_labels"][size]["products"]]):
+                if all([product not in products for product in item_detail[size]["products"]]):
                     sku["out_of_stock"] = True
 
                 if response.css('span[id^="old-price-"]::text').extract():
