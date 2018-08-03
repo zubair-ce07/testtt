@@ -84,7 +84,7 @@ class GarageClothingSpider(CrawlSpider):
         image_requests = response.meta['image_requests']
         product['image_urls'].extend(self.get_product_images(response))
 
-        while image_requests:
+        if image_requests:
             return image_requests.pop()
 
         size_requests = self.generate_size_requests(product, raw_sku)
