@@ -24,8 +24,8 @@ class Parser(scrapy.Spider):
                     sku["out_of_stock"] = True
                 previous_price = option.css("::attr(data-listprice)").extract_first()
                 if previous_price:
-                    sku["previous_prices"] =  [100*float(previous_price[:-2].replace(",","."))]
-            skus[option.css("::attr(data-code)").extract_first()] = sku
+                    sku["previous_prices"] = [100*float(previous_price[:-2].replace(",", "."))]
+                skus[option.css("::attr(data-code)").extract_first()] = sku
             return skus
         url = urlparse(response.url)
         image_paths = response.css('li[data-mimetype="image/jpeg"]::attr(data-detail)').extract()
@@ -48,7 +48,7 @@ class Parser(scrapy.Spider):
            "care":            response.css('div[itemprop=description]>div>span')[-2].css(' ::text').extract(),
            "image_urls":      [f'{url.scheme}://{url.netloc}{path}' for path in image_paths],
            "skus":            get_skus(response.css('option[data-code]')),
-           "price":           100*float(price.replace(',','.')),
+           "price":           100*float(price.replace(',', '.')),
            "currency":        currency
         }
 

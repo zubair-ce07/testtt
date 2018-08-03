@@ -15,6 +15,4 @@ class JoopSpider(CrawlSpider):
              )
 
     def parse_product(self, response):
-            product = self.parser.parse(response)
-            print(product)
-            yield product
+        yield self.parser.parse(response)
