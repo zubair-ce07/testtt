@@ -31,4 +31,4 @@ class SizeItem(scrapy.Item):
     is_available = scrapy.Field()
     price = scrapy.Field()
     is_discounted = scrapy.Field()
-discounted_price = scrapy.Field()
+    discounted_price = scrapy.Field()
