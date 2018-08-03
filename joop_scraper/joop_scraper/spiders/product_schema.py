@@ -1,5 +1,5 @@
 import scrapy
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 
 class Parser(scrapy.Spider):
