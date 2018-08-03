@@ -229,10 +229,6 @@ class MonsoonLondonCrawler(CrawlSpider):
     name = "monsoonlondon"
     product_parser = MonsoonLondonParser()
 
-    start_urls = [
-        'https://www.monsoonlondon.com/en-us/?redirected&skipRedirection=true'
-    ]
-
     rules = (
         Rule(LinkExtractor(restrict_css='.mainNavigation'), callback='parse_listing'),
     )
