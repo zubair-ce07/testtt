@@ -1,9 +1,16 @@
 {% extends 'taskmanager/base.html' %}
+{% load custom_tags %}
+{% load custom_filters %}
+{% block title %}
+    Homepage
+{% endblock title %}
 {% block content %}
-    <h1>Task Manager</h1>
+    <h2> All Tasks </h2>
     <a href="{% url 'taskmanager:add'%}">
         <button>Add Task</button>
     </a>
+    <div class="floatr" > Total Tasks {% total_tasks %} </div>
+
     <table>
         <tr>
             <td> Title </td>
@@ -15,8 +22,8 @@
         {% for task in object_list %}
             <tr>
                 <td> {{ task.title }} </td>
-                <td> {{ task.due_date }} </td>
-                <td class="set_fixed_width"> {{ task.description }} </td>
+                <td> {{ task.due_date|due_date_string }} </td>
+                <td class="set_fixed_width"> {{ task.description|truncate_string:50 }} </td>
                 <td> {{ task.assignee }} </td>
                 <td>
                     <form action="{% url 'taskmanager:delete' task.id%}" method="post" class="inline">
@@ -31,4 +38,3 @@
         {% endfor %}
     </table>
 {% endblock content %}
-

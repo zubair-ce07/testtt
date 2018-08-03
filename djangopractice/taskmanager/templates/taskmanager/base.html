@@ -2,11 +2,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Task Manager</title>
+    <title>{% block title %}Task Manager {% endblock title %}</title>
     <link rel="stylesheet" href="{% static 'taskmanager/style.css' %}">
 </head>
 <body>
-{% block content %}
-{% endblock content%}
+<ul class="nav">
+    <li class="appname"> Task Manager </li>
+    <li class="user">
+        {% if user.is_authenticated %}
+            <div class="inline"> {{ user.username }} </div>
+            <a class="inline" href="{% url 'logout' %}">logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'taskmanager:signup' %}">Signup</a>
+        {% endif %}
+    </li>
+</ul>
+{% block content %} {% endblock content%}
 </body>
 </html>

@@ -7,6 +7,16 @@
 .set_fixed_width{
     width: 50%;
 }
+.user{
+    background-color: #4CAF50;
+    float: right;
+}
+.floatr{
+    float: right;
+}
+.appname{
+    float: left;
+}
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -19,4 +29,25 @@ td, th {
 }
 tr:nth-child(even) {
     background-color: #dddddd;
+}
+ul.nav {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+ul.nav li{
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 5px 6px;
+    text-decoration: none;
+}
+ul.nav li a{
+    display: inline-block;
+    color: white;
+    text-align: center;
+    padding: 5px 6px;
+    text-decoration: none;
 }
