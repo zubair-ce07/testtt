@@ -20,10 +20,9 @@ class PiazzaSpider(CrawlSpider):
     def parse(self, response):
         requests = super().parse(response)
         for req in requests:
-            if 'trail' in req.meta.keys():
-                req.meta['trail'] = req.meta['trail'].append(response.url)
-            else:
-                req.meta['trail'] = [response.url]
+            trail_key = response.request.meta.get('trail', [])
+            trail_key.append(response.url)
+            req.meta['trail'] = list(set(trail_key))
             yield req
 
     def parse_product(self, response):

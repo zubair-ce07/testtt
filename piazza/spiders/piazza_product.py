@@ -6,13 +6,12 @@ from piazza.items import SkuItem, ProductItem
 
 class ProductParser(Spider):
     name = "piazza-parse"
-    gender = "not defined"
 
     def parse(self, response):
         product = ProductItem(brand="Piazzaitalia", market="IT", retailer='piazzaitalia-it', currency="EUR")
         product['retailer_sku'] = self.extract_retailer_sku(response)
         product['trail'] = self.extract_trail(response)
-        product['gender'] = self.gender
+        product['gender'] = self.extract_gender(response)
         product['category'] = self.extract_category(response)
         product['url'] = response.url
         product['name'] = self.extract_prod_name(response)
@@ -104,26 +103,21 @@ class ProductParser(Spider):
         return [category.strip() for category in categories]
 
     def extract_gender(self, response):
-        gender_url = response.css('.breadcrumbs a::attr(href)').extract()[:-1]
-        if 'donna' in gender_url:
-            return 'woman'
-        elif 'uomo' in gender_url:
-            return 'man'
-        elif 'kids' in gender_url:
-            return 'kid'
-        else:
-            return 'not defined'
+        gender_urls = response.meta.get('trail', ['https://www.piazzaitalia.it/'])
+        for gender_url in gender_urls:
+            if 'donna' in gender_url:
+                return 'woman'
+            elif 'uomo' in gender_url:
+                return 'man'
+            elif 'kids' in gender_url:
+                return 'kid'
+            else:
+                return 'not defined'
 
     def extract_trail(self, response):
         trail_urls = response.meta.get('trail', ['https://www.piazzaitalia.it/'])
         trails = []
         for trail_url in trail_urls:
-            if 'donna' in trail_url:
-                self.gender = 'woman'
-            elif 'uomo' in trail_url:
-                self.gender = 'man'
-            elif 'kids' in trail_url:
-                self.gender = 'kid'
             name = trail_url.split("/")[-1]
             trails.append([name.split('.')[0], trail_url])
         return trails
