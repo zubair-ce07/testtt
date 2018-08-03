@@ -23,7 +23,7 @@ class LanebryantSpider(CrawlSpider):
 
     pagination_url = 'https://www.lanebryant.com/lanebryant/plp/includes/plp-filters.jsp'
 
-    start_urls = ['https://www.lanebryant.com/hacci-lace-up-ruffle-sleeve-top/prd-350114']
+    start_urls = ['https://www.lanebryant.com/']
 
     rules = (
         Rule(LinkExtractor(restrict_css='.mar-subnav-links-column', allow='.*\/view-all\/.*'),
