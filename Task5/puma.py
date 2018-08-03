@@ -73,16 +73,16 @@ class PumaSpider(Spider):
 
         item["image_urls"] = set()
         image_urls_json_requests = []
-        image_urls_json_requests.extend([Request(self.image_url_t.format(id), callback=self.parse_image_urls,
+        image_urls_json_requests.extend([Request(self.image_url_t.format(product_id), callback=self.parse_image_urls,
                                                  meta={"json_requests": image_urls_json_requests, "item": item})
-                                        for id in product_ids.keys()])
+                                        for product_id in product_ids.keys()])
         return image_urls_json_requests.pop()
 
     def parse_image_urls(self, response):
         image_urls = {image_url["image"] for image_url in json.loads(response.body)}
         image_urls_json_requests = response.meta.get("json_requests")
         item = response.meta.get("item")
-        
+
         for image_url in image_urls:
             item["image_urls"].add(image_url)
 
@@ -107,7 +107,7 @@ class PumaSpider(Spider):
         return 'Unisex'
 
     def extract_price(self, response):
-        raw_price = response.css(f'span.price::text').re_first('[\d+,]+')
+        raw_price = response.css('span[id^="product-price-"]::text').re_first('[\d+,]+')
         return float(raw_price.replace(',', '')) * 100
 
     def get_categories(self, response):
