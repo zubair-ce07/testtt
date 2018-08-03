@@ -31,6 +31,8 @@ class TausendkindSpider(scrapy.Spider):
         'tausendkind.de'
     ]
 
+    gender_map = {'junge': 'boys', 'maedchen': 'girls'}
+
     def parse(self, response):
         listing_css = '#main-menu a::attr(href)'
 
@@ -68,29 +70,39 @@ class TausendkindSpider(scrapy.Spider):
         product['image_urls'] = self.get_product_images(response)
 
         variants = self.get_product_variants_urls(response)
-        return self.fetch_next_item(variants, product)
+        variant_requests = self.get_variant_requests(variants, product)
+        return self.get_request(variant_requests) or product
 
     def parse_product_variant(self, response):
-        sku = response.meta['sku']
-        variants = response.meta['variants']
+        product = response.meta['product']
+        variant_requests = response.meta['variant_requests']
+
         raw_product = self.get_raw_product(response)
 
-        sku['image_urls'].extend(self.get_product_images(response))
-        sku['skus'].extend(self.get_product_skus(response, raw_product))
+        product['image_urls'].extend(self.get_product_images(response))
+        product['skus'].extend(self.get_product_skus(response, raw_product))
 
-        return self.fetch_next_item(variants, sku)
+        return self.get_request(variant_requests) or product
 
-    def prepare_product_variant_request(self, variants, sku):
-        request = scrapy.Request(variants.pop(), self.parse_product_variant)
-        request.meta['sku'] = sku
-        request.meta['variants'] = variants
-        return request
+    def get_variant_requests(self, variants, product):
+        variant_requests = []
 
-    def fetch_next_item(self, variants, sku):
-        if variants:
-            return self.prepare_product_variant_request(variants, sku)
+        for variant in variants:
+            request = scrapy.Request(variant, self.parse_product_variant)
+            request.meta['product'] = product
+            request.meta['variant_requests'] = variant_requests
 
-        return sku
+            variant_requests.append(request)
+
+        return variant_requests
+
+    @staticmethod
+    def get_one_size_price(raw_product):
+        prices = {'price': int(raw_product['product']['price'] * 100)}
+        if raw_product['product']['price'] != raw_product['product']['price_original']:
+            prices['previous_price'] = [int(raw_product['product']['price_original'] * 100)]
+
+        return prices
 
     def get_product_skus(self, response, raw_product):
         skus = []
@@ -100,7 +112,7 @@ class TausendkindSpider(scrapy.Spider):
         currency = self.get_product_currency(response)
 
         if not size_drop_down:
-            sku = {
+            product = {
                 'sku_id': raw_product['product']['sku'],
                 'size': 'One Size',
                 'is_in_stock': bool(raw_product['product']['qty']),
@@ -109,16 +121,14 @@ class TausendkindSpider(scrapy.Spider):
                 'price': int(raw_product['product']['price'] * 100)
             }
 
-            if raw_product['product']['price'] != raw_product['product']['price_original']:
-                sku['previous_price'] = [int(raw_product['product']['price_original'] * 100)]
-
-            skus.append(sku)
+            product.update(self.get_one_size_price(raw_product))
+            skus.append(product)
             return skus
 
         for size_sel in size_drop_down:
             availability_xpath = './/*[contains(text(), "Ausverkauft")]'
 
-            sku = {
+            product = {
                 'sku_id': size_sel.css('li::attr(data-value)').extract_first(),
                 'size': size_sel.css('.l-space::text').extract_first(),
                 'is_in_stock': not size_sel.xpath(availability_xpath).extract(),
@@ -126,8 +136,8 @@ class TausendkindSpider(scrapy.Spider):
                 'color': color
             }
 
-            sku.update(self.get_product_price(size_sel))
-            skus.append(sku)
+            product.update(self.get_product_price(size_sel))
+            skus.append(product)
 
         return skus
 
@@ -158,10 +168,8 @@ class TausendkindSpider(scrapy.Spider):
         return raw_images['images']['list']
 
     def get_product_color(self, response):
-        color = re.findall(r'in ([a-z]+)', self.get_product_name(response))
-
-        if color:
-            return color[0]
+        name = self.get_product_name(response)
+        return (re.findall(r'in ([a-z]+)', name) or [None])[0]
 
     @staticmethod
     def get_product_categories(response):
@@ -172,13 +180,11 @@ class TausendkindSpider(scrapy.Spider):
     def get_product_retailer_sku(raw_product):
         return raw_product['product']['master_sku']
 
-    @staticmethod
-    def get_product_gender(raw_product):
-        gender_map = {'junge': 'boys', 'maedchen': 'girls'}
+    def get_product_gender(self, raw_product):
         gender = raw_product['product']['filter_gender']
-        if all(g in gender for g in gender_map.keys()):
+        if all(g in gender for g in self.gender_map.keys()):
             return 'unisex'
-        return gender_map.get(gender)
+        return self.gender_map.get(gender)
 
     @staticmethod
     def get_product_brand(raw_product):
@@ -213,3 +219,7 @@ class TausendkindSpider(scrapy.Spider):
     def get_raw_product(response):
         script = response.xpath('//script[contains(text(), "master_sku")]').re(r'{.*}')[0]
         return json.loads(script)
+
+    @staticmethod
+    def get_request(requests):
+        return requests.pop() if requests else None
