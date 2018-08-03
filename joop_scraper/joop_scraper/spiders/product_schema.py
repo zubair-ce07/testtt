@@ -31,7 +31,7 @@ class Parser(scrapy.Spider):
         image_paths = response.css('li[data-mimetype="image/jpeg"]::attr(data-detail)').extract()
         breadcrumb = response.css('#breadcrumb a::text').extract()
         return {
-           "retailer_sku":    response.css('span.js_addToCart::attr(data-code)').extract_first(),
+           "retailer_sku":    response.css('span[data-code]::attr(data-code)').extract_first(),
            "lang":            "de",
            "uuid":            None,
            "trail":           [],
