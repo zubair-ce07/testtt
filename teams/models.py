@@ -28,6 +28,7 @@ class Player(SoftDeleteModelMixin):
     teams = models.ManyToManyField('Team', related_name='players', blank=True)
     url = models.URLField(max_length=100, default=' ', null=True, blank=True)
     photos = GenericRelation('Photo', related_query_name='players')
+    formats = models.ManyToManyField('Format', related_name='players', blank=True)
 
     def __str__(self):
         return self.name
@@ -104,3 +105,10 @@ class LiveScore(models.Model):
     team1 = models.ForeignKey(Team, related_name='lives_scores_1', on_delete=models.CASCADE)
     team2 = models.ForeignKey(Team, related_name='lives_scores_2', on_delete=models.CASCADE)
     status = models.CharField(max_length=50, null=True, blank=True)
+
+
+class Format(models.Model):
+    text = models.CharField(max_length=15, null=True, blank=True)
+
+    def __str__(self):
+        return self.text

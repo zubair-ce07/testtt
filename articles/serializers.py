@@ -29,7 +29,6 @@ class SearchSerializer(serializers.Serializer):
     teams = serializers.SerializerMethodField()
 
     def get_players(self, obj):
-        print(self.context['search'])
         queryset = Player.objects.filter(name__icontains=self.context['search'])
         return PlayerSerializer(instance=queryset, many=True).data
 
