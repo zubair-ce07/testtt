@@ -4,8 +4,10 @@ import re
 import json
 import demjson
 
+from parsel import Selector
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy.http import FormRequest
 
 from items import GapItem
 
@@ -108,15 +110,78 @@ class WoolrichCrawler(CrawlSpider):
     parser = WoolrichParser()
     name = 'gap-cn'
     allowed_domains = ['gap.cn']
-    start_urls = ['https://www.gap.cn/category/44130/product/1652538.html?color=3171',
-                'https://www.gap.cn/category/1185/product/2238164.html?color=3006']
+    start_urls = ['https://www.gap.cn/category/17040.html#side']
 
+    pagination_url = 'https://www.gap.cn/catalog/category/getCategoryProduct'
     download_delay = 0.2
-    # listing_css = ['#navs', '.listing-content']
+
     # rules = (
-    #             Rule(LinkExtractor(restrict_css=listing_css, tags=('a', 'div'), attrs=('href', 'nextpage'))),
-    #             Rule(LinkExtractor(restrict_css=('.productCard')), callback='parse_item')
+    #             Rule(LinkExtractor(restrict_css=('#navs'))),
+    #             Rule(LinkExtractor(restrict_css=['.treeCenter', '.gapTreeUl']), callback='parse_category')
+    #             # Rule(LinkExtractor(restrict_css=('.categoryProductItem')), callback='parse_item')
     #         )
 
     def parse(self, response):
-        return self.parser.parse_item(response)
+        return self.parse_category(response)
+
+    def parse_item(self, response):
+        print('>'*10, response.url)
+    
+    def parse_category(self, response):
+        categories = response.css('#allCategoryId::attr(value)').extract_first()
+        categories = categories[:-1].split(',')
+        if len(categories) > 1:
+            return
+
+        print("#"*5, "Parsing Category")
+        return self.next_page_req(response)
+
+    def next_page_req(self, response):
+        last_display_num = int(response.meta.get('displayed_num', 0))
+
+        category_meta_sel = response.css('.clear1')
+        if not category_meta_sel:
+            return
+
+        cat_id = category_meta_sel.css('::attr(currentcategoryid)').extract_first()
+        cat_total_num = category_meta_sel.css('::attr(currentcategorytotalnum)').extract_first()
+        display_css = '::attr(currentcategorydisplaynum{})'.format(cat_id)
+        cur_display_num = category_meta_sel.css(display_css).extract_first()
+        total_displayed = int(cur_display_num) + last_display_num
+
+        if total_displayed < int(cat_total_num):
+            all_products_css = '::attr(allproductids{})'.format(cat_id)
+            formdata = {
+                'urlDisplayCatagoryId': response.css('#category_id::attr(value)').extract_first(),
+                'allCategoryId': cat_id + ',',
+                'lastCategoryId': cat_id,
+                'lastCategoryTotalNum': cat_total_num,
+                'currentPage': category_meta_sel.css('::attr(currentpage)').extract_first(),
+                'haveDisplayAllCategoryId': cat_id + ',',
+                'lastCategoryDisplayNum': cur_display_num,
+                'productIds': category_meta_sel.css(all_products_css).extract_first()
+            }
+            print('@'*5, 'Yielding request')
+            return FormRequest(url=self.pagination_url, formdata=formdata,
+                                callback=self.parse_page_items,
+                                meta={'displayed_num': total_displayed},)
+
+
+    def parse_page_items(self, response):
+        json_res = json.loads(response.text)
+        if json_res['status'] != "success":
+            return
+        res_selector = Selector(json_res['message'])
+        category_meta = res_selector.css('.clear1')
+        category_id = category_meta.css('::attr(currentcategoryid)').extract_first()
+        display_css = '::attr(currentcategorydisplaynum{})'.format(category_id)
+        cur_display_num = category_meta.css(display_css).extract_first()
+        print('Display Num: ', cur_display_num)
+        print(response.meta.get('displayed_num'))
+        products_links = res_selector.css('.categoryProductItem h5 a::attr(href)').extract()
+        print('L'*5, len(products_links))
+        for link in products_links:
+            print('^'*10, link)
+            #yield FormRequest(url=prod_url, callback=self.parse_item)
+
+        return self.next_page_req(response)
