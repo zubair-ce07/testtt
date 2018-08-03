@@ -4,6 +4,19 @@ import json
 import scrapy
 
 
+class Product(scrapy.Item):
+    retailer_sku = scrapy.Field()
+    name = scrapy.Field()
+    brand = scrapy.Field()
+    gender = scrapy.Field()
+    category = scrapy.Field()
+    image_urls = scrapy.Field()
+    url = scrapy.Field()
+    description = scrapy.Field()
+    care = scrapy.Field()
+    skus = scrapy.Field()
+
+
 class TausendkindSpider(scrapy.Spider):
     name = "tausendkind"
     start_urls = [
@@ -41,22 +54,21 @@ class TausendkindSpider(scrapy.Spider):
 
     def parse_product(self, response):
         raw_product = self.get_raw_product(response)
+        product = Product()
 
-        sku = {
-            'retailer_sku': self.get_product_retailer_sku(raw_product),
-            'name': self.get_product_name(response),
-            'brand': self.get_product_brand(raw_product),
-            'gender': self.get_product_gender(raw_product),
-            'category': self.get_product_categories(response),
-            'url': response.url,
-            'description': self.get_product_description(response),
-            'care': self.get_product_care(response),
-            'skus': self.get_product_skus(response, raw_product),
-            'image_urls': self.get_product_images(response)
-        }
+        product['retailer_sku'] = self.get_product_retailer_sku(raw_product)
+        product['name'] = self.get_product_name(response)
+        product['brand'] = self.get_product_brand(raw_product)
+        product['gender'] = self.get_product_gender(raw_product)
+        product['category'] = self.get_product_categories(response)
+        product['url'] = response.url
+        product['description'] = self.get_product_description(response)
+        product['care'] = self.get_product_care(response)
+        product['skus'] = self.get_product_skus(response, raw_product)
+        product['image_urls'] = self.get_product_images(response)
 
         variants = self.get_product_variants_urls(response)
-        return self.fetch_next_item(variants, sku)
+        return self.fetch_next_item(variants, product)
 
     def parse_product_variant(self, response):
         sku = response.meta['sku']
