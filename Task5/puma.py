@@ -108,6 +108,7 @@ class PumaSpider(Spider):
 
     def extract_price(self, response):
         raw_price = response.css('span[id^="product-price-"]::text').re_first('[\d+,]+')
+        raw_price = raw_price if raw_price else response.css('span.price::text').re_first('[\d+,]+')
         return float(raw_price.replace(',', '')) * 100
 
     def get_categories(self, response):
