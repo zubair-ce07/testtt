@@ -58,3 +58,9 @@ target/
 
 # VSCode
 .vscode
+
+# Virtual Invironment
+venv
+
+# Git Ignore
+.gitignore
