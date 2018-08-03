@@ -1,4 +1,4 @@
-from scrapy.spiders import CrawlSpider, Rule, Request
+from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from piazza.spiders.piazza_product import ProductParser
 
@@ -8,27 +8,23 @@ class PiazzaSpider(CrawlSpider):
     start_urls = [
         'https://www.piazzaitalia.it/',
     ]
-    custom_settings = {
-        'REDIRECT_ENABLED': True,
-    }
-    handle_httpstatus_all = True
 
     rules = (
-        Rule(LinkExtractor(restrict_css=('.item.pages-item-next > a', '.level-top', '.level1 > a'))),
+        Rule(LinkExtractor(restrict_css=('.item.pages-item-next > a', '.level-top', '.level1 > a')), callback='parse'),
 
         Rule(LinkExtractor(restrict_css=('.product-item-link',)), callback='parse_product'),
     )
 
-    # def parse_(self, response):
-    #     # req = Request(response.url, callback=self.parse)
-    #     # # req = super(CrawlSpider, self).parse(response)
-    #     # req.meta['trail'] = response.url
-    #     # return req
-    #     # # return req
-    #     # # return super(CrawlSpider, self).parse(req)
-    #     # # return response.follow(req, callback=self.parse)
-    #     yield Request(response.url, meta={'trail': response.url})
+    product_parser = ProductParser()
 
-    @staticmethod
-    def parse_product(response):
-        return ProductParser().parse(response)
+    def parse(self, response):
+        requests = super().parse(response)
+        for req in requests:
+            if 'trail' in req.meta.keys():
+                req.meta['trail'] = req.meta['trail'].append(response.url)
+            else:
+                req.meta['trail'] = [response.url]
+            yield req
+
+    def parse_product(self, response):
+        return self.product_parser.parse(response)
