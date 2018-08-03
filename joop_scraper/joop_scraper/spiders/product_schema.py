@@ -33,9 +33,7 @@ class Parser(scrapy.Spider):
         return {
            "retailer_sku":    response.css('span[data-code]::attr(data-code)').extract_first(),
            "lang":            "de",
-           "uuid":            None,
-           "trail":           [],
-           "gender":          breadcrumb[0] if breadcrumb[0] != "living" else None,
+           "gender":          breadcrumb[0] if breadcrumb[0] != "Living" else None,
            "category":        breadcrumb,
            "industry":        None,
            "brand":           "Joop",
@@ -52,5 +50,3 @@ class Parser(scrapy.Spider):
            "currency":        currency
         }
 
-
-complain_id = "01930755"
