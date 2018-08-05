@@ -21,7 +21,13 @@ class WoolrichSpider(CrawlSpider):
     request_url = 'http://www.woolrich.com/woolrich/prod/fragments/productDetails.jsp'
     genders = ['Men', 'Women']
 
-    def parse(self, response):
+    listing_css = ['#primary', '.pagination-item--next']
+    rules = (
+                Rule(LinkExtractor(restrict_css=listing_css), follow=True),
+                Rule(LinkExtractor(restrict_css=('.card-title')), callback='parse_item'),
+            )
+
+    def parse_item(self, response):
         item = WoolrichItem()
         item['retailer_sku'] = self._get_retailer_sku(response)
         item['gender'] = self._get_gender(response)
