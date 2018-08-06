@@ -10,6 +10,8 @@ class JacklemkusSpider(CrawlSpider):
     name = 'jacklemkus'
     currency = 'RAND'
     start_urls = ['https://www.jacklemkus.com/']
+    allowed_domains = ['jacklemkus.com']
+
     listing_css = ['#nav .level0 > .menu-link', '.pagination .next']
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, deny='how-to-order'), callback='parse'),
@@ -77,9 +79,10 @@ class JacklemkusSpider(CrawlSpider):
     def get_skus(self, response):
         sku_css = '.product-data-mine::attr(data-lookup)'
         product_sel = response.css(sku_css)
-        if not any(product_sel):
-            return []
 
+        if not product_sel:
+            return []
+        
         product_details = json.loads(product_sel.extract_first().replace("\'", "\""))
         price = self.get_price(response)
 
