@@ -63,7 +63,7 @@ def main():
     if data_dir is None:
         data_dir = 'string value'
 
-    # Two arrays for month and year are declared to access files within the directory.
+    # Two arrays for month and year are declared to access files within the directory
     month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     year = [1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011]
 
