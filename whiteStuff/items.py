@@ -12,3 +12,4 @@ class WhiteStuffItem(scrapy.Item):
     description = scrapy.Field()
     care = scrapy.Field()
     currency = scrapy.Field()
+    image_urls = scrapy.Field()
