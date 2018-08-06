@@ -1,15 +1,14 @@
 import json
 import re
-
 from scrapy import Spider, Request
 from w3lib import url
-
 from Task6.items import ProductItem
 
 
 class MarkhamSpider(Spider):
     name = 'markham'
     custom_settings = {'DOWNLOAD_DELAY': 1.25}
+    allowed_domains = ['markham.co.za']
     start_urls = ['https://www.markham.co.za']
 
     category_items_request_t = 'https://www.markham.co.za/search/ajaxResultsList.jsp?baseState={}&N={}'
@@ -28,14 +27,12 @@ class MarkhamSpider(Spider):
             return Request(self.item_detail_request_t.format(product_id), callback=self.parse_item)
         else:
             categories = self._extract_categories(product_detail)
-
             if categories:
                 yield from [Request(url.add_or_replace_parameter(response.url, "N", category["value"]),
-                            callback=self.parse_categories) for category in categories]
+                                    callback=self.parse_categories) for category in categories]
             else:
                 item_detail = json.loads(response.body).get("data")
                 total_pages = item_detail["totalPages"]
-
                 yield from [Request(url.add_or_replace_parameter(response.url, "page", page_number),
                                     callback=self.parse_pagination)
                             for page_number in range(1, total_pages + 1)]
@@ -48,14 +45,12 @@ class MarkhamSpider(Spider):
     def parse_pagination(self, response):
         item_detail = json.loads(response.body).get("data")
         products = item_detail["products"]
-
         yield from [Request(self.item_detail_request_t.format(product["id"]), callback=self.parse_item)
                     for product in products]
 
     def parse_item(self, response):
         item = ProductItem()
         item_detail = json.loads(response.body)
-
         if item_detail.get("productType") == "ColourSize":
             item["retailer_sku"] = item_detail.get("productId")
             item["name"] = item_detail.get("name")
@@ -65,7 +60,6 @@ class MarkhamSpider(Spider):
             item["image_urls"] = self.extract_image_urls(item_detail)
             item["gender"] = "Men"
             item["skus"] = []
-
             skus_requests = []
             skus_requests.extend([Request(url.add_or_replace_parameter(response.url, "selectedColor", color["id"]),
                                           callback=self.parse_skus,
@@ -78,7 +72,6 @@ class MarkhamSpider(Spider):
         item_detail = json.loads(response.body)
         skus_requests = response.meta["skus_requests"]
         color_name = response.meta["color"]
-
         if item_detail.get("sizes"):
             for size in item_detail["sizes"]:
                 sku = self._create_sku(color_name, size, item_detail.get("oldPrice"))
@@ -87,22 +80,19 @@ class MarkhamSpider(Spider):
             item["skus"] = self._create_sku(color_name, None, item_detail.get("oldPrice"))
         if skus_requests:
             return skus_requests.pop()
-
         return Request(item["url"], callback=self.parse_html_response, meta=response.meta)
 
     def _create_sku(self, color, size, old_price):
         sku = {"color": color,
                "size": size["name"] if size else "",
                "sku_id": f'{color}_{size["name"] if size else ""}'}
-
         if size and not size.get("available"):
             sku["out_of_stock"] = True
-
         if old_price:
             sku["previous_prices"] = []
             sku["previous_prices"].append(self.extract_price(old_price))
             sku["currency"] = old_price[0]
-            
+
         return sku
 
     def parse_html_response(self, response):
@@ -111,7 +101,6 @@ class MarkhamSpider(Spider):
         item["description"] = re.search(r'<div class="product-detail__copy">[\r\n\t\s]+<p>(.+)</p>[\r\n\t\s]+'
                                         r'</div>[\r\n\t\s]+\|#', product_description, re.DOTALL).group(1)
         item["category"] = response.css('.breadcrumbs__item a::text').extract()[1:-1]
-
         return item
 
     def extract_price(self, price):
