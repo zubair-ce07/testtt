@@ -88,8 +88,6 @@ class MonsoonLondonParser(scrapy.Spider):
     def generate_sku_requests(self, response, product, variant):
         url = 'https://www.monsoonlondon.com/en-us/view/component/' \
               'QuickliveProductDetailsComponentController'
-        colors = self.get_product_colors(response)
-        sizes = self.get_product_sizes(response)
         product_code = self.get_product_code(response)
         component_uid = self.get_component_uid(response)
         category_path = self.get_category_path(response)
@@ -99,8 +97,8 @@ class MonsoonLondonParser(scrapy.Spider):
 
         sku_requests = []
 
-        for color_sel in colors:
-            for size_sel in sizes:
+        for color_sel in self.get_product_colors(response):
+            for size_sel in self.get_product_sizes(response):
                 if self.is_current_response(color_sel, size_sel, variant):
                     continue
 
@@ -133,20 +131,12 @@ class MonsoonLondonParser(scrapy.Spider):
         return {
             'sku_id': raw_variant[0],
             'retailer_sku': raw_variant[1],
-            'image': raw_variant[2],
-            'name': raw_variant[3],
-            'category': raw_variant[4],
-            'quantity': raw_variant[5],
             'price': raw_variant[6],
-            'category_code': raw_variant[7],
-            'tax': raw_variant[8],
             'description': raw_variant[9],
             'color': raw_variant[11],
             'size': raw_variant[12],
             'stock': raw_variant[13],
-            'special_price': raw_variant[14],
-            'url': raw_variant[15],
-            'currency': raw_variant[16]
+            'special_price': raw_variant[14]
         }
 
     @staticmethod
