@@ -61,8 +61,8 @@ class MarkhamSpider(Spider):
             item["name"] = item_detail.get("name")
             item["brand"] = item_detail.get("brand")
             item["url"] = response.urljoin(item_detail.get("pdpURL"))
-            item["price"] = item_detail.get("price")
-            item["image_urls"] = [img["large"] for img in item_detail["images"]] if item_detail.get("images") else None
+            item["price"] = self.extract_price(item_detail.get("price"))
+            item["image_urls"] = self.extract_image_urls(item_detail)
             item["gender"] = "Men"
             item["skus"] = []
 
@@ -100,7 +100,8 @@ class MarkhamSpider(Spider):
 
         if old_price:
             sku["previous_prices"] = []
-            sku["previous_prices"].append(old_price)
+            sku["previous_prices"].append(self.extract_price(old_price))
+            sku["currency"] = old_price[0]
             
         return sku
 
@@ -112,3 +113,10 @@ class MarkhamSpider(Spider):
         item["category"] = response.css('.breadcrumbs__item a::text').extract()[1:-1]
 
         return item
+
+    def extract_price(self, price):
+        raw_price = re.search('([\d,]+)', price, re.DOTALL).group(1)
+        return float(raw_price.replace(',', '')) * 100
+
+    def extract_image_urls(self, item_detail):
+        return [img["large"] for img in item_detail["images"]] if item_detail.get("images") else None
