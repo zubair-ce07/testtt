@@ -8,6 +8,7 @@ from Task3.items import ProductItem
 class ColcciSpider(Spider):
     name = "Colcci"
     custom_settings = {'DOWNLOAD_DELAY': 0.25}
+    allowed_domains = ['colcci.com.br']
     start_urls = ['https://www.colcci.com.br/masculino-novo1/page/1',
                   'https://www.colcci.com.br/feminino-novo1/page/1',
                   'https://www.colcci.com.br/fitness/page/1',
