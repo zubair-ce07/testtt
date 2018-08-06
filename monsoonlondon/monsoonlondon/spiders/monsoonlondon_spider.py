@@ -210,6 +210,7 @@ class MonsoonLondonParser(scrapy.Spider):
             'storm': 'Girls',
             'boys': 'Boys',
             'newborn': 'Kids',
+            'baby': 'Kids'
         }
 
         for key in gender_map.keys():
