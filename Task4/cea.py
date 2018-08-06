@@ -60,10 +60,12 @@ class CeaSpider(Spider):
     def parse_json_request(self, response):
         item_detail = json.loads(response.text)[0]
         item = response.meta["item"]
+
         item['category'] = self.extract_category(item_detail)
         item['gender'] = self.extract_gender(response.url, item['name'], item['category'])
         item['image_urls'] = self.extract_image_urls(item_detail)
         item['description'] = self.extract_description(item_detail)
+
         return item
 
     def extract_item_name(self, response):
