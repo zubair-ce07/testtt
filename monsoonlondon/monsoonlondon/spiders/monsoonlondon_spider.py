@@ -26,7 +26,7 @@ class MonsoonLondonParser(scrapy.Spider):
     currency_code = None
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 2
+        'DOWNLOAD_DELAY': 1
     }
 
     def set_currency(self, currency_code, currency_conversion_rate):
@@ -74,6 +74,17 @@ class MonsoonLondonParser(scrapy.Spider):
             'size': raw_sku['size']
         }
 
+    @staticmethod
+    def generate_header(response):
+        return {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) Gecko/20100101 Firefox/62.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Referer': response.url,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Connection': 'keep-alive'
+        }
+
     def generate_sku_requests(self, response, product, variant):
         url = 'https://www.monsoonlondon.com/en-us/view/component/' \
               'QuickliveProductDetailsComponentController'
@@ -84,14 +95,7 @@ class MonsoonLondonParser(scrapy.Spider):
         category_path = self.get_category_path(response)
         catalog_id = self.get_catalog_id(response)
 
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:62.0) Gecko/20100101 Firefox/62.0',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Referer': response.url,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Connection': 'keep-alive'
-        }
+        headers = self.generate_header(response)
 
         sku_requests = []
 
