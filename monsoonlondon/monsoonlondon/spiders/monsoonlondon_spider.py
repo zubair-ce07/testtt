@@ -26,6 +26,16 @@ class MonsoonLondonParser(scrapy.Spider):
     currency_conversion_rate = None
     currency_code = None
 
+    gender_map = {
+        'women': 'Women',
+        'wedding': 'Women',
+        'girl': 'Girls',
+        'storm': 'Girls',
+        'boy': 'Boys',
+        'newborn': 'Kids',
+        'baby': 'Kids'
+    }
+
     custom_settings = {
         'DOWNLOAD_DELAY': 1
     }
@@ -203,19 +213,9 @@ class MonsoonLondonParser(scrapy.Spider):
     def get_product_gender(self, response):
         categories = ''.join(self.get_product_categories(response)).lower()
 
-        gender_map = {
-            'women': 'Women',
-            'wedding': 'Women',
-            'girl': 'Girls',
-            'storm': 'Girls',
-            'boy': 'Boys',
-            'newborn': 'Kids',
-            'baby': 'Kids'
-        }
-
-        for key in gender_map.keys():
+        for key in self.gender_map.keys():
             if key in categories:
-                return gender_map[key]
+                return self.gender_map[key]
 
     @staticmethod
     def get_product_name(response):
@@ -231,7 +231,7 @@ class MonsoonLondonCrawler(CrawlSpider):
     )
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 2,
+        'DOWNLOAD_DELAY': 1,
     }
 
     allowed_domains = [
