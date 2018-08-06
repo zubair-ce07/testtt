@@ -18,6 +18,7 @@ class Product(scrapy.Item):
     description = scrapy.Field()
     care = scrapy.Field()
     skus = scrapy.Field()
+    meta = scrapy.Field()
 
 
 class MonsoonLondonParser(scrapy.Spider):
@@ -48,12 +49,11 @@ class MonsoonLondonParser(scrapy.Spider):
         product['gender'] = self.get_product_gender(response)
         product['skus'] = [self.generate_product_sku(variant)]
 
-        sku_requests = self.generate_sku_requests(response, product, variant)
-        return self.get_request(sku_requests) or product
+        product['meta'] = {'sku_requests': self.generate_sku_requests(response, product, variant)}
+        return self.get_request_or_product(product['meta']['sku_requests'], product)
 
     def parse_variant(self, response):
         product = response.meta['product']
-        sku_requests = response.meta['sku_requests']
         variant = self.get_product_variant(response)
         images = self.get_product_images(response)
 
@@ -62,7 +62,7 @@ class MonsoonLondonParser(scrapy.Spider):
                 product['image_urls'].append(image)
 
         product['skus'].append(self.generate_product_sku(variant))
-        return self.get_request(sku_requests) or product
+        return self.get_request_or_product(product['meta']['sku_requests'], product)
 
     def generate_product_sku(self, raw_sku):
         return {
@@ -113,8 +113,6 @@ class MonsoonLondonParser(scrapy.Spider):
 
                 request = scrapy.FormRequest(url, headers=headers, formdata=form_data,
                                              callback=self.parse_variant, dont_filter=True)
-
-                request.meta['sku_requests'] = sku_requests
                 request.meta['product'] = product
                 sku_requests.append(request)
 
@@ -145,8 +143,12 @@ class MonsoonLondonParser(scrapy.Spider):
         return response.css(colors_css).extract()
 
     @staticmethod
-    def get_request(requests):
-        return requests.pop() if requests else None
+    def get_request_or_product(requests, product):
+        if requests:
+            return requests.pop()
+
+        del product['meta']
+        return product
 
     @staticmethod
     def get_product_sizes(response):
@@ -259,9 +261,9 @@ class MonsoonLondonCrawler(CrawlSpider):
     def parse_listing(self, response):
         sub_category_code = response.css('#js-subcategory-code::attr(value)').extract_first()
         if sub_category_code:
-            return self.get_raw_listing(sub_category_code)
+            return self.get_subcategory_request(sub_category_code)
 
-    def get_raw_listing(self, sub_category_code, page=1):
+    def get_subcategory_request(self, sub_category_code, page=1):
         raw_listing_url = 'https://www.monsoonlondon.com/en-us/view/services/getProducts.json'
         form_data = {
             'page': str(page),
@@ -271,12 +273,12 @@ class MonsoonLondonCrawler(CrawlSpider):
         }
 
         request = scrapy.FormRequest(raw_listing_url, formdata=form_data, method='GET',
-                                     headers=self.headers, callback=self.parse_raw_listing,
+                                     headers=self.headers, callback=self.parse_subcategory,
                                      dont_filter=True)
         request.meta['sub_category_code'] = sub_category_code
         return request
 
-    def parse_raw_listing(self, response):
+    def parse_subcategory(self, response):
         raw_listing = json.loads(response.text)
         sub_category_code = response.meta['sub_category_code']
 
@@ -289,4 +291,4 @@ class MonsoonLondonCrawler(CrawlSpider):
         total_pages = raw_listing['pagination']['totalPages']
 
         if current_page < total_pages:
-            yield self.get_raw_listing(sub_category_code, current_page + 1)
+            yield self.get_subcategory_request(sub_category_code, current_page + 1)
