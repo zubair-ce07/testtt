@@ -4,6 +4,9 @@ from teams.models import Team, Player, Photo, LiveScore, BattingAverage, Bowling
 
 
 class TeamSerializer(serializers.ModelSerializer):
+    follows = serializers.StringRelatedField(many=True)
+    comments = serializers.StringRelatedField(many=True)
+
     class Meta:
         model = Team
         fields = '__all__'
@@ -12,22 +15,14 @@ class TeamSerializer(serializers.ModelSerializer):
 class PlayerSerializer(serializers.ModelSerializer):
     formats = serializers.StringRelatedField(many=True)
     teams = serializers.StringRelatedField(many=True)
+    batting_averages = serializers.StringRelatedField(many=True)
+    bowling_averages = serializers.StringRelatedField(many=True)
+    follows = serializers.StringRelatedField(many=True)
+    comments = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Player
-        exclude = ['is_active', 'DOB', 'batting_style', 'bowling_style']
-
-
-class BattingAverageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BattingAverage
-        fields = ['id', 'player', 'format', 'highest_score']
-
-
-class BowlingAverageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BowlingAverage
-        fields = ['id', 'player', 'format', 'wickets']
+        fields = '__all__'
 
 
 class PlayerInsightsSearchSerializer(serializers.Serializer):
@@ -59,7 +54,7 @@ class PlayerInsightsSearchSerializer(serializers.Serializer):
                     else:
                         query_string = {'{0}_{1}__{2}__{3}'.format(category[0], 'averages', category[1], 'gte'): min_limit}
                     queryset = queryset.filter(**query_string).order_by('id')
-                elif max_limit and min_limit:
+                else:
                     if key in player_fields:
                         greater_query = {'{0}__{1}'.format(key, 'gte'): min_limit}
                         lesser_query = {'{0}__{1}'.format(key, 'lte'): max_limit}

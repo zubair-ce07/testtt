@@ -69,8 +69,8 @@ class BattingAverage(BasicAverageInfo):
     stumps = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return '{player_name}\'s batting average'.format(
-            player_name=self.player
+        return '{player_name}\'s {average_format} batting average'.format(
+            player_name=self.player, average_format=self.format
         )
 
 
@@ -86,8 +86,8 @@ class BowlingAverage(BasicAverageInfo):
     ten_wickets = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return '{player_name}\'s bowling average'.format(
-            player_name=self.player
+        return '{player_name}\'s {average_format} batting average'.format(
+            player_name=self.player, average_format=self.format
         )
 
 

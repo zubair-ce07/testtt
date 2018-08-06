@@ -1,13 +1,11 @@
-from rest_framework import generics
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from teams.models import Team, Player, Photo, LiveScore, BattingAverage, BowlingAverage
-from teams.serializers import TeamSerializer, PlayerSerializer, BattingAverageSerializer, \
-    PlayerInsightsSearchSerializer, BowlingAverageSerializer
+from teams.models import Team, Player, Photo, LiveScore
+from teams.serializers import TeamSerializer, PlayerSerializer, PlayerInsightsSearchSerializer
 
 
-class TeamList(generics.ListAPIView):
+class TeamList(ListAPIView):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
 
@@ -17,17 +15,17 @@ class PlayerList(ListAPIView):
     serializer_class = PlayerSerializer
 
 
-class TeamDetail(generics.RetrieveUpdateDestroyAPIView):
+class TeamDetail(RetrieveUpdateDestroyAPIView):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
 
 
-class PlayerDetail(generics.RetrieveUpdateDestroyAPIView):
+class PlayerDetail(RetrieveUpdateDestroyAPIView):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
 
 
-class TeamPlayersView(generics.ListAPIView):
+class TeamPlayersView(ListAPIView):
     serializer_class = PlayerSerializer
 
     def get_queryset(self):
@@ -37,16 +35,6 @@ class TeamPlayersView(generics.ListAPIView):
         if player_format is not None:
             queryset = queryset.filter(batting_averages__format__iexact=player_format).order_by('id')
         return queryset
-
-
-class BattingAverageList(ListAPIView):
-    queryset = BattingAverage.objects.all()
-    serializer_class = BattingAverageSerializer
-
-
-class BowlingAverageList(ListAPIView):
-    queryset = BowlingAverage.objects.all()
-    serializer_class = BowlingAverageSerializer
 
 
 class PlayersInsightsView(APIView):

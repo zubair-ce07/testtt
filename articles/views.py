@@ -22,7 +22,7 @@ class ArticleDetail(generics.RetrieveUpdateDestroyAPIView):
 class SearchResults(APIView):
 
     def get(self, request, format=None):
-
-        serializer = SearchSerializer(data={}, context={'search': request.query_params.get('q', '')})
+        query_string = request.query_params.get('q')
+        serializer = SearchSerializer(data={}, context={'search': query_string})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
