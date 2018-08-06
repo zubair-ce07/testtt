@@ -9,6 +9,7 @@ from Task4.items import ProductItem
 class CeaSpider(Spider):
     name = 'cea'
     custom_settings = {'DOWNLOAD_DELAY': 0.25}
+    allowed_domains = ['cea.com.br']
     start_urls = ['https://www.cea.com.br']
 
     item_base_url_t = "https://www.cea.com.br/api/catalog_system/pub/products/search?fq=productId:{}"
