@@ -201,20 +201,20 @@ class MonsoonLondonParser(scrapy.Spider):
         return response.css('#breadcrumbs a::text').extract()[1:]
 
     def get_product_gender(self, response):
-        categories = self.get_product_categories(response)
+        categories = ''.join(self.get_product_categories(response)).lower()
 
-        for category in categories:
-            if 'women' in category.lower() or 'wedding' in category.lower():
-                return 'Women'
+        gender_map = {
+            'women': 'Women',
+            'wedding': 'Women',
+            'girl': 'Girls',
+            'storm': 'Girls',
+            'boys': 'Boys',
+            'newborn': 'Kids',
+        }
 
-            if 'girl' in category.lower() or 'storm' in category.lower():
-                return 'Girls'
-
-            if 'boys' in category.lower():
-                return 'Boys'
-
-            if 'newborn' in category.lower():
-                return 'Kids'
+        for key in gender_map.keys():
+            if key in categories:
+                return gender_map[key]
 
     @staticmethod
     def get_product_name(response):
