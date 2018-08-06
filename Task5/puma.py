@@ -11,6 +11,7 @@ from Task5.items import ProductItem
 class PumaSpider(Spider):
     name = 'puma'
     custom_settings = {'DOWNLOAD_DELAY': 1.25}
+    allowed_domains = ['in.puma.com']
     start_urls = ['https://in.puma.com/']
 
     items_per_page = 12
