@@ -98,22 +98,12 @@ class GarageClothingSpider(CrawlSpider):
                 response, product)
             return self.get_request_or_product(product['meta']['multi_dimension_requests'], product)
         else:
-            for size in response.css('span'):
-                product['skus'].append(self.generate_product_sku(size, product))
+            product['skus'].append(self.generate_product_skus(product, response))
             return self.get_request_or_product(product['meta']['size_requests'], product)
 
     def parse_multi_dimension_product(self, response):
         product = response.meta['product']
-        color_code = response.meta['skus_color_code']
-        length = response.meta['length']
-
-        raw_sizes = json.loads(response.css('p::text').extract_first())
-
-        for raw_size in raw_sizes['skulist']:
-            sku_variant = self.generate_multi_dimension_product_sku(product, raw_size, length)
-            sku_variant['color'] = product['meta']['colors'].get(color_code)
-            product['skus'].append(sku_variant)
-
+        product['skus'].append(self.generate_multi_dimension_product_skus(response, product))
         return self.get_request_or_product(product['meta']['multi_dimension_requests'], product)
 
     def generate_image_requests(self, response, product):
@@ -181,27 +171,42 @@ class GarageClothingSpider(CrawlSpider):
         return multi_dimension_requests
 
     @staticmethod
-    def generate_product_sku(size, product):
-        variant = {
-            'color': product['meta']['colors'].get(size.css('span::attr(colour)').extract_first()),
-            'sku_id': size.css('span::attr(skuid)').extract_first(),
-            'size': size.css('span::text').extract_first(),
-            'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
-        }
+    def generate_product_skus(product, response):
+        variants = []
 
-        variant.update(product['meta']['price'])
-        return variant
+        for size in response.css('span'):
+            variant = {
+                'color': product['meta']['colors'].get(size.css('span::attr(colour)')
+                                                       .extract_first()),
+                'sku_id': size.css('span::attr(skuid)').extract_first(),
+                'size': size.css('span::text').extract_first(),
+                'is_in_stock': bool(int(size.css('span::attr(stocklevel)').extract_first()))
+            }
 
-    @staticmethod
-    def generate_multi_dimension_product_sku(product, raw_size, length):
-        variant = {
-            'sku_id': raw_size['skuId'],
-            'size': f"{length}/{raw_size['size']}",
-            'is_in_stock': True if raw_size['available'] == 'true' else False
-        }
+            variant.update(product['meta']['price'])
+            variants.append(variant)
 
-        variant.update(product['meta']['price'])
-        return variant
+        return variants
+
+    def generate_multi_dimension_product_skus(self, response, product):
+        color_code = response.meta['skus_color_code']
+        length = response.meta['length']
+        raw_sizes = self.get_raw_sizes(response)
+
+        variants = []
+
+        for size_sel in raw_sizes['skulist']:
+            variant = {
+                'sku_id': size_sel['skuId'],
+                'size': f"{length}/{size_sel['size']}",
+                'is_in_stock': True if size_sel['available'] == 'true' else False,
+                'color': product['meta']['colors'].get(color_code)
+            }
+
+            variant.update(product['meta']['price'])
+            variants.append(variant)
+
+        return variants
 
     @staticmethod
     def get_product_currency(response):
@@ -264,6 +269,10 @@ class GarageClothingSpider(CrawlSpider):
     @staticmethod
     def get_product_original_style(response):
         return response.css('#originalStyle::attr(value)').extract_first()
+
+    @staticmethod
+    def get_raw_sizes(response):
+        return json.loads(response.css('p::text').extract_first())
 
     @staticmethod
     def get_request_or_product(requests, product):
