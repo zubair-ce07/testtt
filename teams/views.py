@@ -3,7 +3,8 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from teams.models import Team, Player, Photo, LiveScore, BattingAverage, BowlingAverage
-from teams.serializers import TeamSerializer, PlayerSerializer, PlayerFormatSearchSerializer, BattingAverageSerializer
+from teams.serializers import TeamSerializer, PlayerSerializer, BattingAverageSerializer, \
+    PlayerInsightsSearchSerializer, BowlingAverageSerializer
 
 
 class TeamList(generics.ListAPIView):
@@ -31,7 +32,12 @@ class TeamPlayersView(generics.ListAPIView):
 
     def get_queryset(self):
         team_id = self.kwargs['pk']
-        return Player.objects.filter(teams__id=team_id)
+        queryset = Player.objects.filter(teams__id=team_id)
+        player_format = self.request.query_params.get('formats', None)
+        if player_format is not None:
+            query = {'{0}__{1}'.format('batting_averages__format', 'iexact'): player_format}
+            queryset = queryset.filter(**query).order_by('id')
+        return queryset
 
 
 class BattingAverageList(ListAPIView):
@@ -39,14 +45,19 @@ class BattingAverageList(ListAPIView):
     serializer_class = BattingAverageSerializer
 
 
-class PlayersFormatWiseView(APIView):
+class BowlingAverageList(ListAPIView):
+    queryset = BowlingAverage.objects.all()
+    serializer_class = BowlingAverageSerializer
+
+
+class PlayersInsightsView(APIView):
 
     def get(self, request, format=None):
-        serializer = PlayerFormatSearchSerializer(data={}, context={'search': request.query_params})
+        serializer = PlayerInsightsSearchSerializer(data={}, context={'search': request.query_params})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = PlayerFormatSearchSerializer(data={}, context={'search': request.query_params})
+        serializer = PlayerInsightsSearchSerializer(data={}, context={'search': request.query_params})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

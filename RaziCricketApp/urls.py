@@ -20,8 +20,8 @@ from django.conf.urls.static import static
 from django.contrib.auth.models import User
 from rest_framework import routers
 from articles.views import ArticleList, ArticleDetail, SearchResults
-from teams.views import TeamList, PlayerList, TeamDetail, PlayerDetail, TeamPlayersView, PlayersFormatWiseView, \
-    BattingAverageList
+from teams.views import TeamList, PlayerList, TeamDetail, PlayerDetail, TeamPlayersView, PlayersInsightsView, \
+    BattingAverageList, BowlingAverageList
 
 router = routers.DefaultRouter()
 
@@ -31,8 +31,9 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('admin/', admin.site.urls),
 
-    path('players/search/', PlayersFormatWiseView.as_view(), name='players-format'),
+    path('players/search/', PlayersInsightsView.as_view(), name='players-format'),
     path('batting_averages/', BattingAverageList.as_view(), name='batting-averages-list'),
+    path('bowling_averages/', BowlingAverageList.as_view(), name='bowling-averages-list'),
     path('home/search/', SearchResults.as_view(), name='search'),
     path('players/', PlayerList.as_view(), name='players-list'),
     path('teams/', TeamList.as_view(), name='teams-list'),

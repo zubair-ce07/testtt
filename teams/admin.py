@@ -16,13 +16,13 @@ class PhotoAdmin(admin.ModelAdmin):
 
 @admin.register(BattingAverage)
 class BattingAverageAdmin(admin.ModelAdmin):
-    list_display = ['id', 'player', 'average', 'hundreds', 'highest_score', 'is_active']
+    list_display = ['id', 'player', 'average', 'runs', 'strike_rate', 'hundreds', 'highest_score', 'is_active']
     list_filter = ['format']
 
 
 @admin.register(BowlingAverage)
 class BowlingAverageAdmin(admin.ModelAdmin):
-    list_display = ['id', 'player', 'wickets', 'economy', 'is_active']
+    list_display = ['id', 'player', 'wickets', 'economy', 'strike_rate', 'is_active']
     list_filter = ['format']
 
 
@@ -36,5 +36,5 @@ class TeamAdmin(admin.ModelAdmin):
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'ranking', 'playing_role', 'is_active']
-    list_filter = ['name', 'ranking']
+    list_filter = ['name', 'ranking', 'formats']
     search_fields = ['name']
