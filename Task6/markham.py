@@ -36,9 +36,9 @@ class MarkhamSpider(Spider):
                 item_detail = json.loads(response.body).get("data")
                 total_pages = item_detail["totalPages"]
 
-                for page_number in range(1, total_pages+1):
-                    yield Request(url.add_or_replace_parameter(response.url, "page", page_number),
-                                  callback=self.parse_pagination)
+                yield from [Request(url.add_or_replace_parameter(response.url, "page", page_number),
+                                    callback=self.parse_pagination)
+                            for page_number in range(1, total_pages + 1)]
 
     def _extract_categories(self, product_detail):
         for categories in product_detail["filterSets"]:
@@ -49,8 +49,8 @@ class MarkhamSpider(Spider):
         item_detail = json.loads(response.body).get("data")
         products = item_detail["products"]
 
-        for product in products:
-            yield Request(self.item_detail_request_t.format(product["id"]), callback=self.parse_item)
+        yield from [Request(self.item_detail_request_t.format(product["id"]), callback=self.parse_item)
+                    for product in products]
 
     def parse_item(self, response):
         item = ProductItem()
