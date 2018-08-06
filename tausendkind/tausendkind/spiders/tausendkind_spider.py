@@ -15,6 +15,7 @@ class Product(scrapy.Item):
     description = scrapy.Field()
     care = scrapy.Field()
     skus = scrapy.Field()
+    meta = scrapy.Field()
 
 
 class TausendkindSpider(scrapy.Spider):
@@ -70,19 +71,18 @@ class TausendkindSpider(scrapy.Spider):
         product['image_urls'] = self.get_product_images(response)
 
         variants = self.get_product_variants_urls(response)
-        variant_requests = self.get_variant_requests(variants, product)
-        return self.get_request(variant_requests) or product
+        product['meta'] = {'variant_requests': self.get_variant_requests(variants, product)}
+
+        return self.get_request_or_product(product['meta']['variant_requests'], product)
 
     def parse_product_variant(self, response):
         product = response.meta['product']
-        variant_requests = response.meta['variant_requests']
-
         raw_product = self.get_raw_product(response)
 
         product['image_urls'].extend(self.get_product_images(response))
         product['skus'].extend(self.get_product_skus(response, raw_product))
 
-        return self.get_request(variant_requests) or product
+        return self.get_request_or_product(product['meta']['variant_requests'], product)
 
     def get_variant_requests(self, variants, product):
         variant_requests = []
@@ -90,8 +90,6 @@ class TausendkindSpider(scrapy.Spider):
         for variant in variants:
             request = scrapy.Request(variant, self.parse_product_variant)
             request.meta['product'] = product
-            request.meta['variant_requests'] = variant_requests
-
             variant_requests.append(request)
 
         return variant_requests
@@ -221,5 +219,9 @@ class TausendkindSpider(scrapy.Spider):
         return json.loads(script)
 
     @staticmethod
-    def get_request(requests):
-        return requests.pop() if requests else None
+    def get_request_or_product(requests, product):
+        if requests:
+            return requests.pop()
+
+        del product['meta']
+        return product
