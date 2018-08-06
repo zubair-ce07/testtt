@@ -208,7 +208,7 @@ class MonsoonLondonParser(scrapy.Spider):
             'wedding': 'Women',
             'girl': 'Girls',
             'storm': 'Girls',
-            'boys': 'Boys',
+            'boy': 'Boys',
             'newborn': 'Kids',
             'baby': 'Kids'
         }
