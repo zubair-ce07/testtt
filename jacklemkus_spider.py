@@ -13,9 +13,10 @@ class JacklemkusSpider(CrawlSpider):
     allowed_domains = ['jacklemkus.com']
 
     listing_css = ['#nav .level0 > .menu-link', '.pagination .next']
+    product_css = '.row .product-image'
     rules = (
         Rule(LinkExtractor(restrict_css=listing_css, deny='how-to-order'), callback='parse'),
-        Rule(LinkExtractor(restrict_css='.row .product-image'), callback='parse_product'),
+        Rule(LinkExtractor(restrict_css=product_css), callback='parse_product'),
     )
 
     custom_settings = {
@@ -82,7 +83,7 @@ class JacklemkusSpider(CrawlSpider):
 
         if not product_sel:
             return []
-        
+
         product_details = json.loads(product_sel.extract_first().replace("\'", "\""))
         price = self.get_price(response)
 
