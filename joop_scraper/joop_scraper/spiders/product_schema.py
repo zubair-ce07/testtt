@@ -42,8 +42,8 @@ class Parser(scrapy.Spider):
             sku = self.common_sku.copy()
             if "unavailable" in option.css("::attr(class)").extract_first().split():
                 sku["out_of_stock"] = True
-            if self.previous_prices():
-                sku["previous_prices"] = self.previous_prices()
+            if self.previous_prices(option):
+                sku["previous_prices"] = self.previous_prices(option)
             skus[option.css("::attr(data-code)").extract_first()] = sku
         return skus
 
