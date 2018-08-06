@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for scrapybasic project
+# Scrapy settings for boohooMan project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,14 +9,14 @@
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'scrapybasic'
+BOT_NAME = 'boohooMan'
 
-SPIDER_MODULES = ['scrapybasic.spiders']
-NEWSPIDER_MODULE = 'scrapybasic.spiders'
+SPIDER_MODULES = ['boohooMan.spiders']
+NEWSPIDER_MODULE = 'boohooMan.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'scrapybasic (+http://www.yourdomain.com)'
+#USER_AGENT = 'boohooMan (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -47,13 +47,13 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'scrapybasic.middlewares.ScrapybasicSpiderMiddleware': 543,
+#    'boohooMan.middlewares.BoohoomanSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'scrapybasic.middlewares.ScrapybasicDownloaderMiddleware': 543,
+#    'boohooMan.middlewares.BoohoomanDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -65,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'scrapybasic.pipelines.ScrapybasicPipeline': 300,
+#    'boohooMan.pipelines.BoohoomanPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
