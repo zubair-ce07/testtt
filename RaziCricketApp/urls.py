@@ -18,12 +18,10 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.models import User
-from rest_framework import routers
 from articles.views import ArticleList, ArticleDetail, SearchResults
 from teams.views import TeamList, PlayerList, TeamDetail, PlayerDetail, TeamPlayersView, PlayersInsightsView, \
     BattingAverageList, BowlingAverageList
-
-router = routers.DefaultRouter()
+from users.views import UserList, UserDetail, ProfileList, ProfileDetail
 
 urlpatterns = [
     path('comments/', include('comments.urls')),
@@ -31,17 +29,20 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('admin/', admin.site.urls),
 
-    path('players/search/', PlayersInsightsView.as_view(), name='players-format'),
+    path('profiles/', ProfileList.as_view(), name='profile-list'),
+    path('profiles/<int:pk>/', ProfileDetail.as_view(), name='profile-detail'),
+    path('users/', UserList.as_view(), name='user-list'),
+    path('users/<int:pk>/', UserDetail.as_view(), name='user-detail'),
     path('batting_averages/', BattingAverageList.as_view(), name='batting-averages-list'),
     path('bowling_averages/', BowlingAverageList.as_view(), name='bowling-averages-list'),
-    path('home/search/', SearchResults.as_view(), name='search'),
+    path('players/search/', PlayersInsightsView.as_view(), name='players-format'),
+    path('players/<int:pk>/', PlayerDetail.as_view(), name='player-detail'),
     path('players/', PlayerList.as_view(), name='players-list'),
-    path('teams/', TeamList.as_view(), name='teams-list'),
     path('home/', ArticleList.as_view(), name='articles-list'),
+    path('home/search/', SearchResults.as_view(), name='search'),
     path('articles/<int:pk>/', ArticleDetail.as_view(), name='article-detail'),
+    path('teams/', TeamList.as_view(), name='teams-list'),
     path('teams/<int:pk>/', TeamDetail.as_view(), name='team-detail'),
     path('teams/<int:pk>/players/', TeamPlayersView.as_view(), name='team-players'),
-    path('players/<int:pk>/', PlayerDetail.as_view(), name='player-detail'),
-    path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

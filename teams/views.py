@@ -35,8 +35,7 @@ class TeamPlayersView(generics.ListAPIView):
         queryset = Player.objects.filter(teams__id=team_id)
         player_format = self.request.query_params.get('formats', None)
         if player_format is not None:
-            query = {'{0}__{1}'.format('batting_averages__format', 'iexact'): player_format}
-            queryset = queryset.filter(**query).order_by('id')
+            queryset = queryset.filter(batting_averages__format__iexact=player_format).order_by('id')
         return queryset
 
 

@@ -40,25 +40,25 @@ class PlayerInsightsSearchSerializer(serializers.Serializer):
         player_fields = [f.name for f in Player._meta.get_fields()]
         for key in query_dict:
             if key in exact_queries:
-                kwargs = {'{0}__{1}'.format(key, 'iexact'): query_dict[key]}
+                query_string = {'{0}__{1}'.format(key, 'iexact'): query_dict[key]}
                 if key == 'formats':
-                    kwargs = {'{0}__{1}'.format('batting_averages__format', 'iexact'): query_dict[key]}
-                queryset = queryset & queryset.filter(**kwargs).order_by('id')
+                    query_string = {'{0}__{1}'.format('batting_averages__format', 'iexact'): query_dict[key]}
+                queryset = queryset.filter(**query_string).order_by('id')
             else:
                 min_limit, max_limit = query_dict[key].split('_')
                 category = key.split('.')
                 if min_limit == '':
                     if key in player_fields:
-                        kwargs = {'{0}__{1}'.format(key, 'lte'): max_limit}
+                        query_string = {'{0}__{1}'.format(key, 'lte'): max_limit}
                     else:
-                        kwargs = {'{0}_{1}__{2}__{3}'.format(category[0], 'averages', category[1], 'lte'): max_limit}
-                    queryset = queryset & queryset.filter(**kwargs).order_by('id')
+                        query_string = {'{0}_{1}__{2}__{3}'.format(category[0], 'averages', category[1], 'lte'): max_limit}
+                    queryset = queryset.filter(**query_string).order_by('id')
                 elif max_limit == '':
                     if key in player_fields:
-                        kwargs = {'{0}__{1}'.format(key, 'gte'): min_limit}
+                        query_string = {'{0}__{1}'.format(key, 'gte'): min_limit}
                     else:
-                        kwargs = {'{0}_{1}__{2}__{3}'.format(category[0], 'averages', category[1], 'gte'): min_limit}
-                    queryset = queryset & queryset.filter(**kwargs).order_by('id')
+                        query_string = {'{0}_{1}__{2}__{3}'.format(category[0], 'averages', category[1], 'gte'): min_limit}
+                    queryset = queryset.filter(**query_string).order_by('id')
                 elif max_limit and min_limit:
                     if key in player_fields:
                         greater_query = {'{0}__{1}'.format(key, 'gte'): min_limit}
@@ -66,6 +66,6 @@ class PlayerInsightsSearchSerializer(serializers.Serializer):
                     else:
                         greater_query = {'{0}_{1}__{2}__{3}'.format(category[0], 'averages', category[1], 'gte'): min_limit}
                         lesser_query = {'{0}_{1}__{2}__{3}'.format(category[0], 'averages', category[1], 'lte'): max_limit}
-                    queryset = queryset & queryset.filter(**greater_query, **lesser_query).order_by('id')
+                    queryset = queryset.filter(**greater_query, **lesser_query).order_by('id')
 
         return PlayerSerializer(instance=queryset, many=True).data
