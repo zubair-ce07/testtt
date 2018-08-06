@@ -19,21 +19,31 @@ class Weather:
 
 
 class FileParser:
-    def __init__(self, directory_path):
+    def __init__(self, directory_path, argument):
         file_path = directory_path + '/'
         self.file_names = os.listdir(file_path)
+        if len(argument) > 4:
+            year_month = argument.split("/")
+            argument = year_month[0]
+            month = int(year_month[1])
+            if not 1 <= month <= 12:
+                raise ValueError('Input is invalid')
+        check_file = False
         for file in self.file_names:
-            read_file = csv.DictReader(open(file_path + file)
-                                       , skipinitialspace=True, delimiter=',')
-            for row in read_file:
-                    weather = Weather(row.get("PKT", "PKST"), row['Max TemperatureC'], row['Min TemperatureC'],
-                                      row['Max Humidity'], row['Mean Humidity'])
-                    WEATHER_READINGS.append(weather)
+            if argument in file:
+                check_file = True
+                read_file = csv.DictReader(open(file_path + file)
+                                           , skipinitialspace=True, delimiter=',')
+                for row in read_file:
+                        weather = Weather(row["PKT"], row['Max TemperatureC'], row['Min TemperatureC'],
+                                          row['Max Humidity'], row['Mean Humidity'])
+                        WEATHER_READINGS.append(weather)
+        if not check_file:
+            raise ValueError('Input is invalid')
 
 
 class ResultComputer:
-    @staticmethod
-    def give_year_data(year):
+    def give_year_data(self, year):
         highest_temp = 0
         highest_temp_date = 0
         lowest_temp = 100
@@ -65,8 +75,7 @@ class ResultComputer:
         }
         return weather_data
 
-    @staticmethod
-    def give_month_data(year_month):
+    def give_month_data(self, year_month):
         highest_cumulative = 0
         highest_counter = 0
         lowest_cumulative = 0
@@ -89,22 +98,19 @@ class ResultComputer:
 
 
 class GenerateReports:
-    @staticmethod
-    def generate_average_weather_report(highest_average, lowest_average, humidity_average):
+    def generate_average_weather_report(self, highest_average, lowest_average, humidity_average):
         print("Highest Average: {}C".format(highest_average))
         print("Lowest Average: {}C".format(lowest_average))
         print("Average Mean Humidity: {}C".format(humidity_average))
 
-    @staticmethod
-    def generate_extreme_weather_report(highest_temp, highest_temp_month, highest_temp_day,
+    def generate_extreme_weather_report(self, highest_temp, highest_temp_month, highest_temp_day,
                                         lowest_temp, lowest_temp_month, lowest_temp_day,
                                         humidity, humidity_month, humidity_day):
         print("Highest: {0}C on {1} {2}".format(highest_temp, highest_temp_month, highest_temp_day))
         print("Lowest: {0}C on {1} {2}".format(lowest_temp, lowest_temp_month, lowest_temp_day))
         print("Humidity: {0}C on {1} {2}".format(humidity, humidity_month, humidity_day))
 
-    @staticmethod
-    def generate_extreme_weather_report(weather_data):
+    def generate_extreme_weather_report(self, weather_data):
         print("Highest: {0}C on {1} {2}".format(weather_data["HighestTemp"], weather_data["HighestTempMonth"],
                                                 weather_data["HighestTempDay"]))
         print("Lowest: {0}C on {1} {2}".format(weather_data["LowestTemp"], weather_data["LowestTempMonth"],
@@ -112,28 +118,28 @@ class GenerateReports:
         print("Humidity: {0}C on {1} {2}".format(weather_data["Humidity"], weather_data["HumidityMonth"],
                                                  weather_data["HumidityDay"]))
 
-    @staticmethod
-    def generate_extreme_single_bar_report(year_month):
-        plus_sign_red = colored("+", 'red')
-        plus_sign_blue = colored("+", 'blue')
+    def generate_extreme_single_bar_report(self, year_month):
         print(calendar.month_name[int(year_month[-1:])] + " " + year_month[:4])
         for reading in WEATHER_READINGS:
             if year_month[0:4] == reading.date[0:4] and year_month[-1:] == reading.date[5:6] and reading.max_temp != '':
-                    print(reading.max_temp[7:] + ' ' + plus_sign_blue * int(reading.max_temp)
-                          + plus_sign_red * int(reading.min_temp) + " " + reading.max_temp + "C" + " "
-                          + reading.min_temp + "C")
+                n_plus_signs_red = '+' * int(reading.max_temp)
+                plus_sign_red = colored(n_plus_signs_red, 'red')
+                n_plus_signs_blue = '+' * int(reading.min_temp)
+                plus_sign_blue = colored(n_plus_signs_blue, 'blue')
+                print("{0} {1}{2} {3}C {4}C".format(reading.max_temp[7:], plus_sign_blue, plus_sign_red,
+                      reading.max_temp, reading.min_temp))
 
-    @staticmethod
-    def generate_extreme_double_bar_report(year_month):
-        plus_sign_red = colored("+", 'red')
-        plus_sign_blue = colored("+", 'blue')
+    def generate_extreme_double_bar_report(self, year_month):
         print(calendar.month_name[int(year_month[-1:])] + " " + year_month[:4])
         for reading in WEATHER_READINGS:
             if year_month[0:4] == reading.date[0:4] and year_month[-1:] == reading.date[5:6]\
-            and reading.max_temp != '' and reading.min_temp != '':
-                    print(reading.date[7:] + ' ' + plus_sign_blue * int(reading.max_temp) + " " +
-                          reading.max_temp + "C")
-                    print(reading.date[7:] + ' ' + plus_sign_red * int(reading.min_temp) + " " + reading.min_temp + "C")
+             and reading.max_temp != '' and reading.min_temp != '':
+                n_plus_signs_red = '+' * int(reading.max_temp)
+                plus_sign_red = colored(n_plus_signs_red, 'red')
+                n_plus_signs_blue = '+' * int(reading.min_temp)
+                plus_sign_blue = colored(n_plus_signs_blue, 'blue')
+                print("{0} {1} {2}C".format(reading.date[7:], plus_sign_red, reading.max_temp))
+                print("{0} {1} {2}C".format(reading.date[7:], plus_sign_blue, reading.min_temp))
 
 
 def main():
@@ -148,22 +154,38 @@ def main():
     if not os.path.isdir(args.dir_path):
         print("Error, file path not found")
     else:
-        file_parser = FileParser(args.dir_path)
+        try:
+            if args.extreme:
+                file_parser = FileParser(args.dir_path, args.extreme)
+                result_computer = ResultComputer()
+                generate_reports = GenerateReports()
+                weather_data = result_computer.give_year_data(args.extreme)
+                generate_reports.generate_extreme_weather_report(weather_data)
+            if args.average:
+                WEATHER_READINGS.clear()
+                file_parser = FileParser(args.dir_path, args.average)
 
-        result_computer = ResultComputer()
+                result_computer = ResultComputer()
 
-        generate_reports = GenerateReports()
+                generate_reports = GenerateReports()
+                highest_average, lowest_average, humidity_average = result_computer.give_month_data(args.average)
+                generate_reports.generate_average_weather_report(highest_average, lowest_average, humidity_average)
+            if args.bar:
+                WEATHER_READINGS.clear()
+                file_parser = FileParser(args.dir_path, args.bar)
 
-        if args.extreme:
-            weather_data = result_computer.give_year_data(args.extreme)
-            generate_reports.generate_extreme_weather_report(weather_data)
-        if args.average:
-            highest_average, lowest_average, humidity_average = result_computer.give_month_data(args.average)
-            generate_reports.generate_average_weather_report(highest_average, lowest_average, humidity_average)
-        if args.bar:
-            generate_reports.generate_extreme_double_bar_report(args.bar)
-        if args.bonus:
-            generate_reports.generate_extreme_single_bar_report(args.bonus)
+                generate_reports = GenerateReports()
+                generate_reports.generate_extreme_double_bar_report(args.bar)
+            if args.bonus:
+                WEATHER_READINGS.clear()
+                file_parser = FileParser(args.dir_path, args.bonus)
+
+                generate_reports = GenerateReports()
+                generate_reports.generate_extreme_single_bar_report(args.bonus)
+
+        except:
+            print("Input is invalid")
+            return
 
 
 if '__main__' == __name__:
