@@ -164,22 +164,22 @@ class MonsoonLondonParser(scrapy.Spider):
 
     @staticmethod
     def get_catalog_id(response):
-        catalog_id_xpath = '//form[@id="productFormBean"]//input[@name="catalogId"]/@value'
+        catalog_id_xpath = '//*[@id="productFormBean"]//input[@name="catalogId"]/@value'
         return response.xpath(catalog_id_xpath).extract_first()
 
     @staticmethod
     def get_category_path(response):
-        category_path_xpath = '//form[@id="productFormBean"]//input[@name="categoryPath"]/@value'
+        category_path_xpath = '//*[@id="productFormBean"]//input[@name="categoryPath"]/@value'
         return response.xpath(category_path_xpath).extract_first()
 
     @staticmethod
     def get_product_code(response):
-        product_code_xpath = '//form[@id="productFormBean"]//input[@name="productCode"]/@value'
+        product_code_xpath = '//*[@id="productFormBean"]//input[@name="productCode"]/@value'
         return response.xpath(product_code_xpath).extract_first()
 
     @staticmethod
     def get_component_uid(response):
-        component_uid_xpath = '//form[@id="productFormBean"]//input[@name="componentUid"]/@value'
+        component_uid_xpath = '//*[@id="productFormBean"]//input[@name="componentUid"]/@value'
         return response.xpath(component_uid_xpath).extract_first()
 
     @staticmethod
@@ -254,18 +254,17 @@ class MonsoonLondonCrawler(CrawlSpider):
     }
 
     def start_requests(self):
-        yield scrapy.Request(
-            'https://gepi.global-e.com/proxy/initsession/302?optCountry=US&optCurrency=USD&'
-            'webStoreCode=INT&webStoreInstanceCode=INT&_=153328738322',
-            headers=self.headers, callback=self.parse_currency_data)
+        currency_url = 'https://gepi.global-e.com/proxy/initsession/302?optCountry=US&' \
+                       'optCurrency=USD&webStoreCode=INT&webStoreInstanceCode=INT&_=153328738322'
+        yield scrapy.Request(currency_url, headers=self.headers, callback=self.parse_currency_data)
 
     def parse_currency_data(self, response):
         raw_currency = re.findall(r'\((.*)\)', response.text)[0]
         raw_currency = js2py.eval_js(f"var currency = {raw_currency};")
         self.product_parser.set_currency(raw_currency['currencyCode'], raw_currency['geFactor'])
+        landing_page_url = 'https://www.monsoonlondon.com/en-us/?redirected&skipRedirection=true'
 
-        return scrapy.Request('https://www.monsoonlondon.com/en-us/'
-                              '?redirected&skipRedirection=true', callback=self.parse)
+        return scrapy.Request(landing_page_url, callback=self.parse)
 
     def parse_listing(self, response):
         sub_category_code = response.css('#js-subcategory-code::attr(value)').extract_first()
