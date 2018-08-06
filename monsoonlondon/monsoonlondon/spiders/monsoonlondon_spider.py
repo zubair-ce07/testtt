@@ -280,16 +280,16 @@ class MonsoonLondonCrawler(CrawlSpider):
         return request
 
     def parse_subcategory(self, response):
-        raw_listing = json.loads(response.text)
+        raw_subcategory = json.loads(response.text)
         sub_category_code = response.meta['sub_category_code']
 
-        for product in raw_listing['results']:
+        for product in raw_subcategory['results']:
             request = scrapy.Request(response.urljoin(product['productUrl']),
                                      self.product_parser.parse)
             yield request
 
-        current_page = raw_listing['pagination']['currentPage']
-        total_pages = raw_listing['pagination']['totalPages']
+        current_page = raw_subcategory['pagination']['currentPage']
+        total_pages = raw_subcategory['pagination']['totalPages']
 
         if current_page < total_pages:
             yield self.get_subcategory_request(sub_category_code, current_page + 1)
