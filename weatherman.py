@@ -3,6 +3,7 @@ import calendar
 import copy
 import csv
 import datetime
+import glob
 import os
 import re
 from time import strptime
@@ -13,21 +14,15 @@ COLOR_PURPLE = '\033[35m'
 COLOR_DEFAULT = '\033[0m'
 
 
-def is_valid_directory(dirname):
-    if not os.path.isdir(dirname):
-        msg = '{} is not a directory'.format(dirname)
-        raise argparse.ArgumentTypeError(msg)
-    else:
-        return dirname
+def is_valid_directory(dir_name):
+    if os.path.isdir(dir_name):
+        return dir_name
 
 
 def is_valid_year_and_month(year_and_month):
     match = re.search('^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)/(1[0-2]|0[1-9]|\d)', year_and_month)
 
-    if not match:
-        msg = '{} is not a valid year/month'.format(year_and_month)
-        raise argparse.ArgumentTypeError(msg)
-    else:
+    if match:
         return year_and_month
 
 
@@ -44,24 +39,36 @@ class FileParser:
         self.required_files = []
         self.dir_path = dir_path
 
-        file_names = os.listdir(dir_path)
-        for file_name in file_names:
-            if required_year_arg == file_name[15:19]:
-                self.required_files.append(file_name)
+        if required_year_arg:
+            files_required = os.path.join(dir_path, 'Murree_weather_' + required_year_arg + '_???.txt')
+            files_required = glob.glob(files_required)
+            files_required = [os.path.basename(file) for file in files_required]
+            self.required_files.extend(files_required)
+
+        for required_year_and_month in required_years_and_months:
+            if not required_year_and_month:
                 continue
 
-            for required_year_and_month in required_years_and_months:
-                if not required_year_and_month:
-                    continue
+            required_year_and_month = required_year_and_month.split('/')
+            required_year = required_year_and_month[0]
+            required_month = calendar.month_name[int(required_year_and_month[1])]
 
-                required_year_and_month = required_year_and_month.split('/')
-                required_year = required_year_and_month[0]
-                required_month = required_year_and_month[1]
-                file_year_and_month = get_year_and_month(file_name)
-                file_year = file_year_and_month[0]
-                file_month = file_year_and_month[1]
-                if file_year == required_year and file_month == required_month:
-                    self.required_files.append(file_name)
+            files_required = os.path.join(dir_path, 'Murree_weather_' + required_year + '_' +
+                                          required_month[:3] + '.txt')
+
+            files_required = glob.glob(files_required)
+            files_required = [os.path.basename(file) for file in files_required]
+            if files_required:
+                self.required_files.extend(files_required)
+
+    def parse_file_row(self, file_data):
+        for row in file_data:
+            yield {
+                'Max TemperatureC': 0 if row['Max TemperatureC'] == '' else row['Max TemperatureC'],
+                'Min TemperatureC': 0 if row['Min TemperatureC'] == '' else row['Min TemperatureC'],
+                'Max Humidity': 0 if row['Max Humidity'] == '' else row['Max Humidity'],
+                'PKT': row['PKT']
+            }
 
     def parse_file_data(self):
         month_data = {}
@@ -70,13 +77,9 @@ class FileParser:
                 year, month = get_year_and_month(file_name)
                 file_data = csv.DictReader(file, skipinitialspace=True, delimiter=',')
 
-                for index, row in enumerate(file_data):
+                for index, parsed_row in enumerate(self.parse_file_row(file_data)):
                     index_string = str(index + 1)
-                    month_data[index_string] = {}
-                    month_data[index_string]['Max TemperatureC'] = row['Max TemperatureC']
-                    month_data[index_string]['Min TemperatureC'] = row['Min TemperatureC']
-                    month_data[index_string]['Max Humidity'] = row['Max Humidity']
-                    month_data[index_string]['PKT'] = row['PKT']
+                    month_data[index_string] = parsed_row
 
                 if year not in self.year_data.keys():
                     self.year_data[year] = {}
@@ -88,34 +91,20 @@ class FileParser:
 class ResultComputer:
 
     def compute_average_results(self, month_data):
-        sum_highest = sum_lowest = sum_humidity = 0
-        highest_temp_count = lowest_temp_count = humidity_count = 0
-        result = {}
-
-        for day in month_data.values():
-            if day['Max TemperatureC'] != '':
-                sum_highest += int(day['Max TemperatureC'])
-                highest_temp_count += 1
-
-            if day['Min TemperatureC'] != '':
-                sum_lowest += int(day['Min TemperatureC'])
-                lowest_temp_count += 1
-
-            if day['Max Humidity'] != '':
-                sum_humidity += int(day['Max Humidity'])
-                humidity_count += 1
-
-        result['Highest Average'] = sum_highest / highest_temp_count
-        result['Lowest Average'] = sum_lowest / lowest_temp_count
-        result['Average Humidity'] = sum_humidity / humidity_count
-
-        return result
+        sum_highest = sum(int(day['Max TemperatureC']) for day in month_data.values())
+        sum_lowest = sum(int(day['Min TemperatureC']) for day in month_data.values())
+        sum_humidity = sum(int(day['Max Humidity']) for day in month_data.values())
+        count = len(month_data)
+        return {
+            'Highest Average': sum_highest / count,
+            'Lowest Average': sum_lowest / count,
+            'Average Humidity': sum_humidity / count
+        }
 
     def compute_extreme_results(self, year_data):
         min_temp_list = []
         max_temp_list = []
         max_humidity_list = []
-        result = {}
 
         for month in year_data.values():
             value = max(month.items(), key=lambda x: int(x[1]['Max TemperatureC']))
@@ -129,21 +118,19 @@ class ResultComputer:
         lowest_temp_and_date = min(min_temp_list, key=lambda x: x[0])
         highest_humidity_and_date = max(max_humidity_list, key=lambda x: x[0])
 
-        result['Highest Temp'] = highest_temp_and_date[0]
-        result['Highest Temp Date'] = highest_temp_and_date[1]
-        result['Lowest Temp'] = lowest_temp_and_date[0]
-        result['Lowest Temp Date'] = lowest_temp_and_date[1]
-        result['Highest Humidity'] = highest_humidity_and_date[0]
-        result['Highest Humidity Date'] = highest_humidity_and_date[1]
-
-        return result
+        return {
+            'Highest Temp': highest_temp_and_date[0],
+            'Highest Temp Date': highest_temp_and_date[1],
+            'Lowest Temp': lowest_temp_and_date[0],
+            'Lowest Temp Date': lowest_temp_and_date[1],
+            'Highest Humidity': highest_humidity_and_date[0],
+            'Highest Humidity Date': highest_humidity_and_date[1]
+        }
 
     def compute_high_low_day_results(self, month_data):
         result_list = []
         for day in month_data.values():
-
-            if day['Max TemperatureC'] != '' and day['Min TemperatureC'] != '':
-                result_list.append((int(day['Max TemperatureC']), int(day['Min TemperatureC'])))
+            result_list.append((int(day['Max TemperatureC']), int(day['Min TemperatureC'])))
 
         return result_list
 
@@ -185,23 +172,33 @@ class ResultGenerator:
 
 def main():
     argument_parser = argparse.ArgumentParser()
-
-    argument_parser.add_argument('dir_path', type=is_valid_directory,
+    argument_parser.add_argument('dir_path',
+                                 type=is_valid_directory,
                                  help='Directory path of weather files')
     argument_parser.add_argument('-e', '--extreme-report',
                                  help='Generates extreme weather report, taking year as input')
-    argument_parser.add_argument('-a', '--average-report', type=is_valid_year_and_month,
+    argument_parser.add_argument('-a', '--average-report',
+                                 type=is_valid_year_and_month,
                                  help='Generates average weather report, taking year and month as input')
-    argument_parser.add_argument('-c', '--chart-report', type=is_valid_year_and_month,
+    argument_parser.add_argument('-c', '--chart-report',
+                                 type=is_valid_year_and_month,
                                  help='Generates two line reports, taking year and month as input')
-    argument_parser.add_argument('-b', '--bonus', type=is_valid_year_and_month,
+    argument_parser.add_argument('-b', '--bonus',
+                                 type=is_valid_year_and_month,
                                  help='Generates single line reports, taking year and month as input')
+
     args = argument_parser.parse_args()
 
-    file_parser = FileParser(args.dir_path, args.extreme_report, [args.average_report,
-                                                                  args.chart_report, args.bonus])
+    if not args.dir_path:
+        print('Invalid directory path')
+        return
+
+    file_parser = FileParser(args.dir_path, args.extreme_report,
+                             [args.average_report, args.chart_report, args.bonus])
+
     result_computer = ResultComputer()
     result_generator = ResultGenerator()
+
     file_parser.parse_file_data()
 
     if args.extreme_report:
