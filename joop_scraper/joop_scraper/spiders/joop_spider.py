@@ -9,10 +9,11 @@ class JoopSpider(CrawlSpider):
     start_urls = [
         'https://joop.com/de/de/'
     ]
-    rules = (Rule(LinkExtractor(restrict_css='.colors'), callback="parse_product", follow=True),
-             Rule(LinkExtractor(restrict_css='#products'), callback="parse", follow=True),
-             Rule(LinkExtractor(restrict_css='#mainnav'), callback="parse", follow=True),
+    rules = (Rule(LinkExtractor(restrict_css='.colors'), callback="parse_product"),
+             Rule(LinkExtractor(restrict_css=('#mainnav', '#products'))),
              )
 
     def parse_product(self, response):
         yield self.parser.parse(response)
+
+
