@@ -30,15 +30,17 @@ class GapParser:
         item['name'] = raw_item['fn']
         item['url'] = response.url
         item['gender'] = self._get_gender(raw_item['category'])
-        item["description"] = self._get_description(response)
-        item['care'] = self._get_care(response)
+        item["description"], item['care'] = self._get_care_and_description(response)
         item['image_urls'] = self._get_image_urls(response)
         item['skus'] = self._get_skus(response)
 
-        url = 'https://www.gap.cn/catalog/product/getstock?entityId=' + item['retailer_sku']
-        return scrapy.Request(url=url, callback=self._skus_availability, meta={'item': item})
+        return self.stock_status_request(response, item)
 
-    def _skus_availability(self, response):
+    def stock_status_request(self, response, item):
+        url = 'https://www.gap.cn/catalog/product/getstock?entityId=' + item['retailer_sku']
+        return scrapy.Request(url=url, callback=self.parse_stock_status, meta={'item': item})
+
+    def parse_stock_status(self, response):
         item = response.meta.get('item')
         stocks = json.loads(response.text)
         for sku in item['skus']:
@@ -47,22 +49,25 @@ class GapParser:
         return item
 
     def _get_gender(self, categories):
-        for text, gender in self.gender_map:
-            if text in categories:
+        for token, gender in self.gender_map:
+            if token in categories:
                 return gender
         return 'unisex-adults'
 
-    def _get_description(self, response):
-        description = response.css('#short_description').xpath(
-            'descendant-or-self::*/text()').extract()
-        return [self.clean_text(d) for d in description if len(d.strip()) > 1]
-
-    def _get_care(self, response):
+    def _get_care_and_description(self, response):
         css = '.pdp-mainImg td::text, #materialFeatures td::text'
-        cares = response.css(css).extract()
+        raw_care = response.css(css).extract()
+        raw_descp = response.css('#short_description').xpath(
+            'descendant-or-self::*/text()').extract()
+        care = []
+        for c in raw_care:
+            if any(word in c for word in self.care_words):
+                care.append(self.clean_text(c))
+            else:
+                raw_descp.append(c)
 
-        def is_care(c): return any(word in c for word in self.care_words)
-        return [self.clean_text(care) for care in cares if is_care(care)]
+        descp = [self.clean_text(d) for d in raw_descp if len(d.strip()) > 1]
+        return descp, care
 
     def _get_image_urls(self, response):
         return response.css('.more-views a::attr(href)').extract()
@@ -84,17 +89,28 @@ class GapParser:
         return {
             'color': color,
             'currency': self.currency,
-            'price': selector.css('::attr(data-final_price)').extract_first(),
-            'previous price': selector.css('::attr(data-price)').extract_first(),
+            'price': self._get_price(selector),
+            'previous price': self._get_previous_price(selector),
             'size': selector.css('::attr(data-title)').extract_first(),
             'id': selector.css('::attr(data-id)').extract_first()
         }
 
+    def _get_price(self, selector):
+        price = float(selector.css('::attr(data-final_price)').extract_first())
+        return self.to_cent(price)
+    
+    def _get_previous_price(self, selector):
+        previous_price = float(selector.css('::attr(data-price)').extract_first())
+        return self.to_cent(previous_price)
+
     def _extract_raw_product(self, response):
         xpath = '//script[contains(., "var product = {")]/text()'
         script = response.xpath(xpath).extract_first()
-        raw_item = re.search(r"({.*?})", self.clean_text(script)).group(1)
+        raw_item = re.findall(r"({.*?})", self.clean_text(script))[0]
         return demjson.decode(raw_item)
+
+    def to_cent(self, price):
+        return round(price*100)
 
     def clean_text(self, text):
         return re.sub(r'\s+', ' ', text)
