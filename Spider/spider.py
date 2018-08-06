@@ -8,40 +8,40 @@ from concurrent.futures import ThreadPoolExecutor, wait, as_completed
 
 
 class Spider:
-    def __init__(self, t_urls, request_delay, t_requests, s_type):
-        self.t_urls = t_urls
+    def __init__(self, total_urls, request_delay, total_requests, spider_type):
+        self.total_urls = total_urls
         self.request_delay = request_delay
         self.t_requests = t_requests
-        self.s_type = s_type
+        self.spider_type = spider_type
         self.web_url = "https://en.wikipedia.org/wiki/Main_Page"
         self.reports = Reports()
         html_doc = self.http_requester(self.web_url).text
-        next_urls = self.url_parser(html_doc)
-        if s_type is "r":
-            self.recursive_spider(self.t_urls, next_urls, i=1)
-            self.get_report(tasks=None)
+        nextotal_urls = self.url_parser(html_doc)
+        if spider_type is "r":
+            self.recursive_spider(self.total_urls, nextotal_urls, i=1)
+            self.get_report()
         loop = asyncio.get_event_loop()
-        if s_type is "c":
+        if spider_type is "c":
             tasks = []
-            for i in range(self.t_urls):
+            for i in range(self.total_urls):
                 tasks.append(asyncio.ensure_future(self.concurent_spider(
-                    next_urls[i])))
+                    nextotal_urls[i])))
             loop.run_until_complete(asyncio.wait(tasks))
             self.get_report(tasks)
-        if s_type is "p":
+        if spider_type is "p":
             loop.run_until_complete(self.parallel_spider(
-                next_urls))
+                nextotal_urls))
         loop.close()
 
-    def get_report(self, tasks):
-        if self.s_type is not "r":
+    def get_report(self, tasks=None):
+        if self.spider_type is not "r":
             for data in tasks:
                 self.reports.results["total_downloaded"] = (
                     self.reports.results["total_downloaded"]
                     + len(data.result().content))
         self.reports.results["average"] = (
                 self.reports.results["total_downloaded"]
-                / self.t_urls)   
+                / self.total_urls)   
         self.reports.results["requests"] = self.t_requests
         self.reports.get_spider_report()
     
@@ -61,19 +61,19 @@ class Spider:
             return
         else:
             time.sleep(self.request_delay)
-            r = self.http_requester(next_url[i])
+            request = self.http_requester(next_url[i])
             self.reports.results["total_downloaded"] = (
                     self.reports.results["total_downloaded"]
-                    + len(r.content))
+                    + len(request.content))
             self.recursive_spider(urls_to_visit - 1, next_url, i+1)
                 
     @asyncio.coroutine
-    async def parallel_spider(self, next_urls):
+    async def parallel_spider(self, nextotal_urls):
         pool = ThreadPoolExecutor(self.t_requests)
         futures = []
-        for i in range(self.t_urls):
+        for i in range(self.total_urls):
             await asyncio.sleep(self.request_delay)
-            futures.append(pool.submit(self.http_requester, next_urls[i]))
+            futures.append(pool.submit(self.http_requester, nextotal_urls[i]))
         self.get_report(as_completed(futures))
     
     @asyncio.coroutine
