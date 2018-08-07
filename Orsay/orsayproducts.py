@@ -10,7 +10,7 @@ class OrsayproductSpider(scrapy.Spider):
     start_urls = ['http://www.orsay.com/de-de/']
 
     def parse(self, response):
-        product_url = self.get_product_page(response)
+        product_url = self.get_products_page(response)
         yield scrapy.Request(
             url=product_url, callback=self.parse_categories)
 
@@ -25,29 +25,17 @@ class OrsayproductSpider(scrapy.Spider):
         next_page = self.get_next_page(response)
         if next_page:
             yield scrapy.Request(
-                    url=next_url, callback=self.parse_listings)
+                    url=next_page, callback=self.parse_listings)
         for url in product_detials_urls:
             yield scrapy.Request(
                     url=url, callback=self.parse_product)
-
+        
     def parse_product(self, response):
         product_imgs = self.get_product_imgs(response)
         product_details = self.get_product_details(response)
-        colors = self.get_product_colors(response)
-        sizes = self.get_product_sizes(response)
-        product_skus = {}
-        for size in sizes:
-            for color in colors:
-                product_skus = {
-                    product_details["productId"]+"_"+size: {
-                        "color": product_details["color"],
-                        "currency": product_details["currency_code"],
-                        "price": product_details["netPrice"],
-                        "size": product_details["size"]
-                    }
-                }
-        description = response.css(".product-details div::text").extract()
-        description = self.clean_text(description)
+        description = self.get_product_description(response)
+        product_skus = self.get_product_skus(response)
+        care_text = self.get_care_text(response)
         yield {
             "brand": "Orsay",
             "description": description,
@@ -55,8 +43,8 @@ class OrsayproductSpider(scrapy.Spider):
             "category": product_details["categoryName"],
             "name": product_details["name"],
             "skus": product_skus,
-            "url": response.request.url
-            # hande care for product too
+            "url": response.request.url,
+            "care": [care_text]
         }
 
     def clean_text(self, text):
@@ -66,7 +54,7 @@ class OrsayproductSpider(scrapy.Spider):
     def get_number(self, text_str):
         return re.findall(r'\d+', text_str)[0]
 
-    def get_product_page(self, response):
+    def get_products_page(self, response):
         product_urls = response.css(".level-1 a::attr(href)").extract()
         return ([url for url in product_urls if "produkte" in url])[0]
     
@@ -111,3 +99,31 @@ class OrsayproductSpider(scrapy.Spider):
     def get_product_sizes(self, response):
         sizes = response.css(".swatches a::text").extract()
         return [size.replace("\n", "") for size in sizes if size is not "\n"]
+
+    def get_product_description(self, response):
+        description = response.css(".product-details div::text").extract()
+        return self.clean_text(description)
+
+    def get_product_skus(self, response):
+        product_details = self.get_product_details(response)
+        colors = self.get_product_colors(response)
+        sizes = self.get_product_sizes(response)
+        product_skus = {}
+        for size in sizes:
+            for color in colors:
+                product_skus = {
+                    product_details["productId"]+"_"+size: {
+                        "color": product_details["color"],
+                        "currency": product_details["currency_code"],
+                        "price": product_details["netPrice"],
+                        "size": product_details["size"]
+                    }
+                }
+        return product_skus
+
+    def get_care_text(self, response):
+        care_text = response.css(
+                    ".product-material div::text,.product-material p::text "
+                    ).extract()
+        care_text.extend(response.css(".content-asset p::text").extract())
+        return self.clean_text(care_text)
