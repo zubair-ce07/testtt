@@ -2,7 +2,7 @@ import json
 
 from scrapy.spiders import Spider, Request
 
-from Task3.items import ProductItem
+from Task3.items import Product
 
 
 class ColcciSpider(Spider):
@@ -27,7 +27,7 @@ class ColcciSpider(Spider):
 
     def parse_item(self, response):
         selector = response.css(".descriptioncolContent")
-        item = ProductItem()
+        item = Product()
 
         item['retailer_sku'] = self.extract_retailer_sku(selector)
         item['name'] = self.extract_item_name(selector)

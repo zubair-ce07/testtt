@@ -1,7 +1,7 @@
 import scrapy
 
 
-class ProductItem(scrapy.Item):
+class Product(scrapy.Item):
     retailer_sku = scrapy.Field()
     name = scrapy.Field()
     brand = scrapy.Field()
