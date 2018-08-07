@@ -75,50 +75,8 @@ class WoolrichSpider(CrawlSpider):
     def _get_image_urls(self, response):
         return [set(response.css('.productView-image img::attr(src)').extract())]
 
-    # def _get_skus(self, response):
-    #     raw_item = self._extract_sku_pricing(response)
-    #     raw_item['color'] = self._extract_color(response)
-
-    #     sizes = response.css('.sizelist li a::attr(title)').extract()
-    #     size_ids = response.css('.sizelist li a::attr(id)').extract()
-    #     stock_levels = response.css('.sizelist li a::attr(stocklevel)').extract()
-
-    #     skus = []
-    #     for size, size_id, stock_level in zip(sizes, size_ids, stock_levels):
-    #         sku_item = raw_item.copy()
-    #         sku_item['size'] = size
-    #         sku_item['id'] = size_id
-
-    #         if stock_level == '0':
-    #             sku_item['out_of_stock'] = True
-
-    #         skus.append(sku_item)
-
-    #     if len(skus) == 1:
-    #         skus[0]['size'] = 'ONE-SIZE'
-    #     return skus
-
-    # def _extract_sku_pricing(self, response):
-    #     return {
-    #         'price': self._extract_price(response),
-    #         'previous price': self._extract_prev_price(response),
-    #         'currency': self._extract_currency(response)
-    #     }
-    
-    # def _extract_color(self, response):
-    #     return response.css('.colorName::text').extract_first().strip()
-    
-    # def _extract_currency(self, response):
-    #     return response.css('[itemprop="priceCurrency"]::attr(content)').extract_first()
-
-    # def _extract_price(self, response):
-    #     return response.css('[itemprop="price"]::attr(content)').extract_first()
-
-    # def _extract_prev_price(self, response):
-    #     previous_price = response.css('.strikethrough::text').extract_first()
-
-    #     if previous_price:
-    #         return self.clean_text(previous_price).split()[-1]
+    def _get_skus(self, response):
+        pass
 
     def clean_text(self, text):
             return re.sub(r'\s+', ' ', text)
