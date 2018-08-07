@@ -21,21 +21,15 @@ class LevisBrCrawlSpider(CrawlSpider):
     def parse(self, response):
         requests = super().parse(response)
         for request in requests:
-            trail = response.meta['trail'].copy()
-            trail.append(request.url)
+            trail = response.meta.get('trail', [])
+            trail.append(response.url)
+            print("trail", trail)
             request.meta['trail'] = trail
             yield request
 
     def start_requests(self):
         self.start_time = datetime.datetime.now()
-        requests = []
-
-        for url in self.start_urls:
-            request = scrapy.Request(url=url)
-            request.meta['trail'] = [url]
-            requests.append(request)
-
-        return requests
+        return super().start_requests()
 
     def parse_category(self, response):
         pages = response.css(".main script").re_first(".*pagecount_.*=\s(\d+)")
@@ -47,7 +41,7 @@ class LevisBrCrawlSpider(CrawlSpider):
         for page in range(1, pages + 1):
             request = scrapy.Request(response.urljoin(f"{request_url}{page}"), callback=self.parse_listings)
             trail = response.meta['trail'].copy()
-            trail.append(request.url)
+            trail.append(response.url)
             request.meta['trail'] = trail
             yield request
 
