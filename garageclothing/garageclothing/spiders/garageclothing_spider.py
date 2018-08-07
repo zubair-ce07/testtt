@@ -74,37 +74,37 @@ class GarageClothingSpider(CrawlSpider):
         product['meta'] = {
             'price': self.get_product_price(response),
             'colors': self.get_product_colors(response),
-            'image_requests': self.generate_image_requests(response, product)
+            'requests': self.generate_image_requests(response, product)
         }
 
-        return self.get_request_or_product(product['meta']['image_requests'], product)
+        return self.get_request_or_product(product)
 
     def parse_product_images(self, response):
         product = response.meta['product']
-        image_requests = product['meta']['image_requests']
+        image_requests = product['meta']['requests']
         product['image_urls'].extend(self.get_product_images(response))
 
         if image_requests:
             return image_requests.pop()
 
-        product['meta']['size_requests'] = self.generate_size_requests(product)
-        return self.get_request_or_product(product['meta']['size_requests'], product)
+        product['meta']['requests'] = self.generate_size_requests(product)
+        return self.get_request_or_product(product)
 
     def parse_product_sizes(self, response):
         product = response.meta['product']
 
         if response.css('#productLengths'):
-            product['meta']['multi_dimension_requests'] = self.generate_multi_dimension_requests(
+            product['meta']['requests'] = self.generate_multi_dimension_requests(
                 response, product)
-            return self.get_request_or_product(product['meta']['multi_dimension_requests'], product)
-        else:
-            product['skus'].append(self.generate_product_skus(product, response))
-            return self.get_request_or_product(product['meta']['size_requests'], product)
+            return self.get_request_or_product(product)
+
+        product['skus'].append(self.generate_product_skus(product, response))
+        return self.get_request_or_product(product)
 
     def parse_multi_dimension_product(self, response):
         product = response.meta['product']
         product['skus'].append(self.generate_multi_dimension_product_skus(response, product))
-        return self.get_request_or_product(product['meta']['multi_dimension_requests'], product)
+        return self.get_request_or_product(product)
 
     def generate_image_requests(self, response, product):
         colors = self.get_product_colors(response)
@@ -275,9 +275,9 @@ class GarageClothingSpider(CrawlSpider):
         return json.loads(response.css('p::text').extract_first())
 
     @staticmethod
-    def get_request_or_product(requests, product):
-        if requests:
-            return requests.pop()
+    def get_request_or_product(product):
+        if product['meta']['requests']:
+            return product['meta']['requests'].pop()
 
         del product['meta']
         return product
