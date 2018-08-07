@@ -11,4 +11,5 @@ class WoolrichItem(Item):
     description = Field()
     care = Field()
     image_urls = Field()
-    skus = Field()   
+    skus = Field()
+    meta = Field()
