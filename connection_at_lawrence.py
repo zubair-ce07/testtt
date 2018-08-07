@@ -16,9 +16,6 @@ class MixinConection(BaseMixinPPE):
     property_name = 'connection at lawrence'
     landlord_name = 'Asset Campus Housing'
 
-    login_email =  "paks@gmail.com"
-    login_password = "asd123"
-
 
 class ParseSpiderConection(PPBaseParseSpiderE, MixinConection):
     name = MixinConection.name + '-parse'
@@ -26,7 +23,5 @@ class ParseSpiderConection(PPBaseParseSpiderE, MixinConection):
 
 class CrawlSpiderConection(MixinConection, PPBaseCrawlSpiderE):
     name = MixinConection.name + '-crawl'
-    PPBaseCrawlSpiderE.login_email = MixinConection.login_email
-    PPBaseCrawlSpiderE.login_password = MixinConection.login_password
     parse_spider = ParseSpiderConection()
     deal_x = '//*[contains(@class, "pane-entity-field ") and contains(., "Special")]//section//text()'

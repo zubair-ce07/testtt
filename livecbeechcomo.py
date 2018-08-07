@@ -16,9 +16,6 @@ class MixinCooperBeech(BaseMixinPPE):
     property_name = 'Copper Beech at Columbia, MO'
     landlord_name = 'Asset Campus Housing'
 
-    login_email = "soft@gmail.com"
-    login_password = "asd123"
-
 
 class ParseSpiderCooperBeech(PPBaseParseSpiderE, MixinCooperBeech):
     name = MixinCooperBeech.name + '-parse'
@@ -26,7 +23,5 @@ class ParseSpiderCooperBeech(PPBaseParseSpiderE, MixinCooperBeech):
 
 class CrawlSpiderCooperBeech(MixinCooperBeech, PPBaseCrawlSpiderE):
     name = MixinCooperBeech.name + '-crawl'
-    PPBaseCrawlSpiderE.login_email = MixinCooperBeech.login_email
-    PPBaseCrawlSpiderE.login_password = MixinCooperBeech.login_password
     parse_spider = ParseSpiderCooperBeech()
     deal_x = '//*[contains(@class, "pane-entity-field ") and contains(., "Special")]//section//text()'
