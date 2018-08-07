@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import json
+import re
 
 
 class OrsayproductSpider(scrapy.Spider):
     name = 'orsayproducts'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/']
+
+    def clean_text(self, text):
+            text = [txt.strip() for txt in text]
+            text = list(filter(lambda txt: txt != '', text))
+            return text
+    
+    def get_number(self, text_str):
+        return re.findall(r'\d+', text_str)[0]
 
     def parse(self, response):
         product_urls = response.css(".level-1 a::attr(href)").extract()
@@ -15,25 +24,29 @@ class OrsayproductSpider(scrapy.Spider):
             url=product_url[0], callback=self.parse_categories)
 
     def parse_categories(self, response):
-        categories_links = response.css(
+        categories_urls = response.css(
             ".refinement-category-item a::attr(href)").extract()
-        for link in categories_links:
-            if response.request.url in categories_links:
-                yield scrapy.Request(
-                    url=link, callback=self.parse_listings)
-            else:
-                yield scrapy.Request(
-                    url=link, callback=self.parse_categories)
+        for url in categories_urls:
+            yield scrapy.Request(
+                url=url+"?sz=72", callback=self.parse_listings)
 
     def parse_listings(self, response):
         product_detials_urls = response.css(
             ".grid-tile .product-image a::attr(href)").extract()
         product_detials_urls = [response.urljoin(url)
                                 for url in product_detials_urls]
+        total_products = response.css(
+            ".load-more-progress-label::text").extract()[1]
+        total_products = self.get_number(total_products)
+        listed_products = self.get_number(response.url)
+        if int(total_products) < int(listed_products):
+            next_url = response.url.replace(
+                listed_products, str(int(listed_products)+72))
+            yield scrapy.Request(
+                    url=next_url, callback=self.parse_listings)
         for link in product_detials_urls:
             yield scrapy.Request(
                     url=link, callback=self.parse_product)
-        # handle pagination here
 
     def parse_product(self, response):
         product_imgs = response.css(".productthumbnail::attr(src)").extract()
@@ -58,7 +71,7 @@ class OrsayproductSpider(scrapy.Spider):
                     }
                 }
         description = response.css(".product-details div::text").extract()
-        description = self.clean_input(description)
+        description = self.clean_text(description)
         yield {
             "brand": "Orsay",
             "description": description,
@@ -70,7 +83,4 @@ class OrsayproductSpider(scrapy.Spider):
             # hande care for product too
         }
 
-        def clean_input(self, input):
-            input = [desc.strip() for desc in input]
-            input = list(filter(lambda desc: desc != '', input))
-            return input
+        
