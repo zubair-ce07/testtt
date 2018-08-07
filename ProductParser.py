@@ -66,19 +66,17 @@ class ProductParser(Spider):
         return [json.loads(url).get('zoomimage') for url in raw_urls]
 
     def extract_sku_model(self, response):
-        sku_model_no = response.css('::attr(data-products)').extract_first()
-        sku_model_no = re.findall(r'-?\d+\.?\d*', sku_model_no)[0]
-        return sku_model_no
+        sku_model_no = json.loads(response.css('::attr(data-additional)').extract_first())
+        return list(sku_model_no.keys())[0]
 
     def extract_skus(self, response):
-        skus = []
-        for size in response.css('.product-info .selectmenu :not([selected]):not(.out-of-stock)'):
-            skus.append({
-                "price": self.extract_price(response),
-                "currency": self.extract_currency(response),
-                "colour": self.extract_colors(response)[0],
-                "size": size.css('::text').extract_first().strip(),
-                "sku_id": self.extract_sku_model(size)
-            })
+        skus = dict()
+        for size in response.css('.product-info .selectmenu :not([selected]):not(span)'):
+            sku_details = dict()
+            sku_details['color'] = self.extract_colors(response)[0]
+            sku_details['currency'] = self.extract_currency(response)
+            sku_details['price'] = self.extract_price(response)
+            sku_details['size'] = size.css('::text').extract_first().strip()
+            skus[self.extract_sku_model(size)] = sku_details
         return skus
 
