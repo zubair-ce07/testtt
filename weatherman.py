@@ -18,26 +18,36 @@ class Weather:
         self.mean_humidity = mean_humidity
 
 
+class Validate:
+    def __init__(self, argument):
+        if len(argument) > 4:
+            year_month = argument.split("/")
+            month = int(year_month[1])
+            if not 1 <= month <= 12:
+                raise ValueError('Input is invalid')
+
+
 class FileParser:
     def __init__(self, directory_path, argument):
         file_path = directory_path + '/'
         self.file_names = os.listdir(file_path)
-        if len(argument) > 4:
-            year_month = argument.split("/")
-            argument = year_month[0]
-            month = int(year_month[1])
-            if not 1 <= month <= 12:
-                raise ValueError('Input is invalid')
         check_file = False
-        for file in self.file_names:
-            if argument in file:
+        argument = argument.split("/")[0]
+        for file_name in self.file_names:
+            if argument in file_name:
                 check_file = True
-                read_file = csv.DictReader(open(file_path + file)
+                read_file = csv.DictReader(open(file_path + file_name)
                                            , skipinitialspace=True, delimiter=',')
                 for row in read_file:
-                        weather = Weather(row["PKT"], row['Max TemperatureC'], row['Min TemperatureC'],
+                        weather = Weather(row.get("PKT", row.get("PKST")), row['Max TemperatureC'], row['Min TemperatureC'],
                                           row['Max Humidity'], row['Mean Humidity'])
-                        WEATHER_READINGS.append(weather)
+                        check_item = False
+                        for readings in range(0, len(WEATHER_READINGS)):
+                            if weather.date == WEATHER_READINGS[readings].date:
+                                check_item = True
+                        if not check_item:
+                            WEATHER_READINGS.append(weather)
+
         if not check_file:
             raise ValueError('Input is invalid')
 
@@ -53,25 +63,28 @@ class ResultComputer:
         for reading in WEATHER_READINGS:
             if year == reading.date[0:4] and reading.max_temp != '' and reading.min_temp != '' \
                     and reading.max_humidity != '':
-                    if int(reading.max_temp) > highest_temp:
-                        highest_temp = int(reading.max_temp)
-                        highest_temp_date = reading.date
-                    if int(reading.min_temp) < lowest_temp:
-                        lowest_temp = int(reading.min_temp)
-                        lowest_temp_date = reading.date
-                    if int(reading.max_humidity) > humidity:
-                        humidity = int(reading.max_humidity)
-                        humidity_date = reading.date
-        weather_data = {
-            "HighestTemp": str(highest_temp),
-            "HighestTempMonth": calendar.month_name[int(highest_temp_date[5:6])],
-            "HighestTempDay": highest_temp_date[7:],
-            "LowestTemp": str(lowest_temp),
-            "LowestTempMonth": calendar.month_name[int(lowest_temp_date[5:6])],
-            "LowestTempDay": lowest_temp_date[7:],
-            "Humidity": str(humidity),
-            "HumidityMonth": calendar.month_name[int(humidity_date[5:6])],
-            "HumidityDay": humidity_date[7:]
+                if int(reading.max_temp) > highest_temp:
+                    highest_temp = int(reading.max_temp)
+                    highest_temp_date = reading.date
+                    highest_temp_date_split = highest_temp_date.split("-")
+                if int(reading.min_temp) < lowest_temp:
+                    lowest_temp = int(reading.min_temp)
+                    lowest_temp_date = reading.date
+                    lowest_temp_date_split = lowest_temp_date.split("-")
+                if int(reading.max_humidity) > humidity:
+                    humidity = int(reading.max_humidity)
+                    humidity_date = reading.date
+                    humidity_date_split = humidity_date.split("-")
+            weather_data = {
+                "HighestTemp": str(highest_temp),
+                "HighestTempMonth": calendar.month_name[int(highest_temp_date[5:6])],
+                "HighestTempDay": highest_temp_date_split[2],
+                "LowestTemp": str(lowest_temp),
+                "LowestTempMonth": calendar.month_name[int(lowest_temp_date[5:6])],
+                "LowestTempDay": lowest_temp_date_split[2],
+                "Humidity": str(humidity),
+                "HumidityMonth": calendar.month_name[int(humidity_date[5:6])],
+                "HumidityDay": humidity_date_split[2]
         }
         return weather_data
 
@@ -119,9 +132,11 @@ class GenerateReports:
                                                  weather_data["HumidityDay"]))
 
     def generate_extreme_single_bar_report(self, year_month):
-        print(calendar.month_name[int(year_month[-1:])] + " " + year_month[:4])
+        year_month = year_month.split("/")
+        print(calendar.month_name[int(year_month[1])] + " " + year_month[0])
         for reading in WEATHER_READINGS:
-            if year_month[0:4] == reading.date[0:4] and year_month[-1:] == reading.date[5:6] and reading.max_temp != '':
+            date_split = reading.date.split("-")
+            if year_month[0] == date_split[0] and year_month[1] == date_split[1] and reading.max_temp != '':
                 n_plus_signs_red = '+' * int(reading.max_temp)
                 plus_sign_red = colored(n_plus_signs_red, 'red')
                 n_plus_signs_blue = '+' * int(reading.min_temp)
@@ -130,10 +145,12 @@ class GenerateReports:
                       reading.max_temp, reading.min_temp))
 
     def generate_extreme_double_bar_report(self, year_month):
-        print(calendar.month_name[int(year_month[-1:])] + " " + year_month[:4])
+        year_month = year_month.split("/")
+        print(calendar.month_name[int(year_month[1])] + " " + year_month[0])
         for reading in WEATHER_READINGS:
-            if year_month[0:4] == reading.date[0:4] and year_month[-1:] == reading.date[5:6]\
-             and reading.max_temp != '' and reading.min_temp != '':
+            date_split = reading.date.split("-")
+            if year_month[0] == date_split[0] and year_month[1] == date_split[1]\
+               and reading.max_temp != '' and reading.min_temp != '':
                 n_plus_signs_red = '+' * int(reading.max_temp)
                 plus_sign_red = colored(n_plus_signs_red, 'red')
                 n_plus_signs_blue = '+' * int(reading.min_temp)
@@ -157,29 +174,29 @@ def main():
         try:
             if args.extreme:
                 file_parser = FileParser(args.dir_path, args.extreme)
+                validate = Validate(args.extreme)
                 result_computer = ResultComputer()
                 generate_reports = GenerateReports()
                 weather_data = result_computer.give_year_data(args.extreme)
                 generate_reports.generate_extreme_weather_report(weather_data)
+
             if args.average:
-                WEATHER_READINGS.clear()
+                validate = Validate(args.average)
                 file_parser = FileParser(args.dir_path, args.average)
-
                 result_computer = ResultComputer()
-
                 generate_reports = GenerateReports()
                 highest_average, lowest_average, humidity_average = result_computer.give_month_data(args.average)
                 generate_reports.generate_average_weather_report(highest_average, lowest_average, humidity_average)
-            if args.bar:
-                WEATHER_READINGS.clear()
-                file_parser = FileParser(args.dir_path, args.bar)
 
+            if args.bar:
+                validate = Validate(args.bar)
+                file_parser = FileParser(args.dir_path, args.bar)
                 generate_reports = GenerateReports()
                 generate_reports.generate_extreme_double_bar_report(args.bar)
-            if args.bonus:
-                WEATHER_READINGS.clear()
-                file_parser = FileParser(args.dir_path, args.bonus)
 
+            if args.bonus:
+                validate = Validate(args.bonus)
+                file_parser = FileParser(args.dir_path, args.bonus)
                 generate_reports = GenerateReports()
                 generate_reports.generate_extreme_single_bar_report(args.bonus)
 
