@@ -28,9 +28,12 @@ class Parser(scrapy.Spider):
         self.product["description"] = self.get_description()
         self.product["care"] = self.get_care()
         self.product["image_urls"] = self.get_image_urls()
-        self.product["skus"] = self.get_skus()
-        self.product["price"] = self.get_price()
-        self.product["currency"] = self.get_currency()
+        if not self.is_outofstock():
+            self.product["skus"] = self.get_skus()
+            self.product["price"] = self.get_price()
+            self.product["currency"] = self.get_currency()
+        else:
+            self.product["out_of_stock"] = True
         product_or_url = [self.product]
         product_or_url.extend(self.colour_urls())
         return product_or_url
@@ -94,3 +97,6 @@ class Parser(scrapy.Spider):
 
     def colour_urls(self):
         return self.response.css('.colors a::attr(href)').extract()
+
+    def is_outofstock(self):
+        return self.response.css('meta[itemprop="availability"][content="out_of_stock"]')
