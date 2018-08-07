@@ -80,16 +80,16 @@ class ResultComputer:
                     humidity = int(reading.max_humidity)
                     humidity_date = reading.date
                     humidity_date_split = humidity_date.split("-")
-            weather_data = {
-                "HighestTemp": str(highest_temp),
-                "HighestTempMonth": calendar.month_name[int(highest_temp_date[5:6])],
-                "HighestTempDay": highest_temp_date_split[2],
-                "LowestTemp": str(lowest_temp),
-                "LowestTempMonth": calendar.month_name[int(lowest_temp_date[5:6])],
-                "LowestTempDay": lowest_temp_date_split[2],
-                "Humidity": str(humidity),
-                "HumidityMonth": calendar.month_name[int(humidity_date[5:6])],
-                "HumidityDay": humidity_date_split[2]
+        weather_data = {
+            "HighestTemp": str(highest_temp),
+            "HighestTempMonth": calendar.month_name[int(highest_temp_date[5:6])],
+            "HighestTempDay": highest_temp_date_split[2],
+            "LowestTemp": str(lowest_temp),
+            "LowestTempMonth": calendar.month_name[int(lowest_temp_date[5:6])],
+            "LowestTempDay": lowest_temp_date_split[2],
+            "Humidity": str(humidity),
+            "HumidityMonth": calendar.month_name[int(humidity_date[5:6])],
+            "HumidityDay": humidity_date_split[2]
         }
         return weather_data
 
@@ -121,19 +121,12 @@ class GenerateReports:
         print("Lowest Average: {}C".format(lowest_average))
         print("Average Mean Humidity: {}%".format(humidity_average))
 
-    def generate_extreme_weather_report(self, highest_temp, highest_temp_month, highest_temp_day,
-                                        lowest_temp, lowest_temp_month, lowest_temp_day,
-                                        humidity, humidity_month, humidity_day):
-        print("Highest: {0}C on {1} {2}".format(highest_temp, highest_temp_month, highest_temp_day))
-        print("Lowest: {0}C on {1} {2}".format(lowest_temp, lowest_temp_month, lowest_temp_day))
-        print("Humidity: {0}C on {1} {2}".format(humidity, humidity_month, humidity_day))
-
     def generate_extreme_weather_report(self, weather_data):
         print("Highest: {0}C on {1} {2}".format(weather_data["HighestTemp"], weather_data["HighestTempMonth"],
                                                 weather_data["HighestTempDay"]))
         print("Lowest: {0}C on {1} {2}".format(weather_data["LowestTemp"], weather_data["LowestTempMonth"],
                                                weather_data["LowestTempDay"]))
-        print("Humidity: {0}C on {1} {2}".format(weather_data["Humidity"], weather_data["HumidityMonth"],
+        print("Humidity: {0}% on {1} {2}".format(weather_data["Humidity"], weather_data["HumidityMonth"],
                                                  weather_data["HumidityDay"]))
 
     def generate_extreme_single_bar_report(self, year_month):
