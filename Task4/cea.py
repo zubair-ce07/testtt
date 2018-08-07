@@ -62,7 +62,7 @@ class CeaSpider(Spider):
         item = response.meta["item"]
 
         item['category'] = self.extract_category(item_detail)
-        item['gender'] = self.extract_gender(response.url, item['name'], item['category'])
+        item['gender'] = self.detect_gender(response.url, item['name'], item['category'])
         item['image_urls'] = self.extract_image_urls(item_detail)
         item['description'] = self.extract_description(item_detail)
 
@@ -77,7 +77,7 @@ class CeaSpider(Spider):
     def extract_brand(self, response):
         return response.css('td.Marca::text').extract_first()
 
-    def extract_gender(self, url, item_name, item_categories):
+    def detect_gender(self, url, item_name, item_categories):
         lookup_text = (item_name + url + ' '.join(item_categories)).lower()
 
         for gender_term in self.gender_map.keys():
