@@ -64,7 +64,7 @@ class PumaSpider(Spider):
         item['url'] = response.url
         item['price'] = self.extract_price(response)
         item['gender'] = self.detect_gender(response)
-        item["category"] = self.get_categories(response)
+        item["category"] = self.extract_categories(response)
         item['description'] = self.extract_description(response)
         item['skus'] = self.extract_skus(response)
         product_ids = self.extract_product_options(response).get("base_image")
@@ -112,7 +112,7 @@ class PumaSpider(Spider):
         raw_price = raw_price if raw_price else response.css('span.price::text').re_first('[\d+,]+')
         return float(raw_price.replace(',', '')) * 100
 
-    def get_categories(self, response):
+    def extract_categories(self, response):
         item_gender = self.detect_gender(response)
         item_type = response.meta.get("product_type")
         item_menu_category = response.meta.get("menu_category")
