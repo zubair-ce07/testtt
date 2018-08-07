@@ -78,7 +78,7 @@ class CeaSpider(Spider):
         return response.css('td.Marca::text').extract_first()
 
     def detect_gender(self, url, item_name, item_categories):
-        lookup_text = (item_name + url + ' '.join(item_categories)).lower()
+        lookup_text = ' '.join([item_name] + [url] + item_categories).lower()
 
         for gender_term in self.gender_map.keys():
             if gender_term in lookup_text:
