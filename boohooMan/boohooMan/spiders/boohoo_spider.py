@@ -3,6 +3,7 @@ import time
 import re
 from boohooMan.items import BoohoomanItem
 
+
 class BoohooSpiders(scrapy.Spider):
     name = "boohoo"
     start_urls = [
@@ -11,6 +12,7 @@ class BoohooSpiders(scrapy.Spider):
 
     def parse(self, response):
         for item in response.css('li.has-submenu'):
+
             for subitem in item.css('li a'):
                 # print(subitem.css('a::attr(href)').extract_first())
                 # print(subitem.css('a::text').extract_first())
@@ -22,17 +24,12 @@ class BoohooSpiders(scrapy.Spider):
     def parse_url(self, response):
         for item in response.css('div.product-tile'):
             product_item = BoohoomanItem()
-            product_item['name'] = item.css('div.product-name a::text').extract_first()
+            product_item['lang'] = response.css('html::attr(lang)').extract_first()
+            product_item['name'] = item.css('div.product-name a::text').extract_first().strip("\n")
             product_item['date'] = time.time()
             item_url = response.urljoin(item.css(
                         'div.product-image a::attr(href)')
                         .extract_first())
-            product_item['standard_price'] = item.css(
-                         'div.product-pricing \
-                          span.product-standard-price::text').extract_first()
-            product_item['sales_price'] = item.css(
-                          'div.product-pricing \
-                           span.product-sales-price::text').extract_first()
             product_item['colors'] = item.css(
                       'div.product-swatches \
                        li.product-swatch-item  a::attr(title)').extract(),
@@ -48,28 +45,66 @@ class BoohooSpiders(scrapy.Spider):
         product_item = response.meta['item']
         product_item['retailer_sku'] = response.css('div.product-number span::text').extract_first()
         product_item['retailer'] = 'boohooman-us'
-        colors_items_list = response.css('div.product-variations ul.color li.selectable:not(.selected) span::attr(data-href) ').extract()
+        colors_items_list = response.css('div.product-variations ul.color \
+                                         li.selectable:not(.selected) \
+                                         span::attr(data-href) ').extract()
+        list_item = []
+        count = 0
         for item_url in colors_items_list:
-            yield scrapy.Request(item_url+"&format=ajax", callback=self.parse_item_size,meta={'item': product_item })
+            count += 1
+            yield scrapy.Request(item_url+"&format=ajax",
+                                 callback=self.parse_item_size,
+                                 meta={'item': product_item,
+                                       'list_item': list_item,
+                                        'count': count,
+                                        'len_list': len(colors_items_list)
+                                      }
+                                 )
 
     def parse_item_size(self,response):
         product_item = response.meta['item']
-        size_items_list = response.css('div.product-variations ul.size li.selectable:not(.selected) span::attr(data-href) ').extract()
+        list_item = response.meta['list_item']
+        count = response.meta['count']
+        len_list = response.meta['len_list']
+        size_items_list = response.css('div.product-variations ul.size \
+                                        li.selectable:not(.selected) \
+                                        span::attr(data-href) ').extract()
         for item_url in size_items_list:
-            yield scrapy.Request(item_url+"&format=ajax", callback=self.parse_item_info,meta={'item': product_item })
+            yield scrapy.Request(item_url + "&format=ajax",
+                                 callback=self.parse_item_info,
+                                 meta={'item': product_item,
+                                       'list_item': list_item,
+                                        'count': count,
+                                        'len_list': len_list
+                                      }
+                                 )
 
     def parse_item_info(self,response):
-        item_color = response.css('div.product-variations ul.color li.selected span::attr(title) ').extract()
-        item_size = response.css('div.product-variations ul.size li.selected span::attr(data-variation-values) ').extract()
-        item_color = re.sub('.*: ' , '' , item_color[0] )
-        print("gggggggggggggggggggggggggggggggggggggggggggggggggggggggggg")
-        print(item_size[0])
-        # item_size =  dict(item_size)
+        list_item = response.meta['list_item']
+        count = response.meta['count']
+        len_list = response.meta['len_list']
+        item_color = response.css('div.product-variations ul.color li.selected span::attr(title) ').extract_first()
+        item_size = response.css('div.product-variations ul.size li.selected span::attr(title)').extract_first()
+        item_sales_price = response.css('div.product-price span.price-sales::text ').extract_first()
+        item_std_price = response.css('div.product-price span.price-standard::text ').extract_first()
+        item_currency = response.css('div.product-price meta::attr(content) ').extract_first()
+        item_color = re.sub('.*: ' , '' , item_color)
+        item_size = re.sub('.*: ' , '' , item_size)
+        product_item = response.meta['item']
+        item = {
+             'colour': item_color,
+             'item_size': item_size,
+             'price': item_sales_price,
+             'previous_prices': item_std_price,
+             'currency': item_currency,
+             }
+        product_item['item_detail'] = item
+        list_item.append(item)
+        if count == len_list:
+            yield {
+              'list': list_item
+            }
 
-        yield{
-             # 'item_color': item_color,
-             'item_size': item_size
-        }
 
 #
 #
