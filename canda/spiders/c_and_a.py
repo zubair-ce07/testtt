@@ -18,25 +18,28 @@ class WhiteStuffSpider(CrawlSpider):
                                 tags=('li',), attrs=('data-url',)), follow=True),
              Rule(LinkExtractor(restrict_css='.product-tile.product-tile--quickmenu'), callback='parse_item'))
 
+    currency_translation = {'$': 'US Dollar',
+                            '€': "EURO"}
     color_parameters = (('storeId', '10154'), ('langId', '-3'))
     color_url_t = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?'
-    currency = 'EURO'
 
     def parse_color(self, response):
         item = response.meta.get('item')
         remaining_requests = response.meta.get('requests')
+        currency = response.meta.get('currency')
         selector = Selector(text=json.loads(response.text)['html'][0]['product-stage'])
         item['image_urls'] += self.get_image_urls(selector)
-        item['skus'] += self.get_skus(selector, item['retailer_sku'])
+        item['skus'] += self.get_skus(selector, item['retailer_sku'], currency)
         if not remaining_requests:
             return item
         request_to_yield = remaining_requests.pop()
         request_to_yield.meta['requests'] = remaining_requests
         request_to_yield.meta['item'] = item
+        request_to_yield.meta['currency'] = self.get_currency(selector)
         return request_to_yield
 
-    def get_skus(self, selector, retailer_sku):
-        sku_common = {'currency': self.currency}
+    def get_skus(self, selector, retailer_sku, currency):
+        sku_common = {'currency': currency}
         sku_common['new_price'], sku_common['old_price'] = self.get_prices(selector)
         color = self.get_color(selector)
         sku_common['color'] = color
@@ -63,7 +66,8 @@ class WhiteStuffSpider(CrawlSpider):
         item['description'] = self.get_description(response)
         item['care'] = self.get_care(response)
         item['image_urls'] = self.get_image_urls(response)
-        item['skus'] = self.get_skus(response, retailer_sku)
+        currency = self.get_currency(response)
+        item['skus'] = self.get_skus(response, retailer_sku, currency)
         current_color_id = self.get_current_color_id(response)
         color_ids = self.get_color_ids(response)
         color_ids.remove(current_color_id)
@@ -74,6 +78,7 @@ class WhiteStuffSpider(CrawlSpider):
         color_request = color_requests.pop()
         color_request.meta['requests'] = color_requests
         color_request.meta['item'] = item
+        color_request.meta['currency'] = currency
         return color_request
 
     def make_color_requests(self, color_ids, product_id):
@@ -100,6 +105,15 @@ class WhiteStuffSpider(CrawlSpider):
         prices = re.findall(r"\D*(\d+)\D*", price)
         price = prices[0] + prices[1] or '00'
         return int(price)
+
+    def get_currency(self, response):
+        currency_symbol = self.get_currency_symbol(response)
+        return self.currency_translation.get(currency_symbol)
+
+    @staticmethod
+    def get_currency_symbol(response):
+        return re.findall(
+            r"[^\w\d_\s,.\\]", response.css('.product-stage__price span::text').extract()[:2][0], re.UNICODE)[0]
 
     @staticmethod
     def get_brand_name(response):
