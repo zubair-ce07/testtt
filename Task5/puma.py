@@ -63,7 +63,7 @@ class PumaSpider(Spider):
         item['brand'] = 'puma'
         item['url'] = response.url
         item['price'] = self.extract_price(response)
-        item['gender'] = self.extract_gender(response)
+        item['gender'] = self.detect_gender(response)
         item["category"] = self.get_categories(response)
         item['description'] = self.extract_description(response)
         item['skus'] = self.extract_skus(response)
@@ -98,7 +98,7 @@ class PumaSpider(Spider):
     def extract_name(self, response):
         return response.css('.product-name span::text').extract_first()
 
-    def extract_gender(self, response):
+    def detect_gender(self, response):
         name = (self.extract_name(response) + response.url).lower()
 
         for gender in self.gender_map.keys():
@@ -113,7 +113,7 @@ class PumaSpider(Spider):
         return float(raw_price.replace(',', '')) * 100
 
     def get_categories(self, response):
-        item_gender = self.extract_gender(response)
+        item_gender = self.detect_gender(response)
         item_type = response.meta.get("product_type")
         item_menu_category = response.meta.get("menu_category")
         return [item_gender, item_type, item_menu_category]
