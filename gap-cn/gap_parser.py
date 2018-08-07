@@ -38,7 +38,7 @@ class GapParser:
         return self.stock_status_request(response, item)
 
     def stock_status_request(self, response, item):
-        url = f'https://www.gap.cn/catalog/product/getstock?entityId={item['retailer_sku']}'
+        url = f'https://www.gap.cn/catalog/product/getstock?entityId={item["retailer_sku"]}'
         return scrapy.Request(url=url, callback=self.parse_stock_status, meta={'item': item})
 
     def parse_stock_status(self, response):
