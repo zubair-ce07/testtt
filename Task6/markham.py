@@ -2,7 +2,7 @@ import json
 import re
 from scrapy import Spider, Request
 from w3lib import url
-from Task6.items import ProductItem
+from Task6.items import Product
 
 
 class MarkhamSpider(Spider):
@@ -49,7 +49,7 @@ class MarkhamSpider(Spider):
                     for product in products]
 
     def parse_item(self, response):
-        item = ProductItem()
+        item = Product()
         item_detail = json.loads(response.body)
         if item_detail.get("productType") == "ColourSize":
             item["retailer_sku"] = item_detail.get("productId")
