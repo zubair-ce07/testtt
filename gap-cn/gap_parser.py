@@ -30,14 +30,15 @@ class GapParser:
         item['name'] = raw_item['fn']
         item['url'] = response.url
         item['gender'] = self._get_gender(raw_item['category'])
-        item["description"], item['care'] = self._get_care_and_description(response)
+        item['care'] = self._get_care(response)
+        item["description"] = self._get_description(response)
         item['image_urls'] = self._get_image_urls(response)
         item['skus'] = self._get_skus(response)
 
         return self.stock_status_request(response, item)
 
     def stock_status_request(self, response, item):
-        url = 'https://www.gap.cn/catalog/product/getstock?entityId=' + item['retailer_sku']
+        url = f'https://www.gap.cn/catalog/product/getstock?entityId={item['retailer_sku']}'
         return scrapy.Request(url=url, callback=self.parse_stock_status, meta={'item': item})
 
     def parse_stock_status(self, response):
@@ -54,20 +55,23 @@ class GapParser:
                 return gender
         return 'unisex-adults'
 
-    def _get_care_and_description(self, response):
+    def _get_care(self, response):
         css = '.pdp-mainImg td::text, #materialFeatures td::text'
-        raw_care = response.css(css).extract()
-        raw_descp = response.css('#short_description').xpath(
+        care = response.css(css).extract()
+        return [self.clean_text(c) for c in care if self.is_care(c)]
+    
+    def _get_description(self, response):
+        description = response.css('#short_description').xpath(
             'descendant-or-self::*/text()').extract()
-        care = []
-        for c in raw_care:
-            if any(word in c for word in self.care_words):
-                care.append(self.clean_text(c))
-            else:
-                raw_descp.append(c)
 
-        descp = [self.clean_text(d) for d in raw_descp if len(d.strip()) > 1]
-        return descp, care
+        css = '.pdp-mainImg td::text, #materialFeatures td::text'
+        raw_description = response.css(css).extract()
+        for d in raw_description:
+            if not self.is_care(d):
+                description.append(d)
+        
+        return [self.clean_text(d) for d in description if len(d.strip()) > 1]
+
 
     def _get_image_urls(self, response):
         return response.css('.more-views a::attr(href)').extract()
@@ -81,7 +85,7 @@ class GapParser:
         return skus
 
     def _get_color_skus(self, response, color, color_id):
-        css = '.size_list_{} a'.format(color_id)
+        css = f'.size_list_{color_id} a'
         sizes_sel = response.css(css)
         return [self._make_sku(color, sel) for sel in sizes_sel]
 
@@ -108,6 +112,9 @@ class GapParser:
         script = response.xpath(xpath).extract_first()
         raw_item = re.findall(r"({.*?})", self.clean_text(script))[0]
         return demjson.decode(raw_item)
+
+    def is_care(self, care_text):
+        return any(word in care_text for word in self.care_words)
 
     def to_cent(self, price):
         return round(price*100)
