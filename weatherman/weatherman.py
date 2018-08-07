@@ -1,39 +1,119 @@
-import os
 import argparse
+import glob
 
 
-def max_value_func(new_value, old_value, new_date, old_date):
+def arg_parse():
     """
-    The max_value_func() compares two variables.
-    Args:
-        new_value: This is the new value.
-        old_value: This is the currently greatest value.
-        new_date:  This is the new value.
-        old_date:  This is the date of th greatest value.
+    Two arguments are taken from the user and stored in 'report_no' and 'data_dir'.
+    nargs='?' is used to prevent error in case one or no argument is provided.
     Returns:
-        It returns the greater value along with it's corresponding date.
-
+        It returns the 'report_no' and 'data_dir'.
     """
-    if new_value > old_value:
-        return new_value, new_date
+    parser = argparse.ArgumentParser()
+    parser.add_argument('report', nargs='?')
+    parser.add_argument('data', nargs='?')
+    args = parser.parse_args()
+    report_no = args.report
+    data_dir = args.data
+
+    return report_no, data_dir
+
+
+def file_list_func(data_dir):
+    """
+    The file_list_func() returns a sorted file list in a given directory.
+    If the given directory does no exists, it returns an empty array.
+    args:
+        data_dir: This is the location of the files.
+    return:
+        file_list: This is the list of all files.
+    """
+    file_list = (glob.glob(data_dir + "/*.txt"))
+    file_list.sort()
+    return file_list
+
+
+def display_report_table(report_no):
+    """
+    The display_report_table() displays the report table according to the 'report _no'.
+    args:
+        report_no: This is the report number provided by the user
+    """
+    if report_no is '1':
+        print('\033[1m' + '\n1. Annual Max/Min Temp:\n' + '\033[0m')
+        print('\tYear\tMax Temp\tMin Temp\tMax Humidity\tMin Humidity\n\t' + '-' * 68)
+
+    elif report_no is '2':
+        print('\033[1m' + '\n2. Hottest day of each year\n' + '\033[0m')
+        print('\tYear\tDate\t\tTemp\n\t' + '-' * 28)
+
+
+def max_temp_func(new_temp, old_temp, new_date, old_date):
+    """
+    The max_temp_func() compares two temperature values and returns the greater one.
+    args:
+        new_temp: This is the new temperature value to be compared.
+        old_temp: This is currently the highest temperature value of the year.
+        new_date: This is the date on which the new temperature occurred.
+        old_date: This is the date of the greatest temperature.
+    returns:
+        new_temp: 'new_temp is returned if it is greater than 'old_temp'.
+        old_temp: 'old_temp is returned if it is greater than 'new_temp'.
+        new_date: This is returned with 'new_temp'.
+        old_date: This is returned with 'new_temp'.
+    """
+    if new_temp > old_temp:
+        return new_temp, new_date
     else:
-        return old_value, old_date
+        return old_temp, old_date
 
 
-def min_value_func(new_value, old_value):
+def min_temp_func(new_temp, old_temp):
     """
-    The min_value_func() is similar to the max_value_func.
-    Args:
-        new_value: This is the new value.
-        old_value: This is the currently minimum value.
-    Returns:
-        It returns the smallest value.
-
+    The min_temp_func() compares two temperature values and returns the smaller one.
+    args:
+        new_temp: This is the new temperature value to be compared.
+        old_temp: This is currently the lowest temperature value of the year.
+    returns:
+        new_temp: 'new_temp is returned if it is smaller than 'old_temp'.
+        old_temp: 'old_temp is returned if it is smaller than 'new_temp'.
     """
-    if new_value < old_value:
-        return new_value
+    if new_temp < old_temp:
+        return new_temp
     else:
-        return old_value
+        return old_temp
+
+
+def max_humid_func(new_humid, old_humid):
+    """
+    The max_humid_func() compares two humidity values and returns the greater one.
+    args:
+        new_humid: This is the new humidity value to be compared.
+        old_humid: This is currently the greatest humidity value of the year.
+    returns:
+        new_humid: 'new_humid is returned if it is greater than 'old_humid'.
+        old_humid: 'old_humid is returned if it is greater than 'new_humid'.
+    """
+    if new_humid > old_humid:
+        return new_humid
+    else:
+        return old_humid
+
+
+def min_humid_func(new_humid, old_humid):
+    """
+    The min_humid_func() compares two humidity values and returns the smaller one.
+    args:
+        new_humid: This is the new humidity value to be compared.
+        old_humid: This is currently the lowest humidity value of the year.
+    returns:
+        new_humid: 'new_humid is returned if it is smaller than 'old_humid'.
+        old_humid: 'old_humid is returned if it is smaller than 'new_humid'.
+    """
+    if new_humid < old_humid:
+        return new_humid
+    else:
+        return old_humid
 
 
 def reset_val_func():
@@ -46,135 +126,104 @@ def reset_val_func():
     return 0, 1000, '0'
 
 
+def temp_calc_func(f, max_temp, min_temp, max_humid, min_humid, date):
+    """
+    The temp_calc_func() calculates the highest and lowest temperature and humidity in a given file.
+    args:
+        f: This is the file in which all values are present.
+        max_temp: This is the maximum temperature.
+        min_temp: This is the minimum temperature.
+        max_humid: This is the maximum humidity.
+        min_humid: This is the minimum humidity.
+        date: This is the date on which 'max_temp' occurred.
+    returns:
+        max_temp: This is the updated maximum temperature.
+        min_temp: This is the updated minimum temperature.
+        max_humid: This is the updated maximum humidity.
+        min_humid: This is the updated minimum humidity.
+        date: This is the updated date on which 'max_temp' occurred.
+    """
+    for line in f:
+        arr_line = [x for x in line.split(',')]
+        if arr_line[0][0].isdigit():
+            if arr_line[1].isdigit():
+                max_temp, date = max_temp_func(int(arr_line[1]), max_temp, arr_line[0], date)
+
+            if arr_line[3].isdigit():
+                min_temp = min_temp_func(int(arr_line[3]), min_temp)
+
+            if arr_line[7].isdigit():
+                max_humid = max_humid_func(int(arr_line[7]), max_humid)
+
+            if arr_line[9].isdigit():
+                min_humid = min_humid_func(int(arr_line[9]), min_humid)
+
+    return max_temp, min_temp, max_humid, min_humid, date
+
+
+def display_report(report_no, max_temp, min_temp, max_humid, min_humid, date, last_year):
+    if report_no is '1':
+        print('\t{}\t{}\t\t{}\t\t{}\t\t{}'.format(last_year, max_temp, min_temp, max_humid,
+                                                  min_humid))
+    elif report_no is '2':
+        format_date = [x for x in date.split('-')]
+        print('\t{}\t{}/{}/{}\t{}'.format(last_year, format_date[2], format_date[1],
+                                          format_date[0], max_temp))
+
+
+def no_para_func():
+    """
+    The no_para_func() displays the programs usage information when the report number is invalid
+    or the directory provided is wrong.
+    :return:
+    """
+    print("Usage: weatherman\n<report#>\n<data_dir>\n\n[Report #]\n1 for Annual Max/Min Temperature\n"
+          "2 for Hottest day of each year\n\n[data_dir]\n"
+          "Directory containing weather data files\n")
+
+
 def main():
-    """
-    Two arguments are taken from the user and stored in 'report_no' and 'data_dir'.
-    nargs='?' is used to prevent error in case one or no argument is provided.
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('report', nargs='?')
-    parser.add_argument('data', nargs='?')
-    args = parser.parse_args()
-    report_no = args.report
-    data_dir = args.data
+    # The report number and data directory is provided by the user.
+    report_no, data_dir = arg_parse()
 
-    # If no argument is provided, a random 'string value' is stored in 'data_dir'
-    # as an empty string will give error when used in built-in functions.
-    if data_dir is None:
-        data_dir = 'string value'
+    # All files from the directory are stored in 'file_list' in form of list.
+    file_list = file_list_func(data_dir)
 
-    # Two arrays for month and year are declared to access files within the directory
-    month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    year = [1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011]
+    # Check if the report number is valid and the directory provided is correct.
+    if file_list and report_no in ('1', '2'):
 
-    # Two counters for 'month' and 'year' array are declared and set to 0.
-    month_count = 0
-    year_count = 0
+        # Store the first year of the data in 'last_year' for future reference.
+        last_year = file_list[0][33: 37]
 
-    # All values are reset using 'reset_val_func()'.
-    max_temp, min_temp, useless = reset_val_func()
-    max_humid, min_humid, useless = reset_val_func()
-    max_temp, useless, date = reset_val_func()
+        # Displays the report table according to the 'report _no'.
+        display_report_table(report_no)
 
-    # checking if directory exists.
-    if os.path.isdir(data_dir):
+        # Reset the values of the variables.
+        max_temp, min_temp, date = reset_val_func()
+        max_humid, min_humid, useless = reset_val_func()
 
-        # Checking the report number.
-        if report_no is '1':
-            print('\033[1m' + '\n1. Annual Max/Min Temp:\n' + '\033[0m')
-            print('\tYear\tMax Temp\tMin Temp\tMax Humidity\tMin Humidity\n\t' + '-' * 68)
+        # Open all files in the list.
+        for file in file_list:
+            with open(file) as f:
 
-            # The size of year array is 16 so a loop is set for that limit.
-            while year_count < 16:
+                # Store current file year in 'year'.
+                year = f.name[33: 37]
 
-                # The size of month array is 12.
-                if month_count < 12:
+                # If the next year has started, display result of previous year and reset values.
+                if year not in last_year:
+                    display_report(report_no, max_temp, min_temp, max_humid, min_humid, date, last_year)
+                    last_year = year
 
-                    # If current file does not exists, continue to next month.
-                    if not os.path.isfile('{}/lahore_weather_{}_{}.txt'.format(data_dir, year[year_count],
-                                                                               month[month_count])):
-                        month_count += 1
-                        continue
-
-                    # If current file exists, read it line by line and store it in 'arr_line'.
-                    with open('{}/lahore_weather_{}_{}.txt'.format(data_dir, year[year_count], month[month_count]),
-                              'r') as f:
-                        for line in f:
-                            arr_line = [x for x in line.split(',')]
-
-                            # Check if the first value in the line (date) is a digit. The rest of the lines are ignored.
-                            if arr_line[0][0].isdigit():
-
-                                # The maximum temperature is stored in 'max_temp'. Since date is not required
-                                # in this report, it is stored in 'useless'.
-                                if arr_line[1].isdigit():
-                                    max_temp, useless = max_value_func(int(arr_line[1]), max_temp, useless, useless)
-
-                                # The minimum temperature is stored in 'mim_temp'.
-                                if arr_line[3].isdigit():
-                                    min_temp = min_value_func(int(arr_line[3]), min_temp)
-
-                                if arr_line[7].isdigit():
-                                    max_humid, useless = max_value_func(int(arr_line[7]), max_humid, useless, useless)
-
-                                if arr_line[9].isdigit():
-                                    min_humid = min_value_func(int(arr_line[9]), min_humid)
-
-                    # Increment month_counter to open next month's file and close this one.
-                    month_count += 1
-                    f.close()
-
-                # If month_count exceeds limit, it means all the files for this year have been checked.
-                # Display the values, increment year count to move to next year and reset remaining values.
-                if month_count > 11:
-                    print('\t{}\t{}\t\t{}\t\t{}\t\t{}'.format(year[year_count], max_temp, min_temp, max_humid,
-                                                              min_humid))
-                    month_count = 0
-                    year_count += 1
-                    max_temp, min_temp, useless = reset_val_func()
+                    max_temp, min_temp, date = reset_val_func()
                     max_humid, min_humid, useless = reset_val_func()
 
-        # Check report number.
-        elif report_no is '2':
-            print('\033[1m' + '\n2. Hottest day of each year\n' + '\033[0m')
-            print('\tYear\tDate\t\tTemp\n\t' + '-' * 28)
-
-            while year_count < 16:
-
-                if month_count < 12:
-
-                    if not os.path.isfile('{}/lahore_weather_{}_{}.txt'.format(data_dir, year[year_count],
-                                                                               month[month_count])):
-                        month_count += 1
-                        continue
-
-                    with open("{}/lahore_weather_{}_{}.txt".format(data_dir, year[year_count], month[month_count]),
-                              'r') as f:
-                        for line in f:
-                            arr_line = [x for x in line.split(',')]
-
-                            if arr_line[0][0].isdigit():
-
-                                # The maximum temperature is stored in 'max_temp' and it's corresponding date in 'date'.
-                                if arr_line[1].isdigit():
-                                    max_temp, date = max_value_func(int(arr_line[1]), max_temp, arr_line[0], date)
-
-                    month_count += 1
-                    f.close()
-
-                if month_count > 11:
-                    format_date = [x for x in date.split('-')]
-                    print('\t{}\t{}/{}/{}\t{}'.format(year[year_count], format_date[2], format_date[1], format_date[0],
-                                                      max_temp))
-                    month_count = 0
-                    year_count += 1
-                    max_temp, useless, date = reset_val_func()
-    # If the directory provided does not exist, report number is invalid of fewer parameters are provided
-    # then display usage information.
-    if not os.path.isdir(data_dir) or report_no not in ('1', '2'):
-        print("Usage: weatherman\n<report#>\n<data_dir>\n\n[Report #]\n1 for Annual Max/Min Temperature\n"
-              "2 for Hottest day of each year\n\n[data_dir]\n"
-              "Directory containing weather data files\n")
+                # If it is current year, update the values.
+                elif year in last_year:
+                    max_temp, min_temp, max_humid, min_humid, date = temp_calc_func(f, max_temp, min_temp, max_humid,
+                                                                                    min_humid, date)
+    # If invalid report number or the wromg directory is provided, run no_para_func()
+    else:
+        no_para_func()
 
 
 if __name__ == "__main__":
