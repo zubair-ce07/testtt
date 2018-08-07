@@ -1,7 +1,7 @@
-import re
 import json
+import re
 from scrapy import Spider
-from piazza.items import SkuItem, ProductItem
+from piazza.items import ProductItem
 
 
 class ProductParser(Spider):
@@ -9,113 +9,90 @@ class ProductParser(Spider):
 
     def parse(self, response):
         product = ProductItem(brand="Piazzaitalia", market="IT", retailer='piazzaitalia-it', currency="EUR")
-        product['retailer_sku'] = self.extract_retailer_sku(response)
-        product['trail'] = self.extract_trail(response)
-        product['gender'] = self.extract_gender(response)
-        product['category'] = self.extract_category(response)
+        product['retailer_sku'] = self.product_id(response)
+        product['trail'] = self.product_trail(response)
+        product['gender'] = self.product_gender(response)
+        product['category'] = self.product_category(response)
         product['url'] = response.url
-        product['name'] = self.extract_prod_name(response)
-        product['description'] = self.extract_description(response)
-        product['care'] = self.extract_care(response)
-        product['image_urls'] = self.extract_image_urls(response)
-        product['skus'] = self.generate_skus(response)
-        product['price'] = self.extract_price(response)
+        product['name'] = self.product_name(response)
+        product['description'] = self.product_description(response)
+        product['care'] = self.product_care(response)
+        product['image_urls'] = self.image_urls(response)
+        product['skus'] = self.raw_skus(response)
+        product['price'] = self.product_price(response)
         product['spider_name'] = self.name
         return product
 
-    def extract_retailer_sku(self, response):
-        return response.css('.price-box.price-final_price::attr(data-product-id)').get()
+    def product_id(self, response):
+        return response.css('.price-box.price-final_price::attr(data-product-id)').extract_first()
 
-    def extract_trail(self, response):
+    def product_trail(self, response):
         trail_urls = response.meta.get('trail', ['https://www.piazzaitalia.it/'])
-        trails = []
-        for trail_url in trail_urls:
-            name = trail_url.split("/")[-1]
-            trails.append([name.split('.')[0], trail_url])
-        return trails
+        return [[url.split("/")[-1].split(".")[0], url] for url in trail_urls]
 
-    def extract_gender(self, response):
+    def product_gender(self, response):
+        possible_genders = {'donna': 'women', 'uomo': 'men', 'kids': 'kids'}
         gender_urls = response.meta.get('trail', ['https://www.piazzaitalia.it/'])
-        for gender_url in gender_urls:
-            if 'donna' in gender_url:
-                return 'woman'
-            elif 'uomo' in gender_url:
-                return 'man'
-            elif 'kids' in gender_url:
-                return 'kid'
-            else:
-                return 'not defined'
+        gender_urls.extend(response.css('.breadcrumbs *::attr(href)').extract())
+        for url in gender_urls:
+            gender = re.findall('(donna|uomo|kids)', url)
+            if gender:
+                return possible_genders[gender[0]]
+        return 'unisex'
 
-    def extract_category(self, response):
-        categories = response.css('.breadcrumbs li a::text, .breadcrumbs li strong::text').getall()
-        return [category.strip() for category in categories]
+    def product_category(self, response):
+        categories = response.css('.breadcrumbs *::text').extract()
+        filtered_categories = [category.strip() for category in categories]
+        return list(filter(None, filtered_categories))
 
-    def extract_prod_name(self, response):
-        return response.css('.base::text').get()
+    def product_name(self, response):
+        return response.css('.base::text').extract_first()
 
-    def extract_description(self, response):
-        return response.css('.product.attibute.description p::text').getall()
+    def product_description(self, response):
+        return response.css('.product.attibute.description p::text').extract()
 
-    def extract_care(self, response):
-        return response.css('.col.data::text').getall()[-1:]
+    def product_care(self, response):
+        return response.css('.col.data::text').extract()[-1:]
 
-    def extract_image_urls(self, response):
-        images_x = response.xpath(
-            '//script[@type="text/x-magento-init" and contains(text(), "ThumbSlider")]/text()')
-        images_script = images_x.get()
-        images_script_json = json.loads(images_script)
-        images_urls = images_script_json["[data-gallery-role=bitbull-gallery]"]["Bitbull_ImageGallery/js/bitbullGallery"]["data"]
-        return [image_urls["full"] for image_urls in images_urls]
+    def image_urls(self, response):
+        raw_images = response.xpath('//script[contains(text(), "ThumbSlider")]/text()').extract_first()
+        raw_images = json.loads(raw_images)
+        image_urls = raw_images["[data-gallery-role=bitbull-gallery]"]["Bitbull_ImageGallery/js/bitbullGallery"]["data"]
+        return [url["full"] for url in image_urls]
 
-    def generate_skus(self, response):
-        generated_skus = {}
-        sku_json_script = self.extract_json_script(response)
-        if sku_json_script:
-            skus_index = sku_json_script["index"]
+    def raw_skus(self, response):
+        skus = {}
+        product_data_ = self.product_details(response)
+        if product_data_:
+            product_data = self.map_attributes(product_data_)
+            skus_index = product_data_["index"]
             for index in skus_index.keys():
-                generated_skus[index] = self.extract_sku_features(sku_json_script, index)
-        return generated_skus
+                price = product_data_["optionPrices"][index]["finalPrice"]["amount"]
+                old_price = product_data_["optionPrices"][index]["oldPrice"]["amount"]
+                size = product_data[index]["pitalia_size"]
+                color = product_data[index]["color"]
+                skus[index] = {'price': price, 'currency': 'EUR', 'old_price': old_price, 'size': size, 'color': color}
+        return skus
 
-    def extract_sku_features(self, sku_json_script, index):
-        size_id, color_id, available_s_id, available_c_id = self.extract_available_color_size(sku_json_script, index)
-        sku_item = SkuItem()
-        sku_item['price'] = sku_json_script["optionPrices"][index]["finalPrice"]["amount"]
-        sku_item['currency'] = "EUR"
-        sku_item['previous_price'] = sku_json_script["optionPrices"][index]["oldPrice"]["amount"]
-        sku_item['size'] = self.extract_size_color(sku_json_script["attributes"][size_id]["options"], available_s_id)
-        sku_item['color'] = self.extract_size_color(sku_json_script["attributes"][color_id]["options"], available_c_id)
-        return sku_item
+    def product_details(self, response):
+        product_info = response.xpath('//script[contains(text(), "jsonConfig")]/text()').extract_first()
+        attributes = {}
+        if product_info:
+            product_info = json.loads(product_info)
+            attributes = product_info["[data-role=swatch-options]"]["Magento_Swatches/js/SwatchRenderer"]["jsonConfig"]
+        return attributes
 
-    def extract_json_script(self, response):
-        json_x = response.xpath('//script[@type="text/x-magento-init" and contains(text(), "jsonConfig")]/text()')
-        required_script = {}
-        if json_x:
-            json_script = json.loads(json_x.get())
-            required_script = json_script["[data-role=swatch-options]"]["Magento_Swatches/js/SwatchRenderer"]["jsonConfig"]
-        return required_script
+    def map_attributes(self, product_data):
+        attributes = product_data["attributes"]
+        product_sku = {}
+        for feat_value in attributes.values():
+            feature = feat_value["code"]
+            for option in feat_value["options"]:
+                for product in option["products"]:
+                    if product not in product_sku.keys():
+                        product_sku[product] = {}
+                    product_sku[product][feature] = option["label"]
+        return product_sku
 
-    def extract_available_color_size(self, sku_json_script, index):
-        color_id, size_id = self.extract_color_size_ids(sku_json_script['attributes'])
-        available_size_id = sku_json_script["index"][index][size_id]
-        available_color_id = sku_json_script["index"][index][color_id]
-        return size_id, color_id, available_size_id, available_color_id
-
-    def extract_color_size_ids(self, attributes_json):
-        color_id = ""
-        size_id = ""
-        for attribute in attributes_json:
-            attribute_json = attributes_json[attribute]
-            if attribute_json["code"] == "color":
-                color_id = attribute_json["id"]
-            elif attribute_json["code"] == "pitalia_size":
-                size_id = attribute_json["id"]
-        return color_id, size_id
-
-    def extract_size_color(self, required_feature_json, available_id):
-        for req_json in required_feature_json:
-            if req_json["id"] == available_id:
-                return req_json["label"]
-
-    def extract_price(self, response):
-        price = response.css('[id^=product-price] > .price::text').get()
-        return re.findall('^\d+,\d+', price)[0] if price else None
+    def product_price(self, response):
+        return response.css('.product-info-price *::attr(data-price-amount)').extract_first()

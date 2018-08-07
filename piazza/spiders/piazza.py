@@ -1,6 +1,6 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from piazza.spiders.piazza_product import ProductParser
+from .piazza_product import ProductParser
 
 
 class PiazzaSpider(CrawlSpider):
@@ -10,8 +10,7 @@ class PiazzaSpider(CrawlSpider):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=('.item.pages-item-next > a', '.level-top', '.level1 > a')), callback='parse'),
-
+        Rule(LinkExtractor(restrict_css=('.item.pages-item-next', '.level-top', '.level1')), callback='parse'),
         Rule(LinkExtractor(restrict_css=('.product-item-link',)), callback='parse_product'),
     )
 
