@@ -19,10 +19,11 @@ class Parser(scrapy.Spider):
         self.product["category"] = self.get_category()
         self.product["industry"] = None
         self.product["brand"] = "Joop"
-        self.product["url"] = w3url.url_query_cleaner(response.url)
+        self.product["url"] = w3url.url_query_cleaner(self.response.url)
         self.product["market"] = "DE"
+        self.product["trail"] = self.response.meta["trail"].copy()
         self.product["retailer"] = "joop-de"
-        self.product["url_original"] = response.url
+        self.product["url_original"] = self.response.url
         self.product["name"] = self.get_name()
         self.product["description"] = self.get_description()
         self.product["care"] = self.get_care()
@@ -30,7 +31,9 @@ class Parser(scrapy.Spider):
         self.product["skus"] = self.get_skus()
         self.product["price"] = self.get_price()
         self.product["currency"] = self.get_currency()
-        return self.product
+        product_or_url = [self.product]
+        product_or_url.extend(self.colour_urls())
+        return product_or_url
 
     def get_skus(self):
         self.common_sku["price"] = self.get_price()
@@ -78,13 +81,16 @@ class Parser(scrapy.Spider):
     @staticmethod
     def previous_prices(option):
         previous_price = option.css("::attr(data-listprice)").extract_first()
-        return [100 * float(previous_price[:-2].replace(",", "."))]
+        return [100 * float(previous_price[:-2].replace(",", "."))] if previous_price else []
 
     def get_description(self):
-        return self.response.css('div[itemprop=description]>div>p::text').extract_first().split(". ")
+        return self.response.css('div[itemprop=description]>div:nth-child(2) ::text').extract()
 
     def get_care(self):
         care_lines = self.response.css('div[itemprop=description]>div:last-child').css(' ::text').extract()
         care_lines = [line.strip() for line in care_lines]
         care_lines = ''.join(care_lines)
         return care_lines.split(". ")
+
+    def colour_urls(self):
+        return self.response.css('.colors a::attr(href)').extract()
