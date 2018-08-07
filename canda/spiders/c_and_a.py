@@ -1,3 +1,4 @@
+import re
 import json
 from urllib.parse import urlencode
 
@@ -17,8 +18,8 @@ class WhiteStuffSpider(CrawlSpider):
                                 tags=('li',), attrs=('data-url',)), follow=True),
              Rule(LinkExtractor(restrict_css='.product-tile.product-tile--quickmenu'), callback='parse_item'))
 
-    color_request_parameters = (('storeId', '10154'), ('langId', '-3'))
-    color_request_url = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?'
+    color_parameters = (('storeId', '10154'), ('langId', '-3'))
+    color_url_t = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?'
     currency = 'EURO'
 
     def parse_color(self, response):
@@ -39,8 +40,8 @@ class WhiteStuffSpider(CrawlSpider):
         sku_common['new_price'], sku_common['old_price'] = self.get_prices(selector)
         color = self.get_color(selector)
         sku_common['color'] = color
-        all_sizes = [s.strip() for s in selector.css('.size-list .reveal__content li::text').extract()]
-        out_of_stock_sizes = [s.strip() for s in selector.css('.size-list .reveal__content .is-sold::text').extract()]
+        all_sizes = self.get_all_sizes(selector)
+        out_of_stock_sizes = self.get_out_of_stock_sizes(selector)
         skus = []
         for size in all_sizes:
             sku = sku_common.copy()
@@ -80,7 +81,7 @@ class WhiteStuffSpider(CrawlSpider):
         color_request_data = {'productId': product_id}
         for color_id in color_ids:
             color_request_data['colorId'] = color_id
-            color_request = FormRequest(url=f'{self.color_request_url}{urlencode(self.color_request_parameters)}',
+            color_request = FormRequest(url=f'{self.color_url_t}{urlencode(self.color_parameters)}',
                                         callback=self.parse_color, formdata=color_request_data)
             color_requests.append(color_request)
         return color_requests
@@ -96,8 +97,9 @@ class WhiteStuffSpider(CrawlSpider):
 
     @staticmethod
     def formatted_price(price):
-        price = price.translate(str.maketrans({u"\u20ac": '', ',': '.'}))
-        return int(float(price) * 100)
+        prices = re.findall(r"\D*(\d+)\D*", price)
+        price = prices[0] + prices[1] or '00'
+        return int(price)
 
     @staticmethod
     def get_brand_name(response):
@@ -122,6 +124,14 @@ class WhiteStuffSpider(CrawlSpider):
     @staticmethod
     def get_care(response):
         return list(filter(None, [a.strip() for a in response.css('td::text').extract()]))
+
+    @staticmethod
+    def get_all_sizes(response):
+        return [s.strip() for s in response.css('.size-list .reveal__content li::text').extract()]
+
+    @staticmethod
+    def get_out_of_stock_sizes(response):
+        return [s.strip() for s in response.css('.size-list .reveal__content .is-sold::text').extract()]
 
     @staticmethod
     def get_categories(response):
