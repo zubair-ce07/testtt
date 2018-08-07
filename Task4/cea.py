@@ -3,7 +3,7 @@ import json
 from scrapy import Spider, Request
 from w3lib import url
 
-from Task4.items import ProductItem
+from Task4.items import Product
 
 
 class CeaSpider(Spider):
@@ -46,7 +46,7 @@ class CeaSpider(Spider):
             return Request(next_page_url, callback=self.parse_pagination)
 
     def parse_item(self, response):
-        item = ProductItem()
+        item = Product()
         item['name'] = self.extract_item_name(response)
         item['retailer_sku'] = self.extract_retailer_sku(response)
         item['price'] = self.extract_price(response)
