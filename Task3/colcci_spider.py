@@ -36,7 +36,7 @@ class ColcciSpider(Spider):
         item['category'] = self.extract_category(item['name'])
         item['price'] = self.extract_price(selector)
         item['description'] = self.extract_description(selector)
-        item['gender'] = self.extract_gender(response)
+        item['gender'] = self.detect_gender(response)
         item['image_urls'] = self.extract_image_urls(response)
         item['skus'] = self.extract_skus(response)
 
@@ -63,7 +63,7 @@ class ColcciSpider(Spider):
         raw_description = selector.css('#whatItIs *::text').extract()
         return [description.strip() for description in raw_description]
 
-    def extract_gender(self, response):
+    def detect_gender(self, response):
         item_name = self.extract_item_name(response)
         lookup_text = (item_name + response.url).lower()
 
