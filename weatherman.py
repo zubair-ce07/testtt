@@ -21,7 +21,6 @@ def is_valid_directory(dir_name):
 
 def is_valid_year_and_month(year_and_month):
     match = re.search('^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)/(1[0-2]|0[1-9]|\d)', year_and_month)
-
     if match:
         return year_and_month
 
@@ -34,58 +33,49 @@ def get_year_and_month(file_name):
 
 class FileParser:
 
-    def __init__(self, dir_path, required_year_arg, required_years_and_months):
+    def __init__(self, dir_path):
+        self.dir_path = dir_path
         self.year_data = {}
         self.required_files = []
-        self.dir_path = dir_path
 
-        if required_year_arg:
-            files_required = os.path.join(dir_path, 'Murree_weather_' + required_year_arg + '_???.txt')
-            files_required = glob.glob(files_required)
-            files_required = [os.path.basename(file) for file in files_required]
-            self.required_files.extend(files_required)
+    def populate_file_list(self, required_year, required_month=None):
+        if self.year_data.get(required_year, {}).get(required_month):
+            return
 
-        for required_year_and_month in required_years_and_months:
-            if not required_year_and_month:
-                continue
-
-            required_year_and_month = required_year_and_month.split('/')
-            required_year = required_year_and_month[0]
-            required_month = calendar.month_name[int(required_year_and_month[1])]
-
-            files_required = os.path.join(dir_path, 'Murree_weather_' + required_year + '_' +
-                                          required_month[:3] + '.txt')
+        if required_year:
+            if required_month:
+                required_month = calendar.month_name[int(required_month)]
+                files_required = os.path.join(self.dir_path, '*' + required_year + '_' + required_month[:3] + '.txt')
+            else:
+                files_required = os.path.join(self.dir_path, '*' + required_year + '_???.txt')
 
             files_required = glob.glob(files_required)
-            files_required = [os.path.basename(file) for file in files_required]
-            if files_required:
-                self.required_files.extend(files_required)
+            self.required_files.extend([os.path.basename(file) for file in files_required])
 
-    def parse_file_row(self, file_data):
+    def parse_file(self, file_data):
+        month_data = {}
+        index = 1
         for row in file_data:
-            yield {
+            month_data[str(index)] = {
                 'Max TemperatureC': 0 if row['Max TemperatureC'] == '' else row['Max TemperatureC'],
                 'Min TemperatureC': 0 if row['Min TemperatureC'] == '' else row['Min TemperatureC'],
                 'Max Humidity': 0 if row['Max Humidity'] == '' else row['Max Humidity'],
                 'PKT': row['PKT']
             }
+            index += 1
+        return month_data
 
-    def parse_file_data(self):
-        month_data = {}
+    def parse_files(self):
         for file_name in self.required_files:
             with open(os.path.join(self.dir_path, file_name), 'r') as file:
                 year, month = get_year_and_month(file_name)
                 file_data = csv.DictReader(file, skipinitialspace=True, delimiter=',')
+                month_data = self.parse_file(file_data)
 
-                for index, parsed_row in enumerate(self.parse_file_row(file_data)):
-                    index_string = str(index + 1)
-                    month_data[index_string] = parsed_row
-
-                if year not in self.year_data.keys():
+                if not self.year_data.get(year):
                     self.year_data[year] = {}
 
-                self.year_data[year][month] = copy.deepcopy(month_data)
-                month_data.clear()
+            self.year_data[year][month] = copy.deepcopy(month_data)
 
 
 class ResultComputer:
@@ -170,6 +160,13 @@ class ResultGenerator:
         print(COLOR_DEFAULT)
 
 
+def split_year_and_month(year_and_month):
+    year_and_month = year_and_month.split('/')
+    year = year_and_month[0]
+    month = year_and_month[1]
+    return year, month
+
+
 def main():
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument('dir_path',
@@ -193,13 +190,26 @@ def main():
         print('Invalid directory path')
         return
 
-    file_parser = FileParser(args.dir_path, args.extreme_report,
-                             [args.average_report, args.chart_report, args.bonus])
-
+    file_parser = FileParser(args.dir_path)
     result_computer = ResultComputer()
     result_generator = ResultGenerator()
 
-    file_parser.parse_file_data()
+    if args.extreme_report:
+        file_parser.populate_file_list(args.extreme_report)
+
+    if args.average_report:
+        year, month = split_year_and_month(args.average_report)
+        file_parser.populate_file_list(year, month)
+
+    if args.chart_report:
+        year, month = split_year_and_month(args.chart_report)
+        file_parser.populate_file_list(year, month)
+
+    if args.bonus:
+        year, month = split_year_and_month(args.bonus)
+        file_parser.populate_file_list(year, month)
+
+    file_parser.parse_files()
 
     if args.extreme_report:
         if file_parser.year_data.get(args.extreme_report):
@@ -210,10 +220,7 @@ def main():
             print('Sorry! data is not available of required year')
 
     if args.average_report:
-        year_and_month = args.average_report.split('/')
-
-        year = year_and_month[0]
-        month = year_and_month[1]
+        year, month = split_year_and_month(args.average_report)
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
@@ -223,10 +230,7 @@ def main():
             print('Sorry! data is not available of required year and month')
 
     if args.chart_report:
-        year_and_month = args.chart_report.split('/')
-
-        year = year_and_month[0]
-        month = year_and_month[1]
+        year, month = split_year_and_month(args.chart_report)
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
@@ -236,10 +240,7 @@ def main():
             print('Sorry! data is not available of required year and month')
 
     if args.bonus:
-        year_and_month = args.bonus.split('/')
-
-        year = year_and_month[0]
-        month = year_and_month[1]
+        year, month = split_year_and_month(args.bonus)
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
