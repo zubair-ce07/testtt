@@ -7,6 +7,11 @@ from ..items import ProductItem
 
 class ProductParser:
 
+    gender_map = {
+        "homem": "men",
+        "mulher": "women"
+    }
+
     def parse(self, response):
         product = ProductItem()
 
@@ -102,4 +107,7 @@ class ProductParser:
     def gender(self, response):
         categories = self.category(response)
         categories = [category.lower() for category in categories]
-        return 'men' if 'homem' in categories else 'women' if 'mulher' in categories else 'unisex'
+        for gender in self.gender_map:
+            if gender in categories:
+                return self.gender_map[gender]
+        return gender
