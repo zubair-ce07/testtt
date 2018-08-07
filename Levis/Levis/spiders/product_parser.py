@@ -39,11 +39,14 @@ class ProductParser:
 
         return product
 
-    def availability(self, response):
-        sku_css = ".*skuJson_0\s=\s(.*});"
-        raw_sku = json.loads(response.css("head script").re_first(sku_css))
+    def raw_skus(self, response):
+        sku_re = "skuJson_0\s=\s(.*});"
+        sku_css = "head script:not([type]):not([language])"
+        raw_sku = json.loads(response.css(sku_css).re_first(sku_re))
+        return raw_sku
 
-        return raw_sku['available']
+    def availability(self, response):
+        return self.raw_skus(response)['available']
 
     def product_name(self, response):
         return response.css(".productName::text").extract_first()
@@ -52,12 +55,11 @@ class ProductParser:
         return response.css(".product-user-review-product-id::attr('value')").extract_first()
 
     def skus(self, response):
-        sku_css = ".*skuJson_0\s=\s(.*});"
-        raw_sku = json.loads(response.css("head script").re_first(sku_css))
+        raw_skus = self.raw_skus(response)
         color = self.color(response)
 
         skus = dict()
-        for sku in raw_sku['skus']:
+        for sku in raw_skus['skus']:
             if sku['available']:
                 sku_id = sku['sku']
                 skus[sku_id] = {}
