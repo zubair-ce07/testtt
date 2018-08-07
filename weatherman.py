@@ -19,7 +19,8 @@ class Weather:
 
 
 class Validate:
-    def __init__(self, argument):
+    @staticmethod
+    def validate_args(argument):
         if len(argument) > 4:
             year_month = argument.split("/")
             month = int(year_month[1])
@@ -29,6 +30,11 @@ class Validate:
 
 class FileParser:
     def __init__(self, directory_path, argument):
+        try:
+            Validate.validate_args(argument)
+        except:
+            print("Invalid input")
+            return
         file_path = directory_path + '/'
         self.file_names = os.listdir(file_path)
         check_file = False
@@ -36,11 +42,10 @@ class FileParser:
         for file_name in self.file_names:
             if argument in file_name:
                 check_file = True
-                read_file = csv.DictReader(open(file_path + file_name)
-                                           , skipinitialspace=True, delimiter=',')
+                read_file = csv.DictReader(open(file_path + file_name), skipinitialspace=True, delimiter=',')
                 for row in read_file:
-                        weather = Weather(row.get("PKT", row.get("PKST")), row['Max TemperatureC'], row['Min TemperatureC'],
-                                          row['Max Humidity'], row['Mean Humidity'])
+                        weather = Weather(row.get("PKT", row.get("PKST")), row['Max TemperatureC'],
+                                          row['Min TemperatureC'], row['Max Humidity'], row['Mean Humidity'])
                         check_item = False
                         for readings in range(0, len(WEATHER_READINGS)):
                             if weather.date == WEATHER_READINGS[readings].date:
@@ -114,7 +119,7 @@ class GenerateReports:
     def generate_average_weather_report(self, highest_average, lowest_average, humidity_average):
         print("Highest Average: {}C".format(highest_average))
         print("Lowest Average: {}C".format(lowest_average))
-        print("Average Mean Humidity: {}C".format(humidity_average))
+        print("Average Mean Humidity: {}%".format(humidity_average))
 
     def generate_extreme_weather_report(self, highest_temp, highest_temp_month, highest_temp_day,
                                         lowest_temp, lowest_temp_month, lowest_temp_day,
@@ -136,12 +141,13 @@ class GenerateReports:
         print(calendar.month_name[int(year_month[1])] + " " + year_month[0])
         for reading in WEATHER_READINGS:
             date_split = reading.date.split("-")
-            if year_month[0] == date_split[0] and year_month[1] == date_split[1] and reading.max_temp != '':
+            if year_month[0] == date_split[0] and year_month[1] == date_split[1] and reading.max_temp != '' \
+               and reading.min_temp != '':
                 n_plus_signs_red = '+' * int(reading.max_temp)
                 plus_sign_red = colored(n_plus_signs_red, 'red')
                 n_plus_signs_blue = '+' * int(reading.min_temp)
                 plus_sign_blue = colored(n_plus_signs_blue, 'blue')
-                print("{0} {1}{2} {3}C {4}C".format(reading.max_temp[7:], plus_sign_blue, plus_sign_red,
+                print("{0} {1}{2} {3}C {4}C".format(date_split[2], plus_sign_blue, plus_sign_red,
                       reading.max_temp, reading.min_temp))
 
     def generate_extreme_double_bar_report(self, year_month):
@@ -155,8 +161,9 @@ class GenerateReports:
                 plus_sign_red = colored(n_plus_signs_red, 'red')
                 n_plus_signs_blue = '+' * int(reading.min_temp)
                 plus_sign_blue = colored(n_plus_signs_blue, 'blue')
-                print("{0} {1} {2}C".format(reading.date[7:], plus_sign_red, reading.max_temp))
-                print("{0} {1} {2}C".format(reading.date[7:], plus_sign_blue, reading.min_temp))
+                reading_min_temp = colored(reading.min_temp, 'white')
+                print("{0} {1} {2}C".format(date_split[2], plus_sign_red, reading.max_temp))
+                print("{0} {1} {2}C".format(date_split[2], plus_sign_blue, reading_min_temp))
 
 
 def main():
@@ -171,17 +178,14 @@ def main():
     if not os.path.isdir(args.dir_path):
         print("Error, file path not found")
     else:
-        try:
             if args.extreme:
                 file_parser = FileParser(args.dir_path, args.extreme)
-                validate = Validate(args.extreme)
                 result_computer = ResultComputer()
                 generate_reports = GenerateReports()
                 weather_data = result_computer.give_year_data(args.extreme)
                 generate_reports.generate_extreme_weather_report(weather_data)
 
             if args.average:
-                validate = Validate(args.average)
                 file_parser = FileParser(args.dir_path, args.average)
                 result_computer = ResultComputer()
                 generate_reports = GenerateReports()
@@ -189,20 +193,14 @@ def main():
                 generate_reports.generate_average_weather_report(highest_average, lowest_average, humidity_average)
 
             if args.bar:
-                validate = Validate(args.bar)
                 file_parser = FileParser(args.dir_path, args.bar)
                 generate_reports = GenerateReports()
                 generate_reports.generate_extreme_double_bar_report(args.bar)
 
             if args.bonus:
-                validate = Validate(args.bonus)
                 file_parser = FileParser(args.dir_path, args.bonus)
                 generate_reports = GenerateReports()
                 generate_reports.generate_extreme_single_bar_report(args.bonus)
-
-        except:
-            print("Input is invalid")
-            return
 
 
 if '__main__' == __name__:
