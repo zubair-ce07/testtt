@@ -57,14 +57,14 @@ class ProductParser:
         color = self.color(response)
 
         skus = dict()
-        for sku in raw_sku.get('skus'):
-            if sku.get('available'):
-                sku_id = sku.get('sku')
-                skus[sku_id] = skus.setdefault(sku.get('sku'), {})
-                skus[sku_id]['price'] = sku.get('bestPrice')
+        for sku in raw_sku['skus']:
+            if sku['available']:
+                sku_id = sku['sku']
+                skus[sku_id] = {}
+                skus[sku_id]['price'] = sku['bestPrice']
                 skus[sku_id]['currency'] = 'BRL'
-                if sku.get('listPrice'):
-                    skus[sku_id]['previous_prices'] = [sku.get('listPrice')]
+                if sku['listPrice']:
+                    skus[sku_id]['previous_prices'] = [sku['listPrice']]
                 skus[sku_id]['colour'] = color
                 skus[sku_id]['size'] = sku['dimensions'].get('Tamanho', sku['dimensions'].get('TAMANHO'))
 
@@ -75,8 +75,7 @@ class ProductParser:
 
     def price(self, response):
         price = response.css(".skuBestPrice").re_first("\d+,\d+")
-        if price:
-            return int(price.replace(',', ''))
+        return int(price.replace(',', ''))
 
     def image_urls(self, response):
         return response.css(".thumbs a::attr('zoom')").extract()
