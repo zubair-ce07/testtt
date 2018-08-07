@@ -11,26 +11,26 @@ class Spider:
     def __init__(self, total_urls, request_delay, total_requests, spider_type):
         self.total_urls = total_urls
         self.request_delay = request_delay
-        self.t_requests = t_requests
+        self.total_requests = total_requests
         self.spider_type = spider_type
         self.web_url = "https://en.wikipedia.org/wiki/Main_Page"
         self.reports = Reports()
         html_doc = self.http_requester(self.web_url).text
-        nextotal_urls = self.url_parser(html_doc)
+        next_urls = self.url_parser(html_doc)
         if spider_type is "r":
-            self.recursive_spider(self.total_urls, nextotal_urls, i=1)
+            self.recursive_spider(self.total_urls, next_urls, i=1)
             self.get_report()
         loop = asyncio.get_event_loop()
         if spider_type is "c":
             tasks = []
-            for i in range(self.total_urls):
+            for iterator in range(self.total_urls):
                 tasks.append(asyncio.ensure_future(self.concurent_spider(
-                    nextotal_urls[i])))
+                    next_urls[iterator])))
             loop.run_until_complete(asyncio.wait(tasks))
             self.get_report(tasks)
         if spider_type is "p":
             loop.run_until_complete(self.parallel_spider(
-                nextotal_urls))
+                next_urls))
         loop.close()
 
     def get_report(self, tasks=None):
@@ -42,12 +42,12 @@ class Spider:
         self.reports.results["average"] = (
                 self.reports.results["total_downloaded"]
                 / self.total_urls)   
-        self.reports.results["requests"] = self.t_requests
+        self.reports.results["requests"] = self.total_requests
         self.reports.get_spider_report()
     
     def http_requester(self, web_url):
-        r = requests.get(web_url)
-        return r
+        request = requests.get(web_url)
+        return request
     
     def url_parser(self, html_doc):
         sel = parsel.Selector(html_doc)
@@ -56,24 +56,25 @@ class Spider:
                     if "http" in url or "https" in url]
         return next_url
 
-    def recursive_spider(self, urls_to_visit, next_url, i):
+    def recursive_spider(self, urls_to_visit, next_url, iterator):
         if urls_to_visit == 0:
             return
         else:
             time.sleep(self.request_delay)
-            request = self.http_requester(next_url[i])
+            request = self.http_requester(next_url[iterator])
             self.reports.results["total_downloaded"] = (
                     self.reports.results["total_downloaded"]
                     + len(request.content))
             self.recursive_spider(urls_to_visit - 1, next_url, i+1)
                 
     @asyncio.coroutine
-    async def parallel_spider(self, nextotal_urls):
-        pool = ThreadPoolExecutor(self.t_requests)
+    async def parallel_spider(self, next_urls):
+        pool = ThreadPoolExecutor(self.total_requests)
         futures = []
-        for i in range(self.total_urls):
+        for iterator in range(self.total_urls):
             await asyncio.sleep(self.request_delay)
-            futures.append(pool.submit(self.http_requester, nextotal_urls[i]))
+            futures.append(pool.submit(
+                self.http_requester, next_urls[iterator]))
         self.get_report(as_completed(futures))
     
     @asyncio.coroutine
