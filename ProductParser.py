@@ -6,29 +6,45 @@ from hunkemoller.items import HunkemollerItem
 
 
 class ProductParser(Spider):
-    name = "hunkemoller_parser"
+    name = "hunkemoller-de-parser"
     brand = "Hunkemoller"
     gender = "women"
 
+    def parse(self, response):
+        item = HunkemollerItem()
+        item['retailer_sku'] = self.extract_retailer_sku(response)
+        item['trail'] = self.extract_trails(response)
+        item['gender'] = self.gender
+        item['category'] = self.extract_category(response)
+        item['brand'] = self.brand
+        item['url'] = response.url
+        item['name'] = self.extract_product_name(response)
+        item['description'] = self.extract_product_description(response)
+        item['care'] = self.extract_product_care(response)
+        item['image_urls'] = self.extract_image_urls(response)
+        item['skus'] = self.extract_skus(response)
+        item['price'] = self.extract_price(response)
+        item['currency'] = self.extract_currency(response)
+        return item
+
     def extract_retailer_sku(self, response):
         retailer_sku = response.css('.article-number::text').extract_first()
-        return retailer_sku.split(' ')[1] if retailer_sku else None
+        return retailer_sku.split(' ')[1]
 
-    def extract_trail(self, response):
-        trail = list()
-        trail.append(['', 'https://www.hunkemoller.de/de_de/'])
-        trail.append(response.meta.get('trail'))
-        return trail
+    def extract_trails(self, response):
+        new_trails = set(tuple(trail) for trail in response.meta.get('trail'))          # Remove redundant trails
+        new_trails = [list(trail) for trail in new_trails]                              # Back to list format
+        return new_trails
 
     def extract_product_name(self, response):
         return response.css('.product-name h1::text').extract_first()
 
     def extract_product_description(self, response):
-        raw_description = response.css('.description *::text').extract()
+        raw_description = response.css('.description ::text').extract()
         return list(filter(lambda info: info.strip(), raw_description))
 
     def extract_product_care(self, response):
-        product_tips = response.css('.washing-tips *::text').extract()
+        product_tips = response.css('.washing-tips ::text').extract()
         return list(filter(lambda tip: tip.strip(), product_tips))
 
     def extract_price(self, response):
@@ -55,27 +71,14 @@ class ProductParser(Spider):
         return sku_model_no
 
     def extract_skus(self, response):
-        return [{
-            "price": self.extract_price(response),
-            "currency": self.extract_currency(response),
-            "colour": self.extract_colors(response)[0],
-            "size": size.css('::text').extract_first().strip(),
-            "sku_id": self.extract_sku_model(size)
-        } for size in response.css('.product-info .selectmenu :not([selected]):not(.out-of-stock)')]
+        skus = []
+        for size in response.css('.product-info .selectmenu :not([selected]):not(.out-of-stock)'):
+            skus.append({
+                "price": self.extract_price(response),
+                "currency": self.extract_currency(response),
+                "colour": self.extract_colors(response)[0],
+                "size": size.css('::text').extract_first().strip(),
+                "sku_id": self.extract_sku_model(size)
+            })
+        return skus
 
-    def parse(self, response):
-        item = HunkemollerItem()
-        item['retailer_sku'] = self.extract_retailer_sku(response)
-        item['trail'] = self.extract_trail(response)
-        item['gender'] = self.gender
-        item['category'] = self.extract_category(response)
-        item['brand'] = self.brand
-        item['url'] = response.url
-        item['name'] = self.extract_product_name(response)
-        item['description'] = self.extract_product_description(response)
-        item['care'] = self.extract_product_care(response)
-        item['image_urls'] = self.extract_image_urls(response)
-        item['skus'] = self.extract_skus(response)
-        item['price'] = self.extract_price(response)
-        item['currency'] = self.extract_currency(response)
-        return item
