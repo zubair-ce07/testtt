@@ -1,11 +1,9 @@
 import json
 from urllib.parse import parse_qsl
-from requests.compat import urljoin
 from itertools import product
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from scrapy import Request
 from scrapy import FormRequest
 from scrapy.selector import Selector
 
@@ -19,8 +17,6 @@ class LanebryantSpider(CrawlSpider):
     care_words = ['Clean', 'Wash', '%']
 
     listing_css = '.mar-subnav-links-column'
-    product_css = 'script[type="application/ld+json"]::text'
-    sku_css = 'script#pdpInitialData[type="application/json"]::text'
 
     pagination_url = 'https://www.lanebryant.com/lanebryant/plp/includes/plp-filters.jsp'
 
@@ -28,7 +24,7 @@ class LanebryantSpider(CrawlSpider):
     allowed_domains = ['lanebryant.com']
 
     rules = (
-        Rule(LinkExtractor(restrict_css=listing_css, allow='.*\/view-all\/.*'),
+        Rule(LinkExtractor(restrict_css=listing_css, allow='.*\/view-all\/.*', deny='#0'),
              callback='parse_category'),
     )
 
@@ -37,10 +33,10 @@ class LanebryantSpider(CrawlSpider):
     }
 
     def parse_category(self, response):
-        product_urls = response.css('[tabindex]::attr(href)').extract()
+        product_urls = LinkExtractor(restrict_css='[tabindex]', deny='#0').extract_links(response)
 
-        for url in product_urls:
-            yield Request(urljoin(LanebryantSpider.start_urls[0], url), callback=self.parse_product)
+        for link in product_urls:
+            yield response.follow(link.url, callback=self.parse_product)
 
         pages_to_follow = response.css('.mar-pagination a::attr(href)').re('N.*')
 
@@ -49,13 +45,13 @@ class LanebryantSpider(CrawlSpider):
                               callback=self.parse_pagination)
 
     def parse_pagination(self, response):
-        product_grid = json.loads(response.body.decode("utf-8")).get('product_grid', {})
+        product_grid = json.loads(response.text).get('product_grid', {})
         html_content = product_grid.get('html_content', "")
 
         product_urls = Selector(text=html_content).css('[tabindex]::attr(href)').extract()
 
         for url in product_urls:
-            yield Request(urljoin(LanebryantSpider.start_urls[0], url), callback=self.parse_product)
+            yield response.follow(url, callback=self.parse_product)
 
     def parse_product(self, response):
         product_item = Product()
@@ -74,11 +70,10 @@ class LanebryantSpider(CrawlSpider):
         yield product_item
 
     def get_product_name(self, response):
-        product_details = response.css(LanebryantSpider.product_css).extract_first()
+        raw_product = self.get_raw_product(response)
 
-        if product_details:
-            product_details = json.loads(product_details, strict=False)
-            return product_details.get('name')
+        if raw_product:
+            return raw_product.get('name')
 
     def get_care(self, response):
         product_desc = response.css('#tab1 ::text').extract()
@@ -88,75 +83,73 @@ class LanebryantSpider(CrawlSpider):
                     if any(word in line for word in LanebryantSpider.care_words)]
 
     def get_description(self, response):
-        product_details = response.css(LanebryantSpider.product_css).extract_first()
+        raw_product = self.get_raw_product(response)
 
-        if product_details:
-            product_details = json.loads(product_details, strict=False)
-            product_desc = Selector(text=product_details.get('description', '')).css('::text').extract()
+        if raw_product:
+            product_desc = Selector(text=raw_product.get('description', '')).css('::text').extract()
             return [line for line in product_desc if 'Item Number' not in line]
 
     def get_retailer_sku(self, response):
-        product_details = response.css(LanebryantSpider.sku_css).extract_first()
+        raw_product = self.get_raw_skus(response)
 
-        if product_details:
-            product_details = json.loads(product_details, strict=False)
-            return product_details.get('pdpDetail').get('product')[0].get("product_id")
+        if raw_product:
+            return raw_product.get('pdpDetail', {}).get('product', {})[0].get("product_id")
 
     def get_image_urls(self, response):
-        product_details = response.css(LanebryantSpider.product_css).extract_first()
+        raw_product = self.get_raw_product(response)
 
-        if not product_details:
-            return []
-
-        product_details = json.loads(product_details, strict=False)
-        return product_details.get('image')
+        if raw_product:
+            return raw_product.get('image')
 
     def get_gender(self, response):
         return LanebryantSpider.gender
 
     def get_brand(self, response):
-        product_details = response.css(LanebryantSpider.product_css).extract_first()
+        raw_product = self.get_raw_product(response)
 
-        if product_details:
-            product_details = json.loads(product_details, strict=False)
-            return product_details.get('offers', {}).get('seller', {}).get('name')
+        if raw_product:
+            return raw_product.get('offers', {}).get('seller', {}).get('name')
 
     def get_product_url(self, response):
         return response.url
 
     def get_categories(self, response):
-        product_details = response.css(LanebryantSpider.sku_css).extract_first()
+        raw_skus = self.get_raw_skus(response)
 
-        if not product_details:
-            return []
+        if raw_skus:
+            product_specs = raw_skus.get('pdpDetail', {}).get('product', {})[0]
+            return product_specs.get("ensightenData", {})[0].get("categoryPath", "").split(':')
 
-        product_details = json.loads(product_details, strict=False)
-        product_specs = product_details.get('pdpDetail', {}).get('product', {})[0]
+    def get_raw_skus(self, response):
+        sku_css = 'script#pdpInitialData[type="application/json"]::text'
+        raw_skus = response.css(sku_css).extract_first()
 
-        return product_specs.get("ensightenData", {})[0].get("categoryPath", "").split(':')
+        if raw_skus:
+            return json.loads(raw_skus, strict=False)
+
+    def get_raw_product(self, response):
+        product_css = 'script[type="application/ld+json"]::text'
+        raw_product = response.css(product_css).extract_first()
+
+        if raw_product:
+            return json.loads(raw_product, strict=False)
 
     def get_skus(self, response):
-        price_details = response.css(LanebryantSpider.product_css).extract_first()
+        raw_product = self.get_raw_product(response)
+        raw_skus = self.get_raw_skus(response)
 
-        if price_details:
-            price_details = json.loads(price_details, strict=False)
+        available_skus = raw_skus.get('pdpDetail').get('product')[0].get('skus')
 
-        product_details = response.css(LanebryantSpider.sku_css).extract_first()
-
-        if not product_details:
+        if not available_skus:
             return []
 
-        product_details = json.loads(product_details, strict=False)
-
-        colors = product_details.get('pdpDetail').get('product')[0].get('all_available_colors')
+        colors = raw_skus.get('pdpDetail').get('product')[0].get('all_available_colors')
         colors = dict(zip([i.get('id') for i in colors[0].get('values')],
                           [i.get('name') for i in colors[0].get('values')]))
 
-        sizes = product_details.get('pdpDetail').get('product')[0].get('all_available_sizes')
+        sizes = raw_skus.get('pdpDetail').get('product')[0].get('all_available_sizes')
         sizes = dict(zip([i.get('id') for i in sizes[0].get('values')],
                          [i.get('value') for i in sizes[0].get('values')]))
-
-        available_skus = product_details.get('pdpDetail').get('product')[0].get('skus')
 
         product_skus = []
         for color, size in product(colors.keys(), sizes.keys()):
@@ -170,12 +163,13 @@ class LanebryantSpider(CrawlSpider):
 
             sku['color'] = colors.get(color)
             sku['size'] = sizes.get(size)
-            sku['id'] = '{}_{}'.format(colors.get(color).replace('', '_'), sizes.get(size))
+            sku['id'] = '{}_{}'.format(colors.get(color), sizes.get(size))
 
             sku['price'] = raw_sku.get('prices').get('sale_price')[1:]
             sku['previous_price'] = [raw_sku.get('prices').get('list_price')[1:]]
-            price_specs = price_details.get('offers', {}).get('priceSpecification', {})
-            sku['currency'] = price_specs.get('priceCurrency')
+            if raw_product:
+                price_specs = raw_product.get('offers', {}).get('priceSpecification', {})
+                sku['currency'] = price_specs.get('priceCurrency')
 
             product_skus.append(sku)
 
