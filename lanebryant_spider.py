@@ -1,6 +1,7 @@
 import json
 from urllib.parse import parse_qsl
 from itertools import product
+import re
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
@@ -97,7 +98,6 @@ class LanebryantSpider(CrawlSpider):
 
     def get_image_urls(self, response):
         raw_product = self.get_raw_product(response)
-
         if raw_product:
             return raw_product.get('image')
 
@@ -132,7 +132,9 @@ class LanebryantSpider(CrawlSpider):
         raw_product = response.css(product_css).extract_first()
 
         if raw_product:
-            return json.loads(raw_product, strict=False)
+            prev_name = re.findall('\s*\"name\"\s*:(.+?),', raw_product)
+            updated_name = prev_name[0].replace('"', '')
+            return json.loads(raw_product.replace(prev_name[0], '"' + updated_name + '"'), strict=False)
 
     def get_skus(self, response):
         raw_product = self.get_raw_product(response)
