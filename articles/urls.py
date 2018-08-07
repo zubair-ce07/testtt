@@ -1,8 +1,8 @@
 from django.urls import path
-from django.conf.urls import url
-
-from . import views
+from articles.views import ArticleList, SearchResults, ArticleDetail
 
 urlpatterns = [
-    path('', views.index, name='articles_index'),
+    path('search/', SearchResults.as_view(), name='search'),
+    path('articles/', ArticleList.as_view(), name='article-list'),
+    path('articles/<int:pk>/', ArticleDetail.as_view(), name='article-detail'),
 ]

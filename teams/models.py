@@ -1,5 +1,5 @@
 from django.db import models
-from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices
+from teams.choices import BattingStyleChoices, BowlingStyleChoices, PlayingRoleChoices, FormatChoices, TeamTypeChoices
 from datetime import date
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -9,7 +9,7 @@ from common.models import SoftDeleteModelMixin
 class Team(SoftDeleteModelMixin):
     name = models.CharField(max_length=50, default=' ')
     ranking = models.IntegerField(default=0)
-    type = models.CharField(max_length=20, default='county')
+    type = models.CharField(max_length=20, choices=TeamTypeChoices.Choices)
     url = models.URLField(max_length=100, default=' ')
     photos = GenericRelation('Photo', related_query_name='teams')
 
@@ -21,7 +21,6 @@ class Player(SoftDeleteModelMixin):
 
     name = models.CharField(max_length=100, default=' ')
     DOB = models.DateField('Born')
-    # Calculate Age in model as property
     playing_role = models.CharField(max_length=20, default=' ', choices=PlayingRoleChoices.Choices)
     batting_style = models.CharField(max_length=20, default=' ', choices=BattingStyleChoices.Choices)
     bowling_style = models.CharField(max_length=30, default=' ', choices=BowlingStyleChoices.Choices)
@@ -29,6 +28,7 @@ class Player(SoftDeleteModelMixin):
     teams = models.ManyToManyField('Team', related_name='players', blank=True)
     url = models.URLField(max_length=100, default=' ', null=True, blank=True)
     photos = GenericRelation('Photo', related_query_name='players')
+    formats = models.ManyToManyField('Format', related_name='players', blank=True)
 
     def __str__(self):
         return self.name
@@ -57,7 +57,7 @@ class BasicAverageInfo(SoftDeleteModelMixin):
 
 class BattingAverage(BasicAverageInfo):
 
-    player = models.ForeignKey(Player, related_name='batting_average', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, related_name='batting_averages', on_delete=models.CASCADE)
 
     not_outs = models.IntegerField(null=True, blank=True)
     highest_score = models.CharField(max_length=50, default=' ')    # 88*
@@ -69,13 +69,13 @@ class BattingAverage(BasicAverageInfo):
     stumps = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return '{player_name}\'s batting average'.format(
-            player_name=self.player
+        return '{player_name}\'s {average_format} batting average'.format(
+            player_name=self.player, average_format=self.format
         )
 
 
 class BowlingAverage(BasicAverageInfo):
-    player = models.ForeignKey(Player, related_name='bowling_average', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, related_name='bowling_averages', on_delete=models.CASCADE)
 
     wickets = models.IntegerField(null=True, blank=True)
     best_bowling_innings = models.CharField(max_length=50, default=' ', null=True, blank=True)
@@ -86,8 +86,8 @@ class BowlingAverage(BasicAverageInfo):
     ten_wickets = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return '{player_name}\'s bowling average'.format(
-            player_name=self.player
+        return '{player_name}\'s {average_format} batting average'.format(
+            player_name=self.player, average_format=self.format
         )
 
 
@@ -105,3 +105,10 @@ class LiveScore(models.Model):
     team1 = models.ForeignKey(Team, related_name='lives_scores_1', on_delete=models.CASCADE)
     team2 = models.ForeignKey(Team, related_name='lives_scores_2', on_delete=models.CASCADE)
     status = models.CharField(max_length=50, null=True, blank=True)
+
+
+class Format(models.Model):
+    text = models.CharField(max_length=15, null=True, blank=True)
+
+    def __str__(self):
+        return self.text

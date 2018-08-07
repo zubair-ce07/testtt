@@ -17,26 +17,12 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.conf.urls import url
-from django.contrib.auth.models import User
-from rest_framework import routers, serializers, viewsets
-from articles.views import ArticleViewSet
-
-
-# Routers provide an easy way of automatically determining the URL conf.
-from users.views import UserViewSet
-
-router = routers.DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'articles', ArticleViewSet)
 
 urlpatterns = [
-    path('articles/', include('articles.urls')),
-    path('comments/', include('comments.urls')),
-    path('teams/', include('teams.urls')),
-    path('users/', include('users.urls')),
+    path('', include('articles.urls')),
+    path('', include('comments.urls')),
+    path('', include('teams.urls')),
+    path('', include('users.urls')),
     path('admin/', admin.site.urls),
-
-    url(r'^', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
