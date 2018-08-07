@@ -5,7 +5,7 @@ import re
 from scrapy import Spider, Request
 from w3lib import url
 
-from Task5.items import ProductItem
+from Task5.items import Product
 
 
 class PumaSpider(Spider):
@@ -57,7 +57,7 @@ class PumaSpider(Spider):
         yield from [Request(item_url, callback=self.parse_item, meta=response.meta) for item_url in item_urls]
 
     def parse_item(self, response):
-        item = ProductItem()
+        item = Product()
         item['retailer_sku'] = self.extract_retailer_sku(response)
         item['name'] = self.extract_name(response)
         item['brand'] = 'puma'
