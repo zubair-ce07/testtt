@@ -59,20 +59,21 @@ class MonsoonLondonParser(scrapy.Spider):
         product['gender'] = self.get_product_gender(response)
         product['skus'] = [self.generate_product_sku(variant)]
 
-        product['meta'] = {'sku_requests': self.generate_sku_requests(response, product, variant)}
-        return self.get_request_or_product(product['meta']['sku_requests'], product)
+        product['meta'] = {'requests': self.generate_sku_requests(response, product, variant)}
+        return self.get_request_or_product(product)
 
     def parse_variant(self, response):
         product = response.meta['product']
         variant = self.get_product_variant(response)
         images = self.get_product_images(response)
 
-        for image in images:
-            if image not in product['image_urls']:
-                product['image_urls'].append(image)
-
+        product['image_urls'].extend(self.filter_old_images(product, images))
         product['skus'].append(self.generate_product_sku(variant))
-        return self.get_request_or_product(product['meta']['sku_requests'], product)
+        return self.get_request_or_product(product)
+
+    @staticmethod
+    def filter_old_images(product, images):
+        return [image for image in images if image not in product['image_urls']]
 
     def generate_product_sku(self, raw_sku):
         return {
@@ -153,9 +154,9 @@ class MonsoonLondonParser(scrapy.Spider):
         return response.css(colors_css).extract()
 
     @staticmethod
-    def get_request_or_product(requests, product):
-        if requests:
-            return requests.pop()
+    def get_request_or_product(product):
+        if product['meta']['requests']:
+            return product['meta']['requests'].pop()
 
         del product['meta']
         return product
@@ -238,6 +239,10 @@ class MonsoonLondonCrawler(CrawlSpider):
         'monsoonlondon.com'
     ]
 
+    start_urls = [
+        'https://www.monsoonlondon.com/en-us/?redirected&skipRedirection=true'
+    ]
+
     headers = {
         'Connection': 'keep-alive',
         'X-Requested-With': 'XMLHttpRequest',
@@ -249,15 +254,13 @@ class MonsoonLondonCrawler(CrawlSpider):
     def start_requests(self):
         currency_url = 'https://gepi.global-e.com/proxy/initsession/302?optCountry=US&' \
                        'optCurrency=USD&webStoreCode=INT&webStoreInstanceCode=INT&_=153328738322'
-        yield scrapy.Request(currency_url, headers=self.headers, callback=self.parse_currency_data)
+        yield scrapy.Request(currency_url, headers=self.headers, callback=self.parse_forex_rate)
 
-    def parse_currency_data(self, response):
+    def parse_forex_rate(self, response):
         raw_currency = re.findall(r'\((.*)\)', response.text)[0]
         raw_currency = js2py.eval_js(f"var currency = {raw_currency};")
         self.product_parser.set_currency(raw_currency['currencyCode'], raw_currency['geFactor'])
-        landing_page_url = 'https://www.monsoonlondon.com/en-us/?redirected&skipRedirection=true'
-
-        return scrapy.Request(landing_page_url, callback=self.parse)
+        yield from super().start_requests()
 
     def parse_listing(self, response):
         sub_category_code = response.css('#js-subcategory-code::attr(value)').extract_first()
