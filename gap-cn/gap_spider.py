@@ -15,7 +15,7 @@ class GapCrawler(CrawlSpider):
     allowed_domains = ['gap.cn']
     start_urls = ['https://www.gap.cn']
 
-    download_delay = 0.2
+    download_delay = 0.3
 
     parser = GapParser()
     pagination_url = 'https://www.gap.cn/catalog/category/getCategoryProduct'
@@ -33,38 +33,36 @@ class GapCrawler(CrawlSpider):
             return self.next_page_req(response)
 
     def next_page_req(self, response):
-        category_meta_sel = response.css('.clear1')
-        if not category_meta_sel:
+        category_sel = response.css('.clear1')
+        if not category_sel:
             return
 
-        category_id = category_meta_sel.css('::attr(currentcategoryid)').extract_first()
-        current_displayed_items_css = f'::attr(currentcategorydisplaynum{category_id})'
-        current_displayed_items = category_meta_sel.css(current_displayed_items_css).extract_first()
-        total_items = category_meta_sel.css('::attr(currentcategorytotalnum)').extract_first()
+        category_id = category_sel.css('::attr(currentcategoryid)').extract_first()
+        page_size_css = f'::attr(currentcategorydisplaynum{category_id})'
+        page_size = int(category_sel.css(page_size_css).extract_first())
+        total_items = int(category_sel.css('::attr(currentcategorytotalnum)').extract_first())
+        current_page = int(category_sel.css('::attr(currentpage)').extract_first())
 
-        already_displayed_items = int(response.meta.get('total_displayed_items', 0))
-        total_displayed_items = already_displayed_items + int(current_displayed_items)
-        if total_displayed_items < int(total_items):
+        total_displayed_items = page_size * current_page
+        if total_displayed_items < total_items:
             all_products_css = f'::attr(allproductids{category_id})'
             formdata = {
                 'allCategoryId': category_id + ',',
                 'lastCategoryId': category_id,
-                'lastCategoryTotalNum': total_items,
-                'currentPage': category_meta_sel.css('::attr(currentpage)').extract_first(),
+                'lastCategoryTotalNum': str(total_items),
+                'currentPage': str(current_page),
                 'haveDisplayAllCategoryId': category_id + ',',
-                'lastCategoryDisplayNum': current_displayed_items,
-                'productIds': category_meta_sel.css(all_products_css).extract_first()
+                'lastCategoryDisplayNum': str(page_size),
+                'productIds': category_sel.css(all_products_css).extract_first()
             }
             return FormRequest(url=self.pagination_url, formdata=formdata,
-                               callback=self.parse_page_items,
-                               meta={'total_displayed_items': total_displayed_items},)
+                               callback=self.parse_page_items)
 
     def parse_page_items(self, response):
         json_res = json.loads(response.text)
         if json_res['status'] == "success":
             ajax_res = HtmlResponse(url=response.url,
-                                    body=str.encode(json_res['message']),
-                                    request=response.request)
+                                    body=str.encode(json_res['message']))
             products_urls = ajax_res.css('.categoryProductItem h5 a::attr(href)').extract()
             for url in products_urls:
                 link = url_query_cleaner(urljoin(response.url, url))

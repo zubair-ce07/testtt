@@ -39,13 +39,13 @@ class GapParser:
 
     def stock_status_request(self, response, item):
         url = f'https://www.gap.cn/catalog/product/getstock?entityId={item["retailer_sku"]}'
-        return scrapy.Request(url=url, callback=self.parse_stock_status, meta={'item': item})
+        return scrapy.Request(url=url, callback=self.check_stock_status, meta={'item': item})
 
-    def parse_stock_status(self, response):
+    def check_stock_status(self, response):
         item = response.meta.get('item')
-        stocks = json.loads(response.text)
+        stock = json.loads(response.text)
         for sku in item['skus']:
-            if not stocks[sku['id']]:
+            if not stock[sku['id']]:
                 sku['out_of_stock'] = True
         return item
 
@@ -57,21 +57,17 @@ class GapParser:
 
     def _get_care(self, response):
         css = '.pdp-mainImg td::text, #materialFeatures td::text'
-        care = response.css(css).extract()
-        return [self.clean_text(c) for c in care if self.is_care(c)]
+        raw_care = response.css(css).extract()
+        return [self.clean_text(care) for care in raw_care if self.is_care(care)]
     
     def _get_description(self, response):
         description = response.css('#short_description').xpath(
             'descendant-or-self::*/text()').extract()
-
         css = '.pdp-mainImg td::text, #materialFeatures td::text'
         raw_description = response.css(css).extract()
-        for d in raw_description:
-            if not self.is_care(d):
-                description.append(d)
-        
-        return [self.clean_text(d) for d in description if len(d.strip()) > 1]
 
+        description += [desc for desc in raw_description if not self.is_care(desc)]
+        return [self.clean_text(d) for d in description if len(d.strip()) > 1]
 
     def _get_image_urls(self, response):
         return response.css('.more-views a::attr(href)').extract()
@@ -79,10 +75,8 @@ class GapParser:
     def _get_skus(self, response):
         colors = response.css('.onelist a::attr(title)').extract()
         color_ids = response.css('.onelist a::attr(key)').extract()
-        skus = []
-        for color, color_id in zip(colors, color_ids):
-            skus += self._get_color_skus(response, color, color_id)
-        return skus
+        return [sku for color, color_id in zip(colors, color_ids) 
+                    for sku in self._get_color_skus(response, color, color_id)]
 
     def _get_color_skus(self, response, color, color_id):
         css = f'.size_list_{color_id} a'
