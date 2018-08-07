@@ -16,14 +16,14 @@ class LevisBrCrawlSpider(CrawlSpider):
 
     product_parser = ProductParser()
 
-    rules = (Rule(LinkExtractor(restrict_css=".menu-departamento"), callback='parse_category'), )
+    rules = (Rule(LinkExtractor(restrict_css=".menu-departamento"), callback='parse_category'),
+             Rule(LinkExtractor(restrict_css=".product-name a"), callback='parse_product'))
 
     def parse(self, response):
         requests = super().parse(response)
         for request in requests:
-            trail = response.meta.get('trail', [])
+            trail = response.meta.get('trail', []).copy()
             trail.append(response.url)
-            print("trail", trail)
             request.meta['trail'] = trail
             yield request
 
@@ -39,17 +39,10 @@ class LevisBrCrawlSpider(CrawlSpider):
 
         request_url = response.css(".main script").re_first(".*(/buscapagina?.*=)'")
         for page in range(1, pages + 1):
-            request = scrapy.Request(response.urljoin(f"{request_url}{page}"), callback=self.parse_listings)
+            request = scrapy.Request(response.urljoin(f"{request_url}{page}"))
             trail = response.meta['trail'].copy()
             trail.append(response.url)
             request.meta['trail'] = trail
-            yield request
-
-    def parse_listings(self, response):
-        product_le = LinkExtractor(allow="/p")
-        for product in product_le.extract_links(response):
-            request = scrapy.Request(product.url, callback=self.parse_product)
-            request.meta['trail'] = response.meta['trail']
             yield request
 
     def parse_product(self, response):
