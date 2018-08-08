@@ -51,23 +51,22 @@ class MarkhamSpider(Spider):
         item = Product()
         item_detail = json.loads(response.body)
 
-        if item_detail.get("productType") == "ColourSize":
-            item["retailer_sku"] = item_detail.get("productId")
-            item["name"] = item_detail.get("name")
-            item["brand"] = item_detail.get("brand")
-            item["url"] = response.urljoin(item_detail.get("pdpURL"))
-            item["price"] = self.extract_price(item_detail.get("price"))
-            item["image_urls"] = self.extract_image_urls(item_detail)
-            item["gender"] = "Men"
-            item["skus"] = []
+        item["retailer_sku"] = item_detail.get("productId")
+        item["name"] = item_detail.get("name")
+        item["brand"] = item_detail.get("brand")
+        item["url"] = response.urljoin(item_detail.get("pdpURL"))
+        item["price"] = self.extract_price(item_detail.get("price"))
+        item["image_urls"] = self.extract_image_urls(item_detail)
+        item["gender"] = "Men"
+        item["skus"] = []
 
-            skus_requests = []
-            skus_requests.extend([Request(url.add_or_replace_parameter(response.url, "selectedColor", color["id"]),
-                                          callback=self.parse_skus,
-                                          meta={"item": item, "skus_requests": skus_requests, "color": color["name"]})
-                                  for color in item_detail["colors"]])
+        skus_requests = []
+        skus_requests.extend([Request(url.add_or_replace_parameter(response.url, "selectedColor", color["id"]),
+                                      callback=self.parse_skus,
+                                      meta={"item": item, "skus_requests": skus_requests, "color": color["name"]})
+                              for color in item_detail["colors"]])
 
-            return skus_requests.pop()
+        return skus_requests.pop()
 
     def parse_skus(self, response):
         item = response.meta["item"]
