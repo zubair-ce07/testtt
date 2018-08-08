@@ -16,14 +16,14 @@ class HunkemollerDeCrawlSpider(CrawlSpider):
     )
 
     def parse(self, response):
-        total_requests = super().parse(response)
+        total_requests = super(HunkemollerDeCrawlSpider, self).parse(response)
         title = response.css('.parent-title span::text').extract_first(default='')
+        trail = response.meta.get('trail', []).copy()
+        trail.append([title, response.url])
+
         for request in total_requests:
-            trail = response.meta.get('trail', [])
-            trail.append([title, response.url])
             request.meta['trail'] = trail
             yield request
 
     def parse_item(self, response):
         return self.parser.parse(response)
-

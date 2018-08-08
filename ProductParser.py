@@ -32,9 +32,7 @@ class ProductParser(Spider):
         return retailer_sku.split(' ')[1]
 
     def extract_trails(self, response):
-        new_trails = set(tuple(trail) for trail in response.meta.get('trail'))          # Remove redundant trails
-        new_trails = [list(trail) for trail in new_trails]                              # Back to list format
-        return new_trails
+        return response.meta.get('trail').copy()
 
     def extract_product_name(self, response):
         return response.css('.product-name h1::text').extract_first()
@@ -70,13 +68,14 @@ class ProductParser(Spider):
         return list(sku_model_no.keys())[0]
 
     def extract_skus(self, response):
-        skus = dict()
+        skus = {}
+        sku_info = {
+            'color': self.extract_colors(response)[0],
+            'currency': self.extract_currency(response),
+            'price': self.extract_price(response)
+        }
         for size in response.css('.product-info .selectmenu :not([selected]):not(span)'):
-            sku_details = dict()
-            sku_details['color'] = self.extract_colors(response)[0]
-            sku_details['currency'] = self.extract_currency(response)
-            sku_details['price'] = self.extract_price(response)
-            sku_details['size'] = size.css('::text').extract_first().strip()
-            skus[self.extract_sku_model(size)] = sku_details
+            sku = sku_info.copy()
+            sku['size'] = size.css('::text').extract_first().strip()
+            skus[self.extract_sku_model(size)] = sku
         return skus
-
