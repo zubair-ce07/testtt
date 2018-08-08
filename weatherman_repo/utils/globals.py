@@ -53,3 +53,15 @@ class MonthsMapper(object):
     @staticmethod
     def get(item):
         return MonthsMapper.__months_map.get(item)
+
+
+class Helper(object):
+
+    __helper_dict = {
+        'neg-infinity': -99999,
+        'pos-infinity': 99999
+    }
+
+    @staticmethod
+    def get(item):
+        return Helper.__helper_dict.get(item)

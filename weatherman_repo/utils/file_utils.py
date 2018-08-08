@@ -2,7 +2,7 @@ import csv
 import glob
 import os
 
-from weatherman_repo.utils.globals import FileGlobals
+from .globals import FileGlobals
 
 
 class ParseFiles(object):

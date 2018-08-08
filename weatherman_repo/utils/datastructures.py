@@ -1,5 +1,4 @@
-from weatherman_repo.utils.file_utils import ParseFiles
-
+from .file_utils import ParseFiles
 
 class WeatherReadingData(object):
     """
@@ -12,11 +11,13 @@ class WeatherReadingData(object):
         self.month = kwargs.get('month', '')
 
     @property
-    def get_weather_data(self):
+    def weather_data(self):
         file_parser = ParseFiles.parse_data(self.file_path, self.year, self.month)
+        weather_file_data = list()
         for weather_data_entry in file_parser:
             for row in weather_data_entry:
-                yield row
+                weather_file_data.append(row)
+        return weather_file_data
 
 
 class WeatherDataCalculationResults(object):
