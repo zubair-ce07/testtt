@@ -7,54 +7,49 @@ import re
 class OrsayproductSpider(scrapy.Spider):
     name = 'orsayproducts'
     allowed_domains = ['orsay.com']
-    start_urls = ['http://www.orsay.com/de-de/'
-                  + 'a-shape-kleid-mit-puffaermel-421204526000.html']
-    
-    def __init__(self):
-        self.product_skus = {}
+    start_urls = ['http://www.orsay.com/de-de/']
 
-    # def parse(self, response):
-    #     product_url = self.get_products_page(response)
-    #     yield scrapy.Request(
-    #         url=product_url, callback=self.parse_categories)
-
-    # def parse_categories(self, response):
-    #     categories_urls = self.get_categories(response)
-    #     for url in categories_urls:
-    #         yield scrapy.Request(
-    #             url=url+"?sz=72", callback=self.parse_listings)
-
-    # def parse_listings(self, response):
-    #     product_detials_urls = self.get_product_details_urls(response)
-    #     next_page = self.get_next_page(response)
-    #     if next_page:
-    #         yield scrapy.Request(
-    #                 url=next_page, callback=self.parse_listings)
-    #     for url in product_detials_urls:
-    #         yield scrapy.Request(
-    #                 url=url, callback=self.parse_product)
-        
     def parse(self, response):
-        product_imgs = self.get_product_imgs(response)
-        product_details = self.get_product_details(response)
-        description = self.get_product_description(response)
-        self.get_product_skus(response)
-        care_text = self.get_care_text(response)
-        colors_to_follow = self.has_more_colors(response)
-        for color_url in colors_to_follow:
+        product_url = self.get_products_page(response)
+        yield scrapy.Request(
+            url=product_url, callback=self.parse_categories)
+
+    def parse_categories(self, response):
+        categories_urls = self.get_categories(response)
+        for url in categories_urls:
             yield scrapy.Request(
-                url=color_url, callback=self.get_product_skus)
-        else:  # Add wait for response from other requests here!
-            yield {
-                "brand": "Orsay",
-                "description": description,
-                "product_imgs": product_imgs,
-                "category": product_details["categoryName"],
-                "name": product_details["name"],
-                "skus": self.product_skus,
-                "url": response.request.url,
-                "care": [care_text]
-            }
+                url=url+"?sz=72", callback=self.parse_listings)
+
+    def parse_listings(self, response):
+        product_detials_urls = self.get_product_details_urls(response)
+        next_page = self.get_next_page(response)
+        if next_page:
+            yield scrapy.Request(
+                    url=next_page, callback=self.parse)
+        for url in product_detials_urls:
+            yield scrapy.Request(
+                    url=url, callback=self.parse_product)
+        
+    def parse_product(self, response):
+        product_item = {
+            "brand": "Orsay",
+            "description": self.get_product_description(response),
+            "product_imgs": self.get_product_imgs(response),
+            "category": (self.get_product_details(response))["categoryName"],
+            "name": (self.get_product_details(response))["name"],
+            "skus": self.convert_gen_to_dict(self.get_product_skus(response)),
+            "urls": [response.request.url],
+            "care": [self.get_care_text(response)]
+        }
+        colors_to_follow = self.has_more_colors(response)
+        if len(colors_to_follow) > 1:
+            url = self.get_color_url(colors_to_follow)
+            yield scrapy.Request(
+                    url=url, callback=self.get_product_skus,
+                    meta={'colors_list': colors_to_follow,
+                          'item':  product_item})
+        else:
+            yield product_item
 
     def clean_text(self, text):
         text = [txt.strip() for txt in text]
@@ -79,13 +74,16 @@ class OrsayproductSpider(scrapy.Spider):
     
     def get_total_products(self, response):
         total_products = response.css(
-                ".load-more-progress-label::text").extract()[1]
-        return self.get_number(total_products)
-    
+                ".load-more-progress-label::text").extract()
+        for txt in total_products:
+            if self.has_numbers(txt):
+                return self.get_number(txt)
+                
     def get_next_page(self, response):
         total_products = self.get_total_products(response)
         listed_products = self.get_number(response.url)
-        if int(total_products) < int(listed_products):
+        if (int(total_products) < int(listed_products) 
+                and int(total_products) > 72):
             return response.url.replace(
                     listed_products, str(int(listed_products)+72))
         else:
@@ -129,8 +127,24 @@ class OrsayproductSpider(scrapy.Spider):
                     }
                 }
                 sub_skus.update(skus)
-        self.product_skus.update(sub_skus)
-
+        product_item = None
+        if 'item' in response.meta:
+            product_item = response.meta['item']
+            product_item['skus'].update(sub_skus)
+            response.meta['item']['urls'].append(response.url)
+        else:
+            yield sub_skus
+        if 'colors_list' in response.meta:
+            if len(response.meta['colors_list']) == 0:
+                yield response.meta['item']
+            else:
+                colors_to_follow = response.meta['colors_list']
+                url = self.get_color_url(colors_to_follow)
+                yield scrapy.Request(
+                        url=url, callback=self.get_product_skus,
+                        meta={'colors_list': colors_to_follow,
+                              'item':  product_item})
+            
     def get_care_text(self, response):
         care_text = response.css(
                     ".product-material div::text,.product-material p::text "
@@ -142,4 +156,16 @@ class OrsayproductSpider(scrapy.Spider):
         colors_to_follow = response.css(
             ".color .selectable a::attr(href)").extract()
         return colors_to_follow
-
+    
+    def get_color_url(self, colors_to_follow):
+        url = colors_to_follow[0]
+        colors_to_follow.pop(0)
+        return url
+        
+    def convert_gen_to_dict(self, gen_obj):
+        for obj in gen_obj:
+            return obj
+    
+    def has_numbers(self, inputString):
+        return any(char.isdigit() for char in inputString)
+ 
