@@ -5,38 +5,39 @@ import w3lib.url as w3url
 
 class Parser(scrapy.Spider):
     name = "Parser"
-
     product = {}
     response = None
     possible_genders = {"men", "women", "girls", "boys"}
     Default_gender = "unisex_adults"
 
     def parse(self, response):
-        self.response = response
-        self.product["retailer_sku"] = self.get_retailer_sku()
-        self.product["lang"] = "de"
-        self.product["gender"] = self.get_gender()
-        self.product["category"] = self.get_category()
-        self.product["industry"] = None
-        self.product["brand"] = "Joop"
-        self.product["url"] = w3url.url_query_cleaner(self.response.url)
-        self.product["market"] = "DE"
-        self.product["trail"] = self.response.meta["trail"].copy()
-        self.product["retailer"] = "joop-de"
-        self.product["url_original"] = self.response.url
-        self.product["name"] = self.get_name()
-        self.product["description"] = self.get_description()
-        self.product["care"] = self.get_care()
-        self.product["image_urls"] = self.get_image_urls()
-        if not self.is_outofstock():
-            self.product["skus"] = self.get_skus()
-            self.product["price"] = self.get_price()
-            self.product["currency"] = self.get_currency()
+        if response.css('body.pda'):
+            self.response = response
+            self.product["retailer_sku"] = self.get_retailer_sku()
+            self.product["lang"] = "de"
+            self.product["gender"] = self.get_gender()
+            self.product["category"] = self.get_category()
+            self.product["industry"] = None
+            self.product["brand"] = "Joop"
+            self.product["url"] = self.response.url
+            self.product["market"] = "DE"
+            self.product["trail"] = self.response.meta["trail"].copy()
+            self.product["retailer"] = "joop-de"
+            self.product["url_original"] = self.response.url
+            self.product["name"] = self.get_name()
+            self.product["description"] = self.get_description()
+            self.product["care"] = self.get_care()
+            self.product["image_urls"] = self.get_image_urls()
+            if not self.is_outofstock():
+                self.product["skus"] = self.get_skus()
+                self.product["price"] = self.get_price()
+                self.product["currency"] = self.get_currency()
+            else:
+                self.product["out_of_stock"] = True
+            yield self.product
+            yield from self.colour_requests()
         else:
-            self.product["out_of_stock"] = True
-        yield self.product
-        for colour_url in self.colour_urls():
-            yield colour_url
+            self.logger.error('skipping %s because of multiple products page layout.', response.url)
 
     def get_skus(self):
         common_sku = {
@@ -96,8 +97,14 @@ class Parser(scrapy.Spider):
         care_lines = ''.join(care_lines)
         return care_lines.split(". ")
 
-    def colour_urls(self):
-        return self.response.css('.colors a::attr(href)').extract()
+    def colour_requests(self):
+        colour_urls = self.response.css('.colors a::attr(href)').extract()
+        trail = self.response.meta.get("trail", []).copy()
+        trail.append(self.response.url)
+        for url in colour_urls:
+            request = self.response.follow(url, callback=self.parse)
+            request.meta["trail"] = trail
+            yield request
 
     def is_outofstock(self):
         return self.response.css('meta[itemprop="availability"][content="out_of_stock"]')

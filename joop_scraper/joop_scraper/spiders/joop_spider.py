@@ -1,5 +1,6 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+import w3lib.url as w3url
 from .product_schema import Parser
 
 
@@ -9,24 +10,21 @@ class JoopSpider(CrawlSpider):
     start_urls = [
         'https://joop.com/de/de/'
     ]
-    rules = (Rule(LinkExtractor(restrict_css='#products>li>a'), callback="parse_product"),
+
+    @staticmethod
+    def clean_links(links):
+        return [w3url.url_query_cleaner(link) for link in links]
+
+    rules = (Rule(LinkExtractor(restrict_css='#products'), callback="parse_product", process_links=clean_links),
              Rule(LinkExtractor(restrict_css='#mainnav'), callback='parse'),
              )
 
     def parse(self, response):
+        trail = response.meta.get("trail", []).copy()
+        trail.append(response.url)
         for request in super(JoopSpider, self).parse(response):
-            trail = response.meta.get("trail", []).copy()
-            trail.append(response.url)
             request.meta["trail"] = trail
             yield request
 
     def parse_product(self, response):
-        if response.css("body.pda"):
-            for url_or_item in self.parser.parse(response):
-                if not isinstance(url_or_item, dict):
-                    request = response.follow(url_or_item, callback=self.parse_product)
-                    request.meta["trail"] = response.meta["trail"].copy()
-                    request.meta["trail"].append(response.url)
-                    yield request
-                else:
-                    yield url_or_item
+        yield from self.parser.parse(response)
