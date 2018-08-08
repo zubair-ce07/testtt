@@ -18,10 +18,17 @@ class WhiteStuffSpider(CrawlSpider):
                                 tags=('li',), attrs=('data-url',)), follow=True),
              Rule(LinkExtractor(restrict_css='.product-tile.product-tile--quickmenu'), callback='parse_item'))
 
-    currency_translation = {'$': 'US Dollar',
-                            '€': "EURO"}
+    currencies = {'$': 'US Dollar',
+                  '€': 'EURO',
+                  '£': 'Pound Sterling'}
     color_parameters = (('storeId', '10154'), ('langId', '-3'))
     color_url_t = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?'
+    genders = {'herren': 'male',
+               'damen': 'female',
+               'jungen': 'boy',
+               'maedchen': 'girl',
+               'baby': 'kids',
+               'kinder': 'kids'}
 
     def parse_color(self, response):
         item = response.meta.get('item')
@@ -61,6 +68,7 @@ class WhiteStuffSpider(CrawlSpider):
         item['name'] = self.get_title(response)
         item['url'] = response.url
         item['categories'] = self.get_categories(response)
+        item['gender'] = self.get_gender(response)
         retailer_sku = self.get_retailer_sku(response)
         item['retailer_sku'] = retailer_sku
         item['description'] = self.get_description(response)
@@ -108,7 +116,7 @@ class WhiteStuffSpider(CrawlSpider):
 
     def get_currency(self, response):
         currency_symbol = self.get_currency_symbol(response)
-        return self.currency_translation.get(currency_symbol)
+        return self.currencies.get(currency_symbol)
 
     @staticmethod
     def get_currency_symbol(response):
@@ -118,6 +126,12 @@ class WhiteStuffSpider(CrawlSpider):
     @staticmethod
     def get_brand_name(response):
         return response.css('.product-stage__title strong::text').extract()
+
+    def get_gender(self, response):
+        category_url = response.css('.util-link-left.util-text-smaller::attr(href)').extract_first()
+        for gender_german, gender in self.genders.items():
+            if gender_german in category_url:
+                return gender
 
     @staticmethod
     def get_image_urls(response):
@@ -149,8 +163,9 @@ class WhiteStuffSpider(CrawlSpider):
 
     @staticmethod
     def get_categories(response):
-        return response.css('.util-link-left.util-text-smaller::text').extract_first().strip()
-
+        raw_category = response.css('.util-link-left.util-text-smaller::text').extract_first().strip()
+        return re.sub(r"Zurück zu ", '', raw_category)
+    
     @staticmethod
     def get_color_ids(response):
         return response.css('.box--product .color-list li::attr(data-color)').extract()
