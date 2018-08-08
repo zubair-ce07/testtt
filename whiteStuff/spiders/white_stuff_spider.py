@@ -18,7 +18,6 @@ class WhiteStuffSpider(CrawlSpider):
 
     skus_url_t = "https://www.whitestuff.com/global/action/GetProductData-FormatProduct?"
     category_url_t = 'https://fsm.attraqt.com/zones-js.aspx?'
-    currency = ''
     genders = {"womens": "female",
                "mens": "male",
                "boys": "boy",
