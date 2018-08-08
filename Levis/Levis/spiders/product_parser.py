@@ -67,12 +67,13 @@ class ProductParser:
                 continue
             sku_id = raw_sku['sku']
             skus[sku_id] = {}
-            skus[sku_id]['price'] = raw_sku['bestPrice']
-            skus[sku_id]['currency'] = 'BRL'
+            sku = skus[sku_id]
+            sku['price'] = raw_sku['bestPrice']
+            sku['currency'] = 'BRL'
             if raw_sku['listPrice']:
-                skus[sku_id]['previous_prices'] = [raw_sku['listPrice']]
-            skus[sku_id]['colour'] = color
-            skus[sku_id]['size'] = raw_sku['dimensions'].get('Tamanho', raw_sku['dimensions'].get('TAMANHO'))
+                sku['previous_prices'] = [raw_sku['listPrice']]
+            sku['colour'] = color
+            sku['size'] = raw_sku['dimensions'].get('Tamanho', raw_sku['dimensions'].get('TAMANHO'))
 
         return skus
 
