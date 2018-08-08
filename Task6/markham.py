@@ -31,8 +31,7 @@ class MarkhamSpider(Spider):
                 yield from [Request(url.add_or_replace_parameter(response.url, "N", category["value"]),
                                     callback=self.parse_categories) for category in categories]
             else:
-                item_detail = json.loads(response.body).get("data")
-                total_pages = item_detail["totalPages"]
+                total_pages = json.loads(response.body)["data"]["totalPages"]
                 yield from [Request(url.add_or_replace_parameter(response.url, "page", page_number),
                                     callback=self.parse_pagination)
                             for page_number in range(1, total_pages + 1)]
@@ -67,7 +66,7 @@ class MarkhamSpider(Spider):
                                           callback=self.parse_skus,
                                           meta={"item": item, "skus_requests": skus_requests, "color": color["name"]})
                                   for color in item_detail["colors"]])
-        
+
             return skus_requests.pop()
 
     def parse_skus(self, response):
@@ -82,8 +81,10 @@ class MarkhamSpider(Spider):
                 item["skus"].append(sku)
         else:
             item["skus"] = self._create_sku(color_name, None, item_detail.get("oldPrice"))
+
         if skus_requests:
             return skus_requests.pop()
+
         return Request(item["url"], callback=self.parse_html_response, meta=response.meta)
 
     def _create_sku(self, color, size, old_price):
