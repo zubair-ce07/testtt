@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import scrapy
-import re
 import json
-
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
-from scrapy.http import FormRequest
+import re
 from urllib.parse import urljoin
+
+import scrapy
+from scrapy.http import FormRequest
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 from items import WoolrichItem
 
@@ -14,23 +14,20 @@ from items import WoolrichItem
 class WoolrichSpider(CrawlSpider):
     name = 'woolrich'
     allowed_domains = ['woolrich.com']
-    start_urls = [
-        'https://www.woolrich.com/woolrich-x-the-hill-side-backpack-bag-4139/',
-        'https://www.woolrich.com/mens-cotton-check-shirt-john-rich-bros-ws6009/',
-        ]
+    start_urls = ['https://www.woolrich.com']
 
-    custom_settings = {'DOWNLOAD_DELAY': 0.2, 'HTTPCACHE_ENABLED': True}
+    custom_settings = {'DOWNLOAD_DELAY': 0.5, 'HTTPCACHE_ENABLED': True}
 
     genders = ['Men', 'Women']
     currency = 'USD'
 
-    # listing_css = ['#primary', '.pagination-item--next']
-    # rules = (
-    #             Rule(LinkExtractor(restrict_css=listing_css), follow=True),
-    #             Rule(LinkExtractor(restrict_css=('.card-title')), callback='parse_item'),
-    #         )
+    listing_css = ['#primary', '.pagination-item--next']
+    rules = (
+                Rule(LinkExtractor(restrict_css=listing_css), follow=True),
+                Rule(LinkExtractor(restrict_css=('.card-title')), callback='parse_item'),
+            )
 
-    def parse(self, response):
+    def parse_item(self, response):
         self.currency = response.css('[itemprop="priceCurrency"]::attr(content)').extract_first()
 
         item = WoolrichItem()
@@ -63,10 +60,11 @@ class WoolrichSpider(CrawlSpider):
 
         sku_details = json.loads(response.text)['data']
         sku_item['id'] = sku_details['sku']
-        sku_item['price'] = sku_details['price']['without_tax']['value']
+        sku_item['price'] = self.to_cent(sku_details['price']['without_tax']['value'])
 
         if sku_details['price'].get('non_sale_price_without_tax'):
-            sku_item['previous price'] = sku_details['price']['non_sale_price_without_tax']['value']
+            sku_item['previous price'] = self.to_cent(
+                    sku_details['price']['non_sale_price_without_tax']['value'])
 
         if not sku_details['instock']:
             sku_item['out_of_stock'] = True
@@ -177,6 +175,9 @@ class WoolrichSpider(CrawlSpider):
     def get_attr_key(self, response, attr_type):
         attr_value = int(response.css('.form-option-swatch::attr(data-swatch-id)').extract_first())
         return f'attribute[{attr_value + attr_type}]'
+    
+    def to_cent(self, price):
+        return round(price*100)
 
     def clean_text(self, text):
             return re.sub(r'\s+', ' ', text)
