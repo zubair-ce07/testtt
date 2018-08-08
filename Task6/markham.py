@@ -65,8 +65,8 @@ class MarkhamSpider(Spider):
                                       callback=self.parse_skus,
                                       meta={"item": item, "skus_requests": skus_requests, "color": color["name"]})
                               for color in item_detail["colors"]])
-
-        return skus_requests.pop()
+        if skus_requests:
+            return skus_requests.pop()
 
     def parse_skus(self, response):
         item = response.meta["item"]
@@ -76,10 +76,10 @@ class MarkhamSpider(Spider):
 
         if item_detail.get("sizes"):
             for size in item_detail["sizes"]:
-                sku = self._create_sku(color_name, size, item_detail.get("oldPrice"))
+                sku = self._create_sku(color_name, size, item_detail)
                 item["skus"].append(sku)
         else:
-            item["skus"] = self._create_sku(color_name, None, item_detail.get("oldPrice"))
+            item["skus"] = self._create_sku(color_name, None, item_detail)
 
         if skus_requests:
             return skus_requests.pop()
@@ -94,9 +94,9 @@ class MarkhamSpider(Spider):
         if size and not size.get("available"):
             sku["out_of_stock"] = True
 
-        if old_price:
+        if old_price.get("price"):
             sku["previous_prices"] = [].append(self.extract_price(old_price))
-            sku["currency"] = old_price[0]
+            sku["currency"] = old_price.get("price")[0]
 
         return sku
 
@@ -109,8 +109,9 @@ class MarkhamSpider(Spider):
         return item
 
     def extract_price(self, item_detail):
-        raw_price = re.search('([\d,]+)', item_detail.get("price"), re.DOTALL).group(1)
-        return float(raw_price.replace(',', '')) * 100
+        if item_detail.get("price"):
+            raw_price = re.search('([\d,]+)', item_detail.get("price"), re.DOTALL).group(1)
+            return float(raw_price.replace(',', '')) * 100
 
     def extract_image_urls(self, item_detail):
         return [img["large"] for img in item_detail["images"]] if item_detail.get("images") else None
