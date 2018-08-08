@@ -44,14 +44,12 @@ class WhiteStuffSpider(CrawlSpider):
         yield Request(url=f'{self.category_url_t}{urlencode(category_parameters)}', callback=self.parse_category)
 
     def parse_category(self, response):
-        query_string = urlparse(response.url).query
-        parsed_query_string = parse_qs(query_string)
-        page_url = parsed_query_string['pageurl'][0]
         html_response = self.extract_html_from_response(response)
         if not html_response:
             return
+        request_parameters = self.get_request_paramters(response)
         selector = Selector(text=html_response)
-        for request in self.get_item_requests(selector, page_url):
+        for request in self.get_item_requests(selector, request_parameters['pageurl']):
             yield request
         return self.get_pagination_requests(response)
 
@@ -60,14 +58,9 @@ class WhiteStuffSpider(CrawlSpider):
         return [Request(url=urljoin(page_url, url), callback=self.parse_item) for url in selector.css(css).extract()]
 
     def get_pagination_requests(self, response):
-        query_string = urlparse(response.url).query
-        parsed_query_string = parse_qs(query_string)
-        url = parsed_query_string['pageurl'][0]
-        if 'esp_pg' in url:
+        request_parameters = self.get_request_paramters(response)
+        if 'esp_pg' in request_parameters['pageurl']:
             return
-        category = parsed_query_string['config_category'][0]
-        category_tree = parsed_query_string['config_categorytree'][0]
-
         html_response = self.extract_html_from_response(response)
         selector = Selector(text=html_response)
         total_pages = int(selector.css('#TotalPages::attr(value)').extract_first() or '1')
@@ -75,10 +68,10 @@ class WhiteStuffSpider(CrawlSpider):
         if total_pages <= 1:
             return
         category_parameters = self.category_parameters.copy()
-        category_parameters['config_category'] = category
-        category_parameters['config_categorytree'] = category_tree
+        category_parameters['config_category'] = request_parameters['category']
+        category_parameters['config_categorytree'] = request_parameters['category_tree']
         for page_no in range(2, total_pages):
-            next_url = urljoin(url, f'/#esp_pg={page_no}')
+            next_url = urljoin(request_parameters['pageurl'], f'/#esp_pg={page_no}')
             category_parameters['pageurl'] = next_url
             yield Request(url=f'{self.category_url_t}{urlencode(category_parameters)}', callback=self.parse_category)
 
@@ -104,6 +97,16 @@ class WhiteStuffSpider(CrawlSpider):
         item['image_urls'] = self.get_image_urls(raw_skus)
         item['skus'] = self.get_skus(raw_skus, currency)
         return item
+
+    @staticmethod
+    def get_request_paramters(response):
+        query_string = urlparse(response.url).query
+        parsed_query_string = parse_qs(query_string)
+        request_parameters = dict()
+        request_parameters['pageurl'] = parsed_query_string['pageurl'][0]
+        request_parameters['category'] = parsed_query_string['config_category'][0]
+        request_parameters['category_tree'] = parsed_query_string['config_categorytree'][0]
+        return request_parameters
 
     @staticmethod
     def get_raw_skus(response):
