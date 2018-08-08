@@ -10,6 +10,7 @@ WEATHER_READINGS = []
 
 
 class Weather:
+
     def __init__(self, date, max_temp, min_temp, max_humidity, mean_humidity):
         self.date = date
         self.max_temp = max_temp
@@ -19,6 +20,7 @@ class Weather:
 
 
 class Validator:
+
     @staticmethod
     def validate_args(argument):
         if len(argument) > 4:
@@ -29,6 +31,7 @@ class Validator:
 
 
 class FileParser:
+
     def __init__(self, directory_path, argument):
         try:
             Validator.validate_args(argument)
@@ -58,6 +61,7 @@ class FileParser:
 
 
 class ResultComputer:
+
     def give_year_data(self, year):
         highest_temp = 0
         highest_temp_date = 0
@@ -111,6 +115,7 @@ class ResultComputer:
 
 
 class GenerateReports:
+
     def generate_average_weather_report(self, highest_average, lowest_average, humidity_average):
         print("Highest Average: {}C".format(highest_average))
         print("Lowest Average: {}C".format(lowest_average))
