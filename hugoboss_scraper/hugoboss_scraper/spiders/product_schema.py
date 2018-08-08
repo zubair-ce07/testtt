@@ -8,8 +8,8 @@ class Parser(scrapy.Spider):
     common_sku = {}
     product = {}
     response = None
-    possible_genders = {"Men", "Women", "Girls", "Boys"}
-    Default_gender = "Unisex_Adults"
+    possible_genders = {"men", "women", "girls", "boys"}
+    Default_gender = "unisex_adults"
 
     def parse(self, response):
         self.response = response
