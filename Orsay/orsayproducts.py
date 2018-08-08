@@ -2,34 +2,31 @@
 import scrapy
 import json
 import re
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 
 
-class OrsayproductSpider(scrapy.Spider):
+class OrsayproductSpider(CrawlSpider):
     name = 'orsayproducts'
     allowed_domains = ['orsay.com']
     start_urls = ['http://www.orsay.com/de-de/']
-
-    def parse(self, response):
-        product_url = self.get_products_page(response)
-        yield scrapy.Request(
-            url=product_url, callback=self.parse_categories)
-
-    def parse_categories(self, response):
-        categories_urls = self.get_categories(response)
-        for url in categories_urls:
-            yield scrapy.Request(
-                url=url+"?sz=72", callback=self.parse_listings)
+    rules = (
+                Rule(LinkExtractor(
+                    allow=(r'([\w \W])*/produkte/\Z',)), follow=True),
+                Rule(LinkExtractor(
+                    allow=(r'([\w \W])*/produkte/([\w \W])*',)),
+                    callback='parse_listings', follow=True),
+                Rule(LinkExtractor(
+                    allow=(r'([\w \W])*.html\Z',)),
+                    callback='parse_product', follow=True),
+            )
 
     def parse_listings(self, response):
-        product_detials_urls = self.get_product_details_urls(response)
         next_page = self.get_next_page(response)
         if next_page:
             yield scrapy.Request(
-                    url=next_page, callback=self.parse)
-        for url in product_detials_urls:
-            yield scrapy.Request(
-                    url=url, callback=self.parse_product)
-        
+                    url=next_page, callback=self.parse_listings)
+
     def parse_product(self, response):
         product_item = {
             "brand": "Orsay",
@@ -54,34 +51,26 @@ class OrsayproductSpider(scrapy.Spider):
     def clean_text(self, text):
         text = [txt.strip() for txt in text]
         return list(filter(lambda txt: txt != '', text))
-    
+                
     def get_number(self, text_str):
         return re.findall(r'\d+', text_str)[0]
 
-    def get_products_page(self, response):
-        product_urls = response.css(".level-1 a::attr(href)").extract()
-        return ([url for url in product_urls if "produkte" in url])[0]
-    
-    def get_categories(self, response):
-        return response.css(
-                ".refinement-category-item a::attr(href)").extract()
-    
-    def get_product_details_urls(self, response):
-        product_detials_urls = response.css(
-                ".grid-tile .product-image a::attr(href)").extract()
-        return [response.urljoin(url)
-                for url in product_detials_urls]
-    
+    def has_numbers(self, inputString):
+        return any(char.isdigit() for char in inputString)
+
     def get_total_products(self, response):
         total_products = response.css(
                 ".load-more-progress-label::text").extract()
         for txt in total_products:
             if self.has_numbers(txt):
                 return self.get_number(txt)
-                
+    
     def get_next_page(self, response):
+        product_url = response.url
+        if not self.has_numbers(response.url):
+            product_url = response.urljoin("?sz=72")    
         total_products = self.get_total_products(response)
-        listed_products = self.get_number(response.url)
+        listed_products = self.get_number(product_url)
         if (int(total_products) < int(listed_products) 
                 and int(total_products) > 72):
             return response.url.replace(
@@ -165,7 +154,3 @@ class OrsayproductSpider(scrapy.Spider):
     def convert_gen_to_dict(self, gen_obj):
         for obj in gen_obj:
             return obj
-    
-    def has_numbers(self, inputString):
-        return any(char.isdigit() for char in inputString)
- 
