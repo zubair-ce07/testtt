@@ -18,7 +18,7 @@ class Weather:
         self.mean_humidity = mean_humidity
 
 
-class Validate:
+class Validator:
     @staticmethod
     def validate_args(argument):
         if len(argument) > 4:
@@ -31,9 +31,10 @@ class Validate:
 class FileParser:
     def __init__(self, directory_path, argument):
         try:
-            Validate.validate_args(argument)
+            Validator.validate_args(argument)
         except:
-            logging.error("Invalid input")
+            logging.error('Invalid argument %s', argument)
+            raise
         file_path = directory_path + "/"
         self.file_names = os.listdir(file_path)
         check_file = False
@@ -92,24 +93,20 @@ class ResultComputer:
     def give_month_data(self, year_month):
         year_month = year_month.split("/")
         highest_cumulative = 0
-        highest_counter = 0
         lowest_cumulative = 0
-        lowest_counter = 0
         humidity_cumulative = 0
-        humidity_counter = 0
+        counter = 0
         for reading in WEATHER_READINGS:
             reading_temp = reading.date.split("-")
             if year_month[0] == reading_temp[0] and year_month[1] == reading_temp[1] and reading.max_temp != ""\
                     and reading.min_temp != "" and reading.mean_humidity != "":
                     highest_cumulative = highest_cumulative + int(reading.max_temp)
-                    highest_counter = highest_counter + 1
                     lowest_cumulative = lowest_cumulative + int(reading.min_temp)
-                    lowest_counter = lowest_counter + 1
                     humidity_cumulative = humidity_cumulative + int(reading.mean_humidity)
-                    humidity_counter = humidity_counter + 1
-        highest_average = int(highest_cumulative / highest_counter)
-        lowest_average = int(lowest_cumulative / lowest_counter)
-        humidity_average = int(humidity_cumulative / humidity_counter)
+                    counter = counter + 1
+        highest_average = int(highest_cumulative / counter)
+        lowest_average = int(lowest_cumulative / counter)
+        humidity_average = int(humidity_cumulative / counter)
         return highest_average, lowest_average, humidity_average
 
 
