@@ -53,7 +53,7 @@ class FileParser:
                             WEATHER_READINGS.append(weather)
 
         if not check_file:
-            raise ValueError("Year not found")
+            raise ValueError("Data for year {} doesn't exist.".format(year))
 
 
 class ResultComputer:
@@ -69,16 +69,13 @@ class ResultComputer:
                     and reading.max_humidity != "":
                 if int(reading.max_temp) > highest_temp:
                     highest_temp = int(reading.max_temp)
-                    highest_temp_date = reading.date
-                    highest_temp_date = highest_temp_date.split("-")
+                    highest_temp_date = reading.date.split("-")
                 if int(reading.min_temp) < lowest_temp:
                     lowest_temp = int(reading.min_temp)
-                    lowest_temp_date = reading.date
-                    lowest_temp_date = lowest_temp_date.split("-")
+                    lowest_temp_date = reading.date.split("-")
                 if int(reading.max_humidity) > humidity:
                     humidity = int(reading.max_humidity)
-                    humidity_date = reading.date
-                    humidity_date = humidity_date.split("-")
+                    humidity_date = reading.date.split("-")
         weather_data = {
             "HighestTemp": str(highest_temp),
             "HighestTempMonth": calendar.month_name[int(highest_temp_date[1])],
