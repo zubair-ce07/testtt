@@ -1,6 +1,6 @@
+import datetime
 import json
 import time
-import datetime
 
 from ..items import ProductItem
 
@@ -17,11 +17,9 @@ class ProductParser:
 
         product['retailer_sku'] = self.product_id(response)
         product['lang'] = 'pt'
-        product['uuid'] = None
         product['trail'] = response.meta.get('trail', [])
         product['gender'] = self.gender(response)
         product['category'] = self.category(response)
-        product['industry'] = None
         product['brand'] = self.brand(response)
         product['url'] = response.url
         product['date'] = int(time.time())
@@ -38,11 +36,11 @@ class ProductParser:
             product['price'] = self.price(response)
             product['currency'] = 'BRL'
         else:
-            product['skus'] = []
+            product['skus'] = {}
             product['out_of_stock'] = True
         product['spider_name'] = 'levis-br-crawl'
 
-        return product
+        yield product
 
     def raw_skus(self, response):
         sku_re = "skuJson_0\s=\s(.*});"
@@ -64,16 +62,17 @@ class ProductParser:
         color = self.color(response)
 
         skus = dict()
-        for sku in raw_skus['skus']:
-            if sku['available']:
-                sku_id = sku['sku']
-                skus[sku_id] = {}
-                skus[sku_id]['price'] = sku['bestPrice']
-                skus[sku_id]['currency'] = 'BRL'
-                if sku['listPrice']:
-                    skus[sku_id]['previous_prices'] = [sku['listPrice']]
-                skus[sku_id]['colour'] = color
-                skus[sku_id]['size'] = sku['dimensions'].get('Tamanho', sku['dimensions'].get('TAMANHO'))
+        for raw_sku in raw_skus['skus']:
+            if not raw_sku['available']:
+                continue
+            sku_id = raw_sku['sku']
+            skus[sku_id] = {}
+            skus[sku_id]['price'] = raw_sku['bestPrice']
+            skus[sku_id]['currency'] = 'BRL'
+            if raw_sku['listPrice']:
+                skus[sku_id]['previous_prices'] = [raw_sku['listPrice']]
+            skus[sku_id]['colour'] = color
+            skus[sku_id]['size'] = raw_sku['dimensions'].get('Tamanho', raw_sku['dimensions'].get('TAMANHO'))
 
         return skus
 
@@ -110,4 +109,4 @@ class ProductParser:
         for gender in self.gender_map:
             if gender in categories:
                 return self.gender_map[gender]
-        return gender
+        return 'unisex'
