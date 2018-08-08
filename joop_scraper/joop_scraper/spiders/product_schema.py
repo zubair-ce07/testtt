@@ -1,15 +1,15 @@
 import scrapy
-from urllib.parse import urlparse
+from urllib.parse import urljoin
 import w3lib.url as w3url
 
 
 class Parser(scrapy.Spider):
     name = "Parser"
-    common_sku = {}
+
     product = {}
     response = None
-    possible_genders = {"Men", "Women", "Girls", "Boys"}
-    Default_gender = "Unisex_Adults"
+    possible_genders = {"men", "women", "girls", "boys"}
+    Default_gender = "unisex_adults"
 
     def parse(self, response):
         self.response = response
@@ -34,23 +34,25 @@ class Parser(scrapy.Spider):
             self.product["currency"] = self.get_currency()
         else:
             self.product["out_of_stock"] = True
-        product_or_url = [self.product]
-        product_or_url.extend(self.colour_urls())
-        return product_or_url
+        yield self.product
+        for colour_url in self.colour_urls():
+            yield colour_url
 
     def get_skus(self):
-        self.common_sku["price"] = self.get_price()
-        self.common_sku["currency"] = self.get_currency()
-        self.common_sku["colour"] = self.get_colour()
-        options = self.response.css('option[data-code]')
+        common_sku = {
+            "price": self.get_price(),
+            "currency": self.get_currency(),
+            "colour": self.get_colour()
+        }
+        raw_skus = self.response.css('option[data-code]')
         skus = {}
-        for option in options:
-            sku = self.common_sku.copy()
-            if "unavailable" in option.css("::attr(class)").extract_first().split():
+        for raw_sku in raw_skus:
+            sku = common_sku.copy()
+            if raw_sku.css('[class*="unavailable"]'):
                 sku["out_of_stock"] = True
-            if self.previous_prices(option):
-                sku["previous_prices"] = self.previous_prices(option)
-            skus[option.css("::attr(data-code)").extract_first()] = sku
+            if self.previous_prices(raw_sku):
+                sku["previous_prices"] = self.previous_prices(raw_sku)
+            skus[raw_sku.css("::attr(data-code)").extract_first()] = sku
         return skus
 
     def get_price(self):
@@ -61,22 +63,21 @@ class Parser(scrapy.Spider):
         return self.response.css('meta[itemprop="currency"]::attr(content)').extract_first()
 
     def get_colour(self):
-        return self.get_name().split()[-1]
+        return self.get_name().split("in ")[-1]
 
     def get_name(self):
         return self.response.css('h2[itemprop="name"]::text').extract_first()
 
     def get_gender(self):
         category = self.get_category()
-        return category[0] if category[0] in self.possible_genders else self.Default_gender
+        return category[0] if category[0].lower() in self.possible_genders else self.Default_gender
 
     def get_category(self):
         return self.response.css('#breadcrumb a::text').extract()
 
     def get_image_urls(self):
         image_paths = self.response.css('li[data-mimetype="image/jpeg"]::attr(data-detail)').extract()
-        url = urlparse(self.response.url)
-        return [f'{url.scheme}://{url.netloc}{path}' for path in image_paths]
+        return [urljoin(self.response.url, path) for path in image_paths]
 
     def get_retailer_sku(self):
         return self.response.css('span[data-code]::attr(data-code)').extract_first()

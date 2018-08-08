@@ -15,12 +15,9 @@ class JoopSpider(CrawlSpider):
 
     def parse(self, response):
         for request in super(JoopSpider, self).parse(response):
-            if response.meta.get("trail"):
-                trail = response.meta["trail"].copy()
-                trail.append(response.url)
-                request.meta["trail"] = trail
-            else:
-                request.meta["trail"] = [response.url]
+            trail = response.meta.get("trail", []).copy()
+            trail.append(response.url)
+            request.meta["trail"] = trail
             yield request
 
     def parse_product(self, response):
