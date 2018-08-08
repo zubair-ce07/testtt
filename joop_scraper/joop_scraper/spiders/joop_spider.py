@@ -13,9 +13,11 @@ class JoopSpider(CrawlSpider):
 
     @staticmethod
     def clean_links(links):
-        return [w3url.url_query_cleaner(link) for link in links]
+        for link in links:
+            link.url = w3url.url_query_cleaner(link.url)
+            yield link
 
-    rules = (Rule(LinkExtractor(restrict_css='#products'), callback="parse_product", process_links=clean_links),
+    rules = (Rule(LinkExtractor(restrict_css='#products'), callback="parse_product", process_links='clean_links'),
              Rule(LinkExtractor(restrict_css='#mainnav'), callback='parse'),
              )
 

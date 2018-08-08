@@ -1,6 +1,5 @@
 import scrapy
 from urllib.parse import urljoin
-import w3lib.url as w3url
 
 
 class Parser(scrapy.Spider):
@@ -71,7 +70,7 @@ class Parser(scrapy.Spider):
 
     def get_gender(self):
         category = self.get_category()
-        return category[0] if category[0].lower() in self.possible_genders else self.Default_gender
+        return category[0].lower() if category[0].lower() in self.possible_genders else self.Default_gender
 
     def get_category(self):
         return self.response.css('#breadcrumb a::text').extract()
