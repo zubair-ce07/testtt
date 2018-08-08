@@ -86,7 +86,7 @@ class MarkhamSpider(Spider):
 
         return Request(item["url"], callback=self.parse_html_response, meta=response.meta)
 
-    def _create_sku(self, color, size, old_price):
+    def _create_sku(self, color, size, item_detail):
         sku = {"color": color,
                "size": size["name"] if size else "",
                "sku_id": f'{color}_{size["name"] if size else ""}'}
@@ -94,9 +94,12 @@ class MarkhamSpider(Spider):
         if size and not size.get("available"):
             sku["out_of_stock"] = True
 
-        if old_price.get("price"):
-            sku["previous_prices"] = [].append(self.extract_price(old_price))
-            sku["currency"] = old_price.get("price")[0]
+        if item_detail.get("oldPrice"):
+            sku["previous_price"] = item_detail["oldPrice"]
+
+        if item_detail.get("price"):
+            sku["price"] = item_detail["price"]
+            sku["currency"] = item_detail.get("price")[0]
 
         return sku
 
