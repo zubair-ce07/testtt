@@ -32,7 +32,7 @@ class Validator:
 
 class FileParser:
 
-    def __init__(self, directory_path, argument):
+    def parse_files(self, directory_path, argument):
         try:
             Validator.validate_args(argument)
         except:
@@ -172,26 +172,30 @@ def main():
         print("Error, file path not found")
     else:
             if args.extreme:
-                file_parser = FileParser(args.dir_path, args.extreme)
+                file_parser = FileParser()
+                file_parser.parse_files(args.dir_path, args.extreme)
                 result_computer = ResultComputer()
                 generate_reports = GenerateReports()
                 weather_data = result_computer.give_year_data(args.extreme)
                 generate_reports.generate_extreme_weather_report(weather_data)
 
             if args.average:
-                file_parser = FileParser(args.dir_path, args.average)
+                file_parser = FileParser()
+                file_parser.parse_files(args.dir_path, args.average)
                 result_computer = ResultComputer()
                 generate_reports = GenerateReports()
                 highest_average, lowest_average, humidity_average = result_computer.give_month_data(args.average)
                 generate_reports.generate_average_weather_report(highest_average, lowest_average, humidity_average)
 
             if args.bar:
-                file_parser = FileParser(args.dir_path, args.bar)
+                file_parser = FileParser()
+                file_parser.parse_files(args.dir_path, args.bar)
                 generate_reports = GenerateReports()
                 generate_reports.generate_extreme_double_bar_report(args.bar)
 
             if args.bonus:
-                file_parser = FileParser(args.dir_path, args.bonus)
+                file_parser = FileParser()
+                file_parser.parse_files(args.dir_path, args.bonus)
                 generate_reports = GenerateReports()
                 generate_reports.generate_extreme_single_bar_report(args.bonus)
 
