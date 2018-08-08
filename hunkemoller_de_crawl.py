@@ -11,7 +11,7 @@ class HunkemollerDeCrawlSpider(CrawlSpider):
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['.nav-container', '.pages']), follow=True, callback='parse'),
+        Rule(LinkExtractor(restrict_css=['.nav-container', '.pages']), callback='parse'),
         Rule(LinkExtractor(restrict_css='.product-image'), callback='parse_item'),
     )
 
