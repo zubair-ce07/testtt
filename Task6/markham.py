@@ -51,6 +51,7 @@ class MarkhamSpider(Spider):
     def parse_item(self, response):
         item = Product()
         item_detail = json.loads(response.body)
+
         if item_detail.get("productType") == "ColourSize":
             item["retailer_sku"] = item_detail.get("productId")
             item["name"] = item_detail.get("name")
@@ -60,11 +61,13 @@ class MarkhamSpider(Spider):
             item["image_urls"] = self.extract_image_urls(item_detail)
             item["gender"] = "Men"
             item["skus"] = []
+
             skus_requests = []
             skus_requests.extend([Request(url.add_or_replace_parameter(response.url, "selectedColor", color["id"]),
                                           callback=self.parse_skus,
                                           meta={"item": item, "skus_requests": skus_requests, "color": color["name"]})
                                   for color in item_detail["colors"]])
+        
             return skus_requests.pop()
 
     def parse_skus(self, response):
@@ -72,6 +75,7 @@ class MarkhamSpider(Spider):
         item_detail = json.loads(response.body)
         skus_requests = response.meta["skus_requests"]
         color_name = response.meta["color"]
+
         if item_detail.get("sizes"):
             for size in item_detail["sizes"]:
                 sku = self._create_sku(color_name, size, item_detail.get("oldPrice"))
@@ -86,8 +90,10 @@ class MarkhamSpider(Spider):
         sku = {"color": color,
                "size": size["name"] if size else "",
                "sku_id": f'{color}_{size["name"] if size else ""}'}
+
         if size and not size.get("available"):
             sku["out_of_stock"] = True
+
         if old_price:
             sku["previous_prices"] = []
             sku["previous_prices"].append(self.extract_price(old_price))
