@@ -96,8 +96,7 @@ class MarkhamSpider(Spider):
             sku["out_of_stock"] = True
 
         if old_price:
-            sku["previous_prices"] = []
-            sku["previous_prices"].append(self.extract_price(old_price))
+            sku["previous_prices"] = [].append(self.extract_price(old_price))
             sku["currency"] = old_price[0]
 
         return sku
