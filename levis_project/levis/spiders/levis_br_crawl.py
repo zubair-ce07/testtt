@@ -39,4 +39,3 @@ class LevisBrCrawlSpider(CrawlSpider):
             request = Request(response.urljoin(request_url), callback=self.parse)
             request.meta['trail'] = trail
             yield request
-
