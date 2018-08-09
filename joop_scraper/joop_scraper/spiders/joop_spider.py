@@ -1,6 +1,7 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import w3lib.url as w3url
+
 from .product_schema import Parser
 
 
