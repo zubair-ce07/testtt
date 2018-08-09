@@ -2,15 +2,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% block title %}Task Manager {% endblock title %}</title>
+    <title>{% block title %}Task Manager>{% endblock title %}</title>
     <link rel="stylesheet" href="{% static 'taskmanager/style.css' %}">
+    {% block head %}{%  endblock %}
 </head>
 <body>
 <ul class="nav">
-    <li class="appname"> Task Manager </li>
+    <li class="appname"><a href="{% url 'taskmanager:index' %}">  Task Manager </a></li>
     <li class="user">
         {% if user.is_authenticated %}
-            <div class="inline"> {{ user.username }} </div>
+            {% if user.image %}
+                <img src="{{ user.image.url }}">
+            {% endif %}
+            <a class="inline" href="{% url 'taskmanager:profile' user.id %}"> {{ user.username }} </a>
             <a class="inline" href="{% url 'logout' %}">logout</a>
         {% else %}
             <a href="{% url 'login' %}">Login</a>

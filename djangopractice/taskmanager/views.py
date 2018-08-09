@@ -1,5 +1,6 @@
-from django.contrib.auth import authenticate, login, forms as auth_forms
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
@@ -8,8 +9,16 @@ from django.views import generic
 from taskmanager import models, forms
 
 
+@login_required(login_url='login')
+def change_status(request, pk):
+    task = models.Task.objects.get(id=pk)
+    task.status = not task.status
+    task.save()
+    return redirect(reverse('taskmanager:details', args=(pk, )))
+
+
 class SignUp(generic.CreateView):
-    form_class = auth_forms.UserCreationForm
+    form_class = forms.CustomUserCreationForm
     success_url = reverse_lazy('taskmanager:index')
     template_name = 'taskmanager/signup.html'
 
@@ -25,9 +34,24 @@ class SignUp(generic.CreateView):
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
+class TaskDetails(generic.DetailView):
+    model = models.Task
+    template_name = "taskmanager/details.html"
+
+
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class Index(generic.ListView):
     model = models.Task
     template_name = "taskmanager/index.html"
+
+    def get_queryset(self):
+        search_field = self.request.GET.get('search', None)
+        if search_field:
+            object_list = self.model.objects.filter(Q(title__icontains=search_field) |
+                                                    Q(assignee__username__icontains=search_field))
+        else:
+            object_list = self.model.objects.all()
+        return object_list
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
@@ -41,9 +65,21 @@ class EditTask(generic.UpdateView):
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
+class EditProfile(generic.UpdateView):
+    form_class = forms.CustomUserChangeForm
+    model = models.CustomUser
+    template_name = "taskmanager/profile.html"
+
+    def get_success_url(self):
+        return reverse('taskmanager:profile', args=(self.request.user.id, ))
+
+
+@method_decorator(login_required(login_url='login'), name='dispatch')
 class AddTask(generic.CreateView):
     form_class = forms.TaskForm
-    model = models.Task
+    exclude = ['status']
+    #model = models.Task
+
     template_name = "taskmanager/add.html"
 
     def get_form_kwargs(self):
@@ -53,6 +89,11 @@ class AddTask(generic.CreateView):
 
     def get_success_url(self):
         return reverse('taskmanager:index')
+
+    def get_form(self, form_class=forms.TaskForm):
+        form = super(AddTask, self).get_form()
+        form.fields.pop('status')  # ordinary users cannot close tickets.
+        return form
 
 
 @method_decorator(login_required(login_url='login'), name='dispatch')

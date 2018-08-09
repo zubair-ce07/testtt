@@ -17,6 +17,17 @@
 .appname{
     float: left;
 }
+.a_tags{
+    color: black;
+}
+.completed{
+    background-color: darkseagreen;
+    color: black;
+}
+img{
+    width: 40px;
+    height: 40px;
+}
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -27,7 +38,7 @@ td, th {
     text-align: left;
     padding: 8px;
 }
-tr:nth-child(even) {
+tr {
     background-color: #dddddd;
 }
 ul.nav {
@@ -41,13 +52,13 @@ ul.nav li{
     display: block;
     color: white;
     text-align: center;
-    padding: 5px 6px;
+    padding: 4px 6px;
     text-decoration: none;
 }
 ul.nav li a{
     display: inline-block;
     color: white;
     text-align: center;
-    padding: 5px 6px;
+    padding: 4px 6px;
     text-decoration: none;
 }

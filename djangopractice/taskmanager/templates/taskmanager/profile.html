@@ -1,0 +1,20 @@
+{% extends 'taskmanager/base.html' %}
+{% block title %} My Profile {% endblock title %}
+{% block content %}
+    <h2> Profile </h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <table class="set_fixed_width">
+            <tbody>
+            {% for field in form %}
+                <tr>
+                    <th> {{ field.label_tag }} </th>
+                    <td> {{ field }} </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <input type="submit" value="Save" />
+    </form>
+{% endblock content %}
+

@@ -9,10 +9,16 @@
     <a href="{% url 'taskmanager:add'%}">
         <button>Add Task</button>
     </a>
-    <div class="floatr" > Total Tasks {% total_tasks %} </div>
-
+    <div class="floatr">
+        <form class="inline" method="get" action="{% url 'taskmanager:index' %}" >
+            <input type="text" name="search" placeholder="Search"/>
+            <input type="submit" value="search" />
+        </form>
+        <div class="inline" > Total Tasks {% total_tasks %} </div>
+    </div>
     <table>
         <tr>
+            <td> Status </td>
             <td> Title </td>
             <td> Deadline </td>
             <td> Description </td>
@@ -20,8 +26,13 @@
             <td> Options </td>
         </tr>
         {% for task in object_list %}
-            <tr>
-                <td> {{ task.title }} </td>
+            <tr {% if task.status %} class="completed" {%  endif %}>
+                <td>
+                    <a>
+                        {{ task.status|status_string }}
+                    </a>
+                </td>
+                <td> <a class="a_tags" href="{% url 'taskmanager:details' task.id %}"> {{ task.title }} </a> </td>
                 <td> {{ task.due_date|due_date_string }} </td>
                 <td class="set_fixed_width"> {{ task.description|truncate_string:50 }} </td>
                 <td> {{ task.assignee }} </td>

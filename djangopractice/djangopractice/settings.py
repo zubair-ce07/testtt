@@ -12,12 +12,13 @@ SECRET_KEY = '9_fqc7k-8ab$$@tao8rzwg8y06#@j0h=no!&5go3ejo7o3*%9w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0']
+ALLOWED_HOSTS = ['0.0.0.0',
+                 '127.0.0.1',
+                 ]
 
 # Application definition
 INSTALLED_APPS = [
     'taskmanager.apps.TaskmanagerConfig',
-    'jquery_ui',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,6 +46,8 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.media',
+                'django.template.context_processors.media',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -101,3 +104,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL = '/taskmanager'
 LOGOUT_REDIRECT_URL = 'login'
+# Media Settings
+MEDIA_URL = '/media/'
+MEDIA_ROOT = 'taskmanager'
+# MEDIA_URL = 'http://localhost/taskmanager/'
+# MEDIA_ROOT = '/media/'
+# User
+AUTH_USER_MODEL = 'taskmanager.CustomUser'

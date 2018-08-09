@@ -29,3 +29,9 @@ def due_date_string(my_date):
         return "In %s days" % delta.days
 
 
+@register.filter
+def status_string(status):
+    if status:
+        return "Completed"
+    else:
+        return "In Progress"

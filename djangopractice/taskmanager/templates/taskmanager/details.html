@@ -1,0 +1,16 @@
+{% extends 'taskmanager/base.html' %}
+{% load custom_filters %}
+{% block title %}
+    Task
+{% endblock title %}
+{% block content %}
+    <h2> {{ object.title }} </h2>
+    <p class="set_fixed_width"> {{ object.description }} </p>
+    <p> Assigned to : {{ object.assignee }} </p>
+    <p> Due Date : {{ object.due_date }} </p>
+    <p> Status : {{ object.status|status_string }} </p>
+    <p class="inline"> Mark as Completed : </p>
+    <input class="inline" type="checkbox" {% if object.status %}checked{% endif %}
+           onclick="location.href='{% url 'taskmanager:status' object.id%}'">
+{%  endblock content %}
+
