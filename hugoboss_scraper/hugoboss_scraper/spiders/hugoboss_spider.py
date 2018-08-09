@@ -1,6 +1,6 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-import w3lib.url as w3url
+from w3lib.url import url_query_cleaner as url_cleaner
 
 from .product_schema import Parser
 
@@ -13,7 +13,7 @@ class HugoBossSpider(CrawlSpider):
     ]
 
     rules = (Rule(LinkExtractor(restrict_css='.swatch-list__image'), callback="parse_product"),
-             Rule(LinkExtractor(restrict_css='.nav-list--third-level'), callback='parse', process_links='clean_links'),
+             Rule(LinkExtractor(restrict_css='.nav-list--third-level', process_value=url_cleaner), callback='parse'),
              Rule(LinkExtractor(restrict_css='pagingbar__item'), callback='parse'),
              )
 
@@ -25,9 +25,3 @@ class HugoBossSpider(CrawlSpider):
 
     def parse_product(self, response):
         yield from self.parser.parse(response)
-
-    @staticmethod
-    def clean_links(links):
-        for link in links:
-            link.url = w3url.url_query_cleaner(link.url)
-            yield link
