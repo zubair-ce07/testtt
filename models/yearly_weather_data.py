@@ -1,5 +1,5 @@
-from models.WeatherData import WeatherData
-from models.MonthlyWeatherData import MonthlyWeatherData
+from models.weather_data import WeatherData
+from models.monthly_weather_data import MonthlyWeatherData
 
 
 class YearlyWeatherData(WeatherData):
