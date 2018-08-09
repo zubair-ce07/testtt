@@ -1,4 +1,4 @@
-from models.WeatherData import WeatherData
+from models.weather_data import WeatherData
 
 
 class MonthlyWeatherData:
