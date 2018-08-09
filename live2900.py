@@ -1,3 +1,6 @@
+import re
+
+from student.utils import clean
 from .prospectportal_base import BaseMixinPPE
 from .prospectportal_base import PPBaseCrawlSpiderE
 from .prospectportal_base import PPBaseParseSpiderE
@@ -19,6 +22,16 @@ class Mixinlive2900(BaseMixinPPE):
 
 class ParseSpiderlive2900(PPBaseParseSpiderE, Mixinlive2900):
     name = Mixinlive2900.name + '-parse'
+
+    def room_name(self, response, c_sel, sel):
+        name = clean(c_sel.css('.title ::text'))
+        if re.search('(Bedroom)|(\d+x\d+)', name[0]):
+            room_name = clean(c_sel.css('.sub-title ::text'))
+            room_name = room_name[0].replace('/', '')
+            if re.search('(Shared)|(Private)', name[0]):
+                return f"{room_name} {re.search('(Shared)|(Private)', name[0])[0]}"
+            return room_name
+        return name[0]
 
 
 class CrawlSpiderlive2900(Mixinlive2900, PPBaseCrawlSpiderE):

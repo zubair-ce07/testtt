@@ -1,3 +1,4 @@
+from student.utils import clean
 from .prospectportal_base import BaseMixinPPE
 from .prospectportal_base import PPBaseCrawlSpiderE
 from .prospectportal_base import PPBaseParseSpiderE
@@ -19,6 +20,16 @@ class MixinLiveBeechGreenville(BaseMixinPPE):
 
 class ParseSpiderLiveBeechGreenville(PPBaseParseSpiderE, MixinLiveBeechGreenville):
     name = MixinLiveBeechGreenville.name + '-parse'
+    room_types_map = [('standard', 'Standard'), ('handicap', 'Handicap')]
+
+    def room_name(self, response, c_sel, sel):
+        name = clean(c_sel.css('.title ::text'))
+        room_name = clean(c_sel.css('.sub-title ::text'))
+        room_name = room_name[0].replace('/', '')
+        for l_room_type, room_type in self.room_types_map:
+            if l_room_type in name[0]:
+                return f"{room_name} {room_type}"
+        return room_name
 
 
 class CrawlSpiderLiveBeechGreenville(MixinLiveBeechGreenville, PPBaseCrawlSpiderE):

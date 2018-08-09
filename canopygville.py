@@ -1,3 +1,4 @@
+from student.utils import clean
 from .prospectportal_base import BaseMixinPPE
 from .prospectportal_base import PPBaseCrawlSpiderE
 from .prospectportal_base import PPBaseParseSpiderE
@@ -19,6 +20,11 @@ class MixinCanopyApartments(BaseMixinPPE):
 
 class ParseSpiderCanopyApartments(PPBaseParseSpiderE, MixinCanopyApartments):
     name = MixinCanopyApartments.name + '-parse'
+
+    def room_name(self, response, c_sel, sel):
+        name = clean(c_sel.css('.title ::text'))
+        room_name = clean(c_sel.css('.sub-title ::text'))
+        return f"{room_name[0]}-{name[0]}"
 
 
 class CrawlSpiderCanopyApartments(MixinCanopyApartments, PPBaseCrawlSpiderE):

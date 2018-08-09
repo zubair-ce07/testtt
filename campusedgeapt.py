@@ -1,3 +1,6 @@
+import re
+
+from student.utils import clean
 from .prospectportal_base import BaseMixinPPE
 from .prospectportal_base import PPBaseCrawlSpiderE
 from .prospectportal_base import PPBaseParseSpiderE
@@ -19,6 +22,15 @@ class MixinCampusEdge(BaseMixinPPE):
 
 class ParseSpiderCampusEdge(PPBaseParseSpiderE, MixinCampusEdge):
     name = MixinCampusEdge.name + '-parse'
+
+
+    def room_name(self, response, c_sel, sel):
+        name = clean(c_sel.css('.title ::text'))
+        if re.search('(Bedroom)|(\d+x\d+)', name[0]):
+            room_name = clean(c_sel.css('.sub-title ::text'))
+            room_name = room_name[0].replace('/', '')
+            return room_name
+        return name[0]
 
 
 class CrawlSpiderCampusEdge(MixinCampusEdge, PPBaseCrawlSpiderE):
