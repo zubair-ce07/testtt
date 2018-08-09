@@ -1,9 +1,9 @@
-import scrapy
 import json
 import re
 
-from scrapy.spiders import CrawlSpider, Rule
+import scrapy
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
 
 from items import HugoBossItem
 
