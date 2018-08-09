@@ -3,63 +3,9 @@ import csv
 import os.path
 from datetime import datetime
 import re
-
-MIN_VALUE = -35565
-MAX_VALUE = 35565
-ZERO = 0
-
-
-class TemperatureOfYear:
-    """ This is a class for storing Yearly Temperature """
-    def __init__(self, high=MIN_VALUE, low=MAX_VALUE, hum=ZERO):
-        self.highest = high
-        self.highest_temp_day = ""
-        self.lowest = low
-        self.lowest_temp_day = ""
-        self.humidity = hum
-        self.humid_day = ""
-
-
-class AverageTemperatue:
-    """ Class for storing Average Temperatures """
-    def __init__(self, high=ZERO, low=ZERO, hum=ZERO):
-        self.avg_high = high
-        self.avg_low = low
-        self.avg_humidity = hum
-
-
-MONTHS_NAME = {
-    1: "January",
-    2: "February",
-    3: "March",
-    4: "April",
-    5: "May",
-    6: "June",
-    7: "July",
-    8: "August",
-    9: "September",
-    10: "October",
-    11: "November",
-    12: "December"
-}
-
-MONTHS_ABBR = {
-    1: "Jan",
-    2: "Feb",
-    3: "Mar",
-    4: "Apr",
-    5: "May",
-    6: "Jun",
-    7: "Jul",
-    8: "Aug",
-    9: "Sep",
-    10: "Oct",
-    11: "Nov",
-    12: "Dec"
-}
-FILE_START_NAME = "Murree_weather_"
-FILE_EXTENSION = ".txt"
-input_val = sys.argv[1]
+import constants
+from yearlytemperature import TemperatureOfYear
+from averagetemp import AverageTemperatue
 
 
 def find_yearly_temperature(file_path, yearly_temperatue):
@@ -180,6 +126,7 @@ def disp_daily_temp_horizontal(file_path):
                          min_temp, max_temp))
 
 
+input_val = sys.argv[1]
 args_length = len(sys.argv)
 if args_length != 4:
     print("Invalid Arguments")
@@ -201,17 +148,18 @@ if input_val == "-e":
     dir_path = sys.argv[3]
     yearly_temp = TemperatureOfYear()
     for x in range(1, 13):
-        path = dir_path+"/"+FILE_START_NAME+year+"_"+MONTHS_ABBR[x]+FILE_EXTENSION
+        path = dir_path+"/"+constants.FILE_START_NAME+year+"_"+\
+               constants.MONTHS_ABBR[x]+constants.FILE_EXTENSION
         if os.path.exists(path):
             yearly_temp = find_yearly_temperature(path, yearly_temp)
 
-    if yearly_temp.highest != MIN_VALUE:
+    if yearly_temp.highest != constants.MIN_VALUE:
         print("Highest: %dC on %s" % (
             yearly_temp.highest,
             get_formatted_date(yearly_temp.highest_temp_day)))
     else:
         print("No Record of Highest Temperature Found for This Year")
-    if yearly_temp.lowest != MAX_VALUE:
+    if yearly_temp.lowest != constants.MAX_VALUE:
         print("Lowest: %dC on %s" % (
             yearly_temp.lowest,
             get_formatted_date(yearly_temp.lowest_temp_day)))
@@ -231,12 +179,12 @@ elif input_val == "-a":
     year = date[0]
     month = int(date[1])
     dir_path = sys.argv[3]
-    path = dir_path + "/" + FILE_START_NAME + year \
-           + "_" + MONTHS_ABBR[month] + FILE_EXTENSION
+    path = dir_path + "/" + constants.FILE_START_NAME + year \
+           + "_" + constants.MONTHS_ABBR[month] + constants.FILE_EXTENSION
     if os.path.exists(path):
         avg_temp = find_average_temperature(path)
 
-        print("%s %s" % (MONTHS_NAME[month], year))
+        print("%s %s" % (constants.MONTHS_NAME[month], year))
         print("Highest Average: %dC" % avg_temp.avg_high)
         print("Lowest Average: %dC" % avg_temp.avg_low)
         print("Average Humidity: %d%%" % avg_temp.avg_humidity)
@@ -250,9 +198,10 @@ elif input_val == "-c":
     year = date[0]
     month = int(date[1])
     dir_path = sys.argv[3]
-    path = dir_path + "/" + FILE_START_NAME + year + "_" + MONTHS_ABBR[month] + FILE_EXTENSION
+    path = dir_path + "/" + constants.FILE_START_NAME + year + "_" \
+           + constants.MONTHS_ABBR[month] + constants.FILE_EXTENSION
     if os.path.exists(path):
-        print("%s %s" % (MONTHS_NAME[month], year))
+        print("%s %s" % (constants.MONTHS_NAME[month], year))
         display_daily_temperature(path)
     else:
         print("No Data Found for the Specified Month")
@@ -264,9 +213,10 @@ elif input_val == "-h":
     year = date[0]
     month = int(date[1])
     dir_path = sys.argv[3]
-    path = dir_path + "/" + FILE_START_NAME + year + "_" + MONTHS_ABBR[month] + FILE_EXTENSION
+    path = dir_path + "/" + constants.FILE_START_NAME + year + "_" \
+           + constants.MONTHS_ABBR[month] + constants.FILE_EXTENSION
     if os.path.exists(path):
-        print("%s %s" % (MONTHS_NAME[month], year))
+        print("%s %s" % (constants.MONTHS_NAME[month], year))
         disp_daily_temp_horizontal(path)
     else:
         print("No Data Found for the Specified Month")
