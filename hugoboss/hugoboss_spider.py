@@ -111,18 +111,21 @@ class HugoBossSpider(CrawlSpider):
         return response.xpath('//meta[@itemprop="priceCurrency"]/@content').extract_first()
 
     def _extract_price(self, response):
-        return response.xpath('//meta[@itemprop="price"]/@content').extract_first()
+        return self.to_cent(float(response.xpath('//meta[@itemprop="price"]/@content').extract_first()))
 
     def _extract_prev_price(self, response):
         previous_price = response.css('span.product-price--price-standard s::text').extract_first()
         if previous_price:
-            return previous_price.strip()[1:]
+            return self.to_cent(float(previous_price.strip()[1:]))
     
     def _extract_raw_product(self, response):
         script = response.xpath('//script[contains(., "productCurrency")]').extract_first()
 
         raw_product = re.search(r"({.*?})", script).group(1)
         return json.loads(raw_product)
+
+    def to_cent(self, price):
+        return round(price*100)
 
     def clean_text(self, text):
         return re.sub(r'\s+', ' ', text)
