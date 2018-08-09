@@ -16,35 +16,51 @@ class YayvoMobile(scrapy.Spider):
         """In this method, the program will iterate through the links and then
          call the second method for further retrieval of details."""
 
-        # The line below only fetches items because all item have "gb" in them
+        # The line below only fetches individual smartphones
+        #  because all item have "gb" in them
+
         item_links = LinkExtractor(allow='\gb')
         links = item_links.extract_links(response)
         for link in links:
             yield scrapy.Request(link.url,
-                                 callback=self.parse_of_individual_page)
+                                 callback=self.parse_of_mobile)
 
-        # This line will fetch the next page and remove duplicates
-        next_page=LinkExtractor(allow='p=', unique=True)
+        # This line will fetch the next page
+        next_page=LinkExtractor(allow='p=')
         links = next_page.extract_links(response)
         for link in links:
             yield scrapy.Request(link.url,
                                  callback=self.parse)
 
-    def parse_of_individual_page(self, response):
+    def parse_of_mobile(self, response):
         """This method crawls through individual pages and gathers all the
         details. Except the name and price, all details are in tables so
         a loop is functioned in the end which will iterate through each
         column and save the details in the dictionary"""
-        self.record = {
-            'Name': response.css('div.product-name > h1::text')[0].extract(),
+        name_of_mobile = {
+            'Name': response.css('div.product-name > h1::text')[0].extract()
+        }
+
+        # Obtaining price of mobile
+        price_of_mobile = {
             'Price': response.css('span.price::text')[1].extract()
         }
-        table_column = len(response.css('td.label::text').extract())
-        for iteration in range(0, table_column - 1, 2):
-            self.record.update({
 
-                response.css('td.label::text')[iteration].extract():
-                    response.css('td.data::text')[iteration].extract()
+        # Obtaining features from table
+        column_number = len(response.css('td.label::text').extract())
+
+        features_of_mobile = {}
+
+        # The code below uses selectors to fetch data and loop is driven
+        # to populate as separate entries in dictionary
+        for number_of_columns in range(0, column_number - 1, 2):
+            features_of_mobile.update({
+
+                response.css('td.label::text')[number_of_columns].extract():
+                    response.css('td.data::text')[number_of_columns].extract()
 
             })
-        yield self.record
+        # Appending all dictionaries into final dictionary
+
+        final_dict = {**name_of_mobile, **price_of_mobile, **features_of_mobile}
+        yield final_dict
