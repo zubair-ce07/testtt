@@ -8,8 +8,13 @@ from .product_schema import Parser
 class HugoBossSpider(CrawlSpider):
     name = "hugo_boss"
     parser = Parser()
+
     start_urls = [
         'https://www.hugoboss.com/us/'
+    ]
+
+    allowed_domains = [
+        'hugoboss.com'
     ]
 
     rules = (Rule(LinkExtractor(restrict_css='.swatch-list__image'), callback="parse_product"),
