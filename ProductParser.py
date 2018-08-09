@@ -1,7 +1,8 @@
-import json
 import re
+import json
 
 from scrapy import Spider
+
 from hunkemoller.items import HunkemollerItem
 
 
@@ -32,7 +33,7 @@ class ProductParser(Spider):
         return retailer_sku.split(' ')[1]
 
     def extract_trails(self, response):
-        return response.meta.get('trail').copy()
+        return response.meta.get('trail')
 
     def extract_product_name(self, response):
         return response.css('.product-name h1::text').extract_first()
@@ -57,7 +58,7 @@ class ProductParser(Spider):
     def extract_category(self, response):
         page_details = response.css('.kega-ddl-script::text').extract_first()
         product_details = json.loads(re.findall('digitalData.page.pageInfo = (.*?);\s*$', page_details, re.M)[0])
-        return product_details.get('breadCrumbs')
+        return product_details['breadCrumbs']
 
     def extract_image_urls(self, response):
         raw_urls = response.css(".scroller a::attr(rel)").extract()
