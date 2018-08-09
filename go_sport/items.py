@@ -1,6 +1,5 @@
-from scrapy.item import Item, Field
-
 import scrapy
+from scrapy.item import Field, Item
 
 
 class GoSportItem(Item):
