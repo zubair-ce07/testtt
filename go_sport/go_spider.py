@@ -96,8 +96,8 @@ class GoSportSpider(scrapy.Spider):
 
     def _extract_sku_pricing(self, response):
         return {
-            'price': response.css('.price::text').extract_first(),
-            'previous price': response.css('.list_price::text').extract_first(),
+            'price': self.to_cent(float(response.css('.price::text').extract_first())),
+            'previous price': self.to_cent(float(response.css('.list_price::text').extract_first())),
             'currency': response.css('.price_currency_code::text').extract_first()
         }
 
@@ -109,6 +109,9 @@ class GoSportSpider(scrapy.Spider):
         return raw_product["[data-role=swatch-options]"]\
                           ["Magento_Swatches/js/swatch-renderer-custom"]\
                           ["jsonConfig"]["optionPrices"]
+
+    def to_cent(self, price):
+        return round(price*100)
 
     def clean_text(self, text):
         return re.sub(r'\s+', ' ', text)
