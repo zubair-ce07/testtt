@@ -4,13 +4,13 @@ import scrapy
 
 
 class Parser(scrapy.Spider):
-    name = "Parser"
+    name = "parser"
     possible_genders = {"men", "women", "girls", "boys"}
-    default_gender = "unisex_adults"
+    default_gender = "unisex-adults"
 
     def parse(self, response):
         product = {}
-        if response.css('body.pda'):
+        if not response.css('body.pda'):
             self.logger.error('skipping %s because of multiple products page layout.', response.url)
             return
         product["retailer_sku"] = self.get_retailer_sku(response)
@@ -47,7 +47,8 @@ class Parser(scrapy.Spider):
         skus = {}
         for raw_sku in raw_skus:
             sku = common_sku.copy()
-            if raw_sku.css('[class*="unavailable"]'):
+            sku["size"] = self.get_size(raw_sku)
+            if raw_sku.css('.unavailable'):
                 sku["out_of_stock"] = True
             if self.previous_prices(raw_sku):
                 sku["previous_prices"] = self.previous_prices(raw_sku)
@@ -107,10 +108,15 @@ class Parser(scrapy.Spider):
         price = response.css('meta[itemprop="price"]::attr(content)').extract_first()
         return 100 * float(price.replace(',', '.'))
 
+    @staticmethod
+    def get_size(raw_sku):
+        return raw_sku.css("::text").extract_first().split()[0].strip()
+
     def colour_requests(self, response):
         colour_urls = response.css('.colors a::attr(href)').extract()
         trail = response.meta.get("trail", [])
         for url in colour_urls:
             request = response.follow(url, callback=self.parse)
-            request.meta["trail"] = trail.copy().append(response.url)
+            request.meta["trail"] = trail.copy()
+            request.meta["trail"].append(response.url)
             yield request
