@@ -1,13 +1,21 @@
-from config.Parser import Parser
-from models.WeatherData import WeatherData
+from config.parser import Parser
+from core.calculator import Calculator
+from core.report_generator import ReportGenerator
+import sys
 
 
 def main():
-    p = Parser('/home/asad/work/assignments/the-lab/weatherfiles/weatherfiles')
-    p.read()  # reads complete dir and populate data in data structures
-    print("Now showing data")
-
-    WeatherData.print_()
+    try:
+        parser = Parser(sys.argv[1])
+        parser.read()
+        # command and argument given to calculator
+        Calculator(sys.argv[2:])
+        # initializing report generator and print report
+        # calculated by Calculator
+        report_generator = ReportGenerator()
+        report_generator.print_report()
+    except IndexError as ie:
+        print('Arguments have not passed or maybe {0}'.format(str(ie).upper()))
 
 
 if __name__ == "__main__":
