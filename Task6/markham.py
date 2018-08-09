@@ -42,10 +42,10 @@ class MarkhamSpider(CrawlSpider):
         item = Product()
         item_detail = json.loads(response.css('#product-static-data::text').extract_first())
 
-        item["retailer_sku"] = item_detail["id"]
-        item["name"] = item_detail["name"]
-        item["price"] = item_detail["price"]
-        item["brand"] = item_detail["brand"]
+        item["retailer_sku"] = self.extract_retailer_sku(item_detail)
+        item["name"] = self.extract_name(item_detail)
+        item["price"] = self.extract_price(item_detail)
+        item["brand"] = self.extract_brand(item_detail)
         item["url"] = response.url
         item["category"] = self.extract_categorie(response)
         item["gender"] = "Men"
@@ -94,6 +94,18 @@ class MarkhamSpider(CrawlSpider):
             skus.append(sku)
 
         return skus
+
+    def extract_retailer_sku(self, item_detail):
+        return item_detail["id"]
+
+    def extract_name(self, item_detail):
+        return item_detail["name"]
+
+    def extract_price(self, item_detail):
+        return item_detail["price"]
+
+    def extract_brand(self, item_detail):
+        return item_detail["brand"]
 
     def extract_categorie(self, response):
         return response.css('.breadcrumbs__item a::text').extract()[1:-1]
