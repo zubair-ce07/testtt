@@ -1,10 +1,11 @@
-import os
-import sys
-import csv
-import re
 import argparse
+import csv
+import os
+import re
+import sys
+from time import strftime, strptime
+
 from termcolor import colored
-from time import strptime, strftime
 
 
 class WeatherReading:
