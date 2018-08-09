@@ -1,20 +1,21 @@
 import json
-import math
-import re
 
-from scrapy import Spider, Request
-from w3lib import url
+from scrapy import Request
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractor import LinkExtractor
 
 from Task5.items import Product
 
 
-class PumaSpider(Spider):
+class PumaSpider(CrawlSpider):
     name = 'puma'
     custom_settings = {'DOWNLOAD_DELAY': 1.25}
     allowed_domains = ['in.puma.com']
     start_urls = ['https://in.puma.com']
 
-    items_per_page = 12
+    allowed_links = ('men/\w+/', 'women/\w+/', 'kids/', 'sale/\w+/')
+    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".mp-level li a"), callback='parse_pagination')]
+
     image_url_t = "https://in.puma.com/ajaxswatches/ajax/update?pid={}"
     gender_map = {
         'unisex': 'Unisex',
@@ -25,78 +26,69 @@ class PumaSpider(Spider):
         'kids': 'Kids'
     }
 
-    def parse(self, response):
-        adult_categories_links = response.css('p.category-title2 a::attr(href)').re('(.+)\?')
-        kids_categories_links = response.xpath('//a[text()="Kids"]/@href').re('(.+)\?')
-        all_categories_links = adult_categories_links + kids_categories_links
-
-        yield from [Request(category_link, callback=self.parse_categories)
-                    for category_link in all_categories_links]
-
-    def parse_categories(self, response):
-        product_types = response.css('a::attr(href)').re('product_type=([\d+]+)')
-        yield from [Request(url.add_or_replace_parameter(response.url, "product_type", product_type),
-                            callback=self.parse_pagination)
-                    for product_type in product_types]
-
     def parse_pagination(self, response):
-        total_items = response.css('b.only::text').extract_first()
-        total_pages = int(math.ceil(int(total_items)/self.items_per_page)) if total_items else 0
+        response.meta["categories"] = response.css('.breadcrumbs a::text, .breadcrumbs strong::text').extract()
 
-        product_type = response.xpath('//*[text()="Product Type:"]/following-sibling::span[1]/text()').extract_first()
-        menu_category = re.search('/([-\w+]+)\.html', response.url).group(1)
-
-        for page_number in range(1, total_pages+1):
-            yield Request(url.add_or_replace_parameter(response.url, "p", page_number), callback=self.parse_item_links,
-                          meta={"product_type": product_type, "menu_category": menu_category})
-
-    def parse_item_links(self, response):
         item_urls = response.css('.product-image::attr(href)').extract()
+
         yield from [Request(item_url, callback=self.parse_item, meta=response.meta) for item_url in item_urls]
 
+        next_page_url = response.css('a.next::attr(href)').extract_first()
+
+        if next_page_url:
+            return Request(next_page_url, callback=self.parse_pagination)
+
     def parse_item(self, response):
+        item_options = self.extract_item_options(response)
         item = Product()
 
-        item['retailer_sku'] = self.extract_retailer_sku(response)
-        item['name'] = self.extract_name(response)
+        item['retailer_sku'] = self.extract_retailer_sku(item_options)
+        item['name'] = self.extract_name(item_options)
         item['brand'] = 'puma'
         item['url'] = response.url
-        item['price'] = self.extract_price(response)
-        item['description'] = self.extract_description(response)
-        item['gender'] = self.detect_gender(response)
+        item['price'] = self.extract_price(item_options)
+        item['description'] = self.extract_description(item_options)
+        item['gender'] = self.detect_gender(item_options, response)
         item["category"] = self.extract_categories(response)
-        item['skus'] = self.extract_skus(response)
+        item['skus'] = self.extract_skus(item_options)
+        item["image_urls_requests"] = self.get_image_urls_requests(item_options, item)
 
+        return item["image_urls_requests"].pop()
+
+    def get_image_urls_requests(self, item_options, item):
+        product_ids = item_options["childProducts"]
+        image_urls_requests = [self.image_url_t.format(product_id) for product_id in product_ids]
         item["image_urls"] = set()
-        image_urls_json_requests = []
-        image_urls_json_requests.extend([Request(self.image_url_t.format(product_id), callback=self.parse_image_urls,
-                                                 meta={"json_requests": image_urls_json_requests, "item": item})
-                                         for product_id in self.extract_product_options(response)["childProducts"]])
 
-        return image_urls_json_requests.pop()
+        return [Request(url, callback=self.parse_image_urls, meta={"item": item}) for url in image_urls_requests]
 
     def parse_image_urls(self, response):
         item = response.meta.get("item")
+        item["image_urls"] |= {image_url["image"] for image_url in json.loads(response.body)}
 
-        for image_url in json.loads(response.body):
-            item["image_urls"].add(image_url["image"])
+        if item["image_urls_requests"]:
+            return item["image_urls_requests"].pop()
 
-        image_urls_json_requests = response.meta.get("json_requests")
-        if image_urls_json_requests:
-            return image_urls_json_requests.pop()
-
+        del item["image_urls_requests"]
         return item
 
-    def extract_retailer_sku(self, response):
-        item_options = self.extract_product_options(response)
+    def extract_item_options(self, response):
+        return json.loads(response.css('script').re_first(r'Product.Config\((.+)\);'))
+
+    def extract_retailer_sku(self, item_options):
         return item_options["productId"]
 
-    def extract_name(self, response):
-        item_options = self.extract_product_options(response)
+    def extract_name(self, item_options):
         return item_options["productName"]
 
-    def detect_gender(self, response):
-        name = f'{self.extract_name(response)} {response.url}'.lower()
+    def extract_price(self, item_options):
+        return float(item_options["basePrice"]) * 100
+
+    def extract_description(self, item_options):
+        return item_options["description"].split("\n")
+
+    def detect_gender(self, item_options, response):
+        name = f'{self.extract_name(item_options)} {response.url}'.lower()
 
         for gender in self.gender_map:
             if gender in name:
@@ -104,61 +96,24 @@ class PumaSpider(Spider):
 
         return 'Unisex'
 
-    def extract_price(self, response):
-        item_options = self.extract_product_options(response)
-        return float(item_options["basePrice"]) * 100
-
-    def extract_description(self, response):
-        item_options = self.extract_product_options(response)
-        return item_options["description"].split("\n")
-
     def extract_categories(self, response):
-        item_gender = self.detect_gender(response)
-        item_type = response.meta.get("product_type")
-        item_menu_category = response.meta.get("menu_category")
-        return [item_gender, item_type, item_menu_category]
+        return response.meta["categories"]
 
-    def extract_product_options(self, response):
-        return json.loads(response.css('script').re_first(r'Product.Config\((.+)\);'))
+    def extract_skus(self, item_options):
+        colors = [attr["options"] for attr in item_options["attributes"].values() if attr["code"] == 'color'][0]
+        sizes = [attr["options"] for attr in item_options["attributes"].values() if attr["code"] == 'size'][0]
+        skus = []
 
-    def extract_skus(self, response):
-        item_options = self.extract_product_options(response)
+        for sku_id, prices in item_options["childProducts"].items():
+            color_label = [color["label"] for color in colors if sku_id in color["products"]][0]
+            size_label = [size["label"] for size in sizes if sku_id in size["products"]][0]
 
-        if item_options["attributes"]:
-            colors = self.extract_colors(item_options)
-            sizes = self.extract_sizes(item_options)
-            skus = []
+            skus.append({"sku_id": f'{color_label}_{size_label}',
+                         "color": color_label,
+                         'size': size_label,
+                         "currency": item_options["template"][0],
+                         "previous_price": prices["price"],
+                         "price": prices["finalPrice"]
+            })
 
-            for sku_id, prices in item_options["childProducts"].items():
-                color_label, size_label = self.extract_color_size_lables(sku_id, colors, sizes)
-
-                skus.append({"sku_id": f'{color_label}_{size_label}', "color": color_label, 'size': size_label,
-                             "currency": item_options["template"][0], "previous_price": prices["price"],
-                             "price": prices["finalPrice"]
-                })
-
-            return skus
-
-    def extract_colors(self, item_options):
-        for attr in item_options["attributes"].values():
-            if attr["code"] == 'color':
-                return attr["options"]
-
-    def extract_sizes(self, item_options):
-        for attr in item_options["attributes"].values():
-            if attr["code"] == 'size':
-                return attr["options"]
-
-    def extract_color_size_lables(self, sku_id, colors, sizes):
-        color_label = None
-        size_label = None
-
-        for color in colors:
-            if sku_id in color["products"]:
-                color_label = color["label"]
-
-        for size in sizes:
-            if sku_id in size["products"]:
-                size_label = size["label"]
-
-        return color_label, size_label
+        return skus
