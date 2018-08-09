@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from users.serializers import UserSerializer, ProfileSerializer, CreateUserSerializer
 from users.models import Profile
+from common import jwt
 
 
 class UserList(generics.ListAPIView):
@@ -40,10 +41,5 @@ class CreateUserView(APIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-            jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-
-            payload = jwt_payload_handler(user)
-            token = jwt_encode_handler(payload)
             if user:
-                return Response(serializer.data, token)
+                return Response(serializer.data)
