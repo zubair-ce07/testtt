@@ -12,7 +12,6 @@ class BoohoomanItem(scrapy.Item):
     name = scrapy.Field()
     date = scrapy.Field()
     sku = scrapy.Field()
-    colors = scrapy.Field()
     url = scrapy.Field()
     retailer_sku = scrapy.Field()
     retailer = scrapy.Field()
