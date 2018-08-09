@@ -1,6 +1,10 @@
-import argparse
+# -*- coding: utf-8 -*-
+"""
+Parser for weathe man application
+"""
+from app_factory.parser.args_parser import BaseArgsParser
 
-parser = argparse.ArgumentParser(
+parser = BaseArgsParser(
     description="The program is design to generate Murree Weather Data reporting. (Use -h for help)"
 )
 parser.add_argument(
@@ -21,5 +25,11 @@ parser.add_argument(
 parser.add_argument(
     "-c",
     "--month_bar_chart",
+    help="input year and month for chart in format of year/month e.g 2014/8"
+)
+
+parser.add_argument(
+    "-m",
+    "--month_bar_chart_in_one_line",
     help="input year and month for chart in format of year/month e.g 2014/8"
 )

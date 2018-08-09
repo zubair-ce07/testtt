@@ -1,4 +1,8 @@
-
+# -*- coding: utf-8 -*-
+"""
+This file included design pattern base classes (Which are required explicitly). Other design patterns are implemented
+in application as well.
+"""
 class Singleton(type):
     """
     Define an Instance operation that lets clients access its unique
