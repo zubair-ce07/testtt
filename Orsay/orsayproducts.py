@@ -4,6 +4,7 @@ import json
 import re
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from orsay.items import Product
 
 
 class OrsayproductSpider(CrawlSpider):
@@ -28,25 +29,27 @@ class OrsayproductSpider(CrawlSpider):
                     url=next_page, callback=self.parse_listings)
 
     def parse_product(self, response):
-        product_item = {
-            "brand": "Orsay",
-            "description": self.get_product_description(response),
-            "product_imgs": self.get_product_imgs(response),
-            "category": (self.get_product_details(response))["categoryName"],
-            "name": (self.get_product_details(response))["name"],
-            "skus": self.convert_gen_to_dict(self.get_product_skus(response)),
-            "urls": [response.request.url],
-            "care": [self.get_care_text(response)]
-        }
+        product = Product()
+        product['Id'] = self.get_product_details(response)["productId"]
+        product['brand'] = "Orsay"
+        product['description'] = self.get_product_description(response),
+        product['product_imgs'] = self.get_product_imgs(response),
+        product['category'] = (
+            self.get_product_details(response))["categoryName"],
+        product['name'] = (self.get_product_details(response))["name"],
+        product['skus'] = self.convert_gen_to_dict(
+            self.get_product_skus(response)),
+        product['urls'] = [response.request.url],
+        product['care'] = [self.get_care_text(response)]
         colors_to_follow = self.has_more_colors(response)
         if len(colors_to_follow) > 1:
             url = self.get_color_url(colors_to_follow)
             yield scrapy.Request(
                     url=url, callback=self.get_product_skus,
                     meta={'colors_list': colors_to_follow,
-                          'item':  product_item})
+                          'item':  product})
         else:
-            yield product_item
+            yield product
 
     def clean_text(self, text):
         text = [txt.strip() for txt in text]
@@ -120,12 +123,14 @@ class OrsayproductSpider(CrawlSpider):
         if 'item' in response.meta:
             product_item = response.meta['item']
             product_item['skus'].update(sub_skus)
-            response.meta['item']['urls'].append(response.url)
+            product_item['urls'].append(response.url)
         else:
             yield sub_skus
         if 'colors_list' in response.meta:
             if len(response.meta['colors_list']) == 0:
-                yield response.meta['item']
+                item = response.meta['item']
+                item.pop('Id', None)
+                yield item
             else:
                 colors_to_follow = response.meta['colors_list']
                 url = self.get_color_url(colors_to_follow)
