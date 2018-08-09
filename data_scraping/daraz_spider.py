@@ -32,41 +32,47 @@ class DarazMobile(scrapy.Spider):
             yield scrapy.Request(link.url,
                                  callback=self.parse)
 
-    def parse_of_mobile(self, response):
-        """This method crawls through individual pages and gathers all the
-        details. Except the name and price, all details are in tables so
-        a loop is functioned in the end which will iterate through each
-        column and save the details in the dictionary"""
+    def get_name(self,response):
+        """This method retrieves the name of the mobile and returns the
+        dictionary where it is saved"""
 
-        # Splitting name so we don't get additional specs in name
         whole_name = str(response.css('h1.title::text')[0].extract())
-        splitted_name=whole_name.split("-")
-
+        splitted_name = whole_name.split("-")
         name_of_mobile = {
-            'Name' : splitted_name[0]
+            'Name': splitted_name[0]
         }
+        return  name_of_mobile
 
-        # Obtaining price of mobile
+    def get_price(self,response):
+        """This method fetches the price of the mobile and returns a
+        dictionary"""
+
         price_of_mobile = {
-            'Price' : response.css('span::attr(data-price)')[0].extract()
+            'Price': response.css('span::attr(data-price)')[0].extract()
         }
+        return price_of_mobile
 
-        # Obtaining features from table
+    def get_features(self,response):
+        """This method truncates the table to gather all the features and
+        in the for loop, adds these entries to the dictionary"""
         column_number = len(response.css('div.osh-col::text').extract())
 
         features_of_mobile = {}
-
         # The code below uses selectors to fetch data and loop is driven
         # to populate as separate entries in dictionary
-        for number_of_columns in range(0, column_number-1, 2):
-
+        for number_of_columns in range(0, column_number - 1, 2):
             features_of_mobile.update({
 
                 response.css('div.osh-col::text')[number_of_columns].extract():
-                    response.css('div.osh-col::text')[number_of_columns+1].extract()
+                    response.css('div.osh-col::text')[number_of_columns + 1].extract()
 
-                        })
-        # Appending all dictionaries into final dictionary
+            })
+        return features_of_mobile
 
-        final_dict = {**name_of_mobile, **price_of_mobile, **features_of_mobile}
+    def parse_of_mobile(self, response):
+        """This method calls individual functions and compiles their response
+        in a single dictionary"""
+
+        final_dict={**self.get_name(response), **self.get_features(response), **self.get_price(response)}
+
         yield final_dict
