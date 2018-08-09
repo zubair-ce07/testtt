@@ -109,9 +109,8 @@ class Parser(scrapy.Spider):
 
     def colour_requests(self, response):
         colour_urls = response.css('.colors a::attr(href)').extract()
-        trail = response.meta.get("trail", []).copy()
-        trail.append(response.url)
+        trail = response.meta.get("trail", [])
         for url in colour_urls:
             request = response.follow(url, callback=self.parse)
-            request.meta["trail"] = trail
+            request.meta["trail"] = trail.copy().append(response.url)
             yield request
