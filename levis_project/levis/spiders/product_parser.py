@@ -61,7 +61,7 @@ class ProductParser:
         raw_skus = self.raw_skus(response)
         color = self.color(response)
 
-        skus = dict()
+        skus = {}
         for raw_sku in raw_skus['skus']:
             if not raw_sku['available']:
                 continue
