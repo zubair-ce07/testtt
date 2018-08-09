@@ -2,11 +2,14 @@ import datetime
 import json
 import time
 
+from scrapy import Spider
 from ..items import ProductItem
 
 
-class ProductParser:
+class ProductParser(Spider):
 
+    name = 'levis-product-parser'
+    currency = 'BRL'
     gender_map = {
         "homem": "men",
         "mulher": "women"
@@ -34,7 +37,7 @@ class ProductParser:
         if self.availability(response):
             product['skus'] = self.skus(response)
             product['price'] = self.price(response)
-            product['currency'] = 'BRL'
+            product['currency'] = self.currency
         else:
             product['skus'] = {}
             product['out_of_stock'] = True
@@ -69,7 +72,7 @@ class ProductParser:
             skus[sku_id] = {}
             sku = skus[sku_id]
             sku['price'] = raw_sku['bestPrice']
-            sku['currency'] = 'BRL'
+            sku['currency'] = self.currency
             if raw_sku['listPrice']:
                 sku['previous_prices'] = [raw_sku['listPrice']]
             sku['colour'] = color
