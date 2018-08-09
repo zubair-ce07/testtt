@@ -63,7 +63,7 @@ class PumaSpider(CrawlSpider):
 
     def parse_image_urls(self, response):
         item = response.meta.get("item")
-        item["image_urls"] |= {image_url["image"] for image_url in json.loads(response.body)}
+        item["image_urls"] |= {image_url["image"] for image_url in json.loads(response.text)}
 
         if item["image_urls_requests"]:
             return item["image_urls_requests"].pop()
