@@ -75,8 +75,7 @@ class Crawler:
     def print_stats(self):
         print(f'Number of Requests Made: {len(self.seen_urls)}')
         print(f'Total Downloaded Bytes: {self.downloaded_bytes}')
-        print(
-            f'Average Page Size: {self.downloaded_bytes//len(self.seen_urls)}')
+        print(f'Average Page Size: {self.downloaded_bytes//len(self.seen_urls)}')
 
 
 def validate_url(url):
