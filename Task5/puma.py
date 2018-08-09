@@ -28,7 +28,6 @@ class PumaSpider(CrawlSpider):
 
     def parse_pagination(self, response):
         response.meta["categories"] = response.css('.breadcrumbs a::text, .breadcrumbs strong::text').extract()
-
         item_urls = response.css('.product-image::attr(href)').extract()
 
         yield from [Request(item_url, callback=self.parse_item, meta=response.meta) for item_url in item_urls]
