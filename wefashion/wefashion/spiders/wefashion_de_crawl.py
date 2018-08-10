@@ -6,26 +6,28 @@ from wefashion.wefashion_de_parse import ProductParser
 
 class WefashionDeCrawlSpider(CrawlSpider):
     name = 'wefashion-de-crawl'
-    parser = ProductParser()
+    wefashion_parser = ProductParser()
     allowed_domains = ['www.wefashion.de']
     start_urls = [
-        # 'http://www.wefashion.de/'
-        'https://www.wefashion.de/de_DE/herren/t-shirts/printed-t-shirts/'
+        'http://www.wefashion.de/'
+    ]
+    category_css = [
+        '.header-top-level-menu',
+        '#category-level-0'
     ]
 
     rules = (
-        # Rule(LinkExtractor(restrict_css=['.header-top-level-menu', '#category-level-0']),
-        #      follow=True,
-        #      callback='parse_category_page'),
-        Rule(LinkExtractor(restrict_css=['.header-top-level-menu']), callback='parse'),
+        Rule(LinkExtractor(restrict_css=category_css), callback='parse'),
         Rule(LinkExtractor(restrict_css='.product-image'), callback='parse_item'),
     )
 
     def parse(self, response):
-
-        for request in super(WefashionDeCrawlSpider, self).parse(response):
-            print(f"HAMZA {response.css('.image-holder::attr(data-color-id)').extract_first()}")
+        title = response.css('.refinement-header::text').extract_first(default='').strip()
+        trail = response.meta.get('trail', [])
+        trail.append([title, response.url])
+        for request in super().parse(response):
+            request.meta['trail'] = trail.copy()
             yield request
 
-    # def parse_item(self, response):
-    #     return self.parser.parse(response)
+    def parse_item(self, response):
+        return self.wefashion_parser.parse(response)
