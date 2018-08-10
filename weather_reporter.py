@@ -59,7 +59,6 @@ class WeatherReporter:
               " " + (ColorCode.GREY.value + str(temp_min) + "C-") +
               (ColorCode.GREY.value + str(temp_max) + "C"))
 
-
     def print_year_temp_report(self, max_data_list):
         max_temp_date = max_data_list[0].pkt.split("-")
         min_temp_date = max_data_list[1].pkt.split("-")
