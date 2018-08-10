@@ -39,8 +39,7 @@ class ProductParser(Spider):
 
     def product_category(self, response):
         categories = response.css('.breadcrumbs a::text').extract()
-        filtered_categories = [category.strip() for category in categories if category]
-        return filtered_categories
+        return [category.strip() for category in categories if category]
 
     def product_name(self, response):
         return response.css('.base::text').extract_first()
