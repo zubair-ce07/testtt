@@ -17,8 +17,8 @@ class Parser(scrapy.Spider):
             return
         else:
             self.scraped_ids.append(product_data.get("id"))
-        product["name"] = product_data.get("name")
         product["retailer_sku"] = product_data.get("id")
+        product["name"] = product_data.get("name") if product_data.get("name") else ""
         product["image_urls"] = []
         product["lang"] = "en"
         product["gender"] = product_data.get("gender")
@@ -33,6 +33,7 @@ class Parser(scrapy.Spider):
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
         product["skus"] = {}
+        response.meta["pending_color_reqs"] = self.colour_requests(response)
         response.meta["product"] = product
         return self.get_skus(response)
 
@@ -41,7 +42,7 @@ class Parser(scrapy.Spider):
         product["image_urls"].extend(self.get_image_urls(response))
         common_sku = {}
         product_data = self.get_product_json(response)
-        common_sku["price"] = product_data.get(response)
+        common_sku["price"] = product_data.get("price")
         common_sku["currency"] = self.get_currency(response)
         common_sku["colour"] = self.get_colour(response)
         sku_variant = product_data.get("variant")
@@ -99,7 +100,6 @@ class Parser(scrapy.Spider):
     def get_product_json(response):
         json_string = response.css('div[data-as-product]::attr(data-as-product)').extract_first()
         json_string.replace('&quot;', '"')
-        print("Product_json:" + json_string)
         return json.loads(json_string)
 
     def colour_requests(self, response):

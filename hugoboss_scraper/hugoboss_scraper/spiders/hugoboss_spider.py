@@ -2,7 +2,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from w3lib.url import url_query_cleaner as w3cleaner
 
-from .product_schema import Parser
+from .product_parser import Parser
 
 
 class HugoBossSpider(CrawlSpider):
