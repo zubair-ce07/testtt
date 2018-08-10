@@ -1,0 +1,13 @@
+<h1>Signup</h1>
+
+<form method="post">
+    <ul>
+        {% for field in form %}
+            {{ field.label}}
+            {{ field }}
+            <br>
+            <br>
+        {% endfor %}
+    </ul>
+    <input type="submit" value="Sign up">
+</form>
