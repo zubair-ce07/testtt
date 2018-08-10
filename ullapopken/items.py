@@ -11,5 +11,4 @@ class UllapopkenItem(scrapy.Item):
     gender = scrapy.Field()
     description = scrapy.Field()
     care = scrapy.Field()
-    currency = scrapy.Field()
     image_urls = scrapy.Field()
