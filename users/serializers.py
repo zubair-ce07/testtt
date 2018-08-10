@@ -45,17 +45,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         exclude = ['is_active', 'is_staff', 'groups', 'user_permissions', 'last_login', 'date_joined']
 
 
-class UserLoginSerializer(serializers.Serializer):
-    user = serializers.SerializerMethodField()
-    token = serializers.SerializerMethodField()
-
-    def get_user(self, obj):
-        return self.context['user'].username
-
-    def get_token(self, obj):
-        return self.context['token']
-
-
 class LoginInputSerializer(serializers.ModelSerializer):
     password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 

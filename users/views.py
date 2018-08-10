@@ -2,8 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import generics, permissions
 from rest_framework.views import APIView
-from users.serializers import UserSerializer, ProfileSerializer, CreateUserSerializer, UserLoginSerializer, \
-    LoginInputSerializer
+from users.serializers import UserSerializer, ProfileSerializer, CreateUserSerializer, LoginInputSerializer
 from users.models import Profile
 from django.contrib.auth import authenticate, login
 import jwt
@@ -68,8 +67,11 @@ class UserLoginView(APIView):
                 'email': user.email,
             }
             jwt_token = {jwt.encode(payload, "SECRET_KEY")}
-            serializer = UserLoginSerializer(data={}, context={'user': user, 'token': jwt_token})
-            serializer.is_valid(raise_exception=True)
-            return Response(serializer.data)
+            return Response(
+                {
+                    'token': jwt_token,
+                    'user': UserSerializer(user, context={'request': request}).data
+                }
+            )
         else:
             return Response({'Error': "User not found"}, status="404")
