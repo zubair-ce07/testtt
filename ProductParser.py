@@ -66,26 +66,27 @@ class ProductParser(Spider):
         return [json.loads(url).get('zoomimage') for url in raw_urls]
 
     def extract_sku_sizes(self, response):
-        raw_sku_size = response.css('.product-info .selectmenu :not([selected]):not(span) ::text').extract()
-        return [size.strip() for size in raw_sku_size]
+        raw_sku_sizes = response.css('.product-info .selectmenu :not([selected]):not(span) ::text').extract()
+        return [size.strip() for size in raw_sku_sizes]
 
     def extract_sku_models(self, response):
-        raw_sku_id = response.css(
+        raw_sku_models = response.css(
             '.product-info .selectmenu :not([selected]):not(span) ::attr(data-additional)').extract()
-        return [list(json.loads(x).keys())[0] for x in raw_sku_id]
+        return [list(json.loads(sku_model).keys())[0] for sku_model in raw_sku_models]
 
     def extract_skus(self, response):
         sku_sizes = self.extract_sku_sizes(response)
-        sku_id = self.extract_sku_models(response)
+        sku_models = self.extract_sku_models(response)
         sku_info = {
             'color': self.extract_colors(response)[0],
             'currency': self.extract_currency(response),
             'price': self.extract_price(response)
         }
         skus = {}
-        for sku_model, size in zip(sku_id, sku_sizes):
+        for sku_model, size in zip(sku_models, sku_sizes):
             sku = sku_info.copy()
             sku['size'] = size
             skus[sku_model] = sku
+
         return skus
 
