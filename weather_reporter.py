@@ -46,7 +46,7 @@ class WeatherReporter:
     def draw_barchart(self, temp, temp_color_code, day_num):
         """ draw bar chart """
         counter = 0
-        barchart_month = self.calc_barchart(temp)
+        barchart_month = self.weather_analyzer_obj.calc_barchart(temp)
         print(ColorCode.GREY.value + (str(day_num)) +
               " " + (temp_color_code + barchart_month) +
               " " + (ColorCode.GREY.value + str(temp) + "C"))
@@ -59,13 +59,6 @@ class WeatherReporter:
               " " + (ColorCode.GREY.value + str(temp_min) + "C-") +
               (ColorCode.GREY.value + str(temp_max) + "C"))
 
-    def calc_barchart(self, temp):
-        counter = 0
-        barchart = ""
-        while counter < temp:
-            barchart += "+"
-            counter += 1
-        return barchart
 
     def print_year_temp_report(self, max_data_list):
         max_temp_date = max_data_list[0].pkt.split("-")
