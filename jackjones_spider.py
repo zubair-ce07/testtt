@@ -108,18 +108,20 @@ class JackJonesSpider(CrawlSpider):
             yield Request(JackJonesSpider.product_url.format(product_id), callback=self.parse_product)
 
     def parse_product(self, response):
+        raw_product = self.get_raw_product(response)
+
         product_item = Product()
 
-        product_item['retailer_sku'] = self.get_retailer_sku(response)
-        product_item['image_urls'] = self.get_image_urls(response)
-        product_item['description'] = self.get_description(response)
-        product_item['name'] = self.get_product_name(response)
-        product_item['gender'] = self.get_gender(response)
-        product_item['category'] = self.get_categories(response)
-        product_item['url'] = self.get_product_url(response)
-        product_item['brand'] = self.get_brand(response)
-        product_item['care'] = self.get_care(response)
-        product_item['skus'] = self.get_skus(response)
+        product_item['retailer_sku'] = self.get_retailer_sku(raw_product)
+        product_item['image_urls'] = self.get_image_urls(raw_product)
+        product_item['description'] = self.get_description(raw_product)
+        product_item['name'] = self.get_product_name(raw_product)
+        product_item['gender'] = self.get_gender(raw_product)
+        product_item['category'] = self.get_categories(raw_product)
+        product_item['url'] = self.get_product_url(raw_product)
+        product_item['brand'] = self.get_brand(raw_product)
+        product_item['care'] = self.get_care(raw_product)
+        product_item['skus'] = self.get_skus(raw_product)
 
         return self.get_product_stock(product_item)
 
@@ -148,35 +150,26 @@ class JackJonesSpider(CrawlSpider):
     def get_raw_product(self, response):
         return loads(response.text)
 
-    def get_product_name(self, response):
-        raw_product = self.get_raw_product(response)
-
+    def get_product_name(self, raw_product):
         if raw_product:
             return raw_product.get('data', {}).get("goodsName")
 
-    def get_care(self, response):
-        raw_product = self.get_raw_product(response)
-
+    def get_care(self, raw_product):
         if not raw_product:
             return []
 
         return [raw_product.get('data', {}).get("goodsInfo")]
 
-    def get_description(self, response):
-        raw_product = self.get_raw_product(response)
-
+    def get_description(self, raw_product):
         if raw_product:
             return [raw_product.get('data', {}).get("describe")]
 
-    def get_retailer_sku(self, response):
-        raw_product = self.get_raw_product(response)
-
+    def get_retailer_sku(self, raw_product):
         if raw_product:
             return raw_product.get('data', {}).get("projectCode")
 
-    def get_image_urls(self, response):
+    def get_image_urls(self, raw_product):
         base_url = 'https://www.jackjones.com.cn/'
-        raw_product = self.get_raw_product(response)
 
         if not raw_product:
             return []
@@ -185,32 +178,27 @@ class JackJonesSpider(CrawlSpider):
         image_urls = sum((color.get("picurls") for color in product_colors), [])
         return [urljoin(base_url, url) for url in image_urls]
 
-    def get_gender(self, response):
+    def get_gender(self, raw_product):
         return JackJonesSpider.gender
 
-    def get_brand(self, response):
-        raw_product = self.get_raw_product(response)
-
+    def get_brand(self, raw_product):
         if raw_product:
             return raw_product.get('data', {}).get("brand")
 
-    def get_product_url(self, response):
+    def get_product_url(self, raw_product):
         product_url = "https://www.jackjones.com.cn/goodsDetails.html?design={}"
-        raw_product = self.get_raw_product(response)
 
         if raw_product:
             product_id = raw_product.get('data', {}).get("projectCode")
             return product_url.format(product_id)
 
-    def get_categories(self, response):
-        raw_product = self.get_raw_product(response)
+    def get_categories(self, raw_product):
         product_colors = raw_product.get('data', {}).get("color", [])
 
         if product_colors:
             return list({color.get("categoryName") for color in product_colors})
 
-    def get_skus(self, response):
-        raw_product = self.get_raw_product(response)
+    def get_skus(self, raw_product):
 
         if not raw_product:
             return []
