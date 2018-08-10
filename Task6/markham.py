@@ -79,6 +79,9 @@ class MarkhamSpider(CrawlSpider):
     def create_sku(self, sku_detail):
         skus = []
 
+        if not sku_detail.get("sizes"):
+            sku_detail["sizes"] = [{"name": "One Size", "available": True}]
+
         for size in sku_detail["sizes"]:
             sku = {"color": sku_detail["colors"][0]["name"],
                    "size": size["name"],
@@ -88,7 +91,7 @@ class MarkhamSpider(CrawlSpider):
             if not size["available"]:
                 sku["out_of_stock"] = True
 
-            if sku_detail["oldPrice"]:
+            if sku_detail.get("oldPrice"):
                 sku["previous_price"] = sku_detail["oldPrice"]
 
             skus.append(sku)
