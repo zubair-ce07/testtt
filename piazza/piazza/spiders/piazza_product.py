@@ -17,7 +17,7 @@ class ProductParser(Spider):
         product['description'] = self.product_description(response)
         product['care'] = self.product_care(response)
         product['image_urls'] = self.image_urls(response)
-        product['skus'] = self.skus(response)
+        product['skus'] = self.generate_skus(response)
         product['price'] = self.product_price(response)
         product['spider_name'] = self.name
         return product
@@ -57,19 +57,19 @@ class ProductParser(Spider):
         image_urls = raw_images["[data-gallery-role=bitbull-gallery]"]["Bitbull_ImageGallery/js/bitbullGallery"]["data"]
         return [url["full"] for url in image_urls]
 
-    def skus(self, response):
-        sku = {}
+    def generate_skus(self, response):
+        skus = {}
         raw_skus = self.product_details(response)
         if raw_skus:
             product_data = self.map_attributes(raw_skus)
             skus_index = raw_skus["index"]
-            price = self.product_price(response)
-            old_price = response.css('[id^=old-price]::attr(data-price-amount)').extract_first()
+            common_sku = self.product_pricing(response)
             for sku_id in skus_index.keys():
-                size = product_data[sku_id]["pitalia_size"]
-                color = product_data[sku_id]["color"]
-                sku[sku_id] = {'price': price, 'currency': 'EUR', 'old_price': old_price, 'size': size, 'color': color}
-        return sku
+                sku = common_sku.copy()
+                sku['size'] = product_data[sku_id]["pitalia_size"]
+                sku['color'] = product_data[sku_id]["color"]
+                skus[sku_id] = sku
+        return skus
 
     def product_details(self, response):
         p_info = response.xpath('//script[contains(text(), "jsonConfig")]/text()').extract_first()
@@ -90,3 +90,10 @@ class ProductParser(Spider):
 
     def product_price(self, response):
         return response.css('.product-info-price *::attr(data-price-amount)').extract_first()
+
+    def product_pricing(self, response):
+        pricing = {}
+        pricing['price'] = self.product_price(response)
+        pricing['old_price'] = response.css('[id^=old-price]::attr(data-price-amount)').extract_first()
+        pricing['currency'] = 'EUR'
+        return pricing
