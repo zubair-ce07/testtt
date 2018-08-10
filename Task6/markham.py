@@ -56,6 +56,7 @@ class MarkhamSpider(CrawlSpider):
         item["gender"] = "Men"
         item["description"] = self.extract_description(response)
         item["image_urls"] = self.extract_image_urls(item_detail)
+        item["care"] = self.extract_care(response)
         item["skus"] = []
         item["skus_requests"] = self.get_skus_requests(item_detail, item)
 
@@ -123,3 +124,6 @@ class MarkhamSpider(CrawlSpider):
 
     def extract_image_urls(self, item_detail):
         return [img["large"] for img in item_detail["images"]]
+
+    def extract_care(self, response):
+        return response.css('#product-detail-template::text').re('<td>(.+)</td>')
