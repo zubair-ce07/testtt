@@ -3,7 +3,6 @@ import re
 from urllib.parse import urlparse
 from urllib.parse import urljoin
 
-from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 
@@ -86,7 +85,8 @@ class TriumphSpider(CrawlSpider):
 
     def get_description(self, response):
         desc_css = '#product_information_features .description ::text'
-        return list(filter(None, list(map(str.strip, response.css(desc_css).extract()))))
+        prod_desc = [raw_desc.strip() for raw_desc in response.css(desc_css).extract()]
+        return list(filter(None, prod_desc))
 
     def get_retailer_sku(self, response):
         prod_sku_css = '#product_information_features span.productid::text'
@@ -110,41 +110,41 @@ class TriumphSpider(CrawlSpider):
 
     def get_categories(self, response):
         xpath = '//script[contains(.,"var dataParam")]'
-        product_details = response.xpath(xpath).re_first('\s*var\s*dataParam\s*=(.+?);')
+        raw_product = response.xpath(xpath).re_first('\s*var\s*dataParam\s*=(.+?);')
 
-        if not product_details:
+        if not raw_product:
             return []
 
-        product_details = json.loads(product_details)
-        return product_details['googletagmanager']['data']['productCategory']
+        raw_product = json.loads(raw_product)
+        return raw_product['googletagmanager']['data']['productCategory']
 
     def get_skus(self, response):
         color_css = '.colorswatches_inner li.selected a::attr(title)'
         color = response.css(color_css).extract_first()
 
         price_css = '.pricing .price-box div:not(.disabled) span[itemprop="price"]::text'
-        price = response.css(price_css)
+        price = response.css(price_css).extract_first(default='')
 
         currency_css = '.pricing .price-box span[itemprop="priceCurrency"]::text'
-        currency = response.css(currency_css)
+        currency = response.css(currency_css).extract_first()
 
         prev_price_css = '.pricing .price-box> div.disabled span[itemprop="price"]::text'
-        previous_prices = response.css(prev_price_css)
+        previous_prices = response.css(prev_price_css).extract_first(default='')
 
         size_css = '#product_variant_details .colorsizes_inner > .overlaysizes li'
         size_selectors = response.css(size_css)
 
         product_skus = []
         for sel in size_selectors:
-            size = sel.css('a::text').extract_first().strip()
+            size = sel.css('a::text').extract_first(default='').strip()
 
             if not any(size in sku.get('size') for sku in product_skus):
-                sku = {"colour": color, "price": price.extract_first().strip(),
-                       "currency": currency.extract_first(), "size": size,
-                       "sku_id": "{}_{}".format(color, size.strip())}
+                sku = {"colour": color, "price": price.strip(),
+                       "currency": currency, "size": size,
+                       "sku_id": "{}_{}".format(color, size)}
 
                 if previous_prices:
-                    sku["previous_prices"] = [previous_prices.extract_first().strip()]
+                    sku["previous_prices"] = [previous_prices.strip()]
 
                 if sel.css('::attr(class)').extract_first() == 'disabletile':
                     sku["out_of_stock"] = True
