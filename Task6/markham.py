@@ -17,8 +17,8 @@ class MarkhamSpider(CrawlSpider):
     start_urls = ['https://www.markham.co.za']
 
     allowed_links = ('plp/clothing/', 'plp/shoes/', '/plp/accessories/')
-    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__item-title"),
-                  callback='parse_pagination')]
+    rules = (Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__item-title"),
+                  callback='parse_pagination'),)
 
     skus_request_t = 'https://www.markham.co.za/product/generateProductJSON.jsp?productId={}'
     category_request_t = 'https://www.markham.co.za/search/ajaxResultsList.jsp?N={0}&baseState={0}'
