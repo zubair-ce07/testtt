@@ -98,7 +98,7 @@ class MarkhamSpider(CrawlSpider):
                 sku["out_of_stock"] = True
 
             if sku_detail.get("oldPrice"):
-                sku["previous_price"] = sku_detail["oldPrice"]
+                sku["previous_prices"] = [sku_detail["oldPrice"]]
 
             skus.append(sku)
 
