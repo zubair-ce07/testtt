@@ -12,4 +12,4 @@ class Product(scrapy.Item):
     skus = scrapy.Field()
     image_urls = scrapy.Field()
     description = scrapy.Field()
-    image_urls_requests = scrapy.Field()
+    requests_queue = scrapy.Field()
