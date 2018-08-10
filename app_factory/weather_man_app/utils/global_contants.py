@@ -2,19 +2,28 @@
 """
 All global constants and helpers are written here to provide utility throughout the application.
 """
+import datetime
 
 
-class AppsHelper(object):
+class AppHelper:
+    """
+    Application related helpers are written eg application's display name.
+    """
     __app_helper_map = {
         'weather-man': 'Weather Man'
     }
 
     @staticmethod
     def get_app_name(name_for):
-        return AppsHelper.__app_helper_map.get(name_for)
+        """
+        Static method to return application display name given it's key.
+        :param name_for: key to be searched
+        :return: value present in application helper for a specifc key (if any)
+        """
+        return AppHelper.__app_helper_map.get(name_for)
 
 
-class FileGlobals(object):
+class FileGlobalHandler:
     """
     File related global constants
     """
@@ -24,11 +33,16 @@ class FileGlobals(object):
     }
 
     @staticmethod
-    def get(item):
-        return FileGlobals.__global_constants.get(item)
+    def get_file_constant(item):
+        """
+        Provides file related constants.
+        :param item: key to be found eg: FILE_PREFIX
+        :return: constant value for a specific key eg: txt for FILE_EXTENTION
+        """
+        return FileGlobalHandler.__global_constants.get(item)
 
 
-class ArgsParserCategories(object):
+class ArgsParserCategoryHandler:
     """
     File related global constants
     """
@@ -38,55 +52,41 @@ class ArgsParserCategories(object):
 
     @staticmethod
     def get_categories():
-        for constant in ArgsParserCategories.__args_parser_categories:
+        """
+        Yield constants which are used throughout the application and are options in args parser for weather data.
+        :rtype: str
+        """
+        for constant in ArgsParserCategoryHandler.__args_parser_categories:
             yield constant
 
 
-class DateMapper(object):
+class DateMapper:
     """
-    Months mapper used to return numeric months to str prefix
+    Class to provide methods to help regarding date and month.
     """
-    __months_map = {
-        1: 'Jan',
-        2: 'Feb',
-        3: 'Mar',
-        4: 'Apr',
-        5: 'May',
-        6: 'Jun',
-        7: 'Jul',
-        8: 'Aug',
-        9: 'Sep',
-        10: 'Oct',
-        11: 'Nov',
-        12: 'Dec'
-    }
-    __months_map_full_name = {
-        1: 'January',
-        2: 'February',
-        3: 'March',
-        4: 'April',
-        5: 'May',
-        6: 'June',
-        7: 'July',
-        8: 'August',
-        9: 'September',
-        10: 'October',
-        11: 'November',
-        12: 'December'
-    }
-
     @staticmethod
     def get_month_name(month):
-        return "" if month is (None or "") else DateMapper.__months_map.get(MathHelper.parse_int(month))
+        """
+        Get month name given a number
+        :param month: Month number eg: 1 is for Jan
+        :return:
+        """
+        return ("" if month is (None or "") else
+                datetime.date(1900, MathHelper.parse_int(month), 1).strftime('%b'))
 
     @staticmethod
-    def get_month_full_name(month):
-        year, month, day = month.split('-')
-        month = DateMapper.__months_map_full_name.get(MathHelper.parse_int(month))
+    def get_month_full_name_and_day(period):
+        """
+        Gives month's full name and year given date
+        :param period: date eg: 2010-1-12 Year-Month-day
+        :return: Month Day
+        """
+        year, month, day = period.split('-')
+        month = datetime.date(1900, MathHelper.parse_int(month), 1).strftime('%B')
         return f"{month} {day}"
 
 
-class MathHelper(object):
+class MathHelper:
     """
     Mathematical constants and helpers are written here.
     """
@@ -96,30 +96,44 @@ class MathHelper(object):
     }
 
     @staticmethod
-    def get(item):
-        return MathHelper.__helper_dict.get(item)
+    def get_constant_value(help_key):
+        """
+        Provide constant values for a mathematical terms, one thing needs to be keep in mind, these constants are
+        constants throughout the application otherwise there is not value for neg-infinity or pos-infinity these can
+        also be set according to the register size of a system to provide how much big number an architecture can hold,
+        similarly other constants like log(10) value will always be constant throughout different architectures as well.
+        :param help_key: What is wanted from math helper class.
+        :return: Value for a specific key.
+        """
+        return MathHelper.__helper_dict.get(help_key)
 
     @staticmethod
     def parse_int(number):
+        """
+        Checks a value that can not be converted into integer and returns None otherwise convert value to number and
+        :returns
+        :param number: Candidate to be check as a possible integer.
+        :return: None or int number
+        """
         return None if number is "" or number is None else int(number)
 
 
-class ReportsHelper(object):
+class ReportsHelper:
     """
     Reports helpers are written here like empty reports and output strings (all for different cantegories)
     """
     __reports_helper_map = {
-        AppsHelper.get_app_name('weather-man'):
+        AppHelper.get_app_name('weather-man'):
             {
                 'years': {
                     'highest_temp': {
-                        'value': MathHelper.get('neg-infinity'), 'day': None
+                        'value': MathHelper.get_constant_value('neg-infinity'), 'day': None
                     },
                     'lowest_temp': {
-                        'value': MathHelper.get('pos-infinity'), 'day': None
+                        'value': MathHelper.get_constant_value('pos-infinity'), 'day': None
                     },
                     'highest_humidity': {
-                        'value': MathHelper.get('neg-infinity'), 'day': None
+                        'value': MathHelper.get_constant_value('neg-infinity'), 'day': None
                     }
                 },
                 'year_with_month': {
@@ -137,7 +151,7 @@ class ReportsHelper(object):
             }
     }
     __reports_output_strings = {
-        AppsHelper.get_app_name('weather-man'):
+        AppHelper.get_app_name('weather-man'):
             {
                 'years': {
                     'highest_temp': "Highest: {}C on {}",
@@ -157,8 +171,20 @@ class ReportsHelper(object):
     
     @staticmethod
     def get_empty_report(app_name, category):
-        return ReportsHelper.__reports_helper_map.get(AppsHelper.get_app_name(app_name)).get(category)
+        """
+        Returns empty report of a specific category for weather man
+        :param app_name: application name eg weather-man
+        :param category: category of report eg: year report
+        :return: empty report dictionary
+        """
+        return ReportsHelper.__reports_helper_map.get(AppHelper.get_app_name(app_name)).get(category)
 
     @staticmethod
     def get_report_output(app_name, category):
-        return ReportsHelper.__reports_output_strings.get(AppsHelper.get_app_name(app_name)).get(category)
+        """
+        Give output strings that are required to format to make informative after calling.
+        :param app_name: application name eg weather-man
+        :param category: category of report eg: year report
+        :return: dict with keys as sub-categories of report and specific output strings in respective sub-categories.
+        """
+        return ReportsHelper.__reports_output_strings.get(AppHelper.get_app_name(app_name)).get(category)

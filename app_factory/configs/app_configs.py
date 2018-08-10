@@ -5,7 +5,7 @@ differently in different applications).
 """
 
 
-class AppConfigs(object):
+class AppConfig:
     """
     Configurations for the application.
     """
