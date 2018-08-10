@@ -11,9 +11,6 @@ class WeatherReporter:
     def read_files(self, files_path):
         self.weather_analyzer_obj.read_files(files_path)
 
-    def genrate_specific_report(self, given_arg_list):
-        self.weather_analyzer_obj.genrate_specific_report(given_arg_list)
-
     def genrate_year_report(self, given_arg_list):
         self.weather_analyzer_obj.read_files(given_arg_list[2])
         max_data_list = self.weather_analyzer_obj.extract_year_data(
