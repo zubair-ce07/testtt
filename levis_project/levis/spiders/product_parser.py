@@ -34,7 +34,7 @@ class ProductParser(Spider):
         product['description'] = self.description(response)
         product['care'] = self.care(response)
         product['image_urls'] = self.image_urls(response)
-        if self.availability(response):
+        if self.raw_skus(response)['available']:
             product['skus'] = self.skus(response)
             product['price'] = self.price(response)
             product['currency'] = self.currency
@@ -50,9 +50,6 @@ class ProductParser(Spider):
         sku_css = "head script:not([type]):not([language])"
         raw_sku = json.loads(response.css(sku_css).re_first(sku_re))
         return raw_sku
-
-    def availability(self, response):
-        return self.raw_skus(response)['available']
 
     def product_name(self, response):
         return response.css(".productName::text").extract_first()
