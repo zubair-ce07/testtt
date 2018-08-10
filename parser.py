@@ -34,13 +34,10 @@ class Parser:
                 month, year = file_name[3].split('.')[0], file_name[2]
 
                 line = opened_file.readline()
+                WeatherData(year)
                 while line:
                     line = opened_file.readline()
-                    WeatherEntity(line)
-                    # read complete file, populate data in array
-                    # after reading populate in parent array in following format
-                    # {'year' => {'month' => [entries]}}
-                WeatherData(year)
-                WeatherData.add_array_to_key({month: []}, month, year, WeatherEntity.get_data())
-                WeatherEntity.clear()  # Once populated clear data
+                    WeatherData.append_single_list(line)
+                WeatherData.add_array_to_key({month: []}, month, year,  WeatherData.single_list)
+                WeatherData.single_list = []  # Once populated clear data
         print("Files successfully populated")
