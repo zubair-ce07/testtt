@@ -56,6 +56,7 @@ class MarkhamSpider(CrawlSpider):
         item["gender"] = "Men"
         item["description"] = self.extract_description(response)
         item["image_urls"] = self.extract_image_urls(item_detail)
+        item["skus"] = []
         item["skus_requests"] = self.get_skus_requests(item_detail, item)
 
         return item["skus_requests"].pop()
@@ -63,11 +64,10 @@ class MarkhamSpider(CrawlSpider):
     def get_skus_requests(self, item_detail, item):
         colors = item_detail["colors"]
         sku_request = self.skus_request_t.format(item_detail["id"])
-        skus_requestes = [add_or_replace_parameter(sku_request, "selectedColor", color["id"]) for color in colors]
+        skus_requests = [add_or_replace_parameter(sku_request, "selectedColor", color["id"])
+                         for color in colors]
 
-        item["skus"] = []
-
-        return [Request(url, callback=self.parse_skus, meta={"item": item}) for url in skus_requestes]
+        return [Request(url, callback=self.parse_skus, meta={"item": item}) for url in skus_requests]
 
     def parse_skus(self, response):
         item = response.meta["item"]
