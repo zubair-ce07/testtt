@@ -10,6 +10,7 @@ class Product(scrapy.Item):
     price = scrapy.Field()
     gender = scrapy.Field()
     skus = scrapy.Field()
+    care = scrapy.Field()
     image_urls = scrapy.Field()
     description = scrapy.Field()
-    skus_requests = scrapy.Field()
+    requests_queue = scrapy.Field()

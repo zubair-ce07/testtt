@@ -58,9 +58,9 @@ class MarkhamSpider(CrawlSpider):
         item["image_urls"] = self.extract_image_urls(item_detail)
         item["care"] = self.extract_care(response)
         item["skus"] = []
-        item["skus_requests"] = self.get_skus_requests(item_detail, item)
+        item["requests_queue"] = self.get_skus_requests(item_detail, item)
 
-        return item["skus_requests"].pop()
+        return item["requests_queue"].pop()
 
     def get_skus_requests(self, item_detail, item):
         colors = item_detail["colors"]
@@ -76,10 +76,10 @@ class MarkhamSpider(CrawlSpider):
 
         item["skus"].extend(self.extract_sku(sku_detail))
 
-        if item["skus_requests"]:
-            item["skus_requests"].pop()
+        if item["requests_queue"]:
+            item["requests_queue"].pop()
 
-        del item["skus_requests"]
+        del item["requests_queue"]
         return item
 
     def extract_sku(self, sku_detail):
