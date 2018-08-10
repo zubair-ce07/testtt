@@ -122,25 +122,10 @@ class OrsayproductSpider(CrawlSpider):
                     }
                 }
                 sub_skus.update(skus)
-        product_item = None
-        if 'item' in response.meta:
-            product_item = response.meta['item']
-            product_item['skus'].update(sub_skus)
-            product_item['urls'].append(response.url)
+        if self.has_product_variations(response):
+            self.get_product_variations(response)
         else:
-            yield sub_skus.get(0)
-        if 'colors_list' in response.meta:
-            if len(response.meta['colors_list']) == 0:
-                item = response.meta['item']
-                item.pop('Id', None)
-                yield item
-            else:
-                colors_to_follow = response.meta['colors_list']
-                url = self.get_color_url(colors_to_follow)
-                yield scrapy.Request(
-                        url=url, callback=self.get_product_skus,
-                        meta={'colors_list': colors_to_follow,
-                              'item':  product_item})
+            return sub_skus
             
     def get_care_text(self, response):
         care_text = response.css(
@@ -168,7 +153,23 @@ class OrsayproductSpider(CrawlSpider):
         url = colors_to_follow[0]
         colors_to_follow.pop(0)
         return url
-        
-    def convert_gen_to_dict(self, gen_obj):
-        for obj in gen_obj:
-            return obj
+    
+    def has_product_variations(self, response):
+        if 'item' in response.meta:
+            return True
+        else:
+            return False
+    
+    def get_product_variations(self, response):
+        product_item = response.meta['item']
+        product_item['skus'].update(sub_skus)
+        product_item['urls'].append(response.url)
+        if len(response.meta['colors_list']) == 0:
+            yield response.meta['item']
+        else:
+            colors_to_follow = response.meta['colors_list']
+            url = self.get_color_url(colors_to_follow)
+            yield scrapy.Request(
+                    url=url, callback=self.get_product_skus,
+                    meta={'colors_list': colors_to_follow,
+                          'item':  product_item})
