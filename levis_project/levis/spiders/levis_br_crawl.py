@@ -25,15 +25,15 @@ class LevisBrCrawlSpider(CrawlSpider):
             yield request
 
     def parse_category(self, response):
-        pages = response.css(".main script").re_first(".*pagecount_.*=\s(\d+)")
-        if not pages:
+        total_pages = response.css(".main script").re_first(".*pagecount_.*=\s(\d+)")
+        if not total_pages:
             return
-        pages = int(pages)
+        total_pages = int(total_pages)
         request_url = response.css(".main script").re_first(".*(/buscapagina?.*=)'")
         trail = response.meta['trail']
         trail.append(response.url)
-        for page in range(1, pages + 1):
-            request_url = add_or_replace_parameter(request_url, 'PageNumber', page)
+        for page_no in range(1, total_pages + 1):
+            request_url = add_or_replace_parameter(request_url, 'PageNumber', page_no)
             request = Request(response.urljoin(request_url), callback=self.parse)
             request.meta['trail'] = trail.copy()
             yield request
