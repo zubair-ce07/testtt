@@ -16,8 +16,8 @@ class MarkhamSpider(CrawlSpider):
     allowed_domains = ['markham.co.za']
     start_urls = ['https://www.markham.co.za']
 
-    allowed_links = ('plp/clothing/', 'plp/shoes/', '/plp/accessories/')
-    rules = (Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__item-title"),
+    allowed_r = ('plp/clothing/', 'plp/shoes/', '/plp/accessories/')
+    rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".nav__item-title"),
                   callback='parse_pagination'),)
 
     skus_request_t = 'https://www.markham.co.za/product/generateProductJSON.jsp?productId={}'
@@ -92,6 +92,7 @@ class MarkhamSpider(CrawlSpider):
             sku = {"color": sku_detail["colors"][0]["name"],
                    "size": size["name"],
                    "price": sku_detail["price"],
+                   "currency": 'PHP',
                    "sku_id": f'{sku_detail["colors"][0]["name"]}_{size["name"]}'}
 
             if not size["available"]:
