@@ -1,12 +1,12 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
-from w3lib.url import url_query_cleaner as url_cleaner
+from w3lib.url import url_query_cleaner as w3cleaner
 
 from .product_schema import Parser
 
 
 class HugoBossSpider(CrawlSpider):
-    name = "hugo_boss"
+    name = "hugoboss"
     parser = Parser()
 
     start_urls = [
@@ -18,15 +18,16 @@ class HugoBossSpider(CrawlSpider):
     ]
 
     rules = (Rule(LinkExtractor(restrict_css='.swatch-list__image'), callback="parse_product"),
-             Rule(LinkExtractor(restrict_css='.nav-list--third-level', process_value=url_cleaner), callback='parse'),
+             Rule(LinkExtractor(restrict_css='.nav-list--third-level', process_value=w3cleaner), callback='parse'),
              Rule(LinkExtractor(restrict_css='pagingbar__item'), callback='parse'),
              )
 
     def parse(self, response):
         trail = response.meta.get("trail", [])
         for request in super(HugoBossSpider, self).parse(response):
-            request.meta["trail"] = trail.copy().append(response.url)
+            request.meta["trail"] = trail.copy()
+            request.meta["trail"].append(response.url)
             yield request
 
     def parse_product(self, response):
-        yield from self.parser.parse(response)
+        yield self.parser.parse(response)
