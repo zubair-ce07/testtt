@@ -11,9 +11,14 @@ class HunkemollerDeCrawlSpider(CrawlSpider):
     start_urls = [
         'https://www.hunkemoller.de/de_de'
     ]
+    category_css = [
+        '.nav-container',
+        '.pages',
+        '.color-options'
+    ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=['.nav-container', '.pages', '.color-options']), callback='parse'),
+        Rule(LinkExtractor(restrict_css=category_css), callback='parse'),
         Rule(LinkExtractor(restrict_css='.product-image'), callback='parse_item'),
     )
 
@@ -28,4 +33,5 @@ class HunkemollerDeCrawlSpider(CrawlSpider):
             yield request
 
     def parse_item(self, response):
-        return self.parser.extract_retailer_sku(response)
+        return self.parser.parse(response)
+

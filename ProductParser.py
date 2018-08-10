@@ -10,6 +10,7 @@ class ProductParser(Spider):
     name = "hunkemoller-de-parser"
     brand = "Hunkemoller"
     gender = "women"
+    category_regex = re.compile('pageInfo = (.*?);\s*$', re.M)
 
     def parse(self, response):
         item = HunkemollerItem()
@@ -30,7 +31,7 @@ class ProductParser(Spider):
 
     def extract_retailer_sku(self, response):
         retailer_sku = response.css('.article-number::text').extract_first()
-        return retailer_sku.split(' ')[1]
+        return retailer_sku.split()[1]
 
     def extract_trails(self, response):
         return response.meta.get('trail')
@@ -47,36 +48,44 @@ class ProductParser(Spider):
         return list(filter(lambda tip: tip.strip(), product_tips))
 
     def extract_price(self, response):
-        return response.css(".ratings-wrap span[itemprop='price']::text").extract_first()
+        return response.css(".ratings-wrap [itemprop='price']::text").extract_first()
 
     def extract_currency(self, response):
-        return response.css("span[itemprop='priceCurrency']::attr(content)").extract_first()
+        return response.css("[itemprop='priceCurrency']::attr(content)").extract_first()
 
     def extract_colors(self, response):
-        return response.css('.product-info .pdp-colors a::attr(title)').extract()
+        return response.css('.product-info .pdp-colors ::attr(title)').extract()
 
     def extract_category(self, response):
         page_details = response.css('.kega-ddl-script::text').extract_first()
-        product_details = json.loads(re.findall('digitalData.page.pageInfo = (.*?);\s*$', page_details, re.M)[0])
+        product_details = json.loads(re.findall(self.category_regex, page_details)[0])
         return product_details['breadCrumbs']
 
     def extract_image_urls(self, response):
-        raw_urls = response.css(".scroller a::attr(rel)").extract()
+        raw_urls = response.css(".scroller ::attr(rel)").extract()
         return [json.loads(url).get('zoomimage') for url in raw_urls]
 
-    def extract_sku_model(self, response):
-        sku_model_no = json.loads(response.css('::attr(data-additional)').extract_first())
-        return list(sku_model_no.keys())[0]
+    def extract_sku_sizes(self, response):
+        raw_sku_size = response.css('.product-info .selectmenu :not([selected]):not(span) ::text').extract()
+        return [size.strip() for size in raw_sku_size]
+
+    def extract_sku_models(self, response):
+        raw_sku_id = response.css(
+            '.product-info .selectmenu :not([selected]):not(span) ::attr(data-additional)').extract()
+        return [list(json.loads(x).keys())[0] for x in raw_sku_id]
 
     def extract_skus(self, response):
-        skus = {}
+        sku_sizes = self.extract_sku_sizes(response)
+        sku_id = self.extract_sku_models(response)
         sku_info = {
             'color': self.extract_colors(response)[0],
             'currency': self.extract_currency(response),
             'price': self.extract_price(response)
         }
-        for size in response.css('.product-info .selectmenu :not([selected]):not(span)'):
+        skus = {}
+        for sku_model, size in zip(sku_id, sku_sizes):
             sku = sku_info.copy()
-            sku['size'] = size.css('::text').extract_first().strip()
-            skus[self.extract_sku_model(size)] = sku
+            sku['size'] = size
+            skus[sku_model] = sku
         return skus
+
