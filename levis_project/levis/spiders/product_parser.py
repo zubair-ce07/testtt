@@ -12,7 +12,8 @@ class ProductParser(Spider):
     currency = 'BRL'
     gender_map = {
         "homem": "men",
-        "mulher": "women"
+        "mulher": "women",
+        "default": "unisex"
     }
 
     def parse(self, response):
@@ -105,9 +106,8 @@ class ProductParser(Spider):
         return response.css(".bread-crumb a::text").extract()
 
     def gender(self, response):
-        categories = self.category(response)
-        categories = [category.lower() for category in categories]
+        gender_soup = " ".join(self.category(response)).lower()
         for gender in self.gender_map:
-            if gender in categories:
+            if gender in gender_soup:
                 return self.gender_map[gender]
-        return 'unisex'
+        return self.gender_map['default']
