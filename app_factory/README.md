@@ -5,6 +5,14 @@ The purpose of App factory is to register as many applications as wanted and run
 
 ## Getting Started
 
+### Major Requirement(s):
+    Python3.7
+
+### First of all for virtual environment use following commands:
+    cd app_factory
+    make setup (Setup, activate virtualenv and install requirements)
+    make clean (De-activate, deletes virtualenv and cleans *.pyc files)
+
  Run the file run_app.py by passing required arguments 1. app_name, 2 and plus all app specific arguments. For example to run weather man application use like:
 
 #### Arguments example for weather man application:

@@ -28,7 +28,6 @@ class ResultsCalculator(object):
         if humidity and humidity > report['highest_humidity']['value']:
             report['highest_humidity']['value'] = humidity
             report['highest_humidity']['day'] = DateMapper.get_month_full_name(day)
-        return report
 
     @staticmethod
     def update_year_with_month_report(weathe_data_entry, report):
@@ -45,7 +44,6 @@ class ResultsCalculator(object):
         if mean_humidity:
             report['average_mean_humidity']['value'] += mean_humidity
             report['average_mean_humidity']['total-entries'] += 1
-        return report
 
     @staticmethod
     def get_month_bar_chart_result_for_day(weathe_data_entry):
