@@ -17,16 +17,18 @@ class MarkhamSpider(CrawlSpider):
     start_urls = ['https://www.markham.co.za']
 
     allowed_links = ('plp/clothing/', 'plp/shoes/', '/plp/accessories/')
-    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__item-title"), callback='parse_pagination')]
+    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__item-title"),
+                  callback='parse_pagination')]
 
     skus_request_t = 'https://www.markham.co.za/product/generateProductJSON.jsp?productId={}'
     category_request_t = 'https://www.markham.co.za/search/ajaxResultsList.jsp?N={0}&baseState={0}'
 
     def parse_pagination(self, response):
-        products_details = json.loads(response.css('#product-listing-static-data::text').extract_first()).get("data")
+        products_details = json.loads(response.css('#product-listing-static-data::text')
+                                      .extract_first())["data"]
         total_pages = products_details["totalPages"]
 
-        category_id = re.search('N-([\w+]+);', response.url).group(1)
+        category_id = re.findall('N-([\w+]+);', response.url)[0]
         category_request = self.category_request_t.format(category_id)
 
         url_parameters = [urlencode({"No": page*15, "page": page}) for page in range(1, total_pages+1)]
@@ -50,7 +52,7 @@ class MarkhamSpider(CrawlSpider):
         item["price"] = self.extract_price(item_detail)
         item["brand"] = self.extract_brand(item_detail)
         item["url"] = response.url
-        item["category"] = self.extract_categorie(response)
+        item["category"] = self.extract_categories(response)
         item["gender"] = "Men"
         item["description"] = self.extract_description(response)
         item["image_urls"] = self.extract_image_urls(item_detail)
@@ -71,7 +73,7 @@ class MarkhamSpider(CrawlSpider):
         item = response.meta["item"]
         sku_detail = json.loads(response.text)
 
-        item["skus"].extend(self.create_sku(sku_detail))
+        item["skus"].extend(self.extract_sku(sku_detail))
 
         if item["skus_requests"]:
             item["skus_requests"].pop()
@@ -79,7 +81,7 @@ class MarkhamSpider(CrawlSpider):
         del item["skus_requests"]
         return item
 
-    def create_sku(self, sku_detail):
+    def extract_sku(self, sku_detail):
         skus = []
 
         if not sku_detail.get("sizes"):
@@ -108,12 +110,12 @@ class MarkhamSpider(CrawlSpider):
         return item_detail["name"]
 
     def extract_price(self, item_detail):
-        return float(re.search('([\d+,]+)', item_detail["price"]).group(1).replace(",", "")) * 100
+        return float(re.findall('([\d+,]+)', item_detail["price"])[0].replace(",", "")) * 100
 
     def extract_brand(self, item_detail):
         return item_detail["brand"]
 
-    def extract_categorie(self, response):
+    def extract_categories(self, response):
         return response.css('.breadcrumbs__item a::text').extract()[1:-1]
 
     def extract_description(self, response):
