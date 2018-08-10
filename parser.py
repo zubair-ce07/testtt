@@ -1,7 +1,6 @@
 import glob  # library for getting files from selected directory
 
-from models.weather_data import WeatherData
-from models.weather_entity import WeatherEntity
+from weather_data import WeatherData
 
 
 class Parser:

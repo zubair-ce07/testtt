@@ -1,6 +1,6 @@
 from operator import itemgetter
 from calculated_result import CalculatedResult
-from models.weather_data import WeatherData
+from weather_data import WeatherData
 
 
 class Calculator:
