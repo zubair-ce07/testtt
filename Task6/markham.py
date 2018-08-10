@@ -3,7 +3,7 @@ import re
 
 from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractor import LinkExtractor
+from scrapy.linkextractors import LinkExtractor
 from w3lib.url import add_or_replace_parameter
 
 from Task6.items import Product
@@ -15,8 +15,8 @@ class MarkhamSpider(CrawlSpider):
     allowed_domains = ['markham.co.za']
     start_urls = ['https://www.markham.co.za']
 
-    allowed_links = ('plp/clothing/\w+/', 'plp/shoes/\w+/', '/plp/accessories/\w+/')
-    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__sub-item a"), callback='parse_pagination')]
+    allowed_links = ('plp/clothing/[\w+_-]+/', 'plp/shoes/[\w+_-]+/', '/plp/accessories/[\w+_-]+/')
+    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__sub-item"), callback='parse_pagination')]
 
     skus_request_t = 'https://www.markham.co.za/product/generateProductJSON.jsp?productId={}'
     category_request_t = 'https://www.markham.co.za/search/ajaxResultsList.jsp?baseState={0}&N={0}'
@@ -102,7 +102,7 @@ class MarkhamSpider(CrawlSpider):
         return item_detail["name"]
 
     def extract_price(self, item_detail):
-        return item_detail["price"]
+        return float(re.search('([\d+,]+)', item_detail["price"]).group(1).replace(",", "")) * 100
 
     def extract_brand(self, item_detail):
         return item_detail["brand"]
