@@ -1,5 +1,5 @@
 from termcolor import colored
-from models.calculated_result import CalculatedResult
+from calculated_result import CalculatedResult
 from calculator import Calculator
 
 

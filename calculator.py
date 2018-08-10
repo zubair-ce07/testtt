@@ -1,7 +1,5 @@
 from operator import itemgetter
-
-from helpers.core.calculator_helper import *
-from models.calculated_result import CalculatedResult
+from calculated_result import CalculatedResult
 from models.weather_data import WeatherData
 
 

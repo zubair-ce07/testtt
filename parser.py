@@ -1,4 +1,7 @@
 import glob  # library for getting files from selected directory
+
+from models.monthly_weather_data import MonthlyWeatherData
+from models.weather_data import WeatherData
 from models.yearly_weather_data import YearlyWeatherData
 from models.weather_entity import WeatherEntity
 
@@ -39,6 +42,7 @@ class Parser:
                     # read complete file, populate data in array
                     # after reading populate in parent array in following format
                     # {'year' => {'month' => [entries]}}
-                YearlyWeatherData(year, month, WeatherEntity.get_data())
+                WeatherData(year)
+                MonthlyWeatherData(month, year, WeatherEntity.get_data())
                 WeatherEntity.clear()  # Once populated clear data
         print("Files successfully populated")
