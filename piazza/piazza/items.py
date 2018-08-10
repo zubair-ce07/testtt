@@ -18,4 +18,3 @@ class ProductItem(Item):
     price = Field()
     currency = Field()
     spider_name = Field()
-    pass

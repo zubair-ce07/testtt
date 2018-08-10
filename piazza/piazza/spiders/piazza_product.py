@@ -1,5 +1,4 @@
 import json
-import re
 from scrapy import Spider
 from piazza.items import ProductItem
 
@@ -18,30 +17,28 @@ class ProductParser(Spider):
         product['description'] = self.product_description(response)
         product['care'] = self.product_care(response)
         product['image_urls'] = self.image_urls(response)
-        product['skus'] = self.raw_skus(response)
+        product['skus'] = self.skus(response)
         product['price'] = self.product_price(response)
         product['spider_name'] = self.name
         return product
 
     def product_id(self, response):
-        return response.css('.price-box.price-final_price::attr(data-product-id)').extract_first()
+        return response.css('.price-final_price::attr(data-product-id)').extract_first()
 
     def product_trail(self, response):
         trail_urls = response.meta.get('trail', ['https://www.piazzaitalia.it/'])
         return [[url.split("/")[-1].split(".")[0], url] for url in trail_urls]
 
     def product_gender(self, response):
-        possible_genders = {'donna': 'women', 'uomo': 'men', 'kids': 'kids'}
-        gender_urls = response.meta.get('trail', ['https://www.piazzaitalia.it/'])
-        gender_urls.extend(response.css('.breadcrumbs *::attr(href)').extract())
-        for url in gender_urls:
-            gender = re.findall('(donna|uomo|kids)', url)
-            if gender:
-                return possible_genders[gender[0]]
-        return 'unisex'
+        gender_map = {'donna': 'women', 'uomo': 'men', 'kids': 'unisex-kids'}
+        soup = ' '.join(response.meta.get('trail', []) + response.css('.breadcrumbs *::attr(href)').extract())
+        for gender in gender_map:
+            if gender in soup:
+                return gender_map[gender]
+        return 'unisex-adults'
 
     def product_category(self, response):
-        categories = response.css('.breadcrumbs *::text').extract()
+        categories = response.css('.breadcrumbs a::text').extract()
         filtered_categories = [category.strip() for category in categories]
         return list(filter(None, filtered_categories))
 
@@ -49,7 +46,7 @@ class ProductParser(Spider):
         return response.css('.base::text').extract_first()
 
     def product_description(self, response):
-        return response.css('.product.attibute.description p::text').extract()
+        return response.css('.description p::text').extract()
 
     def product_care(self, response):
         return response.css('.col.data::text').extract()[-1:]
@@ -60,27 +57,24 @@ class ProductParser(Spider):
         image_urls = raw_images["[data-gallery-role=bitbull-gallery]"]["Bitbull_ImageGallery/js/bitbullGallery"]["data"]
         return [url["full"] for url in image_urls]
 
-    def raw_skus(self, response):
-        skus = {}
-        product_data_ = self.product_details(response)
-        if product_data_:
-            product_data = self.map_attributes(product_data_)
-            skus_index = product_data_["index"]
-            for index in skus_index.keys():
-                price = product_data_["optionPrices"][index]["finalPrice"]["amount"]
-                old_price = product_data_["optionPrices"][index]["oldPrice"]["amount"]
-                size = product_data[index]["pitalia_size"]
-                color = product_data[index]["color"]
-                skus[index] = {'price': price, 'currency': 'EUR', 'old_price': old_price, 'size': size, 'color': color}
-        return skus
+    def skus(self, response):
+        sku = {}
+        raw_skus = self.product_details(response)
+        if raw_skus:
+            product_data = self.map_attributes(raw_skus)
+            skus_index = raw_skus["index"]
+            price = self.product_price(response)
+            old_price = response.css('[id^=old-price]::attr(data-price-amount)').extract_first()
+            for sku_id in skus_index.keys():
+                size = product_data[sku_id]["pitalia_size"]
+                color = product_data[sku_id]["color"]
+                sku[sku_id] = {'price': price, 'currency': 'EUR', 'old_price': old_price, 'size': size, 'color': color}
+        return sku
 
     def product_details(self, response):
-        product_info = response.xpath('//script[contains(text(), "jsonConfig")]/text()').extract_first()
-        attributes = {}
-        if product_info:
-            product_info = json.loads(product_info)
-            attributes = product_info["[data-role=swatch-options]"]["Magento_Swatches/js/SwatchRenderer"]["jsonConfig"]
-        return attributes
+        p_info = response.xpath('//script[contains(text(), "jsonConfig")]/text()').extract_first()
+        p_info = json.loads(p_info or '{}')
+        return p_info["[data-role=swatch-options]"]["Magento_Swatches/js/SwatchRenderer"]["jsonConfig"] if p_info else {}
 
     def map_attributes(self, product_data):
         attributes = product_data["attributes"]

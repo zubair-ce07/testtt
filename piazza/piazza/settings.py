@@ -18,7 +18,8 @@ NEWSPIDER_MODULE = 'piazza.spiders'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'piazza (+http://www.yourdomain.com)'
 
-
+# Obey robots.txt rules
+ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -45,11 +46,9 @@ NEWSPIDER_MODULE = 'piazza.spiders'
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-SPIDER_MIDDLEWARES = {
-   'piazza.middlewares.PiazzaSpiderMiddleware': 543,
-   'scrapy.contrib.spidermiddleware.referer.RefererMiddleware': True,
-
-}
+#SPIDER_MIDDLEWARES = {
+#    'piazza.middlewares.PiazzaSpiderMiddleware': 543,
+#}
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html

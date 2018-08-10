@@ -19,9 +19,9 @@ class PiazzaSpider(CrawlSpider):
     def parse(self, response):
         requests = super().parse(response)
         for req in requests:
-            trail_key = response.request.meta.get('trail', [])
-            trail_key.append(response.url)
-            req.meta['trail'] = list(set(trail_key))
+            trail = response.meta.get('trail', [])
+            trail.append(response.url)
+            req.meta['trail'] = list(set(trail))
             yield req
 
     def parse_product(self, response):
