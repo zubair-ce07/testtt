@@ -1,6 +1,6 @@
-from config.parser import Parser
-from core.calculator import Calculator
-from core.report_generator import ReportGenerator
+from parser import Parser
+from calculator import Calculator
+from report_generator import ReportGenerator
 import sys
 
 

@@ -1,12 +1,18 @@
 from termcolor import colored
-from helpers.core.report_generator_helper import *
 from models.calculated_result import CalculatedResult
+from calculator import Calculator
 
 
 class ReportGenerator:
 
     def __init__(self):
         self.results = CalculatedResult.get_data()
+
+    @staticmethod
+    def readable_date(date):
+        # assumed date is given in YYYY-MM-DD method
+        split_date = date.split('-')
+        return Calculator.month_with_num(split_date[1]) + " " + split_date[2]
 
     def print_report(self):
         for entry in self.results:
@@ -18,7 +24,7 @@ class ReportGenerator:
                               + each_entry['value']
                               + each_entry['ending'] + " on "
                               , end='')
-                        print(colored(readable_date(each_entry['date']), 'red'))
+                        print(colored(self.readable_date(each_entry['date']), 'red'))
                 elif entry['type'] == "-a":
                     for each_entry in entry['data']:
                         print(each_entry['text'] + " "

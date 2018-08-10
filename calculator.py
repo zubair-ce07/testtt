@@ -12,6 +12,46 @@ class Calculator:
         self.data = WeatherData.get_data()
         self.__calculate(command)
 
+    @staticmethod
+    def month_with_num(num):
+        num = int(num)
+        month = None
+        if num == 1:
+            month = 'Jan'
+        elif num == 2:
+            month = 'Feb'
+        elif num == 3:
+            month = 'Mar'
+        elif num == 4:
+            month = 'Apr'
+        elif num == 5:
+            month = 'May'
+        elif num == 6:
+            month = 'Jun'
+        elif num == 7:
+            month = 'Jul'
+        elif num == 8:
+            month = 'Aug'
+        elif num == 9:
+            month = 'Sep'
+        elif num == 10:
+            month = 'Oct'
+        elif num == 11:
+            month = 'Nov'
+        elif num == 12:
+            month = 'Dec'
+        return month
+
+    @staticmethod
+    def cal_average(list_):
+        return round(sum(list_) / float(len(list_)), 2)
+
+    @staticmethod
+    def find_keys_in_arr(key, arr):
+        # getting a specific keys from a list of dicts
+        # returns list
+        return [int(d[key]) for d in arr if key in d]
+
     def __calculate(self, command):
         print()
         try:
@@ -50,16 +90,16 @@ class Calculator:
                     index = command.index(entry)
                     arg = command[index + 1]
                     # for given year of month 2012/6
-                    year, month = arg.split('/')[0], month_with_num(arg.split('/')[1])
+                    year, month = arg.split('/')[0], self.month_with_num(arg.split('/')[1])
                     if month is None:
                         raise ValueError()
 
                     if entry == "-a":
 
                         # command -a for specific month show highest avg, lowest avg and avg mean humidity
-                        avg_high_temp = cal_average(find_keys_in_arr('max_temperature_c', self.data[year][month]))
-                        avg_low_temp = cal_average(find_keys_in_arr('min_temperature_c', self.data[year][month]))
-                        avg_most_humid_temp = cal_average(find_keys_in_arr('mean_humidity', self.data[year][month]))
+                        avg_high_temp = self.cal_average(self.find_keys_in_arr('max_temperature_c', self.data[year][month]))
+                        avg_low_temp = self.cal_average(self.find_keys_in_arr('min_temperature_c', self.data[year][month]))
+                        avg_most_humid_temp = self.cal_average(self.find_keys_in_arr('mean_humidity', self.data[year][month]))
 
                         data = list()
                         data.append({'text': 'Highest Average', 'value': str(avg_high_temp), 'ending': ''})
@@ -76,7 +116,7 @@ class Calculator:
                         index = command.index(entry)
                         arg = command[index + 1]
                         # for given year of month 2012/6
-                        year, month = arg.split('/')[0], month_with_num(arg.split('/')[1])
+                        year, month = arg.split('/')[0], self.month_with_num(arg.split('/')[1])
                         if month is None:
                             raise ValueError()
 
@@ -93,3 +133,7 @@ class Calculator:
             print("got key error! {0}".format(ke))
             print("for years try", WeatherData.get_years())
             return
+
+
+
+
