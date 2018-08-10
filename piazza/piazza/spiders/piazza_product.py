@@ -39,8 +39,8 @@ class ProductParser(Spider):
 
     def product_category(self, response):
         categories = response.css('.breadcrumbs a::text').extract()
-        filtered_categories = [category.strip() for category in categories]
-        return list(filter(None, filtered_categories))
+        filtered_categories = [category.strip() for category in categories if category]
+        return filtered_categories
 
     def product_name(self, response):
         return response.css('.base::text').extract_first()
@@ -62,9 +62,8 @@ class ProductParser(Spider):
         raw_skus = self.product_details(response)
         if raw_skus:
             product_data = self.map_attributes(raw_skus)
-            skus_index = raw_skus["index"]
             common_sku = self.product_pricing(response)
-            for sku_id in skus_index.keys():
+            for sku_id in raw_skus["index"].keys():
                 sku = common_sku.copy()
                 sku['size'] = product_data[sku_id]["pitalia_size"]
                 sku['color'] = product_data[sku_id]["color"]
@@ -89,7 +88,7 @@ class ProductParser(Spider):
         return product_sku
 
     def product_price(self, response):
-        return response.css('.product-info-price *::attr(data-price-amount)').extract_first()
+        return response.css('.product-info-price ::attr(data-price-amount)').extract_first()
 
     def product_pricing(self, response):
         pricing = {}
