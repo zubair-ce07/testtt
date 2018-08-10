@@ -14,7 +14,7 @@ class PumaSpider(CrawlSpider):
     start_urls = ['https://in.puma.com']
 
     allowed_r = ('men/\w+/', 'women/\w+/', 'kids/', 'sale/\w+/')
-    rules = [Rule(LinkExtractor(allow=allowed_r, restrict_css=".mp-level li a"), callback='parse_pagination')]
+    rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".mp-level li a"), callback='parse_pagination'),)
 
     image_url_t = "https://in.puma.com/ajaxswatches/ajax/update?pid={}"
     gender_map = {
@@ -51,9 +51,9 @@ class PumaSpider(CrawlSpider):
         item["category"] = self.extract_categories(response)
         item['skus'] = self.extract_skus(item_options)
         item["image_urls"] = set()
-        item["requests"] = self.get_image_urls_requests(item_options, item)
+        item["requests_queue"] = self.get_image_urls_requests(item_options, item)
 
-        return item["requests"].pop()
+        return item["requests_queue"].pop()
 
     def get_image_urls_requests(self, item_options, item):
         product_ids = item_options["childProducts"]
@@ -65,10 +65,10 @@ class PumaSpider(CrawlSpider):
         item = response.meta.get("item")
         item["image_urls"] |= self.extract_image_urls(response)
 
-        if item["requests"]:
-            return item["requests"].pop()
+        if item["requests_queue"]:
+            return item["requests_queue"].pop()
 
-        del item["requests"]
+        del item["requests_queue"]
         return item
 
     def extract_image_urls(self, response):
