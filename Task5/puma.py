@@ -111,7 +111,7 @@ class PumaSpider(CrawlSpider):
                          "color": color_label,
                          'size': size_label,
                          "currency": item_options["template"][0],
-                         "previous_price": prices["price"],
+                         "previous_prices": [prices["price"]],
                          "price": prices["finalPrice"]
             })
 
