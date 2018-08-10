@@ -89,4 +89,3 @@ class ProductParser(Spider):
             skus[sku_model] = sku
 
         return skus
-

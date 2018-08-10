@@ -34,4 +34,3 @@ class HunkemollerDeCrawlSpider(CrawlSpider):
 
     def parse_item(self, response):
         return self.parser.parse(response)
-
