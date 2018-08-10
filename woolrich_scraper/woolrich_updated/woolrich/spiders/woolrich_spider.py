@@ -1,73 +1,66 @@
 import scrapy
 from scrapy.linkextractors import LinkExtractor
-
+from woolrich.items import WoolrichItem
 
 class WoolRich(scrapy.Spider):
     """This class contains small helper classes as well as
     other two main classes which iterate through all the products
     in the entire site"""
 
-    name = "WoolRich_Spider"
+    name = "woolrich_spider"
     allowed_domains = ['woolrich.com']
     start_urls = ['https://www.woolrich.com/men/?sort=featured&page=1']
 
     def get_product_name(self, response):
         """This helper function fetches the name of the product"""
-        name = {
-            'Product Name': response.css('h1.productView-title::text').extract()
-        }
-        return name
+
+        product_name = response.css('h1.productView-title::text').extract()
+
+        return product_name
 
     def get_product_style(self, response):
         """This helper function fetches the product style"""
-        style = {
-            'Style': response.css('.productView-product > div:nth-child(2) >'
-                                  ' strong:nth-child(1)::text').extract()
-        }
-        return style
+
+        product_style = response.css('.productView-product > div:nth-child(2) > '
+                                     'strong:nth-child(1)::text').extract()
+        return product_style
 
     def get_product_price(self, response):
         """This helper function fetches the product price"""
-        price = {
-            'Price': response.css('span.price::text')[0].extract()
-        }
-        return price
+
+        product_price = response.css('span.price::text')[0].extract()
+        return product_price
 
     def get_product_size(self, response):
         """This helper function fetches the product size"""
-        size = {
-            'Size': response.css('span.form-option-variant::text').extract()
-        }
-        return size
+
+        product_size = response.css('span.form-option-variant::text').extract()
+        return product_size
 
     def get_product_features(self, response):
         """This helper function fethches the product features"""
-        features = {
-            'Features': response.css('#features-content > li::text').extract()
-        }
-        return features
+
+        product_feature = response.css('#features-content > li::text').extract()
+        return product_feature
 
     def get_product_description(self, response):
         """This helper function fetches the product description"""
-        description = {
-            'Descrption': response.css('#details-content::text').extract()
-        }
-        return description
+
+        product_description = response.css('#details-content::text').extract()
+        return product_description
 
     def get_product_path(self, response):
         """This helper function fetches the product path from home
         in the website"""
-        path = {
-            'Path': response.css('a.breadcrumb-label::text').extract()
-        }
-        return path
+
+        product_path = response.css('a.breadcrumb-label::text').extract()
+        return product_path
 
     def get_product_image(self, response):
         """This helper function fetches all the links of the product images"""
-        images = {
-            'Images': response.css('div.zoom> a::attr(data-zoom-image)').extract()
-        }
-        return images
+
+        product_image = response.css('div.zoom> a::attr(data-zoom-image)').extract()
+        return product_image
 
     def get_product_color(self, response):
         """This helper function fetches all product colors available"""
@@ -75,10 +68,8 @@ class WoolRich(scrapy.Spider):
                                       'span::attr(title)').extract()
         while 'Loading...' in color_unsorted:
             color_unsorted.remove('Loading...')
-        color = {
-            'Colors': color_unsorted
-        }
-        return color
+        product_color = color_unsorted
+        return product_color
 
     def parse(self, response):
         """In this method, the program will iterate through the links and then
@@ -101,15 +92,15 @@ class WoolRich(scrapy.Spider):
         details. The helper functions are called and all their responses
         are appended to a single dictionary"""
 
-        final_dict = {
-            **self.get_product_name(response),
-            **self.get_product_color(response),
-            **self.get_product_price(response),
-            **self.get_product_size(response),
-            **self.get_product_style(response),
-            **self.get_product_path(response),
-            **self.get_product_image(response),
-            **self.get_product_features(response),
-            **self.get_product_description(response)
-        }
-        yield final_dict
+        complete_product = WoolrichItem(
+            name=self.get_product_name(response),
+            color = self.get_product_color(response),
+            price = self.get_product_price(response),
+            size = self.get_product_size(response),
+            style = self.get_product_style(response),
+            path = self.get_product_path(response),
+            image = self.get_product_image(response),
+            features = self.get_product_features(response),
+            description = self.get_product_description(response)
+        )
+        yield complete_product
