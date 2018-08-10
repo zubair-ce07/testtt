@@ -9,13 +9,12 @@ from scrapy.spiders import CrawlSpider, Rule
 from canda.items import CandaItem
 
 
-class WhiteStuffSpider(CrawlSpider):
+class Canda(CrawlSpider):
     DOWNLOAD_DELAY = 1
     name = 'c-and-a'
     start_urls = ['https://www.c-and-a.com/de/de/shop/']
-    rules = (Rule(LinkExtractor(restrict_css='.nav-main__page-menu .nav-main__list-item'), follow=True),
-             Rule(LinkExtractor(restrict_css='.pagination__next.js-view-click',
-                                tags=('li',), attrs=('data-url',)), follow=True),
+    rules = (Rule(LinkExtractor(restrict_css='.nav-main__list-item, .pagination__next.js-view-click',
+                                tags=('li', 'a'), attrs=('data-url', 'href')), follow=True),
              Rule(LinkExtractor(restrict_css='.product-tile.product-tile--quickmenu'), callback='parse_item'))
 
     currencies = {'$': 'US Dollar',
@@ -39,25 +38,20 @@ class WhiteStuffSpider(CrawlSpider):
         item['skus'] += self.get_skus(selector, item['retailer_sku'], currency)
         if not remaining_requests:
             return item
-        request_to_yield = remaining_requests.pop()
-        request_to_yield.meta['requests'] = remaining_requests
-        request_to_yield.meta['item'] = item
-        request_to_yield.meta['currency'] = self.get_currency(selector)
-        return request_to_yield
+        return self.yield_color_request(remaining_requests, item, currency)
 
     def get_skus(self, selector, retailer_sku, currency):
         sku_common = {'currency': currency}
         sku_common['new_price'], sku_common['old_price'] = self.get_prices(selector)
         color = self.get_color(selector)
         sku_common['color'] = color
-        all_sizes = self.get_all_sizes(selector)
         out_of_stock_sizes = self.get_out_of_stock_sizes(selector)
         skus = []
-        for size in all_sizes:
+        for size in self.get_all_sizes(selector):
             sku = sku_common.copy()
             sku['size'] = size
             if size in out_of_stock_sizes:
-                sku['is_out_of_stock'] = 'true'
+                sku['is_out_of_stock'] = True
             sku['sku_id'] = f'{retailer_sku}_{color}_{size}'
             skus.append(sku)
         return skus
@@ -76,13 +70,15 @@ class WhiteStuffSpider(CrawlSpider):
         item['image_urls'] = self.get_image_urls(response)
         currency = self.get_currency(response)
         item['skus'] = self.get_skus(response, retailer_sku, currency)
-        current_color_id = self.get_current_color_id(response)
         color_ids = self.get_color_ids(response)
-        color_ids.remove(current_color_id)
         if not color_ids:
             return item
         product_id = self.get_product_id(response)
         color_requests = self.make_color_requests(color_ids, product_id)
+        return self.yield_color_request(color_requests, item, currency)
+
+    @staticmethod
+    def yield_color_request(color_requests, item, currency):
         color_request = color_requests.pop()
         color_request.meta['requests'] = color_requests
         color_request.meta['item'] = item
@@ -91,11 +87,11 @@ class WhiteStuffSpider(CrawlSpider):
 
     def make_color_requests(self, color_ids, product_id):
         color_requests = []
-        color_request_data = {'productId': product_id}
+        color_data = {'productId': product_id}
         for color_id in color_ids:
-            color_request_data['colorId'] = color_id
+            color_data['colorId'] = color_id
             color_request = FormRequest(url=f'{self.color_url_t}{urlencode(self.color_parameters)}',
-                                        callback=self.parse_color, formdata=color_request_data)
+                                        callback=self.parse_color, formdata=color_data)
             color_requests.append(color_request)
         return color_requests
 
@@ -143,7 +139,7 @@ class WhiteStuffSpider(CrawlSpider):
 
     @staticmethod
     def get_retailer_sku(response):
-        return response.css('.col-md-6 h5::text').extract_first().split(':')[1].strip()
+        return re.findall('.*-(\d+)/', response.url)[0]
 
     @staticmethod
     def get_description(response):
@@ -165,15 +161,11 @@ class WhiteStuffSpider(CrawlSpider):
     def get_categories(response):
         raw_category = response.css('.util-link-left.util-text-smaller::text').extract_first().strip()
         return re.sub(r"Zurück zu ", '', raw_category)
-    
+
     @staticmethod
     def get_color_ids(response):
-        return response.css('.box--product .color-list li::attr(data-color)').extract()
+        return response.css('.box--product .color-list li:not(.is-active)::attr(data-color)').extract()
 
     @staticmethod
     def get_product_id(response):
         return response.css('.product-stage::attr(data-productid)').extract()
-
-    @staticmethod
-    def get_current_color_id(response):
-        return response.css('.box--product .color-list .is-active::attr(data-color)').extract_first()
