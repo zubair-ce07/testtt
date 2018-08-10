@@ -65,16 +65,16 @@ class ProductParser(Spider):
         for raw_sku in raw_skus['skus']:
             if not raw_sku['available']:
                 continue
+
             sku_id = raw_sku['sku']
-            skus[sku_id] = {}
-            sku = skus[sku_id]
+            sku = {}
             sku['price'] = raw_sku['bestPrice']
             sku['currency'] = self.currency
             if raw_sku['listPrice']:
                 sku['previous_prices'] = [raw_sku['listPrice']]
             sku['colour'] = color
             sku['size'] = raw_sku['dimensions'].get('Tamanho', raw_sku['dimensions'].get('TAMANHO'))
-
+            skus[sku_id] = sku
         return skus
 
     def color(self, response):
