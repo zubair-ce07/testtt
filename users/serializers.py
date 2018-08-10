@@ -3,6 +3,7 @@ from users.models import Profile
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
+
 UserModel = get_user_model()
 
 
@@ -19,7 +20,16 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+    confirm_password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+
+    def validate(self, data):
+        password = data.get('password')
+        confirm_password = data.get('confirm_password')
+        if password != confirm_password:
+            raise serializers.ValidationError('Passwords do not match')
+
+        return super(CreateUserSerializer, self).validate(data)
 
     def create(self, validated_data):
         user = UserModel.objects.create(
@@ -32,4 +42,23 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserModel
-        fields = '__all__'
+        exclude = ['is_active', 'is_staff', 'groups', 'user_permissions', 'last_login', 'date_joined']
+
+
+class UserLoginSerializer(serializers.Serializer):
+    user = serializers.SerializerMethodField()
+    token = serializers.SerializerMethodField()
+
+    def get_user(self, obj):
+        return self.context['user'].username
+
+    def get_token(self, obj):
+        return self.context['token']
+
+
+class LoginInputSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+
+    class Meta:
+        model = UserModel
+        fields = ['username', 'password']
