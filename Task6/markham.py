@@ -4,6 +4,7 @@ import re
 from scrapy import Request
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from urllib.parse import urlencode
 from w3lib.url import add_or_replace_parameter
 
 from Task6.items import Product
@@ -15,11 +16,11 @@ class MarkhamSpider(CrawlSpider):
     allowed_domains = ['markham.co.za']
     start_urls = ['https://www.markham.co.za']
 
-    allowed_links = ('plp/clothing/[\w+_-]+/', 'plp/shoes/[\w+_-]+/', '/plp/accessories/[\w+_-]+/')
-    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__sub-item"), callback='parse_pagination')]
+    allowed_links = ('plp/clothing/', 'plp/shoes/', '/plp/accessories/')
+    rules = [Rule(LinkExtractor(allow=allowed_links, restrict_css=".nav__item-title"), callback='parse_pagination')]
 
     skus_request_t = 'https://www.markham.co.za/product/generateProductJSON.jsp?productId={}'
-    category_request_t = 'https://www.markham.co.za/search/ajaxResultsList.jsp?baseState={0}&N={0}'
+    category_request_t = 'https://www.markham.co.za/search/ajaxResultsList.jsp?N={0}&baseState={0}'
 
     def parse_pagination(self, response):
         products_details = json.loads(response.css('#product-listing-static-data::text').extract_first()).get("data")
@@ -28,7 +29,9 @@ class MarkhamSpider(CrawlSpider):
         category_id = re.search('N-([\w+]+);', response.url).group(1)
         category_request = self.category_request_t.format(category_id)
 
-        pages_urls = [add_or_replace_parameter(category_request, "page", page) for page in range(1, total_pages+1)]
+        url_parameters = [urlencode({"No": page*15, "page": page}) for page in range(1, total_pages+1)]
+
+        pages_urls = [f'{category_request}&{url_parameter}' for url_parameter in url_parameters]
 
         return [Request(page_url, callback=self.parse_item_links) for page_url in pages_urls]
 
@@ -36,7 +39,7 @@ class MarkhamSpider(CrawlSpider):
         products = json.loads(response.text)["data"]["products"]
         item_urls = [response.urljoin(product["pdpLinkUrl"]) for product in products]
 
-        return [Request(url, callback=self.parse_item) for url in item_urls]
+        return [Request(item_url, callback=self.parse_item) for item_url in item_urls]
 
     def parse_item(self, response):
         item = Product()
