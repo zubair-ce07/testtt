@@ -22,32 +22,23 @@ class WeatherData:
         add weather data by year on Initializing
         :param year:
         """
-        WeatherData.add_weather_data(year)
 
-    @staticmethod
-    def add_weather_data(year):
-        """
-        :param year: here entry is year from weather_files
-        add year to weather_yearly_data and years_added_so_far
-        ignores if already added
-        :return:
-        """
-        if WeatherData.yearly == {} or year not in WeatherData.yearly.keys():
+        if not WeatherData.yearly.get(year):
             WeatherData.yearly[year] = {}
 
         if year not in WeatherData.years_added_so_far:
             WeatherData.years_added_so_far.add(year)
 
     @staticmethod
-    def daily_weather_entry(string):
+    def daily_weather_entry(weather_entry_string):
         """
-        :param string: if given string is not empty, split it and add all
+        :param weather_entry_string: if given string is not empty, split it and add all
         entries to its respective key in dictionary
         and append in parent array
         :return:
         """
-        if string.strip():
-            arr = string.split(',')
+        if weather_entry_string.strip():
+            arr = weather_entry_string.split(',')
             if arr:
                 # defining variables to increase code readability
                 date = arr[0]
@@ -116,7 +107,5 @@ class WeatherData:
         if month is not added in year then add as dict
         :return:
         """
-        if month not in WeatherData.yearly[year].keys():
-            WeatherData.yearly[year] = dict(
-                list(WeatherData.yearly[year].items()) +
-                list({month: list_of_daily_weather_entry}.items()))
+        if not WeatherData.yearly.get(year).get(month):
+            WeatherData.yearly[year].update({month: list_of_daily_weather_entry})
