@@ -5,17 +5,23 @@ import sys
 
 
 def main():
+    """
+    command and argument given to calculator
+    then initializing report generator and printing report
+    sys.argv[1] is path if directory
+    sys.argv[2:] is list of arguments
+    :return:
+    """
     try:
-        parser = WeatherFilesParser(sys.argv[1])
-        parser.read()
-        # command and argument given to calculator
+        weather_files_parser = WeatherFilesParser(sys.argv[1])
+        weather_files_parser.read()
+
         WeatherReadingsCalculator(sys.argv[2:])
-        # initializing report generator and print report
-        # calculated by Calculator
-        report_generator = WeatherResultReportGenerator()
-        report_generator.print_report()
+        weather_report_generator = WeatherResultReportGenerator()
+        weather_report_generator.print_report()
+
     except IndexError as ie:
-        print('Arguments have not passed or maybe {0}'.format(str(ie).upper()))
+        print(f'Arguments have not passed or maybe {str(ie).upper()}')
 
 
 if __name__ == "__main__":
