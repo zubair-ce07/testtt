@@ -113,24 +113,23 @@ class WeatherReadingsCalculator:
                     # appending entries of all months of year in one list
                     for key, value in self.weather_data[arg].items():
                         max_temp_list = max_temp_list + value
-
-                    data = []
+                    calculated_data = []
                     sorted_arr = sorted(max_temp_list, key=itemgetter('max_temperature_c'))
-                    data.append({'date': sorted_arr.pop()['pkt'],
+                    calculated_data.append({'date': sorted_arr.pop()['pkt'],
                                  'value': str(sorted_arr.pop()['max_temperature_c']),
                                  'text': 'Highest:', 'ending': ''})
 
                     sorted_arr = sorted(max_temp_list, key=itemgetter('min_temperature_c'))
-                    data.append({'date': sorted_arr.pop()['pkt'],
+                    calculated_data.append({'date': sorted_arr.pop()['pkt'],
                                  'value': str(sorted_arr.pop()['min_temperature_c']),
                                  'text': 'Lowest:', 'ending': ''})
                     sorted_arr = sorted(max_temp_list, key=itemgetter('max_humidity'))
-                    data.append({'date': sorted_arr.pop()['pkt'],
+                    calculated_data.append({'date': sorted_arr.pop()['pkt'],
                                  'value': str(sorted_arr.pop()['max_humidity']),
                                  'text': 'Humidity:', 'ending': '%'})
 
                     # saving calculated results
-                    WeatherReadingsCalculator.save_results(entry, data)
+                    WeatherReadingsCalculator.save_results(entry, calculated_data)
 
                 elif entry == "-a" or entry == "-c" or entry == "-d":
 
@@ -153,14 +152,14 @@ class WeatherReadingsCalculator:
                             self.get_keys_from_list('mean_humidity',
                                                     self.weather_data[year][month]))
 
-                        data = [
+                        calculated_data = [
                             {'text': 'Highest Average', 'value': str(avg_high_temp), 'ending': ''},
                             {'text': 'Lowest Average', 'value': str(avg_low_temp), 'ending': ''},
                             {'text': 'Average Mean Humidity', 'value': str(avg_humid_temp),
                              'ending': '%'}]
 
                         # saving calculated results
-                        WeatherReadingsCalculator.save_results(entry, data)
+                        WeatherReadingsCalculator.save_results(entry, calculated_data)
 
                     elif entry == "-c" or entry == "-d":
 
@@ -171,9 +170,9 @@ class WeatherReadingsCalculator:
                         if month is None:
                             raise ValueError()
 
-                        data = [
+                        calculated_data = [
                             {'text': f"{year} {month}", 'value': self.weather_data[year][month]}]
-                        WeatherReadingsCalculator.save_results(entry, data)
+                        WeatherReadingsCalculator.save_results(entry, calculated_data)
         except ValueError as ve:
             print(f"got value error! {ve}")
             return
