@@ -1,13 +1,11 @@
-import json
+from json import loads as json_loads
 
-import scrapy
+from scrapy import Spider
 from w3lib.url import url_query_cleaner as w3cleaner
 
 
-class Parser(scrapy.Spider):
+class Parser(Spider):
     name = "parser"
-    possible_genders = {"men", "women", "girls", "boys"}
-    default_gender = "unisex_adults"
     scraped_ids = []
 
     def parse(self, response):
@@ -35,11 +33,21 @@ class Parser(scrapy.Spider):
         product["skus"] = {}
         response.meta["pending_color_reqs"] = self.colour_requests(response)
         response.meta["product"] = product
-        return self.get_skus(response)
+        return self.parse_colours(response)
 
-    def get_skus(self, response):
+    def parse_colours(self, response):
         product = response.meta["product"].copy()
         product["image_urls"].extend(self.get_image_urls(response))
+        product["skus"].update(self.get_skus(response))
+        if not response.meta["pending_color_reqs"]:
+            return product
+        next_color_req = response.meta["pending_color_reqs"].pop()
+        next_color_req.meta["product"] = product
+        next_color_req.meta["pending_color_reqs"] = response.meta["pending_color_reqs"].copy()
+        return next_color_req
+
+    def get_skus(self, response):
+        skus = {}
         common_sku = {}
         product_data = self.get_product_json(response)
         common_sku["price"] = product_data.get("price")
@@ -57,13 +65,8 @@ class Parser(scrapy.Spider):
                 sku["out_of_stock"] = True
             if product_data.get("metric3"):
                 sku["previous_prices"] = [product_data.get("price") + product_data.get("metric3")]
-            product["skus"][f"{sku_variant}_{size}"] = sku
-        if not response.meta["pending_color_reqs"]:
-            return product
-        next_color_req = response.meta["pending_color_reqs"].pop()
-        next_color_req.meta["product"] = product
-        next_color_req.meta["pending_color_reqs"] = response.meta["pending_color_reqs"].copy()
-        return next_color_req
+            skus[f"{sku_variant}_{size.strip()}"] = sku
+        return skus
 
     @staticmethod
     def get_currency(response):
@@ -72,7 +75,7 @@ class Parser(scrapy.Spider):
     @staticmethod
     def get_colour(response):
         variation_json = response.css('.product-variations::attr(data-current)').extract_first()
-        json_object = json.loads(variation_json)
+        json_object = json_loads(variation_json)
         return json_object.get("color").get("displayValue")
 
     @staticmethod
@@ -104,13 +107,13 @@ class Parser(scrapy.Spider):
     def get_product_json(response):
         json_string = response.css('div[data-as-product]::attr(data-as-product)').extract_first()
         json_string.replace('&quot;', '"')
-        return json.loads(json_string)
+        return json_loads(json_string)
 
     def colour_requests(self, response):
         colour_urls = response.css('.swatch-list__image::attr(href)').extract()
         colour_requests = []
         for url in colour_urls:
-            request = response.follow(w3cleaner(url), self.get_skus)
+            request = response.follow(w3cleaner(url), self.parse_colours)
             if response.url != request.url:
                 colour_requests.append(request)
         return colour_requests
