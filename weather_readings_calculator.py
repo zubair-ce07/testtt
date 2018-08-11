@@ -3,20 +3,40 @@ from weather_data import WeatherData
 
 
 class WeatherReadingsCalculator:
+    """
+    Get populated Data from WeatherData then
+    performs calculations according to entered command
+    """
 
     calculated_weather_results = []
 
     def __init__(self, command):
-        # get data populated in WeatherData model and then calculate
-        self.data = WeatherData.weather_yearly_data
-        self.__calculate(command)
+        """
+        :param command:
+        copy data from WeatherData to self.weather_data for processing and perform calculations
+        """
+        self.weather_data = WeatherData.weather_yearly_data
+        self.calculate(command)
 
     @staticmethod
-    def save_results(data_storage_type, data):
-        WeatherReadingsCalculator.calculated_weather_results.append({'type': data_storage_type, 'data': data})
+    def save_results(data_storage_type, calculated_result_data):
+        """
+        appends each data results to calculated_weather_results
+        :param data_storage_type: can be -e, -a, -c, -d
+        :param calculated_result_data: data according to above type
+        :return:
+        """
+        WeatherReadingsCalculator.calculated_weather_results.append({'type': data_storage_type,
+                                                                     'data': calculated_result_data})
 
     @staticmethod
     def month_with_num(num):
+        """
+        take num and returns corresponding month
+        e.g. month_with_num(2) will return 'Feb'
+        :param num:
+        :return:
+        """
         num = int(num)
         month = None
         if num == 1:
@@ -46,16 +66,32 @@ class WeatherReadingsCalculator:
         return month
 
     @staticmethod
-    def cal_average(list_):
-        return round(sum(list_) / float(len(list_)), 2)
+    def calculate_average(list_of_numbers):
+        """
+        takes list of numbers, perform sum operation on it
+        then divide by number of entries in list_of_numbers
+        before returning round the result up to two decimal places
+        :param list_of_numbers:
+        :return:
+        """
+        return round(sum(list_of_numbers) / float(len(list_of_numbers)), 2)
 
     @staticmethod
-    def find_keys_in_arr(key, arr):
-        # getting a specific keys from a list of dicts
-        # returns list
-        return [int(d[key]) for d in arr if key in d]
+    def get_keys_from_list(key_to_return, list_of_dictionaries):
+        """
+        getting a specific keys from a list of dicts
+        :param key_to_return:
+        :param list_of_dictionaries:
+        :return list:
+        """
+        return [int(d[key_to_return]) for d in list_of_dictionaries if key_to_return in d]
 
-    def __calculate(self, command):
+    def calculate(self, command):
+        """
+        command is array of args given at terminal e.g. ['-e', '2015', '-a', '2013/6']
+        :param command:
+        :return:
+        """
         print()
         try:
             for entry in command:
@@ -70,7 +106,7 @@ class WeatherReadingsCalculator:
 
                     # appending entries of all months of year in one list
                     # for sorting later
-                    for key, value in self.data[arg].items():
+                    for key, value in self.weather_data[arg].items():
                         max_temp_list = max_temp_list + value
 
                     data = list()
@@ -100,14 +136,17 @@ class WeatherReadingsCalculator:
                     if entry == "-a":
 
                         # command -a for specific month show highest avg, lowest avg and avg mean humidity
-                        avg_high_temp = self.cal_average(self.find_keys_in_arr('max_temperature_c', self.data[year][month]))
-                        avg_low_temp = self.cal_average(self.find_keys_in_arr('min_temperature_c', self.data[year][month]))
-                        avg_most_humid_temp = self.cal_average(self.find_keys_in_arr('mean_humidity', self.data[year][month]))
+                        avg_high_temp = self.calculate_average(self.get_keys_from_list('max_temperature_c',
+                                                                                       self.weather_data[year][month]))
+                        avg_low_temp = self.calculate_average(self.get_keys_from_list('min_temperature_c',
+                                                                                      self.weather_data[year][month]))
+                        avg_humid_temp = self.calculate_average(self.get_keys_from_list('mean_humidity',
+                                                                                        self.weather_data[year][month]))
 
                         data = list()
                         data.append({'text': 'Highest Average', 'value': str(avg_high_temp), 'ending': ''})
                         data.append({'text': 'Lowest Average', 'value': str(avg_low_temp), 'ending': ''})
-                        data.append({'text': 'Average Mean Humidity', 'value': str(avg_most_humid_temp), 'ending': '%'})
+                        data.append({'text': 'Average Mean Humidity', 'value': str(avg_humid_temp), 'ending': '%'})
 
                         # saving calculated results
                         WeatherReadingsCalculator.save_results(entry, data)
@@ -124,7 +163,7 @@ class WeatherReadingsCalculator:
                             raise ValueError()
 
                         data = list()
-                        data.append({'text': year + " " + month, 'value': self.data[year][month]})
+                        data.append({'text': year + " " + month, 'value': self.weather_data[year][month]})
                         WeatherReadingsCalculator.save_results(entry, data)
         except ValueError as ve:
             print("got value error! {0}".format(ve))
