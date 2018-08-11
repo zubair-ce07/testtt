@@ -1,4 +1,7 @@
-import os.path
+"""
+this module calculate and display average tempaerature of
+a given month
+"""
 import constants
 import utilities
 from read_csv import ReadCsv
@@ -6,6 +9,7 @@ from read_csv import ReadCsv
 
 class AverageTemperatue:
     """ Class for storing Average Temperatures """
+
     def __init__(self):
         self.average_high = constants.ZERO
         self.average_low = constants.ZERO
@@ -37,19 +41,18 @@ class AverageTemperatue:
         self.average_low = self.average_low / low_count
         self.average_humidity = self.average_humidity / humid_count
 
-    def show_average_temperature(self, date_str, file_path):
+    def show_average_temperature(self, date_str, dir_path):
         """
         this function is for displaying average temperature
         :param date_str:
-        :param file_path:
+        :param dir_path:
         :return: none
         """
-        (year, month)=date_str.split('/')
+        (year, month) = date_str.split('/')
         month = int(month)
-        file_path = file_path + "/" + constants.FILE_START_NAME + year + "_" +\
-                    utilities.get_month_abbr(month) + constants.FILE_EXTENSION
-
-        if os.path.exists(file_path):
+        file_path = utilities.get_file_path(dir_path, year, utilities.get_month_abbr(month))
+        if file_path:
+            file_path = file_path[0]
             self.find_average_temperature(file_path)
 
             print("%s %s" % (utilities.get_month_name(month), year))

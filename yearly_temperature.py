@@ -1,4 +1,6 @@
-import os.path
+"""
+this module calculate and show yearly temperature of a given year
+"""
 import utilities
 import constants
 from read_csv import ReadCsv
@@ -39,20 +41,20 @@ class YearlyTemperature:
                     self.humidity = humidity
                     self.humid_day = row['PKT']
 
-    def show_yearly_temperature(self, date_str, file_path):
+    def show_yearly_temperature(self, date_str, dir_path):
         """
         this method show yearly temperature
         :param date_str:
-        :param file_path:
+        :param dir_path:
         :return:
         """
         date_str = date_str.split('/')
         # here is used indexing because other method was not effective for this
         year = date_str[0]
         for index in range(1, 13):
-            file_path = file_path+"/"+constants.FILE_START_NAME+year+"_" + \
-                   utilities.get_month_abbr(index) + constants.FILE_EXTENSION
-            if os.path.exists(file_path):
+            file_path = utilities.get_file_path(dir_path, year, utilities.get_month_abbr(index))
+            if file_path:
+                file_path = file_path[0]
                 self.find_yearly_temperature(file_path)
 
         if self.highest != constants.MIN_VALUE:
