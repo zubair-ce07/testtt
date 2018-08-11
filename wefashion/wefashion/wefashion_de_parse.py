@@ -1,4 +1,4 @@
-from scrapy import Spider
+from scrapy import Spider, Request
 
 from wefashion.items import WefashionItem
 
@@ -6,6 +6,7 @@ from wefashion.items import WefashionItem
 class ProductParser(Spider):
     name = 'wefashion-de-parser'
     brand = "WE"
+    visited_urls = set()
     gender_map = {
         "herren": "men",
         "damen": "women",
@@ -15,7 +16,11 @@ class ProductParser(Spider):
 
     def parse(self, response):
         item = WefashionItem()
-        item['retailer_sku'] = self.extract_retailer_sku(response)
+        retailer_sku = self.extract_retailer_sku(response)
+        if retailer_sku in self.visited_urls or None:
+            return
+
+        item['retailer_sku'] = retailer_sku.split('_')[0]
         item['trail'] = self.extract_trails(response)
         item['gender'] = self.extract_gender(response)
         item['category'] = self.extract_category(response)
@@ -24,18 +29,48 @@ class ProductParser(Spider):
         item['name'] = self.extract_product_name(response)
         item['description'] = self.extract_product_description(response)
         item['care'] = self.extract_product_care(response)
-        item['image_urls'] = self.extract_image_urls(response)
-        item['skus'] = self.extract_skus(response)
         item['price'] = self.extract_price(response)
         item['currency'] = self.extract_currency(response)
-        return item
+        total_items = len(self.extract_product_urls(response))
+        color_urls = self.extract_product_urls(response)
+        self.visited_urls.add(retailer_sku)
+
+        if total_items > 0:
+            yield self.create_request(color_urls.pop(), {'item': item, 'size': total_items,
+                                                         'urls': color_urls})
+
+    def parse_product(self, response):
+        item = response.meta['item']
+        total_items = response.meta['size']
+
+        image_urls = response.meta.get('image_urls', [])
+        previous_skus = response.meta.get('skus', {})
+
+        image_urls.append(self.extract_image_urls(response))
+        previous_skus.update(self.extract_skus(response))
+
+        if total_items <= 1:
+            item['image_urls'] = image_urls
+            item['skus'] = previous_skus
+            return item
+
+        color_urls = response.meta['urls']
+        yield self.create_request(color_urls.pop(),
+                                  {'item': item, 'size': total_items - 1, 'urls': color_urls,
+                                   'skus': previous_skus, 'image_urls': image_urls})
+
+    def create_request(self, url, meta_info):
+        return Request(url=url, callback=self.parse_product, meta=meta_info)
+
+    def extract_product_urls(self, response):
+        return response.css('.color :not(.unselectable) a::attr(href)').extract()
 
     def extract_retailer_sku(self, response):
         return response.css('.pdp-main::attr(data-product-id)').extract_first()
 
     def extract_gender(self, response):
-        gender = response.css("meta[itemprop='name']::attr(content)").extract_first().split('-')[0].lower()
-        return self.gender_map.get(gender)
+        gender = response.css("meta[itemprop='name']::attr(content)").extract_first(default='').split('-')[0]
+        return self.gender_map.get(gender.lower())
 
     def extract_trails(self, response):
         return response.meta.get('trail')
@@ -59,8 +94,11 @@ class ProductParser(Spider):
     def extract_currency(self, response):
         return response.css("[itemprop='priceCurrency']::attr(content)").extract_first()
 
+    def extract_color_id(self, response):
+        return self.extract_retailer_sku(response).split('_')[1]
+
     def extract_color(self, response):
-        color_id = self.extract_retailer_sku(response).split('_')[1]
+        color_id = self.extract_color_id(response)
         return response.css(f".color [data-value='{color_id}']::text").extract_first(default='').strip()
 
     def extract_category(self, response):
@@ -81,6 +119,7 @@ class ProductParser(Spider):
     def extract_skus(self, response):
         sku_sizes = self.extract_sku_sizes(response)
         sku_models = self.extract_sku_models(response)
+        color_id = self.extract_color_id(response)
         sku_info = {
             'color': self.extract_color(response),
             'currency': self.extract_currency(response),
@@ -91,6 +130,6 @@ class ProductParser(Spider):
         for sku_model, size in zip(sku_models, sku_sizes):
             sku = sku_info.copy()
             sku['size'] = size
-            skus[sku_model] = sku
+            skus[f"{color_id}_{sku_model}"] = sku
 
         return skus
