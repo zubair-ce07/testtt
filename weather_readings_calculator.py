@@ -1,7 +1,6 @@
 """
 WeatherReadingsCalculator takes data from WeatherFilesParser and then processes it
 """
-from operator import itemgetter
 
 from weather_data import WeatherData
 
@@ -26,19 +25,18 @@ class WeatherReadingsCalculator:
         :param command:
         copy data from WeatherData to self.weather_data for processing and perform calculations
         """
-        self.weather_data = WeatherData.weather_yearly_data
+        self.weather_data = WeatherData.yearly
         self.calculate(command)
 
-    @staticmethod
-    def save_results(data_storage_type, calculated_result):
+    def save_results(self, data_storage_type, calculated_result):
         """
         appends each data results to calculated_weather_results
         :param data_storage_type: can be -e, -a, -c, -d
         :param calculated_result: data according to above type
         :return:
         """
-        WeatherReadingsCalculator.calculated_weather_results.append({'type': data_storage_type,
-                                                                     'data': calculated_result})
+        self.calculated_weather_results.append({'type': data_storage_type,
+                                                'data': calculated_result})
 
     @staticmethod
     def month_with_num(num):
@@ -48,32 +46,11 @@ class WeatherReadingsCalculator:
         :param num:
         :return:
         """
-        num = int(num)
+        month_dict = {'1': 'Jan', '2': 'Feb', '3': 'Mar', '4': 'Apr', '5': 'May', '6': 'Jun',
+                      '7': 'Jul', '8': 'Aug', '9': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'}
         month = None
-        if num == 1:
-            month = 'Jan'
-        elif num == 2:
-            month = 'Feb'
-        elif num == 3:
-            month = 'Mar'
-        elif num == 4:
-            month = 'Apr'
-        elif num == 5:
-            month = 'May'
-        elif num == 6:
-            month = 'Jun'
-        elif num == 7:
-            month = 'Jul'
-        elif num == 8:
-            month = 'Aug'
-        elif num == 9:
-            month = 'Sep'
-        elif num == 10:
-            month = 'Oct'
-        elif num == 11:
-            month = 'Nov'
-        elif num == 12:
-            month = 'Dec'
+        if num in month_dict.keys():
+            month = month_dict[num]
         return month
 
     @staticmethod
@@ -115,7 +92,7 @@ class WeatherReadingsCalculator:
             for entry in command:
 
                 if "-e" in entry:
-                    self.process_e_entry(entry, command)
+                    self.calculate_highlow_temperature_humidity(entry, command)
 
                 elif "-a" in entry or "-c" in entry or "-d" in entry:
 
@@ -127,7 +104,7 @@ class WeatherReadingsCalculator:
                         raise ValueError()
 
                     if "-a" in entry:
-                        self.process_a_entry(month, year, entry)
+                        self.calculate_average_temperature_humidity(month, year, entry)
 
                     elif "-c" in entry or "-d" in entry:
 
@@ -140,7 +117,7 @@ class WeatherReadingsCalculator:
 
                         calculated_data = [
                             {'text': f"{year} {month}", 'value': self.weather_data[year][month]}]
-                        WeatherReadingsCalculator.save_results(entry, calculated_data)
+                        self.save_results(entry, calculated_data)
         except ValueError as value_error:
             print(f"got value error! {value_error}")
             return
@@ -152,7 +129,7 @@ class WeatherReadingsCalculator:
             print(f"for years try {WeatherData.years_added_so_far}")
             return
 
-    def process_e_entry(self, entry, command):
+    def calculate_highlow_temperature_humidity(self, entry, command):
         """
         command -e show yearly MIN/MAX temperatures & Max humidity
         input format "-e 2013"
@@ -170,24 +147,24 @@ class WeatherReadingsCalculator:
             max_temp_list = max_temp_list + value
             year_months.add(key)
         calculated_data = []
-        sorted_arr = sorted(max_temp_list, key=itemgetter('max_temperature_c'))
+        sorted_arr = sorted(max_temp_list, key=lambda k: k['max_temperature_c'])
         calculated_data.append({'date': sorted_arr.pop()['pkt'],
                                 'value': str(sorted_arr.pop()['max_temperature_c']),
                                 'text': 'Highest:', 'ending': ''})
 
-        sorted_arr = sorted(max_temp_list, key=itemgetter('min_temperature_c'))
+        sorted_arr = sorted(max_temp_list, key=lambda k: k['min_temperature_c'])
         calculated_data.append({'date': sorted_arr.pop()['pkt'],
                                 'value': str(sorted_arr.pop()['min_temperature_c']),
                                 'text': 'Lowest:', 'ending': ''})
-        sorted_arr = sorted(max_temp_list, key=itemgetter('max_humidity'))
+        sorted_arr = sorted(max_temp_list, key=lambda k: k['max_humidity'])
         calculated_data.append({'date': sorted_arr.pop()['pkt'],
                                 'value': str(sorted_arr.pop()['max_humidity']),
                                 'text': 'Humidity:', 'ending': '%'})
 
         # saving calculated results
-        WeatherReadingsCalculator.save_results(entry, calculated_data)
+        self.save_results(entry, calculated_data)
 
-    def process_a_entry(self, month, year, entry):
+    def calculate_average_temperature_humidity(self, month, year, entry):
         """
         command -a for specific month show highest avg, lowest avg and avg mean humidity
         :param month:
@@ -212,4 +189,4 @@ class WeatherReadingsCalculator:
              'ending': '%'}]
 
         # saving calculated results
-        WeatherReadingsCalculator.save_results(entry, calculated_data)
+        self.save_results(entry, calculated_data)
