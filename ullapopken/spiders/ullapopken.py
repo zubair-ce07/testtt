@@ -28,9 +28,9 @@ class Ullapopken(CrawlSpider):
     image_url_t = 'https://up.scene7.com/is/image/UP/{}?fit=constrain,1&wid=1400&hei=2100'
 
     def parse_category_variables(self, response):
-        category_parameter = response.css('#paging::attr(data-category)').extract_first()
-        grouping_parameter = response.css('#paging::attr(data-grouping)').extract_first()
-        category_request = self.make_category_request(category_parameter, grouping_parameter)
+        category_value = response.css('#paging::attr(data-category)').extract_first()
+        grouping_value = response.css('#paging::attr(data-grouping)').extract_first()
+        category_request = self.make_category_request(category_value, grouping_value)
         category_request.meta['categories'] = self.get_categories(response)
         yield category_request
 
@@ -38,21 +38,19 @@ class Ullapopken(CrawlSpider):
         categories = response.meta.get('categories')
         response_json = json.loads(response.text)
         items = response_json['results']
-        item_requests = self.get_item_requests(items, categories)
-        for item_request in item_requests:
+        for item_request in self.get_item_requests(items, categories):
             yield item_request
-        pagination = response_json['pagination']
-        return self.get_pagination_requests(pagination, response.url, categories)
+        return self.get_pagination_requests(response_json['pagination'], response.url, categories)
 
     def get_pagination_requests(self, pagination, url, categories):
         if pagination['currentPage'] != 0:
             return
 
-        category_p = re.findall('.*category.*category/(.+)/grouping.*', url)[0]
-        grouping_p = re.findall('.*grouping/(.+)/filter.*', url)[0]
+        category_value = re.findall('.*category.*category/(.+)/grouping.*', url)[0]
+        grouping_value = re.findall('.*grouping/(.+)/filter.*', url)[0]
 
         for page_number in range(1, pagination['numberOfPages']):
-            category_request = self.make_category_request(category_p, grouping_p, page_number+1)
+            category_request = self.make_category_request(category_value, grouping_value, page_number+1)
             category_request.meta['categories'] = categories
             yield category_request
 
@@ -61,12 +59,15 @@ class Ullapopken(CrawlSpider):
         for item in items:
             item_request = Request(url=self.article_url_t.format(item['code']), callback=self.parse_item)
             item_request.meta['categories'] = categories
-            if len(item['variantsArticlenumbers']) > 1:
-                variants = item['variantsArticlenumbers']
-                variants.remove(item['code'])
-                item_request.meta['variants'] = variants
+            item_request.meta['variants'] = self.get_variants_codes(item)
             item_requests.append(item_request)
         return item_requests
+
+    @staticmethod
+    def get_variants_codes(item):
+        variants = item['variantsArticlenumbers']
+        variants.remove(item['code'])
+        return variants
 
     def parse_color(self, response):
         raw_item = json.loads(response.text)
@@ -113,8 +114,7 @@ class Ullapopken(CrawlSpider):
     def get_picture_codes(raw_item):
         raw_pictures = raw_item['pictureMap']
         picture_codes = [raw_pictures['code']]
-        picture_codes.extend(raw_pictures['detailCodes'])
-        return picture_codes
+        return picture_codes + raw_pictures['detailCodes']
 
     def get_skus(self, raw_item):
         sku_common = dict()
@@ -155,7 +155,7 @@ class Ullapopken(CrawlSpider):
 
     @staticmethod
     def get_description(raw_item):
-        return list(raw_item['description'].values())[0]
+        return re.sub('<[^<]+?>', '', list(raw_item['description'].values())[0])
 
     @staticmethod
     def get_care(raw_item):
