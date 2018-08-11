@@ -1,6 +1,6 @@
 class WeatherData:
-    __data = {}
-    __years_added = set()
+    weather_yearly_data = {}
+    years_added_so_far = set()
     single_list = []
 
     # Data Structure for saving
@@ -17,12 +17,12 @@ class WeatherData:
     @staticmethod
     def __add_weather_data(entry):
         # add year in master data structure and if already added do nothing
-        if WeatherData.__data == {}:
-            WeatherData.__data[entry] = {}
-        elif entry not in WeatherData.__data.keys():
-            WeatherData.__data[entry] = {}
-        if entry not in WeatherData.__years_added:
-            WeatherData.__years_added.add(entry)
+        if WeatherData.weather_yearly_data == {}:
+            WeatherData.weather_yearly_data[entry] = {}
+        elif entry not in WeatherData.weather_yearly_data.keys():
+            WeatherData.weather_yearly_data[entry] = {}
+        if entry not in WeatherData.years_added_so_far:
+            WeatherData.years_added_so_far.add(entry)
 
     @staticmethod
     def append_single_list(string):
@@ -60,32 +60,32 @@ class WeatherData:
     @staticmethod
     def get_data(key=None):
         if key is None:
-            return WeatherData.__data
+            return WeatherData.weather_yearly_data
         else:
-            if key in WeatherData.__data:
-                return WeatherData.__data[key]
+            if key in WeatherData.weather_yearly_data:
+                return WeatherData.weather_yearly_data[key]
         return None
 
     @staticmethod
     def get_years():
-        return list(WeatherData.__years_added)
+        return list(WeatherData.years_added_so_far)
 
     @staticmethod
     def add_array_to_key(arr, key, entry, weather_entity_data):
         # add data in month of year
-        if key not in WeatherData.__data[entry].keys():
+        if key not in WeatherData.weather_yearly_data[entry].keys():
             arr[list(arr.keys())[0]] = weather_entity_data
-            WeatherData.__data[entry] = dict(list(WeatherData.__data[entry].items()) + list(arr.items()))
+            WeatherData.weather_yearly_data[entry] = dict(list(WeatherData.weather_yearly_data[entry].items()) + list(arr.items()))
 
     @staticmethod
     def print_specific_key(key):
-        if key in WeatherData.__data:
-            print(WeatherData.__data[key])
+        if key in WeatherData.weather_yearly_data:
+            print(WeatherData.weather_yearly_data[key])
 
     @staticmethod
     def print_():
-        print(WeatherData.__data)
-        for k, v in sorted(WeatherData.__data.items()):
+        print(WeatherData.weather_yearly_data)
+        for k, v in sorted(WeatherData.weather_yearly_data.items()):
             print(k)
             for month_k, month_v in v.items():
                 print("\t", end='')
