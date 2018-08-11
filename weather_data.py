@@ -46,7 +46,7 @@ class WeatherData:
         and append in parent array
         :return:
         """
-        if not string == "":
+        if string.strip():
             arr = string.split(',')
             if arr:
                 # defining variables to increase code readability
@@ -54,6 +54,25 @@ class WeatherData:
                 max_temp = 0.0
                 min_temp = 0.0
                 max_humidity = 0.0
+                mean_temp = arr[2]
+                dew_point = arr[4]
+                mean_dew_point = arr[5]
+                min_dew_point = arr[6]
+                mean_humidity = arr[8]
+                min_humidity = arr[9]
+                max_sealevel_pressure = arr[10]
+                mean_sealevel_pressure = arr[11]
+                min_sealevel_pressure = arr[12]
+                max_visibility_km = arr[13]
+                mean_visibility_km = arr[14]
+                min_visibility_km = arr[15]
+                max_wind_speed_kmh = arr[16]
+                mean_wind_speed_kmh = arr[17]
+                max_gust_speed_kmh = arr[18]
+                precipitation_mm = arr[19]
+                cloud_cover = arr[20]
+                events = arr[21]
+                wind_dir_degree = arr[22]
 
                 arr[-1] = arr[-1].split('\n')[0]
 
@@ -67,19 +86,24 @@ class WeatherData:
                     max_humidity = float(arr[7])
 
                 daily_weather_entry = {'pkt': date, 'max_temperature_c': max_temp,
-                                       'mean_temperature_c': arr[2], 'min_temperature_c': min_temp,
-                                       'dew_point_c': arr[4], 'mean_dev_point_c': arr[5],
-                                       'min_dew_point_c': arr[6], 'max_humidity': max_humidity,
-                                       'mean_humidity': arr[8], 'min_humidity': arr[9],
-                                       'max_sea_level_pressure_hpa': arr[10],
-                                       'mean_sea_level_pressure_hpa': arr[11],
-                                       'min_sea_level_pressure_hpa': arr[12],
-                                       'max_visibility_km': arr[13], 'mean_visibility_km': arr[14],
-                                       'min_visibility_km': arr[15], 'max_wind_speed_kmh': arr[16],
-                                       'mean_wind_speed_kmh': arr[17],
-                                       'max_gust_speed_kmh': arr[18], 'precipitation_mm': arr[19],
-                                       'cloud_cover': arr[20], 'events': arr[21],
-                                       'wind_dir_degree': arr[22]}
+                                       'mean_temperature_c': mean_temp,
+                                       'min_temperature_c': min_temp, 'dew_point_c': dew_point,
+                                       'mean_dev_point_c': mean_dew_point,
+                                       'min_dew_point_c': min_dew_point,
+                                       'max_humidity': max_humidity,
+                                       'mean_humidity': mean_humidity, 'min_humidity': min_humidity,
+                                       'max_sea_level_pressure_hpa': max_sealevel_pressure,
+                                       'mean_sea_level_pressure_hpa': mean_sealevel_pressure,
+                                       'min_sea_level_pressure_hpa': min_sealevel_pressure,
+                                       'max_visibility_km': max_visibility_km,
+                                       'mean_visibility_km': mean_visibility_km,
+                                       'min_visibility_km': min_visibility_km,
+                                       'max_wind_speed_kmh': max_wind_speed_kmh,
+                                       'mean_wind_speed_kmh': mean_wind_speed_kmh,
+                                       'max_gust_speed_kmh': max_gust_speed_kmh,
+                                       'precipitation_mm': precipitation_mm,
+                                       'cloud_cover': cloud_cover, 'events': events,
+                                       'wind_dir_degree': wind_dir_degree}
                 return daily_weather_entry
 
     @staticmethod
