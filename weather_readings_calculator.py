@@ -1,4 +1,5 @@
 from operator import itemgetter
+
 from weather_data import WeatherData
 
 
@@ -19,15 +20,15 @@ class WeatherReadingsCalculator:
         self.calculate(command)
 
     @staticmethod
-    def save_results(data_storage_type, calculated_result_data):
+    def save_results(data_storage_type, calculated_result):
         """
         appends each data results to calculated_weather_results
         :param data_storage_type: can be -e, -a, -c, -d
-        :param calculated_result_data: data according to above type
+        :param calculated_result: data according to above type
         :return:
         """
         WeatherReadingsCalculator.calculated_weather_results.append({'type': data_storage_type,
-                                                                     'data': calculated_result_data})
+                                                                     'data': calculated_result})
 
     @staticmethod
     def month_with_num(num):
@@ -71,6 +72,7 @@ class WeatherReadingsCalculator:
         takes list of numbers, perform sum operation on it
         then divide by number of entries in list_of_numbers
         before returning round the result up to two decimal places
+        :rtype: float
         :param list_of_numbers:
         :return:
         """
@@ -90,6 +92,12 @@ class WeatherReadingsCalculator:
         """
         command is array of args given at terminal e.g. ['-e', '2015', '-a', '2013/6']
         :param command:
+        command -c print 2 lines of + in different colors
+        command -d print 1 + line of + in mixed colors
+        command -a for specific month show highest avg, lowest avg and avg mean humidity
+        command -e show yearly MIN/MAX temperatures & Max humidity
+        input format "-e 2013"
+        input format "-a 2013/6"  "-c 2013/6"  "-d 2013/6"
         :return:
         """
         print()
@@ -98,26 +106,27 @@ class WeatherReadingsCalculator:
 
                 if entry == "-e":
 
-                    # for command -e show yearly MIN/MAX temperatures & Max humidity
-                    # input format "-e 2013"
                     index = command.index(entry)
                     arg = command[index + 1]  # getting entered year
                     max_temp_list = []
 
                     # appending entries of all months of year in one list
-                    # for sorting later
                     for key, value in self.weather_data[arg].items():
                         max_temp_list = max_temp_list + value
 
-                    data = list()
+                    data = []
                     sorted_arr = sorted(max_temp_list, key=itemgetter('max_temperature_c'))
-                    data.append({'date': sorted_arr.pop()['pkt'], 'value': str(sorted_arr.pop()['max_temperature_c']),
+                    data.append({'date': sorted_arr.pop()['pkt'],
+                                 'value': str(sorted_arr.pop()['max_temperature_c']),
                                  'text': 'Highest:', 'ending': ''})
+
                     sorted_arr = sorted(max_temp_list, key=itemgetter('min_temperature_c'))
-                    data.append({'date': sorted_arr.pop()['pkt'], 'value': str(sorted_arr.pop()['min_temperature_c']),
+                    data.append({'date': sorted_arr.pop()['pkt'],
+                                 'value': str(sorted_arr.pop()['min_temperature_c']),
                                  'text': 'Lowest:', 'ending': ''})
                     sorted_arr = sorted(max_temp_list, key=itemgetter('max_humidity'))
-                    data.append({'date': sorted_arr.pop()['pkt'], 'value': str(sorted_arr.pop()['max_humidity']),
+                    data.append({'date': sorted_arr.pop()['pkt'],
+                                 'value': str(sorted_arr.pop()['max_humidity']),
                                  'text': 'Humidity:', 'ending': '%'})
 
                     # saving calculated results
@@ -125,7 +134,6 @@ class WeatherReadingsCalculator:
 
                 elif entry == "-a" or entry == "-c" or entry == "-d":
 
-                    # input format "-a 2013/6"  "-c 2013/6"  "-d 2013/6"
                     index = command.index(entry)
                     arg = command[index + 1]
                     # for given year of month 2012/6
@@ -135,26 +143,27 @@ class WeatherReadingsCalculator:
 
                     if entry == "-a":
 
-                        # command -a for specific month show highest avg, lowest avg and avg mean humidity
-                        avg_high_temp = self.calculate_average(self.get_keys_from_list('max_temperature_c',
-                                                                                       self.weather_data[year][month]))
-                        avg_low_temp = self.calculate_average(self.get_keys_from_list('min_temperature_c',
-                                                                                      self.weather_data[year][month]))
-                        avg_humid_temp = self.calculate_average(self.get_keys_from_list('mean_humidity',
-                                                                                        self.weather_data[year][month]))
+                        avg_high_temp = self.calculate_average(
+                            self.get_keys_from_list('max_temperature_c',
+                                                    self.weather_data[year][month]))
+                        avg_low_temp = self.calculate_average(
+                            self.get_keys_from_list('min_temperature_c',
+                                                    self.weather_data[year][month]))
+                        avg_humid_temp = self.calculate_average(
+                            self.get_keys_from_list('mean_humidity',
+                                                    self.weather_data[year][month]))
 
-                        data = list()
-                        data.append({'text': 'Highest Average', 'value': str(avg_high_temp), 'ending': ''})
-                        data.append({'text': 'Lowest Average', 'value': str(avg_low_temp), 'ending': ''})
-                        data.append({'text': 'Average Mean Humidity', 'value': str(avg_humid_temp), 'ending': '%'})
+                        data = [
+                            {'text': 'Highest Average', 'value': str(avg_high_temp), 'ending': ''},
+                            {'text': 'Lowest Average', 'value': str(avg_low_temp), 'ending': ''},
+                            {'text': 'Average Mean Humidity', 'value': str(avg_humid_temp),
+                             'ending': '%'}]
 
                         # saving calculated results
                         WeatherReadingsCalculator.save_results(entry, data)
 
                     elif entry == "-c" or entry == "-d":
 
-                        # command -c print 2 lines of + in different colors
-                        # command -d print 1 + line of + in mixed colors
                         index = command.index(entry)
                         arg = command[index + 1]
                         # for given year of month 2012/6
@@ -162,20 +171,16 @@ class WeatherReadingsCalculator:
                         if month is None:
                             raise ValueError()
 
-                        data = list()
-                        data.append({'text': year + " " + month, 'value': self.weather_data[year][month]})
+                        data = [
+                            {'text': f"{year} {month}", 'value': self.weather_data[year][month]}]
                         WeatherReadingsCalculator.save_results(entry, data)
         except ValueError as ve:
-            print("got value error! {0}".format(ve))
+            print(f"got value error! {ve}")
             return
         except IndexError as ie:
-            print("got index error! {0}".format(ie))
+            print(f"got index error! {ie}")
             return
         except KeyError as ke:
-            print("got key error! {0}".format(ke))
-            print("for years try", WeatherData.years_added_so_far)
+            print(f"got key error! {ke}")
+            print(f"for years try {WeatherData.years_added_so_far}")
             return
-
-
-
-
