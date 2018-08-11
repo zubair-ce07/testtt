@@ -103,11 +103,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL = '/taskmanager'
+LOGIN_SUCCESS_URL = '/taskmanager'
 LOGOUT_REDIRECT_URL = 'login'
 # Media Settings
 MEDIA_URL = '/media/'
 MEDIA_ROOT = 'taskmanager'
-# MEDIA_URL = 'http://localhost/taskmanager/'
-# MEDIA_ROOT = '/media/'
 # User
 AUTH_USER_MODEL = 'taskmanager.CustomUser'
+# Email Settings
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'my_email@gmail.com'
+EMAIL_HOST_PASSWORD = 'my_secret_password'
+EMAIL_USE_TLS = True
