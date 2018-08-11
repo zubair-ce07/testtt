@@ -36,37 +36,38 @@ class FileParser:
     def __init__(self, dir_path):
         self.dir_path = dir_path
         self.year_data = {}
-        self.required_files = []
 
-    def populate_file_list(self, required_year, required_month=None):
+    def read_files_name(self, required_year, required_month=None):
         if self.year_data.get(required_year, {}).get(required_month):
             return
 
-        if required_year:
-            if required_month:
-                required_month = calendar.month_name[int(required_month)]
-                files_required = os.path.join(self.dir_path, '*' + required_year + '_' + required_month[:3] + '.txt')
-            else:
-                files_required = os.path.join(self.dir_path, '*' + required_year + '_???.txt')
+        if required_month:
+            required_month = calendar.month_name[int(required_month)]
+            required_files_path = os.path.join(self.dir_path, '*' + required_year + '_' + required_month[:3] + '.txt')
+        else:
+            required_files_path = os.path.join(self.dir_path, '*' + required_year + '_???.txt')
 
-            files_required = glob.glob(files_required)
-            self.required_files.extend([os.path.basename(csv_file) for csv_file in files_required])
+        required_files_path = glob.glob(required_files_path)
+        files_required = [os.path.basename(csv_file) for csv_file in required_files_path]
+
+        return files_required
 
     def parse_month_data(self, file_data):
         month_data = {}
         index = 1
         for row in file_data:
-            month_data[str(index)] = {
+            month_data[index] = {
                 'Max TemperatureC': 0 if row['Max TemperatureC'] == '' else row['Max TemperatureC'],
                 'Min TemperatureC': 0 if row['Min TemperatureC'] == '' else row['Min TemperatureC'],
                 'Max Humidity': 0 if row['Max Humidity'] == '' else row['Max Humidity'],
                 'PKT': row['PKT']
             }
             index += 1
+
         return month_data
 
-    def parse_files(self):
-        for file_name in self.required_files:
+    def read_files(self, files_list):
+        for file_name in files_list:
             with open(os.path.join(self.dir_path, file_name), 'r') as csv_file:
                 year, month = get_year_and_month(file_name)
                 file_data = csv.DictReader(csv_file, skipinitialspace=True, delimiter=',')
@@ -136,21 +137,21 @@ class ResultGenerator:
         print('Lowest Average: {}'.format(round(data['Lowest Average'], 2)))
         print('Average Mean Humidity: {}\n'.format(round(data['Average Humidity'], 2)))
 
-    def generate_high_low_day_double_results(self, month_data):
-        for index, day in enumerate(month_data.values()):
-            print('{:0>2d} {} {}C\n{:0>2d} {} {}C'.format(index + 1, COLOR_RED + '+' * int(day['Max TemperatureC']),
-                                                          COLOR_PURPLE + day['Max TemperatureC'], index + 1,
+    def generate_chart_results(self, month_data):
+        for day_number, day in month_data.items():
+            print('{:0>2d} {} {}C\n{:0>2d} {} {}C'.format(day_number, COLOR_RED + '+' * int(day['Max TemperatureC']),
+                                                          COLOR_PURPLE + day['Max TemperatureC'], day_number,
                                                           COLOR_BLUE + '+' * int(day['Min TemperatureC']),
                                                           COLOR_PURPLE + day['Min TemperatureC']))
 
         print(COLOR_DEFAULT)
 
-    def generate_high_low_day_single_results(self, month_data):
-        for index, day in enumerate(month_data.values()):
-            print('{:0>2d} {}{} {}C - {}C'.format(index + 1, COLOR_BLUE + '+' * int(day['Min TemperatureC']),
-                                                  COLOR_RED + '+' * int(day['Max TemperatureC']),
-                                                  COLOR_PURPLE + day['Min TemperatureC'],
-                                                  day['Max TemperatureC']))
+    def generate_bonus_results(self, month_data):
+        for day_number, day_data in month_data.items():
+            print('{:0>2d} {}{} {}C - {}C'.format(day_number, COLOR_BLUE + '+' * int(day_data['Min TemperatureC']),
+                                                  COLOR_RED + '+' * int(day_data['Max TemperatureC']),
+                                                  COLOR_PURPLE + day_data['Min TemperatureC'],
+                                                  day_data['Max TemperatureC']))
 
         print(COLOR_DEFAULT)
 
@@ -190,32 +191,19 @@ def main():
     result_generator = ResultGenerator()
 
     if args.extreme_report:
-        file_parser.populate_file_list(args.extreme_report)
+        files_name = file_parser.read_files_name(args.extreme_report)
+        file_parser.read_files(files_name)
 
-    if args.average_report:
-        year, month = split_year_and_month(args.average_report)
-        file_parser.populate_file_list(year, month)
-
-    if args.chart_report:
-        year, month = split_year_and_month(args.chart_report)
-        file_parser.populate_file_list(year, month)
-
-    if args.bonus:
-        year, month = split_year_and_month(args.bonus)
-        file_parser.populate_file_list(year, month)
-
-    file_parser.parse_files()
-
-    if args.extreme_report:
         if file_parser.year_data.get(args.extreme_report):
             year_data = file_parser.year_data[args.extreme_report]
             year_result = result_calculator.calculate_extreme_results(year_data)
             result_generator.generate_extreme_results(year_result)
-        else:
-            print('Sorry! data is not available of required year')
 
     if args.average_report:
-        year, month = split_year_and_month(args.average_report)
+        year, month = split_year_and_month(args.average_month)
+        files_name = file_parser.read_files_name(year, month)
+        if files_name:
+            file_parser.read_files(files_name)
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
@@ -226,19 +214,25 @@ def main():
 
     if args.chart_report:
         year, month = split_year_and_month(args.chart_report)
+        files_name = file_parser.read_files_name(year, month)
+        if files_name:
+            file_parser.read_files(files_name)
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
-            result_generator.generate_high_low_day_double_results(month_data)
+            result_generator.generate_chart_results(month_data)
         else:
             print('Sorry! data is not available of required year and month')
 
     if args.bonus:
         year, month = split_year_and_month(args.bonus)
+        files_name = file_parser.read_files_name(year, month)
+        if files_name:
+            file_parser.read_files(files_name)
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
-            result_generator.generate_high_low_day_single_results(month_data)
+            result_generator.generate_bonus_results(month_data)
         else:
             print('Sorry! data is not available of required year and month')
 
