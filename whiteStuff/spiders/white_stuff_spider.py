@@ -14,14 +14,14 @@ class WhiteStuffSpider(CrawlSpider):
     name = 'white_stuff'
     start_urls = ['https://www.whitestuff.com/global']
     rules = (Rule(LinkExtractor(restrict_css='.navbar__item', allow='.*(mens|kids|gift).*/.+'),
-                  callback='parse_category_name'),)
+                  callback='parse_category_variables'),)
 
     skus_url_t = "https://www.whitestuff.com/global/action/GetProductData-FormatProduct?"
     category_url_t = 'https://fsm.attraqt.com/zones-js.aspx?'
-    genders = {"womens": "female",
-               "mens": "male",
-               "boys": "boy",
-               "girls": "girl"}
+    genders = [("womens", "female"),
+               ("mens", "male"),
+               ("boys", "boy"),
+               ("girls", "girl")]
     category_parameters = {
         'siteId': 'c7439161-d4f1-4370-939b-ef33f4c876cc',
         'zone0': 'banner',
@@ -31,16 +31,19 @@ class WhiteStuffSpider(CrawlSpider):
     }
     skus_parameters = {"Format": "JSON", "ReturnVariable": "true"}
 
-    def parse_category_name(self, response):
+    def parse_category_variables(self, response):
         script = self.get_category_script(response)
         config_category = re.findall(r"category\s?\=\s?\"(.*)\";", script)[0] or ''
         config_category_tree = re.findall(r"tree\s?\=\s?\"(.*)\";", script)[0] or ''
+
         if not config_category:
             return
+
         category_parameters = self.category_parameters.copy()
         category_parameters['config_category'] = config_category
         category_parameters['config_categorytree'] = config_category_tree
         category_parameters['pageurl'] = response.url
+        
         yield Request(url=f'{self.category_url_t}{urlencode(category_parameters)}', callback=self.parse_category)
 
     def parse_category(self, response):
@@ -59,17 +62,21 @@ class WhiteStuffSpider(CrawlSpider):
 
     def get_pagination_requests(self, response):
         request_parameters = self.get_request_paramters(response)
+
         if 'esp_pg' in request_parameters['pageurl']:
             return
+
         html_response = self.extract_html_from_response(response)
         selector = Selector(text=html_response)
         total_pages = int(selector.css('#TotalPages::attr(value)').extract_first() or '1')
 
         if total_pages <= 1:
             return
+
         category_parameters = self.category_parameters.copy()
         category_parameters['config_category'] = request_parameters['category']
         category_parameters['config_categorytree'] = request_parameters['category_tree']
+
         for page_no in range(2, total_pages):
             next_url = urljoin(request_parameters['pageurl'], f'/#esp_pg={page_no}')
             category_parameters['pageurl'] = next_url
@@ -110,11 +117,10 @@ class WhiteStuffSpider(CrawlSpider):
 
     @staticmethod
     def get_raw_skus(response):
-        response = re.findall('(?<=\=)(.*?)(?=;)', response.text, flags=re.S)[0]
-        response = re.sub('\s//.*\n', "", response)
+        response = re.findall('=(.*);', response.text, flags=re.S)[0]
+        response = re.sub('\s//.*', "", response)
         response = re.sub('\\\\\'', "", response)
-        raw_skus = json.loads(response)
-        return raw_skus['productVariations']
+        return json.loads(response)['productVariations']
 
     @staticmethod
     def get_category_script(response):
@@ -133,17 +139,19 @@ class WhiteStuffSpider(CrawlSpider):
 
     def get_skus(self, raw_skus, currency):
         skus = []
-        sku_common = dict()
         for raw_sku in raw_skus.values():
-            sku = sku_common.copy()
+            sku = dict()
             pricing = self.get_pricing(raw_sku, currency)
             sku['sku_id'] = raw_sku['productUUID']
-            sku['in_stock'] = raw_sku['inStock']
             sku['colour'] = raw_sku['colour']
             sku['size'] = raw_sku['size']
             sku['price'] = pricing['price']
             sku['old-price'] = pricing['old-price']
             sku['currency'] = pricing['currency']
+
+            if not raw_sku['inStock']:
+                sku['is_out_of_stock'] = True
+
             skus.append(sku)
         return skus
 
@@ -158,23 +166,24 @@ class WhiteStuffSpider(CrawlSpider):
         return pricing
 
     def make_skus_request(self, response):
-        sku_id = response.css('.js-variation-attribute::attr(data-variation-master-sku)').extract_first()
-        self.skus_parameters["ProductID"] = sku_id
+        self.skus_parameters["ProductID"] = self.get_product_id(response)
         skus_request_url = f'{self.skus_url_t}{urlencode(self.skus_parameters)}'
         return Request(url=skus_request_url, callback=self.parse_skus)
 
     @staticmethod
     def extract_html_from_response(response):
-        # json.loads(re.findall(r"LM.buildZone\((.+)\)", html_response)[1])
+        # json.loads(re.findall(r"LM.buildZone\((.+)\)", response.text)[1])
         # (JSONDecodeError)Expecting ',' delimiter: line 1 column 113 (char 112)
         html_response = response.text.replace(r'\"', '"')
         return re.findall("html\":\"(.*>)", html_response)[-1]
 
     @staticmethod
+    def get_product_id(response):
+        return response.css('.js-variation-attribute::attr(data-variation-master-sku)').extract_first()
+
+    @staticmethod
     def format_price(price):
-        prices = re.findall(r"\D*(\d+)\D*", price)
-        price = prices[0] + prices[1] or '00'
-        return int(price)
+        return int(''.join(re.findall(r"(\d+)", price)))
 
     @staticmethod
     def get_title(response):
@@ -189,9 +198,9 @@ class WhiteStuffSpider(CrawlSpider):
         return response.css('.breadcrumb-list__item-link::text').extract()[1:]
 
     def get_gender(self, response):
-        for gender in self.genders.keys():
-            if gender in response.url:
-                return self.genders.get(gender)
+        for gender_token, gender in self.genders:
+            if gender_token in response.url:
+                return gender
 
     def get_description(self, response):
         return [line for line in self.get_raw_description(response) if 'Care' not in line]
@@ -201,8 +210,8 @@ class WhiteStuffSpider(CrawlSpider):
 
     @staticmethod
     def get_raw_description(response):
-        types = response.css('.ish-productAttributes .ish-ca-type::text').extract()
-        values = response.css('.ish-productAttributes .ish-ca-value::text').extract()
+        types = response.css('.ish-ca-type::text').extract()
+        values = response.css('.ish-ca-value::text').extract()
         raw_description = list(zip(types, values))
         return [f'{line[0]} {line[1]}' for line in raw_description]
 
