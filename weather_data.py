@@ -14,24 +14,28 @@ class WeatherData:
     years_added_so_far = set()
     single_month_weather_list = []
 
-    def __init__(self, entry):
-        WeatherData.add_weather_data(entry)
+    def __init__(self, year):
+        """
+        add weather data by year on Initializing
+        :param year:
+        """
+        WeatherData.add_weather_data(year)
 
     @staticmethod
-    def add_weather_data(entry):
+    def add_weather_data(year):
         """
-        :param entry: here entry is year from weather_files
+        :param year: here entry is year from weather_files
         add year to weather_yearly_data and years_added_so_far
         ignores if already added
         :return:
         """
         if WeatherData.weather_yearly_data == {}:
-            WeatherData.weather_yearly_data[entry] = {}
-        elif entry not in WeatherData.weather_yearly_data.keys():
-            WeatherData.weather_yearly_data[entry] = {}
+            WeatherData.weather_yearly_data[year] = {}
+        elif year not in WeatherData.weather_yearly_data.keys():
+            WeatherData.weather_yearly_data[year] = {}
 
-        if entry not in WeatherData.years_added_so_far:
-            WeatherData.years_added_so_far.add(entry)
+        if year not in WeatherData.years_added_so_far:
+            WeatherData.years_added_so_far.add(year)
 
     @staticmethod
     def append_single_list(string):
