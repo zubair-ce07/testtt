@@ -37,6 +37,6 @@ class WeatherFilesParser:
                 while line:
                     line = opened_file.readline()
                     WeatherData.append_single_list(line)
-                WeatherData.add_array_to_key({month: []}, month, year,  WeatherData.single_list)
-                WeatherData.single_list = []  # Once populated clear data
+                WeatherData.add_array_to_key({month: []}, month, year,  WeatherData.single_month_weather_list)
+                WeatherData.single_month_weather_list = []  # Once populated clear data
         print("Files successfully populated")

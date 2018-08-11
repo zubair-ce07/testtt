@@ -10,7 +10,7 @@ class WeatherData:
     """
     weather_yearly_data = {}
     years_added_so_far = set()
-    single_list = []
+    single_month_weather_list = []
 
     def __init__(self, entry):
         WeatherData.__add_weather_data(entry)
@@ -55,7 +55,7 @@ class WeatherData:
                    'max_visibility_km': arr[13], 'mean_visibility_km': arr[14], 'min_visibility_km': arr[15],
                    'max_wind_speed_kmh': arr[16], 'mean_wind_speed_kmh': arr[17], 'max_gust_speed_kmh': arr[18],
                    'precipitation_mm': arr[19], 'cloud_cover': arr[20], 'events': arr[21], 'wind_dir_degree': arr[22]}
-            WeatherData.single_list.append(obj)
+            WeatherData.single_month_weather_list.append(obj)
 
 
     @staticmethod
