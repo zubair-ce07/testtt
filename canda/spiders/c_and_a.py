@@ -117,11 +117,11 @@ class Canda(CrawlSpider):
     @staticmethod
     def get_currency_symbol(response):
         return re.findall(
-            r"[^\w\d_\s,.\\]", response.css('.product-stage__price span::text').extract()[:2][0], re.UNICODE)[0]
+            r"[^\w\d_\s,.\\]", response.css('.product-stage__price span::text').extract()[0], re.UNICODE)[0]
 
     @staticmethod
     def get_brand_name(response):
-        return response.css('.product-stage__title strong::text').extract()
+        return response.css('.box__logolist-brand::attr(alt)').extract_first() or 'c-and-a'
 
     def get_gender(self, response):
         category_url = response.css('.util-link-left.util-text-smaller::attr(href)').extract_first()
@@ -147,15 +147,15 @@ class Canda(CrawlSpider):
 
     @staticmethod
     def get_care(response):
-        return list(filter(None, [a.strip() for a in response.css('td::text').extract()]))
+        return response.css('td:not(.util-text-center)::text').extract()
 
     @staticmethod
     def get_all_sizes(response):
-        return [s.strip() for s in response.css('.size-list .reveal__content li::text').extract()]
+        return [s.strip() for s in response.css('.size-list li::text').extract()]
 
     @staticmethod
     def get_out_of_stock_sizes(response):
-        return [s.strip() for s in response.css('.size-list .reveal__content .is-sold::text').extract()]
+        return [s.strip() for s in response.css('.size-list .is-sold::text').extract()]
 
     @staticmethod
     def get_categories(response):
@@ -164,7 +164,7 @@ class Canda(CrawlSpider):
 
     @staticmethod
     def get_color_ids(response):
-        return response.css('.box--product .color-list li:not(.is-active)::attr(data-color)').extract()
+        return response.css('.box--product .color-list :not(.is-active)::attr(data-color)').extract()
 
     @staticmethod
     def get_product_id(response):
