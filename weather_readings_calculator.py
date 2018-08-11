@@ -201,4 +201,13 @@ class WeatherReadingsCalculator:
 
     @staticmethod
     def calculated_dict(text, value, date='', ending=''):
+        """
+        returns dictionary of calculated results as
+        {text: text, value: value, date: date, ending: ending}
+        :param text:
+        :param value:
+        :param date:
+        :param ending:
+        :return:
+        """
         return {text: text, value: value, date: date, ending: ending}
