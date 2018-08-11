@@ -1,5 +1,6 @@
 class WeatherData:
     """
+        weather_yearly_data
         Data Structure for saving
         { '2015':
                   {
@@ -7,29 +8,39 @@ class WeatherData:
                     'dec': [list of dictionaries daily entries]
                   }
         }
+
     """
     weather_yearly_data = {}
     years_added_so_far = set()
     single_month_weather_list = []
 
     def __init__(self, entry):
-        WeatherData.__add_weather_data(entry)
+        WeatherData.add_weather_data(entry)
 
     @staticmethod
-    def __add_weather_data(entry):
-        # add year in master data structure and if already added do nothing
+    def add_weather_data(entry):
+        """
+        :param entry: here entry is year from weather_files
+        add year to weather_yearly_data and years_added_so_far
+        ignores if already added
+        :return:
+        """
         if WeatherData.weather_yearly_data == {}:
             WeatherData.weather_yearly_data[entry] = {}
         elif entry not in WeatherData.weather_yearly_data.keys():
             WeatherData.weather_yearly_data[entry] = {}
+
         if entry not in WeatherData.years_added_so_far:
             WeatherData.years_added_so_far.add(entry)
 
     @staticmethod
     def append_single_list(string):
-        # if given str is not empty, split it and all
-        # entries to its respective key in dictionary
-        # and append in parent array
+        """
+        :param string: if given string is not empty, split it and add all
+        entries to its respective key in dictionary
+        and append in parent array
+        :return:
+        """
         if not string == "":
             arr = string.split(',')
             arr[-1] = arr[-1].split('\n')[0]
@@ -57,31 +68,12 @@ class WeatherData:
                    'precipitation_mm': arr[19], 'cloud_cover': arr[20], 'events': arr[21], 'wind_dir_degree': arr[22]}
             WeatherData.single_month_weather_list.append(obj)
 
-
-    @staticmethod
-    def get_data(key=None):
-        if key is None:
-            return WeatherData.weather_yearly_data
-        else:
-            if key in WeatherData.weather_yearly_data:
-                return WeatherData.weather_yearly_data[key]
-        return None
-
-    @staticmethod
-    def get_years():
-        return list(WeatherData.years_added_so_far)
-
     @staticmethod
     def add_array_to_key(arr, key, entry, weather_entity_data):
         # add data in month of year
         if key not in WeatherData.weather_yearly_data[entry].keys():
             arr[list(arr.keys())[0]] = weather_entity_data
             WeatherData.weather_yearly_data[entry] = dict(list(WeatherData.weather_yearly_data[entry].items()) + list(arr.items()))
-
-    @staticmethod
-    def print_specific_key(key):
-        if key in WeatherData.weather_yearly_data:
-            print(WeatherData.weather_yearly_data[key])
 
     @staticmethod
     def print_():

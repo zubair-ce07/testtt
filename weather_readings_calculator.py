@@ -8,7 +8,7 @@ class WeatherReadingsCalculator:
 
     def __init__(self, command):
         # get data populated in WeatherData model and then calculate
-        self.data = WeatherData.get_data()
+        self.data = WeatherData.weather_yearly_data
         self.__calculate(command)
 
     @staticmethod
@@ -134,7 +134,7 @@ class WeatherReadingsCalculator:
             return
         except KeyError as ke:
             print("got key error! {0}".format(ke))
-            print("for years try", WeatherData.get_years())
+            print("for years try", WeatherData.years_added_so_far)
             return
 
 
