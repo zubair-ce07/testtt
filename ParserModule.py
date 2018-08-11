@@ -20,18 +20,28 @@ def parser_(path_dir=None, time_span=None):
     except FileNotFoundError:
         raise FileNotFoundError
 
+    # Getting list of all files from the given directory
     list_record_files = list(object_dir)[0][2:][0]
+
+    # Contain records of all the required directories
     list_required_records = []
 
+    # Parsing the given time format
     year_required, month_required, day_required = time_parser(time_span)
 
+    # It will iterate through all files and gives list of required files
     for record_file in list_record_files:
         if _is_required(record_file, year_required, month_required):
             list_required_records.append(record_file)
 
+    # If records found
     if len(list_required_records) > 0:
+
+        # Records which doesn't require date to be parsed
         if day_required is not None:
             list_records = _data_populator(path_dir, list_required_records, day_required)
+
+        # Records which does require date to be parsed
         else:
             list_records = _data_populator(path_dir, list_required_records)
 
@@ -59,7 +69,10 @@ def _file_reader(path_dir, file_name, specific_date=None):
     """This function Reads Data from Files and Store them"""
     list_file_records = []
     month_file = open(path_dir + file_name, 'r')
+
+    # First line contains information of file structure, so skipping them
     month_file.__next__()
+
     if specific_date is None:
         lines = month_file.readlines()
 
@@ -71,50 +84,19 @@ def _file_reader(path_dir, file_name, specific_date=None):
             max_temperature_c = fields[1],
             mean_temperature_c = fields[2],
             min_temperature = fields[3],
-            dew_point_c = fields[4],
-            mean_dew_point_c = fields[5],
-            min_dew_point_c = fields[6],
             max_humidity = fields[7],
             mean_humidity = fields[8],
             min_humidity = fields[9],
-            max_sea_level_pressure_hpa = fields[10],
-            mean_sea_level_pressure_hpa = fields[11],
-            min_sea_level_pressure_hpa = fields[12],
-            max_visibility_km = fields[13],
-            mean_visibility_km = fields[14],
-            min_visibility_km = fields[15],
-            max_wind_speed_kmph = fields[16],
-            mean_wind_speed_kmph = fields[17],
-            max_gust_speed_kmph = fields[18],
-            precipitationmm = fields[19],
-            cloud_cover = fields[20],
-            events = fields[21],
-            wind_dir_degrees = fields[22],
 
             list_file_records.append(WeatherRecord(
                 date_pkt,
                 max_temperature_c,
                 mean_temperature_c,
                 min_temperature,
-                dew_point_c,
-                mean_dew_point_c,
-                min_dew_point_c,
                 max_humidity,
                 mean_humidity,
                 min_humidity,
-                max_sea_level_pressure_hpa,
-                mean_sea_level_pressure_hpa,
-                min_sea_level_pressure_hpa,
-                max_visibility_km,
-                mean_visibility_km,
-                min_visibility_km,
-                max_wind_speed_kmph,
-                mean_wind_speed_kmph,
-                max_gust_speed_kmph,
-                precipitationmm,
-                cloud_cover,
-                events,
-                wind_dir_degrees,
+
             ))
     else:
         lines = month_file.readlines()
@@ -126,51 +108,21 @@ def _file_reader(path_dir, file_name, specific_date=None):
         max_temperature_c = fields[1],
         mean_temperature_c = fields[2],
         min_temperature = fields[3],
-        dew_point_c = fields[4],
-        mean_dew_point_c = fields[5],
-        min_dew_point_c = fields[6],
         max_humidity = fields[7],
         mean_humidity = fields[8],
         min_humidity = fields[9],
-        max_sea_level_pressure_hpa = fields[10],
-        mean_sea_level_pressure_hpa = fields[11],
-        min_sea_level_pressure_hpa = fields[12],
-        max_visibility_km = fields[13],
-        mean_visibility_km = fields[14],
-        min_visibility_km = fields[15],
-        max_wind_speed_kmph = fields[16],
-        mean_wind_speed_kmph = fields[17],
-        max_gust_speed_kmph = fields[18],
-        precipitationmm = fields[19],
-        cloud_cover = fields[20],
-        events = fields[21],
-        wind_dir_degrees = fields[22],
 
         list_file_records.append(WeatherRecord(
             date_pkt,
             max_temperature_c,
             mean_temperature_c,
             min_temperature,
-            dew_point_c,
-            mean_dew_point_c,
-            min_dew_point_c,
             max_humidity,
             mean_humidity,
             min_humidity,
-            max_sea_level_pressure_hpa,
-            mean_sea_level_pressure_hpa,
-            min_sea_level_pressure_hpa,
-            max_visibility_km,
-            mean_visibility_km,
-            min_visibility_km,
-            max_wind_speed_kmph,
-            mean_wind_speed_kmph,
-            max_gust_speed_kmph,
-            precipitationmm,
-            cloud_cover,
-            events,
-            wind_dir_degrees,
         ))
+
+    month_file.close()
 
     return list_file_records
 
@@ -195,8 +147,8 @@ def _is_required(name_file, year_required, month_required):
                 return False
         else:
             return False
-    except TypeError:
-        raise TypeError('The given dates are not appropriate')
+    except:
+        return False
 
 
 def time_parser(time_to_be_parsed):

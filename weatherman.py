@@ -1,3 +1,13 @@
+"""
+Main module which runs the whole weatherman program, It takes Command Line Args to work with
+
+Command Line Args:
+'-e' : Gives highest, lowest temperatures and highest humidity
+'-a' : Gives average temperature and humidity
+'-c' : Gives results in the chart/graph form
+'-d' : Gives results in chart form but 1 day has only 1 graph
+"""
+
 import sys
 
 from CalculationModule import calculator
@@ -9,6 +19,7 @@ def is_even(num):
 
 
 def main_function():
+    """Takes system args and extract options and time to iterate the whole process over it"""
     if is_even(len(sys.argv)):
         path_dir = sys.argv[1]
         values = sys.argv[2:]

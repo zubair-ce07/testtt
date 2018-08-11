@@ -1,3 +1,5 @@
+"""Calculates the end results, according to given records and options"""
+
 from datetime import datetime
 from termcolor import colored
 
@@ -5,6 +7,8 @@ from ParserModule import time_parser
 
 
 def calculator(time_span, option_given, list_data):
+    """Takes time span, option and list of data and calculate accordingly"""
+
     # -e option will give highest, lowest temperature statistics of records
     if option_given == "-e":
         highest_date = None
