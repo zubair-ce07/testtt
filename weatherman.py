@@ -174,9 +174,12 @@ class WeatherMan:
         average_low_temp = int(sum_low_temp / len(self.low_temp_monthwise))
         average_humid = int(sum_humid / len(self.humid))
         print('************************************')
-        print('Highest Average: ' + str(average_max_temp) + 'C')
-        print('Lowest Average: ' + str(average_low_temp) + 'C')
-        print('Average Humidity: ' + str(average_humid) + '%')
+        print('Highest Average: {average_max_temp}C '.format(
+            average_max_temp=str(average_max_temp)))
+        print('Lowest Average: {average_low_temp}C '.format(
+            average_low_temp=str(average_low_temp)))
+        print('Average Humidity: {average_humid}% '.format(
+            average_humid=str(average_humid)))
         print('************************************')
 
 
@@ -204,12 +207,14 @@ class WeatherMan:
         min_index = self.low_temp_monthwise.index(min_value)
         humid_index = self.humid.index(max_humid)
         print('************************************')
-        print('Highest: ' + str(self.max_temp_monthwise[index]) + 'C on '\
-              + self.date_conversion(self.date_monthwise[index]))
-        print('Lowest: ' + str(self.low_temp_monthwise[min_index]) + 'C on '\
-              + self.date_conversion(self.date_monthwise[min_index]))
-        print('Humidity: ' + str(self.humid[humid_index]) + '% on '\
-              + self.date_conversion(self.date_monthwise[humid_index]))
+        print('Highest: {max_temp}C on {date}'.format(max_temp=str(
+            self.max_temp_monthwise[index]), date=self.date_conversion(self.date_monthwise[index])))
+        print('Lowest: {low_temp}C on {date}'.format(low_temp=str(
+            self.low_temp_monthwise[min_index]), date=self.date_conversion(
+                self.date_monthwise[min_index])))
+        print('Humidity: {humid}% on {date}'.format(humid=str(
+            self.humid[humid_index]), date=self.date_conversion(
+                self.date_monthwise[humid_index])))
         print('************************************')
 
 
@@ -219,10 +224,11 @@ class WeatherMan:
         This function prints bar charts
         """
         for max_temp, min_temp, date in zip(self.max_temp_monthwise,
-                                            self.low_temp_monthwise,
-                                            self.date_monthwise):
-            print(date + colored('+'*max_temp, 'red') + str(max_temp) + 'C')
-            print(date + colored('+'*min_temp, 'blue') + str(min_temp) + 'C')
+                                            self.low_temp_monthwise, self.date_monthwise):
+            print('{date} {color} {m_temp}C'.format(
+                date=date, color=colored('+'*max_temp, 'red'), m_temp=str(max_temp)))
+            print('{date} {color} {m_temp}C'.format(
+                date=date, color=colored('+'*min_temp, 'blue'), m_temp=str(min_temp)))
 
 
     # Bonus Task: Print both charts (bar charts) together
@@ -233,9 +239,9 @@ class WeatherMan:
         for max_temp, min_temp, date in zip(self.max_temp_monthwise,
                                             self.low_temp_monthwise,
                                             self.date_monthwise):
-            print(date + colored('+'*min_temp, 'blue') + colored('+'*max_temp, 'red')\
-                  + str(min_temp) + 'C ' + str(max_temp) + 'C')
-
+            print('{date} {color_blue} {color_red}{min_value}C {max_value}C'.format(
+                date=date, color_blue=colored('+'*min_temp, 'blue'), color_red=colored(
+                    '+'*max_temp, 'red'), min_value=str(min_temp), max_value=str(max_temp)))
 
 # Main Method
 def main():
