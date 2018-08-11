@@ -1,7 +1,8 @@
+import sys
+
 from weather_files_parser import WeatherFilesParser
 from weather_readings_calculator import WeatherReadingsCalculator
 from weather_results_report_generator import WeatherResultReportGenerator
-import sys
 
 
 def main():
