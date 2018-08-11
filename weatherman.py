@@ -52,7 +52,7 @@ class FileParser:
             files_required = glob.glob(files_required)
             self.required_files.extend([os.path.basename(file) for file in files_required])
 
-    def parse_file(self, file_data):
+    def parse_month_data(self, file_data):
         month_data = {}
         index = 1
         for row in file_data:
@@ -70,7 +70,7 @@ class FileParser:
             with open(os.path.join(self.dir_path, file_name), 'r') as file:
                 year, month = get_year_and_month(file_name)
                 file_data = csv.DictReader(file, skipinitialspace=True, delimiter=',')
-                month_data = self.parse_file(file_data)
+                month_data = self.parse_month_data(file_data)
 
                 if not self.year_data.get(year):
                     self.year_data[year] = {}
@@ -78,9 +78,9 @@ class FileParser:
             self.year_data[year][month] = copy.deepcopy(month_data)
 
 
-class ResultComputer:
+class ResultCalculator:
 
-    def compute_average_results(self, month_data):
+    def calculate_average_results(self, month_data):
         sum_highest = sum(int(day['Max TemperatureC']) for day in month_data.values())
         sum_lowest = sum(int(day['Min TemperatureC']) for day in month_data.values())
         sum_humidity = sum(int(day['Max Humidity']) for day in month_data.values())
@@ -91,7 +91,7 @@ class ResultComputer:
             'Average Humidity': sum_humidity / count
         }
 
-    def compute_extreme_results(self, year_data):
+    def calculate_extreme_results(self, year_data):
         min_temp_list = []
         max_temp_list = []
         max_humidity_list = []
@@ -117,13 +117,6 @@ class ResultComputer:
             'Highest Humidity Date': highest_humidity_and_date[1]
         }
 
-    def compute_high_low_day_results(self, month_data):
-        result_list = []
-        for day in month_data.values():
-            result_list.append((int(day['Max TemperatureC']), int(day['Min TemperatureC'])))
-
-        return result_list
-
 
 class ResultGenerator:
 
@@ -143,19 +136,21 @@ class ResultGenerator:
         print('Lowest Average: {}'.format(round(data['Lowest Average'], 2)))
         print('Average Mean Humidity: {}\n'.format(round(data['Average Humidity'], 2)))
 
-    def generate_high_low_day_double_results(self, data):
-        for index, record in enumerate(data):
-            print('{:0>2d} {} {}C\n{:0>2d} {} {}C'.format(index + 1, COLOR_RED + '+' * record[0],
-                                                          COLOR_PURPLE + str(record[0]), index + 1,
-                                                          COLOR_BLUE + '+' * record[1], COLOR_PURPLE + str(record[1])))
+    def generate_high_low_day_double_results(self, month_data):
+        for index, day in enumerate(month_data.values()):
+            print('{:0>2d} {} {}C\n{:0>2d} {} {}C'.format(index + 1, COLOR_RED + '+' * int(day['Max TemperatureC']),
+                                                          COLOR_PURPLE + day['Max TemperatureC'], index + 1,
+                                                          COLOR_BLUE + '+' * int(day['Min TemperatureC']),
+                                                          COLOR_PURPLE + day['Min TemperatureC']))
 
         print(COLOR_DEFAULT)
 
-    def generate_high_low_day_single_results(self, data):
-        for index, record in enumerate(data):
-            print('{:0>2d} {}{} {}C - {}C'.format(index + 1, COLOR_BLUE + '+' * record[1],
-                                                  COLOR_RED + '+' * record[0],
-                                                  COLOR_PURPLE + str(record[1]), str(record[0])))
+    def generate_high_low_day_single_results(self, month_data):
+        for index, day in enumerate(month_data.values()):
+            print('{:0>2d} {}{} {}C - {}C'.format(index + 1, COLOR_BLUE + '+' * int(day['Min TemperatureC']),
+                                                  COLOR_RED + '+' * int(day['Max TemperatureC']),
+                                                  COLOR_PURPLE + day['Min TemperatureC'],
+                                                  day['Max TemperatureC']))
 
         print(COLOR_DEFAULT)
 
@@ -191,7 +186,7 @@ def main():
         return
 
     file_parser = FileParser(args.dir_path)
-    result_computer = ResultComputer()
+    result_calculator = ResultCalculator()
     result_generator = ResultGenerator()
 
     if args.extreme_report:
@@ -214,7 +209,7 @@ def main():
     if args.extreme_report:
         if file_parser.year_data.get(args.extreme_report):
             year_data = file_parser.year_data[args.extreme_report]
-            year_result = result_computer.compute_extreme_results(year_data)
+            year_result = result_calculator.calculate_extreme_results(year_data)
             result_generator.generate_extreme_results(year_result)
         else:
             print('Sorry! data is not available of required year')
@@ -224,7 +219,7 @@ def main():
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
-            month_result = result_computer.compute_average_results(month_data)
+            month_result = result_calculator.calculate_average_results(month_data)
             result_generator.generate_average_results(month_result)
         else:
             print('Sorry! data is not available of required year and month')
@@ -234,8 +229,7 @@ def main():
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
-            month_result = result_computer.compute_high_low_day_results(month_data)
-            result_generator.generate_high_low_day_double_results(month_result)
+            result_generator.generate_high_low_day_double_results(month_data)
         else:
             print('Sorry! data is not available of required year and month')
 
@@ -244,8 +238,7 @@ def main():
 
         if file_parser.year_data.get(year, {}).get(month):
             month_data = file_parser.year_data[year][month]
-            month_result = result_computer.compute_high_low_day_results(month_data)
-            result_generator.generate_high_low_day_single_results(month_result)
+            result_generator.generate_high_low_day_single_results(month_data)
         else:
             print('Sorry! data is not available of required year and month')
 
