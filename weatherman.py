@@ -1,3 +1,6 @@
+"""
+main file for weatherman
+"""
 import sys
 
 from weather_files_parser import WeatherFilesParser
@@ -21,8 +24,10 @@ def main():
         weather_report_generator = WeatherResultReportGenerator()
         weather_report_generator.print_report()
 
-    except IndexError as ie:
-        print(f'Arguments have not passed or maybe {str(ie).upper()}')
+    except IndexError as index_error:
+        print(f"Arguments have not passed or maybe {index_error}")
+    except FileNotFoundError as file_not_found:
+        print(f"FileNotFoundError:: {file_not_found}")
 
 
 if __name__ == "__main__":
