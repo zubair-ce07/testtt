@@ -8,7 +8,7 @@ class WeatherData:
                     'dec': [list of dictionaries daily entries]
                   }
         }
-
+        saves and maintain weather files data in above data structure
     """
     weather_yearly_data = {}
     years_added_so_far = set()
