@@ -6,15 +6,11 @@ from w3lib.url import url_query_cleaner as w3cleaner
 
 class Parser(Spider):
     name = "parser"
-    scraped_ids = []
+    scraped_variants = []
 
     def parse(self, response):
         product = {}
         product_data = self.get_product_json(response)
-        if product_data.get("id") in self.scraped_ids:
-            return
-        else:
-            self.scraped_ids.append(product_data.get("id"))
         product["retailer_sku"] = product_data.get("id")
         product["name"] = product_data.get("name") if product_data.get("name") else ""
         product["image_urls"] = []
@@ -36,13 +32,20 @@ class Parser(Spider):
         return self.parse_colours(response)
 
     def parse_colours(self, response):
+        product_data = self.get_product_json(response)
         product = response.meta["product"].copy()
-        product["image_urls"].extend(self.get_image_urls(response))
-        product["skus"].update(self.get_skus(response))
+        if product_data.get("variant") not in self.scraped_variants:
+            self.scraped_variants.append(product_data.get("variant"))
+            product["image_urls"].extend(self.get_image_urls(response))
+            product["skus"].update(self.get_skus(response))
         if not response.meta["pending_color_reqs"]:
+            if response.meta.get("hey"):
+                print(response.url)
+                print(product_data.get("variant"))
             return product
         next_color_req = response.meta["pending_color_reqs"].pop()
         next_color_req.meta["product"] = product
+        next_color_req.meta["hey"] = True
         next_color_req.meta["pending_color_reqs"] = response.meta["pending_color_reqs"].copy()
         return next_color_req
 
@@ -113,7 +116,7 @@ class Parser(Spider):
         colour_urls = response.css('.swatch-list__image::attr(href)').extract()
         colour_requests = []
         for url in colour_urls:
-            request = response.follow(w3cleaner(url), self.parse_colours)
+            request = response.follow(w3cleaner(url), callback=self.parse_colours)
             if response.url != request.url:
                 colour_requests.append(request)
         return colour_requests
