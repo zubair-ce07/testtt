@@ -1,18 +1,17 @@
 from termcolor import colored
-from calculated_result import CalculatedResult
-from calculator import Calculator
+from weather_readings_calculator import WeatherReadingsCalculator
 
 
-class ReportGenerator:
+class WeatherResultReportGenerator:
 
     def __init__(self):
-        self.results = CalculatedResult.get_data()
+        self.results = WeatherReadingsCalculator.calculated_weather_results
 
     @staticmethod
     def readable_date(date):
         # assumed date is given in YYYY-MM-DD method
         split_date = date.split('-')
-        return Calculator.month_with_num(split_date[1]) + " " + split_date[2]
+        return WeatherReadingsCalculator.month_with_num(split_date[1]) + " " + split_date[2]
 
     def print_report(self):
         for entry in self.results:

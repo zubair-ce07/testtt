@@ -1,14 +1,19 @@
 from operator import itemgetter
-from calculated_result import CalculatedResult
 from weather_data import WeatherData
 
 
-class Calculator:
+class WeatherReadingsCalculator:
+
+    calculated_weather_results = []
 
     def __init__(self, command):
         # get data populated in WeatherData model and then calculate
         self.data = WeatherData.get_data()
         self.__calculate(command)
+
+    @staticmethod
+    def save_results(data_storage_type, data):
+        WeatherReadingsCalculator.calculated_weather_results.append({'type': data_storage_type, 'data': data})
 
     @staticmethod
     def month_with_num(num):
@@ -80,7 +85,7 @@ class Calculator:
                                  'text': 'Humidity:', 'ending': '%'})
 
                     # saving calculated results
-                    CalculatedResult.save_results(entry, data)
+                    WeatherReadingsCalculator.save_results(entry, data)
 
                 elif entry == "-a" or entry == "-c" or entry == "-d":
 
@@ -105,7 +110,7 @@ class Calculator:
                         data.append({'text': 'Average Mean Humidity', 'value': str(avg_most_humid_temp), 'ending': '%'})
 
                         # saving calculated results
-                        CalculatedResult.save_results(entry, data)
+                        WeatherReadingsCalculator.save_results(entry, data)
 
                     elif entry == "-c" or entry == "-d":
 
@@ -120,7 +125,7 @@ class Calculator:
 
                         data = list()
                         data.append({'text': year + " " + month, 'value': self.data[year][month]})
-                        CalculatedResult.save_results(entry, data)
+                        WeatherReadingsCalculator.save_results(entry, data)
         except ValueError as ve:
             print("got value error! {0}".format(ve))
             return

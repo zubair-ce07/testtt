@@ -1,15 +1,16 @@
 class WeatherData:
+    """
+        Data Structure for saving
+        { '2015':
+                  {
+                    'oct': [list of dictionaries of daily entries],
+                    'dec': [list of dictionaries daily entries]
+                  }
+        }
+    """
     weather_yearly_data = {}
     years_added_so_far = set()
     single_list = []
-
-    # Data Structure for saving
-    # { '2015':
-    #           {
-    #             'oct': [list of dictionaries of daily entries],
-    #             'dec': [list of dictionaries daily entries]
-    #           }
-    # }
 
     def __init__(self, entry):
         WeatherData.__add_weather_data(entry)
