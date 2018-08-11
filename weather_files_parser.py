@@ -1,9 +1,9 @@
 import glob  # library for getting files from selected directory
-
 from weather_data import WeatherData
 
 
 class WeatherFilesParser:
+
     __files = []
 
     def __init__(self, path):
@@ -11,10 +11,6 @@ class WeatherFilesParser:
         # getting (.txt) files from DIR and saving it in __files
         WeatherFilesParser.__files = glob.glob("{}/*.txt".format(self.path))
         print('reading files from {0}'.format(self.path))
-
-    @staticmethod
-    def get_files():
-        return WeatherFilesParser.__files
 
     @staticmethod
     def read():
@@ -37,6 +33,6 @@ class WeatherFilesParser:
                 while line:
                     line = opened_file.readline()
                     WeatherData.append_single_list(line)
-                WeatherData.add_array_to_key({month: []}, month, year,  WeatherData.single_month_weather_list)
+                WeatherData.append_month_to_year(month, year,  WeatherData.single_month_weather_list)
                 WeatherData.single_month_weather_list = []  # Once populated clear data
         print("Files successfully populated")
