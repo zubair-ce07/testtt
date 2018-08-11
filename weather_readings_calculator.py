@@ -7,6 +7,13 @@ class WeatherReadingsCalculator:
     """
     Get populated Data from WeatherData then
     performs calculations according to entered command
+    calculated_weather_results are stored in following structure
+    {
+        'type': '-e',
+        'data': [
+                {'date': '', 'value': '', 'text': '', 'ending': ''},
+        ]
+     }
     """
 
     calculated_weather_results = []
@@ -116,17 +123,17 @@ class WeatherReadingsCalculator:
                     calculated_data = []
                     sorted_arr = sorted(max_temp_list, key=itemgetter('max_temperature_c'))
                     calculated_data.append({'date': sorted_arr.pop()['pkt'],
-                                 'value': str(sorted_arr.pop()['max_temperature_c']),
-                                 'text': 'Highest:', 'ending': ''})
+                                            'value': str(sorted_arr.pop()['max_temperature_c']),
+                                            'text': 'Highest:', 'ending': ''})
 
                     sorted_arr = sorted(max_temp_list, key=itemgetter('min_temperature_c'))
                     calculated_data.append({'date': sorted_arr.pop()['pkt'],
-                                 'value': str(sorted_arr.pop()['min_temperature_c']),
-                                 'text': 'Lowest:', 'ending': ''})
+                                            'value': str(sorted_arr.pop()['min_temperature_c']),
+                                            'text': 'Lowest:', 'ending': ''})
                     sorted_arr = sorted(max_temp_list, key=itemgetter('max_humidity'))
                     calculated_data.append({'date': sorted_arr.pop()['pkt'],
-                                 'value': str(sorted_arr.pop()['max_humidity']),
-                                 'text': 'Humidity:', 'ending': '%'})
+                                            'value': str(sorted_arr.pop()['max_humidity']),
+                                            'text': 'Humidity:', 'ending': '%'})
 
                     # saving calculated results
                     WeatherReadingsCalculator.save_results(entry, calculated_data)
