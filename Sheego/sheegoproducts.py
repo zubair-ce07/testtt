@@ -26,8 +26,10 @@ class SheegoproductsSpider(CrawlSpider):
 
     def parse_listing(self, response):
         product_urls = self.get_products_urls(response)
-        for url in product_urls:
+        for next_page_urlurl in product_urls:
             yield scrapy.Request(url=url, callback=self.parse_product)
+        next_page_url = self.get_next_page(response)
+        yield scrapy.Request(url=url, callback=self.parse_listing)
 
     def parse_product(self, response):
         pass
@@ -39,3 +41,7 @@ class SheegoproductsSpider(CrawlSpider):
     def get_products_urls(self, response):
         return response.css(
             ".js-product__link::attr(href)").extract()
+
+    def get_next_page(self, response):
+        return response.urljoin(
+            response.css(".js-next::attr(href)").extract_first())
