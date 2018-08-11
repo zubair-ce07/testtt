@@ -5,13 +5,13 @@ Command Line Args:
 '-e' : Gives highest, lowest temperatures and highest humidity
 '-a' : Gives average temperature and humidity
 '-c' : Gives results in the chart/graph form
-'-d' : Gives results in chart form but 1 day has only 1 graph
+'-r' : Gives results in chart form but 1 day has only 1 graph showing range of temperature
 """
 
 import sys
 
-from CalculationModule import calculator
-from ParserModule import parser_
+from CalculationModule import calculate_results
+from ParserModule import parser
 
 
 def is_even(num):
@@ -21,15 +21,15 @@ def is_even(num):
 def main_function():
     """Takes system args and extract options and time to iterate the whole process over it"""
     if is_even(len(sys.argv)):
-        path_dir = sys.argv[1]
+        directory_path = sys.argv[1]
         values = sys.argv[2:]
         for i in range(0, len(values), 2):
             option = values[i]
             time_span = values[i + 1]
 
-            data_set = parser_(path_dir, time_span)
+            data_set = parser(directory_path, time_span)
             if data_set is not None:
-                calculator(time_span, option, data_set)
+                calculate_results(time_span, option, data_set)
             else:
                 print("\nThe given Time Span : {0} is not valid\n".format(time_span))
     else:

@@ -13,67 +13,69 @@ _list_months = {
 }
 
 
-def parser_(path_dir=None, time_span=None):
+def parser(directory_path=None, time_span=None):
     """This Function Parses The given Directory and Related Content"""
     try:
-        object_dir = os.walk(path_dir)
+        work_directory = os.walk(directory_path)
     except FileNotFoundError:
         raise FileNotFoundError
 
     # Getting list of all files from the given directory
-    list_record_files = list(object_dir)[0][2:][0]
-
+    try:
+        record_files = list(work_directory)[0][2:][0]
+    except IndexError:
+        raise IndexError
     # Contain records of all the required directories
-    list_required_records = []
+    required_records = []
 
     # Parsing the given time format
     year_required, month_required, day_required = time_parser(time_span)
 
     # It will iterate through all files and gives list of required files
-    for record_file in list_record_files:
+    for record_file in record_files:
         if _is_required(record_file, year_required, month_required):
-            list_required_records.append(record_file)
+            required_records.append(record_file)
 
     # If records found
-    if len(list_required_records) > 0:
+    if len(required_records) > 0:
 
         # Records which doesn't require date to be parsed
         if day_required is not None:
-            list_records = _data_populator(path_dir, list_required_records, day_required)
+            records = _data_populator(directory_path, required_records, day_required)
 
         # Records which does require date to be parsed
         else:
-            list_records = _data_populator(path_dir, list_required_records)
+            records = _data_populator(directory_path, required_records)
 
-        return list_records
+        return records
 
     else:
         return None
 
 
-def _data_populator(path_dir, records, day_given=None):
+def _data_populator(directory_path, records, day_given=None):
     """It returns Structured Data in the form of list"""
-    list_weather_structure = []
+    weather_structure = []
 
     if day_given is None:
         for record in records:
-            list_weather_structure.extend(_file_reader(path_dir, record))
+            weather_structure.extend(_file_reader(directory_path, record))
     else:
         for record in records:
-            list_weather_structure.extend(_file_reader(path_dir, record, day_given))
+            weather_structure.extend(_file_reader(directory_path, record, day_given))
 
-    return list_weather_structure
+    return weather_structure
 
 
-def _file_reader(path_dir, file_name, specific_date=None):
+def _file_reader(directory_path, file_name, specific_date=None):
     """This function Reads Data from Files and Store them"""
-    list_file_records = []
-    month_file = open(path_dir + file_name, 'r')
+    file_records = []
+    month_file = open(directory_path + file_name, 'r')
 
     # First line contains information of file structure, so skipping them
     month_file.__next__()
 
-    if specific_date is None:
+    if not specific_date:
         lines = month_file.readlines()
 
         for line in lines:
@@ -88,7 +90,7 @@ def _file_reader(path_dir, file_name, specific_date=None):
             mean_humidity = fields[8],
             min_humidity = fields[9],
 
-            list_file_records.append(WeatherRecord(
+            file_records.append(WeatherRecord(
                 date_pkt,
                 max_temperature_c,
                 mean_temperature_c,
@@ -112,7 +114,7 @@ def _file_reader(path_dir, file_name, specific_date=None):
         mean_humidity = fields[8],
         min_humidity = fields[9],
 
-        list_file_records.append(WeatherRecord(
+        file_records.append(WeatherRecord(
             date_pkt,
             max_temperature_c,
             mean_temperature_c,
@@ -124,7 +126,7 @@ def _file_reader(path_dir, file_name, specific_date=None):
 
     month_file.close()
 
-    return list_file_records
+    return file_records
 
 
 def _is_required(name_file, year_required, month_required):
@@ -133,9 +135,9 @@ def _is_required(name_file, year_required, month_required):
     year_, month_ = name_splited[2], name_splited[3]
 
     try:
-        if year_required is not None:
+        if year_required:
             if int(year_required) == int(year_):
-                if month_required is not None:
+                if month_required:
                     month_ = _list_months[month_]
                     if int(month_required) == int(month_):
                         return True
@@ -153,6 +155,8 @@ def _is_required(name_file, year_required, month_required):
 
 def time_parser(time_to_be_parsed):
     """It Returns the Accurate information of date by splitting it in Year, Month and Date"""
+
+    # Use can give year, month and day separated by '/', so here we have to split them
     bulk_date = time_to_be_parsed.split('/')
     if len(bulk_date) == 3:
         year_required, month_required, day_required = bulk_date[0], bulk_date[1], bulk_date[2]

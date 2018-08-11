@@ -1,4 +1,4 @@
-"""This Module contains DataStructure for each record from the files"""
+"""This Module contains DataStructure to represent each record present in data files"""
 
 
 class WeatherRecord:
@@ -47,5 +47,3 @@ class WeatherRecord:
             self.min_humidity = None
         else:
             self.min_humidity = float(min_humidity[0])
-
-
