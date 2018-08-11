@@ -50,7 +50,7 @@ class FileParser:
                 files_required = os.path.join(self.dir_path, '*' + required_year + '_???.txt')
 
             files_required = glob.glob(files_required)
-            self.required_files.extend([os.path.basename(file) for file in files_required])
+            self.required_files.extend([os.path.basename(csv_file) for csv_file in files_required])
 
     def parse_month_data(self, file_data):
         month_data = {}
@@ -67,9 +67,9 @@ class FileParser:
 
     def parse_files(self):
         for file_name in self.required_files:
-            with open(os.path.join(self.dir_path, file_name), 'r') as file:
+            with open(os.path.join(self.dir_path, file_name), 'r') as csv_file:
                 year, month = get_year_and_month(file_name)
-                file_data = csv.DictReader(file, skipinitialspace=True, delimiter=',')
+                file_data = csv.DictReader(csv_file, skipinitialspace=True, delimiter=',')
                 month_data = self.parse_month_data(file_data)
 
                 if not self.year_data.get(year):
