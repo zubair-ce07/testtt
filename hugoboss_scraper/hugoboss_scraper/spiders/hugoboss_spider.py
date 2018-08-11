@@ -10,14 +10,14 @@ class HugoBossSpider(CrawlSpider):
     parser = Parser()
 
     start_urls = [
-        'https://www.hugoboss.com/us/'
+        'https://www.hugoboss.com/us/material-mix-sneakers-with-rubber-sole/728677842944.html'
     ]
 
     allowed_domains = [
         'hugoboss.com'
     ]
 
-    rules = (Rule(LinkExtractor(restrict_css='.swatch-list__image'), callback="parse_product"),
+    rules = (Rule(LinkExtractor(restrict_css='.swatch-list__image', process_value=w3cleaner), callback="parse_product"),
              Rule(LinkExtractor(restrict_css='.nav-list--third-level', process_value=w3cleaner), callback='parse'),
              Rule(LinkExtractor(restrict_css='pagingbar__item'), callback='parse'),
              )

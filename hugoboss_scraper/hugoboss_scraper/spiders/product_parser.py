@@ -13,6 +13,7 @@ class Parser(scrapy.Spider):
     def parse(self, response):
         product = {}
         product_data = self.get_product_json(response)
+        trail = response.meta.get("trail", []).copy()
         if product_data.get("id") in self.scraped_ids:
             return
         else:
@@ -27,7 +28,7 @@ class Parser(scrapy.Spider):
         product["brand"] = product_data.get("brand")
         product["url"] = response.url
         product["market"] = "US"
-        product["trail"] = response.meta["trail"].copy()
+        product["trail"] = trail
         product["retailer"] = "hugoboss"
         product["url_original"] = response.url
         product["description"] = self.get_description(response)
