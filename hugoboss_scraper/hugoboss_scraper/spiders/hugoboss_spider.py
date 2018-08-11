@@ -18,8 +18,7 @@ class HugoBossSpider(CrawlSpider):
     ]
 
     rules = (Rule(LinkExtractor(restrict_css='.swatch-list__image', process_value=w3cleaner), callback="parse_product"),
-             Rule(LinkExtractor(restrict_css='.nav-list--third-level'), callback='parse'),
-             Rule(LinkExtractor(restrict_css='pagingbar__item'), callback='parse'),
+             Rule(LinkExtractor(restrict_css=('.nav-list--third-level', 'pagingbar__item')), callback='parse'),
              )
 
     def parse(self, response):

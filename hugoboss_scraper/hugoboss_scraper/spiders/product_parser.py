@@ -94,7 +94,11 @@ class Parser(scrapy.Spider):
 
     @staticmethod
     def get_care(response):
-        return response.css('.accordion__care-icon__text::text').extract()
+        material_care = response.css('.materialCare>.product-container__text::text').extract_first()
+        material_care = material_care.strip().split(", ") if material_care else []
+        care = response.css('.accordion__care-icon__text::text').extract()
+        material_care.extend(care if care else [])
+        return material_care
 
     @staticmethod
     def get_product_json(response):
