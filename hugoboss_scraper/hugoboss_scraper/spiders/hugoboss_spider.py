@@ -10,7 +10,7 @@ class HugoBossSpider(CrawlSpider):
     parser = Parser()
 
     start_urls = [
-        'https://www.hugoboss.com/us/material-mix-sneakers-with-rubber-sole/728677842944.html'
+        'https://www.hugoboss.com/us/'
     ]
 
     allowed_domains = [
