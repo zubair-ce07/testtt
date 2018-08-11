@@ -4,7 +4,6 @@ This is basic run application scrip, the script is generalized and can be used t
 """
 
 from factory import AppFactory
-from weather_man_app.utils.global_contants import ArgsParserCategoryHandler
 from parser.args_parser import BaseArgsParser
 from configs.app_configs import AppConfig
 
@@ -14,15 +13,16 @@ class AppRunner:
     Application executor which get application objects and respective parsers as execution control depending on passed
     command line arguments it execute application.
     """
-    def __init__(self, execution_control, application):
+    def __init__(self, execution_control, application, args_hangler):
         self.application = application
         self.execution_control = execution_control
+        self.args_hangler = args_hangler
 
     def execute_app(self):
         """
         Executes application, by calling WeatherMan function with specific option argument.
         """
-        for category in ArgsParserCategoryHandler.get_categories():
+        for category in self.args_hangler.get_categories():
             control_value = getattr(self.execution_control, category)
             if control_value:
                 self.application.show_result(
@@ -39,8 +39,8 @@ def start_app():
     AppConfig.parser.add_sub_parsers()
     args = AppConfig.parser.parse_args()
     AppConfig.app_name = args.command
-    application = AppFactory.get_specific_application()
-    AppRunner(args, application).execute_app()
+    application, args_hangler = AppFactory.get_specific_application()
+    AppRunner(args, application, args_hangler).execute_app()
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ this script as well.
 """
 from colorama import Fore, Style
 
-from weather_man_app.utils.global_contants import MathHelper, ReportsHelper, DateMapper
+from weather_man_app.utils.global_content import MathHelper, ReportsHelper, DateMapper
 from configs.app_configs import AppConfig
 
 

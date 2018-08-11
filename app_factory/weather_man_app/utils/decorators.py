@@ -3,9 +3,6 @@
 This file includes decorators which will help for pre-processing in weather-man-app.
 """
 from functools import wraps
-import datetime
-
-from configs.app_configs import AppConfig
 
 
 def prepare_input(input_function):
