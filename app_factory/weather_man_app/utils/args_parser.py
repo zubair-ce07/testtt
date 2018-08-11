@@ -4,7 +4,7 @@ Parser for weathe man application
 """
 import datetime
 
-# from app_factory.parser.args_parser import BaseArgsParser
+# from parser.args_parser import BaseArgsParser
 
 
 def validate_year(year):
@@ -38,7 +38,9 @@ def validate_year_and_month(period):
 
 
 class ParserHelper:
-
+    """
+    Parser helper will provide utility in providing application specific arguments.
+    """
     @staticmethod
     def add_arguments(parser):
         weather_man_parser = parser.add_parser(

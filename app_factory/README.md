@@ -35,7 +35,7 @@ The purpose of App factory is to register as many applications as wanted and run
 	run-app.py weather-man /path/to/files-dir -c 2011/3
 
 #### Want some fun?
-    weather-man /path/to/files-dir -m 2010/1 -e 2015 -a 2011/3 -c 2012/5 -m 2013/12
+    run-app.py weather-man /path/to/files-dir -m 2010/1 -e 2015 -a 2011/3 -c 2012/5
 
 ### To clean environment following commands can be used:
     deactivate

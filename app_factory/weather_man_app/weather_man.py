@@ -2,10 +2,10 @@
 """
 Weather man application which perform data analytics on weather data.
 """
-from app_factory.weather_man_app.utils.data_handlers import WeatherReadingData
-from app_factory.weather_man_app.utils.decorators import prepare_input
-from app_factory.weather_man_app.utils.design_patterns import Singleton
-from app_factory.weather_man_app.utils.report_handlers import ReportsHandler
+from weather_man_app.utils.data_handlers import WeatherReadingData
+from weather_man_app.utils.decorators import prepare_input
+from weather_man_app.utils.design_patterns import Singleton
+from weather_man_app.utils.report_handlers import ReportsHandler
 
 
 class WeatherMan(metaclass=Singleton):

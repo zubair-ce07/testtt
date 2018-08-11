@@ -3,14 +3,13 @@
 This is basic run application scrip, the script is generalized and can be used to word with other applications as well.
 """
 
-from app_factory.factory import AppFactory
-from app_factory.weather_man_app.utils.global_contants import ArgsParserCategoryHandler
-from app_factory.parser.args_parser import BaseArgsParser
-from app_factory.weather_man_app.weather_man import WeatherMan
-from app_factory.configs.app_configs import AppConfig
+from factory import AppFactory
+from weather_man_app.utils.global_contants import ArgsParserCategoryHandler
+from parser.args_parser import BaseArgsParser
+from configs.app_configs import AppConfig
 
 
-class App:
+class AppRunner:
     """
     Application executor which get application objects and respective parsers as execution control depending on passed
     command line arguments it execute application.
@@ -33,20 +32,19 @@ class App:
 
 def start_app():
     """
-    Instantiate weather man and calls parse_args() which are utilized in app as application and execution control
-    respectively. Also configures app configurations.
+    Parse specific app's arguments and get that particular application from Application factory and execute flow \
+    through AppRunner.
     """
     AppConfig.parser = BaseArgsParser()
-    AppConfig.parser.add_sub_parser_of_applications()
+    AppConfig.parser.add_sub_parsers()
     args = AppConfig.parser.parse_args()
-    application = AppFactory.get_specific_application(args)
-    AppConfig.app_name = 'weather-man'
-
-    App(args, WeatherMan()).execute_app()
+    AppConfig.app_name = args.command
+    application = AppFactory.get_specific_application()
+    AppRunner(args, application).execute_app()
 
 
 if __name__ == '__main__':
     """
-    Calls start application functionality.
+    Calls start application functionality, if the file run_app.py is run.
     """
     start_app()

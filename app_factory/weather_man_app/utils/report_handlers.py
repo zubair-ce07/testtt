@@ -5,8 +5,8 @@ this script as well.
 """
 from colorama import Fore, Style
 
-from app_factory.weather_man_app.utils.global_contants import MathHelper, ReportsHelper, DateMapper
-from app_factory.configs.app_configs import AppConfig
+from weather_man_app.utils.global_contants import MathHelper, ReportsHelper, DateMapper
+from configs.app_configs import AppConfig
 
 
 class ResultsCalculator:

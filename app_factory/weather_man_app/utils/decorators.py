@@ -5,7 +5,7 @@ This file includes decorators which will help for pre-processing in weather-man-
 from functools import wraps
 import datetime
 
-from app_factory.configs.app_configs import AppConfig
+from configs.app_configs import AppConfig
 
 
 def prepare_input(input_function):
