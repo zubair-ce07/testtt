@@ -3,7 +3,7 @@
 Weather man application which perform data analytics on weather data.
 """
 from app_factory.weather_man_app.utils.data_handlers import WeatherReadingData
-from app_factory.weather_man_app.utils.decorators import validate_input
+from app_factory.weather_man_app.utils.decorators import prepare_input
 from app_factory.weather_man_app.utils.design_patterns import Singleton
 from app_factory.weather_man_app.utils.report_handlers import ReportsHandler
 
@@ -16,7 +16,7 @@ class WeatherMan(metaclass=Singleton):
         self.data = None
         self.results = None
 
-    @validate_input
+    @prepare_input
     def generate_year_result(self, **kwargs):
         """
         Get processed data of weather, generate and show report of an year.
@@ -31,7 +31,7 @@ class WeatherMan(metaclass=Singleton):
             self.results.update_year_report(data)
         self.results.show_report()
 
-    @validate_input
+    @prepare_input
     def generate_year_with_month_result(self, **kwargs):
         """
         Get processed data of weather, generate and show report of a specific month of an year.
@@ -47,7 +47,7 @@ class WeatherMan(metaclass=Singleton):
         self.results.prepare_averages_for_result()
         self.results.show_report()
 
-    @validate_input
+    @prepare_input
     def generate_month_bar_chart_result(self, **kwargs):
         """
         Get processed data of weather, generate and show report of a month in form on bar charts.
@@ -61,7 +61,7 @@ class WeatherMan(metaclass=Singleton):
         for data in weather_data_holder.weather_data:
             self.results.show_month_bar_chart_report(data)
 
-    @validate_input
+    @prepare_input
     def generate_month_bar_chart_in_one_line_result(self, **kwargs):
         """
         Get processed data of weather, generate and show report of a month in form on bar charts in one line of

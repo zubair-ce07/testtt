@@ -2,8 +2,10 @@
 """
 This is basic run application scrip, the script is generalized and can be used to word with other applications as well.
 """
+
+from app_factory.factory import AppFactory
 from app_factory.weather_man_app.utils.global_contants import ArgsParserCategoryHandler
-from app_factory.weather_man_app.utils import weather_man_parser
+from app_factory.parser.args_parser import BaseArgsParser
 from app_factory.weather_man_app.weather_man import WeatherMan
 from app_factory.configs.app_configs import AppConfig
 
@@ -29,19 +31,22 @@ class App:
                 )
 
 
-def start_weatherman_app():
+def start_app():
     """
     Instantiate weather man and calls parse_args() which are utilized in app as application and execution control
     respectively. Also configures app configurations.
     """
-    AppConfig.parser = weather_man_parser.parser
-    AppConfig.app_name = 'weather-man'
+    AppConfig.parser = BaseArgsParser()
+    AppConfig.parser.add_sub_parser_of_applications()
     args = AppConfig.parser.parse_args()
+    application = AppFactory.get_specific_application(args)
+    AppConfig.app_name = 'weather-man'
+
     App(args, WeatherMan()).execute_app()
 
 
 if __name__ == '__main__':
     """
-    Start application.
+    Calls start application functionality.
     """
-    start_weatherman_app()
+    start_app()

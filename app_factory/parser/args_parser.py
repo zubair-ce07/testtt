@@ -3,6 +3,9 @@
 Included generic argument parser, different apps parsers can use this parsers.
 """
 import argparse
+import glob
+import importlib
+import os
 import sys
 
 
@@ -12,11 +15,22 @@ class BaseArgsParser(argparse.ArgumentParser):
     """
     def __init__(self, *args, **kwargs):
         super(BaseArgsParser, self).__init__(*args, **kwargs)
-        self.add_argument(
-            "app_type",
-            help="Type of app you want to run. (Like weather-man)",
+
+    def add_sub_parser_of_applications(self):
+        subparsers = self.add_subparsers(help='sub-command help', dest='command')
+        p = subparsers.add_parser(name='a')
+        p.add_argument(
+            "-c",
+            "--md",
+            help="s",
             type=str
         )
+        applications = glob.glob(os.path.join('*_app'))  # All application names will end with `_app`
+        for app in applications:
+            spec = importlib.util.spec_from_file_location("", os.path.join(f"{app}/utils/args_parser.py"))
+            app_parser = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(app_parser)
+            app_parser.ParserHelper.add_arguments(subparsers)
 
     def error(self, message):
         """
