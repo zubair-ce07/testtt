@@ -85,6 +85,6 @@ class WeatherMan(metaclass=Singleton):
          year with month like 2011/1
         :return:
         """
-        return getattr(self, 'generate_{}_result'.format(category))(
+        getattr(self, 'generate_{}_result'.format(category))(
             category=category, file_path=file_path, period=year_month
         )
