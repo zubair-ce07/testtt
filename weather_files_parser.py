@@ -51,9 +51,10 @@ class WeatherFilesParser:
 
             line = opened_file.readline()
             WeatherData(year)
+            monthly_weather_list = []
             while line:
                 line = opened_file.readline()
-                WeatherData.append_single_list(line)
+                if WeatherData.daily_weather_entry(line):
+                    monthly_weather_list.append(WeatherData.daily_weather_entry(line))
 
-            WeatherData.append_month_to_year(month, year, WeatherData.single_month_weather_list)
-            WeatherData.single_month_weather_list = []  # Once populated clear data
+            WeatherData.append_month_to_year(month, year, monthly_weather_list)
