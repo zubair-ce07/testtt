@@ -1,14 +1,14 @@
 class WeatherData:
     """
-        weather_yearly_data
-        Data Structure for saving
-        { '2015':
-                  {
-                    'oct': [list of dictionaries of daily entries],
-                    'dec': [list of dictionaries daily entries]
-                  }
-        }
-        saves and maintain weather files data in above data structure
+    weather_yearly_data
+    Data Structure for saving
+    { '2015':
+              {
+                'oct': [list of dictionaries of daily entries],
+                'dec': [list of dictionaries daily entries]
+              }
+    }
+    saves and maintain weather files data in above data structure
     """
     weather_yearly_data = {}
     years_added_so_far = set()
