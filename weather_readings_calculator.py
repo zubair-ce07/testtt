@@ -146,20 +146,28 @@ class WeatherReadingsCalculator:
         for key, value in self.weather_data[arg].items():
             max_temp_list = max_temp_list + value
             year_months.add(key)
+
         calculated_data = []
         sorted_arr = sorted(max_temp_list, key=lambda k: k['max_temperature_c'])
-        calculated_data.append({'date': sorted_arr.pop()['pkt'],
-                                'value': str(sorted_arr.pop()['max_temperature_c']),
-                                'text': 'Highest:', 'ending': ''})
+        date = sorted_arr.pop()['pkt']
+        value = str(sorted_arr.pop()['max_temperature_c'])
+        text = 'Highest: '
+        ending = ''
+        calculated_data.append(WeatherReadingsCalculator.calculated_dict(text, value, date, ending))
 
         sorted_arr = sorted(max_temp_list, key=lambda k: k['min_temperature_c'])
-        calculated_data.append({'date': sorted_arr.pop()['pkt'],
-                                'value': str(sorted_arr.pop()['min_temperature_c']),
-                                'text': 'Lowest:', 'ending': ''})
+        date = sorted_arr.pop()['pkt']
+        value = str(sorted_arr.pop()['min_temperature_c'])
+        text = 'Lowest: '
+        ending = ''
+        calculated_data.append(WeatherReadingsCalculator.calculated_dict(text, value, date, ending))
+
         sorted_arr = sorted(max_temp_list, key=lambda k: k['max_humidity'])
-        calculated_data.append({'date': sorted_arr.pop()['pkt'],
-                                'value': str(sorted_arr.pop()['max_humidity']),
-                                'text': 'Humidity:', 'ending': '%'})
+        date = sorted_arr.pop()['pkt']
+        value = str(sorted_arr.pop()['max_humidity'])
+        text = 'Humidity: '
+        ending = '%'
+        calculated_data.append(WeatherReadingsCalculator.calculated_dict(text, value, date, ending))
 
         # saving calculated results
         self.save_results(entry, calculated_data)
@@ -183,10 +191,14 @@ class WeatherReadingsCalculator:
                                     self.weather_data[year][month]))
 
         calculated_data = [
-            {'text': 'Highest Average', 'value': str(avg_high_temp), 'ending': ''},
-            {'text': 'Lowest Average', 'value': str(avg_low_temp), 'ending': ''},
-            {'text': 'Average Mean Humidity', 'value': str(avg_humid_temp),
-             'ending': '%'}]
+            WeatherReadingsCalculator.calculated_dict('Highest Average', str(avg_high_temp)),
+            WeatherReadingsCalculator.calculated_dict('Lowest Average', str(avg_low_temp)),
+            WeatherReadingsCalculator.calculated_dict('Average Mean Humidity', str(avg_humid_temp),
+                                                      '', '%')]
 
         # saving calculated results
         self.save_results(entry, calculated_data)
+
+    @staticmethod
+    def calculated_dict(text, value, date='', ending=''):
+        return {text: text, value: value, date: date, ending: ending}
