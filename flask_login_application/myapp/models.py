@@ -1,6 +1,7 @@
-from werkzeug.security import check_password_hash,generate_password_hash
-from myapp import db,login_manager
+from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import UserMixin
+from myapp import db, login_manager
+
 """provides general implementations required 
     by LoginManager
 """
@@ -8,13 +9,16 @@ from flask_login import UserMixin
 
 @login_manager.user_loader
 def load_user(id):
-    """this function helps flask_login to retrieve a user provided the id
-    """
+    """Return a User instance provided the user id."""
     return User.query.get(int(id))
 
 
 class User(UserMixin, db.Model):
-    """This class is used for managing 'users'
+    """This class is used for managing 'users'.
+
+    Methods :
+    set_password(self, password) -- set a password hash for a user.
+    check_password(self, password) -- check a given password against password hash for a user.
     """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(32), index=True, unique=True)

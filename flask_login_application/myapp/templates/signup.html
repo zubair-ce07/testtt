@@ -1,28 +1,23 @@
+{% extends "base.html" %}
 
+{% block content %}
+    <div class="log-form">
+        <h2>Signup</h2>
+        <form method="POST" action="/signup">
+            {{ form.hidden_tag() }}
+            {% if error %}
+                <h4 style="color:red">Error While Registering : {{ error }}</h4>
+            {% endif %}
 
-<html>
-  <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  </head>
-    <body>
-        <div class="log-form">
-            <h2>Signup</h2>
-            <form method="POST" action="/signup">
-                {{ form.hidden_tag() }}
-                {% if error %}
-                    <h4 style="color:red">Error While Registering : {{ error }}</h4>
-                {% endif %}
+            {{ form.username.label }}
+            {{ form.username(size= 32) }}
+            <br/>
+            {{ form.password.label }}
+            {{ form.password(size= 32) }}
 
-                {{ form.username.label }}
-                {{ form.username(size= 32) }}
-                <br/>
-                {{ form.password.label }}
-                {{ form.password(size= 32) }}
-
-                {{ form.submit() }}
-                <br/>
-                <a class="signup" href="/index">Already have an account?</a>
-            </form>
-        </div>
-    </body>
-</html>
+            {{ form.submit() }}
+            <br/>
+            <a class="signup" href="/index">Already have an account?</a>
+        </form>
+    </div>
+{% endblock %}

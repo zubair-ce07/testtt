@@ -1,0 +1,15 @@
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% if title %}
+        <title>{{ title }} - Flask Demo</title>
+    {% else %}
+        <title>Welcome to Flask Demo</title>
+    {% endif %}
+</head>
+<body>
+<div>Login application demo in flask.</div>
+<hr>
+{% block content %}{% endblock %}
+</body>
+</html>

@@ -1,31 +1,32 @@
+{% extends "base.html" %}
 
+{% block content %}
+    <div class="log-form">
+        <h2>Login to your account</h2>
+        <form method="POST" action="/login">
+            {{ form.hidden_tag() }}
+            {% if error %}
+                <h4 style="color:red">Invalid username or password!</h4>
+            {% endif %}
+            {% if registration_successful %}
+                <h4 style="color:green">User Registered. Login to continue.</h4>
+            {% endif %}
+            {{ form.username.label }}
+            {{ form.username(size= 32) }}
+            {% if form.username.errors %}
+                {{ form.username.errors }}
+            {% endif %}
+            <br/>
+            {{ form.password.label }}
+            {{ form.password(size= 32) }}
+            {% if form.password.errors %}
+                {{ form.password.errors }}
+            {% endif %}
+            <br/>
+            {{ form.submit() }}
 
-<html>
-<title>{{ title }}</title>
-  <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  </head>
-    <body>
-        <div class="log-form">
-            <h2>Login to your account</h2>
-            <form method="POST" action="/login">
-                {{ form.hidden_tag() }}
-                {% if error %}
-                    <h4 style="color:red">Invalid username or password!</h4>
-                {% endif %}
-                {% if registration_successful %}
-                    <h4 style="color:green">User Registered. Login to continue.</h4>
-                {% endif %}
-                {{ form.username.label }}
-                {{ form.username(size= 32) }}
+            <a class="signup" href="/signup">signup?</a>
+        </form>
+    </div>
+{% endblock %}
 
-                {{ form.password.label }}
-                {{ form.password(size= 32) }}
-
-                {{ form.submit() }}
-
-                <a class="signup" href="/signup">signup?</a>
-            </form>
-        </div>
-    </body>
-</html>
