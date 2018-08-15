@@ -12,19 +12,39 @@ class QuotesSpider(scrapy.Spider):
     ]
 
     def parse(self, response):
-        quotes = response.xpath('//*[@id="quotesList"]')
-        for quote in quotes:
-            img_url = quote.css('::attr(data-img-url)').extract_first()
-            if not img_url:
-                img_url = 'No image URL'
+        if response.request.method == 'POST':
+            parameters = response.meta
+            parameters['pg'] += 1
+            response = Selector(text=json.loads(response.text)['content'])
+        else:
+            parameters = self.get_parameters(response)
 
-            yield {
-                'text': quote.css('a.oncl_q::text').extract_first(),
-                'author': quote.css('a.oncl_a::text').extract_first(),
-                'img-url': img_url,
-                'shareable url': quote.css('::attr(href)').extract_first()
+        for quote_html in response.css('.m-brick.grid-item'):
+            quote = {
+                'quote': quote_html.xpath('.//a[contains(@class, "oncl_q")]/text()').extract_first(),
+                'author': quote_html.xpath('.//a[contains(@class, "oncl_a")]/text()').extract_first(),
+                'img_url': quote_html.xpath('.//a[contains(@class, "oncl_q")]/img/@data-img-url').extract_first()
             }
+            tags = Selector(text=quote_html.xpath('.//div[@class="kw-box"]').extract_first())
+            quote['tags'] = tags.xpath('//a/text()').extract()
+            shareable_urls = Selector(text=quote_html.xpath('.//div[@class="sh-box"]').extract_first())
+            quote['shareable_urls'] = {
+                'facebook': shareable_urls.xpath('//a[1]/@href').extract_first(),
+                'twitter': shareable_urls.xpath('//a[2]/@href').extract_first(),
+                'pinterest': shareable_urls.xpath('//a[3]/@href').extract_first()
+            }
+            yield quote
 
+        if response.xpath('//link[@rel="next"]/@href').extract():
+            print('going to next page')
+
+        yield scrapy.Request(url='https://www.brainyquote.com/api/inf',
+                             method='POST', callback=self.parse,
+                             body=json.dumps(parameters),
+                             headers={'Content-Type': 'application/json'},
+                             meta=parameters)
+
+    def get_parameters(self, response):
         parameters = {}
         required_variables_script = response.xpath('//script[2]').extract_first()
         parameters['vid'] = re.search('VID=\'(.+?)\'', required_variables_script).group(1)
@@ -34,29 +54,4 @@ class QuotesSpider(scrapy.Spider):
         parameters['v'] = response.xpath('/html/head/meta[5]/@content').extract_first()
         parameters['pg'] = 2
 
-        yield scrapy.Request(url='https://www.brainyquote.com/api/inf',
-                             method='POST', callback=self.parse_inf_api_pages,
-                             body=json.dumps(parameters),
-                             headers={'Content-Type': 'application/json'},
-                             meta=parameters)
-
-    def parse_inf_api_pages(self, response):
-        response_data = json.loads(response.text)
-
-        for selection in Selector(text=response_data['content']).css('div.clearfix'):
-            img_url = selection.css('::attr(data-img-url)').extract_first()
-            if not img_url:
-                img_url = 'No image URL'
-            yield {
-                'text': selection.css('a.oncl_q::text').extract(),
-                'author': selection.css('a.oncl_a::text').extract(),
-                'img-url': img_url,
-                'shareable url': selection.css('::attr(href)').extract_first()
-            }
-
-        response.meta['pg'] += 1
-        yield scrapy.Request(url='https://www.brainyquote.com/api/inf',
-                             method='POST', callback=self.parse_inf_api_pages,
-                             body=json.dumps(response.meta),
-                             headers={'Content-Type': 'application/json'},
-                             meta=response.meta)
+        return parameters
