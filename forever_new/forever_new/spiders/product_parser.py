@@ -103,7 +103,7 @@ class ProductParser(Spider):
         return response.css(".product-img-box img.gallery__image::attr('src')").extract()
 
     def care(self, response):
-        return response.css(".accordion-container .accordion-content:nth-child(2) li::text").extract()
+        return response.css(".accordion-container .accordion-content:nth-child(2) li::text").re("\S.*")
 
     def description(self, response):
         return response.css(".accordion-container .accordion-content:nth-child(2) p::text").extract()
