@@ -9,7 +9,6 @@ from ..items import ProductItem
 class ProductParser(Spider):
     name = "forever-new-product-parser"
     currency = "AUD"
-    start_urls = ["https://www.forevernew.com.au/grace-7-8th-slim-pants-228316"]
 
     def parse(self, response):
         product = ProductItem()
