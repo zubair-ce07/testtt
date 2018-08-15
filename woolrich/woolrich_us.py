@@ -39,12 +39,12 @@ class WoolrichSpider(CrawlSpider):
         item['image_urls'] = self._get_image_urls(response)
         item['skus'] = []
 
-        item['meta'] = {'queued_reqs': self.color_requests(response)}
+        item['meta'] = {'queued_requests': self.color_requests(response)}
         return self.next_request(item)
 
     def next_request(self, item):
-        if item['meta']['queued_reqs']:
-            req = item['meta']['queued_reqs'].pop()
+        if item['meta']['queued_requests']:
+            req = item['meta']['queued_requests'].pop()
             req.meta['item'] = item
             return req
 
