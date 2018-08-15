@@ -10,7 +10,8 @@ from whiteStuff import items
 
 
 class WhiteStuffSpider(CrawlSpider):
-    DOWNLOAD_DELAY = 1
+    custom_settings = {
+        'DOWNLOAD_DELAY': 1}
     name = 'white_stuff'
     start_urls = ['https://www.whitestuff.com/global']
     rules = (Rule(LinkExtractor(restrict_css='.navbar__item', allow='.*(mens|kids|gift).*/.+'),
@@ -29,7 +30,8 @@ class WhiteStuffSpider(CrawlSpider):
         'facetmode': 'data',
         'mergehash': 'true',
     }
-    skus_parameters = {"Format": "JSON", "ReturnVariable": "true"}
+    skus_parameters = {"Format": "JSON",
+                       "ReturnVariable": "true"}
 
     def parse_category_variables(self, response):
         script = self.get_category_script(response)
@@ -48,12 +50,16 @@ class WhiteStuffSpider(CrawlSpider):
 
     def parse_category(self, response):
         html_response = self.extract_html_from_response(response)
+        
         if not html_response:
             return
+        
         request_parameters = self.get_request_paramters(response)
         selector = Selector(text=html_response)
+        
         for request in self.get_item_requests(selector, request_parameters['pageurl']):
             yield request
+        
         return self.get_pagination_requests(response)
 
     def get_item_requests(self, selector, page_url):
