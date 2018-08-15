@@ -76,14 +76,15 @@ def get_min_max_row(func: "min or max function", row1, row2, key_index):
         return func(row1, row2, key=lambda x: int(x[key_index]))
 
 
-def result_formatter(data_row, key_index):
+def min_max_result_formatter(data_row, key_index, unit):
     if data_row is None:
         return "No data found for given date."
     else:
         result_date = datetime.strptime(data_row[constants.PKT_INDEX], "%Y-%m-%d").date()
-        return "{}C on {} {}".format(data_row[key_index],
-                                     result_date.strftime("%B"),
-                                     result_date.day)
+        return "{}{} on {} {}".format(data_row[key_index],
+                                      unit,
+                                      result_date.strftime("%B"),
+                                      result_date.day)
 
 
 def display_min_max_temp_humid(weather_date, path_to_files):
@@ -117,14 +118,68 @@ def display_min_max_temp_humid(weather_date, path_to_files):
                                                 max_humid_row,
                                                 constants.MAX_HUMIDITY_INDEX)
 
-    result_str = result_formatter(max_temp_row, constants.MAX_TEMPERATURE_INDEX)
+    result_str = min_max_result_formatter(max_temp_row, constants.MAX_TEMPERATURE_INDEX, "C")
     print("Highest: {}".format(result_str))
 
-    result_str = result_formatter(min_temp_row, constants.MIN_TEMPERATURE_INDEX)
+    result_str = min_max_result_formatter(min_temp_row, constants.MIN_TEMPERATURE_INDEX, "C")
     print("Lowest: {}".format(result_str))
 
-    result_str = result_formatter(max_humid_row, constants.MAX_HUMIDITY_INDEX)
+    result_str = min_max_result_formatter(max_humid_row, constants.MAX_HUMIDITY_INDEX, "%")
     print("Humidity: {}".format(result_str))
+
+
+"""
+TASK2
+"""
+
+
+def count_entries(file):
+    file.seek(0)
+    next(file)
+    count = sum([1 for row in file])
+    return count
+
+
+def get_average_value(csvfile, key_index):
+    days_count = count_entries(csvfile)
+    csvfile.seek(0)
+    next(csvfile)
+    values = [int(row[key_index]) for row in csv.reader(csvfile)]
+    sum_value = sum(values)
+    average_value = int(sum_value / days_count)
+    return average_value
+
+
+def average_result_formatter(value, unit):
+    if value is None:
+        return "No data could be found on the given date."
+    else:
+        return "{}{}".format(value, unit)
+
+
+def display_average_temperature_humidity(weather_date, path_to_files):
+    city_name = "Murree"
+    average_max_temp = None
+    average_min_temp = None
+    average_humidity = None
+    file_path = get_file_path(path_to_files, city_name, weather_date.year, weather_date.month)
+    if os.path.isfile(file_path):
+        with open(file_path) as csvfile:
+            average_max_temp = get_average_value(csvfile, constants.MAX_TEMPERATURE_INDEX)
+            average_min_temp = get_average_value(csvfile, constants.MIN_TEMPERATURE_INDEX)
+            average_humidity = get_average_value(csvfile, constants.MEAN_HUMIDITY_INDEX)
+
+        print("Highest Average : {}".format(
+            average_result_formatter(average_max_temp, "C")))
+        print("Lowest Average : {}".format(
+            average_result_formatter(average_min_temp, "C")))
+        print("Average Humidity : {}".format(
+            average_result_formatter(average_humidity, "%")))
+
+    else:
+        print("Error in opening the file. Such file does not exist.")
+
+    pass
 
 
 def main():
@@ -132,6 +187,8 @@ def main():
 
     if operation == constants.YEARLY_HIGHEST_LOWEST_TEMP_HUMID:
         display_min_max_temp_humid(weather_date, path_to_files)
+    elif operation == constants.AVERAGE_TEMPERATURE:
+        display_average_temperature_humidity(weather_date, path_to_files)
 
 
 if __name__ == "__main__":
