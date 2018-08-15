@@ -19,7 +19,6 @@ class WoolrichSpider(CrawlSpider):
     custom_settings = {'DOWNLOAD_DELAY': 0.5, 'HTTPCACHE_ENABLED': True}
 
     genders = ['Men', 'Women']
-    currency = 'USD'
 
     listing_css = ['#primary', '.pagination-item--next']
     rules = (
@@ -28,8 +27,6 @@ class WoolrichSpider(CrawlSpider):
             )
 
     def parse_item(self, response):
-        self.currency = response.css('[itemprop="priceCurrency"]::attr(content)').extract_first()
-
         item = WoolrichItem()
         item['retailer_sku'] = self._get_retailer_sku(response)
         item['gender'] = self._get_gender(response)
@@ -54,7 +51,7 @@ class WoolrichSpider(CrawlSpider):
         del item['meta']
         return item
     
-    def _extract_sku(self, response):
+    def parse_sku(self, response):
         item = response.meta.get('item')
         sku_item = response.meta.get('raw_sku')
 
@@ -126,7 +123,7 @@ class WoolrichSpider(CrawlSpider):
 
         size_ids = response.css(f'[name="{size_key}"]::attr(value)').extract()
         if not size_ids:
-            return [self._make_raw_sku(response, color, ['ONE-SIZE'], formdata)]
+            return [self._raw_sku_and_request(response, color, ['ONE-SIZE'], formdata)]
 
         size_requests = []
         for size_id in size_ids:
@@ -143,7 +140,7 @@ class WoolrichSpider(CrawlSpider):
 
         fit_ids = response.css(f'[name="{fit_key}"]::attr(value)').extract()
         if not fit_ids:
-            return [self._make_raw_sku(response, color, [raw_size], formdata)]
+            return [self._raw_sku_and_request(response, color, [raw_size], formdata)]
 
         fit_requests = []
         for fit_id in fit_ids:
@@ -151,26 +148,22 @@ class WoolrichSpider(CrawlSpider):
 
             fit_css = f'[for="attribute_{fit_id}"] span::text'
             size = [raw_size, response.css(fit_css).extract_first()]
-            request = self._make_raw_sku(response, color, size, formdata)
+            request = self._raw_sku_and_request(response, color, size, formdata)
             fit_requests.append(request)
         
         return fit_requests
     
-    def _make_raw_sku(self, response, color, size, formdata):
-        raw_sku = {'color': color}
-        raw_sku['currency'] = self.currency
-        raw_sku['size'] = '/'.join(size)
+    def _raw_sku_and_request(self, response, color, size, formdata):
+        currency_css = '[itemprop="priceCurrency"]::attr(content)'
+        raw_sku = {
+            'color': color,
+            'currency':response.css(currency_css).extract_first(),
+            'size': '/'.join(size)
+            }
 
-        return self._make_sku_request(response, raw_sku, formdata)     
-    
-    def _make_sku_request(self, response, raw_sku, formdata):
-        product_id = self._get_retailer_sku(response)
-        formdata['action'] = 'add'
-        formdata['product_id'] = product_id
-        request_url = f'https://www.woolrich.com/remote/v1/product-attributes/{product_id}'
-
+        request_url = f'https://www.woolrich.com/remote/v1/product-attributes/{formdata["product_id"]}'
         return FormRequest(url=request_url, formdata=formdata, 
-                           callback=self._extract_sku, meta={'raw_sku': raw_sku})
+                           callback=self.parse_sku, meta={'raw_sku': raw_sku})
 
     def get_attr_key(self, response, attr_type):
         attr_value = int(response.css('.form-option-swatch::attr(data-swatch-id)').extract_first())
@@ -180,4 +173,4 @@ class WoolrichSpider(CrawlSpider):
         return round(price*100)
 
     def clean_text(self, text):
-            return re.sub(r'\s+', ' ', text)
+        return re.sub(r'\s+', ' ', text)
