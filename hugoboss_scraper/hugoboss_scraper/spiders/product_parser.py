@@ -53,7 +53,7 @@ class Parser(Spider):
         common_sku = {}
         product_data = self.get_product_json(response)
         sku_variant = product_data["variant"]
-        common_sku["price"] = product_data.get("price")
+        common_sku["price"] = product_data["price"]
         common_sku["currency"] = self.get_currency(response)
         common_sku["colour"] = self.get_colour(response)
         common_sku["size"] = "One Size"
