@@ -41,15 +41,16 @@ class ProductParser(Spider):
         sku_map = {}
         for color in colors:
             color_id = color.css("::attr('value')").extract_first()
-            print(color_id)
-            sku_map[color_id] = {}
-            sku = sku_map[color_id]
-            sku["color"] = color.css("::attr('label')").re_first(":\s(.+)")
-            sku["sizes"] = response.css(f"li[pid='{color_id}'] option")
-            sku["price"] = response.css(f".price-wrapper[pid='{color_id}']")
+            sku = {
+                "color": color.css("::attr('label')").re_first(":\s(.+)"),
+                "sizes": response.css(f"li[pid='{color_id}'] option"),
+                "price": response.css(f".price-wrapper[pid='{color_id}']")
+            }
 
             if not sku["price"]:
                 sku["price"] = response.css(".product-main-info .price-box")
+
+            sku_map[color_id] = sku
 
         return sku_map
 
