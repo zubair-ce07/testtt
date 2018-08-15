@@ -10,7 +10,7 @@ Command Line Args:
 
 import sys
 
-from CalculationModule import calculate_results
+import CalculationModule
 from ParserModule import parser
 
 
@@ -29,9 +29,27 @@ def main_function():
 
             data_set = parser(directory_path, time_span)
             if data_set is not None:
-                calculate_results(time_span, option, data_set)
+
+                # -e  option will give highest, lowest temperature statistics of records
+                if option == "-e":
+                    CalculationModule.extreme_temperature_conditions(time_span, data_set)
+
+                # -a option will give average statistics of records
+                elif option == "-a":
+                    CalculationModule.average_temperature_conditions(time_span, data_set)
+
+                # -c option will give horizontal chart bar
+                elif option == "-c":
+                    CalculationModule.chart_highest_lowest_temperature(time_span, data_set)
+
+                # -d option will give horizontal chart bar of each day defining lowest and highest temperatures
+                elif option == "-d":
+                    CalculationModule.temperature_range_chart(time_span, data_set)
+
+                else:
+                    print("The Given Option is not valid")
             else:
-                print("\nThe given Time Span : {0} is not valid\n".format(time_span))
+                print(f"\nThe given Time Span : {time_span} is not valid\n")
     else:
         print("\nThe arguments are not complete")
 
