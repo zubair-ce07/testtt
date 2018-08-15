@@ -39,13 +39,9 @@ class Parser(Spider):
             product["image_urls"].extend(self.get_image_urls(response))
             product["skus"].update(self.get_skus(response))
         if not response.meta["pending_color_reqs"]:
-            if response.meta.get("hey"):
-                print(response.url)
-                print(product_data.get("variant"))
             return product
         next_color_req = response.meta["pending_color_reqs"].pop()
         next_color_req.meta["product"] = product
-        next_color_req.meta["hey"] = True
         next_color_req.meta["pending_color_reqs"] = response.meta["pending_color_reqs"].copy()
         return next_color_req
 
