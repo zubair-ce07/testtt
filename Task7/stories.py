@@ -56,6 +56,12 @@ class StoriesSpider(CrawlSpider):
         return Request(self.skus_request_t.format(variants), cookies=self.cookies,
                        callback=self.parse_skus, meta={'item': item, 'item_details': item_details})
 
+    def parse_skus(self, response):
+        item = response.meta["item"]
+        item["skus"] = self.extract_skus(response)
+
+        return item
+
     def extract_retailer_sku(self, item_detail):
         return item_detail["articleCode"]
 
@@ -91,12 +97,6 @@ class StoriesSpider(CrawlSpider):
                 variant_codes.extend([variant["variantCode"] for variant in item_details[key]["variants"]])
 
         return ','.join(variant_codes)
-
-    def parse_skus(self, response):
-        item = response.meta["item"]
-        item["skus"] = self.extract_skus(response)
-
-        return item
 
     def extract_skus(self, response):
         item_details = response.meta["item_details"]
