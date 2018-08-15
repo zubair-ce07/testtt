@@ -1,5 +1,6 @@
 import argparse
 import os
+import csv
 
 # Empty array to store all years.
 year_array = []
@@ -8,25 +9,31 @@ year_array = []
 year_count = 0
 
 
+# Class for weather variables.
+class WeatherDict:
+    max_temp = 0
+    min_temp = 100
+    max_humid = 0
+    min_humid = 100
+    date = '0'
+
+
 def get_user_input():
     """
     Two arguments are taken from the user and stored in 'report_no' and 'data_dir'.
     nargs='?' is used to prevent error in case one or no argument is provided.
+    If no directory is provided by the user, store a 'Random string' in 'data_dir' to avoid errors from built in
+    functions.
     Returns:
         report_no: Report number entered by the user.
         data_dir: The directory of the files.
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('report', nargs='?')
-    parser.add_argument('data', nargs='?')
+    parser.add_argument('data', nargs='?', default='Random string')
     args = parser.parse_args()
     report_no = args.report
     data_dir = args.data
-
-    # If no directory is provided by the user, store a 'Random string' in 'data_dir'
-    # to avoid errors from built in functions.
-    if not data_dir:
-        data_dir = 'Random string'
 
     return report_no, data_dir
 
@@ -40,9 +47,14 @@ def get_file_list(data_dir):
     return:
         file_list: List of all files.
     """
-    file_list = os.listdir(data_dir)
-    file_list.sort()
-    return file_list
+
+    if os.path.isdir(data_dir):
+        file_list = os.listdir(data_dir)
+        file_list.sort()
+        return file_list
+
+    else:
+        return False
 
 
 def display_report_table(report_no):
@@ -138,12 +150,12 @@ def reset_temp_and_humid():
     return 0, 100, '0'
 
 
-def get_weather(f, max_temp, min_temp, max_humid, min_humid, date, report_no):
+def get_weather(weather_file, max_temp, min_temp, max_humid, min_humid, date, report_no):
     """
 
     calculates the highest and lowest temperature and humidity in a given file.
     args:
-        f: This is the file in which all values are present.
+        weather_file: This is the file in which all values are present.
         max_temp: This is the maximum temperature.
         min_temp: This is the minimum temperature.
         max_humid: This is the maximum humidity.
@@ -161,38 +173,38 @@ def get_weather(f, max_temp, min_temp, max_humid, min_humid, date, report_no):
     global year_array
     global year_count
 
-    for line in f:
-        line_array = [x for x in line.split(',')]
-        if line_array[0][0].isdigit():
-            year = line_array[0][0: 4]
+    for line in weather_file:
+        if line:
+            if line[0][0].isdigit():
+                year = line[0][0: 4]
 
-            # If year_array is empty, append the first year into it.
-            if not year_array:
-                year_array.append(year)
+                # If year_array is empty, append the first year into it.
+                if not year_array:
+                    year_array.append(year)
 
-            # If year does not exist in year_array, append it and display values of the previous year.
-            if year not in year_array:
-                year_array.append(year)
+                # If year does not exist in year_array, append it and display values of the previous year.
+                if year not in year_array:
+                    year_array.append(year)
 
-                display_report(report_no, max_temp, min_temp, max_humid, min_humid, date, year_array[year_count])
+                    display_report(report_no, max_temp, min_temp, max_humid, min_humid, date, year_array[year_count])
 
-                year_count += 1
+                    year_count += 1
 
-                max_temp, min_temp, date = reset_temp_and_humid()
-                max_humid, min_humid, useless = reset_temp_and_humid()
-            # If year exists in year array, calculate the temperature values.
-            else:
-                if line_array[1].isdigit():
-                    max_temp, date = get_max_temp(int(line_array[1]), max_temp, line_array[0], date)
+                    max_temp, min_temp, date = reset_temp_and_humid()
+                    max_humid, min_humid, useless = reset_temp_and_humid()
+                # If year exists in year array, calculate the temperature values.
+                else:
+                    if line[1].isdigit():
+                        max_temp, date = get_max_temp(int(line[1]), max_temp, line[0], date)
 
-                if line_array[3].isdigit():
-                    min_temp = get_min_temp(int(line_array[3]), min_temp)
+                    if line[3].isdigit():
+                        min_temp = get_min_temp(int(line[3]), min_temp)
 
-                if line_array[7].isdigit():
-                    max_humid = get_max_humid(int(line_array[7]), max_humid)
+                    if line[7].isdigit():
+                        max_humid = get_max_humid(int(line[7]), max_humid)
 
-                if line_array[9].isdigit():
-                    min_humid = get_min_humid(int(line_array[9]), min_humid)
+                    if line[9].isdigit():
+                        min_humid = get_min_humid(int(line[9]), min_humid)
 
     return max_temp, min_temp, max_humid, min_humid, date
 
@@ -236,21 +248,26 @@ def main():
     # All files from the directory are stored in 'file_list' in form of list.
     file_list = get_file_list(data_dir)
 
+    # Make weather dictionary object.
+    weather = WeatherDict()
+
     # Check if the report number is valid and the directory provided is correct.
     if file_list and report_no in ('1', '2'):
 
         # Displays the report table according to the 'report _no'.
         display_report_table(report_no)
 
-        # Reset the values of the variables.
-        max_temp, min_temp, date = reset_temp_and_humid()
-        max_humid, min_humid, useless = reset_temp_and_humid()
-
         # Open all files in the list.
         for file in file_list:
-            with open(data_dir + '/' + file) as f:
-                max_temp, min_temp, max_humid, min_humid, date = get_weather(f, max_temp, min_temp, max_humid,
-                                                                             min_humid, date, report_no)
+            with open(data_dir + '/' + file) as csv_file:
+                weather_file = csv.reader(csv_file)
+                weather.max_temp, weather.min_temp, weather.max_humid, weather.min_humid, weather.date \
+                    = get_weather(weather_file, weather.max_temp, weather.min_temp, weather.max_humid,
+                                  weather.min_humid, weather.date, report_no)
+
+        # Display report for last year as it is not shown in the loop.
+        display_report(report_no, weather.max_temp, weather.min_temp, weather.max_humid, weather.min_humid,
+                       weather.date, year_array[year_count])
 
     # If invalid report number or the wrong directory is provided, run no_para_func()
     else:
