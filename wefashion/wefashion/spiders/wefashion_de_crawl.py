@@ -29,11 +29,12 @@ class WefashionDeCrawlSpider(CrawlSpider):
         title = response.css('.refinement-header::text').extract_first(default='').strip()
         trail = response.meta.get('trail', [])
         trail.append([title, response.url])
+
         for request in super().parse(response):
             request.meta['trail'] = trail.copy()
             yield request
 
-    def filter_product_links(self, links):
+    def filter_product_links(self, links):                  # Remove query string from url
         for link in links:
             new_link = urlparse(link.url)
             link.url = f"{new_link.scheme}://{new_link.netloc + new_link.path}"
