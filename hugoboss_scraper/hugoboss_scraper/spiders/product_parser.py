@@ -6,48 +6,47 @@ from w3lib.url import url_query_cleaner as w3cleaner
 
 class Parser(Spider):
     name = "parser"
-    scraped_variants = []
     scraped_ids = []
 
     def parse(self, response):
         product = {}
         product_data = self.get_product_json(response)
-        if product_data.get("id") in self.scraped_ids:
+        if product_data["id"] in self.scraped_ids:
             return
-        self.scraped_ids.append(product_data.get("id"))
-        product["retailer_sku"] = product_data.get("id")
-        product["name"] = product_data.get("name") if product_data.get("name") else ""
-        product["image_urls"] = []
+        self.scraped_ids.append(product_data["id"])
+        product["retailer_sku"] = product_data["id"]
+        product["name"] = product_data["name"] or ""
+        product["image_urls"] = self.get_image_urls(response)
         product["lang"] = "en"
-        product["gender"] = product_data.get("gender")
+        product["gender"] = product_data["gender"]
         product["category"] = self.get_categories(response)
         product["industry"] = None
-        product["brand"] = product_data.get("brand")
+        product["brand"] = product_data["brand"]
         product["url"] = response.url
         product["market"] = "US"
-        product["trail"] = response.meta.get("trail", []).copy()
+        product["trail"] = response.meta["trail"]
         product["retailer"] = "hugoboss"
         product["url_original"] = response.url
         product["description"] = self.get_description(response)
         product["care"] = self.get_care(response)
-        product["skus"] = {}
+        product["skus"] = self.get_skus(response)
         response.meta["pending_color_reqs"] = self.colour_requests(response)
         response.meta["product"] = product
-        return self.parse_colours(response)
+        return self.item_or_request(response)
 
-    def parse_colours(self, response):
-        product_data = self.get_product_json(response)
-        product = response.meta["product"].copy()
-        if product_data.get("variant") not in self.scraped_variants:
-            self.scraped_variants.append(product_data.get("variant"))
-            product["image_urls"].extend(self.get_image_urls(response))
-            product["skus"].update(self.get_skus(response))
+    @staticmethod
+    def item_or_request(response):
         if not response.meta["pending_color_reqs"]:
-            return product
+            return response.meta["product"].copy()
         next_color_req = response.meta["pending_color_reqs"].pop()
-        next_color_req.meta["product"] = product
+        next_color_req.meta["product"] = response.meta["product"].copy()
         next_color_req.meta["pending_color_reqs"] = response.meta["pending_color_reqs"].copy()
         return next_color_req
+
+    def parse_colour(self, response):
+        response.meta["product"]["skus"].update(self.get_skus(response))
+        response.meta["product"]["image_urls"] += self.get_image_urls(response)
+        return self.item_or_request(response)
 
     def get_skus(self, response):
         skus = {}
@@ -66,8 +65,8 @@ class Parser(Spider):
             sku["size"] = size.strip()
             if size in unavailable_sizes:
                 sku["out_of_stock"] = True
-            if product_data.get("metric3"):
-                sku["previous_prices"] = [product_data.get("price") + product_data.get("metric3")]
+            if product_data["metric3"]:
+                sku["previous_prices"] = [product_data["price"] + product_data["metric3"]]
             skus[f"{sku_variant}_{size.strip()}"] = sku
         return skus
 
@@ -79,7 +78,7 @@ class Parser(Spider):
     def get_colour(response):
         variation_json = response.css('.product-variations::attr(data-current)').extract_first()
         json_object = json_loads(variation_json)
-        return json_object.get("color").get("displayValue")
+        return json_object["color"]["displayValue"]
 
     @staticmethod
     def get_categories(response):
@@ -95,16 +94,14 @@ class Parser(Spider):
 
     @staticmethod
     def get_description(response):
-        paragraph = response.css('div.product-container__text__description::text').extract_first()
-        return paragraph.strip().split('.\n\n') if paragraph else []
+        paragraph = response.css('div.product-container__text__description::text').extract_first(default='')
+        return [line.strip() for line in paragraph.strip().split('.\n')]
 
     @staticmethod
     def get_care(response):
         material_care = response.css('.materialCare>.product-container__text::text').extract_first()
         material_care = material_care.strip().split(", ") if material_care else []
-        care = response.css('.accordion__care-icon__text::text').extract()
-        material_care.extend(care if care else [])
-        return material_care
+        return material_care + response.css('.accordion__care-icon__text::text').extract()
 
     @staticmethod
     def get_product_json(response):
@@ -113,10 +110,10 @@ class Parser(Spider):
         return json_loads(json_string)
 
     def colour_requests(self, response):
-        colour_urls = response.css('.swatch-list__image::attr(href)').extract()
-        colour_requests = []
+        colour_urls = response.css('.swatch-list__button--is-empty>a::attr(href)').extract()
+        colour_reqs = []
         for url in colour_urls:
-            request = response.follow(w3cleaner(url), callback=self.parse_colours, dont_filter=True)
+            request = response.follow(w3cleaner(url), callback=self.parse_colour, dont_filter=True)
             if response.url != request.url:
-                colour_requests.append(request)
-        return colour_requests
+                colour_reqs.append(request)
+        return colour_reqs

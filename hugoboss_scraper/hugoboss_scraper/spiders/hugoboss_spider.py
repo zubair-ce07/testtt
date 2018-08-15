@@ -17,15 +17,18 @@ class HugoBossSpider(CrawlSpider):
         'hugoboss.com'
     ]
 
-    rules = (Rule(LinkExtractor(restrict_css='.swatch-list__image', process_value=w3cleaner), callback="parse_product"),
-             Rule(LinkExtractor(restrict_css=('.nav-list--third-level', '.pagingbar__item')), callback='parse'),
+    product_selectors = ['.swatch-list__image']
+    crawl_selectors = ['.nav-list--third-level', '.pagingbar__item']
+
+    rules = (Rule(LinkExtractor(restrict_css=product_selectors, process_value=w3cleaner), callback="parse_product"),
+             Rule(LinkExtractor(restrict_css=crawl_selectors), callback='parse'),
              )
 
     def parse(self, response):
         trail = response.meta.get("trail", [])
+        trail.append(response.url)
         for request in super(HugoBossSpider, self).parse(response):
             request.meta["trail"] = trail.copy()
-            request.meta["trail"].append(response.url)
             yield request
 
     def parse_product(self, response):
