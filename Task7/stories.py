@@ -10,18 +10,24 @@ class StoriesSpider(CrawlSpider):
     name = 'stories'
     custom_settings = {'DOWNLOAD_DELAY': 1.25}
     allowed_domains = ['stories.com']
-    start_urls = ['https://www.stories.com/en_eur/index.html']
+    start_urls = ['https://www.stories.com/en_eur']
 
     allowed_r = ('/clothing', '/shoes', '/bags', '/jewellery', '/accessories',
-                 '/swimwear', '/lingerie', '/stationery', '/beauty', )
+                 '/swimwear', '/lingerie', '/stationery', '/beauty')
     rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".categories"), callback='parse_pagination'),)
+
+    cookies = {
+        'HMCORP_locale': 'de_AT',
+        'HMCORP_currency': 'EUR'
+    }
+    skus_request_t = 'https://www.stories.com/en_eur/getAvailability?variants={}'
 
     def parse_pagination(self, response):
         total_items = response.css("#productCount::attr(class)").extract_first()
         page_url = response.urljoin(response.css("#productPath::attr(class)").extract_first())
 
         return [Request(f"{page_url}?start={start}", callback=self.parse_items_links)
-               for start in range(0, int(total_items)+1, 32)]
+                for start in range(0, int(total_items)+1, 32)]
 
     def parse_items_links(self, response):
         items_links = response.css("a::attr(href)").extract()
@@ -45,9 +51,10 @@ class StoriesSpider(CrawlSpider):
         item["image_urls"] = self.extract_image_urls(current_item)
         item["care"] = self.extract_care(current_item)
         item["category"] = self.extract_categories(item_details)
-        item["skus"] = self.extract_skus(item_details)
+        variants = self.extract_variants(item_details)
 
-        return item
+        return Request(self.skus_request_t.format(variants), cookies=self.cookies,
+                       callback=self.parse_skus, meta={'item': item, 'item_details': item_details})
 
     def extract_retailer_sku(self, item_detail):
         return item_detail["articleCode"]
@@ -76,7 +83,25 @@ class StoriesSpider(CrawlSpider):
     def extract_categories(self, item_details):
         return item_details["mainCategorySummary"]
 
-    def extract_skus(self, item_details):
+    def extract_variants(self, item_details):
+        variant_codes= []
+
+        for key in item_details:
+            if key.isdigit():
+                variant_codes.extend([variant["variantCode"] for variant in item_details[key]["variants"]])
+
+        return ','.join(variant_codes)
+
+    def parse_skus(self, response):
+        item = response.meta["item"]
+        item["skus"] = self.extract_skus(response)
+
+        return item
+
+    def extract_skus(self, response):
+        item_details = response.meta["item_details"]
+        available_variants = response.css('item::text').extract()
+
         color_variants = [item_details[key] for key in item_details if key.isdigit()]
 
         skus = []
@@ -85,9 +110,13 @@ class StoriesSpider(CrawlSpider):
                 sku = {"size": sku_variant["sizeName"], "color": color_variant["name"]}
                 sku["price"] = color_variant["price"]
                 sku["currency"] = "EUR"
+                sku["sku_id"] = sku_variant["variantCode"]
 
                 if color_variant["priceOriginal"]:
                     sku["previous_prices"] = [color_variant["priceOriginal"]]
+
+                if sku_variant["variantCode"] not in available_variants:
+                    sku["out_of_stock"] = True
 
                 skus.append(sku)
 
