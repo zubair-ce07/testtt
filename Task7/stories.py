@@ -43,6 +43,7 @@ class StoriesSpider(CrawlSpider):
         item["gender"] = "Women"
         item["description"] = self.extract_description(current_item)
         item["image_urls"] = self.extract_image_urls(current_item)
+        item["care"] = self.extract_care(current_item)
         item["category"] = self.extract_categories(item_details)
         item["skus"] = self.extract_skus(item_details)
 
@@ -68,6 +69,9 @@ class StoriesSpider(CrawlSpider):
 
     def extract_image_urls(self, current_item):
         return [f'https:{image_url["fullscreen"]}' for image_url in current_item["images"]]
+
+    def extract_care(self, current_item):
+        return current_item["careInstructions"]
 
     def extract_categories(self, item_details):
         return item_details["mainCategorySummary"]
