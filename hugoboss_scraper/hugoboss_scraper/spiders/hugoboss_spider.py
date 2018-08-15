@@ -29,4 +29,4 @@ class HugoBossSpider(CrawlSpider):
             yield request
 
     def parse_product(self, response):
-        yield self.parser.parse(response)
+        return self.parser.parse(response)

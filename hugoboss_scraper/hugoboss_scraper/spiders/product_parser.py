@@ -7,10 +7,14 @@ from w3lib.url import url_query_cleaner as w3cleaner
 class Parser(Spider):
     name = "parser"
     scraped_variants = []
+    scraped_ids = []
 
     def parse(self, response):
         product = {}
         product_data = self.get_product_json(response)
+        if product_data.get("id") in self.scraped_ids:
+            return
+        self.scraped_ids.append(product_data.get("id"))
         product["retailer_sku"] = product_data.get("id")
         product["name"] = product_data.get("name") if product_data.get("name") else ""
         product["image_urls"] = []
@@ -112,7 +116,7 @@ class Parser(Spider):
         colour_urls = response.css('.swatch-list__image::attr(href)').extract()
         colour_requests = []
         for url in colour_urls:
-            request = response.follow(w3cleaner(url), callback=self.parse_colours)
+            request = response.follow(w3cleaner(url), callback=self.parse_colours, dont_filter=True)
             if response.url != request.url:
                 colour_requests.append(request)
         return colour_requests
