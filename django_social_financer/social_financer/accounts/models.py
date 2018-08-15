@@ -19,14 +19,14 @@ class UserProfile(models.Model):
     city = models.CharField(max_length=50)
     postal_code = models.CharField(max_length=10)
     phone_no = models.CharField(max_length=15)
-    longitude = models.FloatField(null=True)
-    latitude = models.FloatField(null=True)
+    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
     role_types = (
         ('DN', 'Donor'),
         ('CN', 'Consumer'),
     )
     role = models.CharField(max_length=2, choices=role_types)
-    pairId = models.ForeignKey('self', null=True, related_name='Profile', on_delete=models.CASCADE)
+    pair = models.ForeignKey('self', null=True, related_name='pairs', on_delete=models.CASCADE, blank=True)
     categories = models.ManyToManyField(Category)
 
     def __str__(self):

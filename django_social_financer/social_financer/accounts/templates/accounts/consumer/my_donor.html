@@ -1,0 +1,13 @@
+{% load accounts_extras %}
+
+<h3>{{ donor|consumer_heading }}</h3>
+
+{% if donor %}
+    <p>Username: {{ donor.user.username }}</p>
+    <p>Name: {{ donor.user.first_name }} {{ consumer.user.last_name }}</p>
+    <p>Address: {{ donor.address }}</p>
+    <p>Contact no: {{ donor.phone_no }}</p>
+    <p>Category: {{ my_category|categories }} </p>
+    <a href={{ map_url|formatted_address:donor.address }} target="_blank">View location</a>
+{% endif %}
+

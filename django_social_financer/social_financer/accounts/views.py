@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.db.models import F
 from django.views import generic
 from django.contrib.auth import authenticate, login
@@ -22,11 +22,15 @@ class SignUpView(generic.FormView):
     success_url = reverse_lazy('accounts:home')
 
     def form_valid(self, form):
+        """ The Sign up form was validated
+        """
         self.save_user(form)
         # form.save()
         return super().form_valid(form)
 
     def save_user(self, form):
+        """ The  user object is created and saved
+        """
         new_user = User.objects.create_user(username=form.cleaned_data['email_address'],
                                             first_name = form.cleaned_data['first_name'],
                                             last_name = form.cleaned_data['last_name'],
@@ -36,6 +40,8 @@ class SignUpView(generic.FormView):
         self.save_user_profile(new_user, form)
 
     def save_user_profile(self, user, form):
+        """ The userprofile object that has one-one link with user us created and saved
+        """
         user.userprofile.cnic_no = form.cleaned_data['cnic_no']
         user.userprofile.phone_no = form.cleaned_data['phone_no']
         user.userprofile.address = form.cleaned_data['address']
@@ -44,39 +50,26 @@ class SignUpView(generic.FormView):
         user.userprofile.role = form.cleaned_data['role']
         user.userprofile.categories.set(form.cleaned_data['categories'])
         user.userprofile.postal_code = form.cleaned_data['postal_code']
-        long,lat = self.get_long_lat_from_address(form.cleaned_data['address'])
-        if long:
-            user.userprofile.longitude = long
-            user.userprofile.latitude = lat
+        # long,lat = self.get_long_lat_from_address(form.cleaned_data['address'])
+        # if long:
+        #     user.userprofile.longitude = long
+        #     user.userprofile.latitude = lat
         user.userprofile.save()
         pass
 
-    def get_long_lat_from_address(self, address):
-        url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + '+'.join(address.split())
-        try:
-            response = requests(url)
-            location = response['results'][0]['geometry']['location']
-        except:
-            return (None, None)
-        else:
-            lat = location['lat']
-            long = location['long']
-            return (long, lat)
-# class LoginView(generic.View):
-
-# class LoginView(generic.FormView):
-#     template_name = 'registration/login.html'
-#     success_url = reverse_lazy('users:home')
-#
-#     def form_valid(self, form):
-#         email = form.cleaned_data['email']
-#         password = form.cleaned_data['password']
-#         user = authenticate(self.request, email, password)
-#         if user is not None:
-#             login(self.request, user)
-#             return HttpResponseRedirect(reverse_lazy(self.success_url))
-#         else:
-#             pass
+    # def get_long_lat_from_address(self, address):
+    #    """ long/lat are fetched from Google API using address
+    #    """
+    #     url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + '+'.join(address.split())
+    #     try:
+    #         response = requests(url)
+    #         location = response['results'][0]['geometry']['location']
+    #     except:
+    #         return (None, None)
+    #     else:
+    #         lat = location['lat']
+    #         long = location['long']
+    #         return (long, lat)
 
 @login_required
 def home_view(request):
@@ -88,31 +81,32 @@ def home_view(request):
     return HttpResponse("Home l{}l".format(role))
 
 def home_donor(request, user):
-    # https://www.google.com/maps/search/?api=1&query=
-    consumers = UserProfile.objects.filter(city=user.userprofile.city, country=user.userprofile.country)
-    if consumers.exist():
-        for consumer in consumers:
+    """ Select consumers View
+    """
+    if request.method == 'POST': # Post indicates pair has been selected
+        pair_id = int(request.POST.get("pair_id",-1))
+        pair_user = get_object_or_404(UserProfile, pk=pair_id)
+        pair_user.pair = request.user.userprofile
+        pair_user.save()
+        return HttpResponseRedirect(reverse('accounts:my_consumers'))
+    elif request.method == 'GET': # Get indicates view must be populated
+        consumers = UserProfile.objects.filter(
+            city=user.userprofile.city.lower(),
+            country=user.userprofile.country.lower(),
+            role='CN')
+        consumers = consumers.exclude(id=request.user.userprofile.id)
+        consumers = consumers.exclude(id__in=request.user.userprofile.pairs.values('id'))
+        map_query_url = 'https://www.google.com/maps/search/?api=1&query='
+        return render(request,'accounts/donor/select_consumers.html',
+                      context={'consumers': consumers, 'map_url' : map_query_url})
 
-            pass
-    return render(request,'accounts/donor/map.html')
-    # return HttpResponse('Donor Home')
-    pass
-
-def get_distance_btw_coordinates(src_long, src_lat, dest_long, dest_lat):
-    # approximate radius of earth in km
-    R = 6373.0
-    lat1 = radians(52.2296756)
-    lon1 = radians(21.0122287)
-    lat2 = radians(52.406374)
-    lon2 = radians(16.9251681)
-
-    delta_lon = lon2 - lon1
-    delta_lat = lat2 - lat1
-
-    a = sin(delta_lat / 2)**2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c
+def donors_pairs(request):
+    return render(request,'accounts/donor/my_consumers.html',
+                  context={'pair' : request.user.userprofile.pairs.all()})
 
 def home_consumer(request, user):
-    return HttpResponse('Consumer Home')
-    pass
+    return render(request,
+                  'accounts/consumer/my_donor.html',
+                  context={'donor': request.user.userprofile.pair,
+                           'my_category': request.user.userprofile.categories,
+                           'map_url' : 'https://www.google.com/maps/search/?api=1&query='})

@@ -125,3 +125,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 LOGIN_URL = reverse_lazy('accounts:login')
 LOGIN_REDIRECT_URL = reverse_lazy('accounts:home')
+LOGOUT_REDIRECT_URL = LOGIN_REDIRECT_URL
