@@ -39,7 +39,7 @@ class WoolrichSpider(CrawlSpider):
         item['image_urls'] = self._get_image_urls(response)
         item['skus'] = []
 
-        item['meta'] = {'queued_reqs': self._get_color_skus_req(response)}
+        item['meta'] = {'queued_reqs': self.color_requests(response)}
         return self.next_request(item)
 
     def next_request(self, item):
@@ -103,7 +103,7 @@ class WoolrichSpider(CrawlSpider):
     def _get_image_urls(self, response):
         return [set(response.css('.productView-image img::attr(src)').extract())]
 
-    def _get_color_skus_req(self, response):
+    def color_requests(self, response):
         color_key = self.get_attr_key(response, 0)
 
         colors_css = '.productView-options .form-option-swatch span::attr(title)'
@@ -114,11 +114,11 @@ class WoolrichSpider(CrawlSpider):
         color_requests = []
         for color, color_id in zip(colors, colors_ids):
             formdata = {color_key: color_id}
-            color_requests += self._get_size_skus_req(response, color, formdata)
+            color_requests += self.size_requests(response, color, formdata)
         
         return color_requests
 
-    def _get_size_skus_req(self, response, color, formdata):
+    def size_requests(self, response, color, formdata):
         size_key = self.get_attr_key(response, 1)
 
         size_ids = response.css(f'[name="{size_key}"]::attr(value)').extract()
@@ -131,11 +131,11 @@ class WoolrichSpider(CrawlSpider):
 
             size_css = f'[for="attribute_{size_id}"] span::text'
             size = response.css(size_css).extract_first()
-            size_requests += self._get_fitting_skus_req(response, color, size, formdata)
+            size_requests += self.fitting_requests(response, color, size, formdata)
         
         return size_requests
     
-    def _get_fitting_skus_req(self, response, color, raw_size, formdata):
+    def fitting_requests(self, response, color, raw_size, formdata):
         fit_key = self.get_attr_key(response, 2)
 
         fit_ids = response.css(f'[name="{fit_key}"]::attr(value)').extract()
