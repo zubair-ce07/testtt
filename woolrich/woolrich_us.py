@@ -56,18 +56,27 @@ class WoolrichSpider(CrawlSpider):
         sku_item = response.meta.get('raw_sku')
 
         sku_details = json.loads(response.text)['data']
-        sku_item['id'] = sku_details['sku']
-        sku_item['price'] = self.to_cent(sku_details['price']['without_tax']['value'])
+        pprice, price = self.sku_pricing(sku_details)
 
-        if sku_details['price'].get('non_sale_price_without_tax'):
-            sku_item['previous price'] = self.to_cent(
-                    sku_details['price']['non_sale_price_without_tax']['value'])
+        sku_item['id'] = sku_details['sku']
+        sku_item['price'] = price
+
+        if pprice:
+            sku_item['previous_price'] = pprice
 
         if not sku_details['instock']:
             sku_item['out_of_stock'] = True
 
         item['skus'].append(sku_item)
         return self.next_request(item)
+    
+    def sku_pricing(self, raw_sku):
+        price = self.to_cent(raw_sku['price']['without_tax']['value'])
+        pprice = raw_sku['price'].get('non_sale_price_without_tax', {}).get('value')
+        if pprice:
+            pprice = self.to_cent(pprice)
+
+        return pprice, price
 
     def _get_retailer_sku(self, response):
         return response.css('[name="product_id"]::attr(value)').extract_first()
@@ -111,9 +120,12 @@ class WoolrichSpider(CrawlSpider):
         colors = response.css(colors_css).extract()
         colors_ids = response.css(color_ids_css).extract()
 
+        product_id = self._get_retailer_sku(response)
+        common = {'action': 'add', 'product_id': product_id}
         color_requests = []
         for color, color_id in zip(colors, colors_ids):
-            formdata = {color_key: color_id}
+            formdata = common.copy()
+            formdata[color_key] = color_id
             color_requests += self.size_requests(response, color, formdata)
         
         return color_requests
