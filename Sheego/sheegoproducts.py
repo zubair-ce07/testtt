@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re
+import json
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from sheego.items import Product
@@ -29,22 +30,33 @@ class SheegoproductsSpider(CrawlSpider):
         product_urls = self.get_products_urls(response)
         for url in product_urls:
             category = self.extract_category(url)
-            yield scrapy.Request(url=url, callback=self.parse_product,
-                                 meta={'category': category})
+            yield scrapy.Request(
+                url=response.urljoin(url), callback=self.parse_product,
+                meta={'category': category})
         next_page_url = self.get_next_page(response)
-        yield scrapy.Request(url=url, callback=self.parse_listing)
+        yield scrapy.Request(url=next_page_url, callback=self.parse_listing)
 
     def parse_product(self, response):
         product = Product()
-        product['Id'] = self.extract_product_id(response.url)
-        product['name'] = self.get_product_name(response)
+        product_details = self.get_product_details(response)
+        product['Id'] = product_details['productId']
+        product['name'] = product_details['productName']
         product['category'] = response.meta['category']
         product['brand'] = "sheego"
         product['urls'] = [response.url]
         product['product_imgs'] = self.get_product_imgs(response)
         product['description'] = self.get_product_desc(response)
         product['care'] = self.get_prodct_care(response)
-    
+        product['skus'] = {}
+        product['avability'] = product_details['productAvailability']
+        variants = self.prepare_variants_urls(response)
+        url_to_follow = self.get_varaint_url(variants)
+        colors = self.get_product_colors(response)
+        yield scrapy.Request(
+            url=url_to_follow, callback=self.get_product_viariant,
+            meta={
+                "product": product, "variants": variants, "colors": colors})
+
     def get_categories(self, response):
         return response.css(
             ".form-group--checkbox input::attr(value)").extract()
@@ -64,16 +76,7 @@ class SheegoproductsSpider(CrawlSpider):
     def get_product_imgs(self, response):
         imgs = response.css(
             ".p-details__image__thumb__container a::attr(href)").extract()
-        imgs = [response.urljoin(img) for img in imgs]
-        return response.urljoin(imgs)
-    
-    def get_product_name(self, url):
-        name = response.css(".at-dv-title-box h1 span::text").extract()
-        name = self.clean_input(name)
-        return ''.join(str(splited_name) for splited_name in name)
-    
-    def extract_product_id(self, url):
-        return url[url.find("_")+1:(url.find("."))]
+        return [response.urljoin(img) for img in imgs]
     
     def get_product_desc(self, response):
         desc = response.css(".details__box__desc p::text").extract()
@@ -85,25 +88,75 @@ class SheegoproductsSpider(CrawlSpider):
         care = self.clean_input(care)
         return ''.join(str(splited_care) for splited_care in care)
 
+    def get_product_details(self, response):
+        details = response.css(".js-webtrends-data").extract_first()
+        product_data = details[details.find("{"):(details.find("}")+1)]
+        return json.loads(product_data)
+
     def get_product_colors(self, response):
-        pass
-
+        colors = response.css(
+            ".cj-slider__slides .js-ads-script").extract_first()
+        colors = colors[colors.find("[")+1:(colors.find("]"))]
+        colors = colors.replace(",", " ").replace("\'", "")
+        return colors.split()
+        
     def get_product_sizes(self, response):
-        pass
+        sizes = response.css(".at-dv-size-button::text").extract()
+        return self.clean_input(sizes)
     
-    def get_product_skuz(self, response):
-        pass
-    
-    def get_product_viariant(self, response):
-        pass
+    def get_product_skus(self, response, color_id):
+        color = self.get_color_name(response)
+        sizes = self.get_product_sizes(response)
+        product_details = self.get_product_details(response)
+        sub_skus = {}
+        for size in sizes:
+            sub_skus.update({
+                "{}_{}".format(color_id, size): {
+                    'color': color,
+                    'currency': 'EUR',
+                    'size': size,
+                    'price': product_details['productPrice']
+                }
+            })
+        return sub_skus
 
-    def has_product_variant(self, response):
-        pass
+    def get_product_viariant(self, response):
+        product = response.meta['product']
+        variants = response.meta['variants']
+        colors = response.meta['colors']
+        if len(variants) == 0:
+            yield product
+        else:
+            color_id = self.prepare_color_id(colors)
+            skus = self.get_product_skus(response, color_id)
+            product['skus'].update(skus)
+            product['urls'].append(response.url)
+            url_to_follow = self.get_varaint_url(variants)
+            yield scrapy.Request(
+                url=url_to_follow, callback=self.get_product_viariant,
+                meta={"product": product,
+                      "variants": variants, "colors": colors})
+    
+    def prepare_variants_urls(self, response):
+        colors = self.get_product_colors(response)
+        return [response.urljoin(
+                "?variantid=000000128536000{}023000".format(
+                    color)) for color in colors]
+
+    def get_varaint_url(self, variants):
+        variant = variants[0]
+        variants.pop(0)
+        return variant
     
     def get_color_name(self, response):
         color = response.css(".p-details__variants p::text").extract()
         color = self.clean_input(color)
         return ''.join(str(splited_color) for splited_color in color)
+    
+    def prepare_color_id(self, colors):
+        color = colors[0]
+        colors.pop(0)
+        return "00000128536000{}023000".format(color)
 
     def clean_input(self, my_input):
         if type(my_input) is list:
