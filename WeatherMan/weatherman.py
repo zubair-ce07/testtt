@@ -1,10 +1,7 @@
 import os
-# import sys
 import argparse
 import glob
 import csv
-import pprint
-from collections import defaultdict
 
 
 class FileParser:
