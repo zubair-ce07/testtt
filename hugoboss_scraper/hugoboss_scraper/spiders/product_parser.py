@@ -52,22 +52,24 @@ class Parser(Spider):
         skus = {}
         common_sku = {}
         product_data = self.get_product_json(response)
+        sku_variant = product_data["variant"]
         common_sku["price"] = product_data.get("price")
         common_sku["currency"] = self.get_currency(response)
         common_sku["colour"] = self.get_colour(response)
-        sku_variant = product_data.get("variant")
-        sizes = response.css('.swatch-list__size::text').extract()
+        common_sku["size"] = "One Size"
+        discount = product_data["metric3"]
+        if discount:
+            common_sku["previous_prices"] = [product_data["price"] + discount]
+        sizes = response.css('.swatch-list__size')
         if not sizes:
-            sizes.append("One Size")
-        unavailable_sizes = response.css('.swatch-list__size[class*="unselectable"]::text').extract()
+            skus[f"{sku_variant}_One Size"] = common_sku
+            return skus
         for size in sizes:
             sku = common_sku.copy()
-            sku["size"] = size.strip()
-            if size in unavailable_sizes:
+            sku["size"] = size.css('::text').extract_first().strip()
+            if size.css('[class*="unselectable"]'):
                 sku["out_of_stock"] = True
-            if product_data["metric3"]:
-                sku["previous_prices"] = [product_data["price"] + product_data["metric3"]]
-            skus[f"{sku_variant}_{size.strip()}"] = sku
+            skus[f'{sku_variant}_{sku["size"]}'] = sku
         return skus
 
     @staticmethod
