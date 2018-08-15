@@ -1,3 +1,4 @@
+from student.utils import clean
 from .prospectportal_base import BaseMixinPPE
 from .prospectportal_base import PPBaseCrawlSpiderE
 from .prospectportal_base import PPBaseParseSpiderE
@@ -19,6 +20,13 @@ class MixinConection(BaseMixinPPE):
 
 class ParseSpiderConection(PPBaseParseSpiderE, MixinConection):
     name = MixinConection.name + '-parse'
+
+    def room_name(self, response, c_sel, sel):
+        room_name = clean(c_sel.css('.sub-title ::text'))
+        room_name = room_name[0].replace('/', '')
+        if "0 Bedroom" in room_name:
+            return "Studio"
+        return room_name
 
 
 class CrawlSpiderConection(MixinConection, PPBaseCrawlSpiderE):
