@@ -9,7 +9,8 @@ from ullapopken.items import UllapopkenItem
 
 
 class Ullapopken(CrawlSpider):
-    DOWNLOAD_DELAY = 1
+    custom_settings = {
+        'DOWNLOAD_DELAY': 1}
     name = 'ullapopken'
 
     start_urls = ["https://www.ullapopken.de/"]
@@ -18,8 +19,8 @@ class Ullapopken(CrawlSpider):
              Rule(LinkExtractor(restrict_css='.toplevel > .nav_content'),
                   callback='parse_category_variables'))
 
-    genders = {'HERREN': 'Male',
-               'DAMEN': 'Female'}
+    genders = [('HERREN', 'Male'),
+               ('DAMEN', 'Female')]
 
     product_url_t = 'https://www.ullapopken.de/produkt/{}/'
     article_url_t = 'https://www.ullapopken.de/api/res/article/{}'
@@ -32,7 +33,7 @@ class Ullapopken(CrawlSpider):
         grouping_value = response.css('#paging::attr(data-grouping)').extract_first()
         category_request = self.make_category_request(category_value, grouping_value)
         category_request.meta['categories'] = self.get_categories(response)
-        yield category_request
+        return category_request
 
     def parse_category(self, response):
         categories = response.meta.get('categories')
@@ -46,8 +47,8 @@ class Ullapopken(CrawlSpider):
         if pagination['currentPage'] != 0:
             return
 
-        category_value = re.findall('.*category.*category/(.+)/grouping.*', url)[0]
-        grouping_value = re.findall('.*grouping/(.+)/filter.*', url)[0]
+        category_value = re.findall('category.*category/(.+)/grouping', url)[0]
+        grouping_value = re.findall('grouping/(.+)/filter', url)[0]
 
         for page_number in range(1, pagination['numberOfPages']):
             category_request = self.make_category_request(category_value, grouping_value, page_number+1)
@@ -163,8 +164,8 @@ class Ullapopken(CrawlSpider):
         return [care_object['description'] for care_object in care_objects]
 
     def get_gender(self, categories):
-        for gender_german, gender in self.genders.items():
-            if gender_german in categories:
+        for gender_token, gender in self.genders:
+            if gender_token in categories:
                 return gender
 
     def get_url(self, raw_item):
