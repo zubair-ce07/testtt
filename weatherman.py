@@ -2,9 +2,10 @@
 This module reads weather files and calculate max, min temprature and build charts
 """
 
-from __future__ import print_function
 import calendar
 import os
+import argparse
+import csv
 import re
 from termcolor import colored
 
@@ -16,156 +17,76 @@ class WeatherMan:
 
     def __init__(self):
         self.path = ''
-        self.file_name = []
+        self.file_names = []
         self.month_files = []
         self.max_temp_monthwise = []
         self.low_temp_monthwise = []
         self.date_monthwise = []
         self.humid = []
 
-    # getting path of data files
-    def get_path(self):
+
+    def get_path(self, path):
         """
-         This function gets path of related files from a path.txt file
+         This method gets path of related files
         """
         try:
-            _file = open(os.getcwd()+'/path', "r")
-            path_string = _file.read()
-            path = path_string.strip()
             self.path = path
 
-        except IOError:
-            print('\nPlease place your path file in the same directory'
-                  ' with the code file in phycharm default location')
+        except IOError as io_error:
+            print(io_error)
 
 
-    # clearing Global Variables after use
-    def clear_variables(self):
+    def get_files(self, year, month=None):
         """
-        This function clears all variables used at the end of program's iteration
-        """
-        self.file_name.clear()
-        self.month_files.clear()
-        self.max_temp_monthwise.clear()
-        self.low_temp_monthwise.clear()
-        self.date_monthwise.clear()
-        self.humid.clear()
-
-
-    # getting a specific year files
-    def get_files(self, year):
-        """
-        This function gets file names of desired year
+        This method gets files of desired year and month
         """
         try:
             for files in os.listdir(self.path):
                 if re.match('.*' + year + '.*', files):
-                    self.file_name.append(files)
-        except IOError:
-            print('Files not found for this year')
+                    self.file_names.append(files)
+            if month is not None:
+                for _month in self.file_names:
+                    if re.match('.*' + month + '.*', _month):
+                        self.month_files.append(_month)
+        except IOError as io_error:
+            print(io_error)
 
 
-    # getting a specific month file
-    def get_single_file(self, year, month):
-        """
-        This function gets file name of desired month
-        """
-        try:
-            for files in os.listdir(self.path):
-                if re.match('.*' + year + '.*', files):
-                    self.file_name.append(files)
-
-            for _month in self.file_name:
-                if re.match('.*' + month + '.*', _month):
-                    self.month_files.append(_month)
-        except IOError:
-            print('File not found for this month')
-
-
-    # reading data from year files
     def read_from_files(self):
         """
-        This function reads files of desired year
+        This method reads files of desired year and month
         """
-        for my_file in self.file_name:
-            _file = (open(self.path + my_file, 'r'))
-            for line in _file:
-                collection = line.split(',')
-                if collection[1] == '' or collection[3] == '' or collection[7] == '':
-                    continue
-                self.max_temp_monthwise.append(collection[1])
-                self.low_temp_monthwise.append(collection[3])
-                self.humid.append(collection[7])
-                self.date_monthwise.append(collection[0])
+        if len(self.month_files) > 0:
+            self.file_names.clear()
+            self.file_names = self.month_files
+        for my_file in self.file_names:
+            with open('{path}{file_name}'.format(path=self.path, file_name=my_file), 'r') as read_file:
+                line = csv.DictReader(read_file)
+                for chunk in line:
+                    if chunk['Max TemperatureC'] == '' or chunk['Min TemperatureC'] == '' or chunk[
+                        'Max Humidity'] == '':
+                        continue
+                    self.max_temp_monthwise.append(chunk['Max TemperatureC'])
+                    self.low_temp_monthwise.append(chunk['Min TemperatureC'])
+                    self.humid.append(chunk['Max Humidity'])
+                    if chunk['PKT'] is not None:
+                        self.date_monthwise.append(chunk['PKT'])
+                    else:
+                        self.date_monthwise.append(chunk['PKST'])
 
 
-    # reading data from file for a month
-    def read_month_file(self):
-        """
-        This function reads file of desired month
-        """
-        for my_file in self.month_files:
-            file1 = (open(self.path + my_file, 'r'))
-            for line in file1:
-                collection = line.split(',')
-                if collection[1] == '' or collection[3] == '' or collection[7] == '':
-                    continue
-                self.max_temp_monthwise.append(collection[1])
-                self.low_temp_monthwise.append(collection[3])
-                self.humid.append(collection[7])
-                self.date_monthwise.append(collection[0])
-
-
-    # removing unnecessary elements(headers) from year files' container
-    def removing_elements(self):
-        """
-        This function removes headers from max temp container for a year's data
-        """
-        count = 0
-        while count < len(self.file_name):
-            self.max_temp_monthwise.remove('Max TemperatureC')
-            self.low_temp_monthwise.remove('Min TemperatureC')
-            self.humid.remove('Max Humidity')
-            if 'PKT' in self.date_monthwise:
-                self.date_monthwise.remove('PKT')
-            else:
-                self.date_monthwise.remove('PKST')
-            count += 1
-
-
-    # removing unnecessary element(headers) from month file container
-    def removing_element(self):
-        """
-        This function removes headers from max temp container just for a month data
-        """
-        count = len(self.month_files)
-        if count > 0:
-            self.max_temp_monthwise.remove('Max TemperatureC')
-            self.low_temp_monthwise.remove('Min TemperatureC')
-            self.humid.remove('Max Humidity')
-            if 'PKT' in self.date_monthwise:
-                self.date_monthwise.remove('PKT')
-            else:
-                self.date_monthwise.remove('PKST')
-            self.temp_list_conversion()
-        else:
-            print('File not found for this month')
-
-
-    # Converting max_temp_monthwise into integer list
     def temp_list_conversion(self):
         """
-        This function converts string lists into integer lists for mathematical operations
+        This method converts string lists into integer lists for mathematical operations
         """
         self.max_temp_monthwise = list(map(int, self.max_temp_monthwise))
         self.low_temp_monthwise = list(map(int, self.low_temp_monthwise))
         self.humid = list(map(int, self.humid))
 
 
-    # for average maximum, minimum temperature and maximum average humidity
     def show_average(self):
         """
-        This function prints max and min average temperature and humidity
+        This method prints max and min average temperature and humidity
         """
         sum_max_temp = sum(self.max_temp_monthwise)
         sum_low_temp = sum(self.low_temp_monthwise)
@@ -183,22 +104,29 @@ class WeatherMan:
         print('************************************')
 
 
-    # Date Conversion
     def date_conversion(self, index):
         """
-        This function converts numaric date into english date
+        This method converts numaric date into english date
         """
         raw_date = index
         raw_date = raw_date.split('-')
         complete_date = calendar.month_name[int(raw_date[1])]
-        complete_date = complete_date + " " + raw_date[2]
+        complete_date = '{date} {raw_date}'.format(date=complete_date, raw_date=raw_date[2])
         return complete_date
 
 
-    # Print required information
+    def combiner(self, year, month=None):
+        """
+        This method combines combines three common methods in it   
+        """
+        self.get_files(year, month)
+        self.read_from_files()
+        self.temp_list_conversion()
+    
+    
     def print_data(self):
         """
-        This function prints required output of user
+        This method prints required output of user
         """
         max_value = max(self.max_temp_monthwise)
         min_value = min(self.low_temp_monthwise)
@@ -218,10 +146,9 @@ class WeatherMan:
         print('************************************')
 
 
-    # Print chart
     def print_chart(self):
         """
-        This function prints bar charts
+        This method prints bar charts
         """
         for max_temp, min_temp, date in zip(self.max_temp_monthwise,
                                             self.low_temp_monthwise, self.date_monthwise):
@@ -231,10 +158,9 @@ class WeatherMan:
                 date=date, color=colored('+'*min_temp, 'blue'), m_temp=str(min_temp)))
 
 
-    # Bonus Task: Print both charts (bar charts) together
     def print_bar_chart(self):
         """
-        This function prints horizontal bar charts
+        This method prints horizontal bar charts on the same line
         """
         for max_temp, min_temp, date in zip(self.max_temp_monthwise,
                                             self.low_temp_monthwise,
@@ -243,68 +169,35 @@ class WeatherMan:
                 date=date, color_blue=colored('+'*min_temp, 'blue'), color_red=colored(
                     '+'*max_temp, 'red'), min_value=str(min_temp), max_value=str(max_temp)))
 
-# Main Method
+
 def main():
     """
-    This function is entry point of program
+    This method is entry point of program
     """
     weather_man = WeatherMan()
-    weather_man.get_path()
-    while True:
-        try:
-            choice = int(input('Press 1 for year base information\nPress 2 for Month '
-                               'base information\n'
-                               'Press 3 to print chart\nPress 4 to make horizontal'
-                               ' bar chart for each day\n'
-                               'Press 5 exit: '))
-            if choice == 1:
-                year = str(input('Enter the year you want to get information: '))
-                weather_man.get_files(year)
-                weather_man.read_from_files()
-                weather_man.removing_elements()
-                weather_man.temp_list_conversion()
-                weather_man.print_data()
-
-            elif choice == 2:
-                year = str(input('Enter the year you want to get information: '))
-                month = str(input('Enter the month (i.e Jan): '))
-                weather_man.get_single_file(year, month)
-                weather_man.read_month_file()
-                weather_man.removing_element()
-                weather_man.show_average()
-
-            elif choice == 3:
-                year = str(input('Enter the year you want to get information: '))
-                month = str(input('Enter the month (i.e Jan): '))
-                weather_man.get_single_file(year, month)
-                weather_man.read_month_file()
-                weather_man.removing_element()
-                weather_man.print_chart()
-
-            elif choice == 4:
-                year = str(input('Enter the year you want to get information: '))
-                month = str(input('Enter the month (i.e Jan): '))
-                weather_man.get_single_file(year, month)
-                weather_man.read_month_file()
-                weather_man.removing_element()
-                weather_man.print_bar_chart()
-
-            elif choice == 5:
-                break
-
-            else:
-                print('Wrong choice')
-
-                weather_man.clear_variables()
-            choice = 0
-            print("\n")
-
-        except ValueError:
-            print("Wrong value entered")
-            weather_man.clear_variables()
-            choice = 0
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-dir', '--path', type=str)
+    parser.add_argument('-e', '--year', type=str)
+    parser.add_argument('-m', '--month', type=str)
+    parser.add_argument('-c', '--monthly_chart', type=str)
+    parser.add_argument('-ce', '--monthly_chart_horizontal', type=str)
+    args = parser.parse_args()
+    weather_man.get_path(args.path)
+    if args.year:
+        weather_man.combiner(args.year)
+        weather_man.print_data()
+    elif args.month:
+        weather_man.combiner(args.year, args.month)
+        weather_man.show_average()
+    elif args.monthly_chart:
+        weather_man.combiner(args.year, args.month)
+        weather_man.print_chart()
+    elif args.monthly_chart_horizontal:
+        weather_man.combiner(args.year, args.month)
+        weather_man.print_bar_chart()
+        
 
 # execution point of program
 if __name__ == '__main__':
     main()
+
