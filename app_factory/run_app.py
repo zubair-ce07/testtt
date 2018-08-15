@@ -14,13 +14,18 @@ class AppRunner:
     command line arguments it execute application.
     """
     def __init__(self, execution_control, application, args_hangler):
+        """
+        :param execution_control: Args Parser's parsed arguments to control the flow.
+        :param application: Specific application required by the user.
+        :param args_hangler: Specific application's arguments handler, having information of the arguments.
+        """
         self.application = application
         self.execution_control = execution_control
         self.args_hangler = args_hangler
 
     def execute_app(self):
         """
-        Executes application, by calling WeatherMan function with specific option argument.
+        Executes application, by calling function with specific option argument.
         """
         for category in self.args_hangler.get_categories():
             control_value = getattr(self.execution_control, category)

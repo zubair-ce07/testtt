@@ -13,14 +13,14 @@ class AppHelper:
         'weather-man': 'Weather Man'
     }
 
-    @staticmethod
-    def get_app_name(name_for):
+    @classmethod
+    def get_app_name(cls, name_for):
         """
         Static method to return application display name given it's key.
         :param name_for: key to be searched
         :return: value present in application helper for a specifc key (if any)
         """
-        return AppHelper.__app_helper_map.get(name_for)
+        return cls.__app_helper_map.get(name_for)
 
 
 class FileGlobalHandler:
@@ -32,14 +32,14 @@ class FileGlobalHandler:
         'FILE_EXTENTION': 'txt'
     }
 
-    @staticmethod
-    def get_file_constant(item):
+    @classmethod
+    def get_file_constant(cls, item):
         """
         Provides file related constants.
         :param item: key to be found eg: FILE_PREFIX
         :return: constant value for a specific key eg: txt for FILE_EXTENTION
         """
-        return FileGlobalHandler.__global_constants.get(item)
+        return cls.__global_constants.get(item)
 
 
 class ArgsParserCategoryHandler:
@@ -95,8 +95,8 @@ class MathHelper:
         'pos-infinity': 99999
     }
 
-    @staticmethod
-    def get_constant_value(help_key):
+    @classmethod
+    def get_constant_value(cls, help_key):
         """
         Provide constant values for a mathematical terms, one thing needs to be keep in mind, these constants are
         constants throughout the application otherwise there is not value for neg-infinity or pos-infinity these can
@@ -105,7 +105,7 @@ class MathHelper:
         :param help_key: What is wanted from math helper class.
         :return: Value for a specific key.
         """
-        return MathHelper.__helper_dict.get(help_key)
+        return cls.__helper_dict.get(help_key)
 
     @staticmethod
     def parse_int(number):
@@ -169,22 +169,22 @@ class ReportsHelper:
             }
     }
     
-    @staticmethod
-    def get_empty_report(app_name, category):
+    @classmethod
+    def get_empty_report(cls, app_name, category):
         """
         Returns empty report of a specific category for weather man
         :param app_name: application name eg weather-man
         :param category: category of report eg: year report
         :return: empty report dictionary
         """
-        return ReportsHelper.__reports_helper_map.get(AppHelper.get_app_name(app_name)).get(category)
+        return cls.__reports_helper_map.get(AppHelper.get_app_name(app_name)).get(category)
 
-    @staticmethod
-    def get_report_output(app_name, category):
+    @classmethod
+    def get_report_output(cls, app_name, category):
         """
         Give output strings that are required to format to make informative after calling.
         :param app_name: application name eg weather-man
         :param category: category of report eg: year report
         :return: dict with keys as sub-categories of report and specific output strings in respective sub-categories.
         """
-        return ReportsHelper.__reports_output_strings.get(AppHelper.get_app_name(app_name)).get(category)
+        return cls.__reports_output_strings.get(AppHelper.get_app_name(app_name)).get(category)

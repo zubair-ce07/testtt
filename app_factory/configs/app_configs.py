@@ -14,18 +14,18 @@ class AppConfig:
     output_to = 'console'
     parser = None
 
-    @staticmethod
-    def get_app_module_name():
+    @classmethod
+    def get_app_module_name(cls):
         """
         Provides application's module name by processing application name
         :return: Application's module name
         """
-        return AppConfig.app_name.replace('-', '_')
+        return cls.app_name.replace('-', '_')
 
-    @staticmethod
-    def get_app_name():
+    @classmethod
+    def get_app_name(cls):
         """
         Provides application's app name by processing application name
         :return: Application's app name
         """
-        return "".join(map(lambda x: x.capitalize(), AppConfig.app_name.split('-')))
+        return "".join(map(lambda x: x.capitalize(), cls.app_name.split('-')))
