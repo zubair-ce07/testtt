@@ -50,16 +50,9 @@ class Parser(Spider):
 
     def get_skus(self, response):
         skus = {}
-        common_sku = {}
         product_data = self.get_product_json(response)
         sku_variant = product_data["variant"]
-        common_sku["price"] = product_data["price"]
-        common_sku["currency"] = self.get_currency(response)
-        common_sku["colour"] = self.get_colour(response)
-        common_sku["size"] = "One Size"
-        discount = product_data["metric3"]
-        if discount:
-            common_sku["previous_prices"] = [product_data["price"] + discount]
+        common_sku = self.get_common_sku(response, product_data)
         sizes = response.css('.swatch-list__size')
         if not sizes:
             skus[f"{sku_variant}_One Size"] = common_sku
@@ -71,6 +64,17 @@ class Parser(Spider):
                 sku["out_of_stock"] = True
             skus[f'{sku_variant}_{sku["size"]}'] = sku
         return skus
+
+    def get_common_sku(self, response, product_data):
+        common_sku = {}
+        discount = product_data["metric3"]
+        if discount:
+            common_sku["previous_prices"] = [product_data["price"] + discount]
+        common_sku["price"] = product_data["price"]
+        common_sku["currency"] = self.get_currency(response)
+        common_sku["colour"] = self.get_colour(response)
+        common_sku["size"] = "One Size"
+        return common_sku
 
     @staticmethod
     def get_currency(response):
@@ -116,6 +120,5 @@ class Parser(Spider):
         colour_reqs = []
         for url in colour_urls:
             request = response.follow(w3cleaner(url), callback=self.parse_colour, dont_filter=True)
-            if response.url != request.url:
-                colour_reqs.append(request)
+            colour_reqs.append(request)
         return colour_reqs
