@@ -13,11 +13,11 @@ class QuotesSpider(scrapy.Spider):
 
     def parse(self, response):
         if response.request.method == 'POST':
-            parameters = response.meta
-            parameters['pg'] += 1
+            pagination_request_parameters = response.meta
+            pagination_request_parameters['pg'] += 1
             response = Selector(text=json.loads(response.text)['content'])
         else:
-            parameters = self.get_post_request_parameters(response)
+            pagination_request_parameters = self.get_pagination_request_parameters(response)
 
         for quote_html in response.css('.m-brick.grid-item'):
             quote = {
@@ -33,18 +33,18 @@ class QuotesSpider(scrapy.Spider):
             }
             yield quote
 
-        if parameters['pg'] <= parameters['last_page']:
+        if pagination_request_parameters['pg'] <= pagination_request_parameters['last_page']:
             yield scrapy.Request(url='https://www.brainyquote.com/api/inf',
                                  method='POST', callback=self.parse,
-                                 body=json.dumps(parameters),
-                                 meta=parameters)
+                                 body=json.dumps(pagination_request_parameters),
+                                 meta=pagination_request_parameters)
 
-    def get_post_request_parameters(self, response):
+    def get_pagination_request_parameters(self, response):
         required_variables_script = response.xpath('//script[11]').extract_first()
         parameters = {
             'id': re.search('PG_DM_ID=\"(.+?)\"', required_variables_script).group(1),
             'typ': re.search('GA_PG_TYPE=\"(.+?)\"', required_variables_script).group(1),
-            'v': response.xpath('/html/head/meta[5]/@content').extract_first(),
+            'v': response.xpath('//meta[5]/@content').extract_first(),
         }
         required_variables_script = response.xpath('//script[2]').extract_first()
         parameters.update({
