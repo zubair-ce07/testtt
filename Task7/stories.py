@@ -4,23 +4,27 @@ from scrapy import Request
 import js2py
 
 from Task7.items import Product
+from Task7.country_map import country_map
 
 
 class StoriesSpider(CrawlSpider):
     name = 'stories'
     custom_settings = {'DOWNLOAD_DELAY': 1.25}
     allowed_domains = ['stories.com']
-    start_urls = ['https://www.stories.com/en_eur']
 
     allowed_r = ('/clothing', '/shoes', '/bags', '/jewellery', '/accessories',
                  '/swimwear', '/lingerie', '/stationery', '/beauty')
     rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".categories"), callback='parse_pagination'),)
 
-    cookies = {
-        'HMCORP_locale': 'de_AT',
-        'HMCORP_currency': 'EUR'
-    }
-    skus_request_t = 'https://www.stories.com/en_eur/getAvailability?variants={}'
+    skus_request_t = 'https://www.stories.com/en_gbp/getAvailability?variants={}'
+
+    def __init__(self, country='united_states', **kwargs):
+        super().__init__(**kwargs)
+        self.cookies = country_map[country]
+
+    def start_requests(self):
+        urls = ['https://www.stories.com']
+        return [Request(url, cookies=self.cookies) for url in urls]
 
     def parse_pagination(self, response):
         total_items = response.css("#productCount::attr(class)").extract_first()
@@ -109,7 +113,7 @@ class StoriesSpider(CrawlSpider):
             for sku_variant in color_variant["variants"]:
                 sku = {"size": sku_variant["sizeName"], "color": color_variant["name"]}
                 sku["price"] = color_variant["price"]
-                sku["currency"] = "EUR"
+                sku["currency"] = self.cookies["HMCORP_currency"]
                 sku["sku_id"] = sku_variant["variantCode"]
 
                 if color_variant["priceOriginal"]:
