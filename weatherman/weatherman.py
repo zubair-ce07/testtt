@@ -9,7 +9,7 @@ import constants
 def validate_input(args):
     if len(args) is not 4:
         return False
-    if not re.match(r'-[eac]$', args[1]):
+    if not re.match(r'-[eacd]$', args[1]):
         return False
     if args[1][1] is 'e':
         if not re.match(r'\d{4}$', args[2]):
@@ -35,9 +35,9 @@ def parse_input(args):
     elif args[1] == "-a":
         operation = constants.AVERAGE_TEMPERATURE
     elif args[1] == "-c":
-        operation = constants.TWO_LINE_CHART
-    else:
         operation = constants.ONE_LINE_CHART
+    else:
+        operation = constants.TWO_LINE_CHART
 
     if operation == constants.YEARLY_HIGHEST_LOWEST_TEMP_HUMID:
         weather_date = generate_date(args[2][:4])
@@ -54,8 +54,11 @@ def get_min_max_row_from_file(func: "min or max function",
                               csvfile):
     csvfile.seek(0)
     next(csvfile)
-    result_row = func(csv.reader(csvfile),
-                      key=lambda row: int(row[column_index]))
+    try:
+        result_row = func(csv.reader(csvfile),
+                      key=lambda row: int(row[column_index]) )
+    except ValueError:
+        return None
     return result_row
 
 
@@ -128,9 +131,7 @@ def display_min_max_temp_humid(weather_date, path_to_files):
     print("Humidity: {}".format(result_str))
 
 
-"""
-TASK2
-"""
+"""TASK2"""
 
 
 def count_entries(file):
@@ -144,10 +145,14 @@ def get_average_value(csvfile, key_index):
     days_count = count_entries(csvfile)
     csvfile.seek(0)
     next(csvfile)
-    values = [int(row[key_index]) for row in csv.reader(csvfile)]
-    sum_value = sum(values)
-    average_value = int(sum_value / days_count)
-    return average_value
+    try:
+        values = [int(row[key_index]) for row in csv.reader(csvfile)
+                  if row[key_index] != ""]
+        sum_value = sum(values)
+        average_value = int(sum_value / days_count)
+        return average_value
+    except ValueError:
+        return None
 
 
 def average_result_formatter(value, unit):
@@ -179,7 +184,69 @@ def display_average_temperature_humidity(weather_date, path_to_files):
     else:
         print("Error in opening the file. Such file does not exist.")
 
-    pass
+
+"""TASK3"""
+
+
+def one_line_chart(index, low, low_color, high, high_color, unit):
+    result_string = "{index:02d} {low_color}{low_marks}{high_color}{high_marks}\
+    {color_reset} {low}{unit} - {high}{unit}".format(index=index,
+                                                     low_color=low_color,
+                                                     low_marks="+" * low,
+                                                     high_color=high_color,
+                                                     high_marks="+" * high,
+                                                     color_reset=constants.COLOR_RESET,
+                                                     low=low,
+                                                     high=high,
+                                                     unit=unit)
+    return result_string
+
+
+def two_line_chart(index, low, low_color, high, high_color, unit):
+    result_1 = "{index:02d} {low_color}{low_marks} {color_reset} {low}{unit}".format(
+        index=index, low_color=low_color, low_marks="+" * low, color_reset=constants.COLOR_RESET,
+        low=low, unit=unit)
+    result_2 = "{index:02d} {high_color}{high_marks}{color_reset} {high}{unit}".format(
+        index=index, high_color=high_color, high_marks="+" * high, color_reset=constants.COLOR_RESET,
+        high=high, unit=unit)
+    result_string = "{}\n{}".format(result_1, result_2)
+
+    return result_string
+
+
+def display_temperature_chart(weather_date, path_to_files, type):
+    city_name = "Murree"
+    file_path = get_file_path(path_to_files, city_name, weather_date.year, weather_date.month)
+    if os.path.isfile(file_path):
+        month = weather_date.strftime("%B")
+        print("{} {}".format(month, weather_date.year))
+        with open(file_path) as csvfile:
+            next(csvfile)
+            for row in csv.reader(csvfile):
+                try:
+                    min_temperature = int(row[constants.MIN_TEMPERATURE_INDEX])
+                    max_temperature = int(row[constants.MAX_TEMPERATURE_INDEX])
+                    day = datetime.strptime(
+                        row[constants.PKT_INDEX], "%Y-%m-%d").date().day
+                    if type == constants.ONE_LINE_CHART:
+                        line_chart = one_line_chart(day,
+                                                    min_temperature,
+                                                    constants.COLOR_BLUE,
+                                                    max_temperature,
+                                                    constants.COLOR_RED,
+                                                    "C")
+                    else:
+                        line_chart = two_line_chart(day,
+                                                    min_temperature,
+                                                    constants.COLOR_BLUE,
+                                                    max_temperature,
+                                                    constants.COLOR_RED,
+                                                    "C")
+                    print(line_chart)
+                except ValueError:
+                    print("Invalid data in the file for this date.")
+    else:
+        print("File not found!")
 
 
 def main():
@@ -189,6 +256,8 @@ def main():
         display_min_max_temp_humid(weather_date, path_to_files)
     elif operation == constants.AVERAGE_TEMPERATURE:
         display_average_temperature_humidity(weather_date, path_to_files)
+    elif operation == constants.ONE_LINE_CHART or operation == constants.TWO_LINE_CHART:
+        display_temperature_chart(weather_date, path_to_files, operation)
 
 
 if __name__ == "__main__":
