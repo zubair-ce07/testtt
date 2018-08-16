@@ -59,7 +59,7 @@ class StoriesSpider(CrawlSpider):
         variants = self.extract_variants(item_details)
 
         return Request(self.skus_request_t.format(self.cookies["HMCORP_currency"].lower(), variants),
-                       cookies=self.cookies, callback=self.parse_skus,
+                       cookies=self.cookies, callback=self.parse_skus, dont_filter=True,
                        meta={'item': item, 'item_details': item_details})
 
     def parse_skus(self, response):
