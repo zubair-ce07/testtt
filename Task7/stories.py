@@ -12,11 +12,10 @@ class StoriesSpider(CrawlSpider):
     custom_settings = {'DOWNLOAD_DELAY': 1.25}
     allowed_domains = ['stories.com']
 
-    allowed_r = ('/clothing', '/shoes', '/bags', '/jewellery', '/accessories',
-                 '/swimwear', '/lingerie', '/stationery', '/beauty')
+    allowed_r = ('/jewellery',)
     rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".categories"), callback='parse_pagination'),)
 
-    skus_request_t = 'https://www.stories.com/en_gbp/getAvailability?variants={}'
+    skus_request_t = 'https://www.stories.com/en_{0}/getAvailability?variants={1}'
 
     def __init__(self, country='united_states', **kwargs):
         super().__init__(**kwargs)
@@ -57,8 +56,9 @@ class StoriesSpider(CrawlSpider):
         item["category"] = self.extract_categories(item_details)
         variants = self.extract_variants(item_details)
 
-        return Request(self.skus_request_t.format(variants), cookies=self.cookies,
-                       callback=self.parse_skus, meta={'item': item, 'item_details': item_details})
+        return Request(self.skus_request_t.format(self.cookies["HMCORP_currency"].lower(), variants),
+                       cookies=self.cookies, callback=self.parse_skus,
+                       meta={'item': item, 'item_details': item_details})
 
     def parse_skus(self, response):
         item = response.meta["item"]
