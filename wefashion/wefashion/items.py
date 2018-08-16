@@ -15,3 +15,4 @@ class WefashionItem(Item):
     skus = Field()
     price = Field()
     currency = Field()
+    requests = Field()

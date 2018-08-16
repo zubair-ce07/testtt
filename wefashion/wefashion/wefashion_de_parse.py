@@ -15,13 +15,11 @@ class ProductParser(Spider):
     }
 
     def parse(self, response):
-        item = WefashionItem()
-        product_available = self.product_available(response)
-        if not product_available or self.extract_retailer_sku(response) in self.visited_products:
+        if self.if_product_exists(response):
             return
 
-        retailer_sku = self.extract_retailer_sku(response)
-        item['retailer_sku'] = retailer_sku
+        item = WefashionItem()
+        item['retailer_sku'] = self.extract_retailer_sku(response)
         item['trail'] = self.extract_trails(response)
         item['gender'] = self.extract_gender(response)
         item['category'] = self.extract_category(response)
@@ -34,49 +32,52 @@ class ProductParser(Spider):
         item['price'] = self.extract_price(response)
         item['currency'] = self.extract_currency(response)
         item['skus'] = self.extract_skus(response)
-        color_urls = self.extract_product_urls(response)
-        self.visited_products.add(retailer_sku)
-        if color_urls:
-            yield self.create_request(color_urls.pop(), meta={'item': item, 'urls': color_urls})
+        item['requests'] = self.create_requests(response)
+        return self.parse_requests(item)
 
-        return item
+    def parse_requests(self, item):
+        if not item['requests']:
+            del item['requests']
+            return item
+
+        request = item['requests'].pop()
+        request.meta['item'] = item
+        yield request
 
     def parse_product(self, response):
         item = response.meta['item']
-        color_urls = response.meta['urls']
+        item['image_urls'].extend(self.extract_image_urls(response))
+        item['skus'].update(self.extract_skus(response))
+        return self.parse_requests(item)
 
-        image_urls = response.meta.get('image_urls', [])
-        previous_skus = response.meta.get('skus', {})
+    def create_requests(self, response):
+        color_urls = self.extract_color_urls(response)
+        return [Request(url, callback=self.parse_product) for url in color_urls]
 
-        image_urls.append(self.extract_image_urls(response))
-        previous_skus.update(self.extract_skus(response))
+    def if_product_exists(self, response):
+        product_available = self.product_reference(response)
+        retailer_sku = self.extract_retailer_sku(response)
 
-        if not color_urls:
-            image_urls.append(item['image_urls'])
-            item['image_urls'] = image_urls
-            item['skus'].update(previous_skus)
-            return item
+        if not product_available or retailer_sku in self.visited_products:
+            return True
 
-        yield self.create_request(color_urls.pop(),
-                                  meta={'item': item, 'urls': color_urls,
-                                        'skus': previous_skus, 'image_urls': image_urls})
+        self.visited_products.add(retailer_sku)
+        return False
 
-    def create_request(self, url, meta):
-        return Request(url=url, callback=self.parse_product, meta=meta)
-
-    def extract_product_urls(self, response):
+    def extract_color_urls(self, response):
         color_id = self.extract_color_id(response)
-        return response.css(f".color :not(.unselectable)"
-                            f" :not([data-value='{color_id}'])::attr(href)").extract()
+        color_css = f".color :not(.unselectable) :not([data-value='{color_id}'])::attr(href)"
+        return response.css(color_css).extract()
 
-    def product_available(self, response):
+    def product_reference(self, response):
         return response.css('.pdp-main::attr(data-product-id)').extract_first()
 
     def extract_retailer_sku(self, response):
-        return self.product_available(response).split('_')[0]
+        return self.product_reference(response).split('_')[0]
 
     def extract_gender(self, response):
-        gender = response.css("meta[itemprop='name']::attr(content)").extract_first().split('-')[0]
+        gender_css = "meta[itemprop='name']::attr(content)"
+        gender = response.css(gender_css).extract_first().split('-')[0]
         return self.gender_map.get(gender.lower())
 
     def extract_trails(self, response):
@@ -86,29 +87,34 @@ class ProductParser(Spider):
         return response.css(".product-name ::text").extract_first().strip()
 
     def extract_product_description(self, response):
-        description = response.css("[itemprop='description'] div:not(:last-child) ::text").extract()
-        return list(filter(lambda text: text.strip(), description))
+        description_css = "[itemprop='description'] div:not(:last-child) ::text"
+        description = response.css(description_css).extract()
+        return [text for text in description if text.strip()]
 
     def extract_product_care(self, response):
-        care = response.css("[itemprop='description'] div:last-child ::text").extract()
-        return list(filter(lambda text: text.strip(), care))
+        care_css = "[itemprop='description'] div:last-child ::text"
+        care = response.css(care_css).extract()
+        return [text for text in care if text.strip()]
 
     def extract_price(self, response):
-        return response.css("[itemprop='price']::attr(content)").extract_first()
+        price_css = "[itemprop='price']::attr(content)"
+        return response.css(price_css).extract_first()
 
     def extract_currency(self, response):
-        return response.css("[itemprop='priceCurrency']::attr(content)").extract_first()
+        currecy_css = "[itemprop='priceCurrency']::attr(content)"
+        return response.css(currecy_css).extract_first()
 
     def extract_color_id(self, response):
-        return self.product_available(response).split('_')[1]
+        return self.product_reference(response).split('_')[1]
 
     def extract_color(self, response):
         color_id = self.extract_color_id(response)
-        return response.css(f".color [data-value='{color_id}']::text").extract_first(default='').strip()
+        color_id_css = f".color [data-value='{color_id}']::text"
+        return response.css(color_id_css).extract_first(default='').strip()
 
     def extract_category(self, response):
         categories = response.css(".breadcrumb li ::text").extract()
-        return list(filter(lambda category: category.strip(), categories))
+        return [category for category in categories if category.strip()]
 
     def extract_image_urls(self, response):
         return response.css('::attr(data-image-replacement)').extract()
@@ -116,10 +122,8 @@ class ProductParser(Spider):
     def extract_sku_model(self, response):
         return response.css('::attr(data-value)').extract_first()
 
-    def in_stock(self, response):
-        if 'unselectable' in response.css('::attr(class)').extract_first():
-            return True
-        return False
+    def out_of_stock(self, response):
+        return 'unselectable' in response.css('::attr(class)').extract_first()
 
     def extract_skus(self, response):
         color_id = self.extract_color_id(response)
@@ -133,6 +137,10 @@ class ProductParser(Spider):
         for size in response.css('.size li'):
             sku = sku_info.copy()
             sku['size'] = size.css('::attr(title)').extract_first()
-            sku['out_of_stock'] = self.in_stock(size)
+            out_of_stock = self.out_of_stock(size)
+
+            if out_of_stock:
+                sku['out_of_stock'] = out_of_stock
+
             skus[f"{color_id}_{self.extract_sku_model(size)}"] = sku
         return skus

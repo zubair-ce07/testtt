@@ -12,15 +12,15 @@ class WefashionDeCrawlSpider(CrawlSpider):
     start_urls = [
         'http://www.wefashion.de/'
     ]
-    category_css = [
+    listing_css = [
         '.header-top-level-menu',
         '#category-level-0'
     ]
 
     rules = (
-        Rule(LinkExtractor(restrict_css=category_css), callback='parse'),
+        Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
         Rule(LinkExtractor(restrict_css='.product-image',
-                           process_value=lambda url: url_query_cleaner(url)),
+                           process_value=url_query_cleaner),
              callback='parse_item'),
     )
 
