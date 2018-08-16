@@ -1,0 +1,65 @@
+{
+  "teams": [
+    {
+      "name": "Pakistan",
+      "type": "INTERNATIONAL",
+      "ranking": "1"
+    },
+    {
+      "name": "India",
+      "type": "INTERNATIONAL",
+      "ranking": "2"
+    },
+    {
+      "name": "Australia",
+      "type": "INTERNATIONAL",
+      "ranking": "3"
+    },
+    {
+      "name": "South Africa",
+      "type": "INTERNATIONAL",
+      "ranking": "4"
+    },
+    {
+      "name": "England",
+      "type": "INTERNATIONAL",
+      "ranking": "5"
+    },
+    {
+      "name": "Sri Lanka",
+      "type": "INTERNATIONAL",
+      "ranking": "6"
+    },
+    {
+      "name": "New Zealand",
+      "type": "INTERNATIONAL",
+      "ranking": "7"
+    },
+    {
+      "name": "West Indies",
+      "type": "INTERNATIONAL",
+      "ranking": "8"
+    },
+    {
+      "name": "Zimbabwe",
+      "type": "INTERNATIONAL",
+      "ranking": "9"
+    },
+    {
+      "name": "Bangladesh",
+      "type": "INTERNATIONAL",
+      "ranking": "10"
+    },
+    {
+      "name": "Afghanistan",
+      "type": "INTERNATIONAL",
+      "ranking": "11"
+    },
+    {
+      "name": "Ireland",
+      "type": "INTERNATIONAL",
+      "ranking": "12"
+    }
+
+  ]
+}
