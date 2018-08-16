@@ -45,8 +45,8 @@ class ResultProcessor:
         passed students sorted by the score.
         """
         passed_students = [x for x in users if x.score >= threshold]
-        sorted_list = sorted(passed_students, key=lambda x: x.score, reverse=True)
+        sorted_list = sorted(passed_students,
+                             key=lambda x: x.score,
+                             reverse=True)
         groups = [sorted_list[x:x + 50] for x in range(0, 600, 50)]
         return groups
-
-

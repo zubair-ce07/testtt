@@ -12,9 +12,9 @@ class ResultData:
         representation of the object fields
         :return: string containing all fields of object
         """
-        data = str(self.roll_no)\
-               + ", " + str(self.name)\
-               + ", " + str(self.father_name)\
-               + ", " + str(self.score)
+        data = "{}, {}, {}, {}".format(
+            self.roll_no,
+            self.name,
+            self.father_name,
+            self.score)
         return data
-
