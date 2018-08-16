@@ -56,14 +56,15 @@ class Parser(Spider):
         product_data = self.get_product_json(response)
         sku_variant = product_data["variant"]
         sizes_s = response.css('.swatch-list__size')
+        common_sku = self.get_common_sku(response, product_data)
 
         if not sizes_s:
-            skus[f"{sku_variant}_One Size"] = self.get_common_sku(response, product_data)
+            skus[f"{sku_variant}_One Size"] = common_sku
             skus[f"{sku_variant}_One Size"]["size"] = "One Size"
             return skus
 
         for size in sizes_s:
-            sku = self.get_common_sku(response, product_data)
+            sku = common_sku.copy()
             sku["size"] = size.css('::text').extract_first().strip()
             if size.css('[class*="unselectable"]'):
                 sku["out_of_stock"] = True
@@ -117,9 +118,9 @@ class Parser(Spider):
 
     @staticmethod
     def get_product_json(response):
-        json_string = response.css('div[data-as-product]::attr(data-as-product)').extract_first()
-        json_string.replace('&quot;', '"')
-        return json_loads(json_string)
+        raw_product = response.css('div[data-as-product]::attr(data-as-product)').extract_first()
+        raw_product.replace('&quot;', '"')
+        return json_loads(raw_product)
 
     def colour_requests(self, response):
         colour_urls = response.css('.swatch-list__button--is-empty>a::attr(href)').extract()
