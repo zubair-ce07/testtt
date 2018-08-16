@@ -53,11 +53,11 @@ class Parser(Spider):
         product_data = self.get_product_json(response)
         sku_variant = product_data["variant"]
         common_sku = self.get_common_sku(response, product_data)
-        sizes = response.css('.swatch-list__size')
-        if not sizes:
+        sizes_s = response.css('.swatch-list__size')
+        if not sizes_s:
             skus[f"{sku_variant}_One Size"] = common_sku
             return skus
-        for size in sizes:
+        for size in sizes_s:
             sku = common_sku.copy()
             sku["size"] = size.css('::text').extract_first().strip()
             if size.css('[class*="unselectable"]'):

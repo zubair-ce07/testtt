@@ -17,11 +17,11 @@ class HugoBossSpider(CrawlSpider):
         'hugoboss.com'
     ]
 
-    product_selectors = ['.swatch-list__image']
-    crawl_selectors = ['.nav-list--third-level', '.pagingbar__item']
+    product_css = ['.swatch-list__image']
+    listing_css = ['.nav-list--third-level', '.pagingbar__item']
 
-    rules = (Rule(LinkExtractor(restrict_css=product_selectors, process_value=w3cleaner), callback="parse_product"),
-             Rule(LinkExtractor(restrict_css=crawl_selectors), callback='parse'),
+    rules = (Rule(LinkExtractor(restrict_css=product_css, process_value=w3cleaner), callback="parse_product"),
+             Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
              )
 
     def parse(self, response):
