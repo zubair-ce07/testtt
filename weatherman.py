@@ -124,13 +124,16 @@ class ResultGenerator:
     def generate_extreme_results(self, data):
         date = datetime.datetime.strptime(data['Highest Temp Date'], '%Y-%m-%d')
         print('Highest: {}C on {} {}'.format(data['Highest Temp'],
-                                             calendar.month_name[date.month], date.day))
+                                             calendar.month_name[date.month],
+                                             date.day))
         date = datetime.datetime.strptime(data['Lowest Temp Date'], '%Y-%m-%d')
         print('Lowest: {}C on {} {}'.format(data['Lowest Temp'],
-                                            calendar.month_name[date.month], date.day))
+                                            calendar.month_name[date.month],
+                                            date.day))
         date = datetime.datetime.strptime(data['Highest Humidity Date'], '%Y-%m-%d')
         print('Humidity: {}% on {} {}\n'.format(data['Highest Humidity'],
-                                                calendar.month_name[date.month], date.day))
+                                                calendar.month_name[date.month],
+                                                date.day))
 
     def generate_average_results(self, data):
         print('Highest Average: {}'.format(round(data['Highest Average'], 2)))
@@ -139,8 +142,10 @@ class ResultGenerator:
 
     def generate_chart_results(self, month_data):
         for day_number, day in month_data.items():
-            print('{:0>2d} {} {}C\n{:0>2d} {} {}C'.format(day_number, COLOR_RED + '+' * int(day['Max TemperatureC']),
-                                                          COLOR_PURPLE + day['Max TemperatureC'], day_number,
+            print('{:0>2d} {} {}C\n{:0>2d} {} {}C'.format(day_number,
+                                                          COLOR_RED + '+' * int(day['Max TemperatureC']),
+                                                          COLOR_PURPLE + day['Max TemperatureC'],
+                                                          day_number,
                                                           COLOR_BLUE + '+' * int(day['Min TemperatureC']),
                                                           COLOR_PURPLE + day['Min TemperatureC']))
 
@@ -148,7 +153,8 @@ class ResultGenerator:
 
     def generate_bonus_results(self, month_data):
         for day_number, day_data in month_data.items():
-            print('{:0>2d} {}{} {}C - {}C'.format(day_number, COLOR_BLUE + '+' * int(day_data['Min TemperatureC']),
+            print('{:0>2d} {}{} {}C - {}C'.format(day_number,
+                                                  COLOR_BLUE + '+' * int(day_data['Min TemperatureC']),
                                                   COLOR_RED + '+' * int(day_data['Max TemperatureC']),
                                                   COLOR_PURPLE + day_data['Min TemperatureC'],
                                                   day_data['Max TemperatureC']))
