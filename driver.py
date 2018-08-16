@@ -7,50 +7,47 @@ def read_cmd_arg():
     """
     reads cmd line args
     """
-    arg_validator = ArgumentValidator()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("dir_path",
                         help="the path of directory where files are allocated",
                         default=1, nargs='?')
-    parser.add_argument("-e", type=arg_validator.validate_arguments_year,
+    parser.add_argument("-e", type=ArgumentValidator.validate_arguments_year,
                         help="specify year for required information")
     parser.add_argument("-c",
-                        type=arg_validator.validate_arguments_month_year,
+                        type=ArgumentValidator.validate_arguments_month_year,
                         help="specify month for required information")
     parser.add_argument("-a",
-                        type=arg_validator.validate_arguments_month_year,
+                        type=ArgumentValidator.validate_arguments_month_year,
                         help="specify month for required information")
 
     args = parser.parse_args()
-    arg_validator.check_number_arguments(args, parser)
-    given_arg_list = []
+    ArgumentValidator.check_number_arguments(args, parser)
+    arg_type = ""
+    arg_input = ""
     if args.e:
-        given_arg_list.append('-e')
-        given_arg_list.append(args.e)
+        arg_type = '-e'
+        arg_input = args.e
     elif args.a:
-        given_arg_list.append('-a')
-        given_arg_list.append(args.a)
+        arg_type = '-a'
+        arg_input = args.a
     elif args.c:
-        given_arg_list.append('-c')
-        given_arg_list.append(args.c)
+        arg_type = '-c'
+        arg_input = args.c
     else:
         print("Invalid Arguments provided")
         exit()
-    given_arg_list.append(args.dir_path)
-    return given_arg_list
-
+    return arg_type, arg_input, args.dir_path
 
 if __name__ == "__main__":
     weather_reporter_obj = WeatherReporter()
-    given_arg_list = read_cmd_arg()
-    report_type = given_arg_list[0]
+    report_type, report_year, dir_path  = read_cmd_arg()
     if report_type == '-e':
-        weather_reporter_obj.genrate_year_report(given_arg_list)
+        weather_reporter_obj.generate_year_report(report_year, dir_path)
     elif report_type == '-a':
-        weather_reporter_obj.genrate_month_report(given_arg_list)
+        weather_reporter_obj.generate_month_report(report_year, dir_path)
     elif report_type == '-c':
-        weather_reporter_obj.genrate_barchart_report(given_arg_list)
+        weather_reporter_obj.generate_barchart_report(report_year, dir_path)
     else:
         print("Invalid Argumnent")
         exit()

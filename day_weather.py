@@ -1,36 +1,36 @@
 class DayWeather:
-    def __init__(self, pkt, max_temperaturec, mean_temperaturec
-                 , min_temperaturec, dew_pointc, meandew_pointc
-                 , min_dewpointc, max_humidity, mean_humidity
-                 , min_humidity, max_sea_level_pressurehpa
-                 , mean_sea_level_pressurehpa
-                 , min_sea_level_pressurehpa
-                 , max_visibilitykm, mean_visibilitykm
-                 , min_visibilitykm, max_wind_speedkm
-                 , mean_wind_speedkm, max_gust_speedkm
-                 , precipitationcm, cloudcover
-                 , events, winddirdegrees
+    def __init__(self, pkt, max_temperature, mean_temperature
+                 , min_temperature, dew_point, mean_dew_point
+                 , min_dew_point, max_humidity, mean_humidity
+                 , min_humidity, max_sea_level_pressure
+                 , mean_sea_level_pressure
+                 , min_sea_level_pressure
+                 , max_visibility, mean_visibility
+                 , min_visibility, max_wind_speed
+                 , mean_wind_speed, max_gust_speed
+                 , precipitation, cloud_cover
+                 , events, wind_dir_degrees
                  ):
         self.pkt = pkt
-        self.max_temperaturec = max_temperaturec
-        self.mean_temperaturec = mean_temperaturec
-        self.min_temperaturec = min_temperaturec
-        self.dew_pointc = dew_pointc
-        self.meandew_pointc = meandew_pointc
-        self.min_dewpointc = min_dewpointc
+        self.max_temperature = max_temperature
+        self.mean_temperature = mean_temperature
+        self.min_temperature = min_temperature
+        self.dew_point = dew_point
+        self.mean_dew_point = mean_dew_point
+        self.min_dew_point = min_dew_point
         self.max_humidity = max_humidity
         self.mean_humidity = mean_humidity
         self.min_humidity = min_humidity
-        self.max_sea_level_pressurehpa = max_sea_level_pressurehpa
-        self.mean_sea_level_pressurehpa = mean_sea_level_pressurehpa
-        self.min_sea_level_pressurehpa = min_sea_level_pressurehpa
-        self.max_visibilitykm = max_visibilitykm
-        self.mean_visibilitykm = mean_visibilitykm
-        self.min_visibilitykm = min_visibilitykm
-        self.max_wind_speedkm = max_wind_speedkm
-        self.mean_wind_speedkm = mean_wind_speedkm
-        self.max_gust_speedkm = max_gust_speedkm
-        self.precipitationcm = precipitationcm
-        self.cloudcover = cloudcover
+        self.max_sea_level_pressure = max_sea_level_pressure
+        self.mean_sea_level_pressure = mean_sea_level_pressure
+        self.min_sea_level_pressure = min_sea_level_pressure
+        self.max_visibility = max_visibility
+        self.mean_visibility = mean_visibility
+        self.min_visibility = min_visibility
+        self.max_wind_speed = max_wind_speed
+        self.mean_wind_speed = mean_wind_speed
+        self.max_gust_speed = max_gust_speed
+        self.precipitation = precipitation
+        self.cloud_cover = cloud_cover
         self.events = events
-        self.winddirdegrees = winddirdegrees
+        self.wind_dir_degrees = wind_dir_degrees
