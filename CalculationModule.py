@@ -8,23 +8,27 @@ from ParserModule import time_parser
 
 def extreme_temperature_conditions(time_span, list_data):
     """Takes TimeSpan and Data Records to show extreme cases of temperature present in records"""
-    highest_temperature_date = None
-    lowest_temperature_date = None
-    highest_humidity_date = None
-    highest_temperature = None
-    lowest_temperature = None
-    humidity = None
 
     for data in list_data:
-        if data.max_temperature_c and (not highest_temperature or highest_temperature < data.max_temperature_c):
+
+        # Max Temperature Check
+        if data.max_temperature_c and ('highest_temperature' not in locals()
+                                       or highest_temperature < data.max_temperature_c):
+
             highest_temperature_date = data.date_pkt
             highest_temperature = data.max_temperature_c
 
-        if data.min_temperature_c and (not lowest_temperature or lowest_temperature > data.min_temperature_c):
+        # Min Temperature Check
+        if data.min_temperature_c and ('lowest_temperature' not in locals()
+                                       or lowest_temperature > data.min_temperature_c):
+
             lowest_temperature_date = data.date_pkt
             lowest_temperature = data.min_temperature_c
 
-        if data.max_humidity and (not humidity or humidity < data.max_humidity):
+        # Humidity Check
+        if data.max_humidity and ('humidity' not in locals()
+                                  or humidity < data.max_humidity):
+
             humidity = data.max_humidity
             highest_humidity_date = data.date_pkt
 
@@ -114,12 +118,15 @@ def string_to_date(time_span):
     year_required, month_required, day_required = time_parser(time_span)
     if not month_required and not day_required:
         return datetime(year_required, 1, 1, 0, 0).strftime('%Y')
+
     elif not day_required:
         return datetime(year_required, month_required, 1, 0, 0).strftime('%B %Y')
+
     else:
         return datetime(year_required, month_required, day_required, 0, 0).strftime('%d %B %Y')
 
 
 def date_format_converter(date):
     """Here we parse given date to get a well formatted Date pattern (Date to Date) """
+
     return datetime(date[0].year, date[0].month, date[0].day, 0, 0).strftime('%B %Y')

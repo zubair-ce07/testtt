@@ -143,16 +143,18 @@ def time_parser(time_to_be_parsed):
 
     # User can give year, month and day separated by '/', so here we split them
     bulk_date = time_to_be_parsed.split('/')
-    try:
-        if len(bulk_date) == 3:
-            year_required, month_required, day_required = int(bulk_date[0]), int(bulk_date[1]), int(bulk_date[2])
-        elif len(bulk_date) == 2:
-            year_required, month_required, day_required = int(bulk_date[0]), int(bulk_date[1]), None
-        elif len(bulk_date) == 1:
-            year_required, month_required, day_required = int(bulk_date[0]), None, None
-        else:
-            year_required, month_required, day_required = None, None, None
 
-        return year_required, month_required, day_required
+    try:
+        _bulk_time = {
+            3: (int(bulk_date[0]), int(bulk_date[1]), int(bulk_date[2])),
+            2: (int(bulk_date[0]), int(bulk_date[1]), None),
+            1: (int(bulk_date[0]), None, None),
+        }
+
+        if len(bulk_date) in _bulk_time.keys():
+            return _bulk_time[len(bulk_date)]
+        else:
+            return None, None, None
+
     except TypeError:
         raise TypeError
