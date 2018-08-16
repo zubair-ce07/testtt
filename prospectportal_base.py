@@ -260,7 +260,8 @@ class PPBaseParseSpiderE(PPBaseParseSpider, BaseMixinPPE):
     def parse_price(self, response):
         raw_room = response.meta['room']
         loader = RoomLoader(item=raw_room.copy(), response=response)
-        loader.add_xpath('room_price', '//div[@data-charge-type="monthly"]//div[@class="item-price"]//span/text()')
+        price = clean(response.xpath('//div[@data-charge-type="monthly"]//div[@class="item-price"]//span/text()'))[0]
+        loader.add_value('room_price', price)
         yield loader.load_item()
         yield self.next_action()
 
