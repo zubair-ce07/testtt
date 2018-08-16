@@ -17,7 +17,6 @@ def _sanitize(input_val):
         to_clean = input_val.extract()
     else:
         to_clean = input_val
-
     return re.sub('\s+', ' ', to_clean.replace('\xa0', ' ')).strip()
 
 
@@ -40,7 +39,7 @@ class LandmarkCrawlerSpider(scrapy.Spider):
     search_url = 'https://www.google.com/search'
 
     def start_requests(self):
-        csv_path = './landmarkcrawler/new_file.csv'
+        csv_path = './landmarkcrawler/500-faulty-tripadvisor.csv'
         fields = ['landmark', 'city']
         self.logger.info(f'Reading landmarks from {csv_path}')
         with open(csv_path) as csv:
@@ -117,9 +116,16 @@ class LandmarkCrawlerSpider(scrapy.Spider):
         return (clean(response.xpath(xpath)) or [''])[0]
 
     def trip_advisor_reviews_count(self, response):
+        xpath = '//script[@type="application/ld+json" and contains(text(), "reviewCount")]'
+        count = int((clean(response.xpath(xpath).re('reviewCount"\s*:\s*?"(\d+)"')) or ['-1'])[0])
+
+        if count != -1:
+            return count
+
         css = '.reviews_header_count::text'
-        return int((clean(response.css('.rating_and_popularity .rating [property="count"]::text')) or
-                    [''.join(clean(response.css(css).re('\d+')))])[0])
+        value = (clean(response.css('.rating_and_popularity .rating [property="count"]::text')) or
+                    [''.join(clean(response.css(css).re('\d+')))])[0]
+        return int(value.replace(',', ''))
 
     def trip_advisor_heading(self, response):
         return (clean(response.css('.heading_title ::text, #PAGEHEADING::text, #HEADING::text')) or
@@ -135,6 +141,8 @@ class LandmarkCrawlerSpider(scrapy.Spider):
         return (clean(response.css('head title::text')) or [''])[0]
 
     def parse(self, response):
+        # Google Response
+
         landmark = LandmarkcrawlerItem()
 
         landmark['google_search_url'] = response.url
@@ -164,6 +172,9 @@ class LandmarkCrawlerSpider(scrapy.Spider):
         # return Request(url, callback=self.parse_trip_advisor, meta={'landmark': landmark, 'use_proxy': False})
 
     def parse_landmark(self, response):
+        # Google response
+
+
         landmark = response.meta.get('landmark')
         landmark['google_advance_search_url'] = response.url
         landmark['google_search_title'] = self.get_title(response)
@@ -200,13 +211,15 @@ class LandmarkCrawlerSpider(scrapy.Spider):
         # return Request(url, callback=self.parse_trip_advisor, meta={'landmark': landmark, 'use_proxy': False})
 
     def parse_trip_advisor(self, response):
+        # TA Response
+
         landmark = response.meta.get('landmark')
 
         landmark['trip_advisor_url'] = response.url
         landmark['trip_advisor_heading'] = self.trip_advisor_heading(response)
         landmark['trip_advisor_page_title'] = self.trip_advisor_title(response)
 
-        if clean(response.css('.global-nav-link.ui_tab.active::attr(data-tracking-label)'))[0] == 'attractions':
+        if 'things to do' in ' '.join(clean(response.css('.breadcrumb ::text'))).lower():
             landmark['trip_advisor_rating_count'] = self.trip_advisor_reviews_count(response)
         else:
             landmark['trip_advisor_rating_count'] = None

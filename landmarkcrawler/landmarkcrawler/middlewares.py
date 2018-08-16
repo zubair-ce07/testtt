@@ -118,5 +118,5 @@ class CustomProxyMiddleware:
         if request.meta.get('use_proxy'):
             request.meta['proxy'] = "bigg-us-dhcu.tp-ns.com:80"
             request.headers['Proxy-Authorization'] = basic_auth_header(
-                'rafael@kayak.com', 's30p@ssword')
+                'kayakbigg', 's30p@ssword')
             spider.logger.info(f'Using proxy {request.meta["proxy"]}')
