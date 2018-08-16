@@ -1,7 +1,8 @@
-from forever_new.spiders.product_parser import ProductParser
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from w3lib.url import url_query_cleaner
+
+from forever_new.spiders.product_parser import ProductParser
 
 
 class ForeverNewAuCrawlSpider(CrawlSpider):
@@ -9,12 +10,12 @@ class ForeverNewAuCrawlSpider(CrawlSpider):
     allowed_domains = ["forevernew.com.au"]
     start_urls = ["https://www.forevernew.com.au/"]
     product_parser = ProductParser()
-    category_css = "#menu, .next"
+    listing_css = ["#menu", ".next"]
     product_css = ".product-name"
 
     rules = (
-        Rule(LinkExtractor(restrict_css=category_css), callback="parse"),
-        Rule(LinkExtractor(restrict_css=product_css, process_value="process_link"), callback=product_parser.parse)
+        Rule(LinkExtractor(restrict_css=listing_css), callback="parse"),
+        Rule(LinkExtractor(restrict_css=product_css, process_value=url_query_cleaner), callback=product_parser.parse)
     )
 
     def parse(self, response):
@@ -25,6 +26,3 @@ class ForeverNewAuCrawlSpider(CrawlSpider):
         for request in requests:
             request.meta["trail"] = trail.copy()
             yield request
-
-    def process_link(self, value):
-        return url_query_cleaner(value, [])
