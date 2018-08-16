@@ -18,13 +18,13 @@ class UllapopkenCrawler(CrawlSpider, UllapopkenParser):
     rules = (Rule(LinkExtractor(restrict_css='.top_level_nav', deny='.*sale.*'),
                   follow=True),
              Rule(LinkExtractor(restrict_css='.toplevel > .nav_content'),
-                  callback='parse_category_variables'))
+                  callback='parse_category_parameters'))
 
     article_url_t = 'https://www.ullapopken.de/api/res/article/{}'
     category_url_t = 'https://www.ullapopken.de/api/res/category/articles/language/de/' \
                      'size/60/page/{}/category/{}/grouping/{}/filter/_/sort/normal/fs/_'
 
-    def parse_category_variables(self, response):
+    def parse_category_parameters(self, response):
         category = response.css('#paging::attr(data-category)').extract_first()
         grouping = response.css('#paging::attr(data-grouping)').extract_first()
 

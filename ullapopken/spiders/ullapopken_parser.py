@@ -18,10 +18,11 @@ class UllapopkenParser:
     def parse_color(self, response):
         raw_item = json.loads(response.text)
         item = response.meta.get('item')
-        remaining_requests = response.meta.get('remaining_requests')
+
         item['image_urls'] += self.get_image_urls(raw_item)
         item['skus'] += self.get_skus(raw_item)
-        return self.yield_color_request(remaining_requests, item)
+
+        return self.yield_color_request(response.meta.get('remaining_requests'), item)
 
     def parse_item(self, response):
         raw_item = json.loads(response.text)
@@ -39,6 +40,7 @@ class UllapopkenParser:
         item['gender'] = self.get_gender(categories)
         item['image_urls'] = self.get_image_urls(raw_item)
         item['skus'] = self.get_skus(raw_item)
+
         color_requests = self.get_color_requests(variants)
 
         return self.yield_color_request(color_requests, item)
@@ -61,9 +63,7 @@ class UllapopkenParser:
     @staticmethod
     def get_picture_codes(raw_item):
         raw_pictures = raw_item['pictureMap']
-        picture_codes = [raw_pictures['code']]
-
-        return picture_codes + raw_pictures['detailCodes']
+        return [raw_pictures['code']] + raw_pictures['detailCodes']
 
     def get_skus(self, raw_item):
         sku_common = self.get_sku_common(raw_item)
@@ -109,7 +109,7 @@ class UllapopkenParser:
     @staticmethod
     def get_description(raw_item):
         selector = Selector(text=list(raw_item['description'].values())[0])
-        return selector.css('*::text').re_first('.*[a-z].*').strip().split('.')
+        return selector.css('*::text').re_first('.*[\S].*').strip().split('.')
 
     @staticmethod
     def get_care(raw_item):
