@@ -1,7 +1,6 @@
-from urllib.parse import urlparse
-
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from w3lib.url import url_query_cleaner
 
 from wefashion.wefashion_de_parse import ProductParser
 
@@ -20,9 +19,9 @@ class WefashionDeCrawlSpider(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(restrict_css=category_css), callback='parse'),
-        Rule(LinkExtractor(restrict_css='.product-image'),
-             callback='parse_item',
-             process_links='filter_product_links'),
+        Rule(LinkExtractor(restrict_css='.product-image',
+                           process_value=lambda url: url_query_cleaner(url)),
+             callback='parse_item'),
     )
 
     def parse(self, response):
@@ -33,12 +32,6 @@ class WefashionDeCrawlSpider(CrawlSpider):
         for request in super().parse(response):
             request.meta['trail'] = trail.copy()
             yield request
-
-    def filter_product_links(self, links):                  # Remove query string from url
-        for link in links:
-            new_link = urlparse(link.url)
-            link.url = f"{new_link.scheme}://{new_link.netloc + new_link.path}"
-        return links
 
     def parse_item(self, response):
         return self.wefashion_parser.parse(response)
