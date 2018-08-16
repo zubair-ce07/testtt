@@ -85,6 +85,10 @@ class DateMapper:
         month = datetime.date(1900, MathHelper.parse_int(month), 1).strftime('%B')
         return f"{month} {day}"
 
+    @staticmethod
+    def get_date(day):
+        return  day.split('-')[-1]
+
 
 class MathHelper:
     """
@@ -107,15 +111,15 @@ class MathHelper:
         """
         return cls.__helper_dict.get(help_key)
 
-    @staticmethod
-    def parse_int(number):
+    @classmethod
+    def parse_int(cls, number, default=None):
         """
         Checks a value that can not be converted into integer and returns None otherwise convert value to number and
         :returns
         :param number: Candidate to be check as a possible integer.
         :return: None or int number
         """
-        return None if number is "" or number is None else int(number)
+        return cls.__helper_dict.get(default) if number is "" or number is None else int(number)
 
 
 class ReportsHelper:
@@ -138,13 +142,13 @@ class ReportsHelper:
                 },
                 'year_with_month': {
                     'average_highest_temp': {
-                        'value': 0, 'total-entries': 0
+                        'value': 0
                     },
                     'average_lowest_temp': {
-                        'value': 0, 'total-entries': 0
+                        'value': 0
                     },
                     'average_mean_humidity': {
-                        'value': 0, 'day': None, 'total-entries': 0
+                        'value': 0
                     }
                 },
                 'month_bar_chart': {}

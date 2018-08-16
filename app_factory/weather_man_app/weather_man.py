@@ -2,13 +2,12 @@
 """
 Weather man application which perform data analytics on weather data.
 """
-from weather_man_app.utils.data_handlers import WeatherReadingData
+from weather_man_app.utils.data_handlers import WeatherReading
 from weather_man_app.utils.decorators import prepare_input
-from weather_man_app.utils.design_patterns import Singleton
 from weather_man_app.utils.report_handlers import ReportsHandler
 
 
-class WeatherMan(metaclass=Singleton):
+class WeatherMan:
     """
     Contains complete flow required for working of weather man.
     """
@@ -23,12 +22,11 @@ class WeatherMan(metaclass=Singleton):
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='years')
-        weather_data_holder = WeatherReadingData(
+        weather_data_holder = WeatherReading(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        for data in weather_data_holder.weather_data:
-            self.results.update_year_report(data)
+        self.results.update_year_report(weather_data_holder.weather_readings)
         self.results.show_report()
 
     @prepare_input
@@ -38,13 +36,11 @@ class WeatherMan(metaclass=Singleton):
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='year_with_month')
-        weather_data_holder = WeatherReadingData(
+        weather_data_holder = WeatherReading(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        for data in weather_data_holder.weather_data:
-            self.results.update_year_with_month_report(data)
-        self.results.prepare_averages_for_result()
+        self.results.update_year_with_month_report(weather_data_holder.weather_readings)
         self.results.show_report()
 
     @prepare_input
@@ -54,12 +50,11 @@ class WeatherMan(metaclass=Singleton):
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='month_bar_chart')
-        weather_data_holder = WeatherReadingData(
+        weather_data_holder = WeatherReading(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        for data in weather_data_holder.weather_data:
-            self.results.show_month_bar_chart_report(data)
+        self.results.show_month_bar_chart_report(weather_data_holder.weather_readings)
 
     @prepare_input
     def generate_month_bar_chart_in_one_line_result(self, **kwargs):
@@ -69,12 +64,11 @@ class WeatherMan(metaclass=Singleton):
         :param kwargs: key word arguments, required keys are: file_path and period (year or year/month)
         """
         self.results = ReportsHandler(report_category='month_bar_chart_in_one_line')
-        weather_data_holder = WeatherReadingData(
+        weather_data_holder = WeatherReading(
             file_path=kwargs.get('file_path'),
             period=kwargs.get('period')
         )
-        for data in weather_data_holder.weather_data:
-            self.results.show_month_bar_chart_in_one_line_report(data)
+        self.results.show_month_bar_chart_in_one_line_report(weather_data_holder.weather_readings)
 
     def show_result(self, file_path, category, year_month):
         """
