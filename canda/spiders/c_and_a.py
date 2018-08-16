@@ -131,8 +131,7 @@ class Canda(CrawlSpider):
         return int(''.join(re.findall("\d+", price)))
 
     def get_currency(self, response):
-        currency_symbol = self.get_currency_symbol(response)
-        return self.currencies.get(currency_symbol)
+        return self.currencies.get(self.get_currency_symbol(response))
 
     @staticmethod
     def get_currency_symbol(response):
@@ -144,7 +143,7 @@ class Canda(CrawlSpider):
         return response.css('.box__logolist-brand::attr(alt)').extract_first(default='C AND A')
 
     def get_gender(self, response):
-        category_url = response.css('.util-link-left.util-text-smaller::attr(href)').extract_first()
+        category_url = response.css('.util-link-left::attr(href)').extract_first()
 
         for gender_token, gender in self.genders:
             if gender_token in category_url:
@@ -156,7 +155,7 @@ class Canda(CrawlSpider):
 
     @staticmethod
     def get_title(response):
-        return list(filter(None, [a.strip() for a in response.css('.product-stage__title::text').extract()]))[0]
+        return "".join([a.strip() for a in response.css('.product-stage__title::text').extract()])
 
     @staticmethod
     def get_retailer_sku(response):
@@ -189,4 +188,4 @@ class Canda(CrawlSpider):
 
     @staticmethod
     def get_product_id(response):
-        return response.css('.product-stage::attr(data-productid)').extract()
+        return response.css('.product-stage::attr(data-productid)').extract_first()
