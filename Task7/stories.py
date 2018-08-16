@@ -28,10 +28,11 @@ class StoriesSpider(CrawlSpider):
 
     def parse_pagination(self, response):
         total_items = response.css("#productCount::attr(class)").extract_first()
+        products_per_page = response.css("#productPerPage::attr(class)").extract_first()
         page_url = response.urljoin(response.css("#productPath::attr(class)").extract_first())
 
         return [Request(f"{page_url}?start={start}", callback=self.parse_items_links)
-                for start in range(0, int(total_items)+1, 32)]
+                for start in range(0, int(total_items), int(products_per_page))]
 
     def parse_items_links(self, response):
         items_links = response.css("a::attr(href)").extract()
