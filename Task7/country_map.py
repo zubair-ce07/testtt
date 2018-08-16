@@ -1,40 +1,40 @@
-country_map = {'Austria': {
+country_map = {'austria': {
     'HMCORP_locale': 'de_AT',
     'HMCORP_currency': 'EUR'
     },
-    'Belgium': {
+    'belgium': {
         'HMCORP_locale': 'nl_BE',
         'HMCORP_currency': 'EUR'
     },
-    'Denmark': {
+    'denmark': {
         'HMCORP_locale': 'da_DK',
         'HMCORP_currency': 'DKK'
     },
-    'Finland': {
+    'finland': {
         'HMCORP_locale': 'fi_FI',
         'HMCORP_currency': 'EUR'
     },
-    'France': {
+    'france': {
         'HMCORP_locale': 'fr_FR',
         'HMCORP_currency': 'EUR'
     },
-    'Germany': {
+    'germany': {
         'HMCORP_locale': 'de_DE',
         'HMCORP_currency': 'EUR'
     },
-    'Ireland': {
+    'ireland': {
         'HMCORP_locale': 'en_IE',
         'HMCORP_currency': 'EUR'
     },
-    'Italy': {
+    'italy': {
         'HMCORP_locale': 'it_IT',
         'HMCORP_currency': 'EUR'
     },
-    'Netherlands': {
+    'netherlands': {
         'HMCORP_locale': 'nl_NL',
         'HMCORP_currency': 'EUR'
     },
-    'Poland': {
+    'poland': {
         'HMCORP_locale': 'Poland',
         'HMCORP_currency': 'EUR'
     },

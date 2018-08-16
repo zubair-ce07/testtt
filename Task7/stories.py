@@ -20,7 +20,7 @@ class StoriesSpider(CrawlSpider):
 
     def __init__(self, country='united_states', **kwargs):
         super().__init__(**kwargs)
-        self.cookies = country_map[country]
+        self.cookies = country_map[country.lower()]
 
     def start_requests(self):
         urls = ['https://www.stories.com']
