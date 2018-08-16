@@ -3,12 +3,13 @@ import json
 from urllib.parse import urlencode, urljoin, urlparse, parse_qs
 
 import js2xml
-import js2xml.jsonlike
+import js2xml.utils.objects
+import js2xml.utils.vars
 from scrapy import Request, Selector
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule, CrawlSpider
 
-from whiteStuff import items
+from whiteStuff.items import WhiteStuffItem
 
 
 class WhiteStuffSpider(CrawlSpider):
@@ -38,12 +39,14 @@ class WhiteStuffSpider(CrawlSpider):
     }
     skus_parameters = {
         "Format": "JSON",
-        "ReturnVariable": "true"}
+        "ReturnVariable": "true"
+    }
 
     def parse_category_parameters(self, response):
         script = self.get_category_script(response)
-        config_category = re.findall(r"category\s?=\s?\"(.*)\";", script)[0] or ''
-        config_category_tree = re.findall(r"tree\s?=\s?\"(.*)\";", script)[0] or ''
+        parameters = js2xml.utils.vars.get_vars(js2xml.parse(script))
+        config_category_tree = parameters['attraqt.config.categorytree']
+        config_category = parameters['attraqt.config.category']
 
         if not config_category:
             return
@@ -95,7 +98,7 @@ class WhiteStuffSpider(CrawlSpider):
             yield Request(url=f'{self.category_url_t}{urlencode(category_parameters)}', callback=self.parse_category)
 
     def parse_item(self, response):
-        item = items.WhiteStuffItem()
+        item = WhiteStuffItem()
 
         item['name'] = self.get_title(response)
         item['retailer_sku'] = self.get_retailer_sku(response)
@@ -135,11 +138,11 @@ class WhiteStuffSpider(CrawlSpider):
 
     @staticmethod
     def get_raw_skus(response):
-        return js2xml.jsonlike.getall(js2xml.parse(response.text))[0]['productVariations']
+        return js2xml.utils.objects.getall(js2xml.parse(response.text), [dict])[0]['productVariations']
 
     @staticmethod
     def get_category_script(response):
-        return "\n".join(response.css('script::text').re('.*attraqt.config.category.*'))
+        return "".join(response.css('script::text').re('.*attraqt.config.category.*'))
 
     @staticmethod
     def get_image_urls(raw_skus):
@@ -169,15 +172,14 @@ class WhiteStuffSpider(CrawlSpider):
         return skus
 
     def get_pricing(self, raw_sku, currency):
-        pricing = dict()
-        pricing['price'] = self.format_price(raw_sku['salePrice'])
+        pricing = {'price': self.format_price(raw_sku['salePrice'])}
+        pricing['currency'] = currency
 
         if self.format_price(raw_sku['salePrice']) < self.format_price(raw_sku['listPrice']):
             pricing['previous_prices'] = self.format_price(raw_sku['listPrice'])
         else:
             pricing['previous_prices'] = []
 
-        pricing['currency'] = currency
         return pricing
 
     def make_skus_request(self, response):
