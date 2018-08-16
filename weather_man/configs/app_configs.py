@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Configurations which can be used through out different applications are written here.
+Configurations which can be used through out the application are written here.
 """
 
 

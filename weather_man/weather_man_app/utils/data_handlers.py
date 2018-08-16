@@ -4,8 +4,7 @@ Data handlers to getting results from file utils and processed it into required 
 application.
 """
 from weather_man_app.utils.file_utils import FileParser
-
-from app_factory.weather_man_app.utils.global_content import MathHelper
+from weather_man_app.utils.global_content import MathHelper
 
 
 class WeatherReading:

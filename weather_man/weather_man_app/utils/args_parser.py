@@ -12,8 +12,8 @@ def validate_year(year):
     Validate year. *** If any exception comes calling parser will handle. ***
     :param year: year
     """
-    year = datetime.datetime.strptime(year, "%Y").date().strftime("%Y")
-    if int(year) >= datetime.datetime.now().year:
+    year_test = datetime.datetime.strptime(year, "%Y").date().strftime("%Y")
+    if int(year_test) >= datetime.datetime.now().year:
         raise ValueError
     return year
 
