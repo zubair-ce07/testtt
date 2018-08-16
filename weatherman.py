@@ -1,5 +1,4 @@
 import argparse
-import calendar
 import copy
 import csv
 import datetime
@@ -42,10 +41,13 @@ class FileParser:
             return
 
         if required_month:
-            required_month = calendar.month_name[int(required_month)]
-            required_files_path = os.path.join(self.dir_path, '*' + required_year + '_' + required_month[:3] + '.txt')
+            current_date = datetime.datetime.now()
+            required_month = current_date.replace(month=int(required_month)).strftime("%b")
+            required_files_str = '*{}_{}.txt'.format(required_year, required_month)
+            required_files_path = os.path.join(self.dir_path, required_files_str)
         else:
-            required_files_path = os.path.join(self.dir_path, '*' + required_year + '_???.txt')
+            required_files_str = '*{}*.txt'.format(required_year)
+            required_files_path = os.path.join(self.dir_path, required_files_str)
 
         required_files_path = glob.glob(required_files_path)
         files_required = [os.path.basename(csv_file) for csv_file in required_files_path]
@@ -122,17 +124,23 @@ class ResultCalculator:
 class ResultGenerator:
 
     def generate_extreme_results(self, data):
+        current_date = datetime.datetime.now()
         date = datetime.datetime.strptime(data['Highest Temp Date'], '%Y-%m-%d')
+        month = current_date.replace(month=date.month).strftime("%b")
         print('Highest: {}C on {} {}'.format(data['Highest Temp'],
-                                             calendar.month_name[date.month],
+                                             month,
                                              date.day))
+
         date = datetime.datetime.strptime(data['Lowest Temp Date'], '%Y-%m-%d')
+        month = current_date.replace(month=date.month).strftime("%b")
         print('Lowest: {}C on {} {}'.format(data['Lowest Temp'],
-                                            calendar.month_name[date.month],
+                                            month,
                                             date.day))
+
         date = datetime.datetime.strptime(data['Highest Humidity Date'], '%Y-%m-%d')
+        month = current_date.replace(month=date.month).strftime("%b")
         print('Humidity: {}% on {} {}\n'.format(data['Highest Humidity'],
-                                                calendar.month_name[date.month],
+                                                month,
                                                 date.day))
 
     def generate_average_results(self, data):
@@ -160,13 +168,6 @@ class ResultGenerator:
                                                   day_data['Max TemperatureC']))
 
         print(COLOR_DEFAULT)
-
-
-def split_year_and_month(year_and_month):
-    year_and_month = year_and_month.split('/')
-    year = year_and_month[0]
-    month = year_and_month[1]
-    return year, month
 
 
 def main():
@@ -206,7 +207,7 @@ def main():
             result_generator.generate_extreme_results(year_result)
 
     if args.average_report:
-        year, month = split_year_and_month(args.average_month)
+        year, month = args.average_month.split('/')
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
@@ -219,7 +220,7 @@ def main():
             print('Sorry! data is not available of required year and month')
 
     if args.chart_report:
-        year, month = split_year_and_month(args.chart_report)
+        year, month = args.chart_report.split('/')
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
@@ -231,7 +232,7 @@ def main():
             print('Sorry! data is not available of required year and month')
 
     if args.bonus:
-        year, month = split_year_and_month(args.bonus)
+        year, month = args.bonus.split('/')
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
