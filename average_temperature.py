@@ -37,9 +37,12 @@ class AverageTemperatue:
                 self.average_humidity += int(row[' Mean Humidity'])
                 humid_count += 1
 
-        self.average_high = self.average_high / high_count
-        self.average_low = self.average_low / low_count
-        self.average_humidity = self.average_humidity / humid_count
+        if high_count is not constants.ZERO:
+            self.average_high = self.average_high / high_count
+        if low_count is not constants.ZERO:
+            self.average_low = self.average_low / low_count
+        if humid_count is not constants.ZERO:
+            self.average_humidity = self.average_humidity / humid_count
 
     def show_average_temperature(self, date_str, dir_path):
         """
@@ -56,8 +59,17 @@ class AverageTemperatue:
             self.find_average_temperature(file_path)
 
             print("%s %s" % (utilities.get_month_name(month), year))
-            print("Highest Average: %dC" % self.average_high)
-            print("Lowest Average: %dC" % self.average_low)
-            print("Average Humidity: %d%%" % self.average_humidity)
+            if self.average_high is not constants.ZERO:
+                print("Highest Average: %dC" % self.average_high)
+            else:
+                print("Highest Temperatures for this month are not present")
+            if self.average_low is not constants.ZERO:
+                print("Lowest Average: %dC" % self.average_low)
+            else:
+                print("Lowest Temperatures for this month are not present")
+            if self.average_humidity is not constants.ZERO:
+                print("Average Humidity: %d%%" % self.average_humidity)
+            else:
+                print("Average Humidity for this month are not present")
         else:
             print("No Data Found for the Specified Month")
