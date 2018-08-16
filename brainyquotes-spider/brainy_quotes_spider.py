@@ -21,25 +21,22 @@ class QuotesSpider(scrapy.Spider):
 
         for quote_html in response.css('.m-brick.grid-item'):
             quote = {
-                'quote': quote_html.xpath('.//a[contains(@class, "oncl_q")]/text()').extract_first(),
-                'author': quote_html.xpath('.//a[contains(@class, "oncl_a")]/text()').extract_first(),
-                'img_url': quote_html.xpath('.//a[contains(@class, "oncl_q")]/img/@data-img-url').extract_first()
-            }
-            tags = Selector(text=quote_html.xpath('.//div[@class="kw-box"]').extract_first())
-            quote['tags'] = tags.xpath('//a/text()').extract()
-            shareable_urls = Selector(text=quote_html.xpath('.//div[@class="sh-box"]').extract_first())
-            quote['shareable_urls'] = {
-                'facebook': shareable_urls.xpath('//a[1]/@href').extract_first(),
-                'twitter': shareable_urls.xpath('//a[2]/@href').extract_first(),
-                'pinterest': shareable_urls.xpath('//a[3]/@href').extract_first()
+                'quote': quote_html.css('.oncl_q::text').extract_first(),
+                'author': quote_html.css('.oncl_a::text').extract_first(),
+                'img_url': quote_html.css('.bqpht::attr(data-img-url)').extract_first(),
+                'tags': quote_html.css('.oncl_k::text').extract(),
+                'shareable_urls': {
+                    'facebook': quote_html.css('.sh-fb::attr(href)').extract_first(),
+                    'twitter': quote_html.css('.sh-tw::attr(href)').extract_first(),
+                    'pinterest': quote_html.css('.sh-pi::attr(href)').extract_first()
+                }
             }
             yield quote
 
-        if parameters['pg'] < parameters['last_page']:
+        if parameters['pg'] <= parameters['last_page']:
             yield scrapy.Request(url='https://www.brainyquote.com/api/inf',
                                  method='POST', callback=self.parse,
                                  body=json.dumps(parameters),
-                                 headers={'Content-Type': 'application/json'},
                                  meta=parameters)
 
     def get_post_request_parameters(self, response):
@@ -48,9 +45,11 @@ class QuotesSpider(scrapy.Spider):
             'id': re.search('PG_DM_ID=\"(.+?)\"', required_variables_script).group(1),
             'typ': re.search('GA_PG_TYPE=\"(.+?)\"', required_variables_script).group(1),
             'v': response.xpath('/html/head/meta[5]/@content').extract_first(),
-            'pg': 2
         }
         required_variables_script = response.xpath('//script[2]').extract_first()
-        parameters['vid'] = re.search('VID=\'(.+?)\'', required_variables_script).group(1)
-        parameters['last_page'] = int(re.search('LPAGE = (.+?);', required_variables_script).group(1))
+        parameters.update({
+            'vid': re.search('VID=\'(.+?)\'', required_variables_script).group(1),
+            'last_page': int(re.search('LPAGE = (.+?);', required_variables_script).group(1)),
+            'pg': int(re.search('CPAGE = (.+?);', required_variables_script).group(1)) + 1
+        })
         return parameters
