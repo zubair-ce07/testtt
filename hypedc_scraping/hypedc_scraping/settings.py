@@ -90,4 +90,4 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 FEED_FORMAT = 'json'
-FEED_URI = 'result_' + strftime("%Y_%m_%d_%H_%M_%S", localtime()) + '.json'
+FEED_URI = 'mens_shoes_' + strftime("%Y_%m_%d_%H_%M_%S", localtime()) + '.json'

@@ -17,18 +17,18 @@ class HypedcSpider(scrapy.Spider):
     def parse(self, response):
         """ default callback of scrapy spider """
         for item in response.css('div.item'):
-            shoe_info_in_json = json.loads(item.css('a.thumbnail-basic::attr(data-product)')
+            shoe_info_json = json.loads(item.css('a.thumbnail-basic::attr(data-product)')
                                            .extract_first())
-            category = shoe_info_in_json['category'].split('/')
+            category = shoe_info_json['category'].split('/')
             category = category[-1]
 
             shoe_info = {
-                'name': shoe_info_in_json['name'],
+                'name': shoe_info_json['name'],
                 'category': category,
-                'brand': shoe_info_in_json['brand'],
-                'price': shoe_info_in_json['price'],
-                'id': shoe_info_in_json['id'],
-                'variant': shoe_info_in_json['variant'],
+                'brand': shoe_info_json['brand'],
+                'price': shoe_info_json['price'],
+                'id': shoe_info_json['id'],
+                'variant': shoe_info_json['variant'],
                 'image': item.css('img.unveil::attr(data-src)').extract_first(),
                 'image_aletrnate': item.css('img.unveil::attr(data-alternate)').extract_first()
             }
