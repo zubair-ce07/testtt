@@ -17,7 +17,7 @@ class QuotesSpider(scrapy.Spider):
             parameters['pg'] += 1
             response = Selector(text=json.loads(response.text)['content'])
         else:
-            parameters = self.get_parameters(response)
+            parameters = self.get_post_request_parameters(response)
 
         for quote_html in response.css('.m-brick.grid-item'):
             quote = {
@@ -35,23 +35,22 @@ class QuotesSpider(scrapy.Spider):
             }
             yield quote
 
-        if response.xpath('//link[@rel="next"]/@href').extract():
-            print('going to next page')
+        if parameters['pg'] < parameters['last_page']:
+            yield scrapy.Request(url='https://www.brainyquote.com/api/inf',
+                                 method='POST', callback=self.parse,
+                                 body=json.dumps(parameters),
+                                 headers={'Content-Type': 'application/json'},
+                                 meta=parameters)
 
-        yield scrapy.Request(url='https://www.brainyquote.com/api/inf',
-                             method='POST', callback=self.parse,
-                             body=json.dumps(parameters),
-                             headers={'Content-Type': 'application/json'},
-                             meta=parameters)
-
-    def get_parameters(self, response):
-        parameters = {}
+    def get_post_request_parameters(self, response):
+        required_variables_script = response.xpath('//script[11]').extract_first()
+        parameters = {
+            'id': re.search('PG_DM_ID=\"(.+?)\"', required_variables_script).group(1),
+            'typ': re.search('GA_PG_TYPE=\"(.+?)\"', required_variables_script).group(1),
+            'v': response.xpath('/html/head/meta[5]/@content').extract_first(),
+            'pg': 2
+        }
         required_variables_script = response.xpath('//script[2]').extract_first()
         parameters['vid'] = re.search('VID=\'(.+?)\'', required_variables_script).group(1)
-        required_variables_script = response.xpath('//script[11]').extract_first()
-        parameters['id'] = re.search('PG_DM_ID=\"(.+?)\"', required_variables_script).group(1)
-        parameters['typ'] = re.search('GA_PG_TYPE=\"(.+?)\"', required_variables_script).group(1)
-        parameters['v'] = response.xpath('/html/head/meta[5]/@content').extract_first()
-        parameters['pg'] = 2
-
+        parameters['last_page'] = int(re.search('LPAGE = (.+?);', required_variables_script).group(1))
         return parameters
