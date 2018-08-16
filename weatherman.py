@@ -100,16 +100,21 @@ class ResultCalculator:
         max_humidity_list = []
 
         for month in year_data.values():
-            value = max(month.items(), key=lambda x: int(x[1]['Max TemperatureC']))
-            max_temp_list.append((value[1]['Max TemperatureC'], value[1]['PKT']))
-            value = min(month.items(), key=lambda x: int(x[1]['Min TemperatureC']))
-            min_temp_list.append((value[1]['Min TemperatureC'], value[1]['PKT']))
-            value = max(month.items(), key=lambda x: int(x[1]['Max Humidity']))
-            max_humidity_list.append((value[1]['Max Humidity'], value[1]['PKT']))
+            day_with_max_temperature = max(month.items(), key=lambda day: int(day[1]['Max TemperatureC']))
+            max_temp_list.append((day_with_max_temperature[1]['Max TemperatureC'],
+                                  day_with_max_temperature[1]['PKT']))
 
-        highest_temp_and_date = max(max_temp_list, key=lambda x: x[0])
-        lowest_temp_and_date = min(min_temp_list, key=lambda x: x[0])
-        highest_humidity_and_date = max(max_humidity_list, key=lambda x: x[0])
+            day_with_min_temperature = min(month.items(), key=lambda day: int(day[1]['Min TemperatureC']))
+            min_temp_list.append((day_with_min_temperature[1]['Min TemperatureC'],
+                                  day_with_min_temperature[1]['PKT']))
+
+            day_with_max_humidity = max(month.items(), key=lambda day: int(day[1]['Max Humidity']))
+            max_humidity_list.append((day_with_max_humidity[1]['Max Humidity'],
+                                      day_with_max_humidity[1]['PKT']))
+
+        highest_temp_and_date = max(max_temp_list, key=lambda month: month[0])
+        lowest_temp_and_date = min(min_temp_list, key=lambda month: month[0])
+        highest_humidity_and_date = max(max_humidity_list, key=lambda month: month[0])
 
         return {
             'Highest Temp': highest_temp_and_date[0],
@@ -124,24 +129,17 @@ class ResultCalculator:
 class ResultGenerator:
 
     def generate_extreme_results(self, data):
-        current_date = datetime.datetime.now()
         date = datetime.datetime.strptime(data['Highest Temp Date'], '%Y-%m-%d')
-        month = current_date.replace(month=date.month).strftime("%b")
-        print('Highest: {}C on {} {}'.format(data['Highest Temp'],
-                                             month,
-                                             date.day))
+        month = date.strftime("%b")
+        print('Highest: {}C on {} {}'.format(data['Highest Temp'], month, date.day))
 
         date = datetime.datetime.strptime(data['Lowest Temp Date'], '%Y-%m-%d')
-        month = current_date.replace(month=date.month).strftime("%b")
-        print('Lowest: {}C on {} {}'.format(data['Lowest Temp'],
-                                            month,
-                                            date.day))
+        month = date.strftime("%b")
+        print('Lowest: {}C on {} {}'.format(data['Lowest Temp'], month, date.day))
 
         date = datetime.datetime.strptime(data['Highest Humidity Date'], '%Y-%m-%d')
-        month = current_date.replace(month=date.month).strftime("%b")
-        print('Humidity: {}% on {} {}\n'.format(data['Highest Humidity'],
-                                                month,
-                                                date.day))
+        month = date.strftime("%b")
+        print('Humidity: {}% on {} {}\n'.format(data['Highest Humidity'], month, date.day))
 
     def generate_average_results(self, data):
         print('Highest Average: {}'.format(round(data['Highest Average'], 2)))
