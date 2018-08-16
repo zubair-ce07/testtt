@@ -78,13 +78,13 @@ class ProductParser(Spider):
 
             if not raw_sku["sizes"]:
                 sku["size"] = "unisize"
-                skus[sku_id] = sku.copy()
+                skus[sku_id] = sku
                 continue
 
             for size in raw_sku["sizes"]:
                 product_id = size.css("::attr('pid')").extract_first()
                 sku["size"] = size.css("::text").re_first(".*:\s([\w-]*)\s")
-                skus[product_id] = sku.copy()
+                skus[product_id] = sku
 
         return skus
 
