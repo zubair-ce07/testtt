@@ -1,0 +1,173 @@
+""" This module contains class
+and all the functions which are responsible
+for collecting data from .csv temperature
+files and give certain result
+"""
+
+import os
+import re
+import csv
+from constants import Constants
+
+
+class FileContent:
+    """ This module contains class
+    and all the functions which are responsible
+    for collecting data from .csv temperature
+    files and give certain result
+    """
+
+    def __init__(self, path):
+        self.path = path
+        self.file_names = []
+        # for (dir_path, dir_name, filename) in os.walk(path):
+        #    self.file_names.extend(filename)
+        for file in os.walk(path):
+            self.file_names.extend(file[2])
+
+    def __str__(self):
+        return "{}".format(self.file_names)
+
+    def get_yearly_data(self, year):
+        """ This method compute highest, lowest temperature
+        and highest humidity of the given year in a
+        dictionary
+        :param year:
+        :return:
+        """
+
+        regex = Constants.FILE_PREFIX + year + "_[a-z]{3}.txt"
+        selected_file_names = re.findall(
+            regex, ' '.join(self.file_names), re.IGNORECASE)
+
+        # to skip initial whitespaces
+        csv.register_dialect('myDialect',
+                             delimiter=',',
+                             skipinitialspace=True)
+
+        temp_humid_dict = {}
+        temp_humid_dict["max_temp"] = -999
+        temp_humid_dict["min_temp"] = 999
+        temp_humid_dict["max_humidity"] = 0
+        temp_humid_dict["min_temp_year"] = "N/A"
+        temp_humid_dict["max_temp_year"] = "N/A"
+        temp_humid_dict["max_humidity_year"] = "N/A"
+        try:
+            for name in selected_file_names:
+                with open(self.path + "/" + name, 'r') as csv_file:
+                    reader = csv.reader(csv_file, dialect='myDialect')
+                    # to skip header
+                    next(csv_file)
+                    # data = [r for r in reader]
+                    # for index, line in enumerate(reader):
+                    for index_line in enumerate(reader):
+                        # print('line[{}] = {}'.format(i, line))
+                        if index_line[1][1].isdigit():
+                            if int(index_line[1][1]) > temp_humid_dict["max_temp"]:
+                                temp_humid_dict["max_temp"] = int(index_line[1][1])
+                                temp_humid_dict["max_temp_year"] = index_line[1][0]
+                        if index_line[1][3].isdigit():
+                            if int(index_line[1][3]) < temp_humid_dict["min_temp"]:
+                                temp_humid_dict["min_temp"] = int(index_line[1][3])
+                                temp_humid_dict["min_temp_year"] = index_line[1][0]
+                        if index_line[1][7].isdigit():
+                            if int(index_line[1][7]) > temp_humid_dict["max_humidity"]:
+                                temp_humid_dict["max_humidity"] = int(index_line[1][7])
+                                temp_humid_dict["max_humidity_year"] = index_line[1][0]
+                csv_file.close()
+        except IOError:
+            return None
+        else:
+            return temp_humid_dict
+
+    def get_average_monthly_data(self, year, month):
+        """ This method calculates the average
+        highest and lowest temperature and
+        average highest humidity of the given
+        month of a year and returns result in a
+        dictionary
+        :param year:
+        :param month:
+        :return:
+        """
+
+        temp_humid_dict = {}
+        temp_humid_dict["max_temp_sum"] = 0
+        temp_humid_dict["min_temp_sum"] = 0
+        temp_humid_dict["max_humidity_sum"] = 0
+        temp_humid_dict["max_temp_count"] = 0
+        temp_humid_dict["min_temp_count"] = 0
+        temp_humid_dict["max_humidity_count"] = 0
+        name = Constants.FILE_PREFIX + "{}_{}.txt".format(year, month)
+        # to skip initial whitespaces
+        csv.register_dialect('myDialect',
+                             delimiter=',',
+                             skipinitialspace=True)
+        try:
+            with open(self.path + "/" + name, 'r') as csv_file:
+                reader = csv.reader(csv_file, dialect='myDialect')
+                # to skip header
+                next(csv_file)
+                # for index, line in enumerate(reader):
+                for index_line in enumerate(reader):
+                    if index_line[1][1].isdigit():
+                        temp_humid_dict["max_temp_sum"] += int(index_line[1][1])
+                        temp_humid_dict["max_temp_count"] += 1
+                    if index_line[1][3].isdigit():
+                        temp_humid_dict["min_temp_sum"] += int(index_line[1][3])
+                        temp_humid_dict["min_temp_count"] += 1
+                    if index_line[1][7].isdigit():
+                        temp_humid_dict["max_humidity_sum"] += int(index_line[1][7])
+                        temp_humid_dict["max_humidity_count"] += 1
+            csv_file.close()
+        except IOError:
+            return None
+        else:
+            temp_humid_average = {}
+            temp_humid_average["max_temp_avg"] = \
+                temp_humid_dict["max_temp_sum"] // temp_humid_dict["max_temp_count"]
+            temp_humid_average["min_temp_avg"] = \
+                temp_humid_dict["min_temp_sum"] // temp_humid_dict["min_temp_count"]
+            temp_humid_average["max_humidity_avg"] = \
+                temp_humid_dict["max_humidity_sum"] // temp_humid_dict["max_humidity_count"]
+            return temp_humid_average
+
+    def get_daily_temps_of_month(self, year, month):
+        """ This method returns the
+        daily highest and lowest temperature of
+        the given month of a year in a list of two
+        dictionaries
+        :param year:
+        :param month:
+        :return:
+        """
+
+        low_temps = {}
+        high_temps = {}
+        name = Constants.FILE_PREFIX + "{}_{}.txt".format(year, month)
+        # to skip initial whitespaces
+        csv.register_dialect('myDialect',
+                             delimiter=',',
+                             skipinitialspace=True)
+        j = 1
+        try:
+            with open(self.path + "/" + name, 'r') as csv_file:
+                reader = csv.reader(csv_file, dialect='myDialect')
+                # to skip header
+                next(csv_file)
+                # for index, line in enumerate(reader):
+                for index_line in enumerate(reader):
+                    if index_line[1][1].isdigit():
+                        high_temps[j] = int(index_line[1][1])
+                    else:
+                        high_temps[j] = Constants.RNF
+                    if index_line[1][3].isdigit():
+                        low_temps[j] = int(index_line[1][3])
+                    else:
+                        low_temps[j] = Constants.RNF
+                    j += 1
+            csv_file.close()
+        except IOError:
+            return None
+        else:
+            return [high_temps, low_temps]

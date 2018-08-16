@@ -58,3 +58,7 @@ target/
 
 # VSCode
 .vscode
+
+# data files
+weatherfiles/
+
