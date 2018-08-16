@@ -1,10 +1,13 @@
 """
 This module read user input , read files , perform calculation and generate reports
 """
-from datetime import datetime
 import argparse
-import os
 import calendar
+import csv
+import os
+
+from datetime import datetime
+from operator import attrgetter
 
 
 class WeatherReading:
@@ -15,21 +18,13 @@ class WeatherReading:
     mean_humidity = 0
     date = ''
 
-    def add_month_value(self, highest_tmp, lowest_tmp, most_humidity, mean_humidity, date):
-        """The method stores data for single day"""
-        self.highest_temp = highest_tmp
-        self.lowest_temp = lowest_tmp
-        self.most_humidity = most_humidity
+    def __init__(self, date, highest_tmp, lowest_tmp, most_humidity, mean_humidity):
+        """The init method stores data for single day"""
+        self.highest_temp = int(highest_tmp) if highest_tmp != '' else -273
+        self.lowest_temp = int(lowest_tmp) if lowest_tmp != '' else 0
+        self.most_humidity = int(most_humidity) if most_humidity != '' else 0
         self.mean_humidity = mean_humidity
         self.date = date
-
-    def view_day_data(self):
-        """The method print data for single day"""
-        print('date:', self.date)
-        print('Max temp:', self.highest_temp)
-        print('Min temp:', self.lowest_temp)
-        print('Most humidity:', self.most_humidity)
-        print('Mean humidity:', self.mean_humidity)
 
 
 class WeatherResults:
@@ -46,7 +41,8 @@ class WeatherResults:
 
     def set_weather_results_yearly(
             self, max_tmp, max_temp_date, min_tmp,
-            min_temp_date, most_humidity_val, most_humidity_date):
+            min_temp_date, most_humidity_val,
+            most_humidity_date):
         """The method stores maximum and minimum temperature for every single day"""
         self.maximum_temp_value = max_tmp
         self.minimum_temp_value = min_tmp
@@ -72,30 +68,33 @@ class Report:
         """The method prints the report of year maximun, minimum temperature and most humidity"""
         date_format = datetime.strptime(
             results.max_temp_date, self.DATE_FORMAT)
-        print(
-            'Maximum: ', results.maximum_temp_value, 'C',
-            'on ', datetime.strftime(date_format, self.MONTH_DAY_FORMAT))
+        print("Maximum: {max_temp_value} C on {date_max_temp} ".format(
+            max_temp_value=results.maximum_temp_value,
+            date_max_temp=datetime.strftime(date_format, self.MONTH_DAY_FORMAT)))
+
         date_format = datetime.strptime(
             results.min_temp_date, self.DATE_FORMAT)
-        print(
-            'Lowest: ', results.minimum_temp_value, 'C',
-            'on ', datetime.strftime(date_format, self.MONTH_DAY_FORMAT))
+        print("Lowest: {min_temp_value} C on {date_min_temp} ".format(
+            min_temp_value=results.minimum_temp_value,
+            date_min_temp=datetime.strftime(date_format, self.MONTH_DAY_FORMAT)))
         date_format = datetime.strptime(
             results.most_humidity_date, self.DATE_FORMAT)
-        print(
-            'Humidity: ', results.most_humidity_value, '%',
-            'on ', datetime.strftime(date_format, self.MONTH_DAY_FORMAT))
+        print("Humidity: {humidity_value} % on {date_most_humidity} ".format(
+            humidity_value=results.most_humidity_value,
+            date_most_humidity=datetime.strftime(date_format, self.MONTH_DAY_FORMAT)))
 
     def month_average_report(self, results):
         """The method prints averages of (max min temperature,mean humidity)"""
-        print('Highest Average: ', results.average_maximum_temp, 'C')
-        print('Lowest Average: ', results.average_minimum_temp, 'C')
-        print('Average Mean Humidity: ',
-              results.average_mean_humidity, '%')
+        print("Highest Average: {avrg_max_temp} C".
+              format(avrg_max_temp=results.average_maximum_temp))
+        print("Lowest Average: {avrg_low_temp} C".
+              format(avrg_low_temp=results.average_minimum_temp))
+        print("Average Mean Humidity: {avrg_mean_humidity} %".
+              format(avrg_mean_humidity=results.average_mean_humidity))
 
-    def graphic_report(self, month_year, day_data_obj):
+    def graphic_report(self, year_and_month, day_data_obj):
         """The method prints the graphic report of month max min temperature"""
-        date_format = datetime.strptime(month_year, self.DATE_FORMAT)
+        date_format = datetime.strptime(year_and_month, self.DATE_FORMAT)
         print(
             datetime.strftime(date_format, self.MONTH_YEAR_FORMAT))
         for day_num, day_data in enumerate(day_data_obj):
@@ -106,13 +105,15 @@ class Report:
                 highest_temp_value = int(day_data.highest_temp)
                 lowest_temp_value = int(day_data.lowest_temp)
                 total_characters_max_temp = '+' * highest_temp_value
-                print("{} {} {} {} {} C".format(
-                    day_num + 1, '\033[1;31m', total_characters_max_temp,
-                    '\033[1;m', highest_temp_value))
+                print("{day} {start_Redcolor} {total_chararters} {end_color} {max_temp_value} C"
+                      .format(day=day_num + 1, start_Redcolor='\033[1;31m',
+                              total_chararters=total_characters_max_temp,
+                              end_color='\033[1;m', max_temp_value=highest_temp_value))
                 total_characters_min_temp = '+' * lowest_temp_value
-                print("{} {} {} {} {} C".format(
-                    day_num + 1, '\033[1;34m', total_characters_min_temp,
-                    '\033[1;m', lowest_temp_value))
+                print("{day} {start_bluecolor} {total_chararters} {end_color} {low_temp_value} C"
+                      .format(day=day_num + 1, start_bluecolor='\033[1;34m',
+                              total_chararters=total_characters_min_temp,
+                              end_color='\033[1;m', low_temp_value=lowest_temp_value))
         print()
         print('BONUS TASK')
         print(
@@ -125,51 +126,45 @@ class Report:
                 lowest_temp_value = int(day_data.lowest_temp)
                 total_characters_max_temp = '+' * highest_temp_value
                 total_characters_min_temp = '+' * lowest_temp_value
-                print("{} {} {} {} {} {} {} {} C - {} C".format(day_num + 1,\
-                        '\033[1;34m', total_characters_min_temp,\
-                        '\033[1;m', '\033[1;31m', total_characters_max_temp,\
-                        '\033[1;m', lowest_temp_value, highest_temp_value))
+                print("{day} {start_bluecolor} {mintemp} {end_color} {start_redcolor} {maxtemp}\
+                        {end_redcolor} {lowtempvalue} C - {hightempvalue} C".format
+                      (day=day_num + 1, start_bluecolor='\033[1;34m',
+                       mintemp=total_characters_min_temp,
+                       end_color='\033[1;m', start_redcolor='\033[1;31m',
+                       maxtemp=total_characters_max_temp,
+                       end_redcolor='\033[1;m', lowtempvalue=lowest_temp_value,
+                       hightempvalue=highest_temp_value))
 
 
 class DataCalculation:
     """The class performs calculations on weather readings"""
 
-    def calculate_yearly_month_max(self, day_data_obj):
+    @staticmethod
+    def calculate_yearly_month_max(day_data_obj):
         """The method find maximum,minimum temperature and most humidity"""
-        max_temp = 0
-        max_temp_date = ''
-        min_temp = 0
-        min_temp_date = ''
-        most_humidity1 = 0
-        most_humidity_date = ''
-        max_temp = max([int(day_data_obj[i].highest_temp) for i in range(
-            len(day_data_obj)) if day_data_obj[i].highest_temp != ''])
-        min_temp_list = [int(day_data_obj[i].lowest_temp) for i in range(
-            len(day_data_obj)) if day_data_obj[i].lowest_temp != '']
-        min_temp = min(min_temp_list)
-        most_humidity_list = [int(day_data_obj[i].most_humidity) for i in range(
-            len(day_data_obj)) if day_data_obj[i].most_humidity != '']
-        most_humidity1 = max(most_humidity_list)
-        date_list = [[day_data_obj[i].date for i in range(len(day_data_obj))
-                      if day_data_obj[i].date != ''
-                      if day_data_obj[i].highest_temp != ''], [int(day_data_obj[i].highest_temp)
-                                                               for i in range(len(day_data_obj))
-                                                               if day_data_obj[i].highest_temp
-                                                               != '']]
+        max_temp_day = max(
+            [day for day in day_data_obj if day.highest_temp != ''],
+            key=attrgetter('highest_temp')
+        )
+        min_temp_day = min(
+            [day for day in day_data_obj if day.lowest_temp != ''],
+            key=attrgetter('lowest_temp')
+        )
+        most_humid_day = max(
+            [day for day in day_data_obj if day.most_humidity != ''],
+            key=attrgetter('most_humidity')
+        )
+        year_calculation = {
+            'highest_temp': max_temp_day.highest_temp,
+            'max_tmp_date': max_temp_day.date,
+            'lowest_temp': min_temp_day.lowest_temp,
+            'min_tmp_date': min_temp_day.date,
+            'most_humidity': most_humid_day.most_humidity,
+            'humidity_date': most_humid_day.date}
+        return year_calculation
 
-        max_value_dates = [[date_list[0][i] for i in range(len(date_list[0])) if date_list[1][i]
-                            == max_temp],
-                           [date_list[0][i] for i in range(len(date_list[0]))
-                            if min_temp_list[i] == min_temp],
-                           [date_list[0][i] for i in range(len(date_list[0]))
-                            if most_humidity_list[i]
-                            == most_humidity1]]
-        max_temp_date = str(max_value_dates[0][0])
-        min_temp_date = str(max_value_dates[1][0])
-        most_humidity_date = str(max_value_dates[2][0])
-        return max_temp, max_temp_date, min_temp, min_temp_date, most_humidity1, most_humidity_date
-
-    def calculate_averages(self, day_data_obj):
+    @staticmethod
+    def calculate_averages(day_data_obj):
         """The method calculate averages of maximum,minimum temperature and mean humidity"""
         sum_max_temp = 0
         avrg_max_tmp = 0
@@ -179,106 +174,64 @@ class DataCalculation:
         avrg_mean_humidity = 0
         data_found_count = 0
 
-        max_temp_list = [day_data[1].highest_temp for day_data in enumerate(
-            day_data_obj) if day_data[1].highest_temp != '']
+        max_temp_list = [
+            day.highest_temp for day in day_data_obj if day.highest_temp != '']
         sum_max_temp = sum(list(map(int, max_temp_list)))
         data_found_count = len(max_temp_list)
-        min_temp_list = [day_data[1].lowest_temp for day_data in enumerate(
-            day_data_obj) if day_data[1].lowest_temp != '']
+        min_temp_list = [
+            day.lowest_temp for day in day_data_obj if day.lowest_temp != '']
         sum_min_temp = sum(list(map(int, min_temp_list)))
-        mean_humidity_list = [day_data[1].mean_humidity for day_data in enumerate(
-            day_data_obj) if day_data[1].mean_humidity != '']
+        mean_humidity_list = [
+            day.mean_humidity for day in day_data_obj if day.mean_humidity != '']
         sum_mean_humidity = sum(list(map(int, mean_humidity_list)))
         avrg_max_tmp = sum_max_temp / data_found_count
         avrg_min_tmp = sum_min_temp / data_found_count
         avrg_mean_humidity = sum_mean_humidity / data_found_count
-        return avrg_max_tmp, avrg_min_tmp, avrg_mean_humidity
-
-    def calculate_max_min(self, day_data_obj):
-        """The method populate maximum,minimum temperature of month to report class"""
-        month_year = day_data_obj[0].date
-        return month_year
+        month_average_calculation = {
+            'avrg_max_tmp':avrg_max_tmp,
+            'avrg_min_tmp':avrg_min_tmp,
+            'avrg_mean_humidity':avrg_mean_humidity
+        }
+        return month_average_calculation
 
 
 class FileParser:
     """The class filters the files and populate data to weather reading class"""
 
-    def read_files(self, year_input, path_to_dir):
+    @staticmethod
+    def read_files(year_and_month, path_to_dir):
         """The method read the files"""
-        month_count = 0
-        file_name_list = []
-        convert_month_to_int = 0
-        expr = year_input.find('/') > 0
-        month_list = []
+        is_month = year_and_month.find('/') > 0
+        year = year_and_month.split('/')[0]
+        months = []
+        all_readings = []
 
-        def maintain_file_information(file_name, month_number):
-            """The method stores files name and month number in the list"""
-            file_name_list.append(file_name)
-            month_list.append(month_number)
-            return file_name_list, month_list
-        if expr is True:
-            split_month = year_input.split('/')
-            convert_year_to_int = int(split_month[0])
-            convert_month_to_int = int(split_month[1])
-            year_converted = convert_year_to_int
-            total_month_file_count = 1
-            file_name = "Murree_weather_" + str(year_converted) + \
-                "_" + calendar.month_abbr[convert_month_to_int] + ".txt"
-
-            if os.path.isfile(path_to_dir + file_name):
-                month_count = 1
-                file_name_list, month_list = maintain_file_information(
-                    file_name, convert_month_to_int)
+        if is_month:
+            months.append(int(year_and_month.split('/')[1]))
         else:
-            year_converted = year_input
-            for total_months in range(13):
-                file_name = "Murree_weather_" + year_converted + \
-                    "_" + calendar.month_abbr[total_months] + ".txt"
+            months = [x for x in range(1, 13)]
 
-                if os.path.isfile(path_to_dir + file_name):
-                    month_count = month_count + 1
-                    file_name_list, month_list = maintain_file_information(
-                        file_name, total_months)
-            total_month_file_count = month_count
-        count = 0
-        count_month_days = 0
-        sum_ = 0
-        for data_insert in range(total_month_file_count):
-            count_month_days = calendar.monthrange(
-                int(year_converted), int(month_list[data_insert]))[1]
-            sum_ = sum_ + count_month_days
-        total_days = sum_
-        day_index = 0
-        day_data_objects = [None]*total_days
+        for month in months:
+            file_name = "Murree_weather_{year}_{month_abbr}.txt".format(
+                year=year,
+                month_abbr=calendar.month_abbr[month]
+            )
+            file_path = path_to_dir + file_name
+            if os.path.isfile(file_path):
+                with open(file_path, 'r') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for reading in reader:
+                        date = reading.get('PKT') if reading.get(
+                            'PKT') else reading.get('PKST')
+                        highest_temp = reading['Max TemperatureC']
+                        lowest_temp = reading['Min TemperatureC']
+                        most_humidity = reading['Max Humidity']
+                        mean_humidity = reading[' Mean Humidity']
+                        all_readings.append(
+                            WeatherReading(date, highest_temp, lowest_temp,
+                                           most_humidity, mean_humidity))
 
-        for i in range(total_days):
-            day_data_objects[i] = WeatherReading()
-        for data_insert in range(month_count):
-            count = 0
-            file_get = file_name_list[data_insert]
-            path2 = path_to_dir + file_get
-            file_data1 = open(path2, "r")
-            current_month_data = file_data1.read()
-            count = calendar.monthrange(
-                int(year_converted), int(month_list[data_insert]))[1]
-            for month_num in range(count):
-                pro_data = current_month_data.split('\n')
-                day_data = pro_data[month_num + 1]
-                day_pro_data = day_data.split(',', 9)
-                max_tmp_val = 0
-                min_tmp_val = 0
-                most_humid_val = 0
-                mean_humid_val = 0
-                date3 = ''
-                max_tmp_val = day_pro_data[1]
-                min_tmp_val = day_pro_data[3]
-                most_humid_val = day_pro_data[7]
-                mean_humid_val = day_pro_data[8]
-                date3 = day_pro_data[0]
-                day_data_objects[day_index].add_month_value(
-                    max_tmp_val, min_tmp_val, most_humid_val, mean_humid_val, date3)
-                day_index += 1
-        return day_data_objects
+        return all_readings
 
 
 if __name__ == "__main__":
@@ -288,29 +241,34 @@ if __name__ == "__main__":
     parser.add_argument("-c", help="enter the year", type=str)
     parser.add_argument("path", help="enter the year", type=str)
     args = parser.parse_args()
-    read_file_object = FileParser()
-    calculate = DataCalculation()
     result1 = WeatherResults()
     report1 = Report()
     if args.e is not None:
-        weather_record = read_file_object.read_files(args.e, args.path)
-        max_temp1, max_temp_date1, min_temp1, min_temp_date1, most_humidity2, most_humidity_date1 = calculate.calculate_yearly_month_max(
-            weather_record)
+        weather_record = FileParser.read_files(args.e, args.path)
+        calculated_results = DataCalculation.calculate_yearly_month_max(weather_record)
         result1.set_weather_results_yearly(
-            max_temp1, max_temp_date1, min_temp1, min_temp_date1, most_humidity2, most_humidity_date1)
+            max_tmp=calculated_results['highest_temp'],
+            max_temp_date=calculated_results['max_tmp_date'],
+            min_temp_date=calculated_results['min_tmp_date'],
+            min_tmp=calculated_results['lowest_temp'],
+            most_humidity_val=calculated_results['most_humidity'],
+            most_humidity_date=calculated_results['humidity_date']
+        )
         report1.year_report(result1)
         print()
     if args.a is not None:
-        weather_record = read_file_object.read_files(args.a, args.path)
-        avrg_max_tmp1, avrg_min_tmp1, avrg_mean_humidity1 = calculate.calculate_averages(
+        weather_record = FileParser.read_files(args.a, args.path)
+        calculated_results = DataCalculation.calculate_averages(
             weather_record)
         result1.set_weather_results_averages(
-            avrg_max_tmp1, avrg_min_tmp1, avrg_mean_humidity1)
+            avrg_max=calculated_results['avrg_max_tmp'],
+            avrg_min=calculated_results['avrg_min_tmp'],
+            avrg_mean_humid=calculated_results['avrg_mean_humidity']
+        )
         report1.month_average_report(result1)
 
         print()
     if args.c is not None:
-        weather_record = read_file_object.read_files(args.c, args.path)
-        date1 = calculate.calculate_max_min(weather_record)
-        report1.graphic_report(date1, weather_record)
+        weather_record = FileParser.read_files(args.c, args.path)
+        report1.graphic_report(weather_record[0].date, weather_record)
         print()
