@@ -53,7 +53,7 @@ class WeatherAnalyzer:
                             day_data[22]
                         ))
 
-    def collect_month_chart_data(self, year_month):
+    def collect_month_data(self, year_month):
         month_data_list = []
         for day_data in self.day_weather_list:
             if self.check_valid_year_month_file(day_data.pkt, year_month):
@@ -80,7 +80,7 @@ class WeatherAnalyzer:
         else:
             return False
 
-    def collect_average(self, month_data_list):
+    def compute__month_data_average(self, month_data_list):
         max_temp_avg = 0
         min_temp_avg = 0
         humidity_avg = 0
@@ -100,13 +100,6 @@ class WeatherAnalyzer:
         return (max_temp_avg / count_max_temp), (
                 min_temp_avg / count_min_temp), (
                        humidity_avg / count_humidty)
-
-    def extract_month_data(self, year_month):
-        month_data_list = []
-        for day_data in self.day_weather_list:
-            if self.check_valid_year_month_file(day_data.pkt, year_month):
-                month_data_list.append(day_data)
-        return self.collect_average(month_data_list)
 
     def check_valid_year_month_file(self, day_date, year_month):
         match = re.search(r'\d{4}', day_date)

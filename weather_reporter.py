@@ -19,13 +19,15 @@ class WeatherReporter:
 
     def generate_month_report(self, report_year, dir_path):
         self.weather_analyzer_obj.read_files(dir_path)
-        max_temp_avg, min_temp_avg, humidity_avg = self.weather_analyzer_obj.extract_month_data(
+        month_data_list = self.weather_analyzer_obj.collect_month_data(
             report_year)
+        max_temp_avg, min_temp_avg, humidity_avg = self.weather_analyzer_obj.compute__month_data_average(
+            month_data_list)
         self.print_month_temp_report(max_temp_avg, min_temp_avg, humidity_avg)
 
     def generate_barchart_report(self, report_year, dir_path):
         self.weather_analyzer_obj.read_files(dir_path)
-        month_data_list = self.weather_analyzer_obj.collect_month_chart_data(
+        month_data_list = self.weather_analyzer_obj.collect_month_data(
             report_year)
         barchart_data_list = self.calc_month_chart(month_data_list)
         self.print_month_chart(barchart_data_list)
