@@ -40,7 +40,7 @@ class ProductParser(Spider):
         yield request
 
     def skus_map(self, response):
-        colors = response.css("#colour-select option[availability='1']")
+        colors = response.css("#colour-select option:not([availability='0'])")
 
         sku_map = {}
         for color in colors:
@@ -84,8 +84,10 @@ class ProductParser(Spider):
                 size_sku = sku.copy()
                 size = size_selector.css("::text").re_first(".*:\s([\w-]*)\s")
                 size_sku["size"] = size
+
                 if size_selector.css("[class='out-of-stock']"):
                     size_sku["out-of-stock"] = True
+
                 skus[f"{sku_id}_{size}"] = size_sku
 
         return skus
