@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from time import localtime, strftime
 # Scrapy settings for hypedc_scraping project
 #
 # For simplicity, this file contains only settings considered important or
@@ -88,3 +88,6 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+FEED_FORMAT = 'json'
+FEED_URI = 'result_' + strftime("%Y_%m_%d_%H_%M_%S", localtime()) + '.json'

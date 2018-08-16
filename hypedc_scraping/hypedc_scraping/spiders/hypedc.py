@@ -17,24 +17,24 @@ class HypedcSpider(scrapy.Spider):
     def parse(self, response):
         """ default callback of scrapy spider """
         for item in response.css('div.item'):
-            json_data = json.loads(item.css('a.thumbnail-basic::attr(data-product)')
-                                   .extract_first())
-            category = json_data['category'].split('/')
-            category = category[(len(category) - 1)]
+            shoe_info_in_json = json.loads(item.css('a.thumbnail-basic::attr(data-product)')
+                                           .extract_first())
+            category = shoe_info_in_json['category'].split('/')
+            category = category[-1]
 
-            data = {
-                'name': json_data['name'],
+            shoe_info = {
+                'name': shoe_info_in_json['name'],
                 'category': category,
-                'brand': json_data['brand'],
-                'price': json_data['price'],
-                'id': json_data['id'],
-                'variant': json_data['variant'],
+                'brand': shoe_info_in_json['brand'],
+                'price': shoe_info_in_json['price'],
+                'id': shoe_info_in_json['id'],
+                'variant': shoe_info_in_json['variant'],
                 'image': item.css('img.unveil::attr(data-src)').extract_first(),
                 'image_aletrnate': item.css('img.unveil::attr(data-alternate)').extract_first()
             }
             if category not in self.shoes_data:
                 self.shoes_data[category] = []
-            self.shoes_data[category].append(data)
+            self.shoes_data[category].append(shoe_info)
 
         next_page_url = response.css('a.next::attr(href)').extract_first()
         if next_page_url:
