@@ -9,6 +9,7 @@ from ..items import ProductItem
 class ProductParser(Spider):
     name = "forever-new-product-parser"
     currency = "AUD"
+    images_cdn = "https://www.forevernew.com.au/balance_superptype/product/media/pid/"
 
     def parse(self, response):
         product = ProductItem()
@@ -35,9 +36,7 @@ class ProductParser(Spider):
 
         product["image_urls"] = []
         image_requests = self.image_requests(response)
-        request = image_requests.pop()
-        request.meta["product"] = product
-        request.meta["image_requests"] = image_requests
+        request = self.prepare_request(image_requests, product)
         yield request
 
     def skus_map(self, response):
@@ -47,8 +46,8 @@ class ProductParser(Spider):
         for color in colors:
             color_id = color.css("::attr('value')").extract_first()
             sku = {
-                "color": color.css("::attr('label')").re_first(":\s(.+)"),
-                "sizes": response.css(f"li[pid='{color_id}'] option:not([class='out-of-stock'])"),
+                "colour": color.css("::attr('label')").re_first(":\s(.+)"),
+                "sizes": response.css(f"li[pid='{color_id}'] option"),
                 "price": response.css(f".price-wrapper[pid='{color_id}']")
             }
 
@@ -70,21 +69,24 @@ class ProductParser(Spider):
         for sku_id, raw_sku in sku_map.items():
             sku = common_sku.copy()
             sku["price"] = float(raw_sku['price'].css(price_css).re_first(price_re))
-            sku["color"] = raw_sku["color"]
+            sku["colour"] = raw_sku["colour"]
             prev_price = raw_sku["price"].css(prev_price_css).re(price_re)
 
             if prev_price:
                 sku["previous_prices"] = [float(price) for price in prev_price]
 
             if not raw_sku["sizes"]:
-                sku["size"] = "unisize"
+                sku["size"] = "One Size"
                 skus[sku_id] = sku
                 continue
 
-            for size in raw_sku["sizes"]:
-                product_id = size.css("::attr('pid')").extract_first()
-                sku["size"] = size.css("::text").re_first(".*:\s([\w-]*)\s")
-                skus[product_id] = sku
+            for size_selector in raw_sku["sizes"]:
+                size_sku = sku.copy()
+                size = size_selector.css("::text").re_first(".*:\s([\w-]*)\s")
+                size_sku["size"] = size
+                if size_selector.css("[class='out-of-stock']"):
+                    size_sku["out-of-stock"] = True
+                skus[f"{sku_id}_{size}"] = size_sku
 
         return skus
 
@@ -102,11 +104,10 @@ class ProductParser(Spider):
 
     def image_requests(self, response):
         color_ids = response.css("#colour-select option::attr('value')").extract()
-        request_url = "https://www.forevernew.com.au/balance_superptype/product/media/pid/"
         requests = []
 
         for color_id in color_ids:
-            url = urljoin(request_url, color_id)
+            url = urljoin(self.images_cdn, color_id)
             request = Request(url, callback=self.parse_images)
             requests.append(request)
 
@@ -115,14 +116,22 @@ class ProductParser(Spider):
     def parse_images(self, response):
         product = response.meta["product"]
         product["image_urls"].extend(response.css("img.gallery__image::attr('src')").extract())
+        request = self.prepare_request(response.meta["image_requests"], product)
 
-        if not response.meta["image_requests"]:
-            yield product
-        else:
-            request = response.meta["image_requests"].pop()
-            request.meta["product"] = product
-            request.meta["image_requests"] = response.meta["image_requests"]
+        if request:
             yield request
+        else:
+            yield product
+
+    def prepare_request(self, requests, product):
+        if not requests:
+            return
+
+        request = requests.pop()
+        request.meta["product"] = product
+        request.meta["image_requests"] = requests
+
+        return request
 
     def care(self, response):
         return response.css(".accordion-container .accordion-content:nth-child(2) li::text").re("\S.*")
