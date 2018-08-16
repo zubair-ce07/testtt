@@ -11,7 +11,8 @@ from canda.items import CandaItem
 
 class Canda(CrawlSpider):
     custom_settings = {
-        'DOWNLOAD_DELAY': 1}
+        'DOWNLOAD_DELAY': 1
+    }
     name = 'c-and-a'
     start_urls = ['https://www.c-and-a.com/de/de/shop/']
     rules = (Rule(LinkExtractor(restrict_css='.nav-main__list-item, .pagination__next.js-view-click',
@@ -19,34 +20,31 @@ class Canda(CrawlSpider):
              Rule(LinkExtractor(restrict_css='.product-tile'), callback='parse_item'))
 
     currencies = {'€': 'EUR'}
-    color_parameters = (('storeId', '10154'), ('langId', '-3'))
+    color_parameters = (
+        ('storeId', '10154'),
+        ('langId', '-3')
+    )
     color_url_t = 'https://www.c-and-a.com/webapp/wcs/stores/servlet/product/change/color?'
-    genders = [('herren', 'male'),
-               ('damen', 'female'),
-               ('jungen', 'boy'),
-               ('maedchen', 'girl'),
-               ('baby', 'kids'),
-               ('kinder', 'kids')]
+    genders = [
+        ('herren', 'male'),
+        ('damen', 'female'),
+        ('jungen', 'boy'),
+        ('maedchen', 'girl'),
+        ('baby', 'kids'),
+        ('kinder', 'kids')
+    ]
 
     def parse_color(self, response):
         item = response.meta.get('item')
-        remaining_requests = response.meta.get('requests')
+
         selector = Selector(text=json.loads(response.text)['html'][0]['product-stage'])
         item['image_urls'] += self.get_image_urls(selector)
         item['skus'] += self.get_skus(selector, item['retailer_sku'])
 
-        if not remaining_requests:
-            return item
-
-        return self.yield_color_request(remaining_requests, item)
+        return self.yield_color_request(response.meta.get('requests'), item)
 
     def get_skus(self, selector, retailer_sku):
-        sku_common = dict()
-        pricing = self.get_pricing(selector)
-        sku_common['price'] = pricing['price']
-        sku_common['old_price'] = pricing['previous-prices']
-        sku_common['currency'] = pricing['currency']
-        sku_common['color'] = self.get_color(selector)
+        sku_common = self.get_sku_common(selector)
         out_of_stock_sizes = self.get_out_of_stock_sizes(selector)
         skus = []
 
@@ -59,7 +57,14 @@ class Canda(CrawlSpider):
 
             sku['sku_id'] = f'{retailer_sku}_{sku["color"]}_{size}'
             skus.append(sku)
+
         return skus
+
+    def get_sku_common(self, selector):
+        sku_common = {'color': self.get_color(selector)}
+        sku_common.update(self.get_pricing(selector))
+
+        return sku_common
 
     def parse_item(self, response):
         item = CandaItem()
@@ -74,20 +79,22 @@ class Canda(CrawlSpider):
         item['care'] = self.get_care(response)
         item['image_urls'] = self.get_image_urls(response)
         item['skus'] = self.get_skus(response, retailer_sku)
+
         color_ids = self.get_color_ids(response)
-
-        if not color_ids:
-            return item
-
         product_id = self.get_product_id(response)
         color_requests = self.make_color_requests(color_ids, product_id)
+
         return self.yield_color_request(color_requests, item)
 
     @staticmethod
     def yield_color_request(color_requests, item):
+        if not color_requests:
+            return item
+
         color_request = color_requests.pop()
         color_request.meta['requests'] = color_requests
         color_request.meta['item'] = item
+
         return color_request
 
     def make_color_requests(self, color_ids, product_id):
@@ -108,12 +115,15 @@ class Canda(CrawlSpider):
 
     def get_pricing(self, response):
         pricing = dict()
+
         prices_css = '.product-stage__price span:not(.product-stage__price-saving)::text'
         prices = [a.strip() for a in response.css(prices_css).extract()]
         prices = sorted([self.formatted_price(a) for a in prices])
+
         pricing['price'] = prices[0]
-        pricing['previous-prices'] = prices[1:]
+        pricing['previous_prices'] = prices[1:]
         pricing['currency'] = self.get_currency(response)
+
         return pricing
 
     @staticmethod
@@ -135,6 +145,7 @@ class Canda(CrawlSpider):
 
     def get_gender(self, response):
         category_url = response.css('.util-link-left.util-text-smaller::attr(href)').extract_first()
+
         for gender_token, gender in self.genders:
             if gender_token in category_url:
                 return gender
@@ -170,7 +181,7 @@ class Canda(CrawlSpider):
     @staticmethod
     def get_categories(response):
         raw_category = response.css('.util-link-left::text').extract_first().strip()
-        return re.sub(r"Zurück zu ", '', raw_category)
+        return [re.sub(r"Zurück zu ", '', raw_category)]
 
     @staticmethod
     def get_color_ids(response):
