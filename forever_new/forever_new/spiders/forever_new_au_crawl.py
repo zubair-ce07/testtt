@@ -9,11 +9,12 @@ class ForeverNewAuCrawlSpider(CrawlSpider):
     allowed_domains = ["forevernew.com.au"]
     start_urls = ["https://www.forevernew.com.au/"]
     product_parser = ProductParser()
+    category_css = "#menu, .next"
+    product_css = ".product-name"
 
     rules = (
-        Rule(LinkExtractor(restrict_css="#menu, .next"), callback="parse"),
-        Rule(LinkExtractor(restrict_css=".product-name"), callback=product_parser.parse
-             , process_links="clean_links")
+        Rule(LinkExtractor(restrict_css=category_css), callback="parse"),
+        Rule(LinkExtractor(restrict_css=product_css, process_value="process_link"), callback=product_parser.parse)
     )
 
     def parse(self, response):
@@ -25,8 +26,5 @@ class ForeverNewAuCrawlSpider(CrawlSpider):
             request.meta["trail"] = trail.copy()
             yield request
 
-    def clean_links(self, links):
-        for link in links:
-            link.url = url_query_cleaner(link.url, [])
-
-        return links
+    def process_link(self, value):
+        return url_query_cleaner(value, [])
