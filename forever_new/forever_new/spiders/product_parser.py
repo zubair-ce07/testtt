@@ -41,18 +41,14 @@ class ProductParser(Spider):
         yield request
 
     def skus_map(self, response):
-        colors = response.css("#colour-select option")
+        colors = response.css("#colour-select option[availability='1']")
 
         sku_map = {}
         for color in colors:
-
-            if color.css("::attr('availability')").extract_first() == "0":
-                continue
-
             color_id = color.css("::attr('value')").extract_first()
             sku = {
                 "color": color.css("::attr('label')").re_first(":\s(.+)"),
-                "sizes": response.css(f"li[pid='{color_id}'] option"),
+                "sizes": response.css(f"li[pid='{color_id}'] option:not([class='out-of-stock'])"),
                 "price": response.css(f".price-wrapper[pid='{color_id}']")
             }
 
@@ -86,10 +82,6 @@ class ProductParser(Spider):
                 continue
 
             for size in raw_sku["sizes"]:
-
-                if size.css("::attr('class')").extract_first() == "out-of-stock":
-                    continue
-
                 product_id = size.css("::attr('pid')").extract_first()
                 sku["size"] = size.css("::text").re_first(".*:\s([\w-]*)\s")
                 skus[product_id] = sku.copy()
