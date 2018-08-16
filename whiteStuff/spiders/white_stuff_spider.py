@@ -45,8 +45,8 @@ class WhiteStuffSpider(CrawlSpider):
     def parse_category_parameters(self, response):
         script = self.get_category_script(response)
         parameters = js2xml.utils.vars.get_vars(js2xml.parse(script))
-        config_category_tree = parameters['attraqt.config.categorytree']
-        config_category = parameters['attraqt.config.category']
+        config_category_tree = parameters.get('attraqt.config.categorytree')
+        config_category = parameters.get('attraqt.config.category')
 
         if not config_category:
             return
