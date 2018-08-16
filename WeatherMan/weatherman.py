@@ -1,164 +1,167 @@
 import os
 import argparse
-import glob
+from glob import glob
 import csv
+from datetime import datetime
 
 
 class FileParser:
     """This Class Read all files and make a nested dictionary of every day"""
+
     def __init__(self, directory):
         self.directory = directory
-        self.weather_record = []
+        self.weather_record = {}
 
     def file_reader(self):
         """This function will read data from file and make a list"""
-        for name in glob.glob(self.directory+"/*.txt"):
-            with open(name, 'r') as file:
-                next(file)
-                reader = csv.DictReader(file)
-                for row in reader:
-                    if 'PKST' in row.keys():
-                        date = row['PKST']
-                    else:
-                        date = row['PKT']
-                    date = date.split('-')
-                    if not date[0] == "<!":
-                        choose_data = {'Max TemperatureC': row[
-                            'Max TemperatureC'],
-                            'Min TemperatureC': row[
-                            'Min TemperatureC'],
-                            'Max Humidity': row['Max Humidity'],
-                            'Min Humidity': row[' Min Humidity']}
-                        self.weather_record.append(
-                            {date[0]: {
-                                date[1]: {
-                                    date[2]: choose_data
-                                }}})
-                    else:
-                        continue
 
+        if not len(glob(os.path.join(
+            self.directory,
+            'lahore_weather_[0-9]*_[A-Z][a-z]*.txt'
+        ))) == 0:
+            for report_path in glob(os.path.join(
+                    self.directory,
+                    'lahore_weather_[0-9]*_[A-Z][a-z]*.txt'
+            )):
+                with open(report_path, 'r') as report_file:
+                    next(report_file)
+                    reader = csv.DictReader(report_file)
+                    for row in reader:
+                        if 'PKST' in row.keys():
+                            if '<!' not in row['PKST']:
+                                date = datetime.strptime(
+                                    row['PKST'],
+                                    "%Y-%m-%d"
+                                    )
+                            else:
+                                continue
+                        else:
+                            if '<!' not in row['PKT']:
+                                date = datetime.strptime(
+                                    row['PKT'],
+                                    "%Y-%m-%d"
+                                    )
+                            else:
+                                continue
+                        choose_data = {
+                            'Max TemperatureC': row['Max TemperatureC'],
+                            'Min TemperatureC': row['Min TemperatureC'],
+                            'Max Humidity': row['Max Humidity'],
+                            'Min Humidity': row[' Min Humidity']
+                        }
+                        self.weather_record[date] = choose_data
+        else:
+            print("This Directory doesn't contain any weather report")
+            exit(0)
         return self.weather_record
 
 
-class DataCalculation:
-    """Data Calculation Class
-
-    This class will calculate all type of max/min of temperature/humidity"""
+class WeatherReport:
+    """
+    Weather Report Class
+    This class will calculate all type of max/min of temperature/humidity
+    This class will also print the reports
+    """
 
     def __init__(self, data):
         self.data = data
-        self.max_temperature = None
-        self.min_temperatue = None
-        self.max_humidity = None
-        self.min_humidity = None
-        self.max_temperature_variable = 0
-        self.annual_data = dict()
+        self.annual_data = {}
 
     def calculate(self, reporttype):
         """This module will call the calculate function according reporttype"""
-        available_data_of_years = set([elem2 for elem in self.data
-                                       for elem2 in elem])
+        available_data_of_years = set([elem.year for elem in self.data])
         if reporttype == 1:
-            self.calculate_yearly(available_data_of_years)
+            self.get_yearly_weather_report(available_data_of_years)
+            self.print_annualy()
         elif reporttype == 2:
-            self.calculate_hotest_day_of_year(available_data_of_years)
+            self.get_hotest_day_of_year(available_data_of_years)
+            self.print_hotest_day_of_year()
 
         return self.annual_data
 
-    def calculate_yearly(self, available_data_of_years):
+    def get_yearly_weather_report(self, available_data_of_years):
         """This module will calculate annual max/min of temperature/humidity"""
-        self.max_temperature = set()
-        self.min_temperatue = set()
-        self.max_humidity = set()
-        self.min_humidity = set()
         for year in available_data_of_years:
-            self.max_humidity.clear()
-            self.min_temperatue.clear()
-            self.max_temperature.clear()
-            self.min_humidity.clear()
+            self.max_annual_temperature = set()
+            self.min_annual_temperatue = set()
+            self.max_annual_humidity = set()
+            self.min_humidity = set()
             for item in self.data:
-                yearly_data = item.get(year)
-                if yearly_data:
-                    for month in yearly_data:
-                        monthly_data = yearly_data.get(month)
-                        for day in monthly_data:
-                            day_data = monthly_data.get(day)
-                            if day_data['Max TemperatureC']:
-                                self.max_temperature.add(
-                                    int(day_data['Max TemperatureC']))
-                            if day_data['Min TemperatureC']:
-                                self.min_temperatue.add(
-                                    int(day_data['Min TemperatureC']))
-                            if day_data['Max Humidity']:
-                                self.max_humidity.add(
-                                    int(day_data['Max Humidity']))
-                            if day_data['Min Humidity']:
-                                self.min_humidity.add(
-                                    int(day_data['Min Humidity']))
+                if item.year == year:
+                    if self.data[item]['Max TemperatureC']:
+                        self.max_annual_temperature.add(
+                            int(self.data[item]['Max TemperatureC'])
+                        )
+                    if self.data[item]['Min TemperatureC']:
+                        self.min_annual_temperatue.add(
+                            int(self.data[item]['Min TemperatureC'])
+                        )
+                    if self.data[item]['Max Humidity']:
+                        self.max_annual_humidity.add(
+                            int(self.data[item]['Max Humidity'])
+                        )
+                    if self.data[item]['Min Humidity']:
+                        self.min_humidity.add(
+                            int(self.data[item]['Min Humidity'])
+                        )
 
             yearly_calculated_data = {
-                'Max TemperatureC': max(self.max_temperature),
-                'Min TemperatureC': min(self.min_temperatue),
-                'Max Humidity': max(self.max_humidity),
-                'Min Humidity': min(self.min_humidity)}
+                'Max TemperatureC': max(self.max_annual_temperature),
+                'Min TemperatureC': min(self.min_annual_temperatue),
+                'Max Humidity': max(self.max_annual_humidity),
+                'Min Humidity': min(self.min_humidity)
+            }
             self.annual_data[year] = yearly_calculated_data
 
-    def calculate_hotest_day_of_year(self, available_data_of_years):
+    def get_hotest_day_of_year(self, available_data_of_years):
         """This module will calculate Hotest Day of each year"""
         for year in available_data_of_years:
-            self.max_temperature_variable = 0
+            self.monthly_max_temperature = 0
             for item in self.data:
-                yearly_data = item.get(year)
-                if yearly_data:
-                    for month in yearly_data:
-                        monthly_data = yearly_data.get(month)
-                        for day in monthly_data:
-                            day_data = monthly_data.get(day)
-                            if day_data['Max TemperatureC']:
-                                max_temp = int(day_data['Max TemperatureC'])
-                                if max_temp > self.max_temperature_variable:
-                                    self.day = day
-                                    self.month = month
-                                    self.year = year
-                                    self.max_temperature_variable = max_temp
-            hotest_day_of_year = {'Max TemperatureC':
-                                  self.max_temperature_variable,
-                                  'Day': self.day, 'Month': self.month}
+                if item.year == year:
+                    if self.data[item]['Max TemperatureC']:
+                        max_temp = int(self.data[item]['Max TemperatureC'])
+                        if max_temp > self.monthly_max_temperature:
+                            self.day = item.day
+                            self.month = item.month
+                            self.year = item.year
+                            self.monthly_max_temperature = max_temp
+
+            hotest_day_of_year = {
+                'Max TemperatureC': self.monthly_max_temperature,
+                'Day': self.day,
+                'Month': self.month
+            }
+
             self.annual_data[year] = hotest_day_of_year
 
-
-class PrintReport:
-    """This class will print report according to reporttype"""
-
-    def __init__(self, data):
-        self.data = data
-
-    def print_report(self, reporttype):
-        if reporttype == 1:
-            self.print_annualy()
-        elif reporttype == 2:
-            self.print_hotest_day_of_year()
-
     def print_annualy(self):
+        """This Module will print annual report"""
         print("Year    MaxTemp    MinTemp    MaxHumidity    MinHumidity")
         print("--------------------------------------------------------")
-        for year in self.data:
-            print(year, "    ", self.data[year]["Max TemperatureC"], "       ",
-                  self.data[year]["Min TemperatureC"], "       ",
-                  self.data[year]["Max Humidity"], "            ",
-                  self.data[year]["Min Humidity"])
+        for year in self.annual_data:
+            print(
+                year, "    ", self.annual_data[year]["Max TemperatureC"],
+                "       ",
+                self.annual_data[year]["Min TemperatureC"],
+                "       ",
+                self.annual_data[year]["Max Humidity"],
+                "            ",
+                self.annual_data[year]["Min Humidity"]
+            )
 
     def print_hotest_day_of_year(self):
+        """This module will print hotest day of each year"""
         print("Year    Date             Temp")
         print("-----------------------------")
-        for year in self.data:
-            print(year, "    ", self.data[year]["Day"], "/",
-                  self.data[year]["Month"], "/",
+        for year in self.annual_data:
+            print(year, "    ", self.annual_data[year]["Day"], "/",
+                  self.annual_data[year]["Month"], "/",
                   year, "    ",
-                  self.data[year]["Max TemperatureC"])
+                  self.annual_data[year]["Max TemperatureC"])
 
 
-def check_and_parse_system_arguments():
+def parse_arguments():
     """This Function checks for command line arguments and parse it"""
     arg = argparse.ArgumentParser()
     arg.add_argument("-r", "--report", required=True,
@@ -169,16 +172,18 @@ def check_and_parse_system_arguments():
     return int(arg_values["report"]), arg_values["directory"]
 
 
-def check_for_valid_argument(report, directory):
+def validate_arguments(report, directory):
     """This function will be called after parsing of system arguments
 
     this function will check whether the argument recived is valid or not"""
-    if report == 1 or report == 2:
+    if report in [1, 2]:
         if not os.path.isdir(directory):
             print("Please Enter Valid Path of Directory")
             return False
-        else:
-            return True
+        if not os.listdir(directory):
+            print("Directory is Empty! Please Enter Valid Path")
+            return False
+        return True
     else:
         print("Please Enter Valid Report Number")
         print("1. For Annual Max/Min Temperature")
@@ -186,16 +191,16 @@ def check_for_valid_argument(report, directory):
         return False
 
 
+def generate_and_print_report():
+    """This function will generate and print the report"""
+    reporttype, directory = parse_arguments()
+    if validate_arguments(reporttype, directory):
+        parser = FileParser(directory)
+        data = parser.file_reader()
+
+        calculate = WeatherReport(data)
+        annual_data = calculate.calculate(reporttype)
+
+
 if __name__ == "__main__":
-    reporttype, directory = check_and_parse_system_arguments()
-    if not check_for_valid_argument(reporttype, directory):
-        exit(0)
-
-    parser = FileParser(directory)
-    data = parser.file_reader()
-
-    calculate = DataCalculation(data)
-    annual_data = calculate.calculate(reporttype)
-
-    printer = PrintReport(annual_data)
-    printer.print_report(reporttype)
+    generate_and_print_report()
