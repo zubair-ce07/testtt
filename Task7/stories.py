@@ -12,7 +12,8 @@ class StoriesSpider(CrawlSpider):
     custom_settings = {'DOWNLOAD_DELAY': 1.25}
     allowed_domains = ['stories.com']
 
-    allowed_r = ('/jewellery',)
+    allowed_r = ('/clothing', '/shoes', '/bags', '/jewellery', '/accessories',
+                 '/swimwear', '/lingerie', '/stationery', '/beauty')
     rules = (Rule(LinkExtractor(allow=allowed_r, restrict_css=".categories"), callback='parse_pagination'),)
 
     skus_request_t = 'https://www.stories.com/en_{0}/getAvailability?variants={1}'
