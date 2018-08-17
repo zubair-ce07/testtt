@@ -18,3 +18,4 @@ class Product(scrapy.Item):
     skus = scrapy.Field()
     urls = scrapy.Field()
     care = scrapy.Field()
+    avability = scrapy.Field()

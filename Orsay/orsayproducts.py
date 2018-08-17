@@ -44,6 +44,7 @@ class OrsayproductSpider(CrawlSpider):
         product['skus'] = self.get_product_skus(response),
         product['urls'] = [response.request.url],
         product['care'] = [self.get_care_text(response)]
+        product['avability'] = self.get_product_avability(response)
         colors_to_follow = self.has_more_colors(response)
         if len(colors_to_follow) > 1:
             url = self.get_color_url(colors_to_follow)
@@ -173,3 +174,6 @@ class OrsayproductSpider(CrawlSpider):
                     url=url, callback=self.get_product_skus,
                     meta={'colors_list': colors_to_follow,
                           'item':  product_item})
+
+    def get_product_avability(self, response):
+        return response.css(".in-stock-msg::text").extract()
