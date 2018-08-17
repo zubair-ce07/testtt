@@ -2,11 +2,12 @@
 This module reads weather files and calculate max, min temprature and build charts
 """
 
-import calendar
-import os
 import argparse
+import calendar
 import csv
+import os
 import re
+
 from termcolor import colored
 
 class WeatherMan:
@@ -15,25 +16,14 @@ class WeatherMan:
     and print in front of user
     """
 
-    def __init__(self):
-        self.path = ''
+    def __init__(self, path):
+        self.path = path
         self.file_names = []
         self.month_files = []
         self.max_temp_monthwise = []
         self.low_temp_monthwise = []
         self.date_monthwise = []
         self.humid = []
-
-
-    def get_path(self, path):
-        """
-         This method gets path of related files
-        """
-        try:
-            self.path = path
-
-        except IOError as io_error:
-            print(io_error)
 
 
     def get_files(self, year, month=None):
@@ -63,8 +53,8 @@ class WeatherMan:
             with open('{path}{file_name}'.format(path=self.path, file_name=my_file), 'r') as read_file:
                 line = csv.DictReader(read_file)
                 for chunk in line:
-                    if chunk['Max TemperatureC'] == '' or chunk['Min TemperatureC'] == '' or chunk[
-                        'Max Humidity'] == '':
+                    if not (chunk['Max TemperatureC'] or chunk['Min TemperatureC'] or chunk[
+                        'Max Humidity']):
                         continue
                     self.max_temp_monthwise.append(chunk['Max TemperatureC'])
                     self.low_temp_monthwise.append(chunk['Min TemperatureC'])
@@ -108,8 +98,7 @@ class WeatherMan:
         """
         This method converts numaric date into english date
         """
-        raw_date = index
-        raw_date = raw_date.split('-')
+        raw_date = index.split('-')
         complete_date = calendar.month_name[int(raw_date[1])]
         complete_date = '{date} {raw_date}'.format(date=complete_date, raw_date=raw_date[2])
         return complete_date
@@ -123,10 +112,11 @@ class WeatherMan:
         self.read_from_files()
         self.temp_list_conversion()
     
-    
-    def print_data(self):
+
+    def perform_calculation(self):
         """
-        This method prints required output of user
+        This method calculates max, min temperature and max humidity
+        and hence finds their relative indeces
         """
         max_value = max(self.max_temp_monthwise)
         min_value = min(self.low_temp_monthwise)
@@ -134,15 +124,23 @@ class WeatherMan:
         index = self.max_temp_monthwise.index(max_value)
         min_index = self.low_temp_monthwise.index(min_value)
         humid_index = self.humid.index(max_humid)
+        return [index, min_index, humid_index]
+
+
+    def print_data(self):
+        """
+        This method prints required output of user
+        """
+        index_list = self.perform_calculation()
         print('************************************')
         print('Highest: {max_temp}C on {date}'.format(max_temp=str(
-            self.max_temp_monthwise[index]), date=self.date_conversion(self.date_monthwise[index])))
+            self.max_temp_monthwise[index_list[0]]), date=self.date_conversion(self.date_monthwise[index_list[0]])))
         print('Lowest: {low_temp}C on {date}'.format(low_temp=str(
-            self.low_temp_monthwise[min_index]), date=self.date_conversion(
-                self.date_monthwise[min_index])))
+            self.low_temp_monthwise[index_list[1]]), date=self.date_conversion(
+                self.date_monthwise[index_list[1]])))
         print('Humidity: {humid}% on {date}'.format(humid=str(
-            self.humid[humid_index]), date=self.date_conversion(
-                self.date_monthwise[humid_index])))
+            self.humid[index_list[2]]), date=self.date_conversion(
+                self.date_monthwise[index_list[2]])))
         print('************************************')
 
 
@@ -174,28 +172,33 @@ def main():
     """
     This method is entry point of program
     """
-    weather_man = WeatherMan()
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-dir', '--path', type=str)
-    parser.add_argument('-e', '--year', type=str)
-    parser.add_argument('-m', '--month', type=str)
-    parser.add_argument('-c', '--monthly_chart', type=str)
-    parser.add_argument('-ce', '--monthly_chart_horizontal', type=str)
-    args = parser.parse_args()
-    weather_man.get_path(args.path)
-    if args.year:
-        weather_man.combiner(args.year)
-        weather_man.print_data()
-    elif args.month:
-        weather_man.combiner(args.year, args.month)
-        weather_man.show_average()
-    elif args.monthly_chart:
-        weather_man.combiner(args.year, args.month)
-        weather_man.print_chart()
-    elif args.monthly_chart_horizontal:
-        weather_man.combiner(args.year, args.month)
-        weather_man.print_bar_chart()
-        
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-dir', '--path', type=str)
+        parser.add_argument('-e', '--year', type=str)
+        parser.add_argument('-m', '--month', type=str)
+        parser.add_argument('-c', '--monthly_chart', type=str)
+        parser.add_argument('-ce', '--monthly_chart_horizontal', type=str)
+        args = parser.parse_args()
+
+        weather_man = WeatherMan(args.path)
+        if not (args.year or args.month or args.monthly_chart or
+                args.monthly_chart_horizontal):
+            print("Please enter valid argument")
+        elif args.year:
+            weather_man.combiner(args.year)
+            weather_man.print_data()
+        elif args.month:
+            weather_man.combiner(args.year, args.month)
+            weather_man.show_average()
+        elif args.monthly_chart:
+            weather_man.combiner(args.year, args.month)
+            weather_man.print_chart()
+        elif args.monthly_chart_horizontal:
+            weather_man.combiner(args.year, args.month)
+            weather_man.print_bar_chart()
+    except ValueError as value_error:
+        print(value_error)
 
 # execution point of program
 if __name__ == '__main__':
