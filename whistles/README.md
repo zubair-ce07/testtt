@@ -2,6 +2,7 @@ Whistles scraper
 =======
 
 The project includes `whistles` scraper to scrap complete whistles.com products.
+###### Sample json schema can be found at [here](https://docs.google.com/document/d/1FBp_S_td1wCFZkQ_P_M9Zmaixj_s2Qcug51YcTgh8kw/edit?usp=sharing)
 
 ## Getting Started
 
