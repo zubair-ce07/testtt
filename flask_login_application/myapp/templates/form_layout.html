@@ -1,0 +1,24 @@
+{% macro render(form) %}
+<fieldset>
+    <div class="log-form">
+        <form method="POST" action="">
+            {% for field in form %}
+                {% if field.errors %}
+                        <ul>
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                {% endif %}
+                {% if field.type in ['CSRFTokenField', 'HiddenField'] %}
+                    {{ field() }}
+                {% else %}
+                    {{ field.label }}
+                    {{ field() }}
+                {% endif %}
+                <br/>
+            {% endfor %}
+        </form>
+    </div>
+</fieldset>
+{% endmacro %}
