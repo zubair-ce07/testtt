@@ -232,3 +232,8 @@ class WoolrichCrawlSpider(BaseCrawlSpider):
 
 class WoolrichParseSpiderUS(WoolrichParseSpider, MixinUS):
     name = MixinUS.retailer + '-parse'
+
+
+class WoolrichCrawlSpiderUS(WoolrichCrawlSpider, MixinUS):
+    name = MixinUS.retailer + '-crawl'
+    parse_spider = WoolrichParseSpiderUS()
