@@ -6,15 +6,14 @@ class ResultData:
     father_name = None
     score = None
 
-    def to_string(self):
+    @staticmethod
+    def get_fields():
         """
-        creates and returns a comma separated
-        representation of the object fields
-        :return: string containing all fields of object
+        creates and returns a list of the object fields
+        :return: list containing all fields of object
         """
-        data = "{}, {}, {}, {}".format(
-            self.roll_no,
-            self.name,
-            self.father_name,
-            self.score)
-        return data
+        return [
+            'roll_no',
+            'name',
+            'father_name',
+            'score']

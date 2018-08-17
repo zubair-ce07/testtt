@@ -1,4 +1,5 @@
 import csv
+from result_data import ResultData
 
 
 class ResultReporter:
@@ -71,7 +72,7 @@ class ResultReporter:
                  "BSCSM_new.csv", "BSCSA_new.csv",
                  "BSITM_new.csv", "BSITA_new.csv",
                  ]
-        fields = ['roll_no', 'name', 'father_name', 'score']
+        fields = ResultData.get_fields()
 
         for index, group in enumerate(groups):
             with open(files[index], 'w') as f:
@@ -79,8 +80,8 @@ class ResultReporter:
                 writer.writeheader()
                 for student in group:
                     writer.writerow(
-                        {'roll_no': student.roll_no,
-                         'name': student.name,
-                         'father_name': student.father_name,
-                         'score': student.score})
+                        {fields[0]: student.roll_no,
+                         fields[1]: student.name,
+                         fields[2]: student.father_name,
+                         fields[3]: student.score})
         print("Merit Files generated")

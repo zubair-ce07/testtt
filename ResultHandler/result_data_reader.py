@@ -8,6 +8,10 @@ class ResultDataReader:
     returns a list of ResultData objects
     """
     data_path = "data.csv"
+    # defining constants to be used as score field,
+    # if the student registered but not came in the test
+    ABSENT = -300
+    CANCELLED = -200
 
     def __init__(self, path):
         """
@@ -23,26 +27,19 @@ class ResultDataReader:
         store in a list of ResultData objects
         :return: list of ResultData objects
         """
-        required_columns = ["roll_no", "name", "father_name", "score"]
         result_data = []
         with open(self.data_path, 'r') as infile:
             reader = csv.DictReader(infile)
             for row in reader:
-                data_object = ResultData()
-                for (k, v) in row.items():
-                    if k in required_columns:
-                        if k == "name":
-                            data_object.name = v
-                        elif k == "father_name":
-                            data_object.father_name = v
-                        elif k == "roll_no":
-                            data_object.roll_no = v
-                        elif k == "score":
-                            if v == "Absent":
-                                data_object.score = -300
-                            elif v == "CANCELLED":
-                                data_object.score = -200
-                            else:
-                                data_object.score = int(v)
-                result_data.append(data_object)
+                result_item = ResultData()
+                result_item.roll_no = row['roll_no']
+                result_item.name = row['name']
+                result_item.father_name = row['father_name']
+                if row['score'] == "Absent":
+                    result_item.score = self.ABSENT
+                elif row['score'] == "CANCELLED":
+                    result_item.score = self.CANCELLED
+                else:
+                    result_item.score = int(row['score'])
+                result_data.append(result_item)
         return result_data
