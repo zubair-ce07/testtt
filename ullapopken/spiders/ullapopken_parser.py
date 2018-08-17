@@ -71,12 +71,12 @@ class UllapopkenParser:
 
         for raw_sku in raw_item['skuData']:
             sku = sku_common.copy()
-            sku['size'] = raw_sku['displaySize']
+            sku['size'] = self.get_size(raw_sku)
 
             if raw_sku['stockLevelStatus'] != 'AVAILABLE':
                 sku['is_out_of_stock'] = True
 
-            sku['sku_id'] = raw_sku['skuID']
+            sku['sku_id'] = f'{sku["color"]}_{sku["size"]}'
             skus.append(sku)
 
         return skus
@@ -86,6 +86,11 @@ class UllapopkenParser:
         sku_common.update(self.get_pricing(raw_item))
 
         return sku_common
+
+    @staticmethod
+    def get_size(raw_sku):
+        return f'{raw_sku["sizeCharacteristic"]["sizeTypeValue"]}/{raw_sku["displaySize"]}' \
+            if raw_sku["sizeCharacteristic"] else raw_sku["displaySize"]
 
     def get_pricing(self, raw_item):
         pricing = dict()
@@ -109,7 +114,7 @@ class UllapopkenParser:
     @staticmethod
     def get_description(raw_item):
         selector = Selector(text=list(raw_item['description'].values())[0])
-        return selector.css('*::text').re_first('.*[\S].*').strip().split('.')
+        return selector.css('*::text').re_first('.*[\S].*').strip().split('. ')
 
     @staticmethod
     def get_care(raw_item):
