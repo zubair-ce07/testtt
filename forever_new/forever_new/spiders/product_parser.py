@@ -43,7 +43,17 @@ class ProductParser(Spider):
         product["image_urls"] += response.css("img.gallery__image::attr('src')").extract()
         return self.prepare_request(response.meta["image_requests"], product)
 
-    def skus_map(self, response):
+    def prepare_request(self, requests, product):
+
+        if requests:
+            request = requests.pop()
+            request.meta["product"] = product
+            request.meta["image_requests"] = requests
+            yield request
+        else:
+            yield product
+
+    def raw_skus(self, response):
         colors_s = response.css("#colour-select option:not([availability='0'])")
 
         raw_skus = {}
@@ -65,11 +75,10 @@ class ProductParser(Spider):
     def skus(self, response):
         price_css = ".regular-price .price:not([id])::text, .special-price .price:not([id])::text"
         prev_price_css = ".old-price .price:not([id])::text"
-        price_re = "\\$(\d+.\d+)"
-        raw_skus = self.skus_map(response)
-
+        raw_skus = self.raw_skus(response)
         skus = {}
         common_sku = {"currency": self.currency}
+
         for sku_id, raw_sku in raw_skus.items():
             sku = common_sku.copy()
             sku["price"] = float(raw_sku['price'].css(price_css).extract_first().strip("$ \n"))
@@ -85,8 +94,7 @@ class ProductParser(Spider):
 
             for size_s in raw_sku["sizes"]:
                 size_sku = sku.copy()
-                size_sku["size"] = size_s.css("::text").extract_first().split(": ")[1].strip()
-                size_sku["size"] = size_sku["size"].split(" (")[0]
+                size_sku["size"] = size_s.css("::text").extract_first().split(": ")[1].strip().split(" (")[0]
 
                 if size_s.css(".out-of-stock"):
                     size_sku["out-of-stock"] = True
@@ -116,16 +124,6 @@ class ProductParser(Spider):
             requests.append(request)
 
         return requests
-
-    def prepare_request(self, requests, product):
-
-        if requests:
-            request = requests.pop()
-            request.meta["product"] = product
-            request.meta["image_requests"] = requests
-            yield request
-        else:
-            yield product
 
     def care(self, response):
         return list(filter(lambda care: care.strip(),
