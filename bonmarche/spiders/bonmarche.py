@@ -1,5 +1,6 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+
 from .bonmarche_product import ProductParser
 
 
@@ -17,10 +18,9 @@ class PiazzaSpider(CrawlSpider):
     product_parser = ProductParser()
 
     def parse(self, response):
-        requests = super().parse(response)
-        for req in requests:
-            trail = response.meta.get('trail', [])
-            trail.append(response.url)
+        trail = response.meta.get('trail', [])
+        trail.append(response.url)
+        for req in super().parse(response):
             req.meta['trail'] = list(set(trail))
             yield req
 

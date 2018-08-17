@@ -1,6 +1,8 @@
 import json
+
 from scrapy import Spider, Request
 from w3lib.url import url_query_cleaner
+
 from bonmarche.items import ProductItem
 
 
@@ -46,58 +48,91 @@ class ProductParser(Spider):
         return response.css('.product-description::text, .feature-value::text').extract()[-1:]
 
     def color_requests(self, response):
-        requests = []
         color_urls = response.css('.color .swatchanchor.selectable:not(.selected)::attr(href)').extract()
         color_urls.append(response.url)
-        for url in color_urls:
-            request = Request(url, callback=self.parse_colors, dont_filter=True)
-            requests.append(request)
+        requests = [Request(url, callback=self.parse_size) for url in color_urls]
         return requests
 
     def parse_colors(self, response):
+        requests = response.meta['colour_requests']
         product = response.meta["product"]
-        product["image_urls"].extend(self.parse_images(response))
-        product['skus'].update(self.generate_skus(response))
+        product["image_urls"] += self.images(response)
+        size_urls = response.css('.size .swatchanchor.selectable::attr(href)').extract()
+        requests += [Request(url, callback=self.parse_size) for url in size_urls]
+        request = self.process_request(requests, product)
+        if request:
+            yield request
+        else:
+            yield product
+
+    def images(self, response):
+        raw_images = response.css('.productthumbnail::attr(data-lgimg)').extract()
+        image_urls = [url_query_cleaner(json.loads(url)["url"]) for url in raw_images]
+        return set(image_urls)
+
+    def parse_size(self, response):
+        product = response.meta['product']
+        common = self.common_sku(response)
+        skus = {}
+        size = response.css('.size .swatchanchor.selectable.selected::text').extract_first()
+        colour = common['colour']
+        sku = common.copy()
+        length_urls = response.css('.length .swatchanchor.selectable::attr(href)').extract()
+        if length_urls:
+            requests = response.meta['colour_requests']
+            requests += [Request(url, callback=self.parse_length) for url in length_urls]
+            request = self.process_request(requests, product)
+            if request:
+                yield request
+            else:
+                yield product
+        else:
+            sku['size'] = size.strip()
+            skus[f'{colour}_{size.strip()}'] = sku
+        product['skus'].update(skus)
         request = self.process_request(response.meta["colour_requests"], product)
         if request:
             yield request
         else:
             yield product
 
-    def parse_images(self, response):
-        raw_images = response.css('.productthumbnail::attr(data-lgimg)').extract()
-        image_urls = [json.loads(url)["url"] for url in raw_images]
-        image_urls = [url_query_cleaner(url) for url in image_urls]
-        return set(image_urls)
-
-    def generate_skus(self, response):
-        common_sku = self.product_sku(response)
+    def parse_length(self, response):
+        product = response.meta['product']
+        common = self.common_sku(response)
         skus = {}
-        sizes = response.css('.size .swatchanchor.selectable::text').extract()
-        colour = common_sku['colour']
-        for size in sizes:
-            sku = common_sku.copy()
-            sku['size'] = size.strip()
-            skus[colour + '_' + size.strip()] = sku
-        return skus
+        size = response.css('.size .swatchanchor.selectable.selected::text').extract_first()
+        colour = common['colour']
+        sku = common.copy()
+        lengths = response.css('.length .swatchanchor.selectable::text').extract()
+        for length in lengths:
+            filtered_size = f'{size.strip()}/{length.strip()}'
+            sku['size'] = filtered_size
+            skus[f'{colour}_{filtered_size}'] = sku
+        product['skus'].update(skus)
+        request = self.process_request(response.meta["colour_requests"], product)
+        if request:
+            yield request
+        else:
+            yield product
 
-    def product_sku(self, response):
-        pricing = {}
+    def common_sku(self, response):
+        sku = {}
         colour = response.css('.attribute .label::text').extract_first()
         colour = colour.split(":")[-1].strip()
-        pricing['colour'] = colour
-        pricing['currency'] = 'GBP'
+        sku['colour'] = colour
+        sku['currency'] = 'GBP'
         previous_price = response.css('.price-standard::text').extract_first()
+
         if previous_price:
-            pricing['previous_price'] = previous_price.replace('£', '').strip()
-        pricing['price'] = response.css('.price-sales::attr(content)').extract_first()
-        return pricing
+            sku['previous_price'] = previous_price.replace('£', '').strip()
+        sku['price'] = response.css('.price-sales::attr(content)').extract_first()
+        return sku
 
     def process_request(self, requests, product):
-        if requests:
-            request = requests.pop()
-            request.meta["product"] = product
-            request.meta["colour_requests"] = requests
-            return request
-        else:
+        if not requests:
             return
+        request = requests.pop()
+        request.meta["product"] = product
+        request.meta["colour_requests"] = requests
+        return request
+
