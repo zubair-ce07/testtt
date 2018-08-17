@@ -219,3 +219,12 @@ class WoolrichParseSpider(BaseParseSpider, MixinUS):
     def get_attr_key(self, response, attr_type):
         attr_value = int(response.css('.form-option-swatch::attr(data-swatch-id)').extract_first())
         return f'attribute[{attr_value + attr_type}]'
+
+
+class WoolrichCrawlSpider(BaseCrawlSpider):
+    listing_css = ['#primary', '.pagination-item--next']
+    product_css = '.card-title'
+    rules = (
+                Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
+                Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
+            )
