@@ -228,3 +228,7 @@ class WoolrichCrawlSpider(BaseCrawlSpider):
                 Rule(LinkExtractor(restrict_css=listing_css), callback='parse'),
                 Rule(LinkExtractor(restrict_css=product_css), callback='parse_item'),
             )
+
+
+class WoolrichParseSpiderUS(WoolrichParseSpider, MixinUS):
+    name = MixinUS.retailer + '-parse'
