@@ -1,4 +1,4 @@
-from scrapy import Spider, Request
+from scrapy import Spider
 
 from wefashion.items import WefashionItem
 
@@ -32,7 +32,7 @@ class ProductParser(Spider):
         item['price'] = self.extract_price(response)
         item['currency'] = self.extract_currency(response)
         item['skus'] = self.extract_skus(response)
-        item['requests'] = self.create_requests(response)
+        item['requests'] = self.color_requests(response)
         return self.parse_requests(item)
 
     def parse_requests(self, item):
@@ -46,19 +46,19 @@ class ProductParser(Spider):
 
     def parse_product(self, response):
         item = response.meta['item']
-        item['image_urls'].extend(self.extract_image_urls(response))
+        item['image_urls'] += self.extract_image_urls(response)
         item['skus'].update(self.extract_skus(response))
         return self.parse_requests(item)
 
-    def create_requests(self, response):
+    def color_requests(self, response):
         color_urls = self.extract_color_urls(response)
-        return [Request(url, callback=self.parse_product) for url in color_urls]
+        return [response.follow(url, callback=self.parse_product) for url in color_urls]
 
     def product_exists(self, response):
-        product_available = self.product_reference(response)
+        raw_retailer_sku = self.raw_retailer_sku(response)
         retailer_sku = self.extract_retailer_sku(response)
 
-        if not product_available or retailer_sku in self.visited_products:
+        if not raw_retailer_sku or retailer_sku in self.visited_products:
             return True
 
         self.visited_products.add(retailer_sku)
@@ -66,14 +66,14 @@ class ProductParser(Spider):
 
     def extract_color_urls(self, response):
         color_id = self.extract_color_id(response)
-        color_css = f".color :not(.unselectable) :not([data-value='{color_id}'])::attr(href)"
-        return response.css(color_css).extract()
+        color_css = f".color :not(.unselectable) :not([data-value='{color_id}'])"
+        return response.css(color_css)
 
-    def product_reference(self, response):
+    def raw_retailer_sku(self, response):
         return response.css('.pdp-main::attr(data-product-id)').extract_first()
 
     def extract_retailer_sku(self, response):
-        return self.product_reference(response).split('_')[0]
+        return self.raw_retailer_sku(response).split('_')[0]
 
     def extract_gender(self, response):
         gender_css = "meta[itemprop='name']::attr(content)"
@@ -105,7 +105,7 @@ class ProductParser(Spider):
         return response.css(currency_css).extract_first()
 
     def extract_color_id(self, response):
-        return self.product_reference(response).split('_')[1]
+        return self.raw_retailer_sku(response).split('_')[1]
 
     def extract_color(self, response):
         color_id = self.extract_color_id(response)
