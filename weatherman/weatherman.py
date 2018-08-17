@@ -191,18 +191,18 @@ def get_output_for_c_option(file_cont, date):
     print(month_name, date_tokens[0])
     i = 1
     while i < len(daily_temps_of_month[0]):
-        print("\033[1;30;0m{:02d} ".format(i), end="")
+        print("{}{:02d} ".format(Constants.END_COLR, i), end="")
         if daily_temps_of_month[0][i] == Constants.RNF:
-            print("\033[1;31;0mmissing")
+            print("{}missing".format(Constants.RED_COLR))
         else:
-            print("\033[1;31;0m+" * int(daily_temps_of_month[0][i]), end="")
-            print("\033[1;30;0m {:02d}C".format(daily_temps_of_month[0][i]))
-        print("\033[1;30;0m{:02d} ".format(i), end="")
+            print("{}+".format(Constants.RED_COLR) * int(daily_temps_of_month[0][i]), end="")
+            print("{} {:02d}C".format(Constants.END_COLR, daily_temps_of_month[0][i]))
+        print("{}{:02d} ".format(Constants.END_COLR, i), end="")
         if daily_temps_of_month[1][i] == Constants.RNF:
-            print("\033[1;34;0mmissing")
+            print("{}missing".format(Constants.BLUE_COLR))
         else:
-            print("\033[1;34;0m+" * int(daily_temps_of_month[1][i]), end="")
-            print("\033[1;30;0m {:02d}C".format(daily_temps_of_month[1][i]))
+            print("{}+".format(Constants.BLUE_COLR) * int(daily_temps_of_month[1][i]), end="")
+            print("{} {:02d}C".format(Constants.END_COLR, daily_temps_of_month[1][i]))
         i += 1
 
 
@@ -230,24 +230,24 @@ def get_output_for_d_option(file_cont, date):
     while i < len(daily_temps_of_month[0]):
         high_temp_miss = (daily_temps_of_month[0][i] == Constants.RNF)
         low_temp_miss = (daily_temps_of_month[1][i] == Constants.RNF)
-        print("\033[1;30;0m{:02d} ".format(i), end="")
+        print("{}{:02d} ".format(Constants.END_COLR, i), end="")
         if high_temp_miss:
-            print("\033[1;31;0mmissing", end="")
+            print("{}missing".format(Constants.RED_COLR), end="")
         else:
-            print("\033[1;31;0m+" * int(daily_temps_of_month[0][i]), end="")
+            print("{}+".format(Constants.RED_COLR) * int(daily_temps_of_month[0][i]), end="")
         if low_temp_miss:
-            print("\033[1;34;0mmissing", end="")
+            print("{}missing".format(Constants.BLUE_COLR), end="")
         else:
-            print("\033[1;34;0m+" * int(daily_temps_of_month[1][i]), end="")
+            print("{}+".format(Constants.BLUE_COLR) * int(daily_temps_of_month[1][i]), end="")
         if high_temp_miss:
-            print("\033[1;30;0m missing-", end="")
+            print("{} missing-".format(Constants.RED_COLR), end="")
         else:
-            print("\033[1;30;0m {:02d}C-"
-                  .format(daily_temps_of_month[0][i]), end="")
+            print("{} {:02d}C-"
+                  .format(Constants.END_COLR, daily_temps_of_month[0][i]), end="")
         if low_temp_miss:
-            print("\033[1;30;0mmissing")
+            print("{}missing".format(Constants.BLUE_COLR))
         else:
-            print("\033[1;30;0m{:02d}C".format(daily_temps_of_month[1][i]))
+            print("{}{:02d}C".format(Constants.END_COLR, daily_temps_of_month[1][i]))
         i += 1
 
 

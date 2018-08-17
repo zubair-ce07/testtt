@@ -16,6 +16,11 @@ class Constants:
     IVA = "Invalid arguments !!!"
     O_MISS = "Option mismatch !!!"
 
+    # Color codes
+    END_COLR = '\33[0m'
+    RED_COLR = '\33[31m'
+    BLUE_COLR = '\33[34m'
+
     @staticmethod
     def get_rnf():
         """ this method returns RNF string
