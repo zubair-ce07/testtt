@@ -204,7 +204,10 @@ class WoolrichSpider(CrawlSpider):
         return [self.clean_text(c) for c in care if len(c.strip()) > 1]
     
     def _get_image_urls(self, response):
-        return [set(response.css('.productView-image img::attr(src)').extract())]
+        raw_script = response.css('[data-sku]::attr(data-images)').extract_first()
+        image_urls = json.loads(raw_script)
+        
+        return [u['data'].replace('{:size}', '1200x1318') for u in image_urls if not "thumbnail" in u['alt']]
 
     def get_product_attrs(self, response):
         product_attrs_sel = response.css('.productView-options [data-product-attribute]')
