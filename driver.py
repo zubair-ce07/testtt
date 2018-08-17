@@ -23,8 +23,6 @@ def read_cmd_arg():
 
     args = parser.parse_args()
     ArgumentValidator.check_number_arguments(args, parser)
-    arg_type = ""
-    arg_input = ""
     if args.e:
         arg_type = '-e'
         arg_input = args.e
@@ -36,18 +34,18 @@ def read_cmd_arg():
         arg_input = args.c
     else:
         print("Invalid Arguments provided")
-        exit()
+        return
     return arg_type, arg_input, args.dir_path
 
+
 if __name__ == "__main__":
-    weather_reporter_obj = WeatherReporter()
-    report_type, report_year, dir_path  = read_cmd_arg()
+    weather_reporter = WeatherReporter()
+    report_type, report_year, dir_path = read_cmd_arg()
     if report_type == '-e':
-        weather_reporter_obj.generate_year_report(report_year, dir_path)
+        weather_reporter.generate_year_report(report_year, dir_path)
     elif report_type == '-a':
-        weather_reporter_obj.generate_month_report(report_year, dir_path)
+        weather_reporter.generate_month_report(report_year, dir_path)
     elif report_type == '-c':
-        weather_reporter_obj.generate_barchart_report(report_year, dir_path)
+        weather_reporter.generate_barchart_report(report_year, dir_path)
     else:
-        print("Invalid Argumnent")
-        exit()
+        print("Invalid Argument")
