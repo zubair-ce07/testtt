@@ -11,9 +11,12 @@ class Constants:
     # RNF = Record not founf
     RNF = "missing"
     FILE_PREFIX = "Murree_weather_"
+    # IO exception
     IOE = "Something wrong while reading file\n" \
           "may be file does not exist"
+    # invalid arguments
     IVA = "Invalid arguments !!!"
+    # option and date mismatch
     O_MISS = "Option mismatch !!!"
 
     # Color codes

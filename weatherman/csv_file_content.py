@@ -21,8 +21,9 @@ class FileContent:
     def __init__(self, path):
         self.path = path
         self.file_names = []
-        # for (dir_path, dir_name, filename) in os.walk(path):
-        #    self.file_names.extend(filename)
+        # os.walk() will return tuple containing
+        # dir_path, dir_name, filenames
+        # we are using just filenames
         for file in os.walk(path):
             self.file_names.extend(file[2])
 
@@ -58,8 +59,8 @@ class FileContent:
                     reader = csv.reader(csv_file, dialect='myDialect')
                     # to skip header
                     next(csv_file)
-                    # data = [r for r in reader]
-                    # for index, line in enumerate(reader):
+                    # enumerate(reader) will return
+                    #tuple containing index and the complete line
                     for index_line in enumerate(reader):
                         # print('line[{}] = {}'.format(i, line))
                         if index_line[1][1].isdigit():
@@ -108,7 +109,8 @@ class FileContent:
                 reader = csv.reader(csv_file, dialect='myDialect')
                 # to skip header
                 next(csv_file)
-                # for index, line in enumerate(reader):
+                # enumerate(reader) will return
+                # tuple containing index and the complete line
                 for index_line in enumerate(reader):
                     if index_line[1][1].isdigit():
                         temp_humid_dict["max_temp_sum"] += int(index_line[1][1])
@@ -155,7 +157,8 @@ class FileContent:
                 reader = csv.reader(csv_file, dialect='myDialect')
                 # to skip header
                 next(csv_file)
-                # for index, line in enumerate(reader):
+                # enumerate(reader) will return
+                # tuple containing index and the complete line
                 for index_line in enumerate(reader):
                     if index_line[1][1].isdigit():
                         high_temps[j] = int(index_line[1][1])
