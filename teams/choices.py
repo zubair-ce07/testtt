@@ -50,7 +50,7 @@ class FormatChoices:
     TEST = 'TEST'
     ODI = 'ODI'
     T20I = 'T20I'
-    FIRSTCLASS = 'FIRSTCLASS'
+    FIRSTCLASS = 'FIRST-CLASS'
     LISTA = 'LISTA'
     T20S = 'T20S'
 

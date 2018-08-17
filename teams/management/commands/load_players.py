@@ -61,9 +61,15 @@ class Command(BaseCommand):
         elif any("chinaman" in s for s in bowling_style):
             player_bowling_style = BowlingStyleChoices.LEFT_ARM_CHINAMAN
 
-        player_teams = (player_data['personal_info']['Major teams'][0]).rstrip(',')
-        team = Team.objects.get(name=player_teams)
-        team_id = team.id
+        player_teams = player_data['personal_info']['Major teams']
+        player_teams = [name[:-1] for name in player_teams if name.endswith(',')]
+        player_teams_ids = []
+
+        for team in player_teams:
+            team_instance = Team.objects.filter(name=team)
+            if team_instance:
+                team_id = team_instance[0].id
+                player_teams_ids.append(team_id)
 
         random.seed(datetime.now())
 
@@ -75,21 +81,46 @@ class Command(BaseCommand):
             bowling_style=player_bowling_style,
             ranking=random.randint(1, 101)
         )
-        player_instance.teams.add(team_id)
+        for i in player_teams_ids:
+            player_instance.teams.add(i)
 
         batting_data = player_data['batting_averages']
         for bat_avg in batting_data:
-            pass
-            # batting_avg_instance = BattingAverage.objects.create(
-            #     format=list(bat_avg.values())[0],
-            #     matches=list(bat_avg.values())[0]
-            # )
+            batting_avg_instance = BattingAverage.objects.create(
+                format=bat_avg[''].upper(),
+                matches=int(bat_avg['Mat']),
+                innings=int(bat_avg['Inns']),
+                runs=int(bat_avg['Runs']),
+                average=float(bat_avg['Ave']),
+                strike_rate=float(bat_avg['SR']),
+                balls=int(bat_avg['BF']),
+                not_outs=int(bat_avg['NO']),
+                highest_score=(bat_avg['HS']),
+                hundreds=int(bat_avg['100']),
+                fifties=int(bat_avg['50']),
+                fours=int(bat_avg['4s']),
+                sixes=int(bat_avg['6s']),
+                catches=int(bat_avg['Ct']),
+                stumps=int(bat_avg['St']),
+                player_id=player_instance.id
+            )
 
-        # print(player_data['batting_averages'][0]['Mat'])
-        # for player in player_data:
-        #     print(player)
-        print('bla')
-        # Player.objects.get_or_create(
-        #     name=player_name,
-        #     playing_role="Batsman",
-        # )
+        bowling_data = player_data['bowling_averages']
+        for bowl_avg in bowling_data:
+            bowling_avg_instance = BowlingAverage.objects.create(
+                format=bowl_avg[''].upper(),
+                matches=int(bowl_avg['Mat']),
+                innings=int(bowl_avg['Inns']),
+                runs=int(bowl_avg['Runs']),
+                average=float(bowl_avg['Ave']),
+                strike_rate=float(bowl_avg['SR']),
+                balls=int(bowl_avg['Balls']),
+                wickets=int(bowl_avg['Wkts']),
+                best_bowling_innings=bowl_avg['BBI'],
+                best_bowling_match=bowl_avg['BBM'],
+                economy=float(bowl_avg['Econ']),
+                four_wickets=int(bowl_avg['4w']),
+                five_wickets=int(bowl_avg['5w']),
+                ten_wickets=int(bowl_avg['10']),
+                player_id=player_instance.id
+            )
