@@ -6,8 +6,10 @@ from taskmanager.models import CustomUser, Task
 
 
 class TaskForm(forms.ModelForm):
+    status_choice = (('0', 'In Progress'), ('1', 'Completed'))
     due_date = forms.fields.DateField(widget=forms.widgets.DateInput(attrs={'type': 'date'}),
                                       initial=datetime.now()+timedelta(days=7))
+    status = forms.fields.ChoiceField(required=True, choices=status_choice)
 
     class Meta:
         model = Task
@@ -17,6 +19,10 @@ class TaskForm(forms.ModelForm):
         user = kwargs.pop('user', None)  # pop the 'user' from kwargs dictionary
         super(TaskForm, self).__init__(*args, **kwargs)
         self.fields['assignee'].initial = user
+        self.fields['status'].initial = 0
+
+
+class AddTaskForm(TaskForm):
 
     def clean(self):
         """ Checks if the due date entered is correct """

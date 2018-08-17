@@ -12,7 +12,10 @@ from taskmanager import models, forms
 @login_required(login_url='login')
 def change_status(request, pk):
     task = models.Task.objects.get(id=pk)
-    task.status = not task.status
+    if task.status != 1:
+        task.status = 1
+    else:
+        task.status = 0
     task.save()
     return redirect(reverse('taskmanager:details', args=(pk, )))
 
@@ -76,9 +79,8 @@ class EditProfile(generic.UpdateView):
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
 class AddTask(generic.CreateView):
-    form_class = forms.TaskForm
+    form_class = forms.AddTaskForm
     exclude = ['status']
-    #model = models.Task
 
     template_name = "taskmanager/add.html"
 

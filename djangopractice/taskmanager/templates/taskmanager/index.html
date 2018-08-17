@@ -26,14 +26,19 @@
             <td> Options </td>
         </tr>
         {% for task in object_list %}
-            <tr {% if task.status %} class="completed" {%  endif %}>
+            <tr {% ifequal task.status 1 %} class="completed" {%  endifequal %}>
                 <td>
                     <a>
                         {{ task.status|status_string }}
                     </a>
                 </td>
                 <td> <a class="a_tags" href="{% url 'taskmanager:details' task.id %}"> {{ task.title }} </a> </td>
-                <td> {{ task.due_date|due_date_string }} </td>
+                <td> {% ifequal task.status 0 %}
+                    {{ task.due_date|due_date_string }}
+                {% else %}
+                    -------
+                {% endifequal %}
+                </td>
                 <td class="set_fixed_width"> {{ task.description|truncate_string:50 }} </td>
                 <td> {{ task.assignee }} </td>
                 <td>

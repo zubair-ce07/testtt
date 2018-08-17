@@ -10,7 +10,7 @@
     <p> Due Date : {{ object.due_date }} </p>
     <p> Status : {{ object.status|status_string }} </p>
     <p class="inline"> Mark as Completed : </p>
-    <input class="inline" type="checkbox" {% if object.status %}checked{% endif %}
+    <input class="inline" type="checkbox" {% ifequal object.status 1 %}checked{% endifequal %}
            onclick="location.href='{% url 'taskmanager:status' object.id%}'">
 {%  endblock content %}
 

@@ -31,7 +31,7 @@ def due_date_string(my_date):
 
 @register.filter
 def status_string(status):
-    if status:
+    if status == 1:
         return "Completed"
-    else:
+    elif status == 0:
         return "In Progress"
