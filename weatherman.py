@@ -19,9 +19,21 @@ def is_valid_directory(dir_name):
 
 
 def is_valid_year_and_month(year_and_month):
-    match = re.search('^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)/(1[0-2]|0[1-9]|\d)', year_and_month)
+    match = re.fullmatch('^(19|20)[0-9][0-9]/(1[0-2]|0[1-9]|\d)', year_and_month)
     if match:
         return year_and_month
+    else:
+        msg = '{} is not valid year/month'.format(year_and_month)
+        raise argparse.ArgumentTypeError(msg)
+
+
+def is_valid_year(year):
+    match = re.fullmatch('^(19|20)[0-9][0-9]', year)
+    if match:
+        return year
+    else:
+        msg = '{} is not valid year'.format(year)
+        raise argparse.ArgumentTypeError(msg)
 
 
 def get_year_and_month(file_name):
@@ -44,11 +56,10 @@ class FileParser:
             current_date = datetime.datetime.now()
             required_month = current_date.replace(month=int(required_month)).strftime("%b")
             required_files_str = '*{}_{}.txt'.format(required_year, required_month)
-            required_files_path = os.path.join(self.dir_path, required_files_str)
         else:
             required_files_str = '*{}*.txt'.format(required_year)
-            required_files_path = os.path.join(self.dir_path, required_files_str)
 
+        required_files_path = os.path.join(self.dir_path, required_files_str)
         required_files_path = glob.glob(required_files_path)
         files_required = [os.path.basename(csv_file) for csv_file in required_files_path]
 
@@ -59,9 +70,9 @@ class FileParser:
         index = 1
         for row in file_data:
             month_data[index] = {
-                'Max TemperatureC': 0 if row['Max TemperatureC'] == '' else row['Max TemperatureC'],
-                'Min TemperatureC': 0 if row['Min TemperatureC'] == '' else row['Min TemperatureC'],
-                'Max Humidity': 0 if row['Max Humidity'] == '' else row['Max Humidity'],
+                'Max TemperatureC': '0' if row['Max TemperatureC'] == '' else row['Max TemperatureC'],
+                'Min TemperatureC': '0' if row['Min TemperatureC'] == '' else row['Min TemperatureC'],
+                'Max Humidity': '0' if row['Max Humidity'] == '' else row['Max Humidity'],
                 'PKT': row['PKT']
             }
             index += 1
@@ -101,15 +112,15 @@ class ResultCalculator:
 
         for month in year_data.values():
             day_with_max_temperature = max(month.items(), key=lambda day: int(day[1]['Max TemperatureC']))
-            max_temp_list.append((day_with_max_temperature[1]['Max TemperatureC'],
+            max_temp_list.append((int(day_with_max_temperature[1]['Max TemperatureC']),
                                   day_with_max_temperature[1]['PKT']))
 
             day_with_min_temperature = min(month.items(), key=lambda day: int(day[1]['Min TemperatureC']))
-            min_temp_list.append((day_with_min_temperature[1]['Min TemperatureC'],
+            min_temp_list.append((int(day_with_min_temperature[1]['Min TemperatureC']),
                                   day_with_min_temperature[1]['PKT']))
 
             day_with_max_humidity = max(month.items(), key=lambda day: int(day[1]['Max Humidity']))
-            max_humidity_list.append((day_with_max_humidity[1]['Max Humidity'],
+            max_humidity_list.append((int(day_with_max_humidity[1]['Max Humidity']),
                                       day_with_max_humidity[1]['PKT']))
 
         highest_temp_and_date = max(max_temp_list, key=lambda month: month[0])
@@ -147,6 +158,7 @@ class ResultGenerator:
         print('Average Mean Humidity: {}\n'.format(round(data['Average Humidity'], 2)))
 
     def generate_chart_results(self, month_data):
+        print(COLOR_PURPLE)
         for day_number, day in month_data.items():
             print('{:0>2d} {} {}C\n{:0>2d} {} {}C'.format(day_number,
                                                           COLOR_RED + '+' * int(day['Max TemperatureC']),
@@ -158,6 +170,7 @@ class ResultGenerator:
         print(COLOR_DEFAULT)
 
     def generate_bonus_results(self, month_data):
+        print(COLOR_PURPLE)
         for day_number, day_data in month_data.items():
             print('{:0>2d} {}{} {}C - {}C'.format(day_number,
                                                   COLOR_BLUE + '+' * int(day_data['Min TemperatureC']),
@@ -174,6 +187,7 @@ def main():
                                  type=is_valid_directory,
                                  help='Directory path of weather files')
     argument_parser.add_argument('-e', '--extreme-report',
+                                 type=is_valid_year,
                                  help='Generates extreme weather report, taking year as input')
     argument_parser.add_argument('-a', '--average-report',
                                  type=is_valid_year_and_month,
@@ -197,7 +211,10 @@ def main():
 
     if args.extreme_report:
         files_name = file_parser.read_files_name(args.extreme_report)
-        file_parser.read_files(files_name)
+        if files_name:
+            file_parser.read_files(files_name)
+        else:
+            print('Sorry! data is not available of required year provided with -e')
 
         if file_parser.year_data.get(args.extreme_report):
             year_data = file_parser.year_data[args.extreme_report]
@@ -205,7 +222,8 @@ def main():
             result_generator.generate_extreme_results(year_result)
 
     if args.average_report:
-        year, month = args.average_month.split('/')
+        year, month = args.average_report.split('/')
+        month = month.strip('0')
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
@@ -215,10 +233,11 @@ def main():
             month_result = result_calculator.calculate_average_results(month_data)
             result_generator.generate_average_results(month_result)
         else:
-            print('Sorry! data is not available of required year and month')
+            print('Sorry! data is not available of required year and month provided with -a')
 
     if args.chart_report:
         year, month = args.chart_report.split('/')
+        month = month.strip('0')
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
@@ -227,10 +246,11 @@ def main():
             month_data = file_parser.year_data[year][month]
             result_generator.generate_chart_results(month_data)
         else:
-            print('Sorry! data is not available of required year and month')
+            print('Sorry! data is not available of required year and month provided with -c')
 
     if args.bonus:
         year, month = args.bonus.split('/')
+        month = month.strip('0')
         files_name = file_parser.read_files_name(year, month)
         if files_name:
             file_parser.read_files(files_name)
@@ -239,7 +259,7 @@ def main():
             month_data = file_parser.year_data[year][month]
             result_generator.generate_bonus_results(month_data)
         else:
-            print('Sorry! data is not available of required year and month')
+            print('Sorry! data is not available of required year and month provided with -b')
 
 
 if __name__ == '__main__':
